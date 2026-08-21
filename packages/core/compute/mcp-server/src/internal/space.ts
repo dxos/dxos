@@ -24,14 +24,27 @@ export const idParameter = Schema.optional(Schema.String).annotate({
 
 /**
  * Resolves the target space for a tool call against the session's space context.
- * When the session context is non-empty, an explicit `spaceId` must be inside it;
- * a session with an empty context may pass any valid `spaceId` explicitly.
+ *
+ * An `undefined` context is unrestricted — the host states no opinion and any valid `spaceId`
+ * passes. An *empty* one is the opposite: the host enumerated the addressable spaces and found
+ * none, so nothing is addressable. Overloading empty as unrestricted would invert a host's filter
+ * exactly when it excluded everything — a profile whose only spaces are HALO and settings would
+ * accept either by explicit id.
  */
 export const resolveId = (
-  sessionSpaceIds: readonly string[],
+  sessionSpaceIds: readonly string[] | undefined,
   spaceId: string | undefined,
 ): Effect.Effect<string, ToolFailure, never> => {
-  const resolved = spaceId ?? sessionSpaceIds[0];
+  if (sessionSpaceIds != null && sessionSpaceIds.length === 0) {
+    return Effect.fail(
+      failure(
+        'space_not_in_context',
+        'No space is addressable in this session. Create or join a space, or re-authorize this ' +
+          'connection with a space id.',
+      ),
+    );
+  }
+  const resolved = spaceId ?? sessionSpaceIds?.[0];
   if (!resolved) {
     return Effect.fail(
       failure('invalid_request', 'No space in session context. Pass spaceId or re-authorize with a space id.'),
@@ -40,7 +53,7 @@ export const resolveId = (
   if (!SpaceId.isValid(resolved)) {
     return Effect.fail(failure('invalid_request', `Invalid spaceId: ${resolved}`));
   }
-  if (sessionSpaceIds.length > 0 && !sessionSpaceIds.includes(resolved)) {
+  if (sessionSpaceIds != null && !sessionSpaceIds.includes(resolved)) {
     return Effect.fail(
       failure(
         'space_not_in_context',

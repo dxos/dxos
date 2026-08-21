@@ -20,6 +20,7 @@ import * as Template from '@dxos/compute/Template';
 import { Obj, Registry } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
 import { SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 export { ToolFailure, type ToolFailureCode, failure } from './internal/failure';
 import { ToolFailure, failure } from './internal/failure';
@@ -61,9 +62,10 @@ export type HostShape = {
   readonly invoke: (request: InvokeRequest) => Effect.Effect<unknown, HostError>;
   /**
    * Spaces this session may address; the first is the fallback when a call omits `spaceId`.
-   * Empty means unrestricted, which only a host without a grant model (e.g. the local CLI) sets.
+   * Omitted means unrestricted (the invoker's own database context decides); an empty array means
+   * the host enumerated its addressable spaces and found none, so every call is refused.
    */
-  readonly spaceIds: readonly string[];
+  readonly spaceIds?: readonly string[];
 };
 
 export class Host extends Context.Service<Host, HostShape>()('@dxos/mcp-server/Host') {}
@@ -609,16 +611,28 @@ export const hydrateRegistry = ({
 }): Effect.Effect<Registry.Registry> =>
   Effect.promise(async () => {
     const records = await Promise.all(operations.map((json) => Obj.fromJSON(json)));
-    const built = skills.map((record) =>
-      Skill.make({
-        key: record.key,
-        name: record.name ?? viewInternal.nsid(record.key).split('.').at(-1) ?? record.key,
-        description: record.description,
-        mcpPrompt: record.mcpPrompt,
-        tools: Skill.toolDefinitions({ operations: [], tools: record.tools ?? [] }),
-        instructions: Template.make({ source: record.instructions ?? '' }),
-      }),
-    );
+    const built = skills.flatMap((record) => {
+      // A skill whose instructions did not survive the wire would be dropped later by the
+      // projection, silently taking its operations off the surface with it. Refused here instead,
+      // at the boundary where the omission happened and can be attributed to the host's marshalling.
+      if (record.mcpPrompt && (record.instructions == null || record.instructions.length === 0)) {
+        log.error('hydrated skill has no instructions; it and its operations are not served', {
+          key: record.key,
+          tools: record.tools,
+        });
+        return [];
+      }
+      return [
+        Skill.make({
+          key: record.key,
+          name: record.name ?? viewInternal.nsid(record.key).split('.').at(-1) ?? record.key,
+          description: record.description,
+          mcpPrompt: record.mcpPrompt,
+          tools: Skill.toolDefinitions({ operations: [], tools: record.tools ?? [] }),
+          instructions: Template.make({ source: record.instructions ?? '' }),
+        }),
+      ];
+    });
     return makeRegistry({ initial: [...records, ...built] });
   });
 
@@ -635,7 +649,7 @@ export type Options = {
   skills: readonly Skill.Definition[];
   /**
    * Spaces the session may address; the first is the fallback when a call omits `spaceId`.
-   * Empty (the default) means unrestricted — the invoker's own database context decides.
+   * Omitted (the default) means unrestricted — the invoker's own database context decides.
    */
   spaceIds?: readonly string[];
   /** Names of the host's statically-defined tools; none may be one of {@link TOOL_NAMES}. */
@@ -650,7 +664,7 @@ export type Options = {
  */
 export const host = ({
   skills,
-  spaceIds = [],
+  spaceIds,
 }: Pick<Options, 'skills' | 'spaceIds'>): Effect.Effect<HostShape, never, Operation.Service> =>
   Effect.gen(function* () {
     const invoker = yield* Operation.Service;

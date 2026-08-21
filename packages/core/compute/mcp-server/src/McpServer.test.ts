@@ -67,14 +67,16 @@ const testRegistry = ({
 
 type Invocation = McpServer.InvokeRequest;
 
-const testHost = ({
-  spaceIds = [SPACE_A],
-  output = { ok: true },
-  fail: shouldFail,
-}: { spaceIds?: readonly string[]; output?: unknown; fail?: boolean } = {}): {
+const testHost = (
+  options: { spaceIds?: readonly string[] | undefined; output?: unknown; fail?: boolean } = {},
+): {
   host: McpServer.HostShape;
   invocations: Invocation[];
 } => {
+  const { output = { ok: true }, fail: shouldFail } = options;
+  // Read through `in` rather than a destructuring default, which cannot tell an explicit
+  // `undefined` (unrestricted) from an omitted key.
+  const spaceIds = 'spaceIds' in options ? options.spaceIds : [SPACE_A];
   const invocations: Invocation[] = [];
   return {
     invocations,
@@ -150,6 +152,22 @@ describe('McpServer', () => {
       const { result, invocations } = runInvoke({ input: { title: 'x' }, spaceId: SPACE_B });
       expect(failureOf(await result).code).to.equal('space_not_in_context');
       expect(invocations).to.have.length(0);
+    });
+
+    // A host that enumerated its addressable spaces and found none has stated a restriction, not
+    // the absence of one — treating empty as unrestricted would invert its filter exactly when it
+    // excluded everything.
+    test('an empty space context refuses every call, while an absent one is unrestricted', async ({ expect }) => {
+      const none = runInvoke({ input: { title: 'x' }, spaceId: SPACE_B }, { host: testHost({ spaceIds: [] }) });
+      expect(failureOf(await none.result).code).to.equal('space_not_in_context');
+      expect(none.invocations).to.have.length(0);
+
+      const unrestricted = runInvoke(
+        { input: { title: 'x' }, spaceId: SPACE_B },
+        { host: testHost({ spaceIds: undefined }) },
+      );
+      successOf(await unrestricted.result);
+      expect(unrestricted.invocations[0].spaceId).to.equal(SPACE_B);
     });
 
     test('a host failure carries the underlying message, not an Effect envelope', async ({ expect }) => {
@@ -372,6 +390,23 @@ describe('McpServer', () => {
       const { host, invocations } = testHost();
       await EffectEx.runPromise(McpServer.invoke(registry, host, { key: KEY, input: { title: 'Ship' } }));
       expect(invocations).to.deep.equal([{ key: KEY, input: { title: 'Ship' }, spaceId: SPACE_A }]);
+    });
+
+    // Instructions that did not survive the wire would otherwise be an empty-string skill the
+    // projection drops later, taking its operations off the surface with no attributable cause.
+    test('a skill whose instructions did not survive the wire is refused at hydration', async ({ expect }) => {
+      const registry = await EffectEx.runPromise(
+        McpServer.hydrateRegistry({
+          operations: Operation.serializable([CreateTask]).map((record) => Obj.toJSON(record)),
+          skills: [{ key: 'org.dxos.skill.codeProject', mcpPrompt: true, tools: [KEY] }],
+        }),
+      );
+      const listing = successOf(
+        await EffectEx.runPromise(Effect.result(McpServer.loadSkillByName(registry, undefined))),
+      );
+      expect(listing.skills).to.have.length(0);
+      const { operations } = await EffectEx.runPromise(McpServer.find(registry, {}));
+      expect(operations).to.have.length(0);
     });
   });
 

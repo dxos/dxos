@@ -7,11 +7,13 @@ dxos-side decisions those two don't cover.
 
 ## 1. Two hosts, one surface
 
-`@dxos/mcp-server` owns everything that decides what a model sees: the three-tool surface over the
-registry, opted-in skills as prompts, `skillLoad`, ref widening, the wire response passes, and the
-stdio transport that applies them. A host supplies echo's `Registry.Service` (a registry holding
-`PersistentOperation` and `Skill` entities) and `McpServer.Host` (the invoke seam plus the
-session's spaces) — and nothing else.
+`@dxos/mcp-server` owns everything that decides what a model sees **of the operation surface**: the
+three tools over the registry, opted-in skills as prompts, `skillLoad`, ref widening, the wire
+response passes, and the stdio transport that applies them. For that surface a host supplies echo's
+`Registry.Service` (a registry holding `PersistentOperation` and `Skill` entities) and
+`McpServer.Host` (the invoke seam plus the session's spaces) — and nothing else. Each host still
+hand-writes its own static toolkit beside it (§1.1), which is duplication rather than a deliberate
+host-layer boundary.
 
 ### 1.0 Operations are found, not advertised (2026-08-20)
 
@@ -64,6 +66,14 @@ pointer nothing can resolve (edge's own TODO at entrypoint.ts:296 already names 
 materialize-alongside shape) — and supplies `Host` from the binding's invoke plus the grant's
 `spaceIds`. The round trip is pinned dxos-side by the `hydrateRegistry` test in `McpServer.test.ts`,
 so the fidelity contract covers the hydrated path too.
+
+**The live-registry guarantee is in-process only.** Handlers query the registry per request, so an
+in-process host (the CLI) serves an operation registered a moment ago without a rebuild. A hydrated
+registry is a point-in-time copy of an RPC response: EDGE builds it per session, so operation-service
+changes after that point are invisible to `findOperations`, `invokeOperation`'s validation and
+`skillLoad` until the next build. Acceptable while a worker's projection layer is per-request or
+short-lived, and the reason the EDGE follow-through should either rebuild on its own cadence or
+subscribe operation-service updates into the registry — decided there, not here.
 
 Two hosts consume it: edge's `mcp-space-service` (OAuth, grants, service bindings, trace feed) and
 `dx mcp serve` (stdio, local client, no auth by design — OAuth is host-layer and host-layer is what

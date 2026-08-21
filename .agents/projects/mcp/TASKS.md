@@ -481,7 +481,8 @@ three below — and the count no longer grows with the registry.
 - [ ] Follow-up: an advertised ref parameter is a bare `$id: '/schemas/echo/ref'` declaration in
       the JSON Schema `findOperations` hands back, so the envelope shape is stated only in
       SERVER_INSTRUCTIONS. Fixing ECHO's serialization to declare `type: 'object'` (the standing
-      TODO in `projection.ts`) would make the schema self-describing and retire the widening.
+      TODO now in `internal/input.ts`, which inherited it from the deleted `projection.ts`) would
+      make the schema self-describing and retire the widening.
 
 ## Milestone 7 — third-party plugins and reload (design: [DESIGN.md](./DESIGN.md) §2-3)
 

@@ -4,7 +4,8 @@ The DXOS MCP server: the tool and prompt surface projected from the operation re
 
 Everything that decides what a model sees — which operations it can reach, their schemas and
 descriptions, which skills become prompts, and the server instructions — lives here, so every host
-(the EDGE `mcp-space-service` worker, `dx mcp serve`) presents the same surface by construction.
+serving this surface presents it identically by construction (`dx mcp serve` today; the EDGE
+`mcp-space-service` worker on its next pin bump).
 Hosts supply echo's `Registry.Service` (a registry holding `PersistentOperation` and `Skill`
 entities — built from wire records via `McpServer.hydrateRegistry` when the real one lives behind
 an RPC), `McpServer.Host` (how to invoke an operation, and the session's spaces), and a transport;
@@ -26,9 +27,9 @@ grew with every plugin a host enabled. A skill is still the unit of governance �
 reachable only if an opted-in skill's `tools` list names it — and each opted-in skill is also
 served as an MCP prompt.
 
-Per-operation safety is reported on a `findOperations` row (`mutation`: `none` / `write` /
-`destructive`) rather than as tool annotations, since one dispatch tool cannot be safer than
-whatever it is asked to run.
+Per-operation safety is reported on a `findOperations` row, at `operations[].hints.mutation`
+(`none` / `write` / `destructive`), rather than as tool annotations — one dispatch tool cannot be
+safer than whatever it is asked to run.
 
 ## Installation
 

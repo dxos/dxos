@@ -71,7 +71,7 @@ export const SpaceToolkit = Toolkit.make(WhoAmI, ListSpaces);
 const describeSpaces = (server: LocalServer): readonly SpaceInfo[] => {
   // Keyed as plain strings: the host reports its space ids in the wire shape, unbranded.
   const byId = new Map<string, Space>(server.client.spaces.get().map((space) => [space.id, space]));
-  return server.host.spaceIds.map((spaceId) => {
+  return (server.host.spaceIds ?? []).map((spaceId) => {
     const space = byId.get(spaceId);
     if (!space) {
       return { spaceId };
