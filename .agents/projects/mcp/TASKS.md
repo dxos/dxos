@@ -130,6 +130,23 @@ changes what a model sees lives in the shared package or it is a bug.
         every call: without this, a CLI profile with no identity could not call `queryPlugins`.
         Three unit tests in `McpServer.test.ts`, and `serve.test` invokes `queryPlugins` over a live
         session with no spaces.
+  - [x] **`querySpaces` and the Space skill dropped from this pass** (review, wittjosiah) — the
+        point of the port is an isomorphic surface, and this verb could not have one. The two hosts
+        derive session spaces from different places by construction: the CLI computes them from the
+        client (`local-server.ts`), EDGE's MCP worker from its OAuth grant. The enrichment settles
+        it — `name` and `memberCount` read `space.properties` / `space.members`, which need an open
+        space via a client the worker does not have, so no shared service would give the worker
+        those fields. Withholding the skill from the `workerd` barrel had only hidden that: the
+        handler stayed in the shared `SpaceOperationHandlerSet`, so a worker naming it would fail
+        resolving `ClientService` at invoke time. Removed with `SpaceSkill`, `SpaceSummary`, and
+        `skill-definition.workerd.ts` — `capabilities/workerd.ts` is back to the shared definition.
+        `whoami` keeps the answer meanwhile (it returns `host.spaceIds`, which every host has), and
+        the TODO there now records that the two port together as one Space skill once the session
+        reaches a handler as a service. Surface live-verified: 4 tools, 3 prompts (`codeProject`,
+        `database`, `registry`). `serve.test` now asserts the prompt set exactly — the old
+        `.to.include(SKILL)` would not have noticed a skill dropping off, which is how this would
+        have gone unnoticed; verified by reintroducing `space` and watching it fail.
+
   - [x] **`spaceId` is the `SpaceId` schema, not a bare string** (review, wittjosiah) — the ambient
         parameter was `Schema.optional(Schema.String)` while `SpaceId` in `@dxos/keys` is already a
         `Schema.Codec<SpaceId, string>` carrying `isValid`. Free at the boundary: `Tool.getJsonSchema`

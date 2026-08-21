@@ -14,11 +14,15 @@ import { type LocalServer } from './local-server';
 /**
  * Identity, mirroring EDGE's `mcp-space-service` tool of the same name.
  *
- * TODO(wittjosiah): Duplicated with edge's `src/mcp/space-tools.ts`, and the two have already
- *   drifted (this one reports `displayName`, edge's reports `haloSpaceId`). Both should become one
- *   operation named by a skill, the way `querySpaces` replaced `listSpaces` — which needs the
- *   session's identity to reach an operation handler as a service, since EDGE resolves it from the
- *   OAuth grant rather than from a local client.
+ * TODO(wittjosiah): Port this and a space listing together, as one Space skill. Both answer the
+ *   same session question — who am I, and which spaces may I address — and both are blocked on the
+ *   same thing: the session must reach an operation handler as a service. Neither can be derived
+ *   from a client, because EDGE's MCP worker has none and resolves identity and spaces from the
+ *   OAuth grant instead. Porting either alone is what makes the surface non-isomorphic: a
+ *   `querySpaces` reading `client.spaces` works on this host and cannot work on that one, so the
+ *   worker would keep a hand-written listing and the duplication would survive the port.
+ *   Duplicated meanwhile with edge's `src/mcp/space-tools.ts`, and the two have already drifted
+ *   (this one reports `displayName`, edge's reports `haloSpaceId`).
  */
 export const WhoAmI = Tool.make('whoami', {
   description: 'Returns the authenticated DXOS identity and the spaces in the session context',

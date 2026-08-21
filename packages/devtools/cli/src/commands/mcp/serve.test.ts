@@ -18,8 +18,15 @@ import { dxBin } from '../../testing';
  * server exits with the stream rather than answering.
  */
 
-/** The one skill the CLI's registry opts in as a prompt; both halves of the round trip name it. */
+/** The skill both halves of the prompt round trip name. */
 const SKILL = 'codeProject';
+
+/**
+ * Every skill the CLI's registry opts in as an MCP prompt. Asserted exactly: a skill that stops
+ * being contributed drops off this surface silently, which is how the Space skill would have
+ * disappeared unnoticed.
+ */
+const PROMPTS = [SKILL, 'database', 'registry'];
 
 const REQUESTS = [
   {
@@ -70,11 +77,11 @@ const STATIC_TOOLS = ['whoami'];
 const SURFACE_TOOLS = ['queryOperations', 'invokeOperation', 'loadSkill'];
 
 /**
- * Object CRUD contributed by plugin-space as operations. They prove the catalog reaches the
- * registry — as `queryOperations` rows now, not as tools; named after the ECHO API
- * (`Database.add` / `Database.remove`).
+ * What the host used to answer with hand-written tools, reached as `queryOperations` rows now.
+ * A space listing is deliberately absent: it belongs with `whoami`, and the two port together —
+ * see the TODO on `space-tools.ts`.
  */
-const PROJECTED_HOST_OPERATIONS = ['queryPlugins', 'querySpaces', 'queryTypes'];
+const PROJECTED_HOST_OPERATIONS = ['queryPlugins', 'queryTypes'];
 
 const PROJECTED_OBJECT_OPERATIONS = [
   'addObject',
@@ -172,7 +179,7 @@ describe('dx mcp serve', () => {
     }
 
     const prompts: { name: string }[] = responses.get(3)!.result.prompts;
-    expect(prompts.map((prompt) => prompt.name)).to.include(SKILL);
+    expect(prompts.map((prompt) => prompt.name).sort()).to.deep.equal([...PROMPTS].sort());
   });
 
   test('queryOperations reaches the registry, and keys returns the schema to write against', ({ expect }) => {

@@ -3,4 +3,3 @@
 //
 
 export * as DatabaseSkill from './DatabaseSkill';
-export * as SpaceSkill from './SpaceSkill';
