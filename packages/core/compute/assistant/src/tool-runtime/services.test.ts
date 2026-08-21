@@ -157,27 +157,6 @@ describe('projectFunctionToTool', () => {
     expect(decoded.properties).toEqual({ any: 1 });
   });
 
-  /** Reports every `$ref` in the document that no `$defs` entry defines. */
-  const danglingRefs = (document: unknown): string[] => {
-    const defs = new Set(Object.keys(((document as Record<string, unknown>).$defs ?? {}) as object));
-    const collect = (node: unknown): string[] => {
-      if (Array.isArray(node)) {
-        return node.flatMap(collect);
-      }
-      if (typeof node !== 'object' || node === null) {
-        return [];
-      }
-      return Object.entries(node as Record<string, unknown>).flatMap(([key, value]) =>
-        key === '$ref' && typeof value === 'string'
-          ? defs.has(value.replace('#/$defs/', ''))
-            ? []
-            : [value]
-          : collect(value),
-      );
-    };
-    return collect(document);
-  };
-
   // A recursive input renders as `$ref: '#/$defs/…'` with the bodies in the document's separate
   // `definitions` record. Keeping only the root advertised a reference to nothing -- and a model can
   // still answer correctly by inferring the shape from the prompt, so a passing end-to-end test is no
@@ -203,4 +182,25 @@ describe('projectFunctionToTool', () => {
     // The recursion is expressed by reference, not inlined to some arbitrary depth.
     expect(Object.keys((advertised as Record<string, any>).$defs ?? {})).not.toHaveLength(0);
   });
+
+  /** Reports every `$ref` in the document that no `$defs` entry defines. */
+  const danglingRefs = (document: unknown): string[] => {
+    const defs = new Set(Object.keys(((document as Record<string, unknown>).$defs ?? {}) as object));
+    const collect = (node: unknown): string[] => {
+      if (Array.isArray(node)) {
+        return node.flatMap(collect);
+      }
+      if (typeof node !== 'object' || node === null) {
+        return [];
+      }
+      return Object.entries(node as Record<string, unknown>).flatMap(([key, value]) =>
+        key === '$ref' && typeof value === 'string'
+          ? defs.has(value.replace('#/$defs/', ''))
+            ? []
+            : [value]
+          : collect(value),
+      );
+    };
+    return collect(document);
+  };
 });
