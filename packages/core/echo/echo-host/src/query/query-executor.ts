@@ -900,7 +900,6 @@ export class QueryExecutor extends Resource {
       }
 
       case 'TextSelector': {
-        // TODO(dmaretskyi): type + FTS queries would be very common so we should support those, maybe chunk the fts index.
         // TODO(dmaretskyi): nice to have matched text snippets/highlighting.
         if (step.selector.searchKind === 'vector') {
           // Vector search is not currently supported.
@@ -908,7 +907,7 @@ export class QueryExecutor extends Resource {
           break;
         }
 
-        // Full-text search using SQLite FTS5.
+        // Full-text search using SQLite FTS5, optionally scoped by type.
         const beginIndexQuery = performance.now();
         invariant(spaces.length <= 1, 'Multiple spaces are not supported for full-text search');
         const queueIds = extractQueueIds(queues);
@@ -918,6 +917,7 @@ export class QueryExecutor extends Resource {
             spaceId: spaces,
             includeAllQueues: allQueuesFromSpaces,
             queueIds,
+            typeDxns: step.selector.typename,
           }),
         );
         trace.indexHits = textResults.length;

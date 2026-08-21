@@ -29,6 +29,6 @@ export default Config2.make({
     icon: { key: 'ph--magnifying-glass--regular', hue: 'rose' },
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-search',
     spec: 'PLUGIN.mdl',
-    tags: ['labs'],
+    tags: ['system'],
   },
 });
