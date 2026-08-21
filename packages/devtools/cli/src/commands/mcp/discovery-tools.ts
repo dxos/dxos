@@ -7,9 +7,9 @@ import * as Schema from 'effect/Schema';
 import * as Tool from 'effect/unstable/ai/Tool';
 import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
-import { Server } from '@dxos/mcp-server';
+import { McpServer } from '@dxos/mcp-server';
 
-import { type LocalGateway } from './gateway';
+import { type LocalServer } from './local-server';
 
 /**
  * Read-only discovery over what this host assembled, mirroring EDGE's `mcp-space-service` tools of
@@ -32,7 +32,7 @@ export const ListPlugins = Tool.make('listPlugins', {
       }),
     ),
   }),
-  failure: Server.ToolFailure,
+  failure: McpServer.ToolFailure,
 })
   .annotate(Tool.Readonly, true)
   .annotate(Tool.Destructive, false);
@@ -50,61 +50,17 @@ export const ListTypes = Tool.make('listTypes', {
       }),
     ),
   }),
-  failure: Server.ToolFailure,
+  failure: McpServer.ToolFailure,
 })
   .annotate(Tool.Readonly, true)
   .annotate(Tool.Destructive, false);
 
-export const ListOperations = Tool.make('listOperations', {
-  description: 'Lists the operations registered on the operation service.',
-  parameters: Schema.Struct({}),
-  success: Schema.Struct({
-    operations: Schema.Array(
-      Schema.Struct({
-        key: Schema.String.annotate({ description: 'Operation key, as passed to an operation invocation.' }),
-        version: Schema.optional(Schema.String),
-        name: Schema.optional(Schema.String),
-        description: Schema.optional(Schema.String),
-      }),
-    ),
-  }),
-  failure: Server.ToolFailure,
-})
-  .annotate(Tool.Readonly, true)
-  .annotate(Tool.Destructive, false);
+/** `listOperations` is absent because `queryOperations` lists the same registry, with filters and schemas. */
+export const DiscoveryToolkit = Toolkit.make(ListPlugins, ListTypes);
 
-export const DiscoveryToolkit = Toolkit.make(ListPlugins, ListTypes, ListOperations);
-
-/** Projects a JSON field that a model can act on, dropping absent and non-string values. */
-const optionalString = (value: unknown): string | undefined => (typeof value === 'string' ? value : undefined);
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
-
-/** `key` and `version` live under the record's `@meta`, not on its own properties. */
-const metaString = (operation: Record<string, unknown>, field: string): string | undefined => {
-  const meta = operation['@meta'];
-  return isRecord(meta) ? optionalString(meta[field]) : undefined;
-};
-
-export const discoveryHandlers = (gateway: LocalGateway) =>
+export const discoveryHandlers = (server: LocalServer) =>
   DiscoveryToolkit.of({
-    listPlugins: () => Effect.succeed({ plugins: gateway.plugins }),
+    listPlugins: () => Effect.succeed({ plugins: server.plugins }),
 
-    listTypes: () => Effect.succeed({ types: gateway.types }),
-
-    listOperations: () =>
-      gateway.listOperations.pipe(
-        // Serialized `PersistentOperation` records carry schemas and metadata; project the fields a
-        // model needs to pick an operation, not the whole record.
-        Effect.map((operations) => ({
-          operations: operations.map((operation) => ({
-            key: metaString(operation, 'key') ?? '',
-            version: metaString(operation, 'version'),
-            name: optionalString(operation.name),
-            description: optionalString(operation.description),
-          })),
-        })),
-        Effect.mapError((error) => Server.failure('operation_failed', error.message)),
-      ),
+    listTypes: () => Effect.succeed({ types: server.types }),
   });

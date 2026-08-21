@@ -17,11 +17,10 @@ import type * as Types from 'effect/Types';
 
 import { Annotation, DXN, JsonSchema, type Key, Migration, Obj, Ref, Type } from '@dxos/echo';
 import type { URI } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import { type NoHandlerError, RunAgainError } from './errors';
 import type { Operation } from './index';
-// Type-only, so the module cycle (`Skill` imports this module) never exists in emitted code.
-import type * as Skill from './types/Skill';
 
 /**
  * Schema type that accepts any Encoded form but requires no Context.
@@ -426,6 +425,24 @@ export const serialize = (operation: Definition.Any): PersistentOperation => {
 };
 
 /**
+ * Serializes each definition, dropping any whose schema cannot render as JSON Schema, so one
+ * unserializable operation (e.g. `space.importSpace`) does not fail registry population for every
+ * other.
+ */
+export const serializable = (operations: readonly Definition.Any[]): PersistentOperation[] =>
+  operations.flatMap((operation) => {
+    try {
+      return [serialize(operation)];
+    } catch (error) {
+      log.verbose('operation is not serializable; excluded from the registry', {
+        key: String(operation.meta.key),
+        error: String(error),
+      });
+      return [];
+    }
+  });
+
+/**
  * Deserialize a persistent operation record to an operation definition.
  */
 export const deserialize = (record: PersistentOperation): Definition.Any => {
@@ -624,6 +641,28 @@ export const VisibleAnnotation = Annotation.make({
 });
 
 /**
+ * The operation's effect on state: `none` is side-effect free, `write` mutates but is not
+ * irreversible, `destructive` deletes or otherwise cannot be undone. Absent ⇒ unclassified, which
+ * consumers treat conservatively (an MCP client badges the tool as possibly destructive).
+ */
+export const MutationAnnotation = Annotation.make({
+  id: 'org.dxos.operation.mutation',
+  schema: Schema$.Literals(['none', 'write', 'destructive']),
+});
+
+export type Mutation = Schema$.Schema.Type<typeof MutationAnnotation.schema>;
+
+/**
+ * Pipeable combinator classifying the operation's effect on state — see {@link MutationAnnotation}.
+ * Apply at the definition site: `Operation.make({ ... }).pipe(Operation.mutation('none'))`.
+ */
+export const mutation = (value: Mutation) => annotate(MutationAnnotation, value);
+
+/** The operation's mutation class, or undefined when unclassified. Reads from the persisted record. */
+export const getMutation = (op: PersistentOperation): Mutation | undefined =>
+  Option.getOrUndefined(Annotation.get(op, MutationAnnotation));
+
+/**
  * Pipeable combinator that marks an operation visible. Apply at the definition site:
  * `Operation.make({ ... }).pipe(Operation.visible)`.
  */
@@ -635,81 +674,6 @@ export const visible = annotate(VisibleAnnotation, true);
  */
 export const isVisible = (op: PersistentOperation): boolean =>
   Option.getOrElse(Annotation.get(op, VisibleAnnotation), () => false);
-
-/**
- * Projection marker for an operation exposed as an MCP tool to external agents.
- * See plugin-projects `MILESTONE-5.md` §7.4 for the full contract.
- */
-export const McpTool = Schema$.Struct({
-  /** Tool name as exposed to MCP clients; camelCase, domain-prefixed (e.g. `taskCreate`). */
-  name: Schema$.String,
-  /** Model-facing description; falls back to the operation's own description when absent. */
-  description: Schema$.optional(Schema$.String),
-  /**
-   * Safety class the server maps to MCP tool hints: `read` is side-effect free (readOnlyHint),
-   * `write` mutates space data, `destructive` deletes or is otherwise irreversible.
-   */
-  safety: Schema$.Literals(['read', 'write', 'destructive']),
-  /**
-   * Aspect/toolset, for server-side filtering (e.g. `/mcp?toolsets=tasks`).
-   *
-   * TODO(wittjosiah): Remove? Nothing reads it — the MCP projection decodes the field and drops it,
-   * and no toolset filtering exists. Not an MCP concept either: the specification's tool definition
-   * has no grouping field, so this would stay a server-side convention.
-   */
-  aspect: Schema$.optional(Schema$.String),
-  /**
-   * Prompt name of the skill whose workflow this tool belongs to (a skill key's final segment,
-   * e.g. `codeProject`) — derived by {@link mcpTool} from the governing skill's `Definition`;
-   * never written by hand. The MCP projection appends a load-the-skill-first pointer to the tool's
-   * description and serves the skill body through its `skillLoad` tool, so a model discovers the
-   * workflow from the tool it is about to call — progressive disclosure in the direction of the
-   * MCP "Skills over MCP" extension (SEP-2640), whose hosts likewise expose a model-invocable
-   * skill-loading tool keyed by skill name. MCP prompts cannot serve this purpose: the spec makes
-   * them user-controlled, so a model can never fetch one on its own.
-   */
-  skill: Schema$.optional(Schema$.String),
-});
-export type McpTool = Schema$.Schema.Type<typeof McpTool>;
-
-/**
- * Annotation that opts an operation into MCP projection. The annotation rides through
- * {@link serialize} into the persisted record, so a remote projector (edge mcp-space-service)
- * discovers tools from the operation registry rather than a hand-maintained table.
- *
- * Projected operations must be remotely invocable: refs (not live objects) in, JSON snapshots
- * out, schemas that survive serialization, and worker-safe handlers — MILESTONE-5.md §7.4.
- */
-export const McpToolAnnotation = Annotation.make({
-  id: 'org.dxos.operation.mcp-tool',
-  schema: McpTool,
-});
-
-/**
- * Pipeable combinator that opts an operation into MCP projection. Apply at the definition site:
- * `Operation.make({ ... }).pipe(Operation.mcpTool({ name: 'taskComplete', safety: 'write' }))`.
- *
- * `skill` takes the governing skill's `Skill.Definition`, so the annotation cannot name a skill
- * that does not ship. A bare key is accepted for the case the definition cannot be imported —
- * where doing so would close a plugin dependency cycle, the trade plugin-projects' `skills/keys.ts`
- * documents for artifact skills. Either way the key's final segment is what persists: the
- * coordinate the MCP surface uses for both the prompt and `skillLoad`.
- */
-export const mcpTool = ({
-  skill,
-  ...props
-}: Omit<McpTool, 'skill'> & { skill?: Skill.Definition | DXN.Name<string> }) =>
-  annotate(McpToolAnnotation, {
-    ...props,
-    ...(skill == null ? {} : { skill: (typeof skill === 'string' ? skill : skill.key).split('.').at(-1) }),
-  });
-
-/**
- * Returns the MCP projection descriptor when the operation is annotated for it, else undefined.
- * Reads from the persisted operation — the form the projector holds.
- */
-export const getMcpTool = (op: PersistentOperation): McpTool | undefined =>
-  Option.getOrUndefined(Annotation.get(op, McpToolAnnotation));
 
 /**
  * Pipeable combinator that marks an operation idempotent — see {@link IdempotentAnnotation}. Apply at

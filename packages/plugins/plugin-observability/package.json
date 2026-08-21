@@ -137,6 +137,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/operation": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

@@ -6,6 +6,8 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'MapSkill': 'src/skills/MapSkill.ts',
+    'MapOperationHandlerSet': 'src/operations/MapOperationHandlerSet.ts',
     'index': 'src/index.ts',
     'MapPlugin': 'src/MapPlugin.ts',
     'plugin': 'src/plugin.tsx',

@@ -6,6 +6,8 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'TranscriptionSkill': 'src/skills/TranscriptionSkill.ts',
+    'TranscriptionOperationHandlerSet': 'src/operations/TranscriptionOperationHandlerSet.ts',
     'index': 'src/index.ts',
     'TranscriptionPlugin': 'src/TranscriptionPlugin.ts',
     'plugin': 'src/plugin.tsx',

@@ -49,6 +49,9 @@
       "path": "../../core/compute/extractor-lib"
     },
     {
+      "path": "../../core/compute/link"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -77,6 +80,9 @@
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-attention"
     },
     {
       "path": "../../ui/react-ui-form"

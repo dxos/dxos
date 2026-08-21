@@ -9,9 +9,9 @@ import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { type Space } from '@dxos/client-protocol';
 import { log } from '@dxos/log';
-import { Server } from '@dxos/mcp-server';
+import { McpServer } from '@dxos/mcp-server';
 
-import { type LocalGateway } from './gateway';
+import { type LocalServer } from './local-server';
 
 /**
  * Identity and space listing, mirroring EDGE's `mcp-space-service` tools of the same names.
@@ -45,7 +45,7 @@ export const WhoAmI = Tool.make('whoami', {
       description: 'Data spaces this session can operate on; the first is the default for tool calls.',
     }),
   }),
-  failure: Server.ToolFailure,
+  failure: McpServer.ToolFailure,
 })
   .annotate(Tool.Readonly, true)
   .annotate(Tool.Destructive, false);
@@ -57,7 +57,7 @@ export const ListSpaces = Tool.make('listSpaces', {
     "`spaceId`. The identity's own HALO space is not a data space and is never listed.",
   parameters: Schema.Struct({}),
   success: Schema.Struct({ spaces: Schema.Array(SpaceInfo) }),
-  failure: Server.ToolFailure,
+  failure: McpServer.ToolFailure,
 })
   .annotate(Tool.Readonly, true)
   .annotate(Tool.Destructive, false);
@@ -68,10 +68,10 @@ export const SpaceToolkit = Toolkit.make(WhoAmI, ListSpaces);
  * Describes the session's spaces. Best-effort per field: a space whose properties or membership
  * cannot be read is still listed, with whatever did resolve.
  */
-const describeSpaces = (gateway: LocalGateway): readonly SpaceInfo[] => {
-  // Keyed as plain strings: the gateway reports its space ids in the wire shape, unbranded.
-  const byId = new Map<string, Space>(gateway.client.spaces.get().map((space) => [space.id, space]));
-  return gateway.spaceIds.map((spaceId) => {
+const describeSpaces = (server: LocalServer): readonly SpaceInfo[] => {
+  // Keyed as plain strings, since the host reports its space ids unbranded.
+  const byId = new Map<string, Space>(server.client.spaces.get().map((space) => [space.id, space]));
+  return (server.host.spaceIds ?? []).map((spaceId) => {
     const space = byId.get(spaceId);
     if (!space) {
       return { spaceId };
@@ -112,22 +112,22 @@ const readMemberCount = (space: Space): number | undefined => {
   }
 };
 
-export const spaceHandlers = (gateway: LocalGateway) =>
+export const spaceHandlers = (server: LocalServer) =>
   SpaceToolkit.of({
     whoami: () =>
       Effect.gen(function* () {
-        const identity = gateway.client.halo.identity.get();
+        const identity = server.client.halo.identity.get();
         if (!identity) {
           return yield* Effect.fail(
-            Server.failure('invalid_request', 'No identity on this profile. Run `dx account login` first.'),
+            McpServer.failure('invalid_request', 'No identity on this profile. Run `dx account login` first.'),
           );
         }
         return {
           identityKey: identity.identityKey.toHex(),
           ...optional('displayName', identity.profile?.displayName),
-          spaces: describeSpaces(gateway),
+          spaces: describeSpaces(server),
         };
       }),
 
-    listSpaces: () => Effect.sync(() => ({ spaces: describeSpaces(gateway) })),
+    listSpaces: () => Effect.sync(() => ({ spaces: describeSpaces(server) })),
   });

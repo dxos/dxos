@@ -125,6 +125,59 @@ describe('createLoaderStore', () => {
     expect(store.progress()).toBe(halted);
   });
 
+  // The offer is dev-only and non-fatal: startup keeps running behind it, so the store must not
+  // treat `stalled` as a terminal state.
+  test('stalled exposes the abort handler without halting startup', ({ expect }) => {
+    const store = createLoaderStore();
+    expect(store.onAbort()).toBeUndefined();
+
+    const abort = vi.fn();
+    store.stalled(abort);
+    expect(store.onAbort()).toBeTypeOf('function');
+
+    const before = store.progress();
+    vi.advanceTimersByTime(CREEP_TICK_MS * 10);
+    expect(store.progress()).toBeGreaterThan(before);
+
+    store.pushStatus({ humanized: 'still working' });
+    expect(store.lines().at(-1)?.text).toBe('still working');
+
+    store.onAbort()?.();
+    expect(abort).toHaveBeenCalledTimes(1);
+    store.dispose();
+  });
+
+  test('the first abort handler wins, so a re-fired deadline cannot swap it mid-press', ({ expect }) => {
+    const store = createLoaderStore();
+    const first = vi.fn();
+    store.stalled(first);
+    store.stalled(vi.fn());
+    store.onAbort()?.();
+    expect(first).toHaveBeenCalledTimes(1);
+    store.dispose();
+  });
+
+  test('elapsed seconds tick only once stalled', ({ expect }) => {
+    const store = createLoaderStore();
+    // A healthy boot runs no second timer, so the count stays put.
+    vi.advanceTimersByTime(5_000);
+    expect(store.elapsedSeconds()).toBe(0);
+
+    store.stalled(vi.fn());
+    expect(store.elapsedSeconds()).toBe(5);
+    vi.advanceTimersByTime(3_000);
+    expect(store.elapsedSeconds()).toBe(8);
+    store.dispose();
+  });
+
+  test('ready withdraws the offer', ({ expect }) => {
+    const store = createLoaderStore();
+    store.stalled(vi.fn());
+    store.ready();
+    expect(store.onAbort()).toBeUndefined();
+    store.dispose();
+  });
+
   test('auto-creep honours the absolute ceiling', ({ expect }) => {
     const store = createLoaderStore();
     // Host at 80% leads the creep ceiling to min(80 + 15, 90) = 90; the creep

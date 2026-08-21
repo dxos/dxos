@@ -23,11 +23,14 @@ export default Capability.makeModule(
           createObject: (props, options) =>
             Effect.gen(function* () {
               const object = Collection.make(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                targetNodeId: options.targetNodeId,
-              });
+              return yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                {
+                  object,
+                  target: options.target,
+                },
+                { spaceId: options.db.spaceId },
+              );
             }),
         },
         {
@@ -35,14 +38,16 @@ export default Capability.makeModule(
           inputSchema: SpaceOperation.StoredSchemaForm,
           createObject: (props, options) =>
             Effect.gen(function* () {
-              const result = yield* Operation.invoke(SpaceOperation.AddType, {
-                db: options.db,
-                name: props.name,
-                type: createDefaultSchema(),
-              });
+              const result = yield* Operation.invoke(
+                SpaceOperation.AddType,
+                {
+                  name: props.name,
+                  type: createDefaultSchema(),
+                },
+                { spaceId: options.db.spaceId },
+              );
               return {
                 id: result.id,
-                subject: [],
                 object: result.object,
               };
             }),
@@ -52,11 +57,14 @@ export default Capability.makeModule(
           createObject: (props, options) =>
             Effect.gen(function* () {
               const object = Organization.make(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                targetNodeId: options.targetNodeId,
-              });
+              return yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                {
+                  object,
+                  target: options.target,
+                },
+                { spaceId: options.db.spaceId },
+              );
             }),
         },
         {
@@ -64,11 +72,14 @@ export default Capability.makeModule(
           createObject: (props, options) =>
             Effect.gen(function* () {
               const object = Person.make(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                targetNodeId: options.targetNodeId,
-              });
+              return yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                {
+                  object,
+                  target: options.target,
+                },
+                { spaceId: options.db.spaceId },
+              );
             }),
         },
         {
@@ -77,11 +88,14 @@ export default Capability.makeModule(
           createObject: (props, options) =>
             Effect.gen(function* () {
               const object = Task.make(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                targetNodeId: options.targetNodeId,
-              });
+              return yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                {
+                  object,
+                  target: options.target,
+                },
+                { spaceId: options.db.spaceId },
+              );
             }),
         },
       ]),

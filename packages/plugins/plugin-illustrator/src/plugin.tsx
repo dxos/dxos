@@ -13,6 +13,7 @@ import {
   ReactSurface,
   Schema,
   SkillDefinition,
+  SvgVariant,
   Translations,
 } from '#capabilities';
 import { meta } from '#meta';
@@ -29,6 +30,7 @@ export const IllustratorPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(ReactSurface),
   Plugin.addModule(Schema),
   Plugin.addModule(SkillDefinition),
+  Plugin.addModule(SvgVariant),
   Plugin.addModule(Translations),
   Plugin.make,
 );

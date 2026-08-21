@@ -7,6 +7,9 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     'vite-plugin': 'src/vite-plugin/index.ts',
+    // Split out of `vite-plugin` so a runtime host can read the shared-package list without
+    // pulling in Vite itself — the CLI registers the same set in bun's module registry.
+    'vite-plugin/packages': 'src/vite-plugin/packages.ts',
     'index': 'src/index.ts',
     'core/activation-event': 'src/core/activation-event.ts',
     'common/activation-events': 'src/common/activation-events.ts',

@@ -43,10 +43,7 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "date-fns": "catalog:",
-    "extendable-media-recorder": "catalog:",
-    "extendable-media-recorder-wav-encoder": "catalog:",
-    "wavefile": "catalog:"
+    "date-fns": "catalog:"
   },
   "devDependencies": {
     "@types/react": "catalog:",

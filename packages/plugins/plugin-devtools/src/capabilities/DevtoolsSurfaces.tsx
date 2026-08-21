@@ -85,7 +85,11 @@ export const EdgeTestingSurface = () => {
       await space.waitUntilReady();
       const createResult = await invokePromise(ScriptOperation.CreateScript, { db: space.db });
       if (createResult.data?.object) {
-        await invokePromise(SpaceOperation.AddObject, { target: space.db, object: createResult.data.object });
+        await invokePromise(
+          SpaceOperation.AddObject,
+          { object: createResult.data.object },
+          { spaceId: space.db.spaceId },
+        );
       }
       log.info('script created', { result: createResult });
       if (createResult.data?.object) {

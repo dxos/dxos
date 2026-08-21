@@ -165,37 +165,36 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
 
     const tileItems = useMemo(
       () =>
-        items?.map(
-          (item): StackTileData =>
-            isMessageGroup(item)
-              ? {
-                  conversationId: item.id,
-                  messages: item.messages,
-                  total: item.total,
-                  // Conversations show the latest message; star reflects/toggles that message.
-                  starredAtom: starredAtom?.(item.messages[0]?.id),
-                  inboxAtom: inboxAtom?.(item.messages[0]?.id),
-                  enableArchive,
-                  enableIgnoreSender,
-                  enableCreateTopic,
-                  searchQuery,
-                  getContact,
-                  onContactCreate,
-                  onAction,
-                }
-              : {
-                  message: item,
-                  tagsAtom: tagsAtom?.(item.id),
-                  starredAtom: starredAtom?.(item.id),
-                  inboxAtom: inboxAtom?.(item.id),
-                  enableArchive,
-                  enableIgnoreSender,
-                  enableCreateTopic,
-                  searchQuery,
-                  getContact,
-                  onContactCreate,
-                  onAction,
-                },
+        items?.map((item): StackTileData =>
+          isMessageGroup(item)
+            ? {
+                conversationId: item.id,
+                messages: item.messages,
+                total: item.total,
+                // Conversations show the latest message; star reflects/toggles that message.
+                starredAtom: starredAtom?.(item.messages[0]?.id),
+                inboxAtom: inboxAtom?.(item.messages[0]?.id),
+                enableArchive,
+                enableIgnoreSender,
+                enableCreateTopic,
+                searchQuery,
+                getContact,
+                onContactCreate,
+                onAction,
+              }
+            : {
+                message: item,
+                tagsAtom: tagsAtom?.(item.id),
+                starredAtom: starredAtom?.(item.id),
+                inboxAtom: inboxAtom?.(item.id),
+                enableArchive,
+                enableIgnoreSender,
+                enableCreateTopic,
+                searchQuery,
+                getContact,
+                onContactCreate,
+                onAction,
+              },
         ),
       [
         items,
@@ -639,7 +638,7 @@ const ConversationMessageRow = ({
           {/* `ml-auto` rather than `justify-between` on the row: a message whose sender carries
               neither name nor address renders no name at all, and `justify-between` would then treat
               the date as the only child and pull it to the start. */}
-          <span className='ml-auto pis-2 text-xs text-info-text whitespace-nowrap shrink-0'>{date}</span>
+          <span className='ml-auto ps-2 text-xs text-info-text whitespace-nowrap shrink-0'>{date}</span>
         </button>
 
         {/* A message with body text always has a truthy `snippet` (`properties.snippet ?? first text block`), so gating the search snippet on `snippet` is safe. */}

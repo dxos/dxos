@@ -10,7 +10,7 @@ import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { IllustratorEvents } from '#types';
+import { IllustratorCapabilities, IllustratorEvents } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
@@ -40,6 +40,11 @@ export const Schema = AppCapability.schema(() => import('./schema'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
   environments: ['node'],
 });
+export const SvgVariant = Capability.lazyModule(
+  'IllustratorSvgVariant',
+  { provides: [IllustratorCapabilities.VariantProvider], activatesOn: IllustratorEvents.Start },
+  () => import('./svg-variant'),
+);
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',

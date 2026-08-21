@@ -26,7 +26,7 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   workers: 1,
   webServer: {
-    command: 'pnpm vite preview',
+    command: 'pnpm vite preview --configLoader native',
     port: 4173,
     reuseExistingServer: false,
     timeout: 300_000,

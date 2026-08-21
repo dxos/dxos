@@ -6,6 +6,8 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'CommentSkill': 'src/skills/CommentSkill.ts',
+    'CommentOperationHandlerSet': 'src/operations/CommentOperationHandlerSet.ts',
     'index': 'src/index.ts',
     'ReviewPlugin': 'src/ReviewPlugin.ts',
     'plugin': 'src/plugin.tsx',

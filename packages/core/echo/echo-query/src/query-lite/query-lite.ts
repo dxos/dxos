@@ -401,6 +401,15 @@ class FilterClass implements Filter$.Any {
     });
   }
 
+  /** Selects the feed items inside the supplied cursor range, excluding the items its bounds name. */
+  static feedCursor(range: Filter$.FeedCursorRange = {}): Filter$.Any {
+    return new FilterClass({
+      type: 'feed-cursor',
+      ...(range.begin !== undefined ? { begin: range.begin } : {}),
+      ...(range.end !== undefined ? { end: range.end } : {}),
+    });
+  }
+
   private static _timeRangeFilter(
     field: 'updatedAt' | 'createdAt',
     range: { after?: Date | number; before?: Date | number },
@@ -888,6 +897,8 @@ const prettyFilter = (filter: QueryAST.Filter): string => {
       return `Filter.childOf([${filter.parents.map((parent) => JSON.stringify(parent)).join(', ')}], { transitive: ${filter.transitive} })`;
     case 'timestamp':
       return `Filter.${filter.field}.${filter.operator}(${filter.value})`;
+    case 'feed-cursor':
+      return `Filter.feedCursor(${JSON.stringify({ begin: filter.begin, end: filter.end })})`;
     case 'not':
       return `Filter.not(${prettyFilter(filter.filter)})`;
     case 'and':

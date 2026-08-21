@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type Obj } from '@dxos/echo';
-import { Message } from '@dxos/react-ui';
+import { Banner } from '@dxos/react-ui';
 import { composable } from '@dxos/react-ui';
 
 import { InitializeEmpty } from './InitializeEmpty';
@@ -36,11 +36,11 @@ export const Initialize = composable<HTMLDivElement, InitializeProps<any>>(
     return (
       <InitializeEmpty {...props} ref={forwardedRef}>
         {message && (
-          <Message.Root valence='warning'>
-            <Message.Content>
-              <Message.Title>{message}</Message.Title>
-            </Message.Content>
-          </Message.Root>
+          <Banner.Root valence='warning'>
+            <Banner.Content>
+              <Banner.Title>{message}</Banner.Title>
+            </Banner.Content>
+          </Banner.Root>
         )}
       </InitializeEmpty>
     );

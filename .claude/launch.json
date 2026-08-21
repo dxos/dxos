@@ -45,11 +45,11 @@
       "autoPort": true
     },
     {
-      "name": "composer-serve-min",
+      "name": "composer-serve-prod",
       "runtimeExecutable": "sh",
       "runtimeArgs": [
         "-c",
-        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && moon run composer-app:serve-min -- --port 5281 --strictPort"
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && moon run composer-app:serve-prod -- --port 5281 --strictPort"
       ],
       "port": 5281,
       "autoPort": false
@@ -178,6 +178,16 @@
         "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && pnpm --filter @dxos/storybook-react exec storybook dev --port 9014 --no-open --ci"
       ],
       "port": 9014,
+      "autoPort": false
+    },
+    {
+      "name": "storybook-agent",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && export DX_AGENT_CWD=\"$(git rev-parse --show-toplevel)/packages/stories/stories-assistant/src/testing/fixtures\" && pnpm --filter @dxos/storybook-react exec storybook dev --port 9016 --no-open --ci"
+      ],
+      "port": 9016,
       "autoPort": false
     }
   ]

@@ -19,13 +19,13 @@ import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
+import { createMessage } from '@dxos/react-ui-assistant/testing';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { TypeSpec, createObjectFactory } from '@dxos/schema/testing';
 import { Message, Organization, Outline, Person } from '@dxos/types';
 
 import { AssistantPlugin } from '#plugin';
-import { createMessage } from '#testing';
 import { translations } from '#translations';
 
 import { AgentArticle } from './AgentArticle';

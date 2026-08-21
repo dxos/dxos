@@ -83,17 +83,7 @@
       "types": "./dist/types/src/containers/index.d.ts",
       "import": "./dist/lib/containers.mjs"
     },
-    "./operations": {
-      "source": "./src/operations/index.ts",
-      "types": "./dist/types/src/operations/index.d.ts",
-      "import": "./dist/lib/operations.mjs"
-    },
     "./package.json": "./package.json",
-    "./skills": {
-      "source": "./src/skills/index.ts",
-      "types": "./dist/types/src/skills/index.d.ts",
-      "import": "./dist/lib/skills.mjs"
-    },
     "./templates": {
       "source": "./src/templates/index.ts",
       "types": "./dist/types/src/templates/index.d.ts",
@@ -133,6 +123,16 @@
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
+    },
+    "./ScriptOperationHandlerSet": {
+      "source": "./src/operations/ScriptOperationHandlerSet.ts",
+      "types": "./dist/types/src/operations/ScriptOperationHandlerSet.d.ts",
+      "import": "./dist/lib/ScriptOperationHandlerSet.mjs"
+    },
+    "./ScriptSkill": {
+      "source": "./src/skills/ScriptSkill.ts",
+      "types": "./dist/types/src/skills/ScriptSkill.d.ts",
+      "import": "./dist/lib/ScriptSkill.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -220,13 +220,13 @@
     "@lezer/highlight": "catalog:",
     "@octokit/core": "catalog:",
     "@radix-ui/react-compose-refs": "catalog:",
+    "@typescript/typescript6": "catalog:",
     "@typescript/vfs": "catalog:",
     "@valtown/codemirror-continue": "catalog:",
     "@valtown/codemirror-ts": "catalog:",
     "chess.js": "catalog:",
     "esbuild-wasm": "catalog:",
-    "prettier": "catalog:",
-    "typescript": "catalog:"
+    "prettier": "catalog:"
   },
   "devDependencies": {
     "@dxos/config": "workspace:*",

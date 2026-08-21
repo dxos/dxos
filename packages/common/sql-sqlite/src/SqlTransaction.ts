@@ -35,12 +35,9 @@ export class SqlTransaction extends Context.Service<SqlTransaction, Service>()('
  */
 export const layer: Layer.Layer<SqlTransaction, never, SqlClient.SqlClient> = Layer.effect(
   SqlTransaction,
-  Effect.map(
-    SqlClient.SqlClient,
-    (sql: SqlClient.SqlClient): Service => ({
-      withTransaction: (self) => sql.withTransaction(self),
-    }),
-  ),
+  Effect.map(SqlClient.SqlClient, (sql: SqlClient.SqlClient): Service => ({
+    withTransaction: (self) => sql.withTransaction(self),
+  })),
 );
 
 /**

@@ -39,10 +39,10 @@ describe('scheduled routine templates', () => {
       expect(Obj.instanceOf(Routine.Routine, draft)).toBe(true);
       expect(draft.spec?.kind).toBe('instructions');
 
-      // Timer trigger, disabled by default, owned by the routine.
+      // Timer trigger, enabled (the dialog is the review step), owned by the routine.
       const trigger = draft.triggers[0]?.target;
       expect(trigger != null && Obj.instanceOf(Trigger.Trigger, trigger)).toBe(true);
-      expect(trigger?.enabled).toBe(false);
+      expect(trigger?.enabled).toBe(true);
       expect(trigger?.spec?.kind).toBe('timer');
 
       // The owned instructions is the routine's action (an instructions action), with the right skill set.

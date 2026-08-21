@@ -21,6 +21,8 @@ export default defineConfig({
     'testing': 'src/testing.ts',
     'translations': 'src/translations.ts',
     'Markdown': 'src/types/Markdown.ts',
+    'MarkdownOperationHandlerSet': 'src/operations/MarkdownOperationHandlerSet.ts',
+    'MarkdownSkill': 'src/skills/MarkdownSkill.ts',
     'MarkdownCapabilities': 'src/types/MarkdownCapabilities.ts',
     'MarkdownEvents': 'src/types/MarkdownEvents.ts',
     'MarkdownOperation': 'src/types/MarkdownOperation.ts',

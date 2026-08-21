@@ -55,10 +55,29 @@ import {
   startupProfiler,
   translations,
 } from './util';
+import { initAutomergeWasm } from './util/automerge-wasm';
 
 // Fatal-error-only UI, loaded on demand: its FeedbackForm pulls the whole form stack
 // (react-ui-form, editor, pickers) which must stay out of the static boot graph.
 const ResetDialog = lazy(() => import('./components').then((module) => ({ default: module.ResetDialog })));
+
+/**
+ * Startup deadline override, in SECONDS (`VITE_DX_STARTUP_TIMEOUT=2`).
+ *
+ * Exists to exercise the deadline itself: shortening it does not fake a stall, it moves the line
+ * that startup has genuinely not crossed yet, so the real path runs with real work behind it. Dev
+ * only — in production the deadline is fatal, and a shorter one would just fail a boot sooner.
+ * Seconds rather than milliseconds because it is typed by hand.
+ */
+const startupTimeout = (() => {
+  if (!import.meta.env.DEV) {
+    return undefined;
+  }
+  const seconds = Number(import.meta.env.VITE_DX_STARTUP_TIMEOUT);
+  // The CONVERTED value is checked, not the input: 1e308 is finite and 1e308 * 1_000 is not.
+  const timeout = seconds * 1_000;
+  return Number.isFinite(timeout) && timeout > 0 ? timeout : undefined;
+})();
 
 // Injected by the `define` block in vite.config.ts; '' in production builds.
 declare const __DX_DEV_SERVER_BOOT_ID__: string;
@@ -70,6 +89,8 @@ declare global {
 
   interface ImportMetaEnv {
     DEV: string;
+    /** Startup deadline override in SECONDS, dev only — see `startupTimeout` below. */
+    VITE_DX_STARTUP_TIMEOUT?: string;
   }
 
   // Debug hook: run `downloadLogs()` from devtools to save buffered logs (same as Reset dialog).
@@ -183,15 +204,15 @@ const main = async () => {
   profiler?.mark('dynamic-imports:start');
   bootStatus('Loading framework…');
 
-  // Load these in parallel; HTTP/2 multiplexes the four chunks and even on
-  // local-disk the parser can interleave parses.
-  const [{ Config, defs, SaveConfig }, { Client, createClientServices }, { Migrations }, { __COMPOSER_MIGRATIONS__ }] =
-    await Promise.all([
-      import('@dxos/config'),
-      import('@dxos/react-client'),
-      import('@dxos/migrations'),
-      import('./migrations'),
-    ]);
+  // Load these in parallel; HTTP/2 multiplexes the three chunks and even on
+  // local-disk the parser can interleave parses. The wasm init rides the same wave: it must
+  // complete before anything touches automerge (slim entrypoints — see util/automerge-wasm.ts).
+  const [{ Config, defs, SaveConfig }, { Client, createClientServices }, AppMigrations] = await Promise.all([
+    import('@dxos/config'),
+    import('@dxos/react-client'),
+    import('@dxos/app-toolkit/AppMigrations'),
+    initAutomergeWasm(),
+  ]);
 
   profiler?.mark('dynamic-imports:end');
   profiler?.measure('dynamic-imports', 'dynamic-imports:start', 'dynamic-imports:end');
@@ -217,7 +238,7 @@ const main = async () => {
   };
   (window as any).composer = { profiler, otel };
 
-  Migrations.define(APP_KEY, __COMPOSER_MIGRATIONS__);
+  AppMigrations.define();
 
   profiler?.mark('config:start');
   bootStatus('Reading configuration…');
@@ -439,13 +460,14 @@ const main = async () => {
     logStore,
     onFatalError: (error) => raiseFatalError(error),
 
-    isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
+    // Strictly the `dev` cloud environment (not preview) or a local `DX_DEV=true` opt-in, so a plain
+    // local `serve` keeps the lean default plugin set (see `getDefaults` in plugin-defs.tsx).
+    isDev: config.values.runtime?.app?.env?.DX_ENVIRONMENT === 'dev' || isTrue(config.values.runtime?.app?.env?.DX_DEV),
     isLocal: !isTauri && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
     isPwa,
     isTauri,
     isPopover,
     isMobile,
-    isLabs: isTrue(config.values.runtime?.app?.env?.DX_LABS),
     isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
   };
 
@@ -567,6 +589,9 @@ const main = async () => {
       // so the gap between `Startup` activated and `<Placeholder>` dismissed is at least 2× debounce.
       // The boot loader covers the pre-React phase, so we don't need a longer fade to hide a flash.
       debounce: 200,
+      // Shortened only to exercise the deadline (`VITE_DX_STARTUP_TIMEOUT=2` puts the loader's
+      // stalled offer two seconds in). `undefined` leaves `useApp` on its own 30s default.
+      timeout: startupTimeout,
     });
 
     // Rendered instead of `App`, not thrown: `Main` sits above the app-level error boundary, so a

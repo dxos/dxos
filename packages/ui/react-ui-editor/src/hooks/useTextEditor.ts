@@ -74,15 +74,14 @@ export const useTextEditor = (
     if (parentRef.current) {
       log('create', { id, instanceId, doc: initialValue?.length ?? 0 });
 
+      // Only records whether an explicit selection governs, so that `selectionEnd` defers to it; the
+      // effect below applies it. `!== undefined`, since an explicit `{ anchor: 0 }` is a selection.
+      const length = (doc ?? initialValue)?.length ?? 0;
       let initialSelection;
-      if (selection?.anchor && initialValue?.length) {
-        if (selection.anchor <= initialValue.length && (selection?.head ?? 0) <= initialValue.length) {
+      if (selection?.anchor !== undefined && length) {
+        if (selection.anchor <= length && (selection?.head ?? 0) <= length) {
           initialSelection = selection;
         }
-      } else if (selectionEnd && selection === undefined) {
-        const index = initialValue?.indexOf('\n');
-        const anchor = !index || index === -1 ? 0 : index;
-        initialSelection = { anchor };
       }
 
       // https://codemirror.net/docs/ref/#state.EditorStateConfig
@@ -110,9 +109,7 @@ export const useTextEditor = (
       // Move to end of line after document loaded (unless selection is specified).
       if (selectionEnd && !initialSelection) {
         const { to } = view.state.doc.lineAt(0);
-        if (to) {
-          view.dispatch({ selection: { anchor: to } });
-        }
+        view.dispatch({ selection: { anchor: to } });
       }
 
       setView(view);

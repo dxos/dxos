@@ -6,6 +6,7 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'AssistantSkill': 'src/skills/assistant/AssistantSkill.ts',
     'index': 'src/index.ts',
     'AssistantPlugin': 'src/AssistantPlugin.ts',
     'skills': 'src/skills/index.ts',

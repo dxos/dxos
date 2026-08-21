@@ -9,6 +9,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 
 import {
   ClientReady,
+  InvocationListener,
   Namespace,
   Observability,
   ObservabilitySettings,
@@ -32,6 +33,7 @@ import { ObservabilityCapabilities, ObservabilityOptions } from '#types';
 // matching the node/workerd variants that never contributed it.
 export const ObservabilityPlugin = Plugin.define<ObservabilityOptions.ObservabilityPluginOptions>(meta).pipe(
   Plugin.addModule(ClientReady),
+  Plugin.addModule(InvocationListener),
   Plugin.addModule(Namespace),
   Plugin.addModule(Observability),
   Plugin.addModule(ObservabilitySettings),

@@ -6,6 +6,8 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'TableSkill': 'src/skills/TableSkill.ts',
+    'TableOperationHandlerSet': 'src/operations/TableOperationHandlerSet.ts',
     'index': 'src/index.ts',
     'TablePlugin': 'src/TablePlugin.ts',
     'plugin': 'src/plugin.tsx',

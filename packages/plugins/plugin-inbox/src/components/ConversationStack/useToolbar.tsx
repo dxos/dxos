@@ -4,6 +4,7 @@
 
 import type * as Graph from '@dxos/app-graph/Graph';
 import { MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
+import { AI_ACTION_ICON } from '@dxos/ui-types';
 
 import { meta } from '#meta';
 
@@ -106,7 +107,7 @@ export const useMessageActions = ({
                 'ai-reply',
                 {
                   label: ['message-toolbar-ai-reply.menu', { ns: meta.profile.key }],
-                  icon: 'ph--sparkle--regular',
+                  icon: AI_ACTION_ICON,
                   testId: 'inbox.message.aiReply',
                 },
                 onAiReply,

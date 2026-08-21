@@ -68,6 +68,8 @@ const AUXILIARY_ENTRY = [
   'src/**/*-subprocess.{ts,tsx}',
   // Loaded via `new Worker(new URL('./x-worker.ts', import.meta.url))`, which knip does not follow.
   'src/**/*-worker.{ts,tsx}',
+  // Audio worklets, loaded via `audioWorklet.addModule(new URL('./x-processor.js', import.meta.url))`.
+  'src/**/*-processor.js',
   // Function bodies the runtime bundles by path rather than importing.
   'src/functions/**/*.{ts,tsx}',
   // Read by `dx-plugin gen`, which splices their exports into the gitignored `capabilities/gen/`

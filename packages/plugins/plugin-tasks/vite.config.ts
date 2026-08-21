@@ -6,6 +6,7 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'TasksOperationHandlerSet': 'src/operations/TasksOperationHandlerSet.ts',
     'index': 'src/index.ts',
     'TasksPlugin': 'src/TasksPlugin.ts',
     'plugin': 'src/plugin.tsx',

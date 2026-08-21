@@ -5,6 +5,8 @@
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
+import * as RoutineEvents from '@dxos/plugin-routine/RoutineEvents';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { meta } from '#meta';
@@ -48,10 +50,16 @@ export const OAuthRedirect = Capability.lazyModule(
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
 });
+export const RoutineTemplate = Capability.lazyModule(
+  'RoutineTemplate',
+  { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
+  () => import('./routine-template'),
+);
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.dialog', 'org.dxos.role.formInput'],
 });
 export const Schema = AppCapability.schema(() => import('./schema'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,

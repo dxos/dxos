@@ -7,6 +7,8 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     'index': 'src/index.ts',
+    'Binding': 'src/Binding.ts',
+    'ConnectorAuth': 'src/ConnectorAuth.ts',
     'ConnectorPlugin': 'src/ConnectorPlugin.ts',
     'capabilities': 'src/capabilities/index.ts',
     'capabilities.workerd': 'src/capabilities/gen/workerd.ts',
@@ -17,6 +19,8 @@ export default defineConfig({
     'meta': 'src/meta.ts',
     'operations': 'src/operations/index.ts',
     'plugin': 'src/plugin.ts',
+    'skills': 'src/skills/index.ts',
+    'ConnectorsSkill': 'src/skills/ConnectorsSkill.ts',
     'translations': 'src/translations.ts',
     'ConnectorAnnotations': 'src/types/ConnectorAnnotations.ts',
     'ConnectorSpec': 'src/types/ConnectorSpec.ts',

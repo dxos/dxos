@@ -99,6 +99,7 @@ export const SpacesReady = Capability.lazyModule(
   },
   () => import('./spaces-ready'),
 );
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const SpaceState = Capability.lazyModule(
   'SpaceState',
   {
@@ -107,12 +108,14 @@ export const SpaceState = Capability.lazyModule(
   },
   () => import('./state'),
 );
+export const ObservabilityMappings = AppCapability.observabilityMappings(() => import('./observability-mappings'), {
+  props: (options: SpaceSchema.SpacePluginOptions) => ({ observability: options.observability }),
+});
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'), {
   environments: ['node'],
   provides: [SpaceOperationConfig],
   props: (options: SpaceSchema.SpacePluginOptions) => ({
     createInvitationUrl: makeCreateInvitationUrl(options),
-    observability: options.observability,
   }),
 });
 export const Translations = AppCapability.translations([
