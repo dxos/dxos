@@ -1,5 +1,5 @@
 ---
-name: dxos-skills
+name: skills
 description: >-
   Guide for creating and integrating Skills in DXOS. Use when adding
   skills to plugins, wiring operations as tools, structuring skill
@@ -8,7 +8,7 @@ description: >-
 
 # DXOS Skills
 
-Skills define AI toolkits for a domain (e.g. markdown, kanban). They combine **operation definitions** (for tool schemas) with **operation handlers** (for runtime execution). See the operations skill (`.cursor/skills/operations/SKILL.md`) for defining operations.
+Skills define AI toolkits for a domain (e.g. markdown, kanban). They combine **operation definitions** (for tool schemas) with **operation handlers** (for runtime execution). See the operations skill (`../operations/SKILL.md`) for defining operations.
 
 ## Skill definition
 
@@ -20,7 +20,7 @@ A skill has three parts:
 | `operations` | `OperationHandlerSet.OperationHandlerSet` | Handler set for runtime invocation.                 |
 | `make`       | `() => Skill.Skill`                       | Factory that creates the Skill instance with tools. |
 
-Example (see `packages/plugins/plugin-markdown/src/skills/markdown-skill.ts`):
+Example (see `packages/plugins/plugin-markdown/src/skills/MarkdownSkill.ts`):
 
 ```ts
 import { type AppCapabilities } from '@dxos/app-toolkit';
@@ -114,7 +114,7 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
 
 ## Testing with AssistantTestLayer
 
-Use `AssistantTestLayer` from `@dxos/assistant/testing` to test operations and AI flows that use skills. Operation definitions and `OperationHandlerSet` wiring follow the same patterns as production code (see `.cursor/skills/operations/SKILL.md`).
+Use `AssistantTestLayer` from `@dxos/assistant/testing` to test operations and AI flows that use skills. Operation definitions and `OperationHandlerSet` wiring follow the same patterns as production code (see `../operations/SKILL.md`).
 
 ```ts
 import { AssistantTestLayer } from '@dxos/assistant/testing';

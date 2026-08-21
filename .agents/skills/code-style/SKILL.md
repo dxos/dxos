@@ -1,5 +1,5 @@
 ---
-name: dxos-code-style
+name: code-style
 description: >-
   DXOS TypeScript authoring conventions. Use when writing or refactoring code —
   namespace-export packages, internal module imports, class member ordering,

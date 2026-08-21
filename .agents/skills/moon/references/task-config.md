@@ -1,3 +1,5 @@
+<!-- skill-refs: ignore — vendored upstream docs; paths are illustrative, not repo paths. -->
+
 # Moon Task Configuration Reference
 
 Complete reference for task configuration in moon.yml and .moon/tasks.yml.

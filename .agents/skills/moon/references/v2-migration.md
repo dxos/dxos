@@ -1,3 +1,5 @@
+<!-- skill-refs: ignore — vendored upstream docs; paths are illustrative, not repo paths. -->
+
 # Moon v2 Migration Reference
 
 Complete guide for migrating from moon v1 to v2.

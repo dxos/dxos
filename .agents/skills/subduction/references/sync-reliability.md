@@ -139,7 +139,9 @@ waiting for recv-drain before flushing) turns that into a deterministic stall.
 
 ## Reproduce / validate
 
-`packages/services/edge/test/stress/edge-subduction-sync.test.ts`, gated by
+The stress suite lived at `packages/services/edge/test/stress/edge-subduction-sync.test.ts` and no <!-- skill-refs: ignore-line -->
+longer exists in this repo (the nearest in-repo subduction test is
+`packages/core/echo/echo-host/src/edge/echo-edge-subduction-replicator.test.ts`). It was gated by
 `DX_TEST_TAGS=sync-stress`. Point at a deployment with `EDGE_URL`; scale with `DOC_COUNT`; give
 `SYNC_TIMEOUT` room for a heal cycle (≥180 s at ≥1000 docs). The edge worker is bundled from
 `out/main.js` — rebuild (`pnpm -s bundle`) after worker edits or you test stale code. Any

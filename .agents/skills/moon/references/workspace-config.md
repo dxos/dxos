@@ -1,3 +1,5 @@
+<!-- skill-refs: ignore — vendored upstream docs; paths are illustrative, not repo paths. -->
+
 # Moon Workspace Configuration Reference
 
 Complete reference for `.moon/workspace.yml` configuration.

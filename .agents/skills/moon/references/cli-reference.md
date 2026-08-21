@@ -1,3 +1,5 @@
+<!-- skill-refs: ignore — vendored upstream docs; paths are illustrative, not repo paths. -->
+
 # Moon CLI Reference
 
 Complete reference for all moon CLI commands.

@@ -47,7 +47,8 @@ need a domain widget, check for a `react-ui-<domain>` package before building on
 ## Theme tokens
 
 Color/spacing tokens are **plain Tailwind classes** generated from CSS custom properties. The source of
-truth is [`packages/ui/ui-theme/src/css/theme/semantic.css`](../../../packages/ui/ui-theme/src/css/theme/semantic.css)
+truth is the files under [`packages/ui/ui-theme/src/css/theme/`](../../../packages/ui/ui-theme/src/css/theme/)
+(`palette.css`, `roles.css`, `surfaces.css`, `styles.css` define the `--color-*` properties)
 and the per-component files under [`packages/ui/ui-theme/src/css/components/`](../../../packages/ui/ui-theme/src/css/components/).
 
 **The rule:** every `--color-<name>` custom property yields the utilities `bg-<name>`, `text-<name>`,

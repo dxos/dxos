@@ -408,7 +408,7 @@ Practical consequences:
 
 - Declare each spec's true `requires` — there is no penalty for an unsatisfied requirement when nobody is asking for what the spec provides.
 - Don't bundle unrelated services in one spec just to share a factory. A spec is the unit of pruning; bundling forces all-or-nothing.
-- A failure for tag `X` will report `ServiceNotAvailable: X`, not the missing transitive dependency. If you need to debug WHY a spec was dropped, check the `pruned layer specs with unsatisfied requirements` log line emitted by `Slice.init` (`packages/core/compute-runtime/src/LayerStack.ts`).
+- A failure for tag `X` will report `ServiceNotAvailable: X`, not the missing transitive dependency. If you need to debug WHY a spec was dropped, check the `pruned layer specs with unsatisfied requirements` log line emitted by `Slice.init` (`packages/core/compute/compute-runtime/src/LayerStack.ts`).
 
 See the `process slice initialises even when an unrelated process-affinity spec has unsatisfied requirements` test in `LayerStack.test.ts` for the canonical scenario.
 

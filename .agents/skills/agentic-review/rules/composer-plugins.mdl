@@ -1,0 +1,37 @@
+---
+id: org.dxos.review.composer-plugins
+name: ComposerPluginRules
+version: 0.1.0
+---
+
+Review rules promoted from `.agents/skills/composer-plugins/MEMORY.md` — recurring
+session-logged corrections that are mechanically checkable. When a MEMORY.md bullet
+stabilizes into a pattern a subagent can verify, it belongs here so the agentic-review
+harness enforces it on every run.
+
+## Extensions
+
+| Term   | URI                   |
+| ------ | --------------------- |
+| `rule` | org.dxos.mdl.rule@1.0 |
+
+## Rules
+
+```mdl
+rule no-capability-hooks-in-components: Components must not call capability hooks
+  Files under a plugin's `src/components/` must not call capability hooks —
+  `useCapability`, `useCapabilities`, `useAppGraph`, `useOperationInvoker`, or
+  `useProcessManagerRuntime`. All of them throw without a `PluginManager`, which
+  makes the component unmountable in storybook. Resolve the capability once in
+  the container (under `src/containers/`) and thread the resolved value down as
+  a prop or via the composite's `Root` context; per-item helper hooks take the
+  resolved value as a parameter. Do not flag files under `src/containers/` or
+  hooks that merely receive an already-resolved invoker/runtime as an argument.
+  Known pre-existing violations exist in plugin-inbox; still flag them.
+  scope: repo
+  files:
+    - packages/plugins/**/src/components/**/*.ts
+    - packages/plugins/**/src/components/**/*.tsx
+  grep: useCapability|useCapabilities|useAppGraph|useOperationInvoker|useProcessManagerRuntime
+  severity: warn
+```

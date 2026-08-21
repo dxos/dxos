@@ -1,3 +1,5 @@
+<!-- skill-refs: ignore — historical record; paths were correct at time of writing. -->
+
 # Context Propagation Audit
 
 Audit of `ctx: Context` propagation compliance for distributed tracing (DX-868 / DX-765).

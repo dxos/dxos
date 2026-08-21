@@ -1,3 +1,5 @@
+<!-- skill-refs: ignore — historical record; paths were correct at time of writing. -->
+
 # Composer load regression: Automerge write amplification in TagIndex
 
 **Status:** Investigated (forensics) · Fix not yet shipped  

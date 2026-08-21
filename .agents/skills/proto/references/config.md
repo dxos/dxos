@@ -1,3 +1,5 @@
+<!-- skill-refs: ignore — vendored upstream docs; paths are illustrative, not repo paths. -->
+
 # Proto Configuration Reference
 
 Complete reference for `.prototools` configuration.

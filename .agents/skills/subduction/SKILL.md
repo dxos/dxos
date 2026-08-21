@@ -1,5 +1,5 @@
 ---
-name: subduction-policy
+name: subduction
 description: Reference for `SubductionPolicy` (the four hooks `authorizeConnect`, `authorizeFetch`, `authorizePut`, `filterAuthorizedFetch` passed via `Subduction.hydrate(..., policy)` or `new Repo({ subductionPolicy })`). Use when designing client-side access control over Subduction-replicated data, choosing which hook to deny in, or debugging why a doc did or did not replicate.
 ---
 

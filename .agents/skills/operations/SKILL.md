@@ -1,5 +1,5 @@
 ---
-name: dxos-operations
+name: operations
 description: >-
   Guide for defining and implementing Operations in DXOS. Use when creating
   operation definitions, writing handlers, structuring operation modules,
@@ -192,7 +192,7 @@ export default MyOp.pipe(
 
 ## File Structure
 
-For deployable operations, follow this layout (see `packages/core/functions/src/example/` for reference):
+For deployable operations, follow this layout (see `packages/plugins/plugin-chess/src/operations/` for reference):
 
 ```
 my-operations/
@@ -243,7 +243,7 @@ const formatResult = (n: number) => String(n);
 
 ### `index.ts` — Barrel with lazy handler set
 
-Export definitions and create a keyed handler set. See `packages/plugins/plugin-markdown/src/skills/functions/` for reference.
+Export definitions and create a keyed handler set. See `packages/plugins/plugin-chess/src/operations/` for reference.
 
 ```ts
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';

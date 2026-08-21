@@ -1,6 +1,7 @@
 ---
 name: migrate-oxfmt
 description: Guide for migrating a project from Prettier or Biome to Oxfmt. Use when asked to migrate, convert, or switch a JavaScript/TypeScript project's formatter from Prettier or Biome to Oxfmt.
+disable-model-invocation: true
 ---
 
 This skill guides you through migrating a JavaScript/TypeScript project from Prettier or Biome to [Oxfmt](https://oxc.rs/docs/guide/usage/formatter).

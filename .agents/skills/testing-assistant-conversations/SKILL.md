@@ -5,7 +5,7 @@ description: Test assistant conversations, agents, and skills using AssistantTes
 
 # Testing assistant conversations, agents, and skills
 
-This guide matches patterns in `packages/core/assistant-toolkit` and related packages (`assistant`, `plugin-markdown`, `plugin-assistant`). For **regenerating** model fixtures only, prefer the focused skill `regenerate-model-fixture`.
+This guide matches patterns in `packages/core/compute/assistant-toolkit` and related packages (`assistant`, `plugin-markdown`, `plugin-assistant`). For **regenerating** model fixtures only, prefer the focused skill `regenerate-model-fixture`.
 
 ## AssistantTestLayer
 
@@ -16,12 +16,12 @@ Import from `@dxos/assistant/testing`.
 - **AI** — `TestAiService` (memoized by default; see below), default model `ai.claude.model.claude-opus-4-6`.
 - **Tool execution** — `ToolExecutionServices` and `OpaqueToolkit.providerLayer`.
 - **Skill registry** — `Skill.RegistryService` seeded with optional `skills`.
-- **Operations** — `operationHandlers` passed to `OperationHandlerSet.provide(...)`; `ProcessManager` wires `Operation.Service` for tool execution (see `AssistantTestLayer` in `packages/core/assistant/src/testing/layer.ts`).
+- **Operations** — `operationHandlers` passed to `OperationHandlerSet.provide(...)`; `ProcessManager` wires `Operation.Service` for tool execution (see `AssistantTestLayer` in `packages/core/compute/agent-runtime/src/testing/assistant-test-layer.ts`).
 - **ECHO test DB** — `TestDatabaseLayer` with `types` you register.
 - **Credentials** — `CredentialsService.configuredLayer(credentials)` (often `[]` in tests).
 - **Tracing** — `noop` | `console` | `pretty`.
 
-Use **`AssistantTestLayerWithTriggers`** when the scenario uses scheduled triggers (manual time control, in-memory trigger state). Example: `packages/core/assistant-toolkit/src/skills/project/skill.test.ts`.
+Use **`AssistantTestLayerWithTriggers`** when the scenario uses scheduled triggers (manual time control, in-memory trigger state). Example: `packages/core/compute/assistant-toolkit/src/skills/project/skill.test.ts`.
 
 ### Important options
 
@@ -35,7 +35,7 @@ Use **`AssistantTestLayerWithTriggers`** when the scenario uses scheduled trigge
 | `tracing: 'pretty'`           | Useful locally to see tool traces.                                                                                                                                                                                                                                        |
 | `disableLlmMemoization: true` | Skips memo wrapper; use only when you fully stub `AiService` / `LanguageModel` and do not need recorded conversations.                                                                                                                                                    |
 
-Implementation reference: `packages/core/assistant/src/testing/layer.ts`.
+Implementation reference: `packages/core/compute/agent-runtime/src/testing/assistant-test-layer.ts`.
 
 ## Model memoization and `DX_UPDATE_MODEL_FIXTURES`
 
@@ -85,7 +85,7 @@ The default `aiServicePreset: 'direct'` calls the Anthropic API directly. Set `D
 (via `pnpm -ws 1p-credentials` or `export DX_ANTHROPIC_API_KEY=sk-ant-...`) when regenerating the
 memoized cache with `DX_UPDATE_MODEL_FIXTURES=1`. Use `DX_ANTHROPIC_API_KEY`, not `ANTHROPIC_API_KEY`
 (the latter breaks Claude Code). Normal cached runs need no key. Works for both direct operation
-invocations and full conversation tests. Example: `packages/core/assistant-toolkit/src/skills/skill-manager/skill.test.ts`.
+invocations and full conversation tests. Example: `packages/core/compute/assistant-toolkit/src/skills/skill-manager/skill.test.ts`.
 
 ## General test structure
 
@@ -109,7 +109,7 @@ Two common patterns:
 
 1. **Registry at layer build** — pass `skills: [SomeSkill.make(), ...]` into `AssistantTestLayer` when services read from the registry.
 
-2. **Runtime bind** — `addSkills` from `packages/core/assistant-toolkit/src/skills/testing.ts` loads definition `make()` objects into the DB and calls `AiContextService.bindContext({ skills: [...] })`. Used with `AiSessionService.layerNewFeed().pipe(Layer.provideMerge(TestLayer))` in memory skill tests.
+2. **Runtime bind** — `addSkills` from `packages/core/compute/assistant-toolkit/src/skills/testing.ts` loads definition `make()` objects into the DB and calls `AiContextService.bindContext({ skills: [...] })`. Used with `AiSessionService.layerNewFeed().pipe(Layer.provideMerge(TestLayer))` in memory skill tests.
 
 You still pass the skill’s **`operations`** (handler set) into `AssistantTestLayer({ operationHandlers: ... })` so tools actually execute.
 

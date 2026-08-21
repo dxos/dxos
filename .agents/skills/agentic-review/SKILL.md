@@ -8,6 +8,8 @@ description: >-
   the agentic review, list unresolved review issues, review a branch/PR against
   the repo's `.mdl` rules, or check a diff for known anti-patterns. For the
   built-in bug/quality passes use `/code-review` instead.
+disable-model-invocation: true
+argument-hint: '[--pr-only] [--base=<ref>]'
 ---
 
 # Agentic Review
@@ -189,6 +191,26 @@ A document that uses the `rule` type should declare it in an `## Extensions`
 section (`` `rule` `` → `org.dxos.mdl.rule@1.0`); see
 `rules/non-negotiables.mdl` for a complete example with an inline `ext`
 definition.
+
+**Where rules come from.** Besides hand-authored non-negotiables, promote
+recurring corrections out of skill `MEMORY.md` files: when a session-logged
+lesson stabilizes into "flag pattern X unless Y" — a greppable pattern plus a
+judgment call — encode it as a rule so the harness enforces it instead of
+relying on an agent re-reading the memory file. `rules/composer-plugins.mdl`
+is the exemplar; mark the promoted MEMORY bullet with `(→ rule <id>)`.
+
+## Spec conformance (second axis)
+
+The rules above check the code against known conventions. When the change has an
+originating spec — a Linear issue, the PR description, or the project's
+`DESIGN.md`/`TASKS.md` entry — optionally run one extra subagent as a second
+axis: does the diff do what was asked? Prompt it with the spec text and the diff
+(or the file list from prepare), and have it report three things only: asked-for
+behavior that is missing, behavior present that was not asked for (silent scope
+creep), and direct contradictions of the spec. This pass is not wired into the
+prepare/finalize scripts — report its findings in the step-4 summary alongside
+the REVIEW.md counts, clearly labeled as spec findings rather than rule
+diagnostics.
 
 ## Notes
 

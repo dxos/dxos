@@ -1,7 +1,7 @@
 # Layer Composition Style Guide
 
 Conventions for composing Effect `Layer` stacks, primarily test environments. Reference example:
-`packages/core/compute/functions-runtime/src/triggers/trigger-dispatcher.test.ts` (`TestLayer`).
+`packages/core/compute/compute-runtime/src/triggers/trigger-dispatcher.test.ts` (`TestLayer`).
 
 ## 1. One stack per environment — variations are options, not copies
 

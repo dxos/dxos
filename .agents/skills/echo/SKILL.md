@@ -1,5 +1,5 @@
 ---
-name: dxos-echo
+name: echo
 description: >-
   Guide for ECHO (DXOS object graph / local-first DB). Use when adding or
   changing queries, filters, schema types, Ref/DXN handling, Database service
@@ -8,30 +8,30 @@ description: >-
 
 # ECHO (DXOS)
 
-ECHO is the typed object graph backed by Automerge: spaces expose a **`Database`** you mutate with reactive proxies and query with **Filter** / **Query** ASTs. Core types and both imperative and Effect-style DB access live in **`@dxos`**. Client wiring (sync, hypergraph, `EchoClient`) is in **`@dxos/echo-db`**.
+ECHO is the typed object graph backed by Automerge: spaces expose a **`Database`** you mutate with reactive proxies and query with **Filter** / **Query** ASTs. Core types and both imperative and Effect-style DB access live in **`@dxos`**. Client wiring (sync, hypergraph, `EchoClient`) is in **`@dxos/echo-client`**.
 
-For **Effect** patterns (Layer, `Effect.gen`, services), read [.cursor/skills/effect/SKILL.md](../effect/SKILL.md).
+For **Effect** patterns (Layer, `Effect.gen`, services), read the [effect skill](../effect/SKILL.md).
 
 ## Packages (where code lives)
 
-| Package                                                       | Role                                                                                                       |
-| ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| [`@dxos/echo`](../../../packages/core/echo/echo/)             | Types, `Database` interface, Effect `Database.Service`, Query/Filter/Ref/Type/Obj, schema registry surface |
-| [`@dxos/echo-db`](../../../packages/core/echo/echo-db/)       | `EchoClient`, `EchoHost`, `EchoDatabaseImpl`, hypergraph, migrations, sync helpers                         |
-| [`@dxos/echo-react`](../../../packages/core/echo/echo-react/) | `useQuery`, `useObject`, `useSchema`                                                                       |
-| [`@dxos/echo-host`](../../../packages/core/echo/echo-host/)   | Host-side pipeline (`EchoHost`, indexes, services)                                                         |
+| Package                                                         | Role                                                                                                       |
+| --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| [`@dxos/echo`](../../../packages/core/echo/echo/)               | Types, `Database` interface, Effect `Database.Service`, Query/Filter/Ref/Type/Obj, schema registry surface |
+| [`@dxos/echo-client`](../../../packages/core/echo/echo-client/) | `EchoClient`, `DatabaseImpl`, hypergraph, migrations, sync helpers                                         |
+| [`@dxos/echo-react`](../../../packages/core/echo/echo-react/)   | `useQuery`, `useObject`, `useSchema`                                                                       |
+| [`@dxos/echo-host`](../../../packages/core/echo/echo-host/)     | Host-side pipeline (`EchoHost`, indexes, services)                                                         |
 
 ## Obtaining a `Database`
 
-- **App / client**: `EchoClient.constructDatabase(...)` returns an implementation of [`Database`](../../../packages/core/echo/echo/src/Database.ts) (see [`EchoDatabaseImpl`](../../../packages/core/echo/echo-db/src/proxy-db/database.ts)).
+- **App / client**: `EchoClient.constructDatabase(...)` returns an implementation of [`Database`](../../../packages/core/echo/echo/src/Database.ts) (see [`DatabaseImpl`](../../../packages/core/echo/echo-client/src/proxy-db/database.ts)).
 - **Plugins / runtime**: often `space.db` (or equivalent) after space is open—same interface.
-- **Tests**: [`EchoTestPeer`](../../../packages/core/echo/echo-db/src/testing/echo-test-builder.ts) builds a client + DB for isolated runs.
+- **Tests**: [`EchoTestPeer`](../../../packages/core/echo/echo-client/src/testing/echo-test-builder.ts) builds a client + DB for isolated runs.
 
 ## API reference (short)
 
 ### Imperative / non-Effect (`Database` instance)
 
-Use the object from `echo-db` / space. Primary entry: [`Database` interface](../../../packages/core/echo/echo/src/Database.ts) (`add`, `remove`, `query`, `getObjectById`, `makeRef`, `flush`, `graph`, `schemaRegistry`).
+Use the object from `echo-client` / space. Primary entry: [`Database` interface](../../../packages/core/echo/echo/src/Database.ts) (`add`, `remove`, `query`, `getObjectById`, `makeRef`, `flush`, `graph`, `schemaRegistry`).
 
 | Area          | Notes                                                                                                                                  |
 | ------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
@@ -41,7 +41,7 @@ Use the object from `echo-db` / space. Primary entry: [`Database` interface](../
 | **Schema**    | `db.schemaRegistry.query(...)`, registration via graph/registry APIs used in your stack.                                               |
 | **Refs**      | [`Ref`](../../../packages/core/echo/echo/src/Ref.ts), [`DXN`](../../../packages/core/echo/echo/src/index.ts) export from `@dxos/echo`. |
 
-[`EchoDatabase`](../../../packages/core/echo/echo-db/src/proxy-db/database.ts) extends this with sync/migrations (`getSyncState`, `runMigrations`, events).
+[`EchoDatabase`](../../../packages/core/echo/echo-client/src/proxy-db/database.ts) extends this with sync/migrations (`getSyncState`, `runMigrations`, events).
 
 ### Effect (`@dxos/echo/Database` module)
 
@@ -163,5 +163,4 @@ export const make = (props: Obj.MakeProps<typeof Person>): Type.InstanceType<typ
 
 ## Related docs in-repo
 
-- Effect runtime patterns: [.cursor/skills/effect/SKILL.md](../effect/SKILL.md).
-- DXOS SDK notes: [.agents/sdk/](../../../.agents/sdk/) (follow project conventions there).
+- Effect runtime patterns: [effect skill](../effect/SKILL.md).
