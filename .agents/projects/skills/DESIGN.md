@@ -260,6 +260,32 @@ factored out, ask whether it still earns its place.
 
 Details: `experiments/factoring-out/RESULTS.md`.
 
+### The protocol we should have used from the start
+
+Testing where a rule lives is meaningless until the rule is shown to do
+something. The order is: find a scenario where the control fails, show the
+`CLAUDE.md` bullet fixes it, and only then ask whether a self-triggering skill
+matches. Experiments 1, 4 and 5 all skipped to the last step and could not have
+produced an answer.
+
+### Experiment 6: the no-cast Non-negotiable does not work
+
+Applying that protocol to the one scenario with a failing baseline (adding a
+function to a cast-dense file, real fixture, real tools): the control violated
+8/8, and the rule as a `CLAUDE.md` bullet also violated 8/8. Fisher p = 1.0. The
+wording was strengthened to name this exact failure ("matching a file's existing
+style is not a reason to add another one") and still changed nothing.
+
+So 1,121 `as any` in tree and 5,230 `no-casts` review findings are not an
+instruction being occasionally ignored. They are what a rule with no effect looks
+like. The placement question cannot be asked of this rule, because there is
+nothing to preserve or lose by moving it.
+
+This makes Experiment 2, stated rule versus mechanically checked rule, the only
+remaining untested lever, and the one most likely to find something that works.
+
+Details: `experiments/does-the-rule-work/RESULTS.md`.
+
 ## Deferred frictions
 
 Left open deliberately. The rules are scoped to prose we write or substantially

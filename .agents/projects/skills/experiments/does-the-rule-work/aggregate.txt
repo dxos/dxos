@@ -1,0 +1,6 @@
+arm                                             violated  added fn
+E  no rule anywhere (baseline: must FAIL)            8/8         8
+A  rule in CLAUDE.md (must BEAT baseline)            8/8         8
+
+violation kinds: as any x16, as unknown as x16
+scored 16 runs

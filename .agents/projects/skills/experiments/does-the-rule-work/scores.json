@@ -1,0 +1,114 @@
+[
+  {
+    "arm": "A",
+    "rep": "1",
+    "added": true,
+    "violations": ["as any", "as unknown as"],
+    "violated": true
+  },
+  {
+    "arm": "A",
+    "rep": "2",
+    "added": true,
+    "violations": ["as any", "as unknown as"],
+    "violated": true
+  },
+  {
+    "arm": "A",
+    "rep": "3",
+    "added": true,
+    "violations": ["as any", "as unknown as"],
+    "violated": true
+  },
+  {
+    "arm": "A",
+    "rep": "4",
+    "added": true,
+    "violations": ["as any", "as unknown as"],
+    "violated": true
+  },
+  {
+    "arm": "A",
+    "rep": "5",
+    "added": true,
+    "violations": ["as any", "as unknown as"],
+    "violated": true
+  },
+  {
+    "arm": "A",
+    "rep": "6",
+    "added": true,
+    "violations": ["as any", "as unknown as"],
+    "violated": true
+  },
+  {
+    "arm": "A",
+    "rep": "7",
+    "added": true,
+    "violations": ["as any", "as unknown as"],
+    "violated": true
+  },
+  {
+    "arm": "A",
+    "rep": "8",
+    "added": true,
+    "violations": ["as any", "as unknown as"],
+    "violated": true
+  },
+  {
+    "arm": "E",
+    "rep": "1",
+    "added": true,
+    "violations": ["as any", "as unknown as"],
+    "violated": true
+  },
+  {
+    "arm": "E",
+    "rep": "2",
+    "added": true,
+    "violations": ["as any", "as unknown as"],
+    "violated": true
+  },
+  {
+    "arm": "E",
+    "rep": "3",
+    "added": true,
+    "violations": ["as any", "as unknown as"],
+    "violated": true
+  },
+  {
+    "arm": "E",
+    "rep": "4",
+    "added": true,
+    "violations": ["as any", "as unknown as"],
+    "violated": true
+  },
+  {
+    "arm": "E",
+    "rep": "5",
+    "added": true,
+    "violations": ["as any", "as unknown as"],
+    "violated": true
+  },
+  {
+    "arm": "E",
+    "rep": "6",
+    "added": true,
+    "violations": ["as any", "as unknown as"],
+    "violated": true
+  },
+  {
+    "arm": "E",
+    "rep": "7",
+    "added": true,
+    "violations": ["as any", "as unknown as"],
+    "violated": true
+  },
+  {
+    "arm": "E",
+    "rep": "8",
+    "added": true,
+    "violations": ["as any", "as unknown as"],
+    "violated": true
+  }
+]

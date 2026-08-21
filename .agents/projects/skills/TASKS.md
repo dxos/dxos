@@ -155,10 +155,24 @@ Designs in `DESIGN.md`.
       this scenario was measured without tools and with the broken regex, so it
       was artifact. Worth auditing the other Non-negotiables the same way before
       moving any of them.
-- [ ] **Find a task where the rule actually bites.** Every discriminating signal
-      so far turned out to be scorer artifact. Until a scenario exists where the
-      control genuinely fails, no placement question about this rule can be
-      answered.
+- [x] **Experiment 6: does the no-cast rule work at all?** NO. Correct protocol
+      applied for the first time: establish a failing baseline, then show the
+      `CLAUDE.md` bullet fixes it, and only then test a skill. Step 1 passed
+      (control 8/8 violated on a cast-dense fixture with real tools). **Step 2
+      failed completely: the bullet gives 8/8, Fisher p=1.0, zero effect**, even
+      with wording written to address this exact case. The placement question is
+      therefore moot for this rule. Writeup in `experiments/does-the-rule-work/`.
+- [ ] **Experiment 2 (stated versus checked) is now the important one.** Prose
+      does not work here in any placement. `agentic-review` already has a
+      `no-casts` rule that finds these reliably. Whether a mechanical check
+      changes what gets written is the only untested lever left.
+- [ ] **Re-run Experiment 6 against a clean fixture.** The fixture carried six
+      casts in three functions. Does the rule work when the surrounding file is
+      clean, i.e. is local style the whole effect?
+- [ ] **Audit the other Non-negotiables the same way.** Two are now measured:
+      the no-shim rule has no failing baseline (Experiment 5), and the no-cast
+      rule has a failing baseline the rule does not fix (Experiment 6). The rest
+      are unexamined.
 - [ ] **Close out the `principle-*` question.** Run 2 rules out a large win for
       either our Non-negotiables or their principle skills; both failed the
       local-style task. Adopt principle skills only if a cheaper motivation than
