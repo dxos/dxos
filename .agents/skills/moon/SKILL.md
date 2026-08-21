@@ -1,6 +1,12 @@
 ---
 name: moon
-description: Running and configuring moon (the repo's build/task system). Use when running builds/tests/lints via moon run, editing moon.yml or .moon/workspace.yml, debugging task caching or the remote cache, adding tasks for a new package, or using moon query / affected detection.
+description: >-
+  Build, test, and lint anything in this repo, which all run through moon. Use when
+  a build or test does not pick up a file you added, when you need to run one test
+  file or one package's tests, when a task fails with "Could not resolve", "No
+  projects matched the filter", or a package cycle error, when editing moon.yml or
+  .moon/workspace.yml, when adding tasks for a new package, or when the remote
+  cache warns.
 ---
 
 # moon in this repo

@@ -1,11 +1,12 @@
 ---
 name: unslop
 description: >-
-  Cut AI tells from prose before it ships: PR descriptions, changesets, commit
-  bodies, README/DESIGN/TASKS docs, skill text, and design notes. Use whenever
-  writing or substantially editing prose a human will read, and as the last pass
-  before opening a PR. Pair with `technical-writing`, which owns document
-  structure and sentence rules; this skill owns the slop-pattern catalog.
+  Make writing sound human instead of AI-generated. Use whenever text reads like a
+  robot wrote it, sounds machine-generated or corporate, is padded with filler and
+  hedging, or just needs a polish pass before it ships: PR descriptions,
+  changesets, commit messages, READMEs, DESIGN.md and TASKS.md, release notes,
+  skill text, design notes. Also run it as the last pass over any prose before
+  opening a PR.
 ---
 
 # Unslop

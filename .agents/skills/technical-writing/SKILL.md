@@ -1,12 +1,11 @@
 ---
 name: technical-writing
 description: >-
-  How to structure and word any document a human reads: docs, READMEs,
-  DESIGN.md, RFCs, PR descriptions, changesets, commit messages. Layers Diátaxis
-  document modes, Google developer style, STE instruction rules, and Global
-  English syntax. Use when writing or reviewing prose, and before opening a PR.
-  Pair with `unslop`, which owns the slop-pattern catalog; for documents an
-  AGENT reads (skills, AGENTS.md), use `writing-for-agents`.
+  Structure and word documentation people can actually read. Use when writing or
+  reviewing a README, doc page, RFC, design doc, PR description, changeset or
+  commit message; when deciding what sections a document needs or how to organise
+  it; or when a sentence or paragraph is unclear, ambiguous, wordy, or hard to
+  follow on the first read.
 ---
 
 # Technical writing

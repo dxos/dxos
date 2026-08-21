@@ -1,12 +1,12 @@
 ---
 name: writing-for-agents
 description: >-
-  How to write documents an AGENT reads: skills, AGENTS.md/CLAUDE.md, and the
-  reference files they point at. Covers context pointers and trigger wording,
-  context versus cognitive load, the information hierarchy and progressive
-  disclosure, completion criteria, leading words, and pruning. Use when creating
-  or editing a skill or an instruction file. For documents a HUMAN reads, use
-  `technical-writing`.
+  Write or edit a skill, a SKILL.md, AGENTS.md, or CLAUDE.md in THIS repo. Use
+  when adding a new skill, editing an existing one, choosing frontmatter, writing
+  or fixing a description that does not trigger reliably, deciding what belongs in
+  AGENTS.md versus a skill, or splitting a document that has grown too long.
+  Encodes this repo's own conventions and measured triggering results, so prefer
+  it over generic skill-authoring guidance.
 ---
 
 # Writing for agents
