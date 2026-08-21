@@ -18,20 +18,18 @@ import { getMailboxPath } from '../paths';
 const handler: Operation.WithHandler<typeof InboxOperation.AddMailbox> = InboxOperation.AddMailbox.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
-      const target = input.target as any;
-      const object = input.object as Obj.Unknown;
-      const db = Database.isDatabase(target) ? target : Obj.getDatabase(target);
+      const { target, object } = input;
+      // The database is the runtime's, resolved from the invocation's space id, so the collection
+      // write and the binding below both run against it without a service override.
+      const { db } = yield* Database.Service;
       invariant(db, 'Database not found.');
 
-      yield* CollectionModel.add({
-        object,
-        target: Database.isDatabase(target) ? undefined : target,
-      }).pipe(Effect.provide(Database.layer(db)));
+      yield* CollectionModel.add({ object, target });
 
       // A mailbox is inert until a provider binds it, so when exactly one account is already
       // authorized for this type there is nothing for the user to choose — bind it here rather than
       // leaving a Connect menu whose single entry is the only possible answer.
-      yield* Binding.autoBind({ target: object }).pipe(Effect.provide(Database.layer(db)));
+      yield* Binding.autoBind({ target: object });
 
       yield* Operation.schedule(ObservabilityOperation.SendEvent, {
         name: 'space.object.add',

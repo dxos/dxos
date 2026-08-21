@@ -249,11 +249,7 @@ export default Capability.makeModule(
                     { db: space.db },
                     { spaceId: space.db.spaceId },
                   );
-                  yield* Operation.invoke(
-                    SpaceOperation.AddObject,
-                    { object: chat, target: space.db },
-                    { spaceId: space.db.spaceId },
-                  );
+                  yield* Operation.invoke(SpaceOperation.AddObject, { object: chat }, { spaceId: space.db.spaceId });
                   const { targets } = yield* Operation.invoke(
                     NavigationOperation.ResolveNavigationTargets,
                     { query: { uri: Obj.getURI(chat) } },

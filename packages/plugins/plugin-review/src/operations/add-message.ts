@@ -50,7 +50,7 @@ const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = Comme
         // of the two rendered lists (query results or drafts). Removing the draft first left a frame in
         // which the persisted relation was not yet queryable and the draft was gone — the comment
         // flashed out of the companion. (The render dedupes the brief draft/persisted overlap.)
-        yield* Operation.invoke(SpaceOperation.AddObject, { object: thread, target: db }, { spaceId: db.spaceId });
+        yield* Operation.invoke(SpaceOperation.AddObject, { object: thread }, { spaceId: db.spaceId });
         const { relation } = yield* Operation.invoke(
           SpaceOperation.AddRelation,
           {

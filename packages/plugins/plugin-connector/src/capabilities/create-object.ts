@@ -18,10 +18,7 @@ export default Capability.makeModule(
       inputSchema: ConnectorForm.CreateConnectionForm,
       createObject: (props: { connectorId: string }, options) =>
         Effect.gen(function* () {
-          const db = Database.isDatabase(options.target) ? options.target : Obj.getDatabase(options.target);
-          if (!db) {
-            return yield* Effect.fail(new Error('No database for create target'));
-          }
+          const { db } = options;
 
           // Read on demand (invoked from the create-object form submit, not module activation) so
           // this module doesn't need to declare a static dependency on the coordinator.

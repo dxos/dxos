@@ -38,11 +38,7 @@ const handler: Operation.WithHandler<typeof ProjectOperation.Create> = ProjectOp
         .scaffold({ name, subject })
         .pipe(Effect.provideService(Database.Service, Database.makeService(db)));
 
-      const result = yield* Operation.invoke(
-        SpaceOperation.AddObject,
-        { object: draft, target: db },
-        { spaceId: db.spaceId },
-      );
+      const result = yield* Operation.invoke(SpaceOperation.AddObject, { object: draft }, { spaceId: db.spaceId });
       invariant(Obj.instanceOf(Project.Project, result.object), 'Expected a Project.');
       const nodePath = GraphPath.getSpacePath(
         db.spaceId,
