@@ -30,8 +30,8 @@ export const WhoAmI = Tool.make('whoami', {
     displayName: Schema.optional(Schema.String),
     spaces: Schema.Array(Schema.String).annotate({
       description:
-        'Ids of the data spaces this session can operate on; the first is the default for tool ' +
-        'calls. Names and member counts come from the querySpaces operation.',
+        'Ids of the data spaces this session can operate on. None of them is a default: a call ' +
+        'that acts on a space must name one.',
     }),
   }),
   failure: McpServer.ToolFailure,
