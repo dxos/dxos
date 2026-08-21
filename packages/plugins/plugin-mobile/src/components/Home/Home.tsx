@@ -27,15 +27,9 @@ export type HomeProps = {};
  */
 export const Home = (_: HomeProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const userAccountItem = useItemsByDisposition('user-account')[0];
-  const pinnedItems = useItemsByDisposition('pin-end', true);
-  const workspaceItems = useItemsByDisposition('workspace');
+  // Profile and settings moved to the navbar's main menu; Home lists spaces only.
+  const items = useItemsByDisposition('workspace');
   useExpandPath(Node.RootId);
-
-  const items = useMemo(
-    () => [...(userAccountItem ? [userAccountItem] : []), ...pinnedItems, ...workspaceItems],
-    [userAccountItem, pinnedItems, workspaceItems],
-  );
 
   const { results, handleSearch } = useSearchListResults({
     items,

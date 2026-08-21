@@ -9,7 +9,9 @@ import { useMemo } from 'react';
 import { useCapability } from '@dxos/app-framework/ui';
 import * as Node from '@dxos/app-graph/Node';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
+import * as Operation from '@dxos/compute/Operation';
 import { invariant } from '@dxos/invariant';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
@@ -21,6 +23,7 @@ import {
   type ActionExecutor,
   type ActionGraphProps,
   createGapSeparator,
+  createLineSeparator,
   createMenuItemGroup,
   graphActions,
 } from '@dxos/react-ui-menu';
@@ -118,6 +121,46 @@ const createMobileCompanionActions = (
 };
 
 /**
+ * Builds a divider plus menu actions for the profile and pinned (e.g. settings) items that used to
+ * list alongside spaces on Home; Home now lists spaces only, so their navigation moves into the
+ * navbar's main menu, invoking the same `SwitchWorkspace` operation Home's own tiles use.
+ */
+const createMobileAccountMenuSection = (
+  graph: AppCapabilities.AppGraph['graph'],
+  get: Atom.AtomContext,
+  parentId: string,
+): Pick<ActionGraphProps, 'nodes' | 'edges'> => {
+  const connections = get(graph.connections(Node.RootId, 'child'));
+  const userAccountItem = connections.find((node) => node.properties.disposition === 'user-account');
+  const pinnedItems = connections
+    .filter((node) => node.properties.disposition === 'pin-end')
+    .toSorted((a, b) => Position.compare(a.properties, b.properties));
+  const displacedItems = [...(userAccountItem ? [userAccountItem] : []), ...pinnedItems];
+  if (displacedItems.length === 0) {
+    return { nodes: [], edges: [] };
+  }
+
+  const separator = createLineSeparator(`${parentId}-account-separator`, parentId);
+  const actions = displacedItems.map((item) => ({
+    id: `${parentId}-account-${item.id}`,
+    type: Node.ActionType,
+    properties: {
+      icon: item.properties.icon,
+      label: item.properties.label,
+    },
+    data: () => Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: item.id }),
+  }));
+
+  return {
+    nodes: [...separator.nodes, ...actions],
+    edges: [
+      ...separator.edges,
+      ...actions.map((action) => ({ source: parentId, target: action.id, relation: 'child' as const })),
+    ],
+  };
+};
+
+/**
  * Builds the mobile navbar actions including companion tabs, separator, and main menu dropdown.
  */
 export const useMobileNavbarActions = (): MobileNavbarActions => {
@@ -157,6 +200,10 @@ export const useMobileNavbarActions = (): MobileNavbarActions => {
         });
         nodes.push(...menu.nodes);
         edges.push(...menu.edges);
+
+        const accountSection = createMobileAccountMenuSection(graph, get, MAIN_MENU_GROUP_ID);
+        nodes.push(...accountSection.nodes);
+        edges.push(...accountSection.edges);
 
         return { nodes, edges };
       }),
