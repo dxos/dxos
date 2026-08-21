@@ -1,0 +1,98 @@
+[
+  {
+    "arm": "C",
+    "rep": "1",
+    "violated": true,
+    "fired": true
+  },
+  {
+    "arm": "C",
+    "rep": "2",
+    "violated": true,
+    "fired": true
+  },
+  {
+    "arm": "C",
+    "rep": "3",
+    "violated": true,
+    "fired": true
+  },
+  {
+    "arm": "C",
+    "rep": "4",
+    "violated": true,
+    "fired": false
+  },
+  {
+    "arm": "C",
+    "rep": "5",
+    "violated": true,
+    "fired": false
+  },
+  {
+    "arm": "C",
+    "rep": "6",
+    "violated": true,
+    "fired": true
+  },
+  {
+    "arm": "C",
+    "rep": "7",
+    "violated": true,
+    "fired": false
+  },
+  {
+    "arm": "C",
+    "rep": "8",
+    "violated": false,
+    "fired": true
+  },
+  {
+    "arm": "D",
+    "rep": "1",
+    "violated": true,
+    "fired": false
+  },
+  {
+    "arm": "D",
+    "rep": "2",
+    "violated": true,
+    "fired": true
+  },
+  {
+    "arm": "D",
+    "rep": "3",
+    "violated": true,
+    "fired": false
+  },
+  {
+    "arm": "D",
+    "rep": "4",
+    "violated": true,
+    "fired": false
+  },
+  {
+    "arm": "D",
+    "rep": "5",
+    "violated": true,
+    "fired": false
+  },
+  {
+    "arm": "D",
+    "rep": "6",
+    "violated": true,
+    "fired": true
+  },
+  {
+    "arm": "D",
+    "rep": "7",
+    "violated": true,
+    "fired": false
+  },
+  {
+    "arm": "D",
+    "rep": "8",
+    "violated": true,
+    "fired": false
+  }
+]

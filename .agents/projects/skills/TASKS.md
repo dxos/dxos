@@ -177,6 +177,24 @@ Designs in `DESIGN.md`.
       at density 3, the saturated point. The sweep shows dose-response: 17%
       violation at density 1, 30% at density 2, 100% at density 3, against a
       100% control throughout.
+- [x] **Index-model test (the question actually asked).** `AGENTS.md` CAN become
+      an index, but the decisive variable is **skill granularity, not location**.
+      One skill per rule, named for the rule (`no-casts`) violates 1/6 and beats
+      a topic-bundle skill (`code-style`, four topics) at 7/8, p=0.016; the
+      bundle is indistinguishable from having no rule at all (p=0.5 vs control).
+      The index pointer roughly doubles triggering (5/8 vs 2/8) but does not
+      rescue outcomes alone. Writeup in
+      `experiments/factoring-out-calibrated/run2-index-model/`.
+- [x] **Experiment 7's structural conclusion retracted.** It generalised from one
+      badly written description (`type-friction`: coined name, symptom-scoped,
+      concrete tokens stripped, matching clause buried last). Same task and
+      fixture with `no-casts` fires 5/6 instead of 0/8.
+- [ ] **Test pointer + single-purpose skill together.** The recommended
+      configuration was never run as such: V1 had no pointer, and the pointer arm
+      used a topic bundle.
+- [ ] **Split `code-style` into single-purpose skills.** It is 210 lines covering
+      many conventions, which is the configuration measured as ineffective. The
+      no-cast rule is the first candidate to pull out as its own skill.
 - [ ] **Apply the factoring rule of thumb.** Rules relevant _from the task
       statement_ (moving code, opening a PR, writing a test) factor out safely.
       Rules relevant only _mid-edit_ (casts, non-null, swallowed errors, any

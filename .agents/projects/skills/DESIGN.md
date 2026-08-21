@@ -307,7 +307,21 @@ The reason is structural. In Experiment 5 the task statement was "move
 type friction; the agent meets the friction only after it has started editing,
 by which point no load-a-skill decision is happening.
 
-**Skills trigger on the stated task, not on what you discover while doing it.**
+~~**Skills trigger on the stated task, not on what you discover while doing it.**~~
+**Retracted.** That generalised from one badly written description. Rewriting it
+(`no-casts`, naming `as any` literally, instead of the coined `type-friction`)
+took firing from 0/8 to 5/6 and violations from 8/8 to 1/6 on the identical task
+and fixture.
+
+The variable that actually decides it is **skill granularity**. One skill per
+rule, named for the rule, matches the inline rule (1/6 vs 3/10, p=1.0) and beats
+a topic-bundle skill (7/8, p=0.016), which is itself indistinguishable from no
+rule at all. An index pointer roughly doubles triggering but does not rescue
+outcomes on its own.
+
+So `AGENTS.md` can become an index, on two conditions: one skill per rule named
+for the rule, and keep the pointer. Our real `code-style` skill, 210 lines across
+many conventions, is exactly the bundle configuration that failed.
 
 So the factoring rule of thumb: a rule relevant from the task statement (moving
 code, opening a PR, writing a test) factors out safely. A rule relevant only

@@ -2,9 +2,16 @@
 
 Date: 2026-08-21. Model: `sonnet`. 38 runs, real fixtures, real tools.
 
-## Answer
+> **Superseded by `run2-index-model/RESULTS.md`.** The conclusion below blames a
+> structural property of skills. It was actually a badly written description.
+> Holding task and fixture fixed and only rewriting the description, a
+> single-purpose `no-casts` skill fires 5/6 and violates 1/6, matching the inline
+> rule (3/10) and beating a topic-bundle skill (7/8). Read that file for the
+> corrected finding.
 
-**No, not for this rule. The factored skill never triggered, so it performed
+## Answer (superseded)
+
+**With this particular skill, the factored rule never triggered, so it performed
 identically to having no rule at all.**
 
 At the calibrated operating point (density 2):
