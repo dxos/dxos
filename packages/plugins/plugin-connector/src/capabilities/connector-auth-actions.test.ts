@@ -144,7 +144,9 @@ describe('connectorAuth graph extension', () => {
     await context.expand(GraphNode.RootId);
     await context.expand(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID), 'action');
 
-    const actions: any[] = context.registry.get(context.graph.actions(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID)));
+    const actions: any[] = context.registry.get(
+      context.graph.actions(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID)),
+    );
     lastContext = context;
     lastManager = manager;
     return actions.find((action) => action.id.endsWith(ConnectorAuth.GROUP_ID));
@@ -154,7 +156,9 @@ describe('connectorAuth graph extension', () => {
   const registerConnectors = async (connectors: ConnectorSpec.ConnectorEntry[]) => {
     lastManager!.contribute({ module: 'late', interface: ConnectorSpec.Connector, implementation: connectors });
     await lastContext!.expand(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID), 'action');
-    const actions: any[] = lastContext!.registry.get(lastContext!.graph.actions(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID)));
+    const actions: any[] = lastContext!.registry.get(
+      lastContext!.graph.actions(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID)),
+    );
     return actions.find((action) => action.id.endsWith(ConnectorAuth.GROUP_ID));
   };
 
