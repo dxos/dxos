@@ -65,6 +65,7 @@ export const WhoAmI = Tool.make('whoami', {
 
 export const SpaceToolkit = Toolkit.make(WhoAmI);
 
+/** Binds the toolkit to one server, which supplies the client and the session's spaces. */
 export const spaceHandlers = (server: LocalServer) =>
   SpaceToolkit.of({
     whoami: () =>

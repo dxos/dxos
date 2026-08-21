@@ -390,10 +390,7 @@ export const invoke = (
       const arguments_ = input ?? {};
       const wire = yield* encodeInput(record, arguments_, operationKey);
 
-      // The three ways a caller names a space, in precedence order: the ambient argument, a
-      // `spaceId` the operation declares in its own input, and a space-qualified reference it was
-      // handed. Nothing else — there is no session default, so a verb that acts on a space and was
-      // told none is refused rather than run somewhere arbitrary.
+      // Only what names a space counts; there is no session default to fall back to.
       const declared = inputInternal.declaresSpaceId(record) ? arguments_.spaceId : undefined;
       const named =
         spaceId ?? (typeof declared === 'string' ? declared : undefined) ?? spaceInternal.hintFromInput(wire);

@@ -21,6 +21,7 @@ export const key = 'org.dxos.skill.registry';
  */
 export const operations = [RegistryOperation.QueryPlugins];
 
+/** The Registry skill: its verbs, instructions, and the tool definitions they project as. */
 export const make = (): Skill.Skill =>
   Skill.make({
     key,
