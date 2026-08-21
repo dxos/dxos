@@ -103,7 +103,7 @@ runs:
         # `|| preflight_exit=$?` rather than a bare call: the shell here runs with `set -e`, and an
         # unguarded failing command would abort the script before the degrade logic below ever runs.
         preflight_exit=0
-        curl -sf --max-time 20 --retry 3 --retry-all-errors --retry-delay 5 \
+        curl -sf --max-time 20 --retry 3 --retry-all-errors --retry-delay 5 --retry-max-time 60 \
              -o /dev/null -w 'time_connect=%{time_connect} time_appconnect=%{time_appconnect} time_total=%{time_total}\n' \
              --cacert .moon/certs/ca.pem "https://$host:9093/status" || preflight_exit=$?
         if [ "$preflight_exit" -ne 0 ]; then
@@ -113,7 +113,7 @@ runs:
         # /status is unauthenticated; a CAS path is not. 404 means authorised and absent, which is
         # what an all-zero digest should be. 401 means the client certificate was rejected.
         cas_exit=0
-        code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 --retry 3 --retry-all-errors --retry-delay 5 \
+        code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 --retry 3 --retry-all-errors --retry-delay 5 --retry-max-time 60 \
           --cacert .moon/certs/ca.pem --cert .moon/certs/client.pem --key .moon/certs/client.key \
           "https://$host:9093/cas/0000000000000000000000000000000000000000000000000000000000000000") || cas_exit=$?
         if [ "$cas_exit" -ne 0 ]; then
