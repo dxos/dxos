@@ -156,7 +156,10 @@ Three axes structure the options:
 - **Where logic lives.** The "intermediate controller object" the brief
   hypothesizes should be an **Effect-service-shaped controller**: a constructor
   `(ctx: { db, settings, … }) => { state: Record<string, Atom>, dispatch:
-(msg) => Effect }`. No React. Testable headless (vitest + registry), reusable
+(msg) => Effect }`. (Sketch. The implemented contract is `dispatch: (msg) =>
+void` — see §Experiment 1 — because every arm terminates in an Operation
+  invocation whose failure is reported through the operation layer, so there is
+  no residual Effect for the template to run.) No React. Testable headless (vitest + registry), reusable
   from Solid/Lit, and exactly what the existing menu (`MenuBuilder` → atom) and
   board (`Board.Root model=`) APIs already do in miniature.
 
@@ -192,7 +195,7 @@ Generalize what `FormLayout` already proves at form scale to container scale.
 Define a **closed, schema-validated node model** (Effect Schema union — so
 templates are ECHO-storable objects), roughly:
 
-```
+```text
 TemplateNode =
   | Layout:    panel | toolbar | section | grid | row        (chrome/geometry)
   | Composite: list | stack | form | card | menu | tabs      (bind to composite roots)
@@ -407,14 +410,14 @@ in v1, reading controller atoms.
 
 ### Order of work (riskiest first) and exit
 
-1. Pagination atom wrapper → 2. filter/debounce/query atoms → 3. `dispatch` →
-2. menu atom + slot inversion → 5. template + `If`. Behavior comments in the
+1. Pagination atom wrapper → 2. filter/debounce/query atoms → 3. `dispatch` → 4. menu atom + slot inversion → 5. template + `If`. Behavior comments in the
    file (flash-empty prevention, seeded stores, draft reconciliation) are
    load-bearing — port them with the code; `applyPostFilters`/`reconcileDrafts`
    move unchanged. Regression: existing inbox e2e/storybook coverage plus H2's
    new headless tests.
 
-Exit criteria: H1–H3 measured and written up; the four bridge findings
+Exit criteria (**partially met** — H3 was never measured; see Results): H1–H3
+measured and written up; the four bridge findings
 (anchors, slots, debounce, pagination atom) folded back into this spec's
 Recommendation step 1; a go/no-go on extracting a second, simple container
 (`TaskSetArticle`) to test that the pattern generalizes downward as well as up.
@@ -449,7 +452,10 @@ tests); echo-react 38 passed; oxlint clean.
   forced it), and typing subscribes only the filter slot + query chain, not
   the article. Profiling remains open for a follow-up in the running app.
 - **H4 (renderer neutrality):** the headless tests are themselves the cheap
-  proof — the full container logic runs with no renderer at all.
+  proof — the _extracted controller_ runs with no renderer at all. The
+  container as a whole does not: the template, its React-side hooks, and the
+  menu/module-graph dependencies listed below stayed React-bound, so this is
+  neutrality of the logic layer, not of the container.
 
 Bridge findings (the experiment's product), as instrumented:
 

@@ -36,8 +36,9 @@ Appendix; the app terms (`node`, `deck`, `plank`, `companion`, `surface`, `menu`
 
 ## External types
 
-- `Message`, `Event`, `Person`, `Organization` — `@dxos/types`. Messages/events live in feeds;
-  people/organizations in the space.
+- `Message`, `DraftMessage`, `Event`, `Person`, `Organization` — `@dxos/types`. Messages/events
+  live in feeds; people/organizations in the space. A `DraftMessage` is an unsent `Message`,
+  distinguished by its own instance check rather than by a field.
 - `Feed`, `Tag`, `TagIndex` — `@dxos/echo` / `@dxos/schema`. Feed members are immutable; mutable
   tag membership lives in the mailbox's `TagIndex` sidecar.
 - `Cursor` (`@dxos/link`) — the sync **binding**: an external cursor whose `spec.target` is the
@@ -120,6 +121,18 @@ type ExtractedFrom
 ```
 
 ```mdl
+type SentTag
+  desc: |
+    Foreign key of the tag the provider's own copy of a sent message will carry (Gmail's SENT
+    label, or the JMAP account's Sent folder resolved by role). `label` is a fallback used only
+    before the first sync has seen the tag.
+  fields:
+    source: string
+    id: string
+    label: string
+```
+
+```mdl
 type MailSend
   desc: Provider-agnostic send contract, routed via the MailSendOperation capability by connector id.
   fields:
@@ -188,7 +201,7 @@ node MailboxNode
     - Drafts         # filter '', systemTag draft; action: op:DraftEmailAndOpen
     - Subscriptions  # bulk-mail senders view (own article)
     - SavedFilters   # one node per mailbox.filters entry; actions: op:RenameFilter, delete
-  actions: [op:GoogleMailSync, op:EnrichMailbox, op:ProcessMailbox, op:ResetProcessCursor]
+  actions: [op:GoogleMailSync, op:EnrichMailbox, op:ProcessMailbox, op:ResetFeedCursor]
 ```
 
 ```mdl
@@ -225,7 +238,7 @@ deck MailboxDeck
     message replaces the message plank rather than growing the deck, and picking a different
     message drops the attachment that belonged to the last one. Meta/ctrl-click opts out and
     opens a free plank. The attachment level is declared but not yet opened by any container.
-  chain: MailboxPlank > MessagePlank > AttachmentPlank
+  chain: MailboxPlank > MessagePlank > AttachmentPlank  # AttachmentPlank: declared level, no plank yet
 ```
 
 ```mdl
@@ -350,7 +363,7 @@ menu MailboxToolbar
 menu MailboxContextMenu
   of: node:MailboxNode
   disposition: list-item
-  items: [op:GoogleMailSync, op:EnrichMailbox, op:ProcessMailbox, op:ResetProcessCursor]
+  items: [op:GoogleMailSync, op:EnrichMailbox, op:ProcessMailbox, op:ResetFeedCursor]
 ```
 
 ```mdl
@@ -510,7 +523,7 @@ op EnrichMailbox
 
 ```mdl
 op ProcessMailbox
-  desc: Cursored processing pipeline over the feed (durable consumer cursor); ResetProcessCursor rewinds it.
+  desc: Cursored processing pipeline over the feed (durable consumer cursor); ResetFeedCursor rewinds it.
 ```
 
 Constituents (each idempotent, capped, individually invocable): `ClassifyEmail` /
@@ -530,6 +543,7 @@ op ReadEmail
 ```
 
 `AddMailbox` (create-object flow), `RenameFilter` (saved-filter node action),
+`ResetFeedCursor` (rewinds a named consumer's durable cursor over the feed),
 `UnsubscribeSender` (adds a skip-sender filter and fires the RFC 8058 one-click endpoint).
 
 ## Sync

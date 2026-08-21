@@ -14,7 +14,7 @@ specification surface that describes both.
 
 ## 1. Data ontology
 
-```
+```text
 Hyperspace ──── graph of Spaces
   Space ─────── graph of Objects (and Relations)
     Schema ──── shape + meaning of Objects; Views project them
@@ -71,7 +71,7 @@ Feeds make sync idempotent and history durable.
 
 ## 2. App ontology
 
-```
+```text
 Deck ──────── planks + companions, driven by the app-graph
   Plugin ───── contributes graph nodes, containers/views, operations
     Container/View ─ presents Objects (queries/Views); state machines

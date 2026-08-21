@@ -84,7 +84,7 @@ _idioms_, deliberately not a widget language:
 - **Container elements** — `split` (maps to `Splitter`; nest for more than
   two), `stack` (N-way `Mosaic.Stack` row/column), `tabs`/`tab`
   (`AppSurface.Tabpanel` already exists as a role), `panel` (chrome shell:
-  toolbar rail + content + statusbar, i.e. `Panel`/`Pane`).
+  toolbar rail + content + status bar, i.e. `Panel`/`Pane`).
 - **Idiom elements** — `list`, `table`, `form`, `toolbar`, `menu`. Each binds
   to the pillar's data: `view=` (a `View` DXN: query + projection — the whole
   binding in one ref), `subject=` (object ref or context reference),
@@ -150,13 +150,13 @@ registry's documentation surface, kept next to the code they describe.
 ### Extensibility
 
 One registry, mirroring `XmlWidgetRegistry`'s shape and `Surface.create`'s
-contribution style: plugins register `tag → { attrSchema, component | machine
-
-- connect, mdl }`. Custom behavior enters as (a) a new registered element
-with its contract, or (b) a `surface` embed — never as logic in the grammar.
-  The parser is generic over the registry (the FormLayout parser proved the
-  string-DSL → typed-tree → renderer pattern; its hard-coded two-tag grammar is
-  the part to generalize).
+contribution style: plugins register
+`tag → { attrSchema, component | machine, connect, mdl }`. Custom behavior
+enters as (a) a new registered element with its contract, or (b) a `surface`
+embed — never as logic in the grammar.
+The parser is generic over the registry (the FormLayout parser proved the
+string-DSL → typed-tree → renderer pattern; its hard-coded two-tag grammar is
+the part to generalize).
 
 ## What this changes vs. the parked direction
 

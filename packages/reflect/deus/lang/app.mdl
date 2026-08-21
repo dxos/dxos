@@ -126,12 +126,19 @@ ext surface
     A Surface contribution: maps a role token plus a subject-type filter to a
     component. This is the app's single presentation dispatch — articles,
     sections, cards, dialogs, and companions all resolve through it.
+
+    Resolution is not most-specific-wins: every contribution whose role and
+    filter match is a candidate, and `position` orders them (`first` /
+    `last` are the sentinels; equal positions keep registration order). A
+    role-only contribution therefore competes with a subject-specific one,
+    and the subject-specific one must claim an earlier position to win.
   fields:
     desc?: Prose
     role: Identifier             # role token (article | section | card | dialog | ...)
     subject?: TypeRef            # type filter; omitted = role-only match
     component: ComponentRef
     variant?: Identifier
+    position?: number | first | last  # tie-break among all matching contributions
 ```
 
 ```mdl
@@ -164,6 +171,19 @@ node MailboxNode
     - Sent
     - Drafts
   actions: [op:SyncMailbox, op:DraftEmail]
+```
+
+```mdl
+plank MailboxPlank
+  subject: type:Mailbox
+  article: component:MailboxArticle
+```
+
+```mdl
+plank MessagePlank
+  subject: type:Message
+  article: component:MessageArticle
+  parent: MailboxPlank
 ```
 
 ```mdl
