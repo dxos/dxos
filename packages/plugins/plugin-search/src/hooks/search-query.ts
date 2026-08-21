@@ -3,6 +3,7 @@
 //
 
 import { Entity, Filter, Obj, Query } from '@dxos/echo';
+import { type URI } from '@dxos/keys';
 import { type SearchResult } from '@dxos/react-ui-search';
 import { Text } from '@dxos/schema';
 
@@ -12,13 +13,23 @@ import { getIcon, mapObjectToTextFields } from './sync';
 export const buildSearchFilter = (text: string): Filter.Any => Filter.text(text, { type: 'full-text' });
 
 /**
- * Build the ECHO query for a search box value. Empty input matches nothing; a term
- * routes to the FTS index via a single text-search select (never combined with a
- * type filter — that composition is unsupported by the executor).
+ * Build the ECHO query for a search box value. Empty input matches nothing. A term routes to
+ * the FTS index, scoped to `typeUris` when given: the whole-object-JSON index has no per-field
+ * choice yet, so without a scope it surfaces objects the app never renders (views, stored
+ * schemas, relation rows). An empty scope also matches nothing — the caller not having resolved
+ * its visible types yet must not flash unscoped results.
  */
-export const buildSearchQuery = (text: string | undefined): Query.Any => {
+export const buildSearchQuery = (text: string | undefined, typeUris?: readonly URI.URI[]): Query.Any => {
   const trimmed = text?.trim();
-  return trimmed ? Query.select(buildSearchFilter(trimmed)) : Query.select(Filter.nothing());
+  if (!trimmed || (typeUris && typeUris.length === 0)) {
+    return Query.select(Filter.nothing());
+  }
+  if (!typeUris) {
+    return Query.select(buildSearchFilter(trimmed));
+  }
+  return Query.select(
+    Filter.and(buildSearchFilter(trimmed), Filter.or(...typeUris.map((typeUri) => Filter.type(typeUri)))),
+  );
 };
 
 /**

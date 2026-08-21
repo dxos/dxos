@@ -25,12 +25,11 @@ const findTextSearch = (ast: QueryAST.Filter): QueryAST.FilterTextSearch | undef
  * Build the message-list view filter from the mailbox search box: messages matching this filter are
  * what qualify a thread for the list (see {@link buildThreadSemiJoin}).
  *
- * The query executor cannot combine a text-search with any other root filter via AND
- * (it throws "Query too complex"), so free-text search routes to a lone full-text
- * select over the message feed — the message type is implied by the feed scope.
- * Structural-only filters (`from:`, `#tag`) compose with the message type as normal.
- * Mixed text + structural is not supported in this milestone; the text wins and the
- * structural part is dropped (tracked for Milestone 3).
+ * Free-text search routes to a lone full-text select over the message feed — the message
+ * type is implied by the feed scope. Structural-only filters (`from:`, `#tag`) compose with
+ * the message type as normal. Mixed text + structural still drops the structural part here:
+ * the executor now supports AND-ing a text-search with type/props filters, but adopting the
+ * composition in the mailbox is tracked for plugin-search Milestone 3.
  */
 export const buildMailboxSelection = (filterText: string, filter: Filter.Any | undefined): Filter.Any => {
   const base = Filter.type(Message.Message);
