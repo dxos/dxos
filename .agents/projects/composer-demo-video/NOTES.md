@@ -114,3 +114,42 @@ partner where the technology is the _point_ of the clip.
 | 7   | Voice     | **HeyGen avatar intro/outro + user VO** for the body. Synthetic scratch tracks used for timing the edit before any real recording.                                                           |
 | 8   | Triage    | **User marks the candidate list** — so the first deliverable is a complete, annotatable candidate clip list.                                                                                 |
 | 9   | Gmail     | **Mock locally** — synthetic mailbox in the demo seed, no real OAuth, no real account. The connect/OAuth flow is therefore NOT shown.                                                        |
+
+### Reflexivity — build the presentation IN Composer (user, 2026-08-21)
+
+**The strongest available argument is that the video is made with the thing the video is about.**
+Aim to construct most of the presentation inside Composer, with additional plugins, and show that
+happening.
+
+Already true, not aspirational:
+
+- **HeyGen renders run through Composer.** `plugin-heygen` is a connector; the avatar intro in
+  `k7-with-intro.mp4` was produced by a `POST /v3/videos` authenticated from an `AccessToken`
+  living in an ECHO space, driven via `composer.invoke`. The narration you hear was rendered by
+  the product.
+- **The key arrived through the product's own mechanism** — `envBinding` + `EnvCredentials`, not a
+  pasted dialog.
+
+Plugins that already exist and would close most of the remaining gap:
+
+| Need | Plugin | State |
+| --- | --- | --- |
+| Script + shot list | `plugin-markdown`, `plugin-projects`, `plugin-tasks` | ships today |
+| Storyboard / deck | `plugin-presenter` | exists; needs assessment |
+| Generated stills | `plugin-ideogram` via `plugin-studio` | connector wired, key provisioned |
+| Avatar / VO | `plugin-heygen` via `plugin-studio` | **proven end to end** |
+| Architecture diagrams | `plugin-tldraw`, `plugin-mermaid` | ship today |
+| Video objects / assembly | `plugin-video` | exists; the real unknown |
+| Transcript / captions | `plugin-transcription` | ships today |
+
+The honest gap is **editing** — trimming, sequencing and mixing. `plugin-video` needs assessment
+before claiming a timeline. Two ways to tell the truth on camera:
+
+1. Show every *input* built in Composer (script, shot list, storyboard, stills, avatar renders,
+   diagrams) and be candid that the final cut happens in an editor.
+2. Build the timeline too, if `plugin-video` can carry it — the strongest version, and the one
+   that turns the closing line into a demonstration rather than a claim.
+
+Either way this becomes a **new candidate clip** and probably the closing beat of the Cloudflare
+cut: *"Everything you have just watched — the script, the images, the voice — was made in the
+workspace you were watching."*
