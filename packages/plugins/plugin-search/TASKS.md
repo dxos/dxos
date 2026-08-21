@@ -87,10 +87,11 @@ Client fan-out across loaded spaces + RRF merge; scope toggle. See ROADMAP M2.
 
 - [ ] Implement the in-memory `text-search` matcher (currently `return false`) in
       `echo-host/src/filter/filter-match.ts` + `echo/src/internal/Filter/match.ts`.
-- [x] **Enable FTS + type composition** — planner folds `and(text-search, type|or-of-types|
-    type-with-props)` into a type-scoped `TextSelector`; FTS SQL filters on `typeDXN`
-      (shared `buildTypeDxnCondition`); plugin-search scopes its query to user-visible types
-      (`TypeOptions.isUserType`, shared with the nav Database section; collections included).
+- [x] **Enable FTS + type composition** — the planner folds an AND of one text-search
+      with type / or-of-types / type-with-props filters into a type-scoped `TextSelector`;
+      FTS SQL filters on `typeDXN` (shared `buildTypeDxnCondition`); plugin-search scopes
+      its query to user-visible types (`TypeOptions.isUserType`, shared with the nav
+      Database section; collections included).
 - [ ] Adopt the composition in the mailbox (mixed text+structural — see
       `mailbox-search.ts` `buildMailboxSelection`).
 - [ ] Add `searchKind: 'full-text' | 'vector' | 'hybrid'` to the `database.query`
