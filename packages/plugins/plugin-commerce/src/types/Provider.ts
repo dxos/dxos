@@ -4,11 +4,13 @@
 
 import * as Schema from 'effect/Schema';
 
-import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, JsonSchema, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
-export const SKILL_KEY = 'org.dxos.plugin.commerce/skill/provider';
+// Dotted, not slash-separated: the key is an NSID, and `DXN_SPEC_REGEXP` rejects slashes — the old
+// form made `Skill.registryURI` fall back to a bare URI for this skill alone.
+export const SKILL_KEY = 'org.dxos.plugin.commerce.skill.provider';
 
 /** Binds a request parameter to a search-schema field, with an optional transform hint. */
 export const FieldBinding = Schema.Struct({
@@ -64,7 +66,7 @@ export class Provider extends Type.makeObject<Provider>(DXN.make('org.dxos.type.
   }).pipe(
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--package--regular', hue: 'cyan' }),
-    AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
+    Skill.SkillsAnnotation.set([SKILL_KEY]),
   ),
 ) {}
 

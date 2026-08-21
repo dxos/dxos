@@ -35,7 +35,6 @@ import { assertState, invariant } from '@dxos/invariant';
 import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
-import type { SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import type { DataService, QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { ComplexSet, chunkArray, deepMapValues } from '@dxos/util';
@@ -148,6 +147,11 @@ export class EntityManager implements IDatabaseBinding {
 
   /** Fires when service connection is re-established after a leader change. */
   private readonly _reconnected = new Event<void>();
+
+  /** Public view of {@link EntityManager._reconnected}, so sibling streams can re-establish too. */
+  get reconnected(): ReadOnlyEvent<void> {
+    return this._reconnected;
+  }
 
   // ── Automerge document state ────────────────────────────────────────────
   private _spaceRootDocHandle: DocHandleProxy<DatabaseDirectory> | null = null;
@@ -794,7 +798,7 @@ export class EntityManager implements IDatabaseBinding {
     );
   }
 
-  async getSyncState(): Promise<SpaceSyncState> {
+  async getSyncState(): Promise<DataService.SpaceSyncState> {
     const value = await runServiceCall(
       this._runtime,
       this._dataService['DataService.subscribeSpaceSyncState']({ spaceId: this.spaceId }).pipe(
@@ -806,7 +810,7 @@ export class EntityManager implements IDatabaseBinding {
     return value;
   }
 
-  subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn {
+  subscribeToSyncState(ctx: Context, callback: (state: DataService.SpaceSyncState) => void): CleanupFn {
     let cleanup: (() => void) | undefined;
 
     const setupStream = () => {

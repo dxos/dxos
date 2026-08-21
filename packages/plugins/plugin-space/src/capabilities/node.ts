@@ -4,6 +4,7 @@
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
@@ -25,10 +26,19 @@ export const IdentityCreated = Capability.lazyModule(
   },
   () => import('./identity-created'),
 );
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const OperationHandler = Capability.lazyModule(
   'OperationHandler',
   { provides: [Capabilities.OperationHandler] },
   () => import('./operation-handler'),
+);
+export const ObservabilityMappings = Capability.lazyModule(
+  'ObservabilityMappings',
+  {
+    provides: [AppCapabilities.ObservabilityMapping],
+    props: (options: SpaceSchema.SpacePluginOptions) => ({ observability: options.observability }),
+  },
+  () => import('./observability-mappings'),
 );
 export const UndoMappings = Capability.lazyModule(
   'UndoMappings',
@@ -36,7 +46,6 @@ export const UndoMappings = Capability.lazyModule(
     provides: [Capabilities.UndoMapping, SpaceOperationConfig],
     props: (options: SpaceSchema.SpacePluginOptions) => ({
       createInvitationUrl: makeCreateInvitationUrl(options),
-      observability: options.observability,
     }),
   },
   () => import('./undo-mappings'),

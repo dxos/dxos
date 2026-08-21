@@ -169,7 +169,7 @@ const DefaultStory = ({ stages, seed }: StoryArgs) => {
   // Story renders the surface directly (no deck), so expand the doc node's actions.
   useEffect(() => {
     if (attendableId) {
-      void Graph.expand(graph, attendableId, 'action');
+      void Graph.expandSync(graph, attendableId, 'action');
     }
   }, [graph, attendableId]);
 

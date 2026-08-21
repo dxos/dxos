@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useMemo } from 'react';
 
-import { withClientProvider } from '@dxos/react-client/testing';
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { meta as pluginMeta } from '#meta';
@@ -15,12 +15,12 @@ import { Settings } from '#types';
 
 import { PaymentsSettings } from './PaymentsSettings';
 
-type StoryProps = {
+type StoryArgs = {
   settings: Settings.Settings;
 };
 
 // The container reads and writes the contributed settings entry, so the story owns one per render.
-const DefaultStory = ({ settings }: StoryProps) => {
+const DefaultStory = ({ settings }: StoryArgs) => {
   const subject = useMemo(
     () => ({
       prefix: pluginMeta.profile.key,
@@ -36,7 +36,7 @@ const DefaultStory = ({ settings }: StoryProps) => {
 const meta = {
   title: 'plugins/plugin-payments/containers/PaymentsSettings',
   component: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withClientProvider({ createIdentity: true })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withPluginManager()],
   tags: ['settings'],
   parameters: {
     layout: 'fullscreen',

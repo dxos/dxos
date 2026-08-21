@@ -5,7 +5,7 @@
 import react from '@vitejs/plugin-react';
 import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { ResolverFactory } from 'oxc-resolver';
 // import sourcemaps from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { type ConfigEnv, type PluginOption, defineConfig, searchForWorkspaceRoot } from 'vite';
@@ -24,26 +24,77 @@ import importSource from '@dxos/vite-plugin-import-source';
 import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 
-import { createConfig as createTestConfig } from '../../../vitest.base.config';
-import { bootChunking } from './src/vite/boot-chunking';
-import { traceBootLeak } from './src/vite/trace-boot-leak';
+import { createConfig as createTestConfig } from '../../../vitest.base.config.ts';
+import { bootChunking } from './src/vite/boot-chunking.ts';
+import { bootMarkPath, channelFaviconPlugin, channelVariant } from './src/vite/channel-branding.ts';
+import { optimizeDepsInclude } from './src/vite/optimize-deps.ts';
+import { traceBootLeak } from './src/vite/trace-boot-leak.ts';
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
 const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
-// Opt-in `DX_PLUGIN_SET=minimal` swaps the full plugin registry for plugin-defs.minimal.tsx
-// without touching main.tsx — for a faster boot when the full registry is not needed.
-const isMinimalPluginSet = process.env.DX_PLUGIN_SET === 'minimal';
-const pluginSetFile = isMinimalPluginSet ? 'src/plugin-defs.minimal.tsx' : 'src/plugin-defs.tsx';
+// `DX_PLUGIN_SET=production` swaps in plugin-defs.production.tsx at build time (not a runtime flag),
+// so a non-shipped plugin never enters the bundle.
+const isProductionPluginSet = process.env.DX_PLUGIN_SET === 'production';
+const pluginSetFile = isProductionPluginSet ? 'src/plugin-defs.production.tsx' : 'src/plugin-defs.tsx';
 
 const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
 const dxosIcons = path.join(rootDir, '/packages/ui/brand/assets/icons');
 
-const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+const dirname = import.meta.dirname;
 
 // Boot-path chunk grouping; `entry` is the page whose static closure defines the boot set.
 const boot = bootChunking({ entry: path.resolve(dirname, 'src/main.tsx') });
+
+// These packages' `browser`-conditioned entrypoints initialize their wasm with top-level await,
+// which WebKit evaluates out of order under concurrent dynamic imports (TDZ, "undefined is not an
+// object" at plugin activation) — so resolve them to their `slim` entrypoints and initialize
+// explicitly per realm via `initAutomergeWasm()` before the client boots.
+const SLIM_WASM_PACKAGES = ['@automerge/automerge', '@automerge/automerge-repo', '@automerge/automerge-subduction'];
+
+/**
+ * Resolves {@link SLIM_WASM_PACKAGES} to `slim`, and their subpaths without the `browser`
+ * condition — subduction's `browser`-conditioned `/slim` is still the top-level-await bundler
+ * glue, so pinning the non-browser resolution keeps one wasm instance shared by every importer.
+ */
+const slimWasm = (): PluginOption => {
+  // `browser` is deliberately absent; the rest mirrors what vite would apply for the client.
+  const resolver = new ResolverFactory({ conditionNames: ['source', 'import', 'module', 'default'] });
+  let isBuild = false;
+
+  return {
+    name: 'dxos-slim-wasm',
+    enforce: 'pre',
+    configResolved: (config) => {
+      isBuild = config.command === 'build';
+    },
+    resolveId: {
+      order: 'pre',
+      handler: (source, importer) => {
+        if (!importer) {
+          return null;
+        }
+        const pkg = SLIM_WASM_PACKAGES.find((name) => source === name || source.startsWith(`${name}/`));
+        if (!pkg) {
+          return null;
+        }
+        // automerge-repo is redirected only at build: a serve-time redirect would hand out a raw
+        // `/@fs` path that bypasses its optimizer chunk, and repo's dist imports CJS deps
+        // (`debug`, …) that only the prebundle's ESM interop makes importable. The prebundled
+        // fullfat chunk's automerge/subduction imports are externalized and still land here.
+        if (pkg === '@automerge/automerge-repo' && !isBuild) {
+          return null;
+        }
+        // Subpaths resolve as requested (`/slim`, `/slim/next`); asset requests (`?url`) fail the
+        // resolver and fall through to vite.
+        const target = source === pkg ? `${pkg}/slim` : source;
+        const resolved = resolver.sync(path.dirname(importer), target);
+        return resolved.error || !resolved.path ? null : resolved.path;
+      },
+    },
+  };
+};
 
 /**
  * Transpile targets for oxc (dev) and Rolldown (build).
@@ -51,12 +102,12 @@ const boot = bootChunking({ entry: path.resolve(dirname, 'src/main.tsx') });
 const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'] as const;
 
 /**
- * Glob matching the entry of every plugin the minimal registry can reach, for optimize-deps
- * scanning. Derived from the registry sources so adding a plugin to `plugin-defs.minimal.tsx`
+ * Glob matching the entry of every plugin the production set can reach, for optimize-deps
+ * scanning. Derived from the set's sources so adding a plugin to `plugin-defs.production.tsx`
  * needs no edit here; a specifier scan is enough because a missed plugin costs a
  * "discovered new dependencies" reload rather than a wrong build.
  */
-const minimalPluginEntries = () => {
+const productionPluginEntries = () => {
   const names = new Set<string>();
   for (const file of [pluginSetFile, 'src/plugin-defs.core.tsx']) {
     const source = readFileSync(path.join(dirname, file), 'utf8');
@@ -91,6 +142,9 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   importSource({
     include: isFastBundle ? ['#*'] : ['@dxos/**', '#*'],
   }),
+  // WebKit evaluates a module before its dependencies when a graph reached by concurrent dynamic
+  // imports contains top-level await, leaving bindings in TDZ.
+  slimWasm(),
   // Dev log file sink (serve only) + Rolldown log-meta injection (serve + build).
   DxosLogPlugin(),
   wasm(),
@@ -228,97 +282,34 @@ export default defineConfig((env) => ({
     },
   },
   optimizeDeps: {
-    exclude: ['@dxos/wa-sqlite'],
-    // List deeply-imported dep entrypoints so vite's optimize-deps phase
-    // pre-bundles them up front. Without this, vite discovers them mid-load
-    // (when a dynamic import unwraps a new subpath), which forces a full page
-    // reload with the "Discovered new dependencies" banner — ~10 s of wasted
-    // dev time per discovery cycle and the most common cause of HMR appearing
-    // to hang. The pre-bundle cost is amortized after the first `vite serve`.
+    // The wasm packages `slimWasm` redirects must not be pre-bundled: the optimizer resolves
+    // with its own pipeline (the `browser` condition, so the bundler entry) and importers would
+    // land on that chunk's top-level await regardless of what the plugin resolves. automerge-repo
+    // is deliberately NOT excluded: it has CJS deps (`debug`, …) that need the prebundle's ESM
+    // interop, and its prebundled chunk's externalized automerge/subduction imports still resolve
+    // through `slimWasm` at serve time.
+    exclude: ['@dxos/wa-sqlite', '@automerge/automerge', '@automerge/automerge-subduction'],
+    // The full set of dep entrypoints the app reaches, so vite's optimize-deps phase pre-bundles
+    // them up front rather than discovering them mid-load (when a dynamic import unwraps a new
+    // subpath), which forces a full page reload with the "Discovered new dependencies" banner —
+    // ~10 s of wasted dev time per cycle and the most common cause of HMR appearing to hang.
     //
-    // IMPORTANT: every entry must be resolvable from this app's root. If even
-    // one is not, vite aborts the *entire* dependency scan ("Failed to run
-    // dependency scan. Skipping dependency pre-bundling.") and pre-bundles
-    // nothing — worse than an empty list. Several entries below (@automerge/*,
-    // @atlaskit/pragmatic-drag-and-drop*, @effect/ai*, @opentelemetry/*,
-    // xstate, @xstate/react, react-qr-rounded) are only transitive deps of
-    // `@dxos/*` packages; they are listed as direct deps of composer-app in
-    // package.json *specifically* so they resolve from root and can be
-    // pre-bundled here — each one was observed triggering a mid-session
-    // "discovered new dependencies" reload before being added.
-    include: [
-      // React.
-      'react',
-      'react-dom',
-      'react/jsx-runtime',
-      // Effect (with subpath imports).
-      'effect',
-      'effect/Effect',
-      'effect/Array',
-      'effect/Ref',
-      'effect/Option',
-      'effect/Cause',
-      'effect/Exit',
-      'effect/Layer',
-      'effect/Runtime',
-      'effect/Fiber',
-      'effect/Deferred',
-      'effect/Function',
-      'effect/HashSet',
-      'effect/PubSub',
-      'effect/Schema',
-      'effect/Context',
-      'effect/Stream',
-      'effect/Console',
-      '@effect/platform',
-      '@effect/platform-browser',
-      // Effect Atom (reactive state; always loaded, triggered a mid-session reload before being listed).
-      '@effect/atom-react',
-      // Effect AI (absorbed into the core train under `effect/unstable/ai`).
-      '@effect/ai-anthropic',
-      '@effect/ai-anthropic/AnthropicClient',
-      '@effect/ai-anthropic/AnthropicLanguageModel',
-      '@effect/ai-anthropic/AnthropicTool',
-      '@effect/ai-openai',
-      '@effect/ai-openai/OpenAiClient',
-      '@effect/ai-openai/OpenAiLanguageModel',
-      // Automerge (CRDT; deeply imported via @dxos/echo).
-      '@automerge/automerge',
-      '@automerge/automerge-repo',
-      // OpenTelemetry (loaded eagerly via @dxos/observability).
-      '@opentelemetry/api',
-      '@opentelemetry/api-logs',
-      '@opentelemetry/exporter-logs-otlp-http',
-      '@opentelemetry/exporter-metrics-otlp-http',
-      '@opentelemetry/sdk-logs',
-      '@opentelemetry/sdk-metrics',
-      // XState + QR (HALO invitation flow via @dxos/shell).
-      'xstate',
-      '@xstate/react',
-      'react-qr-rounded',
-      // Atlaskit drag-and-drop (mosaic / dnd).
-      '@atlaskit/pragmatic-drag-and-drop',
-      '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator',
-      // CodeMirror (many files in HAR).
-      'codemirror',
-      '@codemirror/state',
-      '@codemirror/view',
-      '@codemirror/language',
-      '@codemirror/commands',
-      '@codemirror/autocomplete',
-      '@codemirror/lang-javascript',
-      '@codemirror/lang-json',
-      '@codemirror/lang-markdown',
-      '@codemirror/theme-one-dark',
-      // Radix (many requests in HAR).
-      '@radix-ui/react-dialog',
-      '@radix-ui/react-dropdown-menu',
-      '@radix-ui/react-tooltip',
-      '@radix-ui/react-scroll-area',
-      '@radix-ui/react-popover',
-      '@radix-ui/react-slot',
-      '@radix-ui/react-context-menu',
-    ],
+    // The list is static rather than left to the `entries` scan below because vite runs that scan
+    // only when there is no valid optimizer cache: once a cache exists it is trusted wholesale, so
+    // a cache built by a session that never opened a given plugin stays permanently short of that
+    // plugin's deps and re-optimizes on first use, session after session. `include` is part of the
+    // cache's config hash, so regenerating this list also invalidates the cache it feeds.
+    //
+    // Regenerate with `moon run composer-app:gen-optimize-deps`.
+    //
+    // Entries must resolve from this app's root, which is why deps reached only through `@dxos/*`
+    // packages (@automerge/*, @atlaskit/pragmatic-drag-and-drop*, @opentelemetry/*, xstate, …) are
+    // also listed as direct deps of composer-app in package.json. An entry that stops resolving
+    // costs a warning per start, not a failed scan.
+    //
+    // `DX_PLUGIN_SET=production` keeps the scan instead: the list covers the full registry, and
+    // pre-bundling all of it is the cost that mode exists to avoid.
+    include: isProductionPluginSet ? undefined : optimizeDepsInclude,
     // Scan the auxiliary HTML entrypoints during pre-bundle so navigations
     // to `internal.html` / `devtools.html` / `reset.html` don't trip a
     // "discovered new dependencies" reload mid-session.
@@ -327,20 +318,22 @@ export default defineConfig((env) => ({
     // are loaded via `await import(...)` at runtime so their bare-module
     // imports aren't reachable from the static graph rooted at `index.html` —
     // Vite would discover them mid-session and trigger a re-optimize + full
-    // page reload per plugin family. Walking the entries at startup makes the
-    // first optimize-deps pass discover all transitive deps. Production
-    // bundling is unaffected: Rolldown still emits a separate chunk per
-    // dynamic import.
+    // page reload per plugin family. Walking the entries at startup catches
+    // whatever `include` above has drifted away from, and is what
+    // `gen-optimize-deps` regenerates that list from. Production bundling is
+    // unaffected: Rolldown still emits a separate chunk per dynamic import.
     entries: [
       './index.html',
       './internal.html',
       './devtools.html',
       './reset.html',
       './recovery.html',
-      // Under DX_PLUGIN_SET=minimal, scan only the plugins the minimal registry can reach,
-      // read from the registry sources themselves — the hand-maintained list this replaces
-      // had drifted from them (missing `tasks`/`progress`, still naming a removed `outliner`).
-      isMinimalPluginSet ? minimalPluginEntries() : path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
+      // Under DX_PLUGIN_SET=production, scan only the plugins that set can reach, read from its
+      // sources themselves — the hand-maintained list this replaces had drifted from them
+      // (missing `tasks`/`progress`, still naming a removed `outliner`).
+      isProductionPluginSet
+        ? productionPluginEntries()
+        : path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
     ],
   },
   resolve: {
@@ -349,7 +342,11 @@ export default defineConfig((env) => ({
     // Use regex `find: /^util$/` (array form) to bind the bare module name only and let Vite's
     // native node: polyfill layer handle subpaths like `node:util/types`.
     alias: [
-      ...(isMinimalPluginSet ? [{ find: /^\.\/plugin-defs$/, replacement: path.resolve(dirname, pluginSetFile) }] : []),
+      // Applies to `build` as much as `serve`: this alias is the whole mechanism by which the
+      // production bundle's module graph never reaches a non-shipped plugin.
+      ...(isProductionPluginSet
+        ? [{ find: /^\.\/plugin-defs$/, replacement: path.resolve(dirname, pluginSetFile) }]
+        : []),
       { find: /^node-fetch$/, replacement: 'isomorphic-fetch' },
       { find: /^node:util$/, replacement: '@dxos/node-std/util' },
       { find: /^node:path$/, replacement: '@dxos/node-std/path' },
@@ -387,6 +384,25 @@ export default defineConfig((env) => ({
     traceBootLeak(path.resolve(dirname, 'src/main.tsx')),
     ShutdownPlugin(),
     ...sharedPlugins(env),
+
+    // Hosts the Claude Agent SDK in the dev server, so the app reaches it same-origin. Dev only —
+    // a deployed Composer has no vite server, and needs the standalone managed process instead.
+    // Turns are confined to DX_AGENT_CWD (default: the workspace root); the host refuses any
+    // requested directory outside it.
+    {
+      name: 'dx-agent-claude',
+      apply: 'serve',
+      // Imported dynamically so only `serve` pays for it: a static import would load the agent SDK
+      // whenever this config is evaluated, including every `vite build` and `vite preview`.
+      configureServer: async (server) => {
+        const { Middleware } = await import('@dxos/agent-claude');
+        server.middlewares.use(Middleware.make({ cwd: process.env.DX_AGENT_CWD ?? rootDir }));
+      },
+    },
+
+    // Hosts the computer harness's shell route against the vite process cwd. Imported dynamically
+    // because this config's static imports are bundled as CJS `require` and the package is ESM-only.
+    import('@dxos/plugin-computer/vite-plugin').then(({ ComputerShellPlugin }) => ComputerShellPlugin()),
 
     // RSS proxy middleware for CORS-free feed fetching.
     {
@@ -497,7 +513,10 @@ export default defineConfig((env) => ({
     // without it.
     bootLoaderPlugin({
       markSvg: (() => {
-        const markPath = path.join(rootDir, 'packages/ui/brand/assets/icons/composer-icon.svg');
+        // A prerelease bundle brands its own; production and any dev server get the released mark.
+        const markPath =
+          bootMarkPath(dirname, channelVariant(env.command)) ??
+          path.join(rootDir, 'packages/ui/brand/assets/icons/composer-icon.svg');
         try {
           return readFileSync(markPath, 'utf8');
         } catch (error) {
@@ -507,6 +526,8 @@ export default defineConfig((env) => ({
         }
       })(),
     }),
+
+    channelFaviconPlugin(dirname, channelVariant(env.command)),
 
     VitePWA({
       // No PWA for e2e tests because it slows them down (especially waiting to clear toasts).

@@ -9,8 +9,8 @@ import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayerWithTriggers } from '@dxos/agent-runtime/testing';
 import {
   AgentHandlers,
-  DatabaseHandlers,
-  DatabaseSkill,
+  ChatContextHandlers,
+  ChatContextSkill,
   RunInstructions,
   WebSearchHandlers,
   WebSearchSkill,
@@ -43,8 +43,8 @@ const queryTraceMessages = Effect.gen(function* () {
 
 const TestLayer = AssistantTestLayerWithTriggers({
   types: [Organization.Organization, Person.Person],
-  skills: [DatabaseSkill.make(), WebSearchSkill.make()],
-  operationHandlers: [DatabaseHandlers, AgentHandlers, WebSearchHandlers, ExampleHandlers],
+  skills: [ChatContextSkill.make(), WebSearchSkill.make()],
+  operationHandlers: [ChatContextHandlers, AgentHandlers, WebSearchHandlers, ExampleHandlers],
   toolkits: [WebSearchToolkitOpaque],
   tracing: 'feed',
   aiServicePreset: 'edge-remote',
@@ -58,7 +58,7 @@ describe.skip('Trace timeline', () => {
       Effect.fnUntraced(
         function* ({ expect }) {
           const agent = yield* AgentService.createSession({
-            skills: [DatabaseSkill.make()],
+            skills: [ChatContextSkill.make()],
           });
           yield* agent.submitPrompt('Create an organization called "Cyberdyne Systems".');
           yield* agent.waitForCompletion();
@@ -96,7 +96,7 @@ describe.skip('Trace timeline', () => {
       Effect.fnUntraced(
         function* ({ expect }) {
           const agent = yield* AgentService.createSession({
-            skills: [DatabaseSkill.make()],
+            skills: [ChatContextSkill.make()],
           });
           yield* Database.add(Obj.make(Organization.Organization, { name: 'Acme Corp' }));
           yield* Database.add(Obj.make(Organization.Organization, { name: 'Globex Industries' }));
@@ -128,7 +128,7 @@ describe.skip('Trace timeline', () => {
       Effect.fnUntraced(
         function* ({ expect }) {
           const agent = yield* AgentService.createSession({
-            skills: [DatabaseSkill.make()],
+            skills: [ChatContextSkill.make()],
           });
           yield* agent.submitPrompt('List all available schemas. Tell me what typenames are available.');
           yield* agent.waitForCompletion();

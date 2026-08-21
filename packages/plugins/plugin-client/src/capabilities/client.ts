@@ -25,6 +25,7 @@ type ClientCapabilityOptions = Omit<
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({
+    client: hostClient,
     onClientInitialized,
     onClientInitializationError,
     onSpacesReady,
@@ -35,12 +36,13 @@ export default Capability.makeModule(
     const capabilityManager = yield* Capability.Service;
     const pluginManager = yield* Plugin.Service;
 
-    log('creating client');
-    const client = new Client(options);
+    log(hostClient ? 'adopting host client' : 'creating client');
+    const client = hostClient ?? new Client(options);
+    if (!hostClient) {
+      // A host-supplied client marked this where it began initializing, which is the span.
+      performance.mark('milestone:client-initialize:start');
+    }
     log('initializing client (forked)...');
-    // Boot-waterfall milestones: split the client init (formerly the boot critical path's
-    // longest block) into SDK initialize vs the app-supplied callback.
-    performance.mark('milestone:client-initialize:start');
 
     let subscription: { unsubscribe: () => void } | undefined;
 

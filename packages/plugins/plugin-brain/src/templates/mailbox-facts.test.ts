@@ -10,12 +10,13 @@ import * as Project from '@dxos/compute/Project';
 import * as Routine from '@dxos/compute/Routine';
 import * as Skill from '@dxos/compute/Skill';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Collection, Database, Feed, Obj } from '@dxos/echo';
+import { Database, Feed, Filter } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { TagIndex, Text } from '@dxos/schema';
+
+import { BrainOperation } from '#types';
 
 import { mailboxFacts } from './mailbox-facts';
 
@@ -37,7 +38,6 @@ describe('mailbox facts project template', () => {
         Instructions.Instructions,
         Routine.Routine,
         Trigger.Trigger,
-        Collection.Collection,
         Mailbox.Mailbox,
         Feed.Feed,
         TagIndex.TagIndex,
@@ -72,13 +72,14 @@ describe('mailbox facts project template', () => {
     expect(projectSkills).toContain(Skill.registryURI('org.dxos.skill.brain').toString());
     expect(projectSkills).toContain(Skill.registryURI('org.dxos.skill.inbox').toString());
 
-    // Routine: a deterministic operation action (no instructions), owned + linked.
-    expect(project.routines).toHaveLength(1);
-    const routine = await project.routines[0].tryLoad();
-    expect(Obj.getParent(routine!)?.id).toBe(project.id);
+    // Routine: a deterministic operation action (no instructions), persisted standalone rather than
+    // owned by the project.
+    const routines = await db.query(Filter.type(Routine.Routine)).run();
+    expect(routines).toHaveLength(1);
+    const routine = routines[0];
     expect(routine!.spec?.kind).toBe('runnable');
     expect(routine!.spec?.kind === 'runnable' && routine!.spec.runnable.uri.toString()).toBe(
-      InboxOperation.AnalyzeMailbox.meta.key.toString(),
+      BrainOperation.AnalyzeMailbox.meta.key.toString(),
     );
 
     // Timer trigger, off by default, with the mailbox ref baked into the operation input.

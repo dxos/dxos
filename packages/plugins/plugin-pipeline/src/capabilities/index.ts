@@ -9,3 +9,4 @@ export const CreateObject = SpaceCapability.createObject(() => import('./create-
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.objectProperties'],
 });
+export const Schema = AppCapability.schema(() => import('./schema'));

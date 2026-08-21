@@ -6,6 +6,8 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'KanbanSkill': 'src/skills/KanbanSkill.ts',
+    'KanbanOperationHandlerSet': 'src/operations/KanbanOperationHandlerSet.ts',
     'index': 'src/index.ts',
     'KanbanPlugin': 'src/KanbanPlugin.ts',
     'plugin': 'src/plugin.tsx',
@@ -13,6 +15,7 @@ export default defineConfig({
     'plugin.workerd': 'src/plugin.workerd.ts',
     'skills': 'src/skills/index.ts',
     'capabilities': 'src/capabilities/index.ts',
+    'capabilities.workerd': 'src/capabilities/workerd.ts',
     'capabilities/node': 'src/capabilities/node.ts',
     'components': 'src/components/index.ts',
     'containers': 'src/containers/index.ts',

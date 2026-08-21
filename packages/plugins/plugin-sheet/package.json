@@ -15,10 +15,12 @@
   "imports": {
     "#capabilities": {
       "source": {
+        "workerd": "./src/capabilities/workerd.ts",
         "node": "./src/capabilities/node.ts",
         "default": "./src/capabilities/index.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
       "node": "./dist/lib/capabilities/node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
@@ -39,10 +41,12 @@
     },
     "#operations": {
       "source": {
+        "workerd": "./src/operations/node.ts",
         "node": "./src/operations/node.ts",
         "default": "./src/operations/index.ts"
       },
       "types": "./dist/types/src/operations/index.d.ts",
+      "workerd": "./dist/lib/operations/node.mjs",
       "node": "./dist/lib/operations/node.mjs",
       "default": "./dist/lib/operations.mjs"
     },
@@ -86,11 +90,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    },
-    "./operations": {
-      "source": "./src/operations/index.ts",
-      "types": "./dist/types/src/operations/index.d.ts",
-      "import": "./dist/lib/operations.mjs"
     },
     "./Sheet": {
       "source": "./src/types/Sheet.ts",

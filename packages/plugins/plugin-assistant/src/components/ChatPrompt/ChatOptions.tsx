@@ -9,6 +9,7 @@ import { type Chat as ChatModule, McpServer } from '@dxos/assistant-toolkit';
 import { type Database, Filter, Obj, type Registry, Type, URI } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { IconButton, Input, Popover, Select, useTranslation } from '@dxos/react-ui';
+import { type ChatView } from '@dxos/react-ui-assistant';
 import { Listbox } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -138,7 +139,7 @@ const SkillsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'registry
 const ViewPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
   const { t } = useTranslation(meta.profile.key);
   const [view, setView] = useObject(chat, 'viewType');
-  const value = (view as Assistant.ChatView | undefined) ?? 'normal';
+  const value = (view as ChatView | undefined) ?? 'normal';
 
   return (
     <Listbox.Root value={value} onValueChange={setView} autoFocus>

@@ -38,12 +38,12 @@ const CONTENT = trim`
   - [ ] Schedule the retro
 `;
 
-type DefaultStoryProps = {
+type StoryArgs = {
   content?: string;
   name?: string;
 };
 
-const DefaultStory = ({ content, name }: DefaultStoryProps) => {
+const DefaultStory = ({ content, name }: StoryArgs) => {
   const [space] = useSpaces();
   const outline = useMemo(() => space && space.db.add(Outline.make({ name, content })), [space, name, content]);
   if (!outline?.content.target) {
@@ -78,14 +78,13 @@ const TaskSetView = ({ outline }: { outline: Outline.Outline }) => {
   // The set is created on the first conversion, so resolve the ref reactively rather than reading
   // `.target` once.
   const [taskSet] = useObject(outline.taskSet);
-  // Membership is the parent edge, but `children()` does not re-emit when a child's own property
-  // changes — so a task renamed through the form would not update here. Query by type and filter
-  // by parent instead.
+  // Queried by type and filtered to the set's members: `useQuery` re-emits on membership changes
+  // but not on a member's property change, and the form edits titles in place.
   const tasks = useQuery(space?.db, Filter.type(Task.Task));
-  const filtered = useMemo(
-    () => (taskSet ? tasks.filter((task) => Obj.getParent(task)?.id === taskSet.id) : []),
-    [tasks, taskSet],
-  );
+  const filtered = useMemo(() => {
+    const members = new Set(taskSet?.tasks.map((ref) => ref.target?.id));
+    return tasks.filter((task) => members.has(task.id));
+  }, [tasks, taskSet]);
 
   const handleCreate = useCallback(
     (title: string) => {

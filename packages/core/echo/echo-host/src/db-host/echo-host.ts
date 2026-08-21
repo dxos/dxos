@@ -26,11 +26,6 @@ import { invariant } from '@dxos/invariant';
 import { type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
-import type {
-  GetSyncStateRequest,
-  GetSyncStateResponse,
-  SyncFeedRequest,
-} from '@dxos/protocols/proto/dxos/client/services';
 import { type DataService, type FeedService } from '@dxos/protocols/rpc';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace } from '@dxos/tracing';
@@ -55,6 +50,21 @@ import { hintFromIndexingResult } from './invalidation-hint';
 import { LocalFeedServiceImpl } from './local-feed-service';
 import { QueryServiceImpl } from './query-service';
 import { type SpaceDocumentListUpdatedEvent, SpaceStateManager } from './space-state-manager';
+
+/**
+ * Documents walked between event-loop yields during a reachability traversal. Bounds how long one
+ * pass can hold the worker thread; the walk is best-effort maintenance and never latency-critical.
+ */
+const CLOSURE_YIELD_INTERVAL = 32;
+
+const AUTOMATIC_GARBAGE_COLLECTION = false;
+
+/**
+ * Every path that can start an indexing run. Logged on each run so an idle-churn loop is
+ * attributable from `app.log` alone — the counts are otherwise indistinguishable between a
+ * data-driven pass and a self-sustaining invalidation cycle.
+ */
+export type IndexRunReason = 'open' | 'feed-blocks' | 'documents-saved' | 'batch-continuation' | 'rpc-update-indexes';
 
 export type EchoHostProps = {
   peerIdProvider?: PeerIdProvider;
@@ -82,12 +92,12 @@ export type FeedSyncHandlers = {
   /**
    * Callback to run blocking feed sync.
    */
-  syncFeed: (ctx: Context, request: SyncFeedRequest) => Promise<void>;
+  syncFeed: (ctx: Context, request: FeedService.SyncFeedRequest) => Promise<void>;
 
   /**
    * Callback to read feed sync backlog per namespace.
    */
-  getSyncState: (ctx: Context, request: GetSyncStateRequest) => Promise<GetSyncStateResponse>;
+  getSyncState: (ctx: Context, request: FeedService.GetSyncStateRequest) => Promise<FeedService.GetSyncStateResponse>;
 };
 
 /**
@@ -129,6 +139,14 @@ export class EchoHost extends Resource {
 
   private _updateIndexes!: DeferredTask;
 
+  /**
+   * Why the pending index run was scheduled, counted per reason. `DeferredTask` coalesces
+   * overlapping `schedule()` calls into one run, so attributing a run needs the full multiset of
+   * reasons that accumulated before it started — a single "last caller" field would misattribute
+   * every coalesced run.
+   */
+  private readonly _pendingIndexReasons = new Map<IndexRunReason, number>();
+
   private _feedService: FeedService.Handlers;
 
   private _indexesUpToDate = false;
@@ -138,8 +156,8 @@ export class EchoHost extends Resource {
 
   // Feed sync handlers are wired lazily via `setFeedSyncHandlers` to break the construction-time
   // cycle with the FeedSyncer, which itself depends on `this.feedStore`.
-  #syncFeed?: (ctx: Context, request: SyncFeedRequest) => Promise<void>;
-  #getSyncState?: (ctx: Context, request: GetSyncStateRequest) => Promise<GetSyncStateResponse>;
+  #syncFeed?: (ctx: Context, request: FeedService.SyncFeedRequest) => Promise<void>;
+  #getSyncState?: (ctx: Context, request: FeedService.GetSyncStateRequest) => Promise<FeedService.GetSyncStateResponse>;
 
   constructor({
     peerIdProvider,
@@ -309,7 +327,7 @@ export class EchoHost extends Resource {
     await this._spaceStateManager.open(ctx);
     log('echo-host: space state manager opened');
     this._feedStore.onNewBlocks.on(this._ctx, () => {
-      this._updateIndexes.schedule();
+      this.#scheduleIndexRun('feed-blocks');
     });
 
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
@@ -324,24 +342,27 @@ export class EchoHost extends Resource {
         e.documentIds,
       );
 
-      // Documents that left the directory are this peer's share of a garbage-collection pass some
-      // peer explicitly ran: the unlink replicates as an ordinary change, and its arrival here is
-      // the evidence. Reclaiming them locally is what makes one invocation free disk everywhere,
-      // rather than requiring every peer to run collection itself.
-      //
-      // Safe because a departed document id never comes back: automerge delivers causally, so a
-      // link removal is never observed before the create it depends on, and the sole writer of a
-      // `links` key (object creation) always writes a freshly created document url. Registering
-      // the new collection state first also means no fetch can race the wipe.
-      const departed = previous ? this.#departedDocuments(previous, e) : [];
-      if (departed.length > 0 || e.previousRootId) {
-        this.#scheduleReclaim(e.spaceId, departed, e.previousRootId);
+      // TODO(dmaretskyi): Current algortithm is too expensive.
+      if (AUTOMATIC_GARBAGE_COLLECTION) {
+        // Documents that left the directory are this peer's share of a garbage-collection pass some
+        // peer explicitly ran: the unlink replicates as an ordinary change, and its arrival here is
+        // the evidence. Reclaiming them locally is what makes one invocation free disk everywhere,
+        // rather than requiring every peer to run collection itself.
+        //
+        // Safe because a departed document id never comes back: automerge delivers causally, so a
+        // link removal is never observed before the create it depends on, and the sole writer of a
+        // `links` key (object creation) always writes a freshly created document url. Registering
+        // the new collection state first also means no fetch can race the wipe.
+        const departed = previous ? this.#departedDocuments(previous, e) : [];
+        if (departed.length > 0 || e.previousRootId) {
+          this.#scheduleReclaim(e.spaceId, departed, e.previousRootId);
+        }
       }
     });
     this._automergeHost.documentsSaved.on(this._ctx, () => {
-      this._updateIndexes.schedule();
+      this.#scheduleIndexRun('documents-saved');
     });
-    this._updateIndexes.schedule();
+    this.#scheduleIndexRun('open');
     log('echo-host: open complete');
   }
 
@@ -386,6 +407,7 @@ export class EchoHost extends Resource {
       return;
     }
     do {
+      this.#noteIndexRunReason('rpc-update-indexes');
       await this._updateIndexes.runBlocking();
       if (this._ctx.disposed) {
         return;
@@ -596,6 +618,12 @@ export class EchoHost extends Resource {
             candidates.add(documentId);
           }
         }
+        // Nothing to reclaim: return before touching the live directory. Walking it to build a
+        // reachable set no candidate would be tested against costs one storage load per document in
+        // the space, which on a large space is seconds of thread time for no possible outcome.
+        if (candidates.size === 0) {
+          return;
+        }
 
         // Re-checked against the live directory: between the event and this task the documents
         // could have been re-linked (a concurrent write merging in), and reachable data is never
@@ -608,7 +636,11 @@ export class EchoHost extends Resource {
           log('reclamation skipped, live space directory unavailable', { spaceId });
           return;
         }
-        const reachable = await this.#collectClosure(root.documentId);
+        // Only the candidates' reachability is in question, so the walk stops as soon as every one
+        // has been found rather than enumerating the whole space. Proving a candidate *unreachable*
+        // still costs a full traversal — that is inherent to reachability — but the common
+        // re-link case now exits after a few loads instead of thousands.
+        const reachable = await this.#collectClosure(root.documentId, candidates);
 
         const stale: DocumentId[] = [];
         for (const documentId of candidates) {
@@ -649,15 +681,35 @@ export class EchoHost extends Resource {
    * members. Storage-only: fetching from the network here would re-materialize the very documents
    * being collected. A document that is not on disk terminates the walk.
    */
-  async #collectClosure(documentId: DocumentId): Promise<Set<DocumentId>> {
+  async #collectClosure(documentId: DocumentId, stopWhenFound?: ReadonlySet<DocumentId>): Promise<Set<DocumentId>> {
     const visited = new Set<DocumentId>();
     const queue: DocumentId[] = [documentId];
+    // When the caller only needs a membership answer, track what is still outstanding so the walk
+    // can stop early. An empty set means the caller wants the full closure.
+    const outstanding = stopWhenFound ? new Set(stopWhenFound) : undefined;
+    let sinceYield = 0;
     while (queue.length > 0) {
       const next = queue.shift()!;
       if (visited.has(next)) {
         continue;
       }
       visited.add(next);
+      outstanding?.delete(next);
+      if (outstanding?.size === 0) {
+        break;
+      }
+      // Every load parses an automerge document on the single worker thread, so a large space would
+      // otherwise hold it for seconds and stall the RPCs a booting tab is waiting on.
+      if (++sinceYield >= CLOSURE_YIELD_INTERVAL) {
+        sinceYield = 0;
+        await sleep(0);
+        // Throw rather than return what has been walked so far: a truncated traversal is not a
+        // closure, and returning it would read as "these documents are unreachable" and wipe live
+        // data. `#scheduleReclaim` swallows this once the context is disposed.
+        if (this._ctx.disposed) {
+          throw new Error('closure traversal aborted: context disposed');
+        }
+      }
       const doc = await this.#loadFromStorage(next);
       if (!doc) {
         continue;
@@ -859,6 +911,23 @@ export class EchoHost extends Resource {
     return this.openSpaceRoot(this._ctx, spaceId);
   }
 
+  /** Records why a run is wanted without scheduling it — for callers that drive the task directly. */
+  #noteIndexRunReason(reason: IndexRunReason): void {
+    this._pendingIndexReasons.set(reason, (this._pendingIndexReasons.get(reason) ?? 0) + 1);
+  }
+
+  #scheduleIndexRun(reason: IndexRunReason): void {
+    this.#noteIndexRunReason(reason);
+    this._updateIndexes.schedule();
+  }
+
+  /** Drains the pending reasons so each run reports only the requests that produced it. */
+  #takeIndexRunReasons(): Record<string, number> {
+    const reasons = Object.fromEntries(this._pendingIndexReasons);
+    this._pendingIndexReasons.clear();
+    return reasons;
+  }
+
   private _runUpdateIndexes = async (): Promise<void> => {
     if (this._ctx.disposed || !this.isOpen) {
       // Signal the `updateIndexes` RPC handler's `do-while` loop to exit
@@ -867,6 +936,9 @@ export class EchoHost extends Resource {
       this._indexesUpToDate = true;
       return;
     }
+
+    const reasons = this.#takeIndexRunReasons();
+    const startedAt = performance.now();
 
     try {
       const combinedResult = _makeEmptyMergedResult();
@@ -915,7 +987,13 @@ export class EchoHost extends Resource {
         });
       }
 
+      const hint = hintFromIndexingResult(combinedResult);
       log.verbose('indexEngine update completed', {
+        reasons,
+        durationMs: performance.now() - startedAt,
+        // A run that indexed nothing yet still invalidates queries is the signature of a
+        // self-sustaining invalidation loop, so record whether this run re-armed its own trigger.
+        invalidates: !!hint,
         updated: combinedResult.updated,
         done: combinedResult.done,
         spaces: combinedResult.spaces.size,
@@ -927,12 +1005,11 @@ export class EchoHost extends Resource {
       await sleep(1);
       if (!combinedResult.done) {
         this._indexesUpToDate = false;
-        this._updateIndexes!.schedule();
+        this.#scheduleIndexRun('batch-continuation');
       } else {
         this._indexesUpToDate = true;
       }
       // Invalidate queries after index update — the indexer is the sole invalidation source.
-      const hint = hintFromIndexingResult(combinedResult);
       if (hint) {
         this._queryService.invalidateQueries(hint);
       }

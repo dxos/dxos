@@ -26,14 +26,14 @@ export type PaginationResult<T> = {
    * while loading or already at the head.
    */
   getPrevious: () => void;
+  /** Resets to the newest page and resumes live updates. */
+  jumpToHead: () => void;
   /** Whether older items remain beyond what is currently loaded. Inferred from the last page's size. */
   hasMore: boolean;
   /** True until the current range delivers its first result, even an empty one. */
   isLoading: boolean;
   /** False once eviction has detached the window from the live head (i.e. skip > 0). */
   atHead: boolean;
-  /** Resets to the newest page and resumes live updates. */
-  jumpToHead: () => void;
 };
 
 /** Reactive snapshot handed to React by `useSyncExternalStore`; a fresh object only on real change. */

@@ -6,63 +6,77 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Collection, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInlineAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Outline, TaskSet } from '@dxos/types';
 
 import * as Instructions from './Instructions';
-import * as Routine from './Routine';
-import type * as Skill from './Skill';
+import * as Skill from './Skill';
 
-/** Lightweight inline goal: per-item status and addressability without document ceremony. */
-export const Goal = Schema.Struct({
-  id: Schema.String,
-  text: Schema.String,
-  status: Schema.optional(Schema.Literals(['open', 'met', 'dropped'])),
-});
-
-export type Goal = Schema.Schema.Type<typeof Goal>;
+/** Work-stream lifecycle state; what done means lives on the task set's milestones. */
+export const ProjectStatus = Schema.Literals(['active', 'paused', 'blocked', 'ended']);
+export type ProjectStatus = Schema.Schema.Type<typeof ProjectStatus>;
 
 /**
  * A user-facing container for interactive, long-running work: instructions (skills + commands),
- * routines, artifacts, and AI chat sessions in project context. Successor to `Topic`.
- * Chats and agents attach via relations/queries (assistant-toolkit depends on compute, so no typed refs here).
+ * artifacts, tasks, and AI chat sessions in project context. Successor to `Topic`.
+ *
+ * Fields are the refs the project owns and orders; everything that merely accumulates around it is
+ * a query — chats by the ECHO parent edge, routines by the connected-routines join (a routine
+ * reaches its project through `instructions.objects`, like any other object), agents via chats.
  */
-export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.project', '0.3.0'))(
+export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.project', '0.4.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
     description: Schema.optional(Schema.String),
 
+    /** Work-stream lifecycle state. */
+    status: Schema.optional(ProjectStatus),
+
     /** Owned agent instructions (created + parented at the plugin layer). */
     instructions: Schema.optional(Ref.Ref(Instructions.Instructions).pipe(FormInlineAnnotation.set(true))),
 
-    /** Routines created within the scope of this project. */
-    routines: Schema.Array(Ref.Ref(Routine.Routine)),
-
-    /** Owned collection of artifacts (documents, outliners, tables, ...) managed by the project. */
-    artifacts: Schema.optional(Ref.Ref(Collection.Collection)),
-
-    /** What done means for this project. */
-    goals: Schema.optional(Schema.Array(Goal)),
+    /** Artifacts (documents, outliners, tables, ...) the project owns, in order. */
+    artifacts: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(Annotation.FormInputAnnotation.set(false)),
 
     /** Ad hoc markdown checklist — the scratch surface; project chats write into it. */
     outline: Schema.optional(Ref.Ref(Outline.Outline)),
 
-    /** Owned (or adopted synced) task container; membership is the ECHO parent edge. */
+    /** Owned (or adopted synced) task container, holding the project's tasks and milestones. */
     taskSet: Schema.optional(Ref.Ref(TaskSet.TaskSet)),
   }).pipe(
     Schema.annotate({ title: 'Project' }),
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--stack--regular', hue: 'amber' }),
+    // Only the project skill: filing created objects into `artifacts` is what a project-scoped
+    // session structurally needs; artifact-type skills are enabled on demand. Plain dotted key, so
+    // the type does not depend on the plugin that owns the skill.
+    Skill.SkillsAnnotation.set(['org.dxos.skill.project']),
   ),
 ) {}
 
-/** Factory wrapper around `Obj.make` for {@link Project}. */
+/**
+ * Factory wrapper around `Obj.make` for {@link Project}.
+ *
+ * Materializes the owned task set unless the caller supplies one: there is no UI to add a ledger to
+ * a project that lacks one, so a project without it has nowhere to put its tasks. The parent edge is
+ * set alongside the ref so the set cascades when the project is deleted.
+ */
 export const make = (
-  props: Omit<Partial<Obj.MakeProps<typeof Project>>, 'routines'> & {
-    routines?: ReadonlyArray<Ref.Ref<Routine.Routine>>;
+  props: Omit<Partial<Obj.MakeProps<typeof Project>>, 'artifacts'> & {
+    artifacts?: ReadonlyArray<Ref.Ref<Obj.Unknown>>;
   } = {},
-): Project => Obj.make(Project, { ...props, routines: props.routines ?? [] });
+): Project => {
+  const project = Obj.make(Project, { ...props, artifacts: props.artifacts ?? [] });
+  if (!props.taskSet) {
+    const taskSet = TaskSet.make();
+    Obj.setParent(taskSet, project);
+    Obj.update(project, (project) => {
+      project.taskSet = Ref.make(taskSet);
+    });
+  }
+  return project;
+};
 
 /** Bindings a chat session should receive when running in a project's context. */
 export type ContextBindings = {

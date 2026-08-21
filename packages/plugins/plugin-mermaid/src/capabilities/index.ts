@@ -9,5 +9,5 @@ import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 export const MarkdownExtension = Capability.lazyModule(
   'MarkdownExtension',
   { provides: [MarkdownCapabilities.ExtensionProvider], activatesOn: MarkdownEvents.Start },
-  () => import('./markdown-extension'),
+  () => import('./markdown'),
 );

@@ -2,19 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as Node from '@dxos/app-graph/Node';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useConnections } from '@dxos/plugin-graph/hooks';
-import { Avatar, Icon, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Avatar, Icon, Input, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/react-ui-search';
 import { mx } from '@dxos/ui-theme';
-import { Position, getHostPlatform, isTauri } from '@dxos/util';
+import { DevFlag, Position, getDevFlag, getHostPlatform, isTauri, setDevFlag } from '@dxos/util';
 
 import { meta } from '#meta';
 
@@ -59,7 +59,30 @@ export const Home = (_: HomeProps) => {
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Mosaic.Container>
+      {/* Gated here so production performs no storage read and vitest (MODE 'test') renders no
+          ineffective control; `DEV` statically false lets the bundler drop the component. */}
+      {import.meta.env.DEV && import.meta.env.MODE === 'development' && <DebugControls />}
     </SearchPanel>
+  );
+};
+
+/** Developer toggles; only mounted in a dev build. */
+const DebugControls = () => {
+  const [remotePull, setRemotePull] = useState(() => getDevFlag(DevFlag.RemoteFeedPull));
+
+  const handleToggle = useCallback((checked: boolean) => {
+    setDevFlag(DevFlag.RemoteFeedPull, checked);
+    // Read back rather than trusting `checked`: a failed storage write must not show as enabled.
+    setRemotePull(getDevFlag(DevFlag.RemoteFeedPull));
+  }, []);
+
+  return (
+    <div role='group' className='flex items-center gap-2 px-2 py-1 text-description text-sm'>
+      <Input.Root>
+        <Input.Checkbox checked={remotePull} onCheckedChange={handleToggle} />
+        <Input.Label>Pull remote news feeds</Input.Label>
+      </Input.Root>
+    </div>
   );
 };
 
@@ -107,16 +130,24 @@ const WorkspaceTile: MosaicStackTileComponent<Node.Node> = (props) => {
     >
       <Card.Header>
         <Avatar.Root>
-          <Avatar.Content
-            icon={data.properties.icon}
-            hue={data.properties.hue}
-            hueVariant='transparent'
-            variant='square'
-            size={8}
-            fallback={name}
-          />
-          <Avatar.Label classNames='cursor-pointer'>{name}</Avatar.Label>
-          <Icon icon='ph--caret-right--regular' />
+          {/* `Card.Header` is a 3-track subgrid: the gutter `Card.Block`s and the center
+              `Card.Title` are what keep the icon, label, and caret on one row. */}
+          <Card.Block>
+            <Avatar.Content
+              icon={data.properties.icon}
+              hue={data.properties.hue}
+              hueVariant='transparent'
+              variant='square'
+              size={8}
+              fallback={name}
+            />
+          </Card.Block>
+          <Avatar.Label asChild>
+            <Card.Title classNames='cursor-pointer'>{name}</Card.Title>
+          </Avatar.Label>
+          <Card.Block end>
+            <Icon icon='ph--caret-right--regular' />
+          </Card.Block>
         </Avatar.Root>
       </Card.Header>
     </Card.Root>

@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { HomeSection, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 import { type Space } from '@dxos/react-client/echo';
-import { Card, IconButton, useTranslation } from '@dxos/react-ui';
+import { Card, Flex, IconButton, useTranslation } from '@dxos/react-ui';
 
 import { useHomeSuggestions } from '#hooks';
 import { meta } from '#meta';
@@ -44,7 +44,7 @@ export const SpaceHomeSuggestions = ({ space, onClose }: SpaceScopedProps) => {
   return (
     <HomeSection.Root>
       <HomeSection.Header title={t('space-home.suggestions.heading')} onClose={onClose} />
-      <div className='flex flex-col gap-3'>
+      <Flex column gap='md'>
         {suggestions.map((prompt, index) => (
           <div
             key={`${index}:${prompt}`}
@@ -76,7 +76,7 @@ export const SpaceHomeSuggestions = ({ space, onClose }: SpaceScopedProps) => {
             </Card.Root>
           </div>
         ))}
-      </div>
+      </Flex>
     </HomeSection.Root>
   );
 };

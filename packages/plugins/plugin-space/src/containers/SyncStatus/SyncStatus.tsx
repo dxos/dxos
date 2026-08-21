@@ -8,7 +8,7 @@ import { StatusBar } from '@dxos/plugin-status-bar/components';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
 import { type SpaceSyncStateMap, getSyncSummary, useSyncState } from '@dxos/react-client/echo';
-import { Icon, IconButton, Popover, useTranslation } from '@dxos/react-ui';
+import { Flex, Icon, IconButton, Popover, useTranslation } from '@dxos/react-ui';
 import { iconSize, mx } from '@dxos/ui-theme';
 import { Unit, type UnitFormat } from '@dxos/util';
 
@@ -77,9 +77,9 @@ const EdgeConnectionPopover = ({ status }: { status: EdgeStatus }) => {
   const edgeUrl = client.config.get('runtime.services.edge.url');
 
   return (
-    <div className='flex flex-col gap-2 w-[240px] p-2' style={iconSize(4)}>
+    <Flex column gap='sm' classNames='w-[240px] p-2' style={iconSize(4)}>
       {/* Connection Status Header */}
-      <div className='flex items-center gap-2 mb-2'>
+      <Flex gap='sm' align='center' classNames='mb-2'>
         <Icon
           icon={isConnected ? 'ph--check-circle--regular' : 'ph--warning-circle--regular'}
           classNames={mx(isConnected ? 'text-success-text' : 'text-error-text animate-pulse')}
@@ -87,7 +87,7 @@ const EdgeConnectionPopover = ({ status }: { status: EdgeStatus }) => {
         <span className='font-medium text-sm truncate' title={edgeUrl}>
           {isConnected ? (edgeUrl ?? t('sync-edge-connected.label')) : t('sync-edge-disconnected.label')}
         </span>
-      </div>
+      </Flex>
 
       {/* Connection Details */}
       {!isConnected && (
@@ -124,7 +124,7 @@ const EdgeConnectionPopover = ({ status }: { status: EdgeStatus }) => {
           </div>
         </div>
       )}
-    </div>
+    </Flex>
   );
 };
 

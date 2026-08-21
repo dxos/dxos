@@ -13,7 +13,7 @@ describe('operation serialization', () => {
   // registered handler before invoking any of them, so an operation that cannot serialize breaks
   // the whole registry — not just its own verb.
   test('every handler serializes into a PersistentOperation record', async ({ expect }) => {
-    const handlers = await TasksOperationHandlerSet.getHandlers();
+    const handlers = await TasksOperationHandlerSet.handlers.getHandlers();
     expect(handlers.length).toBeGreaterThan(0);
     const failures = handlers
       .filter((handler) => {
@@ -29,24 +29,34 @@ describe('operation serialization', () => {
     expect(failures).toEqual([]);
   });
 
-  // The projection marker must survive serialization: the edge reads it off the operation
-  // registry rather than a curated table (MILESTONE-5.md §7.4).
-  test('MCP-projected verbs carry their annotation through serialize', async ({ expect }) => {
-    const handlers = await TasksOperationHandlerSet.getHandlers();
-    const projected = handlers
-      .map((handler) => Operation.getMcpTool(Operation.serialize(handler)))
-      .filter((tool): tool is NonNullable<typeof tool> => tool !== undefined)
-      .map((tool) => tool.name)
-      .sort();
+  // A remote host derives the MCP hints (readOnly/destructive) from the registry record, so the
+  // mutation marker must survive serialization.
+  test('mutation annotations survive serialize', async ({ expect }) => {
+    const handlers = await TasksOperationHandlerSet.handlers.getHandlers();
+    const annotated = Object.fromEntries(
+      handlers
+        .map((handler): [string | undefined, Operation.Mutation | undefined] => [
+          String(handler.meta.key).split('.').at(-1),
+          Operation.getMutation(Operation.serialize(handler)),
+        ])
+        .filter(([, mutation]) => mutation !== undefined),
+    );
 
-    expect(projected).toEqual([
-      'outlineGet',
-      'outlineUpdate',
-      'taskAssign',
-      'taskComplete',
-      'taskCreate',
-      'taskList',
-      'taskUpdate',
-    ]);
+    expect(annotated).toEqual({
+      milestoneCreate: 'write',
+      milestoneDelete: 'destructive',
+      milestoneList: 'none',
+      milestoneMove: 'write',
+      milestoneUpdate: 'write',
+      outlineGet: 'none',
+      outlineUpdate: 'write',
+      taskAssign: 'write',
+      taskComplete: 'write',
+      taskCreate: 'write',
+      taskDelete: 'destructive',
+      taskList: 'none',
+      taskMove: 'write',
+      taskUpdate: 'write',
+    });
   });
 });

@@ -111,6 +111,13 @@ export type XmlWidgetDef = {
    * Only meaningful for block widgets.
    */
   estimatedHeight?: (props: XmlWidgetProps) => number | undefined;
+
+  /**
+   * How `estimatedHeight` is applied: `fixed` (default) pins the block, `min` treats it as a floor.
+   * Use `min` for a widget whose height changes after it mounts — a disclosure, a growing log —
+   * since a pinned box cannot open and clips what it holds.
+   */
+  heightMode?: 'fixed' | 'min';
 };
 
 export type XmlWidgetRegistry = Record<string, XmlWidgetDef>;
@@ -632,7 +639,17 @@ const buildDecorations = (
                 const widget: WidgetType | undefined = factory
                   ? (factory(props) ?? undefined)
                   : Component
-                    ? new StubWidget(widgetId, Component, props, notifier, false, !!block, blockHeight, def.debug)
+                    ? new StubWidget(
+                        widgetId,
+                        Component,
+                        props,
+                        notifier,
+                        false,
+                        !!block,
+                        blockHeight,
+                        def.heightMode,
+                        def.debug,
+                      )
                     : undefined;
 
                 // Add decoration.
@@ -704,7 +721,17 @@ const buildDecorations = (
           const widget: WidgetType | undefined = def.factory
             ? (def.factory(props) ?? undefined)
             : def.Component
-              ? new StubWidget(widgetId, def.Component, props, notifier, false, isBlock, blockHeight, def.debug)
+              ? new StubWidget(
+                  widgetId,
+                  def.Component,
+                  props,
+                  notifier,
+                  false,
+                  isBlock,
+                  blockHeight,
+                  def.heightMode,
+                  def.debug,
+                )
               : undefined;
           if (widget) {
             builder.add(
@@ -766,7 +793,17 @@ const buildDecorations = (
         const widget: WidgetType | undefined = def.factory
           ? (def.factory(mergedProps) ?? undefined)
           : def.Component
-            ? new StubWidget(widgetId, def.Component, mergedProps, notifier, true, undefined, undefined, def.debug)
+            ? new StubWidget(
+                widgetId,
+                def.Component,
+                mergedProps,
+                notifier,
+                true,
+                undefined,
+                undefined,
+                def.heightMode,
+                def.debug,
+              )
             : undefined;
 
         if (widget) {

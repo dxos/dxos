@@ -2,15 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Aggregate, Filter, Obj, Order, Query, Ref, Relation, Scope } from '@dxos/echo';
+import { Aggregate, Filter, Obj, Order, Query, Ref, Relation, Scope, Type } from '@dxos/echo';
 import { QueryPlanner } from '@dxos/echo-host/query';
 import { TestSchema } from '@dxos/echo/testing';
+import { DXN } from '@dxos/keys';
 
 import { DatabaseImpl } from '../proxy-db';
 import { EchoTestBuilder } from '../testing';
 import { type WorkingSetDataProvider, WorkingSetQueryExecutor } from './working-set-executor';
+
+/** Ref at a nested path — unreachable by `reference`'s top-level key type. */
+class Wrapper extends Type.makeObject<Wrapper>(DXN.make('com.example.type.wrapper', '0.1.0'))(
+  Schema.Struct({
+    spec: Schema.optional(
+      Schema.Struct({
+        source: Schema.optional(Schema.Union([Ref.Ref(TestSchema.Person), Ref.Ref(TestSchema.Task)])),
+      }),
+    ),
+  }),
+) {}
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 
@@ -21,7 +34,9 @@ describe('WorkingSetQueryExecutor', () => {
   beforeEach(async () => {
     builder = new EchoTestBuilder();
     await builder.open();
-    const peer = await builder.createPeer({ types: [TestSchema.Person, TestSchema.Task, TestSchema.HasManager] });
+    const peer = await builder.createPeer({
+      types: [TestSchema.Person, TestSchema.Task, TestSchema.HasManager, Wrapper],
+    });
     db = await peer.createDatabase();
   });
 
@@ -124,6 +139,37 @@ describe('WorkingSetQueryExecutor', () => {
     const results = planAndExecute(db, Query.select(Filter.type(TestSchema.Task)).reference('assignee'));
     const ids = results.map((item) => item.objectId);
     expect(ids).toContain(alice.id);
+  });
+
+  test('reference traversal resolves a nested property path', async ({ expect }) => {
+    const alice = Obj.make(TestSchema.Person, { name: 'Alice' });
+    // Same type as the hop's result, but unreferenced — so a traversal that ignored the path and
+    // returned every Person would fail this test.
+    const unreferenced = Obj.make(TestSchema.Person, { name: 'Unreferenced' });
+    const task = Obj.make(TestSchema.Task, { title: 'Task 1' });
+    const personWrapper = Obj.make(Wrapper, { spec: { source: Ref.make(alice) } });
+    const taskWrapper = Obj.make(Wrapper, { spec: { source: Ref.make(task) } });
+    db.add(alice);
+    db.add(unreferenced);
+    db.add(task);
+    db.add(personWrapper);
+    db.add(taskWrapper);
+    await db.flush();
+
+    // The executor unescapes dot-paths and deep-gets, so a nested ref traverses even though the typed
+    // `reference` key cannot name it; `plugin-routine` reaches this via `Query.fromAst`.
+    const nestedHop = Query.fromAst({
+      type: 'reference-traversal',
+      anchor: Query.select(Filter.type(Wrapper)).ast,
+      property: 'spec.source',
+    });
+
+    const results = planAndExecute(db, nestedHop.select(Filter.type(TestSchema.Person)));
+    const ids = results.map((item) => item.objectId);
+    expect(ids).toContain(alice.id);
+    expect(ids).not.toContain(unreferenced.id);
+    // The type filter drops the ref that reaches a Task.
+    expect(ids).not.toContain(task.id);
   });
 
   test('incoming reference traversal finds referencing objects', async ({ expect }) => {
@@ -288,6 +334,28 @@ describe('WorkingSetQueryExecutor', () => {
     expect(byId.get(alice.id)).toEqual({ age: 30 });
     expect(byId.get(bob.id)).toEqual({ age: 30 });
     expect(byId.get(charlie.id)).toEqual({ age: 40 });
+  });
+
+  test('aggregate group key falls back through a coalesce chain, resolving `id` to the entity id', async ({
+    expect,
+  }) => {
+    const alice = Obj.make(TestSchema.Person, { name: 'Alice', age: 30 });
+    const bob = Obj.make(TestSchema.Person, { name: 'Bob' });
+    const charlie = Obj.make(TestSchema.Person, { name: 'Charlie' });
+    db.add(alice);
+    db.add(bob);
+    db.add(charlie);
+    await db.flush();
+
+    const results = planAndExecute(
+      db,
+      Query.select(Filter.type(TestSchema.Person)).aggregate({ age: Aggregate.group({ coalesce: ['age', 'id'] }) }),
+    );
+    const byId = new Map(results.map((item) => [item.objectId, item.groupKey]));
+    expect(byId.get(alice.id)).toEqual({ age: 30 });
+    // Members without `age` key on their own id instead of sharing the `null` group.
+    expect(byId.get(bob.id)).toEqual({ age: bob.id });
+    expect(byId.get(charlie.id)).toEqual({ age: charlie.id });
   });
 
   test('aggregate stable-partitions items so groups are contiguous', async ({ expect }) => {

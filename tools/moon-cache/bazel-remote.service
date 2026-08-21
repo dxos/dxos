@@ -6,6 +6,8 @@ Wants=network-online.target
 [Service]
 # --tls_ca_file is what makes this mTLS rather than plain TLS: without it the server would
 # accept any client, and the cache is reachable from the public internet.
+# --access_log_level defaults to all (one line per CAS/AC request) and filled the disk in
+# 8 days at CI volume; `none` disables it, the request rate isn't otherwise interesting.
 ExecStart=/usr/local/bin/bazel-remote \
   --dir /var/cache/moon \
   --max_size 100 \
@@ -16,6 +18,7 @@ ExecStart=/usr/local/bin/bazel-remote \
   --tls_key_file /etc/bazel-remote/server.key \
   --tls_ca_file /etc/bazel-remote/ca.pem \
   --min_tls_version 1.2 \
+  --access_log_level none \
   --enable_endpoint_metrics
 Restart=always
 RestartSec=2

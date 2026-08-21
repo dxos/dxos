@@ -93,7 +93,7 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
     // trigger automatic action expansion (unlike resolver-created nodes in primary mode).
     // Explicitly expand here so extensions — e.g. plugin-meeting's "Create meeting" — attach
     // to this node's toolbar for the one event whose companion is currently open.
-    void Graph.expand(graph, nodeId, 'action');
+    void Graph.expandSync(graph, nodeId, 'action');
   }, [graph, isEventNode, nodeId]);
 
   // Promote the event from a companion to the main view (mirrors MessageArticle).

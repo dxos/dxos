@@ -28,3 +28,4 @@ export const RepoLayer = Capability.lazyModule(
   },
   () => import('./repo-layer'),
 );
+export const Schema = AppCapability.schema(() => import('./schema'));

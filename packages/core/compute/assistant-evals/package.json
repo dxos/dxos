@@ -42,6 +42,7 @@
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-routine": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-table": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",

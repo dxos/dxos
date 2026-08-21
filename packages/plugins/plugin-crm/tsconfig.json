@@ -64,6 +64,9 @@
       "path": "../../core/echo/echo-client"
     },
     {
+      "path": "../../core/echo/echo-react"
+    },
+    {
       "path": "../../core/mesh/edge-client"
     },
     {
@@ -94,6 +97,9 @@
       "path": "../../ui/ui-theme"
     },
     {
+      "path": "../plugin-client"
+    },
+    {
       "path": "../plugin-inbox"
     },
     {
@@ -104,6 +110,9 @@
     },
     {
       "path": "../plugin-routine"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

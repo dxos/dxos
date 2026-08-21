@@ -6,6 +6,8 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'TableSkill': 'src/skills/TableSkill.ts',
+    'TableOperationHandlerSet': 'src/operations/TableOperationHandlerSet.ts',
     'index': 'src/index.ts',
     'TablePlugin': 'src/TablePlugin.ts',
     'plugin': 'src/plugin.tsx',
@@ -13,6 +15,7 @@ export default defineConfig({
     'plugin.workerd': 'src/plugin.workerd.ts',
     'skills': 'src/skills/index.ts',
     'capabilities': 'src/capabilities/index.ts',
+    'capabilities.workerd': 'src/capabilities/workerd.ts',
     'capabilities/node': 'src/capabilities/node.ts',
     'containers': 'src/containers/index.ts',
     'meta': 'src/meta.ts',

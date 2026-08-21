@@ -7,8 +7,8 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 
 import { ObjectCore } from '../core-db';
-import { getObjectCore, initEchoReactiveObjectRootProxy } from './echo-handler';
-import { isEchoObject } from './echo-object-utils';
+import { initEchoReactiveObjectRootProxy } from './echo-handler';
+import { getObjectCore, isEchoObject } from './echo-object-utils';
 import { symbolInternals } from './echo-proxy-target';
 
 export type CloneOptions<T extends Obj.Unknown> = {

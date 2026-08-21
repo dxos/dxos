@@ -3,16 +3,15 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
-import { createIdFromSpaceKey } from '@dxos/echo-protocol';
-import { EffectEx } from '@dxos/effect';
-import { IdentityDid } from '@dxos/keys';
+import { Identity } from '@dxos/halo';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
-import { ClientCapabilities, ClientEvents } from '#types';
+import { ClientEvents } from '#types';
 
 import { CreateIdentity } from './definitions';
 
@@ -20,18 +19,18 @@ const handler: Operation.WithHandler<typeof CreateIdentity> = CreateIdentity.pip
   Operation.withHandler(
     Effect.fnUntraced(function* (profile) {
       const manager = yield* Capability.get(Capabilities.PluginManager);
-      const client = yield* Capability.get(ClientCapabilities.Client);
-      const data = yield* Effect.promise(() => client.halo.createIdentity(profile));
+      const identity = yield* Identity.create(profile);
       // Boot-waterfall milestone: the identity exists from here (first-run path).
       performance.mark('milestone:identity-created');
-      const spaceKey = data.spaceKey;
-      const spaceId = spaceKey ? yield* Effect.promise(() => createIdFromSpaceKey(spaceKey)) : undefined;
-      yield* Effect.promise(() => EffectEx.runAndForwardErrors(manager.activate(ClientEvents.IdentityCreated)));
+      const spaceId = yield* Identity.personalSpaceId;
+      yield* manager.activate(ClientEvents.IdentityCreated);
       yield* Operation.schedule(ObservabilityOperation.SendEvent, { name: 'identity.create' });
       return {
-        identityDid: IdentityDid.make(data.did),
-        ...(spaceId !== undefined && { spaceId }),
-        ...(data.profile !== undefined && { profile: data.profile }),
+        identityDid: identity.did,
+        ...(Option.isSome(spaceId) && { spaceId: spaceId.value }),
+        ...(identity.displayName !== undefined || identity.data !== undefined
+          ? { profile: { displayName: identity.displayName, data: identity.data } }
+          : {}),
       };
     }),
   ),

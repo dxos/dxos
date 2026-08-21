@@ -24,7 +24,6 @@ import {
   type EdgeReplicationSetting,
   type IdentityRecord,
   type LargeSpaceMetadata,
-  type SpaceCache,
   type SpaceMetadata,
 } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { SqlTransaction } from '@dxos/sql-sqlite';
@@ -217,11 +216,6 @@ export class SqliteMetadataStore implements IMetadataStore {
 
   async setSpaceControlLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe): Promise<void> {
     this.#getSpace(spaceKey).controlTimeframe = timeframe;
-    await this._save();
-  }
-
-  async setCache(spaceKey: PublicKey, cache: SpaceCache): Promise<void> {
-    this.#getSpace(spaceKey).cache = cache;
     await this._save();
   }
 

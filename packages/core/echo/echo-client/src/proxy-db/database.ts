@@ -45,8 +45,7 @@ import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { runServiceCall } from '@dxos/protocols';
-import { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
+import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 import { defaultMap } from '@dxos/util';
 
@@ -95,12 +94,12 @@ export interface EchoDatabase extends Database.Database {
   /**
    * Get the current per-peer automerge document sync state.
    */
-  getAutomergeSyncState(): Promise<SpaceSyncState>;
+  getAutomergeSyncState(): Promise<DataService.SpaceSyncState>;
 
   /**
    * Get notification about the per-peer automerge document sync progress.
    */
-  subscribeToAutomergeSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn;
+  subscribeToAutomergeSyncState(ctx: Context, callback: (state: DataService.SpaceSyncState) => void): CleanupFn;
 
   /**
    * Returns ids for all objects in the space (both loaded and unloaded).
@@ -209,19 +208,35 @@ type SpaceFeedSyncState = Pick<Database.SyncState, 'blocksToPull' | 'blocksToPus
 const EMPTY_FEED_SYNC_STATE: SpaceFeedSyncState = { blocksToPull: '0', blocksToPush: '0', totalBlocks: '0' };
 
 /**
- * Poll interval for feed block backlog, which has no change stream.
+ * Sums per-namespace feed block backlog counts into the space-wide totals tracked by
+ * {@link SpaceFeedSyncState}. Shared by the one-shot {@link DatabaseImpl.getSyncState} and the
+ * streaming {@link DatabaseImpl.subscribeToSyncState}.
  */
-const FEED_SYNC_POLL_INTERVAL = 2_000;
+const aggregateFeedSyncState = (response: FeedService.GetSyncStateResponse): SpaceFeedSyncState => {
+  let blocksToPull = 0n;
+  let blocksToPush = 0n;
+  let totalBlocks = 0n;
+  for (const namespace of response.namespaces ?? []) {
+    blocksToPull += BigInt(namespace.blocksToPull);
+    blocksToPush += BigInt(namespace.blocksToPush);
+    totalBlocks += BigInt(namespace.totalBlocks);
+  }
+  return {
+    blocksToPull: String(blocksToPull),
+    blocksToPush: String(blocksToPush),
+    totalBlocks: String(totalBlocks),
+  };
+};
 
 /**
  * Selects the peer to report the automerge backlog against: the explicit `peerId` when given,
  * otherwise the EDGE peer.
  */
 const selectPeer = (
-  peers: readonly SpaceSyncState.PeerState[],
+  peers: readonly DataService.SpaceSyncState.PeerState[],
   spaceId: SpaceId,
   peerId?: string,
-): SpaceSyncState.PeerState | undefined =>
+): DataService.SpaceSyncState.PeerState | undefined =>
   peerId !== undefined
     ? peers.find((peer) => peer.peerId === peerId)
     : peers.find((peer) => isEdgePeerId(peer.peerId, spaceId));
@@ -230,7 +245,7 @@ const selectPeer = (
  * Flattens per-peer automerge state (for the selected peer) with aggregated feed state.
  */
 const combineSyncState = (
-  automerge: SpaceSyncState,
+  automerge: DataService.SpaceSyncState,
   feeds: SpaceFeedSyncState,
   spaceId: SpaceId,
   peerId?: string,
@@ -747,11 +762,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     await this._entityManager.flush();
   }
 
-  getAutomergeSyncState(): Promise<SpaceSyncState> {
+  getAutomergeSyncState(): Promise<DataService.SpaceSyncState> {
     return this._entityManager.getSyncState();
   }
 
-  subscribeToAutomergeSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn {
+  subscribeToAutomergeSyncState(ctx: Context, callback: (state: DataService.SpaceSyncState) => void): CleanupFn {
     return this._entityManager.subscribeToSyncState(ctx, callback);
   }
 
@@ -762,8 +777,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   subscribeToSyncState(cb: (state: Database.SyncState) => void, options?: Database.GetSyncStateOptions): CleanupFn {
     const ctx = Context.default();
-    let cancelled = false;
-    let automerge: SpaceSyncState = { peers: [] };
+    let automerge: DataService.SpaceSyncState = { peers: [] };
     let feeds: SpaceFeedSyncState = EMPTY_FEED_SYNC_STATE;
     const emit = () => cb(combineSyncState(automerge, feeds, this.spaceId, options?.peerId));
 
@@ -775,35 +789,39 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       }),
     );
 
-    // Feed blocks have no change stream, so poll the backend.
-    let pollInFlight = false;
-    const pollFeeds = async () => {
-      // Skip overlapping ticks so a slow RPC can't emit stale state after a newer poll.
-      if (pollInFlight) {
+    // Feed blocks arrive on a separate stream, which dies on reconnect (leader change) — re-established
+    // from the refreshed service, and cleared meanwhile so a consumer never keeps reporting a backlog
+    // measured against a connection that no longer exists.
+    let cleanupFeedStream: (() => void) | undefined;
+    const subscribeFeedSyncState = () => {
+      cleanupFeedStream?.();
+      cleanupFeedStream = undefined;
+      if (!this.#feedService) {
         return;
       }
-      pollInFlight = true;
-      try {
-        const next = await this.#getSpaceFeedSyncState();
-        if (!cancelled) {
-          feeds = next;
-          emit();
-        }
-      } catch (error) {
-        // Keep the previous feeds state on failure rather than leaving an unhandled rejection.
-        if (!cancelled) {
-          log.warn('failed to poll feed sync state', { error });
-        }
-      } finally {
-        pollInFlight = false;
-      }
+      cleanupFeedStream = subscribeStream(
+        this.#runtime,
+        this.#feedService['FeedService.subscribeSyncState']({ spaceId: this.spaceId, namespaces: [] }),
+        {
+          onData: (response) => {
+            feeds = aggregateFeedSyncState(response);
+            emit();
+          },
+          onError: (error) => {
+            feeds = EMPTY_FEED_SYNC_STATE;
+            emit();
+            if (error instanceof RpcClosedError) {
+              ctx.onDispose(this._entityManager.reconnected.once(() => subscribeFeedSyncState()));
+            } else if (error) {
+              log.warn('feed sync state stream failed', { error });
+            }
+          },
+        },
+      );
     };
-    void pollFeeds();
-    const timer = setInterval(() => void pollFeeds(), FEED_SYNC_POLL_INTERVAL);
-    ctx.onDispose(() => {
-      cancelled = true;
-      clearInterval(timer);
-    });
+
+    subscribeFeedSyncState();
+    ctx.onDispose(() => cleanupFeedStream?.());
 
     return () => {
       void ctx.dispose();
@@ -821,19 +839,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       this.#runtime,
       this.#feedService['FeedService.getSyncState']({ spaceId: this.spaceId, namespaces: [] }),
     );
-    let blocksToPull = 0n;
-    let blocksToPush = 0n;
-    let totalBlocks = 0n;
-    for (const namespace of response.namespaces ?? []) {
-      blocksToPull += BigInt(namespace.blocksToPull);
-      blocksToPush += BigInt(namespace.blocksToPush);
-      totalBlocks += BigInt(namespace.totalBlocks);
-    }
-    return {
-      blocksToPull: String(blocksToPull),
-      blocksToPush: String(blocksToPush),
-      totalBlocks: String(totalBlocks),
-    };
+    return aggregateFeedSyncState(response);
   }
 
   getAllObjectIds(): string[] {

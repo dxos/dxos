@@ -9,8 +9,11 @@ import {
   AppGraphBuilder,
   AutomationTemplates,
   MailboxAction,
+  MailboxProcessor,
   OperationHandler,
   ProjectTemplates,
+  Schema,
+  SenderAction,
   SkillDefinition,
 } from '#capabilities';
 import { meta } from '#meta';
@@ -24,10 +27,12 @@ export const CrmPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.addModule(Schema),
   Plugin.addModule(AutomationTemplates),
   // Injects the `Process CRM` action into plugin-inbox's mailbox toolbar menu.
   Plugin.addModule(MailboxAction),
+  Plugin.addModule(MailboxProcessor),
+  Plugin.addModule(SenderAction),
   Plugin.addModule(ProjectTemplates),
   Plugin.addModule(
     AppCapability.pluginAsset({

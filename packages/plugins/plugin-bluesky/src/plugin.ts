@@ -5,7 +5,7 @@
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { ChannelBackend, Connector, OperationHandler } from '#capabilities';
+import { ChannelBackend, Connector, OperationHandler, Schema } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
@@ -15,7 +15,7 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 export const BlueskyPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),
   Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.addModule(Schema),
   Plugin.addModule(Connector),
   // Read-only ATProto channel backend (contributes ThreadCapabilities.ChannelBackend).
   Plugin.addModule(ChannelBackend),

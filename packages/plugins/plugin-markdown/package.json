@@ -15,10 +15,12 @@
   "imports": {
     "#capabilities": {
       "source": {
+        "workerd": "./src/capabilities/workerd.ts",
         "node": "./src/capabilities/node.ts",
         "default": "./src/capabilities/index.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
       "node": "./dist/lib/capabilities/node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
@@ -85,16 +87,6 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./operations": {
-      "source": "./src/operations/index.ts",
-      "types": "./dist/types/src/operations/index.d.ts",
-      "import": "./dist/lib/operations.mjs"
-    },
-    "./skills": {
-      "source": "./src/skills/index.ts",
-      "types": "./dist/types/src/skills/index.d.ts",
-      "import": "./dist/lib/skills.mjs"
-    },
     "./testing": {
       "source": "./src/testing.ts",
       "types": "./dist/types/src/testing.d.ts",
@@ -135,6 +127,16 @@
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
+    },
+    "./MarkdownOperationHandlerSet": {
+      "source": "./src/operations/MarkdownOperationHandlerSet.ts",
+      "types": "./dist/types/src/operations/MarkdownOperationHandlerSet.d.ts",
+      "import": "./dist/lib/MarkdownOperationHandlerSet.mjs"
+    },
+    "./MarkdownSkill": {
+      "source": "./src/skills/MarkdownSkill.ts",
+      "types": "./dist/types/src/skills/MarkdownSkill.d.ts",
+      "import": "./dist/lib/MarkdownSkill.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

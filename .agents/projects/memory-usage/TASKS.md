@@ -1,6 +1,6 @@
 # Composer Memory Usage — Tasks
 
-_Resume: Phase 4 (idle churn) is the largest remaining pool; Phase 3 continues opportunistically. Uncommitted: none._
+_Resume: Phase 4 idle-churn sites S1-S4 fixed/investigated (see below). S1 landed in #12561 (trigger-list subscription); S3 upgraded from backoff to a real streaming RPC in #12580; S2 likewise upgraded from backoff to a real streaming RPC in this pass. Sequencing still open — verify decommit with `scripts/memory/soak.mjs` once this lands. Phase 3 continues opportunistically. Uncommitted: none._
 
 **Target: 300–400 MB resting footprint for an idle tab, 500 MB ceiling.**
 Composition model and measurement rules: DESIGN.md. Industry comparison:
@@ -71,41 +71,124 @@ in heap-used, so measure with `scripts/memory/soak.mjs` rather than a snapshot.
 Four independent loops. Each needs its own decision; they do not have to be
 fixed the same way.
 
-- [ ] **S1. `TriggerDispatcher` fires at 1 Hz with no triggers defined.**
+- [x] **S1. `TriggerDispatcher` fires at 1 Hz with no triggers defined.**
       `compute-runtime/src/triggers/trigger-dispatcher.ts`: `livePollInterval`
       defaults to 1 s (~line 300), `_startNaturalTimeProcessing` repeats
       `invokeScheduledTriggers` on `Schedule.fixed` (~line 921), and each tick
       also runs an ECHO `Filter.type(Trigger)` query. Started by plugin-routine,
-      a core plugin, so every tab pays it.
-- [ ] **S2. Every subscribed feed polls at 1 Hz.**
-      `echo-client/src/feed/feed-handle.ts` (`POLLING_INTERVAL`,
-      `beginPolling`): one timer and one refresh RPC per feed handle, so cost
-      scales with feeds open (a mailbox is the common case).
-- [ ] **S3. Each open space polls sync state at 2 s.**
+      a core plugin, so every tab pays it. **Partially fixed, toward R1:**
+      `start()` now subscribes once to a live `Filter.type(Trigger)` query
+      (`#subscribeToTriggers`); `refreshTriggers`/`_fetchTriggers` read the
+      subscription's cached `results` instead of re-querying the database, so
+      the trigger-list lookup no longer issues SQL when the trigger set hasn't
+      changed. This is only the "subscription" half of R1 — the tick itself
+      still fires every second (`TriggerDispatcher.invokeScheduledTriggers`
+      still queries feed and subscription trigger data on each tick, and cron
+      due-time checks still run on the fixed schedule). The full R1 — no timer
+      while the working set is empty, sleep to the next due time otherwise —
+      would additionally need to skip firing altogether when idle, a larger,
+      riskier change to feed/subscription trigger semantics, left as a
+      follow-up if further gains are wanted.
+- [x] **S2. Every subscribed feed polls at 1 Hz.**
+      `echo-client/src/feed/feed-handle.ts` (`beginPolling`): one timer and one
+      refresh RPC per feed handle, so cost scales with feeds open (a mailbox
+      is the common case). **Superseded by a real streaming RPC (R1, not
+      R2):** the initial no-change-backoff polling (landed in #12561) has been
+      replaced by `FeedService.subscribeFeed`, a genuine `stream: true` RPC —
+      `LocalFeedServiceImpl` (`echo-host`) pushes a fresh query snapshot on
+      subscribe and again whenever `FeedStore.onNewBlocks` fires and the
+      recomputed snapshot actually differs (string-compared against the last
+      one sent, since this payload is real object content rather than
+      `subscribeSyncState`'s small aggregate count — suppressing unchanged
+      snapshots server-side matters more here); `FeedHandle.beginPolling`
+      consumes it via `subscribeStream` instead of any client-side timer, and
+      shares the same decode/upsert/diff logic as the still-present one-shot
+      `refresh()` path. The two `subscribeX` RPCs' identical
+      recompute-on-`onNewBlocks`-and-coalesce logic is factored into
+      `LocalFeedServiceImpl#recomputeOnNewBlocks`, parameterized by a compute
+      function and a change comparator. Verified end-to-end in
+      `echo-host/src/db-host/feed-service.test.ts` (initial snapshot + a
+      second push after a local write). R4 (visibility gating) was considered
+      but deferred — orthogonal, applies to all four sites, better done as one
+      pass. Same `onNewBlocks`-is-unscoped caveat as S3 applies here too (see
+      the S3 entry's note) — this subscription also recomputes on any space's
+      write, not just its own.
+- [x] **S3. Each open space polls sync state at 2 s.**
       `echo-client/src/proxy-db/database.ts` (`FEED_SYNC_POLL_INTERVAL`):
-      aggregates block backlog across namespaces.
-- [ ] **S4. Query re-execution amplifies every tick.** `echo-host`'s
+      aggregates block backlog across namespaces via a real per-namespace
+      `FeedService.getSyncState` RPC (SQLite `COUNT(*)` server-side); started
+      unconditionally per open space by `plugin-client`'s
+      `space-replication-progress.ts`. **Superseded by a real streaming RPC
+      (R1, not R2):** initial no-change-backoff polling (landed in #12561) has
+      been replaced by `FeedService.subscribeSyncState`, a genuine
+      `stream: true` RPC — `LocalFeedServiceImpl` (`echo-host`) pushes a fresh
+      snapshot on subscribe and again whenever `FeedStore.onNewBlocks` fires
+      and the recomputed state actually differs; `DatabaseImpl.subscribeToSyncState`
+      consumes it via `subscribeStream` instead of any client-side timer.
+      `onNewBlocks` fires on local writes too (`appendLocal` delegates to
+      `append`, which emits it), so this covers both push and pull backlog
+      changes (local writes and completed sync pulls); the freshness ceiling
+      is `FeedSyncer`'s own internal poll cadence against EDGE (5-10 s,
+      unrelated/pre-existing — the remote-availability leg genuinely can't be
+      push-based without a further sync-protocol change, out of scope here).
+      Verified end-to-end in `echo-host/src/db-host/feed-service.test.ts`
+      (initial snapshot + a second push after a local write, direct against
+      `LocalFeedServiceImpl` — the higher-level `EchoTestBuilder` topology
+      stubs `getSyncState` to always-empty when no `FeedSyncer` is wired, so a
+      client-level test can't observe real backlog values). Noted but not
+      fixed here: `space-replication-progress.ts` re-subscribes per space on
+      every `client.spaces` emission with no de-dupe, which can spawn
+      duplicate subscriptions per space over a session — worth its own
+      follow-up. Also noted: `FeedStore.onNewBlocks` is unscoped (fires for
+      any space's write), so every active `subscribeSyncState` subscription
+      recomputes its own namespace counts on each signal regardless of
+      relevance — still cheaper than the fixed-interval poll it replaced
+      (which recomputed unconditionally every 2 s), but a per-space-scoped
+      event would cut it further; needs a `FeedStore` change, not just this
+      RPC, so left as a follow-up alongside the de-dupe note above. Separate
+      PR from the initial S1-S4 pass (#12561).
+- [x] **S4. Query re-execution amplifies every tick.** `echo-host`'s
       `QueryService._executeQueries` re-runs each dirty reactive query per
       invalidation hint; the loops above generate hints, which is what turns
-      three timers into the observed SQL fan-out.
+      three timers into the observed SQL fan-out. **Investigated, no code
+      change:** `matchesHint`/`extractScopes` (`query-executor.ts`) already do
+      real per-dimension filtering, not a broad type/space-only match, and are
+      covered by extensive regression tests (DX-966 canonicalization, id-rooted
+      relation traversal) — tightening further is a speculative change to the
+      invalidation core for unclear benefit. More importantly, S1's
+      `_fetchTriggers().run` was a one-shot query (`ActiveQuery.firstResult`),
+      unconditionally dirty regardless of any hint — `matchesHint` was never
+      in the amplification path for it, so R5 targets the wrong layer. With
+      S1-S3 no longer generating spurious ticks/RPCs on an idle tab, S4's
+      observed fan-out should fall away as a consequence rather than needing
+      its own fix. Separately noted (not actioned): `query-service.ts` has a
+      standing TODO that an idle Composer registers ~80 queries with only ~10
+      unique — a dedup opportunity independent of this phase.
 
 ### Remedies — options to evaluate per site
 
 Independent of each other; some sites may want none, one, or several.
 
-- [ ] **R1. Event-driven scheduling.** Replace a fixed tick with "wake when
-      there is something to do": no timer while the working set is empty, and
-      sleep to the next due time otherwise. Fits S1 directly. Needs a
-      subscription so work arriving while idle still starts, and care around
-      clock changes.
-- [ ] **R2. No-change backoff.** Widen the interval while a poll keeps
+- [~] **R1. Event-driven scheduling.** Replace a fixed tick with "wake when
+  there is something to do": no timer while the working set is empty, and
+  sleep to the next due time otherwise. Fits S1 directly. Needs a
+  subscription so work arriving while idle still starts, and care around
+  clock changes. Partially done for S1: the trigger-list subscription
+  landed (no more per-tick DB query), but the tick itself still fires at a
+  fixed 1 Hz — "no timer while idle" is not yet implemented.
+- [x] **R2. No-change backoff.** Widen the interval while a poll keeps
       returning nothing (e.g. 1 s → 5 s → 30 s), reset on change or local
-      write. Fits S2 and S3. Costs staleness after a quiet period, so pair it
-      with an explicit refresh on user action.
-- [ ] **R3. Coordinated scheduling.** One scheduler batching all due work into
-      a single round-trip instead of N independent timers. Fits S2 and S3
-      together; the win is fewer wakeups and fewer payloads, not a longer
-      interval.
+      write. Interim fix for S2 and S3 while a real streaming RPC was out of
+      scope; both have since been upgraded past it (see below), so this
+      remedy is fully superseded — kept `[x]` as a record of what shipped
+      first, not as an open remedy.
+      **Superseded for S2 and S3**: both were upgraded from backoff to a real
+      streaming RPC (`FeedService.subscribeFeed`, `FeedService.subscribeSyncState`)
+      — see their entries above; R2 no longer applies to either.
+- [x] **R3. Coordinated scheduling.** One scheduler batching all due work into
+      a single round-trip instead of N independent timers. Moot for S2 and
+      S3 now that both push independently instead of polling on any
+      schedule — there's no timer left to coordinate.
 - [ ] **R4. Visibility gating.** Pause or stretch while `document.hidden`,
       resume on `visibilitychange`. Applies to every site, and is the cheapest
       change, but only helps background tabs. Note the client worker keeps
@@ -114,8 +197,13 @@ Independent of each other; some sites may want none, one, or several.
       shapes so a tick re-runs fewer queries. Addresses S4 without changing any
       timer.
 - [ ] **R6. Push over poll.** A persistent connection where EDGE notifies on
-      change, so an idle tab does no work at all. Supersedes R1–R3 for S2 and
-      S3. Lands with feed-live-objects stage 4 rather than here.
+      change, so an idle tab does no work at all. Still open: what S2 and S3
+      shipped is push from the local `echo-host` to the client
+      (`FeedStore.onNewBlocks` → a streaming RPC), which eliminates client-side
+      polling entirely, but the _pull_ leg — EDGE notifying `echo-host` of
+      remote changes, rather than `FeedSyncer`'s own poll cadence against it —
+      is the larger, still-unimplemented half of this remedy. Lands with
+      feed-live-objects stage 4 rather than here.
 
 ### Sequencing
 

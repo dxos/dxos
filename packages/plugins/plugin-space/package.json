@@ -15,10 +15,12 @@
   "imports": {
     "#capabilities": {
       "source": {
+        "workerd": "./src/capabilities/workerd.ts",
         "node": "./src/capabilities/node.ts",
         "default": "./src/capabilities/index.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
       "node": "./dist/lib/capabilities/node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
@@ -68,6 +70,11 @@
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
     },
+    "#skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "default": "./dist/lib/skills.mjs"
+    },
     "#types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
@@ -107,6 +114,11 @@
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./DatabaseSkill": {
+      "source": "./src/skills/DatabaseSkill.ts",
+      "types": "./dist/types/src/skills/DatabaseSkill.d.ts",
+      "import": "./dist/lib/DatabaseSkill.mjs"
+    },
     "./CollectionOperation": {
       "source": "./src/types/CollectionOperation.ts",
       "types": "./dist/types/src/types/CollectionOperation.d.ts",
@@ -136,6 +148,11 @@
       "source": "./src/types/SpaceForm.ts",
       "types": "./dist/types/src/types/SpaceForm.d.ts",
       "import": "./dist/lib/SpaceForm.mjs"
+    },
+    "./SpaceOperationHandlerSet": {
+      "source": "./src/operations/SpaceOperationHandlerSet.ts",
+      "types": "./dist/types/src/operations/SpaceOperationHandlerSet.d.ts",
+      "import": "./dist/lib/SpaceOperationHandlerSet.mjs"
     },
     "./SpaceOperation": {
       "source": "./src/types/SpaceOperation.ts",
@@ -200,6 +217,7 @@
     "@dxos/display-name": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",

@@ -6,43 +6,46 @@ import * as Layer from 'effect/Layer';
 
 import { OpaqueToolkit } from '@dxos/ai';
 import { Chat, WebSearchToolkit } from '@dxos/assistant-toolkit';
-import { DatabaseHandlers, DatabaseSkill } from '@dxos/assistant-toolkit';
+import { ChatContextHandlers, ChatContextSkill } from '@dxos/assistant-toolkit';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
 import { Feed, Tag, type Type } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
-// Narrow subpath imports (`/skills` and `/types`) so the CLI's
-// `bun run --conditions=source` only walks plugin source files that are free of
-// React-component imports. The plugin root barrels re-export the whole tree
-// (including React components that transitively pull `react-aria-components` —
-// whose `source` export condition advertises a TS file that isn't shipped in
-// its dist, causing Bun resolution to fail).
-import { AssistantSkill } from '@dxos/plugin-assistant/skills';
+// Per-symbol subpath imports so the CLI's `bun run --conditions=source` only walks plugin source
+// files that are free of React-component imports. The plugin root barrels re-export the whole tree
+// (including React components that transitively pull `react-aria-components` — whose `source`
+// export condition advertises a TS file that isn't shipped in its dist, causing Bun resolution to
+// fail).
+import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import * as Chess from '@dxos/plugin-chess/Chess';
-import { ChessOperationHandlerSet } from '@dxos/plugin-chess/operations';
-import { ChessSkill } from '@dxos/plugin-chess/skills';
+import * as ChessOperationHandlerSet from '@dxos/plugin-chess/ChessOperationHandlerSet';
+import * as ChessSkill from '@dxos/plugin-chess/ChessSkill';
 import * as Game from '@dxos/plugin-game/Game';
-import { GoogleOperationHandlerSet } from '@dxos/plugin-google/operations';
+import * as GoogleOperationHandlerSet from '@dxos/plugin-google/GoogleOperationHandlerSet';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';
+import * as CalendarSkill from '@dxos/plugin-inbox/CalendarSkill';
+import * as InboxOperationHandlerSet from '@dxos/plugin-inbox/InboxOperationHandlerSet';
+import * as InboxSendSkill from '@dxos/plugin-inbox/InboxSendSkill';
+import * as InboxSkill from '@dxos/plugin-inbox/InboxSkill';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { InboxOperationHandlerSet } from '@dxos/plugin-inbox/operations';
-import { CalendarSkill, InboxSendSkill, InboxSkill } from '@dxos/plugin-inbox/skills';
-import { JmapOperationHandlerSet } from '@dxos/plugin-jmap/operations';
-import { KanbanOperationHandlerSet } from '@dxos/plugin-kanban/operations';
-import { KanbanSkill } from '@dxos/plugin-kanban/skills';
-import { MapOperationHandlerSet } from '@dxos/plugin-map/operations';
-import { MapSkill } from '@dxos/plugin-map/skills';
+import * as JmapOperationHandlerSet from '@dxos/plugin-jmap/JmapOperationHandlerSet';
+import * as KanbanOperationHandlerSet from '@dxos/plugin-kanban/KanbanOperationHandlerSet';
+import * as KanbanSkill from '@dxos/plugin-kanban/KanbanSkill';
+import * as MapOperationHandlerSet from '@dxos/plugin-map/MapOperationHandlerSet';
+import * as MapSkill from '@dxos/plugin-map/MapSkill';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
-import { MarkdownSkill } from '@dxos/plugin-markdown/skills';
-import { CommentOperationHandlerSet } from '@dxos/plugin-review/operations';
-import { CommentSkill } from '@dxos/plugin-review/skills';
-import { ScriptOperationHandlerSet } from '@dxos/plugin-script/operations';
-import { ScriptSkill } from '@dxos/plugin-script/skills';
-import { TableOperationHandlerSet } from '@dxos/plugin-table/operations';
-import { TableSkill } from '@dxos/plugin-table/skills';
-import { TranscriptionOperationHandlerSet } from '@dxos/plugin-transcription/operations';
-import { TranscriptionSkill } from '@dxos/plugin-transcription/skills';
+import * as MarkdownOperationHandlerSet from '@dxos/plugin-markdown/MarkdownOperationHandlerSet';
+import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
+import * as CommentOperationHandlerSet from '@dxos/plugin-review/CommentOperationHandlerSet';
+import * as CommentSkill from '@dxos/plugin-review/CommentSkill';
+import * as ScriptOperationHandlerSet from '@dxos/plugin-script/ScriptOperationHandlerSet';
+import * as ScriptSkill from '@dxos/plugin-script/ScriptSkill';
+import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
+import * as SpaceOperationHandlerSet from '@dxos/plugin-space/SpaceOperationHandlerSet';
+import * as TableOperationHandlerSet from '@dxos/plugin-table/TableOperationHandlerSet';
+import * as TableSkill from '@dxos/plugin-table/TableSkill';
+import * as TranscriptionOperationHandlerSet from '@dxos/plugin-transcription/TranscriptionOperationHandlerSet';
+import * as TranscriptionSkill from '@dxos/plugin-transcription/TranscriptionSkill';
 import { DataTypes } from '@dxos/schema';
 import {
   AnchoredTo,
@@ -64,6 +67,7 @@ export const skillRegistry = makeRegistry({
     // Skills available to the chat.
     AssistantSkill.make(),
     DatabaseSkill.make(),
+    ChatContextSkill.make(),
     CalendarSkill.make(),
     ChessSkill.make(),
     InboxSkill.make(),
@@ -85,20 +89,21 @@ export const skillRegistry = makeRegistry({
 
 export const operationHandlers = OperationHandlerSet.merge(
   // NOTE: Operation handlers referenced by skills above need to be added here.
-  DatabaseHandlers,
-  ChessOperationHandlerSet,
-  InboxOperationHandlerSet,
+  ChatContextHandlers,
+  SpaceOperationHandlerSet.handlers,
+  ChessOperationHandlerSet.handlers,
+  InboxOperationHandlerSet.handlers,
   // Mail-provider handlers: InboxSendSkill / CalendarSkill reference provider ops, and a missing
   // handler set surfaces only at runtime as "tool not found".
-  GoogleOperationHandlerSet,
-  JmapOperationHandlerSet,
-  KanbanOperationHandlerSet,
-  MapOperationHandlerSet,
-  MarkdownOperationHandlerSet,
-  ScriptOperationHandlerSet,
-  TableOperationHandlerSet,
-  CommentOperationHandlerSet,
-  TranscriptionOperationHandlerSet,
+  GoogleOperationHandlerSet.handlers,
+  JmapOperationHandlerSet.handlers,
+  KanbanOperationHandlerSet.handlers,
+  MapOperationHandlerSet.handlers,
+  MarkdownOperationHandlerSet.handlers,
+  ScriptOperationHandlerSet.handlers,
+  TableOperationHandlerSet.handlers,
+  CommentOperationHandlerSet.handlers,
+  TranscriptionOperationHandlerSet.handlers,
 );
 
 export const toolkits: OpaqueToolkit.OpaqueToolkit[] = [

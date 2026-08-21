@@ -13,6 +13,7 @@ import { CodeCapabilities, CodeEvents } from '#types';
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   requires: [AppCapabilities.PluginAsset],
 });
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const BuildRunState = Capability.lazyModule(
   'BuildRunState',
@@ -20,6 +21,7 @@ export const BuildRunState = Capability.lazyModule(
   () => import('./build-run-state'),
 );
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const NavigationTargetResolver = AppCapability.navigationResolver(() => import('./navigation-target-resolver'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
 });

@@ -82,6 +82,11 @@ export const EntityMeta = Schema.Struct({
   createdAt: Schema.NullOr(Schema.Number),
   /** Unix ms timestamp when the object was last re-indexed. */
   updatedAt: Schema.NullOr(Schema.Number),
+  /**
+   * Global position assigned to the object's feed block — the insertion id a feed cursor names.
+   * Null for automerge objects and for feed blocks not yet positioned.
+   */
+  queuePosition: Schema.NullOr(Schema.Number),
 });
 export interface EntityMeta extends Schema.Schema.Type<typeof EntityMeta> {}
 
@@ -114,6 +119,38 @@ const buildSourceCondition = (
   }
 
   return sql.or(conditions);
+};
+
+/**
+ * Window over a feed's positioned blocks: resume after a cursor position and cap the page.
+ * Only meaningful for a queue-scoped query — `queuePosition` is null for automerge objects, so a
+ * caller must not apply this to a query that also selects from a space's documents.
+ */
+export interface QueueWindow {
+  /** Exclusive lower bound: only blocks positioned strictly after this are returned. */
+  after: number;
+  /** Exclusive upper bound: only blocks positioned strictly before this are returned. */
+  before?: number;
+  /** Maximum rows to return, applied after ordering by position. */
+  limit?: number;
+}
+
+/**
+ * Trailing `... AND queuePosition > ? ORDER BY queuePosition LIMIT ?` for a windowed queue read.
+ * Empty when the window is empty, so the unwindowed query keeps its previous shape (and its
+ * unspecified row order).
+ */
+const buildQueueWindow = (sql: SqlClient.SqlClient, window: QueueWindow | undefined): Statement.Fragment => {
+  if (window === undefined) {
+    return sql``;
+  }
+
+  // A cursor read is over positioned blocks only — `queuePosition > ?` excludes the nulls, and
+  // that is the intent: an unpositioned block has no place in the ordering yet, so admitting it
+  // would let it slip past a later read that resumes beyond its eventual position.
+  const upper = window.before !== undefined ? sql` AND queuePosition < ${window.before}` : sql``;
+  const limit = window.limit !== undefined ? sql` LIMIT ${window.limit}` : sql``;
+  return sql` AND queuePosition > ${window.after}${upper} ORDER BY queuePosition ASC${limit}`;
 };
 
 export class EntityMetaIndex implements Index {
@@ -163,6 +200,7 @@ export class EntityMetaIndex implements Index {
       spaceIds: readonly EntityMeta['spaceId'][];
       includeAllQueues?: boolean;
       queueIds?: readonly string[] | null;
+      window?: QueueWindow;
     }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
         if (query.spaceIds.length === 0 && (!query.queueIds || query.queueIds.length === 0)) {
@@ -176,7 +214,8 @@ export class EntityMetaIndex implements Index {
           query.includeAllQueues ?? false,
           query.queueIds ?? null,
         );
-        const rows = yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition}`;
+        const window = buildQueueWindow(sql, query.window);
+        const rows = yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition}${window}`;
         return rows.map((row) => ({
           ...row,
           deleted: !!row.deleted,
@@ -191,12 +230,14 @@ export class EntityMetaIndex implements Index {
       inverted = false,
       includeAllQueues = false,
       queueIds = null,
+      window,
     }: {
       spaceIds: readonly EntityMeta['spaceId'][];
       typeDxns: readonly EntityMeta['typeDXN'][];
       inverted?: boolean;
       includeAllQueues?: boolean;
       queueIds?: readonly string[] | null;
+      window?: QueueWindow;
     }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
         if (spaceIds.length === 0 && (!queueIds || queueIds.length === 0)) {
@@ -210,7 +251,8 @@ export class EntityMetaIndex implements Index {
 
           const sql = yield* SqlClient.SqlClient;
           const sourceCondition = buildSourceCondition(sql, spaceIds, includeAllQueues, queueIds);
-          const rows = yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition}`;
+          const rows =
+            yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition}${buildQueueWindow(sql, window)}`;
           return rows.map((row) => ({
             ...row,
             deleted: !!row.deleted,
@@ -233,9 +275,10 @@ export class EntityMetaIndex implements Index {
               : exactMatch;
           }),
         );
+        const queueWindow = buildQueueWindow(sql, window);
         const rows = inverted
-          ? yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition} AND NOT ${typeWhere}`
-          : yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition} AND ${typeWhere}`;
+          ? yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition} AND NOT ${typeWhere}${queueWindow}`
+          : yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition} AND ${typeWhere}${queueWindow}`;
         return rows.map((row) => ({
           ...row,
           deleted: !!row.deleted,
@@ -278,7 +321,7 @@ export class EntityMetaIndex implements Index {
           objects,
           (object) =>
             Effect.gen(function* () {
-              const { spaceId, queueId, queueNamespace, documentId, data } = object;
+              const { spaceId, queueId, queueNamespace, documentId, data, queuePosition } = object;
 
               // Extract metadata (Logic emulating Echo APIs as strict imports are unavailable).
               const castData = data;
@@ -369,7 +412,8 @@ export class EntityMetaIndex implements Index {
                     source = ${source},
                     target = ${target},
                     parent = ${parent},
-                    updatedAt = ${updatedAtTimestamp}
+                    updatedAt = ${updatedAtTimestamp},
+                    queuePosition = ${queuePosition ?? null}
                   WHERE recordId = ${existing[0].recordId}
                 `;
               } else {
@@ -377,12 +421,12 @@ export class EntityMetaIndex implements Index {
                   INSERT INTO objectMeta (
                     objectId, queueId, queueNamespace, spaceId, documentId,
                     entityKind, typeDXN, deleted, source, target, parent, version,
-                    createdAt, updatedAt
+                    createdAt, updatedAt, queuePosition
                   ) VALUES (
                     ${objectId}, ${queueId ?? ''}, ${queueNamespace ?? ''}, ${spaceId}, ${documentId ?? ''},
                     ${entityKind}, ${typeDXN}, ${deleted},
                     ${source}, ${target}, ${parent}, ${version},
-                    ${createdAtTimestamp}, ${updatedAtTimestamp}
+                    ${createdAtTimestamp}, ${updatedAtTimestamp}, ${queuePosition ?? null}
                   )
                 `;
               }
