@@ -156,4 +156,51 @@ describe('projectFunctionToTool', () => {
     });
     expect(decoded.properties).toEqual({ any: 1 });
   });
+
+  /** Reports every `$ref` in the document that no `$defs` entry defines. */
+  const danglingRefs = (document: unknown): string[] => {
+    const defs = new Set(Object.keys(((document as Record<string, unknown>).$defs ?? {}) as object));
+    const collect = (node: unknown): string[] => {
+      if (Array.isArray(node)) {
+        return node.flatMap(collect);
+      }
+      if (typeof node !== 'object' || node === null) {
+        return [];
+      }
+      return Object.entries(node as Record<string, unknown>).flatMap(([key, value]) =>
+        key === '$ref' && typeof value === 'string'
+          ? defs.has(value.replace('#/$defs/', ''))
+            ? []
+            : [value]
+          : collect(value),
+      );
+    };
+    return collect(document);
+  };
+
+  // A recursive input renders as `$ref: '#/$defs/…'` with the bodies in the document's separate
+  // `definitions` record. Keeping only the root advertised a reference to nothing -- and a model can
+  // still answer correctly by inferring the shape from the prompt, so a passing end-to-end test is no
+  // evidence the schema itself resolves.
+  test('a recursive operation input advertises the definitions its refs point at', ({ expect }) => {
+    interface Node {
+      readonly text: string;
+      readonly child?: Node;
+    }
+    const Node: Schema.Codec<Node> = Schema.Struct({
+      text: Schema.String,
+      child: Schema.optional(Schema.suspend((): Schema.Codec<Node> => Node)),
+    });
+
+    const Recursive = Operation.make({
+      meta: { key: DXN.make('org.dxos.test.function.recursive') },
+      input: Schema.Struct({ node: Node }),
+      output: Schema.Void,
+    });
+
+    const advertised = Tool.getJsonSchema(projectFunctionToTool(Recursive));
+    expect(danglingRefs(advertised)).toEqual([]);
+    // The recursion is expressed by reference, not inlined to some arbitrary depth.
+    expect(Object.keys((advertised as Record<string, any>).$defs ?? {})).not.toHaveLength(0);
+  });
 });
