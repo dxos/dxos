@@ -459,7 +459,15 @@ three below — and the count no longer grows with the registry.
       (`Obj.fromJSON` operations + flattened skills with materialized instructions) — the EDGE
       path, pinned by a dxos-side round-trip test; edge's own TODO (entrypoint.ts:296) already
       names that exact shape. CLI: `commands/mcp/registry.ts` → `local-server.ts`
-      (`makeLocalServer` returning registry/host/client/plugins/types). Verified: echo 573,
+      (`makeLocalServer` returning registry/host/client/plugins/types).
+      **Correction (user, 2026-08-21): the CLI uses `client.graph.registry`** — the hypergraph's
+      own registry, not a separate `makeRegistry` — which surfaced that plugin-routine's
+      `registry-sync` capability ALREADY syncs SkillDefinition + serialized OperationHandler
+      contributions into it; `makeLocalServer` now adds only the directly-imported extras whose
+      key is not yet registered. The duplicate this exposed became a package fix: `mcpSkills` and
+      `findRecords` dedupe by key (last registration wins, matching `getByURI`'s overwritten URI
+      index) — a same-key re-registration is registry life, not the prompt-name-collision
+      authorship error. Two regression tests added. Verified: echo 573,
       echo-client 525, echo-client-e2e 299 (incl. new registry text-filter tests), mcp-server 44,
       cli 46 with the live stdio session 9/9 unchanged — the surface is byte-identical over a real
       MCP handshake with the new plumbing, which is the fidelity contract doing its job.

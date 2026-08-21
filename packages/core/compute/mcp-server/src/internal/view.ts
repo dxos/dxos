@@ -73,7 +73,7 @@ export const mcpSkills = (
       }
 
       const holders = new Map<string, string>(reservedNames.map((name) => [name, '<static prompt>']));
-      for (const candidate of projected) {
+      for (const candidate of dedupeByKey(projected)) {
         const holder = holders.get(candidate.promptName);
         if (holder !== undefined) {
           throw new Error(
@@ -82,9 +82,22 @@ export const mcpSkills = (
         }
         holders.set(candidate.promptName, candidate.key);
       }
-      return projected;
+      return dedupeByKey(projected);
     }),
   );
+
+/**
+ * One entry per key, the last added winning — the same answer `getByURI` gives, whose URI index a
+ * later `add` overwrites. A key registered twice is re-registration (a live registry re-syncing
+ * its contributions), not the authorship error the prompt-name collision check exists for.
+ */
+const dedupeByKey = <T extends { readonly key: string }>(entries: readonly T[]): T[] => {
+  const byKey = new Map<string, T>();
+  for (const entry of entries) {
+    byKey.set(entry.key, entry);
+  }
+  return [...byKey.values()];
+};
 
 /**
  * Operation NSID → prompt names of the skills whose `tools` list names it. Skills are the atomic
@@ -112,7 +125,15 @@ export const findRecords = (
   const base = Filter.type(Operation.PersistentOperation);
   const filter = text != null && text.trim().length > 0 ? Filter.and(base, Filter.text(text)) : base;
   return Effect.promise(() => registry.query(Query.select(filter)).run()).pipe(
-    Effect.map((records) => records.filter(isOperationRecord)),
+    // One record per key, matching {@link lookup}: a re-registered operation must list once, not
+    // once per registration.
+    Effect.map((records) => {
+      const byKey = new Map<string, Operation.PersistentOperation>();
+      for (const record of records.filter(isOperationRecord)) {
+        byKey.set(nsid(Operation.getKey(record) ?? ''), record);
+      }
+      return [...byKey.values()];
+    }),
   );
 };
 

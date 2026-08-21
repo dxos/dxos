@@ -15,7 +15,6 @@ import { type Client, ClientService } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { type Registry, Type } from '@dxos/echo';
-import { makeRegistry } from '@dxos/echo-client';
 import { SpaceId } from '@dxos/keys';
 import { McpServer } from '@dxos/mcp-server';
 import * as CodeProjectSkill from '@dxos/plugin-projects/CodeProjectSkill';
@@ -48,7 +47,8 @@ export type TypeRecord = { readonly typename: string; readonly version: string }
  * registry the projection queries directly. `dx mcp serve` is the deployed server's local twin, so
  * every difference from EDGE is host-layer — no OAuth grant to narrow the session (it sees every
  * visible space), operations run in-process instead of over a service binding, and the registry is
- * this process's own rather than hydrated from an RPC (`McpServer.hydrateRegistry`).
+ * the client's own hypergraph registry rather than one hydrated from an RPC
+ * (`McpServer.hydrateRegistry`).
  */
 export const makeLocalServer = Effect.fn(function* () {
   const client = yield* ClientService;
@@ -72,16 +72,20 @@ export const makeLocalServer = Effect.fn(function* () {
   const handlers = dedupeOperations(yield* handlerSet.handlers);
   const skills = dedupeByKey([...capabilities.getAll(AppCapabilities.SkillDefinition), CodeProjectSkill]);
 
-  const registry = makeRegistry({
-    initial: [
-      // One non-serializable definition (importSpace's `Uint8Array`) must not take the whole
-      // registry down.
-      ...Operation.serializable(handlers),
-      // `make()` builds a detached skill whose instructions template holds its text in a
-      // ref-embedded `Text` created in-process, so the target always resolves here.
-      ...skills.map((definition) => definition.make()),
-    ],
-  });
+  // The client's own hypergraph registry, not a separate instance: plugin-routine's registry-sync
+  // already fills it with the capability-contributed skills and serialized operation handlers, so
+  // only the directly-imported extras are added here — and only when their key is not already
+  // registered, so this host never re-registers what the sync owns.
+  const registry = client.graph.registry;
+  const registered = (key: string) => registry.getByURI(`dxn:${normalizeKey(String(key))}`) != null;
+  registry.add([
+    // One non-serializable definition (importSpace's `Uint8Array`) must not take the whole
+    // registry down.
+    ...Operation.serializable(handlers.filter((handler) => !registered(String(handler.meta.key)))),
+    // `make()` builds a detached skill whose instructions template holds its text in a
+    // ref-embedded `Text` created in-process, so the target always resolves here.
+    ...skills.filter((definition) => !registered(String(definition.key))).map((definition) => definition.make()),
+  ]);
 
   // Same visibility rule as EDGE: the HALO space and the settings space hold identity and app
   // config, never user data, so neither surfaces as a space a tool may target.

@@ -238,6 +238,25 @@ describe('McpServer', () => {
       registry.add(Operation.serializable([CreateTask]));
       expect((await run(registry)).map((row) => row.key)).to.deep.equal([KEY]);
     });
+
+    // A live registry re-syncs its contributions (the CLI's registry-sync capability), so the same
+    // key arrives as distinct entities; that is re-registration, not an authorship error.
+    test('a re-registered operation lists once, the later registration winning', async ({ expect }) => {
+      const registry = testRegistry();
+      registry.add(
+        Operation.serializable([
+          Operation.make({
+            meta: { key: DXN.make(KEY), name: 'Create Task', description: 'Re-registered.' },
+            input: Schema.Struct({ title: Schema.String }),
+            output: Schema.Struct({ id: Schema.String }),
+            services: [Database.Service],
+          }).pipe(Operation.mutation('write')),
+        ]),
+      );
+      const rows = await run(registry);
+      expect(rows.map((row) => row.key)).to.deep.equal([KEY]);
+      expect(rows[0].description).to.equal('Re-registered.');
+    });
   });
 
   describe('skillLoad', () => {
@@ -279,6 +298,14 @@ describe('McpServer', () => {
 
     test('an unknown skill fails with the available names', async ({ expect }) => {
       expect(failureOf(await run(withSkills(), 'nope')).message).to.include('codeProject');
+    });
+
+    test('a re-registered skill lists once, the later registration winning', async ({ expect }) => {
+      const registry = withSkills();
+      registry.add([makeSkill({ key: 'org.dxos.skill.codeProject', instructions: 'Updated workflow.' })]);
+      const listing = successOf(await run(registry, 'codeProject'));
+      expect(listing.skills).to.have.length(1);
+      expect(listing.instructions).to.equal('Updated workflow.');
     });
 
     test('a prompt-name collision inside a request is the call failure, not a crash', async ({ expect }) => {
