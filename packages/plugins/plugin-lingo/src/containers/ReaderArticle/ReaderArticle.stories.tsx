@@ -6,8 +6,15 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
+import { AiService } from '@dxos/ai';
+import { ScriptedLanguageModel } from '@dxos/ai/testing';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Filter, Obj } from '@dxos/echo';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
+import { DXN, Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
@@ -21,8 +28,43 @@ import { LingoPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Language, Vocabulary, Word } from '#types';
 
-import { TEST_PASSAGE, makeTestDeck } from '../../testing';
+import { TEST_PASSAGE, TEST_PASSAGE_TRANSLATION, makeTestDeck } from '../../testing';
 import { ReaderArticle } from './ReaderArticle';
+
+/**
+ * A scripted model, so the split view shows a real translation offline.
+ *
+ * Routed rather than sequential because the reader has more than one model-bearing operation and
+ * they share one service; matching on each system prompt keeps a call from consuming another
+ * operation's turn. An unmatched call fails loudly, which is what we want — it means an operation
+ * reached the model without the story deciding what it should say.
+ */
+const scriptedAi = ScriptedLanguageModel.scriptedAiService([
+  {
+    name: 'translate-passage',
+    match: ScriptedLanguageModel.promptIncludes('You translate a passage for a language learner'),
+    turns: [{ parts: [ScriptedLanguageModel.text(TEST_PASSAGE_TRANSLATION)] }],
+  },
+]);
+
+// LayerSpecs are snapshotted once at boot (see AppCapability.layerSpec), so this rides Startup.
+const StoryAiPlugin = Plugin.define(
+  Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.lingoStoryAi'), name: 'Lingo Story AI' }),
+).pipe(
+  Plugin.addModule({
+    id: 'ai-service',
+    activatesOn: ActivationEvents.Startup,
+    provides: [Capabilities.LayerSpec],
+    activate: () =>
+      Effect.succeed([
+        Capability.contribute(
+          Capabilities.LayerSpec,
+          LayerSpec.make({ affinity: 'space', requires: [], provides: [AiService.AiService] }, () => scriptedAi),
+        ),
+      ]),
+  }),
+  Plugin.make,
+);
 
 const DefaultStory = () => {
   const [space] = useSpaces();
@@ -73,6 +115,7 @@ const meta = {
             }),
         }),
         MarkdownPlugin.make(),
+        StoryAiPlugin(),
         LingoPlugin(),
       ],
     }),
