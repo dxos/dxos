@@ -9,12 +9,13 @@ import * as Schema from 'effect/Schema';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Client, ClientService } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
-import { type Registry, Type } from '@dxos/echo';
+import { type Registry } from '@dxos/echo';
 import { SpaceId } from '@dxos/keys';
 import { McpServer } from '@dxos/mcp-server';
 // Narrow subpath imports: these plugins declare React surfaces, and a bundler follows the dynamic
@@ -23,24 +24,18 @@ import * as ProjectOperationHandlerSet from '@dxos/plugin-projects/ProjectOperat
 import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
 import * as TasksOperationHandlerSet from '@dxos/plugin-tasks/TasksOperationHandlerSet';
 
-import { chatLayer, operationHandlers, types } from '../../util';
+import { chatLayer, operationHandlers } from '../../util';
 
 /**
  * What this host wires beneath the projected surface — echo's registry holding the operations and
- * skills, the invoke seam and session spaces (`McpServer.Host`) — plus what its static toolkits
- * read: `whoami`/`listSpaces` need the live client and `listPlugins`/`listTypes` report what this
- * host assembled, none of which the surface's own contract describes.
+ * skills, the invoke seam and session spaces (`McpServer.Host`) — plus the live client, which
+ * `whoami` reads for the session's identity and the surface's own contract does not describe.
  */
 export type LocalServer = {
   readonly registry: Registry.Registry;
   readonly host: McpServer.HostShape;
   readonly client: Client;
-  readonly plugins: readonly PluginRecord[];
-  readonly types: readonly TypeRecord[];
 };
-
-export type PluginRecord = { readonly key: string; readonly name?: string };
-export type TypeRecord = { readonly typename: string; readonly version: string };
 
 /**
  * The local MCP host: the operations the CLI already runs and the skills it curates, in one echo
@@ -53,11 +48,11 @@ export type TypeRecord = { readonly typename: string; readonly version: string }
 export const makeLocalServer = Effect.fn(function* () {
   const client = yield* ClientService;
   const capabilities = yield* Capability.Service;
-  const manager = yield* Capability.get(Capabilities.PluginManager);
-  const active = new Set(manager.getActive());
   // Captured so an invocation can erase its own requirements: the tool handlers this host backs
-  // are invoked by the MCP server layer, which knows nothing of the CLI's services.
-  const ambient = yield* Effect.context<ClientService>();
+  // are invoked by the MCP server layer, which knows nothing of the CLI's services. The capability
+  // and plugin managers ride along because operations declare them — `queryPlugins` reads what
+  // this host assembled, and the space verbs reach the client through its capability.
+  const ambient = yield* Effect.context<ClientService | Capability.Service | Plugin.Service>();
 
   // The project and task verbs are the skill-governed ones, so a registry without them serves
   // nothing worth calling; their sets are registered directly for the reason the import above
@@ -102,15 +97,6 @@ export const makeLocalServer = Effect.fn(function* () {
       spaceIds,
       invoke: (request) => invoke({ handlerSet, handlers, ambient }, request),
     },
-
-    // Only active plugins contribute capabilities, so an inactive one would be listed as a source
-    // of operations that the registry does not carry.
-    plugins: manager
-      .getPlugins()
-      .filter((plugin) => plugin.modules.some((module) => active.has(module.id)))
-      .map((plugin) => ({ key: plugin.meta.profile.key, name: plugin.meta.profile.name })),
-
-    types: types.map((entity) => ({ typename: Type.getTypename(entity), version: Type.getVersion(entity) })),
   } satisfies LocalServer;
 });
 
@@ -148,7 +134,7 @@ const dedupeByKey = <T extends { readonly key: unknown }>(definitions: readonly 
 type InvocationContext = {
   readonly handlerSet: OperationHandlerSet.OperationHandlerSet;
   readonly handlers: readonly Operation.WithHandler<Operation.Definition.Any>[];
-  readonly ambient: Context.Context<ClientService>;
+  readonly ambient: Context.Context<ClientService | Capability.Service | Plugin.Service>;
 };
 
 const invoke = (

@@ -7,20 +7,11 @@ import * as Schema from 'effect/Schema';
 import * as Tool from 'effect/unstable/ai/Tool';
 import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
-import { type Space } from '@dxos/client-protocol';
+import { type Space } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { McpServer } from '@dxos/mcp-server';
 
 import { type LocalServer } from './local-server';
-
-/**
- * Identity and space listing, mirroring EDGE's `mcp-space-service` tools of the same names.
- *
- * TODO(wittjosiah): Duplicated with edge's `src/mcp/space-tools.ts`. Both should become annotated
- *   operations contributed by a plugin, so each host projects them through `@dxos/mcp-server`
- *   rather than hand-writing a toolkit — the same route the project and task verbs already take.
- *   Until then a change to either tool's shape has to be made twice.
- */
 
 const SpaceInfo = Schema.Struct({
   spaceId: Schema.String,
@@ -35,14 +26,36 @@ const SpaceInfo = Schema.Struct({
 });
 type SpaceInfo = Schema.Schema.Type<typeof SpaceInfo>;
 
+/**
+ * Identity and session spaces, mirroring EDGE's `mcp-space-service` tool of the same name.
+ *
+ * One tool rather than two: the `listSpaces` this replaces returned `describeSpaces` and so did
+ * `whoami`, so the second tool spent a slot on a value the first already carried.
+ *
+ * TODO(wittjosiah): Port this to an operation on a Space skill, identity and spaces together, the
+ *   way every other verb is reached. It is blocked on the session reaching an operation handler as
+ *   a service: neither half can be derived from a client, because EDGE's MCP worker has none and
+ *   resolves identity and spaces from the OAuth grant instead. That is also why a space listing
+ *   cannot port on its own — one reading `client.spaces` works on this host and cannot work on
+ *   that one, so the worker would keep a hand-written listing and the duplication would survive
+ *   the port. Duplicated meanwhile with edge's `src/mcp/space-tools.ts`, and the two have already
+ *   drifted (this one reports `displayName`, edge's reports `haloSpaceId`).
+ */
 export const WhoAmI = Tool.make('whoami', {
-  description: 'Returns the authenticated DXOS identity and the spaces in the session context',
+  description:
+    'Returns the authenticated DXOS identity and the data spaces this session can operate on, each ' +
+    'with its name and member count — refer to a space by name when talking to the user, and pass ' +
+    'its id when calling a tool.',
   parameters: Schema.Struct({}),
   success: Schema.Struct({
-    identityKey: Schema.String,
+    // The DID, not the identity key: it is the identity's public name — what EDGE authorizes
+    // against and what every other surface reports — where the key is an implementation detail.
+    identityDid: Schema.String,
     displayName: Schema.optional(Schema.String),
     spaces: Schema.Array(SpaceInfo).annotate({
-      description: 'Data spaces this session can operate on; the first is the default for tool calls.',
+      description:
+        'The data spaces this session can operate on. None of them is a default: a call that acts ' +
+        'on a space must name one.',
     }),
   }),
   failure: McpServer.ToolFailure,
@@ -50,22 +63,30 @@ export const WhoAmI = Tool.make('whoami', {
   .annotate(Tool.Readonly, true)
   .annotate(Tool.Destructive, false);
 
-export const ListSpaces = Tool.make('listSpaces', {
-  description:
-    'Lists the data spaces this session can operate on, each with its name and member count — refer ' +
-    'to spaces by name rather than by id when talking to the user. Every space listed is usable as ' +
-    "`spaceId`. The identity's own HALO space is not a data space and is never listed.",
-  parameters: Schema.Struct({}),
-  success: Schema.Struct({ spaces: Schema.Array(SpaceInfo) }),
-  failure: McpServer.ToolFailure,
-})
-  .annotate(Tool.Readonly, true)
-  .annotate(Tool.Destructive, false);
+export const SpaceToolkit = Toolkit.make(WhoAmI);
 
-export const SpaceToolkit = Toolkit.make(WhoAmI, ListSpaces);
+/** Binds the toolkit to one server, which supplies the client and the session's spaces. */
+export const spaceHandlers = (server: LocalServer) =>
+  SpaceToolkit.of({
+    whoami: () =>
+      Effect.gen(function* () {
+        const identity = server.client.halo.identity.get();
+        if (!identity) {
+          return yield* Effect.fail(
+            McpServer.failure('invalid_request', 'No identity on this profile. Run `dx account login` first.'),
+          );
+        }
+        return {
+          identityDid: identity.did,
+          ...optional('displayName', identity.profile?.displayName),
+          spaces: describeSpaces(server),
+        };
+      }),
+  });
 
 /**
- * Describes the session's spaces. Best-effort per field: a space whose properties or membership
+ * Describes the session's spaces. The session's own list is the set — it is what dispatch accepts —
+ * and the client supplies the labels. Best-effort per field: a space whose properties or membership
  * cannot be read is still listed, with whatever did resolve.
  */
 const describeSpaces = (server: LocalServer): readonly SpaceInfo[] => {
@@ -111,23 +132,3 @@ const readMemberCount = (space: Space): number | undefined => {
     return undefined;
   }
 };
-
-export const spaceHandlers = (server: LocalServer) =>
-  SpaceToolkit.of({
-    whoami: () =>
-      Effect.gen(function* () {
-        const identity = server.client.halo.identity.get();
-        if (!identity) {
-          return yield* Effect.fail(
-            McpServer.failure('invalid_request', 'No identity on this profile. Run `dx account login` first.'),
-          );
-        }
-        return {
-          identityKey: identity.identityKey.toHex(),
-          ...optional('displayName', identity.profile?.displayName),
-          spaces: describeSpaces(server),
-        };
-      }),
-
-    listSpaces: () => Effect.sync(() => ({ spaces: describeSpaces(server) })),
-  });
