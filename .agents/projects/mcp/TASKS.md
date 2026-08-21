@@ -130,6 +130,18 @@ changes what a model sees lives in the shared package or it is a bug.
         every call: without this, a CLI profile with no identity could not call `queryPlugins`.
         Three unit tests in `McpServer.test.ts`, and `serve.test` invokes `queryPlugins` over a live
         session with no spaces.
+  - [x] **`spaceId` is the `SpaceId` schema, not a bare string** (review, wittjosiah) — the ambient
+        parameter was `Schema.optional(Schema.String)` while `SpaceId` in `@dxos/keys` is already a
+        `Schema.Codec<SpaceId, string>` carrying `isValid`. Free at the boundary: `Tool.getJsonSchema`
+        (what effect's McpServer advertises) emits the same `{anyOf:[string,null], description}` for
+        both, so the guidance text survives and the refinement only adds decode-time rejection.
+        `resolveId` returns `SpaceId | undefined` — `isValid` is a type guard, so this narrows
+        without a cast. Its runtime check stays: only the ambient argument passes through the tool
+        schema, while the operation's own declared `spaceId` and `hintFromInput`'s ref-derived id do
+        not. `invoke` flattened from four levels of `pipe`/`flatMap` to a linear `Effect.gen`, with
+        the input codec dance lifted into `encodeInput`. Also corrected two `HostShape`/`Options`
+        doc comments still promising "the first is the fallback when a call omits `spaceId`" — the
+        session default this PR removed.
 
   The object group goes to **plugin-space**, whose verbs mirror the ECHO API (`Database.add` /
   `Database.remove` → `addObject` / `removeObjects`); `database.objectCreate` / `objectDelete`

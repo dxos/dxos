@@ -113,7 +113,7 @@ const testHost = (
 };
 
 const runInvoke = (
-  args: { key?: string; input?: Record<string, unknown>; spaceId?: string },
+  args: { key?: string; input?: Record<string, unknown>; spaceId?: SpaceId },
   options: { registry?: Registry.Registry; host?: ReturnType<typeof testHost> } = {},
 ) => {
   const registry = options.registry ?? testRegistry();

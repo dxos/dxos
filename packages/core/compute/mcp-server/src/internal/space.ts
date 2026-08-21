@@ -9,7 +9,7 @@ import { SpaceId } from '@dxos/keys';
 
 import { type ToolFailure, failure } from './failure';
 
-export const idParameter = Schema.optional(Schema.String).annotate({
+export const idParameter = Schema.optional(SpaceId).annotate({
   description:
     'Space to operate on. Required for any operation that acts on a space: nothing is inferred, ' +
     'and a call that names no space is refused rather than run somewhere arbitrary. Take the value ' +
@@ -33,7 +33,7 @@ export const resolveId = (
   sessionSpaceIds: readonly string[] | undefined,
   spaceId: string | undefined,
   { required }: { required: boolean },
-): Effect.Effect<string | undefined, ToolFailure, never> => {
+): Effect.Effect<SpaceId | undefined, ToolFailure, never> => {
   if (spaceId === undefined) {
     return required
       ? Effect.fail(
