@@ -218,25 +218,14 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
   }
 };
 
-export type MatchEntityOptions = {
-  /**
-   * Evaluate full-text filters in memory: every whitespace-separated term of the query must appear
-   * (case-insensitive) somewhere in the entity's serialized string values. An approximation of
-   * index-backed FTS, for executors with no index behind them (the registry); the database
-   * executors leave it unset because their index already answered, and matching here would
-   * re-admit candidates the index rejected. Vector search stays index-only either way.
-   */
-  textSearch?: boolean;
-};
-
 /**
  * Matches a filter against an entity proxy without full JSON serialization when possible.
+ *
+ * Full-text filters evaluate in memory here (see {@link matchesTextSearch}) — this matcher serves
+ * executors with no index behind them (the registry, `Filter.toPredicate`); the index-backed
+ * document paths use `filterMatchDoc` and are unaffected.
  */
-export const filterMatchEntity = (
-  filter: QueryAST.Filter,
-  entity: AnyEntity,
-  options?: MatchEntityOptions,
-): boolean => {
+export const filterMatchEntity = (filter: QueryAST.Filter, entity: AnyEntity): boolean => {
   switch (filter.type) {
     case 'object': {
       if (filter.typename !== null) {
@@ -295,7 +284,7 @@ export const filterMatchEntity = (
     }
 
     case 'text-search': {
-      return options?.textSearch === true ? matchesTextSearch(filter, entity) : false;
+      return matchesTextSearch(filter, entity);
     }
 
     case 'timestamp': {
@@ -311,15 +300,15 @@ export const filterMatchEntity = (
     }
 
     case 'not': {
-      return !filterMatchEntity(filter.filter, entity, options);
+      return !filterMatchEntity(filter.filter, entity);
     }
 
     case 'and': {
-      return filter.filters.every((f) => filterMatchEntity(f, entity, options));
+      return filter.filters.every((f) => filterMatchEntity(f, entity));
     }
 
     case 'or': {
-      return filter.filters.some((f) => filterMatchEntity(f, entity, options));
+      return filter.filters.some((f) => filterMatchEntity(f, entity));
     }
 
     default:

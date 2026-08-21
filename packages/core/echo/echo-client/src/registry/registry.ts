@@ -367,8 +367,4 @@ const executeQuery = (registry: Registry.Registry, ast: QueryAST.Query): Entity.
   }
 };
 
-// Text filters evaluate in memory here: the registry has no index behind it, so the matcher's
-// substring approximation is the only executor there is — unlike the database paths, whose index
-// already answered.
-const matchFilter = (filter: QueryAST.Filter, entity: Entity.Unknown): boolean =>
-  filterMatchEntity(filter, entity, { textSearch: true });
+const matchFilter = (filter: QueryAST.Filter, entity: Entity.Unknown): boolean => filterMatchEntity(filter, entity);

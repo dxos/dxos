@@ -3,4 +3,4 @@
 '@dxos/echo': minor
 ---
 
-Registry queries now evaluate `Filter.text` in memory: every whitespace-separated term must appear (case-insensitive) in the entity's serialized string values, including meta keys. Database query paths are unchanged — their index still answers text filters; vector search remains index-only.
+In-memory entity matching now evaluates `Filter.text`: every whitespace-separated term must appear (case-insensitive) in the entity's serialized string values, including meta keys. This reaches registry queries, `Filter.toPredicate`, and registry entities inside scoped database queries; the index-backed document paths are unchanged, and vector search remains index-only.
