@@ -20,6 +20,7 @@ tasks:
       --to react
       --to react-dom
       --conditions workerd,worker
+      --conditions node
       --fail-on present
     deps:
       - dx-trace-imports:build

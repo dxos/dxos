@@ -16,6 +16,7 @@ tasks:
       pnpm exec dx-trace-imports
       --export ./PresenterPlugin
       --to "{react,react-dom}"
+      --conditions workerd,worker
       --conditions node
       --fail-on present
     deps:

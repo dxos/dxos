@@ -5,7 +5,24 @@ tags:
   - ts-vite-build
   - ts-test
   - pack
-# No `check-module-structure`: this plugin declares no `environments`, so it generates no headless
-# barrel and its `#capabilities` is the unconditioned default. Tracing it under node/workerd would
-# assert a property of a bundle no headless host loads — those hosts leave a browser-only plugin
-# out of their plugin list instead.
+
+tasks:
+  check-module-structure:
+    # The plugin generates node and workerd capability barrels, so its headless entry must stay
+    # UI-free: fail if React ever becomes reachable from it under either condition.
+    command: >-
+      pnpm exec dx-trace-imports
+      --export ./WnfsPlugin
+      --to "{react,react-dom}"
+      --conditions workerd,worker
+      --conditions node
+      --fail-on present
+    deps:
+      - dx-trace-imports:build
+      - build
+    inputs:
+      - tsconfig.json
+      - '@group(production)'
+      - /pnpm-lock.yaml
+    options:
+      timeout: 60
