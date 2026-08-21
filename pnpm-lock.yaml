@@ -528,6 +528,9 @@ catalogs:
     '@tauri-apps/plugin-fs':
       specifier: ^2.5.1
       version: 2.5.1
+    '@tauri-apps/plugin-opener':
+      specifier: ^2.5.4
+      version: 2.5.4
     '@tauri-apps/plugin-os':
       specifier: ^2.3.2
       version: 2.3.2
@@ -17405,6 +17408,9 @@ importers:
       '@tauri-apps/api':
         specifier: 'catalog:'
         version: 2.11.1
+      '@tauri-apps/plugin-opener':
+        specifier: 'catalog:'
+        version: 2.5.4
     devDependencies:
       '@dxos/echo-client':
         specifier: workspace:*
@@ -30831,6 +30837,9 @@ packages:
 
   '@tauri-apps/plugin-fs@2.5.1':
     resolution: {integrity: sha512-9Lz+Jopp6QyeEWhlpkMx4R/+P9HgR+AVAI4vOZhlT8Xaymtz8iVI/Ov984/XTqgJz/5gz5NretqPB/XEMS3NhQ==}
+
+  '@tauri-apps/plugin-opener@2.5.4':
+    resolution: {integrity: sha512-1HnPkb+AmgO29HBazm4uPLKB+r7zzcTBW1d0fyYp1uP+jwtpoiNDGKMMzz58SFp49nOIrxdE3aUJtT57lfO9CQ==}
 
   '@tauri-apps/plugin-os@2.3.2':
     resolution: {integrity: sha512-n+nXWeuSeF9wcEsSPmRnBEGrRgOy6jjkSU+UVCOV8YUGKb2erhDOxis7IqRXiRVHhY8XMKks00BJ0OAdkpf6+A==}
@@ -52651,6 +52660,10 @@ snapshots:
       '@tauri-apps/api': 2.11.1
 
   '@tauri-apps/plugin-fs@2.5.1':
+    dependencies:
+      '@tauri-apps/api': 2.11.1
+
+  '@tauri-apps/plugin-opener@2.5.4':
     dependencies:
       '@tauri-apps/api': 2.11.1
 
