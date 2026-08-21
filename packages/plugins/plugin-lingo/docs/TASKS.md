@@ -71,6 +71,10 @@ Found by actually rendering the stories; every one was invisible to the type-che
 - [ ] Scroll-link the two panes in split mode.
 - [x] `ReaderArticle` container storybook (ECHO-backed, seeds the deck and the document).
 - [ ] `VocabularyArticle` and `FlashcardsArticle` container storybooks.
+- [ ] A storybook pairing the reader with `plugin-magazine`, showing the companion working as a
+      translation/helper beside an article the lingo plugin does not own — the case the
+      `AppCapabilities.TextContent` indirection exists for. MagazineCurate's story already wires a
+      live `AiService` LayerSpec, so it is also the natural place to exercise `TranslatePassage`.
 
 ## Phase 3: Study history — NOT STARTED
 
