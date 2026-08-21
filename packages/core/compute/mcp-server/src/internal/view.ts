@@ -72,8 +72,9 @@ export const mcpSkills = (
         });
       }
 
+      const deduped = dedupeByKey(projected);
       const holders = new Map<string, string>(reservedNames.map((name) => [name, '<static prompt>']));
-      for (const candidate of dedupeByKey(projected)) {
+      for (const candidate of deduped) {
         const holder = holders.get(candidate.promptName);
         if (holder !== undefined) {
           throw new Error(
@@ -82,7 +83,7 @@ export const mcpSkills = (
         }
         holders.set(candidate.promptName, candidate.key);
       }
-      return dedupeByKey(projected);
+      return deduped;
     }),
   );
 
