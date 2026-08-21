@@ -5,7 +5,7 @@ tags:
 tasks:
   build:
     deps:
-      - prebuild
+      - ~:#prebuild
     options:
       mergeOutputs: replace
     outputs: []

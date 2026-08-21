@@ -6,7 +6,7 @@ tags:
 tasks:
   build:
     deps:
-      - prebuild
+      - ~:#prebuild
     inputs:
       - bin/main.js
   prebuild:
@@ -22,7 +22,7 @@ tasks:
   test:
     command: pnpm run --silent test
     deps:
-      - prebuild
+      - ~:#prebuild
       - ^:build
     inputs:
       - '@group(sources)'

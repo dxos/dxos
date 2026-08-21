@@ -7,13 +7,7 @@ tags:
 tasks:
   build:
     deps:
-      - prebuild
-  prebuild:
-    deps:
-      - echo-query:prebuild-lezer
-      - echo-query:prebuild-query-lite
-    tags:
-      - prebuild
+      - ~:#prebuild
   prebuild-lezer:
     command: pnpm exec lezer-generator --typeScript ./src/parser/query.grammar -o ./src/parser/gen/query.ts
     inputs:
@@ -36,4 +30,4 @@ tasks:
       - prebuild
   test:
     deps:
-      - prebuild
+      - ~:#prebuild

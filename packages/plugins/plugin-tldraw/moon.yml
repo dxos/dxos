@@ -9,7 +9,7 @@ tags:
 tasks:
   build:
     deps:
-      - prebuild
+      - ~:#prebuild
   prebuild:
     command: bash ./scripts/copy_assets.sh
     toolchains: node # enforce that deps are installed
