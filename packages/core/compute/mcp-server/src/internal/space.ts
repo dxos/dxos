@@ -14,7 +14,8 @@ export const idParameter = Schema.optional(SpaceId).annotate({
     'Space to operate on. Required for any operation that acts on a space: nothing is inferred, ' +
     'and a call that names no space is refused rather than run somewhere arbitrary. Take the value ' +
     'from the caller, from whoami, or from a reference already in hand — never from guessing at ' +
-    'space names. Omit it only when a reference argument already names the space it belongs to.',
+    'space names. Omit it for an operation that does not act on a space, or when a reference ' +
+    'argument already names the space it belongs to.',
 });
 
 /**

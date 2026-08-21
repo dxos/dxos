@@ -15,7 +15,7 @@ export const key = 'org.dxos.skill.registry';
  * atomic unit of projection).
  *
  * There is deliberately no operation-listing verb: an MCP host discovers operations through
- * `findOperations`, which reads the same registry and serves schemas as well, and an in-app agent
+ * `queryOperations`, which reads the same registry and serves schemas as well, and an in-app agent
  * is handed its skill's tools directly. A second listing would answer the same question in a
  * different shape.
  */

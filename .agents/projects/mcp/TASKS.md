@@ -63,8 +63,9 @@ changes what a model sees lives in the shared package or it is a bug.
         from `registry.baseTypes`. Same question, two implementations. `queryTypes` rows gained
         `version` (the one field only `listTypes` carried) and its description now says it spans
         both. Cost: `queryTypes` resolves `Database.Service`, so it is space-addressed where
-        `listTypes` was not — acceptable while every session has a space, and the honest shape,
-        since the schemas it returns are the ones that space accepts.
+        `listTypes` was not — and with no session default it must be _told_ a space: its input
+        carries no reference to infer one from, so `invokeOperation` needs an explicit `spaceId`.
+        The honest shape, since the schemas it returns are the ones that space accepts.
   - [x] **`listPlugins` → plugin-registry `queryPlugins`** (`services: [Plugin.Service]`), on a new
         `Registry` skill (`org.dxos.skill.registry`, `mcpPrompt`). The plugin that owns
         install/enable/disable is the one that can answer what is installed. plugin-registry's node
@@ -115,7 +116,7 @@ changes what a model sees lives in the shared package or it is a bug.
         operation that acts on a space and was told none is refused with a message naming how to
         choose one. `resolveOptionalId` folded back into `resolveId` with a `required` flag — with
         no defaulting the two differed only in whether absence is an error. Cost: a single-space
-        profile now calls `whoami`/`querySpaces` once before its first space-addressed call.
+        profile now calls `whoami` once before its first space-addressed call.
         **`McpServer.resolveSpaceId` takes the flag**, so EDGE's hand-written verbs adopt the rule
         (or state otherwise) on the next pin bump. `serve.test` pins the refusal over a live session.
   - [x] **Dispatch bug this exposed** — the projection resolved a space for _every_ call, which
