@@ -33,6 +33,10 @@ runs in. To land (merge) an existing PR, use the `land` skill.
 8. **Open the PR** with `gh`. Title uses `scope: description`. In the
    description, summarize the changes and the reasoning behind major
    decisions, and link any Linear issue as `closes DX-123` or `part of DX-123`.
+   The description and the changeset are prose we ship: write them with the
+   [`technical-writing`](../technical-writing/SKILL.md) skill (the body is
+   explanation: say why the change is shaped this way, not what the diff shows)
+   and pass [`unslop`](../unslop/SKILL.md) over both before posting.
 9. **Monitor CI every 5 minutes:**
    `gh run list --branch <branch> --limit 3 --workflow "Check"` and
    `pnpm -w gh-action --verify --watch`. Diagnose and, where possible, fix ALL

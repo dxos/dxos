@@ -181,6 +181,9 @@ Deeper conventions:
 - Effect-TS services, layers, and typed domain errors → `effect` skill.
 - React components, theme tokens, and Composer UI primitives → `composer-ui`
   skill.
+- Prose we ship (docs, PR descriptions, changesets) → `technical-writing` +
+  `unslop` skills; documents an agent reads (skills, this file) →
+  `writing-for-agents` skill.
 - Do not use deprecated functions if an alternative is available.
 
 ## Git & PR workflow

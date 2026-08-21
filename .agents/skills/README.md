@@ -1,10 +1,19 @@
-# Skills — authoring conventions
+# Skills: authoring conventions
 
 Deep, task-specific how-to for agents lives here, one directory per skill with a
 `SKILL.md` at its root. `.claude/skills` is a symlink to this directory. Keep
 `AGENTS.md` thin; put the detail in a skill.
 
-## Reference or process — pick one per skill
+This file is the settled convention: what we do. The
+[`writing-for-agents`](writing-for-agents/SKILL.md) skill is the theory behind
+it: context pointers, the two loads, progressive disclosure, completion
+criteria, leading words, and pruning.
+[`SKILL-MECHANICS.md`](writing-for-agents/SKILL-MECHANICS.md) covers frontmatter
+and the invocation choice in detail. Read this file first; reach for those when
+you need to decide something this file does not cover. Skills adapted from
+external collections are listed in [THIRD-PARTY.md](THIRD-PARTY.md).
+
+## Reference or process: pick one per skill
 
 Every skill is one of two kinds, and mixing them in one document is how skills
 get vague. Say which kind a skill is, in its own text, when it isn't obvious.
@@ -26,13 +35,13 @@ instead of inlining it.
   skills by the short directory name; a divergent frontmatter name breaks that
   linkage silently.
 - **`description` is the trigger.** Write it as "Use when …" with the concrete
-  symptoms, file paths, and phrases that should load the skill — it carries the
+  symptoms, file paths, and phrases that should load the skill. It carries the
   entire auto-invocation decision.
 - **Gate with `disable-model-invocation: true` only when a prose ask should
   NOT trigger the skill.** The flag is stronger than "don't auto-fire": it
   removes the description from the model's context and hard-blocks model
   invocation, so a plain-English request ("run the review") and UI affordances
-  like the Create PR button can never reach a gated skill — only a typed
+  like the Create PR button can never reach a gated skill. Only a typed
   `/<name>` can. Gate pure slash-workflows nobody asks for by accident
   (`agentic-review`, `migrate-oxfmt`). Do NOT gate a skill that is the
   sanctioned handler for a natural-language ask (`submit-pr`, `land`): those
@@ -58,7 +67,7 @@ Run it after editing skills, and fix or repoint what it flags.
 
 A skill may keep a `MEMORY.md` of session-logged corrections (see
 `composer-plugins/MEMORY.md` for the format). Memory is a staging area, not a
-destination — promote entries as they stabilize:
+destination. Promote entries as they stabilize:
 
 1. **Durable guidance** → fold into the skill's `SKILL.md`.
 2. **Mechanically checkable rules** (a greppable pattern plus a judgment call)
@@ -73,3 +82,15 @@ Link sibling skills with relative paths (`../effect/SKILL.md`) so the links
 survive checkout location and pass the refs check. Name the division of labor
 when two skills share territory, the way `composer-debug` / `composer-forensics`
 and `composer-plugins` / `composer-ui` do.
+
+## Prose quality
+
+Skill text is prose an agent reads, so it earns the same passes as anything
+else we ship:
+
+- [`writing-for-agents`](writing-for-agents/SKILL.md). Structure and wording
+  for agent-facing documents (skills, `AGENTS.md`, the files they point at).
+- [`technical-writing`](technical-writing/SKILL.md). Document mode and sentence
+  rules for human-facing prose (docs, PR descriptions, changesets).
+- [`unslop`](unslop/SKILL.md). The slop-pattern catalog, as a final pass over
+  either.
