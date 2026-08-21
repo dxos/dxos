@@ -105,8 +105,15 @@ export abstract class BaseHttpClient {
     if (this._apiKey) {
       return undefined;
     }
+    const identity = this._edgeIdentity;
     if (!this._authHeader || this._authHeaderIsStale()) {
       await this._prefetchAuthHeader();
+    }
+    // `setIdentity` may have swapped identities while the prefetch was in flight, so the cached
+    // header now belongs to the new one — handing it back would sign the caller's request, made on
+    // behalf of the old identity, as somebody else.
+    if (this._edgeIdentity !== identity) {
+      return undefined;
     }
     return this._authHeader;
   }

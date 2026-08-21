@@ -17,13 +17,16 @@ import React, {
 } from 'react';
 
 import * as Account from '@dxos/app-toolkit/Account';
+import * as NativeOAuth from '@dxos/app-toolkit/NativeOAuth';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { DXOSHorizontalType } from '@dxos/brand';
+import { log } from '@dxos/log';
 import { Button, DropdownMenu, Flex, Icon, Input, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../../meta';
+import { OAUTH_RECOVERY_REDIRECT_PATH } from '../../../operations/shared';
 import { type WelcomeError, type WelcomeScreenProps, WelcomeState, validEmail } from './types';
 
 const supportsPasskeys =
@@ -141,6 +144,30 @@ export const Welcome = ({
     }
     const timeout = setTimeout(() => setOauthPending(false), OAUTH_PENDING_TIMEOUT);
     return () => clearTimeout(timeout);
+  }, [oauthPending]);
+
+  // On desktop the wait ends when the callback lands, whatever it says: finalizing navigates this
+  // screen away, and a failure is reported only as a toast, which would otherwise leave the form
+  // locked until the ceiling above. The browser path reloads instead, so it never gets here.
+  useEffect(() => {
+    if (!oauthPending || !NativeOAuth.supportsNativeOAuth()) {
+      return;
+    }
+    let unlisten: (() => void) | undefined;
+    let stopped = false;
+    void NativeOAuth.listenForNativeOAuthCallback(OAUTH_RECOVERY_REDIRECT_PATH, () => setOauthPending(false)).then(
+      (fn) => {
+        unlisten = fn;
+        if (stopped) {
+          fn();
+        }
+      },
+      (error) => log.warn('failed to listen for OAuth callback', { error }),
+    );
+    return () => {
+      stopped = true;
+      unlisten?.();
+    };
   }, [oauthPending]);
 
   const focusPrimaryField = useCallback(() => {
