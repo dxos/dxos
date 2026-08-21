@@ -250,9 +250,10 @@ toolkit is deleted; `Gateway`/`Server` became `McpRegistry`/`McpServer`).
 - Predecessor work: `.agents/projects/agent-directives/` (PRs #12453, #12463)
 - Hook reference: https://code.claude.com/docs/en/hooks
 - Plugin reference: https://code.claude.com/docs/en/plugins-reference
-- Skill projection: `packages/core/compute/mcp-server/src/internal/projection.ts` (prompt name =
-  key's final segment; collisions throw; prompts take no parameters — `skillLoad` is the
-  model-side fetch)
+- Skill projection: `packages/core/compute/mcp-server/src/internal/view.ts` (prompt name = key's
+  final segment; collisions throw; prompts take no parameters — `skillLoad` is the model-side
+  fetch). Was `internal/projection.ts` until #12692 split it into `view.ts`/`input.ts` and folded
+  `McpRegistry` into `McpServer`; the CLI host is now `commands/mcp/local-server.ts`.
 - Runtime skill: `packages/plugins/plugin-projects/src/skills/CodeProjectSkill.ts` +
   `code-project-skill.md`; artifact skill:
   `packages/core/compute/assistant-toolkit/src/skills/project/`
