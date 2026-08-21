@@ -104,8 +104,8 @@ runs:
         # unguarded failing command would abort the script before the degrade logic below ever runs.
         preflight_exit=0
         curl -sf --max-time 20 --retry 3 --retry-all-errors --retry-delay 5 \
-             -w 'time_connect=%{time_connect} time_appconnect=%{time_appconnect} time_total=%{time_total}\n' \
-             --cacert .moon/certs/ca.pem "https://$host:9093/status" > /dev/null || preflight_exit=$?
+             -o /dev/null -w 'time_connect=%{time_connect} time_appconnect=%{time_appconnect} time_total=%{time_total}\n' \
+             --cacert .moon/certs/ca.pem "https://$host:9093/status" || preflight_exit=$?
         if [ "$preflight_exit" -ne 0 ]; then
           degrade "Remote cache $host preflight failed after retries: $(curl_exit_meaning "$preflight_exit") (curl exit $preflight_exit). Falling back to the local cache for this job."
         fi
