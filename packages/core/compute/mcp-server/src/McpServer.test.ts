@@ -239,6 +239,28 @@ describe('McpServer', () => {
       expect((await run(registry)).map((row) => row.key)).to.deep.equal([KEY]);
     });
 
+    // The contract in one motion: which skills exist is dynamic — registry state, not server
+    // configuration — and the skill is what carries operations onto the surface. An operation
+    // already in the registry stays dark until a skill naming it arrives, and lights up the moment
+    // one does.
+    test('a skill added at runtime brings its operations with it; nothing leaks before', async ({ expect }) => {
+      const registry = testRegistry({ operations: [CreateTask, QueryObjects], skills: [] });
+      const { host, invocations } = testHost();
+      expect(await run(registry)).to.have.length(0);
+      const dark = await EffectEx.runPromise(
+        Effect.result(McpServer.invoke(registry, host, { key: 'org.dxos.function.space.queryObjects' })),
+      );
+      expect(failureOf(dark).code).to.equal('invalid_request');
+      expect(invocations).to.have.length(0);
+
+      registry.add([makeSkill({ key: 'org.dxos.skill.database', operations: [QueryObjects] })]);
+      expect((await run(registry)).map((row) => row.key)).to.deep.equal(['org.dxos.function.space.queryObjects']);
+      await EffectEx.runPromise(McpServer.invoke(registry, host, { key: 'org.dxos.function.space.queryObjects' }));
+      expect(invocations).to.have.length(1);
+      // CreateTask is still governed by no skill, so the new arrival widened nothing else.
+      expect((await run(registry)).map((row) => row.key)).to.not.include(KEY);
+    });
+
     // A live registry re-syncs its contributions (the CLI's registry-sync capability), so the same
     // key arrives as distinct entities; that is re-registration, not an authorship error.
     test('a re-registered operation lists once, the later registration winning', async ({ expect }) => {
