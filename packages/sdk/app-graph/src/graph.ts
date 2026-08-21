@@ -177,12 +177,16 @@ class GraphImpl implements WritableGraph {
     return Atom.make<Option.Option<Node.Node>>(initial).pipe(Atom.keepAlive, withLabel(`graph:node:${id}`));
   });
 
+  // Swept as soon as it loses subscribers, opting out of the registry's idle grace: this atom
+  // asserts rather than caches, and a node retained past its last read is rebuilt by the
+  // builder's dirty-flush batch (which rebuilds every stale node, lazy or not) after
+  // `removeNode` has emptied it — throwing where no caller can catch it.
   readonly _nodeOrThrow = Atom.family<string, Atom.Atom<Node.Node>>((id) => {
     return Atom.make((get) => {
       const node = get(this._node(id));
       invariant(Option.isSome(node), `Node not available: ${id}`);
       return node.value;
-    });
+    }).pipe(Atom.setIdleTTL(0));
   });
 
   readonly _edges = Atom.family<string, Atom.Writable<Edges>>((id) => {
@@ -243,7 +247,8 @@ class GraphImpl implements WritableGraph {
 
       const root = get(this._nodeOrThrow(id));
       return toJSON(root);
-    }).pipe(withLabel(`graph:json:${id}`));
+      // Same reasoning as `_nodeOrThrow`, whose throw this propagates.
+    }).pipe(Atom.setIdleTTL(0), withLabel(`graph:json:${id}`));
   });
 
   constructor({ registry, nodes, edges, onInitialize, onExpand, onRemoveNode }: GraphProps = {}) {

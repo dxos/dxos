@@ -59,6 +59,18 @@ export const DEFAULT_LOAD_TIMEOUT = Duration.seconds(30);
 /** Default deadline for a single module's `activate()` body. */
 export const DEFAULT_ACTIVATION_TIMEOUT = Duration.seconds(30);
 
+/**
+ * Default grace period before an atom with no subscribers is swept from the registry.
+ *
+ * Sized for render churn — remounts, StrictMode's double render, deck tab switches, virtualized-list
+ * scroll jitter — and for consumers that read an atom before subscribing to it, for which the grace
+ * is correctness margin rather than cache warmth. Without it a registry sweeps on the scheduler task
+ * following the last unsubscribe, which is what drives call sites to `Atom.keepAlive` and its
+ * permanent retention. It is not a residency policy: how long data stays resident belongs to
+ * whichever system owns that data.
+ */
+export const DEFAULT_ATOM_IDLE_TTL = Duration.seconds(5);
+
 export type ActivationMessage = {
   event: string;
   state: 'activating' | 'activated' | 'error';

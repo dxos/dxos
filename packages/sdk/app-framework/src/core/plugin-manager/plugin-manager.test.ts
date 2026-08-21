@@ -14,7 +14,7 @@ import * as Match from 'effect/Match';
 import * as PubSub from 'effect/PubSub';
 import * as Scope from 'effect/Scope';
 import * as TestClock from 'effect/testing/TestClock';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { invariant } from '@dxos/invariant';
@@ -3411,4 +3411,76 @@ describe('PluginManager', () => {
     const makePlugin = (id: string, tags?: string[]) =>
       Plugin.make(Plugin.define({ profile: { key: id, name: id, tags } }))();
   });
+});
+
+/**
+ * The manager's registry is the app's; an atom pinned there is retained for the lifetime of the
+ * page. The idle TTL is what makes `Atom.keepAlive` unnecessary for atoms that go briefly
+ * unobserved, so it is worth a regression test.
+ */
+describe('atom idle TTL', () => {
+  // Node removal is dispatched through the registry's async scheduler, so it needs real turns.
+  const settle = (ms = 0) => new Promise((resolve) => setTimeout(resolve, ms));
+  const SHORT_TTL = 20;
+  const AFTER_SHORT_TTL = 300;
+
+  const makeManager = (options: Partial<PluginManager.ManagerOptions> = {}) =>
+    PluginManager.make({
+      pluginLoader: () => Effect.die('not used'),
+      ...options,
+    });
+
+  it.effect('applies a default grace period to the registry it creates', () =>
+    Effect.promise(async () => {
+      const manager = makeManager();
+      const atom = Atom.make(0);
+
+      manager.registry.subscribe(atom, () => {})();
+      await settle(AFTER_SHORT_TTL);
+
+      // The default is seconds, so the node is still resident well after a bare registry would
+      // have swept it.
+      assert.strictEqual(manager.registry.getNodes().size, 1);
+    }),
+  );
+
+  it.effect('sweeps the node once the grace period elapses', () =>
+    Effect.promise(async () => {
+      const manager = makeManager({ atomIdleTTL: Duration.millis(SHORT_TTL) });
+      const atom = Atom.make(0);
+
+      manager.registry.subscribe(atom, () => {})();
+      await settle(AFTER_SHORT_TTL);
+
+      assert.strictEqual(manager.registry.getNodes().size, 0);
+    }),
+  );
+
+  it.effect('re-subscribing within the grace period cancels the sweep', () =>
+    Effect.promise(async () => {
+      const manager = makeManager({ atomIdleTTL: Duration.millis(SHORT_TTL) });
+      const atom = Atom.make(0);
+
+      manager.registry.subscribe(atom, () => {})();
+      const unsubscribe = manager.registry.subscribe(atom, () => {});
+      await settle(AFTER_SHORT_TTL);
+      assert.strictEqual(manager.registry.getNodes().size, 1);
+
+      unsubscribe();
+      await settle(AFTER_SHORT_TTL);
+      assert.strictEqual(manager.registry.getNodes().size, 0);
+    }),
+  );
+
+  it.effect('a keepAlive atom is never swept', () =>
+    Effect.promise(async () => {
+      const manager = makeManager({ atomIdleTTL: Duration.millis(SHORT_TTL) });
+      const atom = Atom.make(0).pipe(Atom.keepAlive);
+
+      manager.registry.subscribe(atom, () => {})();
+      await settle(AFTER_SHORT_TTL);
+
+      assert.strictEqual(manager.registry.getNodes().size, 1);
+    }),
+  );
 });

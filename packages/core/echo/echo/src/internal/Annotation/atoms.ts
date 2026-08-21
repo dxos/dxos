@@ -9,21 +9,22 @@ import { assertArgument } from '@dxos/invariant';
 
 import type * as Annotation from '../../Annotation';
 import type * as Entity from '../../Entity';
+import { memoizePerEntity, memoizePerEntityKey } from '../common/atom-memo';
 import { snapshotEquals, snapshotForComparison } from '../common/atom-snapshot';
 import { subscribe } from '../common/proxy/reactive';
 import { isEntity } from '../Entity';
 import { get as getAnnotation } from './entity-dictionary';
 
 /**
- * Atom family for an annotation value on an entity instance.
- * Mirrors the object-property atom family: re-emits a fresh reference whenever the entity changes
+ * Atom memo for an annotation value on an entity instance.
+ * Mirrors the object-property atom memo: re-emits a fresh reference whenever the entity changes
  * (so an in-place array mutation is observed) and dedupes primitive values via `!==`.
  */
-const annotationFamily = Atom.family((target: Entity.Unknown) =>
-  Atom.family(<T>(annotation: Annotation.Annotation<T>): Atom.Atom<Option.Option<T>> => {
-    const read = (): Option.Option<T> => Option.map(getAnnotation(target, annotation), snapshotForComparison);
+const annotationFamily = memoizePerEntityKey<Entity.Unknown, Annotation.Annotation<any>, Atom.Atom<Option.Option<any>>>(
+  (target, annotation) => {
+    const read = (): Option.Option<any> => Option.map(getAnnotation(target, annotation), snapshotForComparison);
 
-    return Atom.make<Option.Option<T>>((get) => {
+    return Atom.make<Option.Option<any>>((get) => {
       let previous = read();
 
       const unsubscribe = subscribe(target, () => {
@@ -36,20 +37,19 @@ const annotationFamily = Atom.family((target: Entity.Unknown) =>
       get.addFinalizer(() => unsubscribe());
 
       return previous;
-    }).pipe(Atom.keepAlive);
-  }),
+    });
+  },
 );
 
 /**
- * Atom family for a single key of a record-valued annotation on an entity instance.
- * Keyed by a structurally-equal tuple key `[target, annotation, key])` so nested families are avoided.
+ * Atom memo for a single key of a record-valued annotation on an entity instance.
+ * Keyed by the entity, then by annotation and key in tables the entity's entry owns, so both inner
+ * levels are released with the entity.
  */
-const annotationPropertyFamily = Atom.family(
-  ([target, annotation, key]: readonly [
-    Entity.Unknown,
-    Annotation.Annotation<Record<string, any>>,
-    string,
-  ]): Atom.Atom<any> => {
+const annotationPropertyFamily = memoizePerEntity((target: Entity.Unknown) => {
+  const byAnnotation = new Map<Annotation.Annotation<Record<string, any>>, Map<string, Atom.Atom<any>>>();
+
+  const make = (annotation: Annotation.Annotation<Record<string, any>>, key: string): Atom.Atom<any> => {
     const read = (): unknown =>
       getAnnotation(target, annotation).pipe(
         Option.map((value) => snapshotForComparison(value[key])),
@@ -70,9 +70,26 @@ const annotationPropertyFamily = Atom.family(
       get.addFinalizer(() => unsubscribe());
 
       return previous;
-    }).pipe(Atom.keepAlive);
-  },
-);
+    });
+  };
+
+  return {
+    get: (annotation: Annotation.Annotation<Record<string, any>>, key: string): Atom.Atom<any> => {
+      let byKey = byAnnotation.get(annotation);
+      if (!byKey) {
+        byKey = new Map<string, Atom.Atom<any>>();
+        byAnnotation.set(annotation, byKey);
+      }
+      const existing = byKey.get(key);
+      if (existing) {
+        return existing;
+      }
+      const created = make(annotation, key);
+      byKey.set(key, created);
+      return created;
+    },
+  };
+});
 
 /** Equal when both empty, or both present with shallow-equal content (see `snapshotEquals`). */
 const sameOption = <T>(a: Option.Option<T>, b: Option.Option<T>): boolean =>
@@ -99,9 +116,10 @@ export const makeProperty = <V>(
   key: string,
 ): Atom.Atom<V | undefined> => {
   assertArgument(isEntity(target), 'target', 'Must be a reactive ECHO entity');
-  // The flattened family key is a single concrete tuple type, so the generic `V` is erased at the
-  // family boundary and recovered here; no typed alternative exists for a per-call-generic family.
-  return annotationPropertyFamily([target, annotation as Annotation.Annotation<Record<string, any>>, key]) as Atom.Atom<
-    V | undefined
-  >;
+  // The memo's key type is a single concrete annotation type, so the generic `V` is erased at that
+  // boundary and recovered here; no typed alternative exists for a per-call-generic memo.
+  return annotationPropertyFamily(target).get(
+    annotation as Annotation.Annotation<Record<string, any>>,
+    key,
+  ) as Atom.Atom<V | undefined>;
 };

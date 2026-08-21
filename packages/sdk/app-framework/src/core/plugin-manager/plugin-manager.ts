@@ -63,6 +63,7 @@ import { ManagerState } from './manager-state';
 import {
   type ActivationMessage,
   DEFAULT_ACTIVATION_TIMEOUT,
+  DEFAULT_ATOM_IDLE_TTL,
   DEFAULT_LOAD_TIMEOUT,
   type PluginFailure,
   PluginInitializationError,
@@ -131,6 +132,12 @@ export type ManagerOptions = {
    * Defaults to 30 seconds; pass `Duration.infinity` to disable.
    */
   loadTimeout?: Duration.Input;
+  /**
+   * Grace period before an atom with no subscribers is swept from the registry, applied when this
+   * manager creates its own. See {@link DEFAULT_ATOM_IDLE_TTL} for how it is sized; pass
+   * `Duration.zero` to sweep as soon as the last subscriber leaves.
+   */
+  atomIdleTTL?: Duration.Input;
   /**
    * Maximum time allowed for a single module's `activate()` Effect to settle.
    * Modules that exceed this fail with {@link PluginTimeoutError}; the owning
@@ -313,6 +320,7 @@ class ManagerImpl implements PluginManager {
     onRemove,
     loadTimeout = DEFAULT_LOAD_TIMEOUT,
     activationTimeout = DEFAULT_ACTIVATION_TIMEOUT,
+    atomIdleTTL = DEFAULT_ATOM_IDLE_TTL,
   }: ManagerOptions) {
     // Core plugins default to `meta.tags.includes('system')`, overridden by the host's
     // explicit set. Either way the set is a snapshot of the initial `plugins` array
@@ -322,7 +330,7 @@ class ManagerImpl implements PluginManager {
     const core: string[] = coreProp
       ? coreProp.filter((id) => registered.has(id))
       : plugins.filter(({ meta }) => meta.profile.tags?.includes('system')).map(({ meta }) => meta.profile.key);
-    this.registry = registry ?? Registry.make();
+    this.registry = registry ?? Registry.make({ defaultIdleTTL: Duration.toMillis(atomIdleTTL) });
     this.capabilities = CapabilityManager.make({
       registry: this.registry,
     });

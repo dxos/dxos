@@ -124,6 +124,15 @@ After any restart, before trusting or comparing a local test result:
 nproc && uptime   # cores changed or load already high => re-baseline, or move validation to CI
 ```
 
+`--workers=1` recovers composer e2e on a 4-core box. The suite's own config sets `workers: 3` and
+two-peer specs boot two app instances per worker, so the default over-subscribes the cell and most
+failures are starvation rather than the code under test — measured on one 4-core box, same commit:
+13 passed / 6 failed at the configured 3, and 17 passed / 2 failed at 1 (~17 min). Pass it through
+moon as `pnpm exec moon run composer-app:e2e -- --workers=1`. The two that still fail there are
+`halo.spec.ts`'s cross-device identity-join and space-replication specs, which need NAT traversal to
+a second device and so are blocked by the missing STUN/TURN above — they fail identically on an
+unmodified `main`, so treat them as environmental rather than chasing them.
+
 ### The checkout can silently revert mid-session
 
 The working tree can be found at an **older commit than the branch has already pushed** — tens of

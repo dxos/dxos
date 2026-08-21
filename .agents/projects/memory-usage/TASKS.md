@@ -230,6 +230,72 @@ state, much of it built at module-init time (Effect contexts, schema classes).
 - [ ] Measure what schema/layer construction contributes at boot.
 - [ ] Assess whether that construction can be deferred to first use.
 
+## Phase 7: Atom `keepAlive` retention
+
+Every `Atom.keepAlive` atom is pinned in the registry for the tab's lifetime —
+`canBeRemoved` is permanently false, so idle-TTL eviction never applies. Inside
+an `Atom.family` that pins one atom, one deep-cloned value, one ECHO
+subscription and the family key **per distinct key ever read**. Full mechanism,
+cost model, and the complete site catalog: ATOMS-AUDIT.md.
+
+Bounding plan (work items W1–W7, full detail incl. prior-art survey in
+ATOMS-AUDIT.md): ECHO atoms become **proxy-bounded** — `WeakMap<proxy, atom>`
+families, atom lifetime = entity-proxy lifetime, no atom-level TTL, so ECHO's
+future object-residency policy is the single lifetime knob (decided
+2026-08-14). Everything else becomes subscriber-bounded plus a short idle TTL,
+with per-key state in owner-controlled containers. **App-graph (`graph.ts`
+`_node`/`_edges`) is excluded — being handled independently.**
+
+- [x] **W1. TTL groundwork.** `DEFAULT_ATOM_IDLE_TTL` (5 s) lives with the
+      manager's other defaults in `manager-types.ts` and is applied where the
+      app's registry is actually created — `PluginManager`, via an
+      `atomIdleTTL` option alongside `loadTimeout`/`activationTimeout`. A
+      render-churn grace, explicitly not a residency policy. Other
+      `Registry.make()` sites are per-instance fallbacks for tests and
+      storybook and keep the bare constructor; the app always passes the
+      manager's registry. 4 lifecycle tests in `plugin-manager.test.ts` over
+      `AtomRegistry.getNodes()`. Sharp edges recorded in the option's doc:
+      `setIdleTTL(0)` removes immediately (disabling the default rather than
+      inheriting it), `setIdleTTL(Infinity)` is `keepAlive`.
+      Follow-on: `app-graph`'s `_nodeOrThrow` and `_json` take
+      `Atom.setIdleTTL(0)` — they assert rather than cache, and the builder's
+      dirty-flush batch rebuilds every stale node regardless of `lazy`, so a
+      node retained past its last reader throws after `removeNode` empties it,
+      where no caller can catch it. Caught by plugin-navtree's storybook run.
+- [x] **W2. ECHO families → proxy-bounded.** `memoizePerEntity` /
+      `memoizePerEntityKey` (`internal/common/atom-memo.ts`) replace
+      `Atom.family` for the 8 entity-keyed families across `Obj/atoms.ts` and
+      `Annotation/atoms.ts`: a `WeakMap` keyed by the entity proxy, with inner
+      property/annotation tables owned by the entry so they die with it.
+      Non-proxy entities (queue-stored objects and other branded shapes, which
+      reach these families and can mint a fresh object per read) keep
+      `Atom.family`'s structural memoization — identity keying would churn an
+      atom per render there. Ref-keyed families (`refFamily`,
+      `refSimpleFamily`, `refPropertyFamily`) keep `Atom.family` since
+      `RefImpl` mints a fresh wrapper per read; `keepAlive` dropped from all 11. No `setIdleTTL` on any of them, so ECHO's future object-residency
+      policy stays the single knob. Tests: `atom-memo.test.ts` (memo identity,
+      per-key property atoms, node released when unobserved, clean rebuild +
+      re-subscribe, and a `--expose-gc`-gated collection test). Verified:
+      echo 577, echo-client 523, app-graph 158, app-framework 232, schema 51.
+- [ ] **W3. Attention/view-state containers.** `LocalBackend` un-pin (storage
+      is the store); `MemoryBackend`/`AttentionManager` hold values in their
+      existing `Map`s, one pinned notify atom per owner; prune ids on
+      `update()`.
+- [ ] **W4. Mechanical removals.** `TagIndex` (3), `StateMap`, magazine (5),
+      navtree hook families (5, plus hoist out of `useMemo` to stop per-mount
+      stranding), navtree `itemAtomFamily` (map-backed like W3), native-fs
+      generation counters.
+- [ ] **W5. Per-mount swaps.** `Menu.tsx:53`, `useToolbarState.ts:21`:
+      `keepAlive` → `useAtomMount` (value lives exactly as long as the
+      component).
+- [ ] **W6. Singleton value bounds.** `companionChatCacheAtom`: evict entries
+      when the companion closes, or LRU-cap; review `AiContext._objects`
+      against census data.
+- [ ] **W7. Guardrails + verify.** Lint rule for `keepAlive` inside
+      `Atom.family`/`useMemo` (allowlist Band D); registry census in
+      `plugin-debug`'s stats panel; mailbox scenario before W2 and after each
+      item; `soak.mjs` for RSS. The audit's bands are modelled, not observed.
+
 ## Deferred
 
 - Perf-timeline gating and a CI regression guard (2026-08-06). The findings
@@ -239,6 +305,7 @@ state, much of it built at module-init time (Effect contexts, schema classes).
 
 - DESIGN.md — composition model, findings, measurement rules.
 - RESEARCH.md — industry norms, postmortems, strategy playbook.
+- ATOMS-AUDIT.md — `Atom.keepAlive` retention mechanism and site catalog.
 - Linear DX-1148 — feed/query payload retention.
 - `.agents/projects/feed-live-objects/DESIGN.md` — push-over-poll roadmap.
 - `.agents/projects/startup-latency/DESIGN.md` — demand-driven activation.
