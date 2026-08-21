@@ -172,6 +172,33 @@ changes what a model sees lives in the shared package or it is a bug.
         doc comments still promising "the first is the fallback when a call omits `spaceId`" — the
         session default this PR removed.
 
+  - [x] **EDGE adopted the pin** (edge PR #934, `claude/bump-dxos-pin-79d5ecf4`, CI green
+        2026-08-21) — 86 pins `0de23cd7` → `79d5ecf4`, then three commits of adoption. Nothing in
+        the worker relied on the session default, so the breaking change cost only the wording that
+        promised one (`AuthProps.spaceIds`, `IdentityContext.spaceIds`). `gatewayLayer` now builds
+        `Registry.Service` from `hydrateRegistry` and supplies `Host`, replacing the local
+        `McpRegistry` that merely cast where `hydrateRegistry` deserializes; `discovery-tools.ts`
+        deleted. A registry outage still degrades to the static surface — that contract is tested,
+        so hydration catches rather than dies (`Effect.orDie` broke it; `Effect.catch` on an empty
+        registry restores it).
+    - [x] **Static surface matched to the CLI** — the two hosts are meant to offer a model the same
+          thing and had drifted. `calculator` dropped (bring-up leftover); `listSpaces` folded into
+          `whoami` as upstream did; `whoami`'s description, space annotation and shape aligned, with
+          `identityDid` threaded from the grant beside the hex key. Static surface is `whoami` alone.
+          **Not a straight delete**: edge's `listSpaces` enumerated via `listAgentSpaces` where
+          `whoami` only described granted ids, so the fold had to keep that path. It also had to
+          invert the source — enumerating from the agent made `whoami` hard-depend on
+          `AGENTS_SERVICE`, which 11 tests caught. The grant's own list is authoritative
+          (`resolveSpaceId` accepts nothing outside it), so the common path costs no binding call and
+          only a legacy grant with an empty session context falls back, degrading rather than
+          failing. `withinSessionContext` became dead code.
+    - [x] **Integration suite finished the #12692 port** — `listTools` assertions still expected
+          projected verb names, so they split into a fixed-surface assertion and a catalog assertion
+          via a new `listOperations()` helper; `projectCreate` and `queryObjects` name no reference
+          argument, so with the fallback gone they pass `spaceId` explicitly. Scoping lesson:
+          `mcp-space-service:test` alone missed `packages/services/edge/test/mcp-space-service.node.test.ts`,
+          which lives in the `edge` package — CI caught it twice. Both suites now: 69/69 and 6/6.
+
   The object group goes to **plugin-space**, whose verbs mirror the ECHO API (`Database.add` /
   `Database.remove` → `addObject` / `removeObjects`); `database.objectCreate` / `objectDelete`
   retire into them. Two blockers, not one: a declared service the handler never resolves, and an
