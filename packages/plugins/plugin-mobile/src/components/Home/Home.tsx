@@ -14,7 +14,7 @@ import { Card } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/react-ui-search';
 import { mx } from '@dxos/ui-theme';
-import { DevFlag, Position, getDevFlag, getHostPlatform, isTauri, setDevFlag } from '@dxos/util';
+import { DevFlag, Position, getDevFlag, setDevFlag } from '@dxos/util';
 
 import { meta } from '#meta';
 
@@ -41,8 +41,6 @@ export const Home = (_: HomeProps) => {
     items,
     extract: (node) => toLocalizedString(node.properties.label, t),
   });
-
-  const autoFocus = !isTauri() || getHostPlatform() !== 'ios';
 
   return (
     <SearchPanel onSearch={handleSearch}>

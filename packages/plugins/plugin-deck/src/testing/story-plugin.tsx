@@ -122,6 +122,12 @@ const createItem = (depth = 0, maxDepth = 3): StoryItem => ({
 export const STORY_ITEMS = Array.from({ length: 5 }, () => createItem());
 
 /**
+ * Graph id of a top-level story item. The graph addresses a node by its path from the root, so the bare
+ * {@link STORY_ITEMS} id names no node and opening it yields a plank that never resolves.
+ */
+export const storyItemId = (index: number): string => `${Node.RootId}/${STORY_ITEMS[index].id}`;
+
+/**
  * Maps a nested {@link StoryItem} tree to graph nodes so `Graph.getConnections` / `useConnections` see children.
  */
 const toStoryItemNode = (item: StoryItem, index: number, depth: number): Node.NodeArg<StoryItem> =>
@@ -180,18 +186,21 @@ const storySurfaces = Capability.inlineModule('story-surfaces', { provides: [Cap
           }
 
           return (
-            <Syntax.Root
-              data={{
-                primaryItem: companionTo,
-                companion: { data: subject, properties, variant },
-              }}
-            >
-              <Syntax.Content>
-                <Syntax.Viewport>
-                  <Syntax.Code />
-                </Syntax.Viewport>
-              </Syntax.Content>
-            </Syntax.Root>
+            // Stamped so a host's play test can assert the companion body resolved, not just its tab.
+            <div role='none' className='contents' data-testid='story.companion' data-companion-variant={variant}>
+              <Syntax.Root
+                data={{
+                  primaryItem: companionTo,
+                  companion: { data: subject, properties, variant },
+                }}
+              >
+                <Syntax.Content>
+                  <Syntax.Viewport>
+                    <Syntax.Code />
+                  </Syntax.Viewport>
+                </Syntax.Content>
+              </Syntax.Root>
+            </div>
           );
         },
       }),

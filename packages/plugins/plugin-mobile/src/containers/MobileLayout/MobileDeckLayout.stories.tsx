@@ -4,12 +4,12 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
-import { expect, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { DeckStoryPlugin, STORY_ITEMS } from '@dxos/plugin-deck/testing';
+import { DeckStoryPlugin, storyItemId } from '@dxos/plugin-deck/testing';
 import { translations as deckTranslations } from '@dxos/plugin-deck/translations';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useAsyncEffect } from '@dxos/react-hooks';
@@ -63,29 +63,49 @@ export const Default: Story = {
   },
 };
 
-export const OnePanel: Story = {
-  render: () => {
-    const { invokePromise } = useOperationInvoker();
-    useAsyncEffect(async () => {
-      await invokePromise(LayoutOperation.Open, { subject: [STORY_ITEMS[0].id], navigation: 'immediate' });
-    });
+/** Opens the given story items as the navigation stack, top-most last. */
+const OpenStory = ({ items }: { items: string[] }) => {
+  const { invokePromise } = useOperationInvoker();
+  useAsyncEffect(async () => {
+    for (const [index, subject] of items.entries()) {
+      await invokePromise(LayoutOperation.Open, {
+        subject: [subject],
+        ...(index > 0 && { disposition: 'add' }),
+        navigation: 'immediate',
+      });
+    }
+  });
 
-    return <DefaultStory />;
+  return <DefaultStory />;
+};
+
+export const OnePanel: Story = {
+  render: () => <OpenStory items={[storyItemId(0)]} />,
+};
+
+/**
+ * The drawer's tab strip and its body are resolved separately — the tabs come from the panel's companion
+ * nodes while the body is a Surface — so a tab can render over an empty body. This asserts both.
+ */
+export const Companion: Story = {
+  tags: ['test'],
+  render: () => <OpenStory items={[storyItemId(0)]} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // The plugin manager activates asynchronously, so the panel mounts well after the story's first paint.
+    // Both the navbar and the drawer toolbar carry the tabs; opening from the navbar is the app's path.
+    const [tab] = await canvas.findAllByRole('button', { name: 'Companion Beta' }, { timeout: 30_000 });
+    await userEvent.click(tab);
+
+    await waitFor(async () => {
+      const bodies = canvasElement.querySelectorAll<HTMLElement>('[data-testid="story.companion"]');
+      await expect(Array.from(bodies).map((body) => body.dataset.companionVariant)).toContain('beta');
+    });
+    await expect(canvas.queryByText('Nothing to show here.')).toBeNull();
   },
 };
 
 export const Stack: Story = {
-  render: () => {
-    const { invokePromise } = useOperationInvoker();
-    useAsyncEffect(async () => {
-      await invokePromise(LayoutOperation.Open, { subject: [STORY_ITEMS[0].id], navigation: 'immediate' });
-      await invokePromise(LayoutOperation.Open, {
-        subject: [STORY_ITEMS[1].id],
-        disposition: 'add',
-        navigation: 'immediate',
-      });
-    });
-
-    return <DefaultStory />;
-  },
+  render: () => <OpenStory items={[storyItemId(0), storyItemId(1)]} />,
 };

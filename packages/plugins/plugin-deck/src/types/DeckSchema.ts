@@ -88,6 +88,38 @@ export const StoredDeckState = Schema.Struct({
 }).mapFields(Struct.map(Schema.mutableKey));
 export type StoredDeckState = Schema.Schema.Type<typeof StoredDeckState>;
 
+/** Which root layout renders the deck's state; the two hosts express companion visibility differently. */
+export type Platform = 'mobile' | 'desktop';
+
+/** Which plank companion the host currently has on screen. */
+export type CompanionSelection = {
+  /** Whether the companion pane is on screen at all. */
+  open: boolean;
+  /** The chosen tab; absent means the pane falls back to the plank's first companion. */
+  variant?: string;
+};
+
+/**
+ * The plank companion the host is showing, in one shape for consumers outside the layout (e.g. the
+ * assistant provisioning a chat for the plank). The deck marks the pane open per plank
+ * (`companionPlanks`) and keeps the chosen tab in global view state, while the mobile drawer has no
+ * planks and holds both in `complementarySidebar*` — that split is a layout detail, not one every
+ * consumer should have to re-derive.
+ */
+export const getCompanionSelection = (
+  platform: Platform,
+  state: StoredDeckState,
+  viewStateVariant: string | undefined,
+): CompanionSelection => {
+  if (platform === 'mobile') {
+    const open = state.complementarySidebarState !== 'closed' && state.complementarySidebarPanel !== undefined;
+    return { open, variant: open ? state.complementarySidebarPanel : undefined };
+  }
+
+  const open = (state.decks[state.activeDeck]?.companionPlanks.length ?? 0) > 0;
+  return { open, variant: open ? viewStateVariant : undefined };
+};
+
 // Transient/ephemeral plugin state (not persisted).
 export const EphemeralDeckState = Schema.Struct({
   /** Item ID of the plank currently displayed fullscreen (headless); transient, never in the URL. */

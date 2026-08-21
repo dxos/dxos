@@ -23,6 +23,7 @@ export const translations = [
         'collapse-drawer.label': 'Collapse drawer',
         'close-drawer.label': 'Close drawer',
         'empty-branch.message': 'Nothing here yet.',
+        'empty-drawer.message': 'Nothing to show here.',
         'no-results.message': 'No matches.',
       },
     },

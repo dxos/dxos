@@ -14,7 +14,7 @@ import { withLayout } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { DeckStoryPlugin, STORY_ITEMS } from '../../testing';
+import { DeckStoryPlugin, storyItemId } from '../../testing';
 import { DeckLayout } from './DeckLayout';
 
 const meta = {
@@ -43,7 +43,7 @@ export const OnePlank: Story = {
     const { invokePromise } = useOperationInvoker();
     useAsyncEffect(async () => {
       // A singleton `active` list renders fullbleed; opening into a fresh deck yields that directly.
-      await invokePromise(LayoutOperation.Open, { subject: [STORY_ITEMS[0].id], navigation: 'immediate' });
+      await invokePromise(LayoutOperation.Open, { subject: [storyItemId(0)], navigation: 'immediate' });
     });
 
     return <DeckLayout />;
@@ -54,9 +54,9 @@ export const ManyPlanks: Story = {
   render: () => {
     const { invokePromise } = useOperationInvoker();
     useAsyncEffect(async () => {
-      await invokePromise(LayoutOperation.Open, { subject: [STORY_ITEMS[0].id], navigation: 'immediate' });
+      await invokePromise(LayoutOperation.Open, { subject: [storyItemId(0)], navigation: 'immediate' });
       await invokePromise(LayoutOperation.Open, {
-        subject: [STORY_ITEMS[1].id],
+        subject: [storyItemId(1)],
         disposition: 'add',
         navigation: 'immediate',
       });
