@@ -156,4 +156,46 @@ describe('projectFunctionToTool', () => {
     });
     expect(decoded.properties).toEqual({ any: 1 });
   });
+
+  // A cyclic input schema serializes as `$defs` plus a `$ref` into them. Rebuilding it used to
+  // recurse until the stack blew, which reached the user as "Maximum call stack size exceeded" from
+  // the toolkit build and failed the whole chat request; and the advertised schema dropped the
+  // definitions, leaving the model a dangling `$ref`.
+  test('an operation with a recursive input schema survives the registry round trip', ({ expect }) => {
+    interface Node {
+      readonly name: string;
+      readonly children?: readonly Node[];
+    }
+
+    const Node: Schema.Codec<Node> = Schema.Struct({
+      name: Schema.String,
+      children: Schema.optional(Schema.Array(Schema.suspend((): Schema.Codec<Node> => Node))),
+    });
+
+    const Recursive = Operation.make({
+      meta: { key: DXN.make('org.dxos.test.function.recursive'), name: 'Recursive' },
+      input: Schema.Struct({ root: Node }),
+      output: Schema.Void,
+    });
+
+    const advertised = Tool.getJsonSchema(projectFunctionToTool(Operation.deserialize(Operation.serialize(Recursive))));
+    const refs = collectRefs(advertised);
+    expect(refs.length).toBeGreaterThan(0);
+    const defs = (advertised.$defs ?? {}) as Record<string, unknown>;
+    // Every `$ref` the model is shown must name a definition that is actually present.
+    expect(refs.filter((ref) => !(ref.replace('#/$defs/', '') in defs))).toEqual([]);
+  });
 });
+
+/** Every `$ref` value anywhere in a JSON Schema node. */
+const collectRefs = (node: unknown): string[] => {
+  if (Array.isArray(node)) {
+    return node.flatMap(collectRefs);
+  }
+  if (typeof node !== 'object' || node === null) {
+    return [];
+  }
+  return Object.entries(node as Record<string, unknown>).flatMap(([key, value]) =>
+    key === '$ref' && typeof value === 'string' ? [value] : collectRefs(value),
+  );
+};

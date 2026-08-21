@@ -264,7 +264,26 @@ const isEchoReferenceNode = (node: JsonSchemaType): boolean =>
   ('$ref' in node && node.$ref === JSON_SCHEMA_ECHO_REF_ID) ||
   ('$id' in node && decodeURIComponent(node.$id as string) === JSON_SCHEMA_ECHO_REF_ID);
 
-export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$defs']): Schema.Codec<any, any> => {
+/**
+ * A definition being rebuilt, or already rebuilt, within one {@link toEffectSchema} call.
+ *
+ * The cell is published to the cache *before* its body is built so that a `$ref` re-entering the
+ * definition it is nested in finds it in flight; `schema` is filled in once the body completes.
+ */
+type DefinitionCell = { schema?: Schema.Codec<any, any> };
+
+export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$defs']): Schema.Codec<any, any> =>
+  toEffectSchemaRec(root, _defs, new Map());
+
+/**
+ * @param definitions Definitions rebuilt so far, keyed by `$defs` name, shared across the whole
+ * conversion so that a cyclic `$ref` resolves to a lazy reference rather than recursing forever.
+ */
+const toEffectSchemaRec = (
+  root: JsonSchemaType,
+  _defs: JsonSchemaType['$defs'] | undefined,
+  definitions: Map<string, DefinitionCell>,
+): Schema.Codec<any, any> => {
   const defs = root.$defs ? { ..._defs, ...root.$defs } : (_defs ?? {});
 
   // Tested before the generic object branch: a reference structurally *is* an object, so one that
@@ -273,7 +292,7 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
   // reference semantics.
   const isReference = isEchoReferenceNode(root);
   if (!isReference && 'type' in root && root.type === 'object') {
-    return objectToEffectSchema(root, defs);
+    return objectToEffectSchema(root, defs, definitions);
   }
 
   let result: Schema.Codec<any, any> = Schema.Unknown;
@@ -300,12 +319,12 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
   } else if ('enum' in root) {
     result = Schema.Union(root.enum!.map((e) => Schema.Literal(e)));
   } else if ('oneOf' in root) {
-    result = Schema.Union(root.oneOf!.map((v) => toEffectSchema(v, defs)));
+    result = Schema.Union(root.oneOf!.map((v) => toEffectSchemaRec(v, defs, definitions)));
   } else if ('anyOf' in root) {
-    result = Schema.Union(root.anyOf!.map((v) => toEffectSchema(v, defs)));
+    result = Schema.Union(root.anyOf!.map((v) => toEffectSchemaRec(v, defs, definitions)));
   } else if ('allOf' in root) {
     if (root.allOf!.length === 1) {
-      result = toEffectSchema(root.allOf![0], defs);
+      result = toEffectSchemaRec(root.allOf![0], defs, definitions);
     } else {
       log.warn('allOf with multiple schemas is not supported');
       result = Schema.Unknown;
@@ -334,7 +353,7 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
         if (Array.isArray(root.items)) {
           const [required, optional] = Function.pipe(
             root.items,
-            Array.map((v) => toEffectSchema(v as JsonSchemaType, defs)),
+            Array.map((v) => toEffectSchemaRec(v as JsonSchemaType, defs, definitions)),
             Array.splitAt(root.minItems ?? root.items.length),
           );
           result = Schema.Tuple([...required, ...optional.map(Schema.optionalKey)]);
@@ -344,8 +363,8 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
         } else {
           const items = root.items;
           result = Array.isArray(items)
-            ? Schema.Tuple(items.map((v) => toEffectSchema(v as JsonSchemaType, defs)))
-            : Schema.Array(toEffectSchema(items as JsonSchemaType, defs));
+            ? Schema.Tuple(items.map((v) => toEffectSchemaRec(v as JsonSchemaType, defs, definitions)))
+            : Schema.Array(toEffectSchemaRec(items as JsonSchemaType, defs, definitions));
         }
         break;
       }
@@ -356,11 +375,23 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
     }
   } else if ('$ref' in root) {
     const refSegments = root.$ref!.split('/');
-    const jsonSchema = defs[refSegments[refSegments.length - 1]];
-    invariant(jsonSchema, `missing definition for ${root.$ref}`);
-    result = toEffectSchema(jsonSchema, defs).pipe(
-      Schema.annotate({ identifier: refSegments[refSegments.length - 1] }),
-    );
+    const name = refSegments[refSegments.length - 1];
+    const cell = definitions.get(name);
+    if (cell) {
+      // A definition already seen: `Schema.suspend` defers the lookup, which both terminates a cycle
+      // (the cell is still in flight, so its body cannot be read yet) and shares one node between
+      // every reference to it.
+      result = Schema.suspend(() => cell.schema ?? raise(new Error(`unresolved definition: ${name}`))).pipe(
+        Schema.annotate({ identifier: name }),
+      );
+    } else {
+      const jsonSchema = defs[name];
+      invariant(jsonSchema, `missing definition for ${root.$ref}`);
+      const pending: DefinitionCell = {};
+      definitions.set(name, pending);
+      pending.schema = toEffectSchemaRec(jsonSchema, defs, definitions).pipe(Schema.annotate({ identifier: name }));
+      result = pending.schema;
+    }
   }
 
   const annotations = jsonSchemaFieldsToAnnotations(root);
@@ -374,7 +405,11 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
   return result;
 };
 
-const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs']): Schema.Codec<any, any> => {
+const objectToEffectSchema = (
+  root: JsonSchemaType,
+  defs: JsonSchemaType['$defs'],
+  definitions: Map<string, DefinitionCell>,
+): Schema.Codec<any, any> => {
   invariant('type' in root && root.type === 'object', `not an object: ${root}`);
 
   const echoRefinement: JsonSchemaEchoAnnotations = (root as any)[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY];
@@ -386,14 +421,14 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
   let immutableIdField: Schema.Codec<any, any> | undefined;
   for (const [key, value] of propertyList) {
     if (isEchoObject && key === 'id') {
-      immutableIdField = toEffectSchema(value, defs);
+      immutableIdField = toEffectSchemaRec(value, defs, definitions);
     } else {
       // TODO(burdon): Mutable cast.
       // `optionalKey`, not `optional`: the latter unions the value with `undefined`, which would put
       // every annotation one level below `PropertySignature.type` where the readers look for it.
       (fields as any)[key] = root.required?.includes(key)
-        ? toEffectSchema(value, defs)
-        : Schema.optionalKey(toEffectSchema(value, defs));
+        ? toEffectSchemaRec(value, defs, definitions)
+        : Schema.optionalKey(toEffectSchemaRec(value, defs, definitions));
     }
   }
 
@@ -416,7 +451,7 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
       'only one pattern property is supported',
     );
 
-    schema = Schema.Record(Schema.String, toEffectSchema(root.patternProperties[''], defs));
+    schema = Schema.Record(Schema.String, toEffectSchemaRec(root.patternProperties[''], defs, definitions));
   } else if (
     root.additionalProperties !== true &&
     (typeof root.additionalProperties !== 'object' || root.additionalProperties === null)
@@ -428,7 +463,7 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
     const indexValue =
       root.additionalProperties === true
         ? Schema.Any
-        : toEffectSchema(root.additionalProperties as JsonSchemaType, defs);
+        : toEffectSchemaRec(root.additionalProperties as JsonSchemaType, defs, definitions);
     if (propertyList.length > 0) {
       // v4 spells "struct plus an index signature" as `StructWithRest`.
       schema = Schema.StructWithRest(Schema.Struct(structFields), [Schema.Record(Schema.String, indexValue)]);

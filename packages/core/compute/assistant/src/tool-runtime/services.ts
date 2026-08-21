@@ -19,6 +19,7 @@ import { todo } from '@dxos/debug';
 import { DXN, Filter, Ref, Registry } from '@dxos/echo';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 import { RefFromLLM } from '../util';
 
@@ -50,7 +51,16 @@ export const makeToolResolverFromOperations = <R = never>({
               registry.query(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(key))).run(),
             );
             if (results.length > 0) {
-              return projectFunctionToTool(Operation.deserialize(results[0]));
+              // Rebuilding a stored schema can fail on a record this build cannot represent. Reported
+              // as "not found" so the caller drops that one tool, the way an unresolvable id is
+              // already handled — a throw here escapes as a defect and fails the whole request.
+              return yield* Effect.try({
+                try: () => projectFunctionToTool(Operation.deserialize(results[0])),
+                catch: (error) => {
+                  log.warn('Failed to project a stored operation to a tool', { id, error });
+                  return new AiToolNotFoundError(id);
+                },
+              });
             }
             return yield* Effect.fail(new AiToolNotFoundError(id));
           }),
@@ -213,9 +223,16 @@ export const projectFunctionToTool = (fn: Operation.Definition.Any): Tool.Any =>
  * optional property is therefore dropped, stating the property as the bare type and leaving it out of
  * `required` — the same contract ECHO's own emitter keeps (`stripUndefinedMember`) and the one the
  * pre-migration corpus was recorded against.
+ *
+ * The document's definitions are carried over as `$defs`: v4 emits them for a cyclic schema and
+ * refers to them by `$ref`, so dropping them would state a dangling reference the provider rejects.
  */
-const toModelJsonSchema = (schema: Schema.Codec<any, any>): JsonSchema.JsonSchema =>
-  statePropertyOpenness(dropNullBranches(Schema.toJsonSchemaDocument(schema).schema, new Set(asStringArray(schema))));
+const toModelJsonSchema = (schema: Schema.Codec<any, any>): JsonSchema.JsonSchema => {
+  const { schema: root, definitions } = Schema.toJsonSchemaDocument(schema);
+  const withDefs =
+    Object.keys(definitions).length > 0 ? { ...root, $defs: definitions as Record<string, unknown> } : root;
+  return statePropertyOpenness(dropNullBranches(withDefs, new Set(asStringArray(schema))));
+};
 
 /**
  * States openness on every object node that leaves it implied.
@@ -295,10 +312,16 @@ const makeToolName = (name: string) => {
 export const createStructFieldsFromSchema = (
   schema: Schema.Codec<any, any>,
 ): Record<string, Schema.Codec<any, any>> => {
+  // One expansions map for the whole struct: a recursive property is rewritten once and every
+  // reference to it shares that node, which is what terminates the walk (see `mapSchemaTypeForLLM`).
+  const expansions = new Map<SchemaAST.AST, SchemaAST.AST>();
   switch (schema.ast._tag) {
     case 'Objects':
       return Object.fromEntries(
-        schema.ast.propertySignatures.map((prop) => [prop.name, Schema.make(mapSchemaTypeForLLM(prop.type))]),
+        schema.ast.propertySignatures.map((prop) => [
+          prop.name,
+          Schema.make(mapSchemaTypeForLLM(prop.type, expansions)),
+        ]),
       );
     case 'Void':
       return {};
@@ -311,7 +334,7 @@ export const createStructFieldsFromSchema = (
  * Picks an LLM-friendly schema type for the given schema AST.
  * The picked schema type decodes to the original schema type.
  */
-const mapSchemaTypeForLLM = (ast: SchemaAST.AST): SchemaAST.AST => {
+const mapSchemaTypeForLLM = (ast: SchemaAST.AST, expansions: Map<SchemaAST.AST, SchemaAST.AST>): SchemaAST.AST => {
   if (Ref.isRefType(ast)) {
     // v4's element and property nodes carry their own modifiers, so the wrapper types are gone and
     // the annotations record is optional.
@@ -322,9 +345,27 @@ const mapSchemaTypeForLLM = (ast: SchemaAST.AST): SchemaAST.AST => {
     return SchemaEx.retainContext(ast, RefFromLLM.annotate({ description }).ast);
   }
 
+  // Handled here rather than by `mapAst`, which forces the thunk: a self-referential schema (an
+  // operation whose input embeds JSON Schema, say) would rewrite its own body forever. Rebuilding
+  // lazily and memoizing on the body's identity terminates on the second visit instead, the same way
+  // ECHO's own serializer does.
+  if (SchemaAST.isSuspend(ast)) {
+    const body = ast.thunk();
+    const expand = () => {
+      const cached = expansions.get(body);
+      if (cached) {
+        return cached;
+      }
+      const mapped = mapSchemaTypeForLLM(body, expansions);
+      expansions.set(body, mapped);
+      return mapped;
+    };
+    return new SchemaAST.Suspend(expand, ast.annotations, undefined, ast.encoding, ast.context);
+  }
+
   // `mapAst` carries annotations, checks, encoding and `context` across every rebuilt node; in v4
   // optionality rides on `context`, so rebuilding by hand silently makes an optional key required.
-  return SchemaEx.mapAst(ast, (child) => mapSchemaTypeForLLM(child));
+  return SchemaEx.mapAst(ast, (child) => mapSchemaTypeForLLM(child, expansions));
 };
 
 const isHandlerLike = (value: unknown): value is Toolkit.WithHandler<Record<string, Tool.Any>> => {

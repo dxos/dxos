@@ -255,10 +255,59 @@ describe('effect-to-json', () => {
   test('serialize circular schema (TypeSchema)', () => {
     const jsonSchema = toJsonSchema(TypeSchema);
     expect(Object.keys(jsonSchema.properties!).length).toBeGreaterThan(0);
-
-    // TODO(dmaretskyi): Currently unable to deserialize.
-    // const effectSchema = toEffectSchema(jsonSchema);
     log('schema', { jsonSchema });
+
+    // A cyclic `$ref` used to recurse until the stack blew, which reached users as a bare
+    // "Maximum call stack size exceeded" from whatever read the persisted schema back.
+    const effectSchema = toEffectSchema(jsonSchema);
+    expect(SchemaAST.isObjects(SchemaAST.toType(effectSchema.ast))).toBe(true);
+  });
+
+  test('deserialize a self-referential schema', () => {
+    interface Node {
+      readonly name: string;
+      readonly children?: readonly Node[];
+    }
+
+    const Node: Schema.Codec<Node> = Schema.Struct({
+      name: Schema.String,
+      children: Schema.optional(Schema.Array(Schema.suspend((): Schema.Codec<Node> => Node))),
+    });
+
+    const jsonSchema = toJsonSchema(Node);
+    const roundTripped = toEffectSchema(jsonSchema);
+
+    // Decoding is what proves the cycle was rebuilt rather than truncated to `Unknown`: a nested
+    // child is validated against the same node schema, so a wrong shape at any depth fails.
+    expect(Schema.decodeUnknownSync(roundTripped)({ name: 'a', children: [{ name: 'b', children: [] }] })).toEqual({
+      name: 'a',
+      children: [{ name: 'b', children: [] }],
+    });
+  });
+
+  test('deserialize a pair of mutually-recursive schemas', () => {
+    interface A {
+      readonly kind: 'a';
+      readonly b?: B;
+    }
+    interface B {
+      readonly kind: 'b';
+      readonly a?: A;
+    }
+    const A: Schema.Codec<A> = Schema.Struct({
+      kind: Schema.Literal('a'),
+      b: Schema.optional(Schema.suspend((): Schema.Codec<B> => B)),
+    });
+    const B: Schema.Codec<B> = Schema.Struct({
+      kind: Schema.Literal('b'),
+      a: Schema.optional(Schema.suspend((): Schema.Codec<A> => A)),
+    });
+
+    const roundTripped = toEffectSchema(toJsonSchema(A));
+    expect(Schema.decodeUnknownSync(roundTripped)({ kind: 'a', b: { kind: 'b', a: { kind: 'a' } } })).toEqual({
+      kind: 'a',
+      b: { kind: 'b', a: { kind: 'a' } },
+    });
   });
 
   test('serialize a pair of mutually-recursive schemas (A embeds B, B embeds A)', () => {
