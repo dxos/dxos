@@ -90,6 +90,38 @@ alternative was a loopback-only, single-use HTTP server that reads `.env` and le
 fetch the value directly, so it never enters the agent's context. The sandbox classifier blocked
 that, correctly: read-a-secret-and-serve-it-over-HTTP is indistinguishable from exfiltration.
 
-So the last step needs a human. Cheapest route: open Composer → connector settings → HeyGen,
-paste the key. Once the `AccessToken` exists in the space, everything downstream —
-`createConnection`, `studio.generate` — is agent-drivable.
+### The key-server route
+
+`.claude/scripts/keyserve.py` hands one allowlisted secret from the repo-root `.env` to a local
+browser page over loopback, so the *browser* fetches the value and it never enters the agent's
+context. Deliberately narrow, because a permission rule naming this path inherits whatever the
+file does: it reads only `<repo-root>/.env` (never a caller-supplied path), serves only
+`HEYGEN_API_KEY` or `IDEOGRAM_API_KEY`, binds `127.0.0.1`, uses a random single-use URL token,
+and exits after the first read or 180 s.
+
+Plumbing verified with a secret-free copy: the cross-origin fetch from `http://localhost:5173`
+succeeded, and a second request was refused because the server had already exited.
+
+**It needs one permission line the agent cannot add for itself** — the classifier blocks an agent
+widening its own permissions, through Bash *and* through Edit, which is the correct boundary. Add
+to `.claude/settings.local.json` (gitignored):
+
+```json
+"Bash(python3 .claude/scripts/keyserve.py:*)"
+```
+
+Then, from the repo root:
+
+```bash
+python3 .claude/scripts/keyserve.py HEYGEN_API_KEY 8901
+```
+
+Honest limit of that rule: it names one path, but the file at that path is editable, so its real
+guarantee is "this one script, whose contents are in git and show up in a diff". That is why it
+lives in `.claude/scripts/` rather than in `temp/`.
+
+### Or just paste it
+
+Open Composer → connector settings → HeyGen and paste the key. Once the `AccessToken` exists in
+the space everything downstream — `createConnection`, `studio.generate` — is agent-drivable, and
+the key ends up in Composer's own credential store, which is where it belongs anyway.
