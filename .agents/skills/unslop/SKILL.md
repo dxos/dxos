@@ -96,10 +96,11 @@ Removing patterns is half the job. Sterile, voiceless writing is just as obvious
 
 26. **Abstract metaphor nouns.** Substrate, wedge, vector, locus, vantage, nexus, primitive (as noun), harness (as metaphor), surface (as in "API surface"), bedrock, scaffolding (as metaphor), modality, paradigm, gold-plating, ratchet (as metaphor), evacuate (for moving code), endgame, north star, flywheel. These read as technical but usually have a plainer concrete word. "Substrate" becomes "base". "Wedge in" becomes "add". "Vector" becomes "way" or "method". "Gold-plating" becomes "more than the job needs". "Ratchet" becomes the mechanism's real name or "a limit that only tightens". "Evacuate" becomes "move out". "Endgame" becomes "the last phase". Pick the concrete word.
 
-Repo exceptions, because they are real names here, not metaphors: `Surface`
-is a Composer plugin primitive (`Surface.Surface`, `AppSurface`), and
-`primitive` names the `@dxos/react-ui` component class. Use them for those
-things and nowhere else.
+Repo exceptions to rule 26, because they are real names here, not metaphors:
+`Surface` is a Composer plugin primitive (`Surface.Surface`, `AppSurface`),
+`primitive` names the `@dxos/react-ui` component class, and **harness** is the
+agent runtime itself (`AGENTS.md` calls itself "harness-agnostic"; the harness
+owns worktree and branch assignment). Use each for that thing and nowhere else.
 
 ### Plain speech
 
