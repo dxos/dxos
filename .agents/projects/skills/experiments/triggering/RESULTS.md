@@ -1,6 +1,6 @@
 # Experiment 3: triggering accuracy
 
-Date: 2026-08-21. Model: `sonnet`. 103 of 123 planned runs (see coverage gaps).
+Date: 2026-08-21. Model: `sonnet`. 112 of 123 planned runs (see coverage gaps).
 
 ## Why this experiment is the one that mattered
 
@@ -21,7 +21,7 @@ so the test is whether the description generalises rather than whether it matche
 itself. Three repetitions per prompt, two prompts per skill. `--allowedTools
 Skill` was verified not to change the triggering decision.
 
-## Result: 73/100 positive runs fired the expected skill (73%)
+## Result: 86/110 positive runs fired the expected skill (78%)
 
 The distribution is bimodal. Most skills are near-perfect; a small group barely
 fires at all, and **that group is almost exactly the set I wrote or rewrote in
@@ -40,14 +40,22 @@ this session**.
 | echo, proto                                                                                                                                                                                                                                            |   6/6 |                                                                |
 | browser-e2e-tests, code-style, composer-debug, composer-forensics, composer-plugins, composer-ui, composite-components, context-propagation, debugging-ui, effect, logging, operations, regenerate-model-fixture, subduction, test-perf-leaks, tracing |   3/3 |                                                                |
 
-Two zeros that are **my labelling error, not skill failures**:
+Three cases were **my labelling error, not skill failures**, and the scorer now
+credits them (which is why the headline is 78% rather than 74%):
 
 - `testing-assistant-conversations` 0/3 lost to `regenerate-model-fixture`. My
   prompt was "a test fails with 'No memoized conversation found'", which is
   verbatim `regenerate-model-fixture`'s stated trigger and the more specific
   skill. The router was right and my expected answer was wrong.
+- `task-planning` 0/1 fired `dxos:task-planning`, which is the skill's real
+  plugin-namespaced name. I wrote the bare name as the expected value.
 - `agent-eval-tests` 0/3 on a prompt about scoring whether an agent really did
-  what it claimed. Plausibly the same problem; not re-run.
+  what it claimed. Plausibly the same problem; not re-run, so still counted as a
+  miss.
+
+Three labelling errors in forty-one cases is worth recording on its own: writing
+the expectation is as error-prone as writing the description, and a harness that
+grades against the author's assumption will flatter or punish the wrong thing.
 
 ## Result: negative controls all clean
 
@@ -116,9 +124,10 @@ belongs on the description-rewrite list too.
 
 ## Coverage gaps
 
-20 runs did not complete before the runner was throttled to a crawl. Unmeasured:
-`task-planning`, `cloud-sandbox`, `skills`, plus repetitions 2 and 3 of the
-negative controls.
+11 runs did not complete before the runner was throttled to a crawl. Unmeasured:
+`cloud-sandbox`, `skills`, and repetitions of the negative controls. The low
+group and the headline held steady across four successive samples (82, 92, 103,
+112 runs), so the remainder is unlikely to move them.
 
 ## Reproducing
 

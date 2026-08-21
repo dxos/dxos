@@ -1,8 +1,7 @@
-POSITIVE CASES: expected skill fired in 75/102 runs (74%)
+POSITIVE CASES: expected skill fired in 86/110 runs (78%)
 
 skill                                fired   also fired
 agent-eval-tests                       0/3   
-testing-assistant-conversations        0/3   regenerate-model-fixture
 moon                                   1/6   code-style
 writing-for-agents                     1/6   skill-creator
 trunk-quarantine                       1/3   
@@ -11,7 +10,7 @@ technical-writing                      3/6
 debugging                              2/3   logging
 submit-pr                              2/3   
 browser-e2e-tests                      3/3   
-cloud-sandbox                          1/1   
+cloud-sandbox                          3/3   
 code-style                             3/3   
 composer-debug                         3/3   
 composer-forensics                     3/3   
@@ -22,13 +21,16 @@ context-propagation                    3/3
 debugging-ui                           3/3   
 echo                                   6/6   
 effect                                 3/3   
-land                                   2/2   
+land                                   3/3   
 logging                                3/3   
 operations                             3/3   
 proto                                  6/6   
 regenerate-model-fixture               3/3   
+skills                                 3/3   
 subduction                             3/3   
+task-planning                          2/2   dxos:project, dxos:task-planning
 test-perf-leaks                        3/3   
+testing-assistant-conversations        3/3   regenerate-model-fixture
 tracing                                3/3   
 
 NEGATIVE CASES (nothing should fire):

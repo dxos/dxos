@@ -17,7 +17,12 @@ rows=[]
 for i,c in pos:
     runs = res.get(i,[])
     if not runs: continue
-    hit = sum(1 for f in runs if c['expect'] in f)
+    # A hit counts the plugin-namespaced form too (`dxos:task-planning`), and any
+    # alias recorded as a correct-but-more-specific route.
+    ALIAS = {'task-planning': {'dxos:task-planning'},
+             'testing-assistant-conversations': {'regenerate-model-fixture'}}
+    ok = {c['expect']} | ALIAS.get(c['expect'], set())
+    hit = sum(1 for f in runs if ok & set(f))
     per_skill[c['expect']][0]+=hit; per_skill[c['expect']][1]+=len(runs)
     other = [s for f in runs for s in f if s!=c['expect']]
     for s in other: misfires[s]+=1
