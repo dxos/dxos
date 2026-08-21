@@ -1,4 +1,5 @@
 ---
+# multiple-changesets: an ECHO query-API addition consumers look up under @dxos/echo, independent of the MCP surface reshape that motivated it
 '@dxos/echo': minor
 ---
 
