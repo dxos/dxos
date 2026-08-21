@@ -172,8 +172,8 @@ changes what a model sees lives in the shared package or it is a bug.
         doc comments still promising "the first is the fallback when a call omits `spaceId`" — the
         session default this PR removed.
 
-  - [x] **EDGE adopted the pin** (edge PR #934, `claude/bump-dxos-pin-79d5ecf4`, CI green
-        2026-08-21) — 86 pins `0de23cd7` → `79d5ecf4`, then three commits of adoption. Nothing in
+  - [x] **EDGE adopted the pin** (edge PR #934 MERGED 2026-08-21 as `5fbba72f`, all 7 checks
+        green) — 86 pins `0de23cd7` → `79d5ecf4`, then three commits of adoption. Nothing in
         the worker relied on the session default, so the breaking change cost only the wording that
         promised one (`AuthProps.spaceIds`, `IdentityContext.spaceIds`). `gatewayLayer` now builds
         `Registry.Service` from `hydrateRegistry` and supplies `Host`, replacing the local
