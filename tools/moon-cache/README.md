@@ -49,9 +49,9 @@ MOON_REMOTE_HOST= moon run :build
    proxying it looks like nothing is wrong.
 2. **Any edit to `.moon/workspace.yml` re-hashes every task**, so the next run after a config
    change is a full cold build regardless of which cache is configured.
-3. **Disk is bounded by `--max_size 100`** (GiB), enforced as an LRU: `bazel-remote` evicts the
+3. **Disk is bounded by `--max_size 200`** (GiB), enforced as an LRU: `bazel-remote` evicts the
    least recently used blobs rather than filling the disk. Size it under the volume with room for
-   the OS — 100 GiB on the current 154 GiB disk.
+   the OS — 200 GiB on the current 320 GiB disk, leaving roughly 110 GiB of headroom.
 4. **Release workflows deliberately skip the cache** — `remote-cache: 'false'` on the setup action,
    or a workflow-level `MOON_REMOTE_HOST` where the workflow does not use that action.
 5. **`--access_log_level` defaults to `all`.** At CI volume that's one line per request: 8 days
@@ -59,10 +59,22 @@ MOON_REMOTE_HOST= moon run :build
    budget and exhaust the disk. The unit sets `--access_log_level none`; do not drop it when
    copying this config elsewhere. `rsyslog-logrotate.conf` (below) is the backstop for the next
    service that logs at this volume without a bound of its own.
-6. **A restart costs about 70 s of downtime.** `bazel-remote` walks every cache file to rebuild its
-   in-memory index before it binds 9092/9093, so both ports refuse connections until that finishes
-   — moon falls back to a local build for anyone hitting it during that window. Restarts are safe
-   for the data (below), just not instantaneous.
+6. **A restart costs about 70 s of downtime**, more at high file counts. `bazel-remote` walks every
+   cache file to rebuild its in-memory index before it binds 9092/9093, so both ports refuse
+   connections until that finishes — moon falls back to a local build for anyone hitting it during
+   that window. Restarts are safe for the data (below), just not instantaneous. At 7.2M files the
+   scan/sort/index sequence (visible in `journalctl -u bazel-remote`) has taken several minutes,
+   not 70 s.
+7. **Sustained disk I/O saturation degrades the cache before it looks broken.** A CI fan-out can
+   drive the droplet to 40-60% iowait for the better part of an hour, especially when the cache
+   sits pinned at its `--max_size` cap and every insert forces an LRU eviction. Everything queues
+   behind the disk at that point, including the CI setup action's `/status` preflight probe, which
+   answered after its 20 s budget and reddened three otherwise-unrelated CI jobs between 2026-08-09
+   and 2026-08-19 with a false "unreachable or certificate does not verify" error — the host was up
+   the whole time. `sar -u` showing iowait above ~20% during a fan-out is the tell; the fixes are
+   more RAM (page cache absorbs reads before they reach disk), more disk headroom (fewer forced
+   evictions), and the setup action retrying the preflight before failing the job (see
+   `.github/actions/setup/action.yml`).
 
 ## The server
 
@@ -71,7 +83,7 @@ MOON_REMOTE_HOST= moon run :build
 | host | `cache.dxos.network` -> 64.225.13.237 (DigitalOcean NYC3) |
 | service | `bazel-remote` v2.5.0, systemd unit `bazel-remote` |
 | ports | 9092 gRPC, 9093 HTTPS (metrics + `/status`) |
-| storage | `/var/cache/moon`, zstd, 100 GiB LRU |
+| storage | `/var/cache/moon`, zstd, 200 GiB LRU |
 | certificates | `/etc/bazel-remote/{server.pem,server.key,ca.pem}` |
 
 `--tls_ca_file` is what makes it mTLS. Without it the cache would be world-readable and
