@@ -1,0 +1,2 @@
+- **Never leave compatibility re-exports or shims when moving code.** Update
+  every call site to the new location in the same change.

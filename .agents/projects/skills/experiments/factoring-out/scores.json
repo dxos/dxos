@@ -1,0 +1,156 @@
+[
+  {
+    "arm": "A",
+    "rep": "1",
+    "shim_left": false,
+    "old_file_kept": false,
+    "stale_importers": 0,
+    "importers_seen": 14,
+    "moved": true,
+    "skill_fired": false,
+    "clean": true
+  },
+  {
+    "arm": "A",
+    "rep": "2",
+    "shim_left": false,
+    "old_file_kept": false,
+    "stale_importers": 0,
+    "importers_seen": 14,
+    "moved": true,
+    "skill_fired": false,
+    "clean": true
+  },
+  {
+    "arm": "A",
+    "rep": "3",
+    "shim_left": false,
+    "old_file_kept": false,
+    "stale_importers": 0,
+    "importers_seen": 14,
+    "moved": true,
+    "skill_fired": false,
+    "clean": true
+  },
+  {
+    "arm": "A",
+    "rep": "4",
+    "shim_left": false,
+    "old_file_kept": false,
+    "stale_importers": 0,
+    "importers_seen": 14,
+    "moved": true,
+    "skill_fired": false,
+    "clean": true
+  },
+  {
+    "arm": "A",
+    "rep": "5",
+    "shim_left": false,
+    "old_file_kept": false,
+    "stale_importers": 0,
+    "importers_seen": 14,
+    "moved": true,
+    "skill_fired": false,
+    "clean": true
+  },
+  {
+    "arm": "B",
+    "rep": "1",
+    "shim_left": false,
+    "old_file_kept": false,
+    "stale_importers": 0,
+    "importers_seen": 14,
+    "moved": true,
+    "skill_fired": true,
+    "clean": true
+  },
+  {
+    "arm": "B",
+    "rep": "2",
+    "shim_left": false,
+    "old_file_kept": false,
+    "stale_importers": 0,
+    "importers_seen": 14,
+    "moved": true,
+    "skill_fired": true,
+    "clean": true
+  },
+  {
+    "arm": "B",
+    "rep": "3",
+    "shim_left": false,
+    "old_file_kept": false,
+    "stale_importers": 0,
+    "importers_seen": 14,
+    "moved": true,
+    "skill_fired": true,
+    "clean": true
+  },
+  {
+    "arm": "B",
+    "rep": "4",
+    "shim_left": false,
+    "old_file_kept": false,
+    "stale_importers": 0,
+    "importers_seen": 14,
+    "moved": true,
+    "skill_fired": true,
+    "clean": true
+  },
+  {
+    "arm": "E",
+    "rep": "1",
+    "shim_left": false,
+    "old_file_kept": false,
+    "stale_importers": 0,
+    "importers_seen": 14,
+    "moved": true,
+    "skill_fired": false,
+    "clean": true
+  },
+  {
+    "arm": "E",
+    "rep": "2",
+    "shim_left": false,
+    "old_file_kept": false,
+    "stale_importers": 0,
+    "importers_seen": 14,
+    "moved": true,
+    "skill_fired": false,
+    "clean": true
+  },
+  {
+    "arm": "E",
+    "rep": "3",
+    "shim_left": false,
+    "old_file_kept": false,
+    "stale_importers": 0,
+    "importers_seen": 14,
+    "moved": true,
+    "skill_fired": false,
+    "clean": true
+  },
+  {
+    "arm": "E",
+    "rep": "4",
+    "shim_left": false,
+    "old_file_kept": false,
+    "stale_importers": 0,
+    "importers_seen": 14,
+    "moved": true,
+    "skill_fired": false,
+    "clean": true
+  },
+  {
+    "arm": "E",
+    "rep": "5",
+    "shim_left": false,
+    "old_file_kept": false,
+    "stale_importers": 0,
+    "importers_seen": 14,
+    "moved": true,
+    "skill_fired": false,
+    "clean": true
+  }
+]

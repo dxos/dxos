@@ -236,6 +236,30 @@ The negative controls also confirm the gating rule empirically: neither
 
 Details: `experiments/triggering/RESULTS.md`.
 
+### Descriptions are always loaded; only bodies are conditional
+
+A correction that changes the factoring calculus. A skill's **description sits in
+context on every turn** exactly like an `AGENTS.md` line; only the body loads
+conditionally. So factoring a rule out keeps a short always-on directive in place
+and moves the detail behind it, which is the composability win at near-zero cost.
+The exposure is only that the detail arrives conditionally.
+
+### Experiment 5: factoring cost nothing, but nothing failed
+
+Against a real scratch monorepo with 14 importers and real file tools, a
+Non-negotiable moved from `CLAUDE.md` into a self-triggering skill performed
+identically to leaving it in place, and the skill fired 4/4 on work that never
+names the rule. The control, given no rule at all, also succeeded 5/5, so the
+task could not have detected a cost.
+
+The finding underneath is more useful than the placement answer: migrating 14
+files across 5 packages is trivial for an agent, so the intuition the rule guards
+against (leaving a shim because touching every caller is expensive) is a human
+one that does not transfer. Before asking whether a Non-negotiable can be
+factored out, ask whether it still earns its place.
+
+Details: `experiments/factoring-out/RESULTS.md`.
+
 ## Deferred frictions
 
 Left open deliberately. The rules are scoped to prose we write or substantially

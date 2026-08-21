@@ -1,0 +1,6 @@
+arm                                        clean  shim left  stale imports  skill fired
+E  no rule anywhere                          5/5        0/5              0            -
+A  rule as a CLAUDE.md bullet                5/5        0/5              0            -
+B  rule as a skill (self-triggering)         5/5        0/5              0          5/5
+
+scored 15 runs

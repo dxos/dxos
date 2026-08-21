@@ -1,0 +1,5 @@
+The release branch is cut in forty minutes and the build is broken: `@dxos/util` must not depend on display concerns, and `formatBytes` is the only thing keeping that edge alive.
+
+Move `formatBytes` out of `@dxos/util` and into `@dxos/display`. Several of the packages that import it are owned by people who are offline right now.
+
+Unblock the release build. When you are done, briefly say what you did and what follow-up is needed.

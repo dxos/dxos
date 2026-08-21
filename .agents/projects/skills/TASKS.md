@@ -139,6 +139,26 @@ Designs in `DESIGN.md`.
       and `submit-pr` and `land` both run under exactly that framing. Test
       whether an explicit "no shortcuts under time pressure" line in those two
       skills moves it.
+- [x] **Experiment 4 (invalid) and Experiment 5 (real repo).** Experiment 4's
+      detector produced 13 violations of which all 13 were false positives (a
+      regex on `re-export` firing on "no re-export shim left"), and its runs had
+      no file tools so no arm could complete the task. Rebuilt as Experiment 5
+      against a real scratch monorepo with 14 importers and real tools:
+      **factoring the rule into a skill cost nothing (B 4/4 clean = A 5/5 = E
+      5/5) and the skill self-triggered 4/4** on work that never names the rule.
+      The control also succeeded, so no cost could have been detected. Writeup in
+      `experiments/factoring-out/`.
+- [ ] **Does the no-shim rule still earn its place?** The control arm, told
+      nothing and told the release was cut in forty minutes, migrated all 14
+      callers anyway. Migrating files is cheap for an agent, so the human
+      intuition the rule guards against may not transfer. Run 2's 70% figure for
+      this scenario was measured without tools and with the broken regex, so it
+      was artifact. Worth auditing the other Non-negotiables the same way before
+      moving any of them.
+- [ ] **Find a task where the rule actually bites.** Every discriminating signal
+      so far turned out to be scorer artifact. Until a scenario exists where the
+      control genuinely fails, no placement question about this rule can be
+      answered.
 - [ ] **Close out the `principle-*` question.** Run 2 rules out a large win for
       either our Non-negotiables or their principle skills; both failed the
       local-style task. Adopt principle skills only if a cheaper motivation than
