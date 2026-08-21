@@ -178,19 +178,20 @@ See: `plugin-chess/src/containers/ChessArticle/`, `plugin-sample/src/containers/
 ## Layout primitives: Flex, Grid, Column, Container
 
 When you do need a box — inside `ScrollArea.Viewport`, between `Panel` parts, anywhere the shell doesn't
-already give you one — reach for these before writing `<div className='flex …'>`. `Flex`, `Column`, and
-`Container` are `slottable`, so `asChild` projects the layout onto a semantic element at no extra DOM
-node; `Grid` is a leaf and always renders its own `<div>`. `Flex`/`Grid`/`Container` live in
+already give you one — reach for these before writing `<div className='flex …'>`. All take `asChild`, so
+the layout can project onto a semantic element (`<header>`, `<ul>`) at no extra DOM node.
+`Flex`/`Grid`/`Container` live in
 [`packages/ui/react-ui/src/primitives/`](../../../packages/ui/react-ui/src/primitives) (not
 `components/`); `Column` is in `components/Column`.
 
 - **`Flex`** — `column`, `gap`, `align`, `justify`, `wrap`, `grow`, `center`. `grow` is
   `flex-1 overflow-hidden` (the height-chain link); `center` centers on both axes.
-- **`Grid`** — `cols`, `rows`, `grow` (default `true`) → `repeat(n, 1fr)`. **Only equal tracks**: the
-  props are numbers, so anything asymmetric (`[min-content_1fr]`, `[minmax(0,1fr)_auto]`, `[30rem_1fr]`)
-  is out of reach, and it has no `gap`, `subgrid`, `asChild`, or `display: contents`. Until it is
-  extended (AUDIT §7.4), an asymmetric grid is one of the few places a hand-written
-  `grid-cols-[…]` is still the honest answer — flag it rather than forcing `Grid`.
+- **`Grid`** — `cols`, `rows`, `gap`, `align`, `center`, `grow`, `contents`. Tracks take a count for
+  equal columns (`cols={3}`) or a list for anything asymmetric
+  (`cols={['min-content', '1fr']}`, `cols={[2, 1]}` for `2fr 1fr`) — the list form replaces
+  `grid-cols-[min-content_1fr]`, which is the least readable class in the corpus. `cols='subgrid'`
+  adopts the parent's tracks and spans them. `overflow-hidden` comes only with `grow`, so a
+  `grow={false}` grid clips no more than the `<div>` it replaced.
 - **`Column`** — the gutter grid: three tracks (leading gutter / content / trailing gutter) sized by
   `--gutter`. This is what aligns icons, controls, and scrollbars to the same vertical rules across
   every surface, so use it instead of hand-padding a content column.
@@ -222,8 +223,8 @@ row-centering is common, but defaulting it would silently restyle consumers rely
 
 **This is a live migration, so match it rather than adding to the backlog.**
 [`packages/ui/react-ui/AUDIT.md`](../../../packages/ui/react-ui/AUDIT.md) is the wrapper-div census that
-produced `Flex`: of 191 flex/grid wrappers in plugin containers, 127 are converted. A new hand-rolled
-flex div is new debt in a count someone is actively driving down.
+produced `Flex` and drove the `Grid` extension: of 191 flex/grid wrappers in plugin containers, 145 are
+converted. A new hand-rolled flex or grid div is new debt in a count someone is actively driving down.
 
 ## Lists, pickers, and stacks
 
