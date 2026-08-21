@@ -37,14 +37,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
         return;
       }
 
-      await invokePromise(
-        SpaceOperation.AddObject,
-        {
-          object: chat,
-          target: db,
-        },
-        { spaceId: db.spaceId },
-      );
+      await invokePromise(SpaceOperation.AddObject, { object: chat }, { spaceId: db.spaceId });
       await invokePromise(
         SpaceOperation.AddRelation,
         {
