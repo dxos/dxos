@@ -8,11 +8,6 @@ import type * as Effect from 'effect/Effect';
 import { type MakeOptional } from '@dxos/util';
 
 /**
- * Root node ID.
- */
-export const RootId = 'root';
-
-/**
  * Root node type.
  */
 export const RootType = 'org.dxos.type.graphRoot';

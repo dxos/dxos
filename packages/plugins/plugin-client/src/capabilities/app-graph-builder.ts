@@ -6,13 +6,13 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as CreateAtom from '@dxos/app-graph/CreateAtom';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { ConnectionState } from '@dxos/client/mesh';
 import * as Operation from '@dxos/compute/Operation';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { Identity } from '@dxos/halo';
 
 import { meta } from '#meta';
@@ -26,9 +26,9 @@ export default Capability.makeModule(
     // modules contribute individually, not batched per wave) and re-evaluates when it lands.
     const clientAtom = yield* Capability.atom(ClientCapabilities.Client);
     const identityServiceAtom = yield* Capability.atom(ClientCapabilities.IdentityService);
-    const extensions = yield* GraphBuilder.createExtension({
+    const extensions = yield* AppGraphBuilder.createExtension({
       id: 'root',
-      match: NodeMatcher.whenRoot,
+      match: GraphNodeMatcher.whenRoot,
       actions: () =>
         Effect.succeed([
           {
@@ -61,7 +61,7 @@ export default Capability.makeModule(
           const hub = !!client.config.values?.runtime?.app?.env?.DX_HUB_URL;
 
           return [
-            Node.make({
+            AppGraphNode.make({
               id: Account.id,
               type: meta.profile.key,
               properties: {
@@ -76,7 +76,7 @@ export default Capability.makeModule(
                 status: status.swarm === ConnectionState.OFFLINE ? 'error' : 'active',
               },
               nodes: [
-                Node.make({
+                AppGraphNode.make({
                   id: Account.Profile,
                   data: Account.Profile,
                   type: meta.profile.key,
@@ -87,7 +87,7 @@ export default Capability.makeModule(
                 }),
                 ...(hub
                   ? [
-                      Node.make({
+                      AppGraphNode.make({
                         id: Account.Account,
                         data: Account.Account,
                         type: meta.profile.key,
@@ -98,7 +98,7 @@ export default Capability.makeModule(
                       }),
                     ]
                   : []),
-                Node.make({
+                AppGraphNode.make({
                   id: Account.Security,
                   data: Account.Security,
                   type: meta.profile.key,
@@ -107,7 +107,7 @@ export default Capability.makeModule(
                     icon: 'ph--key--regular',
                   },
                 }),
-                Node.make({
+                AppGraphNode.make({
                   id: Account.Devices,
                   data: Account.Devices,
                   type: meta.profile.key,
@@ -119,7 +119,7 @@ export default Capability.makeModule(
                 }),
                 ...(hub
                   ? [
-                      Node.make({
+                      AppGraphNode.make({
                         id: Account.Invitations,
                         data: Account.Invitations,
                         type: meta.profile.key,
@@ -128,7 +128,7 @@ export default Capability.makeModule(
                           icon: 'ph--ticket--regular',
                         },
                       }),
-                      Node.make({
+                      AppGraphNode.make({
                         id: Account.Usage,
                         data: Account.Usage,
                         type: meta.profile.key,

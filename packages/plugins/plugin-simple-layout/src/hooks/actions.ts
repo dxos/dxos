@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Attention } from '@dxos/react-ui-attention';
 import { type ActionGraphProps } from '@dxos/react-ui-menu';
@@ -47,17 +47,17 @@ export const createCompanionActions = (
   // Get companions from graph connections for activeId.
   const activeConnections = activeId ? get(graph.connections(activeId, 'child')) : [];
   const companions = activeConnections
-    .filter((node: Node.Node) => node.type === PLANK_COMPANION_TYPE)
-    .toSorted((a: Node.Node, b: Node.Node) => Position.compare(a.properties, b.properties));
+    .filter((node: AppGraphNode.Node) => node.type === PLANK_COMPANION_TYPE)
+    .toSorted((a: AppGraphNode.Node, b: AppGraphNode.Node) => Position.compare(a.properties, b.properties));
 
   const nodes: ActionGraphProps['nodes'] = [];
   const edges: ActionGraphProps['edges'] = [];
 
-  companions.forEach((companion: Node.Node) => {
+  companions.forEach((companion: AppGraphNode.Node) => {
     const companionVariant = Attention.getLinkedVariant(companion.id);
     const companionAction = {
       id: `${idPrefix}-companion-${companion.id}`,
-      type: Node.ActionType,
+      type: AppGraphNode.ActionType,
       properties: {
         icon: companion.properties.icon ?? 'ph--circle-dashed--regular',
         label: companion.properties.label,

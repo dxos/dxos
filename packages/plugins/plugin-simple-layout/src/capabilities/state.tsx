@@ -6,15 +6,15 @@ import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as Node from '@dxos/app-graph/Node';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as GraphNode from '@dxos/graph/GraphNode';
 
 import { SimpleLayoutCapabilities } from '#types';
 
 const defaultState: SimpleLayoutCapabilities.SimpleLayoutState = {
   dialogOpen: false,
-  workspace: Node.RootId,
-  previousWorkspace: Node.RootId,
+  workspace: GraphNode.RootId,
+  previousWorkspace: GraphNode.RootId,
   history: [],
   isPopover: false,
   companionVariant: undefined,

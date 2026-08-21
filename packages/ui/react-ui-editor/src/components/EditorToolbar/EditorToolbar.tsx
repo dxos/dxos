@@ -6,7 +6,7 @@ import { type EditorView } from '@codemirror/view';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { memo, useMemo } from 'react';
 
-import type * as Node from '@dxos/app-graph/Node';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
 import { type ActionGraphProps, Menu, type MenuAction, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
@@ -51,7 +51,7 @@ export type EditorToolbarProps = ThemedClassName<
     role?: string;
     attendableId?: string;
     /** Handler for executing actions. Required when customActions use Operation.invoke. */
-    onAction?: (action: MenuAction, params: Node.InvokeProps) => void;
+    onAction?: (action: MenuAction, params: AppGraphNode.InvokeProps) => void;
   } & (EditorToolbarActionGraphProps & EditorToolbarFeatureFlags)
 >;
 

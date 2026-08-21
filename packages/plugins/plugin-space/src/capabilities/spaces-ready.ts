@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as Graph from '@dxos/app-graph/Graph';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
@@ -144,13 +144,10 @@ export default Capability.makeModule(
             return;
           }
 
-          const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
+          const node = AppGraph.getNode(graph, id).pipe(Option.getOrNull);
           if (!node && (isEchoRef(id) || id.length === SPACE_ID_LENGTH)) {
-            // Fire any `resolver` extension for the id first; the timeout below is the fallback when
-            // nothing materializes it.
-            void Graph.initialize(graph, id);
             const timeout = setTimeout(async () => {
-              const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
+              const node = AppGraph.getNode(graph, id).pipe(Option.getOrNull);
               if (!node) {
                 await invokePromise(SpaceOperation.WaitForObject, { id });
               }

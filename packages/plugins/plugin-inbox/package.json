@@ -278,6 +278,7 @@
     "@dxos/errors": "workspace:*",
     "@dxos/extractor": "workspace:*",
     "@dxos/extractor-lib": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",

@@ -3,7 +3,7 @@
 //
 
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
-import type * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import type * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 
@@ -16,11 +16,11 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
  * extension declares a section for the typename.
  */
 export const findTypeSectionPath = (
-  extensions: Iterable<Pick<GraphBuilder.BuilderExtension, 'url'>>,
+  extensions: Iterable<Pick<AppGraphBuilder.BuilderExtension, 'meta'>>,
   { spaceId, typename, objectId }: { spaceId: string; typename: string; objectId: string },
 ): string | undefined => {
   for (const extension of extensions) {
-    const url = extension.url;
+    const url = extension.meta;
     // Only item bindings with a static path locate objects at a fixed depth; dynamic resolvers
     // (nested collections) and singletons (settings pages) address other shapes.
     if (url?.kind === 'item' && Array.isArray(url.path) && url.path.at(-1) === typename) {

@@ -4,7 +4,7 @@
 
 import { useEffect } from 'react';
 
-import * as Graph from '@dxos/app-graph/Graph';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Attention } from '@dxos/react-ui-attention';
 
@@ -19,7 +19,7 @@ export const useExpandPath = (nodeId?: string) => {
   useEffect(() => {
     if (nodeId) {
       for (const prefix of Attention.expandAttendableId(nodeId)) {
-        Graph.expandSync(graph, prefix, 'child');
+        AppGraph.expandSync(graph, prefix, 'child');
       }
     }
   }, [nodeId, graph]);

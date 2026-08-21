@@ -5,7 +5,7 @@
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import { isProxy } from '@dxos/echo/internal';
-import { type Graph, GraphModel } from '@dxos/graph';
+import * as GraphModel from '@dxos/graph/GraphModel';
 import { type MakeOptional } from '@dxos/util';
 
 import { type Connection, type Shape } from './schema';
@@ -13,28 +13,25 @@ import { type Connection, type Shape } from './schema';
 export class CanvasGraphModel<S extends Shape = Shape> extends GraphModel.AbstractGraphModel<
   S,
   Connection,
-  CanvasGraphModel<S>,
-  CanvasGraphBuilder<S>
+  CanvasGraphModel<S>
 > {
   static create<S extends Shape>(
-    graph?: Partial<Graph.Any>,
+    graph?: Partial<GraphModel.AnyData>,
     change?: GraphModel.GraphChangeFunction,
   ): CanvasGraphModel<S> {
     if (isProxy(graph) as any) {
-      return new CanvasGraphModel<S>(graph as Graph.Graph<S, Connection>, change);
+      return new CanvasGraphModel<S>({ graph: graph as GraphModel.Data<S, Connection>, change });
     }
 
     return new CanvasGraphModel<S>({
-      nodes: (graph?.nodes ?? []) as S[],
-      edges: (graph?.edges ?? []) as Connection[],
+      graph: {
+        nodes: (graph?.nodes ?? []) as S[],
+        edges: (graph?.edges ?? []) as Connection[],
+      },
     });
   }
 
-  override get builder() {
-    return new CanvasGraphBuilder(this);
-  }
-
-  override copy(graph?: Partial<Graph.Graph<S, Connection>>): CanvasGraphModel<S> {
+  override copy(graph?: Partial<GraphModel.Data<S, Connection>>): CanvasGraphModel<S> {
     return CanvasGraphModel.create<S>(graph);
   }
 
@@ -62,21 +59,5 @@ export class CanvasGraphModel<S extends Shape = Shape> extends GraphModel.Abstra
     } as Connection;
     this.addEdge(edge);
     return edge;
-  }
-}
-
-export class CanvasGraphBuilder<S extends Shape = Shape> extends GraphModel.AbstractBuilder<
-  S,
-  Connection,
-  CanvasGraphModel<S>
-> {
-  createNode(props: MakeOptional<S, 'id'>): this {
-    this.model.createNode(props);
-    return this;
-  }
-
-  createEdge(props: MakeOptional<Connection, 'id'>): this {
-    this.model.createEdge(props);
-    return this;
   }
 }
