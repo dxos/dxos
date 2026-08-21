@@ -13389,9 +13389,6 @@ importers:
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
