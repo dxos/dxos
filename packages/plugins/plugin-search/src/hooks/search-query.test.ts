@@ -2,11 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { Collection, Type } from '@dxos/echo';
+import { Collection, DXN, Obj, Type } from '@dxos/echo';
+import { TestSchema } from '@dxos/schema/testing';
 
-import { buildSearchFilter, buildSearchQuery, byRelevance } from './search-query';
+import { buildSearchFilter, buildSearchQuery, byRelevance, toSearchResults } from './search-query';
+
+/** A type declaring no `IconAnnotation`, to exercise the fallback. */
+const Unadorned = Type.makeObject(DXN.make('com.example.type.unadorned', '0.1.0'))(
+  Schema.Struct({ name: Schema.String }),
+);
 
 describe('search-query', () => {
   test('buildSearchFilter emits a full-text text-search node', () => {
@@ -40,6 +47,20 @@ describe('search-query', () => {
     // An unresolved (empty) scope must not fall back to an unscoped search.
     const query = buildSearchQuery('invoice', []);
     expect(query.ast).toMatchObject({ type: 'select', filter: { type: 'not' } });
+  });
+
+  test('toSearchResults takes each row icon from the type annotation', () => {
+    // Regression: the icon came from a property-sniffing heuristic returning names like
+    // 'organization', which are not sprite ids — the row rendered an empty icon box.
+    const org = Obj.make(TestSchema.Organization, { name: 'Bramble Coffee Roasters' });
+    const [result] = toSearchResults([org], 'bramble');
+    expect(result.icon).toBe('ph--building--regular');
+  });
+
+  test('toSearchResults falls back to a default icon so every row has one', () => {
+    const object = Obj.make(Unadorned, { name: 'Roast locked' });
+    const [result] = toSearchResults([object], 'roast');
+    expect(result.icon).toBe('ph--circle-dashed--regular');
   });
 
   test('byRelevance ranks exact, then prefix, then substring, then length', () => {

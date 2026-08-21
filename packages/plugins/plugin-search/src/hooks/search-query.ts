@@ -7,7 +7,10 @@ import { type URI } from '@dxos/keys';
 import { type SearchResult } from '@dxos/react-ui-search';
 import { Text } from '@dxos/schema';
 
-import { getIcon, mapObjectToTextFields } from './sync';
+import { mapObjectToTextFields } from './sync';
+
+/** Fallback for a type that declares no `IconAnnotation` — the same one the nav tree and cards use. */
+const DEFAULT_ICON = 'ph--circle-dashed--regular';
 
 /** Full-text search filter over the FTS5 index. */
 export const buildSearchFilter = (text: string): Filter.Any => Filter.text(text, { type: 'full-text' });
@@ -78,13 +81,15 @@ export const toSearchResults = <T extends Entity.Unknown>(objects: T[], text: st
     if (Obj.instanceOf(Text.Text, object)) {
       return acc;
     }
-    // TODO(burdon): Use schema (matches the pre-existing pattern in sync.ts's filterObjectsSync).
     const label = Entity.getLabel(object);
+    // TODO(burdon): Use schema for the snippet too (mapObjectToTextFields flattens every string prop).
     const fields = mapObjectToTextFields(object);
     const snippet = fields.content ?? fields.description ?? Object.values(fields).find((value) => value !== label);
     acc.push({
       id: object.id,
-      icon: getIcon(Entity.getType(object)),
+      // Same type-annotation icon the nav tree and cards resolve, so a result reads as the object it is;
+      // always set, so every row aligns whether or not its type declares one.
+      icon: Entity.getIcon(object)?.icon ?? DEFAULT_ICON,
       label,
       snippet,
       object,
