@@ -10,9 +10,10 @@ import * as IllustratorEvents from '@dxos/plugin-illustrator/IllustratorEvents';
 
 import { ExcalidrawCapabilities } from '#types';
 
+// Browser-only: the variant supplies the React article/card components that render a drawing.
 export const DrawingVariant = Capability.lazyModule(
   'drawing-variant',
-  { provides: [IllustratorCapabilities.VariantProvider], activatesOn: IllustratorEvents.Start },
+  { provides: [IllustratorCapabilities.VariantProvider], activatesOn: IllustratorEvents.Start, environments: [] },
   () => import('./drawing-variant'),
 );
 

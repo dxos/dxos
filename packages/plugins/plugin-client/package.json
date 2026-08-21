@@ -106,6 +106,11 @@
       "types": "./dist/types/src/types/ClientEvents.d.ts",
       "import": "./dist/lib/ClientEvents.mjs"
     },
+    "./ClientOperation": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "import": "./dist/lib/operations.mjs"
+    },
     "./ClientOptions": {
       "source": "./src/types/ClientOptions.ts",
       "types": "./dist/types/src/types/ClientOptions.d.ts",

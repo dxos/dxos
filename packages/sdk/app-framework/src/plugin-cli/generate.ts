@@ -283,6 +283,21 @@ const sortImports = (imports: string[]): string[] => {
 };
 
 /**
+ * Where a condition's built barrel lands, derived from the package's own `default` target so the
+ * manifest matches whichever build the package uses.
+ *
+ * Two layouts exist. `ts-vite-build` flattens each entry to `dist/lib/<name>.mjs`, so the
+ * condition rides the name (`capabilities.node.mjs`). The older `ts-build` mirrors the source
+ * tree under a platform slug (`dist/lib/neutral/capabilities/index.mjs`), so the condition keeps
+ * the source's own shape (`.../capabilities/gen/node.mjs`). Guessing one of them for every
+ * package is what left two plugins pointing at bundles their build never emits.
+ */
+const conditionDist = (defaultDist: string, env: string): string => {
+  const dir = path.posix.dirname(defaultDist);
+  return path.posix.basename(defaultDist) === 'index.mjs' ? `${dir}/gen/${env}.mjs` : `${dir}/capabilities.${env}.mjs`;
+};
+
+/**
  * Rewrites the `#capabilities` entry of the plugin's package.json so each generated environment
  * resolves the generated barrel (source condition) and its built counterpart (dist condition).
  * Key order is load-bearing: `source` first, env conditions before `default`.
@@ -325,10 +340,11 @@ const syncPackageImports = (pluginDir: string, environments: string[]): void => 
     source: envOrder.length > 0 ? source : defaultSource,
     types: existing?.types ?? './dist/types/src/capabilities/index.d.ts',
   };
+  const defaultDist = existing?.default ?? './dist/lib/capabilities.mjs';
   for (const env of envOrder) {
-    entry[env] = `./dist/lib/capabilities.${env}.mjs`;
+    entry[env] = conditionDist(defaultDist, env);
   }
-  entry.default = existing?.default ?? './dist/lib/capabilities.mjs';
+  entry.default = defaultDist;
 
   pkg.imports = { ...pkg.imports, '#capabilities': entry };
   fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');

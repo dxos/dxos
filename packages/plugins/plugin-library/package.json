@@ -21,8 +21,8 @@
         "default": "./src/capabilities/index.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "workerd": "./dist/lib/capabilities.workerd.mjs",
-      "node": "./dist/lib/capabilities.node.mjs",
+      "workerd": "./dist/lib/neutral/capabilities/gen/workerd.mjs",
+      "node": "./dist/lib/neutral/capabilities/gen/node.mjs",
       "default": "./dist/lib/neutral/capabilities/index.mjs"
     },
     "#components": {
@@ -53,7 +53,7 @@
     "#types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
+      "default": "./dist/lib/neutral/types/index.mjs"
     }
   },
   "exports": {
