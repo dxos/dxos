@@ -10,8 +10,6 @@ export default defineConfig({
     'SheetPlugin': 'src/SheetPlugin.ts',
     'plugin': 'src/plugin.tsx',
     'capabilities': 'src/capabilities/index.ts',
-    'capabilities.workerd': 'src/capabilities/gen/workerd.ts',
-    'capabilities.node': 'src/capabilities/gen/node.ts',
     'components': 'src/components/index.ts',
     'containers': 'src/containers/index.ts',
     'meta': 'src/meta.ts',

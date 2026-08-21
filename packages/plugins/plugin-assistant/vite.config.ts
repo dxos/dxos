@@ -11,8 +11,6 @@ export default defineConfig({
     'AssistantPlugin': 'src/AssistantPlugin.ts',
     'skills': 'src/skills/index.ts',
     'capabilities': 'src/capabilities/index.ts',
-    'capabilities.workerd': 'src/capabilities/gen/workerd.ts',
-    'capabilities.node': 'src/capabilities/gen/node.ts',
     'components': 'src/components/index.ts',
     'containers': 'src/containers/index.ts',
     'execution-graph': 'src/execution-graph/index.ts',

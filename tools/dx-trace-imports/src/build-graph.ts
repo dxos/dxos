@@ -3,10 +3,26 @@
 //
 
 import fs from 'node:fs';
+import path from 'node:path';
 
 import { type Matcher, type WorkspacePackageResolver, externalKey, matchesKey } from './matcher.ts';
 import { createImportResolver } from './package-resolution.ts';
 import { parseImportSpecifiers } from './parse-imports.ts';
+
+/** Nearest ancestor directory holding a `package.json`, i.e. the package a file belongs to. */
+const findPackageRoot = (filePath: string): string | null => {
+  let dir = path.dirname(filePath);
+  for (;;) {
+    if (fs.existsSync(path.join(dir, 'package.json'))) {
+      return `${dir}${path.sep}`;
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) {
+      return null;
+    }
+    dir = parent;
+  }
+};
 
 /**
  * Recurse into resolved files that belong to workspace `@dxos/*` packages (including
@@ -25,6 +41,21 @@ const shouldRecurseInto = (
   return packageName?.startsWith('@dxos/') ?? false;
 };
 
+export type ImportGraph = {
+  readonly graph: Map<string, string[]>;
+  /**
+   * `#`-prefixed specifiers in the traced package's OWN files that failed to resolve, as
+   * `<importer> -> <specifier>`. The package under test defines its own subpath imports, so a
+   * failure means the condition set resolves to a file that was never built — and the crawl then
+   * stops at that edge, which would otherwise read as a clean trace. Dependencies are excluded:
+   * a third-party or sibling package may legitimately declare no target for a condition being
+   * tested (`@dxos/crypto`'s `#subtle` has `node`/`browser` and no `default`, so it does not
+   * resolve under workerd), and policing that is a different question from whether this trace
+   * covered what it claims to.
+   */
+  readonly unresolvedSubpaths: string[];
+};
+
 /**
  * Build a static import graph by crawling from the entry file with the SWC parser and
  * resolving each specifier through `package.json` `imports`/`exports`. Edges to files
@@ -35,9 +66,11 @@ export const buildImportGraph = (
   conditions: readonly string[],
   matcher: Matcher,
   resolveWorkspacePackage: WorkspacePackageResolver,
-): Map<string, string[]> => {
+): ImportGraph => {
   const resolver = createImportResolver(conditions);
   const graph = new Map<string, string[]>();
+  const unresolvedSubpaths: string[] = [];
+  const entryPackageRoot = findPackageRoot(entryKey);
   const queue = [entryKey];
   const queued = new Set(queue);
 
@@ -71,6 +104,10 @@ export const buildImportGraph = (
         continue;
       }
 
+      if (specifier.startsWith('#') && entryPackageRoot !== null && fileKey.startsWith(entryPackageRoot)) {
+        unresolvedSubpaths.push(`${fileKey} -> ${specifier}`);
+      }
+
       // Unresolvable bare specifiers (missing install, virtual modules) stay as external leaves.
       if (!specifier.startsWith('.') && !specifier.startsWith('/')) {
         const external = externalKey(specifier);
@@ -82,5 +119,5 @@ export const buildImportGraph = (
     graph.set(fileKey, [...deps]);
   }
 
-  return graph;
+  return { graph, unresolvedSubpaths };
 };

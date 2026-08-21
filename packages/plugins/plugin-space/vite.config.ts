@@ -9,8 +9,6 @@ export default defineConfig({
     'index': 'src/index.ts',
     'SpacePlugin': 'src/SpacePlugin.ts',
     'capabilities': 'src/capabilities/index.ts',
-    'capabilities.workerd': 'src/capabilities/gen/workerd.ts',
-    'capabilities.node': 'src/capabilities/gen/node.ts',
     'components': 'src/components/index.ts',
     'constants': 'src/constants.ts',
     'containers': 'src/containers/index.ts',

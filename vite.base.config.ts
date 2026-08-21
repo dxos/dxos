@@ -6,6 +6,7 @@ import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import react from '@vitejs/plugin-react';
 import { playwright } from '@vitest/browser-playwright';
 import { execFile } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
 import path, { join } from 'node:path';
 import { promisify } from 'node:util';
 import pkgUp from 'pkg-up';
@@ -892,6 +893,40 @@ const buildTestConfig = (
 };
 
 /**
+ * Build entries for the per-condition capability barrels `dx-plugin gen` emits.
+ *
+ * Derived from the package's own `#capabilities` condition map rather than listed by hand: the
+ * generator writes that map, so a hand-maintained entry list drifts silently and leaves the
+ * manifest pointing at a bundle the build never produced — which resolves as a hard
+ * ERR_MODULE_NOT_FOUND for consumers and, worse, reads as a passing structure trace because the
+ * subpath cannot be resolved at all. A declared condition whose generated source is missing is a
+ * hard error for the same reason.
+ */
+const capabilityBarrelEntries = (cwd: string): Record<string, string> => {
+  const pkgPath = join(cwd, 'package.json');
+  if (!existsSync(pkgPath)) {
+    return {};
+  }
+  const source = JSON.parse(readFileSync(pkgPath, 'utf8'))?.imports?.['#capabilities']?.source;
+  if (typeof source !== 'object' || source === null) {
+    return {};
+  }
+  const entries: Record<string, string> = {};
+  for (const [condition, target] of Object.entries(source)) {
+    if (condition === 'default' || typeof target !== 'string') {
+      continue;
+    }
+    if (!existsSync(join(cwd, target))) {
+      throw new Error(
+        `package.json declares the '${condition}' condition for #capabilities but ${target} is missing — run \`pnpm exec dx-plugin gen\` in ${cwd}.`,
+      );
+    }
+    entries[`capabilities.${condition}`] = target;
+  }
+  return entries;
+};
+
+/**
  * Single entry point for a DXOS library package's `vite.config.ts`.
  *
  * - Library JS → `dist/lib/<entry>.mjs` (rolldown, all non-relative imports external).
@@ -915,6 +950,13 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
       : jsx === 'solid'
         ? [solid({ include: `${process.cwd()}/src/**/*.{tsx,jsx}` })]
         : [];
+  // Generated capability barrels are added to whatever the package declares, so a plugin gaining
+  // its first condition needs no edit here.
+  const barrelEntries = capabilityBarrelEntries(process.cwd());
+  const resolvedEntry =
+    Object.keys(barrelEntries).length > 0
+      ? { ...(typeof entry === 'string' ? { index: entry } : entry), ...barrelEntries }
+      : entry;
   return viteDefineConfig({
     // Worker output config. Library packages that use `new Worker(new URL('#x',
     // import.meta.url))` rely on vite's worker bundler to lift the referenced source
@@ -934,7 +976,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
     },
     build: {
       lib: {
-        entry,
+        entry: resolvedEntry,
         formats: ['es'],
         fileName: (_, name) => `${name}.mjs`,
       },

@@ -248,23 +248,26 @@ Migration is mechanical per plugin (the two spike commits are the template) and 
 2. ~~inbox's lazy→inline workerd conversion~~ — resolved; inbox annotates its canonical barrel
    and uses `overrides.{node,workerd}.ts` for the schema-list divergence.
 3. ~~Per-maker `environments` defaults~~ — **done** (Josiah, 2026-08-15), and it subsumed the
-   global-default question. `AppCapability.environmentDefaults` declares the conditions once per
-   family; the makers spread it into the specs they build and `dx-plugin gen` resolves the same
-   literal statically, so the two cannot drift. 58 annotations that only restated their family's
-   default are gone, and a genuine exception stays a one-line `environments` at the exception
-   (plugin-transcription's `appGraphBuilder` renders a `<Mic/>` inline, so it declares `[]`).
+   global-default question. Each `AppCapability.*` helper declares its own default inline — the
+   `environments` literal it passes to `moduleMaker`, or the `options?.environments ?? [...]`
+   fallback in the value-based helpers — and `dx-plugin gen` reads that same literal statically,
+   so there is no second copy to drift. There is deliberately no exported `environmentDefaults`
+   map: a shared table is a second place to state the fact. 58 annotations that only restated
+   their family's default are gone, and a genuine exception stays a one-line `environments` at
+   the exception (plugin-transcription's `appGraphBuilder` renders a `<Mic/>` inline, so it
+   declares `[]`).
 
    Resolution walks the barrel's namespace imports to the declaring module via that package's
    `exports`, preferring `source` and falling back to `import` — so it works in-workspace and
-   against a published package. A maker module opts in simply by exporting `environmentDefaults`,
-   which is what makes this work for out-of-repo plugin authors too.
+   against a published package, which is what makes it usable by out-of-repo plugin authors.
 
    Defaults, from the annotation evidence: headless-by-construction families (`schema`,
    `operationHandler`, `appGraphBuilder`, `settings`, `translations`, `skillDefinition`,
-   `undoMappings`, `commentConfig`, `textContent`, `anchorSort`, `navigationResolver`) →
-   `['node','workerd']`; `commands` and `layerSpec` → `['node']` (every instance in the repo is
-   node-side — evidence, not intrinsic, so widening is a one-line change); UI-bound families
-   (`surface`, `reactRoot`, `reactContext`, `pluginAsset`, `navigationHandler`) → `[]`.
+   `undoMappings`, `commentConfig`, `textContent`, `navigationResolver`, `commands`, `layerSpec`)
+   → `['node','workerd']`; UI-bound families (`surface`, `reactRoot`, `reactContext`,
+   `pluginAsset`, `navigationHandler`, `anchorSort`) → `[]`. `commands` and `layerSpec` are NOT
+   node-only: both are routinely wanted in the browser (the devtools terminal; any browser-side
+   service graph), and a genuinely platform-dependent instance overrides at its call site.
 
 4. **Tag membership was an artifact, now fixed.** The `composer-plugin` tag had gone to exactly
    the 36 plugins that already carried hand-written variants — a record of what someone had
@@ -316,6 +319,39 @@ Migration is mechanical per plugin (the two spike commits are the template) and 
    - plugin-commerce and plugin-onboarding imported `./capabilities` relatively rather than
      `#capabilities`, bypassing the condition map entirely so every runtime got the browser
      barrel.
+
+7. **The condition map had no build behind it — fixed.** `dx-plugin gen` wrote
+   `#capabilities` into `package.json` naming `./dist/lib/capabilities.{node,workerd}.mjs`, but
+   the build entries live in each package's hand-written `vite.config.ts`. 58 of the 85
+   conditioned plugins therefore declared conditions the build never produced. Two consequences,
+   the second worse than the first:
+
+   - A published package resolves `ERR_MODULE_NOT_FOUND` under node or workerd. In-repo work
+     never saw it, because the `source` condition points at the `gen/*.ts` files, which exist.
+   - `dx-trace-imports` could not resolve `#capabilities`, recorded it as `[external]`, stopped
+     the crawl at that edge, and reported "No import paths to react" — **a passing guard that had
+     never entered the barrel it was written to check.** Only 27 of the 85 plugins were really
+     being traced.
+
+   Both halves are now closed. `vite.base.config.ts` derives the `capabilities.<env>` entries
+   from the package's own `#capabilities` condition map, so the manifest the generator writes and
+   the bundles the build emits cannot disagree, and a declared condition whose generated source is
+   missing is a hard error rather than a silent omission. The 34 hand-listed entries are deleted.
+   `dx-trace-imports` now fails when a `#` subpath cannot be resolved under the conditions being
+   tested: a package's own subpath import always has a target, so a failure means the trace proves
+   nothing.
+
+   The general lesson for this design: a generated manifest needs the build wired to the same
+   source of truth, and a structure guard needs to fail when it cannot reach what it is checking.
+   Silence read as success in both places.
+
+8. **The generator was not in the task graph — fixed.** `.moon/tasks/tag-composer-plugin.yml` had
+   `build`/`test` depend on `~:#prebuild`, which resolves to nothing for a task tagged in the same
+   inherited file (`moon task <plugin>:build` listed 22 deps, none of them the generator). The
+   dependents' form, `^:#prebuild`, does resolve, which is what hid it. Both now name
+   `~:gen-capability-barrels` directly. The task's `inputs` also omitted the modules that declare
+   the per-family defaults, so a default change left every plugin's barrel stale in cache;
+   `AppCapability.ts` and `SpaceCapability.ts` are now inputs.
 
 ## Artifacts
 
