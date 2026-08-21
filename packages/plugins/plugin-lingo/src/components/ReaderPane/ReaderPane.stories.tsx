@@ -58,8 +58,13 @@ const ReaderPaneStory = ({ paired = false }: { paired?: boolean }) => {
   const handleSelect = useCallback((segment?: { id: string }) => setSelected(segment?.id), []);
   const paneProps = { analysis, selected, render, onSelect: handleSelect };
 
+  // `documentSlots` sizes the editor from its container, so a bare pane collapses to zero width.
   if (!paired) {
-    return <ReaderPane {...paneProps} content={TEST_PASSAGE} classNames='h-full' />;
+    return (
+      <div className='dx-container px-2'>
+        <ReaderPane {...paneProps} content={TEST_PASSAGE} classNames='h-full' />
+      </div>
+    );
   }
 
   return (

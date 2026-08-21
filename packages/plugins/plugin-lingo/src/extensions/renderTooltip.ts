@@ -45,11 +45,23 @@ export const createTooltipRenderer =
     }
 
     if (onAdd) {
+      const label = t(segment.kind === 'vocab' ? 'add-word.label' : 'add-phrase.label');
       root.append(
-        Domino.of('button')
-          .classNames('flex items-center gap-2 pt-1 cursor-pointer underline underline-offset-2')
-          .text(t(segment.kind === 'vocab' ? 'add-word.label' : 'add-phrase.label'))
-          .on('click', () => onAdd(props)),
+        Domino.of('div')
+          .classNames('flex items-center gap-2 pt-1')
+          .append(
+            Domino.of('button')
+              .classNames('flex items-center p-1 rounded text-description hover:text-accent-text cursor-pointer')
+              // `mousedown` rather than `click`, and prevented: the tooltip sits over the editor, so a
+              // click would move the selection out from under the segment the button acts on.
+              .attributes({ 'type': 'button', 'aria-label': label, 'title': label })
+              .append(Domino.svg('ph--plus--regular').classNames('shrink-0 w-4 h-4'))
+              .on('mousedown', (event) => {
+                event.preventDefault();
+                onAdd(props);
+              }),
+          )
+          .append(Domino.of('span').classNames('text-sm opacity-75').text(label)),
       );
     }
 

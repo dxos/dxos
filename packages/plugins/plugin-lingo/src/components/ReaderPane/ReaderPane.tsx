@@ -13,6 +13,7 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
+  documentSlots,
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
@@ -56,15 +57,15 @@ export const ReaderPane = ({
   // editor down on every selection — losing the decorations the selection just produced.
   const handlers = useRef({ render, onSelect, onActivate });
   handlers.current = { render, onSelect, onActivate };
-  const stableRender = useCallback<NonNullable<SegmentsOptions['render']>>(
+  const handleRender = useCallback<NonNullable<SegmentsOptions['render']>>(
     (el, props, view) => handlers.current.render?.(el, props, view),
     [],
   );
-  const stableSelect = useCallback<NonNullable<SegmentsOptions['onSelect']>>(
+  const handleSelect = useCallback<NonNullable<SegmentsOptions['onSelect']>>(
     (segment) => handlers.current.onSelect?.(segment),
     [],
   );
-  const stableActivate = useCallback<NonNullable<SegmentsOptions['onActivate']>>(
+  const handleActivate = useCallback<NonNullable<SegmentsOptions['onActivate']>>(
     (segment) => handlers.current.onActivate?.(segment),
     [],
   );
@@ -73,19 +74,19 @@ export const ReaderPane = ({
     () =>
       [
         createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
-        createThemeExtensions({ themeMode }),
-        // The language bundle only highlights; `decorateMarkdown` is what hides the markup, so the
-        // reader needs both to show prose rather than source.
+        createThemeExtensions({ themeMode, slots: documentSlots }),
+        // The language bundle only highlights; `decorateMarkdown` is what hides the markup,
+        // so the reader needs both to show prose rather than source.
         markdown && [createMarkdownExtensions(), decorateMarkdown()],
-        segments({ side, render: stableRender, onSelect: stableSelect, onActivate: stableActivate }),
+        segments({ side, render: handleRender, onSelect: handleSelect, onActivate: handleActivate }),
       ].filter(isTruthy),
-    [themeMode, markdown, side, stableRender, stableSelect, stableActivate],
+    [themeMode, markdown, side, handleRender, handleSelect, handleActivate],
   );
 
   const { parentRef, view } = useTextEditor({ initialValue: content, extensions }, [content, extensions]);
 
-  // Analysis arrives after the editor mounts (a model round-trip, or a cache read), so it is
-  // dispatched rather than passed as an initial extension.
+  // Analysis arrives after the editor mounts (a model round-trip, or a cache read),
+  // so it is dispatched rather than passed as an initial extension.
   useEffect(() => {
     if (!view || !analysis) {
       return;

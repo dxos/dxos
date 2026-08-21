@@ -2,8 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type EditorState, type Extension, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
-import { Decoration, EditorView, hoverTooltip } from '@codemirror/view';
+import {
+  EditorSelection,
+  type EditorState,
+  type Extension,
+  RangeSetBuilder,
+  StateEffect,
+  StateField,
+} from '@codemirror/state';
+import { Decoration, EditorView, RectangleMarker, hoverTooltip, layer } from '@codemirror/view';
 
 import { type Range, type Segment, type Segmentation, segmentAt, sourceHash } from '@dxos/nlp';
 import { type RenderCallback } from '@dxos/ui-editor/types';
@@ -169,6 +176,49 @@ const decorations = (side: SegmentSide) =>
   });
 
 /**
+ * Solid highlight behind the active segments.
+ *
+ * Drawn as a layer of rectangles rather than a background on the inline mark so that — like a text
+ * selection — it fills wrapped lines to the line edge instead of stopping at the last glyph. Matches
+ * how review comments are highlighted.
+ */
+const highlightLayer = (side: SegmentSide) =>
+  layer({
+    above: false,
+    class: 'cm-segmentHighlightLayer',
+    update: (update) =>
+      update.docChanged ||
+      update.viewportChanged ||
+      update.geometryChanged ||
+      update.transactions.some((tr) =>
+        tr.effects.some((effect) => effect.is(setHovered) || effect.is(setSelected) || effect.is(setSegments)),
+      ),
+    markers: (view) => {
+      const { segments, hovered, selected } = segmentsState(view.state);
+      const active = [
+        { id: hovered, className: 'cm-segment-highlight' },
+        { id: selected, className: 'cm-segment-highlight cm-segment-highlight-current' },
+      ];
+
+      return active.flatMap(({ id, className }) => {
+        const segment = id && segments.find((candidate) => candidate.id === id);
+        const range = segment && rangeOn(segment, side);
+        if (!range || range.end > view.state.doc.length || range.start >= range.end) {
+          return [];
+        }
+
+        const selectionRange = EditorSelection.range(range.start, range.end);
+        const markers = RectangleMarker.forRange(view, className, selectionRange);
+        // A single rectangle means the segment fits on one visual line — round its corners. Rounding
+        // every rectangle of a wrapped segment would notch the interior edges.
+        return markers.length === 1
+          ? RectangleMarker.forRange(view, `${className} cm-segment-highlight-single`, selectionRange)
+          : markers;
+      });
+    },
+  });
+
+/**
  * Pointer and cursor tracking.
  *
  * Both drive the same `hovered` state: moving the mouse and moving the caret are two ways of
@@ -253,7 +303,13 @@ const popover = (side: SegmentSide, render: NonNullable<SegmentsOptions['render'
  */
 export const segments = (options: SegmentsOptions = {}): Extension => {
   const { side = 'source', render } = options;
-  const extensions: Extension[] = [segmentsField, decorations(side), tracking(side, options), segmentTheme];
+  const extensions: Extension[] = [
+    segmentsField,
+    decorations(side),
+    highlightLayer(side),
+    tracking(side, options),
+    segmentTheme,
+  ];
   if (render) {
     extensions.push(popover(side, render));
   }
@@ -277,22 +333,40 @@ const segmentTheme = EditorView.theme({
     textUnderlineOffset: '4px',
     cursor: 'help',
   },
-  // An outline rather than a fill: the reader is still reading, and a highlight block over running
-  // text competes with it far more than a border does. The colour must come from a text-weight
-  // token, not a surface one — a surface token is a background fill and disappears against the
-  // editor's own background.
   '.cm-segment-hover': {
-    outline: '1px solid var(--color-subdued)',
-    outlineOffset: '1px',
-    borderRadius: '2px',
     cursor: 'pointer',
   },
-  // The committed segment earns more weight than the one merely under the pointer.
-  '.cm-segment-selected': {
-    outline: '1px solid var(--color-accent-text)',
-    outlineOffset: '1px',
-    backgroundColor: 'var(--color-current-surface)',
-    borderRadius: '2px',
+  // The layer paints the fill; the text colour comes from the inline mark, which wraps exactly the
+  // segment. `!important` and the descendant selector win over the markdown syntax-highlight tokens
+  // nested inside the range.
+  '.cm-segment-hover, .cm-segment-hover *': {
+    color: 'var(--color-neutral-fg) !important',
+  },
+  '.cm-segment-selected, .cm-segment-selected *': {
+    color: 'var(--color-accent-fg) !important',
+  },
+  // Never swallow a click meant for the inline mark underneath.
+  '.cm-segmentHighlightLayer': {
+    pointerEvents: 'none',
+  },
+  // `box-shadow` with a 1px spread extends the block 1px on every side in the same colour — visual
+  // padding without changing layout, so vertically adjacent line rectangles paint into each other's
+  // gap and a wrapped segment stays seamless. `padding-inline` with a compensating negative
+  // `margin-inline` gives horizontal breathing room while keeping the fill aligned to the text.
+  '.cm-segment-highlight': {
+    backgroundColor: 'var(--color-neutral-bg)',
+    boxShadow: '0 0 0 1px var(--color-neutral-bg)',
+    boxSizing: 'content-box',
+    marginInline: '-2px',
+    paddingInline: '2px',
+    pointerEvents: 'none',
+  },
+  '.cm-segment-highlight-current': {
+    backgroundColor: 'var(--color-accent-bg)',
+    boxShadow: '0 0 0 1px var(--color-accent-bg)',
+  },
+  '.cm-segment-highlight-single': {
+    borderRadius: '0.25rem',
   },
   '.cm-segment-stale': {
     opacity: '0.4',
