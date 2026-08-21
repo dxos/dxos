@@ -157,27 +157,34 @@ const mutationOf = (record: Operation.PersistentOperation): Operation.Mutation |
 };
 
 /**
- * One operation as `findOperations` returns it — the tool's success row. A row costs the model a
- * description where a schema costs hundreds of tokens, which is why the schemas travel only on a
- * `keys` lookup.
+ * One operation as `findOperations` describes it. A view costs the model a description where a
+ * schema costs hundreds of tokens, which is why `schema` travels only on a `keys` lookup.
  */
-export type Row = {
+export type OperationView = {
   key: string;
   name?: string;
   description?: string;
+  /** Prompt names of the skills that govern this operation. */
   skills: readonly string[];
+  /** Whether the operation is space-addressed, making `invokeOperation`'s `spaceId` load-bearing. */
   requiresSpace: boolean;
-  mutation?: Operation.Mutation;
-  idempotent?: boolean;
-  inputSchema?: unknown;
-  outputSchema?: unknown;
+  /** Behavioral hints, grouped as MCP's own readOnly/destructive/idempotent trio is. */
+  hints: {
+    mutation?: Operation.Mutation;
+    idempotent?: boolean;
+  };
+  /** JSON Schemas of the operation's input and output; present on a `keys` lookup only. */
+  schema?: {
+    input?: unknown;
+    output?: unknown;
+  };
 };
 
-export const row = (
+export const operationView = (
   record: Operation.PersistentOperation,
   owners: Map<string, string[]>,
-  withSchemas: boolean,
-): Row => {
+  withSchema: boolean,
+): OperationView => {
   const key = nsid(Operation.getKey(record) ?? '');
   const idempotent = Option.getOrUndefined(Annotation.get(record, Operation.IdempotentAnnotation));
   return {
@@ -186,8 +193,10 @@ export const row = (
     description: record.description,
     skills: owners.get(key) ?? [],
     requiresSpace: (record.services ?? []).includes(Database.Service.key),
-    mutation: mutationOf(record),
-    idempotent: idempotent === true ? true : undefined,
-    ...(withSchemas ? { inputSchema: record.inputSchema, outputSchema: record.outputSchema } : {}),
+    hints: {
+      mutation: mutationOf(record),
+      idempotent: idempotent === true ? true : undefined,
+    },
+    ...(withSchema ? { schema: { input: record.inputSchema, output: record.outputSchema } } : {}),
   };
 };

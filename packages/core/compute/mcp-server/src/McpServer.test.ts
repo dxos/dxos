@@ -193,9 +193,9 @@ describe('McpServer', () => {
       expect(row.description).to.equal('Creates a task.');
       expect(row.skills).to.deep.equal(['codeProject']);
       expect(row.requiresSpace).to.be.true;
-      expect(row.mutation).to.equal('write');
-      expect(row.idempotent).to.be.true;
-      expect(row).to.not.have.property('inputSchema');
+      expect(row.hints.mutation).to.equal('write');
+      expect(row.hints.idempotent).to.be.true;
+      expect(row).to.not.have.property('schema');
     });
 
     test('an operation no opted-in skill names is not listed', async ({ expect }) => {
@@ -224,8 +224,8 @@ describe('McpServer', () => {
     test('naming keys is the lookup that returns the schemas', async ({ expect }) => {
       const [row] = await run(testRegistry(), { keys: [KEY] });
       expect(row.key).to.equal(KEY);
-      expect((row.inputSchema as any).properties.title).to.exist;
-      expect(row.outputSchema).to.exist;
+      expect((row.schema?.input as any).properties.title).to.exist;
+      expect(row.schema?.output).to.exist;
     });
 
     test('an unknown key contributes nothing rather than failing the search', async ({ expect }) => {
@@ -362,7 +362,7 @@ describe('McpServer', () => {
 
       const { operations } = await EffectEx.runPromise(McpServer.find(registry, {}));
       expect(operations.map((row) => row.key)).to.deep.equal([KEY]);
-      expect(operations[0].mutation).to.equal('write');
+      expect(operations[0].hints.mutation).to.equal('write');
 
       const listing = successOf(
         await EffectEx.runPromise(Effect.result(McpServer.loadSkillByName(registry, 'codeProject'))),

@@ -179,16 +179,22 @@ export const FindOperations = Tool.make('findOperations', {
         requiresSpace: Schema.Boolean.annotate({
           description: 'Whether the operation acts on a space, making invokeOperation spaceId load-bearing.',
         }),
-        mutation: Schema.optional(
-          Schema.String.annotate({
-            description: "Effect on state: 'none' reads, 'write' creates or updates, 'destructive' deletes.",
+        hints: Schema.Struct({
+          mutation: Schema.optional(
+            Schema.String.annotate({
+              description: "Effect on state: 'none' reads, 'write' creates or updates, 'destructive' deletes.",
+            }),
+          ),
+          idempotent: Schema.optional(Schema.Boolean),
+        }),
+        schema: Schema.optional(
+          Schema.Struct({
+            input: Schema.optional(Schema.Unknown),
+            output: Schema.optional(Schema.Unknown),
+          }).annotate({
+            description: "The operation's input and output JSON Schemas; returned for a keys lookup only.",
           }),
         ),
-        idempotent: Schema.optional(Schema.Boolean),
-        inputSchema: Schema.optional(
-          Schema.Unknown.annotate({ description: 'JSON Schema of the input; returned for a keys lookup only.' }),
-        ),
-        outputSchema: Schema.optional(Schema.Unknown),
       }),
     ),
   }),
@@ -291,7 +297,7 @@ export const loadSkillByName = (
 export const find = (
   registry: Registry.Registry,
   { query, skill, keys }: { query?: string; skill?: string; keys?: readonly string[] },
-): Effect.Effect<{ operations: viewInternal.Row[] }, ToolFailure> =>
+): Effect.Effect<{ operations: viewInternal.OperationView[] }, ToolFailure> =>
   catchCollision(
     viewInternal.mcpSkills(registry).pipe(
       Effect.flatMap((skills) => {
@@ -303,7 +309,7 @@ export const find = (
           const operations = keys.flatMap((key) => {
             const record = viewInternal.lookup(registry, key);
             return record != null && owners.has(viewInternal.nsid(Operation.getKey(record) ?? ''))
-              ? [viewInternal.row(record, owners, true)]
+              ? [viewInternal.operationView(record, owners, true)]
               : [];
           });
           return Effect.succeed({ operations });
@@ -318,7 +324,7 @@ export const find = (
                 }
                 return skill == null || ownersOfRecord.some((name) => name.toLowerCase() === skill.toLowerCase());
               })
-              .map((record) => viewInternal.row(record, owners, false)),
+              .map((record) => viewInternal.operationView(record, owners, false)),
           })),
         );
       }),

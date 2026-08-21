@@ -175,15 +175,15 @@ describe('dx mcp serve', () => {
       ).to.be.true;
     }
 
-    // A row is compact: what it costs the model is a description, not a schema.
+    // A view is compact: what it costs the model is a description, not a schema.
     const row = operations.find((operation: { key: string }) => operation.key.endsWith('.taskCreate'));
-    expect(row).to.not.have.property('inputSchema');
+    expect(row).to.not.have.property('schema');
     expect(row.skills).to.include(SKILL);
 
     const detail = JSON.parse(responses.get(10)!.result.content[0].text).operations[0];
     expect(detail.key).to.equal('org.dxos.plugin.space.operation.addObject');
-    expect(detail.inputSchema.type).to.equal('object');
-    expect(detail.mutation).to.be.a('string');
+    expect(detail.schema.input.type).to.equal('object');
+    expect(detail.hints.mutation).to.be.a('string');
   });
 
   // A model recovers from a tool result; a wrong key has to name the tool that lists the right ones.
