@@ -11,7 +11,7 @@ import { type Space } from '@dxos/client-protocol';
 import { log } from '@dxos/log';
 import { McpServer } from '@dxos/mcp-server';
 
-import { type LocalRegistry } from './registry';
+import { type LocalServer } from './local-server';
 
 /**
  * Identity and space listing, mirroring EDGE's `mcp-space-service` tools of the same names.
@@ -68,10 +68,10 @@ export const SpaceToolkit = Toolkit.make(WhoAmI, ListSpaces);
  * Describes the session's spaces. Best-effort per field: a space whose properties or membership
  * cannot be read is still listed, with whatever did resolve.
  */
-const describeSpaces = (registry: LocalRegistry): readonly SpaceInfo[] => {
-  // Keyed as plain strings: the registry reports its space ids in the wire shape, unbranded.
-  const byId = new Map<string, Space>(registry.client.spaces.get().map((space) => [space.id, space]));
-  return registry.spaceIds.map((spaceId) => {
+const describeSpaces = (server: LocalServer): readonly SpaceInfo[] => {
+  // Keyed as plain strings, since the host reports its space ids unbranded.
+  const byId = new Map<string, Space>(server.client.spaces.get().map((space) => [space.id, space]));
+  return (server.host.spaceIds ?? []).map((spaceId) => {
     const space = byId.get(spaceId);
     if (!space) {
       return { spaceId };
@@ -112,11 +112,11 @@ const readMemberCount = (space: Space): number | undefined => {
   }
 };
 
-export const spaceHandlers = (registry: LocalRegistry) =>
+export const spaceHandlers = (server: LocalServer) =>
   SpaceToolkit.of({
     whoami: () =>
       Effect.gen(function* () {
-        const identity = registry.client.halo.identity.get();
+        const identity = server.client.halo.identity.get();
         if (!identity) {
           return yield* Effect.fail(
             McpServer.failure('invalid_request', 'No identity on this profile. Run `dx account login` first.'),
@@ -125,9 +125,9 @@ export const spaceHandlers = (registry: LocalRegistry) =>
         return {
           identityKey: identity.identityKey.toHex(),
           ...optional('displayName', identity.profile?.displayName),
-          spaces: describeSpaces(registry),
+          spaces: describeSpaces(server),
         };
       }),
 
-    listSpaces: () => Effect.sync(() => ({ spaces: describeSpaces(registry) })),
+    listSpaces: () => Effect.sync(() => ({ spaces: describeSpaces(server) })),
   });

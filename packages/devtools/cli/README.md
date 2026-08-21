@@ -26,7 +26,7 @@ in `src/commands/plugin-defs.ts` and lives in the plugin package — e.g. `dx re
 
 `dx mcp serve` exposes your spaces to an MCP client over stdio — the local twin of the
 deployed server at `mcp.dxos.org`. Both are hosts over the same `@dxos/mcp-server` package, so the
-tools, prompts and `skillLoad` output are identical; what differs is host-layer only (no OAuth here,
+tools, prompts and `loadSkill` output are identical; what differs is host-layer only (no OAuth here,
 and operations run in-process). Annotated operations project as tools and opted-in skills as prompts,
 so a plugin you enable shows up without touching this command.
 
