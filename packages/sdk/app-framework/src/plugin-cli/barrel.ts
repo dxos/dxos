@@ -78,7 +78,7 @@ export const parseBarrel = (
 };
 
 const describeMember = (
-  sourceFile: import('typescript').SourceFile,
+  sourceFile: import('@typescript/typescript6').SourceFile,
   entry: ExportConst,
   filePath: string,
   defaults: MakerDefaults,
@@ -102,8 +102,8 @@ const describeMember = (
  * of the family default, so a genuine exception stays a one-line annotation at the exception.
  */
 const resolveEnvironments = (
-  sourceFile: import('typescript').SourceFile,
-  call: import('typescript').CallExpression,
+  sourceFile: import('@typescript/typescript6').SourceFile,
+  call: import('@typescript/typescript6').CallExpression,
   defaults: MakerDefaults,
 ): readonly string[] | null => {
   const declared = readEnvironments(sourceFile, call);
@@ -123,8 +123,8 @@ const resolveEnvironments = (
  * is the only consumer and would silently mis-classify the module.
  */
 const readEnvironments = (
-  sourceFile: import('typescript').SourceFile,
-  call: import('typescript').CallExpression,
+  sourceFile: import('@typescript/typescript6').SourceFile,
+  call: import('@typescript/typescript6').CallExpression,
 ): readonly string[] | null => {
   for (const arg of call.arguments) {
     if (!ts.isObjectLiteralExpression(arg)) {

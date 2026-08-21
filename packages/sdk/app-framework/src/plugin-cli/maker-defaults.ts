@@ -87,14 +87,14 @@ const readMakerDefaults = (filePath: string): Map<string, readonly string[]> | n
 };
 
 /** First `environments:` literal reachable in an expression, unwrapping a `??` fallback. */
-const findEnvironments = (node: import('typescript').Node): readonly string[] | null => {
+const findEnvironments = (node: import('@typescript/typescript6').Node): readonly string[] | null => {
   let found: readonly string[] | null = null;
-  const visit = (child: import('typescript').Node): void => {
+  const visit = (child: import('@typescript/typescript6').Node): void => {
     if (found) {
       return;
     }
     if (ts.isPropertyAssignment(child) && ts.isIdentifier(child.name) && child.name.text === 'environments') {
-      let value: import('typescript').Node = child.initializer;
+      let value: import('@typescript/typescript6').Node = child.initializer;
       if (ts.isBinaryExpression(value) && value.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken) {
         value = value.right;
       }
@@ -133,7 +133,9 @@ export const makerDefaults = (barrelPath: string): MakerDefaults => {
 };
 
 /** Namespace imports (`import * as X from '...'`) with the specifier each binds. */
-const namespaceImports = (source: import('typescript').SourceFile): { namespace: string; specifier: string }[] => {
+const namespaceImports = (
+  source: import('@typescript/typescript6').SourceFile,
+): { namespace: string; specifier: string }[] => {
   const out: { namespace: string; specifier: string }[] = [];
   for (const stmt of source.statements) {
     if (

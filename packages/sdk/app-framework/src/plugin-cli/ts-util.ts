@@ -18,7 +18,7 @@ import path from 'node:path';
 // and skipped when it is absent; the same package the protobuf compiler imports for this reason.
 const TYPESCRIPT_CANDIDATES = ['@typescript/typescript6', 'typescript'] as const;
 
-const resolveTypescript = (): typeof import('typescript') => {
+const resolveTypescript = (): typeof import('@typescript/typescript6') => {
   const bases = [path.join(process.cwd(), 'package.json'), import.meta.url];
   for (const base of bases) {
     for (const specifier of TYPESCRIPT_CANDIDATES) {
@@ -39,10 +39,10 @@ const resolveTypescript = (): typeof import('typescript') => {
 
 export const ts = resolveTypescript();
 
-type SourceFile = import('typescript').SourceFile;
-type Node = import('typescript').Node;
-type Statement = import('typescript').Statement;
-type Expression = import('typescript').Expression;
+type SourceFile = import('@typescript/typescript6').SourceFile;
+type Node = import('@typescript/typescript6').Node;
+type Statement = import('@typescript/typescript6').Statement;
+type Expression = import('@typescript/typescript6').Expression;
 
 /** Parse a file into a ts.SourceFile, or null if it doesn't exist. */
 export const parseFile = (filePath: string): SourceFile | null => {
@@ -287,7 +287,7 @@ export const rebaseSpecifier = (specifier: string, originDir: string, outDir: st
 export const rewriteRelativeSpecifiers = (snippet: string, originDir: string, outDir: string): string => {
   const sf = ts.createSourceFile('snippet.tsx', snippet, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   const edits: Array<{ start: number; end: number; text: string }> = [];
-  const rewrite = (literal: import('typescript').StringLiteral): void => {
+  const rewrite = (literal: import('@typescript/typescript6').StringLiteral): void => {
     if (!literal.text.startsWith('.')) {
       return;
     }
