@@ -178,15 +178,19 @@ See: `plugin-chess/src/containers/ChessArticle/`, `plugin-sample/src/containers/
 ## Layout primitives: Flex, Grid, Column, Container
 
 When you do need a box — inside `ScrollArea.Viewport`, between `Panel` parts, anywhere the shell doesn't
-already give you one — reach for these before writing `<div className='flex …'>`. All are `slottable`
-(`asChild`), so they cost no extra DOM node. `Flex`/`Grid`/`Container` live in
+already give you one — reach for these before writing `<div className='flex …'>`. `Flex`, `Column`, and
+`Container` are `slottable`, so `asChild` projects the layout onto a semantic element at no extra DOM
+node; `Grid` is a leaf and always renders its own `<div>`. `Flex`/`Grid`/`Container` live in
 [`packages/ui/react-ui/src/primitives/`](../../../packages/ui/react-ui/src/primitives) (not
 `components/`); `Column` is in `components/Column`.
 
 - **`Flex`** — `column`, `gap`, `align`, `justify`, `wrap`, `grow`, `center`. `grow` is
   `flex-1 overflow-hidden` (the height-chain link); `center` centers on both axes.
-- **`Grid`** — `cols`, `rows`, `grow` (default `true`) → `repeat(n, 1fr)`. Deliberately thin; if you need
-  track lists or `subgrid`, say so rather than dropping to a raw `grid-cols-[…]` div.
+- **`Grid`** — `cols`, `rows`, `grow` (default `true`) → `repeat(n, 1fr)`. **Only equal tracks**: the
+  props are numbers, so anything asymmetric (`[min-content_1fr]`, `[minmax(0,1fr)_auto]`, `[30rem_1fr]`)
+  is out of reach, and it has no `gap`, `subgrid`, `asChild`, or `display: contents`. Until it is
+  extended (AUDIT §7.4), an asymmetric grid is one of the few places a hand-written
+  `grid-cols-[…]` is still the honest answer — flag it rather than forcing `Grid`.
 - **`Column`** — the gutter grid: three tracks (leading gutter / content / trailing gutter) sized by
   `--gutter`. This is what aligns icons, controls, and scrollbars to the same vertical rules across
   every surface, so use it instead of hand-padding a content column.
