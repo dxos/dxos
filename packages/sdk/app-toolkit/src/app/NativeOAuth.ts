@@ -98,10 +98,11 @@ export const listenForNativeOAuthCallback = async (
 };
 
 /**
- * The shell's callbacks for one flow, as a stream.
+ * The shell's callbacks for `callbackPath`, as a stream — a callback for any other path belongs to
+ * another flow and is dropped.
  *
- * The listener registers asynchronously and each callback is handled by an effect that needs its
- * caller's services, which a bare listener callback cannot carry.
+ * A stream rather than a listener because each callback is handled by an effect that needs its
+ * caller's services. Fails if the listener cannot be registered, since nothing would arrive.
  */
 export const nativeOAuthCallbacks = (callbackPath: string): Stream.Stream<URL, Error> =>
   EffectEx.streamFromEmitter<URL, Error>((emit) => {
