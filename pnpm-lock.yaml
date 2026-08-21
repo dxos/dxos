@@ -11625,6 +11625,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/nlp':
+        specifier: workspace:*
+        version: link:../../core/compute/nlp
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client

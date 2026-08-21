@@ -9,6 +9,7 @@ import { LingoOperation } from '#types';
 
 export const LingoOperationHandlerSet = OperationHandlerSet.lazy([
   LingoOperation.AddWord.pipe(Operation.lazyHandler(() => import('./add-word'))),
+  LingoOperation.AnalyzeText.pipe(Operation.lazyHandler(() => import('./analyze-text'))),
   LingoOperation.ExtractVocabulary.pipe(Operation.lazyHandler(() => import('./extract-vocabulary'))),
   LingoOperation.RecordReview.pipe(Operation.lazyHandler(() => import('./record-review'))),
   LingoOperation.TranslatePassage.pipe(Operation.lazyHandler(() => import('./translate-passage'))),

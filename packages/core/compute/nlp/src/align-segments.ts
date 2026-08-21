@@ -47,11 +47,7 @@ class Cursor {
  * whose text cannot be found is dropped along with its children: a hallucinated quote has no
  * position, and keeping it would put a decoration over unrelated text.
  */
-export const alignSegments = (
-  source: string,
-  raw: readonly RawSegment[],
-  target?: string,
-): Segmentation => {
+export const alignSegments = (source: string, raw: readonly RawSegment[], target?: string): Segmentation => {
   const segments: Segment[] = [];
   const sourceCursor = new Cursor(source);
   const targetCursor = target === undefined ? undefined : new Cursor(target);

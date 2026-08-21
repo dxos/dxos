@@ -17,6 +17,7 @@ export default defineConfig({
     operations: 'src/operations/index.ts',
     testing: 'src/testing.ts',
     translations: 'src/translations.ts',
+    Analysis: 'src/types/Analysis.ts',
     Language: 'src/types/Language.ts',
     LingoCapabilities: 'src/types/LingoCapabilities.ts',
     LingoEvents: 'src/types/LingoEvents.ts',

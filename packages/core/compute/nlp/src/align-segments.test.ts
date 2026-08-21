@@ -108,7 +108,10 @@ describe('segmentAt', () => {
         {
           kind: 'sentence',
           text: 'The dog barks loudly.',
-          children: [{ kind: 'clause', text: 'barks loudly' }, { kind: 'vocab', text: 'loudly' }],
+          children: [
+            { kind: 'clause', text: 'barks loudly' },
+            { kind: 'vocab', text: 'loudly' },
+          ],
         },
       ],
     },

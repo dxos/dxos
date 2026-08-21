@@ -8,9 +8,10 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, DXN, Ref } from '@dxos/echo';
+import { Database, DXN, Obj, Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
+import * as Analysis from './Analysis';
 import * as Language from './Language';
 import * as Vocabulary from './Vocabulary';
 import * as Word from './Word';
@@ -112,6 +113,38 @@ export const TranslateTerm = Operation.make({
     context: Schema.optional(Schema.String.annotate({ description: 'The sentence the term appeared in.' })),
   }),
   output: Candidate,
+  services: [Database.Service, AiService.AiService],
+});
+
+/**
+ * Analyzes a passage into nested paragraph / sentence / clause / vocabulary ranges and caches the
+ * result on an {@link Analysis.Analysis} object.
+ *
+ * Re-running is cheap by design: an analysis whose `sourceHash` still matches is returned as-is, so
+ * reopening a document costs a query rather than a model call.
+ */
+export const AnalyzeText = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.plugin.lingo.operation.analyzeText'),
+    name: 'Analyze text',
+    description: 'Analyzes a passage into paragraph, sentence, clause and vocabulary ranges.',
+    icon: 'ph--brackets-angle--regular',
+  },
+  input: Schema.Struct({
+    subject: Ref.Ref(Obj.Unknown).annotate({ description: 'The object whose text is being analyzed.' }),
+    text: Schema.String.annotate({ description: 'The source text.' }),
+    language: Ref.Ref(Language.Language),
+    translation: Schema.optional(
+      Schema.String.annotate({ description: 'The same passage in the base language, for paired ranges.' }),
+    ),
+    /** Forces a fresh analysis even when a matching one is cached. */
+    refresh: Schema.optional(Schema.Boolean),
+  }),
+  output: Schema.Struct({
+    analysis: Ref.Ref(Analysis.Analysis),
+    /** True when a cached analysis was returned without calling the model. */
+    cached: Schema.Boolean,
+  }),
   services: [Database.Service, AiService.AiService],
 });
 

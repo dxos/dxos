@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+export * as Analysis from './Analysis';
 export * as Language from './Language';
 export * as LingoCapabilities from './LingoCapabilities';
 export * as LingoEvents from './LingoEvents';
