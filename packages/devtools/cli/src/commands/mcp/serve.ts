@@ -19,17 +19,18 @@ import { log } from '@dxos/log';
 import { McpServer } from '@dxos/mcp-server';
 import { isRecordEnabled, loadPlugins } from '@dxos/plugin-registry';
 
-import { DiscoveryToolkit, discoveryHandlers } from './discovery-tools';
 import { makeLocalServer } from './local-server';
 import { SpaceToolkit, spaceHandlers } from './space-tools';
 import { WATCH_CHILD_ENV, formatReady } from './watch-protocol';
 
 /**
  * Names of the statically-defined tools; the projection refuses to build if one of them collides
- * with a name it defines. The operation verbs are deliberately absent — they are not tools at all
- * any more, but rows `queryOperations` returns and `invokeOperation` dispatches.
+ * with a name it defines. `whoami` is the last of them — the operation verbs are not tools at all
+ * any more, but rows `queryOperations` returns and `invokeOperation` dispatches, and the session's
+ * identity is the one fact a plugin operation cannot reach, since EDGE resolves it from an OAuth
+ * grant rather than from a local client.
  */
-const STATIC_TOOL_NAMES = ['whoami', 'listSpaces', 'listPlugins', 'listTypes'] as const;
+const STATIC_TOOL_NAMES = ['whoami'] as const;
 
 declare global {
   /**
@@ -90,9 +91,8 @@ export const serve = Command.make(
     // stdout carries the protocol, so progress goes to the log (stderr).
     log.info('serving MCP over stdio', { spaces: server.host.spaceIds.length });
 
-    const staticToolkits = Layer.mergeAll(
-      McpServer.toolkit(SpaceToolkit).pipe(Layer.provide(SpaceToolkit.toLayer(spaceHandlers(server)))),
-      McpServer.toolkit(DiscoveryToolkit).pipe(Layer.provide(DiscoveryToolkit.toLayer(discoveryHandlers(server)))),
+    const staticToolkits = McpServer.toolkit(SpaceToolkit).pipe(
+      Layer.provide(SpaceToolkit.toLayer(spaceHandlers(server))),
     );
 
     // Written before the transport blocks: the child's stdin is a pipe, so anything the supervisor

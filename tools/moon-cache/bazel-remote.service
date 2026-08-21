@@ -10,7 +10,7 @@ Wants=network-online.target
 # 8 days at CI volume; `none` disables it, the request rate isn't otherwise interesting.
 ExecStart=/usr/local/bin/bazel-remote \
   --dir /var/cache/moon \
-  --max_size 100 \
+  --max_size 200 \
   --storage_mode zstd \
   --grpc_address 0.0.0.0:9092 \
   --http_address 0.0.0.0:9093 \
