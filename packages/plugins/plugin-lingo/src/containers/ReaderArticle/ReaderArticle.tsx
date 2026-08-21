@@ -167,6 +167,23 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
   const [selected, setSelected] = useState<string>();
   const handleSelect = useCallback((segment?: { id: string }) => setSelected(segment?.id), []);
 
+  // The committed segment, resolved to its text, is what the toolbar acts on.
+  const selectedSegment = selected && analysis?.segments.find((segment) => segment.id === selected);
+  const selectedText =
+    selectedSegment && text ? text.slice(selectedSegment.source.start, selectedSegment.source.end) : undefined;
+
+  const handleAddSelection = useCallback(() => {
+    if (!selectedSegment || !selectedText) {
+      return;
+    }
+
+    handleAddWord({
+      segment: selectedSegment,
+      text: selectedText,
+      context: text?.slice(0, selectedSegment.source.end).split('\n').pop() ?? selectedText,
+    });
+  }, [selectedSegment, selectedText, text, handleAddWord]);
+
   const handleAnalyze = useCallback(() => {
     if (!subject || !text || !deck || !invokePromise) {
       return;
@@ -231,6 +248,17 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
         )
         .separator()
         .action(
+          'add-selection',
+          {
+            label: ['add-phrase.label', { ns: meta.profile.key }],
+            icon: 'ph--plus--regular',
+            disposition: 'toolbar',
+            disabled: !deck || !selectedText,
+            testId: 'lingo.reader.add-selection',
+          },
+          handleAddSelection,
+        )
+        .action(
           'analyze',
           {
             label: ['analyze.label', { ns: meta.profile.key }],
@@ -253,7 +281,7 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
           handleExtract,
         )
         .build(),
-    [mode, deck, decks, text, textRef, handleAnalyze, handleExtract, t],
+    [mode, deck, decks, text, textRef, selectedText, handleAddSelection, handleAnalyze, handleExtract, t],
   );
 
   const paneProps = {
