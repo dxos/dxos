@@ -146,8 +146,26 @@ Designs in `DESIGN.md`.
 - [ ] **Experiment 2: stated versus checked.** `code-style` comment rule alone
       against the rule plus a `no-comments`-style reviewer pass. Decides whether
       the reviewer-subagent mechanism is worth adopting for stated-only rules.
-- [ ] **Experiment 3: triggering accuracy.** Run
-      `scripts/improve_description.py` across all 32 skill descriptions.
+- [x] **Experiment 3: triggering accuracy.** DONE, and it is the experiment that
+      mattered. 92 runs measuring whether the `Skill` tool actually fires on
+      naturalistic prompts that avoid each description's own wording. Overall
+      65/89 positives (73%), but bimodal: most skills 3/3, while the four I
+      wrote or rewrote this session are the worst in the repo (`moon` 1/6,
+      `writing-for-agents` 1/6, `unslop` 2/6, `technical-writing` 3/6). Negative
+      controls all clean, which empirically confirms that gated skills are
+      unreachable from a prose ask. Writeup in `experiments/triggering/`.
+- [ ] **Rewrite the four failing descriptions** to lead with the symptom a user
+      would actually type, drop the cross-reference tails, and re-measure with
+      the same harness. Target 5/6.
+- [ ] **Fix two mislabelled cases** (`testing-assistant-conversations` lost to
+      the more specific `regenerate-model-fixture`, which was correct routing;
+      `agent-eval-tests` likely the same) and re-run them.
+- [ ] **Close the coverage gap.** `submit-pr`, `land`, `task-planning`,
+      `cloud-sandbox`, `skills`, `test-perf-leaks`, `trunk-quarantine` were not
+      measured. `submit-pr` and `land` matter most: ungating them assumed prose
+      asks would reach them, and that is still untested.
+- [ ] **Add trigger measurement to the authoring convention.** A new skill is
+      not done until its description fires on prompts that avoid its own wording.
 - [ ] **Re-examine the other rejections** once a method exists. `swarm`/`arena` versus
       the Workflow tool is measurable the same way.
 

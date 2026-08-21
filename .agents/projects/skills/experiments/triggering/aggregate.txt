@@ -1,0 +1,35 @@
+POSITIVE CASES: expected skill fired in 68/92 runs (74%)
+
+skill                                fired   also fired
+agent-eval-tests                       0/3   
+testing-assistant-conversations        0/3   regenerate-model-fixture
+moon                                   1/6   code-style
+writing-for-agents                     1/6   skill-creator
+unslop                                 2/6   
+technical-writing                      3/6   
+debugging                              2/3   logging
+browser-e2e-tests                      2/2   
+code-style                             3/3   
+composer-debug                         3/3   
+composer-forensics                     3/3   
+composer-plugins                       3/3   
+composer-ui                            3/3   
+composite-components                   3/3   
+context-propagation                    3/3   
+debugging-ui                           3/3   
+echo                                   6/6   
+effect                                 3/3   
+logging                                3/3   
+operations                             3/3   
+proto                                  6/6   
+regenerate-model-fixture               3/3   
+subduction                             3/3   
+test-perf-leaks                        2/2   
+tracing                                3/3   
+trunk-quarantine                       1/1   
+
+NEGATIVE CASES (nothing should fire):
+  CLEAN  <- Run the rule-driven review over my branch and list what it fin
+  CLEAN  <- Convert this project from prettier to oxfmt.
+  CLEAN  <- What's the capital of France?
+  CLEAN  <- Rename the variable in this snippet from foo to bar: const foo

@@ -210,6 +210,32 @@ prose cannot beat local style, a mechanical check may be the only thing that can
 
 Details and limitations: `experiments/rule-placement/run2/RESULTS.md`.
 
+### Experiment 1 was asking the wrong question
+
+Arm C delivered the principle skill's text directly into the prompt, so it held
+the same tokens in the same context as arm A's always-loaded rule. If a skill
+always loads, "in a skill" and "in `AGENTS.md`" are the same thing, and the
+comparison could only ever come out null. **Triggering probability is the only
+variable that separates an on-demand skill from an always-loaded rule.**
+
+### Experiment 3 outcome: triggering is where we actually fail
+
+92 runs measuring real `Skill` invocations. 73% of positive cases fired the
+expected skill, but the distribution is bimodal, and the low group is almost
+exactly the set written or rewritten in this session: `moon` 1/6,
+`writing-for-agents` 1/6, `unslop` 2/6, `technical-writing` 3/6, against 3/3 or
+6/6 for fourteen pre-existing skills. The failing descriptions open with the
+author's abstraction rather than the user's symptom, spend their tails on
+cross-references that do no triggering work, and in one case compete with a
+built-in. This is a defect in work done this session, and it is fixable by
+rewriting descriptions, not by moving content between files.
+
+The negative controls also confirm the gating rule empirically: neither
+`agentic-review` nor `migrate-oxfmt` fired from a prose ask, exactly as
+`disable-model-invocation` is documented to behave.
+
+Details: `experiments/triggering/RESULTS.md`.
+
 ## Deferred frictions
 
 Left open deliberately. The rules are scoped to prose we write or substantially

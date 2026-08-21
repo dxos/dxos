@@ -1,0 +1,166 @@
+[
+  {
+    "expect": "unslop",
+    "prompt": "Tidy up the wording here before I post it as a PR description, it reads like a robot wrote it:\n\n\"This PR delves into a crucial refactor of the sync layer, leveraging a new architecture that not only improves performance but also enhances maintainability. It underscores our commitment to robust engineering.\""
+  },
+  {
+    "expect": "unslop",
+    "prompt": "Does this changeset text sound machine-generated to you? \"Additionally, this change showcases a pivotal improvement to the query pipeline, fostering better developer experience across the board.\""
+  },
+  {
+    "expect": "technical-writing",
+    "prompt": "I'm writing the README for a new package in this repo. What structure should it have and what goes in which section?"
+  },
+  {
+    "expect": "technical-writing",
+    "prompt": "Is this doc paragraph clear enough? \"Configuration of the retry budget parameters is performed via config.json, and if exceeded, failure occurs.\""
+  },
+  {
+    "expect": "writing-for-agents",
+    "prompt": "I want to add a new skill to this repo. How should I structure the SKILL.md and what goes in the frontmatter?"
+  },
+  {
+    "expect": "writing-for-agents",
+    "prompt": "One of our skills never seems to load when it should. How do I word its description so it fires reliably?"
+  },
+  {
+    "expect": "moon",
+    "prompt": "The build for a package here isn't picking up a new barrel file I added. Where do I configure that?"
+  },
+  {
+    "expect": "moon",
+    "prompt": "How do I run just one test file in the echo package?"
+  },
+  {
+    "expect": "proto",
+    "prompt": "Node is the wrong version in my shell here and pnpm install keeps failing because of it."
+  },
+  {
+    "expect": "proto",
+    "prompt": "I need to bump the pinned pnpm version for this repo. What's involved?"
+  },
+  {
+    "expect": "debugging-ui",
+    "prompt": "The sidebar in Composer flickers every time you switch spaces. How would you work out why?"
+  },
+  {
+    "expect": "debugging",
+    "prompt": "I want to add log lines to trace what the sync path is doing at runtime and then read them back. How does that work here?"
+  },
+  {
+    "expect": "echo",
+    "prompt": "How do I make a query that filters objects by a property and orders them?"
+  },
+  {
+    "expect": "echo",
+    "prompt": "What's the right way to resolve a Ref to its target object?"
+  },
+  {
+    "expect": "effect",
+    "prompt": "How do I define a service with a Layer in this codebase and provide it to a program?"
+  },
+  {
+    "expect": "code-style",
+    "prompt": "What's our convention for ordering class members, and do we prefer options objects over positional params?"
+  },
+  {
+    "expect": "operations",
+    "prompt": "I'm adding a new operation to a plugin here. What does the definition and handler look like?"
+  },
+  {
+    "expect": "tracing",
+    "prompt": "How do I add a span around a method so it shows up in the trace output?"
+  },
+  {
+    "expect": "context-propagation",
+    "prompt": "My traces come out disconnected, every span is its own root instead of nesting. Why?"
+  },
+  {
+    "expect": "logging",
+    "prompt": "What log level should I use for a recoverable failure, and how do I filter log output when running tests?"
+  },
+  {
+    "expect": "subduction",
+    "prompt": "I need to stop certain documents replicating to peers that shouldn't see them. Where does that get enforced?"
+  },
+  {
+    "expect": "composer-plugins",
+    "prompt": "I'm creating a new Composer plugin from scratch. What files does the package need?"
+  },
+  {
+    "expect": "composer-ui",
+    "prompt": "What class should I use for muted secondary text inside a panel? I don't want to hardcode a grey."
+  },
+  {
+    "expect": "composite-components",
+    "prompt": "I want to build a namespaced component in react-ui with a Root and a Content part. What's the pattern?"
+  },
+  {
+    "expect": "composer-debug",
+    "prompt": "The Composer app boots but the navtree comes up empty. Can I inspect the live client without asking the user to paste console output?"
+  },
+  {
+    "expect": "composer-forensics",
+    "prompt": "A user says their space won't open at all and they think they've lost data. What can we do?"
+  },
+  {
+    "expect": "browser-e2e-tests",
+    "prompt": "I want a Playwright spec that opens a document and checks the title updates. How do I target the elements?"
+  },
+  {
+    "expect": "agent-eval-tests",
+    "prompt": "I want to score whether the agent actually created the object it claimed to create, not just trust its summary."
+  },
+  {
+    "expect": "testing-assistant-conversations",
+    "prompt": "A test is failing with 'No memoized conversation found for the given prompt'. What do I do?"
+  },
+  {
+    "expect": "regenerate-model-fixture",
+    "prompt": "How do I refresh the recorded LLM responses after I changed a prompt in a test?"
+  },
+  {
+    "expect": "test-perf-leaks",
+    "prompt": "The echo test suite takes forever and memory climbs the whole way through. How do I find the hotspot?"
+  },
+  {
+    "expect": "trunk-quarantine",
+    "prompt": "This test fails maybe one run in five in CI. Can we stop it blocking merges while we investigate?"
+  },
+  {
+    "expect": "submit-pr",
+    "prompt": "I'm done with this change. Open a PR for it."
+  },
+  {
+    "expect": "land",
+    "prompt": "Get PR 12688 merged."
+  },
+  {
+    "expect": "cloud-sandbox",
+    "prompt": "moon: command not found, and there's no node_modules in this checkout. What's going on?"
+  },
+  {
+    "expect": "skills",
+    "prompt": "I want to expose a plugin's operations to the assistant as tools. How do I wire that up?"
+  },
+  {
+    "expect": "task-planning",
+    "prompt": "This work is going to span several sessions. Can you keep durable track of where we are?"
+  },
+  {
+    "expect": null,
+    "prompt": "Run the rule-driven review over my branch and list what it finds."
+  },
+  {
+    "expect": null,
+    "prompt": "Convert this project from prettier to oxfmt."
+  },
+  {
+    "expect": null,
+    "prompt": "What's the capital of France?"
+  },
+  {
+    "expect": null,
+    "prompt": "Rename the variable in this snippet from foo to bar: const foo = 1; console.log(foo);"
+  }
+]
