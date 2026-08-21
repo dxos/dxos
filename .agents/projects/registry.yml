@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: skills
+    status: active
+    user: root
+    host: cloud-sandbox
+    created: 2026-08-21
+    summary: 'Audit and grow the .agents/skills library against two public MIT-licensed collections (cursor/plugins pstack, mattpocock/skills) — fix rot in our 29 skills, write down the authoring conventions that were never stated, and import the skills that fill real gaps (bug-diagnosis workflow, test strategy, blast radius, the writing skills).'
+    tasks: .agents/projects/skills/TASKS.md
+    design: .agents/projects/skills/DESIGN.md
+    prs: []
+    resume: 'Phase 0 (hygiene + conventions) and the writing half of Phase 1 are DONE on branch claude/repo-skills-table-6gfvik, four commits, no PR yet: 97786e3c conventions + check-skill-refs.mjs + 165 dead refs fixed, 32adf31a ungate submit-pr/land (gating hard-blocks prose asks and the Create PR button), 4749db18 unslop + technical-writing + writing-for-agents with THIRD-PARTY.md attribution, 600f25af harness carve-out. NEXT: port diagnosing (Matt diagnosing-bugs, highest value — our debugging skill is mechanics-only and only UI bugs have a workflow), then test-strategy (merge of both tdd skills), blast-radius, merge-conflicts. Clones for reference: /home/user/cursor/plugins and /home/user/mattpocock/skills (re-clone if the sandbox reset). Style frictions (em dashes, negation, semicolons) are documented in TASKS.md and deliberately deferred.'
   - name: echo-storage-optimization
     status: active
     user: dmaretskyi
