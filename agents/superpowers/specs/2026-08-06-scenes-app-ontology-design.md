@@ -183,6 +183,22 @@ Time-boxed vertical slice, smallest end-to-end loop:
    `tabs`, `panel`, `list`, `form`, `toolbar`, `surface`); XML parser
    (generalized from the FormLayout approach, generic over an element
    registry) and printer (model → XML) — round-trip tested headlessly.
+
+   That union is the **closed subset for this slice**. The DSL section above
+   also shows `stack`, `table`, and `menu`; those are registry entries the
+   skeleton does not ship, and the codec must _reject_ an unknown tag with
+   the tag name and its position, never drop it silently — a dropped element
+   is a scene that renders as if the author never wrote it. The registry is
+   the source of truth for which tags exist; the union is the source of truth
+   for which ones this build interprets.
+
+   **Untrusted input.** Scene XML arrives from the assistant and from a raw
+   text editor, so schema validation is the second gate, not the first. The
+   parser runs with entity processing off, rejects DTD/DOCTYPE declarations
+   outright, and bounds both input size and nesting depth. Entity expansion,
+   oversized input, and deep nesting each get a test — the parser is the
+   trust boundary of the whole design.
+
 2. **Interpreter.** React renderer mapping nodes onto `Splitter`, `Tabs`,
    `Panel`, `List`/`Mosaic`, `ObjectForm` (bound via `View` +
    `ProjectionModel`), `MenuBuilder` + `graphActions`, and `Surface`.
@@ -193,7 +209,11 @@ Time-boxed vertical slice, smallest end-to-end loop:
 4. **Dogfood.** One master-detail scene over CRM-ish types (organizations
    list → contact form + related list), created live in Composer — and
    generated once by the assistant through the existing `<surface>` widget
-   channel to prove the generation loop.
+   channel to prove the generation loop. The detail pane binds by
+   **selection, not by `scope`**: `scope=` is unspecified end-to-end (open
+   question 1) and stays out of this slice, so the skeleton wires selection
+   through the interpreter's attention context and leaves the parameterized
+   query for the design that follows.
 5. **One machine.** Pick a single component (tabs is the smallest real one)
    and implement its behavior as a framework-agnostic machine + `connect`,
    with an MDL component block — the probe for the zag/MDL layer without
@@ -209,7 +229,11 @@ on zag-adoption vs. atom-native machines with the tabs machine as evidence.
 1. **`scope` / parameterized Views.** Narrowing a View's query by a context
    object (`scope="#orgs.selection"`) has no current mechanism — options: a
    query-AST placeholder substituted at bind time, or a `View` variant that
-   declares parameters. This is the largest new capability the design needs.
+   declares parameters. This is the largest new capability the design needs,
+   and it must be specified across the node schema, codec, registry/MDL
+   contract, and interpreter together before any of them accepts the
+   attribute. The DSL examples above use it illustratively; it is not part of
+   Experiment 2.
 2. **Machines: adopt `@zag-js` or build atom-native?** Adoption buys hardened
    a11y machines; atom-native keeps one reactive substrate and matches the
    headless-test recipe. The tabs probe (Experiment 2 §5) decides.
