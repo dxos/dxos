@@ -180,32 +180,38 @@ const DropdownMenuToolbarItem = ({
   const spin = (applyActive && activeItem?.properties.spin) || groupSpin;
   const labelAction = applyActive && activeItem ? activeItem : group;
 
+  const trigger = icon ? (
+    <NaturalToolbar.IconButton
+      variant='ghost'
+      disabled={disabled}
+      icon={icon}
+      size={iconSize}
+      iconOnly={iconOnly}
+      iconClassNames={mx(spin && 'animate-spin', iconClassNames)}
+      label={actionLabel(labelAction, t)}
+      caretDown={caretDown && !disabled}
+      {...(testId && { 'data-testid': testId })}
+    />
+  ) : (
+    <NaturalToolbar.Button
+      variant='ghost'
+      disabled={disabled}
+      caretDown={caretDown && !disabled}
+      {...(testId && { 'data-testid': testId })}
+    >
+      <ActionLabel action={labelAction} />
+    </NaturalToolbar.Button>
+  );
+
+  // No menu behind a disabled trigger, since `disabled` alone does not gate Radix's open handler and the
+  // group presented an empty dropdown.
+  if (disabled) {
+    return trigger;
+  }
+
   return (
     <DropdownMenu.Root group={group} items={items}>
-      <DropdownMenu.Trigger asChild>
-        {icon ? (
-          <NaturalToolbar.IconButton
-            variant='ghost'
-            disabled={disabled}
-            icon={icon}
-            size={iconSize}
-            iconOnly={iconOnly}
-            iconClassNames={mx(spin && 'animate-spin', iconClassNames)}
-            label={actionLabel(labelAction, t)}
-            caretDown={caretDown}
-            {...(testId && { 'data-testid': testId })}
-          />
-        ) : (
-          <NaturalToolbar.Button
-            variant='ghost'
-            disabled={disabled}
-            caretDown={caretDown}
-            {...(testId && { 'data-testid': testId })}
-          >
-            <ActionLabel action={labelAction} />
-          </NaturalToolbar.Button>
-        )}
-      </DropdownMenu.Trigger>
+      <DropdownMenu.Trigger asChild>{trigger}</DropdownMenu.Trigger>
     </DropdownMenu.Root>
   );
 };

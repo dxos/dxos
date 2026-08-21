@@ -191,6 +191,13 @@ const buildPromises = platforms.map(async ({ target, platform, arch, ext }) => {
     entrypoints: ['./src/bin.ts'],
     target: 'bun',
     plugins: [solidPlugin, rawImportPlugin, urlImportPlugin, nodeStdPlugin, subductionWasmPlugin, automergeWasmPlugin],
+    // Marks the binary so `--watch` selects the binary strategy: a binary has no sources for
+    // `bun --watch` to track, so its supervisor re-runs the executable and watches dev-installed
+    // plugins instead. Substituted while bundling rather than read from the environment at startup,
+    // so nothing in the environment can flip it.
+    define: {
+      'globalThis.DX_CLI_BUNDLED': 'true',
+    },
     compile: {
       target,
       outfile,

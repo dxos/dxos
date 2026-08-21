@@ -977,6 +977,9 @@ const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<an
           ...rest,
           type,
           data,
+          // Merged, not replaced, so several extensions can each contribute properties to one node —
+          // which makes a key one generation sets and the next omits impossible to clear. A builder
+          // that varies a property must emit it on every generation, `false`/`undefined` included.
           properties: { ...existing.properties, ...properties },
         });
         internal._registry.set(nodeAtom, newNode);

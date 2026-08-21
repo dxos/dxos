@@ -58,8 +58,8 @@ export const getOrCreateTaskSet = async (outline: Outline, db: Database.Database
 };
 
 /**
- * Create a task owned by the outline's task set. Membership is the ECHO parent edge
- * (`TaskSet → Task`), not a ref field.
+ * Create a task in the outline's task set. Membership is the set's `tasks` array; the parent edge
+ * is set alongside so the task cascade-deletes with the set.
  */
 export const createTask = async (
   outline: Outline,
@@ -70,6 +70,9 @@ export const createTask = async (
   const taskSet = await getOrCreateTaskSet(outline, db);
   const task = db.add(Task.make({ title: title.trim(), status: 'todo', ...props }));
   Obj.setParent(task, taskSet);
+  Obj.update(taskSet, (taskSet) => {
+    taskSet.tasks = [...taskSet.tasks, Ref.make(task)];
+  });
   return task;
 };
 

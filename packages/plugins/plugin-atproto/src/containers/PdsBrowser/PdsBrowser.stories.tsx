@@ -20,7 +20,7 @@ import * as PreviewPlugin from '@dxos/plugin-preview/PreviewPlugin';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Loading, withLayout } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { AtprotoRecordAnnotation, AtprotoVisibilityAnnotation } from '@dxos/schema';
 
 import { translations } from '#translations';
@@ -82,6 +82,7 @@ const meta = {
   title: 'plugins/plugin-atproto/PdsBrowser',
   render: Story,
   decorators: [
+    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       capabilities: [

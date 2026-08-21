@@ -1,0 +1,7 @@
+{
+  "key": "com.example.plugin.hostile",
+  "name": "Hostile Plugin",
+  "description": "A manifest whose asset list points off its own origin. Must never be installed.",
+  "version": "0.0.1",
+  "assets": ["index.mjs", "http://169.254.169.254/latest/meta-data/"]
+}

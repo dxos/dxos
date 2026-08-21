@@ -6,7 +6,7 @@ import React, { useCallback, useState } from 'react';
 
 import { useSettingsState } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { Flex, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -60,7 +60,7 @@ export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
           </Form.Section>
 
           <Form.Section title={t('test.title')}>
-            <div className='flex gap-2'>
+            <Flex gap='sm'>
               <IconButton
                 disabled={test.kind === 'pending'}
                 icon='ph--plug--regular'
@@ -69,7 +69,7 @@ export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
               />
 
               {/* role=status + aria-live so screen readers announce the async outcome. */}
-              <div className='flex items-center'>
+              <Flex align='center'>
                 <span
                   role='status'
                   aria-live='polite'
@@ -84,8 +84,8 @@ export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
                   {test.kind === 'ok' || test.kind === 'error' ? test.message : ''}
                   {test.kind === 'pending' ? t('test.pending.message') : ''}
                 </span>
-              </div>
-            </div>
+              </Flex>
+            </Flex>
           </Form.Section>
         </Form.Content>
       </Form.Viewport>

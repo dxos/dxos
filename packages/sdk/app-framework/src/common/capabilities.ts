@@ -7,6 +7,7 @@ import type * as Exit$ from 'effect/Exit';
 import type * as Fiber$ from 'effect/Fiber';
 import type * as Layer$ from 'effect/Layer';
 import type * as ManagedRuntime$ from 'effect/ManagedRuntime';
+import * as Option from 'effect/Option';
 import type * as Command$ from 'effect/unstable/cli/Command';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
@@ -299,6 +300,25 @@ export const getAtomValue = <T>(
     const registry = yield* Capability$.get(AtomRegistry);
     const atom = yield* Capability$.get(atomCapability);
     return registry.get(atom);
+  });
+
+/**
+ * Get the current value of an atom capability, or `Option.none()` when either the registry or the
+ * atom itself is uncontributed.
+ *
+ * For operations that run on both the app and a headless host (the edge operation-service, `dx mcp
+ * serve`): those hosts have a capability manager but activate no UI plugins, so {@link getAtomValue}
+ * fails on capabilities like `Layout` that only the app contributes.
+ *
+ * @example const layout = yield* Capabilities.getAtomValueOption(AppCapabilities.Layout);
+ */
+export const getAtomValueOption = <T>(
+  atomCapability: Capability$.InterfaceDef<Atom.Atom<T>>,
+): Effect.Effect<Option.Option<T>, never, Capability$.Service> =>
+  Effect.gen(function* () {
+    const registry = yield* Capability$.getOption(AtomRegistry);
+    const atom = yield* Capability$.getOption(atomCapability);
+    return Option.map(Option.all([registry, atom]), ([registry, atom]) => registry.get(atom));
   });
 
 /**

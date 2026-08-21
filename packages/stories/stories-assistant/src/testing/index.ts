@@ -7,5 +7,6 @@ export { ModuleContainer, type ModuleLayout } from '@dxos/storybook-testing';
 export * from './data';
 export * from './decorators';
 export * from './objects';
+export * from './prompt';
 export * from './schema';
-export * from './snapshot';
+export * from './agent-claude-plugin';

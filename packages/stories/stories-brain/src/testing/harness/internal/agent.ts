@@ -8,14 +8,16 @@ import { type TestContext } from 'vitest';
 
 import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { DatabaseHandlers, DatabaseSkill } from '@dxos/assistant-toolkit';
+import { ChatContextHandlers, ChatContextSkill } from '@dxos/assistant-toolkit';
 import { Database, Feed, Filter } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
 import { type RDF } from '@dxos/pipeline-rdf';
-import { BrainSkill } from '@dxos/plugin-brain';
-import { BrainOperationHandlerSet } from '@dxos/plugin-brain/operations';
+import * as BrainOperationHandlerSet from '@dxos/plugin-brain/BrainOperationHandlerSet';
+import * as BrainSkill from '@dxos/plugin-brain/BrainSkill';
+import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
+import * as SpaceOperationHandlerSet from '@dxos/plugin-space/SpaceOperationHandlerSet';
 import { Message } from '@dxos/types';
 
 import { type ModelVariant } from '../models';
@@ -64,14 +66,17 @@ export type AgentEvalResult = {
  */
 export const runAgentEval = async (config: AgentEvalConfig, testContext: TestContext): Promise<AgentEvalResult> => {
   const skills = [
+    // The source arm reads the feed through the Database skill's query.
     DatabaseSkill.make(),
+    ChatContextSkill.make(),
     ...(config.mode === 'facts' ? [BrainSkill.make()] : []),
     ...(config.mode === 'rag' ? [RagSkill.make()] : []),
     ...(config.mode === 'hybrid' ? [HybridSkill.make()] : []),
   ];
   const operationHandlers = [
-    DatabaseHandlers,
-    ...(usesFactStore(config.mode) ? [BrainOperationHandlerSet] : []),
+    SpaceOperationHandlerSet.handlers,
+    ChatContextHandlers,
+    ...(usesFactStore(config.mode) ? [BrainOperationHandlerSet.handlers] : []),
     ...(config.mode === 'rag' ? [RagOperationHandlerSet] : []),
     ...(config.mode === 'hybrid' ? [HybridOperationHandlerSet] : []),
   ];

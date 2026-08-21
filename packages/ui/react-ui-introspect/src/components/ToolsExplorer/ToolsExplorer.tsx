@@ -7,7 +7,7 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { MAX_LIST_LIMIT, type PickerKind, TOOL_METADATA } from '@dxos/introspect-tools';
-import { Message, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Banner, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
@@ -124,12 +124,12 @@ export const ToolsExplorer = composable<HTMLDivElement, ToolsExplorerProps>(
     if (connectError) {
       return (
         <div {...composableProps(props, { role: 'none' })} ref={forwardedRef}>
-          <Message.Root valence='error'>
-            <Message.Content classNames='m-trim-md'>
-              <Message.Title>{t('connection-failed.title')}</Message.Title>
-              <Message.Body>{connectError.message}</Message.Body>
-            </Message.Content>
-          </Message.Root>
+          <Banner.Root valence='error'>
+            <Banner.Content classNames='m-trim-md'>
+              <Banner.Title>{t('connection-failed.title')}</Banner.Title>
+              <Banner.Body>{connectError.message}</Banner.Body>
+            </Banner.Content>
+          </Banner.Root>
         </div>
       );
     }

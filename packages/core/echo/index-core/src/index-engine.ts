@@ -20,6 +20,7 @@ import {
   type FtsQueryResult,
   type Index,
   type IndexerObject,
+  type QueueWindow,
   ReverseRefIndex,
   type ReverseRefQuery,
 } from './indexes';
@@ -160,6 +161,7 @@ export class IndexEngine {
     spaceIds: readonly SpaceId[];
     includeAllQueues?: boolean;
     queueIds?: readonly string[] | null;
+    window?: QueueWindow;
   }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryAll(query);
   }
@@ -194,6 +196,7 @@ export class IndexEngine {
     inverted?: boolean;
     includeAllQueues?: boolean;
     queueIds?: readonly string[] | null;
+    window?: QueueWindow;
   }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryTypes(query);
   }
@@ -369,15 +372,13 @@ export class IndexEngine {
 
           yield* index.update(objects);
           yield* this.#tracker.updateCursors(
-            updatedCursors.map(
-              (_): IndexCursor => ({
-                indexName: opts.indexName,
-                spaceId: _.spaceId,
-                sourceName: source.sourceName,
-                resourceId: _.resourceId,
-                cursor: _.cursor,
-              }),
-            ),
+            updatedCursors.map((_): IndexCursor => ({
+              indexName: opts.indexName,
+              spaceId: _.spaceId,
+              sourceName: source.sourceName,
+              resourceId: _.resourceId,
+              cursor: _.cursor,
+            })),
           );
           return { updated: objects.length, done: false, objects };
         }),

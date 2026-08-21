@@ -13,7 +13,6 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
-import { type BatchedDocumentUpdates, type DocumentUpdate } from '@dxos/protocols/proto/dxos/echo/service';
 import { type DataService } from '@dxos/protocols/rpc';
 
 import { DocHandleProxy } from './doc-handle-proxy';
@@ -356,7 +355,7 @@ export class RepoProxy extends Resource {
     return handle;
   }
 
-  private _receiveUpdate({ updates }: BatchedDocumentUpdates): void {
+  private _receiveUpdate({ updates }: DataService.BatchedDocumentUpdates): void {
     // The host opens every subscription with an empty batch once it is registered; a real update
     // always carries at least one entry, so this is unambiguous.
     this._subscriptionReady.wake();
@@ -420,7 +419,7 @@ export class RepoProxy extends Resource {
         { timeout: RPC_TIMEOUT },
       );
 
-      const updates: DocumentUpdate[] = [];
+      const updates: DataService.DocumentUpdate[] = [];
       const addMutations = (documentIds: DocumentId[]) => {
         for (const documentId of documentIds) {
           const handle = this._handles[documentId];

@@ -46,7 +46,6 @@ import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
-import { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 import { defaultMap } from '@dxos/util';
 
@@ -95,12 +94,12 @@ export interface EchoDatabase extends Database.Database {
   /**
    * Get the current per-peer automerge document sync state.
    */
-  getAutomergeSyncState(): Promise<SpaceSyncState>;
+  getAutomergeSyncState(): Promise<DataService.SpaceSyncState>;
 
   /**
    * Get notification about the per-peer automerge document sync progress.
    */
-  subscribeToAutomergeSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn;
+  subscribeToAutomergeSyncState(ctx: Context, callback: (state: DataService.SpaceSyncState) => void): CleanupFn;
 
   /**
    * Returns ids for all objects in the space (both loaded and unloaded).
@@ -234,10 +233,10 @@ const aggregateFeedSyncState = (response: FeedService.GetSyncStateResponse): Spa
  * otherwise the EDGE peer.
  */
 const selectPeer = (
-  peers: readonly SpaceSyncState.PeerState[],
+  peers: readonly DataService.SpaceSyncState.PeerState[],
   spaceId: SpaceId,
   peerId?: string,
-): SpaceSyncState.PeerState | undefined =>
+): DataService.SpaceSyncState.PeerState | undefined =>
   peerId !== undefined
     ? peers.find((peer) => peer.peerId === peerId)
     : peers.find((peer) => isEdgePeerId(peer.peerId, spaceId));
@@ -246,7 +245,7 @@ const selectPeer = (
  * Flattens per-peer automerge state (for the selected peer) with aggregated feed state.
  */
 const combineSyncState = (
-  automerge: SpaceSyncState,
+  automerge: DataService.SpaceSyncState,
   feeds: SpaceFeedSyncState,
   spaceId: SpaceId,
   peerId?: string,
@@ -763,11 +762,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     await this._entityManager.flush();
   }
 
-  getAutomergeSyncState(): Promise<SpaceSyncState> {
+  getAutomergeSyncState(): Promise<DataService.SpaceSyncState> {
     return this._entityManager.getSyncState();
   }
 
-  subscribeToAutomergeSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn {
+  subscribeToAutomergeSyncState(ctx: Context, callback: (state: DataService.SpaceSyncState) => void): CleanupFn {
     return this._entityManager.subscribeToSyncState(ctx, callback);
   }
 
@@ -778,7 +777,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   subscribeToSyncState(cb: (state: Database.SyncState) => void, options?: Database.GetSyncStateOptions): CleanupFn {
     const ctx = Context.default();
-    let automerge: SpaceSyncState = { peers: [] };
+    let automerge: DataService.SpaceSyncState = { peers: [] };
     let feeds: SpaceFeedSyncState = EMPTY_FEED_SYNC_STATE;
     const emit = () => cb(combineSyncState(automerge, feeds, this.spaceId, options?.peerId));
 
@@ -790,25 +789,39 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       }),
     );
 
-    if (this.#feedService) {
-      ctx.onDispose(
-        subscribeStream(
-          this.#runtime,
-          this.#feedService['FeedService.subscribeSyncState']({ spaceId: this.spaceId, namespaces: [] }),
-          {
-            onData: (response) => {
-              feeds = aggregateFeedSyncState(response);
-              emit();
-            },
-            onError: (error) => {
-              if (!(error instanceof RpcClosedError)) {
-                log.warn('feed sync state stream failed', { error });
-              }
-            },
+    // Feed blocks arrive on a separate stream, which dies on reconnect (leader change) — re-established
+    // from the refreshed service, and cleared meanwhile so a consumer never keeps reporting a backlog
+    // measured against a connection that no longer exists.
+    let cleanupFeedStream: (() => void) | undefined;
+    const subscribeFeedSyncState = () => {
+      cleanupFeedStream?.();
+      cleanupFeedStream = undefined;
+      if (!this.#feedService) {
+        return;
+      }
+      cleanupFeedStream = subscribeStream(
+        this.#runtime,
+        this.#feedService['FeedService.subscribeSyncState']({ spaceId: this.spaceId, namespaces: [] }),
+        {
+          onData: (response) => {
+            feeds = aggregateFeedSyncState(response);
+            emit();
           },
-        ),
+          onError: (error) => {
+            feeds = EMPTY_FEED_SYNC_STATE;
+            emit();
+            if (error instanceof RpcClosedError) {
+              ctx.onDispose(this._entityManager.reconnected.once(() => subscribeFeedSyncState()));
+            } else if (error) {
+              log.warn('feed sync state stream failed', { error });
+            }
+          },
+        },
       );
-    }
+    };
+
+    subscribeFeedSyncState();
+    ctx.onDispose(() => cleanupFeedStream?.());
 
     return () => {
       void ctx.dispose();

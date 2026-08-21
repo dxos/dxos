@@ -6,7 +6,6 @@
 
 import * as Schema from 'effect/Schema';
 
-import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
@@ -110,7 +109,7 @@ export class Magazine extends Type.makeObject<Magazine>(DXN.make('org.dxos.type.
   }).pipe(
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--book-open-text--regular', hue: 'indigo' }),
-    AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
+    Skill.SkillsAnnotation.set([SKILL_KEY]),
   ),
 ) {}
 

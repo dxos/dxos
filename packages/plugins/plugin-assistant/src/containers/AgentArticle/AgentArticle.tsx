@@ -38,6 +38,7 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
     }),
     [agent],
   );
+
   const handleResetHistory = useCallback(async () => {
     await resetHistory();
   }, [resetHistory]);
@@ -48,9 +49,9 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root>
-          <Toolbar.Separator variant='gap' />
+      <Panel.Toolbar>
+        <Toolbar.Root classNames='dx-document'>
+          <Toolbar.Separator />
           <Toolbar.IconButton
             icon='ph--trash--regular'
             label={t('reset-history.button')}
@@ -58,7 +59,7 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
           />
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='dx-container'>
+      <Panel.Content classNames='dx-document'>
         {instructions && <InstructionsEditor db={db} instructions={instructions} />}
       </Panel.Content>
     </Panel.Root>

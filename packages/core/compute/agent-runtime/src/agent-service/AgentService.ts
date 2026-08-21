@@ -29,6 +29,7 @@ import type { ContentBlock } from '@dxos/types';
 
 import { AGENT_PROCESS_KEY, AgentProcess } from './agent-process';
 import { type DelegationStrategy } from './delegation-strategy';
+import { type MakeTurnProducer } from './turn-producer';
 
 /** The RPC control surface declared by {@link AgentProcess}, recovered from the executable type. */
 type AgentRpcs = ReturnType<typeof AgentProcess> extends Process.Process<any, any, any, infer Rpcs> ? Rpcs : never;
@@ -73,6 +74,12 @@ export const createSession: (
 
 export interface AgentServiceOptions {
   systemPrompt?: string;
+
+  /**
+   * Produces each turn. Defaults to DXOS's own `AiSession`; substituting it swaps the engine while
+   * the process keeps ownership of the queue, alarms, redelivery, delegation and hydration.
+   */
+  makeTurnProducer?: MakeTurnProducer;
 
   /**
    * Default model used by sessions that don't specify one explicitly.
@@ -126,6 +133,7 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
       const makeExecutable = (model?: DXN.DXN, provider?: DXN.DXN) =>
         AgentProcess({
           systemPrompt: opts?.systemPrompt,
+          makeTurnProducer: opts?.makeTurnProducer,
           model: model ?? opts?.model,
           provider: provider ?? opts?.provider,
           getMcpServers: opts?.getMcpServers,

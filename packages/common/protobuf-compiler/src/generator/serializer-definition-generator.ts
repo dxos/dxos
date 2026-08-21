@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import * as ts from '@typescript/typescript6';
 import type protobufjs from 'protobufjs';
-import * as ts from 'typescript';
 
 import { compressSchema } from '@dxos/codec-protobuf';
 

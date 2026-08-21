@@ -19,11 +19,14 @@ export default Capability.makeModule(
       createObject: (props: Partial<Parameters<typeof Score.make>[0]> | undefined, options) =>
         Effect.gen(function* () {
           const object = Score.make(props ?? {});
-          return yield* Operation.invoke(SpaceOperation.AddObject, {
-            object,
-            target: options.target,
-            targetNodeId: options.targetNodeId,
-          });
+          return yield* Operation.invoke(
+            SpaceOperation.AddObject,
+            {
+              object,
+              target: options.target,
+            },
+            { spaceId: options.db.spaceId },
+          );
         }),
     });
   }),

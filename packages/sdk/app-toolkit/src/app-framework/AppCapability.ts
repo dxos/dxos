@@ -120,6 +120,12 @@ export const undoMappings: Maker<typeof Capabilities.UndoMapping> = Capability$.
   Capabilities.UndoMapping,
 );
 
+/** Module maker contributing observability event mappings. */
+export const observabilityMappings: Maker<typeof AppCapabilities.ObservabilityMapping> = Capability$.moduleMaker(
+  'ObservabilityMappings',
+  AppCapabilities.ObservabilityMapping,
+);
+
 /** Module maker contributing a React context. */
 export const reactContext: Maker<typeof Capabilities.ReactContext> = Capability$.moduleMaker(
   'ReactContext',

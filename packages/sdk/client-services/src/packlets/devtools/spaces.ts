@@ -2,18 +2,22 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Stream } from '@dxos/codec-protobuf/stream';
-import {
-  type SubscribeToSpacesRequest,
-  type SubscribeToSpacesResponse,
-} from '@dxos/protocols/proto/dxos/devtools/host';
+import * as Effect from 'effect/Effect';
+import * as EffectStream from 'effect/Stream';
+
+import { EffectEx } from '@dxos/effect';
+import { type SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { type DevtoolsHost } from '@dxos/protocols/rpc';
 
 import { type ServiceContext } from '../services';
 import { type Space } from '../space';
 
-export const subscribeToSpaces = (context: ServiceContext, { spaceKeys = [] }: SubscribeToSpacesRequest) => {
-  return new Stream<SubscribeToSpacesResponse>(({ next }) => {
+export const subscribeToSpaces = (
+  context: ServiceContext,
+  { spaceKeys = [] }: DevtoolsHost.SubscribeToSpacesRequest,
+): EffectStream.Stream<SubscribeToSpacesResponse, Error> => {
+  return EffectEx.streamFromEmitter<SubscribeToSpacesResponse, Error>((emit) => {
     let unsubscribe: () => void;
 
     const update = async () => {
@@ -22,7 +26,7 @@ export const subscribeToSpaces = (context: ServiceContext, { spaceKeys = [] }: S
         (space) => !spaceKeys?.length || spaceKeys.some((spaceKey) => spaceKey.equals(space.key)),
       );
 
-      next({
+      emit.single({
         spaces: filteredSpaces.map((space): SubscribeToSpacesResponse.SpaceInfo => {
           const spaceMetadata = context.metadataStore.spaces.find((spaceMetadata: SpaceMetadata) =>
             spaceMetadata.key.equals(space.key),
@@ -48,9 +52,9 @@ export const subscribeToSpaces = (context: ServiceContext, { spaceKeys = [] }: S
       await update();
     });
 
-    return () => {
+    return Effect.sync(() => {
       unsubscribe?.();
       clearTimeout(timeout);
-    };
+    });
   });
 };

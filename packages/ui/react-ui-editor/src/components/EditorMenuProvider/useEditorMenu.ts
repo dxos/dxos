@@ -31,7 +31,7 @@ export type UseEditorMenuProps = {
    */
   searchTriggers?: string[];
   getMenu?: (context: GetMenuContext) => MaybePromise<EditorMenuGroup[]>;
-} & Pick<PopoverOptions, 'trigger' | 'triggerKey' | 'placeholder' | 'activateOnTyping'>;
+} & Pick<PopoverOptions, 'trigger' | 'triggerKey' | 'placeholder' | 'activateOnTyping' | 'activateOnDelimiters'>;
 
 export type UseEditorMenu = {
   groupsRef: RefObject<EditorMenuGroup[]>;
@@ -66,6 +66,7 @@ export const useEditorMenu = ({
   triggerKey,
   placeholder,
   activateOnTyping,
+  activateOnDelimiters,
   filter = true,
   searchTriggers,
   getMenu,
@@ -221,14 +222,19 @@ export const useEditorMenu = ({
     });
   }, []);
 
+  // Array props are compared by CONTENT, not identity: a caller writing `trigger={['#']}` inline
+  // hands over a new array every render, and a changed extension destroys and recreates the view —
+  // blurring the editor mid-keystroke.
   const serializedTrigger = Array.isArray(trigger) ? trigger.join(',') : trigger;
   const serializedSearchTriggers = searchTriggers?.join(',');
+  const serializedDelimiters = activateOnDelimiters?.join(',');
   const extension = useMemo<Extension>(() => {
     return popover({
       trigger,
       triggerKey,
       placeholder,
       activateOnTyping,
+      activateOnDelimiters,
       onClose: ({ view }) => handleOpenChange({ view, open: false }),
       onEnter: ({ view }) => {
         if (currentRef.current) {
@@ -253,6 +259,7 @@ export const useEditorMenu = ({
     updateGroups,
     serializedTrigger,
     serializedSearchTriggers,
+    serializedDelimiters,
     placeholder,
     activateOnTyping,
   ]);

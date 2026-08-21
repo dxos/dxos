@@ -7,15 +7,15 @@ import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 
 import { GoogleMail } from '#apis';
+import { GoogleOperation } from '#types';
 
 import { GmailSendMessageInvalidError } from '../../../errors';
 import { GoogleCredentials } from '../../../services/google-credentials';
 
-const handler = InboxOperation.GmailSend.pipe(
+const handler = GoogleOperation.GmailSend.pipe(
   Operation.withHandler(({ userId = 'me', message, connection: connectionRef }) =>
     Effect.gen(function* () {
       log('sending email', { userId, connection: connectionRef.uri });

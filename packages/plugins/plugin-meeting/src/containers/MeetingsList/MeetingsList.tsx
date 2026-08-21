@@ -10,7 +10,7 @@ import { Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Button, useTranslation } from '@dxos/react-ui';
+import { Button, Flex, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { Channel } from '@dxos/types';
 
@@ -67,19 +67,20 @@ export const MeetingsList = ({ companionTo: channel }: MeetingsListProps) => {
     invariant(db);
     const createResult = await invokePromise(MeetingOperation.Create, { channel: channel as Channel.Channel });
     invariant(Obj.instanceOf(Meeting.Meeting, createResult.data?.object));
-    const addResult = await invokePromise(SpaceOperation.AddObject, {
-      target: db,
-      object: createResult.data?.object,
-    });
+    const addResult = await invokePromise(
+      SpaceOperation.AddObject,
+      { object: createResult.data?.object },
+      { spaceId: db.spaceId },
+    );
     invariant(Obj.instanceOf(Meeting.Meeting, addResult.data?.object));
     await invokePromise(MeetingOperation.SetActive, { object: addResult.data?.object });
   }, [invokePromise, db, channel]);
 
   return (
     <div>
-      <div className='px-2 min-h-[3rem] flex justify-end items-center'>
+      <Flex align='center' justify='end' classNames='px-2 min-h-[3rem]'>
         <Button onClick={handleCreateMeeting}>{t('create-meeting.label')}</Button>
-      </div>
+      </Flex>
       <Listbox.Root>
         <Listbox.Viewport>
           <Listbox.Content aria-label={t('meeting-list.label')}>

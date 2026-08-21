@@ -79,6 +79,9 @@
       "path": "../../plugins/plugin-debug"
     },
     {
+      "path": "../../plugins/plugin-google"
+    },
+    {
       "path": "../../plugins/plugin-inbox"
     },
     {

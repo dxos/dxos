@@ -32,6 +32,9 @@ const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'];
 const baseDir = resolve(__dirname, '../');
 const rootDir = resolve(baseDir, '../../');
 const staticDir = resolve(baseDir, './static');
+
+/** Root that Claude Agent SDK turns are confined to; unset leaves the agent host unmounted. */
+const agentCwd = process.env.DX_AGENT_CWD;
 const iconsDir = resolve(rootDir, 'node_modules/@phosphor-icons/core/assets');
 const dxosIconsDir = resolve(rootDir, 'packages/ui/brand/assets/icons');
 // tldraw self-hosts its fonts/icons; plugin-tldraw points tldraw at `/assets/plugin-tldraw` and the
@@ -192,6 +195,15 @@ export const createConfig = ({
   // (theme, sidebar labels) is only picked up if it is registered as a manager entry here.
   managerEntries: [resolve(__dirname, './manager.tsx')],
   staticDirs: [staticDir, { from: sketchAssetsDir, to: '/assets/plugin-tldraw' }],
+  // Suppress Storybook's own promotional UI: the "Learn what's new" release popup and the
+  // "Get started" onboarding checklist (sidebar widget and menu guide page).
+  core: {
+    disableWhatsNewNotifications: true,
+  },
+  features: {
+    sidebarOnboardingChecklist: false,
+    menuOnboardingChecklist: false,
+  },
   typescript: {
     // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories.
     reactDocgen: false,
@@ -426,6 +438,21 @@ export const createConfig = ({
           //
 
           DxosLogPlugin(),
+
+          // Hosts the Claude Agent SDK so stories reach it same-origin. Storybook builds its vite
+          // config here and never loads a package's `vite.config.ts`, so a story cannot mount its
+          // own host — hence mounting it centrally. Opt-in: the host spawns the SDK and spends real
+          // tokens, so it stays absent unless DX_AGENT_CWD names the root to confine turns to.
+          agentCwd && {
+            name: 'dx-agent-claude',
+            apply: 'serve' as const,
+            // Imported dynamically: this config is bundled with a CJS `require` for static imports,
+            // and `@dxos/agent-claude` is ESM-only.
+            configureServer: async (server: { middlewares: { use: (handler: any) => void } }) => {
+              const { Middleware } = await import('@dxos/agent-claude');
+              server.middlewares.use(Middleware.make({ cwd: agentCwd }));
+            },
+          },
 
           IconsPlugin({
             // The leading negative lookahead restricts the `dx` set to the `regular` weight only
