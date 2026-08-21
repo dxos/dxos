@@ -119,9 +119,18 @@ runs:
         if [ "$cas_exit" -ne 0 ]; then
           degrade "Remote cache $host CAS probe failed after retries: $(curl_exit_meaning "$cas_exit") (curl exit $cas_exit). Falling back to the local cache for this job."
         fi
-        if [ "$code" != "404" ]; then
-          degrade "Remote cache $host rejected the client certificate (HTTP $code, expected 404). Falling back to the local cache for this job."
-        fi
+        case "$code" in
+          404) ;;
+          401|403)
+            degrade "Remote cache $host rejected the client certificate (HTTP $code, expected 404). Falling back to the local cache for this job."
+            ;;
+          5??)
+            degrade "Remote cache $host CAS probe returned a server error (HTTP $code, expected 404). Falling back to the local cache for this job."
+            ;;
+          *)
+            degrade "Remote cache $host CAS probe returned an unexpected status (HTTP $code, expected 404). Falling back to the local cache for this job."
+            ;;
+        esac
         echo "Remote cache $host reachable and authenticated."
       shell: bash
 
