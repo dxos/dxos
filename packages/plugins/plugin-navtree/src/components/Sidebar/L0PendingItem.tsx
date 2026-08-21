@@ -14,11 +14,18 @@ import { meta } from '#meta';
  */
 const PENDING_ANIMATION_DELAY = '2s';
 
+/**
+ * Slower than the skeleton default, so a rail of them reads as quietly waiting rather than blinking
+ * for attention. The palette stays the achromatic `neutral` ramp: a placeholder should not imply a
+ * hue the space has not published yet.
+ */
+const PENDING_ANIMATION_DURATION = '4s';
+
 /** Fills a rail item's frame while the workspace it stands for is still opening. */
 export const L0PendingAvatar = () => (
   <Skeleton
     classNames='w-(--dx-l0-avatar-size) h-(--dx-l0-avatar-size) rounded-sm'
-    style={{ animationDelay: PENDING_ANIMATION_DELAY }}
+    style={{ animationDelay: PENDING_ANIMATION_DELAY, animationDuration: PENDING_ANIMATION_DURATION }}
   />
 );
 

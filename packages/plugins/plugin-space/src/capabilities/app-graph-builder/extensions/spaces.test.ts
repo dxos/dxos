@@ -8,8 +8,9 @@ import { describe, test } from 'vitest';
 import type * as Node from '@dxos/app-graph/Node';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { type Space, SpaceState } from '@dxos/client/echo';
+import { Entity, Obj } from '@dxos/echo';
 
-import { constructPendingSpaceNode, isPendingSpace } from './spaces';
+import { constructPendingSpaceNode, constructSpaceNode, isPendingSpace } from './spaces';
 
 describe('isPendingSpace', () => {
   test('a space on its way to ready is pending', ({ expect }) => {
@@ -77,5 +78,53 @@ describe('constructPendingSpaceNode', () => {
 
   test('says it is loading when the space has never been seen before', ({ expect }) => {
     expect(makePendingNode().properties.label).toEqual(['loading-space.label', { ns: 'org.dxos.plugin.space' }]);
+  });
+});
+
+describe('pending and ready space nodes', () => {
+  const SPACE_ID = 'BFEDCBA9876543210FEDCBA9876543210';
+
+  /**
+   * Passes `isEntity` and carries `Obj.Meta`, which the migration check reads through
+   * `Annotation.get`; the space's own display properties are left unset.
+   */
+  const makeFakeProperties = (): Record<string | symbol, unknown> => ({
+    [Entity.KindId]: Entity.Kind.Object,
+    [Obj.Meta]: { keys: [], annotations: {} },
+  });
+
+  const makeReadySpace = (): Space =>
+    ({
+      id: SPACE_ID,
+      state: { get: () => SpaceState.SPACE_READY },
+      properties: makeFakeProperties(),
+    }) as unknown as Space;
+
+  test('the same keys are emitted either way, so a stale one cannot survive the transition', ({ expect }) => {
+    // The graph merges node properties rather than replacing them, so a key one generation sets and
+    // the next omits can never be cleared: a space that opened would stay `pending` forever.
+    const pending = Object.keys(constructPendingSpaceNode({ space: makeReadySpace() }).properties ?? {});
+    const ready = Object.keys(constructSpaceNode({ space: makeReadySpace(), navigable: true }).properties ?? {});
+
+    expect(pending.filter((key) => key !== 'testId').toSorted()).toEqual(
+      ready.filter((key) => key !== 'testId').toSorted(),
+    );
+  });
+
+  test('an opened space is no longer pending', ({ expect }) => {
+    const node = constructSpaceNode({ space: makeReadySpace(), navigable: true });
+
+    expect(node.properties?.pending).toBe(false);
+  });
+
+  test('a pending space publishes no appearance of its own', ({ expect }) => {
+    const properties: Record<string, unknown> = constructPendingSpaceNode({ space: makeReadySpace() }).properties ?? {};
+
+    expect(properties.hue).toBeUndefined();
+    expect(properties.icon).toBeUndefined();
+    expect(properties.iconHue).toBeUndefined();
+    // Reordering writes through the space's own database, and dropping onto it would need one.
+    expect(properties.onRearrange).toBeUndefined();
+    expect(properties.canDrop).toBeUndefined();
   });
 });

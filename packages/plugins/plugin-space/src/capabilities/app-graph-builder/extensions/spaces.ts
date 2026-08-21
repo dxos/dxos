@@ -376,6 +376,14 @@ export const constructPendingSpaceNode = ({
       // Names are cached from previous sessions, so a returning user sees real labels while the
       // spaces behind them open; a space never yet seen has none to show.
       label: namesCache?.[space.id] ?? LOADING_SPACE_LABEL,
+      // Cleared rather than omitted, so a space that closes after being ready drops the appearance
+      // and affordances it had then — the merge above would otherwise keep them.
+      description: undefined,
+      hue: undefined,
+      icon: undefined,
+      iconHue: undefined,
+      onRearrange: undefined,
+      canDrop: undefined,
       disabled: true,
       pending: true,
       disposition: 'workspace',
@@ -384,7 +392,7 @@ export const constructPendingSpaceNode = ({
   });
 
 /** Builds an app-graph node for a space, including settings children and optional rearrange handler. */
-const constructSpaceNode = ({
+export const constructSpaceNode = ({
   space,
   navigable = false,
   namesCache,
@@ -434,6 +442,9 @@ const constructSpaceNode = ({
           : undefined,
       iconHue: space.state.get() === SpaceState.SPACE_READY && space.properties.iconHue,
       disabled: !navigable || space.state.get() !== SpaceState.SPACE_READY || hasPendingMigration,
+      // Emitted on every generation, not just when true: the graph merges properties, so a key the
+      // pending generation set and this one omitted could never be cleared.
+      pending: false,
       disposition: 'workspace',
       testId: 'spacePlugin.space',
       onRearrange,
