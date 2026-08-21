@@ -125,6 +125,9 @@ never moves it.
   to its mailbox.
 - **Per plank, not per deck** — `DeckState.companionPlanks` lists the planks showing their companion,
   so moving between planks restores what each was left in.
+- **Carried across a replacing open** — a navigate (or a level swap) closes the plank the companion was
+  open on, which would prune its entry and close a companion the user never touched. `carryCompanion`
+  hands the entry to the plank standing in for it, so the pane survives nav-tree navigation.
 - **Sizing** — the tile is the plank's own width _plus_ the companion beside it, and the companion's
   width is held deck-wide under `COMPANION_SIZE_KEY` (not a valid node id, so it cannot collide).
   Opening or closing the companion therefore never resizes the plank. Dragging the seam commits both

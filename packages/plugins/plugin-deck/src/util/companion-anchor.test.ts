@@ -5,6 +5,7 @@
 import { describe, test } from 'vitest';
 
 import {
+  carryCompanion,
   findAttendedPlank,
   getRenderedPlanks,
   resolveCompanionAnchor,
@@ -71,6 +72,38 @@ describe('resolveCompanionAnchor', () => {
 
   test('an empty deck has no anchor', ({ expect }) => {
     expect(resolveCompanionAnchor([], ['a'])).toBeUndefined();
+  });
+});
+
+describe('carryCompanion', () => {
+  test('an open companion follows the plank the new one replaces', ({ expect }) => {
+    // A nav-tree click replaces the deck: `a` closes, so pruning has already dropped its entry.
+    expect(carryCompanion({ pruned: [], previous: ['a'], replacedId: 'a', replacementId: 'b' })).toEqual(['b']);
+  });
+
+  test('a companion closed on the replaced plank stays closed', ({ expect }) => {
+    expect(carryCompanion({ pruned: [], previous: [], replacedId: 'a', replacementId: 'b' })).toEqual([]);
+    expect(carryCompanion({ pruned: [], previous: ['other'], replacedId: 'a', replacementId: 'b' })).toEqual([]);
+  });
+
+  test('an open that replaces nothing leaves the pruned state alone', ({ expect }) => {
+    expect(carryCompanion({ pruned: ['a'], previous: ['a'], replacedId: undefined, replacementId: 'b' })).toEqual([
+      'a',
+    ]);
+    expect(carryCompanion({ pruned: ['a'], previous: ['a'], replacedId: 'a', replacementId: undefined })).toEqual([
+      'a',
+    ]);
+  });
+
+  test('the surviving planks keep their own companion state', ({ expect }) => {
+    expect(carryCompanion({ pruned: ['c'], previous: ['a', 'c'], replacedId: 'a', replacementId: 'b' })).toEqual([
+      'c',
+      'b',
+    ]);
+  });
+
+  test('does not duplicate a replacement whose companion is already open', ({ expect }) => {
+    expect(carryCompanion({ pruned: ['b'], previous: ['a', 'b'], replacedId: 'a', replacementId: 'b' })).toEqual(['b']);
   });
 });
 

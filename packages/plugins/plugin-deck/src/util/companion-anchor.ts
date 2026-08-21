@@ -45,6 +45,29 @@ export const findAttendedPlank = (planks: readonly string[], attended: readonly 
 export const resolveCompanionAnchor = (planks: readonly string[], attended: readonly string[]): string | undefined =>
   findAttendedPlank(planks, attended) ?? planks[planks.length - 1];
 
+export type CarryCompanionOptions = {
+  /** Companion state after the open, already pruned to the planks that stayed open. */
+  pruned: readonly string[];
+  /** Companion state before the open. */
+  previous: readonly string[];
+  /** The plank the open replaced, when it replaced one. */
+  replacedId: string | undefined;
+  /** The plank standing in for it. */
+  replacementId: string | undefined;
+};
+
+/**
+ * Companion state after an open that replaces a plank: the companion follows the plank the new one stands
+ * in for. Per-plank state is keyed by a plank id and pruned as that plank closes, so without this a
+ * replacing open — a nav-tree click, a level swap — always closes a companion the user never touched; and
+ * closing it also narrows the deck, which the browser answers by clamping the scroll in a one-frame snap
+ * measured at exactly the lost width.
+ */
+export const carryCompanion = ({ pruned, previous, replacedId, replacementId }: CarryCompanionOptions): string[] =>
+  replacedId && replacementId && previous.includes(replacedId) && !pruned.includes(replacementId)
+    ? [...pruned, replacementId]
+    : [...pruned];
+
 export type ResolveCompanionPlankOptions = {
   /** Qualified companion id (`<plank>/~<variant>`) or a bare `~<variant>`. */
   subject: string;
