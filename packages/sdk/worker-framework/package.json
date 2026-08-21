@@ -61,8 +61,11 @@
   },
   "devDependencies": {
     "@dxos/effect": "workspace:*",
+    "@dxos/node-std": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@playwright/test": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
