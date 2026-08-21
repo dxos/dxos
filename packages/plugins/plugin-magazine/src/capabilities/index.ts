@@ -27,9 +27,6 @@ export const RoutineTemplates = Capability.lazyModule(
 export const Schema = AppCapability.schema(() => import('./schema'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
-// workerd registers eagerly (Startup, the maker's default) via ./overrides.workerd.ts — a worker
-// host handling operation requests needs handlers ready immediately, unlike the post-interactive
-// Idle deferral browser and node share.
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
 });

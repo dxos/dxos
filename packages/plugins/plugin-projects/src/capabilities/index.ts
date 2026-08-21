@@ -19,9 +19,6 @@ export const SkillDefinition = AppCapability.skillDefinition(() => import('./ski
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
   environments: [],
 });
-// Headless environments register eagerly (Startup, the maker's default) via ./overrides.workerd.ts —
-// a worker host handling operation requests needs handlers ready immediately, unlike the browser's
-// post-interactive Idle deferral.
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
   environments: ['workerd'],

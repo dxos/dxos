@@ -14,9 +14,6 @@ import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
-// workerd registers eagerly (Startup, the maker's default) via ./overrides.workerd.ts — a worker
-// host handling operation requests needs handlers ready immediately, unlike the post-interactive
-// Idle deferral browser and node share.
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
 });

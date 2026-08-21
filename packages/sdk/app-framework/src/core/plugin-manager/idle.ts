@@ -49,8 +49,15 @@ const afterPaint: Effect.Effect<void> = Effect.suspend(() => {
  * browser-only and this package also builds for node and workerd, where there is no paint to
  * yield to and completing immediately is the correct behaviour.
  */
+/**
+ * Whether the host has a paint the idle wave should yield to. False under node and workerd, where
+ * {@link whenIdle} completes immediately — so forking the wave there buys nothing and only leaves
+ * it unfinished when `start()` returns.
+ */
+export const hostYieldsToPaint = (): boolean => typeof requestIdleCallback === 'function';
+
 export const whenIdle: Effect.Effect<void> = Effect.suspend(() => {
-  if (typeof requestIdleCallback !== 'function') {
+  if (!hostYieldsToPaint()) {
     return Effect.void;
   }
   return afterPaint.pipe(

@@ -20,7 +20,7 @@ import type * as CapabilityManager from '../capability-manager';
 import { DependencyCycleError, DuplicateProviderError, MissingProviderError } from '../errors';
 import type * as Plugin from '../plugin';
 import * as ActivationGraph from './activation-graph';
-import { whenIdle } from './idle';
+import { hostYieldsToPaint, whenIdle } from './idle';
 import { type ManagerState } from './manager-state';
 import { type ModuleLoader, together } from './module-loader';
 
@@ -160,12 +160,17 @@ export class ActivationScheduler {
 
       // The idle wave belongs to the manager rather than to each host: it is an app-framework
       // event, and a host that owned the wait would re-implement it (and could forget to).
-      // Forked so `start` returns at ready, and deferred to host idle so the registration
-      // contributions gated on it land after first paint instead of competing with it.
-      // Tracked: the wave sits behind a wait of up to 15s, and an untracked daemon outlives
-      // `shutdown()` — dispatching Idle into a manager that has already reset re-activates
-      // modules after teardown.
-      yield* this.#state.fibers.trackForked(yield* this.#activateWhenIdle().pipe(Effect.forkDetach));
+      // In a browser it is forked so `start` returns at ready and the contributions gated on it
+      // land after first paint instead of competing with it; tracked, because the wave sits behind
+      // a wait of up to 15s and an untracked daemon outlives `shutdown()` — dispatching Idle into a
+      // manager that has already reset re-activates modules after teardown. A headless host has no
+      // paint to lose the race to and completes `whenIdle` immediately, so forking there would only
+      // let `start()` return before the wave ran.
+      if (hostYieldsToPaint()) {
+        yield* this.#state.fibers.trackForked(yield* this.#activateWhenIdle().pipe(Effect.forkDetach));
+      } else {
+        yield* this.#activateWhenIdle();
+      }
 
       return this.#state.getActiveIds().length > activeBefore || ranAny;
     });
