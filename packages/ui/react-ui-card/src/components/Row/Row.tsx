@@ -303,7 +303,7 @@ export const ContactAvatar = ({
   role,
   db,
   getContact,
-  size = 6,
+  size = 5,
   onContactCreate,
   onClick,
 }: ContactAvatarProps) => {
@@ -342,7 +342,11 @@ export const ContactAvatar = ({
       onPointerLeave={cancelHover}
     >
       {/* Faded (not unmounted) while the create button covers it, so the gutter never resizes. */}
-      <div className={mx(canCreate && 'group-hover/contact:opacity-0 group-focus-within/contact:opacity-0')}>
+      {/* `grid`, not the default block: `dx-avatar` is `display: contents` and the frame inside it is
+          `inline-flex`, so in a block box it sits on the text baseline and the line box adds descender
+          space beneath it — making this wrapper taller than the avatar and pinning the face to its top.
+          Every caller that centres this against a line of text then reads as misaligned. */}
+      <div className={mx('grid', canCreate && 'group-hover/contact:opacity-0 group-focus-within/contact:opacity-0')}>
         <Avatar actor={actor} size={size} onClick={onClick} />
       </div>
       {canCreate && (
@@ -352,7 +356,7 @@ export const ContactAvatar = ({
           icon='ph--user-circle-plus--regular'
           // One step below the avatar it replaces, so the button reads as an affordance rather than
           // as a heavier stand-in for the face.
-          size={Number(size) >= 8 ? 6 : 5}
+          size={Number(size) >= 8 ? 5 : 4}
           label={t('create-contact.label')}
           classNames='absolute inset-0 opacity-0 group-hover/contact:opacity-100 focus-visible:opacity-100'
           onClick={handleContactCreate}

@@ -16,65 +16,47 @@ import { Visualization } from './Visualization';
 // Synthetic neighbourhood: inbound sources → focus (left), focus → near → far (right, outgoing).
 const NODES: SpaceGraphNode[] = [
   { id: 'focus', type: 'object', data: { label: 'Focus' } },
-  ...Array.from(
-    { length: 3 },
-    (_, index): SpaceGraphNode => ({
-      id: `src-${index}`,
-      type: 'object',
-      data: { label: `Source ${index}` },
-    }),
-  ),
-  ...Array.from(
-    { length: 5 },
-    (_, index): SpaceGraphNode => ({
-      id: `near-${index}`,
-      type: 'object',
-      data: { label: `Near ${index}` },
-    }),
-  ),
-  ...Array.from(
-    { length: 8 },
-    (_, index): SpaceGraphNode => ({
-      id: `far-${index}`,
-      type: 'object',
-      data: { label: `Far ${index}` },
-    }),
-  ),
+  ...Array.from({ length: 3 }, (_, index): SpaceGraphNode => ({
+    id: `src-${index}`,
+    type: 'object',
+    data: { label: `Source ${index}` },
+  })),
+  ...Array.from({ length: 5 }, (_, index): SpaceGraphNode => ({
+    id: `near-${index}`,
+    type: 'object',
+    data: { label: `Near ${index}` },
+  })),
+  ...Array.from({ length: 8 }, (_, index): SpaceGraphNode => ({
+    id: `far-${index}`,
+    type: 'object',
+    data: { label: `Far ${index}` },
+  })),
 ];
 
 const EDGES: SpaceGraphEdge[] = [
   // Inbound: sources point at the focus (left side, terminal).
-  ...Array.from(
-    { length: 3 },
-    (_, index): SpaceGraphEdge => ({
-      id: `e-src-focus-${index}`,
-      type: 'ref',
-      source: `src-${index}`,
-      target: 'focus',
-      data: { force: true },
-    }),
-  ),
+  ...Array.from({ length: 3 }, (_, index): SpaceGraphEdge => ({
+    id: `e-src-focus-${index}`,
+    type: 'ref',
+    source: `src-${index}`,
+    target: 'focus',
+    data: { force: true },
+  })),
   // Outgoing: focus → near → far (right side, explored).
-  ...Array.from(
-    { length: 5 },
-    (_, index): SpaceGraphEdge => ({
-      id: `e-focus-near-${index}`,
-      type: 'ref',
-      source: 'focus',
-      target: `near-${index}`,
-      data: { force: true },
-    }),
-  ),
-  ...Array.from(
-    { length: 8 },
-    (_, index): SpaceGraphEdge => ({
-      id: `e-near-far-${index}`,
-      type: 'ref',
-      source: `near-${index % 5}`,
-      target: `far-${index}`,
-      data: { force: true },
-    }),
-  ),
+  ...Array.from({ length: 5 }, (_, index): SpaceGraphEdge => ({
+    id: `e-focus-near-${index}`,
+    type: 'ref',
+    source: 'focus',
+    target: `near-${index}`,
+    data: { force: true },
+  })),
+  ...Array.from({ length: 8 }, (_, index): SpaceGraphEdge => ({
+    id: `e-near-far-${index}`,
+    type: 'ref',
+    source: `near-${index % 5}`,
+    target: `far-${index}`,
+    data: { force: true },
+  })),
 ];
 
 type StoryArgs = { variant: VisualizationVariantId; focus?: string };

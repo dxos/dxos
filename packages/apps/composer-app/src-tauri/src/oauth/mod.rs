@@ -6,10 +6,13 @@ use std::sync::Arc;
 
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE, ORIGIN};
 use serde::{Deserialize, Serialize};
-use tauri::State;
+use tauri::{AppHandle, State};
 use tokio::sync::Mutex;
 
 use server::OAuthServer;
+
+/// Event carrying a callback URL the loopback server received, as an absolute URL string.
+pub const OAUTH_CALLBACK_EVENT: &str = "dxos:oauth-callback";
 
 /// OAuth result returned from the callback.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -22,6 +25,23 @@ pub struct OAuthResult {
     pub reason: Option<String>,
 }
 
+/// Params an OAuth-recovery callback carries back (the `register` and `recovery` purposes).
+///
+/// Kept apart from `OAuthResult`: recovery never yields an access token, and the `recovery` purpose
+/// carries no `accessTokenId` either, so there is nothing to key a per-token lookup on.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct OAuthRecoveryResult {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub access_token_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub registration_token: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub recovery_proof: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+}
+
 /// Request body for initiating OAuth flow.
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -32,6 +52,14 @@ struct InitiateOAuthRequest {
     access_token_id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     native_app_redirect: Option<bool>,
+    // Account recovery: `purpose` selects the flow, `register_recovery` asks kms-service to write
+    // the recovery binding, and atproto needs `login_hint` to resolve the user's auth server.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    purpose: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    register_recovery: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    login_hint: Option<String>,
 }
 
 /// Response from Edge for OAuth initiation.
@@ -69,7 +97,7 @@ impl OAuthServerState {
 /// Starts the OAuth callback server.
 /// Returns the port number the server is listening on.
 #[tauri::command]
-pub async fn start_oauth_server(state: State<'_, OAuthServerState>) -> Result<u16, String> {
+pub async fn start_oauth_server(app: AppHandle, state: State<'_, OAuthServerState>) -> Result<u16, String> {
     let mut server_lock = state.server.lock().await;
 
     // If server is already running, return existing port.
@@ -79,7 +107,7 @@ pub async fn start_oauth_server(state: State<'_, OAuthServerState>) -> Result<u1
 
     // Create and start new server.
     let mut server = OAuthServer::new();
-    let port = server.start().await?;
+    let port = server.start(app).await?;
     *server_lock = Some(server);
 
     Ok(port)
@@ -113,6 +141,20 @@ pub async fn get_oauth_result(
     }
 }
 
+/// Gets the OAuth-recovery callback params, if one has arrived.
+/// Returns None if no result is available yet.
+#[tauri::command]
+pub async fn get_oauth_recovery_result(
+    state: State<'_, OAuthServerState>,
+) -> Result<Option<OAuthRecoveryResult>, String> {
+    let server_lock = state.server.lock().await;
+
+    match &*server_lock {
+        Some(server) => Ok(server.get_recovery_result().await),
+        None => Err("OAuth server not running".to_string()),
+    }
+}
+
 /// Initiates OAuth flow by making request to Edge with correct Origin header.
 /// This bypasses browser restrictions on setting the Origin header.
 #[tauri::command]
@@ -125,6 +167,9 @@ pub async fn initiate_oauth_flow(
     redirect_origin: String,
     auth_header: Option<String>,
     native_app_redirect: Option<bool>,
+    purpose: Option<String>,
+    register_recovery: Option<bool>,
+    login_hint: Option<String>,
 ) -> Result<String, String> {
     let client = reqwest::Client::new();
 
@@ -156,6 +201,9 @@ pub async fn initiate_oauth_flow(
         space_id,
         access_token_id,
         native_app_redirect,
+        purpose,
+        register_recovery,
+        login_hint,
     };
 
     let response = client

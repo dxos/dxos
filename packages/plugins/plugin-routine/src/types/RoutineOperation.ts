@@ -59,7 +59,6 @@ export const CreateRoutine = Operation.make({
   }),
   output: Schema.Struct({
     id: Schema.String,
-    subject: Schema.Array(Schema.String),
     object: Obj.Unknown,
   }),
 });

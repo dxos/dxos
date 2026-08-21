@@ -13,7 +13,7 @@ import * as RoutineEvents from '@dxos/plugin-routine/RoutineEvents';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import { ContactMessageExtractor, SummarizeMessageExtractor } from '#operations';
+import { MessageExtractor } from '#operations';
 import { InboxCapabilities } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
@@ -28,12 +28,18 @@ export const IdentitySpecs = Capability.lazyModule(
 export const ContactExtractor = Capability.inlineModule(
   'contact-extractor',
   { provides: [InboxCapabilities.ObjectExtractor] },
-  () => Effect.succeed([Capability.contribute(InboxCapabilities.ObjectExtractor, ContactMessageExtractor)]),
+  () =>
+    Effect.succeed([
+      Capability.contribute(InboxCapabilities.ObjectExtractor, MessageExtractor.ContactMessageExtractor),
+    ]),
 );
 export const SummarizeExtractor = Capability.inlineModule(
   'summarize-extractor',
   { provides: [InboxCapabilities.ObjectExtractor] },
-  () => Effect.succeed([Capability.contribute(InboxCapabilities.ObjectExtractor, SummarizeMessageExtractor)]),
+  () =>
+    Effect.succeed([
+      Capability.contribute(InboxCapabilities.ObjectExtractor, MessageExtractor.SummarizeMessageExtractor),
+    ]),
 );
 export const MailboxProcessors = Capability.lazyModule(
   'MailboxProcessors',
@@ -47,9 +53,6 @@ export const AutomationTemplates = Capability.lazyModule(
 );
 export const NavigationTargetResolver = AppCapability.navigationResolver(() => import('./navigation-target-resolver'), {
   requires: [ClientCapabilities.Client],
-  // Graph start, not the inbox's own: a deep link is resolved before any inbox surface exists,
-  // so gating this on the surface that the resolution leads to would never resolve.
-  activatesOn: ActivationEvents.Idle,
 });
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,

@@ -123,9 +123,10 @@ RESPONSE RULES (re-injected every turn; these govern the reply, not the work).
 EOF
     if [ "$(current)" = 'terse' ]; then
       cat <<'EOF'
-- MODE: TERSE — at most 8 lines total. No headings, no nested bullets, minimal
-  markdown. Prefer one sentence or a short flat list. If material detail
-  remains, end with exactly: `(say "more" for detail)`.
+- MODE: TERSE — Reply with the answer or current status in 1-2 sentences.
+  Provide follow-up options as a short flat numbered list, with a recommendation if applicable.
+  Consider providing the following options iff applicable:
+  1. Detailed explanation.
 EOF
     else
       cat <<'EOF'

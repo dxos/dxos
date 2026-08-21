@@ -10,7 +10,7 @@ import * as Project from '@dxos/compute/Project';
 import * as Routine from '@dxos/compute/Routine';
 import * as Skill from '@dxos/compute/Skill';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Collection, Database, Feed, Filter, Obj } from '@dxos/echo';
+import { Database, Feed, Filter } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
@@ -36,7 +36,6 @@ describe('inbox research project template', () => {
         Instructions.Instructions,
         Routine.Routine,
         Trigger.Trigger,
-        Collection.Collection,
         Mailbox.Mailbox,
         Feed.Feed,
         TagIndex.TagIndex,
@@ -72,10 +71,10 @@ describe('inbox research project template', () => {
     expect(projectSkills).toContain(Skill.registryURI('org.dxos.skill.inbox').toString());
     expect(projectSkills).toContain(Skill.registryURI('org.dxos.skill.table').toString());
 
-    // Starter routine: owned by the project AND linked into `routines`.
-    expect(project.routines).toHaveLength(1);
-    const routine = await project.routines[0].tryLoad();
-    expect(Obj.getParent(routine!)?.id).toBe(project.id);
+    // Starter routine: a standalone object, connected to the project only through its instructions.
+    const routines = await db.query(Filter.type(Routine.Routine)).run();
+    expect(routines).toHaveLength(1);
+    const routine = routines[0];
 
     // The routine's headless scope: project ref as context, table + project skills.
     const routineInstructionsRef = Routine.instructionsRef(routine!);
@@ -99,7 +98,9 @@ describe('inbox research project template', () => {
     expect(trigger?.runnable).toBeDefined();
   });
 
-  test('deleting the project removes the starter routine with it', async ({ expect }) => {
+  // Deliberate: the routine is no longer owned by the project, so it outlives it. Cleaning up
+  // routines left dangling by a deletion is the separate deletion-guard/staleness work.
+  test('deleting the project leaves the starter routine standing', async ({ expect }) => {
     const { db, mailbox } = await setup();
     const project = await EffectEx.runPromise(
       inboxResearch
@@ -112,6 +113,6 @@ describe('inbox research project template', () => {
 
     db.remove(project);
     await db.flush();
-    expect((await db.query(Filter.type(Routine.Routine)).run()).length).toBe(0);
+    expect((await db.query(Filter.type(Routine.Routine)).run()).length).toBe(1);
   });
 });

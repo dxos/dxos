@@ -10,7 +10,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, type Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { isSpace } from '@dxos/react-client/echo';
-import { DropdownMenu, Icon, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { DropdownMenu, Flex, Icon, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 
 import { ArtifactCard } from '#components';
@@ -108,9 +108,9 @@ export const ArtifactsArticle = ({ role, properties }: ArtifactsArticleProps) =>
       </Panel.Toolbar>
       <Panel.Content>
         {items.length === 0 ? (
-          <div role='status' className='flex items-center justify-center h-full text-subdued'>
+          <Flex role='status' center classNames='h-full text-subdued'>
             {t('empty.message')}
-          </div>
+          </Flex>
         ) : (
           <Masonry.Root Tile={ArtifactTile}>
             <Masonry.Content centered>

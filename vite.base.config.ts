@@ -14,7 +14,7 @@ import { defineConfig as viteDefineConfig, type Plugin, type UserConfig } from '
 import Inspect from 'vite-plugin-inspect';
 import solid from 'vite-plugin-solid';
 import WasmPlugin from 'vite-plugin-wasm';
-import { UserWorkspaceConfig, type ViteUserConfig, defineProject } from 'vitest/config';
+import { type UserWorkspaceConfig, type ViteUserConfig, defineProject } from 'vitest/config';
 import type { Reporter, TestModule, TestRunEndReason } from 'vitest/node';
 
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
@@ -25,7 +25,7 @@ import PluginImportSource from '@dxos/vite-plugin-import-source';
 // build the plugin first, which introduces a moon dep cycle through @dxos/log
 // (vite-plugin-log -> log -> ... -> log:test -> vite-plugin-log).
 import { DxosLogPlugin } from './tools/vite-plugin-log/src/plugin.ts';
-import { TEST_TAGS } from './vitest.tags';
+import { TEST_TAGS } from './vitest.tags.ts';
 
 export { TEST_TAGS };
 
@@ -44,6 +44,10 @@ const NODE_STD_MODULES = [
   'stream',
   'util',
 ];
+
+// This file sits at the workspace root. `import.meta.dirname` rather than `__dirname` so the file
+// loads unchanged under vite's native config loader, where it is a real ESM module in node.
+const workspaceRoot = import.meta.dirname;
 
 const isDebug = !!process.env.VITEST_DEBUG;
 const xmlReport = Boolean(process.env.VITEST_XML_REPORT);
@@ -186,7 +190,7 @@ const runDxBuild = async (): Promise<void> => {
     }
   } catch (error) {
     // execFileAsync captures the subprocess stdio on the rejected value; without this,
-    // rolldown swallows tsgo's actual diagnostic output and the plugin error carries only
+    // rolldown swallows the compiler's actual diagnostic output and the plugin error carries only
     // a generic exit-code message.
     const err = error as { stdout?: string | Buffer; stderr?: string | Buffer };
     if (err.stdout && err.stdout.length > 0) {
@@ -196,7 +200,7 @@ const runDxBuild = async (): Promise<void> => {
       process.stderr.write(err.stderr);
     }
     const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`dx-build (tsgo) failed: ${message} cwd=${process.cwd()}`);
+    throw new Error(`dx-build failed: ${message} cwd=${process.cwd()}`);
   }
 };
 
@@ -297,14 +301,14 @@ export const DxWorkerResolvePlugin = (): Plugin => {
 };
 
 /**
- * Kicks off `dx-build` (tsgo wrapper) at build start so declaration emit runs in
+ * Kicks off `dx-build` (tsc wrapper) at build start so declaration emit runs in
  * parallel with the JS bundle. Generates per-file `.d.ts` files in `dist/types/src/`.
  */
-export const DxTsgoPlugin = (): Plugin => {
+export const DxDeclarationsPlugin = (): Plugin => {
   let dxBuildTask: Promise<void> | undefined;
 
   return {
-    name: 'DxTsgo',
+    name: 'DxDeclarations',
     apply: 'build',
     buildStart() {
       dxBuildTask = runDxBuild();
@@ -458,7 +462,13 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
         storybookScript: 'storybook dev --ci',
         tags: {
           include: ['test'],
-          exclude: ['experimental'],
+          // `manual` mirrors the vitest tag of the same name (vitest.tags.ts) — storybook tags are
+          // not vitest tags, so the opt-in gate has to be repeated here. Stories needing local
+          // services or spending real tokens carry it and stay out of a default run.
+          exclude: [
+            'experimental',
+            ...(['1', 'true'].includes(process.env.DX_RUN_MANUAL_TESTS ?? '') ? [] : ['manual']),
+          ],
         },
       }),
     ],
@@ -742,8 +752,8 @@ const resolveReporterConfig = (cwd: string): ViteUserConfig['test'] => {
 
   const projectType = resolveProjectType();
   const moonRerunReporter = createMoonRerunReporter({ moonProject: packageDirName, projectType });
-  const resultsDirectory = join(__dirname, 'test-results', packageDirName, ...(projectType ? [projectType] : []));
-  const reportsDirectory = join(__dirname, 'coverage', packageDirName, ...(projectType ? [projectType] : []));
+  const resultsDirectory = join(workspaceRoot, 'test-results', packageDirName, ...(projectType ? [projectType] : []));
+  const reportsDirectory = join(workspaceRoot, 'coverage', packageDirName, ...(projectType ? [projectType] : []));
   // The v8 coverage provider imports `node:inspector/promises`, which the workerd runtime does not
   // provide — coverage is unsupported for the workers pool, so never enable it for the workerd project.
   const coverageEnabled = Boolean(process.env.VITEST_COVERAGE) && projectType !== 'workerd';
@@ -885,7 +895,7 @@ const buildTestConfig = (
  * Single entry point for a DXOS library package's `vite.config.ts`.
  *
  * - Library JS → `dist/lib/<entry>.mjs` (rolldown, all non-relative imports external).
- * - Types → `dist/types/src/**\/*.d.ts` (tsgo, started in `buildStart`).
+ * - Types → `dist/types/src/**\/*.d.ts` (tsc, started in `buildStart`).
  * - Tests → vitest projects (`node` / `browser` / `storybook`) wired in when `test` is set.
  */
 export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
@@ -969,7 +979,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
       ...(assetsAsFiles ? [DxRawAssetsPlugin()] : []),
       ...jsxPlugin,
       DxosLogPlugin({ logToFile: false, transform: { enabled: true } }),
-      DxTsgoPlugin(),
+      DxDeclarationsPlugin(),
     ],
     ...(test ? { test: buildTestConfig(process.cwd(), test, jsx) } : {}),
   });

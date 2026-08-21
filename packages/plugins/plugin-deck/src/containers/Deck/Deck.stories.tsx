@@ -365,7 +365,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
   Plugin.make,
 );
 
-type DefaultStoryProps = {
+type StoryArgs = {
   /** Number of story planks to open on mount (0 renders the empty deck). */
   count?: number;
   /** Navigation sidebar state to seed. `closed` is only reachable below `lg`. */
@@ -382,7 +382,7 @@ type DefaultStoryProps = {
 };
 
 /** Stable identity, for the same reason as `NO_COMPANIONS`. */
-const NO_SETTINGS: DefaultStoryProps['settings'] = {};
+const NO_SETTINGS: StoryArgs['settings'] = {};
 
 // Stable identity, so the default does not re-fire the seeding effect it is a dependency of on every render.
 const NO_COMPANIONS: number[] = [];
@@ -393,7 +393,7 @@ const DefaultStory = ({
   companionPlanks = NO_COMPANIONS,
   launcher = false,
   settings: settingsOverrides = NO_SETTINGS,
-}: DefaultStoryProps) => {
+}: StoryArgs) => {
   const [settings, updateSettings] = useAtomCapabilityState(DeckCapabilities.Settings);
 
   // The deck reads its experiments from settings, not from props, so the story writes them there.

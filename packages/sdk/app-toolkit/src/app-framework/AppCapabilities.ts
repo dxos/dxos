@@ -27,6 +27,8 @@ import type { Position } from '@dxos/util';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as Translations$ from '../app/Translations';
+// eslint-disable-next-line @dxos/rules/import-as-namespace
+import type * as ObservabilityMapping$ from './ObservabilityMapping';
 
 export const LAYOUT_CAPABILITY_ID = 'org.dxos.app-framework.capability.layout';
 
@@ -399,4 +401,15 @@ export type ProgressRegistry = Readonly<{
  */
 export const ProgressRegistry = Capability$.makeSingleton<ProgressRegistry>()(
   'org.dxos.app-toolkit.capability.progressRegistry',
+);
+
+export type ObservabilityMapping = ObservabilityMapping$.ObservabilityMapping;
+
+/**
+ * Observability event registration — contributed by the plugin that owns the operation, consumed by
+ * a listener over the invocation stream so the operation itself stays free of telemetry.
+ * @category Capability
+ */
+export const ObservabilityMapping = Capability$.make<ObservabilityMapping[]>()(
+  'org.dxos.app-toolkit.capability.observabilityMapping',
 );

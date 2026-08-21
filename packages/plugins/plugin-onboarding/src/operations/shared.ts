@@ -2,12 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
+import * as NativeOAuth from '@dxos/app-toolkit/NativeOAuth';
 import { type Client } from '@dxos/client';
+import { Context as DxContext } from '@dxos/context';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
+import { type InitiateOAuthFlowRequest } from '@dxos/protocols';
 
 // atproto OAuth scopes for the recovery flows — shared with the Atmosphere integration provider.
-export { ATPROTO_OAUTH_SCOPES } from '@dxos/plugin-connector';
 
 /**
  * Create an `EdgeHttpClient` pointed at the configured edge URL. Extracted here
@@ -52,3 +56,49 @@ export type OAuthRecoveryPendingSnapshot = {
   /** Hub-service URL the invitation code is redeemed against. */
   hubUrl: string;
 };
+
+/**
+ * Begin an OAuth-recovery flow: ask EDGE for the provider's authorization URL and send the user to it.
+ *
+ * Returns once the page is open — completion arrives out of band, at
+ * {@link OAUTH_RECOVERY_REDIRECT_PATH}.
+ *
+ * The two platforms diverge at the initiate call, not just at the opening. In the browser the app
+ * calls EDGE itself and a new tab lands back on its own origin. On desktop the flow has to run in
+ * the system browser (providers refuse embedded webviews), which means EDGE must redirect to the
+ * shell's loopback server instead — and EDGE takes that target from the request's `Origin`, which
+ * only Rust can set. So the shell issues the initiate call too.
+ */
+export const beginOAuthFlow = (
+  edgeClient: EdgeHttpClient,
+  request: InitiateOAuthFlowRequest,
+): Effect.Effect<void, Error> =>
+  NativeOAuth.supportsNativeOAuth()
+    ? Effect.tryPromise({
+        try: async () =>
+          NativeOAuth.startNativeOAuth({
+            edgeUrl: edgeClient.baseUrl,
+            provider: request.provider,
+            scopes: [...request.scopes],
+            spaceId: request.spaceId,
+            accessTokenId: request.accessTokenId,
+            authHeader: await edgeClient.getAuthHeader(),
+            ...(request.purpose ? { purpose: request.purpose } : {}),
+            ...(request.registerRecovery ? { registerRecovery: request.registerRecovery } : {}),
+            ...(request.loginHint ? { loginHint: request.loginHint } : {}),
+          }),
+        catch: (error) =>
+          new Error(`Unable to start OAuth flow: ${error instanceof Error ? error.message : String(error)}`),
+      })
+    : Effect.gen(function* () {
+        const { authUrl } = yield* Effect.tryPromise({
+          try: () => edgeClient.initiateOAuthFlow(DxContext.default(), request),
+          catch: (error) =>
+            new Error(`OAuth initiate failed: ${error instanceof Error ? error.message : String(error)}`),
+        });
+        // A null return means the popup was blocked — fail rather than silently continue, since the
+        // flow can never complete.
+        if (!window.open(authUrl, '_blank')) {
+          return yield* Effect.fail(new Error('Unable to open OAuth recovery window (popup blocked?).'));
+        }
+      });

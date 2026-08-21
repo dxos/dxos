@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export { default as MarkdownSkill } from './markdown-skill';
+export * as MarkdownSkill from './MarkdownSkill';

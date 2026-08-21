@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 
+import type { MakeTurnProducer } from '@dxos/agent-runtime';
 import * as Capability from '@dxos/app-framework/Capability';
 import { type Obj } from '@dxos/echo';
 
@@ -54,4 +55,16 @@ export type HomeSuggestionsCache = Schema.Schema.Type<typeof HomeSuggestionsCach
 /** Per-space cache of LLM-generated home starter prompts, persisted across page reloads. */
 export const HomeSuggestionsCache = Capability.makeSingleton<Atom.Writable<HomeSuggestionsCache>>()(
   `${meta.profile.key}.capability.homeSuggestionsCache`,
+);
+
+/**
+ * Optional engine for producing a conversation turn. When contributed, the agent process runs turns
+ * through it instead of DXOS's own `AiSession` — e.g. a Claude Agent SDK host — while keeping its
+ * queue, alarms, redelivery, delegation and hydration.
+ *
+ * A registry rather than a singleton, for the same reason as `AgentDelegationStrategy`: a harness
+ * has to be able to contribute one before the app's own module activates without colliding.
+ */
+export const AgentTurnProducer = Capability.make<MakeTurnProducer>()(
+  'org.dxos.plugin.assistant.capability.agentTurnProducer',
 );

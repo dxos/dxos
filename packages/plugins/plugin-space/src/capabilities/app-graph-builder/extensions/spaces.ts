@@ -21,7 +21,7 @@ import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { Migrations } from '@dxos/migrations';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import { SpacesService } from '@dxos/protocols/rpc';
 import { Expando } from '@dxos/schema';
 import { Position } from '@dxos/util';
 
@@ -125,7 +125,10 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
               const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getDefaultSpace(client);
               if (space) {
-                yield* Operation.invoke(SpaceOperation.ExportSpace, { space, format: SpaceArchive.Format.BINARY });
+                yield* Operation.invoke(SpaceOperation.ExportSpace, {
+                  space,
+                  format: SpacesService.SpaceArchiveFormat.enums.BINARY,
+                });
               }
             }),
             properties: {
@@ -140,7 +143,10 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
               const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getDefaultSpace(client);
               if (space) {
-                yield* Operation.invoke(SpaceOperation.ExportSpace, { space, format: SpaceArchive.Format.JSON });
+                yield* Operation.invoke(SpaceOperation.ExportSpace, {
+                  space,
+                  format: SpacesService.SpaceArchiveFormat.enums.JSON,
+                });
               }
             }),
             properties: {

@@ -68,10 +68,10 @@ import * as MapView from '@dxos/plugin-map/Map';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import * as Tldraw from '@dxos/plugin-tldraw/Tldraw';
-import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import { SpacesService } from '@dxos/protocols/rpc';
 import { Table } from '@dxos/react-ui-table/types';
 import { Tagging, TagIndex, ViewModel } from '@dxos/schema';
-import { Actor, ContentBlock, Event, Message, Organization, Person, Task, TaskSet } from '@dxos/types';
+import { Actor, ContentBlock, Event, Message, Milestone, Organization, Person, Task, TaskSet } from '@dxos/types';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -140,6 +140,7 @@ const SCHEMAS: Type.AnyEntity[] = [
   Event.Event,
   TaskSet.TaskSet,
   Task.Task,
+  Milestone.Milestone,
   Mailbox.Mailbox,
   Calendar.Calendar,
   Drawing.Drawing,
@@ -238,11 +239,22 @@ const populateSpace = async (space: Space, content: { aboutMd: string; welcomeMd
 
   // Spring Blend Launch task set — TaskSet/Task aren't collection-item types,
   // so they live directly in the space DB, same as contacts.
-  const { taskSet, tasks } = makeTaskSet(people);
+  const { taskSet, tasks, milestones } = makeTaskSet(people);
   space.db.add(taskSet);
+  // Membership and order are the set's arrays; the parent edge rides along for deletion cascade.
+  milestones.forEach((milestone) => {
+    space.db.add(milestone);
+    Obj.setParent(milestone, taskSet);
+    Obj.update(taskSet, (taskSet) => {
+      taskSet.milestones = [...taskSet.milestones, Ref.make(milestone)];
+    });
+  });
   tasks.forEach((task) => {
     space.db.add(task);
     Obj.setParent(task, taskSet);
+    Obj.update(taskSet, (taskSet) => {
+      taskSet.tasks = [...taskSet.tasks, Ref.make(task)];
+    });
   });
 
   // Notes, sketches & sheets — notes reference people/orgs/task set via DXN links/embeds.
@@ -1107,15 +1119,28 @@ const makeCalendar = (
 // Task set + tasks
 //
 
-const makeTaskSet = (people: Record<PersonKey, Person.Person>): { taskSet: TaskSet.TaskSet; tasks: Task.Task[] } => {
+const makeTaskSet = (
+  people: Record<PersonKey, Person.Person>,
+): { taskSet: TaskSet.TaskSet; tasks: Task.Task[]; milestones: Milestone.Milestone[] } => {
   const taskSet = TaskSet.make({
     name: 'Spring Blend Launch',
     description: 'New seasonal espresso blend targeting wholesale espresso bars. Going live in 6 weeks.',
   });
 
+  const roast = Milestone.make({
+    name: 'Roast locked',
+    description: 'Curve signed off and reproducible on the production roaster.',
+  });
+  const launch = Milestone.make({
+    name: 'Launch',
+    description: 'Preorders open and samples with every wholesale account.',
+  });
+  const milestones = [roast, launch];
+
   const tasks: Task.Task[] = [
     Task.make({
       title: 'Source green coffee — Esperanza + Guatemalan parcel',
+      milestone: Ref.make(roast),
       status: 'done',
       priority: 'high',
       assignee: { contact: Ref.make(people.diego) },
@@ -1123,6 +1148,7 @@ const makeTaskSet = (people: Record<PersonKey, Person.Person>): { taskSet: TaskS
     }),
     Task.make({
       title: 'Finalize roast curve (v3)',
+      milestone: Ref.make(roast),
       status: 'in-progress',
       priority: 'high',
       assignee: { contact: Ref.make(people.kai) },
@@ -1130,6 +1156,7 @@ const makeTaskSet = (people: Record<PersonKey, Person.Person>): { taskSet: TaskS
     }),
     Task.make({
       title: 'Send v2 samples to wholesalers',
+      milestone: Ref.make(launch),
       status: 'in-progress',
       priority: 'medium',
       assignee: { contact: Ref.make(people.sam) },
@@ -1137,6 +1164,7 @@ const makeTaskSet = (people: Record<PersonKey, Person.Person>): { taskSet: TaskS
     }),
     Task.make({
       title: 'Design label — Letterform Press',
+      milestone: Ref.make(launch),
       status: 'in-progress',
       priority: 'medium',
       assignee: { contact: Ref.make(people.riley) },
@@ -1144,12 +1172,14 @@ const makeTaskSet = (people: Record<PersonKey, Person.Person>): { taskSet: TaskS
     }),
     Task.make({
       title: 'Schedule launch cuppings (Oakland + remote)',
+      milestone: Ref.make(launch),
       status: 'todo',
       priority: 'medium',
       assignee: { contact: Ref.make(people.sam) },
     }),
     Task.make({
       title: 'Publish product page + open preorders',
+      milestone: Ref.make(launch),
       status: 'todo',
       priority: 'low',
       assignee: { contact: Ref.make(people.riley) },
@@ -1157,7 +1187,7 @@ const makeTaskSet = (people: Record<PersonKey, Person.Person>): { taskSet: TaskS
     }),
   ];
 
-  return { taskSet, tasks };
+  return { taskSet, tasks, milestones };
 };
 
 //
@@ -1769,7 +1799,7 @@ try {
   await space.db.flush();
 
   console.log('exporting…');
-  const archive = await space.internal.export({ format: SpaceArchive.Format.JSON });
+  const archive = await space.internal.export({ format: SpacesService.SpaceArchiveFormat.enums.JSON });
 
   // Store as a single line so regenerations produce a 1-line diff rather than
   // thousands of changed lines. The file is valid JSON; use `jq .` to inspect it.

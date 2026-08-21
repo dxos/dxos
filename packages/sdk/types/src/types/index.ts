@@ -16,6 +16,7 @@ import * as HasConnection from './HasConnection';
 import * as HasRelationship from './HasRelationship';
 import * as HasSubject from './HasSubject';
 import * as Message from './Message';
+import * as Milestone from './Milestone';
 import * as Organization from './Organization';
 import * as Outline from './Outline';
 import * as Person from './Person';
@@ -58,6 +59,7 @@ export {
   HasRelationship,
   HasSubject,
   Message,
+  Milestone,
   Organization,
   Outline,
   Person,

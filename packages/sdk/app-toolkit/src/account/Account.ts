@@ -9,6 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { type Client } from '@dxos/client';
+import { DEFAULT_HUB_URL } from '@dxos/client-protocol';
 import { type Identity } from '@dxos/client/halo';
 import { Context as DxContext } from '@dxos/context';
 import { createDidFromIdentityKey } from '@dxos/credentials';
@@ -100,15 +101,23 @@ export const accountErrorType = (error: unknown): AccountErrorType | undefined =
 // Hub client
 //
 
-/** Hub-service base URL from the client config (`runtime.app.env.DX_HUB_URL`). */
-export const getHubUrl = (client: Client): string | undefined => client.config.values?.runtime?.app?.env?.DX_HUB_URL;
+/**
+ * Hub-service base URL from the client config. `runtime.app.env.DX_HUB_URL` is set by the bundler
+ * config plugin from the build's environment, so surfaces without a bundler (the CLI) fall back to
+ * `runtime.services.hub.url` — the key the `dx hub` admin commands already read — and finally to
+ * {@link DEFAULT_HUB_URL}, so no surface can be left with no hub to talk to.
+ *
+ * NOTE: The gates that treat the presence of `DX_HUB_URL` as "this is a gated deployment" read the
+ * raw config path rather than this resolver, since a default would silently arm them.
+ */
+export const getHubUrl = (client: Pick<Client, 'config'>): string =>
+  client.config.values?.runtime?.app?.env?.DX_HUB_URL ??
+  client.config.values?.runtime?.services?.hub?.url ??
+  DEFAULT_HUB_URL;
 
 /** Client for the configured hub-service (accounts, invitations, email verification). */
-export const createHubClient = (clientOrUrl: Client | string): HubHttpClient => {
-  const hubUrl = typeof clientOrUrl === 'string' ? clientOrUrl : getHubUrl(clientOrUrl);
-  invariant(hubUrl, 'Hub URL not configured (runtime.app.env.DX_HUB_URL).');
-  return new HubHttpClient(hubUrl);
-};
+export const createHubClient = (clientOrUrl: Client | string): HubHttpClient =>
+  new HubHttpClient(typeof clientOrUrl === 'string' ? clientOrUrl : getHubUrl(clientOrUrl));
 
 //
 // Access codes

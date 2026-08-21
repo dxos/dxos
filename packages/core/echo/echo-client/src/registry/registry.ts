@@ -266,7 +266,8 @@ const normalizeURI = (uri: string): URI.URI => DXN.tryMake(uri) ?? EID.tryParse(
  * - `from` and `options` clauses — unwrapped; scope is ignored (a direct registry query always
  *   targets the registry's own entities).
  *
- * Server-side concerns such as traversal, ordering, and text/timestamp filters are not supported.
+ * Full-text filters evaluate in memory as case-insensitive all-terms containment, not ranked FTS.
+ * Vector search, traversal, ordering, and timestamp filters are not supported.
  */
 class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
   readonly #registry: Registry.Registry;
@@ -299,13 +300,11 @@ class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
 
   runSyncEntries(): QueryResult.Entry<T>[] {
     const matches = executeQuery(this.#registry, this.#query.ast);
-    return matches.map(
-      (entity): QueryResult.Entry<T> => ({
-        id: getEntityId(entity),
-        result: entity as unknown as T,
-        resolution: { source: 'local', time: 0 },
-      }),
-    );
+    return matches.map((entity): QueryResult.Entry<T> => ({
+      id: getEntityId(entity),
+      result: entity as unknown as T,
+      resolution: { source: 'local', time: 0 },
+    }));
   }
 
   async first(): Promise<T> {

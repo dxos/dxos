@@ -68,6 +68,8 @@ const AUXILIARY_ENTRY = [
   'src/**/*-subprocess.{ts,tsx}',
   // Loaded via `new Worker(new URL('./x-worker.ts', import.meta.url))`, which knip does not follow.
   'src/**/*-worker.{ts,tsx}',
+  // Audio worklets, loaded via `audioWorklet.addModule(new URL('./x-processor.js', import.meta.url))`.
+  'src/**/*-processor.js',
   // Function bodies the runtime bundles by path rather than importing.
   'src/functions/**/*.{ts,tsx}',
   // Ambient declarations and module augmentations: TypeScript picks these up from `include`, so
@@ -337,6 +339,16 @@ const TRAVERSAL_MISSED: Record<string, string[]> = {
   'packages/core/compute/compute-hyperformula': ['@dxos/effect'],
 };
 
+/**
+ * Resolved from the workspace store by a checked-in developer script rather than declared, so a
+ * package is not made to install a heavy native dependency for a generator that runs only when its
+ * checked-in output changes.
+ */
+const SCRIPT_STORE_RESOLVED: Record<string, string[]> = {
+  // `scripts/generate-icon.mjs` rasterises the DXOS mark with sharp when the brand asset changes.
+  'packages/core/compute/mcp-server': ['sharp'],
+};
+
 const BUNDLER_RESOLVED: Record<string, string[]> = {
   'packages/plugins/plugin-presenter': ['marked'],
   // edge-compute generates a function entrypoint containing
@@ -444,6 +456,7 @@ for (const manifest of globSync(
       ...bundledDependencies(dir),
       ...(BUNDLER_RESOLVED[dir] ?? []),
       ...(TRAVERSAL_MISSED[dir] ?? []),
+      ...(SCRIPT_STORE_RESOLVED[dir] ?? []),
     ],
   };
 }

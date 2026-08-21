@@ -17,6 +17,7 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import { type Space, isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
@@ -385,12 +386,16 @@ const createSchemaActions = ({
                   typename,
                 });
               } else {
-                const result = yield* createObjectFn({}, { db: space.db, target: space.db }).pipe(
+                const result = yield* createObjectFn({}, { db: space.db }).pipe(
                   Effect.provideService(Capability.Service, capabilities),
                 );
-                if (result.subject.length > 0) {
+                const { targets } = yield* Operation.invoke(NavigationOperation.ResolveNavigationTargets, {
+                  query: { uri: Obj.getURI(result.object) },
+                });
+                const navigationTarget = targets[0];
+                if (navigationTarget) {
                   yield* Operation.invoke(LayoutOperation.Open, {
-                    subject: [...result.subject],
+                    subject: [navigationTarget.path],
                     navigation: 'immediate',
                   });
                 }

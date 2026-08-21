@@ -186,6 +186,7 @@ const makeActiveProcess = (
 ): Process.Info => ({
   parentPid: null,
   params: { name: null, annotations: {} },
+  environment: {},
   error: null,
   startedAt: 0,
   completedAt: Option.none(),

@@ -6,13 +6,10 @@ import React from 'react';
 
 import { DropdownMenu, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 
+import { type AudioInputDevice } from '../../capture';
+
 /** Recording trigger mode: toggle on/off, or hold-to-record (push-to-talk). */
 export type RecordMode = 'toggle' | 'hold';
-
-export type AudioInputDevice = {
-  deviceId: string;
-  label: string;
-};
 
 export type MicSettingsProps = {
   /** Translation namespace for the option labels (owned by the consuming plugin). */

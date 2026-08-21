@@ -18,6 +18,9 @@ import {
   MailSyncProvider,
   type MailSyncSource,
   type ReconcileItem,
+  type TagPushOp,
+  type TagPushResult,
+  batchPushOps,
   parseFromHeader,
   reconcileToChanges,
 } from '@dxos/plugin-inbox/sync';
@@ -25,14 +28,14 @@ import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { Person } from '@dxos/types';
 
 import { GoogleMail } from '#apis';
-import { GoogleMailApi, type GoogleMailApiError } from '#services';
+import { GoogleMailApi, type GoogleMailApiError, type GoogleMailApiService } from '#services';
 
 import { GMAIL_SOURCE } from '../../../constants';
 import { GoogleApiError } from '../../../errors';
 import { decodeBody, mapToMessage } from '../mapper';
 import { findOrCreateGmailTag } from '../tags';
 import { GOOGLE_SYNC_CONFIG, fetchAttachments, fetchMessages } from './fetch';
-import { GMAIL_SYSTEM_TAGS } from './system-tags';
+import { GMAIL_SYSTEM_TAGS, GMAIL_UNPUSHABLE_LABELS } from './system-tags';
 
 /** The resolved delta for one run — either a fresh capture (no delta) or a fetched `history.list` page. */
 type DeltaPlan = {
@@ -63,6 +66,7 @@ export const googleMailSyncProvider = (options: {
         name: 'gmail',
         config: GOOGLE_SYNC_CONFIG,
         foreignKeySource: GMAIL_SOURCE,
+        pushTags: (ops) => pushGmailTags(api, userId, ops),
         prepare: ({ mailbox, binding, token, maxMessages }) =>
           Effect.gen(function* () {
             const labelMap = yield* syncLabels(mailbox, userId).pipe(
@@ -99,10 +103,13 @@ export const googleMailSyncProvider = (options: {
                 }
                 const contact = from?.email ? yield* resolve(Person.Person, { email: from.email }) : undefined;
                 const mapped = mapToMessage(decoded, contact ?? undefined);
-                const tagUris = mapped.labelIds.flatMap((labelId) => {
+                // Gmail's own labels for this message, kept separate from anything added locally
+                // below: tag sync uses the split to decide what pushes back (see `Insert.remoteTagUris`).
+                const remoteTagUris = mapped.labelIds.flatMap((labelId) => {
                   const uri = labelMap.get(labelId);
                   return uri ? [uri] : [];
                 });
+                const tagUris = [...remoteTagUris];
                 // `contact` is the Person the space already holds for this sender (resolved above to
                 // link `message.sender.contact`), so no extra lookup is needed to know they are known.
                 if (contact && knownSenderTagUri && !tagUris.includes(knownSenderTagUri)) {
@@ -115,6 +122,7 @@ export const googleMailSyncProvider = (options: {
                   foreignId: decoded.raw.id,
                   key: Number.parseInt(decoded.raw.internalDate),
                   tagUris,
+                  remoteTagUris,
                   attachments,
                 } satisfies EmailStage.Change;
               });
@@ -127,15 +135,12 @@ export const googleMailSyncProvider = (options: {
 
             // The first-tick baseline (and stale-token fallback): the mailbox's current `historyId`
             // with no delta applied. Defined once so both call sites share the same capture.
-            const captureFreshDelta = Effect.map(
-              api.getProfile(userId),
-              (profile): DeltaPlan => ({
-                token: profile.historyId,
-                createdIds: undefined,
-                reconcileItems: [],
-                hasMoreDelta: false,
-              }),
-            );
+            const captureFreshDelta = Effect.map(api.getProfile(userId), (profile): DeltaPlan => ({
+              token: profile.historyId,
+              createdIds: undefined,
+              reconcileItems: [],
+              hasMoreDelta: false,
+            }));
 
             // Resolve the delta plan. First tick captures the current `historyId` before backfill. An
             // incremental run fetches one bounded `history.list` page since the token (`maxResults` = the
@@ -212,12 +217,79 @@ export const googleMailSyncProvider = (options: {
               nextToken: () => capturedToken,
               reconcileForeignIds: reconcileItems.map((item) => item.foreignId),
               hasMoreDelta: () => hasMoreDelta,
+              // The label map inverted: tag uri → Gmail label id. Its keys are the eligible set for
+              // tag reconciliation, so a user tag (which has no label) is never pushed — and neither
+              // is a label Gmail derives rather than accepts (see `GMAIL_UNPUSHABLE_LABELS`), which
+              // would otherwise 400 on every send.
+              tagBindings: new Map(
+                [...labelMap]
+                  .filter(([labelId]) => !GMAIL_UNPUSHABLE_LABELS.has(labelId))
+                  .map(([labelId, uri]) => [uri, labelId]),
+              ),
             };
             return source;
           }).pipe(Effect.provide(context), Effect.mapError(MailSyncError.wrap())),
       };
     }),
   );
+
+/**
+ * HTTP statuses no retry can resolve: the message is gone, the label no longer exists, or the token
+ * lacks `gmail.modify`. Ops that hit these are reported `settled` — refusing to advance past them
+ * would block the reconciliation base forever, re-deriving the same doomed op on every run.
+ */
+const isPermanent = (error: unknown): boolean =>
+  error instanceof GoogleApiError &&
+  error.code !== undefined &&
+  error.code >= 400 &&
+  error.code < 500 &&
+  error.code !== 429;
+
+/**
+ * Applies local tag changes at Gmail, grouped so messages sharing the same label movement go in one
+ * `batchModify` (up to 1000 ids per call, and the API reports nothing per message).
+ *
+ * A batch is all-or-nothing, so its ops share an outcome: applied or permanently rejected → `settled`;
+ * anything retryable (429, 5xx, transport) → `pending`, which holds the base back and re-derives the
+ * same diff next run. Never fails the run — the harness decides what the outcome means.
+ */
+const pushGmailTags = (
+  api: GoogleMailApiService,
+  userId: string,
+  ops: readonly TagPushOp[],
+): Effect.Effect<TagPushResult, MailSyncError, never> =>
+  Effect.gen(function* () {
+    const byForeignId = new Map(ops.map((op) => [op.foreignId, op]));
+    const settled: TagPushOp[] = [];
+    const pending: TagPushOp[] = [];
+    for (const batch of batchPushOps(ops)) {
+      const batchOps = batch.foreignIds.flatMap((id: string) => {
+        const op = byForeignId.get(id);
+        return op ? [op] : [];
+      });
+      const outcome = yield* api
+        .batchModifyMessages(userId, batch.foreignIds, {
+          addLabelIds: batch.addLabelIds,
+          removeLabelIds: batch.removeLabelIds,
+        })
+        .pipe(
+          Effect.map(() => 'settled' as const),
+          Effect.catch((error) => {
+            const permanent = isPermanent(error);
+            log.warn('gmail sync: tag push batch failed', {
+              add: batch.addLabelIds,
+              remove: batch.removeLabelIds,
+              messages: batch.foreignIds.length,
+              permanent,
+              error,
+            });
+            return Effect.succeed(permanent ? ('settled' as const) : ('pending' as const));
+          }),
+        );
+      (outcome === 'settled' ? settled : pending).push(...batchOps);
+    }
+    return { settled, pending };
+  });
 
 /**
  * Folds a `history.list` response's per-message `labelsAdded`/`labelsRemoved` into one merged retag

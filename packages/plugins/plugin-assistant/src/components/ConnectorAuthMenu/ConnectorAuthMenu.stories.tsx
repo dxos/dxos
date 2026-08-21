@@ -16,7 +16,7 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { connectorAuthActions } from '@dxos/plugin-connector';
+import * as ConnectorAuth from '@dxos/plugin-connector/ConnectorAuth';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
@@ -33,7 +33,7 @@ import { ConnectorAuthMenu } from './ConnectorAuthMenu';
 /** `connector-b` already has a Connection below, so it renders as a "reuse" entry; `connector-a` has
  * none, so it renders as a "Connect" entry — together they exercise both item kinds and the
  * separator between them. `Default` renders the `ConnectorAuthMenu` component. `Toolbar` feeds the
- * same `connectorAuthActions` atom into an object toolbar the way studio/ibkr/inbox do. */
+ * same `ConnectorAuth.actions` atom into an object toolbar the way studio/ibkr/inbox do. */
 const CredentialSchema = Schema.Struct({ apiKey: Schema.String.annotate({ title: 'API key' }) });
 
 const makeCredentialForm = (connectorId: string) => ({
@@ -96,7 +96,7 @@ const ToolbarStory = () => {
     if (!space?.db || !target) {
       return undefined;
     }
-    const actions = connectorAuthActions({
+    const actions = ConnectorAuth.actions({
       connectorIds: CONNECTOR_IDS,
       db: space.db,
       spaceId: space.db.spaceId,

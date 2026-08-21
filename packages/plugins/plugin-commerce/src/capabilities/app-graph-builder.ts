@@ -19,6 +19,8 @@ import { Position } from '@dxos/util';
 import { meta } from '#meta';
 import { Provider, Search, SearchOperation } from '#types';
 
+import { getProvidersSectionId } from '../paths';
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
@@ -36,7 +38,8 @@ export default Capability.makeModule(
           return Effect.succeed([
             // TODO(wittjosiah): Should be AppNode.makeSection() but currently has selectable data.
             AppGraphNode.make({
-              id: 'providers',
+              // The segment is shared with the navigation resolver, which spells provider paths.
+              id: getProvidersSectionId(),
               type: 'providers', // TODO(burdon): Const.
               data: 'providers-root', // TODO(burdon): Const.
               properties: {

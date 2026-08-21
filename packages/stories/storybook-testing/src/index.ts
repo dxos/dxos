@@ -4,8 +4,11 @@
 
 export * as Cell from './Cell';
 
+export * from './decorators';
 export * from './layout';
 export * from './ModuleContainer';
+export * from './plugins';
+export * from './snapshot';
 
 // NOTE: `./modules` (Logging/Invocations/ExecutionGraph) is a separate `@dxos/storybook-testing/modules`
 // entrypoint so importing the core (Cell/ModuleContainer) never eagerly pulls their heavy deps

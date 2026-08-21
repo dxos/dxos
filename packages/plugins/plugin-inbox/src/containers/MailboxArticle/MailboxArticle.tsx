@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 
 import {
   useAtomCapability,
@@ -25,7 +25,7 @@ import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
-import { ElevationProvider, Panel } from '@dxos/react-ui';
+import { Deferred, ElevationProvider, Panel } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { type EditorController } from '@dxos/react-ui-editor';
 import {
@@ -90,11 +90,11 @@ export const MailboxArticle = ({
   const showItem = useShowItem();
   const runAction = useActionRunner();
 
-  // Gmail sync (`#sync`), the process pipeline (`#process`) and the scan cascade (`#scan`)
+  // Mail sync (`#sync`), the process pipeline (`#process`) and the analyze cascade (`#analyze`)
   // register monitors keyed by the mailbox URI; the statusbar shows whichever run is active, sync
   // first — it is the one that changes what the list contains rather than what is known about it.
   const syncProgress = useProgressMonitor(createSyncProgressKey(mailbox));
-  const scanProgress = useProgressMonitor(InboxOperation.createScanProgressKey(mailbox));
+  const scanProgress = useProgressMonitor(InboxOperation.createAnalyzeProgressKey(mailbox));
   const isActive = (state: typeof syncProgress) => state?.status === 'running' || state?.status === 'error';
   const progress = [syncProgress, scanProgress].find(isActive);
   // Registry (present when plugin-progress is loaded) lets the meter cancel a cancellable run.
@@ -127,11 +127,10 @@ export const MailboxArticle = ({
   // Filter.
   const builder = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
   const [filterText, setFilterText] = useState<string>(filterProp ?? '');
-  const [filter, setFilter] = useState<Filter.Any>();
-  useEffect(() => {
-    const { filter } = builder.build(filterText);
-    setFilter(filter);
-  }, [filterText, builder]);
+  // Supplied by the query editor, which already parses the DSL to decorate it — deriving the filter
+  // here as well parsed every keystroke twice. `builder` remains for the seeds below, which are set
+  // programmatically and so produce no editor event.
+  const [filter, setFilter] = useState<Filter.Any | undefined>(() => builder.build(filterProp ?? '').filter);
 
   // Whether messages are grouped into conversations (threads). On by default.
   const conversations = settings.conversations ?? true;
@@ -230,14 +229,34 @@ export const MailboxArticle = ({
 
   // Drives an in-flow spinner in the list, never a full-panel fallback — a page fetch or a
   // background refresh must not blank the list. `source` is undefined until a free-text feed resolves.
+  //
+  // Deliberately NOT widened to cover the feed's own resolution: a system-tag view degrades to a
+  // space-only scope while `mailbox.feed` loads, which answers immediately with nothing (measured on
+  // a live profile: 0 messages space-only vs 432 feed-scoped) — but spinning through that window
+  // just trades a flash of the empty panel for a flash of the spinner. The `Deferred` below holds
+  // the panel back instead, which costs no visible state at all.
   const loading = !source || pagination.isLoading;
   // Show the empty-mailbox panel only once the query has settled with nothing, never mid-load.
   const showEmptyState = !loading && messages.length === 0;
 
-  const handleClear = useCallback(() => {
-    setFilterText(filterProp ?? '');
-    setFilter(builder.build(filterProp ?? '').filter);
-  }, [filterProp, builder]);
+  // Text set from here rather than typed reaches the editor imperatively — a controlled `value` would
+  // race fast typing — and raises no editor event, so the parse the editor normally hands back has to
+  // be done here too, or `filter` (which gates Save) keeps describing the previous text.
+  const applyFilterText = useCallback(
+    (text: string) => {
+      setFilterText(text);
+      setFilter(builder.build(text).filter);
+      filterEditorRef.current?.setText(text);
+    },
+    [builder],
+  );
+
+  // Read by `select-tag`, which appends to the current text from a handler that must not be rebuilt
+  // on every keystroke.
+  const filterTextRef = useRef(filterText);
+  filterTextRef.current = filterText;
+
+  const handleClear = useCallback(() => applyFilterText(filterProp ?? ''), [filterProp, applyFilterText]);
 
   const handleNavigate = useCallback(
     (messageId: string, newPlank = false) => {
@@ -334,15 +353,12 @@ export const MailboxArticle = ({
         }
 
         case 'select-tag': {
-          setFilterText((prevFilterText) => {
-            // Check if tag already exists.
-            const tags = prevFilterText.split(/\s+/).filter(Boolean);
-            if (tags.at(-1)?.toLowerCase() === '#' + action.label.toLowerCase()) {
-              return prevFilterText;
-            } else {
-              return [prevFilterText.trim(), '#' + action.label].filter(Boolean).join(' ') + ' ';
-            }
-          });
+          const previous = filterTextRef.current;
+          // Check if tag already exists.
+          const tags = previous.split(/\s+/).filter(Boolean);
+          if (tags.at(-1)?.toLowerCase() !== '#' + action.label.toLowerCase()) {
+            applyFilterText([previous.trim(), '#' + action.label].filter(Boolean).join(' ') + ' ');
+          }
           filterEditorRef.current?.focus();
           break;
         }
@@ -359,7 +375,7 @@ export const MailboxArticle = ({
         }
       }
     },
-    [db, id, mailbox, messages, invokePromise, showItem, handleNavigate],
+    [db, id, mailbox, messages, invokePromise, showItem, handleNavigate, applyFilterText],
   );
 
   const handleSaveFilter = useCallback(() => {
@@ -378,6 +394,7 @@ export const MailboxArticle = ({
         value={filterText}
         filter={filter}
         onChange={setFilterText}
+        onFilterChange={setFilter}
         onSave={handleSaveFilter}
         onClear={handleClear}
         editorRef={filterEditorRef}
@@ -406,12 +423,7 @@ export const MailboxArticle = ({
         </Menu.Root>
       </ElevationProvider>
       <Panel.Content asChild>
-        {showEmptyState ? (
-          <InitializeMailbox mailbox={mailbox} />
-        ) : (
-          // Always keep the list mounted (even with no items yet); `loading` renders an in-flow
-          // spinner at the end of the list rather than replacing the whole panel — so a page fetch
-          // or a mid-sync refresh never blanks what's already shown.
+        <Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
           <InboxStack
             id={id}
             items={items}
@@ -427,7 +439,7 @@ export const MailboxArticle = ({
             searchQuery={searchQuery}
             onAction={handleAction}
           />
-        )}
+        </Deferred>
       </Panel.Content>
       {progress && (progress.status === 'running' || progress.status === 'error') && (
         <Panel.Statusbar asChild>

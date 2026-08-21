@@ -7,5 +7,6 @@ export * from './FormCard';
 export * from './JsonCard';
 export * from './OrganizationCard';
 export * from './PersonCard';
+export * from './PersonCardIcon';
 export * from './ProjectCard';
 export * from './TaskCard';

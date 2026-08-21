@@ -15,7 +15,7 @@ tasks:
     # Handler set registered by the headless host.
     command: >-
       pnpm exec dx-trace-imports
-      --export ./operations
+      --export ./TasksOperationHandlerSet
       --to "@dxos/react-ui"
       --to react
       --to react-dom

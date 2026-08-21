@@ -8,7 +8,7 @@ import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { useObject } from '@dxos/echo-react';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Panel, useTranslation } from '@dxos/react-ui';
+import { Flex, Panel, useTranslation } from '@dxos/react-ui';
 import {
   type ActionExecutor,
   type ActionGraphProps,
@@ -78,10 +78,10 @@ export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticle
         {searchFields.length > 0 ? (
           <dl className='flex flex-col gap-1'>
             {searchFields.map((field) => (
-              <div key={field.key} className='flex items-baseline justify-between gap-2'>
+              <Flex key={field.key} gap='sm' align='baseline' justify='between'>
                 <dt className='text-sm'>{field.title}</dt>
                 {field.type && <dd className='text-xs text-description'>{field.type}</dd>}
-              </div>
+              </Flex>
             ))}
           </dl>
         ) : (

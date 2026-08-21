@@ -288,7 +288,7 @@ export const AssistantTestBaseLayer = ({
           const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
           const registry = yield* Registry.Service;
           const handlers = yield* handlerSet.handlers;
-          registry.add(handlers.map(Operation.serialize));
+          registry.add(Operation.serializable(handlers));
           return registry;
         }),
       ),

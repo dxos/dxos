@@ -121,6 +121,7 @@ export class FeedHandle {
     const changed = objectSetChanged(this._objects, decodedObjects);
     TRACE_FEED_LOAD && log.info('feed refresh', { changed, objects: objects?.length ?? 0, refreshId });
     this._objects = decodedObjects;
+    this.#objectIds = new Set(decodedObjects.map((obj) => obj.id));
     this._isLoading = false;
     if (changed) {
       this.updated.emit();
@@ -153,6 +154,8 @@ export class FeedHandle {
   readonly #hydrating = new Map<EntityId, Promise<Entity.Unknown | undefined>>();
 
   private _objects: Entity.Unknown[] = [];
+  /** Mirrors `_objects`'s ids, kept incremental so append/delete avoid rescanning the whole working set. */
+  #objectIds = new Set<string>();
   private _isLoading = true;
   private _error: Error | null = null;
   private _refreshId = 0;
@@ -293,8 +296,18 @@ export class FeedHandle {
 
   /** Append newly-tracked core entities to the ordered working-set view and notify subscribers. */
   #addOptimistic(cores: FeedObjectCore[]): void {
-    const existingIds = new Set(this._objects.map((obj) => obj.id));
-    this._objects = [...this._objects, ...cores.map((core) => core.entity).filter((obj) => !existingIds.has(obj.id))];
+    const newEntities: Entity.Unknown[] = [];
+    for (const core of cores) {
+      const entity = core.entity;
+      if (!this.#objectIds.has(entity.id)) {
+        this.#objectIds.add(entity.id);
+        newEntities.push(entity);
+      }
+    }
+    if (newEntities.length === 0) {
+      return;
+    }
+    this._objects = [...this._objects, ...newEntities];
     this.updated.emit();
   }
 
@@ -316,6 +329,7 @@ export class FeedHandle {
         this.#cores.delete(id);
         this.#dirtyCores.delete(core);
       }
+      this.#objectIds.delete(id);
     }
     this._objects = this._objects.filter((item) => !ids.includes(item.id));
     this.updated.emit();

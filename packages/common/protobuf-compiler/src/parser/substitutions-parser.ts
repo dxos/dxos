@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import * as ts from '@typescript/typescript6';
 import { Project, type Symbol, type TypeChecker } from 'ts-morph';
-import * as ts from 'typescript';
 
 import { type ModuleSpecifier } from '../module-specifier';
 

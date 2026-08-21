@@ -65,6 +65,9 @@ export const Box = Schema.Struct({
   h: Schema.Number,
   rotation: Schema.optional(Schema.Number).annotate({ description: 'Clockwise rotation in degrees.' }),
   text: Schema.optional(Schema.String).annotate({ description: 'Centered label.' }),
+  corners: Schema.optional(Schema.Literals(['top', 'bottom', 'none'])).annotate({
+    description: 'Rects only: round just these corners (default all); backends without corner control ignore it.',
+  }),
   ...styleFields,
 });
 export type Box = Schema.Schema.Type<typeof Box>;
