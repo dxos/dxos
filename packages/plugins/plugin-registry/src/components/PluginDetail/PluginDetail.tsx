@@ -9,6 +9,7 @@ import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import {
   Button,
   Carousel,
+  Grid,
   Icon,
   Input,
   Link,
@@ -154,10 +155,19 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
            * with the rest of the content in col 2, and `Carousel.Next` sits
            * in col 3.
            */}
-          <div className='dx-document grid grid-cols-[4rem_minmax(0,1fr)_4rem] gap-x-4 p-4 items-start'>
+          <Grid
+            cols={['4rem', 'minmax(0, 1fr)', '4rem']}
+            grow={false}
+            align='start'
+            classNames='dx-document gap-x-4 p-4'
+          >
             <Icon classNames={mx('row-start-1 p-1 rounded-md', styles.bg, styles.fg)} icon={iconKey} size={14} />
 
-            <div className='row-start-1 col-start-2 col-span-2 grid grid-cols-[1fr_min-content] gap-x-3 w-full pt-1'>
+            <Grid
+              cols={['1fr', 'min-content']}
+              grow={false}
+              classNames='row-start-1 col-start-2 col-span-2 gap-x-3 w-full pt-1'
+            >
               <div className='flex items-center gap-2'>
                 <h2 className='text-xl'>{name}</h2>
                 {failure && <PluginFailureBadge failure={failure} size={5} />}
@@ -175,7 +185,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                 {slug}
                 {author && <span className='dx-tag dx-tag--info'>{author}</span>}
               </div>
-            </div>
+            </Grid>
 
             {description && (
               <Section.Root>
@@ -312,7 +322,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                 {onUninstall && <Button onClick={onUninstall}>{t('uninstall.label')}</Button>}
               </div>
             )}
-          </div>
+          </Grid>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
     );
