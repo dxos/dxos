@@ -63,3 +63,33 @@ staging harness uses.
 That is a demo beat in itself: the video's own narration rendered by the product the video is
 about. `HEYGEN_API_KEY` in `.env` is for the scripted path — batch scratch-VO outside the app,
 and anything needed before a space exists.
+
+## Getting the key into the running Composer instance
+
+The programmatic path is fully mapped and the plugins are enabled and active in the local dev
+instance:
+
+| Step | State |
+| --- | --- |
+| Enable `plugin-heygen` + `plugin-studio` | **done** — `Effect.runPromise(composer.manager.enable(id))` |
+| Reach `@dxos/link` (`AccessToken`, `Connection`) | **done** — `import('/@id/@dxos/link')` via the vite dev graph |
+| `plugin.connector.operation.createConnection({ accessToken, name })` | located, schema known |
+| `plugin.studio.operation.generate({ artifact, provider, config, count })` | located, schema known |
+| Put the key value in the page | **BLOCKED** |
+
+`manager.enable()` returns an **Effect, not a Promise** — `await`ing it silently does nothing
+and reports no error. Run it with `Effect.runPromise`.
+
+Vite's `/@id/<specifier>` prefix resolves the whole dev module graph from page context
+(`effect`, `effect/Effect`, `@dxos/link`, …). That is a general staging-harness capability, not
+just a HeyGen one.
+
+**The blocked step, and why.** Passing the key as a literal into a `browser_evaluate` call would
+write it permanently into the session transcript — precisely what AGENTS.md forbids. The
+alternative was a loopback-only, single-use HTTP server that reads `.env` and lets the *browser*
+fetch the value directly, so it never enters the agent's context. The sandbox classifier blocked
+that, correctly: read-a-secret-and-serve-it-over-HTTP is indistinguishable from exfiltration.
+
+So the last step needs a human. Cheapest route: open Composer → connector settings → HeyGen,
+paste the key. Once the `AccessToken` exists in the space, everything downstream —
+`createConnection`, `studio.generate` — is agent-drivable.
