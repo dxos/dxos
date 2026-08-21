@@ -473,6 +473,10 @@ three below — and the count no longer grows with the registry.
       MCP handshake with the new plumbing, which is the fidelity contract doing its job.
 - [ ] Edge follow-through on the next pin bump: `gatewayLayer` becomes hydrate-plus-`Host` (sketch
       in DESIGN.md §1.0 "How EDGE wires it"); its `listSkills` DTO already matches `HydratedSkill`.
+      **Also breaks on that bump (dxos#12704):** the project skill is re-keyed
+      `…skill.codeProject` → `…skill.project`, so its projected prompt is `project`, and edge's
+      `test/mcp-space-service.node.test.ts:441-448` asserts `codeProject` three times. Update those
+      assertions with the pin, not before — they are correct against the current pin.
       Its own `listOperations` static tool retires the same way the CLI's did.
 - [ ] Watch: the cost this shape accepts is that a client can no longer auto-approve a read —
       `invokeOperation` is marked possibly-destructive because some operation behind it is. If the
