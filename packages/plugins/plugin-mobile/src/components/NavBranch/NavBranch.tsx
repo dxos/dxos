@@ -4,7 +4,7 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as Graph from '@dxos/app-graph/Graph';
@@ -27,6 +27,9 @@ export type NavBranchProps = {
   id: string;
 };
 
+/** Reported while a branch's groups are still unexpanded: nothing is yet known to be empty. */
+const NO_EMPTY_GROUPS: ReadonlySet<string> = new Set();
+
 /**
  * Ids of the given nodes that are section groups with nothing under them.
  *
@@ -45,13 +48,18 @@ const useEmptyGroupIds = (graph: Graph.ExpandableGraph, nodes: Node.Node[]): Rea
   // Identity-stable key: `groupIds` is a fresh array whenever the graph re-emits this branch's
   // children, and rebuilding the atom on every emission would drop its subscriptions each time.
   const groupKey = groupIds.join('\n');
+  const [expandedKey, setExpandedKey] = useState<string>();
 
   // Groups sit one level below this branch, so `useExpandPath` does not reach their children; without
-  // expanding them their connectors never run and every group would read as empty.
-  useEffect(() => {
+  // expanding them their connectors never run and every group would read as empty. This has to be a
+  // layout effect: `expandSync` runs every matching builder extension before it returns, so expanding
+  // here and flipping the gate below lands the settled row set in the re-render React flushes before
+  // the browser paints, instead of a frame later.
+  useLayoutEffect(() => {
     for (const groupId of groupKey.split('\n').filter(Boolean)) {
       Graph.expandSync(graph, groupId, 'child');
     }
+    setExpandedKey(groupKey);
   }, [graph, groupKey]);
 
   const emptyIdsAtom = useMemo(
@@ -68,7 +76,13 @@ const useEmptyGroupIds = (graph: Graph.ExpandableGraph, nodes: Node.Node[]): Rea
     [graph, groupKey],
   );
 
-  return useAtomValue(emptyIdsAtom);
+  const emptyIds = useAtomValue(emptyIdsAtom);
+
+  // An unexpanded group reads as childless whether or not it has children, so filtering on that first
+  // read would drop a populated row and pop it back in once the expansion landed. Unknown counts as
+  // visible until this branch's own groups have been expanded, which keeps the guarantee independent
+  // of whether a connector happens to resolve synchronously.
+  return expandedKey === groupKey ? emptyIds : NO_EMPTY_GROUPS;
 };
 
 /**

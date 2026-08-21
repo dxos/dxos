@@ -121,7 +121,12 @@ export const RootDoesNotScroll: Story = {
   },
 };
 
-/** A cancelled gesture snaps back rather than completing a pop the platform took away. */
+/**
+ * A cancelled gesture snaps back rather than completing a pop the platform took away — and the cancel
+ * counts wherever it lands. The platform taking the touch over is the very thing that drops the
+ * implicit capture, so the cancel is delivered off the stack for the same reason the release is; a
+ * cancel dispatched on the stack root would only re-test the path that already worked.
+ */
 export const CancelledGesture: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -131,8 +136,9 @@ export const CancelledGesture: Story = {
 
     stack.dispatchEvent(pointer('pointerdown', bounds.left + 5));
     stack.dispatchEvent(pointer('pointermove', bounds.left + 40));
+    await expect(topPanel(canvasElement).getBoundingClientRect().left).toBeGreaterThan(bounds.left);
     await pause();
-    stack.dispatchEvent(pointer('pointercancel', bounds.left + 40));
+    document.body.dispatchEvent(pointer('pointercancel', bounds.left + 40));
 
     await waitFor(() => expect(topPanel(canvasElement).getBoundingClientRect().left).toBeCloseTo(bounds.left, 0));
     await expect(canvas.getByTestId('panel-general')).toBeInTheDocument();
