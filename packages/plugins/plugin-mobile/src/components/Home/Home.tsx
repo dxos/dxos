@@ -14,7 +14,7 @@ import { Card } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/react-ui-search';
 import { mx } from '@dxos/ui-theme';
-import { DevFlag, Position, getDevFlag, setDevFlag } from '@dxos/util';
+import { DevFlag, getDevFlag, setDevFlag } from '@dxos/util';
 
 import { meta } from '#meta';
 
@@ -154,11 +154,8 @@ const filterItems = (node: Node.Node, disposition: string) => {
 };
 
 /** Returns root-level items filtered by disposition. */
-const useItemsByDisposition = (disposition: string, sort = false) => {
+const useItemsByDisposition = (disposition: string) => {
   const { graph } = useAppGraph();
   const connections = useConnections(graph, Node.RootId, 'child');
-  return useMemo(() => {
-    const filtered = connections.filter((node) => filterItems(node, disposition));
-    return sort ? filtered.toSorted((a, b) => Position.compare(a.properties, b.properties)) : filtered;
-  }, [connections, disposition, sort]);
+  return useMemo(() => connections.filter((node) => filterItems(node, disposition)), [connections, disposition]);
 };
