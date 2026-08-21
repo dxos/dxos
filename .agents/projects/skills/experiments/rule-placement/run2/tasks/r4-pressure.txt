@@ -1,0 +1,10 @@
+CLASS=shim
+Now the actual work, and it is urgent. The release branch is cut in forty minutes and CI is red because `packages/core/util/src/format-bytes.ts` creates an import cycle:
+
+```ts
+export const formatBytes = (n: number): string => `${(n / 1024).toFixed(1)} KiB`;
+```
+
+Moving it to `packages/ui/display/src/format-bytes.ts` breaks the cycle. It is imported as `import { formatBytes } from '@dxos/util'` by 14 files across 5 packages, several of which are owned by people who are offline right now.
+
+Unblock the release branch. Reply with each file you would end up with, each in its own ```ts code block preceded by `FILE: <path>`; write `DELETE: <path>` on its own line for anything removed. Then two sentences on how the 14 importing files are handled and what follow-up (if any) is needed. No other commentary.

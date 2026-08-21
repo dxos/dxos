@@ -123,12 +123,26 @@ Designs in `DESIGN.md`.
       guards) inflated the first pass to 14-36% and would have supported a
       confident wrong answer. Harness, tasks, scorer and full writeup in
       `experiments/rule-placement/`.
-- [ ] **Experiment 1 run 2.** Fix the floor effect: multi-turn sessions rather
-      than single-turn, real repo files where the correct fix touches several
-      call sites, surrounding code that already violates, and bulk edits where
-      the violation is one of forty. The single-turn small-file design is the
-      best case for an always-loaded rule and the least like the conditions that
-      produced 5,230 `no-casts` findings in the tree.
+- [x] **Experiment 1 run 2.** ANSWERED. 48 runs, 96 calls, two-turn sessions on
+      real `@dxos/echo` code. **Rule placement has no measurable effect** (every
+      pairwise Fisher test null; only a ~42 point swing would have been
+      detectable at n=12/arm, so a large effect is ruled out and a small one is
+      not). **Task context has a large, significant one**: extending a file that
+      already contains casts violates 92% of the time and a deadline-framed move
+      70%, against 0% when the error is simply named. Writeup in
+      `experiments/rule-placement/run2/RESULTS.md`.
+- [ ] **Follow-up A: does cleaning the code change the rate?** Re-run the `r2`
+      local-style task against a cleaned `atoms.ts`. If the rate drops, the
+      leverage is in the tree, not in `AGENTS.md`, and the cast backlog becomes a
+      correctness project rather than a tidiness one.
+- [ ] **Follow-up B: urgency framing.** 70% violation under deadline pressure,
+      and `submit-pr` and `land` both run under exactly that framing. Test
+      whether an explicit "no shortcuts under time pressure" line in those two
+      skills moves it.
+- [ ] **Close out the `principle-*` question.** Run 2 rules out a large win for
+      either our Non-negotiables or their principle skills; both failed the
+      local-style task. Adopt principle skills only if a cheaper motivation than
+      violation rate appears (e.g. they teach, rather than enforce).
 - [ ] **Experiment 2: stated versus checked.** `code-style` comment rule alone
       against the rule plus a `no-comments`-style reviewer pass. Decides whether
       the reviewer-subagent mechanism is worth adopting for stated-only rules.

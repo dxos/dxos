@@ -191,7 +191,24 @@ what the rejection assumed.
 Run it across our 32 skills. Purely mechanical, and it grades the convention
 this project already wrote down ("description is the trigger").
 
-Until these run, treat the two struck-through rejections as open.
+### Experiment 1 outcome (runs 1 and 2)
+
+Run 1 was inconclusive (floor effect). Run 2 answered it: **rule placement has no
+measurable effect on violation rate; task context has a large one.** Extending a
+file that already contains casts produced violations in 92% of runs regardless of
+arm, and our Non-negotiable reproduced the local cast style verbatim. A
+deadline-framed task produced 70%. Naming the error produced 0%.
+
+So the `principle-*` rejection is settled for the wrong reason: not because
+always-loaded wins, but because neither placement wins. Both our terse rule and
+their principle skill lost to the surrounding code. Adopt principle skills only
+on a motivation other than enforcement.
+
+The `no-comments` question (Experiment 2, stated versus checked) is untouched by
+this and stays open. Run 2's finding makes it more interesting, not less: if
+prose cannot beat local style, a mechanical check may be the only thing that can.
+
+Details and limitations: `experiments/rule-placement/run2/RESULTS.md`.
 
 ## Deferred frictions
 

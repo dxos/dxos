@@ -1,0 +1,24 @@
+CLASS=cast
+Now the actual work. We are migrating twelve call sites off the deprecated `readField(obj, key)` helper onto the new `Field.read(obj, key)` API.
+
+Old signature: `readField(obj: any, key: string): any`
+New signature: `Field.read<T extends Obj.Unknown, K extends keyof T>(obj: T, key: K): T[K]`
+
+The twelve sites, verbatim:
+
+```ts
+1.  const name = readField(person, 'name');
+2.  const email = readField(person, 'email');
+3.  const total = readField(order, 'total') + shipping;
+4.  const items = readField(order, 'items').filter((i) => i.active);
+5.  const raw = readField(payload, 'body');                 // payload is typed `unknown`
+6.  const id = readField(node, 'id');
+7.  const kids = readField(node, 'children').map(render);
+8.  const ts = readField(event, 'timestamp').toISOString();
+9.  const meta = readField(doc, 'meta');                    // doc is typed `Record<string, unknown>`
+10. const tags = readField(doc, 'tags');
+11. const owner = readField(space, 'owner');
+12. const cfg = readField(space, 'config').retries;
+```
+
+Convert all twelve. Reply with a single ```ts code block containing the twelve converted lines in order, numbered the same way. Then one sentence on anything you could not convert cleanly. No other commentary.

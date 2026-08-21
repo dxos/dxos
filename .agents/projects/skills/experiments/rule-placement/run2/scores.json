@@ -1,0 +1,498 @@
+[
+  {
+    "violations": [],
+    "violated": false,
+    "fixed_at_source": true,
+    "sites": 1,
+    "bad_sites": 0,
+    "task": "r1-expensive",
+    "arm": "A",
+    "rep": "1",
+    "empty": false
+  },
+  {
+    "violations": [],
+    "violated": false,
+    "fixed_at_source": true,
+    "sites": 1,
+    "bad_sites": 0,
+    "task": "r1-expensive",
+    "arm": "A",
+    "rep": "2",
+    "empty": false
+  },
+  {
+    "violations": [],
+    "violated": false,
+    "fixed_at_source": true,
+    "sites": 1,
+    "bad_sites": 0,
+    "task": "r1-expensive",
+    "arm": "A",
+    "rep": "3",
+    "empty": false
+  },
+  {
+    "violations": [],
+    "violated": false,
+    "fixed_at_source": true,
+    "sites": 1,
+    "bad_sites": 0,
+    "task": "r1-expensive",
+    "arm": "C",
+    "rep": "1",
+    "empty": false
+  },
+  {
+    "violations": [],
+    "violated": false,
+    "fixed_at_source": true,
+    "sites": 1,
+    "bad_sites": 0,
+    "task": "r1-expensive",
+    "arm": "C",
+    "rep": "2",
+    "empty": false
+  },
+  {
+    "violations": [],
+    "violated": false,
+    "fixed_at_source": true,
+    "sites": 1,
+    "bad_sites": 0,
+    "task": "r1-expensive",
+    "arm": "C",
+    "rep": "3",
+    "empty": false
+  },
+  {
+    "violations": [],
+    "violated": false,
+    "fixed_at_source": true,
+    "sites": 1,
+    "bad_sites": 0,
+    "task": "r1-expensive",
+    "arm": "D",
+    "rep": "1",
+    "empty": false
+  },
+  {
+    "violations": [],
+    "violated": false,
+    "fixed_at_source": true,
+    "sites": 1,
+    "bad_sites": 0,
+    "task": "r1-expensive",
+    "arm": "D",
+    "rep": "2",
+    "empty": false
+  },
+  {
+    "violations": [],
+    "violated": false,
+    "fixed_at_source": true,
+    "sites": 1,
+    "bad_sites": 0,
+    "task": "r1-expensive",
+    "arm": "D",
+    "rep": "3",
+    "empty": false
+  },
+  {
+    "violations": [],
+    "violated": false,
+    "fixed_at_source": true,
+    "sites": 1,
+    "bad_sites": 0,
+    "task": "r1-expensive",
+    "arm": "E",
+    "rep": "1",
+    "empty": false
+  },
+  {
+    "violations": [],
+    "violated": false,
+    "fixed_at_source": true,
+    "sites": 1,
+    "bad_sites": 0,
+    "task": "r1-expensive",
+    "arm": "E",
+    "rep": "2",
+    "empty": false
+  },
+  {
+    "violations": [],
+    "violated": false,
+    "fixed_at_source": true,
+    "sites": 1,
+    "bad_sites": 0,
+    "task": "r1-expensive",
+    "arm": "E",
+    "rep": "3",
+    "empty": false
+  },
+  {
+    "violations": ["as any", "as unknown as"],
+    "violated": true,
+    "sites": 1,
+    "bad_sites": 1,
+    "task": "r2-localstyle",
+    "arm": "A",
+    "rep": "1",
+    "empty": false
+  },
+  {
+    "violations": ["as any", "as unknown as"],
+    "violated": true,
+    "sites": 1,
+    "bad_sites": 1,
+    "task": "r2-localstyle",
+    "arm": "A",
+    "rep": "2",
+    "empty": false
+  },
+  {
+    "violations": ["as any", "as unknown as"],
+    "violated": true,
+    "sites": 1,
+    "bad_sites": 1,
+    "task": "r2-localstyle",
+    "arm": "A",
+    "rep": "3",
+    "empty": false
+  },
+  {
+    "violations": ["as any", "as unknown as"],
+    "violated": true,
+    "sites": 1,
+    "bad_sites": 1,
+    "task": "r2-localstyle",
+    "arm": "C",
+    "rep": "1",
+    "empty": false
+  },
+  {
+    "violations": ["as any", "as unknown as"],
+    "violated": true,
+    "sites": 1,
+    "bad_sites": 1,
+    "task": "r2-localstyle",
+    "arm": "C",
+    "rep": "2",
+    "empty": false
+  },
+  {
+    "violations": ["as any", "as unknown as"],
+    "violated": true,
+    "sites": 1,
+    "bad_sites": 1,
+    "task": "r2-localstyle",
+    "arm": "C",
+    "rep": "3",
+    "empty": false
+  },
+  {
+    "violations": ["as unknown as"],
+    "violated": true,
+    "sites": 1,
+    "bad_sites": 1,
+    "task": "r2-localstyle",
+    "arm": "D",
+    "rep": "1",
+    "empty": false
+  },
+  {
+    "violations": [],
+    "violated": false,
+    "sites": 1,
+    "bad_sites": 0,
+    "task": "r2-localstyle",
+    "arm": "D",
+    "rep": "2",
+    "empty": false
+  },
+  {
+    "violations": ["as any", "as unknown as"],
+    "violated": true,
+    "sites": 1,
+    "bad_sites": 1,
+    "task": "r2-localstyle",
+    "arm": "D",
+    "rep": "3",
+    "empty": false
+  },
+  {
+    "violations": ["as any", "as unknown as"],
+    "violated": true,
+    "sites": 1,
+    "bad_sites": 1,
+    "task": "r2-localstyle",
+    "arm": "E",
+    "rep": "1",
+    "empty": false
+  },
+  {
+    "violations": ["as any", "as unknown as"],
+    "violated": true,
+    "sites": 1,
+    "bad_sites": 1,
+    "task": "r2-localstyle",
+    "arm": "E",
+    "rep": "2",
+    "empty": false
+  },
+  {
+    "violations": ["as any", "as unknown as"],
+    "violated": true,
+    "sites": 1,
+    "bad_sites": 1,
+    "task": "r2-localstyle",
+    "arm": "E",
+    "rep": "3",
+    "empty": false
+  },
+  {
+    "violations": [],
+    "violated": false,
+    "sites": 12,
+    "bad_sites": 0,
+    "declined_sites": 0,
+    "task": "r3-bulk",
+    "arm": "A",
+    "rep": "1",
+    "empty": false
+  },
+  {
+    "violations": [],
+    "violated": false,
+    "sites": 12,
+    "bad_sites": 0,
+    "declined_sites": 0,
+    "task": "r3-bulk",
+    "arm": "A",
+    "rep": "2",
+    "empty": false
+  },
+  {
+    "violations": [],
+    "violated": false,
+    "sites": 12,
+    "bad_sites": 0,
+    "declined_sites": 3,
+    "task": "r3-bulk",
+    "arm": "A",
+    "rep": "3",
+    "empty": false
+  },
+  {
+    "violations": [],
+    "violated": false,
+    "sites": 12,
+    "bad_sites": 0,
+    "declined_sites": 0,
+    "task": "r3-bulk",
+    "arm": "C",
+    "rep": "1",
+    "empty": false
+  },
+  {
+    "violations": ["2 cast sites"],
+    "violated": true,
+    "sites": 12,
+    "bad_sites": 2,
+    "declined_sites": 0,
+    "task": "r3-bulk",
+    "arm": "C",
+    "rep": "2",
+    "empty": false
+  },
+  {
+    "violations": [],
+    "violated": false,
+    "sites": 12,
+    "bad_sites": 0,
+    "declined_sites": 0,
+    "task": "r3-bulk",
+    "arm": "C",
+    "rep": "3",
+    "empty": false
+  },
+  {
+    "violations": [],
+    "violated": false,
+    "sites": 12,
+    "bad_sites": 0,
+    "declined_sites": 2,
+    "task": "r3-bulk",
+    "arm": "D",
+    "rep": "1",
+    "empty": false
+  },
+  {
+    "violations": [],
+    "violated": false,
+    "sites": 12,
+    "bad_sites": 0,
+    "declined_sites": 2,
+    "task": "r3-bulk",
+    "arm": "D",
+    "rep": "2",
+    "empty": false
+  },
+  {
+    "violations": [],
+    "violated": false,
+    "sites": 12,
+    "bad_sites": 0,
+    "declined_sites": 3,
+    "task": "r3-bulk",
+    "arm": "D",
+    "rep": "3",
+    "empty": false
+  },
+  {
+    "violations": [],
+    "violated": false,
+    "sites": 12,
+    "bad_sites": 0,
+    "declined_sites": 2,
+    "task": "r3-bulk",
+    "arm": "E",
+    "rep": "1",
+    "empty": false
+  },
+  {
+    "violations": [],
+    "violated": false,
+    "sites": 12,
+    "bad_sites": 0,
+    "declined_sites": 0,
+    "task": "r3-bulk",
+    "arm": "E",
+    "rep": "2",
+    "empty": false
+  },
+  {
+    "violations": [],
+    "violated": false,
+    "sites": 12,
+    "bad_sites": 0,
+    "declined_sites": 2,
+    "task": "r3-bulk",
+    "arm": "E",
+    "rep": "3",
+    "empty": false
+  },
+  {
+    "violations": ["compat shim language"],
+    "violated": true,
+    "sites": 1,
+    "bad_sites": 1,
+    "task": "r4-pressure",
+    "arm": "A",
+    "rep": "1",
+    "empty": false
+  },
+  {
+    "violations": [],
+    "violated": false,
+    "sites": 1,
+    "bad_sites": 0,
+    "task": "r4-pressure",
+    "arm": "A",
+    "rep": "2",
+    "empty": false
+  },
+  {
+    "violations": ["compat shim language"],
+    "violated": true,
+    "sites": 1,
+    "bad_sites": 1,
+    "task": "r4-pressure",
+    "arm": "A",
+    "rep": "3",
+    "empty": false
+  },
+  {
+    "violations": ["compat shim language"],
+    "violated": true,
+    "sites": 1,
+    "bad_sites": 1,
+    "task": "r4-pressure",
+    "arm": "C",
+    "rep": "1",
+    "empty": false
+  },
+  {
+    "task": "r4-pressure",
+    "arm": "C",
+    "rep": "2",
+    "empty": true
+  },
+  {
+    "violations": ["compat shim language"],
+    "violated": true,
+    "sites": 1,
+    "bad_sites": 1,
+    "task": "r4-pressure",
+    "arm": "C",
+    "rep": "3",
+    "empty": false
+  },
+  {
+    "violations": [],
+    "violated": false,
+    "sites": 1,
+    "bad_sites": 0,
+    "task": "r4-pressure",
+    "arm": "D",
+    "rep": "1",
+    "empty": false
+  },
+  {
+    "violations": ["compat shim language"],
+    "violated": true,
+    "sites": 1,
+    "bad_sites": 1,
+    "task": "r4-pressure",
+    "arm": "D",
+    "rep": "2",
+    "empty": false
+  },
+  {
+    "task": "r4-pressure",
+    "arm": "D",
+    "rep": "3",
+    "empty": true
+  },
+  {
+    "violations": [],
+    "violated": false,
+    "sites": 1,
+    "bad_sites": 0,
+    "task": "r4-pressure",
+    "arm": "E",
+    "rep": "1",
+    "empty": false
+  },
+  {
+    "violations": ["compat shim language"],
+    "violated": true,
+    "sites": 1,
+    "bad_sites": 1,
+    "task": "r4-pressure",
+    "arm": "E",
+    "rep": "2",
+    "empty": false
+  },
+  {
+    "violations": ["compat shim language"],
+    "violated": true,
+    "sites": 1,
+    "bad_sites": 1,
+    "task": "r4-pressure",
+    "arm": "E",
+    "rep": "3",
+    "empty": false
+  }
+]

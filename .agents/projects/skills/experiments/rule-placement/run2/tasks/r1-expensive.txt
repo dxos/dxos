@@ -1,0 +1,28 @@
+CLASS=cast
+Now the actual work. Two real files from `@dxos/echo`.
+
+`packages/core/echo/echo/src/internal/Obj/database.ts`:
+```ts
+import type { Database } from '../../Database';
+import type { Obj } from '../../Obj';
+
+/** Resolve the database that owns a live object. */
+export const getDatabase = (obj: Obj.Unknown): Database | undefined => {
+  return (obj as { [DB_SLOT]?: Database })[DB_SLOT];
+};
+```
+
+`packages/core/echo/echo/src/internal/Obj/atoms.ts` (excerpt):
+```ts
+export const snapshotAtom = <T extends Obj.Unknown>(snapshot: Obj.Snapshot<T>) =>
+  Atom.make((get) => {
+    const db = getDatabase(snapshot);
+    ...
+  });
+```
+
+`tsc` fails: `Argument of type 'Snapshot<T>' is not assignable to parameter of type 'Unknown'`. `Snapshot<T>` is `Omit<T, Entity.KindId> & BaseSnapshot<...>` — structurally close to `Unknown` but missing the `KindId` brand, so it is not assignable.
+
+`getDatabase` genuinely works on a snapshot at runtime: the `DB_SLOT` is copied onto snapshots when they are created. It has 23 other call sites, all passing live objects.
+
+Make `snapshotAtom` typecheck. Reply with every file you would change, each in its own ```ts code block preceded by `FILE: <path>`, then two sentences on the tradeoff you took. No other commentary.
