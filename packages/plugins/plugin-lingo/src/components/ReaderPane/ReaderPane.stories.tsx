@@ -9,11 +9,16 @@ import { expect, waitFor } from 'storybook/test';
 import { useTranslation } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type VocabularyEntry, type VocabularyLookup, deckSegments, normalizeToken } from '#extensions';
+import {
+  type VocabularyEntry,
+  type VocabularyLookup,
+  createTooltipRenderer,
+  deckSegments,
+  normalizeToken,
+} from '#extensions';
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 
-import { createTooltipRenderer } from '../../containers/ReaderArticle/renderTooltip';
 import { PAIRED_ANALYSIS, TEST_PASSAGE, TEST_PASSAGE_TRANSLATION, makeTestDeck } from '../../testing';
 import { ReaderPane } from './ReaderPane';
 
@@ -58,7 +63,7 @@ const ReaderPaneStory = ({ paired = false }: { paired?: boolean }) => {
   }
 
   return (
-    <div className='grid grid-cols-2 gap-2 min-h-0 h-full'>
+    <div className='dx-container grid grid-cols-2 gap-2 px-2'>
       <ReaderPane {...paneProps} side='source' content={TEST_PASSAGE} classNames='h-full' />
       <ReaderPane {...paneProps} side='target' content={TEST_PASSAGE_TRANSLATION} classNames='h-full' />
     </div>
@@ -68,7 +73,7 @@ const ReaderPaneStory = ({ paired = false }: { paired?: boolean }) => {
 const meta = {
   title: 'plugins/plugin-lingo/components/ReaderPane',
   render: (args: { paired?: boolean }) => <ReaderPaneStory {...args} />,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { layout: 'fullscreen', translations },
 } satisfies Meta<{ paired?: boolean }>;
 

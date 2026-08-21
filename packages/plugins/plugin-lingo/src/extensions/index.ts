@@ -3,4 +3,5 @@
 //
 
 export * from './deck-segments';
+export * from './renderTooltip';
 export * from './segments';

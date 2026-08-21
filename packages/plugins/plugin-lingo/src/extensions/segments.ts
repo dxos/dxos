@@ -278,14 +278,20 @@ const segmentTheme = EditorView.theme({
     cursor: 'help',
   },
   // An outline rather than a fill: the reader is still reading, and a highlight block over running
-  // text competes with it far more than a border does.
+  // text competes with it far more than a border does. The colour must come from a text-weight
+  // token, not a surface one — a surface token is a background fill and disappears against the
+  // editor's own background.
   '.cm-segment-hover': {
-    outline: '1px solid var(--color-hover-surface)',
+    outline: '1px solid var(--color-subdued)',
+    outlineOffset: '1px',
     borderRadius: '2px',
     cursor: 'pointer',
   },
+  // The committed segment earns more weight than the one merely under the pointer.
   '.cm-segment-selected': {
     outline: '1px solid var(--color-accent-text)',
+    outlineOffset: '1px',
+    backgroundColor: 'var(--color-current-surface)',
     borderRadius: '2px',
   },
   '.cm-segment-stale': {

@@ -17,6 +17,7 @@ import {
   type SegmentTooltipProps,
   type VocabularyEntry,
   type VocabularyLookup,
+  createTooltipRenderer,
   deckSegments,
   mergeSegmentations,
   normalizeToken,
@@ -24,7 +25,6 @@ import {
 import { meta } from '#meta';
 import { Analysis, LingoCapabilities, LingoOperation, type LingoSettings, Vocabulary, Word } from '#types';
 
-import { createTooltipRenderer } from './renderTooltip';
 import { useSourceText } from './useSourceText';
 
 const MODES = [

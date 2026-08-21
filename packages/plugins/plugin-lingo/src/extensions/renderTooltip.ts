@@ -5,7 +5,7 @@
 import { Domino } from '@dxos/ui';
 import { type RenderCallback } from '@dxos/ui-editor/types';
 
-import { type SegmentTooltipProps } from '#extensions';
+import { type SegmentTooltipProps } from './segments';
 
 export type TooltipHandlers = {
   t: (key: string, options?: Record<string, unknown>) => string;
