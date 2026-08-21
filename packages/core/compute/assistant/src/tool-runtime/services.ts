@@ -214,8 +214,13 @@ export const projectFunctionToTool = (fn: Operation.Definition.Any): Tool.Any =>
  * `required` — the same contract ECHO's own emitter keeps (`stripUndefinedMember`) and the one the
  * pre-migration corpus was recorded against.
  */
-const toModelJsonSchema = (schema: Schema.Codec<any, any>): JsonSchema.JsonSchema =>
-  statePropertyOpenness(dropNullBranches(Schema.toJsonSchemaDocument(schema).schema, new Set(asStringArray(schema))));
+const toModelJsonSchema = (schema: Schema.Codec<any, any>): JsonSchema.JsonSchema => {
+  // A recursive parameter renders as `$ref: '#/$defs/…'` with the bodies in a separate `definitions`
+  // record; keeping only the root would advertise a dangling reference to the model.
+  const { schema: root, definitions } = Schema.toJsonSchemaDocument(schema);
+  const document = Object.keys(definitions).length > 0 ? { ...root, $defs: definitions } : root;
+  return statePropertyOpenness(dropNullBranches(document, new Set(asStringArray(schema))));
+};
 
 /**
  * States openness on every object node that leaves it implied.
