@@ -1,6 +1,6 @@
 # MOSAIC — Model-Oriented System for Adaptive Interface Composition — Tasks
 
-_Resume: PR #12484 OPEN (event-subscribed). Ontology + DEUS app dialect + PLUGIN.mdl rewrite + UI-schematic phase 1 (illustrator `Ui` dialect: schema → ASCII/tldraw form wireframes) delivered; awaiting review. Next decision: schematic phase 2 (app-graph → deck schematics) vs Scenes Experiment 2._
+_Resume: PR #12484 OPEN, retitled to match its contents, merged with main (2026-08-20) and CodeRabbit's 20 threads answered — the valid findings are folded in (schematic ids qualified by container, ASCII box widths aligned, `ResetFeedCursor` misnaming corrected, `surface` position-ordering documented, Scenes parser hardening + closed tag set). Ontology + DEUS app dialect + PLUGIN.mdl rewrite + UI-schematic phase 1 delivered. Next decision: schematic phase 2 (app-graph → deck schematics) vs Scenes Experiment 2._
 
 Full context in `DESIGN.md` (an index — the design lives in the specs it links).
 Branch `claude/declarative-ui-abstraction-h28b9j`.
@@ -29,6 +29,9 @@ Branch `claude/declarative-ui-abstraction-h28b9j`.
 - [x] **PLUGIN.mdl rewrite** (plugin-inbox) — high-level, against current main, using the app dialect.
 - [ ] **Dialect registry**: register `org.dxos.spec.app` URIs wherever deus URI resolution
       materializes (linter open question) so `app.mdl` terms don't lint as unknown.
+- [x] **Automated review pass** (CodeRabbit) folded back: spec accuracy (H3/H4 claims scoped,
+      dispatch contract, numbering/fences), `PLUGIN.mdl` dangling refs, `app.mdl` surface
+      resolution + example planks.
 - [ ] **Review pass** from Rich on the three documents; fold corrections back.
 
 ## Phase 4: UI schematics (drawings from the app model)
