@@ -9,7 +9,7 @@ import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { McpServer } from '@dxos/mcp-server';
 
-import { type LocalRegistry } from './registry';
+import { type LocalServer } from './local-server';
 
 /**
  * Read-only discovery over what this host assembled, mirroring EDGE's `mcp-space-service` tools of
@@ -62,9 +62,9 @@ export const ListTypes = Tool.make('listTypes', {
  */
 export const DiscoveryToolkit = Toolkit.make(ListPlugins, ListTypes);
 
-export const discoveryHandlers = (registry: LocalRegistry) =>
+export const discoveryHandlers = (server: LocalServer) =>
   DiscoveryToolkit.of({
-    listPlugins: () => Effect.succeed({ plugins: registry.plugins }),
+    listPlugins: () => Effect.succeed({ plugins: server.plugins }),
 
-    listTypes: () => Effect.succeed({ types: registry.types }),
+    listTypes: () => Effect.succeed({ types: server.types }),
   });

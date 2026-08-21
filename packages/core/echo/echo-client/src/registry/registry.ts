@@ -266,7 +266,9 @@ const normalizeURI = (uri: string): URI.URI => DXN.tryMake(uri) ?? EID.tryParse(
  * - `from` and `options` clauses — unwrapped; scope is ignored (a direct registry query always
  *   targets the registry's own entities).
  *
- * Server-side concerns such as traversal, ordering, and text/timestamp filters are not supported.
+ * Full-text filters (`Filter.text`) evaluate in memory: every whitespace-separated term must appear
+ * (case-insensitive) in the entity's serialized string values — containment, not ranked FTS. Vector
+ * search, traversal, ordering, and timestamp filters are not supported.
  */
 class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
   readonly #registry: Registry.Registry;
@@ -365,4 +367,8 @@ const executeQuery = (registry: Registry.Registry, ast: QueryAST.Query): Entity.
   }
 };
 
-const matchFilter = (filter: QueryAST.Filter, entity: Entity.Unknown): boolean => filterMatchEntity(filter, entity);
+// Text filters evaluate in memory here: the registry has no index behind it, so the matcher's
+// substring approximation is the only executor there is — unlike the database paths, whose index
+// already answered.
+const matchFilter = (filter: QueryAST.Filter, entity: Entity.Unknown): boolean =>
+  filterMatchEntity(filter, entity, { textSearch: true });

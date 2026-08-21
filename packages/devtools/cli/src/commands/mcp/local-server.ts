@@ -14,10 +14,10 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Client, ClientService } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
-import * as Skill from '@dxos/compute/Skill';
-import { Obj, Type } from '@dxos/echo';
+import { type Registry, Type } from '@dxos/echo';
+import { makeRegistry } from '@dxos/echo-client';
 import { SpaceId } from '@dxos/keys';
-import { McpRegistry } from '@dxos/mcp-server';
+import { McpServer } from '@dxos/mcp-server';
 import * as CodeProjectSkill from '@dxos/plugin-projects/CodeProjectSkill';
 // Narrow subpath imports: these plugins declare React surfaces, and a bundler follows the dynamic
 // import behind a lazy capability, so activating them would pull React into the CLI binary.
@@ -27,11 +27,14 @@ import * as TasksOperationHandlerSet from '@dxos/plugin-tasks/TasksOperationHand
 import { chatLayer, operationHandlers, types } from '../../util';
 
 /**
- * What the static toolkits need beyond the seam: the registry answers for the operations, but
- * `whoami`/`listSpaces` read the live client and `listPlugins`/`listTypes` report what this host
- * assembled, neither of which `McpRegistry.Shape` describes.
+ * What this host wires beneath the projected surface — echo's registry holding the operations and
+ * skills, the invoke seam and session spaces (`McpServer.Host`) — plus what its static toolkits
+ * read: `whoami`/`listSpaces` need the live client and `listPlugins`/`listTypes` report what this
+ * host assembled, none of which the surface's own contract describes.
  */
-export type LocalRegistry = McpRegistry.Shape & {
+export type LocalServer = {
+  readonly registry: Registry.Registry;
+  readonly host: McpServer.HostShape;
   readonly client: Client;
   readonly plugins: readonly PluginRecord[];
   readonly types: readonly TypeRecord[];
@@ -41,35 +44,44 @@ export type PluginRecord = { readonly key: string; readonly name?: string };
 export type TypeRecord = { readonly typename: string; readonly version: string };
 
 /**
- * The local MCP registry: the operations the CLI already runs, presented in the wire shape the
- * projection consumes. `dx mcp serve` is the deployed server's local twin, so every difference
- * from EDGE's registry is host-layer — no OAuth grant to narrow the session (it sees every visible
- * space), and operations run in-process instead of over a service binding.
+ * The local MCP host: the operations the CLI already runs and the skills it curates, in one echo
+ * registry the projection queries directly. `dx mcp serve` is the deployed server's local twin, so
+ * every difference from EDGE is host-layer — no OAuth grant to narrow the session (it sees every
+ * visible space), operations run in-process instead of over a service binding, and the registry is
+ * this process's own rather than hydrated from an RPC (`McpServer.hydrateRegistry`).
  */
-export const makeRegistry = Effect.fn(function* () {
+export const makeLocalServer = Effect.fn(function* () {
   const client = yield* ClientService;
   const capabilities = yield* Capability.Service;
   const manager = yield* Capability.get(Capabilities.PluginManager);
   const active = new Set(manager.getActive());
-  // Captured so an invocation can erase its own requirements: the tool handlers this registry
-  // backs are invoked by the MCP server layer, which knows nothing of the CLI's services.
+  // Captured so an invocation can erase its own requirements: the tool handlers this host backs
+  // are invoked by the MCP server layer, which knows nothing of the CLI's services.
   const ambient = yield* Effect.context<ClientService>();
 
-  // The project and task verbs are the annotated ones, so a registry without them projects nothing
-  // worth calling; their sets are registered directly for the reason the import above states —
-  // the same trade EDGE's operation-service makes for the mail handler sets. `operationHandlers`
-  // brings the rest the CLI already curates for chat, including the `database.*` handlers the
-  // object tools invoke.
+  // The project and task verbs are the skill-governed ones, so a registry without them serves
+  // nothing worth calling; their sets are registered directly for the reason the import above
+  // states — the same trade EDGE's operation-service makes for the mail handler sets.
+  // `operationHandlers` brings the rest the CLI already curates for chat.
   const handlerSet = OperationHandlerSet.merge(
     ...capabilities.getAll(Capabilities.OperationHandler),
     operationHandlers,
     ProjectOperationHandlerSet.handlers,
     TasksOperationHandlerSet.handlers,
   );
-  // A second registration of the same operation is a tool-name collision, which the projection
-  // raises rather than resolving silently.
   const handlers = dedupeOperations(yield* handlerSet.handlers);
   const skills = dedupeByKey([...capabilities.getAll(AppCapabilities.SkillDefinition), CodeProjectSkill]);
+
+  const registry = makeRegistry({
+    initial: [
+      // One non-serializable definition (importSpace's `Uint8Array`) must not take the whole
+      // registry down.
+      ...Operation.serializable(handlers),
+      // `make()` builds a detached skill whose instructions template holds its text in a
+      // ref-embedded `Text` created in-process, so the target always resolves here.
+      ...skills.map((definition) => definition.make()),
+    ],
+  });
 
   // Same visibility rule as EDGE: the HALO space and the settings space hold identity and app
   // config, never user data, so neither surfaces as a space a tool may target.
@@ -79,8 +91,13 @@ export const makeRegistry = Effect.fn(function* () {
     .map((space) => space.id);
 
   return {
+    registry,
     client,
-    spaceIds,
+
+    host: {
+      spaceIds,
+      invoke: (request) => invoke({ handlerSet, handlers, ambient }, request),
+    },
 
     // Only active plugins contribute capabilities, so an inactive one would be listed as a source
     // of operations that the registry does not carry.
@@ -90,27 +107,7 @@ export const makeRegistry = Effect.fn(function* () {
       .map((plugin) => ({ key: plugin.meta.profile.key, name: plugin.meta.profile.name })),
 
     types: types.map((entity) => ({ typename: Type.getTypename(entity), version: Type.getVersion(entity) })),
-
-    listOperations: Effect.sync(() => Operation.serializable(handlers).map((record) => Obj.toJSON(record))),
-
-    listSkills: Effect.sync(() =>
-      skills.map((definition): McpRegistry.SkillRecord => {
-        // `make()` builds a detached skill whose instructions template holds its text in a
-        // ref-embedded `Text` created in-process, so the target always resolves here.
-        const skill = definition.make();
-        return {
-          key: String(definition.key),
-          name: skill.name,
-          description: skill.description,
-          instructions: skill.instructions?.source?.target?.content,
-          mcpPrompt: Skill.isMcpPrompt(skill),
-          tools: [...skill.tools],
-        };
-      }),
-    ),
-
-    invokeOperation: (request) => invoke({ handlerSet, handlers, ambient }, request),
-  } satisfies LocalRegistry;
+  } satisfies LocalServer;
 });
 
 /** Operation keys travel with or without the `dxn:` prefix; compare them stripped. */
@@ -152,17 +149,17 @@ type InvocationContext = {
 
 const invoke = (
   { handlerSet, handlers, ambient }: InvocationContext,
-  { key, input, spaceId }: McpRegistry.InvokeRequest,
-): Effect.Effect<unknown, McpRegistry.Error> => {
+  { key, input, spaceId }: McpServer.InvokeRequest,
+): Effect.Effect<unknown, McpServer.HostError> => {
   // A named target that does not parse is an error, not a fallback: treating it as absent runs the
   // call against the session's default space, which is not the space the caller asked for.
   if (spaceId != null && !SpaceId.isValid(spaceId)) {
-    return Effect.fail(McpRegistry.error(`Invalid spaceId: ${spaceId}`));
+    return Effect.fail(McpServer.hostError(`Invalid spaceId: ${spaceId}`));
   }
   return Effect.gen(function* () {
     const handler = handlers.find((candidate) => normalizeKey(String(candidate.meta.key)) === normalizeKey(key));
     if (!handler) {
-      return yield* Effect.fail(McpRegistry.error(`Operation not found: ${key}`));
+      return yield* Effect.fail(McpServer.hostError(`Operation not found: ${key}`));
     }
 
     const operations = yield* Operation.Service;
@@ -170,7 +167,7 @@ const invoke = (
     // reference resolves against the database the call targets.
     const decoded = yield* Schema.decodeUnknownEffect(handler.input)(input);
     const output = yield* operations.invoke(handler, decoded);
-    return McpRegistry.snapshot(output);
+    return McpServer.snapshot(output);
   }).pipe(
     Effect.provide(
       // The space is baked into the layer, so it is built per call rather than once per server;
@@ -178,10 +175,10 @@ const invoke = (
       chatLayer({ provider: 'edge', spaceId: spaceIdOption(spaceId), functions: handlerSet }),
     ),
     Effect.provideContext(ambient),
-    Effect.mapError(McpRegistry.error),
+    Effect.mapError(McpServer.hostError),
     // A handler that throws dies rather than fails; surfaced as the call's error so the client
     // sees the message instead of an opaque internal-server-error.
-    Effect.catchDefect((defect) => Effect.fail(McpRegistry.error(defect))),
+    Effect.catchDefect((defect) => Effect.fail(McpServer.hostError(defect))),
   );
 };
 

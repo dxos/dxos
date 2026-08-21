@@ -218,10 +218,25 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
   }
 };
 
+export type MatchEntityOptions = {
+  /**
+   * Evaluate full-text filters in memory: every whitespace-separated term of the query must appear
+   * (case-insensitive) somewhere in the entity's serialized string values. An approximation of
+   * index-backed FTS, for executors with no index behind them (the registry); the database
+   * executors leave it unset because their index already answered, and matching here would
+   * re-admit candidates the index rejected. Vector search stays index-only either way.
+   */
+  textSearch?: boolean;
+};
+
 /**
  * Matches a filter against an entity proxy without full JSON serialization when possible.
  */
-export const filterMatchEntity = (filter: QueryAST.Filter, entity: AnyEntity): boolean => {
+export const filterMatchEntity = (
+  filter: QueryAST.Filter,
+  entity: AnyEntity,
+  options?: MatchEntityOptions,
+): boolean => {
   switch (filter.type) {
     case 'object': {
       if (filter.typename !== null) {
@@ -280,7 +295,7 @@ export const filterMatchEntity = (filter: QueryAST.Filter, entity: AnyEntity): b
     }
 
     case 'text-search': {
-      return false;
+      return options?.textSearch === true ? matchesTextSearch(filter, entity) : false;
     }
 
     case 'timestamp': {
@@ -296,18 +311,61 @@ export const filterMatchEntity = (filter: QueryAST.Filter, entity: AnyEntity): b
     }
 
     case 'not': {
-      return !filterMatchEntity(filter.filter, entity);
+      return !filterMatchEntity(filter.filter, entity, options);
     }
 
     case 'and': {
-      return filter.filters.every((f) => filterMatchEntity(f, entity));
+      return filter.filters.every((f) => filterMatchEntity(f, entity, options));
     }
 
     case 'or': {
-      return filter.filters.some((f) => filterMatchEntity(f, entity));
+      return filter.filters.some((f) => filterMatchEntity(f, entity, options));
     }
 
     default:
       return false;
+  }
+};
+
+/**
+ * In-memory full-text match: every whitespace-separated term must appear (case-insensitive) in the
+ * entity's serialized string values — including meta, so a registry key is searchable. Substring
+ * containment rather than tokenization, which is the honest in-memory approximation of FTS.
+ */
+const matchesTextSearch = (filter: QueryAST.Filter & { type: 'text-search' }, entity: AnyEntity): boolean => {
+  // A vector query is meaningless without an embedding index, whatever the executor.
+  if (filter.searchKind === 'vector') {
+    return false;
+  }
+  const terms = filter.text
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((term) => term.length > 0);
+  if (terms.length === 0) {
+    return true;
+  }
+  let json: unknown;
+  try {
+    json = objectToJSON(entity);
+  } catch {
+    return false;
+  }
+  const haystack: string[] = [];
+  collectStrings(json, haystack, new Set());
+  const text = haystack.join('\n').toLowerCase();
+  return terms.every((term) => text.includes(term));
+};
+
+const collectStrings = (value: unknown, out: string[], seen: Set<unknown>): void => {
+  if (typeof value === 'string') {
+    out.push(value);
+    return;
+  }
+  if (value === null || typeof value !== 'object' || seen.has(value)) {
+    return;
+  }
+  seen.add(value);
+  for (const entry of Array.isArray(value) ? value : Object.values(value)) {
+    collectStrings(entry, out, seen);
   }
 };

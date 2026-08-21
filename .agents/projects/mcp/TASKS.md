@@ -445,9 +445,27 @@ three below — and the count no longer grows with the registry.
       stdio session 9/9 over a real MCP handshake — fixed tool list, catalog reaching the registry
       (project/task verbs + plugin-space's object CRUD), a `keys` lookup returning a real schema,
       an unknown key failing with a pointer to `findOperations`, and the skill listing.
-- [ ] Edge follow-through on the next pin bump (its static toolkits are unaffected; its
-      `SkillRecord` marshalling already carries `tools`). Its own `listOperations` static tool
-      should retire the same way.
+- [x] **Second round (user, 2026-08-21) — the backend is echo's registry.** Projection/catalog
+      abstractions deleted (`projection.ts`, `catalog.ts`, `McpRegistry` wrapper and its
+      `OperationRecord`/`SkillRecord` wire types); the surface queries `Registry.Service` directly
+      and hosts supply only `McpServer.Host` (`invoke` + `spaceIds`). Registry text filters
+      implemented in echo (`Filter.text` evaluates in memory on the registry path only —
+      `MatchEntityOptions.textSearch`; DB executors unchanged, vector stays index-only), so
+      `findOperations`' `query` runs through the query DSL rather than a custom matcher. Handlers
+      query live — an operation registered after startup is findable without a rebuild (prompts
+      still capture at layer build; effect's `McpServer` has no removal). `fromSkills` keeps the
+      test/embedded path (own `makeRegistry` + live-definition `Host`); real hosts wire the
+      process's registry. `McpServer.hydrateRegistry` builds a registry from wire records
+      (`Obj.fromJSON` operations + flattened skills with materialized instructions) — the EDGE
+      path, pinned by a dxos-side round-trip test; edge's own TODO (entrypoint.ts:296) already
+      names that exact shape. CLI: `commands/mcp/registry.ts` → `local-server.ts`
+      (`makeLocalServer` returning registry/host/client/plugins/types). Verified: echo 573,
+      echo-client 525, echo-client-e2e 299 (incl. new registry text-filter tests), mcp-server 44,
+      cli 46 with the live stdio session 9/9 unchanged — the surface is byte-identical over a real
+      MCP handshake with the new plumbing, which is the fidelity contract doing its job.
+- [ ] Edge follow-through on the next pin bump: `gatewayLayer` becomes hydrate-plus-`Host` (sketch
+      in DESIGN.md §1.0 "How EDGE wires it"); its `listSkills` DTO already matches `HydratedSkill`.
+      Its own `listOperations` static tool retires the same way the CLI's did.
 - [ ] Watch: the cost this shape accepts is that a client can no longer auto-approve a read —
       `invokeOperation` is marked possibly-destructive because some operation behind it is. If the
       permission friction bites, the answer is the read/write split deferred at question 2, not a

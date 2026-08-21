@@ -5,7 +5,9 @@ The DXOS MCP server: the tool and prompt surface projected from the operation re
 Everything that decides what a model sees — which operations it can reach, their schemas and
 descriptions, which skills become prompts, and the server instructions — lives here, so every host
 (the EDGE `mcp-space-service` worker, `dx mcp serve`) presents the same surface by construction.
-Hosts supply an `McpRegistry` (how to reach the registry and invoke an operation) and a transport;
+Hosts supply echo's `Registry.Service` (a registry holding `PersistentOperation` and `Skill`
+entities — built from wire records via `McpServer.hydrateRegistry` when the real one lives behind
+an RPC), `McpServer.Host` (how to invoke an operation, and the session's spaces), and a transport;
 nothing else about the surface is theirs to decide.
 
 ## The surface
