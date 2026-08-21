@@ -25,8 +25,7 @@
   ],
   "dependencies": {
     "@dxos/app-toolkit": "workspace:*",
-    "@dxos/keys": "workspace:*",
-    "@dxos/plugin-projects": "workspace:*"
+    "@dxos/keys": "workspace:*"
   },
   "devDependencies": {
     "@dxos/ai": "workspace:*",
@@ -42,6 +41,7 @@
     "@dxos/plugin-crm": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-projects": "workspace:*",
     "@dxos/plugin-routine": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-table": "workspace:*",
