@@ -45,6 +45,7 @@ live Composer captures and TTS, produced unattended.
 ## Phase 1 — the five hybrid clips (days 2-7)
 
 ### Creative
+
 - [x] `SCRIPTS/01-opening.md` — cold open in a wry/erudite register, two versions (hero ~92s,
       Cloudflare ~38s), visual mapping, trims, and the "guests"/"inversion" through-line
 - [x] Credentials wired: root `.env.tpl` -> `.env` via `op inject`, all 9 vars verified non-empty
@@ -54,6 +55,7 @@ live Composer captures and TTS, produced unattended.
 - [ ] Pick one; beat sheets for clips 1-5 in `BEATSHEETS/`
 
 ### Data
+
 - [ ] `build-demo-space.ts` beside `build-exemplar-space.ts` — Bramble superset archive
 - [ ] Deeper inbox + synthetic Gmail mailbox (no OAuth)
 - [ ] CRM pipeline stages with history; kanban with movement
@@ -61,12 +63,14 @@ live Composer captures and TTS, produced unattended.
 - [ ] Verify every fact against `about-bramble.md`
 
 ### Harness
+
 - [ ] Playwright staging module — one named `stage()` per clip
 - [ ] Camera mode: suppress HMR overlay + devtools badge, fixed window size, locked theme, frozen clock
 - [ ] Deterministic deck layout helper
 - [ ] Two-window helper for L1/L2 (offline merge)
 
 ### Capture + post
+
 - [ ] Recording session 1 — clips 1-5
 - [ ] HeyGen avatar set up; synthetic scratch VO for timing
 - [ ] Rough cut (**this is the blog-post pilot and the slip-insurance backup**)

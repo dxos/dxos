@@ -27,6 +27,7 @@ import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 import { createConfig as createTestConfig } from '../../../vitest.base.config.ts';
 import { bootChunking } from './src/vite/boot-chunking.ts';
 import { bootMarkPath, channelFaviconPlugin, channelVariant } from './src/vite/channel-branding.ts';
+import { devSecrets } from './src/vite/dev-secrets.ts';
 import { optimizeDepsInclude } from './src/vite/optimize-deps.ts';
 import { traceBootLeak } from './src/vite/trace-boot-leak.ts';
 
@@ -162,6 +163,10 @@ export default defineConfig((env) => ({
     // coordinator instead of attaching to a stale-code instance (SharedWorkers are keyed by
     // URL + name). Empty in production builds — the name must stay stable across deploys.
     __DX_DEV_SERVER_BOOT_ID__: JSON.stringify(env.command === 'serve' ? Date.now().toString(36) : ''),
+    // Connector API keys from the repo-root `.env`, so plugin-connector can provision connections
+    // on startup rather than the user re-pasting a key after every profile reset. Empty for
+    // `build` — these are inlined at transform time, so a bundle would ship them.
+    ...devSecrets(env.command, rootDir),
   },
   server: {
     host: true,

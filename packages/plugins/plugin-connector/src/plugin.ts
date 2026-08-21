@@ -10,6 +10,7 @@ import {
   BuiltinConnectors,
   Coordinator,
   CreateObject,
+  EnvCredentials,
   OAuthRedirect,
   OperationHandler,
   ReactSurface,
@@ -34,6 +35,7 @@ export const ConnectorPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(BuiltinConnectors),
   Plugin.addModule(Coordinator),
   Plugin.addModule(OAuthRedirect),
+  Plugin.addModule(EnvCredentials),
   Plugin.addModule(RoutineTemplate),
   Plugin.addModule(
     AppCapability.pluginAsset({

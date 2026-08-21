@@ -28,6 +28,7 @@ type HeyGenTokenFormValues = Schema.Schema.Type<typeof HeyGenTokenForm>;
 export const createHeyGenConnectorEntry = () => ({
   id: HEYGEN_CONNECTOR_ID,
   source: HEYGEN_SOURCE,
+  envBinding: 'HEYGEN_API_KEY',
   label: 'HeyGen',
   credentialForm: {
     schema: HeyGenTokenForm,

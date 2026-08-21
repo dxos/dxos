@@ -13,9 +13,9 @@ Source: user brief, 2026-08-21.
 4. Collaboration — multi-user editing, comments, versioned documents.
 5. Assistant — create/update documents, generate diagrams, create tables.
 6. **ECHO** — explorer graph diagrams, live queries, schema/type views, Ref/DXN
-   navigation, local-first storage story. *(added 2026-08-21)*
+   navigation, local-first storage story. _(added 2026-08-21)_
 7. **Agent runtime** — assistant internals: trace panel, tool calls, skills,
-   operation invocation, streaming. *(added 2026-08-21)*
+   operation invocation, streaming. _(added 2026-08-21)_
 8. Advanced plugins — Gmail, unsubscribe, auto-drafts, CRM curation.
 9. Advanced scenarios — project management, pipelines.
 10. Plugin development — registry, Claude Code skills, MCP server, CLI, Chess tutorial.
@@ -30,8 +30,8 @@ first-class spine material, not B-roll.
 - **Playwright cannot drive a Screen Studio recording.** Playwright dispatches
   CDP input events; it never moves the macOS cursor. Screen Studio captures the
   OS cursor and keys its auto-zoom / click-highlight off real cursor events.
-  Therefore capture splits into *stage* (agent-owned, deterministic) and
-  *perform* (needs a real OS cursor: human, or `cliclick`/computer-use).
+  Therefore capture splits into _stage_ (agent-owned, deterministic) and
+  _perform_ (needs a real OS cursor: human, or `cliclick`/computer-use).
 - **`exemplar-space.dx.json` is shipped product.** `plugin-onboarding` imports it
   for every new identity. Demo data should be a separate seed, not a mutation of
   the fixture, unless deliberately backported.
@@ -59,16 +59,16 @@ tail-logger, …). `main` continuously publishes to the `main` environment;
 
 Cloudflare primitives actually bound in `wrangler.*` configs:
 
-| Primitive | Configs referencing it |
-| --- | --- |
-| Durable Objects | 49 |
-| KV | 42 |
-| D1 | 29 |
-| R2 | 27 |
-| Queues | 8 |
-| Workers AI | 8 |
-| Images | 3 |
-| Containers | 2 |
+| Primitive       | Configs referencing it |
+| --------------- | ---------------------- |
+| Durable Objects | 49                     |
+| KV              | 42                     |
+| D1              | 29                     |
+| R2              | 27                     |
+| Queues          | 8                      |
+| Workers AI      | 8                      |
+| Images          | 3                      |
+| Containers      | 2                      |
 
 Composer itself also deploys to Workers (`packages/apps/composer-app/wrangler.jsonc`
 in this repo), as do `tasks`, `testbench-app`, `todomvc`, `docs`, and the
@@ -83,8 +83,8 @@ with the sync engine itself living in Durable Objects.
 
 Cloudflare presentation is **2-4 weeks out** (so ~2026-09-04 to 2026-09-18).
 Phase 1 = **5 hybrid clips** that serve both the CF cut and the general library.
-Working spine for those five: *one space — local-first, synced through EDGE,
-with the agent runtime executing on Workers.* Staging harness gets built for
+Working spine for those five: _one space — local-first, synced through EDGE,
+with the agent runtime executing on Workers._ Staging harness gets built for
 retakes; demo seed script if it fits the window.
 
 ### Partners to showcase (user, 2026-08-21)
@@ -101,16 +101,16 @@ needs a moment where it is visibly load-bearing rather than a logo card:
 - **Cloudflare** — see the EDGE section above.
 
 A partner-credit montage is the cheap version; the good version is one clip per
-partner where the technology is the *point* of the clip.
+partner where the technology is the _point_ of the clip.
 
 ### Q3-Q8 — answered 2026-08-21
 
-| # | Decision | Choice |
-| --- | --- | --- |
-| 3 | Build | **Local dev (this worktree) + production for hero shots** — bulk recorded locally where we control everything; re-shoot space creation, invitation, EDGE sync and deploy against production. |
-| 4 | Demo data | **Separate demo seed** — new script beside `build-exemplar-space.ts`; Bramble superset as a loadable space archive. Shipped exemplar untouched. |
-| 5 | Capture | **Staged-manual** — agent stages exact pre-roll state, user performs from a numbered beat sheet. No robot cursor for now; revisit if mechanical clips pile up. |
-| 6 | Editor | **Research first** — half-day trial of Descript / Kapwing / Veed against a real Screen Studio export, then a comparison doc with a recommendation. |
-| 7 | Voice | **HeyGen avatar intro/outro + user VO** for the body. Synthetic scratch tracks used for timing the edit before any real recording. |
-| 8 | Triage | **User marks the candidate list** — so the first deliverable is a complete, annotatable candidate clip list. |
-| 9 | Gmail | **Mock locally** — synthetic mailbox in the demo seed, no real OAuth, no real account. The connect/OAuth flow is therefore NOT shown. |
+| #   | Decision  | Choice                                                                                                                                                                                       |
+| --- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 3   | Build     | **Local dev (this worktree) + production for hero shots** — bulk recorded locally where we control everything; re-shoot space creation, invitation, EDGE sync and deploy against production. |
+| 4   | Demo data | **Separate demo seed** — new script beside `build-exemplar-space.ts`; Bramble superset as a loadable space archive. Shipped exemplar untouched.                                              |
+| 5   | Capture   | **Staged-manual** — agent stages exact pre-roll state, user performs from a numbered beat sheet. No robot cursor for now; revisit if mechanical clips pile up.                               |
+| 6   | Editor    | **Research first** — half-day trial of Descript / Kapwing / Veed against a real Screen Studio export, then a comparison doc with a recommendation.                                           |
+| 7   | Voice     | **HeyGen avatar intro/outro + user VO** for the body. Synthetic scratch tracks used for timing the edit before any real recording.                                                           |
+| 8   | Triage    | **User marks the candidate list** — so the first deliverable is a complete, annotatable candidate clip list.                                                                                 |
+| 9   | Gmail     | **Mock locally** — synthetic mailbox in the demo seed, no real OAuth, no real account. The connect/OAuth flow is therefore NOT shown.                                                        |

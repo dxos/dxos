@@ -28,6 +28,7 @@ type IdeogramTokenFormValues = Schema.Schema.Type<typeof IdeogramTokenForm>;
 export const createIdeogramConnectorEntry = () => ({
   id: IDEOGRAM_CONNECTOR_ID,
   source: IDEOGRAM_SOURCE,
+  envBinding: 'IDEOGRAM_API_KEY',
   label: 'Ideogram',
   credentialForm: {
     schema: IdeogramTokenForm,
