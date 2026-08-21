@@ -118,6 +118,8 @@ describe('Ui.renderAscii', () => {
     expect(lines[0]).toMatch(/^\+- Address -+\+$/);
     expect(lines.at(-1)).toMatch(/^\+-+\+$/);
     expect(ascii).toContain('[__________]');
+    // Every line is the same width, so nested boxes stay aligned.
+    expect(new Set(lines.map((line) => line.length)).size).toBe(1);
   });
 });
 
@@ -126,8 +128,19 @@ describe('Ui.compile', () => {
     const commands = Ui.compile(Ui.deckOf(Ui.fromSchema(Contact)));
     const ids = commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object.id] : []));
 
-    expect(ids).toEqual(expect.arrayContaining(['deck', 'panel', 'name', 'active', 'role', 'address.street']));
-    expect(ids).toEqual(expect.arrayContaining(['emails.add', 'tasks.add']));
+    const plank = 'deck.plank0';
+    expect(ids).toEqual(
+      expect.arrayContaining([
+        'deck',
+        plank,
+        `${plank}.panel`,
+        `${plank}.panel.name`,
+        `${plank}.panel.active`,
+        `${plank}.panel.role`,
+        `${plank}.panel.address.street`,
+      ]),
+    );
+    expect(ids).toEqual(expect.arrayContaining([`${plank}.panel.emails.add`, `${plank}.panel.tasks.add`]));
 
     for (const command of commands) {
       if (command.op === 'upsert-object') {
@@ -135,6 +148,20 @@ describe('Ui.compile', () => {
         expect(Number.isFinite(command.object.origin!.y)).toBe(true);
       }
     }
+  });
+
+  test('two planks over the same schema emit distinct ids', ({ expect }) => {
+    const form = Ui.fromSchema(Address);
+    const deck: Ui.Deck = {
+      kind: 'deck',
+      planks: [
+        { kind: 'plank', child: { kind: 'panel', child: form } },
+        { kind: 'plank', child: { kind: 'panel', child: form } },
+      ],
+    };
+    const ids = Ui.compile(deck).flatMap((command) => (command.op === 'upsert-object' ? [command.object.id] : []));
+
+    expect(new Set(ids).size).toBe(ids.length);
   });
 
   test('scale and origin place the drawing on the canvas', ({ expect }) => {

@@ -212,8 +212,11 @@ const widthOf = (node: UiNode): number => {
   }
 };
 
-/** One world object per control (id = path), so drawn controls stay individually addressable. */
-const emitControl = (node: Control, x: number, y: number, emit: Emit): void => {
+/** Qualify a node id with its container, so two planks over the same schema stay addressable. */
+const qualify = (prefix: string, path: string): string => (prefix ? `${prefix}.${path}` : path);
+
+/** One world object per control (id = container path), so drawn controls stay individually addressable. */
+const emitControl = (node: Control, x: number, y: number, emit: Emit, prefix: string): void => {
   const top = node.label ? LABEL_H : 0;
   const elements: Scene.Element[] = node.label
     ? [{ kind: 'text', id: 'label', x: 0, y: 0, text: node.label, weight: 's', color: 'grey' }]
@@ -233,7 +236,7 @@ const emitControl = (node: Control, x: number, y: number, emit: Emit): void => {
       elements.push({ kind: 'rect', id: 'box', x: 0, y: top, w: CONTROL_W, h: CONTROL_H, stroke: 'solid' });
       break;
   }
-  emit.commands.push({ op: 'upsert-object', object: { id: node.path, origin: { x, y }, elements } });
+  emit.commands.push({ op: 'upsert-object', object: { id: qualify(prefix, node.path), origin: { x, y }, elements } });
 };
 
 const frame = (id: string, x: number, y: number, w: number, h: number, title: string | undefined, emit: Emit): void => {
@@ -244,20 +247,20 @@ const frame = (id: string, x: number, y: number, w: number, h: number, title: st
   emit.commands.push({ op: 'upsert-object', object: { id, origin: { x, y }, elements } });
 };
 
-const emitNode = (node: UiNode, x: number, y: number, emit: Emit): void => {
+const emitNode = (node: UiNode, x: number, y: number, emit: Emit, prefix = ''): void => {
   switch (node.kind) {
     case 'control':
-      emitControl(node, x, y, emit);
+      emitControl(node, x, y, emit, prefix);
       break;
 
     case 'group': {
       const anonymous = !node.label;
       if (!anonymous) {
-        frame(node.path, x, y, widthOf(node), heightOf(node), node.label, emit);
+        frame(qualify(prefix, node.path), x, y, widthOf(node), heightOf(node), node.label, emit);
       }
       let cursor = y + (anonymous ? 0 : TITLE_H);
       for (const child of node.children) {
-        emitNode(child, x + (anonymous ? 0 : PAD), cursor, emit);
+        emitNode(child, x + (anonymous ? 0 : PAD), cursor, emit, prefix);
         cursor += heightOf(child) + GAP;
       }
       break;
@@ -265,46 +268,53 @@ const emitNode = (node: UiNode, x: number, y: number, emit: Emit): void => {
 
     case 'array': {
       const width = widthOf(node);
-      frame(node.path, x, y, width, heightOf(node), node.label, emit);
+      const id = qualify(prefix, node.path);
+      frame(id, x, y, width, heightOf(node), node.label, emit);
       // The add button sits on the header line, where the array marker reads in ASCII.
       emit.commands.push({
         op: 'upsert-object',
         object: {
-          id: `${node.path}.add`,
+          id: `${id}.add`,
           origin: { x: x + width - TOGGLE_W - 4, y: y + 2 },
           elements: [{ kind: 'rect', id: 'box', x: 0, y: 0, w: TOGGLE_W, h: PLUS_H, text: '+', stroke: 'solid' }],
         },
       });
-      emitNode(node.item, x + PAD, y + TITLE_H, emit);
+      emitNode(node.item, x + PAD, y + TITLE_H, emit, prefix);
       break;
     }
 
     case 'form': {
       let cursor = y;
       for (const child of node.children) {
-        emitNode(child, x, cursor, emit);
+        emitNode(child, x, cursor, emit, prefix);
         cursor += heightOf(child) + GAP;
       }
       break;
     }
 
-    case 'panel':
-      frame('panel', x, y, widthOf(node), heightOf(node), node.label ?? 'panel', emit);
-      emitNode(node.child, x + PAD, y + TITLE_H + PAD, emit);
+    case 'panel': {
+      const id = qualify(prefix, 'panel');
+      frame(id, x, y, widthOf(node), heightOf(node), node.label ?? 'panel', emit);
+      emitNode(node.child, x + PAD, y + TITLE_H + PAD, emit, id);
       break;
+    }
 
-    case 'plank':
-      frame(`plank.${node.label ?? 'main'}`, x, y, widthOf(node), heightOf(node), node.label, emit);
-      emitNode(node.child, x + PAD, y + PAD + (node.label ? TITLE_H : 0), emit);
+    case 'plank': {
+      const id = prefix || 'plank';
+      frame(id, x, y, widthOf(node), heightOf(node), node.label, emit);
+      emitNode(node.child, x + PAD, y + PAD + (node.label ? TITLE_H : 0), emit, id);
       break;
+    }
 
     case 'deck': {
-      frame('deck', x, y, widthOf(node), heightOf(node), undefined, emit);
+      const id = qualify(prefix, 'deck');
+      frame(id, x, y, widthOf(node), heightOf(node), undefined, emit);
       let cursor = x + PAD;
-      for (const plank of node.planks) {
-        emitNode(plank, cursor, y + PAD, emit);
+      // Index, not label: an unlabeled plank must still get a distinct id.
+      node.planks.forEach((plank, index) => {
+        emitNode(plank, cursor, y + PAD, emit, `${id}.plank${index}`);
         cursor += widthOf(plank) + GAP;
-      }
+      });
       break;
     }
   }
@@ -356,7 +366,7 @@ const indent = (lines: string[], prefix: string): string[] => lines.map((line) =
 const boxed = (lines: string[], title?: string): string[] => {
   const width = Math.max(...lines.map((line) => line.length), (title?.length ?? 0) + 4, 12);
   const top = title
-    ? `+- ${title} ${'-'.repeat(Math.max(width - title.length - 2, 1))}+`
+    ? `+- ${title} ${'-'.repeat(Math.max(width - title.length - 1, 1))}+`
     : `+${'-'.repeat(width + 2)}+`;
   return [top, ...lines.map((line) => `| ${line.padEnd(width)} |`), `+${'-'.repeat(width + 2)}+`];
 };
