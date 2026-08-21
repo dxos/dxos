@@ -24,7 +24,6 @@ export const RoutineTemplates = Capability.lazyModule(
   { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
   () => import('./routine-templates'),
 );
-// workerd loads the reduced list via ./overrides.workerd.ts; node takes the canonical one.
 export const Schema = AppCapability.schema(() => import('./schema'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));

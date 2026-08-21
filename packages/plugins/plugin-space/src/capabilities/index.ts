@@ -71,7 +71,6 @@ export const Repair = Capability.lazyModule(
   },
   () => import('./repair'),
 );
-// Headless environments load the reduced list via ./overrides.node.ts / ./overrides.workerd.ts.
 export const Schema = AppCapability.schema(() => import('./schema'));
 export const SpaceSettings = AppCapability.settings(() => import('./settings'), {
   provides: [SpaceCapabilities.SettingsAtom],

@@ -23,7 +23,6 @@ export const OperationHandler = AppCapability.operationHandler(() => import('./o
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.dialog', 'org.dxos.role.section'],
 });
-// workerd loads the reduced list via ./overrides.workerd.ts; node takes the canonical one.
 export const Schema = AppCapability.schema(() => import('./schema'));
 export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({

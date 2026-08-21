@@ -29,7 +29,6 @@ export const OperationHandler = AppCapability.operationHandler(() => import('./o
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article'],
 });
-// Headless environments load the reduced list via ./overrides.workerd.ts.
 export const Schema = AppCapability.schema(() => import('./schema'), {
   environments: ['workerd'],
 });
