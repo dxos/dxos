@@ -266,9 +266,8 @@ const normalizeURI = (uri: string): URI.URI => DXN.tryMake(uri) ?? EID.tryParse(
  * - `from` and `options` clauses — unwrapped; scope is ignored (a direct registry query always
  *   targets the registry's own entities).
  *
- * Full-text filters (`Filter.text`) evaluate in memory: every whitespace-separated term must appear
- * (case-insensitive) in the entity's serialized string values — containment, not ranked FTS. Vector
- * search, traversal, ordering, and timestamp filters are not supported.
+ * Full-text filters evaluate in memory as case-insensitive all-terms containment, not ranked FTS.
+ * Vector search, traversal, ordering, and timestamp filters are not supported.
  */
 class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
   readonly #registry: Registry.Registry;

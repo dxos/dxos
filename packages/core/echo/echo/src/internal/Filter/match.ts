@@ -221,9 +221,8 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
 /**
  * Matches a filter against an entity proxy without full JSON serialization when possible.
  *
- * Full-text filters evaluate in memory here (see {@link matchesTextSearch}) — this matcher serves
- * executors with no index behind them (the registry, `Filter.toPredicate`); the index-backed
- * document paths use `filterMatchDoc` and are unaffected.
+ * Text filters evaluate in memory here because this matcher serves executors with no index behind
+ * them (the registry, `Filter.toPredicate`); index-backed paths use `filterMatchDoc` instead.
  */
 export const filterMatchEntity = (filter: QueryAST.Filter, entity: AnyEntity): boolean => {
   switch (filter.type) {
@@ -317,9 +316,8 @@ export const filterMatchEntity = (filter: QueryAST.Filter, entity: AnyEntity): b
 };
 
 /**
- * In-memory full-text match: every whitespace-separated term must appear (case-insensitive) in the
- * entity's serialized string values — including meta, so a registry key is searchable. Substring
- * containment rather than tokenization, which is the honest in-memory approximation of FTS.
+ * In-memory full-text match: every term must appear (case-insensitive) in the entity's serialized
+ * strings, meta included so a registry key is searchable. Containment, not tokenized ranking.
  */
 const matchesTextSearch = (filter: QueryAST.Filter & { type: 'text-search' }, entity: AnyEntity): boolean => {
   // A vector query is meaningless without an embedding index, whatever the executor.

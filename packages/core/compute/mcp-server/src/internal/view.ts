@@ -10,12 +10,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Annotation, Database, Filter, Obj, Query, type Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-/**
- * Reads of the registry into the shapes the fixed tool surface serves. The registry is echo's own
- * (`Registry.Registry` holding `PersistentOperation` and `Skill` entities), so what lives here is
- * only the projection judgment: which skills opt in, which operations they govern, and what a
- * `findOperations` row says about one.
- */
+/** Reads echo's registry into the shapes the fixed tool surface serves. */
 
 /** Same constraint as tool names; prompt names surface as `/mcp__<server>__<name>`. */
 const PROMPT_NAME_PATTERN = /^[a-zA-Z0-9_-]{1,64}$/;
@@ -35,11 +30,11 @@ export type McpSkill = {
 const isOperationRecord = Obj.instanceOf(Operation.PersistentOperation);
 
 /**
- * The opted-in skills, with prompt names derived from the key's final segment.
+ * The opted-in skills, named by their key's final segment.
  *
- * Opt-in mirrors the old tool projection: a skill written for an in-app chat runtime assumes tools
- * an MCP client does not have. Name collisions throw — an authorship error the contract wants
- * surfaced loudly, not resolved silently; `reservedNames` covers the host's static prompts.
+ * Opt-in exists because a skill written for the in-app chat runtime assumes tools an MCP client
+ * does not have. A prompt-name collision throws rather than resolving silently, since two skills
+ * claiming one name is an authorship error; `reservedNames` covers the host's static prompts.
  */
 export const mcpSkills = (
   registry: Registry.Registry,
@@ -87,11 +82,7 @@ export const mcpSkills = (
     }),
   );
 
-/**
- * One entry per key, the last added winning — the same answer `getByURI` gives, whose URI index a
- * later `add` overwrites. A key registered twice is re-registration (a live registry re-syncing
- * its contributions), not the authorship error the prompt-name collision check exists for.
- */
+/** One entry per key, last-added winning, because a live registry re-registers its contributions. */
 const dedupeByKey = <T extends { readonly key: string }>(entries: readonly T[]): T[] => {
   const byKey = new Map<string, T>();
   for (const entry of entries) {
@@ -100,10 +91,7 @@ const dedupeByKey = <T extends { readonly key: string }>(entries: readonly T[]):
   return [...byKey.values()];
 };
 
-/**
- * Operation NSID → prompt names of the skills whose `tools` list names it. Skills are the atomic
- * unit of projection: membership here is what makes an operation findable and invocable at all.
- */
+/** Operation NSID → the skills naming it; membership here is what makes an operation reachable. */
 export const ownersOf = (skills: readonly McpSkill[]): Map<string, string[]> => {
   const owners = new Map<string, string[]>();
   for (const candidate of skills) {
@@ -115,10 +103,7 @@ export const ownersOf = (skills: readonly McpSkill[]): Map<string, string[]> => 
   return owners;
 };
 
-/**
- * Operation records matching an optional text query — the registry evaluates `Filter.text`
- * in memory, so the search semantics live in echo rather than here.
- */
+/** Operation records matching an optional text query, whose semantics are echo's `Filter.text`. */
 export const findRecords = (
   registry: Registry.Registry,
   text: string | undefined,
@@ -126,8 +111,7 @@ export const findRecords = (
   const base = Filter.type(Operation.PersistentOperation);
   const filter = text != null && text.trim().length > 0 ? Filter.and(base, Filter.text(text)) : base;
   return Effect.promise(() => registry.query(Query.select(filter)).run()).pipe(
-    // One record per key, matching {@link lookup}: a re-registered operation must list once, not
-    // once per registration.
+    // One record per key, matching {@link lookup}, so a re-registered operation lists once.
     Effect.map((records) => {
       const byKey = new Map<string, Operation.PersistentOperation>();
       for (const record of records.filter(isOperationRecord)) {
@@ -158,8 +142,8 @@ const mutationOf = (record: Operation.PersistentOperation): Operation.Mutation |
 };
 
 /**
- * One operation as `findOperations` describes it. A view costs the model a description where a
- * schema costs hundreds of tokens, which is why `schema` travels only on a `keys` lookup.
+ * One operation as `findOperations` describes it. `schema` travels only on a `keys` lookup, because
+ * a schema costs the model hundreds of tokens where the rest of a view costs a description.
  */
 export type OperationView = {
   key: string;

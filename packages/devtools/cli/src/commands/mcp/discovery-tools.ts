@@ -55,11 +55,7 @@ export const ListTypes = Tool.make('listTypes', {
   .annotate(Tool.Readonly, true)
   .annotate(Tool.Destructive, false);
 
-/**
- * `listOperations` is deliberately absent: `findOperations` in `@dxos/mcp-server` answers the same
- * question over the same registry, and it filters and serves schemas as well — two tools listing
- * operations differently is exactly the drift this file's TODO warns about.
- */
+/** `listOperations` is absent because `findOperations` lists the same registry, with filters and schemas. */
 export const DiscoveryToolkit = Toolkit.make(ListPlugins, ListTypes);
 
 export const discoveryHandlers = (server: LocalServer) =>

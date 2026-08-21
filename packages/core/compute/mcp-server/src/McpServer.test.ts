@@ -30,6 +30,14 @@ const CreateTask = Operation.make({
   services: [Database.Service],
 }).pipe(Operation.mutation('write'), Operation.idempotent);
 
+/** Declares `spaceId` in its own input, so the call states its target there rather than ambiently. */
+const ArchiveSpace = Operation.make({
+  meta: { key: DXN.make('org.dxos.function.space.archive'), name: 'Archive Space' },
+  input: Schema.Struct({ spaceId: Schema.String }),
+  output: Schema.Struct({ archived: Schema.Boolean }),
+  services: [Database.Service],
+}).pipe(Operation.mutation('destructive'));
+
 const QueryObjects = Operation.make({
   meta: {
     key: DXN.make('org.dxos.function.space.queryObjects'),
@@ -152,6 +160,25 @@ describe('McpServer', () => {
       const { result, invocations } = runInvoke({ input: { title: 'x' }, spaceId: SPACE_B });
       expect(failureOf(await result).code).to.equal('space_not_in_context');
       expect(invocations).to.have.length(0);
+    });
+
+    // An operation declaring `spaceId` in its own input states its target there; that value is as
+    // much a statement of the call's space as the ambient parameter, so it must reach both.
+    test('an operation that declares spaceId in its input targets that space', async ({ expect }) => {
+      const registry = testRegistry({
+        operations: [ArchiveSpace],
+        skills: [makeSkill({ key: 'org.dxos.skill.codeProject', operations: [ArchiveSpace] })],
+      });
+      const host = testHost({ spaceIds: [SPACE_A, SPACE_B] });
+
+      const { result, invocations } = runInvoke(
+        { key: 'org.dxos.function.space.archive', input: { spaceId: SPACE_B } },
+        { registry, host },
+      );
+
+      successOf(await result);
+      expect(invocations[0].spaceId).to.equal(SPACE_B);
+      expect(invocations[0].input).to.deep.equal({ spaceId: SPACE_B });
     });
 
     // A host that enumerated its addressable spaces and found none has stated a restriction, not

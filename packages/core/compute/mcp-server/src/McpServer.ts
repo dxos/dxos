@@ -436,7 +436,7 @@ const surfaceLayer: Layer.Layer<never, never, Registry.Service | Host> = McpServ
       }),
     ),
   ),
-) as unknown as Layer.Layer<never, never, Registry.Service | Host>;
+);
 
 /**
  * Builds the prompt layers for opted-in skills. Prompts are captured at layer build — effect's
@@ -445,14 +445,15 @@ const surfaceLayer: Layer.Layer<never, never, Registry.Service | Host> = McpServ
  */
 export const promptsLayer = (skills: readonly viewInternal.McpSkill[]): Layer.Layer<never> =>
   Layer.mergeAll(
-    ...(skills.map((candidate) =>
+    Layer.empty,
+    ...skills.map((candidate) =>
       McpServer$.prompt({
         name: candidate.promptName,
         description: candidate.description,
         parameters: {},
         content: () => Effect.succeed(candidate.instructions),
       }),
-    ) as [Layer.Layer<never>, ...Layer.Layer<never>[]]),
+    ),
   );
 
 /**
@@ -476,7 +477,7 @@ export const layer = ({ reservedToolNames = [], reservedPromptNames = [] }: Laye
     const registry = yield* Registry.Service;
     // A collision throws as a defect here, at layer build — an authorship error, surfaced loudly.
     const skills = yield* viewInternal.mcpSkills(registry, reservedPromptNames);
-    return Layer.mergeAll(surfaceLayer, ...(skills.length > 0 ? [promptsLayer(skills)] : []));
+    return Layer.mergeAll(surfaceLayer, promptsLayer(skills));
   }).pipe(Layer.unwrap);
 
 //
