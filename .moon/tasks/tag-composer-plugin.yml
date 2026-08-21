@@ -2,10 +2,11 @@ $schema: https://moonrepo.dev/schemas/tasks.json
 # Composer plugins on the single-entry pattern: one canonical plugin.ts + capabilities/index.ts
 # with per-module `environments` annotations. The generation task emits the headless
 # `#capabilities` barrels (src/capabilities/gen/, gitignored) and syncs the package.json condition
-# map. It carries the repo's `prebuild` task tag, so `build` picks it up through `~:#prebuild`
-# alongside any generation the plugin declares for itself; `test` depends on it directly, since
-# the generated sources have to exist before anything resolves them. `lint` does not — oxlint
-# ignores `**/gen/*`.
+# map. `build` and `test` name it directly rather than through the `~:#prebuild` tag: a
+# same-project tag dep declared in this file resolves to nothing (moon applies the tag after the
+# dep is resolved), so the generator silently never ran for its own package. The `prebuild` tag
+# stays for `^:#prebuild`, which dependents do resolve. `lint` needs neither — oxlint ignores
+# `**/gen/*`.
 tasks:
   gen-capability-barrels:
     command: pnpm exec dx-plugin gen
@@ -15,6 +16,12 @@ tasks:
       - src/capabilities/index.ts
       - src/capabilities/overrides.*.ts
       - package.json
+      # The modules declaring the per-family `environments` defaults: the generator reads those
+      # literals statically, so a default changing there changes every plugin's output while
+      # leaving the barrel untouched. Without these a family-default edit is invisible to the
+      # cache and moon restores a stale barrel.
+      - /packages/sdk/app-toolkit/src/app-framework/AppCapability.ts
+      - /packages/plugins/plugin-space/src/types/SpaceCapability.ts
     outputs:
       # Optional: a plugin that declares no conditions produces zero gen files, and a required
       # output fails the task when nothing was written.
@@ -24,10 +31,10 @@ tasks:
       - prebuild
   build:
     deps:
-      - ~:#prebuild
+      - ~:gen-capability-barrels
   test:
     deps:
-      - ~:#prebuild
+      - ~:gen-capability-barrels
 
 inheritedBy:
   tags: composer-plugin

@@ -40,9 +40,10 @@ export const Schema = AppCapability.schema(() => import('./schema'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
   environments: ['node'],
 });
+// Browser-only: the variant supplies the React article/card components that render a drawing.
 export const SvgVariant = Capability.lazyModule(
   'IllustratorSvgVariant',
-  { provides: [IllustratorCapabilities.VariantProvider], activatesOn: IllustratorEvents.Start },
+  { provides: [IllustratorCapabilities.VariantProvider], activatesOn: IllustratorEvents.Start, environments: [] },
   () => import('./svg-variant'),
 );
 export const PluginAsset = AppCapability.pluginAsset({
