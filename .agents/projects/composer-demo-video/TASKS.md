@@ -45,6 +45,10 @@ live Composer captures and TTS, produced unattended.
 ## Phase 1 — the five hybrid clips (days 2-7)
 
 ### Creative
+- [x] `SCRIPTS/01-opening.md` — cold open in a wry/erudite register, two versions (hero ~92s,
+      Cloudflare ~38s), visual mapping, trims, and the "guests"/"inversion" through-line
+- [x] Credentials wired: root `.env.tpl` -> `.env` via `op inject`, all 9 vars verified non-empty
+      (`agents/demo-video/CREDENTIALS.md`)
 - [ ] `SHOTLIST.md` — cut marked candidates to ~28, tagged by cut (C/D/P/I)
 - [ ] Three competing scripts in `SCRIPTS/` — narrative, architectural, impossible-demos
 - [ ] Pick one; beat sheets for clips 1-5 in `BEATSHEETS/`
