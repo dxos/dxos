@@ -160,10 +160,12 @@ Designs in `DESIGN.md`.
 - [ ] **Fix two mislabelled cases** (`testing-assistant-conversations` lost to
       the more specific `regenerate-model-fixture`, which was correct routing;
       `agent-eval-tests` likely the same) and re-run them.
-- [ ] **Close the coverage gap.** `submit-pr`, `land`, `task-planning`,
-      `cloud-sandbox`, `skills`, `test-perf-leaks`, `trunk-quarantine` were not
-      measured. `submit-pr` and `land` matter most: ungating them assumed prose
-      asks would reach them, and that is still untested.
+- [x] **Coverage gap partly closed** (103/123). Ungating is now validated
+      empirically: "Open a PR for it" fires `submit-pr` 2/3, "Get PR 12688
+      merged" fires `land` 1/1, while the two still-gated skills fire 0 times
+      from equivalent prose. `submit-pr` at 2/3 joins the rewrite list.
+      `trunk-quarantine` at 1/3 shows the low group is not only this session's
+      work. Still unmeasured: `task-planning`, `cloud-sandbox`, `skills`.
 - [ ] **Add trigger measurement to the authoring convention.** A new skill is
       not done until its description fires on prompts that avoid its own wording.
 - [ ] **Re-examine the other rejections** once a method exists. `swarm`/`arena` versus
