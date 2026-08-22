@@ -19,9 +19,9 @@ export type Level = Schema.Schema.Type<typeof Level>;
 /**
  * A language the user is studying.
  *
- * `code` is the study language and `baseCode` the language translations are rendered in, so a
- * Spanish-speaker learning German and an English-speaker learning German hold two distinct objects
- * and never share a vocabulary deck by accident.
+ * `code` is the study language -- the one the source is written in, inferred rather than chosen --
+ * and `baseCode` is the target the reader selects. A Spanish-speaker learning German and an
+ * English-speaker learning German hold two distinct objects and never share a word list by accident.
  */
 export class Language extends Type.makeObject<Language>(DXN.make('org.dxos.type.lingo.language', '0.1.0'))(
   Schema.Struct({
@@ -44,6 +44,45 @@ export class Language extends Type.makeObject<Language>(DXN.make('org.dxos.type.
 
 /** Default base language when the user has not chosen one. */
 export const DEFAULT_BASE_CODE = 'en';
+
+/**
+ * Offered before any language object exists, so the reader is usable in an empty space; choosing
+ * one creates the object. Presentation order is the caller's business -- the reader sorts by name.
+ */
+/**
+ * Scripts where a learner needs a pronunciation guide beside the text, and what that guide is
+ * called. Naming the system matters: asking a model for "a reading" of Japanese yields romaji as
+ * often as furigana, and the two are not interchangeable for someone learning to read kana.
+ */
+const READING_SYSTEMS: Record<string, string> = {
+  ja: 'furigana — hiragana readings for kanji only',
+  zh: 'Hanyu Pinyin with tone marks',
+  ko: 'Revised Romanization',
+  ar: 'romanization',
+  fa: 'romanization',
+  he: 'romanization',
+  ru: 'romanization',
+  th: 'romanization',
+  hi: 'romanization',
+  el: 'romanization',
+};
+
+/** The pronunciation guide for a language, or undefined when its script needs none. */
+export const getReadingSystem = (code?: string): string | undefined =>
+  code ? (READING_SYSTEMS[code] ?? READING_SYSTEMS[code.split('-')[0]]) : undefined;
+
+export const POPULAR: ReadonlyArray<{ code: string; name: string }> = [
+  { code: 'en', name: 'English' },
+  { code: 'fr', name: 'French' },
+  { code: 'de', name: 'German' },
+  { code: 'es', name: 'Spanish' },
+  { code: 'pt', name: 'Portuguese' },
+  { code: 'it', name: 'Italian' },
+  { code: 'ja', name: 'Japanese' },
+  { code: 'zh', name: 'Mandarin' },
+  { code: 'ar', name: 'Arabic' },
+  { code: 'fa', name: 'Persian' },
+];
 
 /** Creates a Language object. */
 export const make = (props: Obj.MakeProps<typeof Language>): Language => Obj.make(Language, props);

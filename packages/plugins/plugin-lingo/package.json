@@ -160,6 +160,7 @@
     "src"
   ],
   "dependencies": {
+    "@codemirror/language": "catalog:",
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
     "@dxos/ai": "workspace:*",

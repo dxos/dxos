@@ -23,13 +23,29 @@ export type TooltipHandlers = {
  * Builds the hover card as plain DOM rather than a React portal: CodeMirror owns the tooltip's
  * lifetime, and mounting a React root per hover leaks one root per region passed over.
  */
+/**
+ * Strips inline markdown from a quoted span.
+ *
+ * The text is sliced from the document, not from the rendered view, so a term inside emphasis
+ * arrives as `**パン屋**`. Deliberately syntax-only -- the span is a fragment, so parsing it as
+ * markdown would be heavier and no more correct.
+ */
+const plain = (text: string): string =>
+  text
+    .replace(/^#{1,6}\s+/, '')
+    .replace(/(\*\*|__)(.*?)\1/g, '$2')
+    .replace(/(\*|_)(.*?)\1/g, '$2')
+    .replace(/~~(.*?)~~/g, '$1')
+    .replace(/`([^`]*)`/g, '$1')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1');
+
 export const createTooltipRenderer =
   ({ t, onAdd, lookup }: TooltipHandlers): RenderCallback<SegmentTooltipProps> =>
   (el, props) => {
     const { segment, text } = props;
     const root = Domino.of('div').classNames('flex flex-col gap-1 p-2 max-w-80');
 
-    root.append(Domino.of('span').classNames('font-medium').text(text));
+    root.append(Domino.of('span').classNames('font-medium text-accent-text').text(plain(text)));
 
     if (segment.reading) {
       root.append(Domino.of('span').classNames('text-sm opacity-75').text(segment.reading));
@@ -37,17 +53,6 @@ export const createTooltipRenderer =
 
     if (segment.gloss) {
       root.append(Domino.of('span').text(segment.gloss));
-    } else {
-      root.append(Domino.of('span').classNames('text-sm opacity-75').text(t('unknown-word.message')));
-    }
-
-    // A coarse region names itself, so the learner can tell what the outline is addressing.
-    if (segment.kind !== 'vocab') {
-      root.append(
-        Domino.of('span')
-          .classNames('text-sm italic opacity-75')
-          .text(t(`segment-${segment.kind}.label`)),
-      );
     }
 
     if (onAdd && !lookup?.(normalizeToken(text))?.wordId) {

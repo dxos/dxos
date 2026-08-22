@@ -69,6 +69,11 @@ export type SegmentTextOptions = {
   targetLanguage?: string;
   /** Granularities to ask for. Narrowing this shortens the reply and the latency. */
   kinds?: readonly SegmentKind[];
+  /**
+   * Pronunciation guide to attach to each vocabulary region (e.g. furigana, pinyin). Omitted, no
+   * reading is requested — a reading is noise for a script the learner can already pronounce.
+   */
+  readingSystem?: string;
 };
 
 /** Flattens the depth-limited reply into the recursive shape the aligner walks. */
@@ -97,7 +102,10 @@ const toRawSegments = ({ paragraphs }: AnalyzedText): RawSegment[] =>
     })),
   }));
 
-const buildPrompt = (source: string, { target, sourceLanguage, targetLanguage, kinds }: SegmentTextOptions) => {
+const buildPrompt = (
+  source: string,
+  { target, sourceLanguage, targetLanguage, kinds, readingSystem }: SegmentTextOptions,
+) => {
   const wanted = kinds ?? SegmentKind.literals;
   const lines = [
     'Analyze the passage below and return its structure as nested regions.',
@@ -111,6 +119,12 @@ const buildPrompt = (source: string, { target, sourceLanguage, targetLanguage, k
     '- A vocab region is a word or fixed phrase worth learning — content words and idioms, not',
     '  function words, punctuation, or numbers.',
   ];
+
+  if (readingSystem) {
+    lines.push(`- Give every vocab region a \`reading\`: ${readingSystem}.`);
+  } else {
+    lines.push('- Omit `reading`; this script needs no pronunciation guide.');
+  }
 
   if (target) {
     lines.push(

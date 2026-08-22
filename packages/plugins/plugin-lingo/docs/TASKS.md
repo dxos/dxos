@@ -74,8 +74,13 @@ Found by actually rendering the stories; every one was invisible to the type-che
 
 ## Phase 2: Deeper integration — NOT STARTED
 
-- [ ] Offer the reader companion beside any article that *has* a Text document, not only one that
-      *is* one. `isReadable` covers `Markdown.Document`, `Text.Text` and anything registered under
+- [ ] Manage the list of languages from plugin settings. `Language.POPULAR` is a hard-coded ten
+      offered in the reader's selector; the learner should be able to choose which languages appear,
+      add one outside the list, and set the base language per entry (creation currently defaults
+      `baseCode` to `Language.DEFAULT_BASE_CODE`).
+
+- [ ] Offer the reader companion beside any article that _has_ a Text document, not only one that
+      _is_ one. `isReadable` covers `Markdown.Document`, `Text.Text` and anything registered under
       `AppCapabilities.TextContent`; the general case is an object with a `Ref<Text.Text>` field,
       which would pick up new types without each one registering an extractor.
 

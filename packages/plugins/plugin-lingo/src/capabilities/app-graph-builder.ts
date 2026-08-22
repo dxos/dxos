@@ -20,9 +20,9 @@ import { Text } from '@dxos/schema';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-import { Language, Vocabulary } from '#types';
+import { Vocabulary } from '#types';
 
-import { getLanguagesPath, getVocabulariesPath } from '../paths';
+import { getVocabulariesPath } from '../paths';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -35,18 +35,6 @@ export default Capability.makeModule(
       capabilities.getAll(AppCapabilities.TextContent).some(({ id }) => id === Obj.getTypename(object));
 
     const extensions = yield* Effect.all([
-      TypeSection.createTypeSectionExtension(Language.Language, {
-        urlKey: 'language',
-        match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.content),
-        groupSegment: GraphPath.GroupSegments.content,
-        createObject: (space) =>
-          Operation.invoke(SpaceOperation.OpenCreateObject, {
-            target: space.db,
-            typename: Type.getTypename(Language.Language),
-            targetNodeId: getLanguagesPath(space.db.spaceId),
-          }),
-      }),
-
       TypeSection.createTypeSectionExtension(Vocabulary.Vocabulary, {
         urlKey: 'vocabulary',
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.content),

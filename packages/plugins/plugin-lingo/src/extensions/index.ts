@@ -3,5 +3,6 @@
 //
 
 export * from './deck-segments';
+export * from './hide-images';
 export * from './renderTooltip';
 export * from './segments';

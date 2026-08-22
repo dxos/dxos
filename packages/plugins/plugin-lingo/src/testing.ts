@@ -76,9 +76,23 @@ export const PAIRED_ANALYSIS: Segmentation = alignSegments(
           kind: 'clause',
           text: '夜明け前に',
           translation: 'before dawn',
-          children: [{ kind: 'vocab', text: '夜明け', translation: 'dawn', gloss: 'dawn', reading: 'よあけ' }],
+          children: [
+            {
+              kind: 'vocab',
+              text: '夜明け',
+              translation: 'dawn',
+              gloss: 'dawn',
+              reading: 'よあけ',
+            },
+          ],
         },
-        { kind: 'vocab', text: '店', translation: 'shop', gloss: 'shop', reading: 'みせ' },
+        {
+          kind: 'vocab',
+          text: '店',
+          translation: 'shop',
+          gloss: 'shop',
+          reading: 'みせ',
+        },
       ],
     },
     {
@@ -86,8 +100,20 @@ export const PAIRED_ANALYSIS: Segmentation = alignSegments(
       text: '市場で小麦粉を買って、その日のパンを作ります。',
       translation: "It buys flour at the market and makes the day's bread.",
       children: [
-        { kind: 'vocab', text: '市場', translation: 'market', gloss: 'market', reading: 'いちば' },
-        { kind: 'vocab', text: '小麦粉', translation: 'flour', gloss: 'flour', reading: 'こむぎこ' },
+        {
+          kind: 'vocab',
+          text: '市場',
+          translation: 'market',
+          gloss: 'market',
+          reading: 'いちば',
+        },
+        {
+          kind: 'vocab',
+          text: '小麦粉',
+          translation: 'flour',
+          gloss: 'flour',
+          reading: 'こむぎこ',
+        },
       ],
     },
   ],

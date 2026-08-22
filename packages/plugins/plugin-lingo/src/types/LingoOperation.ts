@@ -137,6 +137,8 @@ export const AnalyzeText = Operation.make({
     translation: Schema.optional(
       Schema.String.annotate({ description: 'The same passage in the base language, for paired ranges.' }),
     ),
+    /** Where to file the vocabulary the analysis found; omitted, nothing is harvested. */
+    vocabulary: Schema.optional(Ref.Ref(Vocabulary.Vocabulary)),
     /** Forces a fresh analysis even when a matching one is cached. */
     refresh: Schema.optional(Schema.Boolean),
   }),
@@ -144,6 +146,8 @@ export const AnalyzeText = Operation.make({
     analysis: Ref.Ref(Analysis.Analysis),
     /** True when a cached analysis was returned without calling the model. */
     cached: Schema.Boolean,
+    /** Words added to the word list from this analysis. */
+    added: Schema.Number,
   }),
   services: [Database.Service, AiService.AiService],
 });
@@ -166,7 +170,9 @@ export const TranslatePassage = Operation.make({
     language: Ref.Ref(Language.Language),
   }),
   output: Schema.Struct({
-    text: Schema.String.annotate({ description: 'The passage in the base language.' }),
+    text: Schema.String.annotate({ description: 'The passage in the target language.' }),
+    /** The language the passage turned out to be in; the reader records it as the study language. */
+    sourceCode: Schema.optional(Schema.String.annotate({ description: 'BCP-47 tag detected in the source.' })),
   }),
   services: [Database.Service, AiService.AiService],
 });

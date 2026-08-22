@@ -12,8 +12,6 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { Language, Vocabulary } from '#types';
 
-import { getLanguagesPath, getVocabulariesPath } from '../paths';
-
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributeAll(SpaceCapabilities.CreateObjectEntry, [
@@ -22,13 +20,11 @@ export default Capability.makeModule(
         createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Language.make(props);
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
-              target: options.target,
-              // The navtree section, not the database subtree: the section is where the user just
-              // pressed `+` and where the object will be listed.
-              targetNodeId: options.targetNodeId ?? getLanguagesPath(options.db.spaceId),
-            });
+            return yield* Operation.invoke(
+              SpaceOperation.AddObject,
+              { object, target: options.target },
+              { spaceId: options.db.spaceId },
+            );
           }),
       },
       {
@@ -37,11 +33,11 @@ export default Capability.makeModule(
         createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Vocabulary.make(props);
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
-              target: options.target,
-              targetNodeId: options.targetNodeId ?? getVocabulariesPath(options.db.spaceId),
-            });
+            return yield* Operation.invoke(
+              SpaceOperation.AddObject,
+              { object, target: options.target },
+              { spaceId: options.db.spaceId },
+            );
           }),
       },
     ]);
