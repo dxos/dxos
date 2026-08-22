@@ -107,8 +107,13 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
   );
 
   const render = useMemo(
-    () => createTooltipRenderer({ t, onAdd: deck && settings.translateUnknownWords ? handleAddWord : undefined }),
-    [t, deck, settings.translateUnknownWords, handleAddWord],
+    () =>
+      createTooltipRenderer({
+        t,
+        lookup,
+        onAdd: deck && settings.translateUnknownWords ? handleAddWord : undefined,
+      }),
+    [t, lookup, deck, settings.translateUnknownWords, handleAddWord],
   );
 
   // The whole passage in the base language, for the split view's second pane. Keyed by the text it

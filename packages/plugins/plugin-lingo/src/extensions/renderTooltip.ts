@@ -5,12 +5,18 @@
 import { Domino } from '@dxos/ui';
 import { type RenderCallback } from '@dxos/ui-editor/types';
 
+import { type VocabularyLookup, normalizeToken } from './deck-segments';
 import { type SegmentTooltipProps } from './segments';
 
 export type TooltipHandlers = {
   t: (key: string, options?: Record<string, unknown>) => string;
   /** Files the hovered segment into the active deck; absent when no deck is selected. */
   onAdd?: (props: SegmentTooltipProps) => void;
+  /**
+   * The deck's terms. A segment already held has nothing to add, so the action is withheld — the
+   * analysis alone cannot answer this, since a merged analyzed segment looks identical to a new one.
+   */
+  lookup?: VocabularyLookup;
 };
 
 /**
@@ -18,7 +24,7 @@ export type TooltipHandlers = {
  * lifetime, and mounting a React root per hover leaks one root per region passed over.
  */
 export const createTooltipRenderer =
-  ({ t, onAdd }: TooltipHandlers): RenderCallback<SegmentTooltipProps> =>
+  ({ t, onAdd, lookup }: TooltipHandlers): RenderCallback<SegmentTooltipProps> =>
   (el, props) => {
     const { segment, text } = props;
     const root = Domino.of('div').classNames('flex flex-col gap-1 p-2 max-w-80');
@@ -44,7 +50,7 @@ export const createTooltipRenderer =
       );
     }
 
-    if (onAdd) {
+    if (onAdd && !lookup?.(normalizeToken(text))?.wordId) {
       const label = t(segment.kind === 'vocab' ? 'add-word.label' : 'add-phrase.label');
       root.append(
         Domino.of('button')

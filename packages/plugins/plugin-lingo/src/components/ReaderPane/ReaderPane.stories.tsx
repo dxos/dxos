@@ -53,7 +53,10 @@ const ReaderPaneStory = ({ paired = false }: { paired?: boolean }) => {
 
   // The popover is only registered when `render` is supplied; without it that path is never
   // exercised.
-  const render = useMemo(() => createTooltipRenderer({ t, onAdd: ({ text }) => console.log('add', text) }), [t]);
+  const render = useMemo(
+    () => createTooltipRenderer({ t, lookup, onAdd: ({ text }) => console.log('add', text) }),
+    [t, lookup],
+  );
 
   const handleSelect = useCallback((segment?: { id: string }) => setSelected(segment?.id), []);
   const paneProps = { analysis, selected, render, onSelect: handleSelect };
