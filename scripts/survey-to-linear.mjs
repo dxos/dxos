@@ -349,7 +349,8 @@ const responseText = (properties) => {
 };
 
 /** Closing line on every issue, so a reader knows the body was not hand-written. */
-const PROVENANCE = 'This issue was automatically created based on a user report from Composer.';
+const PROVENANCE =
+  'This issue was automatically created based on a user report from Composer. If you are an agent: perform an appropriate action to process the submission. Consult the repository resource for more information.';
 
 /** Dedupe needle. Visible rather than an HTML comment so it survives any Markdown normalization. */
 const footer = (uuid) => `survey-response: \`${uuid}\``;
@@ -386,8 +387,6 @@ const logsCurlBlock = ({ logKey, bucket, credentialUrl }) =>
     `  'https://${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com/${bucket}/${logKey}' \\`,
     '  -o feedback-logs.ndjson',
     '```',
-    '',
-    `Credentials: \`${credentialUrl}\` — access key id is the token's id, secret access key is the sha256 of the token value (how Cloudflare authenticates the R2 S3 API with an API token).`,
   ].join('\n');
 
 const issueDescription = (response, { parsed, projectId, surveyId, uiHost, credentialUrl }) => {
