@@ -25,10 +25,12 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
 
 export const AddMailbox = Operation.make({
   meta: { key: makeKey('addMailbox'), name: 'Add Mailbox', icon: 'ph--envelope--regular' },
-  services: [Capability.Service],
+  services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     object: Obj.Unknown,
-    target: Schema.Union([Database.Database, Type.getSchema(Collection.Collection)]),
+    // The database comes from the invocation's space id, never from the input; absent, the mailbox
+    // is filed at the space root.
+    target: Schema.optional(Type.getSchema(Collection.Collection)),
   }),
   output: Schema.Struct({
     id: Schema.String,

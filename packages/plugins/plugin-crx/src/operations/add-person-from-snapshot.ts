@@ -16,7 +16,11 @@ const handler: Operation.WithHandler<typeof CrxOperation.AddPersonFromSnapshot> 
     Operation.withHandler(
       Effect.fn(function* ({ snapshot, target }) {
         const person = toPerson(snapshot);
-        const { id } = yield* Operation.invoke(SpaceOperation.AddObject, { object: person, target });
+        const { id } = yield* Operation.invoke(
+          SpaceOperation.AddObject,
+          { object: person },
+          { spaceId: target.spaceId },
+        );
         return { id };
       }),
     ),

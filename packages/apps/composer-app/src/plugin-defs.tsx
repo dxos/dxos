@@ -57,7 +57,6 @@ import * as ReviewPlugin from '@dxos/plugin-review/ReviewPlugin';
 import * as SamplePlugin from '@dxos/plugin-sample/SamplePlugin';
 import * as SandboxPlugin from '@dxos/plugin-sandbox/SandboxPlugin';
 import * as ScriptPlugin from '@dxos/plugin-script/ScriptPlugin';
-import * as SearchPlugin from '@dxos/plugin-search/SearchPlugin';
 import * as SequencerPlugin from '@dxos/plugin-sequencer/SequencerPlugin';
 import * as SheetPlugin from '@dxos/plugin-sheet/SheetPlugin';
 import * as SidekickPlugin from '@dxos/plugin-sidekick/SidekickPlugin';
@@ -211,7 +210,6 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     isLocal && SamplePlugin.make(),
     SandboxPlugin.make(),
     ScriptPlugin.make(),
-    SearchPlugin.make(),
     isDev && SidekickPlugin.make(),
     SheetPlugin.make(),
     IllustratorPlugin.make(),

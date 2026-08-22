@@ -37,6 +37,7 @@ export const translations = [
         'welcome-back.title': 'Welcome back!',
         'sign-in-with-passkey-button.label': 'Log in with passkey',
         'passkey-pending.label': 'Waiting for passkey…',
+        'oauth-pending.label': 'Authorizing…',
         'passkey-dismissed-error.message':
           'No passkey was used. The prompt was dismissed, or this device has no passkey for Composer.',
         'passkey-rejected-error.message':

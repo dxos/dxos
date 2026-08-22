@@ -16,6 +16,7 @@ import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import { Chat, RunInstructions } from '@dxos/assistant-toolkit';
 import { isSpace } from '@dxos/client/echo';
@@ -32,8 +33,6 @@ import { Position } from '@dxos/util';
 
 import { ASSISTANT_COMPANION_VARIANT, meta } from '#meta';
 import { AssistantCapabilities, AssistantOperation } from '#types';
-
-import { getChatsPath } from '../paths';
 
 /** Operation definitions to seed as `PersistentOperation` records for automation / triggers. */
 const computeOperationsToImport = [RunInstructions] as const;
@@ -250,16 +249,20 @@ export default Capability.makeModule(
                     { db: space.db },
                     { spaceId: space.db.spaceId },
                   );
-                  const { subject } = yield* Operation.invoke(
-                    SpaceOperation.AddObject,
-                    { object: chat, target: space.db, targetNodeId: getChatsPath(space.db.spaceId) },
+                  yield* Operation.invoke(SpaceOperation.AddObject, { object: chat }, { spaceId: space.db.spaceId });
+                  const { targets } = yield* Operation.invoke(
+                    NavigationOperation.ResolveNavigationTargets,
+                    { query: { uri: Obj.getURI(chat) } },
                     { spaceId: space.db.spaceId },
                   );
-                  yield* Operation.invoke(
-                    LayoutOperation.Open,
-                    { subject: [...subject] },
-                    { spaceId: space.db.spaceId },
-                  );
+                  const navigationTarget = targets[0];
+                  if (navigationTarget) {
+                    yield* Operation.invoke(
+                      LayoutOperation.Open,
+                      { subject: [navigationTarget.path] },
+                      { spaceId: space.db.spaceId },
+                    );
+                  }
                 }),
               properties: {
                 label: ['create-chat.label', { ns: meta.profile.key }],

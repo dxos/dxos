@@ -10,3 +10,4 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 // React surface into a worker bundle that cannot load it.
 
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));

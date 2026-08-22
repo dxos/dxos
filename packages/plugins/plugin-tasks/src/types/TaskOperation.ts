@@ -16,8 +16,6 @@ import { Actor, Milestone, type Person, Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { CODE_PROJECT_SKILL_KEY } from './skill-keys';
-
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /**
@@ -59,7 +57,7 @@ export const CreateTask = Operation.make({
   output: Schema.Struct({
     task: Schema.Unknown,
   }),
-}).pipe(Operation.mcpTool({ name: 'taskCreate', safety: 'write', aspect: 'tasks', skill: CODE_PROJECT_SKILL_KEY }));
+}).pipe(Operation.mutation('write'));
 
 export const UpdateTask = Operation.make({
   meta: {
@@ -88,7 +86,7 @@ export const UpdateTask = Operation.make({
   output: Schema.Struct({
     task: Schema.Unknown,
   }),
-}).pipe(Operation.mcpTool({ name: 'taskUpdate', safety: 'write', aspect: 'tasks', skill: CODE_PROJECT_SKILL_KEY }));
+}).pipe(Operation.mutation('write'));
 
 export const CompleteTask = Operation.make({
   meta: {
@@ -107,7 +105,7 @@ export const CompleteTask = Operation.make({
   output: Schema.Struct({
     task: Schema.Unknown,
   }),
-}).pipe(Operation.mcpTool({ name: 'taskComplete', safety: 'write', aspect: 'tasks', skill: CODE_PROJECT_SKILL_KEY }));
+}).pipe(Operation.mutation('write'));
 
 export const AssignTask = Operation.make({
   meta: {
@@ -127,7 +125,7 @@ export const AssignTask = Operation.make({
   output: Schema.Struct({
     task: Schema.Unknown,
   }),
-}).pipe(Operation.mcpTool({ name: 'taskAssign', safety: 'write', aspect: 'tasks', skill: CODE_PROJECT_SKILL_KEY }));
+}).pipe(Operation.mutation('write'));
 
 export const DeleteTask = Operation.make({
   meta: {
@@ -144,9 +142,7 @@ export const DeleteTask = Operation.make({
     /** Ids of the deleted task and every sub-task that went with it. */
     deleted: Schema.Array(Schema.String),
   }),
-}).pipe(
-  Operation.mcpTool({ name: 'taskDelete', safety: 'destructive', aspect: 'tasks', skill: CODE_PROJECT_SKILL_KEY }),
-);
+}).pipe(Operation.mutation('destructive'));
 
 export const MoveTask = Operation.make({
   meta: {
@@ -164,7 +160,7 @@ export const MoveTask = Operation.make({
   output: Schema.Struct({
     task: Schema.Unknown,
   }),
-}).pipe(Operation.mcpTool({ name: 'taskMove', safety: 'write', aspect: 'tasks', skill: CODE_PROJECT_SKILL_KEY }));
+}).pipe(Operation.mutation('write'));
 
 /** Opaque forward cursor; currently an encoded offset, so the wire shape survives a key-cursor swap. */
 export const TaskCursor = Schema.String;
@@ -200,7 +196,7 @@ export const ListTasks = Operation.make({
     /** Present when more results remain; pass back as `after`. */
     nextCursor: Schema.optional(TaskCursor),
   }),
-}).pipe(Operation.mcpTool({ name: 'taskList', safety: 'read', aspect: 'tasks', skill: CODE_PROJECT_SKILL_KEY }));
+}).pipe(Operation.mutation('none'));
 
 //
 // Milestones. A milestone is an ordered span of work within a task set; it carries no status of
@@ -225,9 +221,7 @@ export const CreateMilestone = Operation.make({
   output: Schema.Struct({
     milestone: Schema.Unknown,
   }),
-}).pipe(
-  Operation.mcpTool({ name: 'milestoneCreate', safety: 'write', aspect: 'tasks', skill: CODE_PROJECT_SKILL_KEY }),
-);
+}).pipe(Operation.mutation('write'));
 
 export const UpdateMilestone = Operation.make({
   meta: {
@@ -248,9 +242,7 @@ export const UpdateMilestone = Operation.make({
   output: Schema.Struct({
     milestone: Schema.Unknown,
   }),
-}).pipe(
-  Operation.mcpTool({ name: 'milestoneUpdate', safety: 'write', aspect: 'tasks', skill: CODE_PROJECT_SKILL_KEY }),
-);
+}).pipe(Operation.mutation('write'));
 
 export const DeleteMilestone = Operation.make({
   meta: {
@@ -267,14 +259,7 @@ export const DeleteMilestone = Operation.make({
     /** Number of tasks that fell back to the backlog. */
     releasedTasks: Schema.Number,
   }),
-}).pipe(
-  Operation.mcpTool({
-    name: 'milestoneDelete',
-    safety: 'destructive',
-    aspect: 'tasks',
-    skill: CODE_PROJECT_SKILL_KEY,
-  }),
-);
+}).pipe(Operation.mutation('destructive'));
 
 export const MoveMilestone = Operation.make({
   meta: {
@@ -292,7 +277,7 @@ export const MoveMilestone = Operation.make({
   output: Schema.Struct({
     milestone: Schema.Unknown,
   }),
-}).pipe(Operation.mcpTool({ name: 'milestoneMove', safety: 'write', aspect: 'tasks', skill: CODE_PROJECT_SKILL_KEY }));
+}).pipe(Operation.mutation('write'));
 
 export const ListMilestones = Operation.make({
   meta: {
@@ -321,4 +306,4 @@ export const ListMilestones = Operation.make({
       }),
     ),
   }),
-}).pipe(Operation.mcpTool({ name: 'milestoneList', safety: 'read', aspect: 'tasks', skill: CODE_PROJECT_SKILL_KEY }));
+}).pipe(Operation.mutation('none'));

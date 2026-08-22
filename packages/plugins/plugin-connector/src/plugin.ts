@@ -15,6 +15,7 @@ import {
   ReactSurface,
   RoutineTemplate,
   Schema,
+  SkillDefinition,
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
@@ -28,6 +29,7 @@ export const ConnectorPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),
   Plugin.addModule(Schema),
   Plugin.addModule(ReactSurface),
+  Plugin.addModule(SkillDefinition),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(BuiltinConnectors),
   Plugin.addModule(Coordinator),

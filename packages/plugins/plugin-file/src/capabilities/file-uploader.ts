@@ -21,7 +21,7 @@ export default Capability.makeModule(
     return Capability.contribute(AppCapabilities.FileUploader, (db, file) => {
       const program = Effect.gen(function* () {
         const { object } = yield* invoke(FileOperation.Create, { db, file });
-        yield* invoke(SpaceOperation.AddObject, { target: db, object });
+        yield* invoke(SpaceOperation.AddObject, { object }, { spaceId: db.spaceId });
         const blob = yield* Database.load(object.data);
         const urlOption = yield* Blob.url(blob).pipe(Effect.provide(Database.layer(db)));
         return {

@@ -16,7 +16,11 @@ const handler: Operation.WithHandler<typeof CrxOperation.AddOrganizationFromSnap
     Operation.withHandler(
       Effect.fn(function* ({ snapshot, target }) {
         const organization = toOrganization(snapshot);
-        const { id } = yield* Operation.invoke(SpaceOperation.AddObject, { object: organization, target });
+        const { id } = yield* Operation.invoke(
+          SpaceOperation.AddObject,
+          { object: organization },
+          { spaceId: target.spaceId },
+        );
         return { id };
       }),
     ),
