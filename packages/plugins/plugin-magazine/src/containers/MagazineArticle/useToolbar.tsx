@@ -90,34 +90,6 @@ export const useToolbar = ({ magazine }: UseToolbarProps) => {
     );
   }, [db, magazine, invoker]);
 
-  // `live` so the form edits a real subscription: the URL-driven name autofill and the feed's own
-  // properties surface behave exactly as they do after creation. A dismissed dialog removes it again,
-  // so only a confirmed feed comes back here to be attached to the magazine.
-  const handleAddFeed = useCallback(() => {
-    if (!db) {
-      return;
-    }
-
-    void EffectEx.runAndForwardErrors(
-      Effect.gen(function* () {
-        const feed = yield* invoker.invoke(SpaceOperation.OpenObjectForm, {
-          target: db,
-          typename: Type.getTypename(Subscription.Subscription),
-          mode: 'live',
-          defaults: { type: 'rss' },
-          // The magazine stays put: the feed is added to the article the user is already looking at.
-          navigable: false,
-        });
-        const subscription = feed?.target;
-        if (Obj.instanceOf(Subscription.Subscription, subscription)) {
-          Obj.update(magazine, (magazine) => {
-            magazine.feeds = [...magazine.feeds, Ref.make(subscription)];
-          });
-        }
-      }),
-    );
-  }, [db, magazine, invoker]);
-
   const handleClear = useCallback(
     () =>
       runExclusive(
@@ -142,14 +114,6 @@ export const useToolbar = ({ magazine }: UseToolbarProps) => {
 
       return (
         MenuBuilder.make()
-          .action(
-            'add-feed',
-            {
-              label: ['add-feed.label', { ns: meta.profile.key }],
-              icon: 'ph--plus--regular',
-            },
-            handleAddFeed,
-          )
           // Single-select filter: `value` is the active child id; `'default'` matches neither, so both
           // toggles read as off. Re-clicking the active toggle returns to `'default'`.
           .group(
