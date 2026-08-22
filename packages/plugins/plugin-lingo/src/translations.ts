@@ -4,11 +4,15 @@
 
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
+import { translations as menuTranslations } from '@dxos/react-ui-menu/translations';
 
 import { meta } from '#meta';
 import { Language, Vocabulary, Word } from '#types';
 
 export const translations = [
+  // The reader toolbar overflows into a menu, which labels itself from this bundle; without it the
+  // control renders its raw i18n key.
+  ...menuTranslations,
   {
     'en-US': {
       [Type.getTypename(Language.Language)]: {

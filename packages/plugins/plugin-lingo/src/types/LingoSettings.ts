@@ -7,20 +7,23 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
-/**
- * How the reader companion renders the text it is bound to.
- * - `original`: the source text, with known vocabulary underlined and translated on hover.
- * - `translation`: known vocabulary replaced inline by its translation.
- * - `split`: both panes side by side, scroll-linked.
- */
-export const RevealMode = Schema.Literals(['original', 'translation', 'split']);
-export type RevealMode = Schema.Schema.Type<typeof RevealMode>;
+import { Format } from '@dxos/echo';
+
+import * as Language from './Language';
 
 export const Settings = Schema.Struct({
-  revealMode: RevealMode.annotate({
-    title: 'Reader mode',
-    description: 'How the reader companion opens: original text, inline translation, or split view.',
-  }),
+  /**
+   * Language the reader opens on. Without it the selector fell back to whichever language sorted
+   * first by name — Arabic — for every learner, since the list is sorted for reading, not ranked.
+   */
+  language: Schema.optional(
+    Schema.String.annotate({
+      title: 'Language',
+      description: 'The language the reader companion translates into by default.',
+      // BCP-47 codes rather than names: the annotation carries bare values, so the select renders
+      // whatever is stored. Labelled options are a form-layer gap, tracked separately.
+    }).pipe(Format.OptionsAnnotation.set([...Language.POPULAR].map(({ code }) => code).sort())),
+  ),
   highlightKnownWords: Schema.optional(
     Schema.Boolean.annotate({
       title: 'Highlight vocabulary',
@@ -38,7 +41,7 @@ export const Settings = Schema.Struct({
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}
 
 export const defaults = (): Settings => ({
-  revealMode: 'original',
+  language: Language.DEFAULT_BASE_CODE,
   highlightKnownWords: true,
   translateUnknownWords: true,
 });

@@ -85,7 +85,13 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
   );
 
   const [languageCode, setLanguageCode] = useState<string | undefined>();
-  const code = languageCode ?? [...translated.keys()][0] ?? options[0]?.code;
+  // Settings before the first option: the list is sorted for reading, so falling straight through to
+  // it opened every reader on Arabic. A language already created for this object still wins — it is
+  // the one with a translation attached.
+  const preferred = options.some(({ code }) => code === settings.language)
+    ? settings.language
+    : Language.DEFAULT_BASE_CODE;
+  const code = languageCode ?? [...translated.keys()][0] ?? preferred ?? options[0]?.code;
   const language = code ? translated.get(code) : undefined;
 
   const allDecks = useQuery(db, Filter.type(Vocabulary.Vocabulary));
