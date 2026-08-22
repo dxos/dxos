@@ -16,6 +16,9 @@
       "path": "../../../common/keys"
     },
     {
+      "path": "../../echo/echo"
+    },
+    {
       "path": "../../protocols"
     }
   ]
