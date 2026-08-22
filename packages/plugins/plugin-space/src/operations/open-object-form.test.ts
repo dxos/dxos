@@ -55,6 +55,21 @@ describe('SpaceOperation.OpenObjectForm', () => {
     const result = await harness.runPromise(Operation.invoke(SpaceOperation.OpenObjectForm, { target: db }));
     expect(result).toBeUndefined();
   });
+
+  test('a remount takes back the dismissal it interrupted', async ({ expect }) => {
+    const object = Obj.make(TestObject, { name: 'retained' });
+    // The StrictMode sequence: the development unmount dismisses and the immediate remount retains,
+    // both within one task, so the deferred dismissal never reaches the operation.
+    const { harness, db } = await setup((handle) => {
+      handle.dismiss();
+      handle.retain();
+      setTimeout(() => handle.settle(object), 10);
+    });
+    await using _harness = harness;
+
+    const result = await harness.runPromise(Operation.invoke(SpaceOperation.OpenObjectForm, { target: db }));
+    expect(result?.target).toBe(object);
+  });
 });
 
 /** Stands in for the dialog surface: settles the handle the operation passed through the layout. */
