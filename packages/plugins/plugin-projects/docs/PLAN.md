@@ -151,8 +151,9 @@ process drains at its own pace (at the cost of the visible extra feed).
       Refs), then removed; recover from commit 11802071c1 if a migration is
       ever needed.
 - [x] `makeInitialized` slims to identity + instructions + first chat
-      (with `agent`/`instructions` refs); `resetChatHistory` rebuilds via the
-      `CompanionTo` relation (new `Agent.loadChat` helper). UI ports:
+      (with `agent`/`instructions` refs); `resetChatHistory` rebuilds the chat —
+      linkage is the ECHO parent edge (`CompanionTo` since deleted), and the new
+      `Agent.loadChat` helper resolves the latest child chat. UI ports:
       `AgentArticle` = instructions editor + reset (artifacts/inputs tabs died
       with their fields); `AgentProperties` derives subscription state from
       compiled trigger foreign keys and toggles via `SyncAutomation`;

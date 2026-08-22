@@ -103,7 +103,6 @@ const types = [
   Outline.Outline,
   Text.Text,
   Chat.Chat,
-  Chat.CompanionTo,
   Skill.Skill,
   Feed.Feed,
   Message.Message,
