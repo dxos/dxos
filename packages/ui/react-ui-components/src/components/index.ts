@@ -12,7 +12,6 @@ export * from './QueryForm';
 export * from './Shimmer';
 export * from './Spinner';
 export * from './TextBlock';
-export * from './TextCrawl';
 export * from './Timeline';
 export * from './TogglePanel';
 export * from './Waveform';

@@ -7,8 +7,8 @@ Composite React components built on `@dxos/react-ui`.
 The package currently holds two kinds of thing, and the split is worth knowing before adding to it:
 
 - **Presentational primitives** that depend on nothing but `react-ui` and the theme —
-  `AnimatedBorder`, `Matrix`, `NumericTabs`, `Progress`, `Shimmer`, `Spinner`, `TextBlock`,
-  `TextCrawl`, `TogglePanel`, `Waveform`.
+  `AnimatedBorder`, `Matrix`, `NumericTabs`, `Shimmer`, `Spinner`, `TextBlock`, `TogglePanel`,
+  `Waveform`.
 - **Domain-coupled components** that reach into ECHO or the assistant — `HtmlViewer`, `QueryEditor`,
   `QueryForm`, `Timeline`. These are why the package depends on `@dxos/echo`, `@dxos/echo-query`,
   `@dxos/assistant` and the editor packages, which every consumer pays for even when it only wanted a
@@ -17,6 +17,7 @@ The package currently holds two kinds of thing, and the split is worth knowing b
 Splitting along that line is the sharpening this package needs; until then, prefer adding a
 presentational primitive here and keeping domain coupling out of it.
 
-`Progress` groups the activity indicators that share a core: `Steps` (a controlled chain of circles)
-plus `ProgressBar`, which derives those steps for an unbounded run. `Spinner`, `Shimmer` and
-`Waveform` are the same family and would join it in a sharper arrangement.
+The progress components have already gone the other way: `Progress` (the bar, the step chain, and
+the readout that adapts between them) and `TextCrawl` now live in `@dxos/react-ui`, where anything
+that reports progress can reach them without paying for this package's domain dependencies.
+`Spinner`, `Shimmer` and `Waveform` are the same family and belong there too.

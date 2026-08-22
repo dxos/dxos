@@ -6,16 +6,17 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
 
-import { sizes } from './sizes';
+import { withTheme } from '../../testing';
+import { Toolbar } from '../Toolbar';
+
+import { textCrawlSizes } from './sizes';
 import { TextCrawl } from './TextCrawl';
 
 random.seed(1234);
 
 const meta = {
-  title: 'ui/react-ui-components/TextCrawl',
+  title: 'ui/react-ui-core/components/TextCrawl',
   component: TextCrawl,
   decorators: [withTheme()],
   parameters: {
@@ -87,7 +88,7 @@ export const Numbers: Story = {
 
     return (
       <div className='flex flex-col gap-4'>
-        {sizes.map((size) => (
+        {textCrawlSizes.map((size) => (
           <div className='flex' key={size}>
             {Array.from({ length: n }).map((_, i) => (
               <TextCrawl

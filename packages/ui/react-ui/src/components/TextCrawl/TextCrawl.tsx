@@ -14,10 +14,10 @@ import React, {
   useSyncExternalStore,
 } from 'react';
 
-import { type ClassNameValue, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
+import { type ClassNameValue, type ThemedClassName } from '@dxos/ui-types';
 
-import { type Size } from './sizes';
+import { type TextCrawlSize } from './sizes';
 
 const emptyLines: string[] = [];
 
@@ -173,7 +173,7 @@ export const TextCrawl = ({
 // Ribbon
 //
 
-const sizeClassNames: Record<Size, { lineHeight: number; className: string }> = {
+const sizeClassNames: Record<TextCrawlSize, { lineHeight: number; className: string }> = {
   sm: { lineHeight: 20, className: 'h-[20px] text-sm' },
   md: { lineHeight: 24, className: 'h-[24px]' },
   lg: { lineHeight: 28, className: 'h-[28px] text-lg' },
@@ -185,7 +185,7 @@ export interface TextRibbonController {
 
 export type TextRibbonProps = ThemedClassName<{
   textClassNames?: ClassNameValue;
-  size?: Size;
+  size?: TextCrawlSize;
   lines?: string[];
   index?: number;
   cyclic?: boolean;
