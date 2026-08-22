@@ -8,6 +8,8 @@ import React from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
+import { type ProgressState, type ProgressStatus, stepAt, stepCount } from './types';
+
 /**
  * What one step is doing. `closed` is a step that has not been revealed yet (it animates open),
  * `open` one that is done, `active` the one in flight, `terminal` the last of a finished run.
@@ -158,26 +160,41 @@ const Notch = ({ classNames }: ThemedClassName) => (
 );
 
 /**
- * Step states for a run with a KNOWN plan: `phases` steps, the one at `phase` in flight.
+ * Step states for a plan, derived from the shared {@link ProgressState}.
  *
- * The counterpart to what {@link ProgressBar} does for an unbounded run — same primitive, different
- * derivation, which is the point of keeping `Steps` controlled.
+ * `revealed` bounds how many steps are drawn — an unbounded run only shows the tail that fits, and the
+ * ones before it animate closed rather than disappearing.
  */
-export const planSteps = (
-  phases: number,
-  phase: number | undefined,
-  status: 'running' | 'done' | 'error' | 'pending',
-): StepsProps['steps'] =>
-  Array.from({ length: phases }, (_, index) => ({
-    id: `phase-${index}`,
-    state:
-      status === 'error' && index === phase
-        ? 'error'
-        : phase === undefined || index > phase
-          ? 'open'
-          : index < phase
-            ? 'terminal'
-            : status === 'running'
-              ? 'active'
-              : 'terminal',
-  }));
+export const deriveSteps = (
+  state: ProgressState,
+  options: { selected?: number; from?: number; to?: number } = {},
+): StepsProps['steps'] => {
+  const count = stepCount(state.phases);
+  const from = options.from ?? 0;
+  const to = options.to ?? count;
+  const { phase, status } = state;
+
+  return Array.from({ length: Math.max(0, to - from) }, (_, offset) => {
+    const index = from + offset;
+    return {
+      ...stepAt(state.phases, index),
+      selected: options.selected === index,
+      state: stepState(index, phase, status),
+    };
+  });
+};
+
+const stepState = (index: number, phase: number | undefined, status: ProgressStatus | undefined): StepState => {
+  if (phase === undefined) {
+    // No phase in flight: the plan is laid out but nothing has claimed a step yet.
+    return 'open';
+  }
+  if (index < phase) {
+    return 'terminal';
+  }
+  if (index > phase) {
+    return 'open';
+  }
+  // The step in flight carries the run's status: spinning while running, red when it failed there.
+  return status === 'error' ? 'error' : status === 'running' || status === 'pending' ? 'active' : 'terminal';
+};

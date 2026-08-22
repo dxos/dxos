@@ -2,12 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
 import { Progress } from '@dxos/progress';
-import { IconButton, ThemedClassName, composable, composableProps } from '@dxos/react-ui';
-import { Steps, planSteps } from '@dxos/react-ui-components';
-import { mx } from '@dxos/ui-theme';
+import { type ThemedClassName, composable } from '@dxos/react-ui';
+import { ProgressMeter as NaturalProgressMeter, type ProgressState } from '@dxos/react-ui-components';
+
+export { formatDuration } from '@dxos/react-ui-components';
 
 export type ProgressMeterProps = ThemedClassName<{
   state: Progress.TaskProgress;
@@ -16,128 +17,44 @@ export type ProgressMeterProps = ThemedClassName<{
 }>;
 
 /**
- * Renders one progress provider's state. When the total is known, a labelled bar with count and
- * ETA; otherwise (no estimate) no bar is shown — just a live elapsed-time readout, since a
- * perpetually-pulsing indeterminate bar conveys nothing.
+ * A registry task, rendered.
+ *
+ * The presentation lives in `react-ui-components`, which knows nothing about a progress registry —
+ * this is the seam between the two, and the only place the runtime's task model is named. Keeping the
+ * adapter here is what lets a story or a scripted value drive the same component.
  */
 export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
-  ({ state, onCancel, ...props }, forwardedRef) => {
-    const { current, total, phases, phase, label, name, status } = state;
-    const indeterminate = total === undefined;
-    const fraction = indeterminate ? 0 : total === 0 ? 1 : Math.min(1, current / total);
-    const eta = Progress.deriveEta(state);
-    const active = status === 'running' || status === 'pending';
-    // The registry only recomputes elapsedMs when the task is touched, so tick locally while active.
-    const elapsedMs = useElapsed(state.startedAt, active, state.elapsedMs);
-    // One control, two jobs: it cancels a run in flight, and clears one that ended in an error —
-    // where there is nothing left to cancel, but the meter would otherwise hold the statusbar with no
-    // way to dismiss it. Clearing needs no `cancellable`: that flag says the PRODUCER can be
-    // interrupted, which is irrelevant once the run is over.
-    const failed = status === 'error';
-    const cancellable = !!onCancel && (failed || (state.cancellable === true && active));
-
-    return (
-      <div
-        {...composableProps(props, { classNames: 'grid grid-rows-[24px_4px_24px] gap-0.5 px-1', role: 'group' })}
-        ref={forwardedRef}
-      >
-        <div className='flex justify-between items-center gap-2 text-xs text-description'>
-          <span className='truncate'>{label ?? name}</span>
-          {/* A known plan is drawn as its steps: which phase is in flight is the one thing a run with
-              an uncountable phase can still say, and it says it without a bar. */}
-          {phases !== undefined && phases > 0 && (
-            <Steps classNames='shrink-0' steps={planSteps(phases, phase, status)} />
-          )}
-          <div className='flex items-center gap-1 shrink-0'>
-            <span className='font-mono'>
-              {indeterminate ? (active ? formatDuration(elapsedMs) : '') : `${current} / ${total}`}
-            </span>
-            {cancellable && (
-              <IconButton
-                density='sm'
-                variant='ghost'
-                size={3}
-                square
-                icon='ph--x--regular'
-                iconOnly
-                label={failed ? 'Dismiss' : 'Cancel'}
-                onClick={onCancel}
-              />
-            )}
-          </div>
-        </div>
-
-        {/* A progress line only when a real fraction is known; an indeterminate bar conveys nothing. */}
-        {!indeterminate && (
-          <div
-            role='progressbar'
-            aria-valuenow={current}
-            aria-valuemax={total}
-            className='relative h-full rounded overflow-hidden bg-separator'
-          >
-            <div
-              className={mx(
-                // Ease the width between updates so incremental advances glide rather than jump.
-                'absolute inset-y-0 start-0 rounded transition-[width] duration-500 ease-linear',
-                status === 'error' ? 'bg-error-surface' : 'bg-primary-surface',
-              )}
-              style={{ width: `${fraction * 100}%` }}
-            />
-          </div>
-        )}
-
-        <div className='flex items-center justify-between gap-2'>
-          {status === 'error' && state.error ? (
-            <div className='text-xs text-error-text truncate'>{state.error}</div>
-          ) : (
-            <>
-              {/* The producer's breakdown of what is outstanding (e.g. per-kind counts). */}
-              <div className='text-xs text-subdued truncate'>{state.note}</div>
-              {!indeterminate && eta !== undefined && status === 'running' && (
-                <div className='text-xs text-subdued shrink-0'>{formatDuration(eta)} remaining</div>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-    );
-  },
+  ({ state, onCancel, className, classNames }, forwardedRef) => (
+    <NaturalProgressMeter
+      // `className` is what a host slot injects at runtime (`Panel.Statusbar asChild`); the
+      // presentational component owns the DOM node, so it is merged into its `classNames` rather
+      // than applied here — there is no element of our own to put it on.
+      classNames={[className, classNames]}
+      state={toProgressState(state)}
+      onCancel={onCancel}
+      ref={forwardedRef}
+    />
+  ),
 );
 
 ProgressMeter.displayName = 'ProgressMeter';
 
 /**
- * Elapsed milliseconds since `startedAt`, ticking every second while `active` (the registry only
- * revises `elapsedMs` on touch, so a task that registers and idles would otherwise never advance).
- * Falls back to the registry's `elapsedMs` when the task has no start time.
+ * Maps a registry task onto the presentational model. The ETA is derived here rather than in the
+ * component: `deriveEta` falls back to a linear projection from the task's own elapsed time, which is
+ * knowledge about how the registry measures, not about how to draw a meter.
  */
-const useElapsed = (startedAt: string | undefined, active: boolean, fallbackMs: number | undefined): number => {
-  const start = startedAt ? Date.parse(startedAt) : undefined;
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    if (!active || start === undefined) {
-      return;
-    }
-    const interval = setInterval(() => setNow(Date.now()), 1_000);
-    return () => clearInterval(interval);
-  }, [active, start]);
-  if (start === undefined) {
-    return fallbackMs ?? 0;
-  }
-  return Math.max(0, now - start);
-};
-
-/** Compact human duration for an ETA (e.g. `12s`, `3m 05s`, `1h 02m`). */
-export const formatDuration = (ms: number): string => {
-  const totalSeconds = Math.max(0, Math.round(ms / 1_000));
-  const seconds = totalSeconds % 60;
-  const minutes = Math.floor(totalSeconds / 60) % 60;
-  const hours = Math.floor(totalSeconds / 3_600);
-  if (hours > 0) {
-    return `${hours}h ${String(minutes).padStart(2, '0')}m`;
-  }
-  if (minutes > 0) {
-    return `${minutes}m ${String(seconds).padStart(2, '0')}s`;
-  }
-  return `${seconds}s`;
-};
+const toProgressState = (task: Progress.TaskProgress): ProgressState => ({
+  label: task.label ?? task.name,
+  status: task.status,
+  current: task.current,
+  total: task.total,
+  phases: task.phases,
+  phase: task.phase,
+  note: task.note,
+  error: task.error,
+  startedAt: task.startedAt,
+  elapsedMs: task.elapsedMs,
+  etaMs: Progress.deriveEta(task),
+  cancellable: task.cancellable,
+});
