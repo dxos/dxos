@@ -86,7 +86,7 @@ const DefaultStory = (args: ProgressMeterProps) => {
       const phase = script.phases[index];
       if (!phase) {
         clearInterval(interval);
-        patch({ status: 'done', note: 'Done' });
+        patch({ status: 'done', note: 'Done', phase: script.phases.length - 1 });
         return;
       }
 
@@ -94,14 +94,14 @@ const DefaultStory = (args: ProgressMeterProps) => {
       // which is the point — there is nothing to count, so the meter shows elapsed instead.
       if (phase.total !== undefined) {
         count += 1;
-        patch({ note: phase.note, total: phase.total, current: count });
+        patch({ note: phase.note, phase: index, total: phase.total, current: count });
         if (count >= phase.total) {
           index += 1;
           count = 0;
         }
       } else {
         count += TICK_MS;
-        patch({ note: phase.note, total: undefined, current: 0 });
+        patch({ note: phase.note, phase: index, total: undefined, current: 0 });
         if (count >= (phase.durationMs ?? 3_000)) {
           index += 1;
           count = 0;
@@ -116,7 +116,8 @@ const DefaultStory = (args: ProgressMeterProps) => {
     stopped.current = true;
     // Stamped here, not in a fixture: the clock has to read from zero on start, and a baked-in
     // `startedAt` shows a run that was already going before anyone pressed anything.
-    setState({ ...IDLE, status: 'running', startedAt: new Date().toISOString() });
+    // `phases` is the plan's length; the meter draws one circle per phase and marks the one in flight.
+    setState({ ...IDLE, status: 'running', startedAt: new Date().toISOString(), phases: phases.length, phase: 0 });
     setScript(({ run }) => ({ phases, run: run + 1 }));
   }, []);
 
@@ -181,7 +182,8 @@ type Story = StoryObj<typeof meta>;
  * named underneath throughout: `label` holds the run's identity and `note` the phase, so the task
  * never reads as a different task mid-run.
  *
- * **Fail** ends the run with an error. **Cancel** — in the toolbar, or the meter's own ✕ — stops a
+ * A run that declares `phases` draws one circle per phase, with the one in flight ringed — the one
+ * thing an uncountable phase can still report. **Fail** ends the run with an error. **Cancel** — in the toolbar, or the meter's own ✕ — stops a
  * run and returns the meter to idle: cancelling is not a failure, so it leaves no error behind. The
  * ✕ stays available on a failed run, where it clears the error rather than cancelling anything.
  */
