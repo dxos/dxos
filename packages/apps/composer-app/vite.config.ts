@@ -48,9 +48,11 @@ const dirname = import.meta.dirname;
 const boot = bootChunking({ entry: path.resolve(dirname, 'src/main.tsx') });
 
 // These packages' `browser`-conditioned entrypoints initialize their wasm with top-level await,
-// which WebKit evaluates out of order under concurrent dynamic imports (TDZ, "undefined is not an
-// object" at plugin activation) — so resolve them to their `slim` entrypoints and initialize
-// explicitly per realm via `initAutomergeWasm()` before the client boots.
+// which WebKit before Safari 27 evaluates out of order under concurrent dynamic imports (TDZ,
+// "undefined is not an object" at plugin activation; https://bugs.webkit.org/show_bug.cgi?id=242740,
+// fixed by the module-loader rewrite in https://github.com/WebKit/WebKit/pull/57827) — so resolve
+// them to their `slim` entrypoints and initialize explicitly per realm via `initAutomergeWasm()`
+// before the client boots.
 const SLIM_WASM_PACKAGES = ['@automerge/automerge', '@automerge/automerge-repo', '@automerge/automerge-subduction'];
 
 /**
