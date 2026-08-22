@@ -4,12 +4,11 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export type { CreateObjectDialogProps } from './CreateObjectDialog';
+export type { ObjectFormDialogProps } from './ObjectFormDialog';
 export type { RenameSubject } from './RenamePopover';
 
 export const CollectionArticle: ComponentType<any> = lazy(() => import('./CollectionArticle'));
 export const CollectionSection: ComponentType<any> = lazy(() => import('./CollectionSection'));
-export const CreateObjectDialog: ComponentType<any> = lazy(() => import('./CreateObjectDialog'));
 export const CreateSpaceDialog: ComponentType<any> = lazy(() => import('./CreateSpaceDialog'));
 export const DefaultProperties: ComponentType<any> = lazy(() => import('./DefaultProperties'));
 export const ImportSpaceDialog: ComponentType<any> = lazy(() => import('./ImportSpaceDialog'));
@@ -18,6 +17,7 @@ export const JoinDialog: ComponentType<any> = lazy(() => import('./JoinDialog'))
 export const MembersContainer: ComponentType<any> = lazy(() => import('./MembersContainer'));
 export const MergePreview: ComponentType<any> = lazy(() => import('./MergePreview'));
 export const ObjectCardStack: ComponentType<any> = lazy(() => import('./ObjectCardStack'));
+export const ObjectFormDialog: ComponentType<any> = lazy(() => import('./ObjectFormDialog'));
 export const RecordArticle: ComponentType<any> = lazy(() => import('./RecordArticle'));
 export const RelatedArticle: ComponentType<any> = lazy(() => import('./RelatedArticle'));
 export const RenamePopover: ComponentType<any> = lazy(() => import('./RenamePopover'));

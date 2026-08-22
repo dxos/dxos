@@ -14,8 +14,9 @@ import { type Space } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type CreateObjectOption, CreateObjectPanel, type Metadata } from '#components';
 import { translations } from '#translations';
+
+import { type CreateObjectOption, CreateObjectPanel, type Metadata } from './CreateObjectPanel';
 
 const mockOptions: CreateObjectOption[] = [
   { id: 'org.dxos.type.document', label: 'Document', plugin: 'Markdown', icon: 'ph--file-text--regular' },
@@ -66,7 +67,7 @@ const mockMetadata: Metadata = {
 };
 
 const meta = {
-  title: 'plugins/plugin-space/containers/CreateObjectDialog',
+  title: 'plugins/plugin-space/components/CreateObjectPanel',
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withPluginManager()],
   parameters: {
     translations,

@@ -176,7 +176,15 @@ export const lazy = (entries: readonly Operation.LazyHandler[]): OperationHandle
     const key = normalizeKey(definition.meta.key);
     let promise = loaded.get(key);
     if (!promise) {
-      promise = load().then(({ default: handler }) => handler);
+      // Evict on failure: a transient import failure (a stale chunk hash after a redeploy) would
+      // otherwise be memoized, so every later invocation rejects instantly without re-fetching.
+      promise = load().then(
+        ({ default: handler }) => handler,
+        (err) => {
+          loaded.delete(key);
+          throw err;
+        },
+      );
       loaded.set(key, promise);
     }
     return promise;

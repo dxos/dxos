@@ -2754,6 +2754,58 @@ describe('Query', () => {
       }
     });
 
+    test('full-text search scoped by type', async () => {
+      const { db, graph } = await builder.createDatabase();
+      graph.registry.add([TestSchema.Task, TestSchema.Person]);
+
+      db.add(Obj.make(TestSchema.Task, { title: 'Quarterly planning' }));
+      db.add(Obj.make(TestSchema.Person, { name: 'Quarterly Reviewer' }));
+      db.add(Obj.make(TestSchema.Person, { name: 'Unrelated Name' }));
+      await db.flush();
+
+      // Unscoped matches both entities containing the term.
+      {
+        const objects = await db.query(Query.select(Filter.text('Quarterly', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(2);
+      }
+
+      // Scoped to one type.
+      {
+        const objects: TestSchema.Task[] = await db
+          .query(
+            Query.select(Filter.and(Filter.text('Quarterly', { type: 'full-text' }), Filter.type(TestSchema.Task))),
+          )
+          .run();
+        expect(objects).toHaveLength(1);
+        expect(objects[0].title).toEqual('Quarterly planning');
+      }
+
+      // Scoped to multiple types via OR.
+      {
+        const objects = await db
+          .query(
+            Query.select(
+              Filter.and(
+                Filter.text('Quarterly', { type: 'full-text' }),
+                Filter.or(Filter.type(TestSchema.Task), Filter.type(TestSchema.Person)),
+              ),
+            ),
+          )
+          .run();
+        expect(objects).toHaveLength(2);
+      }
+
+      // A type scope the term never occurs under matches nothing.
+      {
+        const objects = await db
+          .query(
+            Query.select(Filter.and(Filter.text('Unrelated', { type: 'full-text' }), Filter.type(TestSchema.Task))),
+          )
+          .run();
+        expect(objects).toHaveLength(0);
+      }
+    });
+
     test('full-text search after content update', async () => {
       const { db } = await builder.createDatabase();
 

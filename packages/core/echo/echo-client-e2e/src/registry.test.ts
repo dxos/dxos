@@ -187,6 +187,37 @@ describe('Registry', () => {
     expect((q.results[0] as any).value).toBe(10);
   });
 
+  test('text filters evaluate in memory over property values and meta keys', ({ expect }) => {
+    const registry = makeRegistry();
+    const task = Obj.make(TestSchema.Expando, {
+      [Obj.Meta]: { key: 'org.example.fn.taskCreate', version: '1.0.0' },
+      name: 'Create Task',
+      description: 'Creates a task in the set.',
+    });
+    const query = Obj.make(TestSchema.Expando, {
+      [Obj.Meta]: { key: 'org.example.fn.queryObjects', version: '1.0.0' },
+      name: 'Query Objects',
+      description: 'Queries objects in a space.',
+    });
+    registry.add([task, query]);
+
+    // Case-insensitive, and every term must match — across property values.
+    const byText = registry.query(
+      Query.select(Filter.and(Filter.type(TestSchema.Expando), Filter.text('CREATES task'))),
+    ).results;
+    expect(byText).toHaveLength(1);
+    expect((byText[0] as any).name).toBe('Create Task');
+
+    // Meta is part of the serialized entity, so a registry key is searchable too.
+    const byKey = registry.query(Query.select(Filter.text('queryObjects'))).results;
+    expect(byKey).toHaveLength(1);
+    expect((byKey[0] as any).name).toBe('Query Objects');
+
+    expect(registry.query(Query.select(Filter.text('creates nonexistent'))).results).toHaveLength(0);
+    // Vector search needs an embedding index no in-memory executor has.
+    expect(registry.query(Query.select(Filter.text('task', { type: 'vector' }))).results).toHaveLength(0);
+  });
+
   test('query with limit respects count', ({ expect }) => {
     const registry = makeRegistry();
     registry.add([makeObj({ value: 1 }), makeObj({ value: 2 }), makeObj({ value: 3 })]);

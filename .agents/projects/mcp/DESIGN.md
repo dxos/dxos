@@ -7,15 +7,78 @@ dxos-side decisions those two don't cover.
 
 ## 1. Two hosts, one surface
 
-`@dxos/mcp-server` owns everything that decides what a model sees: annotated operations as tools,
-opted-in skills as prompts, `skillLoad`, name derivation and the collision contract, ref widening,
-the wire response passes, and the stdio transport that applies them. A host supplies a `Gateway`
-— reach the registry, invoke an operation, name the session's spaces — and nothing else.
+`@dxos/mcp-server` owns everything that decides what a model sees **of the operation surface**: the
+three tools over the registry, opted-in skills as prompts, `loadSkill`, ref widening, the wire
+response passes, and the stdio transport that applies them. For that surface a host supplies echo's
+`Registry.Service` (a registry holding `PersistentOperation` and `Skill` entities) and
+`McpServer.Host` (the invoke seam plus the session's spaces) — and nothing else. Each host still
+hand-writes its own static toolkit beside it (§1.1), which is duplication rather than a deliberate
+host-layer boundary.
+
+### 1.0 Operations are found, not advertised (2026-08-20)
+
+The projection spent one MCP tool per operation, so every operation's name, description and full
+input schema entered the client's context at `tools/list` whether or not the task touched it — and
+the cost grew with every plugin a host enabled (27 tools on `dx mcp serve` before this change,
+7 after). The Cloudflare and PostHog MCP servers answer this the same way, and so does this one
+now: a fixed surface of `queryOperations` (search; a `keys` lookup returns the schemas),
+`invokeOperation` (dispatch by key) and `loadSkill`.
+
+**Second round (user, 2026-08-21): the backend is echo's registry, not a custom catalog.** The
+first cut re-implemented storage and search (`ProjectedOperation`, `OperationEntry`, a `Catalog`)
+over wire-record lists — but `PersistentOperation` and `Skill` are ECHO entities and echo's
+`Registry` already stores keyed entities and answers the standard Query DSL. So: `projection.ts`,
+`catalog.ts` and the whole `McpRegistry` wrapper are gone; the surface queries `Registry.Service`
+directly (`Filter.type`, `Filter.text` — in-memory text matching added to the registry in echo for
+this, DB paths untouched — and `getByURI` for key lookups in any spelling). Handlers query live,
+so an operation registered after startup is findable without a rebuild; only the prompt list is
+captured at layer build (effect's `McpServer` has no removal). What remains host-specific is
+`McpServer.Host` — `invoke` + `spaceIds`. No exported intermediate types survive except the
+`queryOperations` row.
+
+Three consequences worth stating, because each removes something that used to be load-bearing:
+
+- **The tool-name contract is gone.** A tool name was the key's final segment inside a 64-char
+  budget, so a long segment could not be advertised and two operations sharing a segment were a
+  collision the projection threw on. Addressed by key, neither is a constraint — and the reserved-name
+  check now guards only this package's three names against a host's static toolkit.
+- **Safety moved from annotations to data.** A per-operation tool carried
+  `readOnlyHint`/`destructiveHint`, which is what a client turns into its permission prompt. One
+  dispatch tool cannot: it is marked possibly-destructive because some operation behind it is, so a
+  client can no longer auto-approve a read. The classification still reaches the _model_, on the
+  `mutation` field of the row. That is the real cost of this shape, and it is why a read/write tool
+  split stays on the table if the permission friction bites.
+- **The skill pointer moved with it.** A governed tool's description used to carry "call
+  loadSkill('x') first"; a row names its skills as a field instead, and `loadSkill` gained a listing
+  mode so a model can see the workflows before it has searched for any operation.
+
+What did not change: skills remain the atomic unit of projection — an operation in the registry
+that no opted-in skill's `tools` list names is neither findable nor invocable — and both hosts pick
+the reshape up from the package, EDGE on its next pin bump.
+
+**How EDGE wires it** (verified against `edge/packages/services/mcp-space-service/src/mcp/gateway.ts`
+and `operation-service/src/entrypoint.ts`): its `gatewayLayer` currently maps the
+`OPERATION_SERVICE` binding onto the old list-shaped contract. Under the new shape it fetches the
+same RPC lists once and builds a local registry with `McpServer.hydrateRegistry({ operations,
+skills })` — operation records hydrate via `Obj.fromJSON`, skills rebuild as detached entities with
+their instructions text embedded, because `instructions.source` is a `Ref` that crosses RPC as a
+pointer nothing can resolve (edge's own TODO at entrypoint.ts:296 already names exactly this
+materialize-alongside shape) — and supplies `Host` from the binding's invoke plus the grant's
+`spaceIds`. The round trip is pinned dxos-side by the `hydrateRegistry` test in `McpServer.test.ts`,
+so the fidelity contract covers the hydrated path too.
+
+**The live-registry guarantee is in-process only.** Handlers query the registry per request, so an
+in-process host (the CLI) serves an operation registered a moment ago without a rebuild. A hydrated
+registry is a point-in-time copy of an RPC response: EDGE builds it per session, so operation-service
+changes after that point are invisible to `queryOperations`, `invokeOperation`'s validation and
+`loadSkill` until the next build. Acceptable while a worker's projection layer is per-request or
+short-lived, and the reason the EDGE follow-through should either rebuild on its own cadence or
+subscribe operation-service updates into the registry — decided there, not here.
 
 Two hosts consume it: edge's `mcp-space-service` (OAuth, grants, service bindings, trace feed) and
 `dx mcp serve` (stdio, local client, no auth by design — OAuth is host-layer and host-layer is what
 the local twin replaces). The fidelity contract: deltas are host-layer only. Anything that changes
-the tool list, descriptions, schemas, prompts or `skillLoad` output lives in the package, or it is a
+the tool list, descriptions, schemas, prompts or `loadSkill` output lives in the package, or it is a
 bug. A CI test running one registry fixture through both hosts is what will enforce this
 (TASKS.md M6); today it is a convention.
 

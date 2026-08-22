@@ -297,11 +297,21 @@ export const DeleteField = Operation.make({
   output: DeleteFieldOutput,
 });
 
-export const OpenCreateObject = Operation.make({
+/**
+ * Opens a form over a new object and suspends until the user confirms or dismisses it.
+ *
+ * The two modes differ in when the object exists:
+ * - `draft` (default) builds it from the form's values on submit, so nothing is written if the
+ *   dialog is dismissed.
+ * - `live` adds it to the database before the form opens, so fields that resolve against the
+ *   database — dynamic option lookups, autofill, inline refs, child objects — behave exactly as
+ *   they do after creation. A dismissal removes it again.
+ */
+export const OpenObjectForm = Operation.make({
   meta: {
-    key: makeKey('openCreateObject'),
-    name: 'Open Create Object Dialog',
-    description: 'Open the create object dialog.',
+    key: makeKey('openObjectForm'),
+    name: 'Open Object Form',
+    description: 'Open a form over a new object and return it once confirmed.',
     icon: 'ph--plus--regular',
   },
   services: [Capability.Service],
@@ -309,17 +319,31 @@ export const OpenCreateObject = Operation.make({
     target: Schema.Union([Database.Database, Type.getSchema(Collection.Collection)]).annotate({
       description: 'The database or collection to create in.',
     }),
+    mode: Schema.optional(
+      Schema.Literals(['draft', 'live']).annotate({
+        description: 'Whether the object is built on submit (`draft`, the default) or up front (`live`).',
+      }),
+    ),
     views: Schema.optional(Schema.Boolean),
     typename: Schema.optional(Schema.String),
-    initialFormValues: Schema.optional(Schema.Any),
+    // An Effect Schema is not itself serializable, so it can only be passed in-process.
+    schema: Schema.optional(
+      Schema.Any.annotate({
+        description:
+          "Form schema, overriding the type's own. Typically a projection, e.g. `Type.getSchema(T).pipe(Schema.pick(...))`.",
+      }),
+    ),
+    defaults: Schema.optional(
+      Schema.Any.annotate({ description: 'Initial values, seeded into the form (`draft`) or the object (`live`).' }),
+    ),
     navigable: Schema.optional(Schema.Boolean),
     targetNodeId: Schema.optional(
       Schema.String.annotate({ description: 'Qualified graph node ID of the target collection.' }),
     ),
-    // TODO(wittjosiah): This is a function, is there a better way to handle this?
-    onCreateObject: Schema.optional(Schema.Any),
   }),
-  output: Schema.Void,
+  output: Schema.UndefinedOr(Ref.Ref(Obj.Unknown)).annotate({
+    description: 'The created object, or nothing if the dialog was dismissed.',
+  }),
 });
 
 export const OpenCreateSpace = Operation.make({
@@ -769,7 +793,8 @@ export const QueryTypes = Operation.make({
     key: makeKey('queryTypes'),
     name: 'Query Types',
     description:
-      'List the types registered in the space. Returns a summary per type — typename, kind, name, ' +
+      'List the types objects in this space can have — those persisted in the space and those the ' +
+      'host itself registers. Returns a summary per type — typename, version, kind, name, ' +
       'description, field names — or, for the typenames named, their full JSON Schema. Read the ' +
       "summary first and ask for a type's schema only when about to create or update one of it.",
     icon: 'ph--list--regular',

@@ -24,6 +24,31 @@ const unwrapOptional = (prop: SchemaAST.PropertySignature): SchemaAST.AST => {
 };
 
 /**
+ * Discriminator values that open a root discriminated union on its first member.
+ *
+ * A union root with no discriminator value renders as a lone select and nothing else — no member's
+ * fields, and no way to submit — so the form seeds the first member rather than presenting a dead
+ * form. Member order is therefore the declaration order of `Schema.Union`: put the common case first.
+ */
+export const getDiscriminatorDefaults = (ast: SchemaAST.AST | undefined): Record<string, unknown> => {
+  if (!ast || !SchemaEx.isDiscriminatedUnion(ast) || !SchemaAST.isUnion(ast)) {
+    return {};
+  }
+
+  const discriminators = new Set(SchemaEx.getDiscriminatingProps(ast) ?? []);
+  const [first] = ast.types;
+  if (!first || discriminators.size === 0) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    SchemaAST.getPropertySignatures(first)
+      .filter((prop) => discriminators.has(prop.name.toString()) && SchemaAST.isLiteral(prop.type))
+      .map((prop) => [prop.name.toString(), (prop.type as SchemaAST.Literal).literal]),
+  );
+};
+
+/**
  * Resolve the properties to render for a field set's *root* schema, given the current form values.
  *
  * A top-level discriminated union is rendered flat: the fields of the member selected by the current
