@@ -32,7 +32,7 @@ export type RecoveryHelpers = {
   sqlDiagnostics: () => Promise<SqlStorageDiagnosticsResult>;
   /** Raw OPFS SQLite export (`DXOS.sqlite`). */
   exportProfile: () => Promise<{ byteLength: number }>;
-  downloadLogs: () => Promise<{ byteLength: number }>;
+  downloadLogs: () => Promise<{ byteLength: number; saved: boolean }>;
   importSqlite: () => Promise<{ byteLength: number }>;
   importProfileFromUrl: (url: string) => Promise<{ byteLength: number; opfsFilename: string }>;
   reset: () => Promise<void>;
