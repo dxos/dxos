@@ -16,6 +16,8 @@ import { type MaybePromise } from '@dxos/util';
 
 import { type FormFieldStatus } from '#types';
 
+import { getDiscriminatorDefaults } from '../util';
+
 /**
  * Form properties.
  */
@@ -130,7 +132,13 @@ export const useFormHandler = <T extends AnyProperties>({
   const [touched, setTouched] = useState<Record<SchemaEx.JsonPath, boolean>>({});
   const [errors, setErrors] = useState<Record<SchemaEx.JsonPath, string>>({});
   const [saving, setSaving] = useState(false);
-  const defaultValues = useDefaultValue<Partial<T>>(defaultValuesProp, () => ({}));
+  const seed = useDefaultValue<Partial<T>>(defaultValuesProp, () => ({}));
+  // A root discriminated union renders nothing but its select until the discriminator has a value, so
+  // the form opens on the first member unless the caller seeded one of its own.
+  const defaultValues = useMemo(
+    () => ({ ...getDiscriminatorDefaults(schema?.ast), ...seed }) as Partial<T>,
+    [schema, seed],
+  );
 
   // The source the form reads from for every field the user is not actively editing. The form is a pure function of
   // this value and re-renders when the parent passes a new one; to reflect external/remote mutations the parent must

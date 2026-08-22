@@ -1,31 +1,42 @@
 // Copyright 2025 DXOS.org
 
+import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
-import { Collection, Obj } from '@dxos/echo';
+import { Collection, Obj, type Ref } from '@dxos/echo';
 
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
-import { CREATE_OBJECT_DIALOG } from '../constants';
+import { OBJECT_FORM_DIALOG } from '../constants';
+import { makeObjectFormHandle } from '../util';
 
-const handler: Operation.WithHandler<typeof SpaceOperation.OpenCreateObject> = SpaceOperation.OpenCreateObject.pipe(
+const handler: Operation.WithHandler<typeof SpaceOperation.OpenObjectForm> = SpaceOperation.OpenObjectForm.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const ephemeralState = yield* Capabilities.getAtomValue(SpaceCapabilities.EphemeralState);
       const navigable = input.navigable ?? true;
+      // The operation's result is the dialog's, so the handler stays suspended for as long as the
+      // dialog is up; the handle is settled once, from the confirm button or the unmount cleanup.
+      const result = yield* Deferred.make<Ref.Ref<Obj.Unknown> | undefined>();
+      const handle = makeObjectFormHandle((object) => {
+        Deferred.doneUnsafe(result, Effect.succeed(object));
+      });
+
       yield* Operation.invoke(LayoutOperation.UpdateDialog, {
-        subject: CREATE_OBJECT_DIALOG,
+        subject: OBJECT_FORM_DIALOG,
         blockAlign: 'start',
         props: {
           target: input.target,
+          mode: input.mode,
           views: input.views,
           typename: input.typename,
-          initialFormValues: input.initialFormValues,
-          onCreateObject: input.onCreateObject,
+          schema: input.schema,
+          defaults: input.defaults,
           targetNodeId: input.targetNodeId,
+          handle,
           shouldNavigate: navigable
             ? (object: Obj.Unknown) => {
                 const isCollection = Obj.instanceOf(Collection.Collection, object);
@@ -34,6 +45,8 @@ const handler: Operation.WithHandler<typeof SpaceOperation.OpenCreateObject> = S
             : () => false,
         },
       });
+
+      return yield* Deferred.await(result);
     }),
   ),
 );
