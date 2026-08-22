@@ -1,5 +1,70 @@
 # @dxos/app-graph
 
+## 0.12.0
+
+### Minor Changes
+
+- 3214dcf: **Breaking:** `Graph.expand` is renamed to `Graph.expandSync`, and `Graph.expand` now returns an `Effect` that runs the expansion off the paint-critical path. Both overloads (direct and curried) are preserved on `expandSync`, so migrating is a rename. Interrupting the new `expand` cancels a still-pending expansion, which makes superseding one scheduled expansion with another a matter of interrupting the previous fiber.
+
+  Expanding a node also no longer blocks the main thread on stack-trace capture. `Atom.withLabel` records a stack trace on every call, and the graph labelled an atom per node, per connection key and per extension, so a single expansion cost hundreds of captures — measured at 17ms with 40 registered extensions. Labels are now opt-in via `VITE_ATOM_LABELS` under the dev server.
+
+  The nav-tree's hover prefetch uses the new scheduled `expand` behind a 150ms settle delay, so moving the cursor across rows only expands the row it stops on.
+
+  The tooltip context is split so that pointing at a trigger no longer re-renders every `Tooltip.Trigger` in the app, and the open tooltip's `data-state`/`aria-describedby` are applied to the active trigger alone rather than to all of them.
+
+- 987f7e1: Replace each plugin's `./plugin` entrypoint with an `XPlugin` namespace. **Breaking:** import the plugin from its own subpath and construct it with `make` — `import * as ChessPlugin from '@dxos/plugin-chess/ChessPlugin'; ChessPlugin.make()` in place of `import { ChessPlugin } from '@dxos/plugin-chess/plugin'; ChessPlugin()`. Plugin metadata is available as `XPlugin.meta` without loading the plugin body. **Breaking:** `@dxos/plugin-graph` no longer re-exports `@dxos/app-graph`; import `Graph`, `GraphBuilder`, `Node` and `NodeMatcher` from `@dxos/app-graph`, which now publishes them as per-namespace subpaths.
+
+### Patch Changes
+
+- bf4f1e6: Key observable atoms by reference so graph extensions no longer fail on clients without a shell.
+- Updated dependencies [e2eecf2]
+- Updated dependencies [75971ad]
+- Updated dependencies [3958355]
+- Updated dependencies [ea11703]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [1c995c4]
+- Updated dependencies [a69d861]
+- Updated dependencies [ba08e65]
+- Updated dependencies [5fcd238]
+- Updated dependencies [e094f74]
+- Updated dependencies [a3b6ef0]
+- Updated dependencies [c439ba0]
+- Updated dependencies [6af130f]
+- Updated dependencies [d62a947]
+- Updated dependencies [4c107a2]
+- Updated dependencies [b9d72bb]
+- Updated dependencies [3e9a10f]
+- Updated dependencies [8ca2ac7]
+- Updated dependencies [b600f72]
+- Updated dependencies [99e323d]
+- Updated dependencies [ea11703]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [24fcadc]
+- Updated dependencies [4804da0]
+- Updated dependencies [63e500b]
+- Updated dependencies [256f286]
+- Updated dependencies [5b504b4]
+- Updated dependencies [d7b0a3b]
+- Updated dependencies [ea11703]
+- Updated dependencies [18597fc]
+- Updated dependencies [881f900]
+- Updated dependencies [32353e6]
+- Updated dependencies [559acfa]
+- Updated dependencies [5d816a6]
+- Updated dependencies [40b50c2]
+- Updated dependencies [85bdad2]
+- Updated dependencies [cc11297]
+  - @dxos/echo@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/debug@0.12.0
+  - @dxos/effect@0.12.0
+  - @dxos/invariant@0.12.0
+  - @dxos/keys@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/ui-theme@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/composer-forensics",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "private": true,
   "description": "Offline Composer profile forensics CLI (probe, automerge tools).",
   "homepage": "https://dxos.org",

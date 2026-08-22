@@ -1,5 +1,89 @@
 # @dxos/client-protocol
 
+## 0.12.0
+
+### Minor Changes
+
+- 4e417e9: Delete the protobuf `service {}` definitions for `ContactsService`, `EdgeAgentService`,
+  `DevicesService`, `NetworkService`, `InvitationsService`, `IdentityService`, `SystemService`,
+  `LoggingService`, `FeedService`, and `QueryService` from `dxos/client/services.proto`,
+  `dxos/client/logging.proto`, `dxos/client/feed.proto` (file removed entirely), and
+  `dxos/echo/query.proto`, now that all ten are served entirely over `@effect/rpc`. Message
+  types still shared outside the RPC boundary (`ContactBook`, `QueryEdgeStatusResponse`,
+  `QueryAgentStatusResponse`, `Device`, `Invitation`, `Identity`, `NetworkStatus`, `Platform`,
+  `LogEntry`, and the `QueryService` request/response types, among others) are unaffected and
+  remain protobuf-encoded on the wire. Consumers that imported a generated proto service
+  interface type for any of these ten services must use `@dxos/protocols/rpc`'s effect-rpc
+  definitions instead. `@dxos/client-protocol`'s deprecated `ClientServices` map keeps its existing entries'
+  signatures — each is now backed by a hand-written Promise/`Stream` interface with the same
+  shape as before — except `ClientServices['ContactsService']`, which had no consumers and is
+  removed.
+
+### Patch Changes
+
+- Updated dependencies [e2eecf2]
+- Updated dependencies [75971ad]
+- Updated dependencies [3958355]
+- Updated dependencies [4e417e9]
+- Updated dependencies [ea11703]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [1c995c4]
+- Updated dependencies [a69d861]
+- Updated dependencies [ba08e65]
+- Updated dependencies [5fcd238]
+- Updated dependencies [e094f74]
+- Updated dependencies [23d2d8c]
+- Updated dependencies [a3b6ef0]
+- Updated dependencies [c439ba0]
+- Updated dependencies [6af130f]
+- Updated dependencies [c8b7158]
+- Updated dependencies [d62a947]
+- Updated dependencies [e56276b]
+- Updated dependencies [4c107a2]
+- Updated dependencies [b9d72bb]
+- Updated dependencies [3e9a10f]
+- Updated dependencies [8ca2ac7]
+- Updated dependencies [b600f72]
+- Updated dependencies [99e323d]
+- Updated dependencies [ea11703]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [24fcadc]
+- Updated dependencies [4804da0]
+- Updated dependencies [63e500b]
+- Updated dependencies [256f286]
+- Updated dependencies [5b504b4]
+- Updated dependencies [a53cabb]
+- Updated dependencies [d7b0a3b]
+- Updated dependencies [4663f24]
+- Updated dependencies [2896a58]
+- Updated dependencies [9e91762]
+- Updated dependencies [4f55909]
+- Updated dependencies [ea11703]
+- Updated dependencies [18597fc]
+- Updated dependencies [63629c5]
+- Updated dependencies [881f900]
+- Updated dependencies [32353e6]
+- Updated dependencies [559acfa]
+- Updated dependencies [5d816a6]
+- Updated dependencies [85e6347]
+- Updated dependencies [40b50c2]
+- Updated dependencies [85bdad2]
+- Updated dependencies [cc11297]
+  - @dxos/echo@0.12.0
+  - @dxos/protocols@0.12.0
+  - @dxos/echo-client@0.12.0
+  - @dxos/credentials@0.12.0
+  - @dxos/rpc@0.12.0
+  - @dxos/worker-framework@0.12.0
+  - @dxos/rpc-tunnel@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/codec-protobuf@0.12.0
+  - @dxos/effect@0.12.0
+  - @dxos/invariant@0.12.0
+  - @dxos/keys@0.12.0
+  - @dxos/node-std@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

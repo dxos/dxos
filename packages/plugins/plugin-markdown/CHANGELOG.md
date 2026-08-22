@@ -1,5 +1,208 @@
 # @dxos/plugin-markdown
 
+## 0.12.0
+
+### Minor Changes
+
+- 75971ad: Add plugin management to the CLI. `dx plugin add <url>` fetches a manifest and snapshots it and the bundle under `plugins/<id>/`, so the install is self-describing on disk and needs no network afterwards; `add --dev <path>` reads a directory in place, falling back to its `dx.config.ts` when there is no built manifest, and may override a builtin of the same id. Installing asks for confirmation before any third-party code is evaluated — the plugin runs with the CLI's identity and `dx mcp serve` exposes its operations to agents — and non-interactive callers must pass `--yes`. Both enable by default (`--no-enable` stops at install) and print the resolved plugin id; `remove` deletes a snapshot or forgets a linked directory. Installed plugins register from metadata cached at install time, so a plugin's code is imported only once something enables it, and one that fails to import is reported by `dx plugin list` instead of failing every command. `dx plugin list` now reports `installed`, `enabled`, `core` and the plugin's source as separate fields rather than one collapsed status, with `--enabled` to filter; `enable`/`disable` are idempotent and fail with actionable messages. Hosts can supply their own core plugin set through `PluginManager`'s new `core` option instead of inheriting every `system`-tagged plugin, which is how telemetry, connectors and routines became disableable in the CLI; its demo plugins are no longer enabled by default. A profile whose enabled list is empty is no longer re-seeded with the defaults. A plugin installed from a URL has its `@dxos/*` imports served from the host's own modules, so it shares the CLI's instance of ECHO's schema registry and the capability system rather than loading its own copy; the shared-package list is exported as `@dxos/app-framework/SharedPackages`.
+- a3b6ef0: Migrate the entire monorepo from Effect 3 to Effect 4 (`effect@4.0.0-rc.108`). **This is a breaking change**, carried as a minor because the fixed publish group is pre-1.0.
+
+  Every `@dxos` package now builds against the consolidated `effect` package — `@effect/platform`, `@effect/rpc`, `@effect/cli`, `@effect/sql-*`, `@effect/ai` and `@effect/printer` usages moved to their `effect/unstable/*` counterparts (or were vendored where v4 ships no counterpart). Consumers embedding `@dxos` packages must be on the Effect 4 line: v3 and v4 cannot coexist in one bundle.
+
+  Consumer-visible API consequences include: schemas are values rather than extensible classes (statics such as `SpaceId.random` are merged onto the schema value), `Schema`-derived types follow v4 shapes (`Codec`, checks instead of refinement nodes, string annotation keys), and `Either`-based results became `Result`.
+
+  The AI tool surface changed with it. An `Operation` now projects to a **dynamic** tool carrying the JSON Schema shown to the model, because v4 describes an Effect-schema tool through the provider's structured-output codec while validating the model's arguments against the untransformed schema — a record was advertised as an array of `[key, value]` pairs but validated as an object, and an optional key was advertised nullable-and-required but validated as absent-or-`T`, so a compliant model was always rejected. Tool arguments are decoded at the execution boundary instead, which is also where a ref supplied as a URI string becomes a `Ref`. Alongside it, an open record (`Schema.Record(String, Any)`) now serializes with an explicit `additionalProperties: true`: v4 omits the keyword when the value type is unconstrained, which made a persisted schema round-trip back as a closed struct that accepted no keys.
+
+- 987f7e1: Replace each plugin's `./plugin` entrypoint with an `XPlugin` namespace. **Breaking:** import the plugin from its own subpath and construct it with `make` — `import * as ChessPlugin from '@dxos/plugin-chess/ChessPlugin'; ChessPlugin.make()` in place of `import { ChessPlugin } from '@dxos/plugin-chess/plugin'; ChessPlugin()`. Plugin metadata is available as `XPlugin.meta` without loading the plugin body. **Breaking:** `@dxos/plugin-graph` no longer re-exports `@dxos/app-graph`; import `Graph`, `GraphBuilder`, `Node` and `NodeMatcher` from `@dxos/app-graph`, which now publishes them as per-namespace subpaths.
+- e7fc023: Replace each plugin's `./operations` and `./skills` barrel entrypoints with per-symbol subpaths. **Breaking:** import a handler set from its own subpath and read it off the namespace — `import * as MarkdownOperationHandlerSet from '@dxos/plugin-markdown/MarkdownOperationHandlerSet'; MarkdownOperationHandlerSet.handlers` in place of `import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations'` — and import a skill from its own subpath, e.g. `import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill'`. **Breaking:** plugin root barrels no longer re-export handler sets or skills, so those names must come from their subpaths. `@dxos/plugin-inbox` additionally publishes `./FeedCursor` and `./MessageExtractor`, and `@dxos/plugin-projects` renames `CodeProjectSkillDefinition` to the `./CodeProjectSkill` namespace.
+- 0280a6a: Retire the `/types` aggregate entrypoint in favour of the per-namespace subpaths.
+
+  `@dxos/plugin-*/types` re-exported every namespace of a plugin from one module, so a
+  single import statically pulled in all of them. These are Effect/ECHO schemas — runtime
+  values rather than erased types — so the aggregate defeated the per-namespace subpaths
+  it sat alongside and kept the plugin's whole schema graph in the eager module graph.
+
+  Breaking: the `./types` export is removed from every plugin that published it. Import the
+  namespace you need instead — `@dxos/plugin-chess/Chess` rather than
+  `@dxos/plugin-chess/types`. The `dxos-subpath-imports` lint rule autofixes call sites.
+
+  Plugins whose barrel mixed namespaces with flat exports gained real modules for those
+  exports (`ConnectorAnnotations`, `SettingsPath`, `AssistantOptions`, `SpaceSchema`, and
+  others); plugin-client and plugin-space additionally had their `export namespace X` wrappers
+  unwrapped, so `X.X.member` becomes `X.member`.
+
+### Patch Changes
+
+- 34a8433: Order module activation by capability dependencies instead of hand-wired events.
+  A module declares the capabilities it `requires` and `provides` (or a runtime
+  `activatesOn` event) and the plugin manager topologically orders activation from
+  that graph. Capabilities are yieldable Effect services, so accessing an undeclared
+  capability or omitting a declared one is now a type error, and missing providers,
+  dependency cycles, and duplicate providers fail fast with tagged errors instead of
+  runtime assertions. Plugins compose as a flat chain of `Plugin.addModule` over
+  module bodies authored with `Capability.lazyModule` (code-split) or
+  `Capability.inlineModule` (eager), or with a per-capability maker from the new
+  `AppCapability` namespace (`surface`, `settings`, `appGraphBuilder`, `translations`,
+  `schema`, ...) that bakes in the module name and default provides. A module is an
+  opaque `Capability.Module<Options>`, parameterized only by its options type, so a
+  module export never leaks a foreign capability's type into declaration emit.
+
+  Every plugin in the repository is migrated to this API. The plugins gain no
+  behaviour of their own from the change, but any plugin defined outside the
+  repository must be migrated too — the legacy API is removed, not deprecated.
+
+  Breaking: the legacy event-wiring API is removed — `AppPlugin` and its
+  `addXModule` helpers, `firesBeforeActivation`/`firesAfterActivation`, `compatFires`,
+  and the ordering-only `Setup*`/`*Ready` activation events (genuine runtime events
+  remain). `Capability.provide`/`provideAll` are renamed to
+  `Capability.contribute`/`contributeAll`, and the untyped raw builder
+  `Capability.contributes` is removed. Multi is now the default capability arity:
+  `Capability.make` defines a multi (registry) capability and
+  `Capability.makeSingleton` the single-provider case, both curried
+  (`make<T>()(nsid)`) so the NSID literal brands the identifier. The
+  `withPluginManager` `capabilities` test option now accepts `Contribution[]`.
+
+- 3958355: Import `dx.config.ts` directly instead of transpiling it, so `dx registry publish` can read a plugin config from the compiled CLI.
+- ba08e65: Evaluate `dx.config.ts` in a node subprocess, so the compiled CLI reads a plugin's config the same way every other runtime does.
+- 4c107a2: Support combining a full-text search filter with type filters via `Filter.and` — the query planner pushes the type scope down into the FTS index instead of rejecting the query as too complex. The search plugin now scopes full-text results to user-visible types (the same set the nav tree's Database section lists, plus collections), so search no longer surfaces internal objects such as views, stored schemas, or relation rows, and each result takes its icon from the type's annotation like the nav tree and cards do. Mailbox search stays scoped to the active tag view when combining free text with tag terms. Search is now a system plugin, always enabled rather than opt-in under Labs.
+- b600f72: Remove LevelDB and the `@dxos/kv-store` package. Automerge document storage, heads, and the query index are now backed exclusively by SQLite. Profile export/import no longer reads or writes a LevelDB store — legacy `KEY_VALUE` archive entries are skipped on import.
+- ea11703: Replace the dead `bs-*`/`is-*`/`pli-*`/`plb-*`/`mli-*`/`mlb-*`/`pis-*`/`pie-*` Tailwind classes with their physical equivalents; they came from `tailwindcss-logical`, removed in the Tailwind v4 migration, and had been generating no CSS.
+- 256f286: Projects gain a lifecycle `status` field (`active | paused | blocked | ended`), surfaced through the MCP-projected verbs, and plugin-projects ships a project-management skill for external agents — including the `/codeProject setup` flow that binds a repo to an existing space. The skill's key segment is `codeProject` because the segment doubles as the projected MCP prompt name and plain `project` belongs to assistant-toolkit's own skill.
+
+  `toEffectSchema` recognizes ECHO's reference sentinel before the generic `type: 'object'` branch, so a reference node widened with structural keywords (as a wire boundary may do for schema-unaware consumers) decodes as a reference instead of a plain struct. Serialization is unchanged — persisted schemas stay byte-identical to previous releases.
+
+  Worker (`workerd`) bundles no longer pull in React. Wrangler resolves `workerd, worker, browser` and never `node`, so a `#capabilities` map offering only `node` and `default` handed workers the browser barrel and its React surfaces. Every plugin with a headless entry now resolves a server-safe barrel under a `workerd` condition, and the `check-module-structure` guards trace with `workerd,worker` — the conditions a worker actually resolves — so a reintroduced leak fails the check instead of passing against a build that is never shipped.
+
+- d7b0a3b: `dx registry publish` authenticates the edge upload with `DX_HUB_API_KEY` when set, so headless callers without a HALO identity can publish.
+- ea11703: Add an agent debug port to the devtools hook (`dxos.debugPort`) that evaluates snippets delivered by a loopback server, and surface start/stop plus the session id in the Debug plugin's settings. Off by default, activated only by an explicit gesture, and never persisted.
+- 559acfa: Fix the TaskSet article and section surfaces never rendering (the Tasks section of a Project article was empty), and the Excalidraw plugin settings surface never rendering — both surface ids ended in a hyphenated segment, which the surface manager drops. Surface and graph-extension ids are now checked at compile time: `id` on `Surface.create`, `Surface.createWeb`, `GraphBuilder.createExtension` and `createExtensionRaw` takes `DXN.Path`, so a malformed literal is a type error instead of a contribution that silently disappears at dispatch. A computed id still falls through to the existing runtime check.
+- 40b50c2: Surface a process's environment (space, conversation) on `Process.Info`, and add a trace panel filter that shows only the processes running in the selected environments.
+- Updated dependencies [0280a6a]
+- Updated dependencies [e2eecf2]
+- Updated dependencies [4a0b78b]
+- Updated dependencies [34a8433]
+- Updated dependencies [85ad256]
+- Updated dependencies [2d4107f]
+- Updated dependencies [c56ba34]
+- Updated dependencies [069e8ed]
+- Updated dependencies [75971ad]
+- Updated dependencies [3958355]
+- Updated dependencies [fee7666]
+- Updated dependencies [4e417e9]
+- Updated dependencies [557e243]
+- Updated dependencies [ea11703]
+- Updated dependencies [a3d45c4]
+- Updated dependencies [881f900]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [1c995c4]
+- Updated dependencies [a69d861]
+- Updated dependencies [ba08e65]
+- Updated dependencies [dbff1e4]
+- Updated dependencies [3ee20ca]
+- Updated dependencies [5fcd238]
+- Updated dependencies [e094f74]
+- Updated dependencies [1b62726]
+- Updated dependencies [a3b6ef0]
+- Updated dependencies [c439ba0]
+- Updated dependencies [6af130f]
+- Updated dependencies [c8b7158]
+- Updated dependencies [d62a947]
+- Updated dependencies [cafa240]
+- Updated dependencies [813069c]
+- Updated dependencies [4c107a2]
+- Updated dependencies [b9d72bb]
+- Updated dependencies [0ef896f]
+- Updated dependencies [777d24a]
+- Updated dependencies [48fd9fe]
+- Updated dependencies [3e9a10f]
+- Updated dependencies [48ea128]
+- Updated dependencies [8ca2ac7]
+- Updated dependencies [098a0bb]
+- Updated dependencies [9c86066]
+- Updated dependencies [5180720]
+- Updated dependencies [b600f72]
+- Updated dependencies [99e323d]
+- Updated dependencies [ea11703]
+- Updated dependencies [cc45381]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [12b6618]
+- Updated dependencies [df0ab57]
+- Updated dependencies [4f760ce]
+- Updated dependencies [557e243]
+- Updated dependencies [ab79741]
+- Updated dependencies [24fcadc]
+- Updated dependencies [77a2d34]
+- Updated dependencies [4804da0]
+- Updated dependencies [61fe676]
+- Updated dependencies [63e500b]
+- Updated dependencies [7c426d4]
+- Updated dependencies [256f286]
+- Updated dependencies [306f50d]
+- Updated dependencies [6c881a2]
+- Updated dependencies [cc9b81f]
+- Updated dependencies [5b504b4]
+- Updated dependencies [eb95cd7]
+- Updated dependencies [a53cabb]
+- Updated dependencies [d7b0a3b]
+- Updated dependencies [20e86ba]
+- Updated dependencies [9e91762]
+- Updated dependencies [4f55909]
+- Updated dependencies [fc83abd]
+- Updated dependencies [678ba58]
+- Updated dependencies [8904184]
+- Updated dependencies [77d0026]
+- Updated dependencies [e288833]
+- Updated dependencies [ea11703]
+- Updated dependencies [0280a6a]
+- Updated dependencies [18597fc]
+- Updated dependencies [63629c5]
+- Updated dependencies [881f900]
+- Updated dependencies [32353e6]
+- Updated dependencies [559acfa]
+- Updated dependencies [bb94124]
+- Updated dependencies [5d816a6]
+- Updated dependencies [40b50c2]
+- Updated dependencies [85bdad2]
+- Updated dependencies [79d5ecf]
+- Updated dependencies [cc11297]
+  - @dxos/app-framework@0.12.0
+  - @dxos/app-toolkit@0.12.0
+  - @dxos/echo@0.12.0
+  - @dxos/plugin-client@0.12.0
+  - @dxos/client-protocol@0.12.0
+  - @dxos/react-ui@0.12.0
+  - @dxos/plugin-space@0.12.0
+  - @dxos/compute@0.12.0
+  - @dxos/client@0.12.0
+  - @dxos/ui-editor@0.12.0
+  - @dxos/echo-client@0.12.0
+  - @dxos/halo@0.12.0
+  - @dxos/types@0.12.0
+  - @dxos/react-ui-menu@0.12.0
+  - @dxos/react-ui-form@0.12.0
+  - @dxos/react-ui-components@0.12.0
+  - @dxos/schema@0.12.0
+  - @dxos/plugin-attention@0.12.0
+  - @dxos/plugin-graph@0.12.0
+  - @dxos/assistant@0.12.0
+  - @dxos/react-ui-editor@0.12.0
+  - @dxos/echo-doc@0.12.0
+  - @dxos/echo-react@0.12.0
+  - @dxos/react-client@0.12.0
+  - @dxos/versioning@0.12.0
+  - @dxos/react-ui-attention@0.12.0
+  - @dxos/react-ui-dnd@0.12.0
+  - @dxos/halo-react@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/effect@0.12.0
+  - @dxos/invariant@0.12.0
+  - @dxos/keys@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/ui@0.12.0
+  - @dxos/ui-theme@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

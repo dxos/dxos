@@ -1,5 +1,12 @@
 # @dxos/ui-theme
 
+## 0.12.0
+
+### Patch Changes
+
+- @dxos/node-std@0.12.0
+  - @dxos/ui-types@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

@@ -1,5 +1,32 @@
 # @dxos/react-ui-editor
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [557e243]
+- Updated dependencies [1b62726]
+- Updated dependencies [813069c]
+- Updated dependencies [098a0bb]
+- Updated dependencies [bf4f1e6]
+- Updated dependencies [4f760ce]
+- Updated dependencies [557e243]
+- Updated dependencies [3214dcf]
+- Updated dependencies [987f7e1]
+- Updated dependencies [306f50d]
+- Updated dependencies [fc83abd]
+- Updated dependencies [8904184]
+  - @dxos/react-ui@0.12.0
+  - @dxos/ui-editor@0.12.0
+  - @dxos/app-graph@0.12.0
+  - @dxos/react-ui-menu@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/invariant@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/ui-theme@0.12.0
+  - @dxos/ui-types@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

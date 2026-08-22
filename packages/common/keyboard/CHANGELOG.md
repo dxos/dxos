@@ -1,5 +1,13 @@
 # @dxos/keyboard
 
+## 0.12.0
+
+### Patch Changes
+
+- @dxos/invariant@0.12.0
+  - @dxos/node-std@0.12.0
+  - @dxos/util@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

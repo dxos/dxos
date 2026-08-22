@@ -1,5 +1,44 @@
 # @dxos/plugin-duffel
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [0280a6a]
+- Updated dependencies [4a0b78b]
+- Updated dependencies [34a8433]
+- Updated dependencies [2d4107f]
+- Updated dependencies [557e243]
+- Updated dependencies [dbff1e4]
+- Updated dependencies [23d2d8c]
+- Updated dependencies [b0953f0]
+- Updated dependencies [375b863]
+- Updated dependencies [cafa240]
+- Updated dependencies [813069c]
+- Updated dependencies [5ceaf9c]
+- Updated dependencies [098a0bb]
+- Updated dependencies [9c86066]
+- Updated dependencies [cc45381]
+- Updated dependencies [557e243]
+- Updated dependencies [ab79741]
+- Updated dependencies [61fe676]
+- Updated dependencies [63e500b]
+- Updated dependencies [256f286]
+- Updated dependencies [306f50d]
+- Updated dependencies [fc83abd]
+- Updated dependencies [678ba58]
+- Updated dependencies [8904184]
+- Updated dependencies [63629c5]
+- Updated dependencies [bb94124]
+  - @dxos/app-framework@0.12.0
+  - @dxos/app-toolkit@0.12.0
+  - @dxos/react-ui@0.12.0
+  - @dxos/edge-client@0.12.0
+  - @dxos/plugin-trip@0.12.0
+  - @dxos/effect@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/util@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

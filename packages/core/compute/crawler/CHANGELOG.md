@@ -1,5 +1,17 @@
 # @dxos/crawler
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [8363f12]
+- Updated dependencies [df93cc2]
+  - @dxos/ai@0.12.0
+  - @dxos/sql-sqlite@0.12.0
+  - @dxos/pipeline-rdf@0.12.0
+  - @dxos/errors@0.12.0
+  - @dxos/pipeline@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

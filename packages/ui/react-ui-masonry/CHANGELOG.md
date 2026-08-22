@@ -1,5 +1,19 @@
 # @dxos/react-ui-masonry
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [557e243]
+- Updated dependencies [813069c]
+- Updated dependencies [098a0bb]
+- Updated dependencies [557e243]
+- Updated dependencies [306f50d]
+- Updated dependencies [fc83abd]
+- Updated dependencies [8904184]
+  - @dxos/react-ui@0.12.0
+  - @dxos/ui-theme@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

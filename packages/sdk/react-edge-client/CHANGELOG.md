@@ -1,5 +1,21 @@
 # @dxos/react-edge-client
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [881f900]
+- Updated dependencies [23d2d8c]
+- Updated dependencies [b0953f0]
+- Updated dependencies [375b863]
+- Updated dependencies [5ceaf9c]
+- Updated dependencies [0280a6a]
+- Updated dependencies [bb94124]
+  - @dxos/client@0.12.0
+  - @dxos/edge-client@0.12.0
+  - @dxos/react-client@0.12.0
+  - @dxos/invariant@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

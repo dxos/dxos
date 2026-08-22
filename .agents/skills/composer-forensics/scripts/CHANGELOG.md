@@ -1,5 +1,19 @@
 # @dxos/composer-forensics
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [4e417e9]
+- Updated dependencies [23d2d8c]
+- Updated dependencies [e56276b]
+- Updated dependencies [4663f24]
+- Updated dependencies [2896a58]
+- Updated dependencies [9e91762]
+- Updated dependencies [85e6347]
+  - @dxos/protocols@0.12.0
+  - @dxos/keys@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes
