@@ -430,7 +430,20 @@ projects:
     tasks: packages/reflect/deus/TASKS.md
     design: packages/reflect/deus/docs/DESIGN.md
     prs: []
-    resume: 'Scaffolded 2026-08-22, scope not yet fixed. Read lang/core.mdl (core = `ext` primitive + document format only), docs/DESIGN.md (standard + DXOS dialects, sketched in prose but NOT yet materialized as .mdl files), docs/IDIOMS.md. Awaiting the user''s answer on which layer to extend: (1) core syntax, (2) a std.mdl standard dialect, (3) the Deus.DXOS domain dialect, or (4) one of the DESIGN.md open questions (standalone `req`, `db` vs `service`, registry, ext versioning, agent contract). Any core-syntax change drags src/extension/{mdl.grammar,lint.ts,complete.ts} with it.'
+    resume: "Phase 1 = Deus.QA, a QA dialect so one .mdl serves a human tester and an agent tester. DESIGN
+      AGREED 2026-08-22, NOT yet materialized: `flow QA-n` blocks live in a `## QA` section of each PLUGIN.mdl
+      (composer-app/APP.mdl for cross-plugin journeys); every step needs `do:` + `expect:` (keeps it
+      human-runnable) with optional `invoke:`/`assert:`/`capture:`; `op@1.1` adds `key?: NSID` and populates the
+      existing `requires:` from the code's `services:`; consent for mutating runs is per-FLOW, not per-operation.
+      Spike flow QA-1 authored in plugin-markdown/PLUGIN.mdl but NOT YET RUN. Two findings already: the spec's
+      single `op create` was hiding TWO runtime ops (org.dxos.function.markdown.create with Database.Service vs
+      org.dxos.plugin.markdown.operation.create with Capability.Service), and steps 1-2 cannot be separate port
+      snippets because a live ECHO object cannot cross the serialization boundary. STILL TO BUILD: lang/qa.mdl,
+      the DESIGN.md Deus.QA section, the running-qa-flows skill, and the agent-startable debug port
+      (DX_DEBUG_PORT -> vite define -> plugin-debug auto-start + temp/debug-port.json sidecar) — that last one
+      reverses an explicit invariant in debug-port-controller.ts and is AWAITING THE USER'S GO. Major project
+      goal recorded in TASKS.md: a Claude routine that (a) updates a PLUGIN.mdl from source, (b) proposes
+      candidate flows, (c) runs the plan."
 ended:
   - name: task-planning-skill
     user: burdon
