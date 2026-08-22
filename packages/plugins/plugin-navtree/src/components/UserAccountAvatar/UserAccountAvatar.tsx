@@ -18,7 +18,10 @@ export type UserAccountAvatarProps = {
 };
 
 export const UserAccountAvatar = ({ size, userId, hue, emoji, status }: UserAccountAvatarProps) => {
-  const fallbackValue = hexToFallback(userId ?? '0');
+  // The identity resolves only once the client has initialised. Seeding the deterministic fallback
+  // with a placeholder id would render a stranger's colour and emoji until it lands, so an
+  // identity-less avatar is a plain circle: present, but making no claim about who is signed in.
+  const fallbackValue = userId ? hexToFallback(userId) : undefined;
 
   return (
     <>
@@ -31,10 +34,13 @@ export const UserAccountAvatar = ({ size, userId, hue, emoji, status }: UserAcco
           <Avatar.Content
             variant='circle'
             size={size ?? 12}
-            status={status ?? 'active'}
-            hue={hue || fallbackValue.hue}
-            fallback={emoji || fallbackValue.emoji}
-            data-testid='treeView.userAccount'
+            // The status ring reads as presence, which an unresolved identity cannot claim.
+            {...(fallbackValue && { status: status ?? 'active' })}
+            hue={hue || fallbackValue?.hue}
+            fallback={emoji || fallbackValue?.emoji || ''}
+            // Distinct from the resolved avatar: `treeView.userAccount` is what the e2e harness
+            // waits on to call the app booted.
+            data-testid={fallbackValue ? 'treeView.userAccount' : 'treeView.userAccount.placeholder'}
           />
         </Avatar.Root>
       </div>

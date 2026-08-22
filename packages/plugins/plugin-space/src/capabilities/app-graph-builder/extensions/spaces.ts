@@ -31,6 +31,7 @@ import { getSpaceDisplayName } from '../../../util';
 import {
   CAN_DROP_SPACE,
   CREATE_OBJECT_IN_SPACE_LABEL,
+  LOADING_SPACE_LABEL,
   MIGRATE_SPACE_LABEL,
   RENAME_SPACE_LABEL,
   checkPendingMigration,
@@ -257,6 +258,8 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             }
           });
 
+          const lazySpaceOpen = !!client.config.values.runtime?.client?.lazySpaceOpen;
+
           return Effect.succeed(
             [
               ...spaces
@@ -264,16 +267,23 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
                 .sort((sortA, sortB) => orderMap.get(sortA.id)! - orderMap.get(sortB.id)!),
               ...spaces.filter((space) => !orderMap.has(space.id)),
             ]
-              .filter((space) => spaceStates.get(space.id) === SpaceState.SPACE_READY)
+              // A space that is listed but still opening gets a node too, so the rail shows how
+              // many workspaces are arriving instead of filling in from nothing.
+              .filter((space) => {
+                const spaceState = spaceStates.get(space.id);
+                return spaceState === SpaceState.SPACE_READY || isPendingSpace(spaceState, lazySpaceOpen);
+              })
               .filter((space) => AppSpace.isVisibleSpace(space))
               .map((space) =>
-                constructSpaceNode({
-                  space,
-                  navigable: ephemeralState.navigableCollections,
-                  namesCache: state.spaceNames,
-                  graph,
-                  spacesOrder,
-                }),
+                spaceStates.get(space.id) === SpaceState.SPACE_READY
+                  ? constructSpaceNode({
+                      space,
+                      navigable: ephemeralState.navigableCollections,
+                      namesCache: state.spaceNames,
+                      graph,
+                      spacesOrder,
+                    })
+                  : constructPendingSpaceNode({ space, namesCache: state.spaceNames }),
               ),
           );
         } catch {
@@ -334,8 +344,55 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
 // Helpers
 //
 
+/**
+ * Whether a listed space is on its way to `SPACE_READY` and should hold a place in the rail.
+ * `SPACE_CLOSED` is the proxy's initial state and opens on its own, except under `lazySpaceOpen`,
+ * where nothing would ever open it and the placeholder would never resolve. Deliberately excludes
+ * the states a space can rest in (inactive, error, awaiting migration), which are not loading.
+ */
+export const isPendingSpace = (state: SpaceState | undefined, lazySpaceOpen = false): boolean =>
+  state === SpaceState.SPACE_INITIALIZING ||
+  state === SpaceState.SPACE_ACTIVE ||
+  (state === SpaceState.SPACE_CLOSED && !lazySpaceOpen);
+
+/**
+ * Builds an app-graph node for a space that has not opened yet. `data` is null so
+ * `AppNodeMatcher.whenSpace` cannot match it: every child connector — in this plugin and in every
+ * other — funnels through that matcher, and each would otherwise query a database or read the
+ * `properties` getter that throws until the space is ready.
+ */
+export const constructPendingSpaceNode = ({
+  space,
+  namesCache,
+}: {
+  space: Space;
+  namesCache?: Record<string, string>;
+}) =>
+  Node.make({
+    id: space.id,
+    type: SpaceSchema.SPACE_TYPE,
+    data: null,
+    properties: {
+      // Names are cached from previous sessions, so a returning user sees real labels while the
+      // spaces behind them open; a space never yet seen has none to show.
+      label: namesCache?.[space.id] ?? LOADING_SPACE_LABEL,
+      // Cleared rather than omitted, so a space that closes after being ready drops the appearance
+      // and affordances it had then — the merge above would otherwise keep them.
+      description: undefined,
+      hue: undefined,
+      icon: undefined,
+      iconHue: undefined,
+      onRearrange: undefined,
+      canDrop: undefined,
+      disabled: true,
+      pending: true,
+      disposition: 'workspace',
+      testId: 'spacePlugin.space.pending',
+    },
+  });
+
 /** Builds an app-graph node for a space, including settings children and optional rearrange handler. */
-const constructSpaceNode = ({
+export const constructSpaceNode = ({
   space,
   navigable = false,
   namesCache,
@@ -385,6 +442,9 @@ const constructSpaceNode = ({
           : undefined,
       iconHue: space.state.get() === SpaceState.SPACE_READY && space.properties.iconHue,
       disabled: !navigable || space.state.get() !== SpaceState.SPACE_READY || hasPendingMigration,
+      // Emitted on every generation, not just when true: the graph merges properties, so a key the
+      // pending generation set and this one omitted could never be cleared.
+      pending: false,
       disposition: 'workspace',
       testId: 'spacePlugin.space',
       onRearrange,

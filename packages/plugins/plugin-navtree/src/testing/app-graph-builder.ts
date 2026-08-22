@@ -12,7 +12,16 @@ import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
 
-export const storybookGraphBuilders = (): BuilderExtensions => {
+export type StorybookGraphOptions = {
+  /**
+   * How the rail's workspaces are published. `growing` (the default) starts at three and adds one
+   * every few seconds; `none` withholds them, as before the client has initialised; `pending` emits
+   * them as spaces that are listed but have not opened.
+   */
+  spaces?: 'growing' | 'none' | 'pending';
+};
+
+export const storybookGraphBuilders = ({ spaces = 'growing' }: StorybookGraphOptions = {}): BuilderExtensions => {
   const propertiesCache = new Map<string, Record<string, unknown>>();
   const getProperties = (id: string, defaults: Record<string, unknown>) => {
     const cached = propertiesCache.get(id);
@@ -98,6 +107,10 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
         match: NodeMatcher.whenRoot,
         connector: (_, get) =>
           Effect.sync(() => {
+            if (spaces === 'none') {
+              return [];
+            }
+
             const count = Atom.make((get) => {
               let value = 3;
               const interval = setInterval(() => {
@@ -113,16 +126,27 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
               return value;
             });
 
-            return Array.from({ length: get(count) }, (_, i) =>
+            return Array.from({ length: spaces === 'pending' ? 3 : get(count) }, (_, i) =>
               Node.make({
                 id: `space-${i}`,
                 type: 'space',
-                properties: getProperties(`space-${i}`, {
-                  label: `Space ${i}`,
-                  icon: random.properties.icon(),
-                  hue: random.properties.hue(),
-                  disposition: 'workspace',
-                }),
+                // A pending space publishes its cached name but no hue or icon, since those live in
+                // the database it has not opened.
+                properties:
+                  spaces === 'pending'
+                    ? getProperties(`space-pending-${i}`, {
+                        label: `Space ${i}`,
+                        disabled: true,
+                        pending: true,
+                        disposition: 'workspace',
+                        testId: 'spacePlugin.space.pending',
+                      })
+                    : getProperties(`space-${i}`, {
+                        label: `Space ${i}`,
+                        icon: random.properties.icon(),
+                        hue: random.properties.hue(),
+                        disposition: 'workspace',
+                      }),
               }),
             );
           }),
