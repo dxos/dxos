@@ -5,19 +5,19 @@
 import { mx } from '@dxos/ui-theme';
 import type { ComponentFunction, Theme } from '@dxos/ui-types';
 
-export type StatusStyleProps = {
+export type ProgressStyleProps = {
   variant?: 'default' | 'main-bottom';
   indeterminate?: boolean;
 };
 
-const root: ComponentFunction<StatusStyleProps> = ({ variant = 'default' }, ...etc) =>
+const root: ComponentFunction<ProgressStyleProps> = ({ variant = 'default' }, ...etc) =>
   mx(
     'h-1 relative rounded-full overflow-hidden',
     variant === 'main-bottom' ? 'w-full block' : 'inline-block bg-base-surface',
     ...etc,
   );
 
-const bar: ComponentFunction<StatusStyleProps> = ({ variant = 'default', indeterminate }, ...etc) =>
+const bar: ComponentFunction<ProgressStyleProps> = ({ variant = 'default', indeterminate }, ...etc) =>
   mx(
     'absolute inset-y-0 block rounded-full',
     variant === 'main-bottom' ? 'bg-composer-300' : 'bg-un-accent',
@@ -25,7 +25,7 @@ const bar: ComponentFunction<StatusStyleProps> = ({ variant = 'default', indeter
     ...etc,
   );
 
-export const statusTheme: Theme<StatusStyleProps> = {
+export const progressTheme: Theme<ProgressStyleProps> = {
   root,
   bar,
 };
