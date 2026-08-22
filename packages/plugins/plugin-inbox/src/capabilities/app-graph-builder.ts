@@ -389,7 +389,7 @@ export default Capability.makeModule(
             Node.makeAction({
               id: 'create-mailbox',
               data: () =>
-                Operation.invoke(SpaceOperation.OpenCreateObject, {
+                Operation.invoke(SpaceOperation.OpenObjectForm, {
                   target: space.db,
                   typename: Type.getTypename(Mailbox.Mailbox),
                   targetNodeId: getMailboxesPath(space.db.spaceId),
@@ -408,7 +408,7 @@ export default Capability.makeModule(
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.communications),
         groupSegment: GraphPath.GroupSegments.communications,
         createObject: (space) =>
-          Operation.invoke(SpaceOperation.OpenCreateObject, {
+          Operation.invoke(SpaceOperation.OpenObjectForm, {
             target: space.db,
             typename: calendarTypename,
             targetNodeId: getCalendarsPath(space.db.spaceId),

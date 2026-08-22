@@ -15,6 +15,9 @@ export type MonitorUpdate = {
 /**
  * Derives the combined (documents + feed blocks) monitor state for a space, or `undefined` when it
  * is fully caught up. Both backlogs share one meter so the UI shows one row per space.
+ *
+ * The label leads with the phase, matching the mail sync meter — a name-only label never said that
+ * the meter was tracking sync.
  */
 export const toSpaceUpdate = (name: string | undefined, state: Database.SyncState): MonitorUpdate | undefined => {
   const unsyncedDocuments = state.unsyncedDocumentCount;
@@ -39,7 +42,7 @@ export const toSpaceUpdate = (name: string | undefined, state: Database.SyncStat
   }
 
   return {
-    label: name ?? 'Space',
+    label: `Syncing ${name ?? 'space'}`,
     current: Math.max(0, total - pending),
     total,
     note: notes.join(' · '),
