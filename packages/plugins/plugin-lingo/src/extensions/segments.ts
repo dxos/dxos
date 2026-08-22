@@ -354,8 +354,8 @@ const segmentTheme = EditorView.theme({
   // gap and a wrapped segment stays seamless. `padding-inline` with a compensating negative
   // `margin-inline` gives horizontal breathing room while keeping the fill aligned to the text.
   '.cm-segment-highlight': {
-    backgroundColor: 'var(--color-neutral-bg)',
-    boxShadow: '0 0 0 1px var(--color-neutral-bg)',
+    backgroundColor: 'var(--color-yellow-bg)',
+    boxShadow: '0 0 0 1px var(--color-yellow-bg)',
     boxSizing: 'content-box',
     marginInline: '-2px',
     paddingInline: '2px',

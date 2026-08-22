@@ -47,21 +47,20 @@ export const createTooltipRenderer =
     if (onAdd) {
       const label = t(segment.kind === 'vocab' ? 'add-word.label' : 'add-phrase.label');
       root.append(
-        Domino.of('div')
-          .classNames('flex items-center gap-2 pt-1')
-          .append(
-            Domino.of('button')
-              .classNames('flex items-center p-1 rounded text-description hover:text-accent-text cursor-pointer')
-              // `mousedown` rather than `click`, and prevented: the tooltip sits over the editor, so a
-              // click would move the selection out from under the segment the button acts on.
-              .attributes({ 'type': 'button', 'aria-label': label, 'title': label })
-              .append(Domino.svg('ph--plus--regular').classNames('shrink-0 w-4 h-4'))
-              .on('mousedown', (event) => {
-                event.preventDefault();
-                onAdd(props);
-              }),
-          )
-          .append(Domino.of('span').classNames('text-sm opacity-75').text(label)),
+        Domino.of('button')
+          // The class list `IconButton` emits for a labelled ghost button (`buttonTheme.root` plus
+          // `iconButtonTheme.root`'s non-icon-only gap); geometry comes from the density knobs on
+          // `.dx-button`, so no padding utility belongs here.
+          .classNames('dx-button dx-focus-ring group gap-1 [&_span]:truncate', 'gap-1.5', 'mt-1 self-start')
+          .attributes({ 'type': 'button', 'data-variant': 'ghost', 'aria-label': label })
+          .append(Domino.svg('ph--plus--regular'))
+          .append(Domino.of('span').text(label))
+          // `mousedown` rather than `click`, and prevented: the tooltip sits over the editor, so a
+          // click would move the selection out from under the segment the button acts on.
+          .on('mousedown', (event) => {
+            event.preventDefault();
+            onAdd(props);
+          }),
       );
     }
 
