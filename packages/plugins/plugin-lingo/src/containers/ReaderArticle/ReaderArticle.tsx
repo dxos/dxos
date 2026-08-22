@@ -3,7 +3,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
@@ -23,7 +23,7 @@ import {
   normalizeToken,
 } from '#extensions';
 import { meta } from '#meta';
-import { Analysis, LingoCapabilities, LingoOperation, type LingoSettings, Vocabulary, Word } from '#types';
+import { Analysis, Language, LingoCapabilities, LingoOperation, type LingoSettings, Vocabulary, Word } from '#types';
 
 import { useSourceText } from './useSourceText';
 
@@ -51,14 +51,26 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
   const { text, textRef } = useSourceText(subject);
 
   const db = subject ? Obj.getDatabase(subject) : undefined;
-  const decks = useQuery(db, Filter.type(Vocabulary.Vocabulary));
+
+  // Language is the primary choice: it decides what is translated and how the text is segmented,
+  // and the deck is only where harvested words are filed.
+  const languages = useQuery(db, Filter.type(Language.Language));
+  const [languageId, setLanguageId] = useState<string | undefined>();
+  const language = languages.find(({ id }) => id === languageId) ?? languages[0];
+
+  const allDecks = useQuery(db, Filter.type(Vocabulary.Vocabulary));
+  const decks = useMemo(
+    () => (language ? allDecks.filter((candidate) => candidate.language.uri === Obj.getURI(language)) : allDecks),
+    [allDecks, language],
+  );
   const [deckId, setDeckId] = useState<string | undefined>();
   const deck = decks.find(({ id }) => id === deckId) ?? decks[0];
+  const languageRef = language ? Ref.make(language) : deck?.language;
 
   // Look across every deck for the language, not just the selected one: the selected deck is where
   // new words are filed, but a term the learner already knows from another deck is still known.
-  const wordFilter = useMemo(() => Filter.type(Word.Word, deck ? { language: deck.language } : {}), [deck]);
-  const words = useQuery(deck ? db : undefined, wordFilter);
+  const wordFilter = useMemo(() => Filter.type(Word.Word, languageRef ? { language: languageRef } : {}), [languageRef]);
+  const words = useQuery(languageRef ? db : undefined, wordFilter);
 
   const [mode, setMode] = useState<LingoSettings.RevealMode>(settings.revealMode);
 
@@ -119,26 +131,7 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
   // The whole passage in the base language, for the split view's second pane. Keyed by the text it
   // was produced from so a document edit invalidates it rather than showing a stale translation.
   const [passage, setPassage] = useState<{ source: string; text: string }>();
-  useEffect(() => {
-    if (mode !== 'split' || !text || !deck || !invokePromise || passage?.source === text) {
-      return;
-    }
-
-    let cancelled = false;
-    void invokePromise(
-      LingoOperation.TranslatePassage,
-      { text, language: deck.language },
-      { spaceId: db?.spaceId, notify: { error: ['translate-error.message', { ns: meta.profile.key }] } },
-    ).then((result) => {
-      if (!cancelled && result.data) {
-        setPassage({ source: text, text: result.data.text });
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [mode, text, deck, db, invokePromise, passage?.source]);
+  const [running, setRunning] = useState(false);
 
   // Only meaningful while it still describes the current text.
   const passageText = passage && passage.source === text ? passage.text : undefined;
@@ -151,7 +144,7 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
   const analysis = useMemo(() => {
     // Deck vocabulary is deterministic and needs no model, so it decorates before (and without) an
     // analysis; analyzed vocab wins where the two overlap.
-    const locale = deck?.language.target?.code;
+    const locale = language?.code;
     const deckOnly = text ? deckSegments(text, lookup, locale) : undefined;
     if (!text || !stored || Analysis.isStale(stored, text)) {
       return deckOnly;
@@ -165,7 +158,7 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
       },
       deckOnly!,
     );
-  }, [text, stored, lookup, deck]);
+  }, [text, stored, lookup, language]);
 
   // The structural selection, shared by both panes: selecting a clause in one addresses the same
   // clause in the other, which is the whole point of the paired ranges.
@@ -189,17 +182,35 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
     });
   }, [selectedSegment, selectedText, text, handleAddWord]);
 
-  const handleAnalyze = useCallback(() => {
-    if (!subject || !text || !deck || !invokePromise) {
+  // Translation then analysis, in that order and as one gesture: the analysis pairs each range with
+  // its counterpart in the translation, so running it first would produce source-only segments.
+  const handleRun = useCallback(async () => {
+    if (!subject || !text || !languageRef || !invokePromise) {
       return;
     }
 
-    void invokePromise(
-      LingoOperation.AnalyzeText,
-      { subject: Ref.make(subject), text, language: deck.language, translation: passageText, refresh: true },
-      { spaceId: db?.spaceId, notify: { error: ['analyze-error.message', { ns: meta.profile.key }] } },
-    );
-  }, [db, subject, text, deck, invokePromise, passageText]);
+    setRunning(true);
+    try {
+      const translated = await invokePromise(
+        LingoOperation.TranslatePassage,
+        { text, language: languageRef },
+        { spaceId: db?.spaceId, notify: { error: ['translate-error.message', { ns: meta.profile.key }] } },
+      );
+
+      const translation = translated.data?.text;
+      if (translation) {
+        setPassage({ source: text, text: translation });
+      }
+
+      await invokePromise(
+        LingoOperation.AnalyzeText,
+        { subject: Ref.make(subject), text, language: languageRef, translation, refresh: true },
+        { spaceId: db?.spaceId, notify: { error: ['analyze-error.message', { ns: meta.profile.key }] } },
+      );
+    } finally {
+      setRunning(false);
+    }
+  }, [db, subject, text, languageRef, invokePromise]);
 
   const handleExtract = useCallback(() => {
     if (!deck || !textRef || !invokePromise) {
@@ -228,6 +239,23 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
             MODES.forEach(({ value, icon }) => {
               group.action(value, { label: [`mode-${value}.label`, { ns: meta.profile.key }], icon }, () =>
                 setMode(value),
+              );
+            });
+          },
+        )
+        .separator()
+        .group(
+          'language',
+          {
+            variant: 'toggleGroup',
+            selectCardinality: 'single',
+            value: language?.id,
+            label: ['language.label', { ns: meta.profile.key }],
+          },
+          (group) => {
+            languages.forEach((option) => {
+              group.action(option.id, { label: option.name, icon: 'ph--globe--regular' }, () =>
+                setLanguageId(option.id),
               );
             });
           },
@@ -264,15 +292,15 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
           handleAddSelection,
         )
         .action(
-          'analyze',
+          'run',
           {
-            label: ['analyze.label', { ns: meta.profile.key }],
-            icon: 'ph--brackets-angle--regular',
+            label: ['run.label', { ns: meta.profile.key }],
+            icon: running ? 'ph--spinner--regular' : 'ph--play--regular',
             disposition: 'toolbar',
-            disabled: !deck || !text,
-            testId: 'lingo.reader.analyze',
+            disabled: running || !languageRef || !text,
+            testId: 'lingo.reader.run',
           },
-          handleAnalyze,
+          handleRun,
         )
         .action(
           'extract',
@@ -286,7 +314,21 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
           handleExtract,
         )
         .build(),
-    [mode, deck, decks, text, textRef, selectedText, handleAddSelection, handleAnalyze, handleExtract, t],
+    [
+      mode,
+      language,
+      languages,
+      deck,
+      decks,
+      text,
+      textRef,
+      running,
+      selectedText,
+      handleAddSelection,
+      handleRun,
+      handleExtract,
+      t,
+    ],
   );
 
   const paneProps = {

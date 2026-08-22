@@ -74,6 +74,11 @@ Found by actually rendering the stories; every one was invisible to the type-che
 
 ## Phase 2: Deeper integration — NOT STARTED
 
+- [ ] Offer the reader companion beside any article that *has* a Text document, not only one that
+      *is* one. `isReadable` covers `Markdown.Document`, `Text.Text` and anything registered under
+      `AppCapabilities.TextContent`; the general case is an object with a `Ref<Text.Text>` field,
+      which would pick up new types without each one registering an extractor.
+
 - [ ] Reuse the analyzer in the email pipeline. `@dxos/nlp` is importable today (as `pipeline-rdf`
       imports `@dxos/ai`); a `@dxos/pipeline-nlp` Stage wrapper is ~30 lines and should be added
       when the email pipeline actually wires it, not before.
