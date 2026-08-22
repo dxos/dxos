@@ -156,7 +156,7 @@ invisible to the type-checker and to storybook; each was found by using the app.
 
 ## Open from the live run
 
-- [ ] Offer the Translation companion beside a Post *in the deck*. `isReadable(post)` is now true, so
+- [ ] Offer the Translation companion beside a Post _in the deck_. `isReadable(post)` is now true, so
       `readerCompanion` matches any node whose data is a Post — but the magazine exposes a selected
       post only as its own companion node (`magazinePost`), and nothing was observed rendering a
       companion of a companion. Decide between opening a Post as its own plank and surfacing the
