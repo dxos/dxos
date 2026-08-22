@@ -1,5 +1,155 @@
 # @dxos/plugin-onboarding
 
+## 0.12.0
+
+### Patch Changes
+
+- 0a01ff7: Deferred ~1.7 MB of the minified JavaScript a tab loads at startup (measured on a fully activated tab, from 13.7 MB to 12.0 MB). The onboarding hero image is now an asset rather than an inlined base64 module, and emoji-mart, the mermaid grammar, bip39, the AI session runtime, the ML runtime, the EVM client, the welcome screen and the devtools chart panel all load on first use.
+- 659f554: First run lands on the default space's Home, where the seeded README is listed under Recent. The navigation moved out of plugin-support's `on-create-space` handler and into plugin-onboarding, which runs it right after seeding the README so the document is already queryable when Home renders.
+- 6526bbd: Restrict onboarding in the native iOS app to passkey login: no sign-up and no alternative login methods.
+- 093a736: Reject a signup email that already has an account before creating a local identity.
+
+  Both signup paths — the welcome dialog's invitation-code flow and the URL-driven
+  `?accountInvitationCode=…&email=…` flow — created the local identity first and only
+  then called `/account/invitation-code/redeem`. Hub correctly rejects a duplicate
+  email with `email_already_registered`, but the client discarded the typed error and
+  reported it as `'email'` ("Failed to send verification email."), leaving behind an
+  identity that can never be bound to an account. Because the welcome dialog dismisses
+  on identity-presence and its signup handlers are gated on `!identity`, the user was
+  left with no account, no error, and no way to retry short of a storage reset.
+
+  Signup now probes `/account/email/exists` first and stops before any identity is
+  created, reporting a new `account-exists` error with a link through to email login.
+
+  The probe is tri-state: a rate-limited or failed check reports `unavailable` rather
+  than "free", and that also stops before identity creation with a retriable error —
+  so no signup path can strand an unbindable identity. The URL-driven flow leaves its
+  `accountInvitationCode`/`email` params intact in that case so a reload retries.
+  Redemption failures are additionally mapped by `data.type`, so a collision reaching
+  the server surfaces the same message rather than the misleading delivery error.
+
+- 85e6347: Distinguish a rejected email login token from a recovery that failed for another reason, so a backend failure is no longer reported as an expired link.
+- Updated dependencies [0280a6a]
+- Updated dependencies [e2eecf2]
+- Updated dependencies [4a0b78b]
+- Updated dependencies [34a8433]
+- Updated dependencies [85ad256]
+- Updated dependencies [2d4107f]
+- Updated dependencies [c56ba34]
+- Updated dependencies [069e8ed]
+- Updated dependencies [75971ad]
+- Updated dependencies [3958355]
+- Updated dependencies [fee7666]
+- Updated dependencies [4e417e9]
+- Updated dependencies [557e243]
+- Updated dependencies [ea11703]
+- Updated dependencies [a3d45c4]
+- Updated dependencies [881f900]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [1c995c4]
+- Updated dependencies [a69d861]
+- Updated dependencies [ba08e65]
+- Updated dependencies [dbff1e4]
+- Updated dependencies [3ee20ca]
+- Updated dependencies [5fcd238]
+- Updated dependencies [e094f74]
+- Updated dependencies [23d2d8c]
+- Updated dependencies [b0953f0]
+- Updated dependencies [375b863]
+- Updated dependencies [a3b6ef0]
+- Updated dependencies [c439ba0]
+- Updated dependencies [6af130f]
+- Updated dependencies [d62a947]
+- Updated dependencies [e56276b]
+- Updated dependencies [cafa240]
+- Updated dependencies [813069c]
+- Updated dependencies [4c107a2]
+- Updated dependencies [b9d72bb]
+- Updated dependencies [0ef896f]
+- Updated dependencies [48fd9fe]
+- Updated dependencies [3e9a10f]
+- Updated dependencies [5ceaf9c]
+- Updated dependencies [48ea128]
+- Updated dependencies [8ca2ac7]
+- Updated dependencies [098a0bb]
+- Updated dependencies [9c86066]
+- Updated dependencies [5180720]
+- Updated dependencies [b600f72]
+- Updated dependencies [99e323d]
+- Updated dependencies [ea11703]
+- Updated dependencies [bf4f1e6]
+- Updated dependencies [cc45381]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [df0ab57]
+- Updated dependencies [557e243]
+- Updated dependencies [ab79741]
+- Updated dependencies [3214dcf]
+- Updated dependencies [24fcadc]
+- Updated dependencies [77a2d34]
+- Updated dependencies [4804da0]
+- Updated dependencies [61fe676]
+- Updated dependencies [63e500b]
+- Updated dependencies [7c426d4]
+- Updated dependencies [987f7e1]
+- Updated dependencies [e7fc023]
+- Updated dependencies [ffb3c44]
+- Updated dependencies [256f286]
+- Updated dependencies [306f50d]
+- Updated dependencies [5b504b4]
+- Updated dependencies [d7b0a3b]
+- Updated dependencies [20e86ba]
+- Updated dependencies [4663f24]
+- Updated dependencies [2896a58]
+- Updated dependencies [0280a6a]
+- Updated dependencies [9e91762]
+- Updated dependencies [fc83abd]
+- Updated dependencies [678ba58]
+- Updated dependencies [8904184]
+- Updated dependencies [77d0026]
+- Updated dependencies [e288833]
+- Updated dependencies [ea11703]
+- Updated dependencies [0280a6a]
+- Updated dependencies [18597fc]
+- Updated dependencies [63629c5]
+- Updated dependencies [881f900]
+- Updated dependencies [32353e6]
+- Updated dependencies [559acfa]
+- Updated dependencies [bb94124]
+- Updated dependencies [5d816a6]
+- Updated dependencies [85e6347]
+- Updated dependencies [40b50c2]
+- Updated dependencies [85bdad2]
+- Updated dependencies [79d5ecf]
+- Updated dependencies [cc11297]
+  - @dxos/app-framework@0.12.0
+  - @dxos/app-toolkit@0.12.0
+  - @dxos/echo@0.12.0
+  - @dxos/plugin-markdown@0.12.0
+  - @dxos/plugin-client@0.12.0
+  - @dxos/protocols@0.12.0
+  - @dxos/react-ui@0.12.0
+  - @dxos/plugin-space@0.12.0
+  - @dxos/compute@0.12.0
+  - @dxos/client@0.12.0
+  - @dxos/edge-client@0.12.0
+  - @dxos/app-graph@0.12.0
+  - @dxos/react-ui-form@0.12.0
+  - @dxos/plugin-support@0.12.0
+  - @dxos/migrations@0.12.0
+  - @dxos/react-client@0.12.0
+  - @dxos/credentials@0.12.0
+  - @dxos/brand@0.12.0
+  - @dxos/react-ui-tabs@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/context@0.12.0
+  - @dxos/effect@0.12.0
+  - @dxos/invariant@0.12.0
+  - @dxos/keys@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/ui-theme@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

@@ -1,5 +1,52 @@
 # @dxos/plugin-mermaid
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [0280a6a]
+- Updated dependencies [4a0b78b]
+- Updated dependencies [34a8433]
+- Updated dependencies [2d4107f]
+- Updated dependencies [75971ad]
+- Updated dependencies [3958355]
+- Updated dependencies [557e243]
+- Updated dependencies [ba08e65]
+- Updated dependencies [dbff1e4]
+- Updated dependencies [a3b6ef0]
+- Updated dependencies [cafa240]
+- Updated dependencies [813069c]
+- Updated dependencies [4c107a2]
+- Updated dependencies [098a0bb]
+- Updated dependencies [9c86066]
+- Updated dependencies [b600f72]
+- Updated dependencies [ea11703]
+- Updated dependencies [cc45381]
+- Updated dependencies [557e243]
+- Updated dependencies [ab79741]
+- Updated dependencies [61fe676]
+- Updated dependencies [63e500b]
+- Updated dependencies [987f7e1]
+- Updated dependencies [e7fc023]
+- Updated dependencies [256f286]
+- Updated dependencies [306f50d]
+- Updated dependencies [d7b0a3b]
+- Updated dependencies [0280a6a]
+- Updated dependencies [fc83abd]
+- Updated dependencies [678ba58]
+- Updated dependencies [8904184]
+- Updated dependencies [ea11703]
+- Updated dependencies [63629c5]
+- Updated dependencies [559acfa]
+- Updated dependencies [bb94124]
+- Updated dependencies [40b50c2]
+  - @dxos/app-framework@0.12.0
+  - @dxos/app-toolkit@0.12.0
+  - @dxos/plugin-markdown@0.12.0
+  - @dxos/react-ui@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/ui-theme@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

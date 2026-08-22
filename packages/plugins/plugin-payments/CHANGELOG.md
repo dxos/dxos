@@ -1,5 +1,70 @@
 # @dxos/plugin-payments
 
+## 0.12.0
+
+### Minor Changes
+
+- 777d24a: `Identity.getEdgeIdentity()` returns the signed-in identity as an EDGE/Hub authentication principal — `Option<EdgeIdentity>` carrying the DID, the local device's peer key, and the `presentCredentials({ challenge })` signer that EDGE's `401` verifiable-presentation handshake requires. It is structurally the `EdgeIdentity` of `@dxos/edge-client`, so consumers hand it straight to `EdgeHttpClient.setIdentity` or `handleAuthChallenge` without depending on `@dxos/client`. Synchronous, like `getSnapshot`, because every consumer attaches it inside a React effect or an identity-change callback; the signing it defers is the asynchronous part.
+
+  This replaces `createEdgeIdentity(client)` from `@dxos/client/edge` at every non-CLI call site: `plugin-client`'s hub HTTP client, `plugin-assistant`'s EDGE AI model resolver, `plugin-connector`'s coordinator, and `plugin-payments`.
+
+  **Breaking for `@dxos/plugin-payments` consumers:** `getEdgeAuthHeader`, `createEdgeAuthedFetch`, `buyPremium`, and `createStripeCheckout` now take an `Identity.EdgeIdentity` as their first argument instead of a `Client`. The package no longer depends on `@dxos/client` or `@dxos/react-client` at all.
+
+### Patch Changes
+
+- Updated dependencies [0280a6a]
+- Updated dependencies [4a0b78b]
+- Updated dependencies [34a8433]
+- Updated dependencies [85ad256]
+- Updated dependencies [2d4107f]
+- Updated dependencies [c56ba34]
+- Updated dependencies [069e8ed]
+- Updated dependencies [fee7666]
+- Updated dependencies [557e243]
+- Updated dependencies [881f900]
+- Updated dependencies [dbff1e4]
+- Updated dependencies [3ee20ca]
+- Updated dependencies [23d2d8c]
+- Updated dependencies [b0953f0]
+- Updated dependencies [375b863]
+- Updated dependencies [cafa240]
+- Updated dependencies [813069c]
+- Updated dependencies [0ef896f]
+- Updated dependencies [777d24a]
+- Updated dependencies [48fd9fe]
+- Updated dependencies [5ceaf9c]
+- Updated dependencies [48ea128]
+- Updated dependencies [098a0bb]
+- Updated dependencies [9c86066]
+- Updated dependencies [cc45381]
+- Updated dependencies [df0ab57]
+- Updated dependencies [557e243]
+- Updated dependencies [ab79741]
+- Updated dependencies [77a2d34]
+- Updated dependencies [61fe676]
+- Updated dependencies [63e500b]
+- Updated dependencies [256f286]
+- Updated dependencies [306f50d]
+- Updated dependencies [9e91762]
+- Updated dependencies [fc83abd]
+- Updated dependencies [678ba58]
+- Updated dependencies [8904184]
+- Updated dependencies [e288833]
+- Updated dependencies [0280a6a]
+- Updated dependencies [63629c5]
+- Updated dependencies [bb94124]
+  - @dxos/app-framework@0.12.0
+  - @dxos/app-toolkit@0.12.0
+  - @dxos/plugin-client@0.12.0
+  - @dxos/react-ui@0.12.0
+  - @dxos/client@0.12.0
+  - @dxos/edge-client@0.12.0
+  - @dxos/halo@0.12.0
+  - @dxos/react-ui-form@0.12.0
+  - @dxos/effect@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/util@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

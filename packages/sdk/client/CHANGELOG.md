@@ -1,5 +1,111 @@
 # @dxos/client
 
+## 0.12.0
+
+### Minor Changes
+
+- 881f900: The agent debug port can now survive a reload of the tab it was authorized in. `start({ persist: true })` records the session in `sessionStorage`, and `resume()` restarts the loop under the same id, so an agent's session id keeps working across a navigation the user did not intend to end it — an OAuth redirect above all, which previously stranded the investigation exactly when the interesting state appeared.
+
+  Deliberately narrow: `sessionStorage`, not `localStorage`, so an arbitrary-eval port cannot outlive its tab; a 30-minute expiry so a forgotten port lapses on its own; `resume()` never mints a session, so mounting the devtools hook cannot switch the port on; and stopping clears the record.
+
+- 0280a6a: Cut app startup cost by loading feature code on demand rather than at boot.
+
+  Activation: the coarse `DeferredStartup` event is replaced by per-plugin start events (`<pluginKey>.event.start`, built with `ActivationEvent.pluginStart`). A plugin's own start event now fires when one of its modules contributes a `ReactSurface` — the feature being rendered is the demand signal — so an unvisited feature's contributions never load. Contributions no surface can gate ride the feature they belong to instead: app-graph builders default to the graph plugin's start event, skill definitions to the assistant's, and cross-plugin contributions (markdown extensions, connectors, game variants) to the consuming plugin's. React surfaces activate on their declared roles.
+
+  Client: initialization can run forked off app startup. `Client.waitUntilInitialized()` exposes a stable completion signal, `useClient` suspends until it resolves, `ClientProvider` gains a `suspend` mode that provides context immediately instead of rendering the fallback subtree-wide, and the HALO adapters are construction-safe over an uninitialized client.
+
+  Bundle: `runDedicatedWorker` moves to `@dxos/client/worker` so the worker-side service runtime (client-services, sqlite, hypercore) is no longer statically reachable from main-thread bundles; the in-process host (`fromHost`) and the RTC ice provider load on demand. A new engine-free `@dxos/compute-hyperformula/types` subpath lets schema and operation definitions use cell-address helpers without loading HyperFormula.
+
+  Breaking: `ActivationEvents.DeferredStartup` and `ActivationEvents.SkillsRequested` are removed; worker entrypoints importing `runDedicatedWorker` from the root must import it from `@dxos/client/worker`; and a plugin's React surface must declare the roles it serves to be activated.
+
+### Patch Changes
+
+- Updated dependencies [e2eecf2]
+- Updated dependencies [069e8ed]
+- Updated dependencies [75971ad]
+- Updated dependencies [3958355]
+- Updated dependencies [4e417e9]
+- Updated dependencies [ea11703]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [1c995c4]
+- Updated dependencies [2c5aaf0]
+- Updated dependencies [a69d861]
+- Updated dependencies [ba08e65]
+- Updated dependencies [5fcd238]
+- Updated dependencies [e094f74]
+- Updated dependencies [23d2d8c]
+- Updated dependencies [b0953f0]
+- Updated dependencies [375b863]
+- Updated dependencies [a3b6ef0]
+- Updated dependencies [c439ba0]
+- Updated dependencies [6af130f]
+- Updated dependencies [c8b7158]
+- Updated dependencies [d62a947]
+- Updated dependencies [e56276b]
+- Updated dependencies [4c107a2]
+- Updated dependencies [b9d72bb]
+- Updated dependencies [3e9a10f]
+- Updated dependencies [5ceaf9c]
+- Updated dependencies [48ea128]
+- Updated dependencies [8ca2ac7]
+- Updated dependencies [b600f72]
+- Updated dependencies [99e323d]
+- Updated dependencies [ea11703]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [24fcadc]
+- Updated dependencies [4804da0]
+- Updated dependencies [63e500b]
+- Updated dependencies [256f286]
+- Updated dependencies [df93cc2]
+- Updated dependencies [5b504b4]
+- Updated dependencies [a53cabb]
+- Updated dependencies [d7b0a3b]
+- Updated dependencies [4663f24]
+- Updated dependencies [2896a58]
+- Updated dependencies [9e91762]
+- Updated dependencies [4f55909]
+- Updated dependencies [ea11703]
+- Updated dependencies [18597fc]
+- Updated dependencies [63629c5]
+- Updated dependencies [881f900]
+- Updated dependencies [32353e6]
+- Updated dependencies [559acfa]
+- Updated dependencies [bb94124]
+- Updated dependencies [5d816a6]
+- Updated dependencies [85e6347]
+- Updated dependencies [40b50c2]
+- Updated dependencies [85bdad2]
+- Updated dependencies [cc11297]
+  - @dxos/echo@0.12.0
+  - @dxos/config@0.12.0
+  - @dxos/protocols@0.12.0
+  - @dxos/client-protocol@0.12.0
+  - @dxos/client-services@0.12.0
+  - @dxos/edge-client@0.12.0
+  - @dxos/echo-client@0.12.0
+  - @dxos/sql-sqlite@0.12.0
+  - @dxos/echo-protocol@0.12.0
+  - @dxos/credentials@0.12.0
+  - @dxos/messaging@0.12.0
+  - @dxos/network-manager@0.12.0
+  - @dxos/rpc@0.12.0
+  - @dxos/websocket-rpc@0.12.0
+  - @dxos/worker-framework@0.12.0
+  - @dxos/rpc-tunnel@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/codec-protobuf@0.12.0
+  - @dxos/context@0.12.0
+  - @dxos/debug@0.12.0
+  - @dxos/effect@0.12.0
+  - @dxos/invariant@0.12.0
+  - @dxos/keys@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/node-std@0.12.0
+  - @dxos/timeframe@0.12.0
+  - @dxos/tracing@0.12.0
+  - @dxos/util@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

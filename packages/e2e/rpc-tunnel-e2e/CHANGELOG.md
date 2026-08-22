@@ -1,5 +1,25 @@
 # @dxos/rpc-tunnel-e2e
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [4e417e9]
+- Updated dependencies [23d2d8c]
+- Updated dependencies [e56276b]
+- Updated dependencies [4663f24]
+- Updated dependencies [2896a58]
+- Updated dependencies [9e91762]
+- Updated dependencies [85e6347]
+- Updated dependencies [77d0026]
+  - @dxos/protocols@0.12.0
+  - @dxos/react-hooks@0.12.0
+  - @dxos/rpc@0.12.0
+  - @dxos/rpc-tunnel@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/codec-protobuf@0.12.0
+  - @dxos/log@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

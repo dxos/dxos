@@ -1,5 +1,34 @@
 # @dxos/react-ui-menu
 
+## 0.12.0
+
+### Minor Changes
+
+- 4f760ce: `Menu.Toolbar` no longer renders the graph items implicitly — it is now only the attention-gated toolbar container, and the new `Menu.Items` renders the graph-backed items wherever it sits among the toolbar's children, so JSX order controls placement. Every `<Menu.Toolbar />` becomes `<Menu.Toolbar><Menu.Items /></Menu.Toolbar>`; a toolbar mixing its own children with the graph items orders them freely.
+
+### Patch Changes
+
+- Updated dependencies [557e243]
+- Updated dependencies [813069c]
+- Updated dependencies [098a0bb]
+- Updated dependencies [bf4f1e6]
+- Updated dependencies [557e243]
+- Updated dependencies [3214dcf]
+- Updated dependencies [987f7e1]
+- Updated dependencies [306f50d]
+- Updated dependencies [fc83abd]
+- Updated dependencies [8904184]
+  - @dxos/react-ui@0.12.0
+  - @dxos/app-graph@0.12.0
+  - @dxos/keyboard@0.12.0
+  - @dxos/react-ui-attention@0.12.0
+  - @dxos/effect@0.12.0
+  - @dxos/invariant@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/ui-theme@0.12.0
+  - @dxos/ui-types@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

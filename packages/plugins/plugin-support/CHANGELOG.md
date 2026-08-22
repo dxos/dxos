@@ -1,5 +1,119 @@
 # @dxos/plugin-support
 
+## 0.12.0
+
+### Patch Changes
+
+- ffb3c44: Point the help menu's app download at the running environment's release channel. CrabNebula's dashboard only lists the primary channel, so a prerelease deployment previously linked users at an installer for a different channel than the one they were using; it now links straight at that channel's latest installer via the CDN's public download endpoint.
+- Updated dependencies [0280a6a]
+- Updated dependencies [e2eecf2]
+- Updated dependencies [4a0b78b]
+- Updated dependencies [34a8433]
+- Updated dependencies [85ad256]
+- Updated dependencies [2d4107f]
+- Updated dependencies [c56ba34]
+- Updated dependencies [069e8ed]
+- Updated dependencies [75971ad]
+- Updated dependencies [3958355]
+- Updated dependencies [fee7666]
+- Updated dependencies [557e243]
+- Updated dependencies [ea11703]
+- Updated dependencies [a3d45c4]
+- Updated dependencies [881f900]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [1c995c4]
+- Updated dependencies [a69d861]
+- Updated dependencies [ba08e65]
+- Updated dependencies [dbff1e4]
+- Updated dependencies [3ee20ca]
+- Updated dependencies [5fcd238]
+- Updated dependencies [e094f74]
+- Updated dependencies [a3b6ef0]
+- Updated dependencies [c439ba0]
+- Updated dependencies [6af130f]
+- Updated dependencies [d62a947]
+- Updated dependencies [cafa240]
+- Updated dependencies [813069c]
+- Updated dependencies [4c107a2]
+- Updated dependencies [b9d72bb]
+- Updated dependencies [0ef896f]
+- Updated dependencies [48fd9fe]
+- Updated dependencies [3e9a10f]
+- Updated dependencies [48ea128]
+- Updated dependencies [8ca2ac7]
+- Updated dependencies [098a0bb]
+- Updated dependencies [9c86066]
+- Updated dependencies [5180720]
+- Updated dependencies [b600f72]
+- Updated dependencies [99e323d]
+- Updated dependencies [ea11703]
+- Updated dependencies [bf4f1e6]
+- Updated dependencies [cc45381]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [df0ab57]
+- Updated dependencies [557e243]
+- Updated dependencies [ab79741]
+- Updated dependencies [3214dcf]
+- Updated dependencies [24fcadc]
+- Updated dependencies [77a2d34]
+- Updated dependencies [4804da0]
+- Updated dependencies [61fe676]
+- Updated dependencies [63e500b]
+- Updated dependencies [7c426d4]
+- Updated dependencies [987f7e1]
+- Updated dependencies [256f286]
+- Updated dependencies [306f50d]
+- Updated dependencies [5b504b4]
+- Updated dependencies [d7b0a3b]
+- Updated dependencies [20e86ba]
+- Updated dependencies [9e91762]
+- Updated dependencies [fc83abd]
+- Updated dependencies [678ba58]
+- Updated dependencies [8904184]
+- Updated dependencies [77d0026]
+- Updated dependencies [e288833]
+- Updated dependencies [ea11703]
+- Updated dependencies [0280a6a]
+- Updated dependencies [18597fc]
+- Updated dependencies [63629c5]
+- Updated dependencies [881f900]
+- Updated dependencies [32353e6]
+- Updated dependencies [559acfa]
+- Updated dependencies [bb94124]
+- Updated dependencies [5d816a6]
+- Updated dependencies [40b50c2]
+- Updated dependencies [85bdad2]
+- Updated dependencies [77d0026]
+- Updated dependencies [79d5ecf]
+- Updated dependencies [cc11297]
+  - @dxos/app-framework@0.12.0
+  - @dxos/app-toolkit@0.12.0
+  - @dxos/echo@0.12.0
+  - @dxos/plugin-client@0.12.0
+  - @dxos/config@0.12.0
+  - @dxos/react-ui@0.12.0
+  - @dxos/plugin-space@0.12.0
+  - @dxos/compute@0.12.0
+  - @dxos/client@0.12.0
+  - @dxos/app-graph@0.12.0
+  - @dxos/react-ui-form@0.12.0
+  - @dxos/plugin-observability@0.12.0
+  - @dxos/react-hooks@0.12.0
+  - @dxos/plugin-deck@0.12.0
+  - @dxos/plugin-status-bar@0.12.0
+  - @dxos/react-client@0.12.0
+  - @dxos/react-ui-markdown@0.12.0
+  - @dxos/keyboard@0.12.0
+  - @dxos/brand@0.12.0
+  - @dxos/react-ui-attention@0.12.0
+  - @dxos/debug@0.12.0
+  - @dxos/effect@0.12.0
+  - @dxos/keys@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/ui-theme@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

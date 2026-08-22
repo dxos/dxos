@@ -1,5 +1,15 @@
 # @dxos/discord-bot
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [069e8ed]
+- Updated dependencies [48ea128]
+  - @dxos/config@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/node-std@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

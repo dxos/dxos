@@ -1,5 +1,154 @@
 # @dxos/plugin-routine
 
+## 0.12.0
+
+### Minor Changes
+
+- 4f55909: Collapse the routine editor into a single composite form (general fields, action, and trigger in one schema-driven form) and reuse it in the create-object dialog: picking a routine template now opens the full routine form over an unpersisted draft, persisted on Save. Routine templates scaffold enabled routines, since the dialog is now the review step.
+
+  Connector sync becomes account-level: `ConnectorSpec.SyncInput` is now a shared schema (`{ connection, priority? }`) that every connector sync operation (Gmail, Google Calendar/Contacts, JMAP, Bluesky, Discord, GitHub, Linear, Slack, Trello) uses, fanning out over the connection's bindings via `Binding.syncAll`, with one routine per connection wrapping the connector's own operation. The fan-out isolates bindings: every binding runs to completion and its outcome is collected, so one broken target neither interrupts a concurrent sibling nor starves the queued rest, and a provider 401 is retagged for reauthentication whether it arrives as a typed failure or a defect (including one buried in a wrapper's `cause`). Deleting a connection now removes its sync routine, so no orphaned schedule keeps firing. The routine is offered through the create-routine form when connecting an account — single- and multi-target alike — instead of created silently; the sync runs when the routine is saved, a target's Sync button syncs its account with the pressed target first, and a deleted routine is re-offered through the form on the next sync press.
+
+  Reading an unpersisted object no longer throws when one of its refs names a registry entry by type DXN rather than an object by entity id (`Ref.fromURI`). Off-database refs resolve against the link cache, which is keyed by entity id, so such a ref is now left unresolved instead of failing an invariant — the routine draft the create dialog renders binds its runnable operation that way.
+
+### Patch Changes
+
+- 256f286: Projects gain a lifecycle `status` field (`active | paused | blocked | ended`), surfaced through the MCP-projected verbs, and plugin-projects ships a project-management skill for external agents — including the `/codeProject setup` flow that binds a repo to an existing space. The skill's key segment is `codeProject` because the segment doubles as the projected MCP prompt name and plain `project` belongs to assistant-toolkit's own skill.
+
+  `toEffectSchema` recognizes ECHO's reference sentinel before the generic `type: 'object'` branch, so a reference node widened with structural keywords (as a wire boundary may do for schema-unaware consumers) decodes as a reference instead of a plain struct. Serialization is unchanged — persisted schemas stay byte-identical to previous releases.
+
+  Worker (`workerd`) bundles no longer pull in React. Wrangler resolves `workerd, worker, browser` and never `node`, so a `#capabilities` map offering only `node` and `default` handed workers the browser barrel and its React surfaces. Every plugin with a headless entry now resolves a server-safe barrel under a `workerd` condition, and the `check-module-structure` guards trace with `workerd,worker` — the conditions a worker actually resolves — so a reintroduced leak fails the check instead of passing against a build that is never shipped.
+
+- Updated dependencies [0280a6a]
+- Updated dependencies [cd205fb]
+- Updated dependencies [8363f12]
+- Updated dependencies [e2eecf2]
+- Updated dependencies [592b00e]
+- Updated dependencies [4a0b78b]
+- Updated dependencies [34a8433]
+- Updated dependencies [85ad256]
+- Updated dependencies [2d4107f]
+- Updated dependencies [c56ba34]
+- Updated dependencies [069e8ed]
+- Updated dependencies [75971ad]
+- Updated dependencies [3958355]
+- Updated dependencies [fee7666]
+- Updated dependencies [557e243]
+- Updated dependencies [ea11703]
+- Updated dependencies [a3d45c4]
+- Updated dependencies [8a77160]
+- Updated dependencies [881f900]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [1c995c4]
+- Updated dependencies [a69d861]
+- Updated dependencies [ba08e65]
+- Updated dependencies [dbff1e4]
+- Updated dependencies [3ee20ca]
+- Updated dependencies [5fcd238]
+- Updated dependencies [e094f74]
+- Updated dependencies [261c821]
+- Updated dependencies [1b62726]
+- Updated dependencies [a3b6ef0]
+- Updated dependencies [c439ba0]
+- Updated dependencies [6af130f]
+- Updated dependencies [d62a947]
+- Updated dependencies [cafa240]
+- Updated dependencies [813069c]
+- Updated dependencies [4c107a2]
+- Updated dependencies [b9d72bb]
+- Updated dependencies [0ef896f]
+- Updated dependencies [48fd9fe]
+- Updated dependencies [3e9a10f]
+- Updated dependencies [48ea128]
+- Updated dependencies [8ca2ac7]
+- Updated dependencies [098a0bb]
+- Updated dependencies [9c86066]
+- Updated dependencies [5180720]
+- Updated dependencies [b600f72]
+- Updated dependencies [99e323d]
+- Updated dependencies [ea11703]
+- Updated dependencies [bf4f1e6]
+- Updated dependencies [cc45381]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [6328de3]
+- Updated dependencies [df0ab57]
+- Updated dependencies [4f760ce]
+- Updated dependencies [557e243]
+- Updated dependencies [ab79741]
+- Updated dependencies [3214dcf]
+- Updated dependencies [24fcadc]
+- Updated dependencies [77a2d34]
+- Updated dependencies [4804da0]
+- Updated dependencies [61fe676]
+- Updated dependencies [63e500b]
+- Updated dependencies [7c426d4]
+- Updated dependencies [987f7e1]
+- Updated dependencies [256f286]
+- Updated dependencies [306f50d]
+- Updated dependencies [6c881a2]
+- Updated dependencies [f048062]
+- Updated dependencies [cc9b81f]
+- Updated dependencies [5b504b4]
+- Updated dependencies [eb95cd7]
+- Updated dependencies [d7b0a3b]
+- Updated dependencies [20e86ba]
+- Updated dependencies [9e91762]
+- Updated dependencies [fc83abd]
+- Updated dependencies [678ba58]
+- Updated dependencies [8904184]
+- Updated dependencies [77d0026]
+- Updated dependencies [e288833]
+- Updated dependencies [ea11703]
+- Updated dependencies [0280a6a]
+- Updated dependencies [18597fc]
+- Updated dependencies [63629c5]
+- Updated dependencies [881f900]
+- Updated dependencies [32353e6]
+- Updated dependencies [559acfa]
+- Updated dependencies [bb94124]
+- Updated dependencies [5d816a6]
+- Updated dependencies [40b50c2]
+- Updated dependencies [85bdad2]
+- Updated dependencies [79d5ecf]
+- Updated dependencies [cc11297]
+  - @dxos/app-framework@0.12.0
+  - @dxos/app-toolkit@0.12.0
+  - @dxos/agent-runtime@0.12.0
+  - @dxos/ai@0.12.0
+  - @dxos/echo@0.12.0
+  - @dxos/link@0.12.0
+  - @dxos/plugin-client@0.12.0
+  - @dxos/react-ui@0.12.0
+  - @dxos/plugin-space@0.12.0
+  - @dxos/compute@0.12.0
+  - @dxos/assistant-toolkit@0.12.0
+  - @dxos/client@0.12.0
+  - @dxos/compute-runtime@0.12.0
+  - @dxos/ui-editor@0.12.0
+  - @dxos/app-graph@0.12.0
+  - @dxos/react-ui-menu@0.12.0
+  - @dxos/react-ui-form@0.12.0
+  - @dxos/react-ui-components@0.12.0
+  - @dxos/schema@0.12.0
+  - @dxos/cli-util@0.12.0
+  - @dxos/react-ui-editor@0.12.0
+  - @dxos/edge-compute@0.12.0
+  - @dxos/echo-doc@0.12.0
+  - @dxos/echo-react@0.12.0
+  - @dxos/react-client@0.12.0
+  - @dxos/react-ui-list@0.12.0
+  - @dxos/react-ui-search@0.12.0
+  - @dxos/react-ui-attention@0.12.0
+  - @dxos/react-ui-syntax-highlighter@0.12.0
+  - @dxos/context@0.12.0
+  - @dxos/effect@0.12.0
+  - @dxos/invariant@0.12.0
+  - @dxos/keys@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/ui@0.12.0
+  - @dxos/ui-theme@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

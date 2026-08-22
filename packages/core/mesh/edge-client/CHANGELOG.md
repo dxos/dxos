@@ -1,5 +1,58 @@
 # @dxos/edge-client
 
+## 0.12.0
+
+### Minor Changes
+
+- 23d2d8c: Both edge clients now acquire their auth challenge from `GET /auth` instead of provoking a 401. `BaseHttpClient` prefetched `/auth` and acted only on a failure; `EdgeClient` never touched `/auth` at all — it fired a GET at the `/ws/:identityDid/:peerKey` upgrade path purely to harvest that path's 401. Both produced a red `Failed to load resource: 401` in the browser console on every client boot, and a routine `auth.failure` in edge's audit trail, for an operation that succeeded.
+
+  The shared `authenticateViaChallengeEndpoint` reads the challenge from either a 200 body (edge answers 200 for anonymous callers as of dxos/edge#775) or a `WWW-Authenticate` header, so this works against servers on either side of that change. Both clients keep their lazy 401-and-retry path for stale credentials.
+
+  Three bugs fell out of the shared parser:
+
+  - **Challenge lists were unparseable.** `WWW-Authenticate` carries a comma-separated list (RFC 9110 §11.6.1), but the old code asserted the header _started with_ `VerifiablePresentation challenge=`, so `Bearer realm="dxos", VerifiablePresentation …` — what edge emits whenever admin-key auth is also allowed — failed the invariant outright.
+  - **Quotes were never stripped**, relying on `Buffer.from` silently discarding them.
+  - **A dead protocol assignment** (`httpUrl.protocol = getEdgeUrlWithProtocol(...)`) assigned a whole URL string to `URL.protocol` and was silently ignored.
+
+  `handleAuthChallenge` keeps its signature, and the 401 assertion is relaxed to accept either shape, so callers such as `plugin-payments` need no change. `EdgeCredentialsHeaderCodec` in `@dxos/protocols` is new: it owns the `Authorization` and `sec-websocket-protocol` encodings that were previously open-coded on both sides.
+
+### Patch Changes
+
+- b0953f0: Pre-authenticate every EdgeHttpClient endpoint that the edge worker authenticates, so credentials go
+  out with the first request instead of after a 401 challenge.
+- 375b863: Proactively refresh the cached HTTP auth header shortly before the server-advertised challenge TTL elapses, instead of provoking a 401 once per window. `/auth` responses may now carry `expiresInMs` beside the challenge; against servers that do not advertise it, behavior is unchanged (refresh on 401 only).
+
+  Signature change: `authenticateViaChallengeEndpoint` (public since the previous release train, introduced in #12541) now returns `{ presentation, expiresInMs }` instead of the bare presentation bytes — destructure `presentation` at call sites.
+
+- 5ceaf9c: EDGE HTTP requests now use the prefix-per-service paths (`/db`, `/identity`, `/compute`, `/blob`) instead of the legacy top-level ones, per `docs/design/system/http-route-migration.md` in `dxos/edge`.
+
+  - `EdgeHttpClient`: `/spaces/*` → `/db/spaces/*`, `/identity/recover` → `/db/identity/recover`, `/agents/*` → `/identity/agents/*`, `/users/:did/agent/*` → `/identity/users/:did/agent/*`, `/functions/*` and `/workflows/*` → `/compute/*`, and `getBlobUrl` now returns `/blob/file/:key`.
+  - `@dxos/plugin-wnfs` blockstore requests move from `/api/file` to `/blob/file`.
+
+  Both forms answer on edge today, so this is not a breaking change for callers of these methods; `/oauth/*`, `/atproto/*`, `/registry/*`, `/status` and `/auth` are pinned and unchanged, and `/triggers/*` is left alone (it is not a migration target).
+
+- bb94124: Run OAuth in the system browser on desktop, via a loopback callback server, so sign-in and integration flows work in the native app. Adds `NativeOAuth` to app-toolkit and a public `getAuthHeader()` to the EDGE HTTP clients.
+- Updated dependencies [4e417e9]
+- Updated dependencies [23d2d8c]
+- Updated dependencies [e56276b]
+- Updated dependencies [4663f24]
+- Updated dependencies [2896a58]
+- Updated dependencies [9e91762]
+- Updated dependencies [85e6347]
+  - @dxos/protocols@0.12.0
+  - @dxos/credentials@0.12.0
+  - @dxos/keyring@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/context@0.12.0
+  - @dxos/crypto@0.12.0
+  - @dxos/effect@0.12.0
+  - @dxos/errors@0.12.0
+  - @dxos/invariant@0.12.0
+  - @dxos/keys@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/node-std@0.12.0
+  - @dxos/util@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

@@ -1,5 +1,117 @@
 # @dxos/client-services
 
+## 0.12.0
+
+### Minor Changes
+
+- 4663f24: Remove the `@dxos/teleport-extension-object-sync` package and the blob-sync teleport extension it
+  implemented (peer-to-peer sync of opaque binary blobs), which had no active feature depending on
+  it. `SpaceManager`/`SpaceProtocol` no longer accept or thread a `blobStore` option, and
+  `DevtoolsHost.getBlobs` (and the devtools "Blobs" panel) are removed along with the underlying
+  `dxos.echo.blob`/`dxos.mesh.teleport.blobsync` protobuf definitions. Also deletes 22 other
+  protobuf `.proto` files under `@dxos/protocols` (KUBE/DXNS/bot-daemon/pre-Automerge-era message
+  and service definitions) confirmed to have zero consumers anywhere in the codebase.
+
+### Patch Changes
+
+- 2c5aaf0: Packages whose sources are not safe to bundle for the browser no longer publish a `source` export condition: `@dxos/client-services`, `@dxos/config`, `@dxos/lock-file`, `@dxos/network-manager`, `@dxos/observability`, `@dxos/random-access-storage` and `@dxos/teleport`.
+
+  Default resolution is unchanged — these packages already resolved to their built `dist` for ordinary consumers, and their entry points, types and runtime behaviour are the same. Only resolution under `--conditions=source` changes: it now yields the built output instead of the TypeScript sources in the published `src` directory, so node, bun and Vite all agree on which packages are consumed from source.
+
+- Updated dependencies [e2eecf2]
+- Updated dependencies [069e8ed]
+- Updated dependencies [75971ad]
+- Updated dependencies [3958355]
+- Updated dependencies [4e417e9]
+- Updated dependencies [ea11703]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [1c995c4]
+- Updated dependencies [a69d861]
+- Updated dependencies [ba08e65]
+- Updated dependencies [5fcd238]
+- Updated dependencies [e094f74]
+- Updated dependencies [23d2d8c]
+- Updated dependencies [b0953f0]
+- Updated dependencies [375b863]
+- Updated dependencies [a3b6ef0]
+- Updated dependencies [34e4fb7]
+- Updated dependencies [c439ba0]
+- Updated dependencies [6af130f]
+- Updated dependencies [c8b7158]
+- Updated dependencies [d62a947]
+- Updated dependencies [e56276b]
+- Updated dependencies [4c107a2]
+- Updated dependencies [b9d72bb]
+- Updated dependencies [3e9a10f]
+- Updated dependencies [5ceaf9c]
+- Updated dependencies [48ea128]
+- Updated dependencies [8ca2ac7]
+- Updated dependencies [b600f72]
+- Updated dependencies [99e323d]
+- Updated dependencies [ea11703]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [24fcadc]
+- Updated dependencies [4804da0]
+- Updated dependencies [63e500b]
+- Updated dependencies [256f286]
+- Updated dependencies [df93cc2]
+- Updated dependencies [5b504b4]
+- Updated dependencies [a53cabb]
+- Updated dependencies [d7b0a3b]
+- Updated dependencies [4663f24]
+- Updated dependencies [2896a58]
+- Updated dependencies [9e91762]
+- Updated dependencies [4f55909]
+- Updated dependencies [ea11703]
+- Updated dependencies [18597fc]
+- Updated dependencies [4fc8f3a]
+- Updated dependencies [63629c5]
+- Updated dependencies [881f900]
+- Updated dependencies [32353e6]
+- Updated dependencies [559acfa]
+- Updated dependencies [bb94124]
+- Updated dependencies [5d816a6]
+- Updated dependencies [85e6347]
+- Updated dependencies [40b50c2]
+- Updated dependencies [85bdad2]
+- Updated dependencies [cc11297]
+  - @dxos/echo@0.12.0
+  - @dxos/config@0.12.0
+  - @dxos/protocols@0.12.0
+  - @dxos/client-protocol@0.12.0
+  - @dxos/edge-client@0.12.0
+  - @dxos/feed@0.12.0
+  - @dxos/echo-client@0.12.0
+  - @dxos/sql-sqlite@0.12.0
+  - @dxos/echo-host@0.12.0
+  - @dxos/echo-protocol@0.12.0
+  - @dxos/credentials@0.12.0
+  - @dxos/keyring@0.12.0
+  - @dxos/messaging@0.12.0
+  - @dxos/network-manager@0.12.0
+  - @dxos/teleport@0.12.0
+  - @dxos/teleport-extension-gossip@0.12.0
+  - @dxos/teleport-extension-replicator@0.12.0
+  - @dxos/websocket-rpc@0.12.0
+  - @dxos/feed-store@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/codec-protobuf@0.12.0
+  - @dxos/context@0.12.0
+  - @dxos/crypto@0.12.0
+  - @dxos/debug@0.12.0
+  - @dxos/effect@0.12.0
+  - @dxos/hypercore@0.12.0
+  - @dxos/invariant@0.12.0
+  - @dxos/keys@0.12.0
+  - @dxos/lock-file@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/node-std@0.12.0
+  - @dxos/random-access-storage@0.12.0
+  - @dxos/timeframe@0.12.0
+  - @dxos/tracing@0.12.0
+  - @dxos/util@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes
