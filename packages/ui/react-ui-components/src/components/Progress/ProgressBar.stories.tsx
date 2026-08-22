@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { Panel, Toolbar } from '@dxos/react-ui';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { TextCrawl } from '../TextCrawl';
 import { ProgressBar, type ProgressBarProps } from './ProgressBar';
@@ -44,41 +44,44 @@ const DefaultStory = ({ items, ...props }: StoryArgs) => {
   }, [running]);
 
   return (
-    <div className='flex flex-col w-[400px] gap-8 overflow-hidden'>
-      <Toolbar.Root>
-        <Toolbar.Button onClick={() => setRunning(true)}>Start</Toolbar.Button>
-        <Toolbar.Button onClick={() => setRunning(false)}>Stop</Toolbar.Button>
-        <Toolbar.Button onClick={() => setNodes((nodes) => [...nodes, createItem()])}>Add</Toolbar.Button>
-        <Toolbar.Button onClick={() => setNodes([...(items ?? [])])}>Reset</Toolbar.Button>
-        <Toolbar.Button onClick={() => setNodes([])}>Clear</Toolbar.Button>
-        <div className='flex-1' />
-        <div className='p-2 text-subdued'>{nodes.length}</div>
-      </Toolbar.Root>
-
-      <div className='flex flex-col gap-1'>
-        <ProgressBar
-          // An unbounded run: the steps ARE the nodes, and the last one is the phase in flight.
-          state={{
-            phases: nodes,
-            phase: nodes.length - 1,
-            status: running ? 'running' : 'done',
-          }}
-          selected={index}
-          onSelect={(node) => setIndex((index) => (index === node.index ? undefined : node.index))}
-          {...props}
-        />
-        <TextCrawl lines={lines} index={index} autoAdvance classNames='ps-4 text-sm text-subdued' />
-      </div>
-    </div>
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <Toolbar.Button onClick={() => setRunning(true)}>Start</Toolbar.Button>
+          <Toolbar.Button onClick={() => setRunning(false)}>Stop</Toolbar.Button>
+          <Toolbar.Button onClick={() => setNodes((nodes) => [...nodes, createItem()])}>Add</Toolbar.Button>
+          <Toolbar.Button onClick={() => setNodes([...(items ?? [])])}>Reset</Toolbar.Button>
+          <Toolbar.Button onClick={() => setNodes([])}>Clear</Toolbar.Button>
+          <div className='flex-1' />
+          <div className='p-2 text-subdued'>{nodes.length}</div>
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content></Panel.Content>
+      <Panel.Statusbar asChild>
+        <div>
+          <ProgressBar
+            state={{
+              phases: nodes,
+              phase: nodes.length - 1,
+              status: running ? 'running' : 'done',
+            }}
+            selected={index}
+            onSelect={(node) => setIndex((index) => (index === node.index ? undefined : node.index))}
+            {...props}
+          />
+          <TextCrawl lines={lines} index={index} autoAdvance classNames='ps-4 text-sm text-subdued' />
+        </div>
+      </Panel.Statusbar>
+    </Panel.Root>
   );
 };
 
 const meta = {
   title: 'ui/react-ui-components/ProgressBar',
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
-    layout: 'centered',
+    layout: 'fullscreen',
   },
 } satisfies Meta<typeof DefaultStory>;
 

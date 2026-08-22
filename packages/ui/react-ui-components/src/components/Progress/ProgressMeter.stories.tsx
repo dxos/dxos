@@ -5,11 +5,11 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { type Progress } from '@dxos/progress';
 import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { ProgressMeter, type ProgressMeterProps } from './ProgressMeter';
+import { type ProgressState } from './types';
 
 const TICK_MS = 400;
 
@@ -36,12 +36,10 @@ const INDETERMINATE: Phase[] = [
   { note: 'Adding to magazine', total: 3 },
 ];
 
-const IDLE: Progress.TaskProgress = {
-  name: 'progress/demo',
+const IDLE: ProgressState = {
   label: 'Curating Reading List',
   current: 0,
   status: 'pending',
-  updatedAt: new Date().toISOString(),
   elapsedMs: 0,
   note: 'Idle',
   cancellable: true,
@@ -54,7 +52,7 @@ const IDLE: Progress.TaskProgress = {
  * The toolbar starts either shape and forces a failure; the meter's own ✕ cancels.
  */
 const DefaultStory = (args: ProgressMeterProps) => {
-  const [state, setState] = useState<Progress.TaskProgress>(IDLE);
+  const [state, setState] = useState<ProgressState>(IDLE);
   const [script, setScript] = useState<{ phases: Phase[]; run: number }>({ phases: [], run: 0 });
   const stopped = useRef(false);
 
@@ -69,12 +67,11 @@ const DefaultStory = (args: ProgressMeterProps) => {
     let index = 0;
     let count = 0;
 
-    const patch = (next: Partial<Progress.TaskProgress>) =>
+    const patch = (next: Partial<ProgressState>) =>
       setState((prev) => ({
         ...prev,
         ...next,
         startedAt,
-        updatedAt: new Date().toISOString(),
         elapsedMs: Date.now() - start,
       }));
 
@@ -124,7 +121,7 @@ const DefaultStory = (args: ProgressMeterProps) => {
   /** Cancelling is not a failure: the run simply stops, and the meter returns to where it began. */
   const handleCancel = useCallback(() => {
     stopped.current = true;
-    setState({ ...IDLE, updatedAt: new Date().toISOString() });
+    setState({ ...IDLE });
   }, []);
 
   const handleFail = useCallback(() => {
@@ -133,7 +130,6 @@ const DefaultStory = (args: ProgressMeterProps) => {
       ...prev,
       status: 'error',
       error: 'Network unreachable',
-      updatedAt: new Date().toISOString(),
     }));
   }, []);
 
@@ -161,7 +157,7 @@ const DefaultStory = (args: ProgressMeterProps) => {
 };
 
 const meta = {
-  title: 'sdk/app-toolkit/components/ProgressMeter',
+  title: 'ui/react-ui-components/ProgressMeter',
   component: ProgressMeter,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
