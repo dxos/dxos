@@ -11,75 +11,59 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { ProgressMeter, type ProgressMeterProps } from './ProgressMeter';
 
-const STEP = 3;
 const TICK_MS = 400;
 
-const DefaultStory = ({ state: stateProp, ...args }: ProgressMeterProps) => {
-  const startRef = useRef(Date.now());
-  const [state, setState] = useState<Progress.TaskProgress>(stateProp);
-  useEffect(() => {
-    startRef.current = Date.now();
-    setState(stateProp);
-    // Only a running task advances; error/done states render as-is.
-    if (stateProp.status !== 'running') {
-      return;
-    }
-
-    const interval = setInterval(() => {
-      setState((prev) => {
-        // Loop back to 0 once complete (when a total is known) so the bar keeps animating.
-        const looped = prev.total != null && prev.current >= prev.total;
-        if (looped) {
-          startRef.current = Date.now();
-          clearInterval(interval);
-          return prev;
-        }
-
-        const now = Date.now();
-        return {
-          ...prev,
-          current: looped ? 0 : prev.current + STEP,
-          startedAt: new Date(startRef.current).toISOString(),
-          updatedAt: new Date(now).toISOString(),
-          elapsedMs: now - startRef.current,
-        };
-      });
-    }, TICK_MS);
-    return () => clearInterval(interval);
-  }, [stateProp]);
-
-  return <Frame {...args} state={state} />;
-};
-
 /**
- * One step of a scripted run. A phase either counts (`total` set) or does not; a run that mixes the
- * two is the case this component exists to serve — see the `Curation` story.
+ * One step of a scripted run. A phase either counts (`total` set) or does not — a run that mixes the
+ * two is the case the meter has to serve: magazine curation counts its feeds, then makes a single
+ * opaque agent call, then counts what it writes.
  */
 type Phase = {
   note: string;
-  /** Omitted for a phase whose length is unknowable, e.g. one opaque model call. */
+  /** Omitted for a phase whose length is unknowable. */
   total?: number;
   /** How long an uncounted phase runs; a counted one ends when it reaches `total`. */
   durationMs?: number;
 };
 
+/** A run whose length is known throughout: a labelled bar with a count and an ETA. */
+const DETERMINATE: Phase[] = [{ note: 'Fetching messages', total: 40 }];
+
+/** A run that counts what it can and cannot count the rest — the case the meter exists for. */
+const INDETERMINATE: Phase[] = [
+  { note: 'Syncing feeds', total: 5 },
+  { note: 'Selecting articles', durationMs: 8_000 },
+  { note: 'Adding to magazine', total: 3 },
+];
+
+const IDLE: Progress.TaskProgress = {
+  name: 'progress/demo',
+  label: 'Curating Reading List',
+  current: 0,
+  status: 'pending',
+  updatedAt: new Date().toISOString(),
+  elapsedMs: 0,
+  note: 'Idle',
+  cancellable: true,
+};
+
 /**
- * Runs a task through a scripted sequence of phases, so a story shows what a real multi-phase
- * operation looks like rather than one frozen frame. Cancelling stops the script where it stands.
+ * Drives a task through a scripted run, so the meter is watched from zero rather than joined halfway
+ * — the only way to see the elapsed clock, the phase transitions and the cancel control do their job.
+ *
+ * The toolbar starts either shape and forces a failure; the meter's own ✕ cancels.
  */
-const PhasedStory = ({ state: stateProp, phases, ...args }: ProgressMeterProps & { phases: Phase[] }) => {
-  const [state, setState] = useState<Progress.TaskProgress>(stateProp);
-  // Bumped by Start; a run begins only when asked, so the elapsed clock and the cancel control can be
-  // watched from zero rather than joined halfway.
-  const [run, setRun] = useState(0);
-  const cancelled = useRef(false);
+const DefaultStory = (args: ProgressMeterProps) => {
+  const [state, setState] = useState<Progress.TaskProgress>(IDLE);
+  const [script, setScript] = useState<{ phases: Phase[]; run: number }>({ phases: [], run: 0 });
+  const stopped = useRef(false);
 
   useEffect(() => {
-    if (run === 0) {
+    if (script.run === 0) {
       return;
     }
 
-    cancelled.current = false;
+    stopped.current = false;
     const startedAt = new Date().toISOString();
     const start = Date.now();
     let index = 0;
@@ -95,11 +79,11 @@ const PhasedStory = ({ state: stateProp, phases, ...args }: ProgressMeterProps &
       }));
 
     const interval = setInterval(() => {
-      if (cancelled.current) {
+      if (stopped.current) {
         return;
       }
 
-      const phase = phases[index];
+      const phase = script.phases[index];
       if (!phase) {
         clearInterval(interval);
         patch({ status: 'done', note: 'Done' });
@@ -126,52 +110,41 @@ const PhasedStory = ({ state: stateProp, phases, ...args }: ProgressMeterProps &
     }, TICK_MS);
 
     return () => clearInterval(interval);
-  }, [run, stateProp, phases]);
+  }, [script]);
 
-  const handleStart = useCallback(() => {
-    cancelled.current = true;
-    // Stamp the start here, not in the args: the clock has to read from zero on Start, and a story
-    // whose `startedAt` is baked in shows a run that was already going before anyone pressed anything.
-    setState({ ...stateProp, status: 'running', startedAt: new Date().toISOString(), elapsedMs: 0 });
-    setRun((run) => run + 1);
-  }, [stateProp]);
+  const handleStart = useCallback((phases: Phase[]) => {
+    stopped.current = true;
+    // Stamped here, not in a fixture: the clock has to read from zero on start, and a baked-in
+    // `startedAt` shows a run that was already going before anyone pressed anything.
+    setState({ ...IDLE, status: 'running', startedAt: new Date().toISOString() });
+    setScript(({ run }) => ({ phases, run: run + 1 }));
+  }, []);
 
-  const handleCancel = useCallback(() => {
-    cancelled.current = true;
-    setState((prev) => ({ ...prev, status: 'error', error: 'Cancelled', updatedAt: new Date().toISOString() }));
+  const handleStop = useCallback((error: string) => {
+    stopped.current = true;
+    setState((prev) => ({ ...prev, status: 'error', error, updatedAt: new Date().toISOString() }));
   }, []);
 
   return (
-    <Frame
-      {...args}
-      state={state}
-      onCancel={handleCancel}
-      onStart={handleStart}
-      startLabel={run === 0 ? 'Start' : 'Restart'}
-    />
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <IconButton icon='ph--play--regular' label='Determinate' onClick={() => handleStart(DETERMINATE)} />
+          <IconButton
+            icon='ph--dots-three-outline--regular'
+            label='Indeterminate'
+            onClick={() => handleStart(INDETERMINATE)}
+          />
+          <IconButton icon='ph--warning--regular' label='Fail' onClick={() => handleStop('Network unreachable')} />
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content />
+      <Panel.Statusbar asChild>
+        <ProgressMeter {...args} state={state} onCancel={() => handleStop('Cancelled')} />
+      </Panel.Statusbar>
+    </Panel.Root>
   );
 };
-
-/** The statusbar the meter actually lives in, so a story shows it at its real placement. */
-const Frame = ({
-  state,
-  onCancel,
-  onStart,
-  startLabel = 'Start',
-  ...args
-}: ProgressMeterProps & { onStart?: () => void; startLabel?: string }) => (
-  <Panel.Root>
-    <Panel.Toolbar asChild>
-      <Toolbar.Root>
-        {onStart && <IconButton icon='ph--play--regular' label={startLabel} onClick={onStart} />}
-      </Toolbar.Root>
-    </Panel.Toolbar>
-    <Panel.Content />
-    <Panel.Statusbar asChild>
-      <ProgressMeter {...args} state={state} onCancel={onCancel} />
-    </Panel.Statusbar>
-  </Panel.Root>
-);
 
 const meta = {
   title: 'sdk/app-toolkit/components/ProgressMeter',
@@ -187,106 +160,19 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const base = (overrides: Partial<Progress.TaskProgress>): Progress.TaskProgress => ({
-  name: 'sync/mailbox',
-  label: 'Syncing Inbox',
-  current: 42,
-  total: 120,
-  status: 'running',
-  startedAt: new Date(Date.now() - 8_000).toISOString(),
-  updatedAt: new Date().toISOString(),
-  elapsedMs: 8_000,
-  cancellable: true,
-  ...overrides,
-});
-
-/** A task that has not started: no clock, no bar movement, until Start is pressed. */
-const idle = (overrides: Partial<Progress.TaskProgress>): Progress.TaskProgress =>
-  base({ status: 'pending', startedAt: undefined, elapsedMs: 0, note: 'Idle', ...overrides });
-
-export const Determinate: Story = {
-  args: {
-    state: base({}),
-    onCancel: () => {},
-  },
-};
-
 /**
- * A task whose length is unknowable — one opaque model call, a remote run reporting no item count.
- * No bar is drawn, because an indeterminate bar conveys nothing; the readout is elapsed time, which
- * at least answers "is this still going, and for how long".
- */
-export const Indeterminate: Story = {
-  args: {
-    state: base({ label: 'Analyzing', total: undefined, note: 'Selecting articles' }),
-    onCancel: () => {},
-  },
-};
-
-/**
- * The case this is evolving towards: a run that COUNTS in one phase and cannot in the next. Magazine
- * curation syncs N feeds (countable), then makes a single agent call over every candidate (opaque),
- * then writes the result (countable). The bar appears for a counted phase and gives way to an elapsed
- * readout for the uncounted one, with the phase named underneath throughout — `label` holds the run's
- * identity and `note` the phase, so the task never reads as a different task mid-run.
+ * **Determinate** counts to a known total: a bar, `n / total`, and an ETA.
  *
- * Press **Start**. Cancel mid-run to see how it ends.
+ * **Indeterminate** mixes both — it counts 5 feeds, then cannot count the agent call, then counts
+ * again. The bar gives way to an elapsed readout where there is nothing to count, and the phase is
+ * named underneath throughout: `label` holds the run's identity and `note` the phase, so the task
+ * never reads as a different task mid-run.
  *
- * NOTE: this drives the state directly, because the transition is not yet expressible through the
- * registry: `TaskHandle.total()` only SETS a total, so a producer cannot return a task to
- * indeterminate once it has counted.
+ * **Fail** ends the run with an error, and the meter's ✕ cancels — the only control an
+ * indeterminate run can offer.
  */
-export const Curation: Story = {
-  render: (args) => (
-    <PhasedStory
-      {...args}
-      phases={[
-        { note: 'Syncing feeds', total: 5 },
-        { note: 'Selecting articles', durationMs: 6_000 },
-        { note: 'Adding to magazine', total: 3 },
-      ]}
-    />
-  ),
+export const Default: Story = {
   args: {
-    state: idle({ name: 'curate/magazine', label: 'Curating Reading List', current: 0, total: 5 }),
-    onCancel: () => {},
-  },
-};
-
-/**
- * Cancelling is the only control an indeterminate run can offer, so it has to do something real.
- * Press **Start**, then the ✕: the script stops where it stands and the task reports why it ended.
- */
-export const Cancellable: Story = {
-  render: (args) => <PhasedStory {...args} phases={[{ note: 'Selecting articles', durationMs: 60_000 }]} />,
-  args: {
-    state: idle({ name: 'curate/magazine', label: 'Curating Reading List', total: undefined }),
-    onCancel: () => {},
-  },
-};
-
-/**
- * A run whose terminal status never arrived — the producer died, or its status could not be
- * replicated back. There is no liveness timeout, so this frame holds forever, offering a cancel
- * control for a run that is no longer there. Seen live on a mailbox stuck at `468 / 468`.
- */
-export const Stalled: Story = {
-  args: {
-    state: base({
-      current: 468,
-      total: 468,
-      note: 'Waiting for the run to report',
-      startedAt: new Date(Date.now() - 45 * 60_000).toISOString(),
-      elapsedMs: 45 * 60_000,
-      status: 'pending',
-    }),
-    onCancel: () => {},
-  },
-};
-
-export const Error: Story = {
-  args: {
-    state: base({ status: 'error', error: 'Network unreachable' }),
-    onCancel: () => {},
+    state: IDLE,
   },
 };
