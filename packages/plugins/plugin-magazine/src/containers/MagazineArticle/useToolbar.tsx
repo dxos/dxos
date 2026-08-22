@@ -9,16 +9,14 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useCallback, useContext, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { Obj, Ref } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { type MagazineView } from '#atoms';
 import { meta } from '#meta';
 import { FeedOperation, Magazine, Subscription } from '#types';
-
-import { FEED_DIALOG } from '../../constants';
 
 export type UseToolbarProps = {
   magazine: Magazine.Magazine;
@@ -64,22 +62,32 @@ export const useToolbar = ({ magazine }: UseToolbarProps) => {
     [runExclusive, invoker, magazine, db],
   );
 
-  // The feed is created and attached up front so the dialog's form edits a live object; cancelling the
-  // dialog takes it back out (see `FeedDialog`), which is what keeps the create atomic from the reader's
-  // point of view without a separate draft representation.
+  // `live` so the form edits a real subscription: the URL-driven name autofill and the feed's own
+  // properties surface behave exactly as they do after creation. A dismissed dialog removes it again,
+  // so only a confirmed feed comes back here to be attached to the magazine.
   const handleAddFeed = useCallback(() => {
     if (!db) {
       return;
     }
 
-    const feed = db.add(Subscription.makeSubscription({ type: 'rss' }));
-    Obj.update(magazine, (magazine) => {
-      magazine.feeds = [...magazine.feeds, Ref.make(feed)];
-    });
-    void invoker.invokePromise(LayoutOperation.UpdateDialog, {
-      subject: FEED_DIALOG,
-      props: { feed, magazine },
-    });
+    void EffectEx.runAndForwardErrors(
+      Effect.gen(function* () {
+        const feed = yield* invoker.invoke(SpaceOperation.OpenObjectForm, {
+          target: db,
+          typename: Type.getTypename(Subscription.Subscription),
+          mode: 'live',
+          defaults: { type: 'rss' },
+          // The magazine stays put: the feed is added to the article the user is already looking at.
+          navigable: false,
+        });
+        const subscription = feed?.target;
+        if (Obj.instanceOf(Subscription.Subscription, subscription)) {
+          Obj.update(magazine, (magazine) => {
+            magazine.feeds = [...magazine.feeds, Ref.make(subscription)];
+          });
+        }
+      }),
+    );
   }, [db, magazine, invoker]);
 
   const handleClear = useCallback(
@@ -143,6 +151,7 @@ export const useToolbar = ({ magazine }: UseToolbarProps) => {
               );
             },
           )
+          // `gap` is a flexible spacer that pushes the trailing group to the trailing edge.
           .separator('gap')
           .action(
             'clear',

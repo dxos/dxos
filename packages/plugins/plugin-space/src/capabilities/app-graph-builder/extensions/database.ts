@@ -371,10 +371,10 @@ const createSchemaActions = ({
     ...(createObjectFn
       ? [
           Node.makeAction({
-            id: SpaceOperation.OpenCreateObject.meta.key,
+            id: SpaceOperation.OpenObjectForm.meta.key,
             data: Effect.fnUntraced(function* () {
               if (inputSchema) {
-                yield* Operation.invoke(SpaceOperation.OpenCreateObject, {
+                yield* Operation.invoke(SpaceOperation.OpenObjectForm, {
                   target: space.db,
                   typename,
                 });
@@ -411,12 +411,12 @@ const createSchemaActions = ({
     Node.makeAction({
       id: `${SpaceOperation.AddObject.meta.key}-view`,
       data: () =>
-        Operation.invoke(SpaceOperation.OpenCreateObject, {
+        Operation.invoke(SpaceOperation.OpenObjectForm, {
           target: space.db,
           views: true,
           // The type-picker field value is the type URI (see TypeOptions), so seed the default with
           // the URI — not the bare typename — for the option to be pre-selected.
-          initialFormValues: { typename: Type.getURI(type) },
+          defaults: { typename: Type.getURI(type) },
         }),
       properties: {
         label: ADD_VIEW_TO_SCHEMA_LABEL,
