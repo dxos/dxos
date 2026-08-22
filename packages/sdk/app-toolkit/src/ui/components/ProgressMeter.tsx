@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react';
 
 import { Progress } from '@dxos/progress';
 import { IconButton, ThemedClassName, composable, composableProps } from '@dxos/react-ui';
+import { Steps, planSteps } from '@dxos/react-ui-components';
 import { mx } from '@dxos/ui-theme';
 
 export type ProgressMeterProps = ThemedClassName<{
@@ -21,7 +22,7 @@ export type ProgressMeterProps = ThemedClassName<{
  */
 export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
   ({ state, onCancel, ...props }, forwardedRef) => {
-    const { current, total, label, name, status } = state;
+    const { current, total, phases, phase, label, name, status } = state;
     const indeterminate = total === undefined;
     const fraction = indeterminate ? 0 : total === 0 ? 1 : Math.min(1, current / total);
     const eta = Progress.deriveEta(state);
@@ -42,6 +43,11 @@ export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
       >
         <div className='flex justify-between items-center gap-2 text-xs text-description'>
           <span className='truncate'>{label ?? name}</span>
+          {/* A known plan is drawn as its steps: which phase is in flight is the one thing a run with
+              an uncountable phase can still say, and it says it without a bar. */}
+          {phases !== undefined && phases > 0 && (
+            <Steps classNames='shrink-0' steps={planSteps(phases, phase, status)} />
+          )}
           <div className='flex items-center gap-1 shrink-0'>
             <span className='font-mono'>
               {indeterminate ? (active ? formatDuration(elapsedMs) : '') : `${current} / ${total}`}
