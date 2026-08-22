@@ -35,7 +35,13 @@ import { TestObject } from './testing';
 describe('SpaceOperation.OpenObjectForm', () => {
   test('returns the confirmed object', async ({ expect }) => {
     const object = Obj.make(TestObject, { name: 'confirmed' });
-    const { harness, db } = await setup((handle) => handle.settle(object));
+    // The draft sequence: confirming closes the dialog, so the unmount's dismissal arrives before
+    // the object the create is still building — and must not settle ahead of it.
+    const { harness, db } = await setup((handle) => {
+      handle.confirm();
+      handle.dismiss();
+      handle.settle(object);
+    });
     await using _harness = harness;
 
     const result = await harness.runPromise(Operation.invoke(SpaceOperation.OpenObjectForm, { target: db }));

@@ -313,8 +313,10 @@ export const ObjectFormDialog = ({
         // a collection, since `db` already says which space.
         const collection = Collection.isCollection(target) ? target : undefined;
         const result = yield* metadata.createObject(data, { db, target: collection, targetNodeId });
-        yield* navigateTo(result.object);
+        // Settled before navigating, as in the live path: the object is created and persisted by
+        // this point, so a navigation failure must not report it to the caller as a dismissal.
         handle?.settle(result.object);
+        yield* navigateTo(result.object);
       }).pipe(
         // A failed create still has to settle, or the operation waiting on the dialog never returns.
         Effect.ensuring(Effect.sync(() => handle?.settle())),
