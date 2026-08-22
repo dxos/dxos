@@ -148,6 +148,9 @@ describe('OperationHandlerSet.lazy', () => {
     const found = await set.getHandlerFor(KEY_A);
     expect(found?.meta.key).toEqual(KEY_A);
     expect(loads).toEqual(2);
+    // The successful load is still cached.
+    await set.getHandlerFor(KEY_A);
+    expect(loads).toEqual(2);
   });
 
   test('merge loads only the matched child', async ({ expect }) => {
