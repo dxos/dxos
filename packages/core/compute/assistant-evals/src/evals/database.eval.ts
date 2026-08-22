@@ -19,7 +19,7 @@ const QUERY_OPERATION_KEY = 'dxn:org.dxos.function.database.query';
 const task = createEvalRunner({
   instructions: trim`
     Create a new organization called "{{name}}".
-    Query the database to confirm that the organization is created and the query tool is working.
+    Query the database to confirm that the organization is created and the database-query tool is working.
   `,
   input: Schema.Struct({ name: Schema.String }),
   output: Schema.Unknown,

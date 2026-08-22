@@ -37,3 +37,85 @@ describe('Operation visibility', () => {
     expect(Operation.isOperationWithHandler(op)).toBe(true);
   });
 });
+
+describe('toolName', () => {
+  const makeOp = (key: string) =>
+    Operation.make({
+      meta: { key: DXN.make(key as any), name: 'Display Copy' },
+      input: Schema.Void,
+      output: Schema.Void,
+    });
+
+  test('strips the constant function prefix and kebab-cases each segment', ({ expect }) => {
+    expect(Operation.toolName(makeOp('org.dxos.function.markdown.create'))).toBe('markdown-create');
+    expect(Operation.toolName(makeOp('org.dxos.function.project.artifactAdd'))).toBe('project-artifact-add');
+    expect(Operation.toolName(makeOp('org.dxos.function.runInstructions'))).toBe('run-instructions');
+  });
+
+  // The name must not track display copy: that was what made rewording a label rename the tool.
+  test('is independent of meta.name', ({ expect }) => {
+    const op = Operation.make({
+      meta: { key: DXN.make('org.dxos.function.markdown.create'), name: 'Something Else Entirely' },
+      input: Schema.Void,
+      output: Schema.Void,
+    });
+    expect(Operation.toolName(op)).toBe('markdown-create');
+  });
+
+  test('a key outside the prefix keeps every segment', ({ expect }) => {
+    expect(Operation.toolName(makeOp('org.dxos.plugin.sheet.operation.rangeGet'))).toBe(
+      'org-dxos-plugin-sheet-operation-range-get',
+    );
+  });
+
+  test('the namespace segment separates verbs that used to collide', ({ expect }) => {
+    const names = ['markdown', 'script', 'sheet'].map((ns) =>
+      Operation.toolName(makeOp(`org.dxos.function.${ns}.create`)),
+    );
+    expect(new Set(names).size).toBe(3);
+  });
+});
+
+describe('findToolNameCollisions', () => {
+  const makeOp = (key: string) =>
+    Operation.make({ meta: { key: DXN.make(key as any) }, input: Schema.Void, output: Schema.Void });
+
+  // One operation bound by two skills reaches the check twice; that is the same tool, not a clash.
+  test('a repeated binding of one operation is not a collision', ({ expect }) => {
+    const op = makeOp('org.dxos.function.markdown.create');
+    expect(Operation.findToolNameCollisions([op, op]).size).toBe(0);
+  });
+
+  test('reports nothing for distinct names', ({ expect }) => {
+    const collisions = Operation.findToolNameCollisions([
+      makeOp('org.dxos.function.markdown.create'),
+      makeOp('org.dxos.function.script.create'),
+    ]);
+    expect(collisions.size).toBe(0);
+  });
+
+  // Kebab-casing is not injective, so registry-unique keys can still claim one tool name. Hyphenated
+  // segments are live (`plugin-crm`, `web-search`), which is what makes this reachable rather than theoretical.
+  test('catches a camelCase segment converging with an already-hyphenated one', ({ expect }) => {
+    const collisions = Operation.findToolNameCollisions([
+      makeOp('org.dxos.function.webSearch.fetch'),
+      makeOp('org.dxos.function.web-search.fetch'),
+    ]);
+    expect([...collisions.keys()]).toEqual(['web-search-fetch']);
+    expect(collisions.get('web-search-fetch')).toHaveLength(2);
+  });
+});
+
+describe('tryToolNameFromKey', () => {
+  test('derives the same name as toolNameFromKey for a well-formed key', ({ expect }) => {
+    expect(Operation.tryToolNameFromKey('org.dxos.function.markdown.create')).toBe('markdown-create');
+  });
+
+  // Registry records arrive as JSON, so a key that cannot yield a valid name must cost only its own
+  // tool — the throwing variant would abort every tool in the projection.
+  test('returns undefined for a key that cannot yield a valid name', ({ expect }) => {
+    expect(Operation.tryToolNameFromKey('org.dxos.function.9lives.go')).toBeUndefined();
+    expect(Operation.tryToolNameFromKey('')).toBeUndefined();
+    expect(() => Operation.toolNameFromKey('org.dxos.function.9lives.go')).toThrow();
+  });
+});

@@ -49,7 +49,7 @@ export const ArtifactList = Operation.make({
     description: trim`
       Lists the objects in a project's artifacts collection (DXN, type, and label per artifact).
       Use this to find what the project already holds before searching the whole space; load an
-      artifact's content with the load tool when needed.
+      artifact's content with the database-load tool when needed.
     `,
   },
   input: Schema.Struct({

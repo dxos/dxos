@@ -2,16 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import * as AnthropicStructuredOutput from 'effect/unstable/ai/AnthropicStructuredOutput';
 import * as Tool from 'effect/unstable/ai/Tool';
 import { describe, test } from 'vitest';
 
+import { OpaqueToolkit, ToolId, ToolResolverService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
-import { Obj, Ref } from '@dxos/echo';
+import { Obj, Ref, Registry } from '@dxos/echo';
+import { makeRegistry } from '@dxos/echo-client';
+import { EffectEx } from '@dxos/effect';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
-import { createStructFieldsFromSchema, projectFunctionToTool } from './services';
+import { createStructFieldsFromSchema, makeToolResolverFromOperations, projectFunctionToTool } from './services';
 
 describe('createStructFieldsFromSchema', () => {
   const SPACE = SpaceId.random();
@@ -155,6 +160,75 @@ describe('projectFunctionToTool', () => {
       properties: { any: 1 },
     });
     expect(decoded.properties).toEqual({ any: 1 });
+  });
+});
+
+describe('makeToolResolverFromOperations', () => {
+  const op = (key: string) =>
+    Operation.serialize(
+      Operation.make({
+        meta: { key: DXN.make(key as any), name: 'Display Copy' },
+        input: Schema.Struct({ value: Schema.String }),
+        output: Schema.Struct({ ok: Schema.Boolean }),
+      }),
+    );
+
+  /** Runs `body` against one resolver instance, so a cached index persists across its resolutions. */
+  const withResolver = <A>(
+    registry: ReturnType<typeof makeRegistry>,
+    body: (resolve: (id: string) => Effect.Effect<Tool.Any, any>) => Effect.Effect<A, any>,
+  ) =>
+    Effect.gen(function* () {
+      const resolver = yield* ToolResolverService;
+      return yield* body((id) => resolver.resolve(ToolId.make(id)));
+    }).pipe(
+      Effect.provide(makeToolResolverFromOperations().pipe(Layer.provide(Layer.succeed(Registry.Service, registry)))),
+      Effect.provide(OpaqueToolkit.providerLayer(OpaqueToolkit.empty)),
+      EffectEx.runPromise,
+    );
+
+  test('resolves an operation the registry carries, by its derived tool name', async ({ expect }) => {
+    const registry = makeRegistry({ initial: [op('org.dxos.function.markdown.create')] });
+    const tool = await withResolver(registry, (resolve) => resolve('markdown-create'));
+    expect(tool.name).toBe('markdown-create');
+  });
+
+  // The query is an await point, so a registration landing mid-build must not be lost: clearing the
+  // cache alone would be undone by the assignment of the snapshot taken before the change.
+  test('a collision registered while the index was being built still fails', async ({ expect }) => {
+    const registry = makeRegistry({ initial: [op('org.dxos.function.webSearch.fetch')] });
+    // Fires the registration inside the first query, after the snapshot is taken but before it is cached.
+    let pending: (() => void) | undefined = () => registry.add([op('org.dxos.function.web-search.fetch')]);
+    const query = registry.query.bind(registry);
+    (registry as any).query = (...args: Parameters<typeof query>) => {
+      const result = query(...args);
+      const run = result.run.bind(result);
+      result.run = async () => {
+        const records = await run();
+        pending?.();
+        pending = undefined;
+        return records;
+      };
+      return result;
+    };
+
+    const attempt = withResolver(registry, (resolve) => resolve('web-search-fetch'));
+    await expect(attempt).rejects.toThrow(/claimed by 2 operations/);
+  });
+
+  // Both resolutions share one resolver, so the second reads an index the first already built: without
+  // invalidation the stale hit would silently pick one of two claimants instead of reporting the
+  // ambiguity. A resolver per call would pass either way, since the second would build a fresh index.
+  test('a collision registered after the index was built still fails', async ({ expect }) => {
+    const registry = makeRegistry({ initial: [op('org.dxos.function.webSearch.fetch')] });
+    const attempt = withResolver(registry, (resolve) =>
+      Effect.gen(function* () {
+        const first = yield* resolve('web-search-fetch');
+        yield* Effect.sync(() => registry.add([op('org.dxos.function.web-search.fetch')]));
+        return { first: first.name, second: yield* Effect.result(resolve('web-search-fetch')) };
+      }),
+    );
+    await expect(attempt).rejects.toThrow(/claimed by 2 operations/);
   });
 
   // A recursive input renders as `$ref: '#/$defs/…'` with the bodies in the document's separate

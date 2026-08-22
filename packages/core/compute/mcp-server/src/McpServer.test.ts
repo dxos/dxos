@@ -463,7 +463,9 @@ describe('McpServer', () => {
               key: 'org.dxos.skill.codeProject',
               name: 'Code project',
               mcpPrompt: true,
-              tools: [KEY],
+              // A skill's `tools` carry derived tool names, not operation NSIDs — the form
+              // `Skill.toolDefinitions` emits and governance matches on.
+              tools: [Operation.toolNameFromKey(KEY)],
               instructions: 'Bind a space first.',
             },
           ],
