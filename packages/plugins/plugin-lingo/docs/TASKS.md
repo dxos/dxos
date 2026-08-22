@@ -130,6 +130,48 @@ on this branch rather than fork a second one.
       `flatten` and per plank while the deck slides; which TAB shows still resolves from the plank's
       own companions and the global variant.
 
+## Phase 1.7: Live run against Composer — DONE
+
+Driven through the debug port on 2026-08-22 against a real nippon.com feed. Every item below was
+invisible to the type-checker and to storybook; each was found by using the app.
+
+- [x] The feed dialog removed its own subscription the instant it opened. The cleanup hung off
+      unmount, and StrictMode's double-invoke fired it — the form held the typed URL while the space
+      held no feed at all. Every dismissal route now cancels explicitly; the StrictMode story fails
+      with the old code and passes with the new.
+- [x] A magazine Post was not readable: `isReadable` recognises Markdown, Text, and types registered
+      under `TextContent`, and the magazine registered none. Added the extractor (fetched body over
+      the feed's summary, title as a heading) — verified against a live synced Post, which returns
+      the Japanese article with its heading.
+- [x] That capability activates on `Startup`. Its consumers read the capability set rather than
+      declaring it as a requirement, so the maker's default dependency gate would never fire.
+- [x] The reader's language selector opened on Arabic for everyone: the option list is sorted for
+      reading and the fallback took its first entry. It now reads a new `language` setting.
+- [x] `LingoSettings.revealMode` removed — it described the split view that no longer exists, and
+      nothing read it.
+- [x] The settings select needed a literal union: `Format.OptionsAnnotation` on a string is ignored
+      because the form picks its renderer by type before it looks at options.
+- [x] The reader toolbar's overflow control rendered the raw key `toolbar-overflow.menu`; the plugin
+      never pulled in the `react-ui-menu` translations.
+
+## Open from the live run
+
+- [ ] Offer the Translation companion beside a Post *in the deck*. `isReadable(post)` is now true, so
+      `readerCompanion` matches any node whose data is a Post — but the magazine exposes a selected
+      post only as its own companion node (`magazinePost`), and nothing was observed rendering a
+      companion of a companion. Decide between opening a Post as its own plank and surfacing the
+      reader alongside the magazine's post companion.
+- [ ] Feed sync is gated on the `magazine.remote-pull` dev flag (`sync-feed.ts`), which returns
+      silently when unset — the flag reads as "sync is broken". Surface the gate in the UI (a
+      disabled sync action with a tooltip) rather than a no-op.
+- [ ] Give the form's select labelled options. The language setting lists bare BCP-47 codes (`ar`,
+      `de`, `en`, …) because `Format.Options` is `string | number` with no label channel.
+- [ ] A magazine renders no tiles for posts whose refs resolve only asynchronously. Curation adds the
+      Post to the space db as a side effect, so its refs resolve synchronously; a hand-built
+      `Ref.make(queuePost)` does not, and the Masonry stays empty with no empty-state either.
+- [ ] The create-feed dialog shows every field on the schema, including `link` and `iconUrl`, which
+      no fetcher populates. Either fill `link` from the RSS channel link in `parseFeed` or drop it.
+
 ## Loose ends from the reader work
 
 - [ ] Decide the fate of `ExtractVocabulary`. Harvesting moved into `AnalyzeText` (the analysis
