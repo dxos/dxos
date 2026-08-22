@@ -106,15 +106,29 @@ Found by actually rendering the stories; every one was invisible to the type-che
 Surfaced while using the reader inside Composer; they are defects in other plugins, agreed to land
 on this branch rather than fork a second one.
 
-- [ ] Default a new feed's type to `rss` in the create form. The union renders with no selection, so
-      a feed created from the navtree has no type until the user opens the properties form. The fix
-      is in the shared `react-ui-form` union control (defaulting to the first member), not in
-      `plugin-magazine`.
-- [ ] Give the ref-create popover standard padding. Selecting an object from a properties-form ref
-      field opens a popover whose content sits flush against its edges.
-- [ ] Make the flat-deck companion open/closed state global (`plugin-deck`). Today it is per-article,
-      so moving between articles loses the companion. Only the open/closed flag is shared — which
-      tab is selected still depends on the subject's type.
+- [x] Default a new feed's type to `rss` in the create form. A form whose ROOT is a discriminated
+      union rendered a lone select and nothing else, so the fix is in `react-ui-form`
+      (`getDiscriminatorDefaults`, seeded through `useFormHandler`) and applies to every union form;
+      the magazine's union now declares `RssCreate` first, which is what makes RSS the default.
+- [x] Give the ref-create popover standard padding. Cause was not the popover: a portal escapes the
+      DOM but not React context, so a `Form.Viewport` declared inside a `Column` believed it still had
+      that host's gutter and placed itself in a content track no ancestor provided. `PopoverPortal`
+      now resets `ColumnContext`; `ObjectPicker` adds the top trim a dialog header normally supplies.
+      Measured in Chromium: form inset 0px → 10px on all four sides.
+- [x] Clear the required-marker asterisk once a field holds a value — a filled-in form read as though
+      every required field were still outstanding.
+- [x] Add a feed from the magazine toolbar via a dialog over the feed's own schema, and drop the
+      auto-open of the settings companion when a magazine has no posts.
+- [ ] Replace `FeedDialog` with the generic plugin-space create dialog once that lands. Spun out as a
+      background task (`Generalize FeedDialog into plugin-space`): `SpaceOperation.OpenObjectForm`
+      taking a schema plus defaults, with a `'live'` mode that adds the object up front and removes it
+      on cancel, returning the object. When it merges, the magazine toolbar calls it with
+      `defaults: { type: 'rss' }` and `FeedDialog.tsx`, its story, its surface registration and
+      `constants.ts` are deleted.
+- [x] Make the flat-deck companion open/closed state global (`plugin-deck`). It was keyed per plank,
+      so moving between articles lost the pane. `isCompanionOpen` reads the flag deck-wide under
+      `flatten` and per plank while the deck slides; which TAB shows still resolves from the plank's
+      own companions and the global variant.
 
 ## Loose ends from the reader work
 
