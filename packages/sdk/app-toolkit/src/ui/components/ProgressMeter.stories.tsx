@@ -104,6 +104,15 @@ export const Indeterminate: Story = {
   },
 };
 
+/** The mailbox sync shape: no total, so no bar — the note must not be squeezed into the bar's track. */
+export const IndeterminateWithNote: Story = {
+  args: {
+    classNames: 'w-[30rem]',
+    state: base({ total: undefined, note: '128 messages across 4 threads outstanding' }),
+    onCancel: () => {},
+  },
+};
+
 export const Error: Story = {
   args: {
     classNames: 'w-[30rem]',

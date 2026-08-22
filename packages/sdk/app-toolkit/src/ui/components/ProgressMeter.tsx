@@ -30,13 +30,16 @@ export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
     const elapsedMs = useElapsed(state.startedAt, active, state.elapsedMs);
     // Show the cancel control only while the task is still active and the producer registered a handler.
     const cancellable = !!onCancel && state.cancellable && active;
+    const etaLabel = !indeterminate && eta !== undefined && status === 'running' ? formatDuration(eta) : undefined;
+    const showError = status === 'error' && !!state.error;
+    // Rows are auto-sized and each is dropped when empty. Fixed tracks reserved height for the bar
+    // and the note whether or not either rendered, so an indeterminate task with no note showed a
+    // label above ~28px of blank statusbar — and pushed its note into the 4px bar track.
+    const showDetail = showError || !!state.note || etaLabel !== undefined;
 
     return (
-      <div
-        {...composableProps(props, { classNames: 'grid grid-rows-[24px_4px_24px] gap-0.5 px-1', role: 'group' })}
-        ref={forwardedRef}
-      >
-        <div className='flex justify-between items-center gap-2 text-xs text-description'>
+      <div {...composableProps(props, { classNames: 'grid gap-0.5 px-1', role: 'group' })} ref={forwardedRef}>
+        <div className='flex justify-between items-center gap-2 min-h-6 text-xs text-description'>
           <span className='truncate'>{label ?? name}</span>
           <div className='flex items-center gap-1 shrink-0'>
             <span className='font-mono'>
@@ -63,7 +66,7 @@ export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
             role='progressbar'
             aria-valuenow={current}
             aria-valuemax={total}
-            className='relative h-full rounded overflow-hidden bg-separator'
+            className='relative h-1 rounded overflow-hidden bg-separator'
           >
             <div
               className={mx(
@@ -76,19 +79,19 @@ export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
           </div>
         )}
 
-        <div className='flex items-center justify-between gap-2'>
-          {status === 'error' && state.error ? (
-            <div className='text-xs text-error-text truncate'>{state.error}</div>
-          ) : (
-            <>
-              {/* The producer's breakdown of what is outstanding (e.g. per-kind counts). */}
-              <div className='text-xs text-subdued truncate'>{state.note}</div>
-              {!indeterminate && eta !== undefined && status === 'running' && (
-                <div className='text-xs text-subdued shrink-0'>{formatDuration(eta)} remaining</div>
-              )}
-            </>
-          )}
-        </div>
+        {showDetail && (
+          <div className='flex items-center justify-between gap-2 min-h-6'>
+            {showError ? (
+              <div className='text-xs text-error-text truncate'>{state.error}</div>
+            ) : (
+              <>
+                {/* The producer's breakdown of what is outstanding (e.g. per-kind counts). */}
+                <div className='text-xs text-subdued truncate'>{state.note}</div>
+                {etaLabel && <div className='text-xs text-subdued shrink-0'>{etaLabel} remaining</div>}
+              </>
+            )}
+          </div>
+        )}
       </div>
     );
   },
