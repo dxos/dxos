@@ -449,7 +449,7 @@ export const MailboxArticle = ({
           </Panel.Toolbar>
         </Menu.Root>
       </ElevationProvider>
-      <Panel.Content asChild>
+      <Panel.Content>
         <Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
           <InboxStack
             id={id}

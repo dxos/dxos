@@ -52,8 +52,10 @@ export const FeedArticle = ({ role, subject, attendableId }: FeedArticleProps) =
   }, [subject, invokePromise]);
 
   return (
-    <Panel.Root role={role} classNames='dx-document'>
-      <FeedToolbar attendableId={attendableId} onSync={handleSync} />
+    <Panel.Root role={role}>
+      <Panel.Toolbar>
+        <FeedToolbar attendableId={attendableId} onSync={handleSync} />
+      </Panel.Toolbar>
       <Panel.Content asChild>
         <PostStack
           id={subscription?.id ?? subject.id}

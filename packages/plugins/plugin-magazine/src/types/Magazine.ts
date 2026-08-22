@@ -29,12 +29,11 @@ export const DEFAULT_INSTRUCTIONS = trim`
   Select only candidates that clearly match the Topic — quality over quantity.
 
   Never select duplicate articles. Two candidates are duplicates if they share a link or guid, or if
-  their titles and content describe the same story (e.g. the same article syndicated by different
+  their titles and content describe the same story (e.g., the same article syndicated by different
   feeds). Keep only one of each — prefer the most complete or authoritative source — and skip the rest.
 
   For each candidate you select, also produce:
-  - A concise 1-2 sentence snippet (plain text, no markdown) capturing why the article is relevant to
-    the Topic. If you read the full article, use it to write a richer snippet.
+  - A concise 1-2 sentence snippet (plain text, no markdown) capturing why the article is relevant to the Topic. If you read the full article, use it to write a richer snippet.
   - The best hero image URL for the article, when one is available.
 `;
 
@@ -47,6 +46,7 @@ export const PostState = Schema.Struct({
   /** Agent-selected hero image URL for this post in this magazine. */
   imageUrl: Schema.optional(Schema.String),
 });
+
 export type PostState = Schema.Schema.Type<typeof PostState>;
 
 /**
