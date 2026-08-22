@@ -52,7 +52,7 @@ const DefaultStory = ({ steps: initial = 3, ...props }: StoryArgs) => {
       <Panel.Content />
       <Panel.Statusbar asChild>
         <Progress.Steps
-          classNames='w-full h-8 px-2'
+          classNames='w-full h-8'
           state={{ phases: steps, phase: steps.length - 1, status: running ? 'running' : 'done' }}
           selected={selected}
           onSelect={(step) => setSelected((selected) => (selected === step.index ? undefined : step.index))}
