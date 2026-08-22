@@ -4,11 +4,16 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { IconButton, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
+import {
+  IconButton,
+  type ProgressProps,
+  Progress,
+  type ThemedClassName,
+  composable,
+  composableProps,
+  stepCount,
+} from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
-
-import { Steps, deriveSteps } from './Steps';
-import { type ProgressProps, stepCount } from './types';
 
 export type ProgressMeterProps = ThemedClassName<ProgressProps>;
 
@@ -46,7 +51,7 @@ export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
       >
         <div className='flex justify-between items-center gap-2 text-xs text-description'>
           <span className='truncate'>{label}</span>
-          {steps > 0 && <Steps classNames='shrink-0' steps={deriveSteps(state, { selected })} onSelect={onSelect} />}
+          {steps > 0 && <Progress.Steps classNames='shrink-0' state={state} selected={selected} onSelect={onSelect} />}
           <div className='flex items-center gap-1 shrink-0'>
             <span className='font-mono'>
               {indeterminate ? (active ? formatDuration(elapsedMs) : '') : `${current} / ${total}`}

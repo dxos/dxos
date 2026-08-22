@@ -5,11 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
+import { IconButton, Panel, type ProgressState, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { ProgressMeter, type ProgressMeterProps } from './ProgressMeter';
-import { type ProgressState } from './types';
 
 const TICK_MS = 400;
 

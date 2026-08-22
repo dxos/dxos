@@ -83,10 +83,12 @@
     "error-stack-parser": "catalog:",
     "i18next": "catalog:",
     "keyborg": "catalog:",
+    "motion": "catalog:",
     "react-aria-components": "catalog:",
     "react-error-boundary": "catalog:",
     "react-i18next": "catalog:",
-    "react-remove-scroll": "catalog:"
+    "react-remove-scroll": "catalog:",
+    "react-resize-detector": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

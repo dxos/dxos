@@ -8,6 +8,8 @@ import { useThemeContext } from '../../hooks';
 import { type ProgressStyleProps } from '../../theme';
 import { type ThemedClassName } from '../../util';
 
+import { ProgressSteps } from './ProgressSteps';
+
 type ProgressBarProps = ThemedClassName<
   ComponentPropsWithRef<'span'> &
     ProgressStyleProps & {
@@ -45,6 +47,7 @@ ProgressBar.displayName = 'Progress.Bar';
 
 export const Progress = {
   Bar: ProgressBar,
+  Steps: ProgressSteps,
 };
 
 export type { ProgressBarProps };

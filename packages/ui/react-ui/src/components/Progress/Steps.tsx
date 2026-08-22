@@ -5,8 +5,9 @@
 import { motion } from 'motion/react';
 import React from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
+
+import { type ThemedClassName } from '../../util';
 
 import { type ProgressState, type ProgressStatus, stepAt, stepCount } from './types';
 

@@ -6,15 +6,16 @@ import { AnimatePresence } from 'motion/react';
 import React from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
+
+import { type ThemedClassName } from '../../util';
 
 import { type StepOptions, Steps, type StepSlots, defaultStepOptions, defaultStepSlots, deriveSteps } from './Steps';
 import { type ProgressProps, stepCount } from './types';
 
 // TODO(burdon): Show predicted nodes faded out.
 
-export type ProgressBarProps = ThemedClassName<
+export type ProgressStepsProps = ThemedClassName<
   ProgressProps & {
     classes?: StepSlots;
     options?: StepOptions;
@@ -22,7 +23,7 @@ export type ProgressBarProps = ThemedClassName<
 >;
 
 /**
- * Progress as steps alone — no label, no counts, no chrome.
+ * A run's plan, drawn as connected circles — no label, no counts, no chrome.
  *
  * ```
  * ---O---O---O---((O))
@@ -30,17 +31,20 @@ export type ProgressBarProps = ThemedClassName<
  *
  * Only the tail that fits is drawn, so a run whose plan outgrows the available width keeps showing
  * where it is rather than shrinking every step to nothing. Takes the same {@link ProgressState} as
- * {@link ProgressMeter}: one is the bare chain, the other the chain in its full readout, and a caller
- * can swap between them without rewriting its props.
+ * {@link ProgressRoot}, which draws it alongside the bar; on its own it is the whole readout for a
+ * run whose only countable axis is which step it is on.
+ *
+ * Sizing is the caller's: the chain claims no width or height of its own, so it can sit in a
+ * fixed-height row without changing it.
  */
-export const ProgressBar = ({
+export const ProgressSteps = ({
   state,
   selected,
   onSelect,
   classNames,
   classes = defaultStepSlots,
   options = defaultStepOptions,
-}: ProgressBarProps) => {
+}: ProgressStepsProps) => {
   const { ref, width } = useResizeDetector();
 
   const count = stepCount(state.phases);
@@ -51,11 +55,11 @@ export const ProgressBar = ({
 
   return (
     <AnimatePresence>
-      <div className={mx('flex items-center w-full h-[32px] overflow-hidden', classNames)} ref={ref}>
+      <div className={mx('flex items-center min-w-0 overflow-hidden', classNames)} ref={ref}>
         <Steps steps={steps} classes={classes} options={options} onSelect={onSelect} />
       </div>
     </AnimatePresence>
   );
 };
 
-ProgressBar.displayName = 'ProgressBar';
+ProgressSteps.displayName = 'Progress.Steps';
