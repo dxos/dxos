@@ -1,6 +1,11 @@
 {
   "permissions": {
-    "allow": ["mcp__Trunk__search-test", "mcp__Trunk__investigate-ci-failure", "mcp__Trunk__detect-frameworks"]
+    "allow": [
+      "mcp__Trunk__search-test",
+      "mcp__Trunk__investigate-ci-failure",
+      "mcp__Trunk__detect-frameworks",
+      "Bash(python3 .claude/scripts/keyserve.py:*)"
+    ]
   },
   "hooks": {
     "PreToolUse": [

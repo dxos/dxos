@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: composer-demo-video
+    status: active
+    user: burdon
+    host: burdon-studio-2022
+    created: 2026-08-21
+    summary: 'Produce a library of 20-30 screen-recorded Composer clips and cut four videos from it — a Cloudflare presentation (nearest hard date, 2-4 weeks out), a developer hero, a prosumer hero, and an investor tour. Covers creative (shot list + scripts + beat sheets), demo data (a separate seed, NOT the shipped exemplar), a Playwright staging harness, and post-production.'
+    tasks: .agents/projects/composer-demo-video/TASKS.md
+    design: .agents/projects/composer-demo-video/DESIGN.md
+    prs: []
+    resume: 'Brainstorming DONE and approved; DESIGN.md written. BLOCKING ON USER: mark agents/demo-video/CANDIDATES.md (73 candidates across 13 categories, Y/S/B/N/? plus * for must-have) — nothing gets scripted until it is marked. Decisions: one clip library, four cuts; capture splits into agent-owned *staging* (Playwright/debug port) and human *performance* (Playwright cannot drive Screen Studio — it never moves the macOS cursor, so no pointer and no auto-zoom); demo data is a NEW seed beside build-exemplar-space.ts because exemplar-space.dx.json ships to every new identity; Gmail is mocked locally so the OAuth flow is not shown; HeyGen avatar bookends + user VO with synthetic scratch tracks for timing; editor undecided pending a half-day Descript/Kapwing/Veed bake-off. KEY FINDING: hero shots must target preview.composer.space, NOT composer.space — .github/workflows/env/production sets DX_PLUGIN_SET=production, which swaps in plugin-defs.production.tsx (7 plugins, isExtensible:false, no registry, no table/sheet/kanban/explorer/inbox/CRM/map/sketch); preview ships the full catalog against EDGE production (DX_EDGE_BASE_URL=https://dxos.network/). Phase 1 = five hybrid clips that are the CF cut in miniature: (1) the space, (2) ECHO explorer graph + live query, (3) offline merge/reconverge [Automerge], (4) assistant + trace panel [Effect], (5) sync into EDGE + deploy [Cloudflare]. Partners Effect/Automerge/Tauri/Cloudflare each get a clip where the tech is the point, not a logo card. Cloudflare grounding: sibling repo /Users/burdon/Code/dxos/edge, ~25 Worker services, bindings 49 DO / 42 KV / 29 D1 / 27 R2 / 8 Queues / 8 Workers AI / 2 Containers.'
   - name: echo-storage-optimization
     status: active
     user: dmaretskyi

@@ -248,6 +248,15 @@ export type ConnectorEntry = {
    * {@link CredentialFormResult}.
    */
   credentialForm?: CredentialForm<any>;
+  /**
+   * Name of the environment variable holding this connector's API key, for local development
+   * only (e.g. `'HEYGEN_API_KEY'`). When the dev server exposes it — see the `secretsPlugin` in
+   * `composer-app/vite.config.ts`, which reads the repo-root `.env` and is inert for `build` —
+   * the connection is provisioned on startup instead of being pasted into the dialog, so a
+   * profile reset does not cost every key again. Never set from a production bundle: the value
+   * is only ever read through `import.meta.env`, which carries nothing there.
+   */
+  envBinding?: string;
   onTokenCreated?: OnTokenCreated;
   /**
    * Probe whether the stored credential still works (see {@link TestConnection}).

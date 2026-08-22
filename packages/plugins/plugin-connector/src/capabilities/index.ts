@@ -5,6 +5,8 @@
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import * as RoutineEvents from '@dxos/plugin-routine/RoutineEvents';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
@@ -25,6 +27,20 @@ export const BuiltinConnectors = Capability.lazyModule(
 // node barrel loads the command graph. The export still has to exist here — `#capabilities`
 // resolves its types through this file for both variants.
 export const Commands = AppCapability.commands([]);
+// Requires the connector entries so the pass can read every `envBinding`; provides nothing —
+// its whole effect is the ECHO write. `SpacesReady`, not `ConnectorEvents.Start`: provisioning
+// has to happen at boot, and that event is demand-driven — it did not arrive within 150s of an
+// idle tab. The module activates it itself, after an early return that keeps a secret-less build
+// (every production build) from touching connector laziness at all.
+export const EnvCredentials = Capability.lazyModule(
+  'EnvCredentials',
+  {
+    requires: [ConnectorSpec.Connector, ClientCapabilities.Client],
+    provides: [],
+    activatesOn: ClientEvents.SpacesReady,
+  },
+  () => import('./env-credentials'),
+);
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const OAuthRedirect = Capability.lazyModule(
   'OAuthRedirect',
