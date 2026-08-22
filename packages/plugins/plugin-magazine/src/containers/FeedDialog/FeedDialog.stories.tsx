@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React from 'react';
+import React, { StrictMode } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -85,6 +85,30 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+/**
+ * Regression: the removal used to hang off unmount, so StrictMode's double-invoke destroyed the
+ * subscription the instant the dialog opened — the form then edited an object no longer in the space.
+ */
+export const StrictModeRemount: Story = {
+  render: () => (
+    <StrictMode>
+      <DefaultStory />
+    </StrictMode>
+  ),
+  play: async () => {
+    const body = within(document.body);
+    await waitFor(
+      async () => {
+        await expect(await body.findByTestId('counts')).toHaveTextContent('feeds:1 refs:1');
+      },
+      { timeout: 15_000 },
+    );
+    // Still there a beat later: a deferred unmount cleanup would have fired by now.
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    await expect(await body.findByTestId('counts')).toHaveTextContent('feeds:1 refs:1');
+  },
+};
 
 /** The form writes straight through to the live subscription. */
 export const Edit: Story = {

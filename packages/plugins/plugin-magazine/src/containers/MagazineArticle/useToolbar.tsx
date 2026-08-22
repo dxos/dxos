@@ -106,6 +106,14 @@ export const useToolbar = ({ magazine }: UseToolbarProps) => {
 
       return (
         MenuBuilder.make()
+          .action(
+            'add-feed',
+            {
+              label: ['add-feed.label', { ns: meta.profile.key }],
+              icon: 'ph--plus--regular',
+            },
+            handleAddFeed,
+          )
           // Single-select filter: `value` is the active child id; `'default'` matches neither, so both
           // toggles read as off. Re-clicking the active toggle returns to `'default'`.
           .group(
@@ -135,17 +143,7 @@ export const useToolbar = ({ magazine }: UseToolbarProps) => {
               );
             },
           )
-          // `gap` is a flexible spacer that pushes the trailing group to the trailing edge.
           .separator('gap')
-          .action(
-            'add-feed',
-            {
-              label: ['add-feed.label', { ns: meta.profile.key }],
-              icon: 'ph--plus--regular',
-              iconOnly: true,
-            },
-            handleAddFeed,
-          )
           .action(
             'clear',
             {
