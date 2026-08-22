@@ -9,14 +9,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { type ThemedClassName, useStateWithRef } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import {
-  type StepOptions,
-  Steps,
-  type StepSlots,
-  type StepState,
-  defaultStepOptions,
-  defaultStepSlots,
-} from '../Progress';
+import { type StepOptions, Steps, type StepSlots, type StepState, defaultStepOptions, defaultStepSlots } from './Steps';
 
 // TODO(burdon): Show predicted nodes faded out.
 // TODO(burdon): Allow controlled index (like TextBlock).

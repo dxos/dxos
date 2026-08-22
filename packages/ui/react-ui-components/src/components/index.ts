@@ -7,7 +7,6 @@ export * from './HtmlViewer';
 export * from './Matrix';
 export * from './NumericTabs';
 export * from './Progress';
-export * from './ProgressBar';
 export * from './QueryEditor';
 export * from './QueryForm';
 export * from './Shimmer';
