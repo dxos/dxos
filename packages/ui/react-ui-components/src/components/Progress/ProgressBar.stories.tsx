@@ -57,9 +57,13 @@ const DefaultStory = ({ items, ...props }: StoryArgs) => {
 
       <div className='flex flex-col gap-1'>
         <ProgressBar
-          nodes={nodes}
-          index={index}
-          active={!!running}
+          // An unbounded run: the steps ARE the nodes, and the last one is the phase in flight.
+          state={{
+            phases: nodes,
+            phase: nodes.length - 1,
+            status: running ? 'running' : 'done',
+          }}
+          selected={index}
           onSelect={(node) => setIndex((index) => (index === node.index ? undefined : node.index))}
           {...props}
         />

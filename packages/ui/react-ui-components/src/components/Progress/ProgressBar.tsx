@@ -3,63 +3,51 @@
 //
 
 import { AnimatePresence } from 'motion/react';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { type ThemedClassName, useStateWithRef } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type StepOptions, Steps, type StepSlots, type StepState, defaultStepOptions, defaultStepSlots } from './Steps';
+import { type StepOptions, Steps, type StepSlots, defaultStepOptions, defaultStepSlots, deriveSteps } from './Steps';
+import { type ProgressProps, stepCount } from './types';
 
 // TODO(burdon): Show predicted nodes faded out.
-// TODO(burdon): Allow controlled index (like TextBlock).
 
-export type ProgressBarProps = ThemedClassName<{
-  nodes?: { id: string }[];
-  index?: number;
-  active?: boolean;
-  classes?: StepSlots;
-  options?: StepOptions;
-  onSelect?: (node: { index: number; id: string }) => void;
-}>;
+export type ProgressBarProps = ThemedClassName<
+  ProgressProps & {
+    classes?: StepSlots;
+    options?: StepOptions;
+  }
+>;
 
 /**
- * Progress over an UNBOUNDED run — steps arrive as the work takes them, and only the tail that fits
- * is drawn. A run with a known plan uses `Steps` with `planSteps` instead; both render the same
- * primitive, and differ only in how each step's state is derived.
+ * Progress as steps alone — no label, no counts, no chrome.
  *
+ * ```
  * ---O---O---O---((O))
+ * ```
+ *
+ * Only the tail that fits is drawn, so a run whose plan outgrows the available width keeps showing
+ * where it is rather than shrinking every step to nothing. Takes the same {@link ProgressState} as
+ * {@link ProgressMeter}: one is the bare chain, the other the chain in its full readout, and a caller
+ * can swap between them without rewriting its props.
  */
 export const ProgressBar = ({
-  nodes,
-  index,
-  active,
+  state,
+  selected,
+  onSelect,
   classNames,
   classes = defaultStepSlots,
   options = defaultStepOptions,
-  onSelect,
 }: ProgressBarProps) => {
   const { ref, width } = useResizeDetector();
-  const [_, setCurrent, currentRef] = useStateWithRef<number>(nodes?.length ?? 0);
-  useEffect(() => {
-    setCurrent(nodes?.length ?? 0);
-  }, [nodes?.length]);
 
-  const maxNodes = Math.floor((width ?? 0) / options.width);
-  const visibleNodes = nodes?.slice(-maxNodes) ?? [];
-  const baseIndex = (nodes?.length ?? 0) - visibleNodes.length;
-
-  const steps = visibleNodes.map((node, i) => ({
-    id: node.id,
-    selected: baseIndex + i === index,
-    state: (baseIndex + i === currentRef.current! - 1
-      ? active
-        ? 'active'
-        : 'terminal'
-      : i < currentRef.current!
-        ? 'open'
-        : 'closed') as StepState,
-  }));
+  const count = stepCount(state.phases);
+  const visible = Math.max(0, Math.floor((width ?? 0) / options.width));
+  // Anchor on the end: the step in flight is the one worth seeing, and it is at the tail.
+  const from = Math.max(0, count - visible);
+  const steps = deriveSteps(state, { selected, from });
 
   return (
     <AnimatePresence>
@@ -69,3 +57,5 @@ export const ProgressBar = ({
     </AnimatePresence>
   );
 };
+
+ProgressBar.displayName = 'ProgressBar';
