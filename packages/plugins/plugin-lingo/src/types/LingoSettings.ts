@@ -7,9 +7,10 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
-import { Format } from '@dxos/echo';
-
 import * as Language from './Language';
+
+/** Codes offered by the settings select, sorted so the list reads the same as the reader's. */
+const LANGUAGE_CODES = [...Language.POPULAR].map(({ code }) => code).sort();
 
 export const Settings = Schema.Struct({
   /**
@@ -17,12 +18,13 @@ export const Settings = Schema.Struct({
    * first by name — Arabic — for every learner, since the list is sorted for reading, not ranked.
    */
   language: Schema.optional(
-    Schema.String.annotate({
+    // A literal union rather than a string carrying `Format.OptionsAnnotation`: the form picks its
+    // renderer by type first, so an annotated string is a text box and only a union becomes a select.
+    // The options are BCP-47 codes, since the annotation carries bare values with no label channel.
+    Schema.Literals(LANGUAGE_CODES).annotate({
       title: 'Language',
       description: 'The language the reader companion translates into by default.',
-      // BCP-47 codes rather than names: the annotation carries bare values, so the select renders
-      // whatever is stored. Labelled options are a form-layer gap, tracked separately.
-    }).pipe(Format.OptionsAnnotation.set([...Language.POPULAR].map(({ code }) => code).sort())),
+    }),
   ),
   highlightKnownWords: Schema.optional(
     Schema.Boolean.annotate({
