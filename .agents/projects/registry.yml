@@ -411,6 +411,17 @@ projects:
     design: .agents/projects/effect-smol/DESIGN.md
     prs: [12521]
     resume: 'Both repos migrated, reviewed and pushed as draft PRs: dxos/dxos#12521 and dxos/edge#827 (branch claude/effect-4-migration-audit-pq2m8z in each). dxos build 326/326 + node tests green; edge build 83/83 + full :test sweep green. Durable v4 rules extracted to .agents/skills/effect/v4-schema.md; spike moved to .agents/projects/effect-smol/spike. NEXT: D7 — dispatch pkg.pr.new on the dxos branch, then repoint edge catalogs.dxos off the 315 local tarball overrides (edge CI is red until that lands, install-time, by design).'
+
+  - name: mosaic
+    status: active
+    user: root
+    host: vm
+    created: 2026-08-13
+    summary: 'MOSAIC (Model-Oriented System for Adaptive Interface Composition; unrelated to react-ui-mosaic) — declarative UI / app ontology work-stream: name the data + app ontologies (Hyperspace/Space/Schema/Feeds; Deck/Plugins/Components), give them a DEUS specification surface (app dialect: node/deck/plank/companion/surface/menu), describe plugin-inbox in it, and design the Scenes composition DSL.'
+    tasks: .agents/projects/mosaic/TASKS.md
+    design: .agents/projects/mosaic/DESIGN.md
+    prs: [12484]
+    resume: 'PR #12484 OPEN (docs + illustrator `Ui` dialect; retitled, merged with main 2026-08-20). Delivered: ontology outline (2026-08-13-hyperspace-app-ontology.md), DEUS app dialect (packages/reflect/deus/lang/app.mdl), plugin-inbox PLUGIN.mdl rewrite, Scenes spec (2026-08-06) with Experiment 2 walking-skeleton proposal, and UI-schematic phase 1 (plugin-illustrator src/model/ui.ts: schema -> Deck/Plank/Panel/Form/Control -> ASCII + tldraw, 6 tests, UiSchematic.stories.tsx). Experiment 1 (MailboxController) parked, code in history 49de0924/a5e7982a. NEXT: review pass on the three documents, then decide Experiment 2 (plugin-scene walking skeleton) vs schematic phase 2 (app-graph -> deck schematics); open items: org.dxos.spec.app URI registration for the deus linter, parameterized Views (scope= binding).'
   - name: halo-consumer-migration
     status: active
     user: dmaretskyi
