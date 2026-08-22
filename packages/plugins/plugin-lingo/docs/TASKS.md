@@ -7,6 +7,7 @@ fixed: the activation test never supplied `plugin-markdown`, which `dx.config.ts
 into Phase 2._
 
 Design, object model, and the reasoning behind each decision: `packages/plugins/plugin-lingo/docs/DESIGN.md`.
+Manual test plan, and what has actually been run by hand: `packages/plugins/plugin-lingo/docs/TESTING.md`.
 
 ## Phase 0: Verify the skeleton locally — DONE
 
