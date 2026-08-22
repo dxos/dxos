@@ -90,26 +90,42 @@ Found by actually rendering the stories; every one was invisible to the type-che
 - [ ] Escalate the selection to the parent segment (the model already carries `parent`), so a
       learner can widen from a term to its clause to its sentence.
 
-- [ ] The split view's second pane asks for a whole-passage translation
-      (`LingoOperation.TranslatePassage`), which needs a live model; the story falls back to the
-      term swap. To exercise it offline the story needs a `Capabilities.LayerSpec` providing an
-      `AiService` over `ScriptedLanguageModel` (see `plugin-magazine/src/stories/MagazineCurate`
-      and `plugin-assistant`'s `scriptedAiServiceMiddleware`). Contributing a stub
-      `OperationHandler` does NOT work — resolution is first-match and the plugin's own set wins.
-- [ ] Decide whether `translation` mode should also be a whole-article translation, or stay as the
-      known-term swap it is today (split's second pane is now the former).
-
 - [ ] Contribute `MarkdownCapabilities.ExtensionProvider` so hover translation works in the markdown
       editor itself, gated on a setting.
 - [ ] `LingoSkill` exposing the operations as assistant tools.
 - [ ] `Vocabulary`/`Word` cards (`card--content`) for collections and search.
-- [ ] Scroll-link the two panes in split mode.
 - [x] `ReaderArticle` container storybook (ECHO-backed, seeds the deck and the document).
 - [ ] `VocabularyArticle` and `FlashcardsArticle` container storybooks.
 - [ ] A storybook pairing the reader with `plugin-magazine`, showing the companion working as a
       translation/helper beside an article the lingo plugin does not own — the case the
       `AppCapabilities.TextContent` indirection exists for. MagazineCurate's story already wires a
       live `AiService` LayerSpec, so it is also the natural place to exercise `TranslatePassage`.
+
+## Cross-plugin follow-ups — SAME BRANCH
+
+Surfaced while using the reader inside Composer; they are defects in other plugins, agreed to land
+on this branch rather than fork a second one.
+
+- [ ] Default a new feed's type to `rss` in the create form. The union renders with no selection, so
+      a feed created from the navtree has no type until the user opens the properties form. The fix
+      is in the shared `react-ui-form` union control (defaulting to the first member), not in
+      `plugin-magazine`.
+- [ ] Give the ref-create popover standard padding. Selecting an object from a properties-form ref
+      field opens a popover whose content sits flush against its edges.
+- [ ] Make the flat-deck companion open/closed state global (`plugin-deck`). Today it is per-article,
+      so moving between articles loses the companion. Only the open/closed flag is shared — which
+      tab is selected still depends on the subject's type.
+
+## Loose ends from the reader work
+
+- [ ] Decide the fate of `ExtractVocabulary`. Harvesting moved into `AnalyzeText` (the analysis
+      already chose the vocab regions and carries gloss/lemma/reading), so nothing calls it. Either
+      delete it, or keep it as the standalone "just build me a deck from this document" entry point
+      and give it a surface.
+- [ ] Clean up the stale objects the ref-comparison bug left in "My Space": five `Analysis` objects
+      for one document, two duplicate Japanese `Language` objects, an orphan `companionTo` relation,
+      and French/German entries whose `baseCode` was written under the inverted language model.
+      A one-shot script over the debug port; it mutates the user's space, so confirm before running.
 
 ## Phase 3: Study history — NOT STARTED
 
@@ -124,5 +140,9 @@ Found by actually rendering the stories; every one was invisible to the type-che
 - [ ] Client-backed container stories do not render in the Claude Code Browser pane — the client
       hangs in `initializeIdentity`. Verify them with Playwright against a real Chromium; a
       reference story from another plugin hangs identically, so this is the pane, not the code.
+- [ ] Three behaviours are asserted but never observed: the translate button's spinner clearing on
+      completion, a real pointer click landing on the segment rather than the native line selection,
+      and furigana actually coming back from the live model for Japanese. All three were reasoned
+      about from the code; none was watched end to end in Composer.
 - [ ] `ExtractVocabulary` caps how many entries are _written_ (`limit`), not how much text is sent
       to the model — cost is unbounded on a long document.
