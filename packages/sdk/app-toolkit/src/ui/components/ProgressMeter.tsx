@@ -28,8 +28,12 @@ export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
     const active = status === 'running' || status === 'pending';
     // The registry only recomputes elapsedMs when the task is touched, so tick locally while active.
     const elapsedMs = useElapsed(state.startedAt, active, state.elapsedMs);
-    // Show the cancel control only while the task is still active and the producer registered a handler.
-    const cancellable = !!onCancel && state.cancellable && active;
+    // One control, two jobs: it cancels a run in flight, and clears one that ended in an error —
+    // where there is nothing left to cancel, but the meter would otherwise hold the statusbar with no
+    // way to dismiss it. Clearing needs no `cancellable`: that flag says the PRODUCER can be
+    // interrupted, which is irrelevant once the run is over.
+    const failed = status === 'error';
+    const cancellable = !!onCancel && (failed || (state.cancellable === true && active));
 
     return (
       <div
@@ -50,7 +54,7 @@ export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
                 square
                 icon='ph--x--regular'
                 iconOnly
-                label='Cancel'
+                label={failed ? 'Dismiss' : 'Cancel'}
                 onClick={onCancel}
               />
             )}

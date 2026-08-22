@@ -120,9 +120,20 @@ const DefaultStory = (args: ProgressMeterProps) => {
     setScript(({ run }) => ({ phases, run: run + 1 }));
   }, []);
 
-  const handleStop = useCallback((error: string) => {
+  /** Cancelling is not a failure: the run simply stops, and the meter returns to where it began. */
+  const handleCancel = useCallback(() => {
     stopped.current = true;
-    setState((prev) => ({ ...prev, status: 'error', error, updatedAt: new Date().toISOString() }));
+    setState({ ...IDLE, updatedAt: new Date().toISOString() });
+  }, []);
+
+  const handleFail = useCallback(() => {
+    stopped.current = true;
+    setState((prev) => ({
+      ...prev,
+      status: 'error',
+      error: 'Network unreachable',
+      updatedAt: new Date().toISOString(),
+    }));
   }, []);
 
   return (
@@ -135,12 +146,14 @@ const DefaultStory = (args: ProgressMeterProps) => {
             label='Indeterminate'
             onClick={() => handleStart(INDETERMINATE)}
           />
-          <IconButton icon='ph--warning--regular' label='Fail' onClick={() => handleStop('Network unreachable')} />
+          <IconButton icon='ph--warning--regular' label='Fail' onClick={handleFail} />
+          <IconButton icon='ph--x--regular' label='Cancel' onClick={handleCancel} />
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content />
       <Panel.Statusbar asChild>
-        <ProgressMeter {...args} state={state} onCancel={() => handleStop('Cancelled')} />
+        {/* The meter's own control cancels a run in flight, and clears one that failed. */}
+        <ProgressMeter {...args} state={state} onCancel={handleCancel} />
       </Panel.Statusbar>
     </Panel.Root>
   );
@@ -168,8 +181,9 @@ type Story = StoryObj<typeof meta>;
  * named underneath throughout: `label` holds the run's identity and `note` the phase, so the task
  * never reads as a different task mid-run.
  *
- * **Fail** ends the run with an error, and the meter's ✕ cancels — the only control an
- * indeterminate run can offer.
+ * **Fail** ends the run with an error. **Cancel** — in the toolbar, or the meter's own ✕ — stops a
+ * run and returns the meter to idle: cancelling is not a failure, so it leaves no error behind. The
+ * ✕ stays available on a failed run, where it clears the error rather than cancelling anything.
  */
 export const Default: Story = {
   args: {
