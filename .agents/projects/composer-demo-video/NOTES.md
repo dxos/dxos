@@ -132,24 +132,24 @@ Already true, not aspirational:
 
 Plugins that already exist and would close most of the remaining gap:
 
-| Need | Plugin | State |
-| --- | --- | --- |
-| Script + shot list | `plugin-markdown`, `plugin-projects`, `plugin-tasks` | ships today |
-| Storyboard / deck | `plugin-presenter` | exists; needs assessment |
-| Generated stills | `plugin-ideogram` via `plugin-studio` | connector wired, key provisioned |
-| Avatar / VO | `plugin-heygen` via `plugin-studio` | **proven end to end** |
-| Architecture diagrams | `plugin-tldraw`, `plugin-mermaid` | ship today |
-| Video objects / assembly | `plugin-video` | exists; the real unknown |
-| Transcript / captions | `plugin-transcription` | ships today |
+| Need                     | Plugin                                               | State                            |
+| ------------------------ | ---------------------------------------------------- | -------------------------------- |
+| Script + shot list       | `plugin-markdown`, `plugin-projects`, `plugin-tasks` | ships today                      |
+| Storyboard / deck        | `plugin-presenter`                                   | exists; needs assessment         |
+| Generated stills         | `plugin-ideogram` via `plugin-studio`                | connector wired, key provisioned |
+| Avatar / VO              | `plugin-heygen` via `plugin-studio`                  | **proven end to end**            |
+| Architecture diagrams    | `plugin-tldraw`, `plugin-mermaid`                    | ship today                       |
+| Video objects / assembly | `plugin-video`                                       | exists; the real unknown         |
+| Transcript / captions    | `plugin-transcription`                               | ships today                      |
 
 The honest gap is **editing** — trimming, sequencing and mixing. `plugin-video` needs assessment
 before claiming a timeline. Two ways to tell the truth on camera:
 
-1. Show every *input* built in Composer (script, shot list, storyboard, stills, avatar renders,
+1. Show every _input_ built in Composer (script, shot list, storyboard, stills, avatar renders,
    diagrams) and be candid that the final cut happens in an editor.
 2. Build the timeline too, if `plugin-video` can carry it — the strongest version, and the one
    that turns the closing line into a demonstration rather than a claim.
 
 Either way this becomes a **new candidate clip** and probably the closing beat of the Cloudflare
-cut: *"Everything you have just watched — the script, the images, the voice — was made in the
-workspace you were watching."*
+cut: _"Everything you have just watched — the script, the images, the voice — was made in the
+workspace you were watching."_
