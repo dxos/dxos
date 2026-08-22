@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { useActivationSignal, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
@@ -20,34 +20,47 @@ import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { CollectionItemAnnotation, ViewAnnotation } from '@dxos/schema';
+import { Button, Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { CollectionItemAnnotation, FactoryAnnotation, ViewAnnotation } from '@dxos/schema';
 
 import { makeCreateObjectEntryForDatabaseType } from '#capabilities';
 import { type CreateObjectOption, CreateObjectPanel, type CreateObjectPanelProps } from '#components';
 import { meta } from '#meta';
-import { SpaceCapabilities, SpaceEvents } from '#types';
+import { SpaceCapabilities, SpaceEvents, SpaceOperation } from '#types';
 
-import { getSpaceDisplayName } from '../../util';
+import { type ObjectFormHandle, getSpaceDisplayName } from '../../util';
 
-export const CREATE_OBJECT_DIALOG = `${meta.profile.key}.CreateObjectDialog`;
-
-export type CreateObjectDialogProps = Pick<CreateObjectPanelProps, 'target' | 'typename' | 'initialFormValues'> & {
+export type ObjectFormDialogProps = Pick<CreateObjectPanelProps, 'target' | 'typename' | 'mode' | 'schema'> & {
   views?: boolean;
-  onCreateObject?: (object: Obj.Unknown) => void;
+  /** Initial values, seeded into the form (`draft`) or into the object at creation (`live`). */
+  defaults?: Record<string, any>;
+  /** Settled once, with the confirmed object or with nothing; see {@link ObjectFormHandle}. */
+  handle?: ObjectFormHandle;
   shouldNavigate?: (object: Obj.Unknown) => boolean;
   targetNodeId?: string;
 };
 
-export const CreateObjectDialog = ({
+/**
+ * The one create-an-object surface: a target picker, a type picker, and a form over the chosen type.
+ *
+ * In `live` mode the object is added to the database before the form opens, so fields that resolve
+ * against the database — dynamic option lookups, autofill, inline refs, child objects — behave
+ * exactly as they do after creation. Dismissing the dialog by any route other than the confirm
+ * button removes it again, so a cancelled create leaves nothing behind; the cleanup hangs off
+ * unmount rather than off the cancel button because escape, the overlay, and the close affordance
+ * never reach a handler and each of them is a cancel.
+ */
+export const ObjectFormDialog = ({
   target: initialTarget,
   typename: initialTypename,
+  mode = 'draft',
+  schema,
   views,
-  initialFormValues,
-  onCreateObject,
+  defaults,
+  handle,
   shouldNavigate: _shouldNavigate,
   targetNodeId,
-}: CreateObjectDialogProps) => {
+}: ObjectFormDialogProps) => {
   const { t } = useTranslation(meta.profile.key);
   const manager = usePluginManager();
   // Demand signal: load policy-parked CreateObjectEntry providers; the picker below reads them
@@ -184,6 +197,100 @@ export const CreateObjectDialog = ({
     ],
   );
 
+  const navigateTo = useCallback(
+    (object: Obj.Unknown) =>
+      Effect.gen(function* () {
+        const shouldNavigate = _shouldNavigate ?? (() => true);
+        if (!shouldNavigate(object)) {
+          return;
+        }
+
+        // Where an object lands in the tree is the resolver's question, not the create's.
+        const { targets } = yield* invoke(NavigationOperation.ResolveNavigationTargets, {
+          query: { uri: Obj.getURI(object) },
+        });
+        const navigationTarget = targets[0];
+        if (navigationTarget) {
+          yield* invoke(LayoutOperation.Open, { subject: [navigationTarget.path], navigation: 'immediate' });
+          yield* invoke(LayoutOperation.Expose, { subject: navigationTarget.path });
+        }
+      }),
+    [_shouldNavigate, invoke],
+  );
+
+  //
+  // Live mode.
+  //
+
+  const type = typename ? typeByTypename.get(typename) : undefined;
+  const [object, setObject] = useState<Obj.Unknown | undefined>();
+  // Read inside the create effect so a caller passing an inline object literal does not re-run it.
+  const defaultsRef = useRef(defaults);
+  defaultsRef.current = defaults;
+  // Set by the confirm button, which is the one dismissal route that keeps what the form built.
+  const confirmed = useRef(false);
+
+  // Escape, the overlay, and the close affordance dismiss the dialog without reaching a handler, and
+  // each of them is a cancel — so the dismissal hangs off unmount. `dismiss` is applied a task later,
+  // which is what keeps StrictMode's development unmount/remount from reading as one.
+  useEffect(() => {
+    handle?.retain();
+    return () => handle?.dismiss();
+  }, [handle]);
+
+  useEffect(() => {
+    if (mode !== 'live' || !db || !type || !Type.isObject(type)) {
+      return;
+    }
+
+    // Types whose required structure `Obj.make` cannot produce alone (a required ref to a backing
+    // object, say) declare a factory to take over construction.
+    const factory = Option.getOrUndefined(FactoryAnnotation.get(Type.getSchema(type)));
+    const values = defaultsRef.current ?? {};
+    const made = factory ? factory(values) : Obj.make(type, values);
+    invariant(Obj.isObject(made), 'Factory did not return an object.');
+    const created = db.add(made);
+    setObject(created);
+
+    return () => {
+      setObject(undefined);
+      if (!confirmed.current) {
+        Obj.getDatabase(created)?.remove(created);
+      }
+    };
+  }, [mode, db, type]);
+
+  const handleConfirm = useCallback(() => {
+    if (!object || !target) {
+      return;
+    }
+
+    // Settled before the close below, since closing unmounts the dialog and an unmount is otherwise
+    // read as a cancel — and cancelling would take the object back out.
+    confirmed.current = true;
+    handle?.settle(object);
+
+    // NOTE: Must close before navigating or attention won't follow object.
+    closeRef.current?.click();
+    void Effect.gen(function* () {
+      // The object is already persisted; this files it under the target collection, if there is one.
+      yield* Operation.invoke(
+        SpaceOperation.AddObject,
+        { object, target: Collection.isCollection(target) ? target : undefined },
+        { spaceId: db?.spaceId },
+      );
+      yield* navigateTo(object);
+    }).pipe(
+      Effect.provideService(Capability.Service, manager.capabilities),
+      Effect.provideService(Operation.Service, operationInvoker),
+      EffectEx.runAndForwardErrors,
+    );
+  }, [object, target, db, navigateTo, handle, manager.capabilities, operationInvoker]);
+
+  //
+  // Draft mode.
+  //
+
   const handleCreateObject = useCallback<NonNullable<CreateObjectPanelProps['onCreateObject']>>(
     ({ metadata, data = {} }) =>
       Effect.gen(function* () {
@@ -191,6 +298,11 @@ export const CreateObjectDialog = ({
           // TODO(wittjosiah): UI feedback.
           return;
         }
+
+        // A draft is built after the dialog has closed, so the unmount below lands before the object
+        // exists; without this the handle would settle as a cancel while the create was still running.
+        confirmed.current = true;
+        handle?.confirm();
 
         // NOTE: Must close before navigating or attention won't follow object.
         closeRef.current?.click();
@@ -201,31 +313,16 @@ export const CreateObjectDialog = ({
         // a collection, since `db` already says which space.
         const collection = Collection.isCollection(target) ? target : undefined;
         const result = yield* metadata.createObject(data, { db, target: collection, targetNodeId });
-        const shouldNavigate = _shouldNavigate ?? (() => true);
-        if (shouldNavigate(result.object)) {
-          // Where an object lands in the tree is the resolver's question, not the create's.
-          const { targets } = yield* invoke(NavigationOperation.ResolveNavigationTargets, {
-            query: { uri: Obj.getURI(result.object) },
-          });
-          const navigationTarget = targets[0];
-          if (navigationTarget) {
-            yield* invoke(LayoutOperation.Open, {
-              subject: [navigationTarget.path],
-              navigation: 'immediate',
-            });
-            yield* invoke(LayoutOperation.Expose, {
-              subject: navigationTarget.path,
-            });
-          }
-        }
-
-        onCreateObject?.(result.object);
+        yield* navigateTo(result.object);
+        handle?.settle(result.object);
       }).pipe(
+        // A failed create still has to settle, or the operation waiting on the dialog never returns.
+        Effect.ensuring(Effect.sync(() => handle?.settle())),
         Effect.provideService(Capability.Service, manager.capabilities),
         Effect.provideService(Operation.Service, operationInvoker),
         EffectEx.runAndForwardErrors,
       ),
-    [target, _shouldNavigate, onCreateObject, manager.capabilities, invoke],
+    [target, targetNodeId, navigateTo, handle, manager.capabilities, operationInvoker],
   );
 
   return (
@@ -246,22 +343,38 @@ export const CreateObjectDialog = ({
           spaces={spaces}
           target={target}
           typename={typename}
-          initialFormValues={initialFormValues}
+          mode={mode}
+          schema={schema}
+          object={object}
+          type={type}
+          initialFormValues={defaults}
           resolve={resolve}
           onCreateObject={handleCreateObject}
           onTargetChange={setTarget}
           onTypenameChange={setTypename}
         />
       </Dialog.Body>
-      {showTypeSelector && registryAvailable && (
+      {object ? (
         <Dialog.ActionBar>
           <Dialog.Close asChild>
-            <PluginRegistryButton />
+            <Button data-testid='object-form.cancel'>{t('object-form-cancel.label')}</Button>
           </Dialog.Close>
+          <Button variant='primary' onClick={handleConfirm} data-testid='object-form.confirm'>
+            {t('object-form-confirm.label')}
+          </Button>
         </Dialog.ActionBar>
+      ) : (
+        showTypeSelector &&
+        registryAvailable && (
+          <Dialog.ActionBar>
+            <Dialog.Close asChild>
+              <PluginRegistryButton />
+            </Dialog.Close>
+          </Dialog.ActionBar>
+        )
       )}
     </Dialog.Content>
   );
 };
 
-CreateObjectDialog.displayName = 'CreateObjectDialog';
+ObjectFormDialog.displayName = 'ObjectFormDialog';
