@@ -8,7 +8,6 @@ import React, { useEffect, useState } from 'react';
 import { withLayout, withTheme } from '../../testing';
 import { Panel } from '../Panel';
 import { Toolbar } from '../Toolbar';
-
 import { Progress } from './Progress';
 import { type ProgressStepsProps } from './ProgressSteps';
 import { type ProgressStep } from './types';

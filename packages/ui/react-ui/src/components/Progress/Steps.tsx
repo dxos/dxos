@@ -8,7 +8,6 @@ import React from 'react';
 import { mx } from '@dxos/ui-theme';
 
 import { type ThemedClassName } from '../../util';
-
 import { type ProgressState, type ProgressStatus, stepAt, stepCount } from './types';
 
 /**

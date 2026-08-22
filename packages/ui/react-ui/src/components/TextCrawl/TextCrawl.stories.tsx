@@ -9,7 +9,6 @@ import { random } from '@dxos/random';
 
 import { withTheme } from '../../testing';
 import { Toolbar } from '../Toolbar';
-
 import { textCrawlSizes } from './sizes';
 import { TextCrawl } from './TextCrawl';
 

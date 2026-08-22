@@ -5,12 +5,7 @@
 import React from 'react';
 
 import { Progress } from '@dxos/progress';
-import {
-  Progress as NaturalProgress,
-  type ProgressState,
-  type ThemedClassName,
-  composable,
-} from '@dxos/react-ui';
+import { Progress as NaturalProgress, type ProgressState, type ThemedClassName, composable } from '@dxos/react-ui';
 
 export { formatDuration } from '@dxos/react-ui';
 

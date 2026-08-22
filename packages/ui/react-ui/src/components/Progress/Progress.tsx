@@ -9,7 +9,6 @@ import { type ProgressStyleProps } from '../../theme';
 import { type ThemedClassName, composable, composableProps } from '../../util';
 import { IconButton } from '../Button';
 import { TextCrawl } from '../TextCrawl';
-
 import { ProgressSteps } from './ProgressSteps';
 import { type ProgressProps, stepCount } from './types';
 

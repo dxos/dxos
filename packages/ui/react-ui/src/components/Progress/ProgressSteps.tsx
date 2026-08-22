@@ -9,7 +9,6 @@ import { useResizeDetector } from 'react-resize-detector';
 import { mx } from '@dxos/ui-theme';
 
 import { type ThemedClassName } from '../../util';
-
 import { type StepOptions, Steps, type StepSlots, defaultStepOptions, defaultStepSlots, deriveSteps } from './Steps';
 import { type ProgressProps, stepCount } from './types';
 

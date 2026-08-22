@@ -9,7 +9,6 @@ import { withLayout, withTheme } from '../../testing';
 import { IconButton } from '../Button';
 import { Panel } from '../Panel';
 import { Toolbar } from '../Toolbar';
-
 import { Progress, type ProgressRootProps } from './Progress';
 import { type ProgressState } from './types';
 
