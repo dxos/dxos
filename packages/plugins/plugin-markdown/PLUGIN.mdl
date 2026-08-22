@@ -156,23 +156,38 @@ component EditableMarkdownCard
 
 ```mdl
 op create
-  desc: Creates a new markdown Document and adds it to the active space.
+  key: org.dxos.function.markdown.create
+  desc: Creates a new markdown Document and adds it to the active space. Agent-facing (skill tool).
   input: { name: string, content: string }
-  output: string                # DXN of created Document
+  output: { id: string }        # DXN of created Document
   effects: [echo:write]
+  requires: [Database.Service]
+
+op createMarkdown
+  key: org.dxos.plugin.markdown.operation.create
+  desc: |
+    UI-facing factory invoked by the navtree create action. Returns a DETACHED Document —
+    placement is a separate `space.addObject` call. Distinct from [op:create], which is the
+    agent-facing tool and writes through the Database service.
+  input: { name?: string, content?: string }
+  output: { object: Document }
+  requires: [Capability.Service]
 
 op open
+  key: org.dxos.function.markdown.open
   desc: Reads the current contents of a markdown Document.
   input: { doc: Ref<Document> }
   output: string
   effects: [echo:read]
 
 op update
+  key: org.dxos.function.markdown.update
   desc: Applies a set of find/replace edits to a markdown Document (optionally on a branch).
   input: { doc: Ref<Document>, edits: Edit[], branchId?: string }
-  output: string
+  output: { newContent: string }
   errors: { NotFound: oldString not present in document }
   effects: [echo:write]
+  requires: [Database.Service]
 
 op CreateBranch
   desc: Fork a core branch off main (or a checkpoint), returning the branch's canonical content DXN.
@@ -358,6 +373,56 @@ test T-7: Suggesting mode authors on the user's branch
     - the edit renders as a self tracked-change
     - main/root content is unchanged; the user's suggestion branch gained the edit
     - a second author's suggestion still renders vs main and does not strike the user's new text
+```
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). `expect` is the success criterion both actors
+judge; `assert` is an optional deterministic check evaluated in the debug port. Report failures
+by flow and step number (e.g. `QA-1.3`).
+
+```mdl
+flow QA-1: Create, place, open and edit a document
+  desc: The core markdown round-trip through the running app.
+  actors: both
+  covers: [F-1.1, F-1.3, T-1, T-2]
+  given:
+    - an identity exists
+    - a space is open and contains at least one collection
+  step 1: Create the document
+    do: In the navtree, click + on a collection and choose Markdown. Name it "QA Notes".
+    invoke: [op:createMarkdown] { name: "QA Notes", content: "# QA Notes\n\nThere is a tyop.\n" }
+    capture: created
+    expect: a detached Document named "QA Notes" is returned; nothing is in the navtree yet
+    assert: return !!$created.object
+  step 2: Place it in the collection
+    do: (same gesture as step 1 — the navtree create action places the document for you)
+    invoke: [op:space.addObject] { object: $created.object, target: $given.collection }
+    capture: added
+    expect: "QA Notes" appears as a row under the collection in the navtree
+    assert: return (await space.db.query(dxos.Filter.everything()).run()).some((o) => o.name === 'QA Notes')
+    note: |
+      Steps 1-2 must be coalesced into ONE port snippet — `created.object` is a live ECHO object
+      and the port serializes between snippets. Step granularity is the human's; batching is the
+      runner's concern.
+  step 3: Open it
+    do: Click "QA Notes" in the navtree.
+    invoke: [op:layout.open] { subject: $added.subject }
+    expect: the editor renders "# QA Notes" and the navtree row is selected
+    assert: |
+      return document.querySelector('[aria-current], [aria-selected="true"]')?.textContent?.includes('QA Notes') ?? false
+  step 4: Fix the typo
+    do: In the editor, change "tyop" to "typo".
+    invoke: [op:update] { doc: $added.object, edits: [{ oldString: "tyop", newString: "typo" }] }
+    expect: the document body reads "There is a typo." and the change replicates
+    assert: return $4.newContent.includes('There is a typo.')
+    note: |
+      [op:update] declares `requires: [Database.Service]`, so `composer.invoke` alone fails with
+      "spawn environment is missing space" — the runner must go through the operation invoker with
+      an explicit `spaceId`.
+  cleanup:
+    - delete the "QA Notes" document
 ```
 
 ---

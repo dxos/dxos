@@ -2,29 +2,65 @@
 
 Project: `deus` · Design: [docs/DESIGN.md](./docs/DESIGN.md) · Idioms: [docs/IDIOMS.md](./docs/IDIOMS.md)
 
-Extend the DEUS pattern-specification language. The design doc is the spec; this file is the ledger.
+_Resume: Phase 1 (Deus.QA) design agreed 2026-08-22. Spiking one markdown flow before
+materializing the dialect._
 
-## State of the package (as read 2026-08-22)
+## Goal
 
-- [lang/core.mdl](./lang/core.mdl) — the only materialized dialect. Document format, the `ext`
-  primitive, primitive types, resolution rules.
-- [docs/DESIGN.md](./docs/DESIGN.md) — describes `Deus.Std` (`type`, `op`, `feat`/`req`, `test`,
-  `component`, `service`, `db`) and `Deus.DXOS` (`echo-type`, `composer-plugin`, `effect-op`) **in
-  prose only** — neither dialect exists as a `.mdl` file.
-- [lang/examples/](./lang/examples/) — chess trilogy; each file declares its own inline `ext` blocks.
-- [src/extension/](./src/extension/) — Lezer grammar, syntax, lint, completion. Hand-written; any
-  core-syntax change lands here too.
+Extend DEUS with a **QA dialect** so a `.mdl` spec doubles as a test plan that a human tester
+and an agent tester execute from the same source. Flows live in a `## QA` section of each
+`PLUGIN.mdl`; cross-plugin journeys live in a new `packages/apps/composer-app/APP.mdl`.
 
-## Phase 0 — Scope
+### Major goal — the QA routine
 
-- [ ] Fix the extension target with the user. Options on the table:
-  1. Core syntax (`core.mdl`) — nesting, imports, constraints, richer `TypeExpr`.
-  2. Materialize `Deus.Std` as `lang/std.mdl` from the DESIGN.md prose.
-  3. Materialize `Deus.DXOS` as `lang/dxos.mdl` (incl. `idiom-ref` from IDIOMS.md).
-  4. Resolve a DESIGN.md open question: standalone `req`, `db` vs `service`, the registry,
-     ext versioning, the agent contract.
-- [ ] Identify the driving use case — the document that could not be expressed.
-- [ ] Decide whether the CodeMirror extension follows in the same change.
+A Claude routine (skill + command) that closes the loop for any plugin:
+
+- [ ] **(a) Update the plugin's `PLUGIN.mdl`** from its source — reconcile `type`/`op`/`component`
+      blocks against the code, backfill `key:` and `requires:` on every `op` from its
+      `Operation.make({ meta.key, services })`.
+- [ ] **(b) Propose candidate flows** — read `feat`/`req`/`test` blocks with no `covers:` pointing
+      at them and draft flows that would exercise them, for human triage.
+- [ ] **(c) Run the plan** — execute selected flows against a live Composer through the debug
+      port and report a per-step pass/fail table.
+
+Each part is independently useful; (c) is the one that needs the language to be right first.
+
+## Phase 1: Deus.QA dialect
+
+Design agreed (see DESIGN.md §Deus.QA once written). Decisions:
+
+- `flow QA-n` blocks in a `## QA` section of each `PLUGIN.mdl`; `APP.mdl` for cross-plugin.
+- `do:` + `expect:` required on every step (keeps flows human-runnable); `invoke:`/`assert:`
+  optional (agent-only affordances); `capture:`/`$name` threads a step's result forward.
+- `op@1.1` adds `key?: NSID`; the existing `requires:` is populated from the code's `services:`.
+- Success criteria: prose `expect:` always, optional deterministic `assert:` snippet.
+- Consent for mutating runs is at **flow granularity**, not per-operation.
+
+### Spike (current)
+
+- [ ] One flow authored in `plugin-markdown/PLUGIN.mdl` `## QA`.
+- [ ] Executed against a live Composer via the debug port; findings recorded below.
+- [ ] Decide from the findings whether the block shape survives contact.
+
+### Then
+
+- [ ] `lang/qa.mdl` — the `Deus.QA` dialect (`ext flow`, `ext step`).
+- [ ] `docs/DESIGN.md` — `Deus.QA` section.
+- [ ] `BLOCK_TYPES += 'flow'` in [src/extension/constants.ts](./src/extension/constants.ts).
+- [ ] `.agents/skills/running-qa-flows/SKILL.md` — the agent-side execution contract.
+- [ ] Backfill `key:`/`requires:` on the markdown ops the flows reference.
+
+## Findings
+
+_(spike results land here)_
+
+## Backlog
+
+- [ ] Grammar + lint for nested sub-blocks — `step 1:` and the existing `req F-1.1:` are both
+      unvalidated today (the Lezer grammar parses key-values only).
+- [ ] Coverage lint — `feat`/`req` with no `flow` covering them.
+- [ ] `composer.invoke` does not forward `spaceId`, so `requires: [Database.Service]` ops need the
+      operation-invoker escape hatch. Fix at the source or keep documenting the workaround.
 
 ## Backlog (from DESIGN.md "Open Questions")
 
