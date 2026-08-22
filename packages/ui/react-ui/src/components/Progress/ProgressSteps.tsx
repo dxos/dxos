@@ -34,8 +34,9 @@ export type ProgressStepsProps = ThemedClassName<
  * {@link ProgressRoot}, which draws it alongside the bar; on its own it is the whole readout for a
  * run whose only countable axis is which step it is on.
  *
- * Sizing is the caller's: the chain claims no width or height of its own, so it can sit in a
- * fixed-height row without changing it.
+ * Height is the caller's, so the chain can sit in a fixed-height row without changing it. Width is
+ * its own: it caps at the plan's natural size and shrinks from there, since a chain given no width
+ * at all measures zero and draws nothing.
  */
 export const ProgressSteps = ({
   state,
@@ -55,7 +56,11 @@ export const ProgressSteps = ({
 
   return (
     <AnimatePresence>
-      <div className={mx('flex items-center min-w-0 overflow-hidden', classNames)} ref={ref}>
+      <div
+        className={mx('flex items-center grow min-w-0 overflow-hidden', classNames)}
+        style={{ maxWidth: count * options.width }}
+        ref={ref}
+      >
         <Steps steps={steps} classes={classes} options={options} onSelect={onSelect} />
       </div>
     </AnimatePresence>

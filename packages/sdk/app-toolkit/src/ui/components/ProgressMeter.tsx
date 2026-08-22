@@ -5,10 +5,14 @@
 import React from 'react';
 
 import { Progress } from '@dxos/progress';
-import { type ThemedClassName, composable } from '@dxos/react-ui';
-import { ProgressMeter as NaturalProgressMeter, type ProgressState } from '@dxos/react-ui-components';
+import {
+  Progress as NaturalProgress,
+  type ProgressState,
+  type ThemedClassName,
+  composable,
+} from '@dxos/react-ui';
 
-export { formatDuration } from '@dxos/react-ui-components';
+export { formatDuration } from '@dxos/react-ui';
 
 export type ProgressMeterProps = ThemedClassName<{
   state: Progress.TaskProgress;
@@ -19,13 +23,13 @@ export type ProgressMeterProps = ThemedClassName<{
 /**
  * A registry task, rendered.
  *
- * The presentation lives in `react-ui-components`, which knows nothing about a progress registry —
- * this is the seam between the two, and the only place the runtime's task model is named. Keeping the
- * adapter here is what lets a story or a scripted value drive the same component.
+ * The presentation lives in `react-ui`, which knows nothing about a progress registry — this is the
+ * seam between the two, and the only place the runtime's task model is named. Keeping the adapter
+ * here is what lets a story or a scripted value drive the same component.
  */
 export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
   ({ state, onCancel, className, classNames }, forwardedRef) => (
-    <NaturalProgressMeter
+    <NaturalProgress.Root
       // `className` is what a host slot injects at runtime (`Panel.Statusbar asChild`); the
       // presentational component owns the DOM node, so it is merged into its `classNames` rather
       // than applied here — there is no element of our own to put it on.

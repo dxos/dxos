@@ -6,22 +6,24 @@ import { mx } from '@dxos/ui-theme';
 import type { ComponentFunction, Theme } from '@dxos/ui-types';
 
 export type ProgressStyleProps = {
-  variant?: 'default' | 'main-bottom';
   indeterminate?: boolean;
+  /** Draws the fill in the error colour, for a run that stopped where it got to. */
+  error?: boolean;
 };
 
-const root: ComponentFunction<ProgressStyleProps> = ({ variant = 'default' }, ...etc) =>
-  mx(
-    'h-1 relative rounded-full overflow-hidden',
-    variant === 'main-bottom' ? 'w-full block' : 'inline-block bg-base-surface',
-    ...etc,
-  );
+const root: ComponentFunction<ProgressStyleProps> = (_props, ...etc) =>
+  // A separator-derived track rather than a surface: the bar is drawn ON a surface, so a track
+  // painted in one is invisible against its host.
+  mx('block h-1 relative rounded-full overflow-hidden bg-separator', ...etc);
 
-const bar: ComponentFunction<ProgressStyleProps> = ({ variant = 'default', indeterminate }, ...etc) =>
+const bar: ComponentFunction<ProgressStyleProps> = ({ indeterminate, error }, ...etc) =>
   mx(
     'absolute inset-y-0 block rounded-full',
-    variant === 'main-bottom' ? 'bg-composer-300' : 'bg-un-accent',
-    indeterminate ? 'animate-progress-indeterminate' : 'start-0',
+    error ? 'bg-error-surface' : 'bg-primary-surface',
+    indeterminate
+      ? 'animate-progress-indeterminate'
+      : // Ease the width between updates so incremental advances glide rather than jump.
+        'start-0 transition-[width] duration-500 ease-linear',
     ...etc,
   );
 
