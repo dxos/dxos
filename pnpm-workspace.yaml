@@ -102,6 +102,7 @@ catalog:
   '@effect/sql-sqlite-wasm': 4.0.0-rc.108
   '@effect/vitest': 4.0.0-rc.108
   '@effect/wa-sqlite': ^0.1.2
+  '@elgato/streamdeck': ^2.1.2
   '@emoji-mart/data': ^1.1.2
   '@emoji-mart/react': ^1.1.1
   '@excalidraw/excalidraw': ^0.18.0
@@ -313,6 +314,7 @@ catalog:
   '@types/vscode': ^1.74.0
   '@types/webextension-polyfill': ^0.12.3
   '@types/wicg-file-system-access': ^2020.9.6
+  '@types/ws': ^8.18.1
   '@types/wtfnode': ^0.10.0
   '@types/yargs': ~16.0.1
   '@types/zen-observable': ^0.8.3

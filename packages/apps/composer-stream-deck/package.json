@@ -1,0 +1,35 @@
+{
+  "name": "@dxos/composer-stream-deck",
+  "version": "0.11.1",
+  "private": true,
+  "description": "Elgato Stream Deck plugin that displays a Composer space on the device.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "import": "./dist/lib/plugin.mjs"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/plugin-stream-deck": "workspace:*",
+    "@elgato/streamdeck": "catalog:",
+    "effect": "catalog:",
+    "ws": "catalog:"
+  },
+  "devDependencies": {
+    "@types/ws": "catalog:"
+  }
+}
