@@ -46,6 +46,7 @@ export const PostState = Schema.Struct({
   /** Agent-selected hero image URL for this post in this magazine. */
   imageUrl: Schema.optional(Schema.String),
 });
+
 export type PostState = Schema.Schema.Type<typeof PostState>;
 
 /**

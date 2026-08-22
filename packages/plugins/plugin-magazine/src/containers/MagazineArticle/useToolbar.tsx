@@ -9,13 +9,16 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useCallback, useContext, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { type MagazineView } from '#atoms';
 import { meta } from '#meta';
-import { FeedOperation, Magazine } from '#types';
+import { FeedOperation, Magazine, Subscription } from '#types';
+
+import { FEED_DIALOG } from '../../constants';
 
 export type UseToolbarProps = {
   magazine: Magazine.Magazine;
@@ -60,6 +63,24 @@ export const useToolbar = ({ magazine }: UseToolbarProps) => {
       ),
     [runExclusive, invoker, magazine, db],
   );
+
+  // The feed is created and attached up front so the dialog's form edits a live object; cancelling the
+  // dialog takes it back out (see `FeedDialog`), which is what keeps the create atomic from the reader's
+  // point of view without a separate draft representation.
+  const handleAddFeed = useCallback(() => {
+    if (!db) {
+      return;
+    }
+
+    const feed = db.add(Subscription.makeSubscription({ type: 'rss' }));
+    Obj.update(magazine, (magazine) => {
+      magazine.feeds = [...magazine.feeds, Ref.make(feed)];
+    });
+    void invoker.invokePromise(LayoutOperation.UpdateDialog, {
+      subject: FEED_DIALOG,
+      props: { feed, magazine },
+    });
+  }, [db, magazine, invoker]);
 
   const handleClear = useCallback(
     () =>
@@ -114,8 +135,17 @@ export const useToolbar = ({ magazine }: UseToolbarProps) => {
               );
             },
           )
-          // `gap` is a flexible spacer that pushes Clear + Curate to the trailing edge.
+          // `gap` is a flexible spacer that pushes the trailing group to the trailing edge.
           .separator('gap')
+          .action(
+            'add-feed',
+            {
+              label: ['add-feed.label', { ns: meta.profile.key }],
+              icon: 'ph--plus--regular',
+              iconOnly: true,
+            },
+            handleAddFeed,
+          )
           .action(
             'clear',
             {
@@ -140,7 +170,7 @@ export const useToolbar = ({ magazine }: UseToolbarProps) => {
           .build()
       );
     },
-    [magazine, viewAtom, busyAtom, setView, handleClear, handleCurate],
+    [magazine, viewAtom, busyAtom, setView, handleAddFeed, handleClear, handleCurate],
   );
 
   return { menu, viewAtom };

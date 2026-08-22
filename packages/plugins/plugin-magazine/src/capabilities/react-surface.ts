@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import { type ComponentProps } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -10,8 +11,10 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Position } from '@dxos/util';
 
-import { FeedArticle, FeedProperties, MagazineArticle, PostArticle, PostCard } from '#containers';
+import { FeedArticle, FeedDialog, FeedProperties, MagazineArticle, PostArticle, PostCard } from '#containers';
 import { Magazine, Subscription } from '#types';
+
+import { FEED_DIALOG } from '../constants';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -40,6 +43,12 @@ export default Capability.makeModule(() =>
         filter: AppSurface.object(AppSurface.CardContent, Subscription.Post),
         component: PostCard,
         props: ({ role, data: { subject } }) => ({ role, subject }),
+      }),
+      Surface.create({
+        id: FEED_DIALOG,
+        filter: AppSurface.component<ComponentProps<typeof FeedDialog>>(AppSurface.Dialog, FEED_DIALOG),
+        component: FeedDialog,
+        props: ({ data: { props } }) => ({ ...props }),
       }),
       Surface.create({
         id: 'feedProperties',
