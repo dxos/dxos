@@ -4,8 +4,11 @@
 
 import { describe, test } from 'vitest';
 
-import { type Space } from '@dxos/client/echo';
+import { type Space, SpaceState } from '@dxos/client/echo';
+import { Annotation, Obj } from '@dxos/echo';
+import { Expando } from '@dxos/schema';
 
+import * as AppAnnotation from './AppAnnotation';
 import * as AppSpace from './AppSpace';
 
 describe('space tags', () => {
@@ -50,8 +53,42 @@ describe('space visibility', () => {
   });
 });
 
+describe('getSettingsSpace', () => {
+  test('returns undefined when the profile has none', ({ expect }) => {
+    expect(AppSpace.getSettingsSpace(makeClient([makeSpace([])]))).toBeUndefined();
+  });
+
+  test('prefers the duplicate carrying the default-space designation', ({ expect }) => {
+    // A profile that hit the duplicate-creation race carries two tagged spaces; the designated one
+    // is the one that has been used, so it wins over its position in the list.
+    const designated = makeSpace([AppSpace.SETTINGS_SPACE_TAG], 'BZZZZ', { defaultSpaceId: 'BSOME' });
+    const empty = makeSpace([AppSpace.SETTINGS_SPACE_TAG], 'BAAAA');
+    expect(AppSpace.getSettingsSpace(makeClient([empty, designated]))?.id).toEqual('BZZZZ');
+    expect(AppSpace.getSettingsSpace(makeClient([designated, empty]))?.id).toEqual('BZZZZ');
+  });
+});
+
 /**
  * A stand-in carrying only the fields the tag predicates read. Cast here rather than widening the
  * predicates, so production code sees a real `Space` and the fake stays contained to the test.
  */
-const makeSpace = (tags: string[]): Space => ({ tags, properties: {} }) as unknown as Space;
+const makeSpace = (tags: string[], id = 'BSPACE', { defaultSpaceId }: { defaultSpaceId?: string } = {}): Space =>
+  ({
+    id,
+    tags,
+    properties: makeProperties(defaultSpaceId),
+    state: { get: () => SpaceState.SPACE_READY },
+  }) as unknown as Space;
+
+/** A real entity rather than a plain object, since annotation reads reject anything else. */
+const makeProperties = (defaultSpaceId?: string) => {
+  const properties = Obj.make(Expando.Expando, {});
+  if (defaultSpaceId) {
+    Obj.update(properties, (properties) => {
+      Annotation.set(properties, AppAnnotation.DefaultSpaceAnnotation, defaultSpaceId);
+    });
+  }
+  return properties;
+};
+
+const makeClient = (spaces: Space[]) => ({ spaces: { get: () => spaces } });
