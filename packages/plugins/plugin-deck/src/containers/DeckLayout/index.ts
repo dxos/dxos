@@ -5,5 +5,6 @@
 import { DeckLayout } from './DeckLayout';
 
 export { NAV_ID } from './constants';
+export { type DeckLayoutProps } from './DeckLayout';
 
 export default DeckLayout;

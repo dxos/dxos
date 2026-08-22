@@ -4,6 +4,8 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { corePlugins } from '@dxos/plugin-testing';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -14,7 +16,13 @@ import { ProfileContainer } from './ProfileContainer';
 const meta = {
   title: 'plugins/plugin-client/containers/ProfileContainer',
   component: ProfileContainer,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withClientProvider({ createIdentity: true })],
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'fullscreen' }),
+    withClientProvider({ createIdentity: true }),
+    // `useOperationInvoker` needs a PluginManager providing Capabilities.OperationInvoker.
+    withPluginManager({ plugins: [...corePlugins()] }),
+  ],
   parameters: {
     layout: 'fullscreen',
     translations,

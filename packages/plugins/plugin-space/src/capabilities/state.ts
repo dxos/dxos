@@ -7,6 +7,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { createKvsStore } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';
@@ -43,19 +44,29 @@ export default Capability.makeModule(
     }).pipe(Atom.keepAlive);
 
     const manager = yield* Capabilities.PluginManager;
-    // Update navigableCollections based on plugin state.
+    // Layout is optional and lands after this module: no plugin contributes it in standalone
+    // harnesses (Storybook, tests), so hoist the capability atom and let the derivation heal if and
+    // when it arrives.
+    const layoutCapabilityAtom = yield* Capability.atom(AppCapabilities.Layout);
+    // Navigating to a collection has to show something. Two renderers answer that: plugin-stack
+    // gives a collection its own article, and the mobile deck renders every `role: 'branch'` node —
+    // a collection included — as a NavBranch article. With neither, the desktop deck opens the
+    // collection's contents instead and the collection itself is not a target.
+    const navigableCollectionsAtom = Atom.make((get) => {
+      const [layoutAtom] = get(layoutCapabilityAtom);
+      const isMobile = layoutAtom ? get(layoutAtom).mode === 'mobile' : false;
+      return isMobile || get(manager.enabled).includes('org.dxos.plugin.stack');
+    });
     const updateNavigableCollections = () => {
-      const enabled =
-        manager.getEnabled().includes('org.dxos.plugin.stack') ||
-        manager.getEnabled().includes('org.dxos.plugin.simpleLayout');
+      const navigableCollections = registry.get(navigableCollectionsAtom);
       const current = registry.get(ephemeralAtom);
-      if (enabled !== current.navigableCollections) {
-        registry.update(ephemeralAtom, (c) => ({ ...c, navigableCollections: enabled }));
+      if (navigableCollections !== current.navigableCollections) {
+        registry.update(ephemeralAtom, (c) => ({ ...c, navigableCollections }));
       }
     };
     // Check initial state and subscribe to changes.
     updateNavigableCollections();
-    const unsubscribe = registry.subscribe(manager.enabled, updateNavigableCollections);
+    const unsubscribe = registry.subscribe(navigableCollectionsAtom, updateNavigableCollections);
 
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
