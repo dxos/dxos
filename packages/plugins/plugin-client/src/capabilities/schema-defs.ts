@@ -19,40 +19,45 @@ export default Capability.makeModule(
     const schemas = yield* AppCapabilities.Schema;
 
     // TODO(wittjosiah): Unregister schemas when they are disabled.
-    let previousDxns = new Set<string>();
-    const cancel = registry.subscribe(
-      schemas.atom,
-      async (schemas) => {
-        const seenSchemaDxns = new Set<string>();
-        const batch: { schema: Type.AnyEntity; dxnKey: string }[] = [];
-        for (const schema of schemas.flat()) {
-          const uri = Type.getURI(schema);
-          if (!uri) {
-            log.warn('skipping schema without uri');
-            continue;
-          }
-
-          const key = uri.toString();
-          if (seenSchemaDxns.has(key)) {
-            log('skipping duplicate schema for echo registration', { uri: key });
-            continue;
-          }
-
-          seenSchemaDxns.add(key);
-          batch.push({ schema, dxnKey: key });
+    const previousDxns = new Set<string>();
+    const register = async (contributions: readonly AppCapabilities.Schema[]) => {
+      const seenSchemaDxns = new Set<string>();
+      const batch: { schema: Type.AnyEntity; dxnKey: string }[] = [];
+      for (const schema of contributions.flat()) {
+        const uri = Type.getURI(schema);
+        if (!uri) {
+          log.warn('skipping schema without uri');
+          continue;
         }
 
-        const toRegister = batch.filter(({ dxnKey }) => !previousDxns.has(dxnKey));
-
-        await client.addTypes(toRegister.map(({ schema }) => schema));
-        for (const { dxnKey } of toRegister) {
-          previousDxns.add(dxnKey);
+        const key = uri.toString();
+        if (seenSchemaDxns.has(key)) {
+          log('skipping duplicate schema for echo registration', { uri: key });
+          continue;
         }
-      },
-      { immediate: true },
-    );
+
+        seenSchemaDxns.add(key);
+        batch.push({ schema, dxnKey: key });
+      }
+
+      const toRegister = batch.filter(({ dxnKey }) => !previousDxns.has(dxnKey));
+
+      await client.addTypes(toRegister.map(({ schema }) => schema));
+      for (const { dxnKey } of toRegister) {
+        previousDxns.add(dxnKey);
+      }
+    };
+
+    // Awaited in the body so the module does not complete until the first batch is registered:
+    // `SchemaRegistered` is the ordering guarantee consumers depend on, and a subscription
+    // callback nobody awaits would only promise that a subscriber exists.
+    yield* Effect.tryPromise(() => register(schemas.get()));
+
+    // `previousDxns` is already populated, so the immediate pass is a no-op and only subsequent
+    // contributions (a plugin enabled later) register here.
+    const cancel = registry.subscribe(schemas.atom, register, { immediate: true });
 
     yield* Effect.addFinalizer(() => Effect.sync(() => cancel()));
-    return [];
+    return Capability.contribute(ClientCapabilities.SchemaRegistered, true);
   }),
 );

@@ -36,6 +36,12 @@ export type TestAppOptions = {
    * Defaults to true.
    */
   registerFrameworkCapabilities?: boolean;
+  /**
+   * Completes when the host is idle, gating the Idle wave. Off-browser the real wait resolves
+   * immediately, so the wave lands before the test body runs; pass `Effect.never` to model a
+   * browser cold boot, where idle-gated modules are still inactive while the app is starting up.
+   */
+  whenIdle?: Effect.Effect<void>;
 };
 
 /**
@@ -114,6 +120,7 @@ export const createTestApp = async (opts: TestAppOptions): Promise<TestHarness> 
     setupEvents = [],
     autoStart = true,
     registerFrameworkCapabilities = true,
+    whenIdle,
   } = opts;
 
   const pluginLoader = (id: string) =>
@@ -123,7 +130,7 @@ export const createTestApp = async (opts: TestAppOptions): Promise<TestHarness> 
       return { plugin };
     });
 
-  const manager = PluginManager.make({ pluginLoader, plugins, enabled });
+  const manager = PluginManager.make({ pluginLoader, plugins, enabled, whenIdle });
 
   if (registerFrameworkCapabilities) {
     manager.capabilities.contribute({
