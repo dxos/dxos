@@ -445,12 +445,17 @@ const snippets = {
 // Table
 //
 
-export const insertTable = (view: EditorView) => {
+/**
+ * Inserts the table snippet at the start of the line holding `at` (default: the cursor).
+ * `at` is what lets the slash menu insert at the trigger it just consumed rather than wherever the
+ * selection happens to sit, so both entry points produce the same table.
+ */
+export const insertTable = (view: EditorView, at?: number) => {
   const {
     selection: { main },
     doc,
   } = view.state;
-  const { number } = doc.lineAt(main.anchor);
+  const { number } = doc.lineAt(at ?? main.anchor);
   const { from } = doc.line(number);
 
   snippets.table(view, null, from, from);
