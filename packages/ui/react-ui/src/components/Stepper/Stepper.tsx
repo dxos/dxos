@@ -167,8 +167,7 @@ const Step = ({ index, step, state, selected, indeterminate, options, onClick }:
           onClick={onClick}
         />
       ) : (
-        // A bare div maps to `generic`, where ARIA prohibits naming and the label is discarded; the
-        // circle is a graphic with a text alternative, which is what `img` describes.
+        // A bare div maps to `generic`, where ARIA discards the label.
         <div role='img' aria-label={label} className={tx('stepper.step', { state, selected, spinning })} />
       )}
       {spinning && <Notch className={tx('stepper.notch', { state })} />}
