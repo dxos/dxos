@@ -17,6 +17,7 @@ import { EditorView, type ViewUpdate, keymap } from '@codemirror/view';
 import { type SyntaxNode, type SyntaxNodeRef } from '@lezer/common';
 
 import { debounceAndThrottle } from '@dxos/async';
+import { trim } from '@dxos/util';
 
 // Markdown refs:
 // https://github.github.com/gfm
@@ -421,23 +422,15 @@ const skipMarkers = (pos: number, tree: SyntaxNode, dir: -1 | 1, limit?: number)
 
 // TODO(burdon): Define and trigger snippets for codeblock, table, etc.
 const snippets = {
-  codeblock: snippet(
-    [
-      //
-      '```#{}',
-      '',
-      '```',
-    ].join('\n'),
-  ),
+  codeblock: snippet(['```#{}', '', '```'].join('\n')),
   table: snippet(
-    [
-      //
-      '| #{A}  | #{B}  | #{C}  |',
-      '| ---- | ---- | ---- |',
-      '| #{A1} | #{B1} | #{C1} |',
-      '| #{A2} | #{B2} | #{C2} |',
-      '',
-    ].join('\n'),
+    trim`
+      | #{C-1} | #{C-2} | #{C-3} |
+      | ---- | ---- | ---- |
+      | #{A-1} | #{B-1} | #{C-1} |
+      | #{A-2} | #{B-2} | #{C-2} |
+      | #{A-3} | #{B-3} | #{C-3} |
+    ` + '\n',
   ),
 };
 
@@ -1047,6 +1040,7 @@ export const toggleBlockquote: StateCommand = (target) => {
 export const addCodeblock: StateCommand = (target) => {
   const { state, dispatch } = target;
   const { selection } = state;
+
   // If on a blank line, use the code block snippet.
   if (selection.ranges.length === 1 && selection.main.empty) {
     const { head } = selection.main;
