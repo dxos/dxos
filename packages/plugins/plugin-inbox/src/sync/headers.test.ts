@@ -62,10 +62,23 @@ describe('parseFromHeader', () => {
     expect(parseFromHeader('rich+news@mail.braneframe.com')).toEqual({ email: 'rich+news@mail.braneframe.com' });
   });
 
+  test('whitespace inside the brackets is padding, not part of the address', () => {
+    expect(parseFromHeader('Chris < chris@caretoyouhealth.com >')).toEqual({
+      name: 'Chris',
+      email: 'chris@caretoyouhealth.com',
+    });
+  });
+
   test('undefined where there is no address to find', () => {
     expect(parseFromHeader('')).toBeUndefined();
     expect(parseFromHeader('Chris')).toBeUndefined();
     expect(parseFromHeader('undisclosed-recipients:;')).toBeUndefined();
     expect(parseFromHeader('Chris <not-an-address>')).toBeUndefined();
+  });
+
+  test('undefined for a bracketed value that is not a single address', () => {
+    expect(parseFromHeader('Chris <not an@example.com>')).toBeUndefined();
+    expect(parseFromHeader('Chris <a@b@c.com>')).toBeUndefined();
+    expect(parseFromHeader('not an@example.com')).toBeUndefined();
   });
 });

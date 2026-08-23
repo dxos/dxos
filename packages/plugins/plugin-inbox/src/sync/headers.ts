@@ -19,10 +19,8 @@
   ________________________________________________________________________________\n
 */
 
-/** The address inside angle brackets, with any trailing RFC 5322 comment ignored. */
-const NAME_ADDR = /^(.*?)<([^<>]+@[^<>]+)>\s*(?:\([^)]*\)\s*)?$/;
+const NAME_ADDR = /^(.*?)<\s*([^<>@\s]+@[^<>@\s]+)\s*>\s*(?:\([^)]*\)\s*)?$/;
 
-/** A bare address with no brackets, e.g. `chris@example.com`, also ignoring a trailing comment. */
 const ADDR_SPEC = /^([^<>@\s]+@[^<>@\s]+?)\s*(?:\([^)]*\)\s*)?$/;
 
 const unquote = (value: string): string => value.replace(/^"(.*)"$/s, '$1').replace(/^'(.*)'$/s, '$1');

@@ -162,7 +162,7 @@ const getUrl = (userId: string, messageId?: string, params?: Record<string, any>
  */
 // Kept in step with `parseFromHeader` in @dxos/plugin-inbox; a template cannot import from it.
 const parseFromHeader = (value: string): { name?: string; email: string } | undefined => {
-  const NAME_ADDR = /^(.*?)<([^<>]+@[^<>]+)>\s*(?:\([^)]*\)\s*)?$/;
+  const NAME_ADDR = /^(.*?)<\s*([^<>@\s]+@[^<>@\s]+)\s*>\s*(?:\([^)]*\)\s*)?$/;
   const ADDR_SPEC = /^([^<>@\s]+@[^<>@\s]+?)\s*(?:\([^)]*\)\s*)?$/;
   const unquote = (str: string) => str.replace(/^"(.*)"$/s, '$1').replace(/^'(.*)'$/s, '$1');
 

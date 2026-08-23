@@ -90,6 +90,7 @@ export const Stepper = composable<HTMLDivElement, StepperProps>(
               />
             )}
             <Step
+              index={index}
               step={stepAt(steps, index)}
               state={stepState(index, shown, handover, error)}
               selected={selected === index}
@@ -131,6 +132,7 @@ const Connector = ({ fraction, error, options }: ConnectorProps) => {
 };
 
 type StepProps = {
+  index: number;
   step: Step;
   state: StepState;
   selected?: boolean;
@@ -140,8 +142,11 @@ type StepProps = {
 };
 
 /** One stage: a circle, ringed by a spinning notch while it runs uncounted. */
-const Step = ({ step, state, selected, indeterminate, options, onClick }: StepProps) => {
+const Step = ({ index, step, state, selected, indeterminate, options, onClick }: StepProps) => {
   const { tx } = useThemeContext();
+  // A circle carries no text, and an anonymous plan supplies no label, so the position is the only
+  // name the control can be given.
+  const label = step.label?.trim() || `Step ${index + 1}`;
   const spinning = state === 'active' && !!indeterminate;
 
   return (
@@ -156,13 +161,13 @@ const Step = ({ step, state, selected, indeterminate, options, onClick }: StepPr
         // key handler of its own; selection toggles, which is what `aria-pressed` describes.
         <button
           type='button'
-          aria-label={step.label}
+          aria-label={label}
           aria-pressed={!!selected}
           className={tx('stepper.step', { state, selected, interactive: true, spinning })}
           onClick={onClick}
         />
       ) : (
-        <div aria-label={step.label} className={tx('stepper.step', { state, selected, spinning })} />
+        <div aria-label={label} className={tx('stepper.step', { state, selected, spinning })} />
       )}
       {spinning && <Notch className={tx('stepper.notch', { state })} />}
     </div>
