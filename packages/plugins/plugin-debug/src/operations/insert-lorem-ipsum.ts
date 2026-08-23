@@ -8,16 +8,10 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
+import { random } from '@dxos/random';
 import { insertAtCursor } from '@dxos/ui-editor';
-import { trim } from '@dxos/util';
 
 import { DebugOperation } from '#types';
-
-const LOREM_IPSUM = trim`
-  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-  labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris
-  nisi ut aliquip ex ea commodo consequat.
-`;
 
 const handler: Operation.WithHandler<typeof DebugOperation.InsertLoremIpsum> = DebugOperation.InsertLoremIpsum.pipe(
   Operation.withHandler(
@@ -31,7 +25,7 @@ const handler: Operation.WithHandler<typeof DebugOperation.InsertLoremIpsum> = D
         return;
       }
 
-      insertAtCursor(entry.view, head, LOREM_IPSUM);
+      insertAtCursor(entry.view, head, random.lorem.paragraph({ min: 2, max: 8 }));
     }),
   ),
 );
