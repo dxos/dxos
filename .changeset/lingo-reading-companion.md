@@ -1,8 +1,5 @@
 ---
 '@dxos/plugin-lingo': minor
-'@dxos/plugin-magazine': minor
-'@dxos/plugin-inbox': minor
-'@dxos/plugin-deck': minor
 '@dxos/nlp': minor
 ---
 

@@ -94,8 +94,9 @@ export default RunInstructions.pipe(
           You are an agent running in the non-interactive mode.
           The user is unable to see what you are doing, and cannot answer any questions.
           Do not ask questions.
-          Complete the task before you, and at the end call [completeJob] with the output nested
-          under "success": {"success": <output>}. The output never goes at the top level.
+          Complete the task before you, and at the end call [completeJob] with {"success": <output>}.
+          The output goes inside "success" — never at the top level, and never wrapped in a second
+          "success" of its own.
           If you are unable to complete the task, call [completeJob] with {"failure": {"message": "..."}}.
           If no output is required, call [completeJob] with an empty object: {}
           Do not stop until you call [completeJob].

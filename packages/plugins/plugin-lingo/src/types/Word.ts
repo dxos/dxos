@@ -103,9 +103,16 @@ export const applyReview = (progress: Progress | undefined, correct: boolean, no
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** True when the word is due for review (never-drilled words are always due). */
+/**
+ * True when the word is due for review (never-drilled words are always due).
+ *
+ * A word that has passed the last box has graduated and never comes due again: `applyReview` still
+ * stamps a `dueAt` on it, since the last interval is what a card in the final box would wait, but
+ * reaching `BOX_COUNT` is what takes it out of the drill.
+ */
 export const isDue = (word: Word, now: Date): boolean =>
-  !word.progress?.dueAt || new Date(word.progress.dueAt).getTime() <= now.getTime();
+  (word.progress?.box ?? 0) < BOX_COUNT &&
+  (!word.progress?.dueAt || new Date(word.progress.dueAt).getTime() <= now.getTime());
 
 /** Ratio of correct answers, or `undefined` before the first review. */
 export const getScore = (word: Word): number | undefined =>

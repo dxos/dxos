@@ -17,15 +17,21 @@ export const Level = Schema.Literals(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']);
 export type Level = Schema.Schema.Type<typeof Level>;
 
 /**
- * A language the user is studying.
+ * A language pairing the user reads in: the language being studied, and the one it is rendered into.
  *
  * `code` is the study language -- the one the source is written in, inferred rather than chosen --
  * and `baseCode` is the target the reader selects. A Spanish-speaker learning German and an
  * English-speaker learning German hold two distinct objects and never share a word list by accident.
+ *
+ * `name` names the TARGET, not the study language: it is built from the option the reader picked
+ * (`ReaderArticle.handleRun`) and read back as the target in prompts (`translate-passage`). The
+ * study language arrives as a bare tag, since the model infers it and no name is ever supplied.
  */
 export class Language extends Type.makeObject<Language>(DXN.make('org.dxos.type.lingo.language', '0.1.0'))(
   Schema.Struct({
-    name: Schema.String.pipe(Schema.annotate({ title: 'Name', description: 'Display name (e.g. "Spanish").' })),
+    name: Schema.String.pipe(
+      Schema.annotate({ title: 'Name', description: 'Display name of the target language (e.g. "Spanish").' }),
+    ),
     code: Schema.String.pipe(
       Schema.annotate({ title: 'Code', description: 'BCP-47 tag of the language being studied (e.g. "es").' }),
     ),
@@ -92,3 +98,12 @@ export const instanceOf = (value: unknown): value is Language => Obj.instanceOf(
 
 /** The language translations are rendered in, falling back to {@link DEFAULT_BASE_CODE}. */
 export const getBaseCode = (language: Language): string => language.baseCode ?? DEFAULT_BASE_CODE;
+
+/**
+ * Display name for a BCP-47 code, falling back to the code itself.
+ *
+ * Models are told which languages they are working between by name, not by tag: a prompt saying
+ * "translate into en" reads as an instruction about a token rather than about English.
+ */
+export const getDisplayName = (code: string): string =>
+  POPULAR.find((entry) => entry.code === code)?.name ?? code;

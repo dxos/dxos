@@ -244,7 +244,7 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
 
     db.remove(stored);
     for (const relation of relations) {
-      if (Relation.getSource(relation) === language && Relation.getTarget(relation)?.id === subject.id) {
+      if (Relation.getSource(relation)?.id === language.id && Relation.getTarget(relation)?.id === subject.id) {
         db.remove(relation);
       }
     }

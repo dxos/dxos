@@ -54,8 +54,15 @@ export const alignSegments = (source: string, raw: readonly RawSegment[], target
   let nextId = 0;
 
   const walk = (entries: readonly RawSegment[], bounds: Range, targetBounds: Range | undefined, parent?: string) => {
+    // Once for the whole sibling run, not once per entry: siblings are ordered and non-overlapping,
+    // so each starts where the last ended. Re-seeking per entry defeats the cursor's only job —
+    // repeated wording ("Go. Go.") would map every sibling onto the first occurrence.
+    sourceCursor.seek(bounds.start);
+    if (targetCursor && targetBounds) {
+      targetCursor.seek(targetBounds.start);
+    }
+
     for (const entry of entries) {
-      sourceCursor.seek(bounds.start);
       const range = sourceCursor.take(entry.text, bounds.end);
       if (!range) {
         continue;
@@ -65,7 +72,6 @@ export const alignSegments = (source: string, raw: readonly RawSegment[], target
       // unquotable counterpart degrades to a source-only segment rather than dropping the segment.
       let targetRange: Range | undefined;
       if (targetCursor && targetBounds && entry.translation) {
-        targetCursor.seek(targetBounds.start);
         targetRange = targetCursor.take(entry.translation, targetBounds.end);
       }
 
@@ -83,6 +89,12 @@ export const alignSegments = (source: string, raw: readonly RawSegment[], target
 
       if (entry.children?.length) {
         walk(entry.children, range, targetRange, id);
+        // The nested walk left both cursors somewhere inside this entry; the next sibling begins
+        // after it, so hand the parent's position back rather than rescanning its own children.
+        sourceCursor.seek(range.end);
+        if (targetCursor && targetRange) {
+          targetCursor.seek(targetRange.end);
+        }
       }
     }
   };

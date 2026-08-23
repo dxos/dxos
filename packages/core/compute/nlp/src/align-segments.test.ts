@@ -11,6 +11,59 @@ import { type RawSegment, segmentAt } from './Segmentation';
 const slice = (text: string, range: { start: number; end: number }) => text.slice(range.start, range.end);
 
 describe('alignSegments', () => {
+  // Repeated wording is exactly what the forward cursor exists for: two identical siblings must land
+  // on successive occurrences, not both on the first. Seeking per entry rather than per sibling run
+  // collapsed them, putting every decoration over the opening sentence.
+  test('maps repeated siblings to successive occurrences', ({ expect }) => {
+    const source = 'Go. Go. Go.';
+    const raw: RawSegment[] = [
+      { kind: 'sentence', text: 'Go.' },
+      { kind: 'sentence', text: 'Go.' },
+      { kind: 'sentence', text: 'Go.' },
+    ];
+
+    const { segments } = alignSegments(source, raw);
+    expect(segments.map((segment) => segment.source)).toEqual([
+      { start: 0, end: 3 },
+      { start: 4, end: 7 },
+      { start: 8, end: 11 },
+    ]);
+  });
+
+  // A nested walk leaves the cursor inside the child it just placed; the sibling after it starts
+  // beyond the parent, so the parent's end has to be handed back or the next repeat is missed.
+  test('resumes after a parent whose children were walked', ({ expect }) => {
+    const source = 'The cat sat. The cat sat.';
+    const raw: RawSegment[] = [
+      { kind: 'sentence', text: 'The cat sat.', children: [{ kind: 'vocab', text: 'cat' }] },
+      { kind: 'sentence', text: 'The cat sat.', children: [{ kind: 'vocab', text: 'cat' }] },
+    ];
+
+    const { segments } = alignSegments(source, raw);
+    const sentences = segments.filter((segment) => segment.kind === 'sentence');
+    const vocab = segments.filter((segment) => segment.kind === 'vocab');
+    expect(sentences.map((segment) => segment.source.start)).toEqual([0, 13]);
+    // Each `cat` sits inside its own sentence, not both inside the first.
+    expect(vocab.map((segment) => slice(source, segment.source))).toEqual(['cat', 'cat']);
+    expect(vocab[1].source.start).toBeGreaterThan(sentences[1].source.start);
+  });
+
+  // The translation is scanned by its own cursor, so it needs the same per-run seek.
+  test('maps repeated siblings on the translation side too', ({ expect }) => {
+    const source = 'Ja. Ja.';
+    const target = 'Yes. Yes.';
+    const raw: RawSegment[] = [
+      { kind: 'sentence', text: 'Ja.', translation: 'Yes.' },
+      { kind: 'sentence', text: 'Ja.', translation: 'Yes.' },
+    ];
+
+    const { segments } = alignSegments(source, raw, target);
+    expect(segments.map((segment) => segment.target)).toEqual([
+      { start: 0, end: 4 },
+      { start: 5, end: 9 },
+    ]);
+  });
+
   test('assigns exact ranges and nests children under their parent', ({ expect }) => {
     const source = 'The dog barks. The cat sleeps.';
     const raw: RawSegment[] = [
@@ -108,10 +161,9 @@ describe('segmentAt', () => {
         {
           kind: 'sentence',
           text: 'The dog barks loudly.',
-          children: [
-            { kind: 'clause', text: 'barks loudly' },
-            { kind: 'vocab', text: 'loudly' },
-          ],
+          // Vocab nests INSIDE its clause, as `toRawSegments` builds it — siblings never overlap,
+          // which is what lets the aligner scan each sibling run forward without rewinding.
+          children: [{ kind: 'clause', text: 'barks loudly', children: [{ kind: 'vocab', text: 'loudly' }] }],
         },
       ],
     },

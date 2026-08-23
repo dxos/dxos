@@ -67,9 +67,10 @@ const handler: Operation.WithHandler<typeof LingoOperation.AnalyzeText> = LingoO
 
         const segmentation = yield* segmentText(text, {
           target: translation,
-          // `code` is the source (inferred) and `name`/`baseCode` the target the reader chose;
-          // passing the target's name as the source had the analysis describe the wrong side.
-          sourceLanguage: language.code || undefined,
+          // Both options want a display NAME, not a tag: `segmentText` puts them in the prompt, and
+          // "the source is in ja" reads as an instruction about a token. `code` is the source
+          // (inferred, and unnamed — hence the lookup); `name` already names the target.
+          sourceLanguage: language.code ? Language.getDisplayName(language.code) : undefined,
           targetLanguage: language.name,
           readingSystem: Language.getReadingSystem(language.code),
         });
