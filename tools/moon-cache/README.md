@@ -78,7 +78,7 @@ Mind the spelling of that value. moon accepts `maxSize: 'not-a-size'` without a 
 level, and runs unbounded. A typo here reads exactly like a working bound. `MOON_LOG=debug` is how
 you check the whole arrangement is live; it names the shared directory before anything else happens:
 
-```
+```text
 DEBUG moon_app::session  In a VCS worktree, using a shared cache directory for blobs and manifests  dir=Some("/Users/you/Code/dxos/.moon/cache")
 DEBUG moon_cas::cas      Creating CAS store  root="/Users/you/Code/dxos/.moon/cache/blobs"
 ```
