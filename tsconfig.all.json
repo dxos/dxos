@@ -433,6 +433,9 @@
       "path": "packages/plugins/plugin-file/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-file-system/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-freeq/tsconfig.json"
     },
     {
@@ -500,9 +503,6 @@
     },
     {
       "path": "packages/plugins/plugin-native/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/plugin-native-filesystem/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-navtree/tsconfig.json"
