@@ -437,20 +437,22 @@ projects:
     tasks: packages/reflect/deus/TASKS.md
     design: packages/reflect/deus/docs/DESIGN.md
     prs: []
-    resume: "Phase 1 = Deus.QA, a QA dialect so one .mdl serves a human tester and an agent tester. DESIGN
-      AGREED 2026-08-22, NOT yet materialized: `flow QA-n` blocks live in a `## QA` section of each PLUGIN.mdl
-      (composer-app/APP.mdl for cross-plugin journeys); every step needs `do:` + `expect:` (keeps it
-      human-runnable) with optional `invoke:`/`assert:`/`capture:`; `op@1.1` adds `key?: NSID` and populates the
-      existing `requires:` from the code's `services:`; consent for mutating runs is per-FLOW, not per-operation.
-      Spike flow QA-1 authored in plugin-markdown/PLUGIN.mdl but NOT YET RUN. Two findings already: the spec's
-      single `op create` was hiding TWO runtime ops (org.dxos.function.markdown.create with Database.Service vs
-      org.dxos.plugin.markdown.operation.create with Capability.Service), and steps 1-2 cannot be separate port
-      snippets because a live ECHO object cannot cross the serialization boundary. STILL TO BUILD: lang/qa.mdl,
-      the DESIGN.md Deus.QA section, the running-qa-flows skill, and the agent-startable debug port
-      (DX_DEBUG_PORT -> vite define -> plugin-debug auto-start + temp/debug-port.json sidecar) — that last one
-      reverses an explicit invariant in debug-port-controller.ts and is AWAITING THE USER'S GO. Major project
-      goal recorded in TASKS.md: a Claude routine that (a) updates a PLUGIN.mdl from source, (b) proposes
-      candidate flows, (c) runs the plan."
+    resume: "Phase 1 (Deus.QA) BUILT: lang/qa.mdl defines flow + step with nine execution rules, the
+      DESIGN.md section draws the test/flow boundary, .agents/skills/running-qa-flows is the agent-side
+      contract, /dxos:qa (dxos plugin, scripts/list-flows.mjs) lists and runs them, and the
+      agent-startable debug port works end to end (DX_DEBUG_PORT -> vite define -> main.tsx ->
+      temp/debug-port.json sidecar; started from main.tsx, NOT plugin-debug, which a plain local serve
+      leaves disabled). markdown QA-1 passes 4/4 and has been run three times; markdown QA-2/QA-3 and
+      chess QA-1 are authored but status: unverified. Also landed on this branch: the MenuExtension
+      capability letting plugins contribute slash-menu commands (one group per plugin, entries name an
+      Operation not a callback) with plugin-debug''s InsertLoremIpsum as the first contributor, and two
+      table-insert fixes in ui-editor. KEY FINDINGS, all in TASKS.md: the pass rate never told us
+      anything (QA-1 was 4/4 while two of four asserts were vacuous); requires: cannot predict
+      runnability so the runner always uses the invoker with a spaceId; any part of a flow without a
+      dual face diverges (cleanup was prose and the two actors picked different mechanisms); and the
+      op key gap is everywhere — chess declares six operations of which one has a runtime counterpart
+      and startGame has none. NEXT: run the three unverified flows, then routine part (a) (reconcile a
+      PLUGIN.mdl against Operation.make), then composer-app/APP.mdl."
 ended:
   - name: task-planning-skill
     user: burdon

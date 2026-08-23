@@ -165,9 +165,7 @@ export default defineConfig((env) => ({
     // coordinator instead of attaching to a stale-code instance (SharedWorkers are keyed by
     // URL + name). Empty in production builds — the name must stay stable across deploys.
     __DX_DEV_SERVER_BOOT_ID__: JSON.stringify(env.command === 'serve' ? Date.now().toString(36) : ''),
-    // Session id for the agent debug port, which plugin-debug starts on activation when this is
-    // non-empty. Hardcoded empty for `build` — the port is arbitrary eval, so the flag must not be
-    // reachable from a deployed origin no matter what the build environment had set.
+    // Hardcoded empty for `build`: the port is arbitrary eval and must not reach a deployed origin.
     __DX_DEBUG_PORT_SESSION__: JSON.stringify(env.command === 'serve' ? debugPortSession : ''),
   },
   server: {

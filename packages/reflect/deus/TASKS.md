@@ -19,7 +19,11 @@ A Claude routine (skill + command) that closes the loop for any plugin:
 
 - [ ] **(a) Update the plugin's `PLUGIN.mdl`** from its source — reconcile `type`/`op`/`component`
       blocks against the code, backfill `key:` and `requires:` on every `op` from its
-      `Operation.make({ meta.key, services })`.
+      `Operation.make({ meta.key, services })`. **Blocked on a binding decision first:** the mapping
+      is not one-to-one. markdown's single `op create` covers two runtime operations with different
+      keys and services, and chess's `startGame` has no runtime counterpart at all. A single
+      `key?: NSID` cannot express either. Split the spec operation, or define one-to-many binding
+      semantics, before writing the reconciler.
 - [ ] **(b) Propose candidate flows** — read `feat`/`req`/`test` blocks with no `covers:` pointing
       at them and draft flows that would exercise them, for human triage.
 - [ ] **(c) Run the plan** — execute selected flows against a live Composer through the debug

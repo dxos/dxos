@@ -73,9 +73,14 @@ against unmet preconditions reports failures that belong to the fixture, not the
 **Check that the flow's own artifacts are absent, whether or not `given` says so.** A previous run
 whose `cleanup` was skipped leaves objects behind, and an existence-shaped assert
 (`some((o) => o.name === 'QA Notes')`) is then already true before step 1 — the step reports pass
-having done nothing. Run the flow's `cleanup` first if that is what it takes, and say you did.
-Then prefer identity-shaped asserts (`some((o) => o.id === $created.object.id)`), which discriminate
-even on a dirty fixture; where you meet an existence-shaped one, fix it per §7.
+having done nothing.
+
+**Never delete an artifact this run did not create.** A same-named object may be the user's, and a
+name match is not evidence of ownership. Abort and say what is in the way; the user decides whether
+to remove it. Only artifacts captured during the current run are yours to clean up (§6).
+
+Prefer identity-shaped asserts (`some((o) => o.id === $created.object.id)`), which discriminate even
+on a dirty fixture; where you meet an existence-shaped one, fix it per §7.
 
 A fresh dev profile boots with an identity and a default space already created. Verify rather than
 assume:
@@ -146,7 +151,7 @@ For a view-holding object the last-but-one segment is the view's target type rat
 
 A table, one row per step, most useful column last:
 
-```
+```text
 QA-1  Create, place, open and edit a document          4/4 pass
   1       Create the document          pass
   2       Place it in the collection   pass    (coalesced with 1)
@@ -154,14 +159,16 @@ QA-1  Create, place, open and edit a document          4/4 pass
   4       Fix the typo                 FAIL    expected "There is a typo.", DOM still has "tyop"
 ```
 
-One row per step, in `steps` order, labelled with the step's `name`. Report a failure by flow and
-step number (`QA-1.4`), or by its `id` where it declares one (`QA-1.open`) — an id survives a step
-being inserted ahead of it, a position does not. Give the observed value next to the expected one.
-Never report a step as passing because the invocation returned without throwing.
+One row per step, in `steps` order, labelled with the step's `name`. Report a failure as
+`QA-<flow>.<step>` — the position (`QA-1.4`), or the step's `id` where it declares one
+(`QA-1.open`), preferring the id since it survives a step being inserted ahead of it. This is
+Execution Rule 9 in the dialect; the two must not diverge. Give the observed value next to the
+expected one, and never report a step as passing because the invocation returned without throwing.
 
 ## 6. Cleanup
 
-`cleanup` is a step list like any other — run it through operations, not raw database calls. The
+`cleanup` removes **only what this run created** — the objects it captured, by identity. It is a
+step list like any other, run through operations, not raw database calls. The
 difference is not pedantry: `space.db.remove` deletes the object but leaves a plank pointing at it,
 and **the user cannot close a plank whose object no longer exists**. `space.removeObjects` unlinks
 from the collection and closes what was open, reporting it as `wasActive`.

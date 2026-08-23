@@ -179,8 +179,9 @@ op open
   key: org.dxos.function.markdown.open
   desc: Reads the current contents of a markdown Document.
   input: { doc: Ref<Document> }
-  output: string
+  output: { content: string }
   effects: [echo:read]
+  requires: [Database.Service]
 
 op update
   key: org.dxos.function.markdown.update
@@ -392,26 +393,28 @@ flow QA-1: Create, place, open and edit a document
   status: passing            # 2026-08-23, 3 runs: by hand, via the skill, and after the steps: rewrite
   given:
     - an identity exists
-    - a space is open and contains at least one collection
-    - no document named "QA Notes" exists (run `cleanup` first if a previous run left one)
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - no document named "QA Notes" exists — ABORT rather than deleting one this flow did not create
   steps:
     - name: Create the document
       do: In the navtree, click + on a collection and choose Markdown. Name it "QA Notes".
       invoke: [op:createMarkdown] { name: "QA Notes", content: "# QA Notes\n\nThere is a tyop.\n" }
       capture: created
-      expect: a detached Document named "QA Notes" is returned; nothing is in the navtree yet
+      expect: a Document named "QA Notes" now exists with that body
       assert: return !!$created.object
 
     - name: Place it in the collection
-      do: (same gesture as the previous step — the navtree create action places the document for you)
+      do: (no separate gesture — the navtree create action places it; the agent path splits the
+        one gesture into a factory call and a placement)
       invoke: org.dxos.plugin.space.operation.addObject { object: $created.object, target: $given.collection }
       capture: added
       expect: "QA Notes" appears as a row under the collection in the navtree
-      assert: return (await space.db.query(dxos.Filter.everything()).run()).some((o) => o.id === $created.object.id)
+      assert: |
+        return $given.collection.objects.some((ref) => ref.target?.id === $created.object.id);
       note: |
-        Coalesced with the previous step into ONE port snippet — `created.object` is a live ECHO
-        object and the port serializes between snippets. Step granularity is the human's; batching
-        is the runner's concern.
+        Coalesced with the previous step — `created.object` is live and cannot cross a snippet
+        boundary. Only serializable values survive one; `$created.object.id` is a scalar and does.
 
     - name: Open it
       id: open

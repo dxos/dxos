@@ -20,12 +20,7 @@ export type DebugPortStartOptions = {
   /** Resolved at each command so a late-booting client is picked up; defaults to the mounted devtools hook. */
   scope?: () => DebugPortScope;
   origin?: string;
-  /**
-   * Use this id instead of minting one. Lets a caller that already knows the id — a dev server
-   * launched with the debug-port flag, which passes the same value to the page and to the agent —
-   * skip the copy-the-id handshake entirely. Callers that do not supply one still get a fresh
-   * random id per activation.
-   */
+  /** Use this id instead of minting one; callers that omit it get a fresh random id per activation. */
   session?: string;
   /** Additional sink for the loop's lines, for hosts with no log surface of their own (the recovery page). */
   onLog?: (line: string) => void;
@@ -82,12 +77,11 @@ const clearPersisted = (): void => {
 /**
  * Start/stop handle for the agent debug port.
  *
- * The port evaluates arbitrary code in the page, so activation is always a deliberate act, never a
- * default. Two gestures qualify, and nothing else starts it: flipping the switch in the running app,
- * or launching a **dev server** with the debug-port flag, which supplies {@link
- * DebugPortStartOptions.session} so the operator who started it already knows the id. The flag is
- * compiled out of production builds, so it cannot reach a deployed origin. Absent either gesture the
- * session id is regenerated per activation and nothing is persisted — a reload leaves it stopped.
+ * The port evaluates arbitrary code in the page, so activation is always a deliberate act: flipping
+ * the switch in the running app, or launching a dev server with the debug-port flag (compiled out of
+ * production builds, so it cannot reach a deployed origin). The flag's caller knows the session id
+ * up front only when it supplied `DX_DEBUG_PORT_SESSION`; with `DX_DEBUG_PORT` alone the id is
+ * generated and read back from `temp/debug-port.json`.
  */
 export interface DebugPortController {
   getStatus(): DebugPortStatus;

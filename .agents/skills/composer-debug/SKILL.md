@@ -192,11 +192,30 @@ const space = dxos.client.spaces.get().find((s) => s.properties?.name === 'My Sp
 const objects = await space.db.query(dxos.Filter.everything()).run();
 const collection = objects.find((o) => dxos.Obj.getTypename(o) === 'org.dxos.type.collection');
 
+// Gotcha 2's escape hatch, as a helper: exact key match, invoker, explicit spaceId.
+const invokeWithSpace = async (key, input) => {
+  const mgr = composer.manager;
+  const sets = mgr.capabilities.getAll({ identifier: 'org.dxos.app-framework.capability.operationHandler' });
+  const [def, ...rest] = sets.flatMap((set) =>
+    set.definitions().filter((d) => String(d.meta.key).replace(/^dxn:/, '') === key),
+  );
+  if (!def || rest.length) {
+    throw new Error(`expected exactly one operation for ${key}`);
+  }
+  const invoker = mgr.capabilities.get({ identifier: 'org.dxos.app-framework.capability.operationInvoker' });
+  const { data, error } = await invoker.invokePromise(def, input, { spaceId: space.id });
+  if (error) {
+    throw new Error(String(error));
+  }
+  return data;
+};
+
 const { object } = await composer.invoke('org.dxos.plugin.markdown.operation.create', {
   name: 'Notes',
   content: '# Notes\n',
 });
-await composer.invoke('org.dxos.plugin.space.operation.addObject', { object, target: collection });
+// `addObject` declares `Database.Service`, so it needs the invoker and a spaceId (gotcha 2).
+await invokeWithSpace('org.dxos.plugin.space.operation.addObject', { object, target: collection });
 await space.db.flush();
 
 // Verify placement rather than trusting the return.
@@ -221,7 +240,7 @@ You have to build that string — `addObject` does not return one (its output sc
 `{ id, object }`):
 
 ```js
-const added = await composer.invoke('org.dxos.plugin.space.operation.addObject', { object, target: collection });
+const added = await invokeWithSpace('org.dxos.plugin.space.operation.addObject', { object, target: collection });
 await space.db.flush();
 const path = `root/${space.id}/content/collections/${object.id}`;
 await composer.invoke('org.dxos.plugin.layout.operation.open', { subject: [path] });
