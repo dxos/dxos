@@ -3,7 +3,7 @@
 //
 
 import { randomUUID } from 'node:crypto';
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { type Plugin } from 'vite';
 
@@ -54,7 +54,19 @@ export const debugPortSidecarPlugin = (session: string, rootDir: string): Plugin
       // `listening` rather than the hook body: the port is unknown until the server binds, and an
       // agent that reads the file needs the URL to open, not just the id.
       server.httpServer?.once('listening', write) ?? write();
-      const remove = () => rmSync(file, { force: true });
+
+      // Only remove our own record. A restart overlaps — the outgoing server's exit handler runs
+      // after the incoming one has already written — and an unconditional unlink deletes the live
+      // server's file, leaving the agent with no session at all.
+      const remove = () => {
+        try {
+          if (JSON.parse(readFileSync(file, 'utf8')).session === session) {
+            rmSync(file, { force: true });
+          }
+        } catch {
+          // Already gone, or replaced by a server whose record we must not touch.
+        }
+      };
       server.httpServer?.once('close', remove);
       process.once('exit', remove);
     },
