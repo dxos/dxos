@@ -33,9 +33,14 @@ const TestLayer = AssistantTestLayer({
 
 describe('Magazine', () => {
   describe('composeInstructions', () => {
-    test('returns the default methodology when no topic is set', ({ expect }) => {
-      expect(Magazine.composeInstructions()).toBe(Magazine.DEFAULT_INSTRUCTIONS);
-      expect(Magazine.composeInstructions('   ')).toBe(Magazine.DEFAULT_INSTRUCTIONS);
+    // The methodology must never reference a Topic the prompt does not carry, or the agent has no
+    // honest outcome but failure (DX-1189).
+    test('never promises a Topic when none is set', ({ expect }) => {
+      for (const instructions of [Magazine.composeInstructions(), Magazine.composeInstructions('   ')]) {
+        expect(instructions.startsWith(Magazine.DEFAULT_INSTRUCTIONS)).toBe(true);
+        expect(instructions).not.toContain('## Topic');
+        expect(instructions).toContain('sets no Topic');
+      }
     });
 
     test('weaves the topic in under a Topic heading', ({ expect }) => {

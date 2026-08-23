@@ -3,7 +3,9 @@
 //
 
 import { describe, expect, it } from '@effect/vitest';
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
@@ -27,16 +29,18 @@ EntityId.dangerouslyDisableRandomness();
 // The agent finishes by calling `completeJob`; scripting that call drives the whole operation
 // without a live model, so what is asserted is the operation's own behaviour rather than the
 // model's. A scripted turn replaces the memoized conversation this file used to replay.
-const layerWithResult = (success: unknown) =>
+const layerWithToolCall = (input: unknown) =>
   AssistantTestLayer({
     operationHandlers: OperationHandlerSet.make(defaultAgentPrompt),
     types: [Chat.Chat, Message.Message, AiContext.Binding, Text.Text, Outline.Outline],
     aiService: ScriptedLanguageModel.scriptedAiService([
-      { parts: [ScriptedLanguageModel.toolCall('completeJob', { success })] },
+      { parts: [ScriptedLanguageModel.toolCall('completeJob', input)] },
       // The loop asks again once the tool result is fed back; a text-only turn stops it.
       { parts: [ScriptedLanguageModel.text('Done.')] },
     ]),
   });
+
+const layerWithResult = (success: unknown) => layerWithToolCall({ success });
 
 describe('RunInstructions', () => {
   it.effect(
@@ -100,6 +104,72 @@ describe('RunInstructions', () => {
         expect(decoded).toEqual({ name: 'Ada Lovelace', age: 36 });
       },
       Effect.provide(layerWithResult({ name: 'Ada Lovelace', age: 36 })),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'reports the failure when completeJob omits success with an explicit null',
+    Effect.fnUntraced(
+      function* (_) {
+        const instructions = yield* Database.add(
+          Instructions.make({
+            name: 'null-success-test',
+            text: 'Attempt the task and report failure via completeJob.',
+            output: Schema.String,
+            skills: [],
+          }),
+        );
+        yield* Database.flush();
+
+        // Models emit `null` rather than omitting a field; the tool must accept that instead of
+        // rejecting the parameters and forcing the agent to retry the completion signal (DX-1189).
+        const exit = yield* Operation.invoke(RunInstructions, {
+          instructions: Ref.make(instructions),
+          input: {},
+        }).pipe(Effect.exit);
+
+        // `Operation.invoke` types only `NoHandlerError`, so the operation's own PromptError
+        // surfaces as a defect.
+        expect(Exit.isFailure(exit)).toBe(true);
+        expect(String(Exit.isFailure(exit) && Cause.squash(exit.cause))).toContain('No topic was provided.');
+      },
+      Effect.provide(
+        layerWithToolCall({ success: null, failure: { message: 'No topic was provided.', description: null } }),
+      ),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'keeps the result when completeJob reports a failure alongside a success',
+    Effect.fnUntraced(
+      function* (_) {
+        const instructions = yield* Database.add(
+          Instructions.make({
+            name: 'both-branches-test',
+            text: 'Curate the input and call completeJob with the selection.',
+            output: Schema.Struct({ posts: Schema.Array(Schema.String) }),
+            skills: [],
+          }),
+        );
+        yield* Database.flush();
+
+        // A model that fills the unused branch with a placeholder rather than omitting it must not
+        // lose the work it completed (DX-1189).
+        const result = yield* Operation.invoke(RunInstructions, {
+          instructions: Ref.make(instructions),
+          input: {},
+        });
+
+        expect(result).toEqual({ posts: ['alpha'] });
+      },
+      Effect.provide(
+        layerWithToolCall({
+          success: { posts: ['alpha'] },
+          failure: { message: 'n/a', description: 'n/a' },
+        }),
+      ),
       TestHelpers.provideTestContext,
     ),
   );

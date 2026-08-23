@@ -96,6 +96,7 @@ export default RunInstructions.pipe(
           Do not ask questions.
           Complete the task before you, and at the end call [completeJob] with the output.
           If you are unable to complete the task, call [completeJob] with the failure reason.
+          Pass either the output or the failure reason, never both, and omit the field you do not use.
           If no output is required, call [completeJob] with an empty object: {}
           Do not stop until you call [completeJob].
         `;
@@ -184,32 +185,39 @@ const makePromptAgentToolkit = (options: {
 }) => {
   class PromptAgentToolkit extends Toolkit.make(
     Tool.make('completeJob', {
+      // Both fields accept an explicit `null`: models routinely emit `null` for a field they mean
+      // to omit, and a bare `Schema.optional` rejects that ("Expected object | undefined"), so the
+      // agent burns turns retrying the completion signal (DX-1189).
       parameters: Schema.Struct({
-        success: Schema.optional(options.output),
+        success: Schema.optional(Schema.NullOr(options.output)),
         failure: Schema.optional(
-          Schema.Struct({
-            message: Schema.String.annotate({
-              description: 'Short message describing the error.',
+          Schema.NullOr(
+            Schema.Struct({
+              message: Schema.String.annotate({
+                description: 'Short message describing the error.',
+              }),
+              description: Schema.optional(Schema.NullOr(Schema.String)).annotate({
+                description: 'Optional longer message describing in detail what went wrong',
+              }),
             }),
-            description: Schema.optional(Schema.String).annotate({
-              description: 'Optional longer message describing in detail what went wrong',
-            }),
-          }),
+          ),
         ),
       }),
     }),
   ) {}
   const layer = PromptAgentToolkit.toLayer({
     completeJob: Effect.fnUntraced(function* (result) {
-      if (result.failure) {
+      // A success payload wins over a failure reported alongside it: a model that fills the unused
+      // branch rather than omitting it would otherwise discard a job it actually completed (DX-1189).
+      if (result.success == null && result.failure) {
         yield* Deferred.fail(
           options.resultSink,
           new PromptError(result.failure.message, {
-            description: result.failure.description,
+            description: result.failure.description ?? undefined,
           }),
         );
       } else {
-        yield* Deferred.succeed(options.resultSink, result.success);
+        yield* Deferred.succeed(options.resultSink, result.success ?? undefined);
       }
     }),
   });
