@@ -35,7 +35,7 @@ const Edit = Schema.Struct({
 
 export const Bash = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.computer.bash'),
+    key: DXN.make('org.dxos.operation.computer.runBash'),
     name: 'Bash',
     icon: 'ph--terminal-window--regular',
     description: trim`
@@ -83,7 +83,7 @@ export const Bash = Operation.make({
 
 export const Edits = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.computer.edits'),
+    key: DXN.make('org.dxos.operation.computer.applyEdits'),
     name: 'Edits',
     icon: 'ph--pencil-simple--regular',
     description: trim`

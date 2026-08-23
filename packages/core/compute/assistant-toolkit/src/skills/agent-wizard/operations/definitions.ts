@@ -12,7 +12,7 @@ import { Agent } from '../../../types';
 
 export const AgentRules = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.assistantToolkit.agentRules'),
+    key: DXN.make('org.dxos.operation.assistantToolkit.getAgentRules'),
     name: 'Agent rules',
     description: 'Gets the rules for creating an agent.',
     icon: 'ph--book-open--regular',

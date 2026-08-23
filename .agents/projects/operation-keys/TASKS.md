@@ -28,13 +28,13 @@ Design: [DESIGN.md](./DESIGN.md)
 - [x] Domain is the PACKAGE (`@dxos/` and `plugin-` stripped, camelCased), verb-first, de-stuttered.
       90 keys renamed. `@dxos/plugin-assistant` keeps `assistant`; `@dxos/assistant-toolkit` becomes
       `assistantToolkit`, which is what resolves the two-packages-one-word case.
-- [ ] Lint rule `operation-key-shape` in `packages/common/eslint-plugin-rules`. Six checks are fully
-      mechanical now that the domain is the package: shape, domain-equals-package, no stutter, no
-      hyphen in a segment, literal-not-helper, and `com.example` for test-local files. Verb-first is
-      partial — enforce a small core verb list strictly and warn on anything outside it, rather than
-      maintaining a dictionary.
-- [ ] A verb must not end in a preposition. De-stuttering produced `tasks.convertTo` from
-      `convertToTask`: verb-first, no stutter, and meaningless. Fixed by hand to `tasks.convert`.
+- [x] Lint rule `operation-key-shape` in `packages/common/eslint-plugin-rules`, registered as an
+      ERROR in `.oxlintrc.json`, with a test per check. Enforces shape, domain-equals-package,
+      no stutter, verb-first against a core verb list, no dangling preposition, literal-not-helper,
+      and `com.example` for test-local files. A fixture is held to its root only — it names no
+      package, so it owns no domain and its shape is not worth a failing build.
+- [x] A verb must not end in a preposition — now a lint check. De-stuttering produced
+      `tasks.convertTo` from `convertToTask`: verb-first, no stutter, and meaningless.
 - [x] Regenerate memoized fixtures and [AUDIT.md](./AUDIT.md). 16 recordings re-cut in the two
       agent-runtime stores; every other store replayed unchanged, since its tools were not renamed.
 - [ ] 33 keys are still off-shape — test and example definitions that omit the domain segment

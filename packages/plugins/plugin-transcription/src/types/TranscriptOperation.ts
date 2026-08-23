@@ -118,7 +118,7 @@ export const SentenceNormalizationOutput = Schema.Struct({
 
 export const SentenceNormalization = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.transcription.sentenceNormalization'),
+    key: DXN.make('org.dxos.operation.transcription.normalizeSentence'),
     name: 'Sentence Normalization',
     description: 'Post process of transcription for sentence normalization',
     icon: 'ph--text-t--regular',

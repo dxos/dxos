@@ -17,7 +17,7 @@ import * as Sheet from './Sheet';
 const Axis = Schema.Union([Schema.Literal('row'), Schema.Literal('col')]);
 
 export const InsertAxis = Operation.make({
-  meta: { key: DXN.make('org.dxos.operation.sheet.axisInsert'), name: 'Insert Axis', icon: 'ph--plus--regular' },
+  meta: { key: DXN.make('org.dxos.operation.sheet.insertAxis'), name: 'Insert Axis', icon: 'ph--plus--regular' },
   input: Schema.Struct({
     model: Schema.Any,
     axis: Axis,
@@ -39,7 +39,7 @@ export type DropAxisOutput = Schema.Schema.Type<typeof DropAxisOutput>;
 
 export const DropAxis = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.sheet.axisDrop'),
+    key: DXN.make('org.dxos.operation.sheet.dropAxis'),
     name: 'Drop Axis',
     icon: 'ph--trash--regular',
   },

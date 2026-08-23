@@ -47,9 +47,9 @@ describe('toolName', () => {
     });
 
   test('strips the constant operation prefix and kebab-cases each segment', ({ expect }) => {
-    expect(Operation.toolName(makeOp('org.dxos.operation.compute.create'))).toBe('compute-create');
-    expect(Operation.toolName(makeOp('org.dxos.operation.compute.addArtifact'))).toBe('compute-add-artifact');
-    expect(Operation.toolName(makeOp('org.dxos.operation.assistantToolkit.runInstructions'))).toBe(
+    expect(Operation.toolNameFromKey('org.dxos.operation.compute.create')).toBe('compute-create');
+    expect(Operation.toolNameFromKey('org.dxos.operation.compute.addArtifact')).toBe('compute-add-artifact');
+    expect(Operation.toolNameFromKey('org.dxos.operation.assistantToolkit.runInstructions')).toBe(
       'assistant-toolkit-run-instructions',
     );
   });
@@ -57,11 +57,11 @@ describe('toolName', () => {
   // The name must not track display copy: that was what made rewording a label rename the tool.
   test('is independent of meta.name', ({ expect }) => {
     const op = Operation.make({
-      meta: { key: DXN.make('org.dxos.operation.compute.create'), name: 'Something Else Entirely' },
+      meta: { key: DXN.make('com.example.operation.compute.create'), name: 'Something Else Entirely' },
       input: Schema.Void,
       output: Schema.Void,
     });
-    expect(Operation.toolName(op)).toBe('compute-create');
+    expect(Operation.toolName(op)).toBe('com-example-operation-compute-create');
   });
 
   test('a key outside the prefix keeps every segment', ({ expect }) => {

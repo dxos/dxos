@@ -21,9 +21,9 @@ as tools.
 ## Summary
 
 - 422 operations; 129 bound into skills.
-- 32 keys are off the canonical `<root>.operation.<domain>.<verb>` shape — nearly all test and
-  example definitions that omit the domain segment (`com.example.operation.fib`). Tracked in
-  [TASKS.md](./TASKS.md); the `operation-key-shape` lint rule will make them fail rather than accumulate.
+- 32 keys are off the canonical `<root>.operation.<domain>.<verb>` shape — test and example
+  definitions that omit the domain segment (`com.example.operation.fib`), which the
+  `operation-key-shape` rule permits: a fixture names no package, so it owns no domain.
 
 ## Operations
 
@@ -41,12 +41,12 @@ Sorted with DXOS operations first and `com.example` fixtures last.
 | `org.dxos.operation.assistant.updateChatName`               | `@dxos/plugin-assistant`         | `types/AssistantOperation.ts`                                     | Update Chat Name                |       |
 | `org.dxos.operation.assistantToolkit.addArtifact`           | `@dxos/assistant-toolkit`        | `skills/project/operations/definitions.ts`                        | Add project artifact            | ✓     |
 | `org.dxos.operation.assistantToolkit.addContext`            | `@dxos/assistant-toolkit`        | `skills/chat-context/operations/definitions.ts`                   | Add to context                  | ✓     |
-| `org.dxos.operation.assistantToolkit.agentRules`            | `@dxos/assistant-toolkit`        | `skills/agent-wizard/operations/definitions.ts`                   | Agent rules                     | ✓     |
 | `org.dxos.operation.assistantToolkit.createAgent`           | `@dxos/assistant-toolkit`        | `skills/agent-wizard/operations/definitions.ts`                   | Create agent                    | ✓     |
 | `org.dxos.operation.assistantToolkit.delegateTask`          | `@dxos/assistant-toolkit`        | `skills/delegation/operations/definitions.ts`                     | Delegate task                   | ✓     |
 | `org.dxos.operation.assistantToolkit.delete`                | `@dxos/assistant-toolkit`        | `skills/memory/operations/definitions.ts`                         | Delete memory                   | ✓     |
 | `org.dxos.operation.assistantToolkit.enableSkills`          | `@dxos/assistant-toolkit`        | `skills/skill-manager/operations/definitions.ts`                  | Enable skills                   | ✓     |
 | `org.dxos.operation.assistantToolkit.fetch`                 | `@dxos/assistant-toolkit`        | `skills/websearch/operations/definitions.ts`                      | Fetch web page                  | ✓     |
+| `org.dxos.operation.assistantToolkit.getAgentRules`         | `@dxos/assistant-toolkit`        | `skills/agent-wizard/operations/definitions.ts`                   | Agent rules                     | ✓     |
 | `org.dxos.operation.assistantToolkit.getContext`            | `@dxos/assistant-toolkit`        | `skills/agent/operations/definitions.ts`                          | Get Agent Context               |       |
 | `org.dxos.operation.assistantToolkit.getCurrentDate`        | `@dxos/assistant-toolkit`        | `skills/alarm/operations/definitions.ts`                          | Get current date                | ✓     |
 | `org.dxos.operation.assistantToolkit.listArtifact`          | `@dxos/assistant-toolkit`        | `skills/project/operations/definitions.ts`                        | List project artifacts          | ✓     |
@@ -109,10 +109,9 @@ Sorted with DXOS operations first and `com.example` fixtures last.
 | `org.dxos.operation.commerce.runProviderSearch`             | `@dxos/plugin-commerce`          | `types/SearchOperation.ts`                                        | Run Provider Search             |       |
 | `org.dxos.operation.commerce.runSearch`                     | `@dxos/plugin-commerce`          | `types/SearchOperation.ts`                                        | Run Search                      |       |
 | `org.dxos.operation.commerce.setProviderTemplate`           | `@dxos/plugin-commerce`          | `types/SearchOperation.ts`                                        | Set Provider Template           | ✓     |
-| `org.dxos.operation.compute.create`                         | `@dxos/compute`                  | `Operation.test.ts`                                               | Something Else Entirely         |       |
 | `org.dxos.operation.compute.createItem`                     | `@dxos/plugin-sample`            | `types/SampleOperation.ts`                                        | Create Sample Item              |       |
-| `org.dxos.operation.computer.bash`                          | `@dxos/plugin-computer`          | `types/ComputerOperation.ts`                                      | Bash                            | ✓     |
-| `org.dxos.operation.computer.edits`                         | `@dxos/plugin-computer`          | `types/ComputerOperation.ts`                                      | Edits                           | ✓     |
+| `org.dxos.operation.computer.applyEdits`                    | `@dxos/plugin-computer`          | `types/ComputerOperation.ts`                                      | Edits                           | ✓     |
+| `org.dxos.operation.computer.runBash`                       | `@dxos/plugin-computer`          | `types/ComputerOperation.ts`                                      | Bash                            | ✓     |
 | `org.dxos.operation.connector.createConnection`             | `@dxos/plugin-connector`         | `types/ConnectorOperation.ts`                                     | Create Connection               |       |
 | `org.dxos.operation.crm.attachImage`                        | `@dxos/plugin-crm`               | `types/CrmOperation.ts`                                           | Attach image                    | ✓     |
 | `org.dxos.operation.crm.enrichImages`                       | `@dxos/plugin-crm`               | `types/CrmOperation.ts`                                           | Enrich images                   |       |
@@ -200,7 +199,7 @@ Sorted with DXOS operations first and `com.example` fixtures last.
 | `org.dxos.operation.markdown.create`                        | `@dxos/plugin-markdown`          | `types/MarkdownOperation.ts`                                      | Create                          | ✓     |
 | `org.dxos.operation.markdown.createBranch`                  | `@dxos/plugin-markdown`          | `types/MarkdownOperation.ts`                                      | Create Branch                   | ✓     |
 | `org.dxos.operation.markdown.createCheckpoint`              | `@dxos/plugin-markdown`          | `types/MarkdownOperation.ts`                                      | Create Checkpoint               | ✓     |
-| `org.dxos.operation.markdown.draft`                         | `@dxos/plugin-markdown`          | `types/MarkdownOperation.ts`                                      | Draft Markdown Document         |       |
+| `org.dxos.operation.markdown.createDraft`                   | `@dxos/plugin-markdown`          | `types/MarkdownOperation.ts`                                      | Draft Markdown Document         |       |
 | `org.dxos.operation.markdown.getHistory`                    | `@dxos/plugin-markdown`          | `types/MarkdownOperation.ts`                                      | Get History                     |       |
 | `org.dxos.operation.markdown.getSelection`                  | `@dxos/plugin-markdown`          | `types/MarkdownOperation.ts`                                      | Get Selection                   | ✓     |
 | `org.dxos.operation.markdown.mergeBranch`                   | `@dxos/plugin-markdown`          | `types/MarkdownOperation.ts`                                      | Merge Branch                    | ✓     |
@@ -267,10 +266,10 @@ Sorted with DXOS operations first and `com.example` fixtures last.
 | `org.dxos.operation.search.open`                            | `@dxos/plugin-search`            | `types/SearchOperation.ts`                                        | Open Search                     |       |
 | `org.dxos.operation.sequencer.read`                         | `@dxos/plugin-sequencer`         | `types/ScoreOperation.ts`                                         | Read score                      | ✓     |
 | `org.dxos.operation.sequencer.write`                        | `@dxos/plugin-sequencer`         | `types/ScoreOperation.ts`                                         | Write score                     | ✓     |
-| `org.dxos.operation.sheet.axisDrop`                         | `@dxos/plugin-sheet`             | `types/SheetOperation.ts`                                         | Drop Axis                       |       |
-| `org.dxos.operation.sheet.axisInsert`                       | `@dxos/plugin-sheet`             | `types/SheetOperation.ts`                                         | Insert Axis                     |       |
 | `org.dxos.operation.sheet.create`                           | `@dxos/plugin-sheet`             | `types/SheetOperation.ts`                                         | Create                          | ✓     |
+| `org.dxos.operation.sheet.dropAxis`                         | `@dxos/plugin-sheet`             | `types/SheetOperation.ts`                                         | Drop Axis                       |       |
 | `org.dxos.operation.sheet.getRange`                         | `@dxos/plugin-sheet`             | `types/SheetOperation.ts`                                         | Get Range Values                | ✓     |
+| `org.dxos.operation.sheet.insertAxis`                       | `@dxos/plugin-sheet`             | `types/SheetOperation.ts`                                         | Insert Axis                     |       |
 | `org.dxos.operation.sheet.restoreAxis`                      | `@dxos/plugin-sheet`             | `types/SheetOperation.ts`                                         | Restore Axis                    |       |
 | `org.dxos.operation.sheet.scrollToAnchor`                   | `@dxos/plugin-sheet`             | `types/SheetOperation.ts`                                         | Scroll To Anchor                |       |
 | `org.dxos.operation.sheet.setRange`                         | `@dxos/plugin-sheet`             | `types/SheetOperation.ts`                                         | Set Range Values                | ✓     |
@@ -347,8 +346,8 @@ Sorted with DXOS operations first and `com.example` fixtures last.
 | `org.dxos.operation.thread.createChannel`                   | `@dxos/plugin-thread`            | `types/ThreadOperation.ts`                                        | Create Channel                  |       |
 | `org.dxos.operation.transcription.create`                   | `@dxos/plugin-transcription`     | `types/TranscriptOperation.ts`                                    | Create Transcript               |       |
 | `org.dxos.operation.transcription.enrichMessage`            | `@dxos/plugin-transcription`     | `types/TranscriptOperation.ts`                                    | Enrich Transcript Message       |       |
+| `org.dxos.operation.transcription.normalizeSentence`        | `@dxos/plugin-transcription`     | `types/TranscriptOperation.ts`                                    | Sentence Normalization          |       |
 | `org.dxos.operation.transcription.open`                     | `@dxos/plugin-transcription`     | `types/TranscriptOperation.ts`                                    | Open                            | ✓     |
-| `org.dxos.operation.transcription.sentenceNormalization`    | `@dxos/plugin-transcription`     | `types/TranscriptOperation.ts`                                    | Sentence Normalization          |       |
 | `org.dxos.operation.transcription.summarize`                | `@dxos/plugin-transcription`     | `types/TranscriptOperation.ts`                                    | Summarize                       | ✓     |
 | `org.dxos.operation.trello.getBoards`                       | `@dxos/plugin-trello`            | `types/TrelloOperation.ts`                                        | Get Trello Boards               |       |
 | `org.dxos.operation.trello.materializeTarget`               | `@dxos/plugin-trello`            | `types/TrelloOperation.ts`                                        | Materialize Trello Target       |       |
@@ -363,6 +362,7 @@ Sorted with DXOS operations first and `com.example` fixtures last.
 | `org.dxos.operation.voxel.generateShape`                    | `@dxos/plugin-voxel`             | `types/VoxelOperation.ts`                                         | Generate shape                  | ✓     |
 | `org.dxos.operation.voxel.queryWorld`                       | `@dxos/plugin-voxel`             | `types/VoxelOperation.ts`                                         | Query world                     | ✓     |
 | `org.dxos.operation.voxel.remove`                           | `@dxos/plugin-voxel`             | `types/VoxelOperation.ts`                                         | Remove voxels                   | ✓     |
+| `com.example.operation.compute.create`                      | `@dxos/compute`                  | `Operation.test.ts`                                               | Something Else Entirely         |       |
 | `com.example.operation.countReplies`                        | `@dxos/agent-runtime`            | `functions.test.ts`                                               | Count Replies                   | ✓     |
 | `com.example.operation.delegatedWork`                       | `@dxos/agent-runtime`            | `agent-service/AgentService.test.ts`                              | Delegated work                  |       |
 | `com.example.operation.delegatedWork`                       | `@dxos/agent-runtime`            | `agent-service/delegation-scripted.test.ts`                       | Delegated work                  |       |

@@ -51,7 +51,7 @@ export const Create = Operation.make({
 // TODO(burdon): Remove or disambiguate from create.
 export const CreateMarkdown = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.markdown.draft'),
+    key: DXN.make('org.dxos.operation.markdown.createDraft'),
     name: 'Draft Markdown Document',
     icon: 'ph--file-text--regular',
   },
