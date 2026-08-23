@@ -42,6 +42,7 @@ export const Settings = Schema.Struct({
 
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}
 
+/** Reader defaults: help on, and translations in the base language until the user picks another. */
 export const defaults = (): Settings => ({
   language: Language.DEFAULT_BASE_CODE,
   highlightKnownWords: true,

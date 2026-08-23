@@ -17,15 +17,12 @@ export const Level = Schema.Literals(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']);
 export type Level = Schema.Schema.Type<typeof Level>;
 
 /**
- * A language pairing the user reads in: the language being studied, and the one it is rendered into.
+ * A (studied, target) pairing, held as its own object so a Spanish-speaker and an English-speaker
+ * learning German never share a word list by accident.
  *
- * `code` is the study language -- the one the source is written in, inferred rather than chosen --
- * and `baseCode` is the target the reader selects. A Spanish-speaker learning German and an
- * English-speaker learning German hold two distinct objects and never share a word list by accident.
- *
- * `name` names the TARGET, not the study language: it is built from the option the reader picked
- * (`ReaderArticle.handleRun`) and read back as the target in prompts (`translate-passage`). The
- * study language arrives as a bare tag, since the model infers it and no name is ever supplied.
+ * `code` is the studied language, inferred from the source rather than chosen; `baseCode` and `name`
+ * both describe the TARGET the reader picked — a trap worth stating, since the studied language is
+ * the one with no name.
  */
 export class Language extends Type.makeObject<Language>(DXN.make('org.dxos.type.lingo.language', '0.1.0'))(
   Schema.Struct({
