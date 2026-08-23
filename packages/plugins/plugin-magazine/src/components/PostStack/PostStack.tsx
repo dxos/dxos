@@ -57,7 +57,6 @@ export const PostStack = composable<HTMLDivElement, PostStackProps>(
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={PostTile}
-                classNames='my-2'
                 gap={8}
                 items={items}
                 draggable={false}

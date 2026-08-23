@@ -112,11 +112,11 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
           </Masonry.Root>
         )}
       </Panel.Content>
-      {curateProgress && (
-        <Panel.Statusbar asChild>
-          <ProgressMeter state={curateProgress} classNames='border-t border-separator' />
-        </Panel.Statusbar>
-      )}
+      {/* Always mounted: the meter decides whether to show, and its delay/minDuration cannot hold one
+          open past the run if the host unmounts it the moment the state goes away. */}
+      <Panel.Statusbar asChild>
+        <ProgressMeter state={curateProgress} classNames='border-t border-subdued-separator' />
+      </Panel.Statusbar>
     </Panel.Root>
   );
 };

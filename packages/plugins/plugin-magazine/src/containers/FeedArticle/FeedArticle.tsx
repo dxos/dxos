@@ -66,7 +66,7 @@ export const FeedArticle = ({ role, subject, attendableId }: FeedArticleProps) =
         />
       </Panel.Content>
       <Panel.Statusbar asChild>
-        <ProgressMeter state={syncProgress} classNames='border-t border-subdued-separator' />
+        <ProgressMeter classNames='border-t border-subdued-separator' state={syncProgress} />
       </Panel.Statusbar>
     </Panel.Root>
   );
