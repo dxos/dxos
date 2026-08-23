@@ -25,7 +25,7 @@ is at **flow granularity**: the user approves a named flow, you run all of its s
 1. Name the flow and summarise what it will change before starting. Do not run an unapproved flow.
 2. Never run a flow against the user's own Composer profile without saying so — prefer a dev
    server you started, whose profile is disposable.
-3. `cleanup:` is part of the flow. If you skip it, say so.
+3. `cleanup:` is part of the flow, and runs unless the user asks to skip it (see §7).
 
 ## 1. Read the flow
 
@@ -75,7 +75,7 @@ whose `cleanup` was skipped leaves objects behind, and an existence-shaped asser
 (`some((o) => o.name === 'QA Notes')`) is then already true before step 1 — the step reports pass
 having done nothing. Run the flow's `cleanup` first if that is what it takes, and say you did.
 Then prefer identity-shaped asserts (`some((o) => o.id === $created.object.id)`), which discriminate
-even on a dirty fixture; where you meet an existence-shaped one, fix it per §6.
+even on a dirty fixture; where you meet an existence-shaped one, fix it per §7.
 
 A fresh dev profile boots with an identity and a default space already created. Verify rather than
 assume:
@@ -159,7 +159,24 @@ step number (`QA-1.4`), or by its `id` where it declares one (`QA-1.open`) — a
 being inserted ahead of it, a position does not. Give the observed value next to the expected one.
 Never report a step as passing because the invocation returned without throwing.
 
-## 6. Feed findings back
+## 6. Cleanup
+
+`cleanup` is a step list like any other — run it through operations, not raw database calls. The
+difference is not pedantry: `space.db.remove` deletes the object but leaves a plank pointing at it,
+and **the user cannot close a plank whose object no longer exists**. `space.removeObjects` unlinks
+from the collection and closes what was open, reporting it as `wasActive`.
+
+**Skipping is a supported option.** "Run QA-1 but skip cleanup" is a normal request — inspecting the
+final state is why flows exist. When you skip:
+
+1. Say so in the report, next to the result rather than buried after it.
+2. List exactly what remains, by name.
+3. Give the command or snippet that removes it later.
+
+The next run's `given` will fail on those leftovers (§3), which is the intended behaviour: a flow
+should refuse to run against its own residue rather than assert vacuously against it.
+
+## 7. Feed findings back
 
 A flow that was wrong about the app is a finding, not a failure to hide. When a run contradicts
 the spec — an output schema that changed, a step that needs coalescing, an operation whose key
@@ -175,6 +192,6 @@ the run is how it earns its accuracy.
 - [ ] Steps threading a live object coalesced into one snippet
 - [ ] Each step judged on its effect (db or DOM), never on a return value
 - [ ] Per-step pass/fail table reported, failures by QA-n.m (or by step `id` where declared)
-- [ ] `cleanup` run, or its omission stated
+- [ ] `cleanup` run through operations (never `db.remove`), or its omission stated with what remains
 - [ ] Flow updated where the run contradicted it
 ```

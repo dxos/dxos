@@ -101,9 +101,23 @@ surrounding tooling that the flow surfaced.
    one hit (Execution Rule 6).
 8. **The skill never said to read the flow first.** It went from consent straight to starting a
    server, so a step's `note:` — which is a constraint, not commentary — could be missed. Now §1.
-9. **`plugin-onboarding` fails to activate on a fresh dev profile** — `Schema not registered
+9. **`cleanup` was prose, so the two actors diverged — and the agent's path was the wrong one.**
+   `cleanup: - delete the "QA Notes" document` named no mechanism, so a human uses the navtree
+   delete action (which routes through `space.removeObjects`) while the runner reached for
+   `space.db.remove`. The latter leaves a plank pointing at a deleted object, which per the
+   handler's own comment "cannot be closed by the user". Found by the user looking at the app after
+   a run that reported 4/4 pass and clean cleanup.
+   → `cleanup` is now a `StepList` with `invoke:`/`expect:`/`assert:` like any other step
+   (Execution Rule 7). Confirmed against the app: `removeObjects` returns
+   `wasActive: [<path>]` and the plank closes.
+   The general lesson: **any part of a flow without a dual face will diverge.** `cleanup` was the
+   one field still prose-only, and that is exactly where it broke.
+10. **Skipping cleanup is now a documented run option** (Execution Rule 8, skill §6) — inspecting
+    the final state is a legitimate reason to leave the artifacts, provided the runner reports what
+    remains and how to remove it.
+11. **`plugin-onboarding` fails to activate on a fresh dev profile** — `Schema not registered
 Schema: org.dxos.type.document`. Not blocking (the default space and identity are still created)
-   but it is an error on every cold boot of a new profile. Not investigated; logged for triage.
+    but it is an error on every cold boot of a new profile. Not investigated; logged for triage.
 
 ## Backlog
 
