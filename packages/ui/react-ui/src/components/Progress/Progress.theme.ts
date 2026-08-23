@@ -23,7 +23,7 @@ const bar: ComponentFunction<ProgressStyleProps> = ({ indeterminate, error }, ..
     indeterminate
       ? 'animate-progress-indeterminate'
       : // Ease the width between updates so incremental advances glide rather than jump.
-        'start-0 transition-[width] duration-500 ease-linear',
+        'start-0 transition-[width] duration-200 ease-linear',
     ...etc,
   );
 

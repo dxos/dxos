@@ -33,7 +33,7 @@ const root: ComponentFunction<StepperStyleProps> = (_props, ...etc) => mx('flex 
 
 const step: ComponentFunction<StepperStyleProps> = ({ state = 'pending', selected, interactive, spinning }, ...etc) =>
   mx(
-    'absolute border rounded-full transition-all duration-500',
+    'absolute border rounded-full transition-all duration-200',
     // Drawn inset while it spins, so the notch reads as a ring around it rather than a collar.
     spinning ? 'inset-[3px]' : 'inset-0',
     interactive && 'cursor-pointer',

@@ -54,24 +54,36 @@ export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
     // interrupted, which is irrelevant once the run is over.
     const cancellable = !!onCancel && (failed || (state.cancellable === true && active));
     const stages = stepCount(state.phases);
-    const notes = useNotes(note, state.startedAt);
+    // The crawl is the meter's only text now, so it opens with the run's name: without it a list of
+    // meters would say what each is doing and never which task it is.
+    const lines = useNotes(label, note, state.startedAt);
 
     return (
       <div
         {...composableProps(props, {
-          // Explicit rows, not auto-placement: every row is drawn whatever the state, so the meter
-          // is the same height determinate, indeterminate or phased.
-          classNames: 'grid grid-rows-[24px_15px_24px] gap-0.5 px-1',
+          // Explicit rows, not auto-placement: both rows are drawn whatever the state, so the meter
+          // is the same height determinate, indeterminate or phased, and the layout around it never
+          // moves when a phase stops being countable.
+          classNames: 'grid grid-rows-[24px_15px] gap-0.5 px-1',
           role: 'group',
         })}
         ref={forwardedRef}
       >
-        <div className='flex justify-between items-center gap-2 text-xs text-description'>
-          <span className='truncate'>{label}</span>
-          <div className='flex items-center gap-1 shrink-0'>
+        <div className='flex items-center justify-between gap-2 text-xs'>
+          {failed && error ? (
+            <div className='min-w-0 flex-1 text-error-text truncate'>{error}</div>
+          ) : (
+            /* What the run is and what it is doing, in its own words, crawling as it moves through
+               its phases. */
+            <TextCrawl classNames='min-w-0 flex-1' textClassNames='text-xs text-subdued' lines={lines} greedy />
+          )}
+          <div className='flex items-center gap-1 shrink-0 text-description'>
             <span className='font-mono'>
               {indeterminate ? (active ? formatDuration(elapsedMs) : '') : `${current} / ${total}`}
             </span>
+            {!indeterminate && etaMs !== undefined && status === 'running' && (
+              <span className='text-subdued'>{formatDuration(etaMs)} left</span>
+            )}
             {cancellable && (
               <IconButton
                 density='sm'
@@ -109,20 +121,6 @@ export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
             aria-label={label}
           />
         )}
-
-        <div className='flex items-center justify-between gap-2'>
-          {failed && error ? (
-            <div className='text-xs text-error-text truncate'>{error}</div>
-          ) : (
-            <>
-              {/* The phases the run has named, in its own words, crawling as it moves through them. */}
-              <TextCrawl classNames='min-w-0 flex-1' textClassNames='text-xs text-subdued' lines={notes} greedy />
-              {!indeterminate && etaMs !== undefined && status === 'running' && (
-                <div className='text-xs text-subdued shrink-0'>{formatDuration(etaMs)} remaining</div>
-              )}
-            </>
-          )}
-        </div>
       </div>
     );
   },
@@ -156,13 +154,13 @@ const useElapsed = (startedAt: string | undefined, active: boolean, fallbackMs: 
 };
 
 /**
- * The phases a run has named so far, in order, for the crawl to scroll through.
+ * The run's name, then the phases it has named so far, for the crawl to scroll through.
  *
  * The state carries only the note in flight, so the history is accumulated here: a crawl fed one
  * line at a time has nothing to scroll from and reads as a plain label. `startedAt` keys the run —
  * a fresh one starts a fresh list rather than continuing the last one's.
  */
-const useNotes = (note: string | undefined, startedAt: string | undefined): string[] => {
+const useNotes = (label: string | undefined, note: string | undefined, startedAt: string | undefined): string[] => {
   const [notes, setNotes] = useState<string[]>(() => (note ? [note] : []));
   const runRef = useRef(startedAt);
   useEffect(() => {
@@ -175,7 +173,7 @@ const useNotes = (note: string | undefined, startedAt: string | undefined): stri
       setNotes((notes) => (notes[notes.length - 1] === note ? notes : [...notes, note]));
     }
   }, [note, startedAt]);
-  return notes;
+  return label === undefined ? notes : [label, ...notes];
 };
 
 //
