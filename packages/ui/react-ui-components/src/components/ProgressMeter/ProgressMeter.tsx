@@ -35,13 +35,13 @@ export type ProgressMeterProps = ThemedClassName<{
  *
  * One component with one geometry, whatever the monitor reports. The parts are chosen from the
  * state — a {@link Stepper} where the run declared a plan, a {@link Progress} fraction where the
- * phase counts and a sweep where it cannot, a crawl of the phases it has named — but the three rows
- * are always drawn, so a phase that stops being countable never changes the readout's height and
- * never moves the layout around it.
+ * phase counts and a sweep where it cannot, a crawl of the phases it has named — but both rows are
+ * always drawn, so a phase that stops being countable never changes the readout's height and never
+ * moves the layout around it.
  */
 export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
   ({ state, onCancel, selected, onSelect, ...props }, forwardedRef) => {
-    const { current = 0, total, label, status, note, error, etaMs } = state;
+    const { current = 0, total, label, status = 'pending', note, error, etaMs } = state;
     const indeterminate = total === undefined;
     const fraction = indeterminate ? 0 : total === 0 ? 1 : Math.min(1, current / total);
     const active = status === 'running' || status === 'pending';

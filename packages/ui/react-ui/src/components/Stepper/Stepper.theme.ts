@@ -5,17 +5,14 @@
 import { mx } from '@dxos/ui-theme';
 import type { ComponentFunction, Theme } from '@dxos/ui-types';
 
-/**
- * What one stage is doing: `complete` is behind the run, `active` the one in flight, `pending` ahead
- * of it, `error` the one it stopped on.
- */
+/** Where a stage sits relative to the run: behind it, in flight, ahead of it, or where it failed. */
 export type StepState = 'pending' | 'active' | 'complete' | 'error';
 
 export type StepperStyleProps = {
   state?: StepState;
   /** A stage the caller has singled out. */
   selected?: boolean;
-  /** The stage can be clicked.  */
+  /** The stage can be clicked. */
   interactive?: boolean;
   /** The stage is running uncounted, so its circle is inset to leave room for the notch. */
   spinning?: boolean;

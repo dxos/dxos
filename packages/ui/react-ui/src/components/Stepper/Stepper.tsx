@@ -147,12 +147,23 @@ const Step = ({ step, state, selected, indeterminate, options, onClick }: StepPr
   return (
     <div
       role='listitem'
-      aria-label={step.label}
       aria-current={state === 'active' ? 'step' : undefined}
       className='relative shrink-0'
       style={{ width: options.size, height: options.size }}
     >
-      <div className={tx('stepper.step', { state, selected, interactive: !!onClick, spinning })} onClick={onClick} />
+      {onClick ? (
+        // A selectable stage is a real button, so it takes focus and answers the keyboard without a
+        // key handler of its own; selection toggles, which is what `aria-pressed` describes.
+        <button
+          type='button'
+          aria-label={step.label}
+          aria-pressed={!!selected}
+          className={tx('stepper.step', { state, selected, interactive: true, spinning })}
+          onClick={onClick}
+        />
+      ) : (
+        <div aria-label={step.label} className={tx('stepper.step', { state, selected, spinning })} />
+      )}
       {spinning && <Notch className={tx('stepper.notch', { state })} />}
     </div>
   );

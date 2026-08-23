@@ -17,11 +17,8 @@ export type ProgressProps = ThemedClassName<
 >;
 
 /**
- * A fill bar: a fraction of a track, or an indeterminate sweep.
- *
- * The smallest thing that reports progress, for a host that supplies its own chrome (a panel footer,
- * an image placeholder). {@link Stepper} draws a plan instead of a fraction, and `ProgressMeter` is
- * the full readout built from both.
+ * A fill bar: a fraction of a track, or an indeterminate sweep, for a host that supplies its own
+ * chrome. {@link Stepper} draws a plan instead, and `ProgressMeter` is the readout built from both.
  */
 export const Progress = forwardRef<HTMLSpanElement, ProgressProps>(
   ({ classNames, children, progress = 0, indeterminate, error, ...props }, forwardedRef) => {

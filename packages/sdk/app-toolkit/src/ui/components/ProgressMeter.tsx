@@ -8,8 +8,6 @@ import { Progress } from '@dxos/progress';
 import { type ThemedClassName, composable } from '@dxos/react-ui';
 import { ProgressMeter as NaturalProgressMeter, type ProgressState } from '@dxos/react-ui-components';
 
-export { formatDuration } from '@dxos/react-ui-components';
-
 export type ProgressMeterProps = ThemedClassName<{
   state: Progress.TaskProgress;
   /** When provided (and the task is active + cancellable), a cancel control invokes this. */
