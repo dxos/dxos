@@ -19,3 +19,5 @@ their containers.
   an address) shrinks with its panel instead of overflowing its own field border.
 - The emoji picker's panel is portalled, like every other picker, so a scrolling ancestor no longer
   clips it.
+- `@dxos/react-ui-components` now depends on `@dxos/progress` directly: the meter reads the runtime's
+  own `TaskProgress` rather than a mirrored shape, so a producer and the readout cannot drift.

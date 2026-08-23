@@ -126,22 +126,24 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
     return (token) => index.get(token);
   }, [words]);
 
-  // Remembers the deck this component created, keyed by language: `deck` comes from a query that
+  // Remembers every deck this component created, keyed by language: `deck` comes from a query that
   // refreshes a tick after `db.add`, so a second "add" pressed before then would see no deck and
-  // create a second one for the same language.
-  const createdDeck = useRef<{ languageId: string; deck: Vocabulary.Vocabulary } | undefined>(undefined);
+  // create another for the same language. A map rather than one slot — switching language and back
+  // within that window would otherwise evict the entry that was about to be reused.
+  const createdDecks = useRef(new Map<string, Vocabulary.Vocabulary>());
   const ensureDeck = useCallback(() => {
     if (deck || !db || !language) {
       return deck;
     }
 
-    if (createdDeck.current?.languageId === language.id) {
-      return createdDeck.current.deck;
+    const created = createdDecks.current.get(language.id);
+    if (created) {
+      return created;
     }
 
-    const created = db.add(Vocabulary.make({ name: language.name, language: Ref.make(language) }));
-    createdDeck.current = { languageId: language.id, deck: created };
-    return created;
+    const deckForLanguage = db.add(Vocabulary.make({ name: language.name, language: Ref.make(language) }));
+    createdDecks.current.set(language.id, deckForLanguage);
+    return deckForLanguage;
   }, [db, deck, language]);
 
   const handleAddWord = useCallback(

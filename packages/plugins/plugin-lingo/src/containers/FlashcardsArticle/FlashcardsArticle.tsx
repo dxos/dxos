@@ -41,7 +41,6 @@ export const FlashcardsArticle = ({ role, subject: deck, attendableId }: Flashca
   const queue = useMemo(() => {
     const now = new Date();
     return [...words].sort((a, b) => Number(Word.isDue(b, now)) - Number(Word.isDue(a, now)));
-    // Re-shuffled only when the deck's membership changes, not on every progress write.
   }, [membership, deck?.id]);
 
   const word = queue[index];

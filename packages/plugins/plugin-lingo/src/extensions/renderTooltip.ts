@@ -68,12 +68,14 @@ export const createTooltipRenderer =
           .attributes({ 'type': 'button', 'data-variant': 'ghost', 'aria-label': label })
           .append(Domino.svg('ph--plus--regular'))
           .append(Domino.of('span').text(label))
-          // `mousedown` rather than `click`, and prevented: the tooltip sits over the editor, so a
-          // click would move the selection out from under the segment the button acts on.
+          // `mousedown` is prevented but does NOT act: the tooltip sits over the editor, so letting
+          // the press through would move the selection out from under the segment the button acts on.
+          // Acting on `click` instead is what makes the button work from the keyboard, which fires
+          // `click` alone.
           .on('mousedown', (event) => {
             event.preventDefault();
-            onAdd(props);
-          }),
+          })
+          .on('click', () => onAdd(props)),
       );
     }
 

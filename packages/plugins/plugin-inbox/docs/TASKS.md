@@ -861,7 +861,7 @@ local feed sync and an edge mailbox sync, and only one of them reports.
 
 `plugin-magazine` feed sync, `runtimeName: 'local'`, one pid, four updates:
 
-```
+```text
 Syncing nippon.com / ja   current 0
 Syncing nippon.com / ja   current 0    total 20
 Syncing nippon.com / ja   current 20   total 20
@@ -871,7 +871,7 @@ progress.complete         current 20   total 20
 Mailbox sync, `runtimeName: 'edge-intrinsic'`, five separate runs 5–10 min apart (the trigger's
 schedule), each a fresh pid, each exactly ONE update:
 
-```
+```text
 Syncing rich@braneframe.com   current 0     (no total, no increments, no terminal)
 ```
 
