@@ -109,7 +109,8 @@ export interface Registry {
    * which fans the database and registry together; this method is for querying a registry directly.
    *
    * Only locally-evaluable AST nodes are supported: `select`, `filter`, `limit`, `from`, `options`,
-   * and boolean combinators. Server-side concerns (order, traversal, text/timestamp filters) throw.
+   * and boolean combinators, plus full-text filters as case-insensitive all-terms containment.
+   * Server-side concerns (order, traversal, vector search, timestamp filters) throw or match nothing.
    */
   query: Database.QueryFn;
 }

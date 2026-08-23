@@ -38,13 +38,18 @@ const handler: Operation.WithHandler<typeof ProjectOperation.Create> = ProjectOp
         .scaffold({ name, subject })
         .pipe(Effect.provideService(Database.Service, Database.makeService(db)));
 
-      const result = yield* Operation.invoke(SpaceOperation.AddObject, {
-        object: draft,
-        target: db,
-        targetNodeId: GraphPath.getSpacePath(db.spaceId, GraphPath.GroupSegments.ai, Type.getTypename(Project.Project)),
-      });
+      const result = yield* Operation.invoke(SpaceOperation.AddObject, { object: draft }, { spaceId: db.spaceId });
       invariant(Obj.instanceOf(Project.Project, result.object), 'Expected a Project.');
-      return { id: result.id, subject: result.subject, project: result.object };
+      const nodePath = GraphPath.getSpacePath(
+        db.spaceId,
+        GraphPath.GroupSegments.ai,
+        Type.getTypename(Project.Project),
+      );
+      return {
+        id: result.id,
+        subject: [GraphPath.getCollectionObjectPath(nodePath, result.object.id)],
+        project: result.object,
+      };
     }),
   ),
 );

@@ -135,7 +135,9 @@ export const FormField = (props: FormFieldProps) => {
     jsonPath,
     placeholder,
     presentation: layout,
-    required,
+    // The asterisk marks what is still outstanding, so it clears once the field holds a value —
+    // otherwise a fully-filled form reads as though every required field were still unanswered.
+    required: required && isEmptyValue(fieldState.getValue()),
     db,
     ...fieldState,
   };
@@ -323,6 +325,10 @@ export const CompactIconButton = ({ classNames, ...props }: IconButtonProps) => 
     </span>
   );
 };
+
+/** Whether a field's value counts as unfilled for the required-marker. `false` and `0` are values. */
+const isEmptyValue = (value: unknown): boolean =>
+  value == null || value === '' || (Array.isArray(value) && value.length === 0);
 
 /**
  * Get property input component.

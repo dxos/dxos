@@ -40,6 +40,7 @@ import * as JmapPlugin from '@dxos/plugin-jmap/JmapPlugin';
 import * as KanbanPlugin from '@dxos/plugin-kanban/KanbanPlugin';
 import * as LibraryPlugin from '@dxos/plugin-library/LibraryPlugin';
 import * as LinearPlugin from '@dxos/plugin-linear/LinearPlugin';
+import * as LingoPlugin from '@dxos/plugin-lingo/LingoPlugin';
 import * as MagazinePlugin from '@dxos/plugin-magazine/MagazinePlugin';
 import * as MapPluginSolid from '@dxos/plugin-map-solid/MapPlugin';
 import * as MapPlugin from '@dxos/plugin-map/MapPlugin';
@@ -56,7 +57,6 @@ import * as ReviewPlugin from '@dxos/plugin-review/ReviewPlugin';
 import * as SamplePlugin from '@dxos/plugin-sample/SamplePlugin';
 import * as SandboxPlugin from '@dxos/plugin-sandbox/SandboxPlugin';
 import * as ScriptPlugin from '@dxos/plugin-script/ScriptPlugin';
-import * as SearchPlugin from '@dxos/plugin-search/SearchPlugin';
 import * as SequencerPlugin from '@dxos/plugin-sequencer/SequencerPlugin';
 import * as SheetPlugin from '@dxos/plugin-sheet/SheetPlugin';
 import * as SidekickPlugin from '@dxos/plugin-sidekick/SidekickPlugin';
@@ -132,6 +132,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       IdeogramPlugin.meta.profile.key,
       IrohBeaconPlugin.meta.profile.key,
       LibraryPlugin.meta.profile.key,
+      LingoPlugin.meta.profile.key,
       MagazinePlugin.meta.profile.key,
       MeetingPlugin.meta.profile.key,
       OsrmPlugin.meta.profile.key,
@@ -213,7 +214,6 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     isLocal && SamplePlugin.make(),
     SandboxPlugin.make(),
     ScriptPlugin.make(),
-    SearchPlugin.make(),
     isDev && SidekickPlugin.make(),
     SheetPlugin.make(),
     StackPlugin.make(),
@@ -243,6 +243,7 @@ const experimental: Plugin.Plugin[] = [
   GitHubPlugin.make(),
   IrohBeaconPlugin.make(),
   LinearPlugin.make(),
+  LingoPlugin.make(),
   SequencerPlugin.make(),
   SlackPlugin.make(),
   SpacetimePlugin.make(),

@@ -4,9 +4,9 @@
 
 import { describe, it } from '@effect/vitest';
 
-import { DatabaseSkill } from '@dxos/assistant-toolkit';
 import { Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
+import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 import { trim } from '@dxos/util';
 
 import { agentTest, agentTestTimeout } from '../harness';

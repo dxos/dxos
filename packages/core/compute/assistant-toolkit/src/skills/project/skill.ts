@@ -34,6 +34,9 @@ const make = () =>
     }),
   });
 
+/**
+ * @deprecated Use the plugin-projects skill, which owns the project model.
+ */
 const skill: Skill.Definition = {
   key: SKILL_KEY,
   make,

@@ -138,7 +138,7 @@ export const AccountContainer = () => {
                           placeholder={t('access-request-email.placeholder')}
                           value={requestEmail}
                           onChange={(event) => setRequestEmail(event.target.value)}
-                          classNames='min-w-64'
+                          classNames='w-64 max-w-full min-w-0'
                         />
                       </Input.Root>
                       <Button type='submit' density='sm'>

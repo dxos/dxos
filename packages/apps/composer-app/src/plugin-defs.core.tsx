@@ -26,6 +26,7 @@ import * as ProgressPlugin from '@dxos/plugin-progress/ProgressPlugin';
 import * as PwaPlugin from '@dxos/plugin-pwa/PwaPlugin';
 import * as RegistryPlugin from '@dxos/plugin-registry/RegistryPlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
+import * as SearchPlugin from '@dxos/plugin-search/SearchPlugin';
 import * as SettingsPlugin from '@dxos/plugin-settings/SettingsPlugin';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import * as SpotlightPlugin from '@dxos/plugin-spotlight/SpotlightPlugin';
@@ -158,6 +159,7 @@ export const getCorePlugins = ({
     !isTauri && isPwa && PwaPlugin.make(),
     isExtensible && RegistryPlugin.make(),
     RoutinePlugin.make(),
+    SearchPlugin.make(),
     SettingsPlugin.make(),
     SpacePlugin.make({
       observability: true,

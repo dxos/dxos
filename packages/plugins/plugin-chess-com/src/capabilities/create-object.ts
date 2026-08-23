@@ -21,11 +21,14 @@ export default Capability.makeModule(
       createObject: (props: Schema.Schema.Type<typeof ChessComAccount.CreateAccountSchema>, options) =>
         Effect.gen(function* () {
           const object = ChessComAccount.makeAccount({ username: props.username });
-          const result = yield* Operation.invoke(SpaceOperation.AddObject, {
-            object,
-            target: options.target,
-            targetNodeId: options.targetNodeId,
-          });
+          const result = yield* Operation.invoke(
+            SpaceOperation.AddObject,
+            {
+              object,
+              target: options.target,
+            },
+            { spaceId: options.db.spaceId },
+          );
           yield* Operation.schedule(
             ChessComOperation.SyncGames,
             { account: Ref.make(object) },

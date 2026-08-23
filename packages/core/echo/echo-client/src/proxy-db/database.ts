@@ -789,25 +789,39 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       }),
     );
 
-    if (this.#feedService) {
-      ctx.onDispose(
-        subscribeStream(
-          this.#runtime,
-          this.#feedService['FeedService.subscribeSyncState']({ spaceId: this.spaceId, namespaces: [] }),
-          {
-            onData: (response) => {
-              feeds = aggregateFeedSyncState(response);
-              emit();
-            },
-            onError: (error) => {
-              if (!(error instanceof RpcClosedError)) {
-                log.warn('feed sync state stream failed', { error });
-              }
-            },
+    // Feed blocks arrive on a separate stream, which dies on reconnect (leader change) — re-established
+    // from the refreshed service, and cleared meanwhile so a consumer never keeps reporting a backlog
+    // measured against a connection that no longer exists.
+    let cleanupFeedStream: (() => void) | undefined;
+    const subscribeFeedSyncState = () => {
+      cleanupFeedStream?.();
+      cleanupFeedStream = undefined;
+      if (!this.#feedService) {
+        return;
+      }
+      cleanupFeedStream = subscribeStream(
+        this.#runtime,
+        this.#feedService['FeedService.subscribeSyncState']({ spaceId: this.spaceId, namespaces: [] }),
+        {
+          onData: (response) => {
+            feeds = aggregateFeedSyncState(response);
+            emit();
           },
-        ),
+          onError: (error) => {
+            feeds = EMPTY_FEED_SYNC_STATE;
+            emit();
+            if (error instanceof RpcClosedError) {
+              ctx.onDispose(this._entityManager.reconnected.once(() => subscribeFeedSyncState()));
+            } else if (error) {
+              log.warn('feed sync state stream failed', { error });
+            }
+          },
+        },
       );
-    }
+    };
+
+    subscribeFeedSyncState();
+    ctx.onDispose(() => cleanupFeedStream?.());
 
     return () => {
       void ctx.dispose();

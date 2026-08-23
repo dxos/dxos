@@ -93,6 +93,9 @@
       "path": "../client-protocol"
     },
     {
+      "path": "../migrations"
+    },
+    {
       "path": "../react-client"
     },
     {

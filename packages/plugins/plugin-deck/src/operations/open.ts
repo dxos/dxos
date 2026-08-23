@@ -27,7 +27,7 @@ import {
   resolveSeededPlanks,
   updatePlankNames,
 } from '../layout';
-import { computeActiveUpdates, openableChildren, resolveDeckSpec } from '../util';
+import { computeActiveUpdates, openableChildren, openCompanionPlank, resolveDeckSpec } from '../util';
 import { updateActiveDeck } from './helpers';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
@@ -197,7 +197,8 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           next = navigateSolo(deck.active);
         }
 
-        const { deckUpdates } = computeActiveUpdates({ next, deck, attention });
+        const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
+        const { deckUpdates } = computeActiveUpdates({ next, deck, attention, flatten });
         // Rebound after the fact so the name follows whichever plank actually ended up holding it, and
         // so names whose plank this open closed are dropped rather than left dangling.
         // A level open binds the name the level owns; an ordinary open binds whatever the caller passed.
@@ -212,7 +213,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         // one-frame snap measured at exactly the lost width.
         const companionPlanks =
           levelOpen?.replacedId && input.subject[0] && deck.companionPlanks.includes(levelOpen.replacedId)
-            ? [...deckUpdates.companionPlanks, input.subject[0]]
+            ? openCompanionPlank(deckUpdates.companionPlanks, flatten, input.subject[0])
             : deckUpdates.companionPlanks;
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
           updateActiveDeck(state, { ...deckUpdates, companionPlanks, plankNames }),

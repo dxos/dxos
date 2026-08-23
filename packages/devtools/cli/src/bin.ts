@@ -15,6 +15,7 @@ import * as Option from 'effect/Option';
 import * as Command from 'effect/unstable/cli/Command';
 
 import { createCliApp } from '@dxos/app-framework/cli';
+import * as AppMigrations from '@dxos/app-toolkit/AppMigrations';
 import { unrefTimeout } from '@dxos/async';
 import { ConfigService, DXOS_VERSION } from '@dxos/client';
 import { DEFAULT_PROFILE } from '@dxos/client-protocol';
@@ -40,6 +41,10 @@ if (level) {
   filter = levels[level] ?? LogLevel.ERROR;
 }
 log.config({ filter });
+
+// Before any command can create a space: an unset `Migrations.targetVersion` stamps no version, and
+// Composer then reports the space as pending migration.
+AppMigrations.define();
 
 let leaksTracker: any;
 if (process.env.DX_TRACK_LEAKS) {

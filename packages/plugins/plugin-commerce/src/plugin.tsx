@@ -9,13 +9,22 @@ import { meta } from '#meta';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
-import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface, Schema, SkillDefinition } from './capabilities';
+import {
+  AppGraphBuilder,
+  CreateObject,
+  NavigationTargetResolver,
+  OperationHandler,
+  ReactSurface,
+  Schema,
+  SkillDefinition,
+} from './capabilities';
 import { translations } from './translations';
 
 export const CommercePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(CreateObject),
+  Plugin.addModule(NavigationTargetResolver),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(Schema),
   Plugin.addModule(ReactSurface),
