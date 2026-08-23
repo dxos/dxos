@@ -7,12 +7,13 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useProgressMonitor, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { Flex, Panel, useTranslation } from '@dxos/react-ui';
 import { Attention, useSelection } from '@dxos/react-ui-attention';
+import { ProgressMeter } from '@dxos/react-ui-components';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
 
@@ -29,6 +30,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   const { t } = useTranslation(meta.profile.key);
   const invoker = useOperationInvoker();
   const [magazine] = useObject(subject);
+  const curateProgress = useProgressMonitor(FeedOperation.createCurateProgressKey(subject));
 
   // The toolbar owns the view-filter atom and the curate/clear handlers; the article reads `view` to
   // filter the visible posts.
@@ -111,6 +113,11 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
           </Masonry.Root>
         )}
       </Panel.Content>
+      {/* Always mounted: the meter decides whether to show, and its delay/minDuration cannot hold one
+          open past the run if the host unmounts it the moment the state goes away. */}
+      <Panel.Statusbar asChild>
+        <ProgressMeter state={curateProgress} classNames='border-t border-subdued-separator' />
+      </Panel.Statusbar>
     </Panel.Root>
   );
 };

@@ -70,6 +70,7 @@
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",
+    "@dxos/react-ui-components": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
