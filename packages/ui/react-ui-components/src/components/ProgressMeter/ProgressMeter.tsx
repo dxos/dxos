@@ -64,7 +64,7 @@ export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
           // Explicit rows, not auto-placement: both rows are drawn whatever the state, so the meter
           // is the same height determinate, indeterminate or phased, and the layout around it never
           // moves when a phase stops being countable.
-          classNames: 'grid grid-rows-[24px_15px] gap-0.5 px-1',
+          classNames: 'grid grid-rows-[24px_24px] px-1',
           role: 'group',
         })}
         ref={forwardedRef}
@@ -75,14 +75,14 @@ export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
           ) : (
             /* What the run is and what it is doing, in its own words, crawling as it moves through
                its phases. */
-            <TextCrawl classNames='min-w-0 flex-1' textClassNames='text-xs text-subdued' lines={lines} greedy />
+            <TextCrawl classNames='min-w-0 flex-1' textClassNames='text-xs text-description' lines={lines} greedy />
           )}
           <div className='flex items-center gap-1 shrink-0 text-description'>
             <span className='font-mono'>
               {indeterminate ? (active ? formatDuration(elapsedMs) : '') : `${current} / ${total}`}
             </span>
             {!indeterminate && etaMs !== undefined && status === 'running' && (
-              <span className='text-subdued'>{formatDuration(etaMs)} left</span>
+              <span className='text-description'>{formatDuration(etaMs)} left</span>
             )}
             {cancellable && (
               <IconButton
@@ -116,7 +116,9 @@ export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
           <Progress
             classNames='w-full self-center'
             progress={fraction}
-            indeterminate={indeterminate && active}
+            // Uncounted while it runs, and still uncounted when it fails — that is what fills the
+            // bar red rather than emptying it. A run that simply ended has nothing left to sweep.
+            indeterminate={indeterminate && (active || failed)}
             error={failed}
             aria-label={label}
           />

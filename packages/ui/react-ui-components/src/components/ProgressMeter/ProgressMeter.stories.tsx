@@ -27,12 +27,14 @@ const step = () => random.number.int({ min: 1, max: 4 });
 const NOTES = ['Syncing feeds', 'Selecting articles', 'Adding to magazine'];
 
 /**
- * At rest the meter already shows the plan it is about to run: a stepper that only appears once the
- * run starts makes the row change shape under the reader for no reason they can act on.
+ * At rest the meter already shows the shape of the run it is about to make: a stepper that only
+ * appears once the run starts makes the row change under the reader for no reason they can act on,
+ * and a counted run that sweeps until started reports the one thing it knows is untrue.
  */
-const idle = (stages: number): ProgressState => ({
+const idle = (stages: number, indeterminate?: boolean): ProgressState => ({
   label: 'Curating Reading List',
   current: 0,
+  total: indeterminate ? undefined : ITEMS,
   status: 'pending',
   elapsedMs: 0,
   cancellable: true,
@@ -51,7 +53,7 @@ type StoryArgs = Partial<ProgressMeterProps> & {
  * — the only way to see the elapsed clock, the phase transitions and the cancel control do their job.
  */
 const DefaultStory = ({ stages = 0, indeterminate, ...args }: StoryArgs) => {
-  const [state, setState] = useState<ProgressState>(() => idle(stages));
+  const [state, setState] = useState<ProgressState>(() => idle(stages, indeterminate));
   const [run, setRun] = useState(0);
   const stopped = useRef(false);
 
@@ -104,7 +106,7 @@ const DefaultStory = ({ stages = 0, indeterminate, ...args }: StoryArgs) => {
     // Stamped here, not in a fixture: the clock has to read from zero on start, and a baked-in
     // `startedAt` shows a run that was already going before anyone pressed anything.
     setState({
-      ...idle(stages),
+      ...idle(stages, indeterminate),
       status: 'running',
       startedAt: new Date().toISOString(),
       phases: stages || undefined,
@@ -117,8 +119,8 @@ const DefaultStory = ({ stages = 0, indeterminate, ...args }: StoryArgs) => {
   /** Cancelling is not a failure: the run simply stops, and the meter returns to where it began. */
   const handleCancel = useCallback(() => {
     stopped.current = true;
-    setState(idle(stages));
-  }, [stages]);
+    setState(idle(stages, indeterminate));
+  }, [stages, indeterminate]);
 
   const handleFail = useCallback(() => {
     stopped.current = true;
@@ -163,6 +165,16 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
+ * The same run with nothing to count. No fraction can be drawn honestly, so the bar sweeps and the
+ * clock runs in place of a count.
+ */
+export const Indeterminate: Story = {
+  args: {
+    indeterminate: true,
+  },
+};
+
+/**
  * A declared plan of three stages, each counted. The stages carry the fraction on the line leaving
  * the one in flight, so the plan and the progress within it are one drawing rather than two.
  */
@@ -176,7 +188,7 @@ export const Stepper: Story = {
  * The same plan with nothing to count. No line can be filled honestly, so the stage in flight spins
  * and the clock runs in place of a count.
  */
-export const Indeterminate: Story = {
+export const StepperIndeterminate: Story = {
   args: {
     stages: 3,
     indeterminate: true,
