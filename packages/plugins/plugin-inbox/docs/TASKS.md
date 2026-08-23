@@ -893,11 +893,35 @@ consistent with the invocation being killed before it enumerates a page, since a
 would still emit `PROGRESS_STATUS_FAILED` from the finalizer. A hard kill skips finalizers; so does
 a defect that escapes the run's error channel.
 
+- [x] **Staleness bound in the sink** — BUILT 2026-08-23. A monitor that goes 90s without an update
+      is failed as `Stopped reporting`, which claims only what is known: the run may have finished or
+      still be going, and only its reporting is certainly over. The entry stays registered so the
+      meter keeps its dismiss control, and a later run recovers the key from its own numbers rather
+      than inheriting the abandoned run's. Bonus: `app-graph-builder` disables the Sync button on
+      `status === 'running'`, so a wedged meter used to disable syncing indefinitely — the bound
+      un-sticks that too. Eight tests, four of which fail without the bound.
 - [ ] Confirm edge-side whether the invocation dies (timeout/OOM/hard kill) or the swarm broadcast
-      drops everything past the first message. Client logs cannot separate these two.
-- [ ] Either way, the sink needs a staleness bound: a monitor with no update for N ms should be
-      failed or removed. Today a run that stops reporting pins its meter open forever, and the
-      only bound in the sink (`RUN_TOMBSTONE_TTL_MS`) applies to cancels, not to silence.
+      drops everything past the first message. Client logs cannot separate these two. The staleness
+      bound makes this non-urgent — a lost run now costs a late meter rather than a dead one — but it
+      does not answer why edge sync is silent, and mail is still not arriving on the trigger.
+- [ ] **Emit the terminal from an exit handler, not the happy path.**
+      `reportStatus({ message: PROGRESS_STATUS_COMPLETE })` at `mail-sync.ts:755` is a plain statement
+      after the pipeline, and the `Effect.tapError` above it catches typed failures only — a DEFECT
+      bypasses both and reports nothing. Wrapping the run in `Effect.onExit` and reporting
+      complete/failed/interrupted off the `Exit` closes every path except a hard kill of the
+      invocation. Deferred deliberately: it only pays off if the invocation survives to run a
+      finalizer, which is exactly what the open question above is about.
+- [ ] **A total at the start of the run** — costed 2026-08-23, NOT worth building as specified.
+      On the incremental path it is already effectively done: both providers call
+      `onEnumerated(forwardIds.length)` eagerly inside `buildSource`
+      (`plugin-google/…/sync-provider.ts:197`, `plugin-jmap/…:222`), so a total lands milliseconds
+      after the opening status. Moving `reportStatus({ current: 0 })` below `buildSource` would close
+      a window that narrow, and would cost the opening status entirely when `buildSource` throws.
+      The path where it WOULD matter is backfill / full-scan, where enumeration genuinely streams
+      (`fetch.ts:192` reports each page as `Stream.paginate` walks it) — and a total there needs
+      either Gmail's `resultSizeEstimate` (an estimate, so the bar would not end where it says) or a
+      full enumeration pass before fetching, plus a new `MailSyncSource` field and both providers.
+      Revisit only if backfill meters become a complaint in their own right.
 
 ## Manual test plan
 
