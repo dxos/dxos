@@ -15,7 +15,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Database, Feed, JsonSchema, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { DXN, EntityId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Message, Outline } from '@dxos/types';
 
@@ -31,7 +31,8 @@ EntityId.dangerouslyDisableRandomness();
 const TestLayer = AssistantTestLayer({
   operationHandlers: OperationHandlerSet.make(defaultAgentPrompt),
   types: [Chat.Chat, Message.Message, AiContext.Binding, Text.Text, Outline.Outline, Feed.Feed],
-  model: DXN.make('com.anthropic.model.claude-sonnet-4-6.default'),
+  // No `model` here: the operation resolves its own from the invocation, so a layer model would be
+  // dead config that disagrees with the model the fixtures record.
   aiServicePreset: 'direct',
 });
 
