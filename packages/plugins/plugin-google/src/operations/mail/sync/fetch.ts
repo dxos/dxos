@@ -20,12 +20,21 @@ import { GoogleMailApi, type GoogleMailApiError, type GoogleMailApiService } fro
 import { GoogleApiError } from '../../../errors';
 import { type AttachmentMetadata } from '../mapper';
 
-/** Gmail's streaming-pipeline tuning; see {@link SyncStreamConfig.SyncStreamConfig}. */
+/**
+ * Gmail's streaming-pipeline tuning; see {@link SyncStreamConfig.SyncStreamConfig}.
+ *
+ * The per-run and enumeration bounds are sized for the smallest host that runs this sync: a
+ * Cloudflare Workers isolate capped at 128 MB, shared with the whole operation-service bundle. The
+ * commit pipeline streams in `commitPageSize` groups, so what a run actually holds resident is one
+ * enumeration page of ids plus the date-window reversal buffer — both scale with `listPageSize`.
+ * Draining a larger delta is not lost, only deferred: a capped run requests `Operation.runAgain()`
+ * and the cursor resumes at the chunk boundary.
+ */
 export const GOOGLE_SYNC_CONFIG = {
-  listPageSize: 500,
+  listPageSize: 100,
   fetchConcurrency: 5,
   commitPageSize: 10,
-  maxItemsPerRun: 500,
+  maxItemsPerRun: 100,
   dateChunkDays: 7,
 } as const satisfies SyncStreamConfig.SyncStreamConfig;
 
