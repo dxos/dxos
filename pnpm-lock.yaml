@@ -17517,9 +17517,6 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
-      '@dxos/react-ui-components':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-components
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
@@ -19010,9 +19007,6 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
-      '@dxos/react-ui-components':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-components
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
@@ -19086,6 +19080,9 @@ importers:
       '@dxos/plugin-trip':
         specifier: workspace:*
         version: link:../../plugins/plugin-trip
+      '@dxos/react-ui-components':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-components
       '@dxos/react-ui-debug':
         specifier: workspace:*
         version: link:../../ui/react-ui-debug
