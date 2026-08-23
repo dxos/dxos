@@ -197,15 +197,15 @@ put a tag where a name belongs. This one is confirmed, unfixed, and the biggest 
       the normal path for document two onward.
 
       The obvious fix is unsafe. Reusing an existing `Language` by `baseCode` alone merges a Japanese
-          and a Spanish document onto one object, and `handleRun` then overwrites `target.code` with the
-          newly detected source — corrupting the first document's reading system and its word list. The
-          correct identity is (source, target), and the source is not known until `TranslatePassage`
-          returns, which is after the object has to exist to be passed to it.
+              and a Spanish document onto one object, and `handleRun` then overwrites `target.code` with the
+              newly detected source — corrupting the first document's reading system and its word list. The
+              correct identity is (source, target), and the source is not known until `TranslatePassage`
+              returns, which is after the object has to exist to be passed to it.
 
-          So this is a re-sequencing — resolve or create the `Language` from the detected `sourceCode`
-          once the translation is back, adopting an existing (source, target) object where one exists —
-          plus a decision about what to do with the per-document Languages already in a user's space.
-          Deliberately not attempted under review: getting it wrong merges decks irreversibly.
+              So this is a re-sequencing — resolve or create the `Language` from the detected `sourceCode`
+              once the translation is back, adopting an existing (source, target) object where one exists —
+              plus a decision about what to do with the per-document Languages already in a user's space.
+              Deliberately not attempted under review: getting it wrong merges decks irreversibly.
 
 ## Loose ends from the reader work
 
