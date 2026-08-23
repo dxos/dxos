@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { ProgressMeter, useProgressMonitors } from '@dxos/app-toolkit/ui';
+import { ProgressMeter, toProgressState, useProgressMonitors } from '@dxos/app-toolkit/ui';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
 import { IconButton, Popover, useTranslation } from '@dxos/react-ui';
 
@@ -41,7 +41,11 @@ export const ProgressStatusIndicator = () => {
           <Popover.Content side='left'>
             <div className='flex flex-col gap-1 w-[260px] p-2'>
               {active.map((monitor) => (
-                <ProgressMeter key={monitor.name} state={monitor} onCancel={() => registry.cancel(monitor.name)} />
+                <ProgressMeter
+                  key={monitor.name}
+                  state={toProgressState(monitor)}
+                  onCancel={() => registry.cancel(monitor.name)}
+                />
               ))}
             </div>
             <Popover.Arrow />

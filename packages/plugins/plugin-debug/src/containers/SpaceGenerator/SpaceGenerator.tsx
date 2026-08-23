@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useOperationInvoker, useOptionalCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { ProgressMeter, useProgressMonitor } from '@dxos/app-toolkit/ui';
+import { ProgressMeter, toProgressState, useProgressMonitor } from '@dxos/app-toolkit/ui';
 import { ComputeGraph } from '@dxos/conductor';
 import { Filter, Obj, Type } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
@@ -329,7 +329,7 @@ const ProgressGenerator = ({ classNames }: ProgressGeneratorProps) => {
         )}
       </Flex>
       {monitor && (monitor.status === 'running' || monitor.status === 'error') && (
-        <ProgressMeter state={monitor} onCancel={() => registry?.cancel(TEST_PROGRESS_NAME)} />
+        <ProgressMeter state={toProgressState(monitor)} onCancel={() => registry?.cancel(TEST_PROGRESS_NAME)} />
       )}
     </div>
   );

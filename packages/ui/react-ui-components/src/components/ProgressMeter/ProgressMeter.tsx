@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { type ComponentPropsWithoutRef, useEffect, useRef, useState } from 'react';
 
 import {
   IconButton,
@@ -17,17 +17,23 @@ import {
 
 import { type ProgressState } from './types';
 
-export type ProgressMeterProps = ThemedClassName<{
-  state: ProgressState;
-  /**
-   * Cancels a run in flight, and clears one that failed — where there is nothing left to cancel, but
-   * the meter would otherwise hold its place with no way to dismiss it.
-   */
-  onCancel?: () => void;
-  /** Index of a stage the caller has singled out. */
-  selected?: number;
-  onSelect?: (step: { index: number; id: string }) => void;
-}>;
+export type ProgressMeterProps = ThemedClassName<
+  // The DOM attributes come with the component because it owns the element: a host that slots it in
+  // (`Panel.Statusbar asChild`) merges `data-slot` and placement onto the child, and a props type that
+  // admits only `state` silently drops them — the meter then lands in an implicit grid row instead of
+  // the statusbar, overlaying the content.
+  Omit<ComponentPropsWithoutRef<'div'>, 'children'> & {
+    state: ProgressState;
+    /**
+     * Cancels a run in flight, and clears one that failed — where there is nothing left to cancel, but
+     * the meter would otherwise hold its place with no way to dismiss it.
+     */
+    onCancel?: () => void;
+    /** Index of a stage the caller has singled out. */
+    selected?: number;
+    onSelect?: (step: { index: number; id: string }) => void;
+  }
+>;
 
 /**
  * A run's full readout: what it is, where it is in its plan, how far through the stage in flight,

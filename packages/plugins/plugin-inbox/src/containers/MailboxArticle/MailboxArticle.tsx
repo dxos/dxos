@@ -16,7 +16,14 @@ import {
 } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface, ProgressMeter, useAppGraph, useProgressMonitor, useShowItem } from '@dxos/app-toolkit/ui';
+import {
+  type AppSurface,
+  ProgressMeter,
+  toProgressState,
+  useAppGraph,
+  useProgressMonitor,
+  useShowItem,
+} from '@dxos/app-toolkit/ui';
 import { Aggregate, Database, Ref as EchoRef, Filter, Obj, Order, Query, Scope, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
@@ -471,7 +478,7 @@ export const MailboxArticle = ({
       {progress && (progress.status === 'running' || progress.status === 'error') && (
         <Panel.Statusbar asChild>
           <ProgressMeter
-            state={progress}
+            state={toProgressState(progress)}
             classNames='border-t border-separator'
             onCancel={progressRegistry ? () => progressRegistry.cancel(progress.name) : undefined}
           />

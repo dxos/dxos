@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { type AppSurface, ProgressMeter, useProgressMonitor, useShowItem } from '@dxos/app-toolkit/ui';
+import { type AppSurface, ProgressMeter, toProgressState, useProgressMonitor, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
@@ -114,7 +114,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       </Panel.Content>
       {curateProgress && (
         <Panel.Statusbar asChild>
-          <ProgressMeter state={curateProgress} classNames='border-t border-separator' />
+          <ProgressMeter state={toProgressState(curateProgress)} classNames='border-t border-separator' />
         </Panel.Statusbar>
       )}
     </Panel.Root>
