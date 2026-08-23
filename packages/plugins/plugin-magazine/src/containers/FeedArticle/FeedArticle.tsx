@@ -5,10 +5,11 @@
 import React, { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface, ProgressMeter, useProgressMonitor } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useProgressMonitor } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Panel } from '@dxos/react-ui';
+import { ProgressMeter } from '@dxos/react-ui-components';
 
 import { PostStack, type PostStackAction } from '#components';
 import { meta } from '#meta';

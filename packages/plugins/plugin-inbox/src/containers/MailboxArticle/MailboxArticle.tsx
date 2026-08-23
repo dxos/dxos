@@ -16,7 +16,7 @@ import {
 } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface, ProgressMeter, useAppGraph, useProgressMonitor, useShowItem } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useAppGraph, useProgressMonitor, useShowItem } from '@dxos/app-toolkit/ui';
 import { Aggregate, Database, Ref as EchoRef, Filter, Obj, Order, Query, Scope, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
@@ -27,6 +27,7 @@ import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
 import { Deferred, ElevationProvider, Panel } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
+import { ProgressMeter } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
 import {
   Menu,
