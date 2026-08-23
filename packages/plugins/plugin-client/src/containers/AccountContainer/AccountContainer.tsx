@@ -173,7 +173,7 @@ export const AccountContainer = () => {
                   )}
                 </Form.Row>
                 <Form.Row label={t('delete-account.label')} description={t('delete-account.description')}>
-                  <Button variant='destructive' density='sm' onClick={handleDeleteAccount}>
+                  <Button variant='destructive' onClick={handleDeleteAccount}>
                     {t('delete-account.label')}
                   </Button>
                 </Form.Row>
