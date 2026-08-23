@@ -25,14 +25,11 @@ import defaultAgentPrompt from './run-instructions';
 
 EntityId.dangerouslyDisableRandomness();
 
-// A live model decides for itself how to encode the completion signal — whether an omitted field
-// arrives absent or as an explicit `null`. Scripted turns cannot cover that, so both outcomes of a
-// routine are replayed against a recorded model here (DX-1189).
+// A live model, not the test, chooses whether an omitted field arrives absent or as `null`.
 const TestLayer = AssistantTestLayer({
   operationHandlers: OperationHandlerSet.make(defaultAgentPrompt),
   types: [Chat.Chat, Message.Message, AiContext.Binding, Text.Text, Outline.Outline, Feed.Feed],
-  // No `model` here: the operation resolves its own from the invocation, so a layer model would be
-  // dead config that disagrees with the model the fixtures record.
+  // No `model`: the operation resolves its own from the invocation and never reads a layer model.
   aiServicePreset: 'direct',
 });
 
@@ -77,8 +74,7 @@ describe('RunInstructions (recorded model)', { tags: ['model-fixture'] }, () => 
         const instructions = yield* Database.add(
           Instructions.make({
             name: 'curate-without-topic',
-            // The DX-1189 shape: the instructions promise a Topic that is never supplied, so the
-            // only honest completion is a failure.
+            // The instructions promise a Topic never supplied, so the only honest outcome fails.
             text: 'Select the candidates in the input that clearly match the editorial Topic described below.',
             output: Schema.Struct({ selected: Schema.Array(Schema.String) }),
             skills: [],

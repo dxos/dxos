@@ -26,22 +26,6 @@ import defaultAgentPrompt from './run-instructions';
 
 EntityId.dangerouslyDisableRandomness();
 
-// The agent finishes by calling `completeJob`; scripting that call drives the whole operation
-// without a live model, so what is asserted is the operation's own behaviour rather than the
-// model's. A scripted turn replaces the memoized conversation this file used to replay.
-const layerWithToolCall = (input: unknown) =>
-  AssistantTestLayer({
-    operationHandlers: OperationHandlerSet.make(defaultAgentPrompt),
-    types: [Chat.Chat, Message.Message, AiContext.Binding, Text.Text, Outline.Outline],
-    aiService: ScriptedLanguageModel.scriptedAiService([
-      { parts: [ScriptedLanguageModel.toolCall('completeJob', input)] },
-      // The loop asks again once the tool result is fed back; a text-only turn stops it.
-      { parts: [ScriptedLanguageModel.text('Done.')] },
-    ]),
-  });
-
-const layerWithResult = (success: unknown) => layerWithToolCall({ success });
-
 describe('RunInstructions', () => {
   it.effect(
     'chat mode appends assistant messages to the chat queue',
@@ -122,8 +106,7 @@ describe('RunInstructions', () => {
         );
         yield* Database.flush();
 
-        // Models emit `null` rather than omitting a field; the tool must accept that instead of
-        // rejecting the parameters and forcing the agent to retry the completion signal (DX-1189).
+        // Models emit `null` rather than omitting a field, and the tool must accept that.
         const exit = yield* Operation.invoke(RunInstructions, {
           instructions: Ref.make(instructions),
           input: {},
@@ -155,8 +138,7 @@ describe('RunInstructions', () => {
         );
         yield* Database.flush();
 
-        // A model that fills the unused branch with a placeholder rather than omitting it must not
-        // lose the work it completed (DX-1189).
+        // A placeholder in the unused branch must not lose the work the agent completed.
         const result = yield* Operation.invoke(RunInstructions, {
           instructions: Ref.make(instructions),
           input: {},
@@ -174,6 +156,24 @@ describe('RunInstructions', () => {
     ),
   );
 });
+
+// Scripting the `completeJob` call drives the whole operation without a live model, so what is
+// asserted is the operation's own behaviour.
+function layerWithToolCall(input: unknown) {
+  return AssistantTestLayer({
+    operationHandlers: OperationHandlerSet.make(defaultAgentPrompt),
+    types: [Chat.Chat, Message.Message, AiContext.Binding, Text.Text, Outline.Outline],
+    aiService: ScriptedLanguageModel.scriptedAiService([
+      { parts: [ScriptedLanguageModel.toolCall('completeJob', input)] },
+      // The loop asks again once the tool result is fed back; a text-only turn stops it.
+      { parts: [ScriptedLanguageModel.text('Done.')] },
+    ]),
+  });
+}
+
+function layerWithResult(success: unknown) {
+  return layerWithToolCall({ success });
+}
 
 const countFeedMessages = (feed: Feed.Feed) =>
   Effect.gen(function* () {

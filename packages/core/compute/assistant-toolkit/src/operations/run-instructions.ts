@@ -185,9 +185,7 @@ const makePromptAgentToolkit = (options: {
 }) => {
   class PromptAgentToolkit extends Toolkit.make(
     Tool.make('completeJob', {
-      // Both fields accept an explicit `null`: models routinely emit `null` for a field they mean
-      // to omit, and a bare `Schema.optional` rejects that ("Expected object | undefined"), so the
-      // agent burns turns retrying the completion signal (DX-1189).
+      // Both fields accept `null` because models emit it for a field they mean to omit.
       parameters: Schema.Struct({
         success: Schema.optional(Schema.NullOr(options.output)),
         failure: Schema.optional(
@@ -207,8 +205,8 @@ const makePromptAgentToolkit = (options: {
   ) {}
   const layer = PromptAgentToolkit.toLayer({
     completeJob: Effect.fnUntraced(function* (result) {
-      // A success payload wins over a failure reported alongside it: a model that fills the unused
-      // branch rather than omitting it would otherwise discard a job it actually completed (DX-1189).
+      // A success payload wins over a failure sent alongside it, so a placeholder cannot discard
+      // completed work.
       if (result.success == null && result.failure) {
         yield* Deferred.fail(
           options.resultSink,

@@ -38,10 +38,7 @@ export const DEFAULT_INSTRUCTIONS = trim`
   - The best hero image URL for the article, when one is available.
 `;
 
-/**
- * Appended when the Magazine declares no Topic. Without it the methodology would promise an
- * editorial brief that is never supplied, leaving the agent no honest outcome but failure (DX-1189).
- */
+/** Appended when the Magazine declares no Topic, so the methodology promises no brief it lacks. */
 const UNTOPICED_INSTRUCTIONS = trim`
   This Magazine sets no Topic, so do not filter by subject: select the most newsworthy and
   substantial candidates on offer.

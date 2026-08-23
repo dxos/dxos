@@ -76,8 +76,7 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
     Effect.catchCause((cause) =>
       Effect.sync(() => {
         const errors = Cause.prettyErrors(cause);
-        // Name the tool and the message explicitly: the serialized `err` alone came through empty
-        // in a user's feedback bundle, leaving the failure undiagnosable (DX-1189).
+        // A serialized error can carry no readable text, so name the tool and message separately.
         log.warn('tool failed', { tool: toolCall.name, message: errors[0]?.message, err: errors[0] });
         return {
           // TODO(dmaretskyi): Effect-ai does not support isError flag.
