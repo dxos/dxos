@@ -27,55 +27,8 @@ describe('Wire', () => {
     });
   });
 
-  describe('narrowRefSchemas', () => {
-    test('a ref parameter is narrowed to its object branch rather than an untyped anyOf', ({ expect }) => {
-      const message = toolsList([
-        {
-          name: 'taskCreate',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              taskSet: {
-                anyOf: [
-                  { type: 'object', properties: { '/': { type: 'string' } }, required: ['/'] },
-                  { type: 'string' },
-                ],
-              },
-            },
-          },
-        },
-      ]);
-      expect(Wire.narrowRefSchemas(message)).to.be.true;
-      expect(message.result.tools[0].inputSchema.properties.taskSet).to.deep.equal({
-        type: 'object',
-        properties: { '/': { type: 'string' } },
-        required: ['/'],
-      });
-    });
-
-    test('an anyOf with more than one object branch is a real union and is left alone', ({ expect }) => {
-      const message = toolsList([
-        {
-          name: 'thing',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              value: {
-                anyOf: [
-                  { type: 'object', properties: { a: { type: 'string' } } },
-                  { type: 'object', properties: { b: { type: 'string' } } },
-                ],
-              },
-            },
-          },
-        },
-      ]);
-      expect(Wire.narrowRefSchemas(message)).to.be.false;
-    });
-  });
-
   describe('decorateInitialize', () => {
-    test('the shared identity is merged and the instructions state the skillLoad convention', ({ expect }) => {
+    test('the shared identity is merged and the instructions state the loadSkill convention', ({ expect }) => {
       const message: any = { result: { serverInfo: { name: 'DXOS', version: '0.1.0' } } };
       expect(Wire.decorateInitialize(message)).to.be.true;
       expect(message.result.serverInfo).to.deep.equal({
@@ -84,7 +37,17 @@ describe('Wire', () => {
         title: Identity.identity.title,
         websiteUrl: Identity.identity.websiteUrl,
       });
-      expect(message.result.instructions).to.include('skillLoad');
+      expect(message.result.instructions).to.include('loadSkill');
+    });
+
+    // The instructions are the one server text a client loads before any tool is chosen, so they
+    // are where the find-then-invoke loop has to be stated: nothing else tells a model that the
+    // verbs are behind two tools rather than being tools.
+    test('the instructions state the find-then-invoke loop', ({ expect }) => {
+      const message: any = { result: { serverInfo: { name: 'DXOS' } } };
+      Wire.decorateInitialize(message);
+      expect(message.result.instructions).to.include('queryOperations');
+      expect(message.result.instructions).to.include('invokeOperation');
     });
 
     test('a host field wins over the shared identity', ({ expect }) => {

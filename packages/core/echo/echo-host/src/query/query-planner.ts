@@ -426,23 +426,42 @@ export class QueryPlanner {
           return QueryPlan.Plan.make([...innerPlan.steps, ...childOfSteps]);
         }
 
-        // Simple AND: all filters are root-executable against in-memory objects after a wildcard select.
-        // Supports combining true root selectors (`object`, `tag`) plus negations / unions of those.
-        // Property-level filters (`compare`, `in`, `range`, `contains`) are intentionally excluded because
-        // `filterMatchDoc` only handles them as nested predicates inside an `object` filter, not at the root.
-        const isRootExecutable = (filter: QueryAST.Filter): boolean => {
-          switch (filter.type) {
-            case 'object':
-            case 'tag':
-              return true;
-            case 'not':
-              return isRootExecutable(filter.filter);
-            case 'or':
-              return filter.filters.every(isRootExecutable);
-            default:
-              return false;
+        // The text search must drive the selection — the in-memory matcher cannot evaluate one —
+        // and inverting it would need objects outside the FTS hits, which the index cannot produce.
+        const textFilters = flatFilters.filter((f): f is QueryAST.FilterTextSearch => f.type === 'text-search');
+        if (textFilters.length === 1 && !context.selectionInverted) {
+          const [textFilter] = textFilters;
+          const rest = flatFilters.filter((f) => f.type !== 'text-search');
+          if (rest.length === 0) {
+            return this._generateSelectionFromFilter(textFilter, context);
           }
-        };
+          if (rest.every(isRootExecutable)) {
+            const typename = rest.map(_extractFilterTypenames).find((list) => list !== null) ?? null;
+            return QueryPlan.Plan.make([
+              {
+                _tag: 'SelectStep',
+                scope: context.scope,
+                selector: {
+                  _tag: 'TextSelector',
+                  text: textFilter.text,
+                  searchKind: textFilter.searchKind ?? this._options.defaultTextSearchKind,
+                  typename,
+                },
+              },
+              ...this._generateDeletedHandlingSteps(context),
+              // The selector's typename narrowing is an over-approximation (it cannot distinguish
+              // schema versions), so the residual filters are always re-checked here.
+              {
+                _tag: 'FilterStep',
+                filter: rest.length === 1 ? { ...rest[0] } : { type: 'and', filters: rest },
+              },
+            ]);
+          }
+        }
+        if (textFilters.length > 0) {
+          throw queryTooComplexError(context.originalQuery);
+        }
+
         if (flatFilters.every(isRootExecutable)) {
           const innerFilter: QueryAST.Filter = { type: 'and', filters: flatFilters };
           const plannedFilter: QueryAST.Filter = context.selectionInverted
@@ -1256,6 +1275,51 @@ const _mergeTimestampSelectors = (selectors: QueryPlan.TimestampSelector[]): Que
     }
   }
   return merged;
+};
+
+/**
+ * Root-executable: the filter can run against in-memory objects after a wildcard select.
+ * Covers true root selectors (`object`, `tag`) plus negations / unions of those.
+ * Property-level filters (`compare`, `in`, `range`, `contains`) are intentionally excluded because
+ * `filterMatchDoc` only handles them as nested predicates inside an `object` filter, not at the root.
+ */
+const isRootExecutable = (filter: QueryAST.Filter): boolean => {
+  switch (filter.type) {
+    case 'object':
+    case 'tag':
+      return true;
+    case 'not':
+      return isRootExecutable(filter.filter);
+    case 'or':
+      return filter.filters.every(isRootExecutable);
+    default:
+      return false;
+  }
+};
+
+/**
+ * Typenames a filter constrains its matches to, or null when it admits objects of any type
+ * (so no narrowing is possible). Used to narrow an index selector; the full filter is still
+ * re-checked in memory, so returning null is always sound.
+ */
+const _extractFilterTypenames = (filter: QueryAST.Filter): NonNullable<QueryAST.FilterObject['typename']>[] | null => {
+  switch (filter.type) {
+    case 'object':
+      return filter.typename !== null ? [filter.typename] : null;
+    case 'or': {
+      const combined: NonNullable<QueryAST.FilterObject['typename']>[] = [];
+      for (const inner of filter.filters) {
+        const list = _extractFilterTypenames(inner);
+        if (list === null) {
+          return null;
+        }
+        combined.push(...list);
+      }
+      return combined;
+    }
+    default:
+      return null;
+  }
 };
 
 const isTrivialTypenameFilter = (filter: QueryAST.Filter): boolean => {

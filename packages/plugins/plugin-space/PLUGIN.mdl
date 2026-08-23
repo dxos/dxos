@@ -112,13 +112,15 @@ component RelatedArticle
 ```
 
 ```mdl
-component CreateObjectDialog
-  desc: Modal dialog that lets the user pick a schema type and fill initial fields to create a new ECHO object.
+component ObjectFormDialog
+  desc: Modal dialog that lets the user pick a target and a schema type and fill in a new ECHO object. In `live` mode the object is added to the database before the form opens and removed again on dismissal.
   props:
     target: Database | Collection
+    mode?: 'draft' | 'live'
     views?: boolean
     typename?: string
-    initialFormValues?: Record<string, any>
+    schema?: Schema
+    defaults?: Record<string, any>
     navigable?: boolean
   actions:
     confirm(data: Record<string, any>)
