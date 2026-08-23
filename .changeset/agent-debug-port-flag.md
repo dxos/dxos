@@ -1,4 +1,6 @@
 ---
+# multiple-changesets: a first-run schema-ordering fix (merged from another branch, different
+# packages entirely) is unrelated to the debug-port flag — a reader hits one or the other, never both
 '@dxos/client': patch
 '@dxos/plugin-markdown': patch
 ---
