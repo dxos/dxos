@@ -4,7 +4,6 @@
 
 import * as Trace from '@dxos/compute/Trace';
 import { EID } from '@dxos/keys';
-import { log } from '@dxos/log';
 
 import type * as AppCapabilities from './AppCapabilities';
 
@@ -195,17 +194,6 @@ export const createProgressTraceSink = (
         cancelled.delete(key);
       }
     }
-
-    // #region DEBUG
-    log.info('[DEBUG H2] status update', {
-      key,
-      message: data.message,
-      current: data.progress.current,
-      total: data.progress.total,
-      pid: target.pid,
-      runtime: target.runtimeName,
-    });
-    // #endregion DEBUG
 
     const handle = monitorFor(registry, key, data.message, target);
 

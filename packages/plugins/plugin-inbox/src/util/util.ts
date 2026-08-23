@@ -312,7 +312,7 @@ export const getMessageProps = (
   const date = formatDateTime(message.created ? new Date(message.created) : new Date(), now, options);
   // Falls through to the address, as `renderMarkdown` does: bulk senders often set no display name,
   // and a row with an empty sender reads as a broken message rather than an unnamed one.
-  const from = message.sender?.contact?.target?.fullName ?? message.sender?.name ?? message.sender?.email;
+  const from = message.sender?.contact?.target?.fullName ?? message.sender?.name ?? message.sender?.email ?? 'xxx';
   const to = message.properties?.to; // TODO(burdon): Ref?
   const email = message.sender?.email;
   const subject = message.properties?.subject;

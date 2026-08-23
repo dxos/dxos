@@ -853,6 +853,52 @@ mutation log, and a state diff has no self-echo failure mode — sync writes tag
 
 ---
 
+## Edge sync emits ONE status per run and no terminal (measured 2026-08-23)
+
+The mailbox meter is permanently indeterminate and never clears. Instrumenting the client-side
+progress trace sink over a ~40-minute window settled where the fault is NOT: the same log carries a
+local feed sync and an edge mailbox sync, and only one of them reports.
+
+`plugin-magazine` feed sync, `runtimeName: 'local'`, one pid, four updates:
+
+```
+Syncing nippon.com / ja   current 0
+Syncing nippon.com / ja   current 0    total 20
+Syncing nippon.com / ja   current 20   total 20
+progress.complete         current 20   total 20
+```
+
+Mailbox sync, `runtimeName: 'edge-intrinsic'`, five separate runs 5–10 min apart (the trigger's
+schedule), each a fresh pid, each exactly ONE update:
+
+```
+Syncing rich@braneframe.com   current 0     (no total, no increments, no terminal)
+```
+
+That single update is `reportStatus({ current: 0 })` at `mail-sync.ts:509` — the run's opening
+report, which by design carries no total (the total is only known once `onEnumerated` has counted a
+page). Nothing after it arrives: not `addToTotal`'s total, not `onRetrieved`'s increments, not the
+`progress.complete` at `mail-sync.ts:755`, not the `PROGRESS_STATUS_FAILED` its error finalizer
+would emit.
+
+So the meter is indeterminate because "started" is the only fact it is ever given, and it never
+clears because no terminal ever arrives. The renderer, the sink reducer and the producer are all
+exonerated: the producer is covered by `plugin-google/…/sync.test.ts` ("emits progress status
+updates"), which asserts a `total > 0` and a rising `current`, and the local run above proves the
+whole sink → registry → meter chain end to end in the very same session.
+
+What remains is edge-side and not observable from the client: the run reaches `provider.prepare`
+(the opening status is written after it), emits that status, and then produces nothing further —
+consistent with the invocation being killed before it enumerates a page, since a normal failure
+would still emit `PROGRESS_STATUS_FAILED` from the finalizer. A hard kill skips finalizers; so does
+a defect that escapes the run's error channel.
+
+- [ ] Confirm edge-side whether the invocation dies (timeout/OOM/hard kill) or the swarm broadcast
+      drops everything past the first message. Client logs cannot separate these two.
+- [ ] Either way, the sink needs a staleness bound: a monitor with no update for N ms should be
+      failed or removed. Today a run that stops reporting pins its meter open forever, and the
+      only bound in the sink (`RUN_TOMBSTONE_TTL_MS`) applies to cancels, not to silence.
+
 ## Manual test plan
 
 Moved to [`TESTING.md`](TESTING.md) — 27 steps across sections A–F. **Run 2026-08-14** against a live
