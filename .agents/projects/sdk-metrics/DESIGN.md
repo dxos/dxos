@@ -220,13 +220,21 @@ a rule, the in-flight episode is invisible to both instruments. The rule:
 Suggested buckets for `episode.duration`:
 `[1, 5, 15, 30, 60, 120, 300, 600, 1800, 3600]`.
 
-Source of truth is a non-React aggregator over
-`space.internal.db.subscribeToAutomergeSyncState` filtered to the EDGE peer, the
-same shape as `useSyncState` (`packages/sdk/react-client/src/echo/useSyncState.ts`)
-but living in a `DataProvider`. The 1Hz polling caveat in
-`SpaceProxy._syncToEdge` (`space-proxy.ts:770`, "still need polling, otherwise
-this gets stuck") applies here too — the subscription alone is not a reliable
-edge trigger.
+Source of truth is `db.subscribeToSyncState(cb, options)`
+(`packages/core/echo/echo-client/src/proxy-db/database.ts:778`), **not** the
+automerge-only `subscribeToAutomergeSyncState` path `useSyncState` uses. Since
+#12561 landed it already selects the EDGE peer and owns its own no-change poll
+backoff (2s, doubling to a 15s ceiling, snapping back the moment the backlog
+moves), so a `DataProvider` consuming it needs no timer of its own — which is
+what the earlier "must not own a poll" constraint was waiting for.
+
+`Database.SyncState` also covers **feed blocks** (`blocksToPull`, `blocksToPush`,
+`totalBlocks`) alongside documents. An episode is therefore defined over total
+pending work, `unsyncedDocumentCount + blocksToPull + blocksToPush`, matching how
+`toSpaceUpdate` (`packages/plugins/plugin-client/src/progress/space-sync-progress.ts`)
+already decides a space is caught up. A client with a stalled feed backlog is
+stuck whether or not its documents converged, so scoping the episode to documents
+would miss it. The `dxos.echo.documents.*` gauges stay document-only.
 
 ### Memory
 
@@ -347,6 +355,10 @@ than trusting the arithmetic.
 1. Which SigNoz environment is the dashboard built against (`DX_ENVIRONMENT`
    values in play)? The `signoz` MCP server is configured but unauthenticated, so
    nothing has been verified against a live instance yet.
-2. Should `did` be dropped in favour of a rotatable client-side identifier? The
+2. Should feed blocks get their own gauge (`dxos.echo.feed.blocks.unsynced.count`)?
+   The episode instruments already count them, but a separate gauge would be needed
+   to tell a document-backlog stall from a feed-block stall on the dashboard. Costs
+   1 series; deferred rather than silently changing the reconciled budget.
+3. Should `did` be dropped in favour of a rotatable client-side identifier? The
    existing `identityProvider` TODO in `client-observability.ts:22-25` already
    flags this for privacy reasons; it would also halve the identity label set.

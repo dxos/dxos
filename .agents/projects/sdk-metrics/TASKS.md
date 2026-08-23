@@ -110,9 +110,11 @@ The headline ask. Two instruments — neither alone answers it.
 ### Tasks
 
 - [ ] **Sync episode state machine** (pure, unit-tested)
-  - Fold a stream of `(timestamp, unsyncedDocumentCount)` into: episode open/close
-    transitions, and `lastProgressAt` = last time the episode's low-water mark
-    decreased.
+  - Fold a stream of `(timestamp, pendingCount)` into: episode open/close transitions,
+    and `lastProgressAt` = last time the episode's low-water mark decreased.
+  - `pendingCount` is `unsyncedDocumentCount + blocksToPull + blocksToPush`, matching
+    `toSpaceUpdate`'s definition of caught-up — a stalled feed backlog is just as stuck
+    as a stalled document backlog.
   - Progress is a **decrease** in `unsyncedDocumentCount`, not any state emission —
     a client re-reporting the same backlog must not look healthy. Track the
     low-water mark so concurrent local writes raising the count don't reset it.
@@ -127,20 +129,18 @@ The headline ask. Two instruments — neither alone answers it.
     Episode state is not persisted across reloads — out of scope.
   - Pure function over a sequence, so testable with no mocks. Cover startup and
     reload with a non-zero backlog, not just the transition cases.
-- [ ] **Non-React cross-space sync aggregator as a `DataProvider`**
-  - Same shape as `useSyncState` (`packages/sdk/react-client/src/echo/useSyncState.ts`):
-    `space.internal.db.subscribeToAutomergeSyncState` filtered to the EDGE peer via
-    `isEdgePeerId`, resubscribing on `client.spaces.subscribe`.
-  - **A poll is required, but this provider must not own one.** The subscription
-    alone gets stuck — hence the existing 1Hz poll and its TODO in
-    `SpaceProxy._syncToEdge` (`space-proxy.ts:770`). But standing up a second timer
-    re-creates the idle churn that memory-usage PR #12561 exists to remove.
-  - **Blocking decision, resolve before writing the provider:** #12561's backed-off
-    sync-state ticker is not on `main` yet (verified — no backoff in
-    `packages/sdk/client/src/echo`), so there is no source to name today. Either
-    (a) wait for #12561 and consume whatever it exposes, or (b) land a shared
-    backed-off sync-state source first and have both this provider and the UI read
-    it. Do **not** proceed by adding a private timer.
+- [ ] **Non-React cross-space sync aggregator as a `DataProvider`** — UNBLOCKED
+  - Consume `db.subscribeToSyncState(cb, options)`
+    (`packages/core/echo/echo-client/src/proxy-db/database.ts:778`), resubscribing on
+    `client.spaces.subscribe`. **Not** `subscribeToAutomergeSyncState` (the
+    `useSyncState` path) — that one is automerge-only and does not see feed blocks.
+  - The earlier "a poll is required but this provider must not own one" blocker is
+    **resolved**: #12561 merged as `8ca2ac7be8`, and `subscribeToSyncState` now owns a
+    no-change backoff internally (2s → 15s ceiling, resetting when the backlog moves)
+    and already selects the EDGE peer. So add no timer here — consuming the
+    subscription is sufficient and introduces no idle churn.
+  - Note the earlier claim that the backoff was "not on main" was checked in the wrong
+    package (`packages/sdk/client/src/echo`); it landed in `echo-client/src/proxy-db`.
 - [ ] **`dxos.echo.sync.episode.duration`** histogram, buckets
       `[1, 5, 15, 30, 60, 120, 300, 600, 1800, 3600]` s
   - "Longest stretch to sync" = `max` over merged buckets in SigNoz; `p99` for the tail.
