@@ -1261,7 +1261,7 @@ catalogs:
       specifier: ^10.6.0
       version: 10.6.0
     motion:
-      specifier: ^12.0.6
+      specifier: ^12.11.0
       version: 12.11.0
     multiformats:
       specifier: ^13.2.2
@@ -17387,6 +17387,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-components':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-components
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
@@ -20397,9 +20400,6 @@ importers:
       motion:
         specifier: 'catalog:'
         version: 12.11.0(@emotion/is-prop-valid@1.2.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      react-resize-detector:
-        specifier: 'catalog:'
-        version: 11.0.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
     devDependencies:
       '@dxos/ai':
         specifier: workspace:*
