@@ -56,6 +56,10 @@ Design agreed (see DESIGN.md §Deus.QA once written). Decisions:
 - [ ] `packages/apps/composer-app/APP.mdl` — cross-plugin journeys.
 - [x] Re-run `QA-1` through the skill (rather than by hand) — 2026-08-23. 4/4 pass, and the
       exercise paid for itself: three defects found, all in artifacts I had just written (below).
+- [x] Re-run again after the `steps:` list rewrite — 2026-08-23, 4/4 pass, clean. No new findings:
+      `given` (including the artifact-absence clause) held, the coalescing note was followed, the
+      exact-match key resolution worked for both `[op:…]` references, `$result` read correctly, and
+      `cleanup` ran. Three consecutive runs, no regression.
 - [ ] More markdown flows: the versioning/suggestion arc (F-8 to F-10) is the part with no
       cheap test coverage and the most to gain.
 
