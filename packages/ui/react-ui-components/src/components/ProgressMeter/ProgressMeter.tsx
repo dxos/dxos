@@ -4,11 +4,17 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { type ThemedClassName, composable, composableProps } from '../../util';
-import { IconButton } from '../Button';
-import { Progress } from '../Progress';
-import { Stepper, stepCount } from '../Stepper';
-import { TextCrawl } from '../TextCrawl';
+import {
+  IconButton,
+  Progress,
+  Stepper,
+  TextCrawl,
+  type ThemedClassName,
+  composable,
+  composableProps,
+  stepCount,
+} from '@dxos/react-ui';
+
 import { type ProgressState } from './types';
 
 export type ProgressMeterProps = ThemedClassName<{

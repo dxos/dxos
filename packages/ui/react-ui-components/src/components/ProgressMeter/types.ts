@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Step } from '../Stepper';
+import { type Step } from '@dxos/react-ui';
 
 /** Where a run is: not started, in flight, finished, or failed. */
 export type ProgressStatus = 'pending' | 'running' | 'done' | 'error';

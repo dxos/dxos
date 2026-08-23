@@ -6,6 +6,7 @@ export * from './AnimatedBorder';
 export * from './HtmlViewer';
 export * from './Matrix';
 export * from './NumericTabs';
+export * from './ProgressMeter';
 export * from './QueryEditor';
 export * from './QueryForm';
 export * from './Shimmer';

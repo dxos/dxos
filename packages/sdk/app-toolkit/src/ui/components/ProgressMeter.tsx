@@ -5,14 +5,10 @@
 import React from 'react';
 
 import { Progress } from '@dxos/progress';
-import {
-  ProgressMeter as NaturalProgressMeter,
-  type ProgressState,
-  type ThemedClassName,
-  composable,
-} from '@dxos/react-ui';
+import { type ThemedClassName, composable } from '@dxos/react-ui';
+import { ProgressMeter as NaturalProgressMeter, type ProgressState } from '@dxos/react-ui-components';
 
-export { formatDuration } from '@dxos/react-ui';
+export { formatDuration } from '@dxos/react-ui-components';
 
 export type ProgressMeterProps = ThemedClassName<{
   state: Progress.TaskProgress;
@@ -23,7 +19,7 @@ export type ProgressMeterProps = ThemedClassName<{
 /**
  * A registry task, rendered.
  *
- * The presentation lives in `react-ui`, which knows nothing about a progress registry — this is the
+ * The presentation lives in `react-ui-components`, which knows nothing about a progress registry — this is the
  * seam between the two, and the only place the runtime's task model is named. Keeping the adapter
  * here is what lets a story or a scripted value drive the same component.
  */

@@ -5,6 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
+import { random } from '@dxos/random';
+
 import { withLayout, withTheme } from '../../testing';
 import { Panel } from '../Panel';
 import { Toolbar } from '../Toolbar';
@@ -13,6 +15,11 @@ import { Stepper, type StepperProps } from './Stepper';
 const TICK_MS = 200;
 /** Items in a counted stage; the line leaving it fills as they are worked through. */
 const ITEMS = 10;
+/**
+ * Items completed per tick. Uneven, because real work is: a fixed step glides so smoothly that the
+ * line's transition has nothing to smooth, and it lands the handover on the same beat every time.
+ */
+const step = () => random.number.int({ min: 1, max: 3 });
 
 type StoryArgs = Partial<StepperProps> & {
   /** How many stages the plan starts with. */
@@ -49,14 +56,16 @@ const DefaultStory = ({ stages: initial = 5, indeterminate, ...props }: StoryArg
 
       if (phase >= stages) {
         clearInterval(interval);
-        setActive(stages - 1);
+        // Past the last stage, not on it: a run parked on its final stage still reads as working,
+        // and an uncounted one goes on spinning there for good.
+        setActive(stages);
         setFraction(1);
         return;
       }
 
-      count += indeterminate ? TICK_MS : 1;
+      count += indeterminate ? TICK_MS : step();
       setActive(phase);
-      setFraction(indeterminate ? 0 : count / ITEMS);
+      setFraction(indeterminate ? 0 : Math.min(1, count / ITEMS));
       if (count >= (indeterminate ? 2_000 : ITEMS)) {
         phase += 1;
         count = 0;
@@ -102,28 +111,25 @@ const DefaultStory = ({ stages: initial = 5, indeterminate, ...props }: StoryArg
           </Toolbar.Button>
           <Toolbar.Button onClick={() => reset()}>Reset</Toolbar.Button>
           <div className='flex-1' />
-          {[3, 5, 8].map((count) => (
+          {[2, 3, 5, 8].map((count) => (
             <Toolbar.Button key={count} onClick={() => reset(count)}>
               {String(count)}
             </Toolbar.Button>
           ))}
-          <div className='p-2 font-mono text-subdued'>{stages} stages</div>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content />
-      <Panel.Statusbar asChild>
-        <div className='p-3'>
-          <Stepper
-            steps={stages}
-            active={active}
-            fraction={fraction}
-            indeterminate={indeterminate}
-            error={failed}
-            selected={selected}
-            onSelect={(step) => setSelected((selected) => (selected === step.index ? undefined : step.index))}
-            {...props}
-          />
-        </div>
+      <Panel.Content classNames='h-6' />
+      <Panel.Statusbar>
+        <Stepper
+          steps={stages}
+          active={active}
+          fraction={fraction}
+          indeterminate={indeterminate}
+          error={failed}
+          selected={selected}
+          onSelect={(step) => setSelected((selected) => (selected === step.index ? undefined : step.index))}
+          {...props}
+        />
       </Panel.Statusbar>
     </Panel.Root>
   );
@@ -132,9 +138,9 @@ const DefaultStory = ({ stages: initial = 5, indeterminate, ...props }: StoryArg
 const meta = {
   title: 'ui/react-ui-core/components/Stepper',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'centered', classNames: 'w-[30rem]' })],
   parameters: {
-    layout: 'fullscreen',
+    layout: 'centered',
   },
 } satisfies Meta<typeof DefaultStory>;
 

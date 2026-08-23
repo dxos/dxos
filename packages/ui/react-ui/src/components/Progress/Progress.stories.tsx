@@ -5,13 +5,20 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { random } from '@dxos/random';
+
 import { withLayout, withTheme } from '../../testing';
 import { Panel } from '../Panel';
 import { Toolbar } from '../Toolbar';
 import { Progress, type ProgressProps } from './Progress';
 
 const TICK_MS = 100;
-const STEP = 0.01;
+/**
+ * Advances by an uneven amount, because real work does: a fixed step glides so smoothly that the
+ * width transition has nothing to smooth, and a bar that only ever looks good on even increments is
+ * not tested at all.
+ */
+const step = () => random.number.int({ min: 1, max: 6 }) / 100;
 
 type StoryArgs = Partial<ProgressProps>;
 
@@ -38,7 +45,7 @@ const DefaultStory = ({ indeterminate, error, ...props }: StoryArgs) => {
     const interval = setInterval(
       () =>
         setProgress((progress) => {
-          const next = Math.min(1, progress + STEP);
+          const next = Math.min(1, progress + step());
           if (next === 1) {
             setRunning(false);
           }

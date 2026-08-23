@@ -5,10 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { withLayout, withTheme } from '../../testing';
-import { IconButton } from '../Button';
-import { Panel } from '../Panel';
-import { Toolbar } from '../Toolbar';
+import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+
 import { ProgressMeter, type ProgressMeterProps } from './ProgressMeter';
 import { type ProgressState } from './types';
 
@@ -163,7 +162,7 @@ const DefaultStory = (args: ProgressMeterProps) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/components/ProgressMeter',
+  title: 'ui/react-ui-components/ProgressMeter',
   component: ProgressMeter,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],

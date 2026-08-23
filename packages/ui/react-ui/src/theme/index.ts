@@ -28,6 +28,7 @@ export * from '../components/Separator/Separator.theme';
 export * from '../components/Skeleton/Skeleton.theme';
 export * from '../components/Slider/Slider.theme';
 export * from '../components/Splitter/Splitter.theme';
+export * from '../components/Stepper/Stepper.theme';
 export * from '../components/Tag/Tag.theme';
 export * from '../components/Toast/Toast.theme';
 export * from '../components/Toolbar/Toolbar.theme';

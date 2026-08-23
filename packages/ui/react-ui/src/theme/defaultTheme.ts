@@ -29,6 +29,7 @@ import { separatorTheme } from '../components/Separator/Separator.theme';
 import { skeletonTheme } from '../components/Skeleton/Skeleton.theme';
 import { sliderTheme } from '../components/Slider/Slider.theme';
 import { splitterTheme } from '../components/Splitter/Splitter.theme';
+import { stepperTheme } from '../components/Stepper/Stepper.theme';
 import { tagTheme } from '../components/Tag/Tag.theme';
 import { toastTheme } from '../components/Toast/Toast.theme';
 import { toolbarTheme } from '../components/Toolbar/Toolbar.theme';
@@ -72,6 +73,7 @@ export const defaultTheme: Theme<Record<string, any>> = {
   skeleton: skeletonTheme,
   slider: sliderTheme,
   splitter: splitterTheme,
+  stepper: stepperTheme,
   tag: tagTheme,
   toast: toastTheme,
   toolbar: toolbarTheme,
