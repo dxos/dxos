@@ -223,7 +223,7 @@ class DxnImageWidget extends WidgetType {
       const root = createRoot(loader);
       root.render(
         <ThemeProvider tx={defaultTx}>
-          <Progress.Bar indeterminate />
+          <Progress indeterminate />
         </ThemeProvider>,
       );
       widget.appendChild(loader);

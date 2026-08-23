@@ -198,7 +198,7 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
       return (
         <Form.Row label={label} description={description}>
           {typeof percent === 'number' ? (
-            <Progress.Bar progress={percent / 100} aria-label={t('usage-percent-used.label', { percent })} />
+            <Progress progress={percent / 100} aria-label={t('usage-percent-used.label', { percent })} />
           ) : (
             t('usage-unlimited.label')
           )}

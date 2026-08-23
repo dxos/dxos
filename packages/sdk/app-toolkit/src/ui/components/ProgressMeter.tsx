@@ -5,7 +5,12 @@
 import React from 'react';
 
 import { Progress } from '@dxos/progress';
-import { Progress as NaturalProgress, type ProgressState, type ThemedClassName, composable } from '@dxos/react-ui';
+import {
+  ProgressMeter as NaturalProgressMeter,
+  type ProgressState,
+  type ThemedClassName,
+  composable,
+} from '@dxos/react-ui';
 
 export { formatDuration } from '@dxos/react-ui';
 
@@ -24,7 +29,7 @@ export type ProgressMeterProps = ThemedClassName<{
  */
 export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
   ({ state, onCancel, className, classNames }, forwardedRef) => (
-    <NaturalProgress.Root
+    <NaturalProgressMeter
       // `className` is what a host slot injects at runtime (`Panel.Statusbar asChild`); the
       // presentational component owns the DOM node, so it is merged into its `classNames` rather
       // than applied here — there is no element of our own to put it on.

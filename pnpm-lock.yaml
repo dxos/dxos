@@ -19591,9 +19591,6 @@ importers:
       keyborg:
         specifier: 'catalog:'
         version: 2.6.0
-      motion:
-        specifier: 'catalog:'
-        version: 12.11.0(@emotion/is-prop-valid@1.2.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       react-aria-components:
         specifier: 'catalog:'
         version: 1.17.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -19606,9 +19603,6 @@ importers:
       react-remove-scroll:
         specifier: 'catalog:'
         version: 2.6.3(@types/react@19.2.17)(react@19.2.7)
-      react-resize-detector:
-        specifier: 'catalog:'
-        version: 11.0.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
     devDependencies:
       '@dxos/random':
         specifier: workspace:*

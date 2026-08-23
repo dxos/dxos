@@ -151,7 +151,7 @@ const RunProgress = ({
   const progress = state.total === 0 ? 0 : state.current / state.total;
   return (
     <Flex column gap='sm' classNames='p-2'>
-      <Progress.Bar progress={progress} classNames='block' />
+      <Progress progress={progress} classNames='block' />
       <span className='text-xs text-description'>
         {t('progress.label', {
           current: state.current,

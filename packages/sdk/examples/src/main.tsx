@@ -133,7 +133,7 @@ const fallback = () => {
   root.render(
     <ThemeProvider tx={defaultTx}>
       <div className='flex h-[100dvh] justify-center items-center'>
-        <Progress.Bar indeterminate aria-label='Initializing' />
+        <Progress indeterminate aria-label='Initializing' />
       </div>
     </ThemeProvider>,
   );

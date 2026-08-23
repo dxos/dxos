@@ -3,160 +3,97 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { withLayout, withTheme } from '../../testing';
-import { IconButton } from '../Button';
 import { Panel } from '../Panel';
 import { Toolbar } from '../Toolbar';
-import { Progress, type ProgressRootProps } from './Progress';
-import { type ProgressState } from './types';
+import { Progress, type ProgressProps } from './Progress';
 
-const TICK_MS = 400;
+const TICK_MS = 100;
+const STEP = 0.01;
 
-/**
- * One step of a scripted run. A phase either counts (`total` set) or does not — a run that mixes the
- * two is the case the readout has to serve: magazine curation counts its feeds, then makes a single
- * opaque agent call, then counts what it writes.
- */
-type Phase = {
-  note: string;
-  /** Omitted for a phase whose length is unknowable. */
-  total?: number;
-  /** How long an uncounted phase runs; a counted one ends when it reaches `total`. */
-  durationMs?: number;
-};
-
-/** A run whose length is known throughout: a bar with a count and an ETA. */
-const DETERMINATE: Phase[] = [{ note: 'Fetching messages', total: 40 }];
-
-/** A run that counts what it can and cannot count the rest — the case the readout exists for. */
-const PHASED: Phase[] = [
-  { note: 'Syncing feeds', total: 5 },
-  { note: 'Selecting articles', durationMs: 8_000 },
-  { note: 'Adding to magazine', total: 3 },
-];
-
-/** A run that never counts anything: one opaque call, start to finish. */
-const INDETERMINATE: Phase[] = [{ note: 'Asking the agent', durationMs: 20_000 }];
-
-const IDLE: ProgressState = {
-  label: 'Curating Reading List',
-  current: 0,
-  status: 'pending',
-  elapsedMs: 0,
-  note: 'Idle',
-  cancellable: true,
-};
+type StoryArgs = Partial<ProgressProps>;
 
 /**
- * Drives a task through a scripted run, so the readout is watched from zero rather than joined
- * halfway — the only way to see the elapsed clock, the phase transitions and the cancel control do
- * their job.
+ * Runs the bar from empty to full so the width transition is watched rather than sampled: a static
+ * fraction says nothing about whether an advance glides or jumps.
  *
- * The toolbar starts each shape and forces a failure; the readout's own ✕ cancels.
+ * **Fail** stops it where it got to and repaints it — the one state where a partial bar is the
+ * point, since it says how far the run got before it broke. An uncounted run has no such place, so
+ * failing fills it instead.
  */
-const DefaultStory = (args: ProgressRootProps) => {
-  const [state, setState] = useState<ProgressState>(IDLE);
-  const [script, setScript] = useState<{ phases: Phase[]; run: number }>({ phases: [], run: 0 });
-  const stopped = useRef(false);
+const DefaultStory = ({ indeterminate, error, ...props }: StoryArgs) => {
+  const [running, setRunning] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    if (script.run === 0) {
+    // An uncounted run has no fraction to accumulate — counting one anyway is what left a stub of
+    // fill behind when it stopped.
+    if (!running || indeterminate) {
       return;
     }
 
-    stopped.current = false;
-    const startedAt = new Date().toISOString();
-    const start = Date.now();
-    let index = 0;
-    let count = 0;
-
-    const patch = (next: Partial<ProgressState>) =>
-      setState((prev) => ({
-        ...prev,
-        ...next,
-        startedAt,
-        elapsedMs: Date.now() - start,
-      }));
-
-    const interval = setInterval(() => {
-      if (stopped.current) {
-        return;
-      }
-
-      const phase = script.phases[index];
-      if (!phase) {
-        clearInterval(interval);
-        patch({ status: 'done', note: 'Done', phase: script.phases.length - 1 });
-        return;
-      }
-
-      // A counted phase advances until it reaches its total; an uncounted one only runs the clock,
-      // which is the point — there is nothing to count, so the readout shows elapsed instead.
-      if (phase.total !== undefined) {
-        count += 1;
-        patch({ note: phase.note, phase: index, total: phase.total, current: count });
-        if (count >= phase.total) {
-          index += 1;
-          count = 0;
-        }
-      } else {
-        count += TICK_MS;
-        patch({ note: phase.note, phase: index, total: undefined, current: 0 });
-        if (count >= (phase.durationMs ?? 3_000)) {
-          index += 1;
-          count = 0;
-        }
-      }
-    }, TICK_MS);
-
+    const interval = setInterval(
+      () =>
+        setProgress((progress) => {
+          const next = Math.min(1, progress + STEP);
+          if (next === 1) {
+            setRunning(false);
+          }
+          return next;
+        }),
+      TICK_MS,
+    );
     return () => clearInterval(interval);
-  }, [script]);
+  }, [running, indeterminate]);
 
-  const handleStart = useCallback((phases: Phase[]) => {
-    stopped.current = true;
-    // Stamped here, not in a fixture: the clock has to read from zero on start, and a baked-in
-    // `startedAt` shows a run that was already going before anyone pressed anything. `phases` is the
-    // plan's length; the readout draws one circle per phase and marks the one in flight.
-    setState({ ...IDLE, status: 'running', startedAt: new Date().toISOString(), phases: phases.length, phase: 0 });
-    setScript(({ run }) => ({ phases, run: run + 1 }));
+  const handleStart = useCallback(() => {
+    setFailed(false);
+    setRunning(true);
   }, []);
 
-  /** Cancelling is not a failure: the run simply stops, and the readout returns to where it began. */
-  const handleCancel = useCallback(() => {
-    stopped.current = true;
-    setState({ ...IDLE });
+  const handleStop = useCallback(() => {
+    setFailed(false);
+    setRunning(false);
   }, []);
 
   const handleFail = useCallback(() => {
-    stopped.current = true;
-    setState((prev) => ({
-      ...prev,
-      status: 'error',
-      error: 'Network unreachable',
-    }));
+    setFailed(true);
+    setRunning(false);
+  }, []);
+
+  const handleReset = useCallback(() => {
+    setFailed(false);
+    setRunning(false);
+    setProgress(0);
   }, []);
 
   return (
     <Panel.Root>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <IconButton icon='ph--play--regular' label='Determinate' onClick={() => handleStart(DETERMINATE)} />
-          <IconButton
-            icon='ph--dots-three-outline--regular'
-            label='Indeterminate'
-            onClick={() => handleStart(INDETERMINATE)}
-          />
-          <IconButton icon='ph--list-checks--regular' label='Phased' onClick={() => handleStart(PHASED)} />
-          <IconButton icon='ph--warning--regular' label='Fail' onClick={handleFail} />
-          <IconButton icon='ph--x--regular' label='Cancel' onClick={handleCancel} />
+          <Toolbar.Button onClick={handleStart}>Start</Toolbar.Button>
+          <Toolbar.Button onClick={handleStop}>Stop</Toolbar.Button>
+          <Toolbar.Button onClick={handleFail}>Fail</Toolbar.Button>
+          <Toolbar.Button onClick={handleReset}>Reset</Toolbar.Button>
+          <Toolbar.Separator />
+          <div className='p-2 tabular-nums text-description text-sm'>{Math.round(progress * 100)}%</div>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content />
-      <Panel.Statusbar asChild>
-        {/* The readout's own control cancels a run in flight, and clears one that failed. */}
-        <Progress.Root {...args} state={state} onCancel={handleCancel} />
+      <Panel.Content classNames='h-6' />
+      <Panel.Statusbar>
+        {/* The sweep is what `running` looks like when nothing counts; stopping it has to leave
+            something behind, so the bar falls back to the fraction the run did reach. */}
+        <Progress
+          {...props}
+          progress={progress}
+          // A stopped run is no longer uncounted, it is simply idle — so the sweep gives way to an
+          // empty bar. A FAILED one stays uncounted, which is what fills it red.
+          indeterminate={indeterminate && (running || failed)}
+          error={error ?? failed}
+        />
       </Panel.Statusbar>
     </Panel.Root>
   );
@@ -164,36 +101,30 @@ const DefaultStory = (args: ProgressRootProps) => {
 
 const meta = {
   title: 'ui/react-ui-core/components/Progress',
-  component: Progress.Root,
+  component: Progress,
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'centered', classNames: 'w-[30rem]' })],
   parameters: {
-    layout: 'fullscreen',
+    layout: 'centered',
   },
-} satisfies Meta<typeof Progress.Root>;
+} satisfies Meta<typeof Progress>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
 /**
- * One component, three shapes, one geometry.
- *
- * **Determinate** counts to a known total: a filled bar, `n / total`, and an ETA.
- * **Indeterminate** never counts: the bar sweeps and the clock runs instead of a fraction.
- * **Phased** mixes both — it counts 5 feeds, cannot count the agent call, then counts again; one
- * circle per phase marks where the run is even while the phase in flight is uncountable.
- *
- * The rows never change height between them, so the surface around the readout never moves.
- * `label` holds the run's identity and the crawl underneath names the phases as they pass, so the
- * task never reads as a different task mid-run.
- *
- * **Fail** ends the run with an error. **Cancel** — in the toolbar, or the readout's own ✕ — stops a
- * run and returns it to idle: cancelling is not a failure, so it leaves no error behind. The ✕ stays
- * available on a failed run, where it clears the error rather than cancelling anything.
+ * The bare bar at a known fraction, for a host that supplies its own chrome. **Start** runs it to
+ * full; the fill eases between ticks rather than stepping.
  */
-export const Default: Story = {
+export const Default: Story = {};
+
+/**
+ * No fraction to draw: the fill sweeps instead of resting somewhere misleading. The toolbar's
+ * counter still advances, to show the sweep owes nothing to the underlying value.
+ */
+export const Indeterminate: Story = {
   args: {
-    state: IDLE,
+    indeterminate: true,
   },
 };

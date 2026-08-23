@@ -117,7 +117,7 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
           </div>
 
           {loading ? (
-            <Progress.Bar indeterminate aria-label={t('fundamentals.heading')} />
+            <Progress indeterminate aria-label={t('fundamentals.heading')} />
           ) : error ? (
             <Banner.Root valence='error'>
               <Banner.Content>

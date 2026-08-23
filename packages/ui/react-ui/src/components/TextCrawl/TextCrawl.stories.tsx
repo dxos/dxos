@@ -67,7 +67,7 @@ export const Controlled: Story = {
           <Toolbar.Button onClick={() => setLines(createLines())}>Generate</Toolbar.Button>
           <Toolbar.Button onClick={() => setLines([])}>Clear</Toolbar.Button>
         </Toolbar.Root>
-        <TextCrawl classNames='border-b border-separator' lines={lines} autoAdvance greedy />
+        <TextCrawl lines={lines} autoAdvance greedy />
       </div>
     );
   },

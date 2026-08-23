@@ -67,6 +67,7 @@ export const TextCrawl = ({
   }, [lines]);
 
   // Starting index.
+  const paintedRef = useRef(false);
   useEffect(() => {
     setPosition(index, false);
   }, []);
@@ -103,9 +104,12 @@ export const TextCrawl = ({
     }
 
     let i: NodeJS.Timeout;
-    const lastLineIndex = Math.max(0, lines.length - 1);
-    const showLastLineImmediately = greedy && index === lastLineIndex;
-    setPosition(index, index !== 0 && !wasReset && !showLastLineImmediately);
+    // `greedy` means arrive at the last line, not scroll to it — but only on the first paint. It
+    // holds the index at the tail for the whole run, so testing it on every update suppressed the
+    // animation for good and the crawl never moved.
+    const settled = paintedRef.current;
+    paintedRef.current = true;
+    setPosition(index, settled && index !== 0 && !wasReset);
     if (cyclic && index >= lines.length) {
       i = setTimeout(() => {
         setIndex(0);
@@ -116,7 +120,7 @@ export const TextCrawl = ({
     return () => {
       clearTimeout(i);
     };
-  }, [wasReset, lines, index, indexProp, cyclic, greedy]);
+  }, [wasReset, lines, index, indexProp, cyclic]);
 
   // Auto-advance.
   const lastUpdatedRef = useRef(Date.now());
