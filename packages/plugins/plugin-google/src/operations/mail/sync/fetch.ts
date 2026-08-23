@@ -23,15 +23,11 @@ import { type AttachmentMetadata } from '../mapper';
 /**
  * Gmail's streaming-pipeline tuning; see {@link SyncStreamConfig.SyncStreamConfig}.
  *
- * The per-run and enumeration bounds are sized for the smallest host that runs this sync: a
- * Cloudflare Workers isolate capped at 128 MB, shared with the whole operation-service bundle. The
- * commit pipeline streams in `commitPageSize` groups, so what a run actually holds resident is one
- * enumeration page of ids plus the date-window reversal buffer — both scale with `listPageSize`.
- * Draining a larger delta is not lost, only deferred: a capped run requests `Operation.runAgain()`
- * and the cursor resumes at the chunk boundary.
+ * `maxItemsPerRun` is sized for the smallest host that runs this sync — a 128 MB Cloudflare Workers
+ * isolate — because it bounds the messages fetched, and so the ECHO documents held, per run.
  */
 export const GOOGLE_SYNC_CONFIG = {
-  listPageSize: 100,
+  listPageSize: 500,
   fetchConcurrency: 5,
   commitPageSize: 10,
   maxItemsPerRun: 100,

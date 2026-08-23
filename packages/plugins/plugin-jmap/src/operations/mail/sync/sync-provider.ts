@@ -43,8 +43,7 @@ const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
  * JMAP mail's streaming-pipeline tuning; see {@link SyncStreamConfig.SyncStreamConfig}.
  *
  * `maxItemsPerRun` is sized for the smallest host that runs this sync — a 128 MB Cloudflare Workers
- * isolate shared with the whole operation-service bundle. A capped run requests
- * `Operation.runAgain()`, so a larger delta is deferred rather than lost.
+ * isolate — because it bounds the messages fetched, and so the ECHO documents held, per run.
  */
 const JMAP_SYNC_CONFIG = {
   listPageSize: 50,
