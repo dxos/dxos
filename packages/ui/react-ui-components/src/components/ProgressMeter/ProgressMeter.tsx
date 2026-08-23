@@ -90,6 +90,7 @@ export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
               <IconButton
                 density='sm'
                 variant='ghost'
+                size={3}
                 icon='ph--x--regular'
                 iconOnly
                 disabled={!cancellable}
