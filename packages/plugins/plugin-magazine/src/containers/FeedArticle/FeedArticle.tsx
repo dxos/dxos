@@ -8,6 +8,9 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface, ProgressMeter, useProgressMonitor } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
+// #region DEBUG
+import { log } from '@dxos/log';
+// #endregion DEBUG
 import { Panel } from '@dxos/react-ui';
 
 import { PostStack, type PostStackAction } from '#components';
@@ -19,6 +22,9 @@ import { FeedToolbar } from './FeedToolbar';
 export type FeedArticleProps = AppSurface.ObjectArticleProps<Subscription.Subscription>;
 
 export const FeedArticle = ({ role, subject, attendableId }: FeedArticleProps) => {
+  // #region DEBUG
+  log.info('[DEBUG H1] FeedArticle render', { subject: subject?.id, role });
+  // #endregion DEBUG
   const { invokePromise } = useOperationInvoker();
   const [currentPostId, setCurrentPostId] = useState<string>();
   const [subscription] = useObject(subject);
