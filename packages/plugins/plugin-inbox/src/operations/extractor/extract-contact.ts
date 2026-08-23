@@ -20,10 +20,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractContact> = Inb
       if (!contact) {
         return;
       }
-      yield* Operation.invoke(SpaceOperation.AddObject, {
-        object: contact,
-        target: db,
-      });
+      yield* Operation.invoke(SpaceOperation.AddObject, { object: contact }, { spaceId: db.spaceId });
 
       // Knowing who someone is makes their mail worth surfacing, so everything already received from
       // them is labelled — not just messages that arrive after the contact exists.

@@ -481,6 +481,9 @@
       "path": "packages/plugins/plugin-linear/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-lingo/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-magazine/tsconfig.json"
     },
     {

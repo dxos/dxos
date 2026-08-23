@@ -20,11 +20,13 @@ export const SERVICES_CONFIG: Record<string, Runtime.Services> = {
     },
   },
   REMOTE: {
+    // ai-service is reached through the single edge entrypoint under the `/ai` prefix; its own
+    // hostname is an implementation detail of not having a domain.
     ai: {
-      server: 'https://ai-service.dxos.workers.dev',
+      server: 'https://main.dxos.network/ai',
     },
     edge: {
-      url: 'https://edge-main.dxos.workers.dev',
+      url: 'https://main.dxos.network',
     },
   },
 };

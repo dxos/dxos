@@ -50,14 +50,17 @@ const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = Comme
         // of the two rendered lists (query results or drafts). Removing the draft first left a frame in
         // which the persisted relation was not yet queryable and the draft was gone — the comment
         // flashed out of the companion. (The render dedupes the brief draft/persisted overlap.)
-        yield* Operation.invoke(SpaceOperation.AddObject, { object: thread, target: db });
-        const { relation } = yield* Operation.invoke(SpaceOperation.AddRelation, {
-          db,
-          schema: AnchoredTo.AnchoredTo,
-          source: thread,
-          target: subject,
-          fields: { anchor: draft.anchor, branch: draft.branch },
-        });
+        yield* Operation.invoke(SpaceOperation.AddObject, { object: thread }, { spaceId: db.spaceId });
+        const { relation } = yield* Operation.invoke(
+          SpaceOperation.AddRelation,
+          {
+            schema: AnchoredTo.AnchoredTo,
+            source: thread,
+            target: subject,
+            fields: { anchor: draft.anchor, branch: draft.branch },
+          },
+          { spaceId: db.spaceId },
+        );
 
         // Persisting spans two awaits, during which a `Delete` for this comment can run. It sees the
         // anchor still listed as a draft, drops that entry, and returns — so without this the thread

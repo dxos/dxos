@@ -4,6 +4,17 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-08-20 — plugin-lingo (new plugin scaffold)
+
+- `Capability.contribute(Capabilities.OperationHandler, XOperationHandlerSet)` takes the SET, not `.handlers` — `.handlers` fails the overload (`plugin-bookmarks/src/capabilities/operation-handler.ts` is the reference).
+- A settings module must declare what it provides: `AppCapability.settings(() => import('./settings'), { provides: [XCapabilities.Settings] })`. Without `provides` the module type does not match.
+- A `Capability` named `Settings` cannot live in a file importing `./Settings` — the `@dxos/rules(import-as-namespace)` lint forces `import * as Settings`, which collides. Name the schema module `<Plugin>Settings.ts` and namespace-export it as `<Plugin>Settings` (plugin-markdown dodges it instead by re-exporting Settings through `Markdown.ts`).
+- `@dxos/rules(dxos-subpath-exports)`: every namespace re-exported from `src/types/index.ts` needs its own `exports` entry in `package.json` AND a matching `vite.config.ts` entry. Adding a type is three edits, not one.
+- effect rc-108 API: `Schema.decodeUnknown` and `Effect.fromNullable` do NOT exist. Use `Schema.decodeUnknownEffect(schema)(value)` and `Option.match(..., { onNone, onSome })`.
+- `useAtomValue` imports from `@effect/atom-react/Hooks`, not the package root.
+- Do not MODEL "the objects belonging to X" as a `Ref[]` array on the parent: put the ref on the CHILD and query it (`Filter.type(Child, { parent: Ref.make(x) })`) — one write to append, and the view is an ordinary reactive `useQuery`, where a whole-list subscription re-reads every target. This is a schema-design rule, not a ban on the hook: where a `Schema.Array(Ref.Ref(...))` field already exists, `useObjects(obj.refs)` is still the correct and REQUIRED way to read it (see "Reactivity (Ref arrays)" below) — reading `ref.target` synchronously renders empty on first mount and goes stale after add/remove.
+- Logical utilities are still dead: `bs-full`, `max-is-80` etc. compile to nothing. Use `h-full`, `max-w-80`.
+
 ## 2026-08-19 — plugin-stream-deck (new plugin)
 
 - Two `vite.config.ts` entries whose names differ ONLY BY CASE (`protocol` + `Protocol`) silently emit `protocol.mjs` and `Protocol2.mjs`; the `./Protocol` exports-map path then resolves to the WRONG file on macOS's case-insensitive FS, and rolldown statically inlines the missing namespace members as `void 0` — no build error, no runtime error, just `undefined` config. Never let two entry names collide case-insensitively.

@@ -42,7 +42,6 @@ export const SearchResultStack = composable<HTMLDivElement, SearchResultStackPro
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={SearchResultTile}
-                classNames='my-2'
                 gap={8}
                 items={items}
                 draggable={false}

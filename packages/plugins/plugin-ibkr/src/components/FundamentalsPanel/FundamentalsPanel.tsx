@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Format, TypeEnum } from '@dxos/echo/Format';
-import { Banner, IconButton, Status, useTranslation } from '@dxos/react-ui';
+import { Banner, IconButton, Progress, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldProvider } from '@dxos/react-ui-form';
 import { formatForDisplay } from '@dxos/schema';
 
@@ -117,7 +117,7 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
           </div>
 
           {loading ? (
-            <Status indeterminate aria-label={t('fundamentals.heading')} />
+            <Progress indeterminate aria-label={t('fundamentals.heading')} />
           ) : error ? (
             <Banner.Root valence='error'>
               <Banner.Content>

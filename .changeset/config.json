@@ -275,6 +275,7 @@
       "@dxos/plugin-kanban",
       "@dxos/plugin-library",
       "@dxos/plugin-linear",
+      "@dxos/plugin-lingo",
       "@dxos/plugin-magazine",
       "@dxos/plugin-map",
       "@dxos/plugin-map-solid",

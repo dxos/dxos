@@ -36,7 +36,7 @@ export default Capability.makeModule(
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.communications),
         groupSegment: GraphPath.GroupSegments.communications,
         createObject: (space) =>
-          Operation.invoke(SpaceOperation.OpenCreateObject, {
+          Operation.invoke(SpaceOperation.OpenObjectForm, {
             target: space.db,
             typename: channelTypename,
             targetNodeId: getChannelsPath(space.db.spaceId),
