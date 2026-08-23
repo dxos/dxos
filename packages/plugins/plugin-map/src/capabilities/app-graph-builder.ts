@@ -25,7 +25,7 @@ export default Capability.makeModule(
     const markerProvidersAtom = yield* Capability.atom(MapCapabilities.MarkerProvider);
 
     const extensions = yield* GraphBuilder.createExtension({
-      id: MapOperation.SetType.meta.key,
+      id: MapOperation.SetControlType.meta.key,
       match: (node, get) => Option.map(NodeMatcher.whenEchoType(View.View)(node, get), (view) => ({ view, node })),
       actions: ({ view, node }, get) => {
         const presentationRef = (node.properties as any).presentation;
@@ -41,7 +41,7 @@ export default Capability.makeModule(
               Effect.gen(function* () {
                 const state = yield* Capabilities.getAtomValue(MapCapabilities.State);
                 const type = state.type === 'globe' ? ('map' as const) : ('globe' as const);
-                yield* Operation.invoke(MapOperation.SetType, { type });
+                yield* Operation.invoke(MapOperation.SetControlType, { type });
               }),
             properties: {
               label: ['toggle-type.label', { ns: meta.profile.key }],
