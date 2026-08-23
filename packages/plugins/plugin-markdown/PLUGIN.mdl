@@ -387,10 +387,11 @@ flow QA-1: Create, place, open and edit a document
   desc: The core markdown round-trip through the running app.
   actors: both
   covers: [F-1.1, F-1.3, T-1, T-2]
-  status: passing            # verified 2026-08-23 against a live serve-qa dev server
+  status: passing            # 2026-08-23, twice: by hand, then through the running-qa-flows skill
   given:
     - an identity exists
     - a space is open and contains at least one collection
+    - no document named "QA Notes" exists (run `cleanup` first if a previous run left one)
   step 1: Create the document
     do: In the navtree, click + on a collection and choose Markdown. Name it "QA Notes".
     invoke: [op:createMarkdown] { name: "QA Notes", content: "# QA Notes\n\nThere is a tyop.\n" }
@@ -402,7 +403,7 @@ flow QA-1: Create, place, open and edit a document
     invoke: org.dxos.plugin.space.operation.addObject { object: $created.object, target: $given.collection }
     capture: added
     expect: "QA Notes" appears as a row under the collection in the navtree
-    assert: return (await space.db.query(dxos.Filter.everything()).run()).some((o) => o.name === 'QA Notes')
+    assert: return (await space.db.query(dxos.Filter.everything()).run()).some((o) => o.id === $created.object.id)
     note: |
       Steps 1-2 must be coalesced into ONE port snippet — `created.object` is a live ECHO object and
       the port serializes between snippets. Step granularity is the human's; batching is the
@@ -412,9 +413,8 @@ flow QA-1: Create, place, open and edit a document
     invoke: org.dxos.plugin.layout.operation.open { subject: ["root/$spaceId/content/collections/$created.object.id"] }
     expect: the editor renders "# QA Notes" and the navtree row is selected
     assert: |
-      return document.body.innerText.includes('QA Notes') &&
-        Array.from(document.querySelectorAll('[aria-current], [aria-selected="true"]'))
-          .some((el) => el.textContent?.includes('QA Notes'));
+      return Array.from(document.querySelectorAll('[aria-current], [aria-selected="true"]'))
+        .some((el) => el.textContent?.includes('QA Notes'));
     note: |
       `subject` is a navigation-path array and must be BUILT — `addObject` does not return one
       (its output schema is `{ id, object }`). Verified against the running app.

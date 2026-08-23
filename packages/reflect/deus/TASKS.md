@@ -54,7 +54,8 @@ Design agreed (see DESIGN.md §Deus.QA once written). Decisions:
 - [x] `.agents/skills/running-qa-flows/SKILL.md` — the agent-side execution contract, including the
       always-use-the-invoker rule and the built navigation path.
 - [ ] `packages/apps/composer-app/APP.mdl` — cross-plugin journeys.
-- [ ] Re-run `QA-1` through the skill (rather than by hand) to check the contract is followable.
+- [x] Re-run `QA-1` through the skill (rather than by hand) — 2026-08-23. 4/4 pass, and the
+      exercise paid for itself: three defects found, all in artifacts I had just written (below).
 - [ ] More markdown flows: the versioning/suggestion arc (F-8 to F-10) is the part with no
       cheap test coverage and the most to gain.
 
@@ -84,7 +85,19 @@ surrounding tooling that the flow surfaced.
 5. **plugin-debug is disabled by default in a plain local `serve`** (`isDev` is only true for the
    dev cloud env or `DX_DEV=true`), so routing port auto-start through it made the flag silently do
    nothing. The port belongs to `@dxos/client`; it now starts from `main.tsx`.
-6. **`plugin-onboarding` fails to activate on a fresh dev profile** — `Schema not registered
+6. **Steps 2 and 3 of `QA-1` asserted true BEFORE the flow ran.** The previous run's skipped
+   `cleanup` left a "QA Notes" document behind, and both asserts were existence-shaped
+   (`some((o) => o.name === 'QA Notes')`, `innerText.includes('QA Notes')`) — so each would have
+   reported pass having done nothing. Proved by evaluating them against the untouched fixture.
+   → Asserts are now identity-shaped; `given` names the absence of the flow's own artifacts; the
+   rule is Execution Rule 5 in `qa.mdl` and a step in the skill's §3.
+7. **The skill's `invokeOp` helper matched keys by `endsWith`** — which matches both
+   `org.dxos.function.markdown.create` and `org.dxos.plugin.markdown.operation.create`, the exact
+   ambiguity `key:` was introduced to remove. Now an exact match that fails unless there is exactly
+   one hit (Execution Rule 6).
+8. **The skill never said to read the flow first.** It went from consent straight to starting a
+   server, so a step's `note:` — which is a constraint, not commentary — could be missed. Now §1.
+9. **`plugin-onboarding` fails to activate on a fresh dev profile** — `Schema not registered
 Schema: org.dxos.type.document`. Not blocking (the default space and identity are still created)
    but it is an error on every cold boot of a new profile. Not investigated; logged for triage.
 

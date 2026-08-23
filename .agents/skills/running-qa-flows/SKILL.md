@@ -27,7 +27,13 @@ is at **flow granularity**: the user approves a named flow, you run all of its s
    server you started, whose profile is disposable.
 3. `cleanup:` is part of the flow. If you skip it, say so.
 
-## 1. Get a running app with the port open
+## 1. Read the flow
+
+Read the `flow` block itself first — `given`, every step's `do` / `invoke` / `expect` / `assert`,
+any `note`, and `cleanup`. A `note` is a constraint on how the step must be run, not commentary:
+ignoring one produces a false failure. Restate what the flow will change before asking for consent.
+
+## 2. Get a running app with the port open
 
 Start your own server rather than asking the user to flip a switch:
 
@@ -57,10 +63,17 @@ node .agents/skills/composer-forensics/scripts/composer-recovery.js --session <u
 **A page reload stops the port**, and a vite restart after a large merge leaves the module graph
 stale — restart the server rather than reloading, and re-read the sidecar for the new session.
 
-## 2. Establish `given`
+## 3. Establish `given`
 
 Every precondition, before step 1. If one cannot be met, **abort and say which** — a flow run
 against unmet preconditions reports failures that belong to the fixture, not the application.
+
+**Check that the flow's own artifacts are absent, whether or not `given` says so.** A previous run
+whose `cleanup` was skipped leaves objects behind, and an existence-shaped assert
+(`some((o) => o.name === 'QA Notes')`) is then already true before step 1 — the step reports pass
+having done nothing. Run the flow's `cleanup` first if that is what it takes, and say you did.
+Then prefer identity-shaped asserts (`some((o) => o.id === $created.object.id)`), which discriminate
+even on a dirty fixture; where you meet an existence-shaped one, fix it per §6.
 
 A fresh dev profile boots with an identity and a default space already created. Verify rather than
 assume:
@@ -75,35 +88,36 @@ return {
 `SpaceState.SPACE_READY === 3`. To create an identity where there is none:
 `await dxos.client.halo.createIdentity({ displayName: 'QA' })`.
 
-## 3. Run the steps
+## 4. Run the steps
 
 **Always invoke through the operation invoker with an explicit `spaceId`.** Do not branch on the
 op's `requires:` — an operation's declaration cannot see what services its downstream calls need,
 so `requires:` predicts nothing reliably. One helper, used for every step:
 
 ```js
-const invokeOp = async (keySuffix, input, space) => {
+const invokeOp = async (key, input, space) => {
   const mgr = composer.manager;
   const sets = mgr.capabilities.getAll({ identifier: 'org.dxos.app-framework.capability.operationHandler' });
-  let def;
-  for (const set of sets) {
-    const found = set.definitions().find((d) => String(d.meta.key).endsWith(keySuffix));
-    if (found) {
-      def = found;
-      break;
-    }
-  }
-  if (!def) {
-    throw new Error(`operation not found: ${keySuffix}`);
+  const matches = sets.flatMap((set) =>
+    set.definitions().filter((d) => String(d.meta.key).replace(/^dxn:/, '') === key),
+  );
+  if (matches.length !== 1) {
+    throw new Error(`expected exactly one operation for ${key}, found ${matches.length}`);
   }
   const invoker = mgr.capabilities.get({ identifier: 'org.dxos.app-framework.capability.operationInvoker' });
-  const { data, error } = await invoker.invokePromise(def, input, { spaceId: space.id });
+  const { data, error } = await invoker.invokePromise(matches[0], input, { spaceId: space.id });
   if (error) {
     throw new Error(String(error));
   }
   return data;
 };
 ```
+
+**Match the key exactly — never by suffix.** `endsWith('create')` matches both
+`org.dxos.function.markdown.create` and `org.dxos.plugin.markdown.operation.create`, which is the
+precise ambiguity the `key:` field exists to remove; a suffix match silently reintroduces it and
+takes whichever came first. Failing on anything but exactly one match turns a renamed or duplicated
+key into an error rather than a wrong operation.
 
 **Coalesce adjacent steps that thread a live object.** The port serializes between snippets, so an
 ECHO object captured in one step cannot reach the next as a proxy. When a step's `capture:` feeds
@@ -126,7 +140,7 @@ await composer.invoke('org.dxos.plugin.layout.operation.open', { subject: [path]
 For a view-holding object the last-but-one segment is the view's target type rather than
 `collections`; read it off an existing navtree entry rather than guessing.
 
-## 4. Report
+## 5. Report
 
 A table, one row per step, most useful column last:
 
@@ -141,7 +155,7 @@ QA-1  Create, place, open and edit a document          4/4 pass
 Report a failure by flow and step number (`QA-1.4`) with the observed value next to the expected
 one. Never report a step as passing because the invocation returned without throwing.
 
-## 5. Feed findings back
+## 6. Feed findings back
 
 A flow that was wrong about the app is a finding, not a failure to hide. When a run contradicts
 the spec — an output schema that changed, a step that needs coalescing, an operation whose key
@@ -151,9 +165,9 @@ the run is how it earns its accuracy.
 ## Checklist
 
 ```markdown
-- [ ] Flow named and approved by the user before running
-- [ ] `given` verified, not assumed; aborted if unmet
-- [ ] Every step invoked through the invoker with a spaceId
+- [ ] Flow read in full (including every `note`) and approved by the user before running
+- [ ] `given` verified, not assumed; the flow's own artifacts confirmed absent; aborted if unmet
+- [ ] Every step invoked through the invoker with a spaceId, matching the key exactly
 - [ ] Steps threading a live object coalesced into one snippet
 - [ ] Each step judged on its effect (db or DOM), never on a return value
 - [ ] Per-step pass/fail table reported, failures by QA-n.m

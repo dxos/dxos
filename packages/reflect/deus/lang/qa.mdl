@@ -142,7 +142,17 @@ a runner that ignores them produces false failures.
 4. **Establish `given` or abort.** A flow that runs against unmet preconditions reports failures
    that belong to the fixture, not the application.
 
-5. **Report by flow and step number** — `QA-1.3` — so a failure is addressable without prose.
+5. **Assertions must be falsifiable against a dirty fixture.** An existence-shaped check
+   (`some((o) => o.name === 'Notes')`) is already true when a previous run left its artifacts
+   behind, so the step reports pass having done nothing. Assert on the identity the flow just
+   produced (`o.id === $created.object.id`), and name the flow's own artifacts in `given` as
+   preconditions of their absence.
+
+6. **Resolve an operation by its exact key, never by suffix.** `endsWith('create')` matches both
+   `org.dxos.function.markdown.create` and `org.dxos.plugin.markdown.operation.create` — the very
+   ambiguity `key:` exists to remove.
+
+7. **Report by flow and step number** — `QA-1.3` — so a failure is addressable without prose.
 
 ---
 
