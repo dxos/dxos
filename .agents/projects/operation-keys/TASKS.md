@@ -27,7 +27,8 @@ Design: [DESIGN.md](./DESIGN.md)
       exact key matches, the rest name old namespaces as patterns or prose.
 - [ ] Lint rule `operation-key-shape` in `packages/common/eslint-plugin-rules`: a key must be a
       literal matching `<root>.operation.<domain>.<camelVerb>`, never built by a helper.
-- [ ] Regenerate memoized fixtures and [AUDIT.md](./AUDIT.md).
+- [x] Regenerate memoized fixtures and [AUDIT.md](./AUDIT.md). 16 recordings re-cut in the two
+      agent-runtime stores; every other store replayed unchanged, since its tools were not renamed.
 - [ ] 33 keys are still off-shape — test and example definitions that omit the domain segment
       (`com.example.operation.fib`). The lint rule should land before these are cleaned up, so they
       fail rather than accumulate.
