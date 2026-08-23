@@ -475,11 +475,15 @@ flow QA-1: Start a game and play the opening
   desc: The core chess round-trip — create a game, play the first few moves, read the position back.
   actors: human
   covers: [F-1.1, F-2.1]
-  status: unverified
+  status: passing            # 2026-08-23; step 1 performed by a human (no create operation exists)
   given:
     - an identity exists
-    - a space is open and contains at least one collection
-    - no game named "QA Game" exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - plugin-chess is enabled — it is OFF by default, and no chess operation is registered until
+      it is on. Enabling is a UI action (Settings -> plugin registry); `manager.enable()` returns
+      without error from the debug port and does not enable it.
+    - no game named "QA Game" exists — ABORT rather than deleting one this flow did not create
   steps:
     - name: Create the game
       do: In the navtree, click + on a collection and choose Chess. Name it "QA Game".
@@ -505,12 +509,17 @@ flow QA-1: Start a game and play the opening
       expect: the knight stands on f3 and the move list reads "1. e4 e5 2. Nf3"
       assert: return $result.pgn.includes('Nf3');
     - name: Reject an illegal move
-      do: Try to drag the f3 knight to f6.
-      invoke: [op:submitMove] { game: $given.game, move: "Nf6" }
-      expect: the move is refused, the board is unchanged, and the game reports IllegalMove
+      do: Try to drag the a8 rook two squares up the a-file, onto a6 — its own pawn is in the way.
+      invoke: [op:submitMove] { game: $given.game, move: "Ra6" }
+      expect: the move is refused, the board is unchanged, and the game reports an invalid move
       assert: |
-        // The step passes when the invocation FAILS — an accepted illegal move is the defect.
-        return $error?.message?.includes('Illegal') ?? false;
+        // Passes when the invocation FAILS — an accepted illegal move is the defect.
+        return /Invalid move/.test($error?.message ?? '');
+      note: |
+        SAN is side-relative, so the move in `do` and the move in `invoke` must denote the same one.
+        This step first read "drag the f3 knight to f6" against `Nf6`, which after 1. e4 e5 2. Nf3 is
+        BLACK's knight and perfectly legal (Petrov) — the human and agent paths described different
+        moves and the step failed against a correct engine.
   cleanup:
     - name: Delete the game
       do: Right-click "QA Game" in the navtree and choose Delete.
