@@ -34,6 +34,16 @@ const Edit = Schema.Struct({
   }),
 });
 
+/**
+ * What a slash-menu command receives: the surface it was triggered on, and the offset the trigger
+ * was consumed at. A handler resolves the live view from `MarkdownCapabilities.EditorViews` — the
+ * editor is not reachable from the operation layer any other way.
+ */
+export const EditorCommandInput = Schema.Struct({
+  subject: Schema.String.annotate({ description: 'Attendable id (or document id) of the editor surface.' }),
+  head: Schema.Number.annotate({ description: 'Document offset the command should insert at.' }),
+});
+
 export const Create = Operation.make({
   meta: {
     key: DXN.make('org.dxos.function.markdown.create'),

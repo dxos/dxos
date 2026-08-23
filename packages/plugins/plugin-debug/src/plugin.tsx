@@ -5,7 +5,15 @@
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { AppGraphBuilder, DebugSettings, LogRecording, ReactSurface, StatsPanel } from '#capabilities';
+import {
+  AppGraphBuilder,
+  DebugSettings,
+  LogRecording,
+  MarkdownMenu,
+  OperationHandler,
+  ReactSurface,
+  StatsPanel,
+} from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { Debug } from '#types';
@@ -18,6 +26,8 @@ export const DebugPlugin = Plugin.define<Debug.DebugPluginOptions>(meta).pipe(
   Plugin.addModule(DebugSettings),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(LogRecording),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(MarkdownMenu),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(StatsPanel),
   Plugin.addModule(
