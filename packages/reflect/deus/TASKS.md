@@ -2,8 +2,8 @@
 
 Project: `deus` · Design: [docs/DESIGN.md](./docs/DESIGN.md) · Idioms: [docs/IDIOMS.md](./docs/IDIOMS.md)
 
-_Resume: Phase 1 (Deus.QA) design agreed 2026-08-22. Spiking one markdown flow before
-materializing the dialect._
+_Resume: Phase 1 (Deus.QA) materialized 2026-08-23 — dialect, DESIGN section, execution skill, and
+a verified flow. Next: APP.mdl, then re-run QA-1 through the skill to test the contract itself._
 
 ## Goal
 
@@ -49,11 +49,14 @@ Design agreed (see DESIGN.md §Deus.QA once written). Decisions:
 
 - [x] `BLOCK_TYPES += 'flow'` in [src/extension/constants.ts](./src/extension/constants.ts).
 - [x] Backfill `key:`/`requires:` on the markdown ops the flows reference.
-- [ ] `lang/qa.mdl` — the `Deus.QA` dialect (`ext flow`, `ext step`), encoding Findings 1-3.
-- [ ] `docs/DESIGN.md` — `Deus.QA` section.
-- [ ] `.agents/skills/running-qa-flows/SKILL.md` — the agent-side execution contract, including the
+- [x] `lang/qa.mdl` — the `Deus.QA` dialect (`ext flow`, `ext step`), encoding Findings 1-3.
+- [x] `docs/DESIGN.md` — `Deus.QA` section.
+- [x] `.agents/skills/running-qa-flows/SKILL.md` — the agent-side execution contract, including the
       always-use-the-invoker rule and the built navigation path.
 - [ ] `packages/apps/composer-app/APP.mdl` — cross-plugin journeys.
+- [ ] Re-run `QA-1` through the skill (rather than by hand) to check the contract is followable.
+- [ ] More markdown flows: the versioning/suggestion arc (F-8 to F-10) is the part with no
+      cheap test coverage and the most to gain.
 
 ## Findings
 
