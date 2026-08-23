@@ -155,7 +155,7 @@ const setup = async () => {
 const TARGET_TYPENAME = Type.getTypename(Expando.Expando);
 
 const TestSync = Operation.make({
-  meta: { key: DXN.make('org.dxos.operation.test.syncTemplate.sync'), name: 'Test Sync' },
+  meta: { key: DXN.make('com.example.operation.test.syncTemplate.sync'), name: 'Test Sync' },
   input: Schema.Struct({ connection: Ref.Ref(Connection.Connection), priority: Schema.optional(Schema.String) }),
   output: Schema.Any,
 });

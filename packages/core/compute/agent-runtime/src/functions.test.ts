@@ -24,7 +24,7 @@ EntityId.dangerouslyDisableRandomness();
 
 const ReadName = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.readName'),
+    key: DXN.make('com.example.operation.readName'),
     name: 'Read Name',
     description: 'Reads the name of an organization.',
   },
@@ -50,7 +50,7 @@ const Comment: Schema.Codec<Comment> = Schema.Struct({
 
 const CountReplies = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.countReplies'),
+    key: DXN.make('com.example.operation.countReplies'),
     name: 'Count Replies',
     description: 'Counts the number of replies nested inside a comment thread.',
   },

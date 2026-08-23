@@ -100,7 +100,7 @@ describe('projectFunctionToTool', () => {
   // single parameterless operation would break every agent request.
   test('a parameterless operation emits a schema that satisfies strict mode', ({ expect }) => {
     const Parameterless = Operation.make({
-      meta: { key: DXN.make('org.dxos.operation.test.noParams') },
+      meta: { key: DXN.make('com.example.operation.test.noParams') },
       input: Schema.Void,
       output: Schema.Void,
     });
@@ -116,7 +116,7 @@ describe('projectFunctionToTool', () => {
   // every request fail, since all tools are sent together.
   test('an operation taking arbitrary JSON is not advertised as strict', ({ expect }) => {
     const PropertyBag = Operation.make({
-      meta: { key: DXN.make('org.dxos.operation.test.propertyBag') },
+      meta: { key: DXN.make('com.example.operation.test.propertyBag') },
       input: Schema.Struct({ properties: Schema.Record(Schema.String, Schema.Any) }),
       output: Schema.Void,
     });
@@ -131,7 +131,7 @@ describe('projectFunctionToTool', () => {
   // therefore project to dynamic tools, whose JSON Schema the provider must use verbatim.
   test('the advertised schema is what the model is validated against', ({ expect }) => {
     const Mixed = Operation.make({
-      meta: { key: DXN.make('org.dxos.operation.test.mixed') },
+      meta: { key: DXN.make('com.example.operation.test.mixed') },
       input: Schema.Struct({
         typename: Schema.String,
         properties: Schema.Record(Schema.String, Schema.Any),
@@ -246,7 +246,7 @@ describe('makeToolResolverFromOperations', () => {
     });
 
     const Recursive = Operation.make({
-      meta: { key: DXN.make('org.dxos.operation.test.recursive') },
+      meta: { key: DXN.make('com.example.operation.test.recursive') },
       input: Schema.Struct({ node: Node }),
       output: Schema.Void,
     });

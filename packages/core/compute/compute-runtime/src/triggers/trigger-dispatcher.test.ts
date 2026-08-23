@@ -67,14 +67,14 @@ const SpaceAwareResolverLayer = Layer.effect(
  * operation handler set registered with {@link OperationHandlerSet.provide} below.
  */
 const ProbeOp = Operation.make({
-  meta: { key: DXN.make('org.example.operation.triggerDispatcher.probeDatabase'), name: 'Probe Database' },
+  meta: { key: DXN.make('com.example.operation.triggerDispatcher.probeDatabase'), name: 'Probe Database' },
   input: Schema.Any,
   output: Schema.Struct({ spaceId: Schema.String }),
   services: [Database.Service],
 });
 
 class RetryCounter extends Type.makeObject<RetryCounter>(
-  DXN.make('org.example.operation.triggerDispatcher.retryCounter', '0.1.0'),
+  DXN.make('com.example.operation.triggerDispatcher.retryCounter', '0.1.0'),
 )(
   Schema.Struct({
     count: Schema.Number,
@@ -82,7 +82,7 @@ class RetryCounter extends Type.makeObject<RetryCounter>(
 ) {}
 
 const RetryOp = Operation.make({
-  meta: { key: DXN.make('org.example.operation.triggerDispatcher.retry'), name: 'Retry' },
+  meta: { key: DXN.make('com.example.operation.triggerDispatcher.retry'), name: 'Retry' },
   input: Schema.Void,
   output: Schema.Void,
   services: [Database.Service],
@@ -93,7 +93,7 @@ const RetryOp = Operation.make({
  * resolved object's id — used to assert `subject` dereferences to the mutated object.
  */
 const SubjectProbeOp = Operation.make({
-  meta: { key: DXN.make('org.example.operation.triggerDispatcher.subjectProbe'), name: 'Subject Probe' },
+  meta: { key: DXN.make('com.example.operation.triggerDispatcher.subjectProbe'), name: 'Subject Probe' },
   input: Schema.Any,
   output: Schema.Struct({ type: Schema.String, subjectId: Schema.optional(Schema.String) }),
   services: [Database.Service],

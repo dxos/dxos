@@ -42,7 +42,7 @@ const TestMonitor = Layer.succeed(Trigger.TriggerMonitorService, {
  * required input, so a run that supplies none throws before the handler body.
  */
 const TestRunnable = Operation.make({
-  meta: { key: DXN.make('org.dxos.operation.test.runnable'), name: 'Test Runnable' },
+  meta: { key: DXN.make('com.example.operation.test.runnable'), name: 'Test Runnable' },
   input: Schema.Struct({ label: Schema.Any }),
   output: Schema.Void,
 });

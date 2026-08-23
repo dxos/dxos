@@ -47,21 +47,21 @@ describe('toolName', () => {
     });
 
   test('strips the constant operation prefix and kebab-cases each segment', ({ expect }) => {
-    expect(Operation.toolName(makeOp('org.dxos.operation.markdown.create'))).toBe('markdown-create');
-    expect(Operation.toolName(makeOp('org.dxos.operation.project.artifactAdd'))).toBe('project-artifact-add');
-    expect(Operation.toolName(makeOp('org.dxos.operation.assistant.runInstructions'))).toBe(
-      'assistant-run-instructions',
+    expect(Operation.toolName(makeOp('org.dxos.operation.sample.create'))).toBe('sample-create');
+    expect(Operation.toolName(makeOp('org.dxos.operation.sample.artifactAdd'))).toBe('sample-artifact-add');
+    expect(Operation.toolName(makeOp('org.dxos.operation.sampleAssistant.runInstructions'))).toBe(
+      'sample-assistant-run-instructions',
     );
   });
 
   // The name must not track display copy: that was what made rewording a label rename the tool.
   test('is independent of meta.name', ({ expect }) => {
     const op = Operation.make({
-      meta: { key: DXN.make('org.dxos.operation.markdown.create'), name: 'Something Else Entirely' },
+      meta: { key: DXN.make('org.dxos.operation.sample.create'), name: 'Something Else Entirely' },
       input: Schema.Void,
       output: Schema.Void,
     });
-    expect(Operation.toolName(op)).toBe('markdown-create');
+    expect(Operation.toolName(op)).toBe('sample-create');
   });
 
   test('a key outside the prefix keeps every segment', ({ expect }) => {
@@ -82,13 +82,13 @@ describe('findToolNameCollisions', () => {
 
   // One operation bound by two skills reaches the check twice; that is the same tool, not a clash.
   test('a repeated binding of one operation is not a collision', ({ expect }) => {
-    const op = makeOp('org.dxos.operation.markdown.create');
+    const op = makeOp('org.dxos.operation.sample.create');
     expect(Operation.findToolNameCollisions([op, op]).size).toBe(0);
   });
 
   test('reports nothing for distinct names', ({ expect }) => {
     const collisions = Operation.findToolNameCollisions([
-      makeOp('org.dxos.operation.markdown.create'),
+      makeOp('org.dxos.operation.sample.create'),
       makeOp('org.dxos.operation.script.create'),
     ]);
     expect(collisions.size).toBe(0);
@@ -99,24 +99,24 @@ describe('findToolNameCollisions', () => {
   // rather than borrowing a real one, and stands as the regression test if one ever slips back in.
   test('catches a camelCase segment converging with an already-hyphenated one', ({ expect }) => {
     const collisions = Operation.findToolNameCollisions([
-      makeOp('org.dxos.operation.webSearch.fetch'),
-      makeOp('org.dxos.operation.web-search.fetch'),
+      makeOp('org.dxos.operation.sampleSearch.fetch'),
+      makeOp('org.dxos.operation.sample-search.fetch'),
     ]);
-    expect([...collisions.keys()]).toEqual(['web-search-fetch']);
-    expect(collisions.get('web-search-fetch')).toHaveLength(2);
+    expect([...collisions.keys()]).toEqual(['sample-search-fetch']);
+    expect(collisions.get('sample-search-fetch')).toHaveLength(2);
   });
 });
 
 describe('tryToolNameFromKey', () => {
   test('derives the same name as toolNameFromKey for a well-formed key', ({ expect }) => {
-    expect(Operation.tryToolNameFromKey('org.dxos.operation.markdown.create')).toBe('markdown-create');
+    expect(Operation.tryToolNameFromKey('org.dxos.operation.sample.create')).toBe('sample-create');
   });
 
   // Registry records arrive as JSON, so a key that cannot yield a valid name must cost only its own
   // tool — the throwing variant would abort every tool in the projection.
   test('returns undefined for a key that cannot yield a valid name', ({ expect }) => {
-    expect(Operation.tryToolNameFromKey('org.dxos.operation.9lives.go')).toBeUndefined();
+    expect(Operation.tryToolNameFromKey('org.dxos.operation.9sample.go')).toBeUndefined();
     expect(Operation.tryToolNameFromKey('')).toBeUndefined();
-    expect(() => Operation.toolNameFromKey('org.dxos.operation.9lives.go')).toThrow();
+    expect(() => Operation.toolNameFromKey('org.dxos.operation.9sample.go')).toThrow();
   });
 });

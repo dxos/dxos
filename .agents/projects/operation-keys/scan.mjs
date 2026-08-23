@@ -71,7 +71,10 @@ for (const file of defFiles) {
   }
 }
 
-rows.sort((a, b) => a.key.localeCompare(b.key));
+// Production keys first, examples last; the table is read to find a real operation, and an
+// alphabetical sort would bury 422 of them under `com.example`.
+const rank = (key) => (key.startsWith('org.dxos.') ? 0 : key.startsWith('org.example.') ? 1 : 2);
+rows.sort((a, b) => rank(a.key) - rank(b.key) || a.key.localeCompare(b.key));
 const nonStandard = rows.filter(
   (row) =>
     !/^(org\.dxos|org\.example|com\.example)\.operation\.[a-zA-Z][a-zA-Z0-9]*\.[a-zA-Z][a-zA-Z0-9]*$/.test(row.key),

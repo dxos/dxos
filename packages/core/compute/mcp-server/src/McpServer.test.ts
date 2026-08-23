@@ -32,7 +32,7 @@ const CreateTask = Operation.make({
 
 /** Declares `spaceId` in its own input, so the call states its target there rather than ambiently. */
 const ArchiveSpace = Operation.make({
-  meta: { key: DXN.make('org.dxos.operation.space.archive'), name: 'Archive Space' },
+  meta: { key: DXN.make('com.example.operation.space.archive'), name: 'Archive Space' },
   input: Schema.Struct({ spaceId: Schema.String }),
   output: Schema.Struct({ archived: Schema.Boolean }),
   services: [Database.Service],
@@ -51,7 +51,7 @@ const QueryObjects = Operation.make({
 
 /** Declares no database: it asks about the host rather than about a space's data. */
 const QueryPlugins = Operation.make({
-  meta: { key: DXN.make('org.example.operation.registry.queryPlugins'), name: 'Query Plugins' },
+  meta: { key: DXN.make('com.example.operation.registry.queryPlugins'), name: 'Query Plugins' },
   input: Schema.Struct({ enabled: Schema.optional(Schema.Boolean) }),
   output: Schema.Struct({ plugins: Schema.Array(Schema.Unknown) }),
 }).pipe(Operation.mutation('none'));
@@ -195,7 +195,7 @@ describe('McpServer', () => {
       const host = testHost({ spaceIds: [SPACE_A, SPACE_B] });
 
       const { result, invocations } = runInvoke(
-        { key: 'org.dxos.operation.space.archive', input: { spaceId: SPACE_B } },
+        { key: 'com.example.operation.space.archive', input: { spaceId: SPACE_B } },
         { registry, host },
       );
 
@@ -226,7 +226,7 @@ describe('McpServer', () => {
         skills: [makeSkill({ key: 'org.dxos.skill.registry', operations: [QueryPlugins] })],
       });
       const { result, invocations } = runInvoke(
-        { key: 'org.example.operation.registry.queryPlugins' },
+        { key: 'com.example.operation.registry.queryPlugins' },
         { registry, host: testHost({ spaceIds: [], output: { plugins: [] } }) },
       );
 

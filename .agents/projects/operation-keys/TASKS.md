@@ -19,6 +19,8 @@ Design: [DESIGN.md](./DESIGN.md)
       `stories-brain` → `storiesBrain`. No key carries a hyphen now, which also retires the
       `webSearch`/`web-search` collision hazard in practice.
 - [x] Give `runInstructions` a domain (`org.dxos.operation.assistant.runInstructions`).
+- [x] Operations defined in and local to a test, storybook or `testing/` use the `com.example` root,
+      so a fixture never squats a real namespace. 54 keys moved.
 - [x] AUDIT.md moved here, regenerated from a committed [scan.mjs](./scan.mjs), keyed on the DXN with
       the derived tool-name column REMOVED — it is a function of the key, and restating it invites drift.
 - [ ] Update PLUGIN.mdl across all plugins — 71 reference operations; the codemod fixed the 5 with

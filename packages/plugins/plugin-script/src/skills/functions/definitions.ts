@@ -28,7 +28,7 @@ const FUNCTION_FORMAT = trim`
 
   const MyFunction = Operation.make({
     meta: {
-      key: DXN.make('org.dxos.operation.script.myFunction'),
+      key: DXN.make('com.example.test.function'),
       name: 'My Function',
     },
     input: Schema.Struct({

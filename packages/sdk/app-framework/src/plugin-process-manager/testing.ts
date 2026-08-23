@@ -20,31 +20,31 @@ import { OperationInvoker } from '@dxos/operation';
 export const Compute = Operation.make({
   input: Schema.Struct({ value: Schema.Number }),
   output: Schema.Struct({ value: Schema.Number }),
-  meta: { key: DXN.make('org.dxos.operation.test.compute') },
+  meta: { key: DXN.make('com.example.operation.test.compute') },
 });
 
 export const HalveCompute = Operation.make({
   input: Schema.Struct({ value: Schema.Number }),
   output: Schema.Struct({ value: Schema.Number }),
-  meta: { key: DXN.make('org.dxos.operation.test.halveCompute') },
+  meta: { key: DXN.make('com.example.operation.test.halveCompute') },
 });
 
 export const ToString = Operation.make({
   input: Schema.Struct({ value: Schema.Number }),
   output: Schema.Struct({ string: Schema.String }),
-  meta: { key: DXN.make('org.dxos.operation.test.toString') },
+  meta: { key: DXN.make('com.example.operation.test.toString') },
 });
 
 export const Add = Operation.make({
   input: Schema.Tuple([Schema.Number, Schema.Number]),
   output: Schema.Number,
-  meta: { key: DXN.make('org.dxos.operation.test.add') },
+  meta: { key: DXN.make('com.example.operation.test.add') },
 });
 
 export const SideEffect = Operation.make({
   input: Schema.Void,
   output: Schema.Void,
-  meta: { key: DXN.make('org.dxos.operation.test.sideEffect') },
+  meta: { key: DXN.make('com.example.operation.test.sideEffect') },
 });
 
 //

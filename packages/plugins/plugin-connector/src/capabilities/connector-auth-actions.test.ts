@@ -29,7 +29,7 @@ import connectorGraphBuilder from './app-graph-builder';
 const SUBJECT_ID = 'subject';
 
 const TestSync = Operation.make({
-  meta: { key: DXN.make('org.dxos.operation.test.connectorAuthGraph.sync'), name: 'Test Sync' },
+  meta: { key: DXN.make('com.example.operation.test.connectorAuthGraph.sync'), name: 'Test Sync' },
   input: Schema.Struct({ connection: Ref.Ref(Connection.Connection), priority: Schema.optional(Schema.String) }),
   output: Schema.Any,
 });
