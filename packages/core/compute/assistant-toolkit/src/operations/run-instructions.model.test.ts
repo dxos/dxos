@@ -73,10 +73,11 @@ describe('RunInstructions (recorded model)', { tags: ['model-fixture'] }, () => 
       function* (_) {
         const instructions = yield* Database.add(
           Instructions.make({
-            name: 'curate-without-topic',
-            // The instructions promise a Topic never supplied, so the only honest outcome fails.
-            text: 'Select the candidates in the input that clearly match the editorial Topic described below.',
-            output: Schema.Struct({ selected: Schema.Array(Schema.String) }),
+            name: 'unobtainable-figure',
+            // The figure is not in the input and there are no tools to look it up, so the only
+            // honest outcome is a failure.
+            text: 'Report the exact closing share price of the company named in the input on that date. Never guess or estimate: if you cannot obtain the real figure, report a failure instead.',
+            output: Schema.Struct({ closingPrice: Schema.Number }),
             skills: [],
           }),
         );
@@ -84,7 +85,7 @@ describe('RunInstructions (recorded model)', { tags: ['model-fixture'] }, () => 
 
         const exit = yield* Operation.invoke(RunInstructions, {
           instructions: Ref.make(instructions),
-          input: { candidates: ['US-Canada trade talks', 'Humanoid robotics funding round'] },
+          input: { company: 'Acme Manufacturing Holdings', date: '2019-04-02' },
         }).pipe(Effect.exit);
 
         // `Operation.invoke` types only `NoHandlerError`, so the operation's own PromptError
