@@ -16,7 +16,7 @@ import {
 } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface, ProgressMeter, useAppGraph, useProgressMonitor, useShowItem } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useAppGraph, useProgressMonitor, useShowItem } from '@dxos/app-toolkit/ui';
 import { Aggregate, Database, Ref as EchoRef, Filter, Obj, Order, Query, Scope, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
@@ -27,6 +27,7 @@ import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
 import { Deferred, ElevationProvider, Panel } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
+import { ProgressMeter } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
 import {
   Menu,
@@ -449,7 +450,7 @@ export const MailboxArticle = ({
           </Panel.Toolbar>
         </Menu.Root>
       </ElevationProvider>
-      <Panel.Content asChild>
+      <Panel.Content>
         <Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
           <InboxStack
             id={id}
@@ -468,15 +469,13 @@ export const MailboxArticle = ({
           />
         </Deferred>
       </Panel.Content>
-      {progress && (progress.status === 'running' || progress.status === 'error') && (
-        <Panel.Statusbar asChild>
-          <ProgressMeter
-            state={progress}
-            classNames='border-t border-separator'
-            onCancel={progressRegistry ? () => progressRegistry.cancel(progress.name) : undefined}
-          />
-        </Panel.Statusbar>
-      )}
+      <Panel.Statusbar asChild>
+        <ProgressMeter
+          classNames='border-t border-subdued-separator'
+          state={progress?.status === 'running' || progress?.status === 'error' ? progress : undefined}
+          onCancel={progressRegistry ? () => progress && progressRegistry.cancel(progress.name) : undefined}
+        />
+      </Panel.Statusbar>
     </Panel.Root>
   );
 };

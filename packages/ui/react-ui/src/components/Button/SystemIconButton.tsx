@@ -31,6 +31,7 @@ const StarIconButton = forwardRef<HTMLButtonElement, TogglePresetProps>(({ label
       icon='ph--star--regular'
       activeIcon='ph--star--fill'
       label={label ?? t(active ? 'system-button.unstar.label' : 'system-button.star.label')}
+      classNames={active && 'text-yellow-500'}
       ref={forwardedRef}
     />
   );

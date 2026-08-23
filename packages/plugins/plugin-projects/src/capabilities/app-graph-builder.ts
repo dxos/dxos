@@ -41,7 +41,7 @@ export default Capability.makeModule(
       match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
       groupSegment: GraphPath.GroupSegments.ai,
       createObject: (space) =>
-        Operation.invoke(SpaceOperation.OpenCreateObject, {
+        Operation.invoke(SpaceOperation.OpenObjectForm, {
           target: space.db,
           typename: Type.getTypename(Project.Project),
           targetNodeId: GraphPath.getSpacePath(

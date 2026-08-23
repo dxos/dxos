@@ -57,7 +57,6 @@ export const PostStack = composable<HTMLDivElement, PostStackProps>(
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={PostTile}
-                classNames='my-2'
                 gap={8}
                 items={items}
                 draggable={false}
@@ -105,7 +104,7 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
         <Card.Root ref={forwardedRef} fullWidth>
           <Card.Header>
             <Card.Block>
-              <Icon icon='ph--dot-outline--regular' />
+              <Icon icon='ph--rss-simple--regular' />
             </Card.Block>
             <Card.Text classNames='truncate'>{post.title ?? t('post-title.placeholder')}</Card.Text>
             {post.link && (
@@ -138,7 +137,9 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
                 <Card.Block>
                   <Icon icon='ph--calendar--regular' />
                 </Card.Block>
-                <Card.Text variant='description'>{published}</Card.Text>
+                <Card.Text variant='description' classNames='text-info-text'>
+                  {published}
+                </Card.Text>
               </Card.Row>
             )}
           </Card.Body>

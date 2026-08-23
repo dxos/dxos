@@ -806,25 +806,27 @@ const buildDecorations = (
               )
             : undefined;
 
-        if (widget) {
-          builder.add(
-            absoluteFrom,
-            range.to,
-            Decoration.replace({
-              widget,
-              block: def.block,
-              atomic: true,
-              inclusive: true,
-              tag: tagName,
-              streaming: true,
-              contentFrom,
-            }),
-          );
+        // Decorated even when the factory declined: a factory may return null while the tag is still
+        // empty (`<reasoning>` with no text yet), and leaving the range undecorated renders the raw
+        // markup to the reader for exactly as long as that lasts — the flash this scan exists to
+        // prevent. Without a widget it is an inline replace that simply hides the text; `block` needs
+        // a widget to size the line, so it is only claimed when there is one.
+        builder.add(
+          absoluteFrom,
+          range.to,
+          Decoration.replace({
+            ...(widget ? { widget, block: def.block } : {}),
+            atomic: true,
+            inclusive: true,
+            tag: tagName,
+            streaming: true,
+            contentFrom,
+          }),
+        );
 
-          // Set from to just before the streaming tag so next rebuild covers it.
-          streamingFrom = absoluteFrom;
-          last = absoluteFrom;
-        }
+        // Set from to just before the streaming tag so next rebuild covers it.
+        streamingFrom = absoluteFrom;
+        last = absoluteFrom;
 
         // Only one streaming tag at a time.
         break;
