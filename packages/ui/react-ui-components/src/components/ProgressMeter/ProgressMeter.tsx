@@ -51,8 +51,10 @@ export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
     // One control, two jobs: it cancels a run in flight, and clears one that ended in an error —
     // where there is nothing left to cancel, but the meter would otherwise hold its place with no
     // way to dismiss it. Clearing needs no `cancellable`: that flag says the PRODUCER can be
-    // interrupted, which is irrelevant once the run is over.
-    const cancellable = !!onCancel && (failed || (state.cancellable === true && active));
+    // interrupted, which is irrelevant once the run is over. A finished run disables the control
+    // rather than dropping it: a button that vanishes on completion takes its width with it and
+    // slides the readout beside it sideways, at the exact moment the reader is looking at it.
+    const cancellable = failed || (state.cancellable === true && active);
     const stages = stepCount(state.phases);
     // The crawl is the meter's only text now, so it opens with the run's name: without it a list of
     // meters would say what each is doing and never which task it is.
@@ -84,14 +86,13 @@ export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
             {!indeterminate && etaMs !== undefined && status === 'running' && (
               <span className='text-description'>{formatDuration(etaMs)} left</span>
             )}
-            {cancellable && (
+            {onCancel && (
               <IconButton
                 density='sm'
                 variant='ghost'
-                size={3}
-                square
                 icon='ph--x--regular'
                 iconOnly
+                disabled={!cancellable}
                 label={failed ? 'Dismiss' : 'Cancel'}
                 onClick={onCancel}
               />
