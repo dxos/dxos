@@ -128,15 +128,13 @@ export class Connection extends Resource {
   // Consecutive leader-session open failures; grows the retry backoff and resets once a session
   // opens successfully.
   #leaderFailureCount = 0;
-  // Steals since the last successful port exchange. Bounds the steal path: a steal that does not
-  // yield a port means the incumbent was not the problem, and repeating it only destroys a healthy
-  // leader's worker.
+  // Steals since the last successful port exchange: one that yields no port means the incumbent was
+  // not the problem, so repeating it only destroys a healthy leader's worker.
   #stealCount = 0;
   // Whether the wedged-tab escalation has already fired for the current steal streak.
   #stealEscalated = false;
-  // True while a `#watchLeader` chain holds the leader lock or is queued for it. A tab whose chain
-  // has ended is invisible to the lock's wait queue: it can never lead again, so every recovery
-  // path must re-arm election rather than assume a request is still outstanding.
+  // True while a `#watchLeader` chain holds the leader lock or is queued for it; a tab whose chain
+  // has ended is invisible to the wait queue and can never lead again.
   #electionActive = false;
   // Resolves the leader-lock hold; woken on close, worker termination, or when our lock is stolen.
   #leaderDone: Trigger | undefined;
@@ -220,9 +218,8 @@ export class Connection extends Resource {
   }
 
   #watchLeader() {
-    // Re-entrancy guard: recovery paths call this whenever they cannot prove a request is
-    // outstanding, and a second concurrent chain would trip the `!this.#leaderSession` invariant
-    // below once both are granted in turn.
+    // Recovery paths call this whenever they cannot prove a request is outstanding, and a second
+    // concurrent chain would trip the `!this.#leaderSession` invariant below.
     if (this.#electionActive) {
       return;
     }
@@ -267,8 +264,8 @@ export class Connection extends Resource {
         });
         this.#electionActive = false;
         log('worker-connection: leader lock released');
-        // A clean release still leaves this tab without a worker. Returning here would drop it out
-        // of the lock's wait queue for good: it could never lead again and could only ever steal.
+        // Returning here would drop this tab out of the lock's wait queue for good, leaving it able
+        // to steal but never to lead.
         if (!this._ctx.disposed) {
           this.#watchLeader();
         }
@@ -392,7 +389,7 @@ export class Connection extends Resource {
       log('worker-connection: connected to worker', { leaderId, isOwner });
       this.#lastConnectError = undefined;
       // A port proves the coordinator link works, so the steal budget below is about the incumbent
-      // rather than this tab; start the next streak from scratch.
+      // rather than this tab.
       this.#stealCount = 0;
       this.#stealEscalated = false;
 
@@ -442,13 +439,11 @@ export class Connection extends Resource {
   });
 
   async #maybeStealStaleLeader(): Promise<void> {
-    // Every steal kills the incumbent's worker outright, so it has to pay for itself: after this
-    // many steals with no port to show for it, the incumbent is not what is broken — this tab's own
-    // coordinator link is, and it cannot be repaired by taking the lock. Left unbounded, a single
-    // wedged tab restarts a healthy tab's worker every `portTimeout` indefinitely.
+    // Every steal kills the incumbent's worker, so it has to pay for itself: past this many with no
+    // port to show for it, what is broken is this tab's coordinator link, which the lock cannot fix.
     if (this.#stealCount >= this.#maxLeaderFailures) {
-      // Reported once per streak: the port timeout keeps firing every few seconds, and a warning per
-      // cycle would bury the escalation it is meant to explain.
+      // Once per streak: the port timeout keeps firing, so a warning per cycle would bury the
+      // escalation it is meant to explain.
       if (!this.#stealEscalated) {
         this.#stealEscalated = true;
         log.warn('worker-connection: steal budget exhausted, coordinator link is broken', {
@@ -496,10 +491,8 @@ export class Connection extends Resource {
       log.catch(error);
     }
 
-    // The steal only evicts the incumbent; the lock is released the moment the callback above
-    // returns. Without re-arming election here, a tab whose own election chain has ended takes the
-    // lock from a healthy leader and then hands it straight back, gaining nothing and costing the
-    // incumbent its worker. No-op when a request is already queued.
+    // The steal only evicts — the lock is released the moment the callback above returns — so without
+    // re-arming, a tab whose chain has ended takes the lock and hands it straight back.
     this.#watchLeader();
   }
 

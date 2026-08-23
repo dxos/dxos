@@ -303,26 +303,24 @@ describe('Connection multi-client', () => {
     expect((await asyncTimeout(leader.connected, 10_000)).isOwner).toBe(true);
     expect(leaderWorkers).toBe(1);
 
-    // The wedged tab can never receive a port, so every steal is wasted — but each one aborts the
-    // incumbent's lock, which terminates its worker and forces a full re-boot. Unbounded, this is
-    // a permanent livelock: one wedged tab restarting a healthy tab's worker every `portTimeout`.
+    // A steal by this tab is always wasted — it can never receive a port — but still aborts the
+    // incumbent's lock, terminating its worker and forcing a full re-boot.
     const wedged = makeConnection(hub, keys, timeouts, {
       maxLeaderFailures: 2,
       createCoordinator: createBrokenCoordinator,
     });
-    // Never connects; `open()` rejects on its own budget well after this test's window.
-    void wedged.connection.open().catch(() => {});
+    // Asserted in teardown rather than discarded: `open()` must reject because no port ever arrives,
+    // and swallowing it here would hide any other failure the connection reports.
+    const wedgedOpen = expect(wedged.connection.open()).rejects.toThrow();
     onTestFinished(async () => {
       await wedged.connection.close();
+      await wedgedOpen;
     });
 
-    // ~20 port timeouts' worth of runway. Pre-fix this window produced a steal (and a leader
-    // worker restart) every 200ms for as long as the tab stayed open.
+    // ~20 port timeouts' worth of runway, so an unbounded steal loop has room to show itself.
     await sleep(4_000);
 
-    // Bounded by the steal budget: the wedged tab evicts the leader at most `maxLeaderFailures`
-    // times, and each eviction costs exactly one worker re-creation. Unbounded, this window
-    // yields a restart per `portTimeout` — 10 of them here, and it never stops.
+    // Bounded by the steal budget: at most `maxLeaderFailures` evictions, one worker re-creation each.
     expect(leaderWorkers).toBeLessThanOrEqual(1 + 2);
 
     // Escalated once so the app can surface a reload, rather than degrading silently forever.
