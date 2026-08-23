@@ -468,15 +468,13 @@ export const MailboxArticle = ({
           />
         </Deferred>
       </Panel.Content>
-      {progress && (progress.status === 'running' || progress.status === 'error') && (
-        <Panel.Statusbar asChild>
-          <ProgressMeter
-            state={progress}
-            classNames='border-t border-separator'
-            onCancel={progressRegistry ? () => progressRegistry.cancel(progress.name) : undefined}
-          />
-        </Panel.Statusbar>
-      )}
+      <Panel.Statusbar asChild>
+        <ProgressMeter
+          state={progress?.status === 'running' || progress?.status === 'error' ? progress : undefined}
+          classNames='border-t border-subdued-separator'
+          onCancel={progressRegistry ? () => progress && progressRegistry.cancel(progress.name) : undefined}
+        />
+      </Panel.Statusbar>
     </Panel.Root>
   );
 };

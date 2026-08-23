@@ -7,9 +7,6 @@ import React, { useCallback } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, CardIconSlot, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
-// #region DEBUG
-import { log } from '@dxos/log';
-// #endregion DEBUG
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { Card, Flex, Icon, Input, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -30,9 +27,6 @@ import { meta } from '#meta';
 import { SpaceSurface } from '#types';
 
 export const RecordArticle = ({ role, subject, attendableId }: AppSurface.ObjectArticleProps) => {
-  // #region DEBUG
-  log.info('[DEBUG H1] RecordArticle render', { subject: Obj.isObject(subject) ? subject.id : undefined });
-  // #endregion DEBUG
   const { t } = useTranslation(meta.profile.key);
   const { actions, onAction } = useMenuActions(attendableId);
   // Obj.getType fails for database-registered (dynamic) schemas due to DXN mismatch;
