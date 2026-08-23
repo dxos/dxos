@@ -48,13 +48,10 @@ export default Capability.makeModule(
       }
     };
 
-    // Awaited in the body so the module does not complete until the first batch is registered:
-    // `SchemaRegistered` is the ordering guarantee consumers depend on, and a subscription
-    // callback nobody awaits would only promise that a subscriber exists.
+    // Awaited here so `SchemaRegistered` means the types are registered, not that a subscriber exists.
     yield* Effect.tryPromise(() => register(schemas.get()));
 
-    // `previousDxns` is already populated, so the immediate pass is a no-op and only subsequent
-    // contributions (a plugin enabled later) register here.
+    // `previousDxns` is populated, so the immediate pass is a no-op.
     const cancel = registry.subscribe(schemas.atom, register, { immediate: true });
 
     yield* Effect.addFinalizer(() => Effect.sync(() => cancel()));

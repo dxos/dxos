@@ -11,7 +11,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { DXN, Type } from '@dxos/echo';
-// ClientPlugin's `#plugin` loader resolves to `plugin.node.ts` under the source condition vitest uses.
+// Resolves to `plugin.node.ts` under the source condition vitest uses.
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
@@ -30,12 +30,32 @@ const NotePlugin = Plugin.define(Plugin.makeMeta({ key: DXN.make('example.com.pl
   Plugin.make,
 );
 
-/**
- * Stands in for every first-run consumer that writes a typed object as soon as an identity exists
- * (Composer's seeded README is the one this was found through). `SchemaRegistered` is what pulls
- * the otherwise idle-gated registration into the `IdentityCreated` wave. It records what
- * `Database.add` would check, which is the assertion that fails without the ordering.
- */
+describe('SchemaDefs', () => {
+  test('registers contributed schema before an IdentityCreated consumer runs', async ({ expect }) => {
+    const result: { registered?: boolean } = {};
+    await using harness = await createComposerTestApp({
+      plugins: [ClientPlugin.make({}), NotePlugin(), makeSeedPlugin(result)()],
+      // A cold boot creates the identity long before the host goes idle, so the wave `SchemaDefs`
+      // rides in on has not run.
+      autoStart: false,
+      whenIdle: Effect.never,
+    });
+    await harness.fire(ActivationEvents.Startup);
+
+    const client = harness.get(ClientCapabilities.Client);
+    await client.waitUntilInitialized();
+    expect(harness.manager.getActive()).not.toContain('org.dxos.plugin.client.module.SchemaDefs');
+
+    // What `ClientOperation.CreateIdentity` does, minus its idle-gated handler registration.
+    await client.halo.createIdentity();
+    await harness.fire(ClientEvents.IdentityCreated);
+
+    expect(result.registered).toBe(true);
+    expect(harness.manager.getActive()).toContain('org.dxos.plugin.client.module.SchemaDefs');
+  });
+});
+
+/** Records what `Database.add` checks, at the point a first-run consumer would write. */
 const makeSeedPlugin = (result: { registered?: boolean }) =>
   Plugin.define(Plugin.makeMeta({ key: DXN.make('example.com.plugin.seed'), name: 'Seed' })).pipe(
     Plugin.addModule({
@@ -52,32 +72,3 @@ const makeSeedPlugin = (result: { registered?: boolean }) =>
     }),
     Plugin.make,
   );
-
-describe('SchemaDefs', () => {
-  test('registers contributed schema before an IdentityCreated consumer runs', async ({ expect }) => {
-    const result: { registered?: boolean } = {};
-    await using harness = await createComposerTestApp({
-      plugins: [ClientPlugin.make({}), NotePlugin(), makeSeedPlugin(result)()],
-      // A cold boot creates the identity seconds before the host goes idle, so the wave
-      // `SchemaDefs` normally rides in on has not run: `autoStart: false` skips the harness's
-      // explicit Idle dispatch and `Effect.never` holds the scheduler's own idle wait open.
-      autoStart: false,
-      whenIdle: Effect.never,
-    });
-    await harness.fire(ActivationEvents.Startup);
-
-    const client = harness.get(ClientCapabilities.Client);
-    // The harness forks client initialization off startup; `spaces` is unreadable until it lands.
-    await client.waitUntilInitialized();
-    expect(harness.manager.getActive()).not.toContain('org.dxos.plugin.client.module.SchemaDefs');
-
-    // `ClientOperation.CreateIdentity` in miniature: its handler creates the identity and then
-    // fires the event. Invoking it here would instead exercise the node barrel's idle-gated
-    // operation handlers, which this test deliberately holds back.
-    await client.halo.createIdentity();
-    await harness.fire(ClientEvents.IdentityCreated);
-
-    expect(result.registered).toBe(true);
-    expect(harness.manager.getActive()).toContain('org.dxos.plugin.client.module.SchemaDefs');
-  });
-});
