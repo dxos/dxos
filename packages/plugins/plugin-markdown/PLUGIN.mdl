@@ -452,11 +452,13 @@ flow QA-2: Link one page to another
   desc: Two documents and a reference between them — the `@` link path end to end.
   actors: both
   covers: [F-4.1, F-4.2, F-4.3, T-4]
-  status: unverified
+  status: passing            # 2026-08-23; the final click is human (see the last step)
   given:
     - an identity exists
-    - a space is open and contains at least one collection
-    - no documents named "Page 1" or "Page 2" exist
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - no documents named "Page 1" or "Page 2" exist — ABORT rather than deleting ones this flow
+      did not create
   steps:
     - name: Create Page 1
       do: In the navtree, click + on a collection and choose Markdown. Name it "Page 1" and type a heading and a sentence.
@@ -481,21 +483,26 @@ flow QA-2: Link one page to another
       expect: "Page 2" appears as a row alongside "Page 1"
     - name: Link Page 1 to Page 2
       id: link
-      do: Open "Page 1", put the caret at the end, type `@Page 2` and select it from the link query.
-      invoke: [op:update] { doc: $page1.object, edits: [{ newString: "\nSee [Page 2](/$page2.object.id).\n" }] }
-      expect: the end of Page 1 shows a link labelled "Page 2"
-      assert: return $result.newContent.includes('Page 2');
+      do: |
+        Select "Page 1" in the navtree to open it, put the caret at the end, then type `/` and choose
+        "Inline link" (or type `@Page 2` directly) and pick Page 2 from the query.
+      invoke: [op:update] { doc: $page1.object, edits: [{ newString: "\nSee [Page 2]($page2.uri).\n" }] }
+      expect: the end of Page 1 shows an internal reference to Page 2, not a plain web hyperlink
+      assert: |
+        return /\]\(echo:\/\//.test($result.newContent);
       note: |
-        `oldString` omitted appends — see the `edits` schema. The human path goes through the link
-        query, which resolves the object and writes the same markup; the two must produce a link
-        that resolves to the SAME object, which is what the next step checks.
+        The target MUST be the object's DXN — `Obj.getURI(object)`, of the form
+        `echo://<spaceId>/<objectId>` — which is exactly what the link query and the "Inline link"
+        command write (see `useLinkQuery.insertLink`). A root-relative `/<objectId>` renders as an
+        ordinary http hyperlink and resolves to nothing; asserting only that the label appears does
+        not catch it, which is why the assert matches the scheme.
     - name: Follow the link
       do: Click the "Page 2" link in Page 1.
-      invoke: org.dxos.plugin.layout.operation.open { subject: ["root/$spaceId/content/collections/$page2.object.id"] }
       expect: Page 2 opens and its navtree row is selected
-      assert: |
-        return Array.from(document.querySelectorAll('[aria-current], [aria-selected="true"]'))
-          .some((el) => el.textContent?.includes('Page 2'));
+      note: |
+        NO `invoke` — opening Page 2 by path would pass without the link being involved at all, so
+        it would assert nothing about the previous step. Following the reference is a click; leave
+        it to the human rather than substituting an operation that tests something else.
   cleanup:
     - name: Delete both pages
       do: Right-click each of "Page 1" and "Page 2" in the navtree and choose Delete.

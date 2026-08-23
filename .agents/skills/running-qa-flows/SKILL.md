@@ -136,6 +136,15 @@ step intended — a `create` operation is a factory and places nothing. Evaluate
 step has one; otherwise judge `expect:` from a database query or the DOM. `space.db.query(…).run()`
 resolves to an array, not `{ objects }`.
 
+**Select a document in the navtree before editing it.** Opening the plank is what binds the editor
+to that document; an edit invoked against a document the navtree has not selected lands in the
+database without the surface the human is looking at ever showing it.
+
+**A link to another object is a DXN, not a path.** `Obj.getURI(object)` yields
+`echo://<spaceId>/<objectId>`, which is exactly what the link query and the "Inline link" command
+write. A root-relative `/<objectId>` renders as an ordinary http hyperlink and resolves to nothing —
+and an assert that only looks for the link label will not catch it, so match the scheme.
+
 **Opening an object** needs a navigation path, and you must build it — `space.addObject` returns
 `{ id, object }` and no `subject`:
 
