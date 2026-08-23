@@ -36,23 +36,54 @@ Design agreed (see DESIGN.md §Deus.QA once written). Decisions:
 - Success criteria: prose `expect:` always, optional deterministic `assert:` snippet.
 - Consent for mutating runs is at **flow granularity**, not per-operation.
 
-### Spike (current)
+### Spike — DONE 2026-08-23
 
-- [ ] One flow authored in `plugin-markdown/PLUGIN.mdl` `## QA`.
-- [ ] Executed against a live Composer via the debug port; findings recorded below.
-- [ ] Decide from the findings whether the block shape survives contact.
+- [x] One flow authored in `plugin-markdown/PLUGIN.mdl` `## QA`.
+- [x] Agent-startable debug port (`DX_DEBUG_PORT` → `serve-qa` → `temp/debug-port.json`).
+- [x] `QA-1` executed end to end against a live dev server. **All 4 steps pass**, no human in the
+      loop: the agent started the server, read the session from the sidecar, and drove the port.
+- [x] Verdict: **the block shape survives contact.** `do`/`expect`/`invoke`/`assert`/`capture` were
+      each load-bearing; nothing in the shape had to change. What changed is content — see Findings.
 
 ### Then
 
-- [ ] `lang/qa.mdl` — the `Deus.QA` dialect (`ext flow`, `ext step`).
+- [x] `BLOCK_TYPES += 'flow'` in [src/extension/constants.ts](./src/extension/constants.ts).
+- [x] Backfill `key:`/`requires:` on the markdown ops the flows reference.
+- [ ] `lang/qa.mdl` — the `Deus.QA` dialect (`ext flow`, `ext step`), encoding Findings 1-3.
 - [ ] `docs/DESIGN.md` — `Deus.QA` section.
-- [ ] `BLOCK_TYPES += 'flow'` in [src/extension/constants.ts](./src/extension/constants.ts).
-- [ ] `.agents/skills/running-qa-flows/SKILL.md` — the agent-side execution contract.
-- [ ] Backfill `key:`/`requires:` on the markdown ops the flows reference.
+- [ ] `.agents/skills/running-qa-flows/SKILL.md` — the agent-side execution contract, including the
+      always-use-the-invoker rule and the built navigation path.
+- [ ] `packages/apps/composer-app/APP.mdl` — cross-plugin journeys.
 
 ## Findings
 
-_(spike results land here)_
+From running `QA-1` on 2026-08-23. Numbers 1-3 are language findings; 4-6 are defects in the
+surrounding tooling that the flow surfaced.
+
+1. **`requires:` is necessary but not sufficient to predict runnability.** The flow's `note:`
+   correctly predicted step 4 (`update`, `Database.Service`) needed the operation-invoker escape
+   hatch, and missed that step 2 (`addObject`) needs it too. A step can fail on a _downstream_
+   op's services, which the op's own declaration cannot express.
+   → **Simplification worth adopting:** have the runner ALWAYS invoke through the invoker with a
+   `spaceId`, rather than branching on `requires:`. That makes `requires:` informational and removes
+   a whole class of "which path does this step take" reasoning.
+2. **Cross-plugin ops appear inside plugin-scoped flows**, not only in `APP.mdl`. `QA-1` references
+   `space.addObject` and `layout.open`, neither declared in markdown's `PLUGIN.mdl`, so `[op:…]`
+   could not resolve and there was no `requires:` to warn from. Full-key literals for foreign ops
+   work; the `covers:`/reference lint must tolerate them.
+3. **Coalescing steps 1-2 was correctly predicted.** A live ECHO object cannot cross the port's
+   serialization boundary, so the runner must batch adjacent steps that thread one. Human step
+   granularity and snippet granularity are genuinely different things.
+4. **`addObject` does not return `subject`.** Its output schema is `{ id, object }`. The
+   `composer-debug` skill §5 documents `{ id, subject, object }` and instructs feeding
+   `added.subject` to `layout.operation.open` — stale, and it cost a retry. The working form is a
+   built path: `root/<spaceId>/content/collections/<objectId>`. Skill corrected.
+5. **plugin-debug is disabled by default in a plain local `serve`** (`isDev` is only true for the
+   dev cloud env or `DX_DEV=true`), so routing port auto-start through it made the flag silently do
+   nothing. The port belongs to `@dxos/client`; it now starts from `main.tsx`.
+6. **`plugin-onboarding` fails to activate on a fresh dev profile** — `Schema not registered
+Schema: org.dxos.type.document`. Not blocking (the default space and identity are still created)
+   but it is an error on every cold boot of a new profile. Not investigated; logged for triage.
 
 ## Backlog
 

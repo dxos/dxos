@@ -387,6 +387,7 @@ flow QA-1: Create, place, open and edit a document
   desc: The core markdown round-trip through the running app.
   actors: both
   covers: [F-1.1, F-1.3, T-1, T-2]
+  status: passing            # verified 2026-08-23 against a live serve-qa dev server
   given:
     - an identity exists
     - a space is open and contains at least one collection
@@ -398,29 +399,30 @@ flow QA-1: Create, place, open and edit a document
     assert: return !!$created.object
   step 2: Place it in the collection
     do: (same gesture as step 1 — the navtree create action places the document for you)
-    invoke: [op:space.addObject] { object: $created.object, target: $given.collection }
+    invoke: org.dxos.plugin.space.operation.addObject { object: $created.object, target: $given.collection }
     capture: added
     expect: "QA Notes" appears as a row under the collection in the navtree
     assert: return (await space.db.query(dxos.Filter.everything()).run()).some((o) => o.name === 'QA Notes')
     note: |
-      Steps 1-2 must be coalesced into ONE port snippet — `created.object` is a live ECHO object
-      and the port serializes between snippets. Step granularity is the human's; batching is the
+      Steps 1-2 must be coalesced into ONE port snippet — `created.object` is a live ECHO object and
+      the port serializes between snippets. Step granularity is the human's; batching is the
       runner's concern.
   step 3: Open it
     do: Click "QA Notes" in the navtree.
-    invoke: [op:layout.open] { subject: $added.subject }
+    invoke: org.dxos.plugin.layout.operation.open { subject: ["root/$spaceId/content/collections/$created.object.id"] }
     expect: the editor renders "# QA Notes" and the navtree row is selected
     assert: |
-      return document.querySelector('[aria-current], [aria-selected="true"]')?.textContent?.includes('QA Notes') ?? false
+      return document.body.innerText.includes('QA Notes') &&
+        Array.from(document.querySelectorAll('[aria-current], [aria-selected="true"]'))
+          .some((el) => el.textContent?.includes('QA Notes'));
+    note: |
+      `subject` is a navigation-path array and must be BUILT — `addObject` does not return one
+      (its output schema is `{ id, object }`). Verified against the running app.
   step 4: Fix the typo
     do: In the editor, change "tyop" to "typo".
-    invoke: [op:update] { doc: $added.object, edits: [{ oldString: "tyop", newString: "typo" }] }
-    expect: the document body reads "There is a typo." and the change replicates
-    assert: return $4.newContent.includes('There is a typo.')
-    note: |
-      [op:update] declares `requires: [Database.Service]`, so `composer.invoke` alone fails with
-      "spawn environment is missing space" — the runner must go through the operation invoker with
-      an explicit `spaceId`.
+    invoke: [op:update] { doc: $created.object, edits: [{ oldString: "tyop", newString: "typo" }] }
+    expect: the document body reads "There is a typo." and the editor re-renders
+    assert: return $4.newContent.includes('There is a typo.') && !document.body.innerText.includes('tyop');
   cleanup:
     - delete the "QA Notes" document
 ```
