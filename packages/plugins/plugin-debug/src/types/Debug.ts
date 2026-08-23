@@ -18,6 +18,13 @@ export type DebugPluginOptions = {
   logStore?: IdbLogStore;
   /** Persist the stats-panel store to localStorage so it survives a reload. Defaults to `true`. */
   persistStats?: boolean;
+  /**
+   * Starts the agent debug port on this session id at activation, instead of waiting for the
+   * settings switch. Set only by a dev server launched with the debug-port flag, which already knows
+   * the id and hands the same value to the agent — the port is arbitrary eval, so nothing else may
+   * turn it on.
+   */
+  debugPortSession?: string;
 };
 
 export type DebugContextType = {

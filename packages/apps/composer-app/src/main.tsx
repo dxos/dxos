@@ -82,6 +82,10 @@ const startupTimeout = (() => {
 // Injected by the `define` block in vite.config.ts; '' in production builds.
 declare const __DX_DEV_SERVER_BOOT_ID__: string;
 
+// Session id for the agent debug port when the dev server was launched with the debug-port flag.
+// Always '' in production builds, so the port cannot be auto-started on a deployed origin.
+declare const __DX_DEBUG_PORT_SESSION__: string;
+
 declare global {
   interface ImportMeta {
     env: ImportMetaEnv;
@@ -469,6 +473,7 @@ const main = async () => {
     isPopover,
     isMobile,
     isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
+    debugPortSession: __DX_DEBUG_PORT_SESSION__ || undefined,
   };
 
   // `getPlugins` is synchronous: each plugin's main entry exposes only

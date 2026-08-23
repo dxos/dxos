@@ -20,6 +20,13 @@ export type DebugPortStartOptions = {
   /** Resolved at each command so a late-booting client is picked up; defaults to the mounted devtools hook. */
   scope?: () => DebugPortScope;
   origin?: string;
+  /**
+   * Use this id instead of minting one. Lets a caller that already knows the id — a dev server
+   * launched with the debug-port flag, which passes the same value to the page and to the agent —
+   * skip the copy-the-id handshake entirely. Callers that do not supply one still get a fresh
+   * random id per activation.
+   */
+  session?: string;
   /** Additional sink for the loop's lines, for hosts with no log surface of their own (the recovery page). */
   onLog?: (line: string) => void;
   /**
@@ -75,9 +82,12 @@ const clearPersisted = (): void => {
 /**
  * Start/stop handle for the agent debug port.
  *
- * The port evaluates arbitrary code in the page, so it is never started implicitly: activation is
- * always an explicit gesture, the session id is regenerated each time, and nothing is persisted —
- * a reload leaves it stopped.
+ * The port evaluates arbitrary code in the page, so activation is always a deliberate act, never a
+ * default. Two gestures qualify, and nothing else starts it: flipping the switch in the running app,
+ * or launching a **dev server** with the debug-port flag, which supplies {@link
+ * DebugPortStartOptions.session} so the operator who started it already knows the id. The flag is
+ * compiled out of production builds, so it cannot reach a deployed origin. Absent either gesture the
+ * session id is regenerated per activation and nothing is persisted — a reload leaves it stopped.
  */
 export interface DebugPortController {
   getStatus(): DebugPortStatus;
@@ -111,7 +121,7 @@ class DebugPortControllerImpl implements DebugPortController {
   }
 
   start(options: DebugPortStartOptions = {}): string {
-    return this.#run(randomSession(), options);
+    return this.#run(options.session ?? randomSession(), options);
   }
 
   resume(options: DebugPortStartOptions = {}): string | undefined {
