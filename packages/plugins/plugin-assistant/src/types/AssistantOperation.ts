@@ -121,6 +121,7 @@ export const GenerateHomeSuggestions = Operation.make({
   output: Schema.Struct({ prompts: Schema.Array(Schema.String) }),
 });
 
+// TODO(burdon): "toggle" is an anti-pattern; set directly.
 export const ToggleTracePanelDebug = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.assistant.toggleTracePanelDebug'),

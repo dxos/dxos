@@ -198,7 +198,7 @@ describe('makeToolResolverFromOperations', () => {
   test('a collision registered while the index was being built still fails', async ({ expect }) => {
     const registry = makeRegistry({ initial: [op('org.dxos.operation.webSearch.fetch')] });
     // Fires the registration inside the first query, after the snapshot is taken but before it is cached.
-    let pending: (() => void) | undefined = () => registry.add([op('org.dxos.operation.webSearch.fetch')]);
+    let pending: (() => void) | undefined = () => registry.add([op('org.dxos.operation.web-search.fetch')]);
     const query = registry.query.bind(registry);
     (registry as any).query = (...args: Parameters<typeof query>) => {
       const result = query(...args);
@@ -224,7 +224,7 @@ describe('makeToolResolverFromOperations', () => {
     const attempt = withResolver(registry, (resolve) =>
       Effect.gen(function* () {
         const first = yield* resolve('web-search-fetch');
-        yield* Effect.sync(() => registry.add([op('org.dxos.operation.webSearch.fetch')]));
+        yield* Effect.sync(() => registry.add([op('org.dxos.operation.web-search.fetch')]));
         return { first: first.name, second: yield* Effect.result(resolve('web-search-fetch')) };
       }),
     );

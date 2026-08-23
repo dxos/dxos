@@ -79,6 +79,6 @@ export const templates = [
     id: 'org.dxos.script.commentary',
     name: 'Commentary',
     source: removeHeader(commentary),
-    presetId: 'org.dxos.operation.chess.commentary',
+    presetId: 'org.dxos.operation.script.commentary',
   },
 ] as const;

@@ -26,7 +26,7 @@ import * as Trip from './Trip';
  */
 export const ExtractTrip = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.trip.extractTrip'),
+    key: DXN.make('org.dxos.operation.trip.extract'),
     name: 'Extract Trip',
     description: 'Parse a flight confirmation email into Booking + Segment proposals.',
     icon: 'ph--airplane-takeoff--regular',
@@ -44,7 +44,7 @@ export const ExtractTrip = Operation.make({
  */
 export const MergeTrip = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.trip.mergeTrip'),
+    key: DXN.make('org.dxos.operation.trip.merge'),
     name: 'Merge trip',
     description: 'Merge this trip into the nearest other trip by date and delete it.',
     icon: 'ph--arrows-merge--regular',
@@ -66,7 +66,7 @@ export const MergeTrip = Operation.make({
  */
 export const CreateTripFromEvents = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.trip.createTripFromEvents'),
+    key: DXN.make('org.dxos.operation.trip.createFromEvents'),
     name: 'Create trip from events',
     description: 'Create a new trip and itinerary from a range of calendar events.',
     icon: 'ph--airplane-takeoff--regular',

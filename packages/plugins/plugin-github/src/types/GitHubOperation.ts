@@ -25,7 +25,7 @@ import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
  */
 export const GetGitHubRepositories = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.github.getGithubRepositories'),
+    key: DXN.make('org.dxos.operation.github.getRepositories'),
     name: 'Get GitHub Repositories',
     description: 'List GitHub repositories reachable from a connection without materializing local objects.',
     icon: 'ph--github-logo--regular',
@@ -41,7 +41,7 @@ export const GetGitHubRepositories = Operation.make({
  */
 export const MaterializeGitHubTarget = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.github.materializeGithubTarget'),
+    key: DXN.make('org.dxos.operation.github.materializeTarget'),
     name: 'Materialize GitHub Target',
     description: 'Create the empty local root Project bound to a selected GitHub repository.',
     icon: 'ph--github-logo--regular',
@@ -74,7 +74,7 @@ export interface SyncOptions extends Schema.Schema.Type<typeof SyncOptions> {}
  */
 export const SyncGitHubRepositories = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.github.syncGithubRepositories'),
+    key: DXN.make('org.dxos.operation.github.syncRepositories'),
     name: 'Sync GitHub Repositories',
     description: 'Reconcile every bound GitHub repo plus its owning org, members, issues, PRs, and comments.',
     icon: 'ph--arrows-clockwise--regular',

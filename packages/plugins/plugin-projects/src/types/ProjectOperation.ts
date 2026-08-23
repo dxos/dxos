@@ -25,7 +25,7 @@ export const Create = Operation.make({
   meta: {
     // `projectCreate`, not `create`: the whole key derives the tool name, so a bare `create` would
     // read as `projects-create` — accurate, but the verb alone is too generic to stand on its own.
-    key: DXN.make('org.dxos.operation.projects.projectCreate'),
+    key: DXN.make('org.dxos.operation.projects.create'),
     name: 'Create Project',
     description:
       'Creates a project and its owned graph: agent instructions, an artifacts collection, and a ' +
@@ -71,7 +71,7 @@ export const CreateChat = Operation.make({
 
 export const UpdateProjectTasks = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.projects.updateProjectTasks'),
+    key: DXN.make('org.dxos.operation.projects.updateTasks'),
     name: 'Update Project Tasks',
     description:
       "Tracks requests from the given senders as tasks in the project's task set (one task per message, idempotent).",
@@ -166,7 +166,7 @@ export type TrackingPipeline = Schema.Schema.Type<typeof TrackingPipeline>;
 
 export const CreateTrackingProject = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.projects.createTrackingProject'),
+    key: DXN.make('org.dxos.operation.projects.createTracking'),
     name: 'Create Tracking Project',
     description:
       "Creates a project that follows a message's sender (or their whole domain): scaffolds the project, wires a feed-triggered routine binding the chosen pipeline, and backfills from the existing feed.",

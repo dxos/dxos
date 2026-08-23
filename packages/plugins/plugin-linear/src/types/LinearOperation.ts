@@ -22,7 +22,7 @@ import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
  */
 export const GetLinearTeams = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.linear.getLinearTeams'),
+    key: DXN.make('org.dxos.operation.linear.getTeams'),
     name: 'Get Linear Teams',
     description: 'List Linear teams reachable from a connection without materializing local objects.',
     icon: 'ph--users--regular',
@@ -40,7 +40,7 @@ export const GetLinearTeams = Operation.make({
  */
 export const MaterializeLinearTarget = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.linear.materializeLinearTarget'),
+    key: DXN.make('org.dxos.operation.linear.materializeTarget'),
     name: 'Materialize Linear Target',
     description: 'Create the empty local root Project bound to a selected Linear team.',
     icon: 'ph--users--regular',
@@ -76,7 +76,7 @@ export interface SyncOptions extends Schema.Schema.Type<typeof SyncOptions> {}
  */
 export const SyncLinearTeams = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.linear.syncLinearTeams'),
+    key: DXN.make('org.dxos.operation.linear.syncTeams'),
     name: 'Sync Linear Teams',
     description: 'Reconcile every bound Linear team — projects and issues.',
     icon: 'ph--arrows-clockwise--regular',

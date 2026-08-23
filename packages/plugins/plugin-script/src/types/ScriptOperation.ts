@@ -28,7 +28,7 @@ export const NotebookProps = Schema.Struct({
 
 export const CreateScript = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.script.createScript'),
+    key: DXN.make('org.dxos.operation.script.create'),
     name: 'Create Script',
     icon: 'ph--code--regular',
   },

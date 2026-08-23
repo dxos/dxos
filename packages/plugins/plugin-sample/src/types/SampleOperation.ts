@@ -22,7 +22,7 @@ import { DXN } from '@dxos/keys';
 // - `output`: Effect/Schema defining the return shape.
 export const CreateSampleItem = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.sample.createSampleItem'),
+    key: DXN.make('org.dxos.operation.compute.createItem'),
     name: 'Create Sample Item',
     icon: 'ph--plus--regular',
   },

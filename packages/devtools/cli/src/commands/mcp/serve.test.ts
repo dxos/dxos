@@ -186,8 +186,9 @@ describe('dx mcp serve', () => {
     const { operations } = JSON.parse(responses.get(9)!.result.content[0].text);
     const keys: string[] = operations.map((operation: { key: string }) => operation.key);
     // The registry the CLI assembles carries the project/task verbs and plugin-space's object CRUD.
-    expect(keys.some((key) => key.endsWith('.taskCreate'))).to.be.true;
-    expect(keys.some((key) => key.endsWith('.projectCreate'))).to.be.true;
+    // Full keys, not suffixes: several packages now have a bare `create` verb.
+    expect(keys).to.include('org.dxos.operation.tasks.create');
+    expect(keys).to.include('org.dxos.operation.projects.create');
     for (const verb of [...PROJECTED_OBJECT_OPERATIONS, ...PROJECTED_HOST_OPERATIONS]) {
       expect(
         keys.some((key) => key.endsWith(`.${verb}`)),
@@ -196,7 +197,7 @@ describe('dx mcp serve', () => {
     }
 
     // A view is compact: what it costs the model is a description, not a schema.
-    const row = operations.find((operation: { key: string }) => operation.key.endsWith('.taskCreate'));
+    const row = operations.find((operation: { key: string }) => operation.key === 'org.dxos.operation.tasks.create');
     expect(row).to.not.have.property('schema');
     expect(row.skills).to.include(SKILL);
 

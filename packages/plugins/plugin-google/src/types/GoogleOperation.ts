@@ -30,7 +30,7 @@ export const GetGoogleCalendars = Operation.make({
   //   runs because composer's invoker doesn't carry per-space Database. The handler provides
   //   `Database.layer(db)` itself (same pattern as plugin-trello GetTrelloBoards).
   meta: {
-    key: DXN.make('org.dxos.operation.google.getGoogleCalendars'),
+    key: DXN.make('org.dxos.operation.google.getCalendars'),
     name: 'Get Google Calendars',
     description: 'Discover Google Calendars reachable from a connection without materializing local Calendars.',
     icon: 'ph--calendar--regular',
@@ -41,7 +41,7 @@ export const GetGoogleCalendars = Operation.make({
 
 export const GmailSend = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.google.googleMailSend'),
+    key: DXN.make('org.dxos.operation.google.sendMail'),
     name: 'Send Gmail',
     description: 'Send emails via Gmail.',
     icon: 'ph--paper-plane-tilt--regular',
@@ -56,7 +56,7 @@ export const GmailSend = Operation.make({
 
 export const GoogleMailSync = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.google.googleMailSync'),
+    key: DXN.make('org.dxos.operation.google.syncMail'),
     name: 'Sync Google Mail',
     description: 'Sync emails from Gmail to the mailbox feed.',
     icon: 'ph--arrows-clockwise--regular',
@@ -90,7 +90,7 @@ export const MaterializeGmailTarget = Operation.make({
 
 export const GoogleCalendarSync = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.google.googleCalendarSync'),
+    key: DXN.make('org.dxos.operation.google.syncCalendar'),
     name: 'Sync Google Calendar',
     description:
       'Sync events from Google Calendar. The initial sync uses startTime ordering for specified number of days. Subsequent syncs use updatedMin to catch all changes.',
@@ -122,7 +122,7 @@ export const MaterializeGoogleCalendarTarget = Operation.make({
 
 export const CreateGoogleCalendarEvent = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.google.createGoogleCalendarEvent'),
+    key: DXN.make('org.dxos.operation.google.createCalendarEvent'),
     name: 'Create Google Calendar Event',
     description: 'Create an event on Google Calendar.',
     icon: 'ph--calendar-plus--regular',
@@ -142,7 +142,7 @@ export const CreateGoogleCalendarEvent = Operation.make({
 
 export const GetGoogleContactGroups = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.google.getGoogleContactGroups'),
+    key: DXN.make('org.dxos.operation.google.getContactGroups'),
     name: 'Get Google Contact Groups',
     description: 'Discover Google Contact Groups reachable from a connection.',
     icon: 'ph--users--regular',
@@ -153,7 +153,7 @@ export const GetGoogleContactGroups = Operation.make({
 
 export const GoogleContactsSync = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.google.googleContactsSync'),
+    key: DXN.make('org.dxos.operation.google.syncContacts'),
     name: 'Sync Google Contacts',
     description: 'Sync contacts from a Google Contact group into Person objects in the space.',
     icon: 'ph--arrows-clockwise--regular',

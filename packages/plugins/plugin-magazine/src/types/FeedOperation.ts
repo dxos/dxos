@@ -108,7 +108,7 @@ export const LoadPostContent = Operation.make({
  */
 export const CurateMagazine = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.magazine.curateMagazine'),
+    key: DXN.make('org.dxos.operation.magazine.curate'),
     name: 'Curate Magazine',
     description: 'Syncs feeds, selects matching posts via the magazine skill, and applies per-feed keep limits.',
     icon: 'ph--sparkle--regular',
@@ -133,7 +133,7 @@ export const CurateMagazine = Operation.make({
  */
 export const ClearMagazine = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.magazine.clearMagazine'),
+    key: DXN.make('org.dxos.operation.magazine.clear'),
     name: 'Clear Magazine',
     description: "Removes a Magazine's posts, keeping any that are starred.",
     icon: 'ph--trash--regular',

@@ -24,7 +24,7 @@ import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
  */
 export const GetBlueskyTargets = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.bluesky.getBlueskyTargets'),
+    key: DXN.make('org.dxos.operation.bluesky.getTargets'),
     name: 'Get Bluesky Targets',
     description: "List the user's Bluesky timeline / likes / bookmarks plus saved custom feeds.",
     icon: 'ph--butterfly--regular',
@@ -43,7 +43,7 @@ export const GetBlueskyTargets = Operation.make({
  */
 export const MaterializeBlueskyTarget = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.bluesky.materializeBlueskyTarget'),
+    key: DXN.make('org.dxos.operation.bluesky.materializeTarget'),
     name: 'Materialize Bluesky Target',
     description: 'Create the empty local Subscription feed bound to a selected Bluesky target.',
     icon: 'ph--butterfly--regular',
@@ -62,7 +62,7 @@ export const MaterializeBlueskyTarget = Operation.make({
  */
 export const SyncBlueskyTargets = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.bluesky.syncBlueskyTargets'),
+    key: DXN.make('org.dxos.operation.bluesky.syncTargets'),
     name: 'Sync Bluesky',
     description: 'Pull posts for every Bluesky target bound to a connection.',
     icon: 'ph--arrows-clockwise--regular',

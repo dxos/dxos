@@ -18,15 +18,23 @@ Design: [DESIGN.md](./DESIGN.md)
 - [x] Normalize domain segments to camelCase: `plugin-crm` → `crm`, `web-search` → `webSearch`,
       `stories-brain` → `storiesBrain`. No key carries a hyphen now, which also retires the
       `webSearch`/`web-search` collision hazard in practice.
-- [x] Give `runInstructions` a domain (`org.dxos.operation.assistant.runInstructions`).
+- [x] Give `runInstructions` a domain (`org.dxos.operation.assistantToolkit.runInstructions`).
 - [x] Operations defined in and local to a test, storybook or `testing/` use the `com.example` root,
       so a fixture never squats a real namespace. 54 keys moved.
 - [x] AUDIT.md moved here, regenerated from a committed [scan.mjs](./scan.mjs), keyed on the DXN with
       the derived tool-name column REMOVED — it is a function of the key, and restating it invites drift.
 - [ ] Update PLUGIN.mdl across all plugins — 71 reference operations; the codemod fixed the 5 with
       exact key matches, the rest name old namespaces as patterns or prose.
-- [ ] Lint rule `operation-key-shape` in `packages/common/eslint-plugin-rules`: a key must be a
-      literal matching `<root>.operation.<domain>.<camelVerb>`, never built by a helper.
+- [x] Domain is the PACKAGE (`@dxos/` and `plugin-` stripped, camelCased), verb-first, de-stuttered.
+      90 keys renamed. `@dxos/plugin-assistant` keeps `assistant`; `@dxos/assistant-toolkit` becomes
+      `assistantToolkit`, which is what resolves the two-packages-one-word case.
+- [ ] Lint rule `operation-key-shape` in `packages/common/eslint-plugin-rules`. Six checks are fully
+      mechanical now that the domain is the package: shape, domain-equals-package, no stutter, no
+      hyphen in a segment, literal-not-helper, and `com.example` for test-local files. Verb-first is
+      partial — enforce a small core verb list strictly and warn on anything outside it, rather than
+      maintaining a dictionary.
+- [ ] A verb must not end in a preposition. De-stuttering produced `tasks.convertTo` from
+      `convertToTask`: verb-first, no stutter, and meaningless. Fixed by hand to `tasks.convert`.
 - [x] Regenerate memoized fixtures and [AUDIT.md](./AUDIT.md). 16 recordings re-cut in the two
       agent-runtime stores; every other store replayed unchanged, since its tools were not renamed.
 - [ ] 33 keys are still off-shape — test and example definitions that omit the domain segment

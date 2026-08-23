@@ -86,7 +86,7 @@ export const Create = Operation.make({
 
 export const GetValues = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.sheet.rangeGet'),
+    key: DXN.make('org.dxos.operation.sheet.getRange'),
     name: 'Get Range Values',
     description: 'Returns cell values from a sheet as a 2D array. Defaults to the entire occupied area.',
     icon: 'ph--table--regular',
@@ -109,7 +109,7 @@ export const GetValues = Operation.make({
 
 export const SetValues = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.sheet.rangeSet'),
+    key: DXN.make('org.dxos.operation.sheet.setRange'),
     name: 'Set Range Values',
     description: 'Sets multiple cell values in a sheet at once.',
     icon: 'ph--pencil--regular',

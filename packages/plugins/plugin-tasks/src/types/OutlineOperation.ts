@@ -28,7 +28,7 @@ export const CreateOutline = Operation.make({
 
 export const ConvertToTask = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.tasks.convertToTask'),
+    key: DXN.make('org.dxos.operation.tasks.convert'),
     name: 'Convert to Task',
     icon: 'ph--check-circle--regular',
   },
@@ -61,7 +61,7 @@ export const QuickJournalEntry = Operation.make({
 
 export const GetOutline = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.tasks.outlineGet'),
+    key: DXN.make('org.dxos.operation.tasks.getOutline'),
     name: 'Get Outline',
     description: "Read an outline's checklist markdown and its parsed items.",
     icon: 'ph--list-checks--regular',
@@ -80,7 +80,7 @@ export const GetOutline = Operation.make({
 
 export const UpdateOutline = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.tasks.outlineUpdate'),
+    key: DXN.make('org.dxos.operation.tasks.updateOutline'),
     name: 'Update Outline',
     description:
       'Update an outline: upsert checklist items by title (preserving position and surrounding prose), or replace the markdown wholesale.',

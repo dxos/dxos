@@ -25,7 +25,7 @@ import { DXN } from '@dxos/keys';
 
 export const ListProjects = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.projects.projectList'),
+    key: DXN.make('org.dxos.operation.projects.list'),
     name: 'List Projects',
     description: 'List the projects in the space: id, name, status, description, and whether a task set is linked.',
     icon: 'ph--list-bullets--regular',
@@ -51,7 +51,7 @@ export const ListProjects = Operation.make({
 
 export const GetProject = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.projects.projectGet'),
+    key: DXN.make('org.dxos.operation.projects.get'),
     name: 'Get Project',
     description: 'Read a project in full: status, task-set summary (open/total per set), outline, and artifacts.',
     icon: 'ph--info--regular',
@@ -81,7 +81,7 @@ export const GetProject = Operation.make({
 
 export const UpdateProject = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.projects.projectUpdate'),
+    key: DXN.make('org.dxos.operation.projects.update'),
     name: 'Update Project',
     description: 'Patch a project: name, status, or description.',
     icon: 'ph--pencil-simple--regular',

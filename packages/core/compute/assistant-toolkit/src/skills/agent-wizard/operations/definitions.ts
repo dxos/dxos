@@ -12,7 +12,7 @@ import { Agent } from '../../../types';
 
 export const AgentRules = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.agentWizard.agentRules'),
+    key: DXN.make('org.dxos.operation.assistantToolkit.agentRules'),
     name: 'Agent rules',
     description: 'Gets the rules for creating an agent.',
     icon: 'ph--book-open--regular',
@@ -23,7 +23,7 @@ export const AgentRules = Operation.make({
 
 export const CreateAgent = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.agentWizard.createAgent'),
+    key: DXN.make('org.dxos.operation.assistantToolkit.createAgent'),
     name: 'Create agent',
     description: 'Creates a new agent.',
     icon: 'ph--brain--regular',
@@ -50,7 +50,7 @@ export const CreateAgent = Operation.make({
 
 export const SyncAutomation = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.agent.syncTriggers'),
+    key: DXN.make('org.dxos.operation.assistantToolkit.syncTriggers'),
     name: 'Sync automation',
     description:
       'Compiles the agent automation config (subscriptions, optional cron) into Routines that relay events onto the agent session. Recreates everything, so call with the FULL desired config after any change; enabled is copied from the agent onto every trigger.',

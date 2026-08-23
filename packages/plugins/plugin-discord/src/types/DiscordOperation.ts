@@ -23,7 +23,7 @@ import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
  */
 export const GetDiscordChannels = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.discord.getDiscordChannels'),
+    key: DXN.make('org.dxos.operation.discord.getChannels'),
     name: 'Get Discord Channels',
     description: 'List Discord text channels reachable from a connection without materializing local Channels.',
     icon: 'ph--hash--regular',
@@ -41,7 +41,7 @@ export const GetDiscordChannels = Operation.make({
  */
 export const MaterializeDiscordTarget = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.discord.materializeDiscordTarget'),
+    key: DXN.make('org.dxos.operation.discord.materializeTarget'),
     name: 'Materialize Discord Target',
     description: 'Create the empty local Channel bound to a selected Discord channel.',
     icon: 'ph--hash--regular',
@@ -60,7 +60,7 @@ export const MaterializeDiscordTarget = Operation.make({
  */
 export const SyncDiscordChannel = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.discord.syncDiscordChannel'),
+    key: DXN.make('org.dxos.operation.discord.syncChannel'),
     name: 'Sync Discord Channel',
     description: 'Reconcile messages for every Discord channel bound to a connection.',
     icon: 'ph--arrows-clockwise--regular',
@@ -81,7 +81,7 @@ export const SyncDiscordChannel = Operation.make({
  */
 export const CrawlDiscordChannels = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.discord.crawlDiscordChannels'),
+    key: DXN.make('org.dxos.operation.discord.crawlChannels'),
     name: 'Crawl Discord Channels',
     description: 'Incrementally crawl Discord channels through the fact-extraction pipeline.',
     icon: 'ph--bulldozer--regular',

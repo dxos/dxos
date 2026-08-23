@@ -96,7 +96,7 @@ const AVAILABLE_PACKAGES = trim`
 
 export const Create = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.script.create'),
+    key: DXN.make('org.dxos.operation.script.createFunction'),
     name: 'Create',
     description: `Creates a new function with TypeScript source code and adds it to the space. ${FUNCTION_FORMAT} ${AVAILABLE_PACKAGES}`,
     icon: 'ph--code--regular',

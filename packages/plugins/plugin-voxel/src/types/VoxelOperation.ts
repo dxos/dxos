@@ -56,7 +56,7 @@ export const QueryWorld = Operation.make({
 
 export const AddVoxels = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.voxel.addVoxels'),
+    key: DXN.make('org.dxos.operation.voxel.add'),
     name: 'Add voxels',
     description: 'Adds one or more voxels to the world at specified coordinates with a given hue.',
     icon: 'ph--plus--regular',
@@ -77,7 +77,7 @@ export const AddVoxels = Operation.make({
 
 export const RemoveVoxels = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.voxel.removeVoxels'),
+    key: DXN.make('org.dxos.operation.voxel.remove'),
     name: 'Remove voxels',
     description: 'Removes voxels at specified coordinates from the world.',
     icon: 'ph--minus--regular',

@@ -11,7 +11,7 @@ import { DXN } from '@dxos/keys';
 
 export const OpenSearch = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.search.openSearch'),
+    key: DXN.make('org.dxos.operation.search.open'),
     name: 'Open Search',
     icon: 'ph--magnifying-glass--regular',
   },

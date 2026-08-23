@@ -344,7 +344,7 @@ export const OpenObjectForm = Operation.make({
 
 export const OpenCreateSpace = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.space.openCreateSpace'),
+    key: DXN.make('org.dxos.operation.space.openCreate'),
     name: 'Open Create Space Dialog',
     description: 'Open the create space dialog.',
     icon: 'ph--plus--regular',
@@ -355,7 +355,7 @@ export const OpenCreateSpace = Operation.make({
 
 export const OpenImportSpace = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.space.openImportSpace'),
+    key: DXN.make('org.dxos.operation.space.openImport'),
     name: 'Open Import Space Dialog',
     description: 'Open the import space dialog to create a new space from a backup.',
     icon: 'ph--download--regular',
@@ -366,7 +366,7 @@ export const OpenImportSpace = Operation.make({
 
 export const ImportSpace = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.space.importSpace'),
+    key: DXN.make('org.dxos.operation.space.import'),
     name: 'Import Space',
     description: 'Import a space archive as a new space.',
     icon: 'ph--upload--regular',
@@ -386,7 +386,7 @@ export const ImportSpace = Operation.make({
 
 export const ExportSpace = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.space.exportSpace'),
+    key: DXN.make('org.dxos.operation.space.export'),
     name: 'Export Space',
     description: 'Export a space as a backup and download the archive.',
     icon: 'ph--download--regular',

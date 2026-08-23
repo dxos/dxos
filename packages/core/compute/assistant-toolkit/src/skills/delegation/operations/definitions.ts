@@ -12,7 +12,7 @@ import { trim } from '@dxos/util';
 
 export const DelegateTask = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.delegation.delegateTask'),
+    key: DXN.make('org.dxos.operation.assistantToolkit.delegateTask'),
     name: 'Delegate task',
     description: trim`
       Delegate a unit of work to a sub-agent.
