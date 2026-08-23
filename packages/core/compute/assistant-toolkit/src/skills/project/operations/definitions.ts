@@ -12,7 +12,7 @@ import { trim } from '@dxos/util';
 
 export const ArtifactAdd = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.project.artifactAdd'),
+    key: DXN.make('org.dxos.operation.project.artifactAdd'),
     name: 'Add project artifact',
     icon: 'ph--stack-plus--regular',
     description: trim`
@@ -43,7 +43,7 @@ export const ArtifactInfo = Schema.Struct({
 
 export const ArtifactList = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.project.artifactList'),
+    key: DXN.make('org.dxos.operation.project.artifactList'),
     name: 'List project artifacts',
     icon: 'ph--stack--regular',
     description: trim`

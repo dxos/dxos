@@ -10,7 +10,7 @@ import { DXN } from '@dxos/keys';
 
 import * as Operation from './Operation';
 
-const KEY = DXN.make('org.example.test.op');
+const KEY = DXN.make('com.example.test.op');
 
 const makeOp = () => Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY, name: 'Test Op' } });
 
@@ -46,16 +46,18 @@ describe('toolName', () => {
       output: Schema.Void,
     });
 
-  test('strips the constant function prefix and kebab-cases each segment', ({ expect }) => {
-    expect(Operation.toolName(makeOp('org.dxos.function.markdown.create'))).toBe('markdown-create');
-    expect(Operation.toolName(makeOp('org.dxos.function.project.artifactAdd'))).toBe('project-artifact-add');
-    expect(Operation.toolName(makeOp('org.dxos.function.runInstructions'))).toBe('run-instructions');
+  test('strips the constant operation prefix and kebab-cases each segment', ({ expect }) => {
+    expect(Operation.toolName(makeOp('org.dxos.operation.markdown.create'))).toBe('markdown-create');
+    expect(Operation.toolName(makeOp('org.dxos.operation.project.artifactAdd'))).toBe('project-artifact-add');
+    expect(Operation.toolName(makeOp('org.dxos.operation.assistant.runInstructions'))).toBe(
+      'assistant-run-instructions',
+    );
   });
 
   // The name must not track display copy: that was what made rewording a label rename the tool.
   test('is independent of meta.name', ({ expect }) => {
     const op = Operation.make({
-      meta: { key: DXN.make('org.dxos.function.markdown.create'), name: 'Something Else Entirely' },
+      meta: { key: DXN.make('org.dxos.operation.markdown.create'), name: 'Something Else Entirely' },
       input: Schema.Void,
       output: Schema.Void,
     });
@@ -63,14 +65,12 @@ describe('toolName', () => {
   });
 
   test('a key outside the prefix keeps every segment', ({ expect }) => {
-    expect(Operation.toolName(makeOp('org.dxos.plugin.sheet.operation.rangeGet'))).toBe(
-      'org-dxos-plugin-sheet-operation-range-get',
-    );
+    expect(Operation.toolName(makeOp('com.example.operation.random'))).toBe('com-example-operation-random');
   });
 
   test('the namespace segment separates verbs that used to collide', ({ expect }) => {
     const names = ['markdown', 'script', 'sheet'].map((ns) =>
-      Operation.toolName(makeOp(`org.dxos.function.${ns}.create`)),
+      Operation.toolName(makeOp(`org.dxos.operation.${ns}.create`)),
     );
     expect(new Set(names).size).toBe(3);
   });
@@ -82,24 +82,25 @@ describe('findToolNameCollisions', () => {
 
   // One operation bound by two skills reaches the check twice; that is the same tool, not a clash.
   test('a repeated binding of one operation is not a collision', ({ expect }) => {
-    const op = makeOp('org.dxos.function.markdown.create');
+    const op = makeOp('org.dxos.operation.markdown.create');
     expect(Operation.findToolNameCollisions([op, op]).size).toBe(0);
   });
 
   test('reports nothing for distinct names', ({ expect }) => {
     const collisions = Operation.findToolNameCollisions([
-      makeOp('org.dxos.function.markdown.create'),
-      makeOp('org.dxos.function.script.create'),
+      makeOp('org.dxos.operation.markdown.create'),
+      makeOp('org.dxos.operation.script.create'),
     ]);
     expect(collisions.size).toBe(0);
   });
 
-  // Kebab-casing is not injective, so registry-unique keys can still claim one tool name. Hyphenated
-  // segments are live (`plugin-crm`, `web-search`), which is what makes this reachable rather than theoretical.
+  // Kebab-casing is not injective: a camelCase segment and an already-hyphenated one converge. No key
+  // carries a hyphen today — the `operation-key-shape` rule forbids it — so this constructs the pair
+  // rather than borrowing a real one, and stands as the regression test if one ever slips back in.
   test('catches a camelCase segment converging with an already-hyphenated one', ({ expect }) => {
     const collisions = Operation.findToolNameCollisions([
-      makeOp('org.dxos.function.webSearch.fetch'),
-      makeOp('org.dxos.function.web-search.fetch'),
+      makeOp('org.dxos.operation.webSearch.fetch'),
+      makeOp('org.dxos.operation.web-search.fetch'),
     ]);
     expect([...collisions.keys()]).toEqual(['web-search-fetch']);
     expect(collisions.get('web-search-fetch')).toHaveLength(2);
@@ -108,14 +109,14 @@ describe('findToolNameCollisions', () => {
 
 describe('tryToolNameFromKey', () => {
   test('derives the same name as toolNameFromKey for a well-formed key', ({ expect }) => {
-    expect(Operation.tryToolNameFromKey('org.dxos.function.markdown.create')).toBe('markdown-create');
+    expect(Operation.tryToolNameFromKey('org.dxos.operation.markdown.create')).toBe('markdown-create');
   });
 
   // Registry records arrive as JSON, so a key that cannot yield a valid name must cost only its own
   // tool — the throwing variant would abort every tool in the projection.
   test('returns undefined for a key that cannot yield a valid name', ({ expect }) => {
-    expect(Operation.tryToolNameFromKey('org.dxos.function.9lives.go')).toBeUndefined();
+    expect(Operation.tryToolNameFromKey('org.dxos.operation.9lives.go')).toBeUndefined();
     expect(Operation.tryToolNameFromKey('')).toBeUndefined();
-    expect(() => Operation.toolNameFromKey('org.dxos.function.9lives.go')).toThrow();
+    expect(() => Operation.toolNameFromKey('org.dxos.operation.9lives.go')).toThrow();
   });
 });

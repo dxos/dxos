@@ -77,7 +77,7 @@ describe.skip('Bundler', () => {
         import * as Schema from 'effect/Schema';
 
         export default defineFunction({
-          key: 'org.dxos.script.forex-effect',
+          key: 'org.dxos.operation.script.forex-effect',
           name: 'Forex Effect',
           description: 'Returns the exchange rate between two currencies.',
 

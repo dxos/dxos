@@ -36,7 +36,7 @@ export interface Candidate extends Schema.Schema.Type<typeof Candidate> {}
  */
 export const ExtractVocabulary = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.plugin.lingo.operation.extractVocabulary'),
+    key: DXN.make('org.dxos.operation.lingo.extractVocabulary'),
     name: 'Extract vocabulary',
     description: 'Extracts vocabulary from a text object and adds it to a vocabulary deck.',
     icon: 'ph--magic-wand--regular',
@@ -56,7 +56,7 @@ export const ExtractVocabulary = Operation.make({
 /** Adds a single word to a deck, deduplicating on the term. */
 export const AddWord = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.plugin.lingo.operation.addWord'),
+    key: DXN.make('org.dxos.operation.lingo.addWord'),
     name: 'Add word',
     description: 'Adds a word to a vocabulary deck.',
     icon: 'ph--plus--regular',
@@ -81,7 +81,7 @@ export const AddWord = Operation.make({
 /** Records one flashcard answer and advances the word's Leitner schedule. */
 export const RecordReview = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.plugin.lingo.operation.recordReview'),
+    key: DXN.make('org.dxos.operation.lingo.recordReview'),
     name: 'Record review',
     description: 'Records a flashcard answer and updates the word score.',
     icon: 'ph--check-circle--regular',
@@ -102,7 +102,7 @@ export const RecordReview = Operation.make({
  */
 export const TranslateTerm = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.plugin.lingo.operation.translateTerm'),
+    key: DXN.make('org.dxos.operation.lingo.translateTerm'),
     name: 'Translate term',
     description: 'Translates a single term, optionally using the surrounding sentence for context.',
     icon: 'ph--translate--regular',
@@ -125,7 +125,7 @@ export const TranslateTerm = Operation.make({
  */
 export const AnalyzeText = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.plugin.lingo.operation.analyzeText'),
+    key: DXN.make('org.dxos.operation.lingo.analyzeText'),
     name: 'Analyze text',
     description: 'Analyzes a passage into paragraph, sentence, clause and vocabulary ranges.',
     icon: 'ph--brackets-angle--regular',
@@ -160,7 +160,7 @@ export const AnalyzeText = Operation.make({
  */
 export const TranslatePassage = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.plugin.lingo.operation.translatePassage'),
+    key: DXN.make('org.dxos.operation.lingo.translatePassage'),
     name: 'Translate passage',
     description: 'Translates an entire passage into the base language, preserving markdown.',
     icon: 'ph--translate--regular',

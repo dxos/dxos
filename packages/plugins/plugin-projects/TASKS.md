@@ -279,7 +279,7 @@ summaries), and the `stories-projects` storybook strategy.
       project scope (subject → `instructions.objects`, `seedProjectScope` adds ProjectSkill +
       artifact skills); `ARTIFACT_SKILL_KEYS` += table, sheet; ProjectArticle **Context** section
       (`InstructionsEditor` `fields` prop — only rendered fields write back). `AddArtifact` alias
-      NOT added: `org.dxos.function.project.artifactAdd`/`artifactList` are already public
+      NOT added: `org.dxos.operation.project.artifactAdd`/`artifactList` are already public
       operations with handlers registered by plugin-assistant, so other plugins can invoke them
       as-is. plugin-projects 13 + plugin-routine 62 tests green.
 - [x] **UC-A sender ledger** — `inboxResearch` project template + "Set up project" mailbox-node

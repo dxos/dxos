@@ -16,7 +16,7 @@ import { Chat } from '../../../types';
 
 export const Relay = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.agent.relay'),
+    key: DXN.make('org.dxos.operation.agent.relay'),
     name: 'Agent Relay',
     description: 'Qualifies a subscription event with a cheap model and forwards it onto the durable agent session.',
     icon: 'ph--funnel--regular',
@@ -36,7 +36,7 @@ export const Relay = Operation.make({
 
 export const GetContext = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.agent.getContext'),
+    key: DXN.make('org.dxos.operation.agent.getContext'),
     name: 'Get Agent Context',
     description: 'Get the context of an agent.',
     icon: 'ph--info--regular',

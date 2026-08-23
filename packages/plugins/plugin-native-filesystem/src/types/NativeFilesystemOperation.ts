@@ -10,13 +10,9 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
 export const OpenDirectory = Operation.make({
   meta: {
-    key: makeKey('openDirectory'),
+    key: DXN.make('org.dxos.operation.nativeFilesystem.openDirectory'),
     name: 'Open Folder',
     icon: 'ph--folder-open--regular',
   },
@@ -26,7 +22,11 @@ export const OpenDirectory = Operation.make({
 });
 
 export const CloseDirectory = Operation.make({
-  meta: { key: makeKey('closeDirectory'), name: 'Close Folder', icon: 'ph--folder--regular' },
+  meta: {
+    key: DXN.make('org.dxos.operation.nativeFilesystem.closeDirectory'),
+    name: 'Close Folder',
+    icon: 'ph--folder--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({ id: Schema.String }),
   output: Schema.Void,
@@ -34,7 +34,7 @@ export const CloseDirectory = Operation.make({
 
 export const RefreshDirectory = Operation.make({
   meta: {
-    key: makeKey('refreshDirectory'),
+    key: DXN.make('org.dxos.operation.nativeFilesystem.refreshDirectory'),
     name: 'Refresh Folder',
     icon: 'ph--arrows-clockwise--regular',
   },

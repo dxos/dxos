@@ -244,8 +244,8 @@ export const getHandler = <const Op extends Operation.Definition.Any>(
 
 /**
  * Gets a handler for an operation by key.
- * Accepts either a plain NSID (`org.dxos.function.database.contextAdd`) or a
- * full DXN string (`dxn:org.dxos.function.database.contextAdd`).
+ * Accepts either a plain NSID (`org.dxos.operation.database.contextAdd`) or a
+ * full DXN string (`dxn:org.dxos.operation.database.contextAdd`).
  */
 export const getHandlerByKey = (
   set: OperationHandlerSet,

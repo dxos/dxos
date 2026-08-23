@@ -17,13 +17,13 @@ import { OperationInvoker } from '@dxos/operation';
 import { type MappedEvent, listen } from './invocation-listener';
 
 const Rename = Operation.make({
-  meta: { key: DXN.make('org.dxos.test.rename') },
+  meta: { key: DXN.make('org.dxos.operation.test.rename') },
   input: Schema.Struct({ name: Schema.String }),
   output: Schema.Struct({ id: Schema.String }),
 });
 
 const Untracked = Operation.make({
-  meta: { key: DXN.make('org.dxos.test.untracked') },
+  meta: { key: DXN.make('org.dxos.operation.test.untracked') },
   input: Schema.Struct({ name: Schema.String }),
   output: Schema.Void,
 });

@@ -21,7 +21,7 @@ import { createEvalRunner } from '../runner';
 // judgment a deterministic check can't make — is graded by an LLM judge (TESTING.md dimensions
 // A/B/H); every other criterion stays dimension-G (deterministic).
 
-const UPDATE_TASKS_OPERATION_KEY = 'dxn:org.dxos.function.planning.updateTasks';
+const UPDATE_TASKS_OPERATION_KEY = 'dxn:org.dxos.operation.planning.updateTasks';
 const OBJECT_WRITE_OPERATION_KEYS = [
   'dxn:org.dxos.function.database.objectCreate',
   'dxn:org.dxos.function.database.objectUpdate',

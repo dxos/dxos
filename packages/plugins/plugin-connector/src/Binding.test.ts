@@ -245,7 +245,7 @@ describe('Binding.sync', () => {
   const fired: string[] = [];
 
   const TestSync = Operation.make({
-    meta: { key: DXN.make('org.dxos.test.Binding.sync.sync'), name: 'Test Sync' },
+    meta: { key: DXN.make('org.dxos.operation.test.Binding.sync.sync'), name: 'Test Sync' },
     input: Schema.Struct({ connection: Ref.Ref(Connection.Connection), priority: Schema.optional(Schema.String) }),
     output: Schema.Any,
   });
@@ -336,7 +336,7 @@ describe('Binding.scaffoldRoutine', () => {
   // Stand-in for a connector's `sync.operation` (e.g. `GoogleOperation.GoogleMailSync`): account-level,
   // taking the same `{ connection, priority? }` shape every real connector's sync declares.
   const TestSync = Operation.make({
-    meta: { key: DXN.make('org.dxos.test.sync'), name: 'Test Sync' },
+    meta: { key: DXN.make('org.dxos.operation.test.sync'), name: 'Test Sync' },
     input: Schema.Struct({ connection: Ref.Ref(Connection.Connection), priority: Schema.optional(Schema.String) }),
     output: Schema.Any,
   });
@@ -446,7 +446,7 @@ describe('binding lifecycle', () => {
   const SOURCE = 'gmail.example';
 
   const TestSync = Operation.make({
-    meta: { key: DXN.make('org.dxos.test.bindingLifecycle.sync'), name: 'Test Sync' },
+    meta: { key: DXN.make('org.dxos.operation.test.bindingLifecycle.sync'), name: 'Test Sync' },
     input: Schema.Struct({ connection: Ref.Ref(Connection.Connection), priority: Schema.optional(Schema.String) }),
     output: Schema.Any,
   });
@@ -691,7 +691,7 @@ describe('Binding.syncAll', () => {
   // Stand-in for a connector's account-level `sync.operation`: its handler wraps the shared
   // fan-out over a per-binding sync, the shape every migrated connector follows.
   const TestSync = Operation.make({
-    meta: { key: DXN.make('org.dxos.test.syncFanout.sync'), name: 'Test Sync' },
+    meta: { key: DXN.make('org.dxos.operation.test.syncFanout.sync'), name: 'Test Sync' },
     input: Schema.Struct({ connection: Ref.Ref(Connection.Connection), priority: Schema.optional(Schema.String) }),
     output: Schema.Any,
   });

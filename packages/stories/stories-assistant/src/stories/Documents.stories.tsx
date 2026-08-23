@@ -195,7 +195,7 @@ export const WithScript: Story = {
       const { identityKey } = client.halo.identity.get()!;
       await client.halo.writeCredentials([getAccessCredential(identityKey)]);
 
-      const template = templates.find((template) => template.id === 'org.dxos.script.forex-effect');
+      const template = templates.find((template) => template.id === 'org.dxos.operation.script.forex-effect');
       invariant(template, 'Template not found');
       invariant(template.name, 'Template name not found');
 
@@ -218,7 +218,7 @@ export const WithScript: Story = {
               You can get the exchange rate between two currencies.
             `,
           }),
-          tools: [ToolId.make('org.dxos.script.forex-effect')],
+          tools: [ToolId.make('org.dxos.operation.script.forex-effect')],
         }),
       );
 

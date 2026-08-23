@@ -180,8 +180,8 @@ export type KeyFilterOptions = {
  *
  * @example
  * ```ts
- * Filter.key('org.example.type.foo');
- * Filter.key('org.example.type.foo', { version: '^1.2.3' });
+ * Filter.key('com.example.type.foo');
+ * Filter.key('com.example.type.foo', { version: '^1.2.3' });
  * ```
  */
 export const key = (key: string, options?: KeyFilterOptions): Any => {

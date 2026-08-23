@@ -38,7 +38,7 @@ describe('reconcileCursors', () => {
   // The handler derives its own Database from the connection ref, matching the
   // production connectors (composer's invoker has no `databaseResolver`).
   const MaterializeExampleTarget = Operation.make({
-    meta: { key: DXN.make('org.dxos.test.materializeExampleTarget') },
+    meta: { key: DXN.make('org.dxos.operation.test.materializeExampleTarget') },
     input: ConnectorSpec.MaterializeTargetInput,
     output: ConnectorSpec.MaterializeTargetOutput,
   });
@@ -67,7 +67,7 @@ describe('reconcileCursors', () => {
   // Never invoked here — `ConnectorSync` requires an operation, and this test only exercises
   // cursor reconciliation.
   const SyncExampleTarget = Operation.make({
-    meta: { key: DXN.make('org.dxos.test.reconcileCursors.sync') },
+    meta: { key: DXN.make('org.dxos.operation.test.reconcileCursors.sync') },
     input: Schema.Struct({ connection: Ref.Ref(Connection.Connection), priority: Schema.optional(Schema.String) }),
     output: Schema.Any,
   });

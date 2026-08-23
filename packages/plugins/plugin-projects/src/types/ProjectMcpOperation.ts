@@ -11,10 +11,6 @@ import * as Project from '@dxos/compute/Project';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
 /**
  * Project verbs projected as MCP tools (MILESTONE-5.md §7.2/§7.4).
  *
@@ -29,7 +25,7 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
 
 export const ListProjects = Operation.make({
   meta: {
-    key: makeKey('projectList'),
+    key: DXN.make('org.dxos.operation.projects.projectList'),
     name: 'List Projects',
     description: 'List the projects in the space: id, name, status, description, and whether a task set is linked.',
     icon: 'ph--list-bullets--regular',
@@ -55,7 +51,7 @@ export const ListProjects = Operation.make({
 
 export const GetProject = Operation.make({
   meta: {
-    key: makeKey('projectGet'),
+    key: DXN.make('org.dxos.operation.projects.projectGet'),
     name: 'Get Project',
     description: 'Read a project in full: status, task-set summary (open/total per set), outline, and artifacts.',
     icon: 'ph--info--regular',
@@ -85,7 +81,7 @@ export const GetProject = Operation.make({
 
 export const UpdateProject = Operation.make({
   meta: {
-    key: makeKey('projectUpdate'),
+    key: DXN.make('org.dxos.operation.projects.projectUpdate'),
     name: 'Update Project',
     description: 'Patch a project: name, status, or description.',
     icon: 'ph--pencil-simple--regular',

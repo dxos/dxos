@@ -14,12 +14,12 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
 export const CreateChat = Operation.make({
-  meta: { key: makeKey('createChat'), name: 'Create Chat', icon: 'ph--chat-text--regular' },
+  meta: {
+    key: DXN.make('org.dxos.operation.assistant.createChat'),
+    name: 'Create Chat',
+    icon: 'ph--chat-text--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     db: Database.Database,
@@ -39,7 +39,7 @@ export const CreateChat = Operation.make({
 
 export const UpdateChatName = Operation.make({
   meta: {
-    key: makeKey('updateChatName'),
+    key: DXN.make('org.dxos.operation.assistant.updateChatName'),
     name: 'Update Chat Name',
     icon: 'ph--pencil--regular',
   },
@@ -54,7 +54,7 @@ export const UpdateChatName = Operation.make({
 
 export const SetCurrentChat = Operation.make({
   meta: {
-    key: makeKey('setCurrentChat'),
+    key: DXN.make('org.dxos.operation.assistant.setCurrentChat'),
     name: 'Set Current Chat',
     icon: 'ph--chat-text--regular',
   },
@@ -67,7 +67,12 @@ export const SetCurrentChat = Operation.make({
 });
 
 export const ForkChat = Operation.make({
-  meta: { key: makeKey('forkChat'), name: 'Fork Chat', icon: 'ph--git-branch--regular', skipRegistry: true },
+  meta: {
+    key: DXN.make('org.dxos.operation.assistant.forkChat'),
+    name: 'Fork Chat',
+    icon: 'ph--git-branch--regular',
+    skipRegistry: true,
+  },
   services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     chat: Type.getSchema(Chat.Chat),
@@ -81,7 +86,7 @@ export const ForkChat = Operation.make({
 
 export const EnsureCompanionChat = Operation.make({
   meta: {
-    key: makeKey('ensureCompanionChat'),
+    key: DXN.make('org.dxos.operation.assistant.ensureCompanionChat'),
     name: 'Ensure Companion Chat',
     icon: 'ph--chat-text--regular',
   },
@@ -105,7 +110,7 @@ export const SkillForm = Schema.Struct({
 
 export const GenerateHomeSuggestions = Operation.make({
   meta: {
-    key: makeKey('generateHomeSuggestions'),
+    key: DXN.make('org.dxos.operation.assistant.generateHomeSuggestions'),
     name: 'Generate Home Suggestions',
     icon: 'ph--sparkle--regular',
     // Internal UI operation — not exposed as an agent tool.
@@ -118,7 +123,7 @@ export const GenerateHomeSuggestions = Operation.make({
 
 export const ToggleTracePanelDebug = Operation.make({
   meta: {
-    key: makeKey('toggleTracePanelDebug'),
+    key: DXN.make('org.dxos.operation.assistant.toggleTracePanelDebug'),
     name: 'Toggle trace panel debug',
     description: 'Toggle trace panel between commit graph and raw span tree JSON.',
     icon: 'ph--bug--regular',

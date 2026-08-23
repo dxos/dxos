@@ -100,7 +100,7 @@ describe('projectFunctionToTool', () => {
   // single parameterless operation would break every agent request.
   test('a parameterless operation emits a schema that satisfies strict mode', ({ expect }) => {
     const Parameterless = Operation.make({
-      meta: { key: DXN.make('org.dxos.test.function.noParams') },
+      meta: { key: DXN.make('org.dxos.operation.test.noParams') },
       input: Schema.Void,
       output: Schema.Void,
     });
@@ -116,7 +116,7 @@ describe('projectFunctionToTool', () => {
   // every request fail, since all tools are sent together.
   test('an operation taking arbitrary JSON is not advertised as strict', ({ expect }) => {
     const PropertyBag = Operation.make({
-      meta: { key: DXN.make('org.dxos.test.function.propertyBag') },
+      meta: { key: DXN.make('org.dxos.operation.test.propertyBag') },
       input: Schema.Struct({ properties: Schema.Record(Schema.String, Schema.Any) }),
       output: Schema.Void,
     });
@@ -131,7 +131,7 @@ describe('projectFunctionToTool', () => {
   // therefore project to dynamic tools, whose JSON Schema the provider must use verbatim.
   test('the advertised schema is what the model is validated against', ({ expect }) => {
     const Mixed = Operation.make({
-      meta: { key: DXN.make('org.dxos.test.function.mixed') },
+      meta: { key: DXN.make('org.dxos.operation.test.mixed') },
       input: Schema.Struct({
         typename: Schema.String,
         properties: Schema.Record(Schema.String, Schema.Any),
@@ -188,7 +188,7 @@ describe('makeToolResolverFromOperations', () => {
     );
 
   test('resolves an operation the registry carries, by its derived tool name', async ({ expect }) => {
-    const registry = makeRegistry({ initial: [op('org.dxos.function.markdown.create')] });
+    const registry = makeRegistry({ initial: [op('org.dxos.operation.markdown.create')] });
     const tool = await withResolver(registry, (resolve) => resolve('markdown-create'));
     expect(tool.name).toBe('markdown-create');
   });
@@ -196,9 +196,9 @@ describe('makeToolResolverFromOperations', () => {
   // The query is an await point, so a registration landing mid-build must not be lost: clearing the
   // cache alone would be undone by the assignment of the snapshot taken before the change.
   test('a collision registered while the index was being built still fails', async ({ expect }) => {
-    const registry = makeRegistry({ initial: [op('org.dxos.function.webSearch.fetch')] });
+    const registry = makeRegistry({ initial: [op('org.dxos.operation.webSearch.fetch')] });
     // Fires the registration inside the first query, after the snapshot is taken but before it is cached.
-    let pending: (() => void) | undefined = () => registry.add([op('org.dxos.function.web-search.fetch')]);
+    let pending: (() => void) | undefined = () => registry.add([op('org.dxos.operation.webSearch.fetch')]);
     const query = registry.query.bind(registry);
     (registry as any).query = (...args: Parameters<typeof query>) => {
       const result = query(...args);
@@ -220,11 +220,11 @@ describe('makeToolResolverFromOperations', () => {
   // invalidation the stale hit would silently pick one of two claimants instead of reporting the
   // ambiguity. A resolver per call would pass either way, since the second would build a fresh index.
   test('a collision registered after the index was built still fails', async ({ expect }) => {
-    const registry = makeRegistry({ initial: [op('org.dxos.function.webSearch.fetch')] });
+    const registry = makeRegistry({ initial: [op('org.dxos.operation.webSearch.fetch')] });
     const attempt = withResolver(registry, (resolve) =>
       Effect.gen(function* () {
         const first = yield* resolve('web-search-fetch');
-        yield* Effect.sync(() => registry.add([op('org.dxos.function.web-search.fetch')]));
+        yield* Effect.sync(() => registry.add([op('org.dxos.operation.webSearch.fetch')]));
         return { first: first.name, second: yield* Effect.result(resolve('web-search-fetch')) };
       }),
     );
@@ -246,7 +246,7 @@ describe('makeToolResolverFromOperations', () => {
     });
 
     const Recursive = Operation.make({
-      meta: { key: DXN.make('org.dxos.test.function.recursive') },
+      meta: { key: DXN.make('org.dxos.operation.test.recursive') },
       input: Schema.Struct({ node: Node }),
       output: Schema.Void,
     });

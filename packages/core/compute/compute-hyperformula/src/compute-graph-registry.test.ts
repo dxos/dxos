@@ -17,7 +17,7 @@ import { TestBuilder, createMockedComputeRuntimeProvider } from './testing';
 
 const AddDefinition = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.test.compute.add'),
+    key: DXN.make('org.dxos.operation.test.compute.add'),
     name: 'add',
     description: 'Adds two numbers',
   },

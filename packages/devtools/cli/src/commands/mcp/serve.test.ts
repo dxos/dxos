@@ -45,7 +45,7 @@ const REQUESTS = [
     jsonrpc: '2.0',
     id: 7,
     method: 'tools/call',
-    params: { name: 'invokeOperation', arguments: { key: 'org.dxos.plugin.registry.operation.queryPlugins' } },
+    params: { name: 'invokeOperation', arguments: { key: 'org.dxos.operation.registry.queryPlugins' } },
   },
   { jsonrpc: '2.0', id: 8, method: 'tools/call', params: { name: 'whoami', arguments: {} } },
   { jsonrpc: '2.0', id: 9, method: 'tools/call', params: { name: 'queryOperations', arguments: {} } },
@@ -53,7 +53,7 @@ const REQUESTS = [
     jsonrpc: '2.0',
     id: 10,
     method: 'tools/call',
-    params: { name: 'queryOperations', arguments: { keys: ['org.dxos.plugin.space.operation.addObject'] } },
+    params: { name: 'queryOperations', arguments: { keys: ['org.dxos.operation.space.addObject'] } },
   },
   {
     jsonrpc: '2.0',
@@ -66,7 +66,7 @@ const REQUESTS = [
     jsonrpc: '2.0',
     id: 13,
     method: 'tools/call',
-    params: { name: 'invokeOperation', arguments: { key: 'org.dxos.plugin.space.operation.queryTypes' } },
+    params: { name: 'invokeOperation', arguments: { key: 'org.dxos.operation.space.queryTypes' } },
   },
 ];
 
@@ -201,7 +201,7 @@ describe('dx mcp serve', () => {
     expect(row.skills).to.include(SKILL);
 
     const detail = JSON.parse(responses.get(10)!.result.content[0].text).operations[0];
-    expect(detail.key).to.equal('org.dxos.plugin.space.operation.addObject');
+    expect(detail.key).to.equal('org.dxos.operation.space.addObject');
     expect(detail.schema.input.type).to.equal('object');
     expect(detail.hints.mutation).to.be.a('string');
   });

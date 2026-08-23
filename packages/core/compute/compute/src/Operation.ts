@@ -330,9 +330,9 @@ export const opaqueHandler = <T extends Operation.Definition.Any>(
 //
 
 /**
- * Constant namespace prefix elided from tool names; keys outside it keep every segment.
+ * Constant namespace prefix elided from tool names; keys outside it (examples, third-party) keep every segment.
  */
-const TOOL_NAME_KEY_PREFIX = 'org.dxos.function.';
+const TOOL_NAME_KEY_PREFIX = 'org.dxos.operation.';
 
 /**
  * Derives the model-facing tool name for an operation from its DXN key — never from `meta.name`,
@@ -346,8 +346,8 @@ const TOOL_NAME_KEY_PREFIX = 'org.dxos.function.';
  * guarantee tool-name uniqueness. Two such keys are an authoring error, caught in the two places both
  * keys are visible at once: {@link findToolNameCollisions} over a whole set, and the tool resolver.
  *
- * @example `org.dxos.function.markdown.create` → `markdown-create`
- * @example `org.dxos.function.project.artifactAdd` → `project-artifact-add`
+ * @example `org.dxos.operation.markdown.create` → `markdown-create`
+ * @example `org.dxos.operation.project.artifactAdd` → `project-artifact-add`
  */
 export const toolName = (op: Definition.Any): string => toolNameFromKey(op.meta.key);
 

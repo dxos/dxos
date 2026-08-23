@@ -42,7 +42,7 @@ class MissingService extends Context.Service<MissingService, { readonly unused: 
  * `AnalyzeMailbox` moved to plugin-brain.
  */
 const StubOperation = Operation.make({
-  meta: { key: DXN.make('org.dxos.plugin.inbox.testing.operation.stub'), name: 'Stub' },
+  meta: { key: DXN.make('org.dxos.operation.inbox.testing.stub'), name: 'Stub' },
   services: [MissingService],
   input: Schema.Struct({ mailbox: Ref.Ref(Mailbox.Mailbox) }),
   output: Schema.Void,

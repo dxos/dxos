@@ -23,7 +23,7 @@ const ChecklistTask = Schema.Struct({
 
 export const UpdateTasks = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.planning.updateTasks'),
+    key: DXN.make('org.dxos.operation.planning.updateTasks'),
     name: 'Update tasks',
     description: INSTRUCTIONS,
     icon: 'ph--check-square-offset--regular',
@@ -37,7 +37,7 @@ export const UpdateTasks = Operation.make({
 
 export const PlanReminder = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.planning.planReminder'),
+    key: DXN.make('org.dxos.operation.planning.planReminder'),
     name: 'Plan reminder',
     description: 'Reminds the agent to continue when its plan still has incomplete tasks.',
   },

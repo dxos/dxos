@@ -26,17 +26,17 @@ export type Template = {
 
 export const templates = [
   {
-    id: 'org.dxos.script.ping',
+    id: 'org.dxos.operation.script.ping',
     name: 'Ping',
     source: removeHeader(ping),
   },
   {
-    id: 'org.dxos.script.forex',
+    id: 'org.dxos.operation.script.forex',
     name: 'Forex',
     source: removeHeader(forex),
   },
   {
-    id: 'org.dxos.script.forex-effect',
+    id: 'org.dxos.operation.script.forex-effect',
     name: 'Forex (Effect)',
     source: removeHeader(forexEffect),
   },
@@ -71,7 +71,7 @@ export const templates = [
     presetId: 'org.dxos.function.data-generator',
   },
   {
-    id: 'org.dxos.script.anthropic',
+    id: 'org.dxos.operation.script.anthropic',
     name: 'Anthropic',
     source: removeHeader(anthropic),
   },
@@ -79,6 +79,6 @@ export const templates = [
     id: 'org.dxos.script.commentary',
     name: 'Commentary',
     source: removeHeader(commentary),
-    presetId: 'org.dxos.function.chess.commentary',
+    presetId: 'org.dxos.operation.chess.commentary',
   },
 ] as const;

@@ -16,7 +16,7 @@ import * as Chat from '../types/Chat';
 
 export const RunInstructions = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.runInstructions'),
+    key: DXN.make('org.dxos.operation.assistant.runInstructions'),
     name: 'Run Instructions',
     description: 'Agentic worker that executes a provided prompt using skills and tools.',
     icon: 'ph--brain--regular',

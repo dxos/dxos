@@ -14,10 +14,6 @@ import { DXN } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
 /**
  * Discovery only — list Linear teams reachable from the connection's token.
  * Returns one descriptor per team across the user's workspace. Read-only:
@@ -26,7 +22,7 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
  */
 export const GetLinearTeams = Operation.make({
   meta: {
-    key: makeKey('getLinearTeams'),
+    key: DXN.make('org.dxos.operation.linear.getLinearTeams'),
     name: 'Get Linear Teams',
     description: 'List Linear teams reachable from a connection without materializing local objects.',
     icon: 'ph--users--regular',
@@ -44,7 +40,7 @@ export const GetLinearTeams = Operation.make({
  */
 export const MaterializeLinearTarget = Operation.make({
   meta: {
-    key: makeKey('materializeLinearTarget'),
+    key: DXN.make('org.dxos.operation.linear.materializeLinearTarget'),
     name: 'Materialize Linear Target',
     description: 'Create the empty local root Project bound to a selected Linear team.',
     icon: 'ph--users--regular',
@@ -80,7 +76,7 @@ export interface SyncOptions extends Schema.Schema.Type<typeof SyncOptions> {}
  */
 export const SyncLinearTeams = Operation.make({
   meta: {
-    key: makeKey('syncLinearTeams'),
+    key: DXN.make('org.dxos.operation.linear.syncLinearTeams'),
     name: 'Sync Linear Teams',
     description: 'Reconcile every bound Linear team — projects and issues.',
     icon: 'ph--arrows-clockwise--regular',

@@ -214,101 +214,101 @@ describe('Query', () => {
     test('filter by meta key', async ({ expect }) => {
       const target = db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.foo', version: '1.2.3' },
+          [Obj.Meta]: { key: 'com.example.type.foo', version: '1.2.3' },
           value: 42,
         }),
       );
       db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.bar', version: '1.2.3' },
+          [Obj.Meta]: { key: 'com.example.type.bar', version: '1.2.3' },
           value: 43,
         }),
       );
       await db.flush();
 
-      const objects = await db.query(Filter.key('org.example.type.foo')).run();
+      const objects = await db.query(Filter.key('com.example.type.foo')).run();
       expect(objects).toEqual([target]);
     });
 
     test('filter by meta key matches any version when range omitted', async ({ expect }) => {
       const matchingA = db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.foo', version: '1.0.0' },
+          [Obj.Meta]: { key: 'com.example.type.foo', version: '1.0.0' },
           value: 1,
         }),
       );
       const matchingB = db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.foo' },
+          [Obj.Meta]: { key: 'com.example.type.foo' },
           value: 2,
         }),
       );
       db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.other', version: '1.0.0' },
+          [Obj.Meta]: { key: 'com.example.type.other', version: '1.0.0' },
           value: 3,
         }),
       );
       await db.flush();
 
-      const objects = await db.query(Filter.key('org.example.type.foo')).run();
+      const objects = await db.query(Filter.key('com.example.type.foo')).run();
       expect(new Set(objects.map((o) => o.id))).toEqual(new Set([matchingA.id, matchingB.id]));
     });
 
     test('filter by meta key with semver caret range', async ({ expect }) => {
       const match = db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.foo', version: '1.5.0' },
+          [Obj.Meta]: { key: 'com.example.type.foo', version: '1.5.0' },
           value: 1,
         }),
       );
       db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.foo', version: '2.0.0' },
+          [Obj.Meta]: { key: 'com.example.type.foo', version: '2.0.0' },
           value: 2,
         }),
       );
       db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.foo', version: '1.0.0' },
+          [Obj.Meta]: { key: 'com.example.type.foo', version: '1.0.0' },
           value: 3,
         }),
       );
       await db.flush();
 
-      const objects = await db.query(Filter.key('org.example.type.foo', { version: '^1.2.3' })).run();
+      const objects = await db.query(Filter.key('com.example.type.foo', { version: '^1.2.3' })).run();
       expect(objects).toEqual([match]);
     });
 
     test('filter by meta key with semver tilde range', async ({ expect }) => {
       const match = db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.foo', version: '1.2.7' },
+          [Obj.Meta]: { key: 'com.example.type.foo', version: '1.2.7' },
           value: 1,
         }),
       );
       db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.foo', version: '1.3.0' },
+          [Obj.Meta]: { key: 'com.example.type.foo', version: '1.3.0' },
           value: 2,
         }),
       );
       await db.flush();
 
-      const objects = await db.query(Filter.key('org.example.type.foo', { version: '~1.2.3' })).run();
+      const objects = await db.query(Filter.key('com.example.type.foo', { version: '~1.2.3' })).run();
       expect(objects).toEqual([match]);
     });
 
     test('filter by meta key excludes objects without version when range specified', async ({ expect }) => {
       db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.foo' },
+          [Obj.Meta]: { key: 'com.example.type.foo' },
           value: 1,
         }),
       );
       await db.flush();
 
-      const objects = await db.query(Filter.key('org.example.type.foo', { version: '^1.0.0' })).run();
+      const objects = await db.query(Filter.key('com.example.type.foo', { version: '^1.0.0' })).run();
       expect(objects).toEqual([]);
     });
 
