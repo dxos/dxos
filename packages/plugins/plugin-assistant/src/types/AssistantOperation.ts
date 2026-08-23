@@ -121,17 +121,18 @@ export const GenerateHomeSuggestions = Operation.make({
   output: Schema.Struct({ prompts: Schema.Array(Schema.String) }),
 });
 
-// TODO(burdon): "toggle" is an anti-pattern; set directly.
-export const ToggleTracePanelDebug = Operation.make({
+export const SetTracePanelDebug = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.assistant.toggleTracePanelDebug'),
-    name: 'Toggle trace panel debug',
-    description: 'Toggle trace panel between commit graph and raw span tree JSON.',
+    key: DXN.make('org.dxos.operation.assistant.setTracePanelDebug'),
+    name: 'Set trace panel debug',
+    description: 'Show the trace panel as a raw span tree JSON rather than a commit graph.',
     icon: 'ph--bug--regular',
   },
   services: [Capability.Service],
+  // Required: a caller that omitted it used to get a flip, which made the result depend on state the
+  // caller had not read — two calls racing would land wherever the interleaving left them.
   input: Schema.Struct({
-    state: Schema.optional(Schema.Boolean),
+    state: Schema.Boolean,
   }),
   output: Schema.Boolean,
 });

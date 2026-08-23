@@ -53,17 +53,18 @@ export const UpdatePlankSize = Operation.make({
   output: Schema.Void,
 });
 
-export const ToggleExpose = Operation.make({
+export const SetExpose = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.deck.toggleExpose'),
-    name: 'Toggle Exposé',
+    key: DXN.make('org.dxos.operation.deck.setExpose'),
+    name: 'Set Exposé',
     description: 'Show every plank at once as shrunk-to-fit tiles, or return to the deck.',
     icon: 'ph--squares-four--regular',
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    /** Explicit state; toggles when absent. */
-    expose: Schema.optional(Schema.Boolean),
+    // Required: an absent value used to mean "flip", making the result depend on state the caller
+    // had not read.
+    expose: Schema.Boolean,
   }),
   output: Schema.Void,
 });

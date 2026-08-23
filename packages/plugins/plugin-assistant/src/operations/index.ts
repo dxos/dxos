@@ -15,6 +15,6 @@ export const AssistantOperationHandlerSet = OperationHandlerSet.lazy([
   AssistantOperation.GenerateHomeSuggestions.pipe(Operation.lazyHandler(() => import('./generate-home-suggestions'))),
   RoutineOperation.RunPromptInNewChat.pipe(Operation.lazyHandler(() => import('./run-prompt-in-new-chat'))),
   AssistantOperation.SetCurrentChat.pipe(Operation.lazyHandler(() => import('./set-current-chat'))),
-  AssistantOperation.ToggleTracePanelDebug.pipe(Operation.lazyHandler(() => import('./toggle-trace-panel-debug'))),
+  AssistantOperation.SetTracePanelDebug.pipe(Operation.lazyHandler(() => import('./set-trace-panel-debug'))),
   AssistantOperation.UpdateChatName.pipe(Operation.lazyHandler(() => import('./update-chat-name'))),
 ]);

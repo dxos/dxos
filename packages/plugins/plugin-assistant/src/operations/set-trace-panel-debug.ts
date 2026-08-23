@@ -9,17 +9,15 @@ import * as Operation from '@dxos/compute/Operation';
 
 import { AssistantCapabilities, AssistantOperation } from '#types';
 
-const handler: Operation.WithHandler<typeof AssistantOperation.ToggleTracePanelDebug> =
-  AssistantOperation.ToggleTracePanelDebug.pipe(
+const handler: Operation.WithHandler<typeof AssistantOperation.SetTracePanelDebug> =
+  AssistantOperation.SetTracePanelDebug.pipe(
     Operation.withHandler(
-      Effect.fnUntraced(function* (input) {
-        const current = yield* Capabilities.getAtomValue(AssistantCapabilities.Settings);
-        const next = input.state ?? !current.tracePanelDebug;
+      Effect.fnUntraced(function* ({ state }) {
         yield* Capabilities.updateAtomValue(AssistantCapabilities.Settings, (settings) => ({
           ...settings,
-          tracePanelDebug: next,
+          tracePanelDebug: state,
         }));
-        return next;
+        return state;
       }),
     ),
   );

@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
 
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
 import * as Node from '@dxos/app-graph/Node';
@@ -143,10 +144,17 @@ export default Capability.makeModule(
               },
             }),
             Node.makeAction({
-              id: AssistantOperation.ToggleTracePanelDebug.meta.key,
-              data: () => Operation.invoke(AssistantOperation.ToggleTracePanelDebug, {}),
+              id: AssistantOperation.SetTracePanelDebug.meta.key,
+              // The menu item flips, so it reads the current value and states the one it wants.
+              data: () =>
+                Effect.gen(function* () {
+                  const settings = yield* Capabilities.getAtomValue(AssistantCapabilities.Settings);
+                  yield* Operation.invoke(AssistantOperation.SetTracePanelDebug, {
+                    state: !settings.tracePanelDebug,
+                  });
+                }),
               properties: {
-                label: ['toggle-trace-panel-debug.label', { ns: meta.profile.key }],
+                label: ['set-trace-panel-debug.label', { ns: meta.profile.key }],
                 icon: 'ph--brackets-curly--regular',
               },
             }),

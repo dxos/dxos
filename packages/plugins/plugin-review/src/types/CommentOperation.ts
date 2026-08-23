@@ -73,15 +73,17 @@ export const Select = Operation.make({
   output: Schema.Void,
 });
 
-export const ToggleResolved = Operation.make({
+export const SetResolved = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.review.toggleResolved'),
-    name: 'Toggle Resolved',
+    key: DXN.make('org.dxos.operation.review.setResolved'),
+    name: 'Set Resolved',
     icon: 'ph--check-circle--regular',
   },
   services: [Capability.Service],
   input: Schema.Struct({
     thread: Type.getSchema(Thread.Thread),
+    // Required: the caller states the status it wants rather than flipping whatever is current.
+    resolved: Schema.Boolean,
   }),
   output: Schema.Void,
 });

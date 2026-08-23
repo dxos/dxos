@@ -47,6 +47,20 @@ Design: [DESIGN.md](./DESIGN.md)
       redeploy (or an EDGE-side key rewrite) in the same window as the rename. Coordinate with the
       edge repo's `mcp-operations` project.
 
+- [x] `toggle` retired as an operation verb. Six operations became `set*` with a REQUIRED state, so a
+      caller can no longer omit it and get a flip. Where the UI genuinely flips, the read moved to the
+      call site, which is where the intent lives.
+
+## Follow-up PR
+
+- [ ] Rename each operation const to match its key's verb (`CreateMarkdown` -> `CreateDraft`,
+      `TaskCreate` -> `Create`). 123 consts. ATTEMPTED AND REVERTED here: a test file defines
+      `const op = Operation.make(...)`, so a package-scoped rename rewrote every bare `op` in
+      @dxos/compute — 249 files. Redo it scoped to the defining file plus its actual importers, and
+      skip identifiers that are short or not PascalCase.
+- [ ] `markdown.createDraft` has no caller beyond its handler-set registration. Decide whether it
+      earns its place now that MCP can invoke it by key, or should be deleted.
+
 ## Backlog
 
 - [ ] 37 derived tool names still exceed 30 characters (max 48), from deep domain paths such as
