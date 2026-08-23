@@ -349,13 +349,19 @@ flow QA-1: Create and open a document
   covers: [F-1.1, T-1]
   given:
     - a space is open and contains at least one collection
-  step 1: Create the document
-    do: In the navtree, click + on a collection and choose Markdown. Name it "Notes".
-    invoke: [op:createMarkdown] { name: "Notes", content: "# Notes\n" }
-    capture: created
-    expect: a detached Document named "Notes" is returned; nothing is in the navtree yet
-    assert: return !!$created.object
+  steps:
+    - name: Create the document
+      do: In the navtree, click + on a collection and choose Markdown. Name it "Notes".
+      invoke: [op:createMarkdown] { name: "Notes", content: "# Notes\n" }
+      capture: created
+      expect: a detached Document named "Notes" is returned; nothing is in the navtree yet
+      assert: return !!$created.object
 ```
+
+Steps are items of a `steps` list, not repeated `step <n>:` keys — core declares block bodies as
+`key[?]: value` with an indented `-` list as the multi-line form, and a positional pseudo-key both
+departs from that and forces hand-renumbering when a step is inserted. Numbering is by position;
+a step needing a handle stable across insertions declares `id:`.
 
 `do` and `expect` are required on every step — that is what keeps a flow human-runnable, and a
 step no human can perform is a design smell rather than a shortcut. `invoke` and `assert` are the

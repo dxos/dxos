@@ -20,8 +20,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
 | `test`      | `org.dxos.mdl.test@1.0`        |
 | `component` | `org.dxos.mdl.component@1.0`   |
-| `op`        | `org.dxos.mdl.op@1.0`          |
+| `op`        | `org.dxos.mdl.op@1.1`          |
 | `service`   | `org.dxos.mdl.service@1.0`     |
+| `flow`      | `org.dxos.mdl.flow@1.0`        |
+| `step`      | `org.dxos.mdl.step@1.0`        |
 
 ## External types & capabilities
 
@@ -392,37 +394,42 @@ flow QA-1: Create, place, open and edit a document
     - an identity exists
     - a space is open and contains at least one collection
     - no document named "QA Notes" exists (run `cleanup` first if a previous run left one)
-  step 1: Create the document
-    do: In the navtree, click + on a collection and choose Markdown. Name it "QA Notes".
-    invoke: [op:createMarkdown] { name: "QA Notes", content: "# QA Notes\n\nThere is a tyop.\n" }
-    capture: created
-    expect: a detached Document named "QA Notes" is returned; nothing is in the navtree yet
-    assert: return !!$created.object
-  step 2: Place it in the collection
-    do: (same gesture as step 1 — the navtree create action places the document for you)
-    invoke: org.dxos.plugin.space.operation.addObject { object: $created.object, target: $given.collection }
-    capture: added
-    expect: "QA Notes" appears as a row under the collection in the navtree
-    assert: return (await space.db.query(dxos.Filter.everything()).run()).some((o) => o.id === $created.object.id)
-    note: |
-      Steps 1-2 must be coalesced into ONE port snippet — `created.object` is a live ECHO object and
-      the port serializes between snippets. Step granularity is the human's; batching is the
-      runner's concern.
-  step 3: Open it
-    do: Click "QA Notes" in the navtree.
-    invoke: org.dxos.plugin.layout.operation.open { subject: ["root/$spaceId/content/collections/$created.object.id"] }
-    expect: the editor renders "# QA Notes" and the navtree row is selected
-    assert: |
-      return Array.from(document.querySelectorAll('[aria-current], [aria-selected="true"]'))
-        .some((el) => el.textContent?.includes('QA Notes'));
-    note: |
-      `subject` is a navigation-path array and must be BUILT — `addObject` does not return one
-      (its output schema is `{ id, object }`). Verified against the running app.
-  step 4: Fix the typo
-    do: In the editor, change "tyop" to "typo".
-    invoke: [op:update] { doc: $created.object, edits: [{ oldString: "tyop", newString: "typo" }] }
-    expect: the document body reads "There is a typo." and the editor re-renders
-    assert: return $4.newContent.includes('There is a typo.') && !document.body.innerText.includes('tyop');
+  steps:
+    - name: Create the document
+      do: In the navtree, click + on a collection and choose Markdown. Name it "QA Notes".
+      invoke: [op:createMarkdown] { name: "QA Notes", content: "# QA Notes\n\nThere is a tyop.\n" }
+      capture: created
+      expect: a detached Document named "QA Notes" is returned; nothing is in the navtree yet
+      assert: return !!$created.object
+
+    - name: Place it in the collection
+      do: (same gesture as the previous step — the navtree create action places the document for you)
+      invoke: org.dxos.plugin.space.operation.addObject { object: $created.object, target: $given.collection }
+      capture: added
+      expect: "QA Notes" appears as a row under the collection in the navtree
+      assert: return (await space.db.query(dxos.Filter.everything()).run()).some((o) => o.id === $created.object.id)
+      note: |
+        Coalesced with the previous step into ONE port snippet — `created.object` is a live ECHO
+        object and the port serializes between snippets. Step granularity is the human's; batching
+        is the runner's concern.
+
+    - name: Open it
+      id: open
+      do: Click "QA Notes" in the navtree.
+      invoke: org.dxos.plugin.layout.operation.open { subject: ["root/$spaceId/content/collections/$created.object.id"] }
+      expect: the editor renders "# QA Notes" and the navtree row is selected
+      assert: |
+        return Array.from(document.querySelectorAll('[aria-current], [aria-selected="true"]'))
+          .some((el) => el.textContent?.includes('QA Notes'));
+      note: |
+        `subject` is a navigation-path array and must be BUILT — `addObject` does not return one
+        (its output schema is `{ id, object }`). Verified against the running app.
+
+    - name: Fix the typo
+      do: In the editor, change "tyop" to "typo".
+      invoke: [op:update] { doc: $created.object, edits: [{ oldString: "tyop", newString: "typo" }] }
+      expect: the document body reads "There is a typo." and the editor re-renders
+      assert: return $result.newContent.includes('There is a typo.') && !document.body.innerText.includes('tyop');
   cleanup:
     - delete the "QA Notes" document
 ```
@@ -479,11 +486,12 @@ ext component
 
 ```mdl
 ext op
-  uri: org.dxos.mdl.op@1.0
+  uri: org.dxos.mdl.op@1.1
   desc: |
     A named operation with typed inputs, outputs, and declared errors.
     Pure ops have no effects or requires. Effectful ops declare both.
   fields:
+    key?: NSID                  # runtime operation key — what the invoker receives
     desc?: Prose
     input?: FieldMap
     output?: TypeExpr

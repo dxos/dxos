@@ -29,9 +29,11 @@ is at **flow granularity**: the user approves a named flow, you run all of its s
 
 ## 1. Read the flow
 
-Read the `flow` block itself first — `given`, every step's `do` / `invoke` / `expect` / `assert`,
-any `note`, and `cleanup`. A `note` is a constraint on how the step must be run, not commentary:
-ignoring one produces a false failure. Restate what the flow will change before asking for consent.
+Read the `flow` block itself first — `given`, the `steps` list, and `cleanup`. Steps are items of
+a list, numbered by position from 1; a step carrying an `id:` is referenced by that instead. For
+each step read `do` / `invoke` / `expect` / `assert` and any `note`. A `note` is a constraint on
+how the step must be run, not commentary: ignoring one produces a false failure. Restate what the
+flow will change before asking for consent.
 
 ## 2. Get a running app with the port open
 
@@ -146,14 +148,16 @@ A table, one row per step, most useful column last:
 
 ```
 QA-1  Create, place, open and edit a document          4/4 pass
-  1  Create the document              pass
-  2  Place it in the collection       pass    (coalesced with 1)
-  3  Open it                          pass
-  4  Fix the typo                     FAIL    expected "There is a typo.", DOM still has "tyop"
+  1       Create the document          pass
+  2       Place it in the collection   pass    (coalesced with 1)
+  3 open  Open it                      pass
+  4       Fix the typo                 FAIL    expected "There is a typo.", DOM still has "tyop"
 ```
 
-Report a failure by flow and step number (`QA-1.4`) with the observed value next to the expected
-one. Never report a step as passing because the invocation returned without throwing.
+One row per step, in `steps` order, labelled with the step's `name`. Report a failure by flow and
+step number (`QA-1.4`), or by its `id` where it declares one (`QA-1.open`) — an id survives a step
+being inserted ahead of it, a position does not. Give the observed value next to the expected one.
+Never report a step as passing because the invocation returned without throwing.
 
 ## 6. Feed findings back
 
@@ -170,7 +174,7 @@ the run is how it earns its accuracy.
 - [ ] Every step invoked through the invoker with a spaceId, matching the key exactly
 - [ ] Steps threading a live object coalesced into one snippet
 - [ ] Each step judged on its effect (db or DOM), never on a return value
-- [ ] Per-step pass/fail table reported, failures by QA-n.m
+- [ ] Per-step pass/fail table reported, failures by QA-n.m (or by step `id` where declared)
 - [ ] `cleanup` run, or its omission stated
 - [ ] Flow updated where the run contradicted it
 ```

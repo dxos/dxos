@@ -103,6 +103,14 @@ Schema: org.dxos.type.document`. Not blocking (the default space and identity ar
 
 ## Backlog
 
+- [ ] **`req F-1.1:` inside `feat` has the same defect `step <n>:` had** — a positional/id pseudo-key
+      is not core syntax (core declares block bodies as `key[?]: value`), it only survives because
+      `fences.ts` has a regex that tolerates it, and it forces hand-renumbering. `flow` moved to a
+      `steps:` list; `req` should follow. Deliberately NOT done here: it appears across all 92
+      `PLUGIN.mdl` files, so it is its own change with its own risk.
+- [ ] Lint the Extensions table against the block types a document actually uses. `plugin-markdown`
+      used `flow` for a full day without declaring it, and pinned `op@1.0` while depending on
+      `op@1.1`'s `key:` — core calls both a lint error, and nothing caught either.
 - [ ] Grammar + lint for nested sub-blocks — `step 1:` and the existing `req F-1.1:` are both
       unvalidated today (the Lezer grammar parses key-values only).
 - [ ] Coverage lint — `feat`/`req` with no `flow` covering them.
