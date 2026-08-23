@@ -35,8 +35,7 @@ describe('SchemaDefs', () => {
     const result: { registered?: boolean } = {};
     await using harness = await createComposerTestApp({
       plugins: [ClientPlugin.make({}), NotePlugin(), makeSeedPlugin(result)()],
-      // A cold boot creates the identity long before the host goes idle, so the wave `SchemaDefs`
-      // rides in on has not run.
+      // A cold boot creates the identity before the host idles, where `SchemaDefs` would activate.
       autoStart: false,
       whenIdle: Effect.never,
     });
