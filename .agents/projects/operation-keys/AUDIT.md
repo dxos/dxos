@@ -21,7 +21,7 @@ as tools.
 ## Summary
 
 - 422 operations; 129 bound into skills.
-- 34 keys are off the canonical `<root>.operation.<domain>.<verb>` shape — nearly all test and
+- 33 keys are off the canonical `<root>.operation.<domain>.<verb>` shape — nearly all test and
   example definitions that omit the domain segment (`com.example.operation.fib`). Tracked in
   [TASKS.md](./TASKS.md); the `operation-key-shape` lint rule will make them fail rather than accumulate.
 
@@ -367,6 +367,7 @@ Sorted with DXOS operations first and `com.example` fixtures last.
 | `com.example.operation.delegatedWork`                       | `@dxos/agent-runtime`            | `agent-service/AgentService.test.ts`                              | Delegated work                  |       |
 | `com.example.operation.delegatedWork`                       | `@dxos/agent-runtime`            | `agent-service/delegation-scripted.test.ts`                       | Delegated work                  |       |
 | `com.example.operation.deployed`                            | `@dxos/compute-runtime`          | `protocol.test.ts`                                                | Deployed                        |       |
+| `com.example.operation.example.myFunction`                  | `@dxos/plugin-script`            | `skills/functions/definitions.ts`                                 | My Function                     |       |
 | `com.example.operation.fib`                                 | `@dxos/functions-testing`        | `functions/definitions.ts`                                        | Fibonacci                       |       |
 | `com.example.operation.fib`                                 | `@dxos/compute`                  | `testing/definitions.ts`                                          | Fibonacci                       |       |
 | `com.example.operation.fn.taskCreate`                       | `@dxos/mcp-server`               | `internal/input.test.ts`                                          | Create Task                     | ✓     |
@@ -452,4 +453,3 @@ Sorted with DXOS operations first and `com.example` fixtures last.
 | `com.example.operation.triggerDispatcher.probeDatabase`     | `@dxos/compute-runtime`          | `triggers/trigger-dispatcher.test.ts`                             | Probe Database                  |       |
 | `com.example.operation.triggerDispatcher.retry`             | `@dxos/compute-runtime`          | `triggers/trigger-dispatcher.test.ts`                             | Retry                           |       |
 | `com.example.operation.triggerDispatcher.subjectProbe`      | `@dxos/compute-runtime`          | `triggers/trigger-dispatcher.test.ts`                             | Subject Probe                   |       |
-| `com.example.test.function`                                 | `@dxos/plugin-script`            | `skills/functions/definitions.ts`                                 | My Function                     |       |

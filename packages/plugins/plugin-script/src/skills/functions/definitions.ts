@@ -28,7 +28,7 @@ const FUNCTION_FORMAT = trim`
 
   const MyFunction = Operation.make({
     meta: {
-      key: DXN.make('com.example.test.function'),
+      key: DXN.make('com.example.operation.example.myFunction'),
       name: 'My Function',
     },
     input: Schema.Struct({
