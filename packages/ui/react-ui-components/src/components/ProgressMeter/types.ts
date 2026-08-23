@@ -10,14 +10,12 @@ export type ProgressStatus = 'pending' | 'running' | 'done' | 'error';
 /**
  * What a {@link ProgressMeter} renders.
  *
- * A presentational mirror of the runtime's task model, deliberately NOT that type: the meter knows
- * nothing about a registry, so it can be driven by a scripted value, a story fixture, or a live task
- * alike. The adapter that maps one to the other belongs with whoever owns the registry.
+ * A presentational mirror of the runtime's task model rather than that type, so the meter can be
+ * driven by a scripted value or a live task alike; the adapter between them belongs with whoever
+ * owns the registry.
  *
- * The two axes are independent, because a real run separates them: `phases`/`phase` say where the run
- * is in its plan, `current`/`total` how far through the phase in flight. A run can be on phase 2 of 4
- * and know nothing about how long phase 2 is — which is exactly when `total` is absent and the
- * stage in flight spins rather than resting a line at a number that means nothing.
+ * `phases`/`phase` and `current`/`total` are independent axes, because a run can be on phase 2 of 4
+ * and know nothing about how long phase 2 is.
  */
 export type ProgressState = {
   label?: string;

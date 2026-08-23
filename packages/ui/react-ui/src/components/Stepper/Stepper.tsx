@@ -90,6 +90,7 @@ export const Stepper = composable<HTMLDivElement, StepperProps>(
               />
             )}
             <Step
+              index={index}
               step={stepAt(steps, index)}
               state={stepState(index, shown, handover, error)}
               selected={selected === index}
@@ -131,6 +132,7 @@ const Connector = ({ fraction, error, options }: ConnectorProps) => {
 };
 
 type StepProps = {
+  index: number;
   step: Step;
   state: StepState;
   selected?: boolean;
@@ -140,19 +142,34 @@ type StepProps = {
 };
 
 /** One stage: a circle, ringed by a spinning notch while it runs uncounted. */
-const Step = ({ step, state, selected, indeterminate, options, onClick }: StepProps) => {
+const Step = ({ index, step, state, selected, indeterminate, options, onClick }: StepProps) => {
   const { tx } = useThemeContext();
+  // A circle carries no text, and an anonymous plan supplies no label, so the position is the only
+  // name the control can be given.
+  const label = step.label?.trim() || `Step ${index + 1}`;
   const spinning = state === 'active' && !!indeterminate;
 
   return (
     <div
       role='listitem'
-      aria-label={step.label}
       aria-current={state === 'active' ? 'step' : undefined}
       className='relative shrink-0'
       style={{ width: options.size, height: options.size }}
     >
-      <div className={tx('stepper.step', { state, selected, interactive: !!onClick, spinning })} onClick={onClick} />
+      {onClick ? (
+        // A selectable stage is a real button, so it takes focus and answers the keyboard without a
+        // key handler of its own; selection toggles, which is what `aria-pressed` describes.
+        <button
+          type='button'
+          aria-label={label}
+          aria-pressed={!!selected}
+          className={tx('stepper.step', { state, selected, interactive: true, spinning })}
+          onClick={onClick}
+        />
+      ) : (
+        // A bare div maps to `generic`, where ARIA discards the label.
+        <div role='img' aria-label={label} className={tx('stepper.step', { state, selected, spinning })} />
+      )}
       {spinning && <Notch className={tx('stepper.notch', { state })} />}
     </div>
   );

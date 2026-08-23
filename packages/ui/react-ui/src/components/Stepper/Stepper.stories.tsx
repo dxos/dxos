@@ -78,6 +78,9 @@ const DefaultStory = ({ stages: initial = 5, indeterminate, ...props }: StoryArg
   const reset = useCallback(
     (next = stages) => {
       stopped.current = true;
+      // Ends the run rather than pausing it: changing `stages` re-runs the driving effect, which
+      // would clear the stop flag and start over from the first stage.
+      setRun(0);
       setStages(next);
       setActive(undefined);
       setFraction(0);
