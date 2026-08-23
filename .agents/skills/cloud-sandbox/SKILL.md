@@ -89,8 +89,12 @@ are all unavailable, and nothing can be validated the normal way. Confirm with
 Fallback: typecheck against SOURCES instead of built `dist/types`, via the `source` export
 condition every `@dxos` package declares. Write a throwaway config in the package, run it, delete it:
 
+The `extends` path is relative to the package, so count the directories: three levels for
+`packages/plugins/plugin-x`, four for `packages/core/compute/nlp`. Get it wrong and tsc fails before
+it type-checks anything.
+
 ```jsonc
-// packages/<...>/<pkg>/tsconfig.check.json
+// packages/plugins/<pkg>/tsconfig.check.json — three levels deep; add a `../` per extra level
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
@@ -109,8 +113,14 @@ condition every `@dxos` package declares. Write a throwaway config in the packag
 }
 ```
 
-Run `pnpm exec tsc -p tsconfig.check.json | grep -E "^(src|dx\\.config)"` — filter to the package's
-own paths. The hundreds of `../../…` errors are pre-existing and not yours: codegen'd packages
+Run it so the filter cannot swallow the verdict — in a pipeline the shell reports `grep`'s status,
+not `tsc`'s, so a real failure reads as success whenever the filter matches nothing:
+
+```bash
+pnpm exec tsc -p tsconfig.check.json > /tmp/tsc.log; status=$?; grep -E "^(src|dx\.config)" /tmp/tsc.log; exit $status
+```
+
+The filter narrows the output to the package's own paths. The hundreds of `../../…` errors are pre-existing and not yours: codegen'd packages
 (`@dxos/protocols`) have no sources to resolve. This catches real type errors but is NOT the build
 — no vite, no declaration emit, no project references — so say so when reporting.
 

@@ -73,5 +73,6 @@ const SYSTEM_PROMPT = trim`
   - Translate naturally rather than word for word, but do not summarize, expand or add commentary.
 
   # Output
-  Respond with the translated passage only — no preamble, no code fence.
+  Return an object with \`sourceCode\` and \`text\`. \`text\` is the translated passage alone — no
+  preamble, no commentary, no code fence around it.
 `;

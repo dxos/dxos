@@ -26,7 +26,7 @@ export const translations = [
         'delete-object.label': 'Delete language',
       },
       [Type.getTypename(Vocabulary.Vocabulary)]: {
-        'typename.label': 'Vocabulary',
+        'typename.label': 'Word list',
         'typename.label_zero': 'Word lists',
         'typename.label_one': 'Word list',
         'typename.label_other': 'Word lists',

@@ -3,7 +3,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
@@ -126,12 +126,22 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
     return (token) => index.get(token);
   }, [words]);
 
+  // Remembers the deck this component created, keyed by language: `deck` comes from a query that
+  // refreshes a tick after `db.add`, so a second "add" pressed before then would see no deck and
+  // create a second one for the same language.
+  const createdDeck = useRef<{ languageId: string; deck: Vocabulary.Vocabulary } | undefined>(undefined);
   const ensureDeck = useCallback(() => {
     if (deck || !db || !language) {
       return deck;
     }
 
-    return db.add(Vocabulary.make({ name: language.name, language: Ref.make(language) }));
+    if (createdDeck.current?.languageId === language.id) {
+      return createdDeck.current.deck;
+    }
+
+    const created = db.add(Vocabulary.make({ name: language.name, language: Ref.make(language) }));
+    createdDeck.current = { languageId: language.id, deck: created };
+    return created;
   }, [db, deck, language]);
 
   const handleAddWord = useCallback(
@@ -252,6 +262,15 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
 
   const handleRun = useCallback(async () => {
     if (!subject || !text || !code || !db || !invokePromise) {
+      return;
+    }
+
+    // TESTING.md B5: pressing again on an unchanged document must come back from the stored
+    // `Analysis` rather than spend a second translation. The guard belongs here because the
+    // `AnalyzeText` call below passes `refresh: true`, which deliberately bypasses its own cache —
+    // and `TranslatePassage`, the expensive half, has no cache at all. An analysis whose
+    // segmentation failed still has work left, so an empty `segments` is not a hit.
+    if (stored && !Analysis.isStale(stored, text) && stored.segments.length > 0) {
       return;
     }
 

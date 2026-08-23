@@ -12,7 +12,7 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 - `@dxos/rules(dxos-subpath-exports)`: every namespace re-exported from `src/types/index.ts` needs its own `exports` entry in `package.json` AND a matching `vite.config.ts` entry. Adding a type is three edits, not one.
 - effect rc-108 API: `Schema.decodeUnknown` and `Effect.fromNullable` do NOT exist. Use `Schema.decodeUnknownEffect(schema)(value)` and `Option.match(..., { onNone, onSome })`.
 - `useAtomValue` imports from `@effect/atom-react/Hooks`, not the package root.
-- `useObjects(refs)` is deprecated (whole-list subscription). For "the objects belonging to X", put the ref on the CHILD and query it (`Filter.type(Child, { parent: Ref.make(x) })`) instead of holding a `Ref[]` array on the parent — one write to append, and the view is an ordinary reactive `useQuery`.
+- Do not MODEL "the objects belonging to X" as a `Ref[]` array on the parent: put the ref on the CHILD and query it (`Filter.type(Child, { parent: Ref.make(x) })`) — one write to append, and the view is an ordinary reactive `useQuery`, where a whole-list subscription re-reads every target. This is a schema-design rule, not a ban on the hook: where a `Schema.Array(Ref.Ref(...))` field already exists, `useObjects(obj.refs)` is still the correct and REQUIRED way to read it (see "Reactivity (Ref arrays)" below) — reading `ref.target` synchronously renders empty on first mount and goes stale after add/remove.
 - Logical utilities are still dead: `bs-full`, `max-is-80` etc. compile to nothing. Use `h-full`, `max-w-80`.
 
 ## 2026-07-28 — CLI / node plugin variants (React out of non-browser builds)

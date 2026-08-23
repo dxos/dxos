@@ -110,9 +110,21 @@ export const segmentsField = StateField.define<SegmentsState>({
 /** Read the current segment state. */
 export const segmentsState = (state: EditorState): SegmentsState => state.field(segmentsField, false) ?? EMPTY;
 
-/** The segment covering `position` on this side, most specific first. */
+/**
+ * The segment covering `position` on this side, most specific first, or undefined once the ranges
+ * have gone stale.
+ *
+ * Staleness is not merely cosmetic: an edit shifts the text under every range, so a stale segment
+ * names a slice of the CURRENT document rather than the term that was analyzed. Every consumer —
+ * hover, selection, and the tooltip's add action — resolves through here, so refusing to answer is
+ * what stops an edit from filing the wrong word.
+ */
 export const segmentAtPosition = (state: EditorState, position: number, side: SegmentSide): Segment | undefined => {
-  const { segments } = segmentsState(state);
+  const { segments, stale } = segmentsState(state);
+  if (stale) {
+    return undefined;
+  }
+
   if (side === 'source') {
     return segmentAt(segments, position);
   }

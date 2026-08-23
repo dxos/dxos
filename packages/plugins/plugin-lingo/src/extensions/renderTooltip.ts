@@ -55,7 +55,9 @@ export const createTooltipRenderer =
       root.append(Domino.of('span').text(segment.gloss));
     }
 
-    if (onAdd && !lookup?.(normalizeToken(text))?.wordId) {
+    // `plain` first, as the label above does: the deck holds `パン屋`, not `**パン屋**`, so looking up
+    // the raw markdown offers to add a term that is already there.
+    if (onAdd && !lookup?.(normalizeToken(plain(text)))?.wordId) {
       const label = t(segment.kind === 'vocab' ? 'add-word.label' : 'add-phrase.label');
       root.append(
         Domino.of('button')

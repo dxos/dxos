@@ -52,10 +52,6 @@ export class Language extends Type.makeObject<Language>(DXN.make('org.dxos.type.
 export const DEFAULT_BASE_CODE = 'en';
 
 /**
- * Offered before any language object exists, so the reader is usable in an empty space; choosing
- * one creates the object. Presentation order is the caller's business -- the reader sorts by name.
- */
-/**
  * Scripts where a learner needs a pronunciation guide beside the text, and what that guide is
  * called. Naming the system matters: asking a model for "a reading" of Japanese yields romaji as
  * often as furigana, and the two are not interchangeable for someone learning to read kana.
@@ -77,6 +73,10 @@ const READING_SYSTEMS: Record<string, string> = {
 export const getReadingSystem = (code?: string): string | undefined =>
   code ? (READING_SYSTEMS[code] ?? READING_SYSTEMS[code.split('-')[0]]) : undefined;
 
+/**
+ * Offered before any language object exists, so the reader is usable in an empty space; choosing one
+ * creates the object. Presentation order is the caller's business -- the reader sorts by name.
+ */
 export const POPULAR: ReadonlyArray<{ code: string; name: string }> = [
   { code: 'en', name: 'English' },
   { code: 'fr', name: 'French' },
@@ -105,5 +105,4 @@ export const getBaseCode = (language: Language): string => language.baseCode ?? 
  * Models are told which languages they are working between by name, not by tag: a prompt saying
  * "translate into en" reads as an instruction about a token rather than about English.
  */
-export const getDisplayName = (code: string): string =>
-  POPULAR.find((entry) => entry.code === code)?.name ?? code;
+export const getDisplayName = (code: string): string => POPULAR.find((entry) => entry.code === code)?.name ?? code;

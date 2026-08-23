@@ -101,21 +101,25 @@ export const ReaderPane = ({
   // Analysis arrives after the editor mounts (a model round-trip, or a cache read),
   // so it is dispatched rather than passed as an initial extension.
   useEffect(() => {
-    if (!view || !analysis) {
+    if (!view) {
       return;
     }
 
+    // An empty dispatch rather than an early return: losing the analysis has to reach the editor, or
+    // it keeps decorating the text with the analysis of a passage that is no longer shown.
     view.dispatch({
       effects: setSegments.of({
-        segments: analysis.segments,
-        hash: (side === 'source' ? analysis.sourceHash : analysis.targetHash) ?? '',
+        segments: analysis?.segments ?? [],
+        hash: (side === 'source' ? analysis?.sourceHash : analysis?.targetHash) ?? '',
       }),
     });
   }, [view, analysis, side]);
 
   // Mirrors the other pane: an external selection is applied without re-running local tracking.
   useEffect(() => {
-    if (view && selected !== undefined) {
+    if (view) {
+      // `setSelected` carries `string | undefined` precisely so a cleared selection can be sent;
+      // gating on a defined value left the pane highlighting a segment nothing had selected.
       view.dispatch({ effects: setSelected.of(selected) });
     }
   }, [view, selected]);

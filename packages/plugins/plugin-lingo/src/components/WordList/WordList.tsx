@@ -25,15 +25,32 @@ export const WordList = ({ words, selected, onSelect, classNames }: WordListProp
     return null;
   }
 
+  // Selectable rows are options in a listbox, not items in a list: the selection has to be carried by
+  // `aria-selected` rather than by a background colour, and the row has to be reachable and operable
+  // from the keyboard. Without `onSelect` the rows are inert, and a plain list is the honest role.
+  const interactive = Boolean(onSelect);
+
   return (
-    <div role='list' className={mx('flex flex-col divide-y divide-separator', classNames)}>
+    <div role={interactive ? 'listbox' : 'list'} className={mx('flex flex-col divide-y divide-separator', classNames)}>
       {words.map((word) => (
         <div
-          role='listitem'
+          role={interactive ? 'option' : 'listitem'}
           key={word.id}
+          {...(interactive && {
+            'aria-selected': selected === word.id,
+            // Roving focus would be better with many rows, but every option being tabbable is
+            // correct before that and never traps the user.
+            'tabIndex': 0,
+            'onKeyDown': (event: React.KeyboardEvent) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                onSelect?.(word);
+              }
+            },
+          })}
           className={mx(
             'grid grid-cols-[1fr_1fr_auto] items-baseline gap-3 p-2',
-            onSelect && 'cursor-pointer hover:bg-hover-surface',
+            onSelect && 'cursor-pointer hover:bg-hover-surface dx-focus-ring-inset',
             selected === word.id && 'bg-current-surface',
           )}
           onClick={onSelect && (() => onSelect(word))}

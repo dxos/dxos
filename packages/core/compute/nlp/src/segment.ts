@@ -164,5 +164,11 @@ export const segmentText = (source: string, options: SegmentTextOptions = {}) =>
     return alignSegments(source, toRawSegments(value), options.target);
   }).pipe(Effect.provide(AiService.model(SEGMENT_MODEL)));
 
-/** The pluggable analyzer contract, mirroring {@link Parser} for the editor extension and pipelines. */
+/**
+ * The pluggable analyzer contract, mirroring `Parser` for the editor extension and pipelines.
+ *
+ * Deliberately NOT the type of {@link segmentText}, which is an Effect program: a React consumer
+ * takes this, and the caller wiring one up runs the program to a Promise at that boundary. The two
+ * are not meant to unify — `Parser` and `parseText` stand in exactly the same relation.
+ */
 export type Segmenter = (source: string, options?: SegmentTextOptions) => Promise<Segmentation>;

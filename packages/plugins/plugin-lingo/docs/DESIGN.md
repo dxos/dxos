@@ -105,7 +105,11 @@ on `plugin-inbox` or `plugin-transcription`; those plugins opt their types in by
 takes a `Ref<Text>`, which a capability-extracted string does not have. The toolbar's extract
 action is disabled in that case rather than silently doing nothing.
 
-**Revealing vocabulary.** `src/extensions/vocabulary.ts` is a CodeMirror extension with two parts:
+**Revealing vocabulary.** Two extensions, split during Phase 1.6 when the reader moved from
+per-token decoration to analyzed structure — `src/extensions/segments.ts` (the analyzed spans, with
+`renderTooltip.ts` for the hover card) and `src/extensions/deck-segments.ts` (the `Intl.Segmenter`
+word pass that finds deck terms in text the analyzer has not covered). What follows describes the
+shared shape of both:
 
 - A `ViewPlugin` that tokenizes the **visible ranges only** and decorates known terms — either an
   underline (`original`) or a widget carrying the translation (`translation`). Visible-range-only
@@ -144,12 +148,21 @@ Everything the reader renders is read-only. The companion never writes to the do
 
 Defined in `src/types/LingoOperation.ts`, handlers in `src/operations/`.
 
-| Operation           | Input                                       | Output             | Services            |
-| ------------------- | ------------------------------------------- | ------------------ | ------------------- |
-| `ExtractVocabulary` | `source: Ref<Text>`, `vocabulary`, `limit?` | `words`, `skipped` | Database, AiService |
-| `AddWord`           | `vocabulary`, term fields                   | `word`, `existing` | Database            |
-| `RecordReview`      | `word`, `correct`                           | `progress`         | Database            |
-| `TranslateTerm`     | `term`, `language`, `context?`              | a candidate entry  | Database, AiService |
+| Operation           | Input                                         | Output                        | Services            |
+| ------------------- | --------------------------------------------- | ----------------------------- | ------------------- |
+| `TranslatePassage`  | `text`, `language`                            | `text`, `sourceCode`          | Database, AiService |
+| `AnalyzeText`       | `subject`, `text`, `language`, `translation?` | `analysis`, `cached`, `added` | Database, AiService |
+| `ExtractVocabulary` | `source: Ref<Text>`, `vocabulary`, `limit?`   | `words`, `skipped`            | Database, AiService |
+| `AddWord`           | `vocabulary`, term fields                     | `word`, `existing`            | Database            |
+| `RecordReview`      | `word`, `correct`                             | `progress`                    | Database            |
+| `TranslateTerm`     | `term`, `language`, `context?`                | a candidate entry             | Database, AiService |
+
+**`TranslatePassage`** and **`AnalyzeText`** are the reader's pair, added in Phase 1.5/1.6.
+`TranslatePassage` returns the passage in the base language plus the `sourceCode` it detected — the
+study language is never given to it. `AnalyzeText` then segments both sides through `@dxos/nlp`,
+persists an `Analysis` keyed by source and target hash (so an unchanged document costs no model
+call), and harvests the vocab regions into the deck as a side effect — which is why
+`ExtractVocabulary` is now largely redundant, and its fate is an open task in `docs/TASKS.md`.
 
 **`ExtractVocabulary`** is the operation the request called for: analyze a Text object, produce
 vocabulary, file it. It prompts for a JSON array of candidates (term, lemma, translation, reading,
@@ -181,8 +194,9 @@ plugin-lingo/
     types/                 # Language, Vocabulary, Word, LingoOperation, LingoSettings, …
     capabilities/          # schema, settings, create-object, operation-handler,
                            # react-surface, app-graph-builder
-    operations/            # add-word, extract-vocabulary, record-review, translate-term
-    extensions/            # vocabulary.ts — the CodeMirror extension
+    operations/            # add-word, analyze-text, extract-vocabulary, record-review,
+                           # translate-passage, translate-term
+    extensions/            # segments, deck-segments, renderTooltip, hide-images
     components/            # WordList, Flashcard, ReaderPane (+ stories)
     containers/            # VocabularyArticle, FlashcardsArticle, ReaderArticle
 ```

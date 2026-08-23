@@ -35,11 +35,14 @@ export const FlashcardsArticle = ({ role, subject: deck, attendableId }: Flashca
 
   // The queue is frozen for the session: re-sorting after each answer would jump the card the user
   // just graded to a new position and re-show it immediately.
+  // Membership, not count: swapping one word for another leaves the length unchanged, and the queue
+  // would go on drilling a word the deck no longer holds.
+  const membership = words.map((word) => word.id).join(',');
   const queue = useMemo(() => {
     const now = new Date();
     return [...words].sort((a, b) => Number(Word.isDue(b, now)) - Number(Word.isDue(a, now)));
     // Re-shuffled only when the deck's membership changes, not on every progress write.
-  }, [words.length, deck?.id]);
+  }, [membership, deck?.id]);
 
   const word = queue[index];
 

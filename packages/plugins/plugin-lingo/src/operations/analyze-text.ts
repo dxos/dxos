@@ -14,7 +14,7 @@ import { type Segment, segmentText, sourceHash } from '@dxos/nlp';
 
 import { Analysis, Language, LingoOperation } from '#types';
 
-import { addWord } from '../util';
+import { addWord, normalizeTerm } from '../util';
 
 const handler: Operation.WithHandler<typeof LingoOperation.AnalyzeText> = LingoOperation.AnalyzeText.pipe(
   Operation.withHandler(
@@ -43,12 +43,23 @@ const handler: Operation.WithHandler<typeof LingoOperation.AnalyzeText> = LingoO
 
           const deck = yield* Database.load(vocabulary);
           let added = 0;
+          // `addWord` dedups against what the deck already holds by re-querying, but a passage that
+          // uses the same word twice yields two vocab segments in ONE pass, and the second query need
+          // not yet see the first add. Tracking the batch's own keys is what makes the pass idempotent
+          // in itself, which no database-level uniqueness would be needed for.
+          const seen = new Set<string>();
           for (const segment of segments) {
             if (segment.kind !== 'vocab' || !segment.gloss) {
               continue;
             }
 
             const source = text.slice(segment.source.start, segment.source.end);
+            const key = normalizeTerm(segment.lemma ?? source);
+            if (seen.has(key)) {
+              continue;
+            }
+            seen.add(key);
+
             const { existing: had } = yield* addWord(deck, {
               term: source,
               translation: segment.gloss,

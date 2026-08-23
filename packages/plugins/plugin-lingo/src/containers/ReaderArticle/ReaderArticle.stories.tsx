@@ -45,6 +45,25 @@ const scriptedAi = ScriptedLanguageModel.scriptedAiService([
     match: ScriptedLanguageModel.promptIncludes('You translate a passage for a language learner'),
     turns: [{ parts: [ScriptedLanguageModel.text(TEST_PASSAGE_TRANSLATION)] }],
   },
+  {
+    // The tooltip's add action, which is reachable in the story whenever `translateUnknownWords` is
+    // on — an unrouted call fails loudly, so the first click on an unknown word broke the story.
+    name: 'translate-term',
+    match: ScriptedLanguageModel.promptIncludes('You translate a single term for a language learner'),
+    turns: [
+      {
+        parts: [
+          ScriptedLanguageModel.text(JSON.stringify([{ term: 'word', translation: 'word', partOfSpeech: 'noun' }])),
+        ],
+      },
+    ],
+  },
+  {
+    // `AnalyzeText` reaches the segmenter, which is a third model-bearing path through this story.
+    name: 'segment-text',
+    match: ScriptedLanguageModel.promptIncludes('Analyze the passage below and return its structure'),
+    turns: [{ parts: [ScriptedLanguageModel.text(JSON.stringify({ paragraphs: [] }))] }],
+  },
 ]);
 
 // LayerSpecs are snapshotted once at boot (see AppCapability.layerSpec), so this rides Startup.
