@@ -30,10 +30,6 @@ describe('alignSegments', () => {
     ]);
   });
 
-  // Caught by plugin-lingo's paired-reader storybook, not by the tests above: siblings are ordered in
-  // the SOURCE, but a translation reorders them freely. `市場で小麦粉を` becomes "buys flour at the
-  // market", so the second sibling's counterpart sits BEFORE the first's — a forward-only scan on the
-  // target side finds nothing and silently drops the pairing, which broke cross-pane selection.
   test('aligns a translation whose clauses are reordered against the source', ({ expect }) => {
     const source = '市場で小麦粉を買う';
     const target = 'buys flour at the market';

@@ -21,3 +21,5 @@ their containers.
   clips it.
 - `@dxos/react-ui-components` now depends on `@dxos/progress` directly: the meter reads the runtime's
   own `TaskProgress` rather than a mirrored shape, so a producer and the readout cannot drift.
+- `@dxos/progress` gains `phases`/`phase` on `TaskProgress` and `phase`/`total`/`plan` on
+  `TaskHandle`, so a run can describe a plan and drop a count it can no longer make.
