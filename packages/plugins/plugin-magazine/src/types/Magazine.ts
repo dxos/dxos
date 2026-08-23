@@ -24,7 +24,9 @@ export const SKILL_KEY = 'org.dxos.skill.magazine';
  * contract) lives in the Magazine skill, not here.
  */
 export const DEFAULT_INSTRUCTIONS = trim`
-  You curate articles for a Magazine around the Topic described below.
+  You curate articles for a Magazine.
+  The Topic of the Magazine is described by the description of the Magazine object.
+  If the Topic is not clear then infer it from the feeds of the Magazine.
 
   Select only candidates that clearly match the Topic — quality over quantity.
 
