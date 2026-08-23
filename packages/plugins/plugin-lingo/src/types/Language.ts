@@ -9,10 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { DescriptionAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
-/**
- * CEFR proficiency band. Advisory only: it tunes how much help the reader shows (which words count
- * as "known" by default) rather than gating any feature.
- */
+/** CEFR band, advisory only: it tunes how much help the reader shows, and gates no feature. */
 export const Level = Schema.Literals(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']);
 export type Level = Schema.Schema.Type<typeof Level>;
 
@@ -20,9 +17,8 @@ export type Level = Schema.Schema.Type<typeof Level>;
  * A (studied, target) pairing, held as its own object so a Spanish-speaker and an English-speaker
  * learning German never share a word list by accident.
  *
- * `code` is the studied language, inferred from the source rather than chosen; `baseCode` and `name`
- * both describe the TARGET the reader picked — a trap worth stating, since the studied language is
- * the one with no name.
+ * `code` is the studied side and BOTH `baseCode` and `name` describe the target — the studied
+ * language is the one with no name, which has been misread as the reverse.
  */
 export class Language extends Type.makeObject<Language>(DXN.make('org.dxos.type.lingo.language', '0.1.0'))(
   Schema.Struct({
