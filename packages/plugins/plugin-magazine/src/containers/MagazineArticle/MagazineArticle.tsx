@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
+import { type AppSurface, ProgressMeter, useProgressMonitor, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
@@ -29,6 +29,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   const { t } = useTranslation(meta.profile.key);
   const invoker = useOperationInvoker();
   const [magazine] = useObject(subject);
+  const curateProgress = useProgressMonitor(FeedOperation.createCurateProgressKey(subject));
 
   // The toolbar owns the view-filter atom and the curate/clear handlers; the article reads `view` to
   // filter the visible posts.
@@ -111,6 +112,11 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
           </Masonry.Root>
         )}
       </Panel.Content>
+      {curateProgress && (
+        <Panel.Statusbar asChild>
+          <ProgressMeter state={curateProgress} classNames='border-t border-separator' />
+        </Panel.Statusbar>
+      )}
     </Panel.Root>
   );
 };

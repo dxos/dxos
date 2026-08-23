@@ -65,6 +65,11 @@ export interface TaskHandle {
    * phase's total forward is how a bar ends up describing work it knows nothing about.
    */
   readonly phase: (phase: number, options?: { total?: number; note?: string }) => void;
+  /**
+   * Set the plan without entering a phase — how a remote producer's status update lands, where the
+   * count and the phase arrive together and the update must not reset either.
+   */
+  readonly plan: (options: { phases?: number; phase?: number }) => void;
   /** Set the producer's estimate of remaining time (ms). */
   readonly estimate: (remainingMs: number) => void;
   readonly note: (text: string) => void;
@@ -146,6 +151,15 @@ export const make = (): ProgressApi => {
       advance: (by = 1) => touch(entry, (item) => (item.current += by)),
       set: (current) => touch(entry, (item) => (item.current = current)),
       total: (total) => touch(entry, (item) => (item.total = total)),
+      plan: ({ phases, phase }) =>
+        touch(entry, (item) => {
+          if (phases !== undefined) {
+            item.phases = phases;
+          }
+          if (phase !== undefined) {
+            item.phase = phase;
+          }
+        }),
       phase: (phase, options = {}) =>
         touch(entry, (item) => {
           item.phase = phase;

@@ -207,6 +207,11 @@ export const createProgressTraceSink = (
       return;
     }
 
+    // The plan first: a phase change resets the item count, so applying it after `set` would discard
+    // the very total/current this update carries.
+    if (data.progress.phases !== undefined || data.progress.phase !== undefined) {
+      handle.plan({ phases: data.progress.phases, phase: data.progress.phase });
+    }
     if (data.progress.total !== undefined) {
       handle.total(data.progress.total);
     }
