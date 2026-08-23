@@ -17,7 +17,7 @@ const handler: Operation.WithHandler<typeof TableOperation.OnTypeAdded> = TableO
         db,
         typename: Type.getTypename(type),
       });
-      yield* Operation.invoke(SpaceOperation.AddObject, { target: db, object }, { spaceId: db.spaceId });
+      yield* Operation.invoke(SpaceOperation.AddObject, { object }, { spaceId: db.spaceId });
       const { targets } = yield* Operation.invoke(NavigationOperation.ResolveNavigationTargets, {
         query: { uri: Obj.getURI(object) },
       });

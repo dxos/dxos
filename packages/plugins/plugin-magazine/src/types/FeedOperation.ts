@@ -7,7 +7,8 @@
 import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, DXN, Ref, Registry } from '@dxos/echo';
+import * as Trace from '@dxos/compute/Trace';
+import { Database, DXN, Obj, Ref, Registry } from '@dxos/echo';
 
 import { meta } from '#meta';
 
@@ -17,6 +18,23 @@ import * as Subscription from './Subscription';
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /** Fetches an RSS/Atom feed and appends new posts to the backing ECHO feed. */
+/**
+ * Progress-registry key for a run over `subject`.
+ *
+ * Absolute form: the producer (an operation) and the consumer (an article) derive the key
+ * independently, and the default `Obj.getURI` follows how the object was hydrated — a relative URI on
+ * one side and an absolute one on the other means the article watches a name the sink never
+ * registered, and no meter appears.
+ */
+const createProgressKey = (subject: Obj.Unknown, suffix: string) =>
+  Obj.getURI(subject, { prefer: 'absolute' }).toString() + suffix;
+
+/** Progress key for a feed's sync monitor ({@link SyncFeed}). */
+export const createSyncProgressKey = (feed: Subscription.Subscription) => createProgressKey(feed, '#sync');
+
+/** Progress key for a magazine's curation monitor ({@link CurateMagazine}). */
+export const createCurateProgressKey = (magazine: Magazine.Magazine) => createProgressKey(magazine, '#curate');
+
 export const SyncFeed = Operation.make({
   meta: {
     key: makeKey('syncFeed'),
@@ -24,7 +42,7 @@ export const SyncFeed = Operation.make({
     description: 'Fetches RSS/Atom feed and writes posts to the ECHO feed.',
     icon: 'ph--arrows-clockwise--regular',
   },
-  services: [Database.Service],
+  services: [Database.Service, Trace.TraceService],
   input: Schema.Struct({
     feed: Ref.Ref(Subscription.Subscription),
   }),
@@ -110,7 +128,7 @@ export const CurateMagazine = Operation.make({
   }),
   // Database.Service for candidate collection, Registry.Service to resolve the methodology skill;
   // sub-operations (SyncFeed, RunInstructions) resolve through the ambient Operation.Service invoker.
-  services: [Database.Service, Registry.Service],
+  services: [Database.Service, Registry.Service, Trace.TraceService],
 }).pipe(Operation.visible);
 
 /**

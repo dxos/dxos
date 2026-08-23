@@ -1,6 +1,6 @@
 # plugin-search — Tasks
 
-_Resume: Milestone 1 COMPLETE (commits 790c44e1..774b3e45). Milestone 1.5 COMPLETE — shared search-text utils moved to `@dxos/react-ui-search`, `SAMPLE_MESSAGES` corpus added to `@dxos/plugin-testing`, best-match snippets wired into `MessageStack`, `MailboxFilter` extracted, and `SearchResultList` (react-ui-list `Listbox`) shipped with a corpus-backed storybook. Uncommitted: none. Next: open a PR, or start Milestone 2 (cross-space fan-out + RRF merge)._
+_Resume: Milestones 1 and 1.5 COMPLETE. FTS + type composition (Milestone 3, first half) COMPLETE — the planner folds `and(text-search, type)` into a type-scoped `TextSelector`, the FTS SQL filters on `typeDXN`, plugin-search scopes its query to user-visible types (`useSearchableTypeUris` + `TypeOptions.isUserType`, shared with the nav tree's Database section; collections stay searchable), and the mailbox composes free text with the message type and tag-member ids so search stays scoped to a tag view. Remaining in M3: in-memory text-search matcher, predicate (`from:`) search, agent-tool searchKind. Next: those, or Milestone 2 (cross-space fan-out + RRF merge)._
 
 Work-stream: unify Composer search across lexical (FTS5), semantic (vector),
 structured/RDF, and agent planes; tiered client/EDGE vector index synced via feeds.
@@ -34,8 +34,9 @@ Wire `plugin-search` + `MailboxArticle` to the shipped FTS5 index with ranking a
 
 ### References
 
-- Executor cannot AND `text-search` with other root filters ("Query too complex") —
-  `packages/core/echo/echo-host/src/query/query-planner.ts` `case 'and'`.
+- Executor now ANDs one `text-search` with root-executable type/props filters (typename pushed
+  into the `TextSelector` and down to the FTS SQL) — `query-planner.ts` `case 'and'`,
+  `fts-index.ts` `typeDxns`. Two text filters or a negated composition remain "Query too complex".
 - FTS single-space, whole-object-JSON, no snippet — `index-core` `FtsIndex`.
 
 ## Milestone 1.5: MailboxFilter extraction + search result surfaces
@@ -86,7 +87,15 @@ Client fan-out across loaded spaces + RRF merge; scope toggle. See ROADMAP M2.
 
 - [ ] Implement the in-memory `text-search` matcher (currently `return false`) in
       `echo-host/src/filter/filter-match.ts` + `echo/src/internal/Filter/match.ts`.
-- [ ] Enable FTS + type composition; unblock mailbox mixed text+structural.
+- [x] **Enable FTS + type composition** — the planner folds an AND of one text-search
+      with type / or-of-types / type-with-props filters into a type-scoped `TextSelector`;
+      FTS SQL filters on `typeDXN` (shared `buildTypeDxnCondition`); plugin-search scopes
+      its query to user-visible types (`TypeOptions.isUserType`, shared with the nav
+      Database section; collections included).
+- [x] **Adopt the composition in the mailbox** — `buildMailboxSelection` composes free text
+      with the message type and rewrites root tag terms to `TagIndex` id selections, so a
+      text search stays scoped to the active tag view. Structural terms other than tags are
+      still dropped from a mixed query (predicate search — see M1.5 follow-ups).
 - [ ] Add `searchKind: 'full-text' | 'vector' | 'hybrid'` to the `database.query`
       agent tool.
 

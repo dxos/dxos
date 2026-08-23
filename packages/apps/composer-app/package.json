@@ -95,6 +95,7 @@
     "@dxos/plugin-kanban": "workspace:*",
     "@dxos/plugin-library": "workspace:*",
     "@dxos/plugin-linear": "workspace:*",
+    "@dxos/plugin-lingo": "workspace:*",
     "@dxos/plugin-magazine": "workspace:*",
     "@dxos/plugin-map": "workspace:*",
     "@dxos/plugin-map-solid": "workspace:*",

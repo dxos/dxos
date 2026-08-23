@@ -65,7 +65,7 @@ export type FormFieldRendererProps<T = any> = {
   autoFocus?: boolean;
   /** Presentation mode for the field (full/compact/inline/static); see {@link FormPresentation}. */
   presentation?: FormPresentation;
-  /** Whether the field is required (non-optional in the schema); surfaces a trailing asterisk on the label. */
+  /** Whether the field is required AND still unfilled; surfaces a trailing asterisk on the label. */
   required?: boolean;
 } & FormFieldStateProps<T>;
 

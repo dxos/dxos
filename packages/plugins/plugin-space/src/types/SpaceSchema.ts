@@ -146,7 +146,8 @@ export type CreateObject = (
   props: any,
   options: {
     db: Database.Database;
-    target: Database.Database | Collection.Collection;
+    /** The collection to file into; absent files at the space root of `db`. */
+    target?: Collection.Collection;
     targetNodeId?: string;
   },
 ) => Effect.Effect<CreateObjectResult, Error, Capability.Service | Operation.Service>;
