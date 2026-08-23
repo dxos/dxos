@@ -57,8 +57,9 @@ cache:
 
 `casOutputsCache` moves task outputs out of `.moon/cache/outputs`, which held one tar archive per
 task hash, and into `blobs/` and `manifests/` beside it. `unstable_sharedWorktreeCache` then points
-every git worktree of this repo at one such store, held in the base checkout — the directory
-`git rev-parse --git-common-dir` resolves to. Only blobs and manifests are shared. Hashes, locks and
+every git worktree of this repo at one such store, held in the base checkout's `.moon/cache`. The
+base checkout is the one whose `.git` directory `git rev-parse --git-common-dir` names, which is
+how to find it from inside a worktree. Only blobs and manifests are shared. Hashes, locks and
 states stay per-worktree because they embed absolute paths, so a worktree still decides for itself
 what is stale.
 
@@ -68,8 +69,19 @@ chain in 0.2 s of task time against 25 s to rebuild it, with the remote cache sw
 
 Two things follow from where the store lives. A plain clone is its own base checkout, so on a CI
 runner the setting resolves to the same directory it would have used anyway and changes nothing.
-And the store grows inside the base checkout rather than under `~`, so `cache.cas.maxSize` is what
-bounds it — unset today, meaning unbounded.
+And the store grows inside the base checkout rather than under `~`, so it needs a bound of its own.
+`cache.cas.maxSize` is set to 10 GB, evicted least-recently-used. A full 332-task `:build` occupies
+463 MB of it, so that is roughly twenty distinct build states before anything is dropped. Left
+unset the store is unbounded, which on a laptop is a slow leak rather than an error.
+
+Mind the spelling of that value. moon accepts `maxSize: 'not-a-size'` without a word, at any log
+level, and runs unbounded. A typo here reads exactly like a working bound. `MOON_LOG=debug` is how
+you check the whole arrangement is live; it names the shared directory before anything else happens:
+
+```
+DEBUG moon_app::session  In a VCS worktree, using a shared cache directory for blobs and manifests  dir=Some("/Users/you/Code/dxos/.moon/cache")
+DEBUG moon_cas::cas      Creating CAS store  root="/Users/you/Code/dxos/.moon/cache/blobs"
+```
 
 `unstable_sharedWorktreeCache` is unstable in the sense moon means it: the name carries the prefix
 and may be renamed. moon rejects unknown keys outright, so if a future release drops the prefixed
