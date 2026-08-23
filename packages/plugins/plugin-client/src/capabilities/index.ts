@@ -87,7 +87,10 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
 });
 export const SchemaDefs = Capability.lazyModule(
   'SchemaDefs',
-  { requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, AppCapabilities.Schema], provides: [] },
+  {
+    requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, AppCapabilities.Schema],
+    provides: [ClientCapabilities.SchemaRegistered],
+  },
   () => import('./schema-defs'),
 );
 export const RemoteTraceMonitor = Capability.lazyModule(

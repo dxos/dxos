@@ -23,7 +23,10 @@ export const CreateObject = SpaceCapability.createObject(() => import('./create-
 export const IdentityCreated = Capability.lazyModule(
   'IdentityCreated',
   {
-    requires: [ClientCapabilities.Client],
+    // `SchemaRegistered` pulls the otherwise idle-gated schema registration into this wave: the
+    // root collection is a typed object, and first-run identity creation happens long before the
+    // host goes idle.
+    requires: [ClientCapabilities.Client, ClientCapabilities.SchemaRegistered],
     provides: [SpaceCapabilities.DefaultSpace],
     // Runtime event: the default space is created when a local identity is created, not at startup.
     activatesOn: ClientEvents.IdentityCreated,
