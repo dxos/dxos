@@ -57,8 +57,7 @@
     "dompurify": "catalog:",
     "effect": "catalog:",
     "json5": "catalog:",
-    "motion": "catalog:",
-    "react-resize-detector": "catalog:"
+    "motion": "catalog:"
   },
   "devDependencies": {
     "@dxos/ai": "workspace:*",

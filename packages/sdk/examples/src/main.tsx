@@ -14,7 +14,7 @@ import { Client, ClientProvider } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { TestBuilder, performInvitation } from '@dxos/react-client/testing';
-import { Icon, Input, Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
+import { Icon, Input, Progress, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
 import { Text } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
@@ -133,7 +133,7 @@ const fallback = () => {
   root.render(
     <ThemeProvider tx={defaultTx}>
       <div className='flex h-[100dvh] justify-center items-center'>
-        <Status indeterminate aria-label='Initializing' />
+        <Progress indeterminate aria-label='Initializing' />
       </div>
     </ThemeProvider>,
   );
