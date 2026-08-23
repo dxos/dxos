@@ -124,7 +124,11 @@ export const createProgressTraceSink = (
     dropMonitor(key);
   };
 
-  const makeOnCancel = (key: string, target: CancelTarget) => () => {
+  // Reads the target when cancel is pressed, not when the monitor was registered: a run reporting
+  // from a new process updates the stored target in place (see `monitorFor`), and a handler bound to
+  // the target it first saw would cancel a process that is no longer doing the work.
+  const makeOnCancel = (key: string) => () => {
+    const target = monitors.get(key)?.target ?? {};
     if (options.cancelScope === 'run') {
       cancelled.set(key, { scope: 'run', at: Date.now() });
     } else if (target.pid) {
@@ -141,13 +145,18 @@ export const createProgressTraceSink = (
     target: CancelTarget,
   ) => {
     const existing = monitors.get(key);
-    if (existing && existing.target.pid === target.pid) {
+    if (existing) {
+      // Same run, new process — an EDGE continuation reports under a fresh pid. Re-registering here
+      // would call `register`, which drops the prior entry so a genuine re-run starts clean, and the
+      // total this run already reported would go with it: the meter falls back to a sweep mid-run,
+      // having counted moments earlier. Keep the handle and re-point the target instead.
+      monitors.set(key, { handle: existing.handle, target });
       return existing.handle;
     }
 
     // Cancellable when a handler is wired and there is something to address — a local process (pid) or
     // an edge trigger (trigger); the handler routes local vs edge by runtime.
-    const onCancel = options.cancelProcess && (target.pid || target.trigger) ? makeOnCancel(key, target) : undefined;
+    const onCancel = options.cancelProcess && (target.pid || target.trigger) ? makeOnCancel(key) : undefined;
     const handle = registry.register(key, { label, onCancel });
     monitors.set(key, { handle, target });
     return handle;

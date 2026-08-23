@@ -52,6 +52,41 @@ describe('createProgressTraceSink', () => {
     expect(task?.status).toBe('running');
   });
 
+  // Mail sync's shape: the run starts with no total and accumulates one as each page is enumerated,
+  // so the meter is briefly indeterminate and must become determinate the moment a total arrives.
+  test('a total that arrives mid-run makes the task determinate', () => {
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    const sink = createProgressTraceSink(progress);
+    const key = 'mailbox-uri#sync';
+
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 0 } }));
+    expect(registry.get(progress.monitorAtom(key))?.total).toBeUndefined();
+
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 0, total: 468 } }));
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 12, total: 468 } }));
+
+    const task = registry.get(progress.monitorAtom(key));
+    expect(task?.total).toBe(468);
+    expect(task?.current).toBe(12);
+  });
+
+  // The same run reported from a different process (an EDGE continuation) re-registers the monitor;
+  // the total it already reported has to survive that, or the meter falls back to a sweep mid-run.
+  test('a total survives the monitor being re-registered by another pid', () => {
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    const sink = createProgressTraceSink(progress);
+    const key = 'mailbox-uri#sync';
+
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 4, total: 468 } }, { pid: 'run-1' }));
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 9 } }, { pid: 'run-2' }));
+
+    const task = registry.get(progress.monitorAtom(key));
+    expect(task?.total).toBe(468);
+    expect(task?.current).toBe(9);
+  });
+
   test('completes and removes the monitor on progress.complete', () => {
     const registry = Registry.make();
     const progress = createProgressRegistry(registry);

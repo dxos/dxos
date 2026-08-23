@@ -4,6 +4,7 @@
 
 import React, { type ComponentPropsWithoutRef, useEffect, useRef, useState } from 'react';
 
+import { Progress as ProgressModel } from '@dxos/progress';
 import {
   IconButton,
   Progress,
@@ -15,25 +16,29 @@ import {
   stepCount,
 } from '@dxos/react-ui';
 
-import { type ProgressState } from './types';
-
 export type ProgressMeterProps = ThemedClassName<
-  // The DOM attributes come with the component because it owns the element: a host that slots it in
-  // (`Panel.Statusbar asChild`) merges `data-slot` and placement onto the child, and a props type that
-  // admits only `state` silently drops them — the meter then lands in an implicit grid row instead of
-  // the statusbar, overlaying the content.
   Omit<ComponentPropsWithoutRef<'div'>, 'children'> & {
-    state: ProgressState;
-    /**
-     * Cancels a run in flight, and clears one that failed — where there is nothing left to cancel, but
-     * the meter would otherwise hold its place with no way to dismiss it.
-     */
-    onCancel?: () => void;
+    state?: ProgressModel.TaskProgress;
     /** Index of a stage the caller has singled out. */
     selected?: number;
     onSelect?: (step: { index: number; id: string }) => void;
+    /**
+     * Cancels a run in flight, and clears one that failed — where there is nothing left to cancel,
+     * but the meter would otherwise hold its place with no way to dismiss it.
+     */
+    onCancel?: () => void;
   }
 >;
+
+export const ProgressMeter = ({ state, ...props }: ProgressMeterProps) => {
+  if (!state) {
+    return null;
+  }
+
+  return <InnerProgressMeter state={state} {...props} />;
+};
+
+type InnerProgressMeterProps = ProgressMeterProps & { state: ProgressModel.TaskProgress };
 
 /**
  * A run's full readout: what it is, where it is in its plan, how far through the stage in flight,
@@ -45,26 +50,29 @@ export type ProgressMeterProps = ThemedClassName<
  * are always drawn, so a phase that stops being countable never changes the readout's height and
  * never moves the layout around it.
  */
-export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
-  ({ state, onCancel, selected, onSelect, ...props }, forwardedRef) => {
-    const { current = 0, total, label, status, note, error, etaMs } = state;
+export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterProps>(
+  ({ state, selected, onSelect, onCancel, ...props }, forwardedRef) => {
+    const { current = 0, total, label, name, status, note, error } = state ?? {};
+    // Derived here rather than supplied: `deriveEta` projects from the task's own elapsed time, so
+    // every producer gets the same estimate without computing one.
+    const etaMs = state && ProgressModel.deriveEta(state);
     const indeterminate = total === undefined;
     const fraction = indeterminate ? 0 : total === 0 ? 1 : Math.min(1, current / total);
     const active = status === 'running' || status === 'pending';
     const failed = status === 'error';
     // The producer only revises `elapsedMs` when it touches the task, so tick locally while active.
-    const elapsedMs = useElapsed(state.startedAt, active, state.elapsedMs);
+    const elapsedMs = useElapsed(state?.startedAt, active, state?.elapsedMs);
     // One control, two jobs: it cancels a run in flight, and clears one that ended in an error —
     // where there is nothing left to cancel, but the meter would otherwise hold its place with no
     // way to dismiss it. Clearing needs no `cancellable`: that flag says the PRODUCER can be
     // interrupted, which is irrelevant once the run is over. A finished run disables the control
     // rather than dropping it: a button that vanishes on completion takes its width with it and
     // slides the readout beside it sideways, at the exact moment the reader is looking at it.
-    const cancellable = failed || (state.cancellable === true && active);
-    const stages = stepCount(state.phases);
+    const cancellable = failed || (state?.cancellable === true && active);
+    const stages = stepCount(state?.phases);
     // The crawl is the meter's only text now, so it opens with the run's name: without it a list of
     // meters would say what each is doing and never which task it is.
-    const lines = useNotes(label, note, state.startedAt);
+    const lines = useNotes(label ?? name, note, state?.startedAt);
 
     return (
       <div
@@ -128,7 +136,7 @@ export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
             // bar red rather than emptying it. A run that simply ended has nothing left to sweep.
             indeterminate={indeterminate && (active || failed)}
             error={failed}
-            aria-label={label}
+            aria-label={label ?? name}
           />
         )}
       </div>

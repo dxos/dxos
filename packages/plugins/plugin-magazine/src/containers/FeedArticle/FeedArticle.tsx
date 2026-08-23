@@ -5,7 +5,7 @@
 import React, { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface, ProgressMeter, toProgressState, useProgressMonitor } from '@dxos/app-toolkit/ui';
+import { type AppSurface, ProgressMeter, useProgressMonitor } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Panel } from '@dxos/react-ui';
@@ -65,11 +65,9 @@ export const FeedArticle = ({ role, subject, attendableId }: FeedArticleProps) =
           onAction={handleAction}
         />
       </Panel.Content>
-      {syncProgress && (
-        <Panel.Statusbar asChild>
-          <ProgressMeter state={toProgressState(syncProgress)} classNames='border-t border-separator' />
-        </Panel.Statusbar>
-      )}
+      <Panel.Statusbar asChild>
+        <ProgressMeter state={syncProgress} classNames='border-t border-separator' />
+      </Panel.Statusbar>
     </Panel.Root>
   );
 };
