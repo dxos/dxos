@@ -189,23 +189,25 @@ Everything else CodeRabbit raised is fixed (see the PR threads). Two were declin
 `Segmenter`'s Promise boundary mirrors `Parser` by design, and the `targetLanguage` patch would have
 put a tag where a name belongs. This one is confirmed, unfixed, and the biggest open defect here.
 
-- [ ] **Every document creates its own `Language`, and so its own word list.** `translated` only
-      holds Languages related to THIS subject, so a second document in a language already studied
-      takes the create path in `handleRun`; `ensureDeck` then gives it a second `Vocabulary`. Words
-      are queried by `Filter.type(Word.Word, { language: languageRef })` — by OBJECT, not by code —
-      so the learner's vocabulary silently fragments one deck per document. Not an edge case: it is
-      the normal path for document two onward.
+- [ ] **Every document creates its own `Language`, and so its own word list.** Confirmed against the
+      running app; the safe fix is a re-sequencing, not the fallback lookup the review proposed.
 
-      The obvious fix is unsafe. Reusing an existing `Language` by `baseCode` alone merges a Japanese
-                  and a Spanish document onto one object, and `handleRun` then overwrites `target.code` with the
-                  newly detected source — corrupting the first document's reading system and its word list. The
-                  correct identity is (source, target), and the source is not known until `TranslatePassage`
-                  returns, which is after the object has to exist to be passed to it.
+`translated` only holds Languages related to THIS subject, so a second document in a language already
+studied takes the create path in `handleRun`; `ensureDeck` then gives it a second `Vocabulary`. Words
+are queried by `Filter.type(Word.Word, { language: languageRef })` — by OBJECT, not by code — so the
+learner's vocabulary silently fragments one deck per document. Not an edge case: it is the normal path
+for document two onward.
 
-                  So this is a re-sequencing — resolve or create the `Language` from the detected `sourceCode`
-                  once the translation is back, adopting an existing (source, target) object where one exists —
-                  plus a decision about what to do with the per-document Languages already in a user's space.
-                  Deliberately not attempted under review: getting it wrong merges decks irreversibly.
+The obvious fix is unsafe. Reusing an existing `Language` by `baseCode` alone merges a Japanese and a
+Spanish document onto one object, and `handleRun` then overwrites `target.code` with the newly
+detected source — corrupting the first document's reading system and its word list. The correct
+identity is (source, target), and the source is not known until `TranslatePassage` returns, which is
+after the object has to exist to be passed to it.
+
+So this is a re-sequencing — resolve or create the `Language` from the detected `sourceCode` once the
+translation is back, adopting an existing (source, target) object where one exists — plus a decision
+about what to do with the per-document Languages already in a user's space. Deliberately not attempted
+under review: getting it wrong merges decks irreversibly.
 
 ## Loose ends from the reader work
 
