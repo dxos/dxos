@@ -57,11 +57,6 @@ export type PluginConfig = State & {
    * plugin loader. Defaults to true; the curated set (`plugin-defs.production.tsx`) turns it off.
    */
   isExtensible?: boolean;
-  /**
-   * Starts the agent debug port on this session id as the app boots. Set only by a dev server
-   * launched with the debug-port flag (`vite.config.ts`), never in a production build.
-   */
-  debugPortSession?: string;
   isDev?: boolean;
   isLocal?: boolean;
   isPwa?: boolean;

@@ -42,12 +42,3 @@ export const LogRecording = Capability.lazyModule(
   { provides: [], activatesOn: DebugEvents.Start },
   () => import('./log-recording'),
 );
-export const DebugPort = Capability.lazyModule(
-  'DebugPort',
-  {
-    provides: [],
-    props: ({ debugPortSession }: Debug.DebugPluginOptions) => ({ session: debugPortSession ?? '' }),
-    activatesOn: DebugEvents.Start,
-  },
-  () => import('./debug-port'),
-);

@@ -446,6 +446,16 @@ const main = async () => {
   const client = new Client({ config, services });
   void client.initialize().catch((err) => log.catch(err));
 
+  // Agent debug port, when the dev server was launched with the flag. Started here rather than from
+  // plugin-debug (which owns the settings switch) because the port belongs to the client, and a
+  // plain local `serve` leaves that plugin disabled — tying the flag to it would make the flag
+  // silently do nothing. The controller resolves its scope per command, so starting before the
+  // client finishes initializing is fine. Empty in production builds; see vite.config.ts.
+  if (__DX_DEBUG_PORT_SESSION__) {
+    const { getDebugPortController } = await import('@dxos/client/devtools');
+    getDebugPortController().start({ session: __DX_DEBUG_PORT_SESSION__, persist: true });
+  }
+
   profiler?.mark('plugins:start');
 
   const isPwa = !isFalse(config.values.runtime?.app?.env?.DX_PWA);
@@ -473,7 +483,6 @@ const main = async () => {
     isPopover,
     isMobile,
     isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
-    debugPortSession: __DX_DEBUG_PORT_SESSION__ || undefined,
   };
 
   // `getPlugins` is synchronous: each plugin's main entry exposes only

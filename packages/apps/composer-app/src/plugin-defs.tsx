@@ -155,7 +155,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
  * plugin. `plugin-defs.production.tsx` is the curated set `composer.space` ships.
  */
 export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
-  const { logStore, isDev, isLocal, isTauri, isPopover, isMobile, debugPortSession } = config;
+  const { logStore, isDev, isLocal, isTauri, isPopover, isMobile } = config;
   return [
     ...getCorePlugins(config),
     AssistantPlugin.make(),
@@ -171,7 +171,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     // Debug/Devtools below) since its tools need the dev server's route (vite.config.ts).
     isDev && ComputerPlugin.make(),
     !isTauri && CrxPlugin.make(),
-    DebugPlugin.make({ logStore, debugPortSession }),
+    DebugPlugin.make({ logStore }),
     DevtoolsPlugin.make(),
     DiscordPlugin.make(),
     DoctorPlugin.make(),
