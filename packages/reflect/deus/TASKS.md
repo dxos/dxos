@@ -57,6 +57,9 @@ Design agreed (see DESIGN.md §Deus.QA once written). Decisions:
       always-use-the-invoker rule and the built navigation path.
 - [x] `/dxos:qa` command in the `dxos` plugin — `list` / `show` / `run [--skip-cleanup]`, backed by
       `scripts/list-flows.mjs`; execution defers to the `running-qa-flows` skill.
+- [x] More flows: markdown QA-2 (link one page to another) and QA-3 (a contributed slash command);
+      chess QA-1 (start a game, play the opening, reject an illegal move).
+- [ ] Run QA-2, QA-3 and chess QA-1 — all three are `status: unverified`.
 - [ ] `packages/apps/composer-app/APP.mdl` — cross-plugin journeys.
 - [x] Re-run `QA-1` through the skill (rather than by hand) — 2026-08-23. 4/4 pass, and the
       exercise paid for itself: three defects found, all in artifacts I had just written (below).
@@ -119,7 +122,20 @@ surrounding tooling that the flow surfaced.
 10. **Skipping cleanup is now a documented run option** (Execution Rule 8, skill §6) — inspecting
     the final state is a legitimate reason to leave the artifacts, provided the runner reports what
     remains and how to remove it.
-11. **`plugin-onboarding` fails to activate on a fresh dev profile** — `Schema not registered
+11. **Authoring three more flows produced two more instances of the `key:` gap, and one worse case.**
+    plugin-chess declares `startGame`, `submitMove`, `resignGame`, `getLegalMoves`, `validateMove`,
+    `applyMove` — of which only `submitMove` has a runtime counterpart
+    (`org.dxos.function.chess.move`). `startGame` has NONE: a game is built with `Game.make` and
+    placed with `addObject`, so an agent cannot start one through an operation at all. Chess QA-1
+    is `actors: human` for that reason, recorded on the step rather than hidden.
+    → Strengthens the case for routine part (a): every one of these was found by hand.
+12. **CodeMirror does not observe synthetic input**, so an agent cannot open the `/` popup. Tried
+    `computer.type`, key events, and `beforeinput`/`input` dispatched at `contentDOM`; each inserted
+    the character without opening the menu. QA-3's first step is therefore human-only. The
+    contributed operation itself IS agent-verifiable and was confirmed inserting into a live editor.
+13. **`EditorViews.getByDocumentId` takes the DXN** (`echo://<spaceId>/<objectId>`), not the bare
+    object id. Cost a round trip.
+14. **`plugin-onboarding` fails to activate on a fresh dev profile** — `Schema not registered
 Schema: org.dxos.type.document`. Not blocking (the default space and identity are still created)
     but it is an error on every cold boot of a new profile. Not investigated; logged for triage.
 
