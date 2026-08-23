@@ -14,10 +14,10 @@ import React, {
   useSyncExternalStore,
 } from 'react';
 
-import { type ClassNameValue, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
+import { type ClassNameValue, type ThemedClassName } from '@dxos/ui-types';
 
-import { type Size } from './sizes';
+import { type TextCrawlSize } from './sizes';
 
 const emptyLines: string[] = [];
 
@@ -67,6 +67,7 @@ export const TextCrawl = ({
   }, [lines]);
 
   // Starting index.
+  const paintedRef = useRef(false);
   useEffect(() => {
     setPosition(index, false);
   }, []);
@@ -103,9 +104,12 @@ export const TextCrawl = ({
     }
 
     let i: NodeJS.Timeout;
-    const lastLineIndex = Math.max(0, lines.length - 1);
-    const showLastLineImmediately = greedy && index === lastLineIndex;
-    setPosition(index, index !== 0 && !wasReset && !showLastLineImmediately);
+    // `greedy` means arrive at the last line, not scroll to it — but only on the first paint. It
+    // holds the index at the tail for the whole run, so testing it on every update suppressed the
+    // animation for good and the crawl never moved.
+    const settled = paintedRef.current;
+    paintedRef.current = true;
+    setPosition(index, settled && index !== 0 && !wasReset);
     if (cyclic && index >= lines.length) {
       i = setTimeout(() => {
         setIndex(0);
@@ -116,7 +120,7 @@ export const TextCrawl = ({
     return () => {
       clearTimeout(i);
     };
-  }, [wasReset, lines, index, indexProp, cyclic, greedy]);
+  }, [wasReset, lines, index, indexProp, cyclic]);
 
   // Auto-advance.
   const lastUpdatedRef = useRef(Date.now());
@@ -173,7 +177,7 @@ export const TextCrawl = ({
 // Ribbon
 //
 
-const sizeClassNames: Record<Size, { lineHeight: number; className: string }> = {
+const sizeClassNames: Record<TextCrawlSize, { lineHeight: number; className: string }> = {
   sm: { lineHeight: 20, className: 'h-[20px] text-sm' },
   md: { lineHeight: 24, className: 'h-[24px]' },
   lg: { lineHeight: 28, className: 'h-[28px] text-lg' },
@@ -185,7 +189,7 @@ export interface TextRibbonController {
 
 export type TextRibbonProps = ThemedClassName<{
   textClassNames?: ClassNameValue;
-  size?: Size;
+  size?: TextCrawlSize;
   lines?: string[];
   index?: number;
   cyclic?: boolean;
