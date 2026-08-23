@@ -30,6 +30,24 @@ describe('alignSegments', () => {
     ]);
   });
 
+  // Caught by plugin-lingo's paired-reader storybook, not by the tests above: siblings are ordered in
+  // the SOURCE, but a translation reorders them freely. `市場で小麦粉を` becomes "buys flour at the
+  // market", so the second sibling's counterpart sits BEFORE the first's — a forward-only scan on the
+  // target side finds nothing and silently drops the pairing, which broke cross-pane selection.
+  test('aligns a translation whose clauses are reordered against the source', ({ expect }) => {
+    const source = '市場で小麦粉を買う';
+    const target = 'buys flour at the market';
+    const raw: RawSegment[] = [
+      { kind: 'vocab', text: '市場', translation: 'market' },
+      { kind: 'vocab', text: '小麦粉', translation: 'flour' },
+    ];
+
+    const { segments } = alignSegments(source, raw, target);
+    expect(segments.map((segment) => slice(source, segment.source))).toEqual(['市場', '小麦粉']);
+    // Both counterparts resolve, in the order the TARGET happens to put them.
+    expect(segments.map((segment) => segment.target && slice(target, segment.target))).toEqual(['market', 'flour']);
+  });
+
   // A nested walk leaves the cursor inside the child it just placed; the sibling after it starts
   // beyond the parent, so the parent's end has to be handed back or the next repeat is missed.
   test('resumes after a parent whose children were walked', ({ expect }) => {

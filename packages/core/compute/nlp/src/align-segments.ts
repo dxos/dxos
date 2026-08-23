@@ -70,9 +70,19 @@ export const alignSegments = (source: string, raw: readonly RawSegment[], target
 
       // The translation is aligned independently: the analyzer quotes both sides, and a missing or
       // unquotable counterpart degrades to a source-only segment rather than dropping the segment.
+      //
+      // Forward first, then rewound: siblings are ordered in the SOURCE, but a translation reorders
+      // them freely — `市場で小麦粉を` becomes "buys flour at the market", putting the second sibling's
+      // counterpart before the first's. Scanning forward only would find nothing and silently drop
+      // the pairing, so a miss falls back to the parent's extent; the forward attempt is what still
+      // maps repeated wording to successive occurrences when the order does hold.
       let targetRange: Range | undefined;
       if (targetCursor && targetBounds && entry.translation) {
         targetRange = targetCursor.take(entry.translation, targetBounds.end);
+        if (!targetRange) {
+          targetCursor.seek(targetBounds.start);
+          targetRange = targetCursor.take(entry.translation, targetBounds.end);
+        }
       }
 
       const id = `s${nextId++}`;
