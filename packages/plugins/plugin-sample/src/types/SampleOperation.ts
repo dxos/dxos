@@ -13,9 +13,7 @@ import * as Schema from 'effect/Schema';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
-import { meta } from '#meta';
-
-// Convention: prefix all operation keys with the plugin's meta.id to avoid collisions.
+// Convention: `<root>.operation.<domain>.<verb>`, written in full so a key can be found by searching for it.
 
 // `Operation.make` creates a typed operation definition.
 // - `meta.key`: globally unique identifier used for routing and invocation.
