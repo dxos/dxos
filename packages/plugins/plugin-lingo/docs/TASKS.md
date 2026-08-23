@@ -1,10 +1,19 @@
 # plugin-lingo — Tasks
 
-_Resume: Phase 0 is complete — build, unit test, storybook test, lint and the full `composer-app`
-build all pass locally on `claude/language-learning-plugin-eyedv0`. One real defect surfaced and was
-fixed: the activation test never supplied `plugin-markdown`, which `dx.config.ts` declares in
-`dependsOn`, so plugin resolution failed outright. Next: `PLUGIN.mdl`, then open a PR or continue
-into Phase 2._
+_Resume: **PR [#12712](https://github.com/dxos/dxos/pull/12712) is OPEN** — the plugin itself is
+built, live-verified in Composer (Phase 1.7) and documented (`PLUGIN.mdl`, `TESTING.md`). Phases 0,
+1, 1.5, 1.6 and 1.7 are all DONE.
+
+The branch has since grown a **second, larger work-stream that has nothing to do with language
+learning**: the progress-meter rebuild and the mail-sync investigation it uncovered (see
+"Progress + sync work carried on this branch" below). That is the part still moving; the lingo plugin
+itself is waiting on review.
+
+Next, in order: (1) decide whether the progress work ships with #12712 or splits into its own PR — it
+is ~36 commits across `react-ui`, `react-ui-components`, `app-toolkit`, `plugin-magazine` and
+`plugin-inbox`, and reviewing it alongside a new plugin is a lot to ask of one reviewer; (2) push —
+the branch is 36 commits ahead of its remote; (3) `MAIL_REMOTE_SYNC` is a live product decision
+awaiting the user (see below)._
 
 Design, object model, and the reasoning behind each decision: `packages/plugins/plugin-lingo/docs/DESIGN.md`.
 Manual test plan, and what has actually been run by hand: `packages/plugins/plugin-lingo/docs/TESTING.md`.
@@ -31,7 +40,8 @@ All five ran green in the `plugin-lingo` worktree on 2026-08-20.
 - [x] `src/extensions/vocabulary.ts` — CodeMirror decorations over visible ranges + hover card.
 - [x] Navtree type sections, create-object entries, settings, translations.
 - [x] Component stories and a plugin activation test.
-- [ ] `PLUGIN.mdl` — required before the first PR merges, authored from the as-built plugin
+- [x] `PLUGIN.mdl` — authored from the as-built plugin (2026-08-22), which is what the
+      composer-plugins skill requires before a first PR merges.
       (see the `composer-plugins` skill § Specification). Deliberately not in the skeleton.
 
 ## Phase 1.5: Reader corrections — DONE
