@@ -62,6 +62,8 @@ type MonitorEntry = {
   stall?: ReturnType<typeof setTimeout>;
   /** Set once the stall fired, so the next update starts a clean run rather than reviving a dead one. */
   stalled?: boolean;
+  /** Last phase index seen, so a change of phase can clear the count belonging to the old one. */
+  phase?: number;
 };
 
 /**
@@ -299,6 +301,18 @@ export const createProgressTraceSink = (
     // the very total/current this update carries.
     if (data.progress.phases !== undefined || data.progress.phase !== undefined) {
       handle.plan({ phases: data.progress.phases, phase: data.progress.phase });
+      // A count belongs to the phase that reported it, so entering a new phase clears it — otherwise
+      // an uncountable phase inherits its predecessor's numbers and draws a determinate bar over work
+      // it cannot measure. The producer says so by sending no total, but `total` is an optional field:
+      // an explicit `undefined` and an absent one are the same bytes on the wire, so the phase change
+      // is the only signal that survives. `plan` deliberately does not reset (it must not discard the
+      // numbers THIS update carries), which is why the reset is here — before they are applied.
+      const entry = monitors.get(key);
+      if (entry && data.progress.phase !== undefined && data.progress.phase !== entry.phase) {
+        entry.phase = data.progress.phase;
+        handle.total(undefined);
+        handle.set(0);
+      }
     }
     if (data.progress.total !== undefined) {
       handle.total(data.progress.total);

@@ -209,6 +209,60 @@ describe('createProgressTraceSink', () => {
   });
 });
 
+// `plugin-magazine`'s curate run, which is what surfaced this: phase 0 counts the feeds, phase 1 is a
+// single opaque agent call over every candidate and so reports no total. Observed in the statusbar as
+// "Syncing feeds  0 / 1" with the stepper already on step 2 — phase 1 drawing phase 0's count.
+describe('phase counts', () => {
+  test('entering a phase clears the count the previous one reported', () => {
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    const sink = createProgressTraceSink(progress);
+    const key = 'magazine-uri#curate';
+
+    sink.write(
+      statusMessage({ message: 'Syncing feeds', progress: { key, phases: 3, phase: 0, current: 0, total: 1 } }),
+    );
+    expect(registry.get(progress.monitorAtom(key))?.total).toBe(1);
+
+    sink.write(statusMessage({ message: 'Selecting articles', progress: { key, phases: 3, phase: 1, current: 0 } }));
+    const task = registry.get(progress.monitorAtom(key));
+    // Uncountable: the meter must sweep, not claim 0 of the feed count it is no longer counting.
+    expect(task?.total).toBeUndefined();
+    expect(task?.phase).toBe(1);
+  });
+
+  test('a phase that declares its own total keeps it', () => {
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    const sink = createProgressTraceSink(progress);
+    const key = 'magazine-uri#curate';
+
+    sink.write(statusMessage({ progress: { key, phases: 3, phase: 1, current: 0 } }));
+    sink.write(statusMessage({ progress: { key, phases: 3, phase: 2, current: 0, total: 7 } }));
+
+    const task = registry.get(progress.monitorAtom(key));
+    expect(task?.total).toBe(7);
+    expect(task?.current).toBe(0);
+  });
+
+  // Updates WITHIN a phase are the common case and must not be mistaken for a phase change, or the
+  // count would be wiped on every tick.
+  test('progress within a phase keeps its count', () => {
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    const sink = createProgressTraceSink(progress);
+    const key = 'magazine-uri#curate';
+
+    sink.write(statusMessage({ progress: { key, phases: 3, phase: 2, current: 0, total: 7 } }));
+    sink.write(statusMessage({ progress: { key, phases: 3, phase: 2, current: 3 } }));
+    sink.write(statusMessage({ progress: { key, phases: 3, phase: 2, current: 5 } }));
+
+    const task = registry.get(progress.monitorAtom(key));
+    expect(task?.total).toBe(7);
+    expect(task?.current).toBe(5);
+  });
+});
+
 // Measured against a live mailbox on 2026-08-23: an edge sync emitted its opening status and nothing
 // further — no total, no increments, and no terminal — leaving the meter sweeping indefinitely over a
 // run that was no longer reporting. Every terminal a producer can emit travels the same lossy path
