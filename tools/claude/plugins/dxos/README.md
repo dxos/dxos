@@ -60,6 +60,35 @@ Unlike `/dxos:project`, there is no `UserPromptSubmit` hook: the store is the
 `.mdl` files themselves, so there is no backend to swap and nothing for a
 directive to resolve.
 
+## Developing this plugin
+
+Load it straight from the working tree — no install, no cache, no marketplace, no session restart:
+
+```bash
+claude --plugin-dir tools/claude/plugins/dxos
+```
+
+Edits take effect in the next session started with that flag, which is what makes the loop
+repeatable. The installed copy (`dxos@dxos`) is a snapshot of GitHub `main`, so a command added on a
+branch is invisible to it until the branch lands.
+
+Assert it non-interactively — this is the regression check, cheap enough to run on every edit:
+
+```bash
+claude --plugin-dir tools/claude/plugins/dxos --model haiku \
+  -p "List the slash commands available to you whose name starts with dxos."
+```
+
+For scored behavioural cases (does `/dxos:qa list` render the table?) rather than mere presence, see
+`evals/` and `claude plugin eval dxos`.
+
+Two paths that look right and are not:
+
+- **`~/.claude/skills/<name>/`** auto-loads a plugin and `/reload-plugins` reloads it live, but the
+  loader keys on the directory name while `plugin.json` declares `dxos`, so a symlink resolves under
+  neither name.
+- **A local-scope marketplace** works, but costs config surgery plus a restart per change.
+
 ## How it works
 
 A `UserPromptSubmit` hook reads the **raw typed text** and fires *before* the
