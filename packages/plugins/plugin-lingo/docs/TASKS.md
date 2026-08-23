@@ -194,6 +194,56 @@ invisible to the type-checker and to storybook; each was found by using the app.
       and French/German entries whose `baseCode` was written under the inverted language model.
       A one-shot script over the debug port; it mutates the user's space, so confirm before running.
 
+## Progress + sync work carried on this branch — DONE, unpushed
+
+Not language learning at all. It started as "does magazine curation deserve a progress monitor?" and
+turned into a rebuild of the progress readout plus a live investigation of why mail sync never
+finishes. Kept here because it is what this branch actually contains; the detail lives in the
+packages it touches.
+
+- [x] **One progress readout, two components, one core.** `ProgressBar` + `ProgressMeter`
+      consolidated; `Stepper` and `TextCrawl` moved down to `react-ui`; `Status` renamed `Progress`.
+      `@dxos/progress` gained `phases`/`phase` and `TaskHandle.phase/total/plan`. The meter reads
+      `Progress.TaskProgress` directly — no intermediate mapping, per the user's call — and the
+      `app-toolkit` wrapper that once did the mapping is deleted, so its six consumers import from
+      `@dxos/react-ui-components` and declare the dependency.
+- [x] **The meter no longer flashes.** `delay` (500ms) withholds it until a run is worth reporting;
+      `minDuration` (1s) then holds it long enough to read. Every `Panel.Statusbar` call site mounts
+      it unconditionally, since a host that unmounts on state loss defeats both bounds.
+- [x] **Feed sync and magazine curation report progress**, displayed in `Panel.Statusbar`; the feed
+      sync button moved to the toolbar's trailing edge.
+- [x] **A total survives a process change.** An EDGE continuation reports under a fresh pid;
+      re-registering dropped the entry and the total with it, so a counted run fell back to a sweep
+      mid-flight.
+- [x] **A run that stops reporting no longer wedges the UI.** Every terminal travels the same lossy
+      path as the progress it ends — a killed process runs no finalizer, a defect escapes the error
+      channel, a swarm broadcast is fire-and-forget — so the sink gives up after 90s and fails the
+      monitor as `Stopped reporting`, claiming only what it knows. Verified firing at exactly 90s
+      against the live session. Also un-sticks the Sync button, which `app-graph-builder` disables
+      while `status === 'running'`.
+- [x] **A phase no longer inherits the previous phase's count.** `total` is an optional schema field,
+      so an explicit `undefined` and an absent one are the same bytes on the wire; the phase change is
+      the only signal that survives, and the sink now resets on it. Magazine curation showed this as
+      `0 / 1` — phase 0's feed count — while phase 1's uncountable agent call was in flight.
+
+Filed against other people's areas rather than fixed here:
+
+- [x] **Surface flash on first navigation** — [#12717](https://github.com/dxos/dxos/issues/12717),
+      @wittjosiah. `Surface` fires `SurfacesRequested(role)` on mount to load role-gated modules, so a
+      lazy `ReactSurface` loses the slot to an eager one; measured at 1.06s. In
+      `app-framework/TASKS.md`.
+- [x] **EDGE mail sync never completes** — [#12719](https://github.com/dxos/dxos/issues/12719),
+      @wittjosiah. 146 edge runs, 146 `operation.start`, zero `operation.end`, with the sync cursor's
+      `lastTick` 23 hours stale across all of them; the same operation in-process succeeds in 41s and
+      commits 99 messages. Detail in `plugin-inbox/docs/TASKS.md`.
+
+- [ ] **Decide `MAIL_REMOTE_SYNC`** — put to the user, unanswered. Mail does not sync in the
+      background at all until #12719 lands, and the Sync button is not a workaround (`Binding.runSync`
+      fires the trigger whenever the connector declares one, so it takes the same dead path). The
+      options offered were: flip to `false` for local sync, leave it, or gate it behind a setting.
+- [ ] **Decide whether this work ships with #12712 or as its own PR.** ~36 commits over five packages,
+      against a PR whose subject is a new plugin.
+
 ## Phase 3: Study history — NOT STARTED
 
 - [ ] Per-answer review log (charts retention, not just counts).
