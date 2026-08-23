@@ -88,6 +88,11 @@
       "types": "./dist/types/src/types/DebugNodes.d.ts",
       "import": "./dist/lib/DebugNodes.mjs"
     },
+    "./DebugOperation": {
+      "source": "./src/types/DebugOperation.ts",
+      "types": "./dist/types/src/types/DebugOperation.d.ts",
+      "import": "./dist/lib/DebugOperation.mjs"
+    },
     "./DebugPlugin": {
       "source": "./src/DebugPlugin.ts",
       "types": "./dist/types/src/DebugPlugin.d.ts",
