@@ -900,10 +900,22 @@ a defect that escapes the run's error channel.
       than inheriting the abandoned run's. Bonus: `app-graph-builder` disables the Sync button on
       `status === 'running'`, so a wedged meter used to disable syncing indefinitely — the bound
       un-sticks that too. Eight tests, four of which fail without the bound.
-- [ ] Confirm edge-side whether the invocation dies (timeout/OOM/hard kill) or the swarm broadcast
-      drops everything past the first message. Client logs cannot separate these two. The staleness
-      bound makes this non-urgent — a lost run now costs a late meter rather than a dead one — but it
-      does not answer why edge sync is silent, and mail is still not arriving on the trigger.
+- [x] **Which of the two it is — ANSWERED 2026-08-23 against the live session, and it is neither of
+      the guesses.** The swarm is not dropping anything: the run genuinely stops. Read from the
+      space's `Execution Trace` feed over a ~24h window: **146 edge runs, 146 `operation.start`, zero
+      `operation.end`.** Local runs of the identical operation in the same feed carry
+      `start` + `end outcome: success`. Corroborated independently of trace: the sync `Cursor`'s
+      `lastTick` was 23 HOURS stale across those 146 runs (`Cursor.recordSuccess` is its only writer),
+      and advanced the moment the operation was invoked in-process — 41s, 99 new messages, no error.
+      So the operation, the token, the connection and the cursor are all fine, and mail sync is broken
+      only on EDGE. Filed as #12719 with the pid table. The remaining unknown (hard kill vs escaping
+      defect) needs workerd-side logs, which the client cannot see.
+- [ ] **Mail does not sync in the background at all** until #12719 is fixed — `MAIL_REMOTE_SYNC = true`
+      routes the Routine to EDGE precisely so mail arrives while Composer is closed, and that is the
+      path that never completes. The Sync button is NOT a workaround: `Binding.runSync` fires the
+      trigger whenever the connector declares one, so it takes the same broken edge path. Flipping
+      `MAIL_REMOTE_SYNC` to `false` is a one-line local-sync fallback that demonstrably works, at the
+      cost of the feature the flag exists for — a product call, not a bug fix.
 - [ ] **Emit the terminal from an exit handler, not the happy path.**
       `reportStatus({ message: PROGRESS_STATUS_COMPLETE })` at `mail-sync.ts:755` is a plain statement
       after the pipeline, and the `Effect.tapError` above it catches typed failures only — a DEFECT
