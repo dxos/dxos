@@ -1,4 +1,4 @@
-# `dxos` — project tracking for coding agents
+# `dxos` — project tracking and QA flows for coding agents
 
 Durable, resumable project and task tracking. A committed **registry** of
 work-streams, a **`TASKS.md` ledger** per project, and one command to drive them.
@@ -36,6 +36,29 @@ claude plugin install dxos@dxos
 
 In a repo with no registry yet, `/dxos:project new <name>` creates one. Read verbs
 report that none exists rather than inventing entries.
+
+## `/dxos:qa` — running QA flows
+
+A second command, over the executable `flow` blocks declared in `.mdl` specs (the
+`Deus.QA` dialect — a `## QA` section in a `PLUGIN.mdl`, or an `APP.mdl` for
+journeys crossing plugins).
+
+| Command                            | What it does                                                            |
+| ---------------------------------- | ----------------------------------------------------------------------- |
+| `/dxos:qa`                         | Numbered table of every flow, with its `status:`                        |
+| `/dxos:qa list [filter]`           | The same table, narrowed by document path, flow id, or title            |
+| `/dxos:qa show <flow>`             | Print one flow verbatim — its `given`, steps and `cleanup`              |
+| `/dxos:qa run <flow>`              | Execute it against a live app and report a per-step pass/fail table     |
+| `/dxos:qa run <flow> --skip-cleanup` | Leave the artifacts in place so the final state can be inspected      |
+| `/dxos:qa help`                    | Table of every verb                                                     |
+
+Rows are addressable by number, as with `/dxos:project list`. Enumeration is
+`scripts/list-flows.mjs`; execution is the repo's `running-qa-flows` skill, which
+the command defers to rather than restating.
+
+Unlike `/dxos:project`, there is no `UserPromptSubmit` hook: the store is the
+`.mdl` files themselves, so there is no backend to swap and nothing for a
+directive to resolve.
 
 ## How it works
 

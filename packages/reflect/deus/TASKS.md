@@ -13,6 +13,8 @@ and an agent tester execute from the same source. Flows live in a `## QA` sectio
 
 ### Major goal — the QA routine
 
+Part (c) has a front door: `/dxos:qa run <flow>`. Parts (a) and (b) do not yet.
+
 A Claude routine (skill + command) that closes the loop for any plugin:
 
 - [ ] **(a) Update the plugin's `PLUGIN.mdl`** from its source — reconcile `type`/`op`/`component`
@@ -53,6 +55,8 @@ Design agreed (see DESIGN.md §Deus.QA once written). Decisions:
 - [x] `docs/DESIGN.md` — `Deus.QA` section.
 - [x] `.agents/skills/running-qa-flows/SKILL.md` — the agent-side execution contract, including the
       always-use-the-invoker rule and the built navigation path.
+- [x] `/dxos:qa` command in the `dxos` plugin — `list` / `show` / `run [--skip-cleanup]`, backed by
+      `scripts/list-flows.mjs`; execution defers to the `running-qa-flows` skill.
 - [ ] `packages/apps/composer-app/APP.mdl` — cross-plugin journeys.
 - [x] Re-run `QA-1` through the skill (rather than by hand) — 2026-08-23. 4/4 pass, and the
       exercise paid for itself: three defects found, all in artifacts I had just written (below).

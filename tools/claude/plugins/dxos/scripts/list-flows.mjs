@@ -1,0 +1,94 @@
+#!/usr/bin/env node
+//
+// Copyright 2026 DXOS.org
+//
+// Enumerates `flow` blocks across the repo's `.mdl` specs.
+// Usage: node list-flows.mjs [filter] [--json]
+//   filter  substring matched against the document path or the flow id/title.
+//
+// Deliberately regex-based rather than a real parser: the block grammar is still settling, and a
+// listing that breaks on an unparsed field is worse than one that reports what it found.
+
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { join, relative } from 'node:path';
+
+const SKIP = new Set(['node_modules', 'dist', '.git', '.moon', 'out', 'temp', '.cache']);
+
+const walk = (dir, out = []) => {
+  for (const entry of readdirSync(dir)) {
+    if (SKIP.has(entry)) {
+      continue;
+    }
+    const path = join(dir, entry);
+    let stat;
+    try {
+      stat = statSync(path);
+    } catch {
+      continue; // Broken symlink.
+    }
+    if (stat.isDirectory()) {
+      walk(path, out);
+    } else if (entry.endsWith('.mdl')) {
+      out.push(path);
+    }
+  }
+  return out;
+};
+
+/** Flows in one document, with the fields a caller needs to decide what to run. */
+const parseFlows = (text, file) => {
+  const flows = [];
+  // Block bodies are fenced; the header is the fence's first line.
+  const blockRe = /```mdl\n(flow\s+[^\n]*\n[\s\S]*?)```/g;
+  let match;
+  while ((match = blockRe.exec(text)) !== null) {
+    const body = match[1];
+    const header = body.match(/^flow\s+([\w.-]+)\s*(?::\s*(.*))?$/m);
+    if (!header) {
+      continue;
+    }
+    flows.push({
+      file,
+      id: header[1],
+      title: (header[2] ?? '').trim(),
+      status: body.match(/^\s*status:\s*(\w+)/m)?.[1] ?? 'unverified',
+      actors: body.match(/^\s*actors:\s*([\w|\s]+?)\s*$/m)?.[1]?.trim() ?? 'both',
+      // Only the `steps:` section — `cleanup:` is a step list too, and counting it would overstate
+      // the work a run does.
+      steps: (body.split(/^\s*cleanup:/m)[0].match(/^\s{4}-\s+(?:name|do):/gm) ?? []).length,
+      covers: body.match(/^\s*covers:\s*\[(.*?)\]/m)?.[1] ?? '',
+    });
+  }
+  return flows;
+};
+
+const root = process.env.DX_REPO_ROOT ?? process.cwd();
+const args = process.argv.slice(2);
+const asJson = args.includes('--json');
+const filter = args.find((arg) => !arg.startsWith('--'));
+
+// A dialect definition (`org.dxos.spec.*`) carries example flows to document its own syntax; those
+// are illustrations, not plans, and listing them as runnable is a trap.
+const isDialect = (text) => /^id:\s*org\.dxos\.spec\./m.test(text.split('---')[1] ?? '');
+
+const flows = walk(root)
+  .map((file) => ({ file, text: readFileSync(file, 'utf8') }))
+  .filter(({ text }) => !isDialect(text))
+  .flatMap(({ file, text }) => parseFlows(text, relative(root, file)))
+  .filter((flow) => !filter || `${flow.file} ${flow.id} ${flow.title}`.toLowerCase().includes(filter.toLowerCase()));
+
+if (asJson) {
+  console.log(JSON.stringify(flows, null, 2));
+} else if (flows.length === 0) {
+  console.log(filter ? `No flows matching "${filter}".` : 'No flows found.');
+} else {
+  const width = (key) => Math.max(...flows.map((flow) => String(flow[key]).length));
+  const [idWidth, statusWidth] = [width('id'), width('status')];
+  flows.forEach((flow, index) => {
+    const num = String(index + 1).padStart(2);
+    console.log(
+      `${num}. ${flow.id.padEnd(idWidth)}  ${flow.status.padEnd(statusWidth)}  ${String(flow.steps).padStart(2)} steps  ${flow.title}`,
+    );
+    console.log(`    ${flow.file}${flow.covers ? `  covers: ${flow.covers}` : ''}`);
+  });
+}
