@@ -648,8 +648,25 @@ function` when a tool-call `doc` ref decodes without a resolver; the five doc-re
       nondeterministic tool-error recovery and cannot replay-converge; covered live by
       `planning.eval.ts`. Un-gate only if recording strategy changes.
 
-- [ ] **Possibly move Project type from @dxos/compute to plugin-projects at end** — revisit once the plugin's shape settles.
-- [x] **Review CompanionTo reuse for project chats** — resolved in milestone 3: companion chat keeps `CompanionTo`; owned sessions use the ECHO parent edge. Agent-roster linkage still open.
+- [x] **Possibly move Project type from @dxos/compute to plugin-projects at end** — rejected 2026-08-19: `pipeline-email` (core) consumes Project, and core cannot import a plugin; the compute/assistant-toolkit placement rule is recorded in `packages/core/compute/compute/src/types/AUDIT.md`.
+- [x] **Review CompanionTo reuse for project chats** — superseded: `CompanionTo` is deleted; ALL chats (companion, project, agent) use the ECHO parent edge — see the parent-edge normalization entry below. Agent-roster linkage still open.
+- [ ] **Promote the `Obj.setParent` ref-less-edge warning to an invariant** — landed on PR #12675:
+      `Obj.setParent` warns when the parent holds no ref to the child (data or object annotation);
+      `Chat.CompanionChatAnnotation` covers every chat link. Remaining: sweep the ~60 `setParent`
+      call sites repo-wide (watch the parent-edge-without-a-ref warning in test logs) — known
+      offenders: sub-task edges (parent task holds no ref down; hierarchy is the child's
+      `parentTask`), some task-add paths, story fixtures — then replace the warn with `invariant`.
+      Thread: https://github.com/dxos/dxos/pull/12675#discussion_r3816670221
+- [x] **Rename `packages/core/echo/echo/src/Err.ts` → `Error.ts`** — DONE 2026-08-20: subpath is
+      `@dxos/echo/Error`, barrel namespace is `Error`; modules that also use the global alias as
+      `EchoError` locally.
+- [ ] **Derive tool names from DXN keys** (approved 2026-08-19; chip spawned) — replace `makeToolName(meta.name)` with key-derived names (`markdown-create`), unify with `Skill.toolDefinitions`, add `Skill.toolName()` helper + bind-time uniqueness invariant, sweep hardcoded names, regenerate fixtures + the tool AUDIT. Decision record: `packages/core/compute/assistant/src/tool-runtime/AUDIT.md`.
+- [ ] **Record the live-model fixture for the Project conversation test** — `packages/core/compute/assistant-toolkit/src/skills/project/conversation.test.ts` gates its live flavor with `.skip`; run `DX_UPDATE_MODEL_FIXTURES=1 moon run assistant-toolkit:test -- src/skills/project/conversation.test.ts` with 1p credentials, commit `.store/conversations/**`, drop the `.skip`.
+- [x] **Normalize Chat ownership onto the ECHO parent edge** — DONE on this branch: `Filter.hasParent`
+      landed in `@dxos/echo`; all `CompanionTo` write/read sites migrated to `Obj.setParent` /
+      `children()` / `Obj.getParent`; `standaloneChatsQuery` is `hasParent(false)`; `CompanionTo`
+      deleted (pure drop, no migration — pre-launch). Audit:
+      `packages/core/compute/compute/src/types/AUDIT.md`.
 - [ ] **Unify project-context binding** across companion and standalone chats (shared hook keyed on the chat's parent) — closes the late-added-skills gap.
 - [ ] **Remove plugin-sidekick** — obviated (AUDIT.md notes it); deletion is a separate change.
 - [ ] **Consider merging plugin-routine into plugin-projects** — boundary is thin post-Routine-move.

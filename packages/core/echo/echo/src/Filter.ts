@@ -458,6 +458,17 @@ export const childOf = (
 };
 
 /**
+ * Filter objects by whether they have a parent, regardless of which object it is.
+ * `Filter.hasParent(false)` selects root objects — those never passed to `Obj.setParent`.
+ * Unlike {@link childOf} this reads the object's own parent slot, so it costs no traversal.
+ */
+export const hasParent = (value = true): Any =>
+  new FilterClass({
+    type: 'has-parent',
+    value,
+  });
+
+/**
  * Negate the filter.
  */
 export const not = <F extends Any>(filter: F): Filter<Type<F>> => {
