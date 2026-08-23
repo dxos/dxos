@@ -132,6 +132,27 @@ describe('OperationHandlerSet.lazy', () => {
     expect(loads.a).toEqual(1);
   });
 
+  test('a failed load is not memoized, so a retry re-imports', async ({ expect }) => {
+    let loads = 0;
+    const set = OperationHandlerSet.lazy([
+      Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY_A } }).pipe(
+        Operation.lazyHandler(() => {
+          loads++;
+          return loads === 1
+            ? Promise.reject(new TypeError('Failed to fetch dynamically imported module'))
+            : Promise.resolve({ default: makeHandler(KEY_A, 'A') });
+        }),
+      ),
+    ]);
+    await expect(set.getHandlerFor(KEY_A)).rejects.toThrow('Failed to fetch dynamically imported module');
+    const found = await set.getHandlerFor(KEY_A);
+    expect(found?.meta.key).toEqual(KEY_A);
+    expect(loads).toEqual(2);
+    // The successful load is still cached.
+    await set.getHandlerFor(KEY_A);
+    expect(loads).toEqual(2);
+  });
+
   test('merge loads only the matched child', async ({ expect }) => {
     const loads = { a: 0, b: 0 };
     const setA = OperationHandlerSet.lazy([
