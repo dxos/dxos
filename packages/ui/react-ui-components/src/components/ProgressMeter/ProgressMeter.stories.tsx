@@ -5,12 +5,12 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
+import { type Progress } from '@dxos/progress';
 import { random } from '@dxos/random';
 import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { ProgressMeter, type ProgressMeterProps } from './ProgressMeter';
-import { type ProgressState } from './types';
 
 const TICK_MS = 200;
 /** Items in a counted phase; the bar (or the line leaving a stage) fills as they are worked through. */
@@ -31,7 +31,9 @@ const NOTES = ['Syncing feeds', 'Selecting articles', 'Adding to magazine'];
  * appears once the run starts makes the row change under the reader for no reason they can act on,
  * and a counted run that sweeps until started reports the one thing it knows is untrue.
  */
-const idle = (stages: number, indeterminate?: boolean): ProgressState => ({
+const idle = (stages: number, indeterminate?: boolean): Progress.TaskProgress => ({
+  name: 'progress/demo',
+  updatedAt: new Date().toISOString(),
   label: 'Curating Reading List',
   current: 0,
   total: indeterminate ? undefined : ITEMS,
@@ -53,7 +55,7 @@ type StoryArgs = Partial<ProgressMeterProps> & {
  * — the only way to see the elapsed clock, the phase transitions and the cancel control do their job.
  */
 const DefaultStory = ({ stages = 0, indeterminate, ...args }: StoryArgs) => {
-  const [state, setState] = useState<ProgressState>(() => idle(stages, indeterminate));
+  const [state, setState] = useState<Progress.TaskProgress>(() => idle(stages, indeterminate));
   const [run, setRun] = useState(0);
   const stopped = useRef(false);
 
@@ -69,7 +71,7 @@ const DefaultStory = ({ stages = 0, indeterminate, ...args }: StoryArgs) => {
     let phase = 0;
     let count = 0;
 
-    const patch = (next: Partial<ProgressState>) =>
+    const patch = (next: Partial<Progress.TaskProgress>) =>
       setState((prev) => ({ ...prev, ...next, startedAt, elapsedMs: Date.now() - start }));
 
     const interval = setInterval(() => {

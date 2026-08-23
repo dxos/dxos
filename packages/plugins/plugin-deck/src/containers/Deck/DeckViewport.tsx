@@ -52,7 +52,7 @@ import {
 import { meta } from '#meta';
 import { DeckOperation, DeckRole } from '#types';
 
-import { findAttendedPlank, getRenderedPlanks, layoutAppliesTopbar } from '../../util';
+import { findAttendedPlank, getRenderedPlanks, isCompanionOpen, layoutAppliesTopbar } from '../../util';
 import {
   ToggleComplementarySidebarButton as NaturalToggleComplementarySidebarButton,
   ToggleSidebarButton as NaturalToggleSidebarButton,
@@ -123,20 +123,22 @@ type PlankContextValue = RenderedPlanks & {
 };
 
 /**
- * The companion plank id to render beside `id`, or undefined when its companion is closed. Companion
- * state is *per plank* (`DeckState.companionPlanks`) and rendering resolves from exactly that state —
- * never from attention. Attention used to pick a single anchor here, which meant attention traffic
- * re-anchored the companion between planks: tiles widened and narrowed with no user gesture, the engine
- * answered a sticky tile's width change by silently shifting `scrollLeft` by the delta (zero scroll
- * commands — writer instrumentation finds nothing), and a companion could be "open" in state yet render
- * beside no visible plank. The variant (which tab) stays global view state, shared across planks.
+ * The companion plank id to render beside `id`, or undefined when its companion is closed. Whether it is
+ * open comes from `DeckState.companionPlanks` (deck-wide under `flatten`, per plank while the deck
+ * slides — see {@link isCompanionOpen}) and never from attention. Attention used to pick a single anchor
+ * here, which meant attention traffic re-anchored the companion between planks: tiles widened and
+ * narrowed with no user gesture, the engine answered a sticky tile's width change by silently shifting
+ * `scrollLeft` by the delta (zero scroll commands — writer instrumentation finds nothing), and a
+ * companion could be "open" in state yet render beside no visible plank. The variant (which tab) stays
+ * global view state, shared across planks.
  */
 const useDeckCompanion = (id: string | undefined): string | undefined => {
   const { deck } = useDeckContext('useDeckCompanion');
+  const { flatten } = useDeckSettings();
   const companions = useCompanions(id);
   const selectedVariant = useSelectedCompanionVariant();
   const { companionId } = useSelectedCompanion(companions, selectedVariant);
-  return id && deck.companionPlanks.includes(id) ? companionId : undefined;
+  return isCompanionOpen(deck.companionPlanks, flatten, id) ? companionId : undefined;
 };
 
 /**

@@ -25,31 +25,17 @@ export const SKILL_KEY = 'org.dxos.skill.magazine';
  */
 export const DEFAULT_INSTRUCTIONS = trim`
   You curate articles for a Magazine.
+  The Topic is given below under "## Topic". If none is given, infer it from the Magazine's feeds.
 
-  Quality over quantity.
+  Select only candidates that clearly match the Topic — quality over quantity.
 
   Never select duplicate articles. Two candidates are duplicates if they share a link or guid, or if
-  their titles and content describe the same story (e.g. the same article syndicated by different
+  their titles and content describe the same story (e.g., the same article syndicated by different
   feeds). Keep only one of each — prefer the most complete or authoritative source — and skip the rest.
 
   For each candidate you select, also produce:
-  - A concise 1-2 sentence snippet (plain text, no markdown) capturing why the article is worth
-    reading. If you read the full article, use it to write a richer snippet.
+  - A concise 1-2 sentence snippet (plain text, no markdown) capturing why the article is relevant to the Topic. If you read the full article, use it to write a richer snippet.
   - The best hero image URL for the article, when one is available.
-`;
-
-/** Appended when the Magazine declares no Topic, so the methodology promises no brief it lacks. */
-const UNTOPICED_INSTRUCTIONS = trim`
-  This Magazine sets no Topic, so do not filter by subject: select the most newsworthy and
-  substantial candidates on offer.
-`;
-
-/** Appended ahead of the Topic text when the Magazine declares one. */
-const TOPIC_INSTRUCTIONS = trim`
-  ## Topic
-
-  Select only candidates that clearly match the Topic below, and say in each snippet why the article
-  is relevant to it.
 `;
 
 /** Per-Post magazine-scoped curation state, keyed by Post id. */
@@ -61,6 +47,7 @@ export const PostState = Schema.Struct({
   /** Agent-selected hero image URL for this post in this magazine. */
   imageUrl: Schema.optional(Schema.String),
 });
+
 export type PostState = Schema.Schema.Type<typeof PostState>;
 
 /**
@@ -178,9 +165,7 @@ export const make = (props: MakeProps = {}): Magazine => {
 /** Composes Routine instructions from the default editorial methodology and an optional topic focus. */
 export const composeInstructions = (topic?: string): string => {
   const trimmed = topic?.trim();
-  return trimmed
-    ? `${DEFAULT_INSTRUCTIONS}\n\n${TOPIC_INSTRUCTIONS}\n\n${trimmed}`
-    : `${DEFAULT_INSTRUCTIONS}\n\n${UNTOPICED_INSTRUCTIONS}`;
+  return trimmed ? `${DEFAULT_INSTRUCTIONS}\n\n## Topic\n\n${trimmed}` : DEFAULT_INSTRUCTIONS;
 };
 
 /** Schema for the create-magazine dialog form. */

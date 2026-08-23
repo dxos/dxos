@@ -13,9 +13,11 @@ import { type AttentionSigilAction } from '@dxos/app-toolkit/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useActionRunner, useActions, useNode } from '@dxos/plugin-graph/hooks';
 
-import { useBreakpoints, useCompanions, useDeckState } from '#hooks';
+import { useBreakpoints, useCompanions, useDeckSettings, useDeckState } from '#hooks';
 import { meta } from '#meta';
 import { DeckOperation, DeckSchema } from '#types';
+
+import { isCompanionOpen } from '../../util';
 
 /** Sigil-menu dispositions surfaced as plank actions. */
 const PLANK_ACTION_DISPOSITIONS = ['list-item', 'list-item-primary', 'heading-list-item'];
@@ -68,6 +70,7 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
   const { graph } = useAppGraph();
   const { invokePromise } = useOperationInvoker();
   const { deck, state } = useDeckState();
+  const { flatten } = useDeckSettings();
   const runAction = useActionRunner();
   const breakpoint = useBreakpoints();
   const node = useNode(graph, id);
@@ -97,10 +100,21 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
       expandToggle: breakpoint !== 'mobile' && part === 'main' && (active?.length ?? 0) > 1,
       incrementStart: canIncrementStart,
       incrementEnd: canIncrementEnd,
-      // Companions are per-plank: offer the toggle on any plank that has one while its own is off.
-      companion: companions.length > 0 && !deck.companionPlanks.includes(id),
+      // Offered on any plank that has a companion while the companion is off — deck-wide in flat mode,
+      // per-plank while the deck slides.
+      companion: companions.length > 0 && !isCompanionOpen(deck.companionPlanks, flatten, id),
     }),
-    [breakpoint, part, canIncrementStart, canIncrementEnd, companions.length, deck.companionPlanks, id, active?.length],
+    [
+      breakpoint,
+      part,
+      canIncrementStart,
+      canIncrementEnd,
+      companions.length,
+      deck.companionPlanks,
+      flatten,
+      id,
+      active?.length,
+    ],
   );
 
   // Load the node's child actions so the sigil menu is populated.

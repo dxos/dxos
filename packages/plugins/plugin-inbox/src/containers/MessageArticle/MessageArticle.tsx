@@ -347,8 +347,8 @@ export const MessageArticle = ({
       onOpenAttachment={mailbox ? handleOpenAttachment : onOpenAttachment}
     >
       <Panel.Root role={role} data-testid={testId}>
-        <Panel.Toolbar asChild>
-          <ConversationStack.Toolbar />
+        <Panel.Toolbar>
+          <ConversationStack.Toolbar classNames='dx-document' />
         </Panel.Toolbar>
         <Panel.Content asChild>
           <ConversationStack.Content />
