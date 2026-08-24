@@ -437,6 +437,31 @@ projects:
     design: packages/core/halo/halo/CONSUMER_MIGRATION.md
     prs: [12229, 12583, 12588]
     resume: "The ledger IS packages/core/halo/halo/MIGRATION_PLAN.md (per-plugin table + numbered Missing APIs 1-10); CONSUMER_MIGRATION.md is the cookbook, API_AUDIT.md the pre-migration inventory. THE HALO TIER IS COMPLETE — Missing APIs 1-6 all landed: #12229 (React + imperative singleton tiers), #12583 (1: Identity.personalSpaceId; 2: createRecoveryCredential/requestRecoveryChallenge/revokeRecoveryCredential + passkey recover), #12588 (3: Identity.getEdgeIdentity), and this branch (4: useInvitationFlow in halo-react + DeviceInfo.presence/os/platform/kind + shell DeviceListItem takes the structural ShellDevice with toShellDevice for client callers; 5: ClientOperation.GrantServiceAccess, plugin-script off writeCredentials; 6: Identity.atom(service), an Atom<Option<Info>> keyed by service reference, used by app-graph-builder). No plugin touches @dxos/client for HALO anymore. NEXT is the non-HALO remainder, all bigger: 7 = ECHO React bindings (~340 imports, the dominant blocker), 8 = space-invitation UI on Space.share/join, 9 = config/mesh/services access without the client root (what still pins DevicesContainer via useNetworkStatus + the DX_ENVIRONMENT gate, app-graph-builder, plugin-debug, plugin-observability), 10 = a @dxos/react-client/testing replacement. DELIBERATE BOUNDARIES (not gaps): CLI src/commands/** construct the client; plugin-client provides it. CARVE-OUTS: requestRecoveryChallenge needs EDGE so halo-e2e cannot cover it; plugin-onboarding queryAllCredentials wants an exhaustive credential QUERY verb distinct from the credentials stream; oauth-recovery-redirect keeps a client for Account.createHubClient and a 30s recover timeout vs the proxy's 20s. E2E: playwright app-manager.ts parses the DevicesContainer console JSON for invitationCode — that log line is load-bearing, keep it."
+  - name: deus
+    status: active
+    user: burdon
+    host: burdon-mbp-2092
+    created: 2026-08-22
+    summary: Extend the DEUS pattern-specification language (`.mdl`) — core syntax, the standard dialect, and the DXOS domain dialect — plus the CodeMirror extension that has to follow any syntax change.
+    tasks: packages/reflect/deus/TASKS.md
+    design: packages/reflect/deus/docs/DESIGN.md
+    prs: []
+    resume: "Phase 1 (Deus.QA) BUILT: lang/qa.mdl defines flow + step with nine execution rules, the
+      DESIGN.md section draws the test/flow boundary, .agents/skills/running-qa-flows is the agent-side
+      contract, /dxos:qa (dxos plugin, scripts/list-flows.mjs) lists and runs them, and the
+      agent-startable debug port works end to end (DX_DEBUG_PORT -> vite define -> main.tsx ->
+      temp/debug-port.json sidecar; started from main.tsx, NOT plugin-debug, which a plain local serve
+      leaves disabled). markdown QA-1 passes 4/4 and has been run three times; markdown QA-2/QA-3 and
+      chess QA-1 are authored but status: unverified. Also landed on this branch: the MenuExtension
+      capability letting plugins contribute slash-menu commands (one group per plugin, entries name an
+      Operation not a callback) with plugin-debug''s InsertLoremIpsum as the first contributor, and two
+      table-insert fixes in ui-editor. KEY FINDINGS, all in TASKS.md: the pass rate never told us
+      anything (QA-1 was 4/4 while two of four asserts were vacuous); requires: cannot predict
+      runnability so the runner always uses the invoker with a spaceId; any part of a flow without a
+      dual face diverges (cleanup was prose and the two actors picked different mechanisms); and the
+      op key gap is everywhere — chess declares six operations of which one has a runtime counterpart
+      and startGame has none. NEXT: run the three unverified flows, then routine part (a) (reconcile a
+      PLUGIN.mdl against Operation.make), then composer-app/APP.mdl."
 ended:
   - name: task-planning-skill
     user: burdon
