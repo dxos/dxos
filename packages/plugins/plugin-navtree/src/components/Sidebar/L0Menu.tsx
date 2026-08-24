@@ -49,6 +49,7 @@ import { meta } from '#meta';
 import { l0ItemType } from '../../util';
 import { useNavTreeContext } from '../NavTreeContext';
 import { UserAccountAvatar } from '../UserAccountAvatar';
+import { L0PendingAvatar, L0PendingItem } from './L0PendingItem';
 
 //
 // L0Item
@@ -169,9 +170,12 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
   const [closestEdge, setEdge] = useState<Edge | null>(null);
   const localizedString = toLocalizedString(item.properties.label, t);
   const hue = item.properties.hue ?? null;
+  const pending = item.properties.pending === true;
 
   useLayoutEffect(() => {
-    if (!itemElement.current || !onRearrange) {
+    // A pending workspace has no space to reorder into yet, and its ordering is written to the
+    // settings space, so it stays undraggable until it opens.
+    if (!itemElement.current || !onRearrange || pending) {
       return;
     }
 
@@ -223,7 +227,7 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
         },
       }),
     );
-  }, [item, onRearrange]);
+  }, [item, onRearrange, pending]);
 
   const handleMouseEnter = useCallback(() => onItemHover?.({ item }), [item, onItemHover]);
 
@@ -231,6 +235,7 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
     <L0ItemRoot ref={itemElement} item={item} parent={parent} path={path} onMouseEnter={handleMouseEnter}>
       <div
         data-frame={true}
+        {...(pending && { 'data-pending': true, 'aria-busy': true })}
         {...(hue && { style: { background: `var(--color-${hue}-surface)` } })}
         className={mx(
           'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded-sm',
@@ -252,6 +257,12 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
 
 const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
   const { t } = useTranslation(meta.profile.key);
+
+  // A space that has not opened yet has no hue or icon of its own to show, so it holds the frame
+  // rather than rendering an avatar that would change under the user once it lands.
+  if (item.properties.pending === true) {
+    return <L0PendingAvatar />;
+  }
 
   // Actions.
   if (item.properties.icon) {
@@ -317,7 +328,10 @@ export const L0Menu = ({
           : targetIndex +
             (sourceIndex < targetIndex ? (closestEdge === 'top' ? -1 : 0) : closestEdge === 'bottom' ? 1 : 0);
       const nextOrder = arrayMove([...topLevelItems], sourceIndex, insertIndex);
-      return sourceItem.properties.onRearrange(nextOrder.map((item) => item.data));
+      // A pending workspace carries no space to order, and takes its place once it opens.
+      return sourceItem.properties.onRearrange(
+        nextOrder.filter((item) => item.properties.pending !== true).map((item) => item.data),
+      );
     },
     [topLevelItems],
   );
@@ -357,16 +371,22 @@ export const L0Menu = ({
       {/* Space list. */}
       <ScrollArea.Root centered thin orientation='vertical'>
         <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
-          {topLevelItems.map((item) => (
-            <L0Item
-              key={item.id}
-              item={item}
-              parent={parent}
-              path={path}
-              onItemHover={onItemHover}
-              {...(hasRearrangeableItems && { onRearrange: handleRearrange })}
-            />
-          ))}
+          {topLevelItems.length > 0 ? (
+            topLevelItems.map((item) => (
+              <L0Item
+                key={item.id}
+                item={item}
+                parent={parent}
+                path={path}
+                onItemHover={onItemHover}
+                {...(hasRearrangeableItems && { onRearrange: handleRearrange })}
+              />
+            ))
+          ) : (
+            // Spaces reach the graph only once the client has initialised, and every identity ends
+            // up with at least one, so an empty rail means the list is still on its way.
+            <L0PendingItem />
+          )}
         </ScrollArea.Viewport>
       </ScrollArea.Root>
 
@@ -377,8 +397,8 @@ export const L0Menu = ({
         ))}
       </div>
 
-      {userAccountItem && (
-        <div className='grid dx-app-no-drag'>
+      <div className='grid dx-app-no-drag'>
+        {userAccountItem ? (
           <L0ItemRoot key={userAccountItem.id} item={userAccountItem} parent={parent} path={path}>
             <UserAccountAvatar
               userId={userAccountItem.properties.userId}
@@ -388,8 +408,14 @@ export const L0Menu = ({
               size={10}
             />
           </L0ItemRoot>
-        </div>
-      )}
+        ) : (
+          // The account node arrives with the client; hold its place so the corner of the rail is
+          // never empty, rather than collapsing the row until then.
+          <div className='flex w-full justify-center items-center'>
+            <UserAccountAvatar size={10} />
+          </div>
+        )}
+      </div>
     </Tabs.Tablist>
   );
 };

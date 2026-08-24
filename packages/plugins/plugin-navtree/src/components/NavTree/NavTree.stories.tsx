@@ -27,7 +27,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { NavTreeContainer } from '#containers';
 import { NavTreePlugin } from '#plugin';
-import { storybookGraphBuilders } from '#testing';
+import { type StorybookGraphOptions, storybookGraphBuilders } from '#testing';
 import { translations } from '#translations';
 
 random.seed(1234);
@@ -135,41 +135,43 @@ const UnavailableWorkspaceStory = () => {
   return <DefaultStory />;
 };
 
+const navTreeDecorators = (graphOptions?: StorybookGraphOptions) => [
+  withLayout({ layout: 'fullscreen' }),
+  withPluginManager({
+    plugins: [
+      ...corePlugins(),
+      StorybookPlugin.make({
+        initialState: { sidebarState: 'expanded' },
+      }),
+
+      NavTreePlugin(),
+    ],
+    capabilities: () => {
+      const storyStateAtom = Atom.make({ tab: 'root/space-0' }).pipe(Atom.keepAlive);
+      return [
+        Capability.contribute(StoryState, storyStateAtom),
+        Capability.contribute(AppCapabilities.AppGraphBuilder, storybookGraphBuilders(graphOptions)),
+        Capability.contribute(
+          Capabilities.OperationHandler,
+          OperationHandlerSet.make(
+            Operation.withHandler(LayoutOperation.SwitchWorkspace, ({ subject }) =>
+              Effect.gen(function* () {
+                const registry: Registry.AtomRegistry = yield* Capability.get(Capabilities.AtomRegistry);
+                registry.set(storyStateAtom, { tab: subject });
+              }),
+            ),
+          ),
+        ),
+      ];
+    },
+  }),
+];
+
 const meta = {
   title: 'plugins/plugin-navtree/components/NavTree',
   component: NavTreeContainer,
   render: DefaultStory,
-  decorators: [
-    withLayout({ layout: 'fullscreen' }),
-    withPluginManager({
-      plugins: [
-        ...corePlugins(),
-        StorybookPlugin.make({
-          initialState: { sidebarState: 'expanded' },
-        }),
-
-        NavTreePlugin(),
-      ],
-      capabilities: () => {
-        const storyStateAtom = Atom.make({ tab: 'root/space-0' }).pipe(Atom.keepAlive);
-        return [
-          Capability.contribute(StoryState, storyStateAtom),
-          Capability.contribute(AppCapabilities.AppGraphBuilder, storybookGraphBuilders()),
-          Capability.contribute(
-            Capabilities.OperationHandler,
-            OperationHandlerSet.make(
-              Operation.withHandler(LayoutOperation.SwitchWorkspace, ({ subject }) =>
-                Effect.gen(function* () {
-                  const registry: Registry.AtomRegistry = yield* Capability.get(Capabilities.AtomRegistry);
-                  registry.set(storyStateAtom, { tab: subject });
-                }),
-              ),
-            ),
-          ),
-        ];
-      },
-    }),
-  ],
+  decorators: navTreeDecorators(),
   parameters: {
     layout: 'fullscreen',
     translations,
@@ -234,5 +236,25 @@ export const UnavailableWorkspace: Story = {
     const canvas = within(canvasElement);
     // Plugin startup plus the message's own render delay; allow for a slow CI runner.
     await canvas.findByTestId('navtree.workspace.unavailable', {}, { timeout: 15000 });
+  },
+};
+
+/** Spaces the client has listed but not yet opened: named from cache, with nothing to navigate into. */
+export const PendingWorkspaces: Story = {
+  decorators: navTreeDecorators({ spaces: 'pending' }),
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+    const canvas = within(canvasElement);
+    // Every listed space holds a place in the rail, so the count is right before any of them opens.
+    const items = await canvas.findAllByTestId('spacePlugin.space.pending', {}, { timeout: 15000 });
+    await expect(items).toHaveLength(3);
+  },
+};
+
+/** Before the client has initialised, when the app knows it will have workspaces but not how many. */
+export const NoWorkspacesYet: Story = {
+  decorators: navTreeDecorators({ spaces: 'none' }),
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByTestId('navtree.workspace.pending', {}, { timeout: 15000 });
   },
 };

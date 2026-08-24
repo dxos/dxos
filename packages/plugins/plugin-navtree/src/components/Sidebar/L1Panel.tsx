@@ -61,6 +61,7 @@ export type L1PanelProps = {
  */
 const L1PanelInner = ({ open, path, id, item, spaces, isCurrent, onBack }: L1PanelProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const pending = item?.properties.pending === true;
   const title = item ? toLocalizedString(item.properties.label, t) : t('workspace-unavailable.heading');
   const isActivated = useIsActivatedWorkspace(id);
   const shouldRenderContent = isCurrent || isActivated;
@@ -84,12 +85,24 @@ const L1PanelInner = ({ open, path, id, item, spaces, isCurrent, onBack }: L1Pan
       // reference a missing element.
       {...(!item && { 'aria-labelledby': undefined })}
       {...(isCurrent && {
-        'data-testid': item ? 'navtree.workspace.visible' : 'navtree.workspace.unavailable',
+        'data-testid': pending
+          ? 'navtree.workspace.pending'
+          : item
+            ? 'navtree.workspace.visible'
+            : 'navtree.workspace.unavailable',
       })}
       {...(!open && { inert: true })}
     >
       {shouldRenderContent &&
-        (item ? (
+        (pending ? (
+          // Its children live in a database that has not opened, so there is no tree to build yet.
+          <Empty
+            label={t('loading-workspace.label')}
+            icon='ph--circle-notch--regular'
+            classNames='row-start-2 self-start animate-fade-in [&_svg]:animate-spin'
+            style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
+          />
+        ) : item ? (
           <L1PanelContent open={open} path={path} item={item} onBack={onBack} />
         ) : (
           reportUnavailable && (
