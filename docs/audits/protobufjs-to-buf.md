@@ -25,7 +25,7 @@ generators run side by side and both outputs are consumed today.
 | Surface                                                                  | Count                             |
 | ------------------------------------------------------------------------ | --------------------------------- |
 | `.ts`/`.tsx` files importing `@dxos/protocols/proto/*` (protobuf.js gen) | 290 files / 464 import statements |
-| Files importing `@dxos/protocols/buf/*` (already migrated)               | 25 (dxos) + ~60 (edge)            |
+| Files importing `@dxos/protocols/buf/*` (already migrated)               | 25 (dxos) + 85 (edge)             |
 | Files importing `@dxos/codec-protobuf`                                   | 39                                |
 | `schema.getCodecForType(...)` call sites                                 | 47                                |
 | `Stream` imports from `@dxos/codec-protobuf`                             | 26                                |
@@ -38,7 +38,7 @@ Most-imported legacy modules: `dxos/client/services` (106), `dxos/halo/credentia
 `dxos/config` (36), `dxos/echo/metadata` (31), `dxos/echo/feed` (22).
 
 `dxos/edge` adds one direct dependent (`@dxos/hub-protocol` → `@dxos/codec-protobuf`) plus
-`@dxos/protocols/proto/*` imports in `db-service`; its newer code already uses
+17 files still importing `@dxos/protocols/proto/*`; its newer code already uses
 `@dxos/protocols/buf/*` for credentials, keys, query and messenger.
 
 ## What actually has to be replaced
@@ -94,7 +94,7 @@ Assumes no behaviour change and no proto edits; each phase independently landabl
 | 5     | `@dxos/effect-proto` on buf descriptors (`react-ui-form`)                                                                                                                                                           | 3–5 days    |
 | 6     | Delete `protobuf-compiler`, the `prebuild` task, `substitutions.ts`, `codec-protobuf`; drop `protobufjs` from the catalog; update `dxos/edge` (`hub-protocol`, `db-service`)                                        | 3–5 days    |
 
-**Total: roughly 7–9 engineer-weeks**, of which phase 4 is the long tail and the only phase that
+**Total: roughly 7–10.5 engineer-weeks**, of which phase 4 is the long tail and the only phase that
 touches most of the repo. Phases 0–2 (~3 weeks) deliver the actual de-risking; stopping after
 phase 1 already removes protobuf.js from the new RPC stack.
 
