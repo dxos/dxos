@@ -43,20 +43,20 @@ describe('operation serialization', () => {
     );
 
     expect(annotated).toEqual({
-      milestoneCreate: 'write',
-      milestoneDelete: 'destructive',
-      milestoneList: 'none',
-      milestoneMove: 'write',
-      milestoneUpdate: 'write',
-      outlineGet: 'none',
-      outlineUpdate: 'write',
-      taskAssign: 'write',
-      taskComplete: 'write',
-      taskCreate: 'write',
-      taskDelete: 'destructive',
-      taskList: 'none',
-      taskMove: 'write',
-      taskUpdate: 'write',
+      assign: 'write',
+      complete: 'write',
+      create: 'write',
+      createMilestone: 'write',
+      delete: 'destructive',
+      deleteMilestone: 'destructive',
+      getOutline: 'none',
+      list: 'none',
+      listMilestone: 'none',
+      move: 'write',
+      moveMilestone: 'write',
+      update: 'write',
+      updateMilestone: 'write',
+      updateOutline: 'write',
     });
   });
 });

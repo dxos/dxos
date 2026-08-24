@@ -6,6 +6,15 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: operation-keys
+    status: active
+    user: burdon
+    created: 2026-08-22
+    summary: 'One canonical shape for every Operation.make key — org.dxos.operation.<domain>.<verb>, written as a full literal so it is greppable — with the model-facing tool name derived from it.'
+    tasks: .agents/projects/operation-keys/TASKS.md
+    design: .agents/projects/operation-keys/DESIGN.md
+    prs: [12677]
+    resume: 'Phase 1 landing in PR #12677 alongside the tool-name derivation. Keys, makeKey removal and the three collisions are DONE (452 keys, 96 files, builds green). OPEN: PLUGIN.mdl across all plugins (71 reference operations, only 5 had exact key matches the codemod could fix), the operation-key-shape lint rule, fixture regeneration and AUDIT.md. Phase 2 is EDGE coordination — it stores meta.key beside the functionId it binds by, so deployed functions need a redeploy in the same window; coordinate with the edge repo mcp-operations project.'
   - name: plugin-lingo
     status: active
     user: burdon

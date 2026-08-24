@@ -11,24 +11,20 @@ import * as ObservabilityOperation from '@dxos/plugin-observability/Observabilit
 
 import { CommentOperation } from '#types';
 
-const handler: Operation.WithHandler<typeof CommentOperation.ToggleResolved> = CommentOperation.ToggleResolved.pipe(
+const handler: Operation.WithHandler<typeof CommentOperation.SetResolved> = CommentOperation.SetResolved.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const thread = input.thread;
 
       Obj.update(thread, (thread) => {
-        if (thread.status === 'active' || thread.status === undefined) {
-          thread.status = 'resolved';
-        } else if (thread.status === 'resolved') {
-          thread.status = 'active';
-        }
+        thread.status = input.resolved ? 'resolved' : 'active';
       });
 
       const db = Obj.getDatabase(thread);
       invariant(db, 'Database not found');
 
       yield* Operation.schedule(ObservabilityOperation.SendEvent, {
-        name: 'comments.toggle-resolved',
+        name: 'comments.set-resolved',
         properties: {
           spaceId: db.spaceId,
           threadId: thread.id,

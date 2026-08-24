@@ -9,5 +9,5 @@ import { ObservabilityOperation } from '#types';
 
 export const ObservabilityOperationHandlerSet = OperationHandlerSet.lazy([
   ObservabilityOperation.SendEvent.pipe(Operation.lazyHandler(() => import('./send-event'))),
-  ObservabilityOperation.Toggle.pipe(Operation.lazyHandler(() => import('./toggle'))),
+  ObservabilityOperation.SetEnabled.pipe(Operation.lazyHandler(() => import('./set-enabled'))),
 ]);

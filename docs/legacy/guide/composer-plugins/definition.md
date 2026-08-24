@@ -14,7 +14,7 @@ Plugins are identified by a list of properties stored in `plugin.meta`:
 import { definePlugin } from '@dxos/app-framework';
 
 export default definePlugin({
-  id: 'org.example.my-plugin',
+  id: 'com.example.my-plugin',
   name: 'My Plugin',
 });
 ```

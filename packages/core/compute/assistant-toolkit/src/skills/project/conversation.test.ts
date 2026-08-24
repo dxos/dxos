@@ -95,7 +95,7 @@ describe('Project conversation', () => {
     });
 
     it.effect(
-      'scripted: the assistant files a document into the project via add-project-artifact',
+      'scripted: the assistant files a document into the project via assistant-toolkit-add-artifact',
       Effect.fnUntraced(
         function* ({ expect }) {
           const { project, chat, feed, doc } = yield* seedProjectChat();
@@ -105,7 +105,11 @@ describe('Project conversation', () => {
           expect(project.artifacts).toHaveLength(0);
 
           scriptedTurns.push(
-            { parts: [toolCall('add-project-artifact', { project: Obj.getURI(project), object: Obj.getURI(doc) })] },
+            {
+              parts: [
+                toolCall('assistant-toolkit-add-artifact', { project: Obj.getURI(project), object: Obj.getURI(doc) }),
+              ],
+            },
             { parts: [text('Filed the document into the project.')] },
           );
 

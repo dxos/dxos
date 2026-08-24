@@ -9,6 +9,7 @@ import { AssistantTestLayer, collectEphemeral, messageTextIncludes, waitForMessa
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
 import { getSession } from '@dxos/compute/AgentService';
+import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
@@ -18,6 +19,7 @@ import { Message, Outline, Task, TaskSet } from '@dxos/types';
 
 import { AgentHandlers } from '../operations';
 import { DelegationHandlers, DelegationSkill } from '../skills';
+import { DelegateTask } from '../skills/delegation/operations/definitions';
 import { Agent, Chat } from '../types';
 import { makeDelegationStrategy } from './delegation-strategy';
 
@@ -45,7 +47,7 @@ const TestLayer = AssistantTestLayer({
       turns: [
         // Immediate reply + delegation in one turn: the user sees the reply while the work runs.
         {
-          parts: [text('On it — delegating.'), toolCall('delegate-task', { title: TASK_TITLE })],
+          parts: [text('On it — delegating.'), toolCall(Operation.toolName(DelegateTask), { title: TASK_TITLE })],
         },
         {
           parts: [text('Delegated. I will report back when it completes.')],

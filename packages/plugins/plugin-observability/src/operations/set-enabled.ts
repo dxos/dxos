@@ -13,7 +13,7 @@ import { Observability } from '@dxos/observability';
 import { meta } from '#meta';
 import { ObservabilityCapabilities, ObservabilityOperation, Settings } from '#types';
 
-const handler: Operation.WithHandler<typeof ObservabilityOperation.Toggle> = ObservabilityOperation.Toggle.pipe(
+const handler: Operation.WithHandler<typeof ObservabilityOperation.SetEnabled> = ObservabilityOperation.SetEnabled.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const namespace = yield* Capability.get(ObservabilityCapabilities.Namespace);
@@ -26,7 +26,7 @@ const handler: Operation.WithHandler<typeof ObservabilityOperation.Toggle> = Obs
         return false;
       }
       const settings = registry.get(settingsObj.atom) as Settings.Settings;
-      const newEnabled = input.state ?? !settings.enabled;
+      const newEnabled = input.state;
       registry.set(settingsObj.atom, { ...settings, enabled: newEnabled });
       observability.events.captureEvent('observability.toggle', {
         enabled: newEnabled,

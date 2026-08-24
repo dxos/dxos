@@ -9,12 +9,12 @@ import * as Operation from '@dxos/compute/Operation';
 
 import { DeckCapabilities, DeckOperation } from '#types';
 
-const handler: Operation.WithHandler<typeof DeckOperation.ToggleExpose> = DeckOperation.ToggleExpose.pipe(
+const handler: Operation.WithHandler<typeof DeckOperation.SetExpose> = DeckOperation.SetExpose.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       yield* Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (state) => ({
         ...state,
-        expose: input.expose ?? !state.expose,
+        expose: input.expose,
       }));
     }),
   ),

@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
@@ -46,7 +47,7 @@ const make = () =>
         ## Workflow
 
         1. If no drawing exists in context, create one first.
-        2. ALWAYS call read before editing an existing drawing — it returns the scene as you
+        2. ALWAYS call ${Operation.toolName(DrawingOperation.Read)} before editing an existing drawing — it returns the scene as you
            (or the user) last left it, with origins derived from the live canvas, so it stays
            correct even after the user drags shapes around. Note "unmanaged" counts shapes the
            user drew by hand that are not part of the scene.
