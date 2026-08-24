@@ -23,6 +23,7 @@ import { trace } from '@dxos/tracing';
 
 import { type AutomergeHost } from '../automerge';
 import { QueryExecutor } from '../query';
+import { QueryError } from '../query/errors';
 import { type InvalidationHint, mergeHints } from './invalidation-hint';
 import type { SpaceStateManager } from './space-state-manager';
 
@@ -145,19 +146,20 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
   }
 
   /**
-   * Resolves the objects holding a reference to a DXN, straight off the reverse-reference index.
-   * Exposed separately from `execQuery` because the query language can only anchor an incoming-reference
-   * traversal on an entity in the working set, which a named entity never is.
+   * Resolves the objects holding a reference to a DXN.
+   *
+   * Separate from `execQuery` because an incoming-reference clause can only anchor on an entity in
+   * the working set, which a named entity never is.
    */
   ['QueryService.queryReverseRef'](
     request: QueryService.ReverseRefRequest,
   ): Effect.Effect<QueryService.ReverseRefResponse, Error> {
     return Effect.gen({ self: this }, function* () {
-      // The index is written asynchronously, so a caller that just added or edited an object would
-      // otherwise read a stale reverse-reference set.
+      // The index is written asynchronously, so a caller that just wrote an object would otherwise
+      // read a stale reverse-reference set.
       yield* Effect.tryPromise({
         try: () => this._params.updateIndexes(),
-        catch: (error) => new Error('Failed to bring the index up to date.', { cause: error }),
+        catch: QueryError.wrap({ message: 'Failed to bring the index up to date.' }),
       });
       const rows = yield* this._params.indexEngine
         .queryReverseRef({ targetDXN: request.targetDXN as URI.URI })
@@ -169,9 +171,9 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
         new Set(metas.filter((meta) => meta.spaceId === request.spaceId).map((meta) => meta.objectId)),
       );
       return { objectIds };
-      // Surfaced on the RPC's declared error channel rather than dying: an index read failure is
-      // recoverable for the caller, which can retry or fall back.
-    }).pipe(Effect.mapError((error) => (error instanceof Error ? error : new Error(String(error)))));
+      // Mapped onto the RPC's declared error channel: an index read failure is recoverable for the
+      // caller, so it must not become a defect.
+    }).pipe(Effect.mapError(QueryError.wrap({ message: 'Reverse-reference lookup failed.' })));
   }
 
   ['QueryService.execQuery'](request: QueryRequest): EffectStream.Stream<QueryResponse, Error> {

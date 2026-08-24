@@ -99,8 +99,7 @@ export const QueryResponse = Schema.Struct({
 export interface QueryResponse extends Schema.Schema.Type<typeof QueryResponse> {}
 
 /**
- * Looks up the objects holding a reference to `targetDXN`, via the reverse-reference index.
- * The DXN names either an entity (`echo:`) or a named entity (`dxn:`).
+ * Looks up the objects holding a reference to `targetDXN` — an entity (`echo:`) or a named entity (`dxn:`).
  */
 export const ReverseRefRequest = Schema.Struct({
   spaceId: Schema.String,

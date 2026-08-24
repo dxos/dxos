@@ -17,12 +17,9 @@ import { EscapedPropPath, chunkArray } from '../utils';
 import type { Index, IndexerObject } from './interface';
 
 /**
- * Normalizes a reference URI to its index key, so that every spelling of the same target collapses
- * to one key. Echo references are keyed by their local (space-less) form — the index is scoped to
- * one space, where entity ids are unique. A `dxn:` reference to a named entity is keyed by its
- * unversioned NSID, so a lookup finds every version of that name; the referencing object still
- * holds the versioned URI, which is what a rewrite reads. Lookups normalize identically
- * (see `query`).
+ * Normalizes a reference URI so every spelling of the same target shares one index key: an echo
+ * reference by its local (space-less) form, a named-entity `dxn:` by its unversioned NSID. Lookups
+ * normalize identically (see `query`).
  */
 const indexKey = (uri: URI.URI): URI.URI | undefined => {
   const parsedEchoUri = EID.tryParse(uri);

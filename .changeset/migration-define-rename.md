@@ -1,13 +1,9 @@
 ---
 '@dxos/echo': minor
-'@dxos/echo-client': minor
-'@dxos/echo-host': minor
-'@dxos/index-core': minor
 '@dxos/plugin-client': minor
-'@dxos/protocols': minor
 ---
 
-Added `Migration.defineRename({ from, to })` for migrating references to a renamed named entity (e.g. an operation key). Applying it rewrites every `dxn:` reference pointing at the old name to point at the new one, preserving the reference's version suffix; a reference that already reads correctly is not written, so a re-run — or a peer that already replicated the result — is a no-op.
+Added `Migration.defineRename({ from, to })` for migrating references to a renamed named entity (e.g. an operation key). Applying it rewrites the `dxn:` references held in the space's object data, preserving each reference's version suffix; a reference that already reads correctly is not written, so a re-run — or a peer that already replicated the result — is a no-op. Queue and feed contents are not indexed for reverse lookup and are not migrated.
 
 Migration definitions now carry `Migration.TypeId` and a `kind` discriminant: `Migration.ObjectMigration` (from `Migration.define`) and `Migration.RenameMigration` (from `Migration.defineRename`) both extend the `Migration.Migration` base, narrowed with `Migration.isObjectMigration` / `Migration.isRenameMigration`; `Migration.isMigration` guards an unknown value. `EchoDatabase.runMigrations` accepts both kinds and rejects an unrecognized one before applying any of the batch.
 
