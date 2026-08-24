@@ -104,20 +104,51 @@ structure. The version lives in the DXN, so the root needs no separate `SpaceDoc
    control feed have separate fates — the audit below has to establish which `feed-store`
    consumers are credential-chain-only.
 
-## Open questions (2)
+## Bootstrap and cutover (resolved 2026-08-24)
 
-1. **Joiner bootstrap.** A fresh joiner must discover, be authorized for, and replicate the
-   credentials doc _before_ it is admitted to anything — the chicken-and-egg the control
-   feed solved with `SpaceMember.genesis_feed_key`
-   (`packages/core/protocols/src/proto/dxos/halo/credentials.proto`). Options: carry the
-   credentials-doc URL in the invitation payload; make the credentials doc world-readable
-   within the space root; or keep a genesis-equivalent field pointing at it. Needs deciding
-   before Phase 2 — it is the one place where "just replicate it like any other doc" is
-   circular.
-2. **Ordering/watermark for the migration copy.** Per-space atomic cutover (below) still
-   needs a defined cutoff: what happens to a credential appended to the control feed while
-   the copy is in flight. Simplest is to re-scan the feed after the copy and only publish
-   the root once the feed head is stable; dual-write is the alternative.
+**There is no discovery problem — the pointer is handed over, exactly as it is today.**
+Both invitation protocols already work this way, so the new world is a field swap, not a new
+mechanism:
+
+- **Space invite** (`space-invitation-protocol.ts`): the host admits the guest and returns the
+  `SpaceMember` credential in the `AdmissionResponse`; the guest reads `assertion.spaceKey`
+  and `assertion.genesisFeedKey` off it and calls `acceptSpace()`. It never discovers
+  anything.
+- **Device/HALO invite** (`device-invitation-protocol.ts`): identical shape —
+  `AdmissionResponse.device` carries `haloSpaceKey` + `genesisFeedKey`. This is why the HALO
+  space migrates the same way as any other space.
+- The same assertion field is what lets a _second_ device reconstruct a space it was never
+  invited to interactively: `cross-device-space-synchronizer.ts` builds `acceptSpace()` args
+  straight from `assertion.genesisFeedKey`.
+
+So: **`SpaceMember.genesis_feed_key` becomes the space root doc URL** (or a sibling field
+beside it during the dual-path window). It must live in the _credential assertion_, not just
+the response envelope, or cross-device reconstruction loses its pointer.
+
+**The joiner does not need pre-admission replication access.** Confirmed in
+`dxos/edge`: `AutomergeReplicationAuthenticator.checkReplicationAllowed()`
+(`packages/services/db-service/src/worker/automerge/automerge-replicator-auth.ts`) authorizes
+purely from EDGE's own space state machine — `getSpaceMember(identityKey)`, allow if the role
+is OWNER/ADMIN/EDITOR/READER. The host wrote the admission credential and it replicated to
+EDGE, so EDGE already knows the joiner is in and lets it replicate. Nothing about that
+depends on what the joiner has read. Peer-to-peer, the invitation host is on the wire anyway
+and serves the docs directly.
+
+Two real hazards, neither of them a bootstrap circularity:
+
+1. **EDGE must be reading that space's credentials from the doc** before it can see the
+   admission — which is precisely what the per-space single-source flip guarantees. A space
+   mid-flip must not accept admissions.
+2. **The 60s auth cache is a negative cache.** `checkReplicationAllowed` caches a
+   `Space member role not set` denial for `AUTH_CACHE_TTL_MS`, so a joiner that dials EDGE
+   before the admission credential lands can stay denied for up to a minute. This exists
+   today; it gets more reachable when admission and replication travel the same transport.
+   Needs an invalidation on credential apply.
+
+**Migration cutover: dual-write.** During the window a migrating space writes credentials to
+both the control feed and the credentials doc, so a reader on either source stays complete
+and no watermark or write-freeze is needed. The flip is the point at which readers stop
+consulting the feed; the feed write stops when the dual path is retired.
 
 ## Resolved (user, 2026-08-24)
 

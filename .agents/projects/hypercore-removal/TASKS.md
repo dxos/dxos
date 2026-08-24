@@ -43,9 +43,18 @@ Branch `claude/remove-hypercore-automerge-creds-uo7lx9`. Rationale in `DESIGN.md
 - [ ] Read path — feed the credential processor from the doc array; preserve ordering
       semantics the state machine relies on.
 - [ ] Notarization (`notarization-plugin.ts`) and invitations over the new write path.
-- [ ] **Decide the joiner-bootstrap mechanism** (DESIGN open question 1) — invitation
-      payload, world-readable-within-space, or a genesis-equivalent pointer. Blocks the rest
-      of this phase.
+- [x] **Joiner bootstrap resolved** — no discovery needed; the pointer rides the admission
+      credential exactly as `genesisFeedKey` does today, and EDGE authorizes replication from
+      its own SpaceMember state, not from what the joiner has read. See DESIGN "Bootstrap and
+      cutover".
+- [ ] **Swap `SpaceMember.genesis_feed_key` for the space root doc URL** in the credential
+      ASSERTION (not just the AdmissionResponse envelope) — `space-invitation-protocol.ts`,
+      `device-invitation-protocol.ts`, and the `acceptSpace()` call in
+      `cross-device-space-synchronizer.ts`, which is the path that would silently lose its
+      pointer.
+- [ ] **Invalidate the EDGE auth negative cache on credential apply**
+      (`automerge-replicator-auth.ts`, `AUTH_CACHE_TTL_MS`) — a joiner that dials before the
+      admission lands is denied for up to 60s. Pre-existing, more reachable after this change.
 - [ ] Replication: credentials doc joins normal subduction; fresh-joiner test that reads
       credentials before being admitted to anything else.
 - [ ] Replay test: old feed vs new document produce identical membership/invitation/epoch
@@ -55,9 +64,12 @@ Branch `claude/remove-hypercore-automerge-creds-uo7lx9`. Rationale in `DESIGN.md
 
 - [ ] Reader accepts BOTH sources (control feed and credentials doc) for the whole
       migration window — client and EDGE alike.
-- [ ] Cutoff/watermark for credentials appended DURING the copy (DESIGN open question 2);
-      publish the root only once the copy is complete and stable. Migration must be
-      re-runnable without loss or duplication.
+- [ ] **Dual-write during the window** — a migrating space writes every credential to BOTH
+      the control feed and the credentials doc, so either reader stays complete and no
+      watermark or write-freeze is needed. Migration must be re-runnable without duplication
+      (duplicates are signature-idempotent per the ordering contract).
+- [ ] A space mid-flip must not accept admissions until EDGE reads its credentials from the
+      doc.
 - [ ] Client migrates one space at a time, ATOMICALLY: mint a root doc over the current
       directory, copy credentials out of the control feed, rewrite `echo_spaces`, flip the
       space to the doc source. Space id UNCHANGED. No space is ever half-migrated.
