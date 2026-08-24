@@ -110,6 +110,36 @@ describe('projectFunctionToTool', () => {
     expect(emitted.type).toBe('object');
   });
 
+  // `Schema.Void` does not survive the registry round trip: `Operation.serialize` renders it through
+  // JSON Schema as `{type: 'null'}` and `deserialize` reads that back as `Schema.Null`, while an
+  // operation persisted without an `inputSchema` reads back as `Schema.Unknown`. Neither tag is the
+  // one the operation was authored with, and an unhandled tag threw — failing not just this tool but
+  // every agent request that offered it, since all tools are sent together.
+  for (const [name, input] of [
+    ['void', Schema.Void],
+    ['null (a round-tripped void)', Schema.Null],
+    ['unknown (persisted without an input schema)', Schema.Unknown],
+  ] as const) {
+    test(`a no-input operation projects to empty parameters: ${name}`, ({ expect }) => {
+      const NoInput = Operation.make({
+        meta: { key: DXN.make('com.example.operation.test.noInput') },
+        input,
+        output: Schema.Void,
+      });
+
+      expect(createStructFieldsFromSchema(input)).toEqual({});
+      const emitted = Tool.getJsonSchema(projectFunctionToTool(NoInput));
+      expect(emitted.type).toBe('object');
+      expect(strictOffenders(emitted)).toEqual([]);
+    });
+  }
+
+  // The projection is the last line of defence, so a genuinely unprojectable input still throws —
+  // `makeToolResolverFromOperations` catches that and drops the single tool.
+  test('an input that is neither a struct nor empty still fails', ({ expect }) => {
+    expect(() => createStructFieldsFromSchema(Schema.String)).toThrow(/Unsupported schema AST: String/);
+  });
+
   // An operation taking arbitrary JSON cannot be described under a provider's strict mode: the value
   // slot emits the empty schema, which Anthropic rejects ("Empty schema ({}) that accepts any JSON
   // value is not supported"). Strict is therefore off for projected operations — re-enabling it makes
