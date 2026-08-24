@@ -103,7 +103,7 @@ The straightforward gauges, all read at collection time via `observe()`. Lands i
   Now reconciles on every update. Split out of `subscribeSyncSummary` as a client-free
   class precisely so the add/remove/fold behaviour is testable (6 tests).
 
-## Phase 3: EDGE websocket
+## Phase 3: EDGE websocket — DONE
 
 Emitted via `trace.metrics` from `packages/core/mesh/edge-client/src/edge-client.ts`
 — that package must not depend on `@dxos/observability`. First real consumer of the
@@ -111,14 +111,24 @@ Emitted via `trace.metrics` from `packages/core/mesh/edge-client/src/edge-client
 
 ### Tasks
 
-- [ ] **`dxos.edge.ws.reconnect.count{reason}`** counter
+- [x] **`dxos.edge.ws.reconnect.count{reason}`** counter
   - At the reconnect-listener notification (`edge-client.ts:355`).
-  - `reason` must be a bounded enum mapped from close code / error class
-    (`normal`, `going_away`, `abnormal`, `network`, `auth`, `identity_changed`,
-    `other`) — never a raw error message.
-- [ ] **`dxos.edge.ws.connected`** observable gauge (0/1)
+  - `classifyCloseCode` / `classifySocketError` in `reconnect-reason.ts`, 8 tests. The enum is
+    bounded and never a raw message. Three distinct restart causes exist in the connection, and
+    they are diagnostically different, which is what makes the breakdown worth having:
+    `onclose` carries a code, `onerror` carries none, and the keepalive watchdog fires when the
+    peer went silent while our own pings were flowing.
+  - **`navigator.onLine === false` wins over any close code.** A 1006 while the browser has no
+    network is a lost connection, not a server fault, and conflating them makes the metric
+    useless for the one question it is asked. Hence `offline` is a reason, not an attribute —
+    folding it in keeps the enum flat instead of doubling every other value.
+  - Added `dxos.edge.ws.session.reconnects`, a gauge of reconnects since the process started.
+    That resets on reload, so its value _is_ the per-session total — a delta counter cannot
+    answer "how bad was this session" at all, and `session.id` is deliberately not a metric
+    attribute (P2).
+- [x] **`dxos.edge.ws.connected`** observable gauge (0/1)
   - `avg` across series = fraction of the fleet online, which a counter cannot give.
-- [ ] **`dxos.edge.ws.connect.duration{outcome}`** histogram, buckets
+- [ ] **`dxos.edge.ws.connect.duration{outcome}`** histogram (not done), buckets
       `[0.1, 0.25, 0.5, 1, 2, 5, 10, 30, 60]` s
   - Beware the reset-backoff hazard noted at `edge-client.ts:325` — do not treat a
     dial that never opened as a success.
@@ -196,6 +206,31 @@ read only via `getStatsSnapshot`) and **no event-loop-lag metric at all**.
     metrics. Per-method detail stays in the existing log line and `getStatsSnapshot`.
   - Explicit bucket views registered (`[0.01 … 10]s`), since the default boundaries are
     ms-shaped.
+
+## Phase 7: Review pass — DONE
+
+Audit of everything added so far, once the live instance had taught us what the backend
+actually supports.
+
+### Tasks
+
+- [x] **Event loop lag no longer resets on read.** `takeMaxMs()` was destructive, which breaks
+      the moment the callback runs twice in a window — a second `RemoteMetrics` processor, or a
+      `flush()` landing beside a periodic collection, both cause that. The window is now rotated
+      on the export cadence and `peakMs` is a plain idempotent getter, asserted by a test that
+      reads it three times.
+- [x] **`OtelMetrics` builds its attribute set once per record.** It was calling `getTags()` and
+      spreading twice per sample — fine when only providers emitted, but `RpcTiming` now
+      publishes per RPC, so that was allocation on a hot path.
+- [x] **Added `dxos.echo.sync.pending.count`.** The only pending signal was documents-only, while
+      the episode and stall instruments key off documents + feed blocks. The dashboard and the
+      stall alert now read the same definition the instruments do.
+- [x] **Event loop lag split into two panels**, main thread and workers. They mean different
+      things: main-thread lag is felt directly as UI jank, whereas worker lag surfaces as RPC
+      queue wait.
+- [x] **Verified the space aggregates are not last-write-wins.** Removing the `key` attribute
+      could have left four gauges each overwriting the previous space's value within a window;
+      they do reduce properly, and `epoch` correctly takes a max rather than a sum.
 
 ## Phase 5: Dashboard and validation
 

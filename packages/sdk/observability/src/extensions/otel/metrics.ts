@@ -127,22 +127,27 @@ export class OtelMetrics {
 
   gauge(name: string, value: number, tags?: Attributes, data?: MetricData): void {
     const gauge = this.#cached(this.#gauges, name, data, (options) => this.#meter.createGauge(name, options));
-    log('otel gauge', { name, value, tags: { ...this.options.getTags(), ...tags } });
-    gauge.record(value, { ...this.options.getTags(), ...tags });
+    const attributes = { ...this.options.getTags(), ...tags };
+    log('otel gauge', { name, value, tags: attributes });
+    gauge.record(value, attributes);
   }
 
   increment(name: string, value?: number, tags?: Attributes, data?: MetricData): void {
     const counter = this.#cached(this.#counters, name, data, (options) => this.#meter.createCounter(name, options));
-    log('otel counter', { name, value, tags: { ...this.options.getTags(), ...tags } });
-    counter.add(value ?? 1, { ...this.options.getTags(), ...tags });
+    const attributes = { ...this.options.getTags(), ...tags };
+    log('otel counter', { name, value, tags: attributes });
+    counter.add(value ?? 1, attributes);
   }
 
   distribution(name: string, value: number, tags?: Attributes, data?: MetricData): void {
     const histogram = this.#cached(this.#histograms, name, data, (options) =>
       this.#meter.createHistogram(name, options),
     );
-    log('otel distribution', { name, value, tags: { ...this.options.getTags(), ...tags } });
-    histogram.record(value, { ...this.options.getTags(), ...tags });
+    // Built once: this runs per RPC now that RpcTiming publishes through it, so two tag spreads
+    // and two getTags() calls per record were allocation on a hot path.
+    const attributes = { ...this.options.getTags(), ...tags };
+    log('otel distribution', { name, value, tags: attributes });
+    histogram.record(value, attributes);
   }
 
   /**

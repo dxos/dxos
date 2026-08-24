@@ -14,7 +14,7 @@ import { log } from '@dxos/log';
 import { ConnectionState, type NetworkStatus, Platform } from '@dxos/protocols/proto/dxos/client/services';
 
 import { type DataProvider } from '../observability';
-import { EventLoopLagTracker, LAG_SAMPLE_INTERVAL_MS } from './event-loop-lag';
+import { EventLoopLagTracker, LAG_SAMPLE_INTERVAL_MS, LAG_WINDOW_MS } from './event-loop-lag';
 import { type CrossRealmMemory, measureCrossRealmMemory, readHeap, supportsCrossRealmMemory } from './memory';
 import { SyncEpisodeTracker } from './sync-episodes';
 import { subscribeSyncSummary } from './sync-state';
@@ -331,14 +331,12 @@ export const eventLoopLagProvider = (): DataProvider =>
     const lag = new EventLoopLagTracker(LAG_SAMPLE_INTERVAL_MS);
 
     scheduleTaskInterval(ctx, async () => lag.sample(Date.now()), LAG_SAMPLE_INTERVAL_MS);
+    // Window rotation is driven here rather than by the read, so the gauge callback stays a plain
+    // idempotent getter — see EventLoopLagTracker.
+    scheduleTaskInterval(ctx, async () => lag.rotate(), LAG_WINDOW_MS);
 
     ctx.onDispose(
-      observability.metrics.observe(
-        'dxos.client.runtime.eventLoop.lag',
-        () => lag.takeMaxMs() / 1_000,
-        undefined,
-        SECONDS,
-      ),
+      observability.metrics.observe('dxos.client.runtime.eventLoop.lag', () => lag.peakMs / 1_000, undefined, SECONDS),
     );
 
     return async () => {
@@ -356,10 +354,12 @@ export const syncMetricsProvider = (client: Client): DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
     const episodes = new SyncEpisodeTracker();
+    let pending = 0;
 
     // Fed on every sync-state emission rather than at collection time: an episode that opens and
     // closes inside one 60s export window would otherwise never be seen at all.
     subscribeSyncSummary(client, ctx, (summary) => {
+      pending = summary.pendingWorkCount;
       const closed = episodes.observe(Date.now(), summary.pendingWorkCount);
       if (closed) {
         log('sync episode closed', { durationMs: closed.durationMs, truncated: closed.truncated });
@@ -372,6 +372,9 @@ export const syncMetricsProvider = (client: Client): DataProvider =>
       }
     });
 
+    ctx.onDispose(
+      observability.metrics.observe('dxos.echo.sync.pending.count', () => pending, undefined, { unit: '{item}' }),
+    );
     ctx.onDispose(
       observability.metrics.observe(
         'dxos.echo.sync.stalled.duration',

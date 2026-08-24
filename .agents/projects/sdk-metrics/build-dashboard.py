@@ -87,6 +87,11 @@ STALLED = "dxos.echo.sync.stalled.duration"
 LAG = "dxos.client.runtime.eventLoop.lag"
 QUEUE_WAIT = "dxos.rpc.queueWait.duration"
 RPC_SERVICE = "dxos.rpc.service.duration"
+PENDING = "dxos.echo.sync.pending.count"
+WS_RECONNECT = "dxos.edge.ws.reconnect.count"
+WS_SESSION = "dxos.edge.ws.session.reconnects"
+WS_CONNECTED = "dxos.edge.ws.connected"
+WORKER_REALMS = "dxos.process.type in ('shared-worker', 'dedicated-worker', 'service-worker')"
 
 panels = {
   "stat-spaces": number("Spaces per client (avg)", "", [
@@ -145,10 +150,17 @@ panels = {
              bq("B", STALLED, "max", "max", "max", "worst client")),
       unit="s", precision="0",
       thresholds=[{"color": "Red", "label": "10 min stalled", "unit": "s", "value": 600}]),
-  "loop-lag": timeseries("Event loop lag — avg / max",
-      "Peak time a timer fired behind schedule per export window, i.e. how long the realm was blocked. Group by dxos.process.type to separate the tab from the workers.",
-      series(bq("A", LAG, "avg", "avg", "avg", "avg {{dxos.process.type}}", group=["dxos.process.type"]),
-             bq("B", LAG, "max", "max", "max", "max {{dxos.process.type}}", group=["dxos.process.type"])),
+  "loop-lag-main": timeseries("Event loop lag — main thread",
+      "Peak time a timer fired behind schedule per window, i.e. how long the tab was blocked. Main thread lag is felt directly as UI jank.",
+      series(bq("A", LAG, "avg", "avg", "avg", "avg", extra_filter="dxos.process.type = 'browser'"),
+             bq("B", LAG, "max", "max", "max", "max", extra_filter="dxos.process.type = 'browser'")),
+      unit="s", precision="3"),
+  "loop-lag-worker": timeseries("Event loop lag — workers",
+      "Same measure inside the shared and dedicated workers, where client-services runs. Worker lag does not jank the UI directly; it shows up as RPC queue wait on the panel below.",
+      series(bq("A", LAG, "avg", "avg", "avg", "avg {{dxos.process.type}}",
+                group=["dxos.process.type"], extra_filter=WORKER_REALMS),
+             bq("B", LAG, "max", "max", "max", "max {{dxos.process.type}}",
+                group=["dxos.process.type"], extra_filter=WORKER_REALMS)),
       unit="s", precision="3"),
   "rpc-timings": timeseries("RPC queue wait vs service time — max",
       "Queue wait is time the message spent waiting for the thread; service time is time spent working. Queue wait rising while service time is flat means the receiving realm is saturated, not slow.",
@@ -161,6 +173,24 @@ panels = {
            "having": {"expression": ""}, "legend": "queue wait avg", "name": "F1", "order": None},
           kind="time_series")],
       unit="s", precision="3"),
+  "ws-reconnect-reason": timeseries("EDGE reconnects by cause",
+      "offline = the browser reported no network; abnormal = closed with no close frame while online; server_error/going_away = the server closed deliberately; inactivity_timeout = the peer went silent while our pings were flowing.",
+      series(bq("A", WS_RECONNECT, "increase", "sum", "sum", "{{reason}}", group=["reason"])),
+      unit="none", precision="0"),
+  "ws-session-reconnects": timeseries("Reconnects per session — avg / max",
+      "Counted since the process started, so the value IS the per-session total; it resets on reload. A delta counter cannot answer this.",
+      series(bq("A", WS_SESSION, "avg", "avg", "avg", "avg session"),
+             bq("B", WS_SESSION, "max", "max", "max", "worst session")),
+      unit="none", precision="1"),
+  "ws-connected": timeseries("Fleet connectivity",
+      "Average of a 0/1 gauge, so this is the fraction of clients with an open EDGE socket.",
+      series(bq("A", WS_CONNECTED, "avg", "avg", "avg", "fraction online")),
+      unit="none", precision="2"),
+  "sync-pending": timeseries("Pending sync work per client — avg / max",
+      "Documents plus feed blocks — the same definition the episode and stall instruments use, so this panel and the stall alert agree.",
+      series(bq("A", PENDING, "avg", "avg", "avg", "avg client"),
+             bq("B", PENDING, "max", "max", "max", "worst client")),
+      unit="none", precision="0"),
   "heap-by-device": table("Heaviest clients by heap",
       "One row per device; heapSizeLimit is the browser's cap for that client.",
       [composite([
@@ -173,8 +203,11 @@ order = [("stat-spaces",0,0,3,3),("stat-docs",3,0,3,3),("stat-unsynced",6,0,3,3)
          ("sync-duration",0,3,6,6),("sync-stalled",6,3,6,6),
          ("spaces-dist",0,9,6,6),("spaces-ready",6,9,6,6),
          ("docs-location",0,15,6,6),("unsynced-backlog",6,15,6,6),
-         ("heap-used",0,21,6,6),("heap-by-device",6,21,6,6),
-         ("loop-lag",0,27,6,6),("rpc-timings",6,27,6,6)]
+         ("sync-pending",0,21,6,6),("ws-connected",6,21,6,6),
+         ("ws-reconnect-reason",0,27,6,6),("ws-session-reconnects",6,27,6,6),
+         ("loop-lag-main",0,33,6,6),("loop-lag-worker",6,33,6,6),
+         ("rpc-timings",0,39,6,6),("heap-used",6,39,6,6),
+         ("heap-by-device",0,45,6,6)]
 
 dashboard = {
   "name": "client-metrics-vibptxv0",

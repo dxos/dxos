@@ -1265,12 +1265,12 @@
           ]
         }
       },
-      "loop-lag": {
+      "loop-lag-main": {
         "kind": "Panel",
         "spec": {
           "display": {
-            "name": "Event loop lag \u2014 avg / max",
-            "description": "Peak time a timer fired behind schedule per export window, i.e. how long the realm was blocked. Group by dxos.process.type to separate the tab from the workers."
+            "name": "Event loop lag \u2014 main thread",
+            "description": "Peak time a timer fired behind schedule per window, i.e. how long the tab was blocked. Main thread lag is felt directly as UI jank."
           },
           "links": [],
           "plugin": {
@@ -1330,7 +1330,123 @@
                           ],
                           "disabled": false,
                           "filter": {
-                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag AND dxos.process.type = 'browser'"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "avg",
+                          "name": "A",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.client.runtime.eventLoop.lag",
+                              "reduceTo": "max",
+                              "spaceAggregation": "max",
+                              "temporality": "",
+                              "timeAggregation": "max"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag AND dxos.process.type = 'browser'"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "max",
+                          "name": "B",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "loop-lag-worker": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Event loop lag \u2014 workers",
+            "description": "Same measure inside the shared and dedicated workers, where client-services runs. Worker lag does not jank the UI directly; it shows up as RPC queue wait on the panel below."
+          },
+          "links": [],
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "axes": {
+                "isLogScale": false,
+                "softMax": 0,
+                "softMin": 0
+              },
+              "chartAppearance": {
+                "fillMode": "none",
+                "lineInterpolation": "spline",
+                "lineStyle": "solid",
+                "showPoints": false,
+                "spanGaps": {
+                  "fillLessThan": "",
+                  "fillOnlyBelow": false
+                }
+              },
+              "formatting": {
+                "decimalPrecision": "3",
+                "unit": "s"
+              },
+              "legend": {
+                "customColors": null,
+                "mode": "list",
+                "position": "bottom"
+              },
+              "thresholds": null,
+              "visualization": {
+                "fillSpans": false,
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.client.runtime.eventLoop.lag",
+                              "reduceTo": "avg",
+                              "spaceAggregation": "avg",
+                              "temporality": "",
+                              "timeAggregation": "avg"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag AND dxos.process.type in ('shared-worker', 'dedicated-worker', 'service-worker')"
                           },
                           "functions": [],
                           "groupBy": [
@@ -1366,7 +1482,7 @@
                           ],
                           "disabled": false,
                           "filter": {
-                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag AND dxos.process.type in ('shared-worker', 'dedicated-worker', 'service-worker')"
                           },
                           "functions": [],
                           "groupBy": [
@@ -1573,6 +1689,405 @@
                           "legend": "queue wait avg",
                           "name": "F1",
                           "order": null
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ws-reconnect-reason": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "EDGE reconnects by cause",
+            "description": "offline = the browser reported no network; abnormal = closed with no close frame while online; server_error/going_away = the server closed deliberately; inactivity_timeout = the peer went silent while our pings were flowing."
+          },
+          "links": [],
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "axes": {
+                "isLogScale": false,
+                "softMax": 0,
+                "softMin": 0
+              },
+              "chartAppearance": {
+                "fillMode": "none",
+                "lineInterpolation": "spline",
+                "lineStyle": "solid",
+                "showPoints": false,
+                "spanGaps": {
+                  "fillLessThan": "",
+                  "fillOnlyBelow": false
+                }
+              },
+              "formatting": {
+                "decimalPrecision": "0",
+                "unit": "none"
+              },
+              "legend": {
+                "customColors": null,
+                "mode": "list",
+                "position": "bottom"
+              },
+              "thresholds": null,
+              "visualization": {
+                "fillSpans": false,
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "name": "A",
+                "plugin": {
+                  "kind": "signoz/BuilderQuery",
+                  "spec": {
+                    "signal": "metrics",
+                    "aggregations": [
+                      {
+                        "metricName": "dxos.edge.ws.reconnect.count",
+                        "reduceTo": "sum",
+                        "spaceAggregation": "sum",
+                        "temporality": "",
+                        "timeAggregation": "increase"
+                      }
+                    ],
+                    "disabled": false,
+                    "filter": {
+                      "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                    },
+                    "functions": [],
+                    "groupBy": [
+                      {
+                        "name": "reason",
+                        "fieldContext": "attribute",
+                        "fieldDataType": "string",
+                        "signal": "metrics"
+                      }
+                    ],
+                    "having": {
+                      "expression": ""
+                    },
+                    "legend": "{{reason}}",
+                    "name": "A",
+                    "order": [],
+                    "source": ""
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ws-session-reconnects": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Reconnects per session \u2014 avg / max",
+            "description": "Counted since the process started, so the value IS the per-session total; it resets on reload. A delta counter cannot answer this."
+          },
+          "links": [],
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "axes": {
+                "isLogScale": false,
+                "softMax": 0,
+                "softMin": 0
+              },
+              "chartAppearance": {
+                "fillMode": "none",
+                "lineInterpolation": "spline",
+                "lineStyle": "solid",
+                "showPoints": false,
+                "spanGaps": {
+                  "fillLessThan": "",
+                  "fillOnlyBelow": false
+                }
+              },
+              "formatting": {
+                "decimalPrecision": "1",
+                "unit": "none"
+              },
+              "legend": {
+                "customColors": null,
+                "mode": "list",
+                "position": "bottom"
+              },
+              "thresholds": null,
+              "visualization": {
+                "fillSpans": false,
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.edge.ws.session.reconnects",
+                              "reduceTo": "avg",
+                              "spaceAggregation": "avg",
+                              "temporality": "",
+                              "timeAggregation": "avg"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "avg session",
+                          "name": "A",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.edge.ws.session.reconnects",
+                              "reduceTo": "max",
+                              "spaceAggregation": "max",
+                              "temporality": "",
+                              "timeAggregation": "max"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "worst session",
+                          "name": "B",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ws-connected": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Fleet connectivity",
+            "description": "Average of a 0/1 gauge, so this is the fraction of clients with an open EDGE socket."
+          },
+          "links": [],
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "axes": {
+                "isLogScale": false,
+                "softMax": 0,
+                "softMin": 0
+              },
+              "chartAppearance": {
+                "fillMode": "none",
+                "lineInterpolation": "spline",
+                "lineStyle": "solid",
+                "showPoints": false,
+                "spanGaps": {
+                  "fillLessThan": "",
+                  "fillOnlyBelow": false
+                }
+              },
+              "formatting": {
+                "decimalPrecision": "2",
+                "unit": "none"
+              },
+              "legend": {
+                "customColors": null,
+                "mode": "list",
+                "position": "bottom"
+              },
+              "thresholds": null,
+              "visualization": {
+                "fillSpans": false,
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "name": "A",
+                "plugin": {
+                  "kind": "signoz/BuilderQuery",
+                  "spec": {
+                    "signal": "metrics",
+                    "aggregations": [
+                      {
+                        "metricName": "dxos.edge.ws.connected",
+                        "reduceTo": "avg",
+                        "spaceAggregation": "avg",
+                        "temporality": "",
+                        "timeAggregation": "avg"
+                      }
+                    ],
+                    "disabled": false,
+                    "filter": {
+                      "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                    },
+                    "functions": [],
+                    "groupBy": [],
+                    "having": {
+                      "expression": ""
+                    },
+                    "legend": "fraction online",
+                    "name": "A",
+                    "order": [],
+                    "source": ""
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "sync-pending": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Pending sync work per client \u2014 avg / max",
+            "description": "Documents plus feed blocks \u2014 the same definition the episode and stall instruments use, so this panel and the stall alert agree."
+          },
+          "links": [],
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "axes": {
+                "isLogScale": false,
+                "softMax": 0,
+                "softMin": 0
+              },
+              "chartAppearance": {
+                "fillMode": "none",
+                "lineInterpolation": "spline",
+                "lineStyle": "solid",
+                "showPoints": false,
+                "spanGaps": {
+                  "fillLessThan": "",
+                  "fillOnlyBelow": false
+                }
+              },
+              "formatting": {
+                "decimalPrecision": "0",
+                "unit": "none"
+              },
+              "legend": {
+                "customColors": null,
+                "mode": "list",
+                "position": "bottom"
+              },
+              "thresholds": null,
+              "visualization": {
+                "fillSpans": false,
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.echo.sync.pending.count",
+                              "reduceTo": "avg",
+                              "spaceAggregation": "avg",
+                              "temporality": "",
+                              "timeAggregation": "avg"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "avg client",
+                          "name": "A",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.echo.sync.pending.count",
+                              "reduceTo": "max",
+                              "spaceAggregation": "max",
+                              "temporality": "",
+                              "timeAggregation": "max"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "worst client",
+                          "name": "B",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
                         }
                       }
                     ]
@@ -1795,7 +2310,7 @@
             },
             {
               "content": {
-                "$ref": "#/spec/panels/heap-used"
+                "$ref": "#/spec/panels/sync-pending"
               },
               "height": 6,
               "width": 6,
@@ -1804,7 +2319,7 @@
             },
             {
               "content": {
-                "$ref": "#/spec/panels/heap-by-device"
+                "$ref": "#/spec/panels/ws-connected"
               },
               "height": 6,
               "width": 6,
@@ -1813,12 +2328,39 @@
             },
             {
               "content": {
-                "$ref": "#/spec/panels/loop-lag"
+                "$ref": "#/spec/panels/ws-reconnect-reason"
               },
               "height": 6,
               "width": 6,
               "x": 0,
               "y": 27
+            },
+            {
+              "content": {
+                "$ref": "#/spec/panels/ws-session-reconnects"
+              },
+              "height": 6,
+              "width": 6,
+              "x": 6,
+              "y": 27
+            },
+            {
+              "content": {
+                "$ref": "#/spec/panels/loop-lag-main"
+              },
+              "height": 6,
+              "width": 6,
+              "x": 0,
+              "y": 33
+            },
+            {
+              "content": {
+                "$ref": "#/spec/panels/loop-lag-worker"
+              },
+              "height": 6,
+              "width": 6,
+              "x": 6,
+              "y": 33
             },
             {
               "content": {
@@ -1826,8 +2368,26 @@
               },
               "height": 6,
               "width": 6,
+              "x": 0,
+              "y": 39
+            },
+            {
+              "content": {
+                "$ref": "#/spec/panels/heap-used"
+              },
+              "height": 6,
+              "width": 6,
               "x": 6,
-              "y": 27
+              "y": 39
+            },
+            {
+              "content": {
+                "$ref": "#/spec/panels/heap-by-device"
+              },
+              "height": 6,
+              "width": 6,
+              "x": 0,
+              "y": 45
             }
           ]
         }
