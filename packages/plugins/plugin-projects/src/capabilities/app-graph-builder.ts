@@ -18,7 +18,6 @@ import { Chat } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
-import { type SpaceId } from '@dxos/keys';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
@@ -160,7 +159,12 @@ export const createProjectActionExtension = () =>
                 return;
               }
 
-              yield* createProjectChat(project, db.spaceId);
+              const spaceId = db.spaceId;
+              const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, {}, { spaceId });
+              // Parent edge before the add: it files the chat under the project, not the space root.
+              Chat.linkCompanion({ chat, subject: project });
+              yield* Operation.invoke(SpaceOperation.AddObject, { object: chat }, { spaceId });
+              yield* Operation.invoke(AssistantOperation.SetCurrentChat, { companionTo: project, chat }, { spaceId });
             }),
           properties: {
             label: ['create-chat.label', { ns: meta.profile.key }],
@@ -171,15 +175,3 @@ export const createProjectActionExtension = () =>
         }),
       ]),
   });
-
-/**
- * Starts a chat on a project: a companion chat like any other, but persisted on creation rather than
- * on the first message, so an explicit click puts it in the navtree straight away.
- */
-const createProjectChat = Effect.fnUntraced(function* (project: Project.Project, spaceId: SpaceId) {
-  const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, {}, { spaceId });
-  // Parent edge before the add: it is what files the chat under the project rather than the space root.
-  Chat.linkCompanion({ chat, subject: project });
-  yield* Operation.invoke(SpaceOperation.AddObject, { object: chat }, { spaceId });
-  yield* Operation.invoke(AssistantOperation.SetCurrentChat, { companionTo: project, chat }, { spaceId });
-});

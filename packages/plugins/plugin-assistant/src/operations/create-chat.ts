@@ -22,10 +22,10 @@ const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = Ass
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
       const { db } = yield* Database.Service;
 
-      // The chat is left for the caller to add (`SpaceOperation.AddObject`), but the feed cannot be:
-      // bindings are feed events, and `Feed.query` asserts the feed is stored before its contents can
-      // be read, so a transient chat still needs a durable feed to bind onto.
-      // TODO(wittjosiah): Keep the feed in memory too, once a feed can carry events before it is added.
+      // The chat is left for the caller to add (`SpaceOperation.AddObject`); the feed is added here only
+      // because the default bindings below are written immediately, and `Feed.query` asserts a stored feed.
+      // TODO(wittjosiah): Defer binding until the caller has added the chat, so the feed can stay in
+      //  memory too — nothing needs to write to a feed before its chat is in the database.
       const feed = db.add(Feed.make());
       const chat = Chat.make({ name, feed: Ref.make(feed), instructions });
       Obj.setParent(feed, chat);
