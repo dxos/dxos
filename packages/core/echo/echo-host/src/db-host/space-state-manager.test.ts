@@ -214,6 +214,39 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
     }
   });
 
+  test('setting space root references on an unknown space fails rather than losing them', async () => {
+    const dbPath = join(__dirname, 'test-space-root-refs-unknown.db');
+    rmSync(dbPath, { force: true });
+    onTestFinished(() => {
+      rmSync(dbPath, { force: true });
+    });
+
+    const { runtime, dispose } = createTestSqliteRuntime(dbPath);
+    onTestFinished(() => {
+      void dispose();
+    });
+
+    const automergeHost = new AutomergeHost({ runtime });
+    await automergeHost.open(Context.default());
+    onTestFinished(() => {
+      void automergeHost.close();
+    });
+
+    const manager = new SpaceStateManager({ runtime });
+    await manager.open(Context.default());
+    onTestFinished(() => {
+      void manager.close();
+    });
+
+    // No directory assigned, so there is no row to hold the columns.
+    await expect(
+      manager.setSpaceRootRefs(SpaceId.random(), {
+        spaceRootDocUrl: (await automergeHost.createDoc({})).url,
+        idDerivation: 'rootDoc',
+      }),
+    ).rejects.toThrow();
+  });
+
   test('EchoHost openSpaceRoot works without url on reopened host', async () => {
     const dbPath = join(__dirname, 'test-echo-host-persistent.db');
     rmSync(dbPath, { force: true });

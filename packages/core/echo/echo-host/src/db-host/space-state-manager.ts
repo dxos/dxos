@@ -119,6 +119,9 @@ export class SpaceStateManager extends Resource {
    * written once per space — at creation, or when a legacy space migrates and gains one.
    */
   async setSpaceRootRefs(spaceId: SpaceId, refs: SpaceRootRefs): Promise<void> {
+    // The refs are stored as columns on the space's row, so without one the UPDATE below matches
+    // nothing and the refs would survive only in memory — lost on the next open.
+    invariant(this._rootBySpace.has(spaceId), 'Space has no directory assigned.');
     this._spaceRootRefs.set(spaceId, refs);
     await this._saveSpaceRootRefs(spaceId, refs);
   }
@@ -227,7 +230,7 @@ export class SpaceStateManager extends Resource {
         this._spaceRootRefs.set(spaceId, {
           spaceRootDocUrl: row.space_root_doc_url as AutomergeUrl,
           credentialsDocUrl: (row.credentials_doc_url ?? undefined) as AutomergeUrl | undefined,
-          idDerivation: (row.id_derivation ?? 'spaceKey') as SpaceIdDerivation,
+          idDerivation: parseIdDerivation(spaceId, row.id_derivation),
         });
       }
     }
@@ -265,6 +268,21 @@ export class SpaceStateManager extends Resource {
     );
   }
 }
+
+/**
+ * A derivation this build does not know is read as `spaceKey`: that is the weaker claim of the two, so
+ * an unrecognized value can never be mistaken for a root that certifies the space id.
+ */
+const parseIdDerivation = (spaceId: SpaceId, value: string | null): SpaceIdDerivation => {
+  if (value === 'rootDoc' || value === 'spaceKey') {
+    return value;
+  }
+
+  if (value !== null) {
+    log.warn('unknown space id derivation, reading as spaceKey', { spaceId, value });
+  }
+  return 'spaceKey';
+};
 
 /**
  * The references a space root document carries, as persisted beside the space. The directory lives in
