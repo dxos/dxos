@@ -24,7 +24,7 @@ export const Schema = Capability.make<Type.AnyEntity[]>()(`${meta.profile.key}.c
  * `true` rather than `void` — the loader reads an `undefined` implementation as not contributed.
  */
 export const SchemaRegistered = Capability.makeSingleton<true>()(`${meta.profile.key}.capability.schemaRegistered`);
-export const Migration = Capability.make<Migration$.Any[]>()(`${meta.profile.key}.capability.migration`);
+export const Migration = Capability.make<Migration$.Migration[]>()(`${meta.profile.key}.capability.migration`);
 export const AccountCache = Capability.makeSingleton<Atom.Writable<AccountCacheType>>()(
   `${meta.profile.key}.capability.accountCache`,
 );

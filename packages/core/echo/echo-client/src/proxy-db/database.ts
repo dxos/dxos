@@ -89,7 +89,7 @@ export interface EchoDatabase extends Database.Database {
   /**
    * Run migrations.
    */
-  runMigrations(migrations: Migration.Any[]): Promise<void>;
+  runMigrations(migrations: Migration.Migration[]): Promise<void>;
 
   /**
    * Get the current per-peer automerge document sync state.
@@ -727,24 +727,22 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     await Promise.all([...this.#feeds.values()].map((handle) => handle.waitForPendingWrites()));
   }
 
-  async runMigrations(migrations: Migration.Any[]): Promise<void> {
+  async runMigrations(migrations: Migration.Migration[]): Promise<void> {
     // Validated up front so a batch containing an unrecognized migration cannot leave the
     // preceding ones half-applied.
     for (const migration of migrations) {
+      // Read before the guard, which narrows the failing branch to `never`.
       const kind: string = migration.kind;
-      if (kind !== 'object' && kind !== 'rename') {
+      if (!Migration.isMigration(migration)) {
         throw new TypeError(`Unknown migration kind: ${kind}`);
       }
     }
 
     for (const migration of migrations) {
-      switch (migration.kind) {
-        case 'object':
-          await this.#runObjectMigration(migration);
-          break;
-        case 'rename':
-          await this.#runRenameMigration(migration);
-          break;
+      if (Migration.isObjectMigration(migration)) {
+        await this.#runObjectMigration(migration);
+      } else if (Migration.isRenameMigration(migration)) {
+        await this.#runRenameMigration(migration);
       }
     }
     await this._entityManager.flush();

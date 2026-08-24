@@ -42,11 +42,6 @@ export const isMigration = (value: unknown): value is Migration => {
  * The data shape matches the target schema; the optional `[Obj.Meta]` symbol key lets the
  * transform update the object's meta (e.g. `key` / `version`) atomically with the data swap.
  */
-/**
- * Any concrete migration. Narrow with the `kind` discriminant.
- */
-export type Any = ObjectMigration | RenameMigration;
-
 type MigrationSchemaInput = Type.AnyEntity;
 
 type MigrationInstanceType<S extends MigrationSchemaInput> = Type.InstanceType<S>;
@@ -101,6 +96,11 @@ export interface ObjectMigration extends Migration {
   transform: (from: unknown, context: ObjectMigrationContext) => Promise<unknown>;
   onMigration?: (params: OnMigrateProps<any, any>) => Promise<void>;
 }
+
+/**
+ * Narrows a migration to an {@link ObjectMigration}.
+ */
+export const isObjectMigration = (migration: Migration): migration is ObjectMigration => migration.kind === 'object';
 
 /**
  * Define a migration between two object schemas.
@@ -160,6 +160,11 @@ export interface RenameMigration extends Migration {
   /** DXN of the new name (unversioned). */
   to: DXN.DXN;
 }
+
+/**
+ * Narrows a migration to a {@link RenameMigration}.
+ */
+export const isRenameMigration = (migration: Migration): migration is RenameMigration => migration.kind === 'rename';
 
 /**
  * Define a migration that renames a named entity.
