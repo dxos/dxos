@@ -65,7 +65,6 @@ describe('IndexQuerySource', () => {
         });
       },
       'QueryService.reindex': () => Effect.void,
-      'QueryService.queryReverseRef': () => Effect.succeed({ objectIds: [] }),
     });
 
     const source = new IndexQuerySource({
@@ -106,7 +105,6 @@ describe('IndexQuerySource', () => {
         });
       },
       'QueryService.reindex': () => Effect.void,
-      'QueryService.queryReverseRef': () => Effect.succeed({ objectIds: [] }),
     });
 
     const source = new IndexQuerySource({
@@ -149,7 +147,6 @@ describe('IndexQuerySource', () => {
         });
       },
       'QueryService.reindex': () => Effect.void,
-      'QueryService.queryReverseRef': () => Effect.succeed({ objectIds: [] }),
     });
 
     const source = new IndexQuerySource({
@@ -203,7 +200,6 @@ describe('IndexQuerySource', () => {
           emit = (results) => void streamEmit.single({ queryId: request.queryId, results });
         }),
       'QueryService.reindex': () => Effect.void,
-      'QueryService.queryReverseRef': () => Effect.succeed({ objectIds: [] }),
     });
 
     const updateEvent = new Event<ObjectUpdate>();

@@ -21,7 +21,7 @@ import type { Index, IndexerObject } from './interface';
  * reference by its local (space-less) form, a named-entity `dxn:` by its unversioned NSID. Lookups
  * normalize identically (see `query`).
  */
-const indexKey = (uri: URI.URI): URI.URI | undefined => {
+export const referenceIndexKey = (uri: URI.URI): URI.URI | undefined => {
   const parsedEchoUri = EID.tryParse(uri);
   if (parsedEchoUri) {
     return EID.getEntityId(parsedEchoUri) ? EID.toLocal(parsedEchoUri) : undefined;
@@ -39,7 +39,7 @@ const extractReferences = (data: Record<string, unknown>): { path: string[]; tar
   const refs: { path: string[]; targetDXN: URI.URI }[] = [];
   const visit = (path: string[], value: unknown) => {
     if (isEncodedReference(value)) {
-      const targetDXN = indexKey(EncodedReference.toURI(value));
+      const targetDXN = referenceIndexKey(EncodedReference.toURI(value));
       if (targetDXN === undefined) {
         return;
       }
@@ -106,7 +106,7 @@ export class ReverseRefIndex implements Index {
     ({ targetDXN }: ReverseRefQuery): Effect.Effect<readonly ReverseRef[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
-        const normalized = indexKey(targetDXN);
+        const normalized = referenceIndexKey(targetDXN);
         if (normalized === undefined) {
           return [];
         }

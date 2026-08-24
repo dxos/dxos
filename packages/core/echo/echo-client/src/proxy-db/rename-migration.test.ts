@@ -114,6 +114,28 @@ describe('rename migration', () => {
     expect(trigger.nested.runnable.uri).to.eq(BAR);
   });
 
+  test('resolves through the index on a client with an empty working set', async () => {
+    // A fresh client holds no loaded cores, so the reverse-reference index is the only thing that
+    // can find the referencing object.
+    const { db, graph, peer, key } = await builder.createDatabase();
+    graph.registry.add([Operation, Trigger]);
+
+    const triggerId = db.add(makeTrigger()).id;
+    await db.flush();
+
+    const client = await peer.createClient();
+    await client.graph.registry.add([Operation, Trigger]);
+    const reopened = await peer.openDatabase(key, undefined, { client });
+
+    await reopened.runMigrations([rename]);
+
+    const [trigger] = await reopened.query(Filter.type(Trigger)).run();
+    expect(trigger.id).to.eq(triggerId);
+    expect(trigger.runnable.uri).to.eq(BAR);
+    expect(trigger.steps.map((step) => step.uri)).to.deep.eq([BAR, OTHER]);
+    expect(trigger.nested.runnable.uri).to.eq('dxn:org.example.operation.bar:1.0.0');
+  });
+
   test('a rename to the same name is a no-op', async () => {
     const { db, graph } = await builder.createDatabase();
     graph.registry.add([Operation, Trigger]);

@@ -12,9 +12,8 @@ import { Context, Resource } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { QueryAST } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
-import { RuntimeProvider } from '@dxos/effect';
+import { type RuntimeProvider } from '@dxos/effect';
 import { type IndexEngine } from '@dxos/index-core';
-import { type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { type QueryRequest, type QueryResponse, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
@@ -23,7 +22,6 @@ import { trace } from '@dxos/tracing';
 
 import { type AutomergeHost } from '../automerge';
 import { QueryExecutor } from '../query';
-import { QueryError } from '../query/errors';
 import { type InvalidationHint, mergeHints } from './invalidation-hint';
 import type { SpaceStateManager } from './space-state-manager';
 
@@ -143,37 +141,6 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
   ['QueryService.reindex'](): Effect.Effect<void, Error> {
     // No-op: SQL indexer handles re-indexing automatically.
     return Effect.sync(() => log.warn('reindex() is deprecated and no longer has any effect'));
-  }
-
-  /**
-   * Resolves the objects holding a reference to a DXN.
-   *
-   * Separate from `execQuery` because an incoming-reference clause can only anchor on an entity in
-   * the working set, which a named entity never is.
-   */
-  ['QueryService.queryReverseRef'](
-    request: QueryService.ReverseRefRequest,
-  ): Effect.Effect<QueryService.ReverseRefResponse, Error> {
-    return Effect.gen({ self: this }, function* () {
-      // The index is written asynchronously, so a caller that just wrote an object would otherwise
-      // read a stale reverse-reference set.
-      yield* Effect.tryPromise({
-        try: () => this._params.updateIndexes(),
-        catch: QueryError.wrap({ message: 'Failed to bring the index up to date.' }),
-      });
-      const rows = yield* this._params.indexEngine
-        .queryReverseRef({ targetDXN: request.targetDXN as URI.URI })
-        .pipe(RuntimeProvider.provide(this._params.runtime));
-      const metas = yield* this._params.indexEngine
-        .lookupByRecordIds(Array.from(new Set(rows.map((row) => row.recordId))))
-        .pipe(RuntimeProvider.provide(this._params.runtime));
-      const objectIds = Array.from(
-        new Set(metas.filter((meta) => meta.spaceId === request.spaceId).map((meta) => meta.objectId)),
-      );
-      return { objectIds };
-      // Mapped onto the RPC's declared error channel: an index read failure is recoverable for the
-      // caller, so it must not become a defect.
-    }).pipe(Effect.mapError(QueryError.wrap({ message: 'Reverse-reference lookup failed.' })));
   }
 
   ['QueryService.execQuery'](request: QueryRequest): EffectStream.Stream<QueryResponse, Error> {

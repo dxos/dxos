@@ -5,6 +5,7 @@
 import { Order, Query } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
+import { DXN, type URI } from '@dxos/keys';
 
 import { QueryError } from './errors';
 import { QueryPlan } from './plan';
@@ -643,6 +644,33 @@ export class QueryPlanner {
     query: QueryAST.QueryIncomingReferencesClause,
     context: GenerationContext,
   ): QueryPlan.Plan {
+    // `Query.select(Filter.key(dxn)).referencedBy()` collapses to a single index lookup. Evaluating
+    // the anchor would be both a scan (a meta-key filter is matched in memory, not indexed) and
+    // empty for the case this exists to serve: a named entity, which is never in the graph.
+    const namedAnchor = namedEntityAnchor(query.anchor);
+    if (namedAnchor !== undefined) {
+      return QueryPlan.Plan.make([
+        {
+          _tag: 'SelectStep',
+          selector: {
+            _tag: 'IncomingReferenceSelector',
+            targetDXN: namedAnchor,
+            property: query.property ?? null,
+          },
+          scope: context.scope,
+        },
+        ...this._generateDeletedHandlingSteps(context),
+        {
+          _tag: 'FilterStep',
+          filter: {
+            type: 'object',
+            typename: query.typename,
+            props: {},
+          },
+        },
+      ]);
+    }
+
     return QueryPlan.Plan.make([
       ...this._generate(query.anchor, context).steps,
       {
@@ -1124,6 +1152,30 @@ export class QueryPlanner {
 /**
  * Context for query planning.
  */
+/**
+ * The DXN named by a `Query.select(Filter.key(dxn))` anchor, or undefined when the anchor is any
+ * other shape. A version-constrained key is excluded: the reverse-reference index keys a named
+ * entity without its version, so the range could not be honoured.
+ */
+const namedEntityAnchor = (anchor: QueryAST.Query): URI.URI | undefined => {
+  if (anchor.type !== 'select' || anchor.filter.type !== 'object') {
+    return undefined;
+  }
+  const filter = anchor.filter;
+  if (
+    filter.metaKey === undefined ||
+    filter.metaVersion !== undefined ||
+    filter.typename !== null ||
+    (filter.id !== undefined && filter.id.length > 0) ||
+    Object.keys(filter.props).length > 0 ||
+    (filter.foreignKeys !== undefined && filter.foreignKeys.length > 0)
+  ) {
+    return undefined;
+  }
+  // `Filter.key` takes a bare NSID, but a caller holding a DXN passes it through unchanged.
+  return DXN.isDXN(filter.metaKey) ? DXN.tryMake(filter.metaKey) : DXN.tryMake(`dxn:${filter.metaKey}`);
+};
+
 type GenerationContext = {
   /**
    * The original query.
