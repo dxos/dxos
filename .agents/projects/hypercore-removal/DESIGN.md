@@ -40,12 +40,18 @@ Space root layout:
 
 ```json
 {
-  "type": "dxn:org.dxos.document.spaceRoot",
+  "type": "dxn:org.dxos.document.spaceRoot:0.1.0",
   "spaceId": "<space id>",
   "directory": "automerge:<url>",
   "credentials": "dxn:<automerge url>"
 }
 ```
+
+The type is a versioned DXN in ECHO's own form — `dxn:<nsid>:<semver>`, final segment
+camelCase (`DXN_SPEC_REGEXP` in `keys/src/DXN.ts`), the same shape `EntitySystem.type`
+carries (`dxn:org.dxos.type.schema:0.1.0`). Spelled `type`, not `@type`: `@type` is the
+protobuf convention from `dxos.halo.credentials` and appears nowhere in ECHO document
+structure. The version lives in the DXN, so the root needs no separate `SpaceDocVersion`.
 
 ### Constraints this satisfies
 
@@ -80,17 +86,24 @@ Space root layout:
    control feed have separate fates — the audit below has to establish which `feed-store`
    consumers are credential-chain-only.
 
-## Open questions
+## Resolved (user, 2026-08-24)
 
-1. Does the space **key** survive at all? Credentials are issued by `space.key` and the
-   admission chain roots in it; only the _feed_ admission credentials become meaningless.
-   Cheapest path: keep the keypair as the credential issuer, drop only its role as the id
-   source and the feed admission.
-2. How does this interact with the Keyhive/`@dxos/halo` direction (`Access`
-   `pull|read|edit|admin` in `packages/core/halo/halo/src/Space.ts`)? A credentials doc that
-   is an opaque byte array is compatible with either, but the migration should not have to
-   run twice.
-3. EDGE: `edge-feed-replicator` and the EDGE-side control-feed storage both go away; needs
-   a coordinated change in the `dxos/edge` repo and a deploy window.
-4. Are queues / `feed-store` retained for non-credential data? If so hypercore removal is
-   partial and the `@dxos/hypercore` package deletion is blocked on that.
+1. **The space keypair survives as the credential issuer.** It loses only its two other
+   roles: minting the space id, and admitting feeds. The admission chain still roots in
+   `space.key`, so `@dxos/credentials` issuance is unchanged; the two `AdmittedFeed`
+   credentials in `spaceGenesis()` simply stop being written.
+2. **This is a prerequisite to Keyhive, not a competitor.** Credentials-over-Automerge lands
+   first; the `Access` model in `packages/core/halo/halo/src/Space.ts` builds on top of it.
+   Nothing here should assume the credential payload stays protobuf forever — the doc holds
+   opaque bytes precisely so Keyhive can change what those bytes are without a second
+   migration of the space topology.
+3. **Migration: both paths supported, then per-space atomic client cutover.** Reader code
+   accepts either source; a client migrates one space at a time, atomically, and from that
+   point EDGE reads that space's credentials from exactly one source. No flag day, and no
+   space is ever half-migrated.
+4. **Queues and other feeds survive and are entirely separate.** Confirmed in source: queues
+   use `@dxos/feed` (`packages/core/echo/feed`, SQLite-backed, its own unrelated
+   `FeedStore`) and pull in no hypercore. Only four packages depend on hypercore or
+   `@dxos/feed-store` — `common/hypercore`, `common/feed-store`,
+   `mesh/teleport-extension-replicator`, `sdk/client-services` — so removing the credential
+   chain removes the last consumer and `@dxos/hypercore` can be deleted outright.
