@@ -70,7 +70,7 @@ export const Defaults = (_basePath?: string): ConfigInit => {
 export const Storage = async (): Promise<ConfigInit> => {
   try {
     const config = await localforage.getItem<unknown>(SETTINGS_KEY);
-    if (config) {
+    if (config !== null) {
       // Persisted settings outlive the schema that wrote them, so they are validated on read.
       return parseConfig(config, SETTINGS_KEY);
     }

@@ -71,7 +71,19 @@ export const Dynamics = (): ConfigInit => ({});
 export const Envs = (basePath = DEFAULT_BASE_PATH): ConfigInit => {
   // `envs-map.yml` is a key/path spec rather than a config, so only its projection is validated.
   const content = maybeLoadFile(path.resolve(basePath, FILE_ENVS));
-  return content ? parseConfig(mapFromKeyValues(content, process.env), FILE_ENVS) : {};
+  if (!content) {
+    return {};
+  }
+
+  let projected: unknown;
+  try {
+    projected = mapFromKeyValues(content, process.env);
+  } catch (err) {
+    // A `type: json` entry holding malformed JSON throws before the schema is ever consulted.
+    throw new InvalidConfigError({ message: `Invalid config from ${FILE_ENVS}: ${err}` });
+  }
+
+  return parseConfig(projected, FILE_ENVS);
 };
 
 /**
