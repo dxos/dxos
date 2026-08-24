@@ -115,3 +115,17 @@ test('leaves entity references untouched', async () => {
   expect(trigger.runnable.uri).to.eq(Ref.make(operation).uri);
   expect(trigger.nested.runnable.uri).to.eq(BAR);
 });
+
+test('a rename to the same name is a no-op', async () => {
+  const { db, graph } = await builder.createDatabase();
+  graph.registry.add([Operation, Trigger]);
+
+  const trigger = db.add(makeTrigger());
+  await db.flush();
+  await db.runMigrations([
+    Migration.defineRename({ from: 'org.example.operation.foo', to: 'org.example.operation.foo' }),
+  ]);
+
+  expect(trigger.runnable.uri).to.eq(FOO);
+  expect(trigger.steps.map((step) => step.uri)).to.deep.eq([FOO, OTHER]);
+});

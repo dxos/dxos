@@ -729,6 +729,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   async runMigrations(migrations: Migration.Any[]): Promise<void> {
     for (const migration of migrations) {
+      // Widened for the error message: the `default` branch narrows `migration` to `never`.
+      const kind: string = migration.kind;
       switch (migration.kind) {
         case 'object':
           await this.#runObjectMigration(migration);
@@ -736,6 +738,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
         case 'rename':
           await this.#runRenameMigration(migration);
           break;
+        default:
+          throw new TypeError(`Unknown migration kind: ${kind}`);
       }
     }
     await this._entityManager.flush();
@@ -783,13 +787,14 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     const fromName = DXN.getName(migration.from);
     const toName = DXN.getName(migration.to);
 
-    // Rewrites a reference URI, preserving any version suffix; undefined when it is not a hit.
+    // Rewrites a reference URI, preserving any version suffix; undefined when the URI already
+    // reads correctly (a miss, or a rename whose target equals its source).
     const rewrite = (uri: URI.URI): URI.URI | undefined => {
       if (!DXN.isDXN(uri) || DXN.getName(uri) !== fromName) {
         return undefined;
       }
-      const version = DXN.getVersion(uri);
-      return DXN.make<string>(toName, version);
+      const rewritten = DXN.make<string>(toName, DXN.getVersion(uri));
+      return rewritten === uri ? undefined : rewritten;
     };
 
     const objects = await this._hypergraph.query(Query.select(Filter.everything()).from(this)).run();
