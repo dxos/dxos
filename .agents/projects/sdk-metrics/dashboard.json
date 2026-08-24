@@ -365,8 +365,8 @@
         "kind": "Panel",
         "spec": {
           "display": {
-            "name": "Spaces per client \u2014 avg / p90 / max",
-            "description": "Distribution across clients; a gauge cannot be summed meaningfully, so these are spatial aggregations within each bucket."
+            "name": "Spaces per client \u2014 avg / max",
+            "description": "Aggregated across clients within each bucket. No p90/p99: SigNoz only supports percentile space aggregation on histograms, not gauges."
           },
           "links": [],
           "plugin": {
@@ -447,10 +447,10 @@
                           "aggregations": [
                             {
                               "metricName": "dxos.client.spaces.count",
-                              "reduceTo": "avg",
-                              "spaceAggregation": "p90",
+                              "reduceTo": "min",
+                              "spaceAggregation": "min",
                               "temporality": "",
-                              "timeAggregation": "avg"
+                              "timeAggregation": "min"
                             }
                           ],
                           "disabled": false,
@@ -462,7 +462,7 @@
                           "having": {
                             "expression": ""
                           },
-                          "legend": "p90",
+                          "legend": "min",
                           "name": "B",
                           "order": [],
                           "source": "",
@@ -713,8 +713,8 @@
         "kind": "Panel",
         "spec": {
           "display": {
-            "name": "Unsynced backlog \u2014 worst / avg client",
-            "description": "A max that stays flat while avg sits near 0 is a single stuck client \u2014 what the Phase 4 sync-stall instruments will make explicit."
+            "name": "Unsynced backlog per client \u2014 avg / max",
+            "description": "p90/p99 would need this exported as a histogram; a gauge only supports avg/min/max/sum across clients. A max that stays flat while avg sits near 0 is still a single stuck client."
           },
           "links": [],
           "plugin": {
@@ -766,35 +766,6 @@
                           "aggregations": [
                             {
                               "metricName": "dxos.echo.documents.unsynced.count",
-                              "reduceTo": "max",
-                              "spaceAggregation": "max",
-                              "temporality": "",
-                              "timeAggregation": "max"
-                            }
-                          ],
-                          "disabled": false,
-                          "filter": {
-                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
-                          },
-                          "functions": [],
-                          "groupBy": [],
-                          "having": {
-                            "expression": ""
-                          },
-                          "legend": "worst client",
-                          "name": "A",
-                          "order": [],
-                          "source": "",
-                          "stepInterval": 0
-                        }
-                      },
-                      {
-                        "type": "builder_query",
-                        "spec": {
-                          "signal": "metrics",
-                          "aggregations": [
-                            {
-                              "metricName": "dxos.echo.documents.unsynced.count",
                               "reduceTo": "avg",
                               "spaceAggregation": "avg",
                               "temporality": "",
@@ -811,6 +782,35 @@
                             "expression": ""
                           },
                           "legend": "avg client",
+                          "name": "A",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.echo.documents.unsynced.count",
+                              "reduceTo": "max",
+                              "spaceAggregation": "max",
+                              "temporality": "",
+                              "timeAggregation": "max"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "worst client",
                           "name": "B",
                           "order": [],
                           "source": "",
@@ -829,8 +829,8 @@
         "kind": "Panel",
         "spec": {
           "display": {
-            "name": "Heap used \u2014 p50 / p90 / max",
-            "description": "Thresholds mark the 300-400MB resting target from the memory-usage project."
+            "name": "Heap used \u2014 avg / max",
+            "description": "Thresholds mark the 300-400MB resting target from the memory-usage project. Percentiles across clients need a histogram; a gauge cannot provide them."
           },
           "links": [],
           "plugin": {
@@ -896,7 +896,7 @@
                             {
                               "metricName": "dxos.client.runtime.heapUsed",
                               "reduceTo": "avg",
-                              "spaceAggregation": "p50",
+                              "spaceAggregation": "avg",
                               "temporality": "",
                               "timeAggregation": "avg"
                             }
@@ -910,37 +910,8 @@
                           "having": {
                             "expression": ""
                           },
-                          "legend": "p50",
+                          "legend": "avg client",
                           "name": "A",
-                          "order": [],
-                          "source": "",
-                          "stepInterval": 0
-                        }
-                      },
-                      {
-                        "type": "builder_query",
-                        "spec": {
-                          "signal": "metrics",
-                          "aggregations": [
-                            {
-                              "metricName": "dxos.client.runtime.heapUsed",
-                              "reduceTo": "avg",
-                              "spaceAggregation": "p90",
-                              "temporality": "",
-                              "timeAggregation": "avg"
-                            }
-                          ],
-                          "disabled": false,
-                          "filter": {
-                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
-                          },
-                          "functions": [],
-                          "groupBy": [],
-                          "having": {
-                            "expression": ""
-                          },
-                          "legend": "p90",
-                          "name": "B",
                           "order": [],
                           "source": "",
                           "stepInterval": 0
@@ -968,8 +939,8 @@
                           "having": {
                             "expression": ""
                           },
-                          "legend": "max",
-                          "name": "C",
+                          "legend": "worst client",
+                          "name": "B",
                           "order": [],
                           "source": "",
                           "stepInterval": 0

@@ -111,6 +111,41 @@ through, and add `description`. Also register explicit histogram bucket boundari
 via a `View` — the OTel default boundaries top out at 10,000 and are shaped for
 milliseconds, which is wrong for the seconds-to-minutes durations below.
 
+## Gauges cannot give fleet percentiles
+
+Verified against the live instance, and it contradicts an earlier assumption in this
+document: **SigNoz rejects percentile space aggregation on a gauge.**
+
+```
+invalid space aggregation `p90` for metric type `gauge`,
+percentile space aggregations are only supported for `histogram`,
+`exponentialhistogram` metric types
+```
+
+A gauge supports `sum`, `avg`, `min`, `max`, `count` across series; time aggregation is
+equally percentile-free. So "the p90 client holds N spaces" is **not** obtainable from
+`dxos.client.spaces.count` as a gauge, however many series exist — the per-device series
+are there, but the query layer will not compute a quantile over them.
+
+This is the same mergeability argument the sync section already makes, applied in the
+other direction: a percentile has to be derived from bucket counts, so the backend will
+only compute one where buckets exist. Three ways out, in increasing cost:
+
+1. **Accept `avg` / `min` / `max`.** One series per metric, no code change. `max` already
+   answers "is any client pathological", which is most of the operational value.
+2. **Export the metric as a histogram as well as a gauge**, when the distribution is the
+   question rather than the extremes. Real percentiles, mergeable across the fleet, at
+   `boundaries + 3` series each — see [Budget](#budget), where histograms already dominate.
+   The strongest candidate is `heapUsed`, since the 300-400MB resting target is inherently
+   a distribution question.
+3. **A ClickHouse SQL panel** computing `quantile(0.9)(value)` over the raw samples.
+   Sidesteps the builder's restriction without new instruments, at the cost of a panel that
+   no longer shares the builder's variable handling and has to be maintained as SQL.
+
+Current decision: option 1 everywhere, because no gauge here has a settled distribution
+question yet. Revisit for `heapUsed` when the memory target moves from "measure it" to
+"hold the line on it".
+
 ## Metrics to add
 
 Names follow the existing `dxos.<subsystem>.…` convention. Units use UCUM as OTel
@@ -300,8 +335,8 @@ choice is the entire cost lever.
 Every metric inherits the extension's global tags (`ctx.tag`, `did`, `deviceKey`,
 `appPlatform`, `osPlatform`) plus resource attributes. The rule:
 
-- **Keep `deviceKey`** — one series per device is the _point_, since "p90 client
-  holds N spaces" requires one series per client to aggregate across.
+- **Keep `deviceKey`** — one series per device is the _point_: it is what lets a panel
+  aggregate across clients at all, rather than reading one blended number.
 - **Keep `did`** — bounded per user, needed to roll devices up to users.
 - **Drop `session.id`** (P2) — unbounded, grows forever with page reloads.
 - **Never add** `spaceId`, `objectId`, `peerId`, or a raw error string as a metric

@@ -199,14 +199,19 @@ and nothing has been verified against a live instance.
   - Histograms are 37 of those 65 series; if the number has to come down, cut
     bucket boundaries before attributes.
 - [x] **Build the dashboard** — spec authored as `dashboard.json`; see the blocked publish above.
-  - Spaces: `avg`/`p90`/`max` of `dxos.client.spaces.count` across devices.
+  - Spaces: `avg`/`min`/`max` of `dxos.client.spaces.count` across devices — **not** p90:
+    SigNoz only supports percentile space aggregation on histograms (see DESIGN.md
+    "Gauges cannot give fleet percentiles").
   - Connectivity: `avg` of `dxos.edge.ws.connected`; `sum by (reason)` rate of
     `dxos.edge.ws.reconnect.count`.
-  - Documents: `avg`/`p90` of `dxos.echo.documents.count{location=local}`.
+  - Documents: `avg`/`max` of `dxos.echo.documents.count{location=local}`.
   - Sync: `max`/`p99` of `dxos.echo.sync.episode.duration`; count of devices with
     `dxos.echo.sync.stalled.duration > 600`.
-  - Memory: `p50`/`p90`/`max` of `dxos.client.runtime.heapUsed` against the
-    300-400MB target; `dxos.client.runtime.memory.bytes` stacked by `scope`.
+  - Memory: `avg`/`max` of `dxos.client.runtime.heapUsed` against the 300-400MB target;
+    `dxos.client.runtime.memory.bytes` stacked by `scope`.
+  - [ ] **Decide whether `heapUsed` also gets a histogram**, which is the only way to get a
+        real fleet p90/p99 on it. Costs `boundaries + 3` series; deferred until the memory
+        target moves from measurement to enforcement.
 - [ ] **Alert: sync stuck**
   - `dxos.echo.sync.stalled.duration > 600`, with no second condition: the gauge is 0
     whenever the client is caught up, so an `unsynced.count > 0` conjunct is redundant
