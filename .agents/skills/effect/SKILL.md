@@ -5,8 +5,9 @@ description: Effect in DXOS: the pinned copy in node_modules, and the house rule
 
 # Effect in DXOS
 
-Effect written from memory is **compile-clean and test-silent**: it typechecks, the
-tests pass, and the behaviour is wrong. Read the **pinned** copy.
+Answer Effect questions from `node_modules/effect` rather than from recall. What is
+on disk is **pinned** to the version this repo compiles against. What you remember is
+pinned to nothing, and Effect moves.
 
 ## The pinned copy
 
