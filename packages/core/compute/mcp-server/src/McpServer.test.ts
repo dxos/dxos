@@ -21,7 +21,7 @@ const SPACE = SpaceId.random();
 const SPACE_A = SpaceId.random();
 const SPACE_B = SpaceId.random();
 
-const KEY = 'org.dxos.function.tasks.taskCreate';
+const KEY = 'com.example.operation.tasks.createTask';
 
 const CreateTask = Operation.make({
   meta: { key: DXN.make(KEY), name: 'Create Task', description: 'Creates a task.' },

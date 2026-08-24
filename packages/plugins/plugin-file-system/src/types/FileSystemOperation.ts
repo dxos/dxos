@@ -12,7 +12,7 @@ import { DXN } from '@dxos/keys';
 
 export const OpenDirectory = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.nativeFilesystem.openDirectory'),
+    key: DXN.make('org.dxos.operation.fileSystem.openDirectory'),
     name: 'Open Folder',
     icon: 'ph--folder-open--regular',
   },
@@ -23,7 +23,7 @@ export const OpenDirectory = Operation.make({
 
 export const CloseDirectory = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.nativeFilesystem.closeDirectory'),
+    key: DXN.make('org.dxos.operation.fileSystem.closeDirectory'),
     name: 'Close Folder',
     icon: 'ph--folder--regular',
   },
@@ -34,7 +34,7 @@ export const CloseDirectory = Operation.make({
 
 export const RefreshDirectory = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.nativeFilesystem.refreshDirectory'),
+    key: DXN.make('org.dxos.operation.fileSystem.refreshDirectory'),
     name: 'Refresh Folder',
     icon: 'ph--arrows-clockwise--regular',
   },

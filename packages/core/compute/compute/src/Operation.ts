@@ -347,7 +347,7 @@ const TOOL_NAME_KEY_PREFIX = 'org.dxos.operation.';
  * keys are visible at once: {@link findToolNameCollisions} over a whole set, and the tool resolver.
  *
  * @example `org.dxos.operation.markdown.create` → `markdown-create`
- * @example `org.dxos.operation.assistantToolkit.addArtifact` → `project-artifact-add`
+ * @example `org.dxos.operation.assistantToolkit.addArtifact` → `assistant-toolkit-add-artifact`
  */
 export const toolName = (op: Definition.Any): string => toolNameFromKey(op.meta.key);
 

@@ -33,6 +33,14 @@ describe('operation-key-shape', () => {
         { filename: testFile, code: operation('com.example.operation.markdown.create') },
         // A key property outside an Operation.make call is none of the rule's business.
         { filename, code: "const meta = { key: DXN.make('whatever') };" },
+        // Naming the key once is still greppable, so the const is followed and its value checked.
+        {
+          filename,
+          code: [
+            "const KEY = 'org.dxos.operation.markdown.create';",
+            'Operation.make({ meta: { key: DXN.make(KEY) }, input: 1, output: 2 });',
+          ].join('\n'),
+        },
       ],
       invalid: [],
     });
@@ -77,6 +85,23 @@ describe('operation-key-shape', () => {
           filename,
           code: "Operation.make({ meta: { key: makeKey('create') }, input: 1, output: 2 });",
           errors: [{ messageId: 'notLiteral' }],
+        },
+        // A const indirection is followed rather than waved through — it hid a stale key in a test.
+        {
+          filename,
+          code: [
+            "const KEY = 'org.dxos.function.markdown.create';",
+            'Operation.make({ meta: { key: DXN.make(KEY) }, input: 1, output: 2 });',
+          ].join('\n'),
+          errors: [{ messageId: 'badShape' }],
+        },
+        {
+          filename: testFile,
+          code: [
+            "const KEY = 'org.dxos.operation.markdown.create';",
+            'Operation.make({ meta: { key: DXN.make(KEY) }, input: 1, output: 2 });',
+          ].join('\n'),
+          errors: [{ messageId: 'fixtureRoot' }],
         },
         // A fixture must not squat a product namespace.
         {

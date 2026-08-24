@@ -245,6 +245,28 @@ export default {
     const filename = context.filename ?? context.physicalFilename ?? '';
     const fixture = isFixture(filename);
 
+    /**
+     * Resolves a bare identifier to the string a module-scope `const` initialises it with, so a
+     * `const KEY = '...'` indirection is still held to the shape rules — the key is greppable, it
+     * is just named once. Anything the scope analysis cannot pin down stays unresolved.
+     */
+    const literalOf = (node) => {
+      if (node.type === 'Literal' && typeof node.value === 'string') {
+        return node.value;
+      }
+      if (node.type !== 'Identifier') {
+        return undefined;
+      }
+      const scope = context.sourceCode.getScope(node);
+      const variable = scope.references.find((ref) => ref.identifier === node)?.resolved;
+      const [definition] = variable?.defs ?? [];
+      if (definition?.type !== 'Variable' || definition.parent?.kind !== 'const') {
+        return undefined;
+      }
+      const init = definition.node.init;
+      return init?.type === 'Literal' && typeof init.value === 'string' ? init.value : undefined;
+    };
+
     const check = (node, key) => {
       // A fixture is held only to its root: it names no package, so it owns no domain, and the
       // shape of a throwaway key is not worth a failing build.
@@ -329,16 +351,20 @@ export default {
           value.arguments.length >= 1
         ) {
           const arg = value.arguments[0];
-          if (arg.type === 'Literal' && typeof arg.value === 'string') {
-            check(arg, arg.value);
+          const key = literalOf(arg);
+          if (key !== undefined) {
+            check(arg, key);
           } else if (!fixture) {
             context.report({ node: arg, messageId: 'notLiteral' });
           }
           return;
         }
 
-        // Anything else — a helper call, a template literal, a bare identifier — hides the key.
-        if (value.type !== 'Literal' && !fixture) {
+        // Anything else — a helper call or a template literal — hides the key.
+        const key = literalOf(value);
+        if (key !== undefined) {
+          check(value, key);
+        } else if (!fixture) {
           context.report({ node: value, messageId: 'notLiteral' });
         }
       },

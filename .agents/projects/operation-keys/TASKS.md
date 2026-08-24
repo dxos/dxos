@@ -41,6 +41,17 @@ Design: [DESIGN.md](./DESIGN.md)
       (`com.example.operation.fib`). The lint rule should land before these are cleaned up, so they
       fail rather than accumulate.
 
+- [x] Merge `origin/main`: main's `plugin-native-filesystem` → `plugin-file-system` rename made the
+      domain wrong (`nativeFilesystem`), and #12675 landed a copy of the superseded audit at
+      `packages/core/compute/assistant/src/tool-runtime/AUDIT.md`. Domain retargeted to `fileSystem`,
+      stale audit deleted — this project's [AUDIT.md](./AUDIT.md) is the only one.
+- [x] The lint rule waved a `const KEY = '...'` indirection through in fixtures, which hid an
+      `org.dxos.function.` key in `McpServer.test.ts`. It now resolves a module-scope const to its
+      literal, so naming a key once is allowed but its value is still checked.
+- [x] Fixed the last dangling key references: three evals pointed at `org.dxos.function.database.*`
+      operations that had never existed under that name (now `space.addObject`/`updateObject`/
+      `queryObjects`), and `plugin-sidekick` bound a non-existent `agent.get-context`.
+
 ## Phase 2 — deploy coordination
 
 - [ ] EDGE stores `meta.key` beside the `functionId` it binds by, so deployed functions need a
