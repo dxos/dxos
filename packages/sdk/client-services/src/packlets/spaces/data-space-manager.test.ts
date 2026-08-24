@@ -13,7 +13,7 @@ import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { type SpaceMember as SpaceMemberAssertion } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { SpaceMember, type SpaceMember as SpaceMemberAssertion } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { openAndClose } from '@dxos/test-utils';
 
 import { AuthStatus } from '../space';
@@ -73,6 +73,43 @@ describe('DataSpaceManager', () => {
     const space = await peer.dataSpaceManager.createSpace(new Context(), { useSpaceRootDocument: false });
     expect(space.id).to.equal(await createIdFromSpaceKey(space.key));
     expect(peer.echoHost.getSpaceRootRefs(space.id)).to.be.undefined;
+  });
+
+  test('an admitted peer agrees with the creator about the space id', async () => {
+    const builder = new TestBuilder();
+
+    const peer1 = builder.createPeer();
+    await peer1.createIdentity();
+
+    const peer2 = builder.createPeer();
+    await peer2.createIdentity();
+
+    await openAndClose(peer1.echoHost, peer1.dataSpaceManager, peer2.echoHost, peer2.dataSpaceManager);
+    await connectReplicators([peer1, peer2]);
+
+    const space1 = await peer1.dataSpaceManager.createSpace(new Context());
+    await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
+
+    const memberCredential = await peer1.dataSpaceManager.admitMember({
+      spaceKey: space1.key,
+      identityKey: peer2.identity.identityKey,
+      role: SpaceMember.Role.ADMIN,
+    });
+
+    // admitMember resolves the root itself, so the credential carries it without the caller passing it.
+    const assertion = getCredentialAssertion(memberCredential) as SpaceMemberAssertion;
+    expect(assertion.spaceRootUrl).to.equal(peer1.echoHost.getSpaceRootRefs(space1.id)?.spaceRootDocUrl);
+
+    const space2 = await peer2.dataSpaceManager.acceptSpace(new Context(), {
+      spaceKey: space1.key,
+      genesisFeedKey: space1.inner.genesisFeedKey,
+      spaceRootUrl: assertion.spaceRootUrl,
+    });
+    await peer2.dataSpaceManager.waitUntilSpaceReady(space2.key);
+
+    // The joiner must not fall back to deriving an id from the space key.
+    expect(space2.id).to.equal(space1.id);
+    expect(space2.id).to.not.equal(await createIdFromSpaceKey(space1.key));
   });
 
   test('sync between peers', async () => {

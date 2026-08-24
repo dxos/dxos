@@ -9,9 +9,9 @@ Branch `claude/remove-hypercore-automerge-creds-uo7lx9`. Rationale in `DESIGN.md
 Both PRs land the dual-path world: nothing is deleted, old spaces keep working, new spaces are
 opt-in. Hypercore deletion (Phase 4) is explicitly NOT in scope for either.
 
-`DX_SPACE_CREATE_LEGACY` (config flag, default OFF once PR A lands, ON until then) selects the
-old control-feed genesis at `DataSpaceManager.createSpace()`. It is the switch every test
-matrix row below keys off, and the rollback lever if the new path misbehaves in the field.
+`CreateSpaceOptions.useSpaceRootDocument` (per-space, default TRUE) selects the anchor at
+`DataSpaceManager.createSpace()`; pass `false` for a legacy key-derived space. It is the switch
+every test matrix row below keys off, and the rollback lever if the new path misbehaves.
 
 ### Seams (found 2026-08-24)
 
@@ -37,7 +37,7 @@ matrix row below keys off, and the rollback lever if the new path misbehaves in 
    contract (Phase 2).
 4. `SpaceMember` assertion carries the space root doc URL beside `genesis_feed_key`; both
    invitation protocols and `cross-device-space-synchronizer.ts` read it (Phase 2).
-5. `DX_SPACE_CREATE_LEGACY` and dual-path readers.
+5. `useSpaceRootDocument` and dual-path readers.
 6. Client-side migration of a legacy space, dual-write, per-space flip (Phase 3).
 
 ### PR B — `dxos/edge`
@@ -134,9 +134,11 @@ migration; crash mid-migration and resume.
       map keyed by credential id, so an append is idempotent and concurrent appends converge;
       `orderCredentials()` produces the total order every peer computes identically —
       `parentCredentialIds` win (clock skew can date a parent after its child), ties break on
-      `(issuanceDate, id)`. An unreplicated parent does not block its child (the state machine
-      rejects an unverifiable chain anyway) and a cycle keeps every credential rather than
-      dropping it.
+      `(issuanceDate, id)`. Every ordering input is read from the ENCODED credential, never from
+      the entry around it, so a peer cannot reorder processing by editing the document; an entry
+      keyed by something other than its credential id, or that does not decode, is dropped. An
+      unreplicated parent does not block its child (the state machine rejects an unverifiable
+      chain anyway) and a cycle keeps every credential rather than dropping it.
 - [ ] Credentials doc: append-only array of the existing encoded credential bytes.
 - [ ] Write path — `spaceGenesis()` emits into the credentials doc instead of the control feed;
       drop the two `AdmittedFeed` credentials.
@@ -150,7 +152,10 @@ migration; crash mid-migration and resume.
 - [x] **`SpaceMember.space_root_url` added beside `genesis_feed_key`** (field 7, optional) and
       threaded through `createAdmissionCredentials` → `admitMember` → `acceptSpace`, including
       `cross-device-space-synchronizer.ts`. Absent for a space still on its control feed.
-- [ ] Populate it at genesis — blocked on the root-doc creation path.
+- [x] Populated at genesis, and `admitMember` resolves the root itself so no invitation call site
+      can emit a credential without it.
+- [x] `acceptSpace` derives the space id from the admitting credential's root URL — without it the
+      joiner built a key-derived id and disagreed with the creator about which space it was in.
 - [ ] `device-invitation-protocol.ts` equivalent for the HALO space.
 - [ ] **NAME COLLISION to resolve**: `spaces-service.ts` already reports a `spaceRootUrl` in
       pipeline diagnostics meaning the DIRECTORY (`space.databaseRoot?.url`). Two different

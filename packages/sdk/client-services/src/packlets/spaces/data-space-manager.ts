@@ -30,7 +30,12 @@ import {
   MeshEchoReplicatorService,
   findInlineObjectOfType,
 } from '@dxos/echo-host';
-import { type DatabaseDirectory, createIdFromSpaceKey } from '@dxos/echo-protocol';
+import {
+  type DatabaseDirectory,
+  createIdFromRootDocumentId,
+  createIdFromSpaceKey,
+  documentIdFromUrl,
+} from '@dxos/echo-protocol';
 import {
   type EdgeConnection,
   EdgeConnectionService,
@@ -458,8 +463,14 @@ export class DataSpaceManager extends Resource {
     invariant(!this.isSpaceDeleted(opts.spaceKey), 'Cannot accept a deleted space.');
 
     const tags = opts.tags ? Array.from(opts.tags) : [];
+    // Without this the joiner derives an id from the space key and disagrees with the creator about
+    // which space this is.
+    const spaceId = opts.spaceRootUrl
+      ? await createIdFromRootDocumentId(documentIdFromUrl(opts.spaceRootUrl))
+      : undefined;
     const metadata: SpaceMetadata = {
       key: opts.spaceKey,
+      spaceId,
       genesisFeedKey: opts.genesisFeedKey,
       controlTimeframe: opts.controlTimeframe,
       dataTimeframe: opts.dataTimeframe,
@@ -558,6 +569,10 @@ export class DataSpaceManager extends Resource {
       throw new AlreadyJoinedError();
     }
 
+    // Resolved here rather than at each call site: a caller that forgets it emits a credential the
+    // admitted member cannot find the root from.
+    const spaceRootUrl = options.spaceRootUrl ?? this._echoHost.getSpaceRootRefs(space.id)?.spaceRootDocUrl;
+
     // TODO(burdon): Check if already admitted.
     const credentials: FeedMessage.Payload[] = await createAdmissionCredentials(
       this.signingContext.credentialSigner,
@@ -569,7 +584,7 @@ export class DataSpaceManager extends Resource {
       options.profile,
       options.delegationCredentialId,
       space.spaceState.tags,
-      options.spaceRootUrl,
+      spaceRootUrl,
     );
 
     // TODO(dmaretskyi): Refactor.

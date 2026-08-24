@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 
 import { createIdFromRootDocumentId } from './space-id';
@@ -12,6 +13,15 @@ export const SPACE_ROOT_TYPE = 'dxn:org.dxos.document.spaceRoot:0.1.0';
 /** How a space id was minted — a migrated space has a root whose id does NOT derive its space id, and nothing else distinguishes the two. */
 export type SpaceIdDerivation = 'rootDoc' | 'spaceKey';
 
+const AUTOMERGE_URL_PREFIX = 'automerge:';
+
+/** Document id from an `automerge:<documentId>` URL, since the derivation hashes the id rather than the URL. */
+export const documentIdFromUrl = (url: string): string => {
+  invariant(url.startsWith(AUTOMERGE_URL_PREFIX), 'Not an automerge URL');
+  return url.slice(AUTOMERGE_URL_PREFIX.length);
+};
+
+/** Whether a value is a derivation this build understands. */
 export const isSpaceIdDerivation = (value: unknown): value is SpaceIdDerivation =>
   value === 'rootDoc' || value === 'spaceKey';
 
