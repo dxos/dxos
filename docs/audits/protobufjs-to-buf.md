@@ -1,6 +1,38 @@
-# Audit: remaining protobuf.js dependencies and cost of migrating to buf
+# Plan: migrating off protobuf.js to buf
 
-Status: audit only — no code changes. Counts taken from `main` at the time of writing.
+Where the migration stands and what is left. Counts are measured, not estimated; every "blocked"
+claim below is established in code rather than assumed. The findings that shaped the plan are kept
+at the bottom — read those before picking up a thread.
+
+## Status
+
+| #   | Thread                                  | State       | Notes                                                                    |
+| --- | --------------------------------------- | ----------- | ------------------------------------------------------------------------ |
+| 1   | `@dxos/effect-proto` removal            | **done**    | Package deleted; storybook rewritten on a hand-authored Effect Schema.   |
+| 2   | Test/example protos                     | todo        | Untouched — `#3`'s harness was built against real dxos messages instead. |
+| 3   | Shape-compat layer                      | **done**    | `@dxos/protocols/buf-shape-compat` + conformance harness (5 tests).      |
+| 4   | `dxos.config`                           | **blocked** | Needs a decision on `@dxos/config`'s public surface — see findings.      |
+| 5   | devtools                                | **part**    | Enum imports moved; the rest needs `#7` first.                           |
+| 6   | `Stream` extraction                     | **done**    | Moved to `@dxos/async`; generator emits it from there.                   |
+| 7   | `protoMessage()` / `serviceError` → buf | todo        | The chokepoint. Unblocks `#5` and most of the import sweep.              |
+| 8   | Remaining `ServiceDescriptor` RPC       | todo        | Cross-peer wire compatibility; sequence after `#6` (now done).           |
+| 9a  | keyring `KeyRecord`                     | **done**    | No substituted fields; wire format unchanged, asserted byte-for-byte.    |
+| 9b  | `echo.query.Heads`                      | **done**    | Same; also dropped the workerd lazy-codec workaround.                    |
+| 9c  | `echo/metadata` + `echo/feed`           | todo        | Needs fixture profiles per storage version.                              |
+| 9d  | credentials signing/verification        | todo        | Highest risk; additionally needs `Any` support in the compat layer.      |
+
+**Next up, in order:** `#7` (unblocks `#5` and the sweep) → rest of `#5` → `#9c` → `#8` → `#9d`.
+`#2` and `#4` are independent and can slot in anywhere; `#4` needs the API decision first.
+
+Deleting `protobuf-compiler`/`codec-protobuf` and dropping `protobufjs` from the catalog is the
+last step, and needs every thread above done.
+
+Before starting any thread, read **Findings** at the bottom: the four generator divergences are
+what make the mechanical-looking parts non-mechanical, and two of them (`Any`, nested enums) are
+hard gates rather than nuisances. Two habits earned their keep here and are worth repeating:
+assert byte **and** shape equality against the protobuf.js codec for anything persisted, and when
+a switch looks safe, attempt it and let `tsc` rule rather than reasoning about it — that is how
+both the nested-enum gate and the `Buffer`-view divergence surfaced.
 
 ## Summary
 
@@ -85,28 +117,31 @@ So the two directions compete. `protoMessage()` is the single chokepoint where p
 enters the new RPC stack — re-pointing it at `@bufbuild/protobuf` is a small, high-leverage
 change, but only if the substituted-shape problem (1) is solved first.
 
-## Estimate
+## Remaining estimate
 
-Assumes no behaviour change and no proto edits; each phase independently landable.
+Per open thread, assuming no behaviour change and no proto edits.
 
-| Phase | Work                                                                                                                                                                                                                | Estimate    |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| 0     | Shape-compat layer: buf-based encode/decode that reproduces the current substituted object shape (PublicKey/PrivateKey/Timeframe/Any/Struct/Timestamp), with round-trip and byte-equality tests against protobuf.js | 1–1.5 weeks |
-| 1     | Re-point `protoMessage()` / `serviceError` at buf; keep protobuf.js for everything else                                                                                                                             | 2–3 days    |
-| 2     | Persisted codecs (keyring, heads store, metadata, feed) + credential signing compat, incl. fixture tests on existing data                                                                                           | 1–1.5 weeks |
-| 3     | Replace `ServiceDescriptor`/`createProtoRpcPeer` for the remaining non-effect services (mesh/teleport, iframe, bridge, agentmanager); move `Stream` out of `codec-protobuf`                                         | 1.5–2 weeks |
-| 4     | Mechanical rewrite of 409 `@dxos/protocols/proto/*` imports → `@dxos/protocols/buf/*` (largely codemod-able; the enum and `optional`/default-value differences are not)                                             | 2–3 weeks   |
-| 5     | `@dxos/effect-proto` on buf descriptors (`react-ui-form`)                                                                                                                                                           | 3–5 days    |
-| 6     | Delete `protobuf-compiler`, the `prebuild` task, `substitutions.ts`, `codec-protobuf`; drop `protobufjs` from the catalog; update `dxos/edge` (`hub-protocol`, `db-service`)                                        | 3–5 days    |
+| Thread | Work                                                                                                 | Estimate    |
+| ------ | ---------------------------------------------------------------------------------------------------- | ----------- |
+| 7      | Re-point `protoMessage()` / `serviceError` at buf (64 sites, one file)                               | 2–3 days    |
+| 5      | Rest of devtools, behind `#7` — message type imports, the nested enum, `JsonView`                    | 2–3 days    |
+| 9c     | `echo/metadata` + `echo/feed`, with a fixture profile per storage version                            | 1 week      |
+| 8      | `ServiceDescriptor`/`createProtoRpcPeer` for mesh/teleport, iframe, bridge, agentmanager             | 1.5–2 weeks |
+| 9d     | Credentials signing/verification, incl. `Any` support in the compat layer                            | 1–1.5 weeks |
+| 4      | `dxos.config`, after the `@dxos/config` API decision                                                 | 1–2 weeks   |
+| 2      | Test/example protos                                                                                  | 2–3 days    |
+| —      | Import sweep of the remaining `@dxos/protocols/proto/*` declarations, behind `#7`                    | 2–3 weeks   |
+| —      | Delete `protobuf-compiler`, `codec-protobuf`, `substitutions.ts`; drop `protobufjs` from the catalog | 3–5 days    |
 
-**Total: roughly 7–10.5 engineer-weeks**, of which phase 4 is the long tail and the only phase that
-touches most of the repo. Phases 0–2 (~3 weeks) deliver the actual de-risking; stopping after
-phase 1 already removes protobuf.js from the new RPC stack.
+**Remaining: roughly 6.5–10 engineer-weeks**, of which the import sweep is the long tail and the
+only item that touches most of the repo. The first draft of this plan estimated 7–10.5 weeks for
+the whole migration; the threads done so far were the cheap and the de-risking ones, so the
+remaining range has barely moved — that is expected, not a slip.
 
-Main risks, in order: credential signature stability (2), decoded-shape drift silently changing
-behaviour at 409 sites, and enum/default-value semantics differing between the two generators.
+Main risks, in order: credential signature stability (`#9d`), decoded-shape drift silently changing
+behaviour across the sweep, and the four generator divergences below.
 
-## Ranked threads (risk × complexity)
+## Thread detail (ranked by risk × complexity)
 
 Independently landable threads, lowest → highest risk×complexity. Six have a dependency, in three
 groups: `#7` and `#9a`–`#9d` on the shape-compat layer (`#3`), and `#8` on the `Stream` extraction
@@ -127,7 +162,9 @@ groups: `#7` and `#9a`–`#9d` on the shape-compat layer (`#3`), and `#8` on the
 | 9c  | `echo/metadata` + `echo/feed`           | 31 + 22 declarations across echo-host, feed-store, client-services                          | medium–high | medium     | Broad on-disk state with no cheap rebuild path; needs a fixture profile per storage version.                                                                                                                                        |
 | 9d  | credentials signing/verification        | `halo/credentials/src/credentials/*`, 94 declarations                                       | highest     | high       | `signing.ts` stringifies the _substituted object_, so any shape drift invalidates every existing credential. Do last, behind 9a–9c, with fixtures of real signed credentials from released versions.                                |
 
-### Not a codemod: `dxos.config` (#4)
+## Findings
+
+### `dxos.config` (#4) is not a codemod
 
 `packages/sdk/config/src/index.ts` re-exports `@dxos/protocols/proto/dxos/config` wholesale — as
 `defs` (the generated namespace, whose enums are numeric-valued objects) and as the public
@@ -137,7 +174,7 @@ apps therefore reads through that re-export. buf renders those enums differently
 on that surface first and is re-rated high complexity; it is not the cheap codemod pilot the first
 draft of this audit assumed.
 
-### #5, partially landed
+### What landed in #5, and why the rest cannot
 
 Top-level enums are byte- and value-identical between the two generators, so devtools' enum
 imports move now: `SignalState`, `ConnectionState`, `SpaceState` (two sites),
@@ -150,7 +187,7 @@ with no casts. What remains in devtools needs `#7` first:
 - **`JsonView`** — calls `schema.getCodecForType(value.type_url)` to decode arbitrary `Any`
   payloads at runtime, so it needs the buf type registry that `#9d` also waits on.
 
-### Why the rest of #5 cannot land before #7
+#### The blocker
 
 `protoMessage()` is typed `Schema.Codec<TYPES[K], Uint8Array>`, where `TYPES` comes from the
 protobuf.js `src/proto/gen` barrel — so every value the effect-rpc services hand devtools is
@@ -176,21 +213,6 @@ Measured while building the compat layer, so the ranking above understates #9c/#
    the mixed case outright (`no overlap`), so these are safe to attempt but cannot land before
    `#7` — the enum belongs to a value whose type still comes from the protobuf.js barrel.
 4. **`google.protobuf.Any`** is unsupported and throws.
-
-### Scheduling status
-
-Landed: `#1` (effect-proto deleted), `#3` (shape-compat layer plus a conformance harness), `#5`
-in part (devtools enum imports), `#6` (`Stream` moved to `@dxos/async`), `#9a` (keyring
-`KeyRecord`), `#9b` (`echo.query.Heads`). `#2` is still open: the harness that `#3`
-needed was built against real dxos messages, so nothing under `tools/protobuf-test` or the
-`example/testing` protos has moved yet.
-
-Blocked, with the blocker established above rather than assumed: `#4` needs a decision on
-`@dxos/config`'s public surface; `#5` needs `#7` first. `#9c` and `#9d` remain, in that order, and
-`#9d` additionally needs `Any` support in the compat layer, since credentials carry
-`google.protobuf.Any`.
-
-Still unscheduled: `#2`, `#7`, `#8`.
 
 ### Verified: devtools is already on effect-rpc
 
