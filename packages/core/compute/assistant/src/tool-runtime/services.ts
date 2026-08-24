@@ -16,9 +16,10 @@ import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '
 import { OpaqueToolkit } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import { todo } from '@dxos/debug';
-import { DXN, Filter, Ref, Registry } from '@dxos/echo';
+import { Filter, Ref, Registry } from '@dxos/echo';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 import { RefFromLLM } from '../util';
 
@@ -29,11 +30,61 @@ export const makeToolResolverFromOperations = <R = never>({
   never,
   OpaqueToolkit.OpaqueToolkitProvider | Registry.Service | R
 > => {
+  // `Layer.effect` runs construction in the layer's own scope, so the subscription below is released
+  // with the layer.
   return Layer.effect(
     ToolResolverService,
     Effect.gen(function* () {
       const toolkitProvider = yield* OpaqueToolkit.OpaqueToolkitProvider;
       const registry = yield* Registry.Service;
+
+      // Tool names derive from operation keys lossily (`Operation.toolNameFromKey`), so a record is
+      // matched by re-deriving its name rather than by reconstructing a key — which rules out the
+      // indexed key lookup and would otherwise mean scanning every operation per resolution.
+      let index: Map<string, Operation.PersistentOperation[]> | undefined;
+      // Dropped on any registry change rather than only on a lookup miss: a hit against a stale index
+      // would resolve a name whose second claimant registered after the build, silently picking one
+      // of two operations instead of reporting the ambiguity below. The counter carries that signal
+      // across the query's own await, where clearing `index` alone would be undone by the assignment
+      // of a snapshot the change is already missing from.
+      let generation = 0;
+      yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          registry.changed.on(() => {
+            index = undefined;
+            generation++;
+          }),
+        ),
+        (unsubscribe) => Effect.sync(() => unsubscribe()),
+      );
+      const buildIndex = Effect.fn('buildToolNameIndex')(function* () {
+        // Retries rather than caching a snapshot the registry has already moved past; a change during
+        // the query is rare and finite, so this settles on the first quiet pass.
+        while (true) {
+          const seen = generation;
+          const records = yield* Effect.promise(() => registry.query(Filter.type(Operation.PersistentOperation)).run());
+          const built = new Map<string, Operation.PersistentOperation[]>();
+          for (const record of records) {
+            const key = Operation.getKey(record);
+            if (key == null) {
+              continue;
+            }
+            // Non-throwing: a record's key is untrusted, and one that cannot derive a valid name must
+            // cost only its own tool rather than every registry-backed tool in the index.
+            const name = Operation.tryToolNameFromKey(key);
+            if (name == null) {
+              log.warn('operation key cannot derive a valid tool name; not indexed', { key });
+              continue;
+            }
+            built.set(name, [...(built.get(name) ?? []), record]);
+          }
+          if (generation === seen) {
+            index = built;
+            return built;
+          }
+        }
+      });
+
       return {
         resolve: (id): Effect.Effect<Tool.Any, AiToolNotFoundError> =>
           Effect.gen(function* () {
@@ -44,15 +95,35 @@ export const makeToolResolverFromOperations = <R = never>({
               return tool;
             }
 
-            // Normalize to a full DXN key (tool IDs are plain NSIDs, stored keys are full DXNs).
-            const key = DXN.isDXN(id) ? id : `dxn:${id}`;
-            const results = yield* Effect.promise(() =>
-              registry.query(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(key))).run(),
-            );
-            if (results.length > 0) {
-              return projectFunctionToTool(Operation.deserialize(results[0]));
+            // A miss is conclusive: any registration since the build dropped the index above, so a
+            // rebuild here would only re-scan the registry for every id that is not an operation.
+            const matches = (index ?? (yield* buildIndex())).get(id);
+            if (matches == null) {
+              return yield* Effect.fail(new AiToolNotFoundError(id));
             }
-            return yield* Effect.fail(new AiToolNotFoundError(id));
+            // Two keys deriving one name (`webSearch` vs `web-search`) is an authoring error. Picking
+            // the first match would silently shadow the other, so it fails here instead — the only
+            // place both keys are visible at once (a ToolId no longer distinguishes them).
+            invariant(
+              matches.length === 1,
+              `Tool name "${id}" is claimed by ${matches.length} operations: ${matches
+                .map((record) => Operation.getKey(record))
+                .join(', ')}`,
+            );
+            // A registry record is untrusted input: its persisted schema may be one the projection
+            // cannot express as tool parameters. Throwing here would surface as a defect and fail
+            // the whole request, so one unprojectable operation is logged and dropped instead —
+            // `resolveToolkit` filters a not-found tool out and the agent runs with the rest.
+            try {
+              return projectFunctionToTool(Operation.deserialize(matches[0]));
+            } catch (err) {
+              log.error('operation cannot be projected to a tool; excluded from context', {
+                id,
+                key: Operation.getKey(matches[0]),
+                err,
+              });
+              return yield* Effect.fail(new AiToolNotFoundError(id));
+            }
           }),
       } satisfies Context.Service.Shape<typeof ToolResolverService>;
     }),
@@ -183,7 +254,7 @@ export const projectFunctionToTool = (fn: Operation.Definition.Any): Tool.Any =>
 
   const fields = createStructFieldsFromSchema(fn.input);
   const parametersSchema = Object.keys(fields).length === 0 ? EMPTY_PARAMETERS_SCHEMA : Schema.Struct(fields);
-  const tool = Tool.dynamic(makeToolName(fn.meta.name ?? fn.meta.key), {
+  const tool = Tool.dynamic(Operation.toolName(fn), {
     description: fn.meta.description,
     // A dynamic tool's JSON Schema is passed to the provider verbatim (`Tool.getJsonSchema` returns
     // it before any transformer runs), which is the only way to keep what the model is told and what
@@ -214,8 +285,13 @@ export const projectFunctionToTool = (fn: Operation.Definition.Any): Tool.Any =>
  * `required` — the same contract ECHO's own emitter keeps (`stripUndefinedMember`) and the one the
  * pre-migration corpus was recorded against.
  */
-const toModelJsonSchema = (schema: Schema.Codec<any, any>): JsonSchema.JsonSchema =>
-  statePropertyOpenness(dropNullBranches(Schema.toJsonSchemaDocument(schema).schema, new Set(asStringArray(schema))));
+const toModelJsonSchema = (schema: Schema.Codec<any, any>): JsonSchema.JsonSchema => {
+  // A recursive parameter renders as `$ref: '#/$defs/…'` with the bodies in a separate `definitions`
+  // record; keeping only the root would advertise a dangling reference to the model.
+  const { schema: root, definitions } = Schema.toJsonSchemaDocument(schema);
+  const document = Object.keys(definitions).length > 0 ? { ...root, $defs: definitions } : root;
+  return statePropertyOpenness(dropNullBranches(document, new Set(asStringArray(schema))));
+};
 
 /**
  * States openness on every object node that leaves it implied.
@@ -277,15 +353,6 @@ const withoutNull = (value: unknown): unknown => {
   return typeof only === 'object' && only !== null ? { ...rest, ...only } : only;
 };
 
-/**
- * @returns Tool name produced from function name by escaping invalid characters.
- */
-const makeToolName = (name: string) => {
-  const toolName = name.toLowerCase().replace(/[^a-zA-Z0-9]/g, '-');
-  invariant(toolName.match(/^[a-z_][a-z0-9-_]*$/));
-  return toolName;
-};
-
 // TODO(dmaretskyi): Factor out.
 /**
  * Projects an operation input struct into the LLM-facing tool parameter fields, mapping each
@@ -296,11 +363,23 @@ export const createStructFieldsFromSchema = (
   schema: Schema.Codec<any, any>,
 ): Record<string, Schema.Codec<any, any>> => {
   switch (schema.ast._tag) {
-    case 'Objects':
+    case 'Objects': {
+      // One cache for the whole struct: sibling properties may reach the same recursive body.
+      const expansions = new Map<SchemaAST.AST, SchemaAST.AST>();
       return Object.fromEntries(
-        schema.ast.propertySignatures.map((prop) => [prop.name, Schema.make(mapSchemaTypeForLLM(prop.type))]),
+        schema.ast.propertySignatures.map((prop) => [
+          prop.name,
+          Schema.make(mapSchemaTypeForLLM(prop.type, expansions)),
+        ]),
       );
+    }
+    // All three spell "this operation takes no input". `Void` is the authored form; the other two
+    // are what it degrades to across `Operation.serialize`/`deserialize`, which routes the schema
+    // through JSON Schema: `Schema.Void` emits `{type: 'null'}` and reads back as `Null`, and an
+    // operation persisted with no `inputSchema` at all reads back as `Schema.Unknown`.
     case 'Void':
+    case 'Null':
+    case 'Unknown':
       return {};
     default:
       return todo(`Unsupported schema AST: ${schema.ast._tag}`);
@@ -311,7 +390,10 @@ export const createStructFieldsFromSchema = (
  * Picks an LLM-friendly schema type for the given schema AST.
  * The picked schema type decodes to the original schema type.
  */
-const mapSchemaTypeForLLM = (ast: SchemaAST.AST): SchemaAST.AST => {
+const mapSchemaTypeForLLM = (
+  ast: SchemaAST.AST,
+  expansions: Map<SchemaAST.AST, SchemaAST.AST> = new Map(),
+): SchemaAST.AST => {
   if (Ref.isRefType(ast)) {
     // v4's element and property nodes carry their own modifiers, so the wrapper types are gone and
     // the annotations record is optional.
@@ -322,9 +404,29 @@ const mapSchemaTypeForLLM = (ast: SchemaAST.AST): SchemaAST.AST => {
     return SchemaEx.retainContext(ast, RefFromLLM.annotate({ description }).ast);
   }
 
+  // `mapAst` evaluates a suspended body eagerly, so a recursive schema would walk its own cycle
+  // forever. Memoizing by body identity and rebuilding the suspend lazily closes the cycle: the
+  // re-entrant call returns this very node instead of expanding the body again.
+  if (SchemaAST.isSuspend(ast)) {
+    const body = ast.thunk();
+    let mapped = expansions.get(body);
+    if (!mapped) {
+      let expanded: SchemaAST.AST | undefined;
+      mapped = new SchemaAST.Suspend(
+        () => (expanded ??= mapSchemaTypeForLLM(body, expansions)),
+        ast.annotations,
+        undefined,
+        ast.encoding,
+        ast.context,
+      );
+      expansions.set(body, mapped);
+    }
+    return mapped;
+  }
+
   // `mapAst` carries annotations, checks, encoding and `context` across every rebuilt node; in v4
   // optionality rides on `context`, so rebuilding by hand silently makes an optional key required.
-  return SchemaEx.mapAst(ast, (child) => mapSchemaTypeForLLM(child));
+  return SchemaEx.mapAst(ast, (child) => mapSchemaTypeForLLM(child, expansions));
 };
 
 const isHandlerLike = (value: unknown): value is Toolkit.WithHandler<Record<string, Tool.Any>> => {

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Collection, Database, Obj, Ref } from '@dxos/echo';
+import { Database, Obj, type Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
 import { ArtifactAdd } from './definitions';
@@ -21,21 +21,9 @@ const handler: Operation.WithHandler<typeof ArtifactAdd> = ArtifactAdd.pipe(
     Effect.fn(function* ({ project: projectRef, object: objectRef }) {
       const project = yield* Database.load(projectRef);
 
-      // Projects normally own an artifacts collection from creation; materialize one for those that don't.
-      let collection: Collection.Collection;
-      if (project.artifacts) {
-        collection = yield* Database.load(project.artifacts);
-      } else {
-        collection = yield* Database.add(Collection.make());
-        Obj.setParent(collection, project);
+      if (!project.artifacts.some((ref) => refKey(ref) === refKey(objectRef))) {
         Obj.update(project, (project) => {
-          project.artifacts = Ref.make(collection);
-        });
-      }
-
-      if (!collection.objects.some((ref) => refKey(ref) === refKey(objectRef))) {
-        Obj.update(collection, (collection) => {
-          collection.objects.push(objectRef);
+          project.artifacts = [...project.artifacts, objectRef];
         });
       }
 

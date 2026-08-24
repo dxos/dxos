@@ -24,7 +24,7 @@ EntityId.dangerouslyDisableRandomness();
 
 const ReadName = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.readName'),
+    key: DXN.make('com.example.operation.readName'),
     name: 'Read Name',
     description: 'Reads the name of an organization.',
   },
@@ -35,6 +35,29 @@ const ReadName = Operation.make({
   services: [Database.Service],
 });
 
+/**
+ * A self-referential tool input. The registry stores an operation as JSON schema, so resolving it
+ * back into a tool decodes a cyclic document -- the case that recursed until the stack blew.
+ */
+interface Comment {
+  readonly text: string;
+  readonly reply?: Comment;
+}
+const Comment: Schema.Codec<Comment> = Schema.Struct({
+  text: Schema.String,
+  reply: Schema.optional(Schema.suspend((): Schema.Codec<Comment> => Comment)),
+});
+
+const CountReplies = Operation.make({
+  meta: {
+    key: DXN.make('com.example.operation.countReplies'),
+    name: 'Count Replies',
+    description: 'Counts the number of replies nested inside a comment thread.',
+  },
+  input: Schema.Struct({ comment: Comment }),
+  output: Schema.Number,
+});
+
 const Handlers = OperationHandlerSet.make(
   Operation.withHandler(
     ReadName,
@@ -43,12 +66,30 @@ const Handlers = OperationHandlerSet.make(
       return resolved.name ?? '<no org>';
     }),
   ),
+  Operation.withHandler(
+    CountReplies,
+    Effect.fn(function* ({ comment }) {
+      let count = 0;
+      for (let node = comment.reply; node !== undefined; node = node.reply) {
+        count++;
+      }
+      return count;
+    }),
+  ),
 );
 
 const skill = Skill.make({
   key: 'org.dxos.skill.test',
   name: 'Test skill',
   tools: Skill.toolDefinitions({ operations: [ReadName] }),
+});
+
+// Kept separate from `skill`: adding a tool there would change the recorded request of the test
+// above, whose fixture is keyed on the tool list.
+const recursiveSkill = Skill.make({
+  key: 'org.dxos.skill.recursive',
+  name: 'Recursive input skill',
+  tools: Skill.toolDefinitions({ operations: [CountReplies] }),
 });
 
 const TestLayer = Layer.empty.pipe(
@@ -78,6 +119,23 @@ describe('Research', { tags: ['model-fixture'] }, () => {
           prompt: `What is the name of the organization? ${org.id}`,
           toolkit: yield* createToolkit({
             skills: [skill],
+          }),
+        });
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    LanguageModelFixture.isUpdateEnabled() ? 240_000 : 30_000,
+  );
+
+  it.effect(
+    'call a function with a recursive input',
+    Effect.fnUntraced(
+      function* (_) {
+        yield* new AiRequest.Request({ observer: GenerationObserver.fromPrinter(new ConsolePrinter()) }).run({
+          prompt: 'How many replies are nested under this comment? { text: "a", reply: { text: "b" } }',
+          toolkit: yield* createToolkit({
+            skills: [recursiveSkill],
           }),
         });
       },

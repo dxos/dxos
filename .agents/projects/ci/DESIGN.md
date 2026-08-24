@@ -15,8 +15,8 @@ Everything routes through `moon`, and `.moon/workspace.yml` decides where the re
 ### The `check` job runs in three stages, ordered by cost
 
 Its steps are cheap-first, because what the ordering buys is time-to-red-signal on a broken PR — not
-a shorter Check, which `storybook` (~20 min) sets, not `check` (~8 min). Stage boundaries are the
-dependency edges:
+a shorter Check, whose length is set by the `test` shards, not by `check` (~8 min). Stage boundaries
+are the dependency edges:
 
 1. **No-build gates, ~30 s combined** — `format-check` first (one unformatted file fails every job
    in the workflow), then the packaging scripts, then the peer-dependency resolution.
@@ -24,9 +24,12 @@ dependency edges:
    `check-module-structure` belongs here and not in stage 1 despite costing 5 s: it declares
    `deps: [build]`, so ahead of the gate it would pull the builds along with it.
 3. **The two slow checks** — `knip` (2m36s–3m21s, and the bulk of the job's real work) and
-   `check-boot-budget` (53 s cold). Only this stage is report-all (`continue-on-error` plus a gate
-   step): fail-fast costs nothing when steps cost seconds, but here it hides one failure behind the
-   other for a whole further run of the job.
+   `check-plugin-set`. Only this stage is report-all (`continue-on-error` plus a gate step):
+   fail-fast costs nothing when steps cost seconds, but here it hides one failure behind the other
+   for a whole further run of the job. `check-boot-budget` was the second of the two until it moved
+   to its own `boot-budget` job; `check-plugin-set` stayed because its `DX_PLUGIN_SET=production`
+   bundle is cheap only on a runner where stage 2 has already warmed `^:build` (22 s there, against
+   the boot budget's 41 s when the two shared this job).
 
 Two facts the ordering depends on, both verified rather than assumed:
 
@@ -37,10 +40,11 @@ Two facts the ordering depends on, both verified rather than assumed:
 - **The production `bundle` is not otherwise built anywhere in Check.** `:build` does not include it
   and `e2e-bundle` builds `bundle-e2e`, a separate cache entry by design (`DX_PWA=false` changes the
   very boot graph the budget measures). So `check-boot-budget` pays for that bundle wherever it
-  lives; on the `check` job it at least follows stage 2, which has warmed the library builds under
-  it. Measured there: 53 s for the step, 28 s of it the bundle building from source with its 281
-  dependency tasks hydrated. Its former home — one `e2e` cell — could never gate a PR automatically:
-  `e2e` runs on main/changeset-release, or on an explicit dispatch someone has to ask for.
+  lives, which is why it now owns the `boot-budget` job: on `check` it sat behind all of stage 1+2
+  for library builds the remote cache already holds, and it was measured there at 53 s for the step,
+  28 s of it the bundle building from source with its 281 dependency tasks hydrated. Its earlier home
+  — one `e2e` cell — could never gate a PR automatically: `e2e` runs on main/changeset-release, or on
+  an explicit dispatch someone has to ask for.
 
 Neither caching the small scripts as moon tasks nor caching `knip` was worth it: the scripts run in
 1–6 s, and knip is a whole-repo analysis that any real PR invalidates, so its hit rate is ~0.
@@ -145,7 +149,29 @@ holds every run red; Trunk still records each first attempt. All three carry a S
 TODO and come out when DX-1152 lands. Nothing else in the repo may retry.
 
 Runtime, cold cache: e2e's slowest shard is 7.7 min (6.2 warm) against `test` at 12.8 min and
-`storybook` at 9.4 min. **E2E is no longer the critical path — `test` is.**
+`storybook` at 9.4 min, measured when unit/browser, storybook and workerd were three flavour-shaped
+jobs. **E2E is no longer the critical path — `test` is.**
+
+### `test` shards by work, not by flavour
+
+The three former jobs (`test`, `storybook`, `workerd`) each fixed a cell's size to its flavour's own
+total, so the critical path was whatever storybook happened to weigh and more runners could not move
+it. They are now one matrix of four cells, each `moon exec --job N --job-total 4 :test :test-browser
+:test-storybook :test-workerd`: moon partitions the whole target set, so cells are sized by work and a
+new suite lands wherever there is room. Consequences worth knowing:
+
+- Playwright is installed on every cell — moon owns cell assignment, so a cell's flavours are not
+  known to the workflow.
+- One `VITEST_COVERAGE` for all four is safe because `vite.base.config.ts` drops coverage for the
+  `workerd` project type; that used to be a per-job `VITEST_COVERAGE: 'false'`.
+- `--on-failure continue`, as on the e2e cells: moon's default bail would drop a failing cell's
+  remaining targets and hide what they cost.
+- Artifacts are per cell (`vitest-report-<node>-<shard>`), and `needs.test.result` in `report`
+  aggregates the matrix.
+
+`--job` is also what the retired e2e sharding used; there it failed for a different reason (the
+partitioner co-located composer's two halves — see below). Here there is no such pair, and no target
+list is hand-maintained.
 
 ### Running a campaign, and attributing a red cell
 

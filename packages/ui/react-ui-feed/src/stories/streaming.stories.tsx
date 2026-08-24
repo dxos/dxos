@@ -24,7 +24,7 @@ const meta: Meta<FeedStoryProps> = {
   parameters: { layout: 'fullscreen' },
   // Seeded with history on purpose: a feed that does not fill its viewport has nothing to follow,
   // so a test of the follow over an empty one passes whatever the follow does.
-  args: { scenario: 'assistant', count: 200, streaming: true, debug: false, scrollPastEnd: false },
+  args: { scenario: 'assistant', count: 200, streaming: true, debug: false, tailLines: 0 },
 };
 
 export default meta;

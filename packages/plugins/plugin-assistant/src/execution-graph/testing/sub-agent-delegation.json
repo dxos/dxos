@@ -20,7 +20,7 @@
     "meta": {
       "pid": "e200b1f7-30a5-4aa8-ba12-31c6d9ddf4aa",
       "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
-      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "processName": "Get Agent Context (dxn:org.dxos.operation.assistantToolkit.getContext)",
       "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
       "runtimeName": "local"
     },
@@ -30,7 +30,7 @@
         "timestamp": 1780800819779,
         "type": "operation.start",
         "data": {
-          "key": "dxn:org.dxos.function.agent.getContext",
+          "key": "dxn:org.dxos.operation.assistantToolkit.getContext",
           "name": "Get Agent Context",
           "icon": "ph--info--regular"
         }
@@ -41,7 +41,7 @@
     "meta": {
       "pid": "e200b1f7-30a5-4aa8-ba12-31c6d9ddf4aa",
       "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
-      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "processName": "Get Agent Context (dxn:org.dxos.operation.assistantToolkit.getContext)",
       "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
       "runtimeName": "local"
     },
@@ -51,7 +51,7 @@
         "timestamp": 1780800819796,
         "type": "operation.end",
         "data": {
-          "key": "dxn:org.dxos.function.agent.getContext",
+          "key": "dxn:org.dxos.operation.assistantToolkit.getContext",
           "name": "Get Agent Context",
           "icon": "ph--info--regular",
           "outcome": "success"
@@ -87,7 +87,7 @@
     "meta": {
       "pid": "fe05f5e6-f261-464a-a993-1ecc78557286",
       "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
-      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "processName": "Get Agent Context (dxn:org.dxos.operation.assistantToolkit.getContext)",
       "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
       "runtimeName": "local"
     },
@@ -97,7 +97,7 @@
         "timestamp": 1780800820015,
         "type": "operation.start",
         "data": {
-          "key": "dxn:org.dxos.function.agent.getContext",
+          "key": "dxn:org.dxos.operation.assistantToolkit.getContext",
           "name": "Get Agent Context",
           "icon": "ph--info--regular"
         }
@@ -108,7 +108,7 @@
     "meta": {
       "pid": "fe05f5e6-f261-464a-a993-1ecc78557286",
       "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
-      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "processName": "Get Agent Context (dxn:org.dxos.operation.assistantToolkit.getContext)",
       "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
       "runtimeName": "local"
     },
@@ -118,7 +118,7 @@
         "timestamp": 1780800820031,
         "type": "operation.end",
         "data": {
-          "key": "dxn:org.dxos.function.agent.getContext",
+          "key": "dxn:org.dxos.operation.assistantToolkit.getContext",
           "name": "Get Agent Context",
           "icon": "ph--info--regular",
           "outcome": "success"
@@ -148,7 +148,7 @@
             "name": "update-tasks",
             "input": "{\"tasks\": [{\"id\":\"task_1\",\"title\":\"Create a sub-agent that writes a haiku in a new document\",\"status\":\"in-progress\"}]}",
             "providerExecuted": false,
-            "operationKey": "dxn:org.dxos.function.planning.updateTasks",
+            "operationKey": "dxn:org.dxos.operation.assistantToolkit.updateTasks",
             "operationName": "Update tasks",
             "operationIcon": "ph--check-square-offset--regular"
           }
@@ -192,7 +192,7 @@
     "meta": {
       "pid": "4f9baefc-1353-406d-b883-0b5a7d1f0e31",
       "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
-      "processName": "Update tasks (dxn:org.dxos.function.planning.updateTasks)",
+      "processName": "Update tasks (dxn:org.dxos.operation.assistantToolkit.updateTasks)",
       "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
       "conversationId": "01KTFZZXTFTNVTK86WEJ6DKTFT",
       "runtimeName": "local"
@@ -203,7 +203,7 @@
         "timestamp": 1780800822760,
         "type": "operation.start",
         "data": {
-          "key": "dxn:org.dxos.function.planning.updateTasks",
+          "key": "dxn:org.dxos.operation.assistantToolkit.updateTasks",
           "name": "Update tasks",
           "icon": "ph--check-square-offset--regular"
         }
@@ -214,7 +214,7 @@
     "meta": {
       "pid": "4f9baefc-1353-406d-b883-0b5a7d1f0e31",
       "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
-      "processName": "Update tasks (dxn:org.dxos.function.planning.updateTasks)",
+      "processName": "Update tasks (dxn:org.dxos.operation.assistantToolkit.updateTasks)",
       "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
       "conversationId": "01KTFZZXTFTNVTK86WEJ6DKTFT",
       "runtimeName": "local"
@@ -225,7 +225,7 @@
         "timestamp": 1780800822783,
         "type": "operation.end",
         "data": {
-          "key": "dxn:org.dxos.function.planning.updateTasks",
+          "key": "dxn:org.dxos.operation.assistantToolkit.updateTasks",
           "name": "Update tasks",
           "icon": "ph--check-square-offset--regular",
           "outcome": "success"
@@ -264,7 +264,7 @@
     "meta": {
       "pid": "211a43a3-f85b-4925-aae3-af92c46ac91b",
       "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
-      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "processName": "Get Agent Context (dxn:org.dxos.operation.assistantToolkit.getContext)",
       "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
       "runtimeName": "local"
     },
@@ -274,7 +274,7 @@
         "timestamp": 1780800823031,
         "type": "operation.start",
         "data": {
-          "key": "dxn:org.dxos.function.agent.getContext",
+          "key": "dxn:org.dxos.operation.assistantToolkit.getContext",
           "name": "Get Agent Context",
           "icon": "ph--info--regular"
         }
@@ -285,7 +285,7 @@
     "meta": {
       "pid": "211a43a3-f85b-4925-aae3-af92c46ac91b",
       "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
-      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "processName": "Get Agent Context (dxn:org.dxos.operation.assistantToolkit.getContext)",
       "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
       "runtimeName": "local"
     },
@@ -295,7 +295,7 @@
         "timestamp": 1780800823047,
         "type": "operation.end",
         "data": {
-          "key": "dxn:org.dxos.function.agent.getContext",
+          "key": "dxn:org.dxos.operation.assistantToolkit.getContext",
           "name": "Get Agent Context",
           "icon": "ph--info--regular",
           "outcome": "success"
@@ -325,7 +325,7 @@
             "name": "delegate-task",
             "input": "{\"title\": \"Create a haiku in a new document\"}",
             "providerExecuted": false,
-            "operationKey": "dxn:org.dxos.function.delegation.delegateTask",
+            "operationKey": "dxn:org.dxos.operation.assistantToolkit.delegateTask",
             "operationName": "Delegate task",
             "operationIcon": "ph--share-network--regular"
           }
@@ -369,7 +369,7 @@
     "meta": {
       "pid": "cad71a95-5fbc-45cd-a834-bfc7e5085a3f",
       "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
-      "processName": "Delegate task (dxn:org.dxos.function.delegation.delegateTask)",
+      "processName": "Delegate task (dxn:org.dxos.operation.assistantToolkit.delegateTask)",
       "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
       "conversationId": "01KTFZZXTFTNVTK86WEJ6DKTFT",
       "runtimeName": "local"
@@ -380,7 +380,7 @@
         "timestamp": 1780800825246,
         "type": "operation.start",
         "data": {
-          "key": "dxn:org.dxos.function.delegation.delegateTask",
+          "key": "dxn:org.dxos.operation.assistantToolkit.delegateTask",
           "name": "Delegate task",
           "icon": "ph--share-network--regular"
         }
@@ -391,7 +391,7 @@
     "meta": {
       "pid": "cad71a95-5fbc-45cd-a834-bfc7e5085a3f",
       "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
-      "processName": "Delegate task (dxn:org.dxos.function.delegation.delegateTask)",
+      "processName": "Delegate task (dxn:org.dxos.operation.assistantToolkit.delegateTask)",
       "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
       "conversationId": "01KTFZZXTFTNVTK86WEJ6DKTFT",
       "runtimeName": "local"
@@ -402,7 +402,7 @@
         "timestamp": 1780800825268,
         "type": "operation.end",
         "data": {
-          "key": "dxn:org.dxos.function.delegation.delegateTask",
+          "key": "dxn:org.dxos.operation.assistantToolkit.delegateTask",
           "name": "Delegate task",
           "icon": "ph--share-network--regular",
           "outcome": "success"
@@ -441,7 +441,7 @@
     "meta": {
       "pid": "cf82b042-0703-4e57-b630-204f0e13deee",
       "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
-      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "processName": "Get Agent Context (dxn:org.dxos.operation.assistantToolkit.getContext)",
       "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
       "runtimeName": "local"
     },
@@ -451,7 +451,7 @@
         "timestamp": 1780800825537,
         "type": "operation.start",
         "data": {
-          "key": "dxn:org.dxos.function.agent.getContext",
+          "key": "dxn:org.dxos.operation.assistantToolkit.getContext",
           "name": "Get Agent Context",
           "icon": "ph--info--regular"
         }
@@ -462,7 +462,7 @@
     "meta": {
       "pid": "cf82b042-0703-4e57-b630-204f0e13deee",
       "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
-      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "processName": "Get Agent Context (dxn:org.dxos.operation.assistantToolkit.getContext)",
       "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
       "runtimeName": "local"
     },
@@ -472,7 +472,7 @@
         "timestamp": 1780800825552,
         "type": "operation.end",
         "data": {
-          "key": "dxn:org.dxos.function.agent.getContext",
+          "key": "dxn:org.dxos.operation.assistantToolkit.getContext",
           "name": "Get Agent Context",
           "icon": "ph--info--regular",
           "outcome": "success"
@@ -577,7 +577,7 @@
   {
     "meta": {
       "pid": "58e4ed1d-6cb2-475e-850a-d89be0c5c714",
-      "processName": "Update Chat Name (dxn:org.dxos.plugin.assistant.operation.updateChatName)",
+      "processName": "Update Chat Name (dxn:org.dxos.operation.assistant.updateChatName)",
       "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
       "runtimeName": "local"
     },
@@ -587,7 +587,7 @@
         "timestamp": 1780800828033,
         "type": "operation.start",
         "data": {
-          "key": "dxn:org.dxos.plugin.assistant.operation.updateChatName",
+          "key": "dxn:org.dxos.operation.assistant.updateChatName",
           "name": "Update Chat Name",
           "icon": "ph--pencil--regular"
         }
@@ -598,7 +598,7 @@
     "meta": {
       "pid": "b070e30f-bafe-4118-94da-83681c24d49d",
       "parentPid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
-      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "processName": "Get Agent Context (dxn:org.dxos.operation.assistantToolkit.getContext)",
       "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
       "runtimeName": "local"
     },
@@ -608,7 +608,7 @@
         "timestamp": 1780800828277,
         "type": "operation.start",
         "data": {
-          "key": "dxn:org.dxos.function.agent.getContext",
+          "key": "dxn:org.dxos.operation.assistantToolkit.getContext",
           "name": "Get Agent Context",
           "icon": "ph--info--regular"
         }
@@ -619,7 +619,7 @@
     "meta": {
       "pid": "b070e30f-bafe-4118-94da-83681c24d49d",
       "parentPid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
-      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "processName": "Get Agent Context (dxn:org.dxos.operation.assistantToolkit.getContext)",
       "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
       "runtimeName": "local"
     },
@@ -629,7 +629,7 @@
         "timestamp": 1780800828278,
         "type": "operation.end",
         "data": {
-          "key": "dxn:org.dxos.function.agent.getContext",
+          "key": "dxn:org.dxos.operation.assistantToolkit.getContext",
           "name": "Get Agent Context",
           "icon": "ph--info--regular",
           "outcome": "success"
@@ -665,7 +665,7 @@
     "meta": {
       "pid": "c2b79fcc-a455-4546-b306-fe175a2b646a",
       "parentPid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
-      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "processName": "Get Agent Context (dxn:org.dxos.operation.assistantToolkit.getContext)",
       "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
       "runtimeName": "local"
     },
@@ -675,7 +675,7 @@
         "timestamp": 1780800828453,
         "type": "operation.start",
         "data": {
-          "key": "dxn:org.dxos.function.agent.getContext",
+          "key": "dxn:org.dxos.operation.assistantToolkit.getContext",
           "name": "Get Agent Context",
           "icon": "ph--info--regular"
         }
@@ -686,7 +686,7 @@
     "meta": {
       "pid": "c2b79fcc-a455-4546-b306-fe175a2b646a",
       "parentPid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
-      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "processName": "Get Agent Context (dxn:org.dxos.operation.assistantToolkit.getContext)",
       "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
       "runtimeName": "local"
     },
@@ -696,7 +696,7 @@
         "timestamp": 1780800828455,
         "type": "operation.end",
         "data": {
-          "key": "dxn:org.dxos.function.agent.getContext",
+          "key": "dxn:org.dxos.operation.assistantToolkit.getContext",
           "name": "Get Agent Context",
           "icon": "ph--info--regular",
           "outcome": "success"
@@ -707,7 +707,7 @@
   {
     "meta": {
       "pid": "58e4ed1d-6cb2-475e-850a-d89be0c5c714",
-      "processName": "Update Chat Name (dxn:org.dxos.plugin.assistant.operation.updateChatName)",
+      "processName": "Update Chat Name (dxn:org.dxos.operation.assistant.updateChatName)",
       "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
       "runtimeName": "local"
     },
@@ -717,7 +717,7 @@
         "timestamp": 1780800828735,
         "type": "operation.end",
         "data": {
-          "key": "dxn:org.dxos.plugin.assistant.operation.updateChatName",
+          "key": "dxn:org.dxos.operation.assistant.updateChatName",
           "name": "Update Chat Name",
           "icon": "ph--pencil--regular",
           "outcome": "success"
@@ -771,7 +771,7 @@
             "name": "create",
             "input": "{\"name\": \"Haiku\", \"content\": \"# Haiku\\n\\nAutumn leaves descend,\\nWhispering through quiet woods—\\nEarth breathes in their fall.\"}",
             "providerExecuted": false,
-            "operationKey": "dxn:org.dxos.function.markdown.create",
+            "operationKey": "dxn:org.dxos.operation.markdown.create",
             "operationName": "Create",
             "operationIcon": "ph--file-text--regular"
           }
@@ -815,7 +815,7 @@
     "meta": {
       "pid": "dd1b51d9-f2f7-4144-945b-7ccd96978964",
       "parentPid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
-      "processName": "Create (dxn:org.dxos.function.markdown.create)",
+      "processName": "Create (dxn:org.dxos.operation.markdown.create)",
       "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
       "runtimeName": "local"
     },
@@ -825,7 +825,7 @@
         "timestamp": 1780800832091,
         "type": "operation.start",
         "data": {
-          "key": "dxn:org.dxos.function.markdown.create",
+          "key": "dxn:org.dxos.operation.markdown.create",
           "name": "Create",
           "icon": "ph--file-text--regular"
         }
@@ -836,7 +836,7 @@
     "meta": {
       "pid": "dd1b51d9-f2f7-4144-945b-7ccd96978964",
       "parentPid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
-      "processName": "Create (dxn:org.dxos.function.markdown.create)",
+      "processName": "Create (dxn:org.dxos.operation.markdown.create)",
       "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
       "runtimeName": "local"
     },
@@ -846,7 +846,7 @@
         "timestamp": 1780800832174,
         "type": "operation.end",
         "data": {
-          "key": "dxn:org.dxos.function.markdown.create",
+          "key": "dxn:org.dxos.operation.markdown.create",
           "name": "Create",
           "icon": "ph--file-text--regular",
           "outcome": "success"
@@ -885,7 +885,7 @@
     "meta": {
       "pid": "01175964-6ffa-4785-84cb-649cbb80edd5",
       "parentPid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
-      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "processName": "Get Agent Context (dxn:org.dxos.operation.assistantToolkit.getContext)",
       "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
       "runtimeName": "local"
     },
@@ -895,7 +895,7 @@
         "timestamp": 1780800832318,
         "type": "operation.start",
         "data": {
-          "key": "dxn:org.dxos.function.agent.getContext",
+          "key": "dxn:org.dxos.operation.assistantToolkit.getContext",
           "name": "Get Agent Context",
           "icon": "ph--info--regular"
         }
@@ -906,7 +906,7 @@
     "meta": {
       "pid": "01175964-6ffa-4785-84cb-649cbb80edd5",
       "parentPid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
-      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "processName": "Get Agent Context (dxn:org.dxos.operation.assistantToolkit.getContext)",
       "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
       "runtimeName": "local"
     },
@@ -916,7 +916,7 @@
         "timestamp": 1780800832319,
         "type": "operation.end",
         "data": {
-          "key": "dxn:org.dxos.function.agent.getContext",
+          "key": "dxn:org.dxos.operation.assistantToolkit.getContext",
           "name": "Get Agent Context",
           "icon": "ph--info--regular",
           "outcome": "success"
@@ -1061,7 +1061,7 @@
     "meta": {
       "pid": "901f7e36-b0be-4e9e-99df-389261ff3722",
       "parentPid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
-      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "processName": "Get Agent Context (dxn:org.dxos.operation.assistantToolkit.getContext)",
       "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
       "runtimeName": "local"
     },
@@ -1071,7 +1071,7 @@
         "timestamp": 1780800834486,
         "type": "operation.start",
         "data": {
-          "key": "dxn:org.dxos.function.agent.getContext",
+          "key": "dxn:org.dxos.operation.assistantToolkit.getContext",
           "name": "Get Agent Context",
           "icon": "ph--info--regular"
         }
@@ -1082,7 +1082,7 @@
     "meta": {
       "pid": "901f7e36-b0be-4e9e-99df-389261ff3722",
       "parentPid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
-      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "processName": "Get Agent Context (dxn:org.dxos.operation.assistantToolkit.getContext)",
       "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
       "runtimeName": "local"
     },
@@ -1092,7 +1092,7 @@
         "timestamp": 1780800834487,
         "type": "operation.end",
         "data": {
-          "key": "dxn:org.dxos.function.agent.getContext",
+          "key": "dxn:org.dxos.operation.assistantToolkit.getContext",
           "name": "Get Agent Context",
           "icon": "ph--info--regular",
           "outcome": "success"
@@ -1189,7 +1189,7 @@
     "meta": {
       "pid": "639e78ff-d0b1-4d00-8e52-7fc43d245c9f",
       "parentPid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
-      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "processName": "Get Agent Context (dxn:org.dxos.operation.assistantToolkit.getContext)",
       "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
       "runtimeName": "local"
     },
@@ -1199,7 +1199,7 @@
         "timestamp": 1780800837746,
         "type": "operation.start",
         "data": {
-          "key": "dxn:org.dxos.function.agent.getContext",
+          "key": "dxn:org.dxos.operation.assistantToolkit.getContext",
           "name": "Get Agent Context",
           "icon": "ph--info--regular"
         }
@@ -1210,7 +1210,7 @@
     "meta": {
       "pid": "639e78ff-d0b1-4d00-8e52-7fc43d245c9f",
       "parentPid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
-      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "processName": "Get Agent Context (dxn:org.dxos.operation.assistantToolkit.getContext)",
       "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
       "runtimeName": "local"
     },
@@ -1220,7 +1220,7 @@
         "timestamp": 1780800837747,
         "type": "operation.end",
         "data": {
-          "key": "dxn:org.dxos.function.agent.getContext",
+          "key": "dxn:org.dxos.operation.assistantToolkit.getContext",
           "name": "Get Agent Context",
           "icon": "ph--info--regular",
           "outcome": "success"

@@ -6,6 +6,20 @@ User-reported defects and small UX corrections found while using Composer, track
 across whichever package owns the fix. Findings and rationale live in
 [DESIGN.md](DESIGN.md); this file is the ledger.
 
+## Markdown editor
+
+- [ ] **Disable the smart em-dash input rule — it breaks tables.** Typing `--` inside a table
+      delimiter row (`| --- |`) is rewritten to an em-dash, which destroys the alignment row and
+      with it the table. Reported 2026-08-23 while fixing the table-insert defects below.
+- [x] **Table toolbar button was disabled on a blank line and enabled on a full one** — inverted.
+      A table replaces the line it lands on, so it belongs on a blank line
+      ([blocks.ts](../../../packages/ui/react-ui-editor/src/components/EditorToolbar/blocks.ts)).
+- [x] **Slash menu and toolbar inserted different tables** — the menu had its own literal (three
+      empty columns) while the toolbar used a snippet (two columns, placeholder cells). The menu now
+      calls the same `insertTable`, which takes an optional position so it can insert at the
+      consumed trigger
+      ([menu-presets.ts](../../../packages/ui/react-ui-editor/src/components/EditorMenuProvider/menu-presets.ts)).
+
 ## Phase 1: Inbox message article
 
 - [x] **Drop per-message expand/collapse when a conversation has one message**

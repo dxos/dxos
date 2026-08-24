@@ -4,15 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import {
-  AgentRegistry,
-  type StateError,
-  type StateStore,
-  type Type,
-  identifiersForUser,
-  labelForUser,
-  tapStage,
-} from '@dxos/crawler';
+import { AgentRegistry, type StateError, type StateStore, type Type, tapStage } from '@dxos/crawler';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type Stage } from '@dxos/pipeline';
@@ -42,7 +34,10 @@ export const detectQuestions = (text: string): string[] =>
  * Find-or-create the ECHO Person for a question asker, keyed by the stable source-native user id,
  * and link the crawler's agent profile to it (`Profile.ref` = the Person's DXN). Idempotent.
  */
-const upsertAsker = (db: Database.Database, author: Type.User): Effect.Effect<void, StoreError, AgentRegistry> =>
+const upsertAsker = (
+  db: Database.Database,
+  author: Type.User,
+): Effect.Effect<void, StoreError, AgentRegistry.AgentRegistry> =>
   Effect.gen(function* () {
     const key = { source: DISCORD_SOURCE, id: author.id };
     const found = yield* Database.query(Query.select(Filter.foreignKeys(Person.Person, [key]))).run.pipe(
@@ -54,14 +49,16 @@ const upsertAsker = (db: Database.Database, author: Type.User): Effect.Effect<vo
         : yield* Database.add(
             Person.make({
               [Obj.Meta]: { keys: [key] },
-              fullName: labelForUser(author) ?? author.id,
+              fullName: AgentRegistry.labelForUser(author) ?? author.id,
               ...(author.username ? { nickname: author.username } : {}),
             }),
           ).pipe(Effect.provide(Database.layer(db)));
 
-    const registry = yield* AgentRegistry;
-    const agent = yield* registry.resolve(identifiersForUser(author), labelForUser(author));
-    yield* registry.setRef(agent.id, Obj.getURI(person).toString());
+    const agent = yield* AgentRegistry.resolve(
+      AgentRegistry.identifiersForUser(author),
+      AgentRegistry.labelForUser(author),
+    );
+    yield* AgentRegistry.setRef(agent.id, Obj.getURI(person).toString());
   }).pipe(
     Effect.catch((error) =>
       error instanceof StoreError
@@ -78,7 +75,12 @@ const upsertAsker = (db: Database.Database, author: Type.User): Effect.Effect<vo
  */
 export const extractQuestionsStage = (
   options: ExtractQuestionsOptions = {},
-): Stage.Stage<Type.Event, Type.Event, StateError, ExtractedQuestionStore | AgentRegistry | StateStore> =>
+): Stage.Stage<
+  Type.Event,
+  Type.Event,
+  StateError,
+  ExtractedQuestionStore.ExtractedQuestionStore | AgentRegistry.AgentRegistry | StateStore.StateStore
+> =>
   tapStage('extract-questions', ['Message'], (event) =>
     event._tag !== 'Message'
       ? Effect.void
@@ -87,31 +89,28 @@ export const extractQuestionsStage = (
           if (questions.length === 0) {
             return;
           }
-          const store = yield* ExtractedQuestionStore;
           yield* Effect.forEach(
             questions,
             (question) =>
-              store
-                .put({
-                  authorId: event.message.author.id,
-                  ...(event.message.author.displayName ? { authorLabel: event.message.author.displayName } : {}),
-                  targetId: event.target.id,
-                  messageId: event.message.id,
-                  question,
-                  ...(event.message.createdAt ? { askedAt: event.message.createdAt } : {}),
-                })
-                .pipe(
-                  Effect.tap(() =>
-                    Effect.sync(() =>
-                      log.info('question', {
-                        author: event.message.author.displayName ?? event.message.author.id,
-                        target: event.target.id,
-                        message: event.message.id,
-                        question,
-                      }),
-                    ),
+              ExtractedQuestionStore.put({
+                authorId: event.message.author.id,
+                ...(event.message.author.displayName ? { authorLabel: event.message.author.displayName } : {}),
+                targetId: event.target.id,
+                messageId: event.message.id,
+                question,
+                ...(event.message.createdAt ? { askedAt: event.message.createdAt } : {}),
+              }).pipe(
+                Effect.tap(() =>
+                  Effect.sync(() =>
+                    log.info('question', {
+                      author: event.message.author.displayName ?? event.message.author.id,
+                      target: event.target.id,
+                      message: event.message.id,
+                      question,
+                    }),
                   ),
                 ),
+              ),
             { discard: true },
           );
           if (options.db) {

@@ -10,16 +10,12 @@ import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref, Type } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
 
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
 /**
  * Generic create operation: produces a Connection bound to the given AccessToken.
  */
 export const CreateConnection = Operation.make({
   meta: {
-    key: makeKey('createConnection'),
+    key: DXN.make('org.dxos.operation.connector.createConnection'),
     name: 'Create Connection',
     description: 'Creates a new Connection bound to an existing AccessToken.',
     icon: 'ph--plugs-connected--regular',

@@ -28,7 +28,7 @@ const FUNCTION_FORMAT = trim`
 
   const MyFunction = Operation.make({
     meta: {
-      key: DXN.make('org.dxos.script.myFunction'),
+      key: DXN.make('com.example.operation.example.myFunction'),
       name: 'My Function',
     },
     input: Schema.Struct({
@@ -96,7 +96,7 @@ const AVAILABLE_PACKAGES = trim`
 
 export const Create = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.script.create'),
+    key: DXN.make('org.dxos.operation.script.createFunction'),
     name: 'Create',
     description: `Creates a new function with TypeScript source code and adds it to the space. ${FUNCTION_FORMAT} ${AVAILABLE_PACKAGES}`,
     icon: 'ph--code--regular',
@@ -120,7 +120,7 @@ export const Create = Operation.make({
 
 export const Read = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.script.read'),
+    key: DXN.make('org.dxos.operation.script.read'),
     name: 'Read',
     description: 'Reads the source code and metadata of a function.',
     icon: 'ph--file-text--regular',
@@ -152,7 +152,7 @@ const Edit = Schema.Struct({
 
 export const Update = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.script.update'),
+    key: DXN.make('org.dxos.operation.script.update'),
     name: 'Update',
     description: `Updates the source code or metadata of a function. ${FUNCTION_FORMAT}`,
     icon: 'ph--pencil--regular',
@@ -177,7 +177,7 @@ export const Update = Operation.make({
 
 export const Delete = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.script.delete'),
+    key: DXN.make('org.dxos.operation.script.delete'),
     name: 'Delete',
     description: 'Deletes a function and its source from the space.',
     icon: 'ph--trash--regular',
@@ -191,7 +191,7 @@ export const Delete = Operation.make({
 
 export const Deploy = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.script.deploy'),
+    key: DXN.make('org.dxos.operation.script.deploy'),
     name: 'Deploy',
     description: `Deploys a function to the Edge runtime. The function source must follow the required format: a single export default of Operation.pipe(Operation.withHandler(Effect.fn(function* (...) { ... }))). See the Create operation description for a full example.`,
     icon: 'ph--rocket-launch--regular',
@@ -210,7 +210,7 @@ export const Deploy = Operation.make({
 
 export const Invoke = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.script.invoke'),
+    key: DXN.make('org.dxos.operation.script.invoke'),
     name: 'Invoke',
     description: 'Invokes a deployed Edge function with the given payload.',
     icon: 'ph--play--regular',
@@ -252,7 +252,7 @@ const InvocationSpanSchema = Schema.Struct({
 
 export const InspectInvocations = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.script.inspectInvocations'),
+    key: DXN.make('org.dxos.operation.script.inspectInvocations'),
     name: 'InspectInvocations',
     description: 'Queries the invocation trace feed for a function, returning its invocation history.',
     icon: 'ph--magnifying-glass--regular',
@@ -294,7 +294,7 @@ const DeployedFunctionSchema = Schema.Struct({
 
 export const QueryDeployedFunctions = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.script.queryDeployed'),
+    key: DXN.make('org.dxos.operation.script.queryDeployed'),
     name: 'QueryDeployedFunctions',
     description: 'Lists all functions deployed to the EDGE runtime. Use InstallFunction to add one to the space.',
     icon: 'ph--list--regular',
@@ -310,7 +310,7 @@ export const QueryDeployedFunctions = Operation.make({
 
 export const InstallFunction = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.script.install'),
+    key: DXN.make('org.dxos.operation.script.install'),
     name: 'InstallFunction',
     description:
       'Installs a deployed EDGE function into the current space by key. The returned function ID can be passed directly to Invoke.',

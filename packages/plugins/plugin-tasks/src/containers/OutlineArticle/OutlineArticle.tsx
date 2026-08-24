@@ -54,8 +54,8 @@ export const OutlineArticle = ({ role, attendableId, subject: outline }: Outline
   const handleConvertCurrent = useCallback(() => outlineRef.current?.convertToTask(), []);
 
   // Task titles are edited independently of the document, so the link text is reconciled from the
-  // live objects rather than trusted as written. Membership is the parent edge, so unrelated tasks
-  // in the space are dropped before the map is built.
+  // live objects rather than trusted as written. Membership is the set's `tasks` array, so
+  // unrelated tasks in the space are dropped before the map is built.
   const taskSet = outline.taskSet?.target;
   const tasks = useQuery(space?.db, taskSet ? Filter.type(Task.Task) : Filter.nothing());
   // `useQuery` re-emits only when result membership changes, never on a member's property change,
@@ -67,10 +67,9 @@ export const OutlineArticle = ({ role, attendableId, subject: outline }: Outline
     return () => unsubscribes.forEach((unsubscribe) => unsubscribe());
   }, [tasks]);
   const resolveLinkLabel = useMemo(() => {
+    const members = new Set(taskSet?.tasks.map((ref) => ref.target?.id));
     const labels = new Map(
-      tasks
-        .filter((task) => Obj.getParent(task)?.id === taskSet?.id)
-        .map((task) => [Obj.getURI(task).toString(), task.title]),
+      tasks.filter((task) => members.has(task.id)).map((task) => [Obj.getURI(task).toString(), task.title]),
     );
     return (url: string) => labels.get(url);
   }, [tasks, taskSet, tick]);

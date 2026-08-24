@@ -30,7 +30,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
     (get) => {
       const chats =
         companionTo && db
-          ? get(db.query(Query.select(Filter.id(companionTo.id)).targetOf(Chat.CompanionTo).source()).atom)
+          ? get(db.query(Query.select(Filter.id(companionTo.id)).children()).atom).filter(Obj.instanceOf(Chat.Chat))
           : [];
 
       const builder = MenuBuilder.make().root({
@@ -86,7 +86,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
         );
 
       if (chats.length > 0) {
-        builder.group(
+        builder.separator().group(
           'chats',
           {
             label: ['chat-history.label', { ns: meta.profile.key }],

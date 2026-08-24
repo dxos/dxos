@@ -13,7 +13,7 @@ import { DXN } from '@dxos/keys';
 
 const Anthropic = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.script.anthropic'),
+    key: DXN.make('com.example.operation.script.anthropic'),
     name: 'Anthropic Chat',
     description: 'Chat with Anthropic',
   },

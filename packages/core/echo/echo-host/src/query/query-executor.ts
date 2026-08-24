@@ -899,8 +899,30 @@ export class QueryExecutor extends Resource {
         break;
       }
 
+      case 'IncomingReferenceSelector': {
+        const beginIndexQuery = performance.now();
+        const metas = await this._queryIncomingReferencesByTarget([step.selector.targetDXN], step.selector.property);
+        trace.indexHits = metas.length;
+        trace.indexQueryTime += performance.now() - beginIndexQuery;
+
+        if (this._ctx.disposed) {
+          return { workingSet, trace };
+        }
+
+        const documentLoadStart = performance.now();
+        // The index is per-space, but the scope may name a subset of the queried spaces.
+        const scoped = spaces.length > 0 ? metas.filter((meta) => spaces.includes(meta.spaceId)) : metas;
+        const results = await this._loadDocumentsAfterSqlQuery(scoped);
+        trace.documentsLoaded += results.length;
+        trace.documentLoadTime += performance.now() - documentLoadStart;
+
+        workingSet.push(...results.filter(isNonNullable));
+        trace.objectCount = workingSet.length;
+
+        break;
+      }
+
       case 'TextSelector': {
-        // TODO(dmaretskyi): type + FTS queries would be very common so we should support those, maybe chunk the fts index.
         // TODO(dmaretskyi): nice to have matched text snippets/highlighting.
         if (step.selector.searchKind === 'vector') {
           // Vector search is not currently supported.
@@ -908,7 +930,7 @@ export class QueryExecutor extends Resource {
           break;
         }
 
-        // Full-text search using SQLite FTS5.
+        // Full-text search using SQLite FTS5, optionally scoped by type.
         const beginIndexQuery = performance.now();
         invariant(spaces.length <= 1, 'Multiple spaces are not supported for full-text search');
         const queueIds = extractQueueIds(queues);
@@ -918,6 +940,7 @@ export class QueryExecutor extends Resource {
             spaceId: spaces,
             includeAllQueues: allQueuesFromSpaces,
             queueIds,
+            typeDxns: step.selector.typename,
           }),
         );
         trace.indexHits = textResults.length;
@@ -1750,7 +1773,20 @@ export class QueryExecutor extends Resource {
     workingSet: QueryItem[],
     property: EscapedPropPath | null,
   ): Promise<readonly EntityMeta[]> {
-    const anchorDxns = workingSet.map((item) => QueryExecutor._anchorTargetDxn(item));
+    return this._queryIncomingReferencesByTarget(
+      workingSet.map((item) => QueryExecutor._anchorTargetDxn(item)),
+      property,
+    );
+  }
+
+  /**
+   * Reverse-reference lookup by target URI. Anchors that are not entities (a named entity's `dxn:`)
+   * reach this directly, without a working set.
+   */
+  private async _queryIncomingReferencesByTarget(
+    anchorDxns: readonly URI.URI[],
+    property: EscapedPropPath | null,
+  ): Promise<readonly EntityMeta[]> {
     const rows: readonly ReverseRef[] = (
       await Promise.all(
         anchorDxns.map((targetDXN) => this._runInRuntime(this._indexEngine.queryReverseRef({ targetDXN }))),

@@ -178,6 +178,9 @@
       "path": "../../plugins/plugin-file"
     },
     {
+      "path": "../../plugins/plugin-file-system"
+    },
+    {
       "path": "../../plugins/plugin-freeq"
     },
     {
@@ -223,6 +226,9 @@
       "path": "../../plugins/plugin-linear"
     },
     {
+      "path": "../../plugins/plugin-lingo"
+    },
+    {
       "path": "../../plugins/plugin-magazine"
     },
     {
@@ -242,9 +248,6 @@
     },
     {
       "path": "../../plugins/plugin-native"
-    },
-    {
-      "path": "../../plugins/plugin-native-filesystem"
     },
     {
       "path": "../../plugins/plugin-navtree"
@@ -404,9 +407,6 @@
     },
     {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/schema"
     },
     {
       "path": "../../sdk/shell"

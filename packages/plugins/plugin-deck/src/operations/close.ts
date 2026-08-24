@@ -21,9 +21,10 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Close> = LayoutOpera
     Effect.fnUntraced(function* (input) {
       const deck = yield* DeckCapabilities.getDeck();
       const attention = yield* Capability.get(AttentionCapabilities.Attention);
+      const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
 
       const next = input.subject.reduce((acc, id) => closeEntry(acc, id), deck.active);
-      const { deckUpdates, toAttend } = computeActiveUpdates({ next, deck, attention });
+      const { deckUpdates, toAttend } = computeActiveUpdates({ next, deck, attention, flatten });
       yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
         updateActiveDeck(state, { ...deckUpdates, plankNames: updatePlankNames(deck.plankNames, deckUpdates.active) }),
       );

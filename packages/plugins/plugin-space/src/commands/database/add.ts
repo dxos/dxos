@@ -16,7 +16,7 @@ import { CommandConfig, Common, type SpaceNotFoundError, flushAndSync, print, sp
 import { type ClientService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
-import { Annotation, Collection, Database, type Err, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
+import { Annotation, Collection, Database, type Error as EchoError, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
 import { Kind as EntityKind } from '@dxos/echo/Entity';
 import { type SpaceId } from '@dxos/keys';
@@ -30,7 +30,7 @@ export const add: Command.Command<
   'add',
   { readonly spaceId: Option.Option<SpaceId>; readonly typename: Option.Option<string> },
   {},
-  Err.EntityNotFoundError | Error | SpaceNotFoundError,
+  EchoError.EntityNotFoundError | Error | SpaceNotFoundError,
   ClientService | CommandConfig | Operation.Service | Plugin.Service | Capability.Service | Prompt.Environment
 > = Command.make(
   'add',
@@ -72,7 +72,7 @@ export const add: Command.Command<
         return yield* Effect.fail(new Error(`Unknown typename: ${selectedTypename}`));
       }
 
-      const result = yield* metadata.createObject({}, { db, target: collection ?? db });
+      const result = yield* metadata.createObject({}, { db, target: collection });
       const object = result.object;
       if (!Obj.isObject(object)) {
         return yield* Effect.fail(new Error(`Invalid object: ${object}`));

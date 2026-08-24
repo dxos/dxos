@@ -6,7 +6,6 @@ import * as Option from 'effect/Option';
 import React, { forwardRef, useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Chat } from '@dxos/assistant-toolkit';
 import { getSpace } from '@dxos/client/echo';
@@ -38,16 +37,10 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
         return;
       }
 
-      await invokePromise(SpaceOperation.AddObject, {
-        object: chat,
-        target: db,
-      });
-      await invokePromise(SpaceOperation.AddRelation, {
-        db,
-        schema: Chat.CompanionTo,
-        source: chat,
-        target: companionTo,
-      });
+      // Ref on the subject (annotation) + parent edge: the chat belongs to its subject (cascades
+      // on delete, keeps it out of the standalone Chats section).
+      Chat.linkCompanion({ chat, subject: companionTo });
+      await invokePromise(SpaceOperation.AddObject, { object: chat }, { spaceId: db.spaceId });
       await invokePromise(AssistantOperation.SetCurrentChat, {
         companionTo,
         chat,
@@ -85,7 +78,7 @@ const useSkills = ({ subject: chat, companionTo }: Pick<ChatCompanionProps, 'sub
       return [] as string[];
     }
 
-    return Option.getOrElse(() => [] as string[])(AppAnnotation.SkillsAnnotation.get(Type.getSchema(schema)));
+    return Option.getOrElse(() => [] as string[])(Skill.SkillsAnnotation.get(Type.getSchema(schema)));
   }, [companionTo]);
 
   const existingSkills = useQuery(space?.db, Filter.type(Skill.Skill));

@@ -39,7 +39,7 @@ op OnCreateSpace
 
 ```mdl
 op CreateChannel
-  key: org.dxos.plugin.thread.operation.createChannel
+  key: org.dxos.operation.thread.createChannel
   desc: Create a new Channel in the given space.
   in:
     spaceId: SpaceId
@@ -50,7 +50,7 @@ op CreateChannel
 
 ```mdl
 op AppendChannelMessage
-  key: org.dxos.plugin.thread.operation.appendChannelMessage
+  key: org.dxos.operation.thread.appendChannelMessage
   desc: Append a Message authored by `sender` to the channel's feed.
   in:
     channel: Channel

@@ -18,8 +18,8 @@ import {
   type QueryAST,
   isEncodedReference,
 } from '@dxos/echo-protocol';
-import { EscapedPropPath } from '@dxos/index-core';
-import { EID, type EntityId, type SpaceId } from '@dxos/keys';
+import { EscapedPropPath, referenceIndexKey } from '@dxos/index-core';
+import { EID, type EntityId, type SpaceId, type URI } from '@dxos/keys';
 import { getDeep, visitValues } from '@dxos/util';
 
 import type { ObjectCore } from '../core-db';
@@ -186,6 +186,16 @@ export class WorkingSetQueryExecutor {
           for (const id of step.selector.objectIds) {
             const core = this._provider.getCoreById(id, true);
             if (core && this._provider.areStrongDepsSatisfied(core)) {
+              newItems.push(this._coreToItem(core));
+            }
+          }
+          break;
+        }
+        case 'IncomingReferenceSelector': {
+          // The host resolves this off the index, which has not seen objects added in this session.
+          const { targetDXN, property } = step.selector;
+          for (const core of this._provider.allCores()) {
+            if (_structureReferencesTarget(core.getObjectStructure(), targetDXN, property)) {
               newItems.push(this._coreToItem(core));
             }
           }
@@ -630,6 +640,37 @@ const _structureReferencesAny = (
           found = true;
         }
       }
+    }
+  });
+  return found;
+};
+
+/**
+ * Whether the structure holds a reference whose URI equals `targetDXN`, compared by the
+ * reverse-reference index's key so a versioned named-entity reference matches its unversioned name.
+ */
+const _structureReferencesTarget = (
+  structure: EntityStructure,
+  targetDXN: URI.URI,
+  property: EscapedPropPath | null,
+): boolean => {
+  const data = structure.data;
+  if (!data || typeof data !== 'object') {
+    return false;
+  }
+
+  const matches = (value: unknown): boolean =>
+    isEncodedReference(value) && referenceIndexKey(EncodedReference.toURI(value)) === referenceIndexKey(targetDXN);
+
+  if (property !== null) {
+    const value = getDeep(data, EscapedPropPath.unescape(property));
+    return matches(value) || (Array.isArray(value) && value.some(matches));
+  }
+
+  let found = false;
+  visitValues(data, (value) => {
+    if (!found && matches(value)) {
+      found = true;
     }
   });
   return found;

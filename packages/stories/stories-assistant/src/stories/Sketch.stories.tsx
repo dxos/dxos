@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { userEvent, within } from 'storybook/test';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Ref } from '@dxos/echo';
@@ -14,7 +13,7 @@ import { Cell } from '@dxos/storybook-testing';
 import { trim } from '@dxos/util';
 
 import { StoryRole } from '../modules';
-import { ModuleContainer, addToRootCollection, createDecorators, storyParameters } from '../testing';
+import { ModuleContainer, addToRootCollection, createDecorators, storyParameters, submitPrompt } from '../testing';
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Sketch',
   render: ModuleContainer,
@@ -60,44 +59,6 @@ const decorators = createDecorators({
   },
   skills: [AssistantSkill.key, DrawingSkill.key],
 });
-
-/**
- * Submit a prompt through the chat's CodeMirror editor. Submission is dropped silently while the
- * runtime is still activating or a previous response is streaming, so retry until the message
- * actually shows up in the thread (the editor clearing is NOT proof of submission).
- */
-const submitPrompt = async (canvasElement: HTMLElement, text: string) => {
-  const canvas = within(canvasElement);
-  const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 60_000 });
-  const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
-  if (!editor) {
-    throw new Error('Chat editor not found.');
-  }
-  const needle = text.slice(0, 30);
-  // The prompt editor itself holds the text until it clears; anywhere else (the thread renders
-  // sent messages in their own read-only CodeMirror) counts as submitted.
-  const promptRoot = editor.closest('.cm-editor');
-  const submitted = () =>
-    [...canvasElement.querySelectorAll('*')].some(
-      (node) =>
-        node.childElementCount === 0 && node.closest('.cm-editor') !== promptRoot && node.textContent?.includes(needle),
-    );
-  for (let attempt = 0; attempt < 20; attempt++) {
-    if (!editor.textContent?.includes(needle)) {
-      await userEvent.click(editor);
-      await userEvent.type(editor, text);
-    }
-    await userEvent.keyboard('{Enter}');
-    const deadline = Date.now() + 10_000;
-    while (Date.now() < deadline) {
-      if (submitted()) {
-        return;
-      }
-      await new Promise((resolve) => setTimeout(resolve, 500));
-    }
-  }
-  throw new Error('Prompt did not reach the thread.');
-};
 
 /** Count canvas shape records belonging to a world object (`meta.object`), or all managed shapes. */
 const countObjectRecords = async (objectId?: string): Promise<number> => {

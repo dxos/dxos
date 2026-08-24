@@ -170,7 +170,7 @@ const meta = {
         Capability.contribute(AppCapabilities.Translations, translations),
         // The Duplicates tab is driven by real operations, so the story registers the handler set
         // and the state atom the space plugin would normally contribute.
-        Capability.contribute(Capabilities.OperationHandler, SpaceOperationHandlerSet),
+        Capability.contribute(Capabilities.OperationHandler, SpaceOperationHandlerSet.handlers),
         Capability.contribute(SpaceCapabilities.EphemeralState, ephemeralState()),
         // plugin-inbox contributes these in the app (it owns the types this materialises); the story
         // runs no plugins that would.
