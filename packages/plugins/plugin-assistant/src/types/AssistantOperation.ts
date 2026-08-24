@@ -105,6 +105,26 @@ export const BindChatContext = Operation.make({
   output: Schema.Void,
 });
 
+/**
+ * Creates a persisted companion chat for a subject and makes it current — the explicit "new chat"
+ * affordance, as against {@link EnsureCompanionChat}, which resolves whatever chat a plank should
+ * already be showing and leaves it transient until the first message.
+ */
+export const CreateCompanionChat = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.assistant.createCompanionChat'),
+    name: 'Create Companion Chat',
+    icon: 'ph--chat-text--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    companionTo: Obj.Unknown,
+  }),
+  output: Schema.Struct({
+    chat: Type.getSchema(Chat.Chat),
+  }),
+});
+
 export const EnsureCompanionChat = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.assistant.ensureCompanionChat'),

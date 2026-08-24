@@ -204,13 +204,7 @@ const useToolbarActions = (project: Project.Project) => {
             disposition: 'toolbar',
             testId: 'projectsPlugin.createChat',
           },
-          // Clearing the current chat is what starts a new one.
-          () =>
-            void invokePromise(
-              AssistantOperation.SetCurrentChat,
-              { companionTo: project, chat: undefined },
-              { spaceId },
-            ),
+          () => void invokePromise(AssistantOperation.CreateCompanionChat, { companionTo: project }, { spaceId }),
         )
         // The growing gap pushes the routines button to the trailing edge: it opens a companion rather
         // than creating anything, so it reads as navigation, not a peer of the create actions.

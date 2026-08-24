@@ -537,12 +537,15 @@ companion-chat provisioner — and everything project-specific reaches the sessi
 - plugin-projects' provider adds the instructions' skills and context objects, and the
   `instructions` ref that `BindChatContext` backfills onto the chat.
 
-Consequences of dropping the bespoke operation:
+Two chat lifecycles, neither project-specific:
 
-- **Lazy persistence.** The chat exists in the DB after the first message, not on click,
-  so a project whose chat was never submitted has no navtree child.
-- **Companion pane, not a plank.** It opens beside the project; the navtree child gives
-  it a full plank once persisted.
+- **Provisioned** — `EnsureCompanionChat`, fired by the provisioner for whatever plank is
+  active. Transient until the first message, so an untouched companion leaves nothing behind.
+- **Explicit** — `CreateCompanionChat`, behind the `+` affordances. Persisted on click, since
+  a chat the user deliberately created should be in the navtree straight away.
+
+The remaining change from the old bespoke operation: the chat opens in the companion pane
+rather than its own plank, and the navtree child gives it a plank on demand.
 
 `Chat.linkCompanion` sets the parent edge either way, so the navtree children and the
 standalone-Chats exclusion below are unaffected.
@@ -567,10 +570,10 @@ chat appears twice, once under its project and once at the space level.
 ### Toolbar
 
 `ProjectArticle` has a `Panel.Toolbar` (`asChild` + `Toolbar.Root`) whose
-`IconButton` invokes `AssistantOperation.SetCurrentChat({ companionTo: project })` with no
-chat — clearing the current chat is what starts a new one. The same action is contributed
-to the project's navtree node (`disposition: 'list-item-primary'`) so `+` works from the
-tree.
+`IconButton` invokes `AssistantOperation.CreateCompanionChat({ companionTo: project })`, which
+persists the chat immediately so it appears in the navtree before the first message. The same
+action is contributed to the project's navtree node (`disposition: 'list-item-primary'`) so `+`
+works from the tree.
 
 ## Routine staleness and deletion guards (decided 2026-08-14)
 

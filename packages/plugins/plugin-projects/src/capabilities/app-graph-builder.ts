@@ -151,7 +151,7 @@ export const createProjectActionExtension = () =>
     actions: (project) =>
       Effect.succeed([
         Node.makeAction({
-          id: AssistantOperation.SetCurrentChat.meta.key,
+          id: AssistantOperation.CreateCompanionChat.meta.key,
           data: () =>
             Effect.gen(function* () {
               const db = Obj.getDatabase(project);
@@ -159,10 +159,9 @@ export const createProjectActionExtension = () =>
                 return;
               }
 
-              // Clearing the current chat is what starts a new one.
               yield* Operation.invoke(
-                AssistantOperation.SetCurrentChat,
-                { companionTo: project, chat: undefined },
+                AssistantOperation.CreateCompanionChat,
+                { companionTo: project },
                 { spaceId: db.spaceId },
               );
             }),
