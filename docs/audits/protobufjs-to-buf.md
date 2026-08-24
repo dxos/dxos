@@ -27,7 +27,7 @@ at the bottom — read those before picking up a thread.
 Deleting `protobuf-compiler`/`codec-protobuf` and dropping `protobufjs` from the catalog is the
 last step, and needs every thread above done.
 
-Before starting any thread, read **Findings** at the bottom: the four generator divergences are
+Before starting any thread, read **Findings** at the bottom: the five generator divergences are
 what make the mechanical-looking parts non-mechanical, and two of them (`Any`, nested enums) are
 hard gates rather than nuisances. Two habits earned their keep here and are worth repeating:
 assert byte **and** shape equality against the protobuf.js codec for anything persisted, and when
@@ -133,13 +133,14 @@ Per open thread, assuming no behaviour change and no proto edits.
 | —      | Import sweep of the remaining `@dxos/protocols/proto/*` declarations, behind `#7`                    | 2–3 weeks   |
 | —      | Delete `protobuf-compiler`, `codec-protobuf`, `substitutions.ts`; drop `protobufjs` from the catalog | 3–5 days    |
 
-**Remaining: roughly 6.5–10 engineer-weeks**, of which the import sweep is the long tail and the
-only item that touches most of the repo. The first draft of this plan estimated 7–10.5 weeks for
-the whole migration; the threads done so far were the cheap and the de-risking ones, so the
-remaining range has barely moved — that is expected, not a slip.
+**Remaining: roughly 8.5–12.5 engineer-weeks**, of which the import sweep is the long tail and the
+only item that touches most of the repo. That is the sum of the rows above at five days
+to the week, and it exceeds the 7–10.5 weeks the first draft estimated for the _whole_ migration:
+the early threads surfaced four generator divergences that the first pass had not priced, and
+`#4` turned out to be an API change rather than a codemod.
 
 Main risks, in order: credential signature stability (`#9d`), decoded-shape drift silently changing
-behaviour across the sweep, and the four generator divergences below.
+behaviour across the sweep, and the five generator divergences below.
 
 ## Thread detail (ranked by risk × complexity)
 
@@ -208,11 +209,14 @@ Measured while building the compat layer, so the ranking above understates #9c/#
    before 1970 and decodes a second early (`new Date(-1)` round-trips to `…:58.999Z`). The compat
    layer canonicalises instead, so it diverges from the legacy codec here — deliberately, since
    reproducing the bug would carry a value corruption into new code.
-3. **Nested enums are renamed.** protobuf.js nests them under the message namespace
+3. **Oneof groups are shaped differently.** buf carries the selected member as
+   `{ case, value }` under the group name; protobuf.js writes it as a plain field. The compat layer
+   translates both directions, which is why `dxos.mesh.muxer.Command` round-trips flat.
+4. **Nested enums are renamed.** protobuf.js nests them under the message namespace
    (`EdgeStatus.ConnectionState`); buf flattens to `EdgeStatus_ConnectionState`. TypeScript rejects
    the mixed case outright (`no overlap`), so these are safe to attempt but cannot land before
    `#7` — the enum belongs to a value whose type still comes from the protobuf.js barrel.
-4. **`google.protobuf.Any`** is unsupported and throws.
+5. **`google.protobuf.Any`** is unsupported and throws.
 
 ### Verified: devtools is already on effect-rpc
 
@@ -230,6 +234,8 @@ slices behind #3 — a rolling sweep rather than a milestone.
 Sequencing notes: `dxos/edge` (`hub-protocol`, `db-service`) follows whatever `@dxos/protocols`
 publishes and should not be scheduled separately; deleting `protobuf-compiler`/`codec-protobuf`
 and dropping `protobufjs` from the catalog is unblocked only once EVERY consumer has moved:
-`#1` (done), `#4`, `#5`, `#6`, `#7`, `#8` and all of `#9a`–`#9d`. `#4`, `#5` and `#7` are easy to
+`#1` and `#6` (done), `#4`, `#5`, `#7`, `#8` and all of `#9a`–`#9d`. `#2` is not a prerequisite —
+deleting the two packages removes their own test and example protos with them, so those paths need
+migrating only if the fixtures are worth keeping. `#4`, `#5` and `#7` are easy to
 overlook here because they read protobuf.js through generated types and `protoMessage()` rather
 than through `codec-protobuf` directly, but they are consumers all the same.

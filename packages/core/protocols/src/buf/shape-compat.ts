@@ -2,14 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-// Reproduces the protobuf.js codec's JS object shapes on top of buf, so call sites can migrate
-// one at a time without every substituted field changing type. Mirrors `src/proto/substitutions.ts`
-// plus `@dxos/codec-protobuf`'s well-known-type substitutions.
-//
-// Two documented divergences from protobuf.js, both in `docs/audits/protobufjs-to-buf.md`:
-// `google.protobuf.Any` throws, because resolving it needs a buf-side type registry and the
-// `preserve_any` option; and an unset non-optional message field is omitted rather than
-// materialised as an empty submessage, so byte equality holds only once those fields are set.
+// Reproduces protobuf.js's JS object shapes on top of buf so call sites can migrate one at a
+// time; the divergences it cannot bridge are listed in `docs/audits/protobufjs-to-buf.md`.
 
 import {
   type DescField,
@@ -228,6 +222,43 @@ const isBytesField = (field: DescField): boolean =>
   (field.fieldKind === 'scalar' && field.scalar === ScalarType.BYTES) ||
   (field.fieldKind === 'list' && field.listKind === 'scalar' && field.scalar === ScalarType.BYTES);
 
+const convertField = (field: DescField, fieldValue: any, direction: keyof Substitution): any => {
+  const substitution = substitutionFor(field);
+  if (substitution !== undefined) {
+    return substituteField(field, fieldValue, substitution, direction);
+  }
+  if (isBytesField(field)) {
+    return Array.isArray(fieldValue) ? fieldValue.map(normalizeBytes) : normalizeBytes(fieldValue);
+  }
+  return mapValue(field, fieldValue, (nested, entry) => convert(nested, entry, direction));
+};
+
+// buf carries a oneof as `{ case, value }` under the group name where protobuf.js writes the
+// selected member as a plain field, so the two forms are translated rather than copied through.
+const convertOneofs = (schema: DescMessage, value: any, result: Record<string, any>, direction: keyof Substitution) => {
+  for (const oneof of schema.oneofs) {
+    if (direction === 'toProto') {
+      const selected = oneof.fields.find((field) => value[field.localName] != null);
+      for (const field of oneof.fields) {
+        delete result[field.localName];
+      }
+      if (selected !== undefined) {
+        result[oneof.localName] = {
+          case: selected.localName,
+          value: convertField(selected, value[selected.localName], direction),
+        };
+      }
+    } else {
+      const group = value[oneof.localName];
+      delete result[oneof.localName];
+      const selected = group?.case && oneof.fields.find((field) => field.localName === group.case);
+      if (selected) {
+        result[selected.localName] = convertField(selected, group.value, direction);
+      }
+    }
+  }
+};
+
 const convert = (schema: DescMessage, value: any, direction: keyof Substitution): any => {
   if (value == null) {
     return value;
@@ -235,19 +266,16 @@ const convert = (schema: DescMessage, value: any, direction: keyof Substitution)
   const { $typeName: _typeName, ...rest } = value;
   const result: Record<string, any> = rest;
   for (const field of schema.fields) {
+    if (field.oneof !== undefined) {
+      continue;
+    }
     const fieldValue = value[field.localName];
     if (fieldValue == null) {
       continue;
     }
-    const substitution = substitutionFor(field);
-    if (substitution !== undefined) {
-      result[field.localName] = substituteField(field, fieldValue, substitution, direction);
-    } else if (isBytesField(field)) {
-      result[field.localName] = Array.isArray(fieldValue) ? fieldValue.map(normalizeBytes) : normalizeBytes(fieldValue);
-    } else {
-      result[field.localName] = mapValue(field, fieldValue, (nested, entry) => convert(nested, entry, direction));
-    }
+    result[field.localName] = convertField(field, fieldValue, direction);
   }
+  convertOneofs(schema, value, result, direction);
   return result;
 };
 

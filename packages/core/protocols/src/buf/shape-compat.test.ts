@@ -13,6 +13,7 @@ import { SpaceMetadataSchema } from './proto/gen/dxos/echo/metadata_pb.ts';
 import { HeadsSchema } from './proto/gen/dxos/echo/query_pb.ts';
 import { ClaimSchema } from './proto/gen/dxos/halo/credentials_pb.ts';
 import { KeyRecordSchema } from './proto/gen/dxos/halo/keyring_pb.ts';
+import { CommandSchema } from './proto/gen/dxos/mesh/muxer_pb.ts';
 import { UnsupportedSubstitutionError, decodeCompat, encodeCompat } from './shape-compat.ts';
 
 // Byte equality alone would miss a substitution decoding to the wrong JS type, and shape equality
@@ -79,6 +80,27 @@ describe('buf shape-compat', () => {
     // canonicalises instead, so this case deliberately diverges from the legacy codec.
     const decoded = decodeCompat(InvitationSchema, encodeCompat(InvitationSchema, { created: new Date(-1) }));
     expect(decoded.created.getTime()).toBe(-1);
+  });
+
+  test('a selected oneof member round-trips as a flat field', ({ expect }) => {
+    const codec = schema.getCodecForType('dxos.mesh.muxer.Command');
+    const value = { data: { channelId: 7, data: new Uint8Array([1, 2]) } };
+
+    const legacyBytes = codec.encode(value);
+    const bufBytes = encodeCompat(CommandSchema, value);
+    expect(new Uint8Array(bufBytes)).toEqual(new Uint8Array(legacyBytes));
+
+    // The buf `{ case, value }` group must not leak into the decoded shape.
+    const decoded = decodeCompat(CommandSchema, legacyBytes);
+    expect(decoded.payload).toBeUndefined();
+    expect(decoded.data.channelId).toBe(7);
+    expect(codec.decode(bufBytes).data?.channelId).toBe(7);
+  });
+
+  test('an unset oneof stays absent', ({ expect }) => {
+    const decoded = decodeCompat(CommandSchema, encodeCompat(CommandSchema, {}));
+    expect(decoded.payload).toBeUndefined();
+    expect(decoded.data).toBeUndefined();
   });
 
   test('a message carrying google.protobuf.Any is rejected rather than mis-encoded', ({ expect }) => {
