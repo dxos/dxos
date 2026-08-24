@@ -90,3 +90,25 @@ describe('EventLoopLagTracker', () => {
     expect(rotated(tracker)).toEqual(0);
   });
 });
+
+describe('EventLoopLagTracker.suspend', () => {
+  test('a gap across a suspend is not reported as lag', () => {
+    const tracker = new EventLoopLagTracker(500);
+    tracker.sample(0);
+
+    // The tab went hidden; its timers were clamped for a minute. That is throttling, not jank.
+    tracker.suspend();
+    tracker.sample(60_000);
+
+    expect(rotated(tracker)).toEqual(0);
+  });
+
+  test('sampling resumes normally after a suspend', () => {
+    const tracker = new EventLoopLagTracker(500);
+    tracker.suspend();
+    tracker.sample(60_000);
+    tracker.sample(62_000);
+
+    expect(rotated(tracker)).toEqual(1_500);
+  });
+});

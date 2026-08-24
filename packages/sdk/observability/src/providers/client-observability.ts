@@ -330,7 +330,16 @@ export const eventLoopLagProvider = (): DataProvider =>
     const ctx = new Context();
     const lag = new EventLoopLagTracker(LAG_SAMPLE_INTERVAL_MS);
 
-    scheduleTaskInterval(ctx, async () => lag.sample(Date.now()), LAG_SAMPLE_INTERVAL_MS);
+    // A hidden tab has its timers throttled, so probes fire late for reasons that are not lag.
+    // Skip those windows entirely rather than reporting throttling as jank.
+    const visibility = (globalThis as { document?: { visibilityState?: string } }).document;
+    const isHidden = () => visibility?.visibilityState === 'hidden';
+
+    scheduleTaskInterval(
+      ctx,
+      async () => (isHidden() ? lag.suspend() : lag.sample(Date.now())),
+      LAG_SAMPLE_INTERVAL_MS,
+    );
     // Window rotation is driven here rather than by the read, so the gauge callback stays a plain
     // idempotent getter — see EventLoopLagTracker.
     scheduleTaskInterval(ctx, async () => lag.rotate(), LAG_WINDOW_MS);

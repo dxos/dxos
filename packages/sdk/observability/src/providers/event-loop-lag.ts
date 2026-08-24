@@ -27,6 +27,15 @@ export class EventLoopLagTracker {
 
   constructor(private readonly _intervalMs: number = LAG_SAMPLE_INTERVAL_MS) {}
 
+  /**
+   * Discards the reference timestamp so the next probe cannot report lag.
+   * Called when the realm was legitimately not running — a hidden tab has its timers clamped to
+   * once per second or worse, which would otherwise read as tens of seconds of event-loop lag.
+   */
+  suspend(): void {
+    this.#lastSampleAt = undefined;
+  }
+
   /** Records one probe. Lag is elapsed time beyond the scheduled interval. */
   sample(now: number): void {
     if (this.#lastSampleAt !== undefined) {

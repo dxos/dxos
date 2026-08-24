@@ -232,6 +232,34 @@ actually supports.
       could have left four gauges each overwriting the previous space's value within a window;
       they do reduce properly, and `epoch` correctly takes a max rather than a sum.
 
+## Phase 8: Verified against the live instance — worker coverage
+
+Checked what each realm actually reports rather than assuming.
+
+`dxos.process.type` has two observed values, `browser` and `dedicated-worker`, so the worker
+**does** export — via `trace.metrics` from SDK code running there (the echo replication and
+collection-sync histograms). Three gaps that only the live data revealed:
+
+### Tasks
+
+- [x] **The worker registered no data providers, so it reported no provider-based metrics.**
+      `initializeObservability` runs in the dedicated worker, but the providers were registered
+      by `plugin-observability`'s client-ready capability, which runs only in the tab. Confirmed
+      by query: `eventLoop.lag` existed for `browser` only. Moved the lag provider into
+      `initializeObservability` (composer's `config.ts`), which both realms call, and removed the
+      now-duplicate plugin registration.
+- [x] **Event loop lag counted background-tab throttling as jank.** A hidden tab has its timers
+      clamped, so a probe firing a minute late looks like a minute of lag — which is what the
+      live `browser` series showing ~23s average was. The sampler now `suspend()`s while
+      `document.visibilityState === 'hidden'`, discarding the reference timestamp so the first
+      probe after the tab wakes cannot report a gap. 2 tests.
+- [ ] **`dxos.rpc.*` will never appear until RPC timing is switched on.** The middleware is
+      opt-in (`RpcTiming.isEnabled(options?.timing)` via `client-protocol/src/Rpc.ts`) and
+      nothing in the app passes `timing` — only the worker-framework tests and storybook do. So
+      `recordSample` never runs in production and neither histogram is ever recorded. Needs a
+      decision: enable it for the client-services channel (it costs a `Date.now()` pair and a
+      header per RPC), or drop those two metrics.
+
 ## Phase 5: Dashboard and validation
 
 Blocked on SigNoz auth — the `signoz` MCP server is configured but unauthenticated,
