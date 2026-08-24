@@ -762,15 +762,15 @@ a Chat helper (rebuild the feed), not an Agent one.
 
 ### Where current Agent functionality lands
 
-| Today (Agent)                                                            | After                                                                                                                                 |
-| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `makeInitialized` (agent + chat + binder + CompanionTo)                  | create Agent (identity + instructions); chat creation is the chat factory's job (the companion path or ad-hoc), with `chat.agent` set |
-| model files an artifact (`add-artifact`)                                 | `ProjectSkill.artifact-add` into the owning project's Collection                                                                      |
-| model reads its context (`get-context`)                                  | instructions via the system prompt (`chat.instructions`); artifacts via `ProjectSkill.artifact-list`; plan via the chat, unchanged    |
-| scheduled run (`cron` → `sync-triggers` → timer trigger → `AgentWorker`) | Routine (timer trigger) whose run targets a chat carrying `chat.agent`                                                                |
-| subscription run (qualifier trigger per feed)                            | Routine (feed trigger); qualifier folds into the routine                                                                              |
-| `resetChatHistory`                                                       | Chat helper; the agent is untouched                                                                                                   |
-| chat attribution (`did`)                                                 | unchanged — the one thing that was always identity-shaped                                                                             |
+| Today (Agent)                                                            | After                                                                                                                                     |
+| ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `makeInitialized` (agent + chat + binder + CompanionTo)                  | create Agent (identity + instructions); chat creation is the chat factory's job (the companion path or ad-hoc), linked by the parent edge |
+| model files an artifact (`add-artifact`)                                 | `ProjectSkill.artifact-add` into the owning project's Collection                                                                          |
+| model reads its context (`get-context`)                                  | instructions via the system prompt (`chat.instructions`); artifacts via `ProjectSkill.artifact-list`; plan via the chat, unchanged        |
+| scheduled run (`cron` → `sync-triggers` → timer trigger → `AgentWorker`) | Routine (timer trigger) whose run targets a chat carrying `chat.agent`                                                                    |
+| subscription run (qualifier trigger per feed)                            | Routine (feed trigger); qualifier folds into the routine                                                                                  |
+| `resetChatHistory`                                                       | Chat helper; the agent is untouched                                                                                                       |
+| chat attribution (`did`)                                                 | unchanged — the one thing that was always identity-shaped                                                                                 |
 
 Sequences for the three use cases, post-refactor:
 

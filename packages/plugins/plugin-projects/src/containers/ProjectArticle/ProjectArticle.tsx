@@ -204,8 +204,7 @@ const useToolbarActions = (project: Project.Project) => {
             disposition: 'toolbar',
             testId: 'projectsPlugin.createChat',
           },
-          // Clearing the current chat is what starts a new one; a project chat is an ordinary
-          // companion chat, so the generic operation owns the lifecycle.
+          // Clearing the current chat is what starts a new one.
           () =>
             void invokePromise(
               AssistantOperation.SetCurrentChat,

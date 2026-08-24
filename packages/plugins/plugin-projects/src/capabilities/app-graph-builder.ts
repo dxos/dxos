@@ -159,8 +159,7 @@ export const createProjectActionExtension = () =>
                 return;
               }
 
-              // Clearing the current chat is what starts a new one; the companion provisioner then
-              // resolves it. A project chat is an ordinary companion chat.
+              // Clearing the current chat is what starts a new one.
               yield* Operation.invoke(
                 AssistantOperation.SetCurrentChat,
                 { companionTo: project, chat: undefined },
