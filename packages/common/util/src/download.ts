@@ -28,28 +28,17 @@ const downloadUrl = (url: string, filename: string): void => {
   }
 };
 
-type NativeSave = 'saved' | 'cancelled' | 'unavailable';
-
-/** Save through Tauri's native dialog. */
-const saveBlobNative = async (data: Blob, filename: string): Promise<NativeSave> => {
-  let path: string | null;
-  try {
-    const { save } = await import('@tauri-apps/plugin-dialog');
-    path = await save({ defaultPath: filename });
-  } catch {
-    // A platform whose capability set omits `dialog`/`fs`, such as the iOS build, rejects the import
-    // or the command itself; the caller is no worse off attempting the anchor.
-    return 'unavailable';
-  }
-
+/** Save through Tauri's native dialog, resolving false if the user dismissed it. */
+const saveBlobNative = async (data: Blob, filename: string): Promise<boolean> => {
+  const { save } = await import('@tauri-apps/plugin-dialog');
+  const path = await save({ defaultPath: filename });
   if (!path) {
-    return 'cancelled';
+    return false;
   }
 
-  // Past the dialog the plugins are known reachable, so a write failure is a real error to surface.
   const { writeFile } = await import('@tauri-apps/plugin-fs');
   await writeFile(path, new Uint8Array(await data.arrayBuffer()));
-  return 'saved';
+  return true;
 };
 
 /** Trigger an anchor download of a blob, keeping the object URL alive past the click. */
@@ -63,16 +52,16 @@ const downloadBlobAnchor = (data: Blob, filename: string): void => {
 };
 
 /**
- * Save a blob to disk, resolving false if the user cancelled.
+ * Save a blob to disk, resolving false if the user cancelled and rejecting if the save failed.
  *
- * The Tauri webview registers no download handler, so `<a download>` is dropped there.
+ * The Tauri webview registers no download handler, so `<a download>` is dropped there and the
+ * native dialog is the only path that writes anything — a platform without it (the iOS build, whose
+ * capabilities omit `dialog`/`fs`) has to raise, since falling back to the anchor would report a
+ * success that never happened.
  */
 export const downloadBlob = async (data: Blob, filename: string): Promise<boolean> => {
   if (isTauri()) {
-    const outcome = await saveBlobNative(data, filename);
-    if (outcome !== 'unavailable') {
-      return outcome === 'saved';
-    }
+    return saveBlobNative(data, filename);
   }
 
   downloadBlobAnchor(data, filename);
