@@ -30,9 +30,12 @@ const BASE = process.env.CHANGESET_BASE_REF || 'origin/main';
 const sh = (cmd) => execSync(cmd, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 const lines = (output) => output.split('\n').filter(Boolean);
 
-// Package names contain no colon, and the trailing group matches a YAML line comment, which would
-// otherwise smuggle a release past this.
-const RELEASE_LINE = /^\s*(['"]?)(?<pkg>[^'":]+)\1\s*:\s*(['"]?)(?<bump>major|minor|patch)\3\s*(#.*)?$/;
+// One `<package>: <bump>` entry. Package names contain no colon, `none` is a release type Changesets
+// accepts, and the trailing group matches a YAML line comment, which would otherwise smuggle a release
+// past this. A `@`-scoped name must be quoted: YAML reserves a leading `@`, so Changesets' own parser
+// throws on the bare form and accepting it here would pass a changeset the release cannot read.
+const RELEASE_LINE =
+  /^\s*(?:(?<quote>['"])(?<quoted>[^'"]+)\k<quote>|(?<bare>[^@'":\s][^'":]*?))\s*:\s*(?<bumpQuote>['"]?)(?<bump>major|minor|patch|none)\k<bumpQuote>\s*(?:#.*)?$/;
 
 // A YAML comment, so `@changesets/parse` discards it rather than reading a package named `multiple-changesets`.
 const WAIVER = /^\s*#\s*multiple-changesets\s*:\s*(?<reason>\S.*?)\s*$/;
@@ -59,11 +62,31 @@ const frontMatter = (source) => {
   return all.slice(open + 1, close === -1 ? undefined : close);
 };
 
-const releasesIn = (file) =>
-  frontMatter(read(file))
-    .map((line) => RELEASE_LINE.exec(line)?.groups)
-    .filter(Boolean)
-    .map(({ pkg, bump }) => ({ pkg, bump }));
+// A line carrying no data: blank, or a YAML comment such as the count rule's waiver.
+const isInert = (line) => line.trim() === '' || line.trim().startsWith('#');
+
+// Reading the front matter with a regex rather than `@changesets/parse` keeps this script dependency-free,
+// so `unreadable` carries whatever it could not account for — a YAML flow mapping, a bare `@`-scoped name,
+// anything exotic. A gate that silently saw zero releases in a file it did not understand would pass the
+// very changeset it exists to reject, so an unreadable line is a failure, never an empty result.
+const readChangeset = (file) => {
+  const source = read(file);
+  const hasFrontMatter = /^\s*---\s*$/m.test(source.split('\n')[0] ?? '');
+  const body = frontMatter(source).filter((line) => !isInert(line));
+  const releases = [];
+  const unreadable = [];
+  for (const line of body) {
+    const groups = RELEASE_LINE.exec(line)?.groups;
+    if (groups) {
+      releases.push({ pkg: groups.quoted ?? groups.bare, bump: groups.bump });
+    } else {
+      unreadable.push(line.trim());
+    }
+  }
+  return { hasFrontMatter, releases, unreadable };
+};
+
+const releasesIn = (file) => readChangeset(file).releases;
 
 // Every changeset in the tree, for the rules that do not care how it got here.
 const allChangesets = readdirSync(CHANGESET_DIR)
@@ -73,6 +96,31 @@ const allChangesets = readdirSync(CHANGESET_DIR)
 
 const failures = [];
 const fail = (...block) => failures.push(block.join('\n'));
+
+// ─── readable front matter ──────────────────────────────────────────────────────────────────────────
+// Runs first: every rule below reasons about the releases a changeset declares, so a file this script
+// cannot read fully would quietly satisfy all of them.
+const checkFormat = () => {
+  for (const file of allChangesets) {
+    const { hasFrontMatter, unreadable } = readChangeset(file);
+    if (!hasFrontMatter) {
+      fail(
+        `${file} has no YAML front matter — Changesets cannot read it.`,
+        "  Fix: open the file with a `---` fence, one `'<package>': <bump>` line per package, then a",
+        '  closing `---` and the changelog body.',
+      );
+      continue;
+    }
+    if (unreadable.length > 0) {
+      fail(
+        `${file} has front-matter line(s) this check cannot read:`,
+        ...unreadable.map((line) => `  ${line}`),
+        "  Fix: write one `'<package>': <bump>` per line, quoting any `@`-scoped name — not a YAML flow",
+        '  mapping and not a bare `@name`, both of which hide releases from this gate.',
+      );
+    }
+  }
+};
 
 // ─── bump levels ────────────────────────────────────────────────────────────────────────────────────
 // DELETE THIS SECTION and its `GROUP_ANCHORS` as part of the PR that cuts `1.0.0` — that PR needs the
@@ -247,6 +295,7 @@ const checkCount = () => {
   );
 };
 
+checkFormat();
 checkBumps();
 checkPackages();
 checkCount();
