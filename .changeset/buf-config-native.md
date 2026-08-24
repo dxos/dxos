@@ -1,11 +1,11 @@
 ---
-'@dxos/config': major
+'@dxos/config': minor
 '@dxos/protocols': minor
 ---
 
 `@dxos/config` is converted to buf (`@bufbuild/protobuf`) and no longer depends on protobuf.js.
 
-**Breaking:** `defs` and `ConfigProto` now come from the buf-generated module, which renders nested
+**Breaking** (riding the minor, per the pre-1.0 policy): `defs` and `ConfigProto` now come from the buf-generated module, which renders nested
 types flat — `Runtime.Client.ServicesMode` is `Runtime_Client_ServicesMode`, and so on for every
 nested message and enum. Config _inputs_ (loaders, savers, the `Config` constructor) take the new
 `ConfigInit` type; `Config.values` is a buf message, so it carries `$typeName` and compares against
