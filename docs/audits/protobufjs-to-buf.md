@@ -137,13 +137,25 @@ apps therefore reads through that re-export. buf renders those enums differently
 on that surface first and is re-rated high complexity; it is not the cheap codemod pilot the first
 draft of this audit assumed.
 
+### #5 cannot land before #7
+
+`protoMessage()` is typed `Schema.Codec<TYPES[K], Uint8Array>`, where `TYPES` comes from the
+protobuf.js `src/proto/gen` barrel — so every value the effect-rpc services hand devtools is
+protobuf.js-shaped. Re-pointing devtools' type imports at `@dxos/protocols/buf/*` while that
+holds would type buf shapes over protobuf.js values, and the only way to compile it is the casts
+the repo forbids. #5 is therefore ordered strictly after #7, not merely helped by it.
+
 ### Scheduling status
 
-Approved to proceed: #1, #2, #3, #4, #6, and #9a–#9d in that slice order. Not yet scheduled: #5,
-#7, #8. Two consequences of that split are worth naming before anyone starts: #5 rides on #7
-(without it, a devtools sweep only moves type imports and leaves the payload codec on
-protobuf.js), and #9a–#9d each need #3 landed first. Nothing in the approved set is blocked by
-#5, #7 or #8.
+Landed: #1 (effect-proto deleted), #2/#3 (shape-compat layer plus its conformance harness), #9a
+(keyring `KeyRecord`), #9b (`echo.query.Heads`).
+
+Blocked, with the blocker established above rather than assumed: #4 needs a decision on
+`@dxos/config`'s public surface; #5 needs #7 first. #9c and #9d remain, in that order, and #9d
+additionally needs `Any` support in the compat layer, since credentials carry
+`google.protobuf.Any`.
+
+Still unscheduled: #6, #7, #8.
 
 ### Verified: devtools is already on effect-rpc
 
