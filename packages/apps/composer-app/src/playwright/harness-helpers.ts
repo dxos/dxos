@@ -153,7 +153,8 @@ export type ThrottleProfile = {
 export const throttleProfile = (): ThrottleProfile => {
   const num = (name: string, fallback: number, min: number): number => {
     const raw = process.env[name];
-    const value = raw === undefined ? fallback : Number(raw);
+    // Blank is a set-but-empty override, not an absent one; `Number('')` would silently pass it as 0.
+    const value = raw === undefined ? fallback : raw.trim() === '' ? NaN : Number(raw);
     if (!Number.isFinite(value) || value < min) {
       throw new Error(`${name} must be a finite number >= ${min}; got ${JSON.stringify(raw)}`);
     }
