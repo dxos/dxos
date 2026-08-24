@@ -1,6 +1,7 @@
 // Base tsconfig for all projects.
 // Don't rename it tsconfig.json. This is specifically non-standard name so TSC doesn't pick it up.
 {
+  "$schema": "./node_modules/@effect/tsgo/schema.json",
   "compilerOptions": {
     "allowJs": false,
     "composite": true,
