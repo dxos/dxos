@@ -304,6 +304,28 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
       credentialsDocUrl: undefined,
       idDerivation: 'rootDoc',
     });
+
+    // The refs must survive a restart: without them a reopened host cannot tell a rootDoc space
+    // from a legacy one, and would re-anchor it under a second root.
+    await host.close();
+    await dispose();
+
+    const reopened = createTestSqliteRuntime(dbPath);
+    onTestFinished(() => {
+      void reopened.dispose();
+    });
+    const reopenedHost = new EchoHost({ runtime: reopened.runtime });
+    await reopenedHost.open(Context.default());
+    onTestFinished(() => {
+      void reopenedHost.close();
+    });
+
+    expect(reopenedHost.spaceIds).to.deep.equal([spaceId]);
+    expect(reopenedHost.getSpaceRootRefs(spaceId)).to.deep.equal({
+      spaceRootDocUrl: spaceRootUrl,
+      credentialsDocUrl: undefined,
+      idDerivation: 'rootDoc',
+    });
   });
 
   test('EchoHost openSpaceRoot works without url on reopened host', async () => {
