@@ -4065,6 +4065,12 @@ importers:
       '@hazae41/symbol-dispose-polyfill':
         specifier: 'catalog:'
         version: 1.1.2
+      '@tauri-apps/plugin-dialog':
+        specifier: 'catalog:'
+        version: 2.7.2
+      '@tauri-apps/plugin-fs':
+        specifier: 'catalog:'
+        version: 2.5.1
     devDependencies:
       '@dxos/crypto':
         specifier: workspace:*
@@ -19462,6 +19468,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0-rc.108(effect@4.0.0-rc.108)(react@19.2.7)(scheduler@0.27.0)

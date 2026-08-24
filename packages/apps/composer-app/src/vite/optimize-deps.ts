@@ -309,6 +309,8 @@ export const optimizeDepsInclude: string[] = [
   '@dxos/react-ui > react-i18next',
   '@dxos/react-ui > react-remove-scroll',
   '@dxos/util > @hazae41/symbol-dispose-polyfill',
+  '@dxos/util > @tauri-apps/plugin-dialog',
+  '@dxos/util > @tauri-apps/plugin-fs',
   '@effect/ai-anthropic',
   '@effect/ai-anthropic/AnthropicClient',
   '@effect/ai-anthropic/AnthropicLanguageModel',
