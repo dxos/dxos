@@ -110,6 +110,11 @@ jobs:
       - name: Check changeset bump levels
         run: pnpm run check-changeset-bumps
 
+      # A changeset naming an `ignore`d package alongside a released one makes the whole release plan
+      # unassemblable, and an unknown name throws on assembly; both surface only on `main`.
+      - name: Check changeset packages
+        run: pnpm run check-changeset-packages
+
       # A changeset is a changelog entry, so a PR is normally one file however many packages or commits
       # it touched; the rare multi-entry PR waives this in the changeset's front matter. Counting is
       # diff-based, hence `pull_request` only: on `main` `.changeset/` holds every unreleased entry, and
