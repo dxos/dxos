@@ -63,6 +63,7 @@
   "devDependencies": {
     "@changesets/changelog-git": "catalog:",
     "@changesets/cli": "catalog:",
+    "@changesets/parse": "catalog:",
     "@cloudflare/vitest-pool-workers": "catalog:",
     "@cloudflare/workers-types": "catalog:",
     "@dxos/async": "workspace:*",

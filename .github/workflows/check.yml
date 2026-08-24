@@ -105,8 +105,8 @@ jobs:
       - name: Check publish config
         run: pnpm run check-publish-config
 
-      # Every gating rule on `.changeset/*.md` — bump levels, versionable packages, one entry per PR — in
-      # one pass, so a run reports all of them instead of stopping at the first. Each fails on something
+      # Every gating rule on `.changeset/*.md` — parseability, bump levels, versionable packages, one
+      # entry per PR — in one pass, so a run reports all of them instead of stopping at the first. Each fails on something
       # otherwise invisible until `changeset version` runs on `main`. The count rule is diff-based and
       # self-skips outside a `pull_request`: on `main` `.changeset/` holds every unreleased entry, and a
       # `merge_group` batches PRs that each legitimately carry their own. The missing-changeset reminder

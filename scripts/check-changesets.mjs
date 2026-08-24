@@ -6,6 +6,8 @@
 // The gate on `.changeset/*.md` authoring: every rule that can fail a build, in one pass over the
 // changesets so a run reports *all* of them rather than whichever the first step happened to hit.
 //
+//   parseable    Rejects a file `@changesets/parse` cannot read, so no later rule reasons about a
+//                changeset whose releases it never saw.
 //   bump levels  Rejects `major` while pre-1.0 — a breaking change rides the minor.
 //   packages     Rejects a package Changesets cannot version: an `ignore`d one named alongside a
 //                released one, or a name absent from the workspace.
@@ -16,6 +18,7 @@
 // a PR that it *has* no changeset and deliberately never fails, so it stays its own (non-gating) job.
 // See `agents/instructions/changesets.md` and `.github/RELEASE-SPEC.md`.
 
+import { parseChangesetFile } from '@changesets/parse';
 import { execSync } from 'node:child_process';
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -29,13 +32,6 @@ const BASE = process.env.CHANGESET_BASE_REF || 'origin/main';
 // `stderr: pipe` so git's own diagnostics land in the caught error rather than the build log.
 const sh = (cmd) => execSync(cmd, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 const lines = (output) => output.split('\n').filter(Boolean);
-
-// One `<package>: <bump>` entry. Package names contain no colon, `none` is a release type Changesets
-// accepts, and the trailing group matches a YAML line comment, which would otherwise smuggle a release
-// past this. A `@`-scoped name must be quoted: YAML reserves a leading `@`, so Changesets' own parser
-// throws on the bare form and accepting it here would pass a changeset the release cannot read.
-const RELEASE_LINE =
-  /^\s*(?:(?<quote>['"])(?<quoted>[^'"]+)\k<quote>|(?<bare>[^@'":\s][^'":]*?))\s*:\s*(?<bumpQuote>['"]?)(?<bump>major|minor|patch|none)\k<bumpQuote>\s*(?:#.*)?$/;
 
 // A YAML comment, so `@changesets/parse` discards it rather than reading a package named `multiple-changesets`.
 const WAIVER = /^\s*#\s*multiple-changesets\s*:\s*(?<reason>\S.*?)\s*$/;
@@ -52,6 +48,8 @@ const read = (file) => {
 };
 
 // Front matter is the block between the first two `---` fences; a `#` below it is a markdown heading.
+// Releases come from `parseChangesetFile`; this exists only for the count rule's waiver, which is a YAML
+// comment the parser discards by design — precisely so it never reaches `CHANGELOG.md`.
 const frontMatter = (source) => {
   const all = source.split('\n');
   const open = all.findIndex((line) => line.trim() === '---');
@@ -62,28 +60,20 @@ const frontMatter = (source) => {
   return all.slice(open + 1, close === -1 ? undefined : close);
 };
 
-// A line carrying no data: blank, or a YAML comment such as the count rule's waiver.
-const isInert = (line) => line.trim() === '' || line.trim().startsWith('#');
-
-// Reading the front matter with a regex rather than `@changesets/parse` keeps this script dependency-free,
-// so `unreadable` carries whatever it could not account for — a YAML flow mapping, a bare `@`-scoped name,
-// anything exotic. A gate that silently saw zero releases in a file it did not understand would pass the
-// very changeset it exists to reject, so an unreadable line is a failure, never an empty result.
+// The releases a changeset declares, read by the same parser the release itself uses, so this gate cannot
+// disagree with `changeset version` about what a file says. A hand-rolled matcher silently missed the
+// forms it did not anticipate — a `none` release, a YAML flow mapping — and a gate that sees no releases
+// in a file it does not understand passes the very changeset it exists to reject.
+//
+// `@changesets/parse@1.0.0` exports no `safeParseChangesetFile`, so an unreadable file arrives as a throw;
+// it becomes a reported failure rather than an empty release list.
 const readChangeset = (file) => {
-  const source = read(file);
-  const hasFrontMatter = /^\s*---\s*$/m.test(source.split('\n')[0] ?? '');
-  const body = frontMatter(source).filter((line) => !isInert(line));
-  const releases = [];
-  const unreadable = [];
-  for (const line of body) {
-    const groups = RELEASE_LINE.exec(line)?.groups;
-    if (groups) {
-      releases.push({ pkg: groups.quoted ?? groups.bare, bump: groups.bump });
-    } else {
-      unreadable.push(line.trim());
-    }
+  try {
+    const { releases } = parseChangesetFile(read(file));
+    return { releases: releases.map(({ name, type }) => ({ pkg: name, bump: type })) };
+  } catch (err) {
+    return { releases: [], error: err.message.split('\n')[0] };
   }
-  return { hasFrontMatter, releases, unreadable };
 };
 
 const releasesIn = (file) => readChangeset(file).releases;
@@ -97,26 +87,17 @@ const allChangesets = readdirSync(CHANGESET_DIR)
 const failures = [];
 const fail = (...block) => failures.push(block.join('\n'));
 
-// ─── readable front matter ──────────────────────────────────────────────────────────────────────────
-// Runs first: every rule below reasons about the releases a changeset declares, so a file this script
-// cannot read fully would quietly satisfy all of them.
-const checkFormat = () => {
+// ─── parseable ──────────────────────────────────────────────────────────────────────────────────────
+// Runs first: every rule below reasons about the releases a changeset declares, so a file the parser
+// cannot read would quietly satisfy all of them — and would fail the release instead.
+const checkParseable = () => {
   for (const file of allChangesets) {
-    const { hasFrontMatter, unreadable } = readChangeset(file);
-    if (!hasFrontMatter) {
+    const { error } = readChangeset(file);
+    if (error) {
       fail(
-        `${file} has no YAML front matter — Changesets cannot read it.`,
-        "  Fix: open the file with a `---` fence, one `'<package>': <bump>` line per package, then a",
-        '  closing `---` and the changelog body.',
-      );
-      continue;
-    }
-    if (unreadable.length > 0) {
-      fail(
-        `${file} has front-matter line(s) this check cannot read:`,
-        ...unreadable.map((line) => `  ${line}`),
-        "  Fix: write one `'<package>': <bump>` per line, quoting any `@`-scoped name — not a YAML flow",
-        '  mapping and not a bare `@name`, both of which hide releases from this gate.',
+        `${file} cannot be parsed as a changeset: ${error}`,
+        "  Fix: a `---` fence, one `'<package>': <bump>` line per package (quote any `@`-scoped name —",
+        '  YAML reserves a leading `@`), then a closing `---` and the changelog body.',
       );
     }
   }
@@ -295,7 +276,7 @@ const checkCount = () => {
   );
 };
 
-checkFormat();
+checkParseable();
 checkBumps();
 checkPackages();
 checkCount();
