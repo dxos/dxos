@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
@@ -23,7 +24,7 @@ const make = () =>
         {{! File }}
 
         You can read the contents of files.
-        Calling the read tool returns the file contents as a File content block (a data URL for
+        Calling the ${Operation.toolName(FileOperation.Read)} tool returns the file contents as a File content block (a data URL for
         inline files, the original URL for external files). The model receives the file natively
         and can describe, transcribe, or otherwise reason over its contents.
       `,

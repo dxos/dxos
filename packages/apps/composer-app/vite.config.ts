@@ -27,6 +27,7 @@ import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 import { createConfig as createTestConfig } from '../../../vitest.base.config.ts';
 import { bootChunking } from './src/vite/boot-chunking.ts';
 import { bootMarkPath, channelFaviconPlugin, channelVariant } from './src/vite/channel-branding.ts';
+import { debugPortSidecarPlugin, resolveDebugPortSession } from './src/vite/debug-port.ts';
 import { optimizeDepsInclude } from './src/vite/optimize-deps.ts';
 import { traceBootLeak } from './src/vite/trace-boot-leak.ts';
 
@@ -36,6 +37,8 @@ const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
 // `DX_PLUGIN_SET=production` swaps in plugin-defs.production.tsx at build time (not a runtime flag),
 // so a non-shipped plugin never enters the bundle.
 const isProductionPluginSet = process.env.DX_PLUGIN_SET === 'production';
+// Non-empty only when a dev server is launched with the debug-port flag; see `src/vite/debug-port.ts`.
+const debugPortSession = resolveDebugPortSession();
 const pluginSetFile = isProductionPluginSet ? 'src/plugin-defs.production.tsx' : 'src/plugin-defs.tsx';
 
 const rootDir = searchForWorkspaceRoot(process.cwd());
@@ -164,6 +167,8 @@ export default defineConfig((env) => ({
     // coordinator instead of attaching to a stale-code instance (SharedWorkers are keyed by
     // URL + name). Empty in production builds — the name must stay stable across deploys.
     __DX_DEV_SERVER_BOOT_ID__: JSON.stringify(env.command === 'serve' ? Date.now().toString(36) : ''),
+    // Hardcoded empty for `build`: the port is arbitrary eval and must not reach a deployed origin.
+    __DX_DEBUG_PORT_SESSION__: JSON.stringify(env.command === 'serve' ? debugPortSession : ''),
   },
   server: {
     host: true,
@@ -433,6 +438,9 @@ export default defineConfig((env) => ({
         });
       },
     },
+
+    // Dev-only: publish the debug-port session id for an agent that cannot read this process's env.
+    debugPortSidecarPlugin(debugPortSession, rootDir),
 
     // Dev-only: serve forensics test profile for recovery import testing.
     {

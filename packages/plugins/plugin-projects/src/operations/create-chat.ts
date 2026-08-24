@@ -10,10 +10,11 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AiContext } from '@dxos/assistant';
+import { Chat } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Obj, Ref, Type } from '@dxos/echo';
+import { Database, Ref, Type } from '@dxos/echo';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 
 import { ProjectOperation } from '#types';
@@ -30,9 +31,9 @@ const handler: Operation.WithHandler<typeof ProjectOperation.CreateChat> = Proje
         instructions: project.instructions,
       });
 
-      // The parent edge is the ownership statement; no `SpaceOperation.AddObject`, which would also
-      // file the chat in the space root collection and surface it under Collections.
-      Obj.setParent(chat, project);
+      // Ref on the project (annotation) + parent edge; no `SpaceOperation.AddObject`, which would
+      // also file the chat in the space root collection and surface it under Collections.
+      Chat.linkCompanion({ chat, subject: project });
 
       // Skills and context objects reach the session through bindings, not the system prompt.
       // Always bound, on top of whatever the project's instructions add: the project itself (the

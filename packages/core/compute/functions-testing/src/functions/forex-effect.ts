@@ -15,7 +15,7 @@ import { DXN } from '@dxos/keys';
 
 const ForexEffect = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.script.forexEffect'),
+    key: DXN.make('com.example.operation.script.forexEffect'),
     name: 'Forex Effect',
     description: 'Returns the exchange rate between two currencies.',
   },

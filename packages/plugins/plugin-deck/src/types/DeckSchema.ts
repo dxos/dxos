@@ -31,9 +31,11 @@ export const DeckState = Schema.Struct({
    */
   plankSizing: Schema.mutableKey(PlankSizing),
   /**
-   * Planks showing their companion, by id. Per plank rather than per deck so moving between planks
+   * Planks showing their companion, by id. Per plank while the deck slides, so moving between planks
    * restores what each was left in — a plank you closed the companion on stays closed when you come
-   * back to it, while the one you left it open on reopens it.
+   * back to it, while the one you left it open on reopens it. Under `flatten` only one plank is laid
+   * out at a time and the flag is read deck-wide instead (`isCompanionOpen`), so the pane stays in the
+   * state you left it in as you move between articles.
    */
   companionPlanks: Schema.mutable(Schema.Array(Schema.String)),
   /**

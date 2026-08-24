@@ -101,7 +101,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
                 value={getValue()}
                 onChange={handleChange}
                 placeholder={t('display-name-input.placeholder')}
-                classNames='min-w-64'
+                classNames='w-64 max-w-full min-w-0'
               />
             </Input.Root>
           </Form.Row>

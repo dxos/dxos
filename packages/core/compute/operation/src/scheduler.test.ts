@@ -25,19 +25,19 @@ const testRuntime = ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntim
 const CountOp = Operation.make({
   input: Schema.Struct({ id: Schema.String }),
   output: Schema.Void,
-  meta: { key: DXN.make('org.example.test.count') },
+  meta: { key: DXN.make('com.example.operation.test.count') },
 });
 
 const SideEffect = Operation.make({
   input: Schema.Void,
   output: Schema.Void,
-  meta: { key: DXN.make('org.example.test.sideEffect') },
+  meta: { key: DXN.make('com.example.operation.test.sideEffect') },
 });
 
 const TriggerWithFollowup = Operation.make({
   input: Schema.Struct({ id: Schema.String }),
   output: Schema.Struct({ triggered: Schema.Boolean }),
-  meta: { key: DXN.make('org.example.test.triggerWithFollowup') },
+  meta: { key: DXN.make('com.example.operation.test.triggerWithFollowup') },
 });
 
 describe('Scheduler', () => {

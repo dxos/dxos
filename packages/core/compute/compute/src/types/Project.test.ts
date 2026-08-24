@@ -43,10 +43,10 @@ describe('Project', () => {
     const doc = Obj.make(TestObject, {});
     const instructions = Instructions.make({ text: 'Test', skills: [skillRef], objects: [Ref.make(doc)] });
     const project = Project.make({ name: 'test' });
-    Obj.setParent(instructions, project);
     Obj.update(project, (project) => {
       project.instructions = Ref.make(instructions);
     });
+    Obj.setParent(instructions, project);
 
     const bindings = Project.contextBindings(project);
     expect(bindings.skills.map((ref) => ref.uri)).toEqual([skillRef.uri]);

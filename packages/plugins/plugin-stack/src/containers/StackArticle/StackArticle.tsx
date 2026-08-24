@@ -115,22 +115,26 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
   );
 
   const handleAdd = useCallback(
-    (id: string) =>
-      invokePromise(SpaceOperation.OpenCreateObject, {
+    async (id: string) => {
+      const { data } = await invokePromise(SpaceOperation.OpenObjectForm, {
         target: collection,
         navigable: false,
-        // The created object is appended; move it to immediately after the originating section.
-        onCreateObject: (object: Obj.Unknown) => {
-          const from = findIndex(Obj.getURI(object));
-          const anchor = findIndex(id);
-          if (from >= 0 && anchor >= 0) {
-            Obj.update(collection, (collection) => {
-              const [ref] = collection.objects.splice(from, 1);
-              collection.objects.splice(anchor < from ? anchor + 1 : anchor, 0, ref);
-            });
-          }
-        },
-      }),
+      });
+      const object = data?.target;
+      if (!object) {
+        return;
+      }
+
+      // The created object is appended; move it to immediately after the originating section.
+      const from = findIndex(Obj.getURI(object));
+      const anchor = findIndex(id);
+      if (from >= 0 && anchor >= 0) {
+        Obj.update(collection, (collection) => {
+          const [ref] = collection.objects.splice(from, 1);
+          collection.objects.splice(anchor < from ? anchor + 1 : anchor, 0, ref);
+        });
+      }
+    },
     [collection, invokePromise, findIndex],
   );
 
@@ -164,7 +168,7 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
 
   const handleAddSection = useCallback(
     () =>
-      invokePromise(SpaceOperation.OpenCreateObject, {
+      invokePromise(SpaceOperation.OpenObjectForm, {
         target: collection,
         navigable: false,
       }),

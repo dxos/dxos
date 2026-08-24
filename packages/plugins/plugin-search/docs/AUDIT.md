@@ -95,7 +95,7 @@ via `JSON.parse(JSON.stringify(object))`, keeps string fields, and scans them.
 
 - **Surfaces** (`react-surface.tsx`): the `SEARCH_DIALOG` command palette, an
   `AppSurface.SearchInput` slot, and a `Space` deck-companion (`SearchArticle`).
-- **Operation**: `OpenSearch` (opens the dialog; keybinding `shift+meta+f`).
+- **Operation**: `OpenSearch` (opens the dialog; keybinding `meta+k`).
 - **The global-filter side channel matters:** `GlobalFilterProvider` /
   `useGlobalFilteredObjects` (re-exported from `@dxos/react-ui-search`) let other
   views live-filter on the active query — `plugin-table` consumes it in

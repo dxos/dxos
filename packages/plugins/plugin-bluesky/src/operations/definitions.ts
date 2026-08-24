@@ -13,10 +13,6 @@ import { DXN } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
 /**
  * Discovery — list the available Bluesky sync targets reachable from a
  * connection's token. Always returns the three "self" targets (posts, likes,
@@ -28,7 +24,7 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
  */
 export const GetBlueskyTargets = Operation.make({
   meta: {
-    key: makeKey('getBlueskyTargets'),
+    key: DXN.make('org.dxos.operation.bluesky.getTargets'),
     name: 'Get Bluesky Targets',
     description: "List the user's Bluesky timeline / likes / bookmarks plus saved custom feeds.",
     icon: 'ph--butterfly--regular',
@@ -47,7 +43,7 @@ export const GetBlueskyTargets = Operation.make({
  */
 export const MaterializeBlueskyTarget = Operation.make({
   meta: {
-    key: makeKey('materializeBlueskyTarget'),
+    key: DXN.make('org.dxos.operation.bluesky.materializeTarget'),
     name: 'Materialize Bluesky Target',
     description: 'Create the empty local Subscription feed bound to a selected Bluesky target.',
     icon: 'ph--butterfly--regular',
@@ -66,7 +62,7 @@ export const MaterializeBlueskyTarget = Operation.make({
  */
 export const SyncBlueskyTargets = Operation.make({
   meta: {
-    key: makeKey('syncBlueskyTargets'),
+    key: DXN.make('org.dxos.operation.bluesky.syncTargets'),
     name: 'Sync Bluesky',
     description: 'Pull posts for every Bluesky target bound to a connection.',
     icon: 'ph--arrows-clockwise--regular',

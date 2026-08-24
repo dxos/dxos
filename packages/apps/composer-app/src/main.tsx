@@ -82,6 +82,10 @@ const startupTimeout = (() => {
 // Injected by the `define` block in vite.config.ts; '' in production builds.
 declare const __DX_DEV_SERVER_BOOT_ID__: string;
 
+// Session id for the agent debug port when the dev server was launched with the debug-port flag.
+// Always '' in production builds, so the port cannot be auto-started on a deployed origin.
+declare const __DX_DEBUG_PORT_SESSION__: string;
+
 declare global {
   interface ImportMeta {
     env: ImportMetaEnv;
@@ -441,6 +445,13 @@ const main = async () => {
   performance.mark('milestone:client-initialize:start');
   const client = new Client({ config, services });
   void client.initialize().catch((err) => log.catch(err));
+
+  // Started here rather than from plugin-debug, which a plain local `serve` leaves disabled —
+  // tying the flag to it would make the flag silently do nothing.
+  if (__DX_DEBUG_PORT_SESSION__) {
+    const { getDebugPortController } = await import('@dxos/client/devtools');
+    getDebugPortController().start({ session: __DX_DEBUG_PORT_SESSION__, persist: true });
+  }
 
   profiler?.mark('plugins:start');
 

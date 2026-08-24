@@ -125,7 +125,7 @@ catalog:
   '@lezer/xml': ^1.0.6
   '@lit/react': ^1.0.8
   '@modelcontextprotocol/sdk': ^1.27.1
-  '@moonrepo/cli': 2.4.5
+  '@moonrepo/cli': 2.5.2
   '@ngneat/falso': ^7.1.1
   '@observablehq/plot': ^0.6.11
   '@obsidize/tar-browserify': ^5.2.0
@@ -529,7 +529,7 @@ catalog:
   miniflare: ^4.20260714.0
   minimatch: ^10.2.3
   mocha: ^10.6.0
-  motion: ^12.0.6
+  motion: ^12.11.0
   multiformats: ^13.2.2
   n3: 2.1.0
   nan: 2.23.0

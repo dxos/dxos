@@ -4,6 +4,9 @@
 
 import type * as Effect from 'effect/Effect';
 
+import { type CleanupFn } from '@dxos/async';
+import { type MetricObserver } from '@dxos/tracing';
+
 export * from './extensions';
 
 /**
@@ -27,12 +30,24 @@ export type ExtensionApiBase<K extends Kind = Kind> = {
 };
 
 /**
+ * Instrument-level metadata, declared once by the first caller for a given metric name.
+ * Units must be UCUM as OTel requires — `s`, `By`, `{thing}`.
+ */
+export type MetricMeta = { unit?: string; description?: string };
+
+/**
  * Metrics extension API (kind-specific methods only).
  */
 export type Metrics = {
-  gauge(name: string, value: number, tags?: Attributes): void;
-  increment(name: string, value?: number, tags?: Attributes): void;
-  distribution(name: string, value: number, tags?: Attributes): void;
+  gauge(name: string, value: number, tags?: Attributes, meta?: MetricMeta): void;
+  increment(name: string, value?: number, tags?: Attributes, meta?: MetricMeta): void;
+  distribution(name: string, value: number, tags?: Attributes, meta?: MetricMeta): void;
+  /**
+   * Registers a callback read once per export interval.
+   * Prefer this over {@link Metrics.gauge} for any "current value" metric, since a pushed gauge
+   * only lands in the export windows its producer happens to tick in.
+   */
+  observe(name: string, callback: MetricObserver, tags?: Attributes, meta?: MetricMeta): CleanupFn;
 };
 
 /**
