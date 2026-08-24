@@ -19,6 +19,7 @@ const BLOCK_TYPE_COLORS: Record<(typeof BLOCK_TYPES)[number], string> = {
   service: 'var(--color-yellow-400)',
   db: 'var(--color-red-400)',
   module: 'var(--color-indigo-400)',
+  flow: 'var(--color-teal-400)',
 };
 
 const theme = EditorView.baseTheme({

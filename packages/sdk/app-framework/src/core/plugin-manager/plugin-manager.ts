@@ -138,6 +138,11 @@ export type ManagerOptions = {
    * pass `Duration.infinity` to disable.
    */
   activationTimeout?: Duration.Input;
+  /**
+   * Completes when the host is idle, gating the Idle wave. Defaults to the real paint/idle wait,
+   * which resolves immediately off-browser; `Effect.never` models a browser that has not idled.
+   */
+  whenIdle?: Effect.Effect<void>;
 };
 
 /**
@@ -313,6 +318,7 @@ class ManagerImpl implements PluginManager {
     onRemove,
     loadTimeout = DEFAULT_LOAD_TIMEOUT,
     activationTimeout = DEFAULT_ACTIVATION_TIMEOUT,
+    whenIdle,
   }: ManagerOptions) {
     // Core plugins default to `meta.tags.includes('system')`, overridden by the host's
     // explicit set. Either way the set is a snapshot of the initial `plugins` array
@@ -330,7 +336,7 @@ class ManagerImpl implements PluginManager {
 
     this._state = new ManagerState(this.registry, { plugins, core, enabled });
     this._loader = new ModuleLoader(this._state, this.capabilities, activationTimeout);
-    this._scheduler = new ActivationScheduler(this._state, this.capabilities, this._loader);
+    this._scheduler = new ActivationScheduler(this._state, this.capabilities, this._loader, whenIdle);
     this._catalog = new PluginCatalog(this._state, this._scheduler, this.pluginRegistry, {
       pluginLoader,
       loadTimeout,

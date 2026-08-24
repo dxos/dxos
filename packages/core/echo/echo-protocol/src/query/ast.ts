@@ -232,6 +232,20 @@ export interface FilterChildOf extends Schema.Schema.Type<typeof FilterChildOf_>
 export const FilterChildOf: Schema.Codec<FilterChildOf> = FilterChildOf_;
 
 /**
+ * Filter objects by whether they have a parent at all, regardless of which object it is.
+ * The parent lives on the object's own structure (`system.parent`), so this is a local predicate —
+ * no traversal, unlike {@link FilterChildOf}.
+ */
+const FilterHasParent_ = Schema.Struct({
+  type: Schema.Literal('has-parent'),
+  /** True matches objects with a parent; false matches unparented (root) objects. */
+  value: Schema.Boolean,
+});
+
+export interface FilterHasParent extends Schema.Schema.Type<typeof FilterHasParent_> {}
+export const FilterHasParent: Schema.Codec<FilterHasParent> = FilterHasParent_;
+
+/**
  * Union of filters.
  */
 export const Filter = Schema.Union([
@@ -246,6 +260,7 @@ export const Filter = Schema.Union([
   FilterFeedCursor,
   FilterTextSearch,
   FilterChildOf,
+  FilterHasParent,
   FilterNot,
   FilterAnd,
   FilterOr,

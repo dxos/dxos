@@ -642,7 +642,7 @@ generalize now with mailbox as instance #1.
       the gate absorbs, so the test exercises the mechanism instead of a real accident.
 - [x] **Ownership move, part 2 (D5b)** — the `AnalyzeMailbox` DEFINITION moved to `BrainOperation`,
       changing its DXN. That key was RELEASED (landed 2026-07-10 in #12153), so a routine bound to
-      `org.dxos.plugin.inbox.operation.analyzeMailbox` is orphaned — accepted deliberately, pre-1.0.
+      `org.dxos.operation.inbox.analyzeMailbox` is orphaned — accepted deliberately, pre-1.0.
       The handler, its test, and the page-size constant moved with it; brain gained `@dxos/pipeline-email`
       and `@dxos/link`. `createAnalyzeProgressKey` STAYED in inbox: every monitor key on a mailbox must
       be minted the same way or producer and article compute different names and no meter appears. The

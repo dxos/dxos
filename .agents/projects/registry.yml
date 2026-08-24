@@ -6,6 +6,15 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: operation-keys
+    status: active
+    user: burdon
+    created: 2026-08-22
+    summary: 'One canonical shape for every Operation.make key — org.dxos.operation.<domain>.<verb>, written as a full literal so it is greppable — with the model-facing tool name derived from it.'
+    tasks: .agents/projects/operation-keys/TASKS.md
+    design: .agents/projects/operation-keys/DESIGN.md
+    prs: [12677]
+    resume: 'Phase 1 landing in PR #12677 alongside the tool-name derivation. Keys, makeKey removal and the three collisions are DONE (452 keys, 96 files, builds green). OPEN: PLUGIN.mdl across all plugins (71 reference operations, only 5 had exact key matches the codemod could fix), the operation-key-shape lint rule, fixture regeneration and AUDIT.md. Phase 2 is EDGE coordination — it stores meta.key beside the functionId it binds by, so deployed functions need a redeploy in the same window; coordinate with the edge repo mcp-operations project.'
   - name: plugin-lingo
     status: active
     user: burdon
@@ -166,8 +175,8 @@ projects:
     host: burdon-studio-2022
     created: 2026-07-24
     summary: New core plugin for interactive long-running processes (Routines, Agents, artifacts); Project type succeeds Topic; obviates plugin-sidekick.
-    tasks: packages/plugins/plugin-projects/TASKS.md
-    design: packages/plugins/plugin-projects/DESIGN.md
+    tasks: packages/plugins/plugin-projects/docs/TASKS.md
+    design: packages/plugins/plugin-projects/docs/DESIGN.md
     prs: [12335, 12365, 12370, 12383, 12386, 12389, 12431, 12440, 12442, 12444]
     resume: 'PRs #12431 + #12440 MERGED (2026-08-01 / 2026-08-03) — Milestone 5 Phases 1+3 + Phase 2 CORE + Phase 4 DXOS SIDE all landed on main. #12442 (story rename WithSubAgentsTest1/2) and #12444 (DESIGN.md corrections) also merged. CHECKLIST-LOOP PLAY COVERAGE now in CI (stories-assistant/Chat.stories.tsx): WithPlanningScripted proves the title-keyed upsert rewrites in place rather than duplicating; WithSubAgentsTest2 proves delegation adds an unchecked item and onComplete checks it off. Both assert against real objects (space query -> Outline.parseChecklist via an onInit space capture + polling helper) because no surface in those layouts renders the outline; live counterparts WithPlanning/WithSubAgentsTest1 stay tags: [!test]. PITFALL: a scripted story must end with NO open checklist items, or the end-of-request plan reminder consumes an extra scripted turn and the story flakes. GAP: no promote-task verb, so outside delegation the agent still cannot create a durable Task. Earlier, from #12431: TaskSet (org.dxos.type.taskSet@0.2.0) replaces ExternalProject; containment/hierarchy = ECHO parent edge (NO Task.taskSet field — REVISED from the backref plan; one tree TaskSet->Task->sub-Task, Query.children() returns roots, children() does NOT re-emit on property changes — use Filter.type + getParent filter for reactive label maps); Task 0.2.0 assignee: Actor +failed/cancelled; Project 0.3.0 goals/outline/taskSets (ARRAY — revised from single ref); Outline -> @dxos/types with checklist markdown grammar (parseChecklist/upsertChecklistItems/hasOpenItems) + promotion helpers; Plan REMOVED entirely (two-forms model, DESIGN.md § Product model: markdown = fluid, Task/TaskSet = durable, promotion links; Chat.outline scratch, project chats write project outline via parent edge; delegation IS promotion — durable agent Task, supervisor reconciles children, onComplete checks off the markdown line; no agentPid on tasks); planning skill edits checklist markdown (title-keyed); plugin-outliner RENAMED plugin-tasks (PRIVATE — new npm name, no trusted publisher); TaskOperation verbs taskCreate/taskUpdate/taskComplete/taskAssign; @dxos/react-ui-task (private) reusable TaskList with CRUD callbacks + AssigneeChip, TaskSetArticle composes it over TaskOperation; ProjectArticle Goals (read-only) + Tasks (per-TaskSet Section surface embed) sections. NO MIGRATIONS (user: nothing deployed). NEXT: Phase 2 remainder (templates scaffold/adopt TaskSet — scaffold = create+link native TaskSet at project creation, adopt = link an existing synced mirror; app-graph task nodes; goals authoring UI; stories-projects play test; kanban adoption = separate PR). Phase 4 DXOS SIDE MERGED in PR #12440 (McpToolAnnotation + taskList/projectList/projectGet/projectUpdate/outlineGet/outlineUpdate, all annotated, serialize guards assert the annotation round-trips; projectCreate/createChat/createRoutine are NOT projectable — they resolve Capability.Service) — remaining Phase 4 is the edge projection plus the invokeOperation-identity prereq from the 2026-08-01 mcp-space-service review, Phase 5 dogfood (mapping table in MILESTONE-5.md §8: TASKS.md IS the Outline, DESIGN.md a Project artifact, $track -> taskCreate; promote TASKS.md into Composer at acceptance). Follow-ups in TASKS.md: TaskList trace-activity re-correlation via a Process annotation carrying the task ref; reactive parent-project outline in ChatTaskList; promotion eval; M4 leftovers (galleries width collapse, table-tool gap decision a/b/c, tagged scaffold errors, UC-A/UC-B Live). Standing: context/artifact model decision owed; URL binding for project chats needs Josiah. Process note: do NOT pin a worktree in this pointer — each session works in its harness-assigned worktree.'
   - name: sketch-scene-dsl
@@ -428,6 +437,31 @@ projects:
     design: packages/core/halo/halo/CONSUMER_MIGRATION.md
     prs: [12229, 12583, 12588]
     resume: "The ledger IS packages/core/halo/halo/MIGRATION_PLAN.md (per-plugin table + numbered Missing APIs 1-10); CONSUMER_MIGRATION.md is the cookbook, API_AUDIT.md the pre-migration inventory. THE HALO TIER IS COMPLETE — Missing APIs 1-6 all landed: #12229 (React + imperative singleton tiers), #12583 (1: Identity.personalSpaceId; 2: createRecoveryCredential/requestRecoveryChallenge/revokeRecoveryCredential + passkey recover), #12588 (3: Identity.getEdgeIdentity), and this branch (4: useInvitationFlow in halo-react + DeviceInfo.presence/os/platform/kind + shell DeviceListItem takes the structural ShellDevice with toShellDevice for client callers; 5: ClientOperation.GrantServiceAccess, plugin-script off writeCredentials; 6: Identity.atom(service), an Atom<Option<Info>> keyed by service reference, used by app-graph-builder). No plugin touches @dxos/client for HALO anymore. NEXT is the non-HALO remainder, all bigger: 7 = ECHO React bindings (~340 imports, the dominant blocker), 8 = space-invitation UI on Space.share/join, 9 = config/mesh/services access without the client root (what still pins DevicesContainer via useNetworkStatus + the DX_ENVIRONMENT gate, app-graph-builder, plugin-debug, plugin-observability), 10 = a @dxos/react-client/testing replacement. DELIBERATE BOUNDARIES (not gaps): CLI src/commands/** construct the client; plugin-client provides it. CARVE-OUTS: requestRecoveryChallenge needs EDGE so halo-e2e cannot cover it; plugin-onboarding queryAllCredentials wants an exhaustive credential QUERY verb distinct from the credentials stream; oauth-recovery-redirect keeps a client for Account.createHubClient and a 30s recover timeout vs the proxy's 20s. E2E: playwright app-manager.ts parses the DevicesContainer console JSON for invitationCode — that log line is load-bearing, keep it."
+  - name: deus
+    status: active
+    user: burdon
+    host: burdon-mbp-2092
+    created: 2026-08-22
+    summary: Extend the DEUS pattern-specification language (`.mdl`) — core syntax, the standard dialect, and the DXOS domain dialect — plus the CodeMirror extension that has to follow any syntax change.
+    tasks: packages/reflect/deus/TASKS.md
+    design: packages/reflect/deus/docs/DESIGN.md
+    prs: []
+    resume: "Phase 1 (Deus.QA) BUILT: lang/qa.mdl defines flow + step with nine execution rules, the
+      DESIGN.md section draws the test/flow boundary, .agents/skills/running-qa-flows is the agent-side
+      contract, /dxos:qa (dxos plugin, scripts/list-flows.mjs) lists and runs them, and the
+      agent-startable debug port works end to end (DX_DEBUG_PORT -> vite define -> main.tsx ->
+      temp/debug-port.json sidecar; started from main.tsx, NOT plugin-debug, which a plain local serve
+      leaves disabled). markdown QA-1 passes 4/4 and has been run three times; markdown QA-2/QA-3 and
+      chess QA-1 are authored but status: unverified. Also landed on this branch: the MenuExtension
+      capability letting plugins contribute slash-menu commands (one group per plugin, entries name an
+      Operation not a callback) with plugin-debug''s InsertLoremIpsum as the first contributor, and two
+      table-insert fixes in ui-editor. KEY FINDINGS, all in TASKS.md: the pass rate never told us
+      anything (QA-1 was 4/4 while two of four asserts were vacuous); requires: cannot predict
+      runnability so the runner always uses the invoker with a spaceId; any part of a flow without a
+      dual face diverges (cleanup was prose and the two actors picked different mechanisms); and the
+      op key gap is everywhere — chess declares six operations of which one has a runtime counterpart
+      and startGame has none. NEXT: run the three unverified flows, then routine part (a) (reconcile a
+      PLUGIN.mdl against Operation.make), then composer-app/APP.mdl."
 ended:
   - name: task-planning-skill
     user: burdon

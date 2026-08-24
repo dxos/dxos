@@ -9,7 +9,7 @@ import type * as Capability from '@dxos/app-framework/Capability';
 import type * as Operation from '@dxos/compute/Operation';
 import type * as Trace from '@dxos/compute/Trace';
 import { type Database, Ref } from '@dxos/echo';
-import { type EntityNotFoundError } from '@dxos/echo/Err';
+import { type EntityNotFoundError } from '@dxos/echo/Error';
 import { type Resolver } from '@dxos/extractor';
 import { type Connection } from '@dxos/link';
 import { type ConnectionAuthExpiredError } from '@dxos/plugin-connector';

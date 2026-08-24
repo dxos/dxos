@@ -19,6 +19,12 @@ import { type AccountCache as AccountCacheType } from './AccountCache';
 
 export const Client = Capability.makeSingleton<Client$>()(`${meta.profile.key}.capability.client`);
 export const Schema = Capability.make<Type.AnyEntity[]>()(`${meta.profile.key}.capability.schema`);
+/**
+ * Ordering marker for modules that create typed objects: requiring `Schema` only orders after the
+ * schema PROVIDERS, which says nothing about `SchemaDefs`, the fellow consumer that registers them.
+ * `true` rather than `void` — the loader reads an `undefined` implementation as not contributed.
+ */
+export const SchemaRegistered = Capability.makeSingleton<true>()(`${meta.profile.key}.capability.schemaRegistered`);
 export const Migration = Capability.make<ObjectMigration[]>()(`${meta.profile.key}.capability.migration`);
 export const AccountCache = Capability.makeSingleton<Atom.Writable<AccountCacheType>>()(
   `${meta.profile.key}.capability.accountCache`,
