@@ -220,6 +220,9 @@ export class DataSpaceManager extends Resource {
 
   private readonly _spaces = new ComplexMap<PublicKey, DataSpace>(PublicKey.hash);
 
+  /** Spaces created legacy in this session; see {@link _anchorSpaceOnRootDocument}. */
+  private readonly _legacyCreatedSpaces = new Set<SpaceId>();
+
   private readonly _spaceManager: SpaceManager;
   private readonly _metadataStore: IMetadataStore;
   private readonly _keyring: KeyringApi;
@@ -310,7 +313,6 @@ export class DataSpaceManager extends Resource {
         }
         log('load space', { spaceMetadata });
         const space = await this._constructSpace(ctx, spaceMetadata);
-        await this._anchorSpaceOnRootDocument(ctx, space);
         // Track spaces that were previously active for auto-activation (used in dedicated worker mode).
         if (this._runtimeProps?.autoActivateSpaces && spaceMetadata.state === SpaceState.SPACE_ACTIVE) {
           spacesToActivate.push(space);
@@ -363,6 +365,9 @@ export class DataSpaceManager extends Resource {
     const anchorOnRootDocument = (options.useSpaceRootDocument ?? true) && !options.rootUrl && !options.documents;
     const createdSpace = anchorOnRootDocument ? await this._echoHost.createSpaceWithRootDocument(ctx) : undefined;
     const spaceId = createdSpace?.spaceId ?? (await createIdFromSpaceKey(spaceKey));
+    if (!createdSpace) {
+      this._legacyCreatedSpaces.add(spaceId);
+    }
 
     const metadata: SpaceMetadata = {
       key: spaceKey,
@@ -425,11 +430,6 @@ export class DataSpaceManager extends Resource {
 
     const space = await this._constructSpace(ctx, metadata);
     await space.open(ctx);
-    if (createdSpace) {
-      // A space deliberately created legacy stays unanchored until it is loaded, since anchoring it
-      // here would leave no way to produce the pre-migration state the migration path is tested from.
-      await this._anchorSpaceOnRootDocument(ctx, space);
-    }
 
     log('adding space...', { spaceKey });
 
@@ -487,7 +487,6 @@ export class DataSpaceManager extends Resource {
 
     const space = await this._constructSpace(ctx, metadata);
     await space.open(ctx);
-    await this._anchorSpaceOnRootDocument(ctx, space);
     await this._metadataStore.addSpace(metadata);
     // Use DSM lifecycle ctx: the invitation accept flow disposes `ctx` as soon as
     // `acceptSpace` returns (guardedState.complete -> ctx.dispose). Detached data-pipeline
@@ -503,7 +502,14 @@ export class DataSpaceManager extends Resource {
    * Mints a space root over a legacy space, transparently and idempotently, keeping its space id. Never
    * blocks opening the space: a space without an anchor still works, it just has not migrated yet.
    */
-  private async _anchorSpaceOnRootDocument(ctx: Context, space: DataSpace): Promise<void> {
+  private async _anchorSpaceOnRootDocument(ctx: Context, space: DataSpace, force = false): Promise<void> {
+    // A space created legacy stays unanchored for this session, or there would be no way to produce
+    // the pre-migration state the migration path starts from. It anchors on the next load, which is
+    // exactly the migration this project is for.
+    if (!force && this._legacyCreatedSpaces.has(space.id)) {
+      return;
+    }
+
     try {
       if (!this._echoHost.getSpaceRootRefs(space.id)) {
         const refs = await this._echoHost.migrateSpaceToRootDocument(ctx, space.id);
@@ -547,7 +553,7 @@ export class DataSpaceManager extends Resource {
    */
   async migrateSpaceToRootDocument(ctx: Context, spaceKey: PublicKey): Promise<SpaceRootRefs> {
     const space = this._spaces.get(spaceKey) ?? failedInvariant();
-    await this._anchorSpaceOnRootDocument(ctx, space);
+    await this._anchorSpaceOnRootDocument(ctx, space, true);
     return this._echoHost.getSpaceRootRefs(space.id) ?? failedInvariant();
   }
 
@@ -830,6 +836,21 @@ export class DataSpaceManager extends Resource {
     if (metadata.controlTimeframe) {
       dataSpace.inner.controlPipeline.state.setTargetTimeframe(metadata.controlTimeframe);
     }
+
+    // Anchoring materializes credential state, so it waits for the space to be open: a closed space
+    // must stay unmaterialized or lazy loading is defeated. Every path that opens a space — load and
+    // activate, create, accept — arrives here.
+    let anchored = false;
+    ctx.onDispose(
+      dataSpace.stateUpdate.on(() => {
+        if (anchored || !dataSpace.isOpen) {
+          return;
+        }
+
+        anchored = true;
+        void this._anchorSpaceOnRootDocument(ctx, dataSpace);
+      }),
+    );
 
     this._spaces.set(metadata.key, dataSpace);
     return dataSpace;
