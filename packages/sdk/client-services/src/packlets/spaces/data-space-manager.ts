@@ -191,6 +191,13 @@ export type DataSpaceManagerRuntimeProps = {
    * This is used in dedicated worker mode to restore space state after leader changeover.
    */
   autoActivateSpaces?: boolean;
+
+  /**
+   * Anchor new spaces on a space root document, taking the space id from that document instead of
+   * from the space key. Off by default: the credential chain still lives in the control feed, so a
+   * root-anchored space only gains the anchor, not the new credential path.
+   */
+  useSpaceRootDocument?: boolean;
 };
 
 export type CreateSpaceOptions = {
@@ -344,10 +351,14 @@ export class DataSpaceManager extends Resource {
     const controlFeedKey = await this._keyring.createKey();
     const dataFeedKey = await this._keyring.createKey();
 
-    const spaceId = await createIdFromSpaceKey(spaceKey);
+    // An imported space brings its own root document, so it keeps the key-derived id.
+    const anchorOnRootDocument = !!this._runtimeProps?.useSpaceRootDocument && !options.rootUrl && !options.documents;
+    const createdSpace = anchorOnRootDocument ? await this._echoHost.createSpaceWithRootDocument(ctx) : undefined;
+    const spaceId = createdSpace?.spaceId ?? (await createIdFromSpaceKey(spaceKey));
 
     const metadata: SpaceMetadata = {
       key: spaceKey,
+      spaceId: createdSpace ? spaceId : undefined,
       genesisFeedKey: controlFeedKey,
       controlFeedKey,
       dataFeedKey,
@@ -388,7 +399,9 @@ export class DataSpaceManager extends Resource {
     log('opening space...', { spaceKey });
 
     let root: DatabaseRoot;
-    if (options.rootUrl) {
+    if (createdSpace) {
+      root = createdSpace.directory;
+    } else if (options.rootUrl) {
       const newRootDocId = documentIdMapping[interpretAsDocumentId(options.rootUrl)] ?? failedInvariant();
       const rootDocHandle = await this._echoHost.loadDoc<DatabaseDirectory>(ctx, newRootDocId);
       invariant(rootDocHandle, 'Root document must be available after import.');
@@ -414,6 +427,7 @@ export class DataSpaceManager extends Resource {
       root.url,
       tags,
       options.membershipPolicy,
+      createdSpace?.spaceRootUrl,
     );
     await this._metadataStore.addSpace(metadata);
 

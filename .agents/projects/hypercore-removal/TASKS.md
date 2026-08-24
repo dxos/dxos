@@ -110,9 +110,17 @@ migration; crash mid-migration and resume.
       the space id from its document id, creates the directory beneath it and records the refs.
       NOTE: the pre-existing `createSpaceRoot()` creates the DIRECTORY; that naming predates this
       model and should be renamed with the diagnostics field below.
-- [ ] Wire it into `DataSpaceManager.createSpace()` behind `DX_SPACE_CREATE_LEGACY` — needs care,
-      since createSpace derives the space id from the space key before anything else and threads
-      that key through `SpaceMetadata`.
+- [x] Wired into `DataSpaceManager.createSpace()` behind `DataSpaceManagerRuntimeProps.useSpaceRootDocument`
+      (a runtime prop, not an env var — it is injectable and already how this manager takes options;
+      OFF by default, so the legacy path is the default rather than needing a legacy flag). An
+      imported space (`rootUrl`/`documents`) keeps the key-derived id.
+- [x] `SpaceMetadata.space_id` (field 13) carries the id when it was NOT derived from the key, and
+      `SpaceManager._constructSpace` prefers it. This was the blocker: everything downstream of
+      construction re-derived the id from the key and would have disagreed with the root.
+- [ ] Remaining `createIdFromSpaceKey` sites that still assume key-derivation for a root-anchored
+      space: `automerge-host.ts` (`getSpaceKeyByRootDocumentId`), `mesh-echo-replicator.ts`,
+      `space-protocol.ts` (swarm topic). They are correct for legacy spaces and unreached while the
+      flag is off; they must be threaded before it can default on.
 
 ## Phase 2: credentials document
 

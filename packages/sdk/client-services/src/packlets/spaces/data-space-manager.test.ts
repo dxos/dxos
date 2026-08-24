@@ -2,15 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
+import { interpretAsDocumentId } from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
 
 import { asyncTimeout, latch } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { createAdmissionCredentials } from '@dxos/credentials';
+import { createAdmissionCredentials, getCredentialAssertion } from '@dxos/credentials';
+import { createIdFromRootDocumentId, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { type SpaceMember as SpaceMemberAssertion } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { openAndClose } from '@dxos/test-utils';
 
 import { AuthStatus } from '../space';
@@ -33,6 +36,43 @@ describe('DataSpaceManager', () => {
     expect(space.inner.spaceState.members.size).to.equal(1);
     expect(space.inner.spaceState.feeds.size).to.equal(2);
     expect(space.inner.protocol.feeds.size).to.equal(2);
+  });
+
+  test('a space created with useSpaceRootDocument takes its id from the root document', async () => {
+    const builder = new TestBuilder();
+
+    const peer = builder.createPeer({ dataSpaceProps: { useSpaceRootDocument: true } });
+    await peer.createIdentity();
+    await openAndClose(peer.echoHost, peer.dataSpaceManager);
+
+    const space = await peer.dataSpaceManager.createSpace(new Context());
+    await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+
+    const refs = peer.echoHost.getSpaceRootRefs(space.id);
+    expect(refs?.idDerivation).to.equal('rootDoc');
+    expect(space.id).to.equal(await createIdFromRootDocumentId(interpretAsDocumentId(refs!.spaceRootDocUrl)));
+
+    // The key-derived id is a DIFFERENT id, which is the whole reason it has to be carried.
+    expect(space.id).to.not.equal(await createIdFromSpaceKey(space.key));
+
+    // The admitted member can find the root from the genesis credentials alone.
+    const memberCredential = space.inner.spaceState.credentials.find(
+      (credential) => getCredentialAssertion(credential)['@type'] === 'dxos.halo.credentials.SpaceMember',
+    );
+    const assertion = getCredentialAssertion(memberCredential!) as SpaceMemberAssertion;
+    expect(assertion.spaceRootUrl).to.equal(refs!.spaceRootDocUrl);
+  });
+
+  test('spaces are key-derived by default', async () => {
+    const builder = new TestBuilder();
+
+    const peer = builder.createPeer();
+    await peer.createIdentity();
+    await openAndClose(peer.echoHost, peer.dataSpaceManager);
+
+    const space = await peer.dataSpaceManager.createSpace(new Context());
+    expect(space.id).to.equal(await createIdFromSpaceKey(space.key));
+    expect(peer.echoHost.getSpaceRootRefs(space.id)).to.be.undefined;
   });
 
   test('sync between peers', async () => {
