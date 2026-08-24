@@ -245,7 +245,7 @@ describe('Binding.sync', () => {
   const fired: string[] = [];
 
   const TestSync = Operation.make({
-    meta: { key: DXN.make('com.example.operation.test.Binding.sync.sync'), name: 'Test Sync' },
+    meta: { key: DXN.make('com.example.operation.binding.sync'), name: 'Test Sync' },
     input: Schema.Struct({ connection: Ref.Ref(Connection.Connection), priority: Schema.optional(Schema.String) }),
     output: Schema.Any,
   });

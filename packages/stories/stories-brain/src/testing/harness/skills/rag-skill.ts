@@ -19,7 +19,7 @@ export const RAG_SKILL_KEY = 'org.dxos.stories-brain.skill.rag';
 /** Retrieves message snippets by semantic (vector) similarity to a natural-language query. */
 export const RetrieveSnippets = Operation.make({
   meta: {
-    key: DXN.make('com.example.operation.stories-brain.retrieveSnippets'),
+    key: DXN.make('com.example.operation.storiesBrain.retrieveSnippets'),
     name: 'Retrieve Snippets',
     description:
       'Retrieves the most semantically similar email snippets to a query from a vector index over the mailbox.',

@@ -23,7 +23,9 @@ const FIXTURE_KEY_RE = /^(com\.example|org\.example)\.operation\.([a-z][a-zA-Z0-
  * exhaustive dictionary would rot, and the shape is still checked by the camelCase split above.
  */
 const VERBS = new Set([
+  'accept',
   'add',
+  'adjust',
   'analyze',
   'append',
   'apply',
@@ -50,6 +52,7 @@ const VERBS = new Set([
   'deploy',
   'disable',
   'disconnect',
+  'download',
   'draft',
   'draw',
   'drop',
@@ -91,6 +94,7 @@ const VERBS = new Set([
   'mount',
   'move',
   'navigate',
+  'normalize',
   'open',
   'parse',
   'pause',
@@ -120,6 +124,7 @@ const VERBS = new Set([
   'rename',
   'render',
   'reset',
+  'research',
   'resolve',
   'respond',
   'restore',
@@ -140,11 +145,13 @@ const VERBS = new Set([
   'share',
   'show',
   'sleep',
+  'snapshot',
   'sort',
   'start',
   'stop',
   'stub',
   'submit',
+  'suggest',
   'summarize',
   'switch',
   'sync',
@@ -206,6 +213,9 @@ const isFixture = (filePath) =>
   /\.test\.tsx?$/.test(filePath) ||
   /\.stories\.tsx?$/.test(filePath) ||
   filePath.includes('/testing/') ||
+  filePath.includes('/playground/') ||
+  filePath.includes('/templates/') ||
+  /\/test-[^/]+\.tsx?$/.test(filePath) ||
   filePath.endsWith('/testing.ts') ||
   filePath.includes('-testing/');
 

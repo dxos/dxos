@@ -165,7 +165,7 @@ export const ScaffoldProject = Operation.make({
 
 export const HelloWorld = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.code.helloWorld'),
+    key: DXN.make('org.dxos.operation.code.writeHelloWorld'),
     name: 'Hello World',
     description:
       'Sanity-check operation: writes (or overwrites) a single `src/hello.ts` file containing a Hello World program. ' +

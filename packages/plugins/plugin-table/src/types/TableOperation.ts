@@ -28,7 +28,7 @@ export type CreateTableType = Schema.Schema.Type<typeof CreateTableSchema>;
 
 export const OnTypeAdded = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.table.onTypeAdded'),
+    key: DXN.make('org.dxos.operation.table.handleTypeAdded'),
     name: 'On Type Added',
     icon: 'ph--table--regular',
   },

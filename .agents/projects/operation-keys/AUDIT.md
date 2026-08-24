@@ -20,10 +20,9 @@ as tools.
 
 ## Summary
 
-- 422 operations; 129 bound into skills.
-- 32 keys are off the canonical `<root>.operation.<domain>.<verb>` shape — test and example
-  definitions that omit the domain segment (`com.example.operation.fib`), which the
-  `operation-key-shape` rule permits: a fixture names no package, so it owns no domain.
+- 452 operations; 132 bound into skills.
+- 30 keys omit the domain segment — all `com.example` fixtures, which the `operation-key-shape`
+  rule permits: a fixture names no package, so it owns no domain.
 
 ## Operations
 
@@ -31,7 +30,27 @@ Sorted with DXOS operations first and `com.example` fixtures last.
 
 | DXN key                                                     | Package                          | File                                                              | `meta.name`                     | Skill |
 | ----------------------------------------------------------- | -------------------------------- | ----------------------------------------------------------------- | ------------------------------- | ----- |
-| `org.dxos.operation.appToolkit.log`                         | `@dxos/app-toolkit`              | `playground/logger/schema.ts`                                     | Log                             |       |
+| `org.dxos.operation.appToolkit.acceptChange`                | `@dxos/app-toolkit`              | `operations/CollaborationOperation.ts`                            | Accept Change                   |       |
+| `org.dxos.operation.appToolkit.acceptProposal`              | `@dxos/app-toolkit`              | `operations/CollaborationOperation.ts`                            | Accept Proposal                 |       |
+| `org.dxos.operation.appToolkit.addToast`                    | `@dxos/app-toolkit`              | `operations/LayoutOperation.ts`                                   | Add Toast                       |       |
+| `org.dxos.operation.appToolkit.close`                       | `@dxos/app-toolkit`              | `operations/LayoutOperation.ts`                                   | Close                           |       |
+| `org.dxos.operation.appToolkit.expose`                      | `@dxos/app-toolkit`              | `operations/LayoutOperation.ts`                                   | Expose                          |       |
+| `org.dxos.operation.appToolkit.open`                        | `@dxos/app-toolkit`              | `operations/SettingsOperation.ts`                                 | Open Settings                   | ✓     |
+| `org.dxos.operation.appToolkit.open`                        | `@dxos/app-toolkit`              | `operations/LayoutOperation.ts`                                   | Open                            | ✓     |
+| `org.dxos.operation.appToolkit.openPluginRegistry`          | `@dxos/app-toolkit`              | `operations/SettingsOperation.ts`                                 | Open Plugin Registry            |       |
+| `org.dxos.operation.appToolkit.rejectChange`                | `@dxos/app-toolkit`              | `operations/CollaborationOperation.ts`                            | Reject Change                   |       |
+| `org.dxos.operation.appToolkit.resolveNavigationTargets`    | `@dxos/app-toolkit`              | `operations/NavigationOperation.ts`                               | Resolve navigation targets      | ✓     |
+| `org.dxos.operation.appToolkit.restoreText`                 | `@dxos/app-toolkit`              | `operations/CollaborationOperation.ts`                            | Restore Text                    |       |
+| `org.dxos.operation.appToolkit.revertWorkspace`             | `@dxos/app-toolkit`              | `operations/LayoutOperation.ts`                                   | Revert Workspace                |       |
+| `org.dxos.operation.appToolkit.scrollIntoView`              | `@dxos/app-toolkit`              | `operations/LayoutOperation.ts`                                   | Scroll Into View                |       |
+| `org.dxos.operation.appToolkit.select`                      | `@dxos/app-toolkit`              | `operations/LayoutOperation.ts`                                   | Select                          |       |
+| `org.dxos.operation.appToolkit.set`                         | `@dxos/app-toolkit`              | `operations/LayoutOperation.ts`                                   | Set                             |       |
+| `org.dxos.operation.appToolkit.switchWorkspace`             | `@dxos/app-toolkit`              | `operations/LayoutOperation.ts`                                   | Switch Workspace                |       |
+| `org.dxos.operation.appToolkit.updateCompanion`             | `@dxos/app-toolkit`              | `operations/LayoutOperation.ts`                                   | Update Companion                |       |
+| `org.dxos.operation.appToolkit.updateComplementary`         | `@dxos/app-toolkit`              | `operations/LayoutOperation.ts`                                   | Update Complementary Sidebar    |       |
+| `org.dxos.operation.appToolkit.updateDialog`                | `@dxos/app-toolkit`              | `operations/LayoutOperation.ts`                                   | Update Dialog                   |       |
+| `org.dxos.operation.appToolkit.updatePopover`               | `@dxos/app-toolkit`              | `operations/LayoutOperation.ts`                                   | Update Popover                  |       |
+| `org.dxos.operation.appToolkit.updateSidebar`               | `@dxos/app-toolkit`              | `operations/LayoutOperation.ts`                                   | Update Sidebar                  |       |
 | `org.dxos.operation.assistant.createChat`                   | `@dxos/plugin-assistant`         | `types/AssistantOperation.ts`                                     | Create Chat                     |       |
 | `org.dxos.operation.assistant.ensureCompanionChat`          | `@dxos/plugin-assistant`         | `types/AssistantOperation.ts`                                     | Ensure Companion Chat           |       |
 | `org.dxos.operation.assistant.forkChat`                     | `@dxos/plugin-assistant`         | `types/AssistantOperation.ts`                                     | Fork Chat                       |       |
@@ -94,7 +113,6 @@ Sorted with DXOS operations first and `com.example` fixtures last.
 | `org.dxos.operation.client.updateProfile`                   | `@dxos/plugin-client`            | `operations/definitions.ts`                                       | Update Profile                  |       |
 | `org.dxos.operation.code.buildProject`                      | `@dxos/plugin-code`              | `types/CodeOperation.ts`                                          | Build Project                   | ✓     |
 | `org.dxos.operation.code.deleteFile`                        | `@dxos/plugin-code`              | `types/CodeOperation.ts`                                          | Delete File                     | ✓     |
-| `org.dxos.operation.code.helloWorld`                        | `@dxos/plugin-code`              | `types/CodeOperation.ts`                                          | Hello World                     | ✓     |
 | `org.dxos.operation.code.listFiles`                         | `@dxos/plugin-code`              | `types/CodeOperation.ts`                                          | List Files                      | ✓     |
 | `org.dxos.operation.code.readFile`                          | `@dxos/plugin-code`              | `types/CodeOperation.ts`                                          | Read File                       | ✓     |
 | `org.dxos.operation.code.reset`                             | `@dxos/plugin-code`              | `types/CodeOperation.ts`                                          | Reset Project                   | ✓     |
@@ -103,13 +121,13 @@ Sorted with DXOS operations first and `com.example` fixtures last.
 | `org.dxos.operation.code.scaffold`                          | `@dxos/plugin-code`              | `types/CodeOperation.ts`                                          | Scaffold Project                | ✓     |
 | `org.dxos.operation.code.verifySpec`                        | `@dxos/plugin-code`              | `types/CodeOperation.ts`                                          | Verify Spec                     | ✓     |
 | `org.dxos.operation.code.writeFile`                         | `@dxos/plugin-code`              | `types/CodeOperation.ts`                                          | Write File                      | ✓     |
+| `org.dxos.operation.code.writeHelloWorld`                   | `@dxos/plugin-code`              | `types/CodeOperation.ts`                                          | Hello World                     | ✓     |
 | `org.dxos.operation.commerce.analyzeProvider`               | `@dxos/plugin-commerce`          | `types/SearchOperation.ts`                                        | Analyze Provider                | ✓     |
 | `org.dxos.operation.commerce.generateProviderTemplate`      | `@dxos/plugin-commerce`          | `types/SearchOperation.ts`                                        | Generate Provider Template      |       |
 | `org.dxos.operation.commerce.renderPage`                    | `@dxos/plugin-commerce`          | `types/SearchOperation.ts`                                        | Render Page                     |       |
 | `org.dxos.operation.commerce.runProviderSearch`             | `@dxos/plugin-commerce`          | `types/SearchOperation.ts`                                        | Run Provider Search             |       |
 | `org.dxos.operation.commerce.runSearch`                     | `@dxos/plugin-commerce`          | `types/SearchOperation.ts`                                        | Run Search                      |       |
 | `org.dxos.operation.commerce.setProviderTemplate`           | `@dxos/plugin-commerce`          | `types/SearchOperation.ts`                                        | Set Provider Template           | ✓     |
-| `org.dxos.operation.compute.createItem`                     | `@dxos/plugin-sample`            | `types/SampleOperation.ts`                                        | Create Sample Item              |       |
 | `org.dxos.operation.computer.applyEdits`                    | `@dxos/plugin-computer`          | `types/ComputerOperation.ts`                                      | Edits                           | ✓     |
 | `org.dxos.operation.computer.runBash`                       | `@dxos/plugin-computer`          | `types/ComputerOperation.ts`                                      | Bash                            | ✓     |
 | `org.dxos.operation.connector.createConnection`             | `@dxos/plugin-connector`         | `types/ConnectorOperation.ts`                                     | Create Connection               |       |
@@ -216,6 +234,10 @@ Sorted with DXOS operations first and `com.example` fixtures last.
 | `org.dxos.operation.nativeFilesystem.refreshDirectory`      | `@dxos/plugin-native-filesystem` | `types/NativeFilesystemOperation.ts`                              | Refresh Folder                  |       |
 | `org.dxos.operation.observability.sendEvent`                | `@dxos/plugin-observability`     | `types/ObservabilityOperation.ts`                                 | Send Event                      |       |
 | `org.dxos.operation.observability.setEnabled`               | `@dxos/plugin-observability`     | `types/ObservabilityOperation.ts`                                 | Set Observability Enabled       |       |
+| `org.dxos.operation.onboarding.completeOAuthRegistration`   | `@dxos/plugin-onboarding`        | `operations/definitions.ts`                                       | Complete OAuth Registration     |       |
+| `org.dxos.operation.onboarding.importExemplarSpace`         | `@dxos/plugin-onboarding`        | `operations/definitions.ts`                                       | Import Exemplar Space           |       |
+| `org.dxos.operation.onboarding.redeemOAuthRecovery`         | `@dxos/plugin-onboarding`        | `operations/definitions.ts`                                       | Redeem OAuth Recovery           |       |
+| `org.dxos.operation.onboarding.registerOAuthRecovery`       | `@dxos/plugin-onboarding`        | `operations/definitions.ts`                                       | Register OAuth Recovery         |       |
 | `org.dxos.operation.presenter.setPresenting`                | `@dxos/plugin-presenter`         | `types/PresenterOperation.ts`                                     | Set Presenting                  |       |
 | `org.dxos.operation.projects.create`                        | `@dxos/plugin-projects`          | `types/ProjectOperation.ts`                                       | Create Project                  | ✓     |
 | `org.dxos.operation.projects.createChat`                    | `@dxos/plugin-projects`          | `types/ProjectOperation.ts`                                       | Create Project Chat             |       |
@@ -242,24 +264,20 @@ Sorted with DXOS operations first and `com.example` fixtures last.
 | `org.dxos.operation.routine.createTriggerFromTemplate`      | `@dxos/plugin-routine`           | `types/RoutineOperation.ts`                                       | Create Trigger From Template    |       |
 | `org.dxos.operation.routine.runAutomation`                  | `@dxos/plugin-routine`           | `types/RoutineOperation.ts`                                       | Run Routine                     |       |
 | `org.dxos.operation.routine.runPromptInNewChat`             | `@dxos/plugin-routine`           | `types/RoutineOperation.ts`                                       | Run Prompt In New Chat          |       |
+| `org.dxos.operation.sample.createItem`                      | `@dxos/plugin-sample`            | `types/SampleOperation.ts`                                        | Create Sample Item              |       |
 | `org.dxos.operation.sample.randomize`                       | `@dxos/plugin-sample`            | `types/SampleOperation.ts`                                        | Randomize Sample Item           |       |
 | `org.dxos.operation.sample.updateStatus`                    | `@dxos/plugin-sample`            | `types/SampleOperation.ts`                                        | Update Status                   |       |
 | `org.dxos.operation.sandbox.create`                         | `@dxos/plugin-sandbox`           | `skills/functions/definitions.ts`                                 | CreateSandbox                   | ✓     |
 | `org.dxos.operation.sandbox.downloadFile`                   | `@dxos/plugin-sandbox`           | `skills/functions/definitions.ts`                                 | DownloadFile                    | ✓     |
 | `org.dxos.operation.sandbox.exec`                           | `@dxos/plugin-sandbox`           | `skills/functions/definitions.ts`                                 | Exec                            | ✓     |
 | `org.dxos.operation.sandbox.uploadFile`                     | `@dxos/plugin-sandbox`           | `skills/functions/definitions.ts`                                 | UploadFile                      | ✓     |
-| `org.dxos.operation.script.anthropic`                       | `@dxos/plugin-script`            | `templates/anthropic.ts`                                          | Anthropic Chat                  |       |
-| `org.dxos.operation.script.chessBot`                        | `@dxos/plugin-script`            | `templates/chess-bot.ts`                                          | Chess Bot                       |       |
-| `org.dxos.operation.script.commentary`                      | `@dxos/plugin-script`            | `templates/commentary.ts`                                         | Commentary                      |       |
 | `org.dxos.operation.script.create`                          | `@dxos/plugin-script`            | `types/ScriptOperation.ts`                                        | Create Script                   |       |
 | `org.dxos.operation.script.createFunction`                  | `@dxos/plugin-script`            | `skills/functions/definitions.ts`                                 | Create                          | ✓     |
 | `org.dxos.operation.script.delete`                          | `@dxos/plugin-script`            | `skills/functions/definitions.ts`                                 | Delete                          | ✓     |
 | `org.dxos.operation.script.deploy`                          | `@dxos/plugin-script`            | `skills/functions/definitions.ts`                                 | Deploy                          | ✓     |
-| `org.dxos.operation.script.forex`                           | `@dxos/plugin-script`            | `templates/forex.ts`                                              | Forex                           |       |
 | `org.dxos.operation.script.inspectInvocations`              | `@dxos/plugin-script`            | `skills/functions/definitions.ts`                                 | InspectInvocations              | ✓     |
 | `org.dxos.operation.script.install`                         | `@dxos/plugin-script`            | `skills/functions/definitions.ts`                                 | InstallFunction                 | ✓     |
 | `org.dxos.operation.script.invoke`                          | `@dxos/plugin-script`            | `skills/functions/definitions.ts`                                 | Invoke                          | ✓     |
-| `org.dxos.operation.script.ping`                            | `@dxos/plugin-script`            | `templates/ping.ts`                                               | Ping                            |       |
 | `org.dxos.operation.script.queryDeployed`                   | `@dxos/plugin-script`            | `skills/functions/definitions.ts`                                 | QueryDeployedFunctions          | ✓     |
 | `org.dxos.operation.script.read`                            | `@dxos/plugin-script`            | `skills/functions/definitions.ts`                                 | Read                            | ✓     |
 | `org.dxos.operation.script.update`                          | `@dxos/plugin-script`            | `skills/functions/definitions.ts`                                 | Update                          | ✓     |
@@ -283,6 +301,7 @@ Sorted with DXOS operations first and `com.example` fixtures last.
 | `org.dxos.operation.space.close`                            | `@dxos/plugin-space`             | `types/SpaceOperation.ts`                                         | Close Space                     |       |
 | `org.dxos.operation.space.collectGarbage`                   | `@dxos/plugin-space`             | `types/SpaceOperation.ts`                                         | Collect Garbage                 |       |
 | `org.dxos.operation.space.create`                           | `@dxos/plugin-space`             | `types/SpaceOperation.ts`                                         | Create Space                    |       |
+| `org.dxos.operation.space.createCollection`                 | `@dxos/plugin-space`             | `types/CollectionOperation.ts`                                    | Create Collection               |       |
 | `org.dxos.operation.space.delete`                           | `@dxos/plugin-space`             | `types/SpaceOperation.ts`                                         | Delete Space                    |       |
 | `org.dxos.operation.space.deleteField`                      | `@dxos/plugin-space`             | `types/SpaceOperation.ts`                                         | Delete Field                    |       |
 | `org.dxos.operation.space.duplicateObject`                  | `@dxos/plugin-space`             | `types/SpaceOperation.ts`                                         | Duplicate Object                |       |
@@ -324,7 +343,8 @@ Sorted with DXOS operations first and `com.example` fixtures last.
 | `org.dxos.operation.table.addRow`                           | `@dxos/plugin-table`             | `types/TableOperation.ts`                                         | Add Row                         |       |
 | `org.dxos.operation.table.create`                           | `@dxos/plugin-table`             | `types/TableOperation.ts`                                         | Create Table                    |       |
 | `org.dxos.operation.table.exportRows`                       | `@dxos/plugin-table`             | `types/TableOperation.ts`                                         | Export Rows                     |       |
-| `org.dxos.operation.table.onTypeAdded`                      | `@dxos/plugin-table`             | `types/TableOperation.ts`                                         | On Type Added                   |       |
+| `org.dxos.operation.table.handleTypeAdded`                  | `@dxos/plugin-table`             | `types/TableOperation.ts`                                         | On Type Added                   |       |
+| `org.dxos.operation.tasks.appendJournalEntry`               | `@dxos/plugin-tasks`             | `types/OutlineOperation.ts`                                       | Quick Journal Entry             |       |
 | `org.dxos.operation.tasks.assign`                           | `@dxos/plugin-tasks`             | `types/TaskOperation.ts`                                          | Assign Task                     | ✓     |
 | `org.dxos.operation.tasks.complete`                         | `@dxos/plugin-tasks`             | `types/TaskOperation.ts`                                          | Complete Task                   | ✓     |
 | `org.dxos.operation.tasks.convert`                          | `@dxos/plugin-tasks`             | `types/OutlineOperation.ts`                                       | Convert to Task                 |       |
@@ -338,7 +358,6 @@ Sorted with DXOS operations first and `com.example` fixtures last.
 | `org.dxos.operation.tasks.listMilestone`                    | `@dxos/plugin-tasks`             | `types/TaskOperation.ts`                                          | List Milestones                 | ✓     |
 | `org.dxos.operation.tasks.move`                             | `@dxos/plugin-tasks`             | `types/TaskOperation.ts`                                          | Move Task                       |       |
 | `org.dxos.operation.tasks.moveMilestone`                    | `@dxos/plugin-tasks`             | `types/TaskOperation.ts`                                          | Move Milestone                  | ✓     |
-| `org.dxos.operation.tasks.quickEntry`                       | `@dxos/plugin-tasks`             | `types/OutlineOperation.ts`                                       | Quick Journal Entry             |       |
 | `org.dxos.operation.tasks.update`                           | `@dxos/plugin-tasks`             | `types/TaskOperation.ts`                                          | Update Task                     | ✓     |
 | `org.dxos.operation.tasks.updateMilestone`                  | `@dxos/plugin-tasks`             | `types/TaskOperation.ts`                                          | Update Milestone                | ✓     |
 | `org.dxos.operation.tasks.updateOutline`                    | `@dxos/plugin-tasks`             | `types/OutlineOperation.ts`                                       | Update Outline                  | ✓     |
@@ -358,10 +377,16 @@ Sorted with DXOS operations first and `com.example` fixtures last.
 | `org.dxos.operation.trip.merge`                             | `@dxos/plugin-trip`              | `types/TripOperation.ts`                                          | Merge trip                      |       |
 | `org.dxos.operation.trip.planRoute`                         | `@dxos/plugin-trip`              | `types/RoutingOperation.ts`                                       | Plan route                      | ✓     |
 | `org.dxos.operation.trip.searchBookings`                    | `@dxos/plugin-trip`              | `types/BookingOperation.ts`                                       | Search Bookings                 | ✓     |
+| `org.dxos.operation.video.fetchDescription`                 | `@dxos/plugin-video`             | `types/VideoOperation.ts`                                         | Fetch Video Description         |       |
+| `org.dxos.operation.video.fetchTranscript`                  | `@dxos/plugin-video`             | `types/VideoOperation.ts`                                         | Fetch Video Transcript          |       |
+| `org.dxos.operation.video.summarize`                        | `@dxos/plugin-video`             | `types/VideoOperation.ts`                                         | Summarize Video                 |       |
+| `org.dxos.operation.video.transcribe`                       | `@dxos/plugin-video`             | `types/VideoOperation.ts`                                         | Transcribe Video                |       |
 | `org.dxos.operation.voxel.add`                              | `@dxos/plugin-voxel`             | `types/VoxelOperation.ts`                                         | Add voxels                      | ✓     |
 | `org.dxos.operation.voxel.generateShape`                    | `@dxos/plugin-voxel`             | `types/VoxelOperation.ts`                                         | Generate shape                  | ✓     |
 | `org.dxos.operation.voxel.queryWorld`                       | `@dxos/plugin-voxel`             | `types/VoxelOperation.ts`                                         | Query world                     | ✓     |
 | `org.dxos.operation.voxel.remove`                           | `@dxos/plugin-voxel`             | `types/VoxelOperation.ts`                                         | Remove voxels                   | ✓     |
+| `com.example.operation.appToolkit.log`                      | `@dxos/app-toolkit`              | `playground/logger/schema.ts`                                     | Log                             |       |
+| `com.example.operation.binding.sync`                        | `@dxos/plugin-connector`         | `Binding.test.ts`                                                 | Test Sync                       |       |
 | `com.example.operation.compute.create`                      | `@dxos/compute`                  | `Operation.test.ts`                                               | Something Else Entirely         |       |
 | `com.example.operation.countReplies`                        | `@dxos/agent-runtime`            | `functions.test.ts`                                               | Count Replies                   | ✓     |
 | `com.example.operation.delegatedWork`                       | `@dxos/agent-runtime`            | `agent-service/AgentService.test.ts`                              | Delegated work                  |       |
@@ -382,20 +407,24 @@ Sorted with DXOS operations first and `com.example` fixtures last.
 | `com.example.operation.reply`                               | `@dxos/compute`                  | `testing/definitions.ts`                                          | Reply                           |       |
 | `com.example.operation.research`                            | `@dxos/agent-runtime`            | `agent-service/AgentService.test.ts`                              | Research                        | ✓     |
 | `com.example.operation.scheduler`                           | `@dxos/compute-runtime`          | `protocol.test.ts`                                                | Scheduler                       |       |
+| `com.example.operation.script.anthropic`                    | `@dxos/plugin-script`            | `templates/anthropic.ts`                                          | Anthropic Chat                  |       |
+| `com.example.operation.script.chessBot`                     | `@dxos/plugin-script`            | `templates/chess-bot.ts`                                          | Chess Bot                       |       |
+| `com.example.operation.script.commentary`                   | `@dxos/plugin-script`            | `templates/commentary.ts`                                         | Commentary                      |       |
+| `com.example.operation.script.forex`                        | `@dxos/plugin-script`            | `templates/forex.ts`                                              | Forex                           |       |
 | `com.example.operation.script.forexEffect`                  | `@dxos/functions-testing`        | `functions/forex-effect.ts`                                       | Forex Effect                    |       |
 | `com.example.operation.script.forexEffect`                  | `@dxos/plugin-script`            | `templates/forex-effect.ts`                                       | Forex Effect                    |       |
+| `com.example.operation.script.ping`                         | `@dxos/plugin-script`            | `templates/ping.ts`                                               | Ping                            |       |
 | `com.example.operation.sleep`                               | `@dxos/functions-testing`        | `functions/definitions.ts`                                        | Sleep                           |       |
 | `com.example.operation.sleep`                               | `@dxos/compute`                  | `testing/definitions.ts`                                          | Sleep                           |       |
 | `com.example.operation.space.archive`                       | `@dxos/mcp-server`               | `McpServer.test.ts`                                               | Archive Space                   |       |
 | `com.example.operation.space.queryObjects`                  | `@dxos/mcp-server`               | `McpServer.test.ts`                                               | Query Objects                   |       |
 | `com.example.operation.space.removeObjects`                 | `@dxos/mcp-server`               | `McpServer.test.ts`                                               | Remove Objects                  |       |
-| `com.example.operation.stories-brain.retrieveSnippets`      | `@dxos/stories-brain`            | `testing/harness/skills/rag-skill.ts`                             | Retrieve Snippets               | ✓     |
+| `com.example.operation.storiesBrain.retrieveSnippets`       | `@dxos/stories-brain`            | `testing/harness/skills/rag-skill.ts`                             | Retrieve Snippets               | ✓     |
 | `com.example.operation.storiesBrain.retrieveSubject`        | `@dxos/stories-brain`            | `testing/harness/skills/hybrid-skill.ts`                          | Retrieve Subject                | ✓     |
 | `com.example.operation.test.add`                            | `@dxos/operation`                | `invoker.test.ts`                                                 | —                               |       |
 | `com.example.operation.test.add`                            | `@dxos/app-framework`            | `plugin-process-manager/testing.ts`                               | —                               |       |
 | `com.example.operation.test.async`                          | `@dxos/operation`                | `operation.test.ts`                                               | —                               |       |
 | `com.example.operation.test.asyncHandler`                   | `@dxos/operation`                | `operation.test.ts`                                               | —                               |       |
-| `com.example.operation.test.Binding.sync.sync`              | `@dxos/plugin-connector`         | `Binding.test.ts`                                                 | Test Sync                       |       |
 | `com.example.operation.test.bindingLifecycle.sync`          | `@dxos/plugin-connector`         | `Binding.test.ts`                                                 | Test Sync                       |       |
 | `com.example.operation.test.childPassthrough`               | `@dxos/compute-runtime`          | `ProcessManager.test.ts`                                          | ChildPassthrough                |       |
 | `com.example.operation.test.compute`                        | `@dxos/operation`                | `invoker.test.ts`                                                 | —                               |       |

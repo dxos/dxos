@@ -44,7 +44,7 @@ export const ConvertToTask = Operation.make({
 
 export const QuickJournalEntry = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.tasks.quickEntry'),
+    key: DXN.make('org.dxos.operation.tasks.appendJournalEntry'),
     name: 'Quick Journal Entry',
     icon: 'ph--pencil--regular',
   },
