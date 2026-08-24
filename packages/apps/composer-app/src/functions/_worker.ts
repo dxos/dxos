@@ -5,8 +5,8 @@
 // Import from the focused leaf modules rather than the `../util` barrel: the barrel re-exports
 // modules (config/halo/storage) that pull Automerge's wasm into this Cloudflare Worker bundle, which
 // esbuild cannot load.
-import { DESKTOP_ORIGINS, FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from '../util/constants';
-import { corsHeaders, isAllowedOrigin } from '../util/cors';
+import { FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from '../util/constants';
+import { corsHeaders, isAllowedOrigin, nativeOrigins } from '../util/cors';
 
 type Env = {
   ASSETS: Fetcher;
@@ -23,13 +23,14 @@ const FEEDBACK_LOGS_MAX_BODY_SIZE = LOG_STORE_MAX_BYTES;
 /**
  * Handle /api/feedback-logs — upload NDJSON debug logs to R2.
  *
- * Admits {@link DESKTOP_ORIGINS} as well as this deployment's own: the bundled desktop app serves
- * its frontend from localhost and has no `/api` route there, so its uploads are necessarily
- * cross-origin. Every response carries the CORS headers, since the client reads the returned key.
+ * Admits `nativeOrigins` as well as this deployment's own: a native build serves its frontend from
+ * its own origin and has no `/api` route there, so its uploads are necessarily cross-origin. Every
+ * response carries the CORS headers, since the client reads the returned key.
  */
 const handleFeedbackLogs = async (request: Request, env: Env): Promise<Response> => {
   const origin = request.headers.get('Origin');
-  const cors = corsHeaders(request.url, origin, true);
+  const allowed = nativeOrigins(env.ENVIRONMENT);
+  const cors = corsHeaders(request.url, origin, allowed);
   if (request.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: cors });
   }
@@ -38,8 +39,10 @@ const handleFeedbackLogs = async (request: Request, env: Env): Promise<Response>
     return new Response('Method not allowed', { status: 405, headers: cors });
   }
 
-  // Reject requests from disallowed origins server-side, not just via CORS headers.
-  if (!isAllowedOrigin(request.url, origin, true)) {
+  // Reject disallowed origins server-side, not just via CORS headers. A missing `Origin` is refused
+  // rather than allowed: every browser sends one on a POST, so its absence means a client that no
+  // same-origin policy is holding back — and this route writes megabytes to storage.
+  if (!origin || !isAllowedOrigin(request.url, origin, allowed)) {
     return new Response('Forbidden', { status: 403, headers: cors });
   }
 

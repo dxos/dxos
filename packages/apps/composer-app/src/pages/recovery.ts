@@ -107,8 +107,8 @@ const recoveryHelpers: RecoveryHelpers = {
   },
   exportProfile: async () => {
     const bytes = await exportProfileArchiveBytes();
-    downloadProfileArchiveExport(bytes);
-    return { byteLength: bytes.byteLength };
+    const saved = await downloadProfileArchiveExport(bytes);
+    return { byteLength: bytes.byteLength, saved };
   },
   exportSqlite: async () => recoveryHelpers.exportProfile(),
   downloadLogs: downloadRecoveryLogs,
@@ -214,7 +214,11 @@ const actions: Record<RecoveryAction, () => void> = {
     void runAction('Export', async () => {
       print('Exporting profile archive (.dxprofile with SQLite entry)…');
       const started = performance.now();
-      const { byteLength } = await recoveryHelpers.exportProfile();
+      const { byteLength, saved } = await recoveryHelpers.exportProfile();
+      if (!saved) {
+        print('Cancelled.');
+        return;
+      }
       print(`Exported ${byteLength.toLocaleString()} bytes in ${(performance.now() - started).toFixed(0)} ms`);
     }),
 

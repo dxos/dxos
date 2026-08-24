@@ -31,7 +31,7 @@ export type RecoveryHelpers = {
   /** OPFS pool + SQLite only — no client boot (safe when feed open hangs). */
   sqlDiagnostics: () => Promise<SqlStorageDiagnosticsResult>;
   /** Raw OPFS SQLite export (`DXOS.sqlite`). */
-  exportProfile: () => Promise<{ byteLength: number }>;
+  exportProfile: () => Promise<{ byteLength: number; saved: boolean }>;
   downloadLogs: () => Promise<{ byteLength: number; saved: boolean }>;
   importSqlite: () => Promise<{ byteLength: number }>;
   importProfileFromUrl: (url: string) => Promise<{ byteLength: number; opfsFilename: string }>;
@@ -43,7 +43,7 @@ export type RecoveryHelpers = {
     objectIds?: string[];
   }) => Promise<CompactDocumentsResult & { spaceId: string }>;
   /** @deprecated Use {@link exportProfile}. */
-  exportSqlite: () => Promise<{ byteLength: number }>;
+  exportSqlite: () => Promise<{ byteLength: number; saved: boolean }>;
   inspectOpfsPool: () => Promise<
     Array<{ name: string; associatedPath: string; totalBytes: number; payloadBytes: number }>
   >;

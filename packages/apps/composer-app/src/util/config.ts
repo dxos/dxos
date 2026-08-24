@@ -74,11 +74,18 @@ const POSTHOG_DISABLED_CONFIG = {
 /**
  * Where feedback logs are uploaded. A native build serves its frontend from a localhost asset server
  * (`src-tauri/src/lib.rs`) that has no `/api` route, so the relative path the web deployment uses
- * would resolve to a 404 there and silently drop every log bundle — it posts to the canonical
- * deployment instead, which the worker admits cross-origin (`src/functions/_worker.ts`).
+ * would resolve to a 404 there and silently drop every log bundle — it posts to a deployment that
+ * hosts the route, which admits it cross-origin (`src/functions/_worker.ts`).
+ *
+ * Each deployment binds its own R2 bucket, so a channel must name its own or its reports land in
+ * another channel's storage; `DX_FEEDBACK_LOGS_ENDPOINT` per environment
+ * (`.github/workflows/env/*`) is what picks it, and the canonical domain is only the fallback.
  */
-const feedbackLogsEndpoint = (isTauri: boolean): string | undefined =>
-  isTauri ? `https://${NativePasskey.APP_DOMAIN}${FEEDBACK_LOGS_PATH}` : undefined;
+const feedbackLogsEndpoint = (config: Config, isTauri: boolean): string | undefined =>
+  isTauri
+    ? (config.values.runtime?.app?.env?.DX_FEEDBACK_LOGS_ENDPOINT ??
+      `https://${NativePasskey.APP_DOMAIN}${FEEDBACK_LOGS_PATH}`)
+    : undefined;
 
 /** Initialize observability extensions and data providers for Composer. */
 export const initializeObservability = async (
@@ -108,7 +115,7 @@ export const initializeObservability = async (
         environment: config.values.runtime?.app?.env?.DX_ENVIRONMENT ?? 'unknown',
         logStore,
         feedbackLogMaxSize: LOG_STORE_MAX_BYTES,
-        feedbackLogsEndpoint: feedbackLogsEndpoint(isTauri),
+        feedbackLogsEndpoint: feedbackLogsEndpoint(config, isTauri),
         posthog: observabilityDisabled ? POSTHOG_DISABLED_CONFIG : undefined,
       }),
     ),

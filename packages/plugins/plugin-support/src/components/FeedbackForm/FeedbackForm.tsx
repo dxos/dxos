@@ -121,8 +121,10 @@ export type FeedbackFormDownloadLogsProps = {
 
 const FeedbackFormDownloadLogs = ({ onDownloadLogs }: FeedbackFormDownloadLogsProps) => {
   const { t } = useTranslation(meta.profile.key);
+  // An async wrapper, so a handler that throws synchronously rejects rather than escaping into the
+  // click handler.
   const handleClick = useCallback(() => {
-    void Promise.resolve(onDownloadLogs?.()).catch((err) => log.catch(err));
+    void (async () => onDownloadLogs?.())().catch((err) => log.catch(err));
   }, [onDownloadLogs]);
 
   if (!onDownloadLogs) {

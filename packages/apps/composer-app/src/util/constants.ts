@@ -35,3 +35,10 @@ export const FEEDBACK_LOGS_PATH = '/api/feedback-logs';
 export const DESKTOP_ORIGINS: ReadonlySet<string> = new Set(
   [26777, 26778, 26779, 26780].map((port) => `http://localhost:${port}`),
 );
+
+/**
+ * Origin `tauri dev` serves the app from — the Vite dev server, per `channel::DEV_SERVER_PORT`.
+ * Admitted only by non-production deployments: 5173 is a port any local page can take, so
+ * production must not accept uploads from it.
+ */
+export const DEV_SERVER_ORIGIN = 'http://localhost:5173';

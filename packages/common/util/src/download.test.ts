@@ -78,4 +78,22 @@ describe('download', () => {
     await expect(downloadBlob(new Blob(['x']), 'logs.ndjson')).resolves.toBe(false);
     expect(writeFile).not.toHaveBeenCalled();
   });
+
+  test('an unreachable native dialog falls back to the anchor', async () => {
+    (globalThis as { __TAURI__?: unknown }).__TAURI__ = {};
+    save.mockRejectedValue(new Error('dialog.save not allowed'));
+
+    await expect(downloadBlob(new Blob(['x']), 'logs.ndjson')).resolves.toBe(true);
+    expect(writeFile).not.toHaveBeenCalled();
+    expect(anchors).toHaveLength(1);
+  });
+
+  test('a write failure surfaces rather than falling back', async () => {
+    (globalThis as { __TAURI__?: unknown }).__TAURI__ = {};
+    save.mockResolvedValue('/tmp/logs.ndjson');
+    writeFile.mockRejectedValue(new Error('disk full'));
+
+    await expect(downloadBlob(new Blob(['x']), 'logs.ndjson')).rejects.toThrow('disk full');
+    expect(anchors).toHaveLength(0);
+  });
 });
