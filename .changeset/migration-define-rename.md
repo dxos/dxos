@@ -3,6 +3,7 @@
 '@dxos/echo-client': minor
 '@dxos/echo-host': minor
 '@dxos/index-core': minor
+'@dxos/plugin-client': minor
 '@dxos/protocols': minor
 ---
 

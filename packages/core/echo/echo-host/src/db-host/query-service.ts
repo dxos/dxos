@@ -155,7 +155,10 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     return Effect.gen({ self: this }, function* () {
       // The index is written asynchronously, so a caller that just added or edited an object would
       // otherwise read a stale reverse-reference set.
-      yield* Effect.promise(() => this._params.updateIndexes());
+      yield* Effect.tryPromise({
+        try: () => this._params.updateIndexes(),
+        catch: (error) => new Error('Failed to bring the index up to date.', { cause: error }),
+      });
       const rows = yield* this._params.indexEngine
         .queryReverseRef({ targetDXN: request.targetDXN as URI.URI })
         .pipe(RuntimeProvider.provide(this._params.runtime));
@@ -166,7 +169,9 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
         new Set(metas.filter((meta) => meta.spaceId === request.spaceId).map((meta) => meta.objectId)),
       );
       return { objectIds };
-    }).pipe(Effect.orDie);
+      // Surfaced on the RPC's declared error channel rather than dying: an index read failure is
+      // recoverable for the caller, which can retry or fall back.
+    }).pipe(Effect.mapError((error) => (error instanceof Error ? error : new Error(String(error)))));
   }
 
   ['QueryService.execQuery'](request: QueryRequest): EffectStream.Stream<QueryResponse, Error> {
