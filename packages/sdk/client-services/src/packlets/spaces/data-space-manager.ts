@@ -191,16 +191,16 @@ export type DataSpaceManagerRuntimeProps = {
    * This is used in dedicated worker mode to restore space state after leader changeover.
    */
   autoActivateSpaces?: boolean;
-
-  /**
-   * Anchor new spaces on a space root document, taking the space id from that document instead of
-   * from the space key. Off by default: the credential chain still lives in the control feed, so a
-   * root-anchored space only gains the anchor, not the new credential path.
-   */
-  useSpaceRootDocument?: boolean;
 };
 
 export type CreateSpaceOptions = {
+  /**
+   * Anchor the space on a space root document, taking its id from that document instead of from the
+   * space key. Defaults to true; pass false to create a legacy key-derived space, which tests need to
+   * cover the migration path. Ignored for an imported space, which brings its own root.
+   */
+  useSpaceRootDocument?: boolean;
+
   rootUrl?: AutomergeUrl;
   documents?: Record<DocumentId, Uint8Array>;
   tags?: string[];
@@ -352,7 +352,7 @@ export class DataSpaceManager extends Resource {
     const dataFeedKey = await this._keyring.createKey();
 
     // An imported space brings its own root document, so it keeps the key-derived id.
-    const anchorOnRootDocument = !!this._runtimeProps?.useSpaceRootDocument && !options.rootUrl && !options.documents;
+    const anchorOnRootDocument = (options.useSpaceRootDocument ?? true) && !options.rootUrl && !options.documents;
     const createdSpace = anchorOnRootDocument ? await this._echoHost.createSpaceWithRootDocument(ctx) : undefined;
     const spaceId = createdSpace?.spaceId ?? (await createIdFromSpaceKey(spaceKey));
 
@@ -765,7 +765,7 @@ export class DataSpaceManager extends Resource {
       log.warn('p2p automerge replication disabled', { space: space.key });
       return;
     }
-    await replicator.authorizeDevice(space.key, session.remotePeerId);
+    await replicator.authorizeDevice(space.id, session.remotePeerId);
     // session ended during device authorization
     if (session.isOpen) {
       session.addExtension('dxos.mesh.teleport.automerge', replicator.createExtension());

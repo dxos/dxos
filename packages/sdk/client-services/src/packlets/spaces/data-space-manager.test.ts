@@ -38,10 +38,10 @@ describe('DataSpaceManager', () => {
     expect(space.inner.protocol.feeds.size).to.equal(2);
   });
 
-  test('a space created with useSpaceRootDocument takes its id from the root document', async () => {
+  test('a space takes its id from its root document by default', async () => {
     const builder = new TestBuilder();
 
-    const peer = builder.createPeer({ dataSpaceProps: { useSpaceRootDocument: true } });
+    const peer = builder.createPeer();
     await peer.createIdentity();
     await openAndClose(peer.echoHost, peer.dataSpaceManager);
 
@@ -63,14 +63,14 @@ describe('DataSpaceManager', () => {
     expect(assertion.spaceRootUrl).to.equal(refs!.spaceRootDocUrl);
   });
 
-  test('spaces are key-derived by default', async () => {
+  test('a legacy space can still be created, for migration coverage', async () => {
     const builder = new TestBuilder();
 
     const peer = builder.createPeer();
     await peer.createIdentity();
     await openAndClose(peer.echoHost, peer.dataSpaceManager);
 
-    const space = await peer.dataSpaceManager.createSpace(new Context());
+    const space = await peer.dataSpaceManager.createSpace(new Context(), { useSpaceRootDocument: false });
     expect(space.id).to.equal(await createIdFromSpaceKey(space.key));
     expect(peer.echoHost.getSpaceRootRefs(space.id)).to.be.undefined;
   });
