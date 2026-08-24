@@ -137,7 +137,20 @@ apps therefore reads through that re-export. buf renders those enums differently
 on that surface first and is re-rated high complexity; it is not the cheap codemod pilot the first
 draft of this audit assumed.
 
-### #5 cannot land before #7
+### #5, partially landed
+
+Top-level enums are byte- and value-identical between the two generators, so devtools' enum
+imports move now: `SignalState`, `ConnectionState`, `SpaceState` (two sites),
+`EdgeReplicationSetting` and `LogLevel` are on `@dxos/protocols/buf/*` and the package type-checks
+with no casts. What remains in devtools needs `#7` first:
+
+- **Message type imports** (`Credential`, `KeyRecord`, `SubscribeToFeedBlocksResponse`, …) —
+  the values are protobuf.js-shaped at runtime.
+- **Nested enums** — `EdgePanel`'s `EdgeStatus.ConnectionState`, per the divergence above.
+- **`JsonView`** — calls `schema.getCodecForType(value.type_url)` to decode arbitrary `Any`
+  payloads at runtime, so it needs the buf type registry that `#9d` also waits on.
+
+### Why the rest of #5 cannot land before #7
 
 `protoMessage()` is typed `Schema.Codec<TYPES[K], Uint8Array>`, where `TYPES` comes from the
 protobuf.js `src/proto/gen` barrel — so every value the effect-rpc services hand devtools is
@@ -158,12 +171,17 @@ Measured while building the compat layer, so the ranking above understates #9c/#
    before 1970 and decodes a second early (`new Date(-1)` round-trips to `…:58.999Z`). The compat
    layer canonicalises instead, so it diverges from the legacy codec here — deliberately, since
    reproducing the bug would carry a value corruption into new code.
-3. **`google.protobuf.Any`** is unsupported and throws.
+3. **Nested enums are renamed.** protobuf.js nests them under the message namespace
+   (`EdgeStatus.ConnectionState`); buf flattens to `EdgeStatus_ConnectionState`. TypeScript rejects
+   the mixed case outright (`no overlap`), so these are safe to attempt but cannot land before
+   `#7` — the enum belongs to a value whose type still comes from the protobuf.js barrel.
+4. **`google.protobuf.Any`** is unsupported and throws.
 
 ### Scheduling status
 
-Landed: `#1` (effect-proto deleted), `#3` (shape-compat layer plus a conformance harness), `#9a`
-(keyring `KeyRecord`), `#9b` (`echo.query.Heads`). `#2` is still open: the harness that `#3`
+Landed: `#1` (effect-proto deleted), `#3` (shape-compat layer plus a conformance harness), `#5`
+in part (devtools enum imports), `#6` (`Stream` moved to `@dxos/async`), `#9a` (keyring
+`KeyRecord`), `#9b` (`echo.query.Heads`). `#2` is still open: the harness that `#3`
 needed was built against real dxos messages, so nothing under `tools/protobuf-test` or the
 `example/testing` protos has moved yet.
 
@@ -172,7 +190,7 @@ Blocked, with the blocker established above rather than assumed: `#4` needs a de
 `#9d` additionally needs `Any` support in the compat layer, since credentials carry
 `google.protobuf.Any`.
 
-Still unscheduled: `#2`, `#6`, `#7`, `#8`.
+Still unscheduled: `#2`, `#7`, `#8`.
 
 ### Verified: devtools is already on effect-rpc
 
