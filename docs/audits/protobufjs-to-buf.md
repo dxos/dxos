@@ -127,6 +127,16 @@ Within #9, each slice is ordered by blast radius: 9a → 9b → 9c → 9d.
 | 9c  | `echo/metadata` + `echo/feed`           | 31 + 22 declarations across echo-host, feed-store, client-services                          | medium–high | medium     | Broad on-disk state with no cheap rebuild path; needs a fixture profile per storage version.                                                                                                                                        |
 | 9d  | credentials signing/verification        | `halo/credentials/src/credentials/*`, 94 declarations                                       | highest     | high       | `signing.ts` stringifies the _substituted object_, so any shape drift invalidates every existing credential. Do last, behind 9a–9c, with fixtures of real signed credentials from released versions.                                |
 
+### Not a codemod: `dxos.config` (#4)
+
+`packages/sdk/config/src/index.ts` re-exports `@dxos/protocols/proto/dxos/config` wholesale — as
+`defs` (the generated namespace, whose enums are numeric-valued objects) and as the public
+`ConfigProto` type. Every `Runtime.Client.ServicesMode.DEDICATED_WORKER`-style reference in the
+apps therefore reads through that re-export. buf renders those enums differently, so switching
+`@dxos/config` to buf changes its public surface rather than just its imports. #4 needs a decision
+on that surface first and is re-rated high complexity; it is not the cheap codemod pilot the first
+draft of this audit assumed.
+
 ### Scheduling status
 
 Approved to proceed: #1, #2, #3, #4, #6, and #9a–#9d in that slice order. Not yet scheduled: #5,
