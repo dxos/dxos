@@ -24,9 +24,12 @@ are the dependency edges:
    `check-module-structure` belongs here and not in stage 1 despite costing 5 s: it declares
    `deps: [build]`, so ahead of the gate it would pull the builds along with it.
 3. **The two slow checks** — `knip` (2m36s–3m21s, and the bulk of the job's real work) and
-   `check-boot-budget` (53 s cold). Only this stage is report-all (`continue-on-error` plus a gate
-   step): fail-fast costs nothing when steps cost seconds, but here it hides one failure behind the
-   other for a whole further run of the job.
+   `check-plugin-set`. Only this stage is report-all (`continue-on-error` plus a gate step):
+   fail-fast costs nothing when steps cost seconds, but here it hides one failure behind the other
+   for a whole further run of the job. `check-boot-budget` was the second of the two until it moved
+   to its own `boot-budget` job; `check-plugin-set` stayed because its `DX_PLUGIN_SET=production`
+   bundle is cheap only on a runner where stage 2 has already warmed `^:build` (22 s there, against
+   the boot budget's 41 s when the two shared this job).
 
 Two facts the ordering depends on, both verified rather than assumed:
 
@@ -37,10 +40,11 @@ Two facts the ordering depends on, both verified rather than assumed:
 - **The production `bundle` is not otherwise built anywhere in Check.** `:build` does not include it
   and `e2e-bundle` builds `bundle-e2e`, a separate cache entry by design (`DX_PWA=false` changes the
   very boot graph the budget measures). So `check-boot-budget` pays for that bundle wherever it
-  lives; on the `check` job it at least follows stage 2, which has warmed the library builds under
-  it. Measured there: 53 s for the step, 28 s of it the bundle building from source with its 281
-  dependency tasks hydrated. Its former home — one `e2e` cell — could never gate a PR automatically:
-  `e2e` runs on main/changeset-release, or on an explicit dispatch someone has to ask for.
+  lives, which is why it now owns the `boot-budget` job: on `check` it sat behind all of stage 1+2
+  for library builds the remote cache already holds, and it was measured there at 53 s for the step,
+  28 s of it the bundle building from source with its 281 dependency tasks hydrated. Its earlier home
+  — one `e2e` cell — could never gate a PR automatically: `e2e` runs on main/changeset-release, or on
+  an explicit dispatch someone has to ask for.
 
 Neither caching the small scripts as moon tasks nor caching `knip` was worth it: the scripts run in
 1–6 s, and knip is a whole-repo analysis that any real PR invalidates, so its hit rate is ~0.
