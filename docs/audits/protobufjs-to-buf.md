@@ -22,13 +22,18 @@ generators run side by side and both outputs are consumed today.
 
 ## Current exposure
 
-| Surface                                                                  | Count                             |
-| ------------------------------------------------------------------------ | --------------------------------- |
-| `.ts`/`.tsx` files importing `@dxos/protocols/proto/*` (protobuf.js gen) | 290 files / 464 import statements |
-| Files importing `@dxos/protocols/buf/*` (already migrated)               | 25 (dxos) + 85 (edge)             |
-| Files importing `@dxos/codec-protobuf`                                   | 39                                |
-| `schema.getCodecForType(...)` call sites                                 | 47                                |
-| `Stream` imports from `@dxos/codec-protobuf`                             | 26                                |
+| Surface                                                                  | Count                        |
+| ------------------------------------------------------------------------ | ---------------------------- |
+| `.ts`/`.tsx` files importing `@dxos/protocols/proto/*` (protobuf.js gen) | 275 files / 409 declarations |
+| Files importing `@dxos/protocols/buf/*` (already migrated)               | 25 (dxos) + 85 (edge)        |
+| Files importing `@dxos/codec-protobuf`                                   | 39                           |
+| `schema.getCodecForType(...)` call sites                                 | 47                           |
+| `Stream` imports from `@dxos/codec-protobuf`                             | 26                           |
+
+Counted over git-tracked `*.ts`/`*.tsx` only, matching `import`/`export … from '@dxos/protocols/proto/…'`
+declarations (not raw mentions of the path, which come to 464 lines). How many of those declarations
+touch a _substituted_ field is not measured here — it needs per-field analysis, and it is the number
+that actually sizes the sweep.
 
 Heaviest legacy consumers (files importing `@dxos/protocols/proto/*`):
 `sdk/client-services` (83), `core/mesh` (50), `core/halo` (28), `sdk/client` (23),
@@ -49,7 +54,7 @@ Codegen is solved; the cost is concentrated in four runtime behaviours protobuf.
 1. **Substitutions.** `packages/core/protocols/src/proto/substitutions.ts` rewrites
    `dxos.keys.PublicKey` → `PublicKey`, `dxos.keys.PrivateKey` → `Buffer`,
    `dxos.echo.timeframe.TimeframeVector` → `Timeframe`, plus `Any`, `Struct` and `Timestamp`
-   handling. Generated buf types are plain messages, so every one of the 464 import sites that
+   handling. Generated buf types are plain messages, so every one of the 409 import sites that
    touches a substituted field sees a different shape (`{ data: Uint8Array }` instead of a
    `PublicKey` instance). This is the bulk of the mechanical work.
 2. **Credential signature stability.** `credentials/src/credentials/signing.ts` signs
@@ -90,7 +95,7 @@ Assumes no behaviour change and no proto edits; each phase independently landabl
 | 1     | Re-point `protoMessage()` / `serviceError` at buf; keep protobuf.js for everything else                                                                                                                             | 2–3 days    |
 | 2     | Persisted codecs (keyring, heads store, metadata, feed) + credential signing compat, incl. fixture tests on existing data                                                                                           | 1–1.5 weeks |
 | 3     | Replace `ServiceDescriptor`/`createProtoRpcPeer` for the remaining non-effect services (mesh/teleport, iframe, bridge, agentmanager); move `Stream` out of `codec-protobuf`                                         | 1.5–2 weeks |
-| 4     | Mechanical rewrite of 464 `@dxos/protocols/proto/*` imports → `@dxos/protocols/buf/*` (largely codemod-able; the enum and `optional`/default-value differences are not)                                             | 2–3 weeks   |
+| 4     | Mechanical rewrite of 409 `@dxos/protocols/proto/*` imports → `@dxos/protocols/buf/*` (largely codemod-able; the enum and `optional`/default-value differences are not)                                             | 2–3 weeks   |
 | 5     | `@dxos/effect-proto` on buf descriptors (`react-ui-form`)                                                                                                                                                           | 3–5 days    |
 | 6     | Delete `protobuf-compiler`, the `prebuild` task, `substitutions.ts`, `codec-protobuf`; drop `protobufjs` from the catalog; update `dxos/edge` (`hub-protocol`, `db-service`)                                        | 3–5 days    |
 
@@ -99,12 +104,12 @@ touches most of the repo. Phases 0–2 (~3 weeks) deliver the actual de-risking;
 phase 1 already removes protobuf.js from the new RPC stack.
 
 Main risks, in order: credential signature stability (2), decoded-shape drift silently changing
-behaviour at 464 sites, and enum/default-value semantics differing between the two generators.
+behaviour at 409 sites, and enum/default-value semantics differing between the two generators.
 
 ## Ranked threads (risk × complexity)
 
-Independently landable threads, lowest → highest risk×complexity. Only #7 and #9 depend on
-another thread (the shape-compat layer, #3).
+Independently landable threads, lowest → highest risk×complexity. Three depend on another thread:
+#7 and #9 on the shape-compat layer (#3), and #8 on the `Stream` extraction (#6).
 
 | #   | Thread                                  | Scope                                                                                           | Risk        | Complexity | Notes                                                                                                                                                                                                                               |
 | --- | --------------------------------------- | ----------------------------------------------------------------------------------------------- | ----------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -118,9 +123,10 @@ another thread (the shape-compat layer, #3).
 | 8   | Remaining `ServiceDescriptor` RPC       | mesh/teleport, iframe, bridge, agentmanager — 18 services / 36 rpcs, ~60 sites                  | medium–high | high       | Cross-peer wire compatibility: a mismatch breaks replication between versions, not just a local call. Sequence after #6.                                                                                                            |
 | 9   | Persisted and signed data               | keyring `KeyRecord`, `echo.query.Heads`, `echo/metadata`, `echo/feed`, `credentials/signing.ts` | highest     | high       | Signing stringifies the substituted object, so shape drift invalidates every existing credential; the rest is on-disk state. Needs fixture tests over real profiles.                                                                |
 
-The 464-import codemod is not a thread of its own: it decomposes into #4, #5 and per-package
+The 409-declaration codemod is not a thread of its own: it decomposes into #4, #5 and per-package
 slices behind #3 — a rolling sweep rather than a milestone.
 
 Sequencing notes: `dxos/edge` (`hub-protocol`, `db-service`) follows whatever `@dxos/protocols`
 publishes and should not be scheduled separately; deleting `protobuf-compiler`/`codec-protobuf`
-and dropping `protobufjs` from the catalog is unblocked only once #6, #8 and #9 have landed.
+and dropping `protobufjs` from the catalog is unblocked only once #1 (phase 5), #6, #8 and #9
+have landed — #1 is the last consumer of protobuf.js outside those packages.
