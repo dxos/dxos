@@ -22,7 +22,7 @@ at the bottom — read those before picking up a thread.
 | 9d  | credentials signing/verification        | todo     | Highest risk; additionally needs `Any` support in the compat layer.      |
 
 **Next up, in order:** `#7` (unblocks `#5` and the sweep) → rest of `#5` → `#9c` → `#8` → `#9d`.
-`#2` and `#4` are independent and can slot in anywhere; `#4` needs the API decision first.
+`#2` is independent and can slot in anywhere.
 
 Deleting `protobuf-compiler`/`codec-protobuf` and dropping `protobufjs` from the catalog is the
 last step, and needs every thread above done.

@@ -2,11 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
+import { fromJson } from '@bufbuild/protobuf';
 import fs from 'node:fs';
 import path from 'node:path';
 import { parse } from 'yaml';
 
 import { log } from '@dxos/log';
+import { InvalidConfigError } from '@dxos/protocols';
+import { ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 
 import { mapFromKeyValues } from '../config';
 import { type ConfigInit, FILE_DEFAULTS, FILE_ENVS } from '../types';
@@ -23,6 +26,25 @@ const maybeLoadFile = (file: string): any => {
   }
 };
 
+/**
+ * Loads a config file, validating it against the schema.
+ * This is the boundary where untrusted YAML enters, so field types are checked here rather than in
+ * `validateConfig`, which the compiler already covers via `ConfigInit`.
+ */
+const maybeLoadConfigFile = (file: string): ConfigInit | undefined => {
+  const content = maybeLoadFile(file);
+  if (content === undefined || content === null) {
+    return undefined;
+  }
+
+  try {
+    // Unknown fields are ignored, matching the protobuf.js `verify` this replaced.
+    return fromJson(ConfigSchema, content, { ignoreUnknownFields: true });
+  } catch (err) {
+    throw new InvalidConfigError({ message: `Invalid config in ${file}: ${err}` });
+  }
+};
+
 //
 // NOTE: Export LocalStorage and Dynamics for typescript to typecheck browser code (see ConfigPlugin).
 //
@@ -32,7 +54,7 @@ const maybeLoadFile = (file: string): any => {
  */
 export const Profile = (profile = 'default') => {
   const configFile = path.join(process.env.HOME ?? '~', `.config/dx/profile/${profile}.yml`);
-  return maybeLoadFile(configFile) as ConfigInit;
+  return maybeLoadConfigFile(configFile);
 };
 
 /**
@@ -58,7 +80,7 @@ export const Envs = (basePath = DEFAULT_BASE_PATH): ConfigInit => {
  * JSON config.
  */
 export const Defaults = (basePath = DEFAULT_BASE_PATH): ConfigInit =>
-  maybeLoadFile(path.resolve(basePath, FILE_DEFAULTS)) ?? {};
+  maybeLoadConfigFile(path.resolve(basePath, FILE_DEFAULTS)) ?? {};
 
 /**
  * Load config from storage.

@@ -26,11 +26,7 @@ export const protoMessage = <K extends keyof TYPES & string>(typeName: K): Schem
     ),
   );
 
-/**
- * Effect schema for a buf message type, encoded as protobuf bytes on the wire.
- * The wire format matches `protoMessage` for the same message; the difference is the TypeScript
- * shape callers see, so a package that has migrated to buf keeps its own types across RPC.
- */
+/** Matches `protoMessage`'s wire format while exposing the buf message type to callers. */
 export const bufMessage = <T extends Message>(messageSchema: GenMessage<T>): Schema.Codec<T, Uint8Array> =>
   Schema.Uint8Array.pipe(
     Schema.decodeTo(

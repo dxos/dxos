@@ -6,7 +6,7 @@ import { Client } from '@dxos/client';
 import { mountDevtoolsHooks } from '@dxos/client/devtools';
 import { type LocalClientServices, fromHost } from '@dxos/client/local';
 import { Config, defs } from '@dxos/config';
-import { Runtime_Client_ServicesMode, Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
+import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
 
 import { setupConfig } from '../util';
 import { initAutomergeWasm } from '../util/automerge-wasm';

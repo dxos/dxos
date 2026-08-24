@@ -112,11 +112,7 @@ export const validateConfig = (config: ConfigInit): ConfigProto => {
   }
 };
 
-/**
- * Reads a string out of `runtime.app.env`.
- * That field is a `google.protobuf.Struct`, so any JSON value can land in a key; callers that need
- * a string get `undefined` for anything else rather than a value of the wrong type.
- */
+/** Keeps non-string `Struct` values out of string-only consumers of `runtime.app.env`. */
 export const getEnvString = (config: Config | undefined, key: string): string | undefined => {
   const value = config?.values.runtime?.app?.env?.[key];
   return typeof value === 'string' ? value : undefined;
