@@ -39,7 +39,7 @@ export type NodeMatcher<TData = GraphNode.Any, TNode extends GraphNode.Any = Gra
  * ```ts
  * GraphBuilder.createExtension({
  *   id: 'myExtension',
- *   match: NodeMatcher.whenRoot,
+ *   match: GraphNodeMatcher.whenRoot,
  *   connector: (node) => Effect.succeed([...]),
  * });
  * ```
@@ -57,7 +57,7 @@ export const whenRoot = <TNode extends GraphNode.Any>(node: TNode): Option.Optio
  * ```ts
  * GraphBuilder.createExtension({
  *   id: 'spacesExtension',
- *   match: NodeMatcher.whenId('spaces'),
+ *   match: GraphNodeMatcher.whenId('spaces'),
  *   connector: (node) => Effect.succeed([...]),
  * });
  * ```
@@ -77,7 +77,7 @@ export const whenId =
  * ```ts
  * GraphBuilder.createExtension({
  *   id: 'spaceSettingsExtension',
- *   match: NodeMatcher.whenNodeType('org.dxos.plugin.space.settings'),
+ *   match: GraphNodeMatcher.whenNodeType('org.dxos.plugin.space.settings'),
  *   connector: (node) => Effect.succeed([...]),
  * });
  * ```
@@ -88,7 +88,7 @@ export const whenNodeType =
     node.type === type ? Option.some(node) : Option.none();
 
 //
-// ECHO Data Matchers
+// Combinators
 //
 
 /**
@@ -103,10 +103,10 @@ export const whenNodeType =
  *
  * @example
  * ```ts
- * // Match ECHO objects that are NOT Channels — result is NodeMatcher<Obj.Unknown>.
- * const whenCommentable = NodeMatcher.whenAll(
- *   NodeMatcher.whenEchoObject,
- *   NodeMatcher.whenNot(NodeMatcher.whenEchoTypeMatches(Channel.Channel)),
+ * // Match settings nodes that are not the root — `whenNot` is transparent, so the result carries the node.
+ * const whenSettings = GraphNodeMatcher.whenAll(
+ *   GraphNodeMatcher.whenNodeType('org.dxos.plugin.space.settings'),
+ *   GraphNodeMatcher.whenNot(GraphNodeMatcher.whenRoot),
  * );
  * ```
  */
@@ -152,10 +152,10 @@ export const whenAll: {
  *
  * @example
  * ```ts
- * // Match nodes that are either Sequences or Routines
- * const whenInvocable = NodeMatcher.whenAny(
- *   NodeMatcher.whenEchoTypeMatches(Sequence),
- *   NodeMatcher.whenEchoTypeMatches(Routine.Routine),
+ * // Match nodes that are either the root or the spaces node
+ * const whenTopLevel = GraphNodeMatcher.whenAny(
+ *   GraphNodeMatcher.whenRoot,
+ *   GraphNodeMatcher.whenId('spaces'),
  * );
  * ```
  */
@@ -199,14 +199,8 @@ export const whenAny: {
  *
  * @example
  * ```ts
- * // Match any ECHO object that is NOT a Channel — result is NodeMatcher<Obj.Unknown>.
- * const whenCommentable = NodeMatcher.whenAll(
- *   NodeMatcher.whenEchoObject,
- *   NodeMatcher.whenNot(NodeMatcher.whenEchoTypeMatches(Channel.Channel)),
- * );
- *
  * // Match any node that is NOT the root
- * const whenNotRoot = NodeMatcher.whenNot(NodeMatcher.whenRoot);
+ * const whenNotRoot = GraphNodeMatcher.whenNot(GraphNodeMatcher.whenRoot);
  * ```
  */
 export const whenNot =

@@ -12,7 +12,6 @@ import * as Project from '@dxos/compute/Project';
 import { Feed, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { qualifyId } from '@dxos/graph/GraphNode';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
@@ -47,7 +46,7 @@ describe('project chats graph extension', () => {
     const context = setupGraphBuilder({ extensions: [...rootExtensions, ...chatExtensions] });
 
     await context.expand(GraphNode.RootId);
-    await context.expand(qualifyId(GraphNode.RootId, PROJECT_ID));
+    await context.expand(GraphNode.qualifyId(GraphNode.RootId, PROJECT_ID));
 
     const addChat = async (name: string) => {
       const feed = db.add(Feed.make());
@@ -63,7 +62,8 @@ describe('project chats graph extension', () => {
       db,
       project,
       addChat,
-      getChildIds: () => context.getConnections(qualifyId(GraphNode.RootId, PROJECT_ID)).map((node) => node.id),
+      getChildIds: () =>
+        context.getConnections(GraphNode.qualifyId(GraphNode.RootId, PROJECT_ID)).map((node) => node.id),
     };
   };
 
@@ -78,11 +78,11 @@ describe('project chats graph extension', () => {
     // The connector reads a hierarchy query rather than a ref array, so it must re-run when a chat
     // is newly parented.
     const chat = await addChat('First');
-    expect(getChildIds()).toEqual([qualifyId(GraphNode.RootId, PROJECT_ID, chat.id)]);
+    expect(getChildIds()).toEqual([GraphNode.qualifyId(GraphNode.RootId, PROJECT_ID, chat.id)]);
 
     const second = await addChat('Second');
     expect(getChildIds()).toHaveLength(2);
-    expect(getChildIds()).toContain(qualifyId(GraphNode.RootId, PROJECT_ID, second.id));
+    expect(getChildIds()).toContain(GraphNode.qualifyId(GraphNode.RootId, PROJECT_ID, second.id));
   });
 
   test('excludes non-chat children of the project', async ({ expect }) => {
@@ -95,6 +95,6 @@ describe('project chats graph extension', () => {
     await db.flush();
     await flush();
 
-    expect(getChildIds()).toEqual([qualifyId(GraphNode.RootId, PROJECT_ID, chat.id)]);
+    expect(getChildIds()).toEqual([GraphNode.qualifyId(GraphNode.RootId, PROJECT_ID, chat.id)]);
   });
 });

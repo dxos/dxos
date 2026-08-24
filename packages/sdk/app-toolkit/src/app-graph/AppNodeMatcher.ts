@@ -7,12 +7,12 @@
 import * as Option from 'effect/Option';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import { type Space, isSpace } from '@dxos/client/echo';
 import { Entity, Obj, type Type } from '@dxos/echo';
 import type * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
 /** A matcher over app-graph nodes. */
 type Matcher<TData> = GraphNodeMatcher.NodeMatcher<TData, AppGraphNode.Node>;
-import { type Space, isSpace } from '@dxos/client/echo';
 
 /**
  * Canonical app-graph node type for `Space` data nodes. Mirrors
@@ -96,7 +96,7 @@ export const whenNavTreeGroup =
  * ```ts
  * GraphBuilder.createExtension({
  *   id: 'collectionExtension',
- *   match: Matcher<AppGraphNode.Node>.whenEchoType(Collection.Collection),
+ *   match: AppNodeMatcher.whenEchoType(Collection.Collection),
  *   connector: (collection) => {
  *     // `collection` is typed as Collection.Collection
  *     return Effect.succeed(collection.objects.map(...));
@@ -126,7 +126,7 @@ export const whenEchoType =
  * ```ts
  * GraphBuilder.createExtension({
  *   id: 'objectProperties',
- *   match: Matcher<AppGraphNode.Node>.whenEchoObject,
+ *   match: AppNodeMatcher.whenEchoObject,
  *   connector: (object) => {
  *     // `object` is typed as Obj.Unknown
  *     const id = Obj.getURI(object);
@@ -163,14 +163,14 @@ export const whenEchoObject = (node: AppGraphNode.Node): Option.Option<Obj.Unkno
  * @example
  * ```ts
  * // Use with whenAny for OR logic
- * const whenPresentable = Matcher<AppGraphNode.Node>.whenAny(
- *   Matcher<AppGraphNode.Node>.whenEchoTypeMatches(Collection.Collection),
- *   Matcher<AppGraphNode.Node>.whenEchoTypeMatches(Markdown.Document),
+ * const whenPresentable = GraphNodeMatcher.whenAny(
+ *   AppNodeMatcher.whenEchoTypeMatches(Collection.Collection),
+ *   AppNodeMatcher.whenEchoTypeMatches(Markdown.Document),
  * );
  *
  * // Use with whenNot for exclusion
- * const whenNotChannel = Matcher<AppGraphNode.Node>.whenNot(
- *   Matcher<AppGraphNode.Node>.whenEchoTypeMatches(Channel.Channel),
+ * const whenNotChannel = GraphNodeMatcher.whenNot(
+ *   AppNodeMatcher.whenEchoTypeMatches(Channel.Channel),
  * );
  * ```
  *
@@ -195,9 +195,9 @@ export const whenEchoTypeMatches =
  * @example
  * ```ts
  * // Match ECHO objects that are not system types
- * const whenUserObject = Matcher<AppGraphNode.Node>.whenAll(
- *   Matcher<AppGraphNode.Node>.whenEchoObjectMatches,
- *   Matcher<AppGraphNode.Node>.whenNot(Matcher<AppGraphNode.Node>.whenEchoTypeMatches(SystemType)),
+ * const whenUserObject = GraphNodeMatcher.whenAll(
+ *   AppNodeMatcher.whenEchoObjectMatches,
+ *   GraphNodeMatcher.whenNot(AppNodeMatcher.whenEchoTypeMatches(SystemType)),
  * );
  * ```
  *
