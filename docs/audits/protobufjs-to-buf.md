@@ -100,3 +100,27 @@ phase 1 already removes protobuf.js from the new RPC stack.
 
 Main risks, in order: credential signature stability (2), decoded-shape drift silently changing
 behaviour at 464 sites, and enum/default-value semantics differing between the two generators.
+
+## Ranked threads (risk × complexity)
+
+Independently landable threads, lowest → highest risk×complexity. Only #7 and #9 depend on
+another thread (the shape-compat layer, #3).
+
+| #   | Thread                                  | Scope                                                                                           | Risk        | Complexity | Notes                                                                                                                                                                                                                               |
+| --- | --------------------------------------- | ----------------------------------------------------------------------------------------------- | ----------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `@dxos/effect-proto` removal            | 2 files                                                                                         | very low    | very low   | The only real consumer is `react-ui-form`'s `ObjectTree.stories.tsx` (`parseProto`) — a storybook. Deletes an entire protobuf.js dependent.                                                                                         |
+| 2   | Test/example protos                     | `tools/protobuf-test`, `codec-protobuf/test`, `protobuf-compiler/test`, `example/testing/*`     | very low    | low        | No persisted data, no signatures. Doubles as the conformance harness for #3.                                                                                                                                                        |
+| 3   | Shape-compat layer                      | new module in `@dxos/protocols`                                                                 | low         | high       | Buf encode/decode reproducing the substituted shapes (PublicKey, PrivateKey, TimeframeVector, Any, Struct, Timestamp) plus byte/JSON-equality tests against protobuf.js. Nothing switches over, so risk stays low; gates #7 and #9. |
+| 4   | `dxos.config`                           | 33 files                                                                                        | low         | low–medium | Read-mostly, not persisted, not signed. Good codemod pilot for enum and default-value differences.                                                                                                                                  |
+| 5   | devtools                                | 20 files                                                                                        | low         | medium     | Diagnostic-only; regressions are visible and harmless. Exercises the RPC and `Stream` seams without touching user data.                                                                                                             |
+| 6   | `Stream` extraction                     | 26 import sites                                                                                 | low         | medium     | Move `Stream` out of `codec-protobuf` into its own package; unblocks deleting that package.                                                                                                                                         |
+| 7   | `protoMessage()` / `serviceError` → buf | 64 sites, 1 file                                                                                | medium      | low        | The chokepoint: re-points the whole effect-rpc stack off protobuf.js in one file. Highest leverage per line changed, but a shape mismatch breaks every client service at once.                                                      |
+| 8   | Remaining `ServiceDescriptor` RPC       | mesh/teleport, iframe, bridge, agentmanager — 18 services / 36 rpcs, ~60 sites                  | medium–high | high       | Cross-peer wire compatibility: a mismatch breaks replication between versions, not just a local call. Sequence after #6.                                                                                                            |
+| 9   | Persisted and signed data               | keyring `KeyRecord`, `echo.query.Heads`, `echo/metadata`, `echo/feed`, `credentials/signing.ts` | highest     | high       | Signing stringifies the substituted object, so shape drift invalidates every existing credential; the rest is on-disk state. Needs fixture tests over real profiles.                                                                |
+
+The 464-import codemod is not a thread of its own: it decomposes into #4, #5 and per-package
+slices behind #3 — a rolling sweep rather than a milestone.
+
+Sequencing notes: `dxos/edge` (`hub-protocol`, `db-service`) follows whatever `@dxos/protocols`
+publishes and should not be scheduled separately; deleting `protobuf-compiler`/`codec-protobuf`
+and dropping `protobufjs` from the catalog is unblocked only once #6, #8 and #9 have landed.
