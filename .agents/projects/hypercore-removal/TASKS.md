@@ -215,8 +215,18 @@ migration; crash mid-migration and resume.
 - [ ] The flip itself: stop consulting the feed for a space whose document is complete, and stop
       writing feed credentials for it. Both sources still run today.
 
-- [ ] Reader accepts BOTH sources (control feed and credentials doc) for the whole
-      migration window — client and EDGE alike.
+- [x] **Reader accepts BOTH sources on EDGE** (dxos/edge#945) — `SpaceStateMachine` pulls from the
+      credentials document alongside the control feed. Two things made this cheaper than planned:
+      the root document is found by DERIVATION rather than by a new client API or protocol field
+      (a `rootDoc` space id is the hash of its root document id, so exactly one stored document can
+      match, and the lookup is self-certifying); and the per-space selector falls out of that for
+      free — a space is on the document path exactly when its root resolves, so a legacy space needs
+      no flag to stay on the feed. Cost: the wire contract and `orderCredentials` are DUPLICATED in
+      the edge repo, because the catalog pins `@dxos/echo-protocol` to a commit predating them. A
+      shared fixed derivation vector is asserted on both sides so they cannot drift silently.
+      A document write is not gated the way feed admission gates a block, so every credential is
+      signature-verified before it reaches a processor.
+- [ ] Reader accepts both sources on the CLIENT for the whole migration window.
 - [ ] **Dual-write during the window** — a migrating space writes every credential to BOTH
       the control feed and the credentials doc, so either reader stays complete and no
       watermark or write-freeze is needed. Migration must be re-runnable without duplication
