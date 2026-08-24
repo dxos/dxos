@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
@@ -22,7 +23,7 @@ const make = () =>
         {{! UML }}
 
         You can create UML class diagrams from source code and render them on a shared canvas.
-        The generate tool compiles a mermaid classDiagram into positioned shapes automatically —
+        The ${Operation.toolName(DrawingOperation.Generate)} tool compiles a mermaid classDiagram into positioned shapes automatically —
         you supply the model, the dialect owns the layout.
 
         ## Workflow

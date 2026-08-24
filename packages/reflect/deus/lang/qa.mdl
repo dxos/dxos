@@ -1,0 +1,233 @@
+---
+id: org.dxos.spec.qa
+name: DSL.QA
+version: 1.0
+extends:
+  - org.dxos.spec.core
+---
+
+The QA dialect. Adds one construct — `flow` — so a `.mdl` specification doubles as a test plan
+that a human tester and an agent tester execute from the same source.
+
+A `flow` is an ordered list of steps with a success criterion. Each step carries two faces: a
+human instruction and, where the step maps to an invocable operation, an agent binding. Neither
+face is a rendering of the other — a human clicks a navtree row, an agent invokes an operation,
+and both are the truth about how that actor performs the step.
+
+Flows live in a `## QA` section of a `PLUGIN.mdl`, or in an `APP.mdl` for journeys that cross
+plugins.
+
+## Extensions
+
+| Term   | URI                        |
+|--------|----------------------------|
+| `ext`  | `org.dxos.spec.core/ext`   |
+
+---
+
+## Relationship to `test`
+
+`test` and `flow` are not competitors and must not be collapsed:
+
+| | `test T-n` | `flow QA-n` |
+|---|---|---|
+| Kind | derivable criterion | orchestrable script |
+| Shape | given / when / then | N ordered steps |
+| Target | vitest, storybook play | the running app |
+| Asserted by | the test runner | the human, or an agent through the debug port |
+
+A flow's `covers:` names the `feat` / `req` / `test` identifiers it exercises, so coverage is a
+question the linter can answer rather than a guess.
+
+---
+
+## The `flow` Block
+
+```mdl
+ext flow
+  uri: org.dxos.mdl.flow@1.0
+  desc: |
+    An end-to-end scenario against the running application, executed by a human tester or an
+    agent. Ordered steps, each with its own success criterion.
+  fields:
+    desc?:     Prose
+    actors?:   human | agent | both     # default both; see the invoke rule below
+    covers?:   RefList                  # feat / req / test ids this flow exercises
+    status?:   passing | failing | unverified   # last known result, with a date in a comment
+    given?:    GivenList                # preconditions; `name: prose` binds `$given.name` (see below)
+    before?:   StepList                 # fixture the test needs, but is not itself testing
+    test:      StepList                 # the test — the steps whose failure is a defect
+    after?:    StepList                 # returning the app to its pre-flow state
+                                        # all three are arrays of the same `step` shape
+    then?:     ProseList                # whole-flow criteria, beyond the per-step ones
+    tags?:     TagList
+  nesting: none
+```
+
+```mdl
+ext step
+  uri: org.dxos.mdl.step@1.0
+  desc: |
+    One move in a flow — an item of the `steps` list, not a block of its own. `do` and `expect`
+    are required: that is what keeps a flow human-runnable, and a step no human can perform is a
+    design smell rather than a shortcut.
+  fields:
+    name?:     Prose          # short title, for the report table
+    id?:       Identifier     # stable handle; see the numbering rule below
+    do:        Prose          # the human instruction (required)
+    expect:    Prose          # the success criterion BOTH actors judge (required)
+    invoke?:   OpInvocation   # operation reference + input literal
+    capture?:  Identifier     # names this step's result for later steps as `$<name>`
+    assert?:   CodeBlock      # deterministic check evaluated in the debug port; must return truthy
+    note?:     Prose          # a constraint the runner must respect (see Execution Rules)
+    blocked?:  Prose          # why this step cannot run at all, and what must change first
+```
+
+Steps are items of a list, not repeated `step <n>:` keys. Core declares block bodies as
+`key[?]: value`, with `key:` followed by an indented `-` list as the multi-line form — which
+`given` already uses. A pseudo-key carrying a positional id is not core syntax, and
+it forces every later step to be renumbered by hand when one is inserted.
+
+### Field rules
+
+1. **`do` and `expect` are required on every step.** A flow whose steps only an agent can perform
+   is not a QA plan, it is a script.
+2. **`invoke` is optional, and its absence is meaningful.** A step with no operation behind it —
+   a drag, a page reload, a judgement about flicker — is a first-class step. A flow containing any
+   such step cannot declare `actors: agent`.
+3. **`assert` is optional.** `expect` prose is always the criterion; `assert` only makes it
+   deterministic where that is cheap. Requiring it would make authoring a flow a coding task.
+4. **`capture` threads a result forward** as `$<name>`, referenced in a later step's `invoke`.
+   Within a step, `$result` is that step's own `invoke` result, for use in its `assert`. Only
+   serializable values cross a snippet boundary — an id does, a live ECHO object does not (Rule 2).
+5. **A `given` entry written `name: prose` binds `$given.name`.** A bare entry is a condition to
+   check; a named one is also a value the runner must resolve and hold for the steps to reference
+   (`$given.collection`). Without this, a step's `invoke` would name something the flow never
+   defined.
+6. **Steps are numbered by position**, from 1, so `QA-1.3` is the third item. A step that needs a
+   handle stable across insertions declares `id:`, and is then referenced by it (`QA-1.open`)
+   instead. Most steps do not need one; give an `id` to a step whose failure is cited somewhere
+   outside the document.
+
+### Operation references
+
+Within the document, an operation declared here is referenced as `[op:<id>]`, which resolves via
+that block's `key:` field (`op@1.1`).
+
+An operation owned by **another** plugin is written as a full key literal. This is not only an
+`APP.mdl` concern: a plugin-scoped flow routinely drives `space.addObject` and `layout.open`, and
+neither is declared in the plugin's own spec.
+
+---
+
+## `op@1.1` — the `key` field
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.1
+  extends: op
+  adds-fields:
+    key?: NSID    # runtime operation key — what the invoker receives
+```
+
+Without `key`, a flow cannot say which operation it means. The distinction is real and not
+academic: `plugin-markdown` declares one `op create` but ships two runtime operations —
+`org.dxos.operation.markdown.create` (agent-facing, `Database.Service`) and
+`org.dxos.operation.markdown.createDraft` (the UI factory, `Capability.Service`). A flow that
+guesses picks the wrong one and fails at runtime.
+
+Populate the pre-existing `requires:` from the code's `services:` at the same time. It is
+informational — see Execution Rule 1 — but it tells a reader why a step behaves as it does.
+
+---
+
+## Execution Rules
+
+These are not style advice. Each was established by running a flow against a live application;
+a runner that ignores them produces false failures.
+
+1. **Always invoke through the operation invoker with an explicit `spaceId`.** Do not branch on
+   `requires:`. An operation's own declaration cannot see the services its *downstream* calls
+   need, so `requires:` is necessary but not sufficient to predict whether a plain invoke will
+   work. Taking the invoker path unconditionally removes the question.
+
+2. **Coalesce adjacent steps that thread a live object.** The debug port serializes between
+   snippets, so an ECHO object captured in one step cannot be passed to the next. Human step
+   granularity and snippet granularity are different things, and reconciling them is the runner's
+   job, not the author's.
+
+3. **Verify the effect, never the return value.** A successful invocation frequently did less
+   than the step intended — a `create` operation is a factory and places nothing. Judge `expect`
+   against the database or the DOM.
+
+4. **Establish `given` or abort.** A flow that runs against unmet preconditions reports failures
+   that belong to the fixture, not the application.
+
+5. **Assertions must be falsifiable against a dirty fixture.** An existence-shaped check
+   (`some((o) => o.name === 'Notes')`) is already true when a previous run left its artifacts
+   behind, so the step reports pass having done nothing. Assert on the identity the flow just
+   produced (`o.id === $created.object.id`), and name the flow's own artifacts in `given` as
+   preconditions of their absence.
+
+6. **Resolve an operation by its exact key, never by suffix.** `endsWith('create')` matches both
+   `org.dxos.operation.markdown.create` and `org.dxos.operation.markdown.createDraft` — the very
+   ambiguity `key:` exists to remove.
+
+7. **Three stages, run in order: `before`, `test`, `after` — each an array of the same `step`.**
+   Put a step in `before` only when it is fixture the test is not itself exercising. Creating the
+   subject usually IS the test: QA-2 tests that two documents can be made and linked, so the
+   creating belongs in `test`, and `before` stays empty. `before` builds the fixture,
+   `test` is the test, `after` undoes it. The split is what makes a partial run meaningful — and
+   what makes a failure legible, since a `before` failure is a broken fixture while a `test`
+   failure is a defect in the application. Every stage is a step list; `after` in particular is
+   steps, not prose, and goes through operations like any other. A prose instruction ("delete the
+   document") leaves each actor to pick a mechanism, and they diverge: a human uses the navtree's
+   delete action, which routes through `space.removeObjects` and closes any open plank; a runner
+   reaching for `space.db.remove` strands a plank pointing at an object that no longer exists,
+   which the user cannot then close.
+
+8. **A partial run is the runner's option, not the flow's.** A flow always declares all three
+   stages; which of them to run is decided per invocation. Running `before` alone stands a fixture
+   up to look at; `after` alone tears one down; `steps` alone re-tests against a fixture already
+   standing. Whatever is skipped must be reported — what remains and how to remove it — since the
+   next full run's `given` will otherwise fail on its own leftovers (Rule 5).
+
+9. **A step that cannot run says so in `blocked`, and the flow's `status` becomes `blocked`.**
+   Not `failing` — nothing was tested — and not silence, which reads as untried. A duplicate
+   operation key, a missing capability or a removed operation all land here.
+
+10. **Report by flow and step number** — `QA-1.3`, or `QA-1.<id>` for a step declaring one — so a
+    failure is addressable without prose. Prefer the id where a step has one: it survives a step
+    being inserted ahead of it, a position does not.
+
+---
+
+## Example
+
+```mdl
+flow QA-1: Create and open a document
+  actors: both
+  covers: [F-1.1, T-1]
+  given:
+    - an identity exists
+    - collection: a collection in the open space, to create into
+  test:
+    - name: Create the document
+      do: In the navtree, click + on a collection and choose Markdown. Name it "Notes".
+      invoke: [op:createMarkdown] { name: "Notes", content: "# Notes\n" }
+      capture: created
+      expect: a Document named "Notes" now exists
+      assert: return !!$created.object
+    - name: Place it in the collection
+      do: (no separate gesture — the navtree action places it; the agent path splits the one
+        gesture into a factory call and a placement)
+      invoke: org.dxos.operation.space.addObject { object: $created.object, target: $given.collection }
+      expect: "Notes" appears as a row under the collection
+      assert: return (await space.db.query(dxos.Filter.everything()).run()).some((o) => o.id === $created.object.id)
+      note: Coalesced with the previous step — `created.object` is live and cannot cross a snippet boundary.
+  after:
+    - name: Delete the document
+      do: Right-click "Notes" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
+      expect: the row leaves the navtree AND its plank closes if it was open
+```

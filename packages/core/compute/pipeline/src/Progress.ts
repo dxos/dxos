@@ -19,7 +19,7 @@ export type ProgressApi = ProgressCore.ProgressApi;
 export const make = ProgressCore.make;
 export const deriveEta = ProgressCore.deriveEta;
 
-export class Progress extends Context.Service<Progress, ProgressCore.ProgressApi>()('@dxos/pipeline/Progress') {
-  /** A fresh in-memory registry. */
-  static layer: Layer.Layer<Progress> = Layer.sync(Progress, () => ProgressCore.make());
-}
+export class Progress extends Context.Service<Progress, ProgressCore.ProgressApi>()('@dxos/pipeline/Progress') {}
+
+/** A fresh in-memory registry. */
+export const layer: Layer.Layer<Progress> = Layer.sync(Progress, () => ProgressCore.make());

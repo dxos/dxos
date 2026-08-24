@@ -22,6 +22,9 @@ export const FeedToolbar = ({ attendableId, onSync }: FeedToolbarProps) => {
   const menuActions = useMenuBuilder(
     () =>
       MenuBuilder.make()
+        // `gap` is a flexible spacer: Sync is a run action, so it sits at the trailing edge with the
+        // magazine's Clear and Curate rather than at the leading edge where content actions go.
+        .separator('gap')
         .action(
           'sync',
           {

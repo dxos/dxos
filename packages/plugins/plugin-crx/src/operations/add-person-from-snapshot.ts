@@ -18,7 +18,7 @@ const handler: Operation.WithHandler<typeof CrxOperation.AddPersonFromSnapshot> 
         const person = toPerson(snapshot);
         const { id } = yield* Operation.invoke(
           SpaceOperation.AddObject,
-          { object: person, target },
+          { object: person },
           { spaceId: target.spaceId },
         );
         return { id };

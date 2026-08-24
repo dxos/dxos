@@ -85,7 +85,7 @@ export type UserFeedback = Schema.Schema.Type<typeof UserFeedback>;
 
 export const CaptureUserFeedback = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.support.captureFeedback'),
+    key: DXN.make('org.dxos.operation.support.captureFeedback'),
     name: 'Capture User Feedback',
     description: 'Capture one-shot user feedback (sent to the observability backend).',
     icon: 'ph--chat-text--regular',
@@ -97,7 +97,7 @@ export const CaptureUserFeedback = Operation.make({
 
 export const CreateTicket = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.support.createTicket'),
+    key: DXN.make('org.dxos.operation.support.createTicket'),
     name: 'Create Support Ticket',
     description: 'Creates a new support ticket in the active space.',
     icon: 'ph--note--regular',
@@ -118,7 +118,7 @@ export const CreateTicket = Operation.make({
 
 export const MarkInProgress = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.support.markInProgress'),
+    key: DXN.make('org.dxos.operation.support.markInProgress'),
     name: 'Mark Support Ticket In Progress',
     description: 'Marks a support ticket as in progress.',
     icon: 'ph--clock--regular',
@@ -134,7 +134,7 @@ export const MarkInProgress = Operation.make({
 
 export const ResolveTicket = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.support.resolveTicket'),
+    key: DXN.make('org.dxos.operation.support.resolveTicket'),
     name: 'Resolve Support Ticket',
     description: 'Marks a support ticket as resolved with optional resolution notes.',
     icon: 'ph--check--regular',
@@ -155,7 +155,7 @@ export const ResolveTicket = Operation.make({
 
 export const SearchDocs = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.support.searchDocs'),
+    key: DXN.make('org.dxos.operation.support.searchDocs'),
     name: 'Search Documentation',
     description: 'Searches DXOS / Composer documentation for the given query.',
     icon: 'ph--magnifying-glass--regular',

@@ -44,7 +44,11 @@ export const useCreateAndDeployScriptTemplates = (space: Space | undefined, scri
           initialTemplateId: template.id as any,
         });
         invariant(Obj.instanceOf(Script.Script, createResult.data?.object));
-        await invokePromise(SpaceOperation.AddObject, { target: space.db, object: createResult.data.object });
+        await invokePromise(
+          SpaceOperation.AddObject,
+          { object: createResult.data.object },
+          { spaceId: space.db.spaceId },
+        );
 
         return deployScript({ space, client, script: createResult.data.object });
       }),

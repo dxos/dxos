@@ -152,7 +152,7 @@ export const make: {
 
 /**
  * Annotation opting a skill into MCP projection: it becomes a prompt and is loadable by name
- * through the server's `skillLoad` tool.
+ * through the server's `loadSkill` tool.
  *
  * Opt-in: a skill written for an in-app chat runtime may assume tools an MCP client does not have,
  * and only the author can judge whether the workflow still holds on the MCP surface. Absent ⇒ the
@@ -198,6 +198,8 @@ export const getVersion = (skill: Skill): string | undefined => Obj.getMeta(skil
 
 /**
  * Util to create tool definitions for a skill.
+ * Operation tool ids are the model-facing names (see {@link Operation.toolName}), so the skill's
+ * `tools` array and the session toolkit speak one identifier space.
  */
 export const toolDefinitions = ({
   tools = [],
@@ -205,7 +207,7 @@ export const toolDefinitions = ({
 }: {
   tools?: readonly string[];
   operations?: readonly Operation.Definition.Any[];
-}) => [...operations.map((op) => ToolId.make(DXN.getName(op.meta.key))), ...tools.map((tool) => ToolId.make(tool))];
+}) => [...operations.map((op) => ToolId.make(Operation.toolName(op))), ...tools.map((tool) => ToolId.make(tool))];
 
 /**
  * Factory for the skills.

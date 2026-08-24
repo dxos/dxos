@@ -37,23 +37,10 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
         return;
       }
 
-      await invokePromise(
-        SpaceOperation.AddObject,
-        {
-          object: chat,
-          target: db,
-        },
-        { spaceId: db.spaceId },
-      );
-      await invokePromise(
-        SpaceOperation.AddRelation,
-        {
-          schema: Chat.CompanionTo,
-          source: chat,
-          target: companionTo,
-        },
-        { spaceId: db.spaceId },
-      );
+      // Ref on the subject (annotation) + parent edge: the chat belongs to its subject (cascades
+      // on delete, keeps it out of the standalone Chats section).
+      Chat.linkCompanion({ chat, subject: companionTo });
+      await invokePromise(SpaceOperation.AddObject, { object: chat }, { spaceId: db.spaceId });
       await invokePromise(AssistantOperation.SetCurrentChat, {
         companionTo,
         chat,

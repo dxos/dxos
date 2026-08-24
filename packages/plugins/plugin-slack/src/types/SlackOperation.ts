@@ -12,10 +12,6 @@ import { DXN, Ref } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
 /** Wire-shape of a `RemoteTarget` for `GetSlackChannels.output`. */
 const RemoteTarget = Schema.Struct({
   id: Schema.String,
@@ -34,7 +30,7 @@ const RemoteTarget = Schema.Struct({
  */
 export const GetSlackChannels = Operation.make({
   meta: {
-    key: makeKey('getSlackChannels'),
+    key: DXN.make('org.dxos.operation.slack.getChannels'),
     name: 'Get Slack Channels',
     description: 'List Slack conversations reachable from a connection without materializing local Channels.',
     icon: 'ph--slack-logo--regular',
@@ -58,7 +54,7 @@ export const GetSlackChannels = Operation.make({
  */
 export const MaterializeSlackTarget = Operation.make({
   meta: {
-    key: makeKey('materializeSlackTarget'),
+    key: DXN.make('org.dxos.operation.slack.materializeTarget'),
     name: 'Materialize Slack Target',
     description: 'Create the empty local Channel bound to a selected Slack conversation.',
     icon: 'ph--slack-logo--regular',
@@ -80,7 +76,7 @@ export const MaterializeSlackTarget = Operation.make({
  */
 export const SyncSlackChannel = Operation.make({
   meta: {
-    key: makeKey('syncSlackChannel'),
+    key: DXN.make('org.dxos.operation.slack.syncChannel'),
     name: 'Sync Slack Channel',
     description: 'Reconcile messages for every Slack channel bound to a connection.',
     icon: 'ph--arrows-clockwise--regular',

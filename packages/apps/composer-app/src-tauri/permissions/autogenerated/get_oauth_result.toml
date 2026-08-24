@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-oauth-result"
+description = "Enables the get_oauth_result command without any pre-configured scope."
+commands.allow = ["get_oauth_result"]
+
+[[permission]]
+identifier = "deny-get-oauth-result"
+description = "Denies the get_oauth_result command without any pre-configured scope."
+commands.deny = ["get_oauth_result"]

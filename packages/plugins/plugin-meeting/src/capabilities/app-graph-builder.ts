@@ -143,7 +143,7 @@ export default Capability.makeModule(
                     const createResult = yield* Operation.invoke(MeetingOperation.Create, { channel });
                     const addResult = yield* Operation.invoke(
                       SpaceOperation.AddObject,
-                      { target: db, object: createResult.object },
+                      { object: createResult.object },
                       { spaceId: db.spaceId },
                     );
                     invariant(Obj.instanceOf(Meeting.Meeting, addResult.object));

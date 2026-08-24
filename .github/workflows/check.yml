@@ -105,20 +105,16 @@ jobs:
       - name: Check publish config
         run: pnpm run check-publish-config
 
-      # Pre-1.0 a breaking change rides the minor; `major` is reserved for the deliberate 1.0.0 cut. The
-      # groups are `fixed`, so one stray `major` versions every package to 1.0.0. Delete with the cut.
-      - name: Check changeset bump levels
-        run: pnpm run check-changeset-bumps
-
-      # A changeset is a changelog entry, so a PR is normally one file however many packages or commits
-      # it touched; the rare multi-entry PR waives this in the changeset's front matter. Counting is
-      # diff-based, hence `pull_request` only: on `main` `.changeset/` holds every unreleased entry, and
-      # a `merge_group` batches several PRs that each legitimately carry their own.
-      - name: Check changeset count
-        if: github.event_name == 'pull_request'
+      # Every gating rule on `.changeset/*.md` — parseability, bump levels, versionable packages, one
+      # entry per PR — in one pass, so a run reports all of them instead of stopping at the first. Each fails on something
+      # otherwise invisible until `changeset version` runs on `main`. The count rule is diff-based and
+      # self-skips outside a `pull_request`: on `main` `.changeset/` holds every unreleased entry, and a
+      # `merge_group` batches PRs that each legitimately carry their own. The missing-changeset reminder
+      # is advisory and stays its own job (`changeset-reminder`).
+      - name: Check changesets
         env:
           CHANGESET_BASE_REF: ${{ github.event.pull_request.base.sha }}
-        run: pnpm run check-changeset-count
+        run: pnpm run check-changesets
 
       - name: Check version files in sync
         # version.ts (DXOS_VERSION) + tauri.conf.json are derived from their package versions by

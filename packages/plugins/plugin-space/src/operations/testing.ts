@@ -5,11 +5,13 @@
 import * as Schema from 'effect/Schema';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import { SpaceProperties } from '@dxos/client-protocol/types';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
-import { DXN, Feed, Obj, Tag, Type } from '@dxos/echo';
+import { Collection, DXN, Feed, Obj, Tag, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
+import { CollectionItemAnnotation } from '@dxos/schema';
 
 export class TestObject extends Type.makeObject<TestObject>(DXN.make('com.example.type.testObject', '0.1.0'))(
   Schema.Struct({
@@ -17,6 +19,14 @@ export class TestObject extends Type.makeObject<TestObject>(DXN.make('com.exampl
     description: Schema.optional(Schema.String),
   }),
 ) {}
+
+/**
+ * A type eligible to live in a collection, which is what routes `CollectionModel.add` through its
+ * root-collection branch — the one that files a ref without persisting the object itself.
+ */
+export class TestCollectionItem extends Type.makeObject<TestCollectionItem>(
+  DXN.make('com.example.type.testCollectionItem', '0.1.0'),
+)(Schema.Struct({ name: Schema.optional(Schema.String) }).pipe(CollectionItemAnnotation.set(true))) {}
 
 export const TestRelation = Type.makeRelation(DXN.make('com.example.relation.testRelation', '0.1.0'))({
   source: Obj.Unknown,
@@ -45,6 +55,15 @@ export const taggedIds = (object: Obj.Any): (string | undefined)[] =>
 export const makeTestLayer = (...handlers: Operation.WithHandler<Operation.Definition.Any>[]) =>
   AssistantTestLayer({
     operationHandlers: OperationHandlerSet.make(...handlers),
-    types: [Skill.Skill, Feed.Feed, Tag.Tag, TestObject, TestRelation],
+    types: [
+      Skill.Skill,
+      Feed.Feed,
+      Tag.Tag,
+      Collection.Collection,
+      SpaceProperties,
+      TestObject,
+      TestCollectionItem,
+      TestRelation,
+    ],
     disableLlmMemoization: true,
   });

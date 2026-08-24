@@ -117,7 +117,7 @@ export const translations: Resource[] = [
         'assistant-dialog.title': 'Assistant',
         'open-assistant.label': 'Open assistant',
         'import-compute-operations.label': 'Import compute operations',
-        'toggle-trace-panel-debug.label': 'Toggle trace panel debug view',
+        'set-trace-panel-debug.label': 'Toggle trace panel debug view',
 
         'no-results.message': 'No results',
 

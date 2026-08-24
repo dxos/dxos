@@ -25,7 +25,7 @@ const TextSplice = Schema.Struct({
 
 export const AcceptProposal = Operation.make({
   meta: {
-    key: DXN.make(`${COLLABORATION_OPERATION}.acceptProposal`),
+    key: DXN.make('org.dxos.operation.appToolkit.acceptProposal'),
     name: 'Accept Proposal',
     description: 'Accept a proposal from a collaborator.',
     icon: 'ph--check--regular',
@@ -47,7 +47,7 @@ export const AcceptProposal = Operation.make({
  */
 export const AcceptChange = Operation.make({
   meta: {
-    key: DXN.make(`${COLLABORATION_OPERATION}.acceptChange`),
+    key: DXN.make('org.dxos.operation.appToolkit.acceptChange'),
     name: 'Accept Change',
     description: 'Accept an individual change from a branch.',
     icon: 'ph--check--regular',
@@ -73,7 +73,7 @@ export const AcceptChange = Operation.make({
  */
 export const RejectChange = Operation.make({
   meta: {
-    key: DXN.make(`${COLLABORATION_OPERATION}.rejectChange`),
+    key: DXN.make('org.dxos.operation.appToolkit.rejectChange'),
     name: 'Reject Change',
     description: 'Reject an individual change from a branch.',
     icon: 'ph--x--regular',
@@ -94,7 +94,7 @@ export const RejectChange = Operation.make({
  */
 export const RestoreText = Operation.make({
   meta: {
-    key: DXN.make(`${COLLABORATION_OPERATION}.restoreText`),
+    key: DXN.make('org.dxos.operation.appToolkit.restoreText'),
     name: 'Restore Text',
     description: 'Apply a text splice to a document or one of its branches.',
     icon: 'ph--arrow-counter-clockwise--regular',

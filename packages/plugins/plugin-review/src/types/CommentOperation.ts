@@ -16,12 +16,12 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { Actor, AnchoredTo, Message, type Person, Thread } from '@dxos/types';
 
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
 export const Create = Operation.make({
-  meta: { key: makeKey('create'), name: 'Create Comment Thread', icon: 'ph--chat-text--regular' },
+  meta: {
+    key: DXN.make('org.dxos.operation.review.create'),
+    name: 'Create Comment Thread',
+    icon: 'ph--chat-text--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
@@ -41,7 +41,11 @@ export const DeleteOutput = Schema.Struct({
 export type DeleteOutput = Schema.Schema.Type<typeof DeleteOutput>;
 
 export const Delete = Operation.make({
-  meta: { key: makeKey('delete'), name: 'Delete Comment Thread', icon: 'ph--trash--regular' },
+  meta: {
+    key: DXN.make('org.dxos.operation.review.delete'),
+    name: 'Delete Comment Thread',
+    icon: 'ph--trash--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     anchor: Type.getSchema(AnchoredTo.AnchoredTo),
@@ -52,7 +56,11 @@ export const Delete = Operation.make({
 });
 
 export const Select = Operation.make({
-  meta: { key: makeKey('select'), name: 'Select Comment Thread', icon: 'ph--check--regular' },
+  meta: {
+    key: DXN.make('org.dxos.operation.review.select'),
+    name: 'Select Comment Thread',
+    icon: 'ph--check--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     // Optional so callers can clear the active thread (e.g. after delete/close).
@@ -65,21 +73,27 @@ export const Select = Operation.make({
   output: Schema.Void,
 });
 
-export const ToggleResolved = Operation.make({
+export const SetResolved = Operation.make({
   meta: {
-    key: makeKey('toggleResolved'),
-    name: 'Toggle Resolved',
+    key: DXN.make('org.dxos.operation.review.setResolved'),
+    name: 'Set Resolved',
     icon: 'ph--check-circle--regular',
   },
   services: [Capability.Service],
   input: Schema.Struct({
     thread: Type.getSchema(Thread.Thread),
+    // Required: the caller states the status it wants rather than flipping whatever is current.
+    resolved: Schema.Boolean,
   }),
   output: Schema.Void,
 });
 
 export const AddMessage = Operation.make({
-  meta: { key: makeKey('addMessage'), name: 'Add Comment', icon: 'ph--chat-text--regular' },
+  meta: {
+    key: DXN.make('org.dxos.operation.review.addMessage'),
+    name: 'Add Comment',
+    icon: 'ph--chat-text--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     subject: Obj.Unknown,
@@ -98,7 +112,11 @@ export const DeleteMessageOutput = Schema.Struct({
 export type DeleteMessageOutput = Schema.Schema.Type<typeof DeleteMessageOutput>;
 
 export const DeleteMessage = Operation.make({
-  meta: { key: makeKey('deleteMessage'), name: 'Delete Comment', icon: 'ph--trash--regular' },
+  meta: {
+    key: DXN.make('org.dxos.operation.review.deleteMessage'),
+    name: 'Delete Comment',
+    icon: 'ph--trash--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     anchor: Type.getSchema(AnchoredTo.AnchoredTo),
@@ -113,7 +131,7 @@ export const DeleteMessage = Operation.make({
  */
 export const Restore = Operation.make({
   meta: {
-    key: makeKey('restore'),
+    key: DXN.make('org.dxos.operation.review.restore'),
     name: 'Restore Comment Thread',
     icon: 'ph--clock-counter-clockwise--regular',
   },
@@ -130,7 +148,7 @@ export const Restore = Operation.make({
  */
 export const RestoreMessage = Operation.make({
   meta: {
-    key: makeKey('restoreMessage'),
+    key: DXN.make('org.dxos.operation.review.restoreMessage'),
     name: 'Restore Comment',
     icon: 'ph--clock-counter-clockwise--regular',
   },
@@ -145,7 +163,7 @@ export const RestoreMessage = Operation.make({
 
 export const RespondToThread = Operation.make({
   meta: {
-    key: makeKey('respondToThread'),
+    key: DXN.make('org.dxos.operation.review.respondToThread'),
     name: 'Respond to Comment Thread',
     description: 'Runs one comment-thread agent turn against the given comment thread + subject.',
   },
@@ -159,7 +177,7 @@ export const RespondToThread = Operation.make({
 
 export const SetAgentConfig = Operation.make({
   meta: {
-    key: makeKey('setAgentConfig'),
+    key: DXN.make('org.dxos.operation.review.setAgentConfig'),
     name: 'Set Agent Config',
     description: 'Updates thread.agent. Undefined config disables the agent.',
   },
@@ -175,7 +193,7 @@ export const SetAgentConfig = Operation.make({
 
 export const CreateProposals = Operation.make({
   meta: {
-    key: makeKey('createProposals'),
+    key: DXN.make('org.dxos.operation.review.createProposals'),
     name: 'Create Proposals',
     description: 'Proposes a set of changes to a document.',
     icon: 'ph--sparkle--regular',

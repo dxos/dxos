@@ -15,10 +15,6 @@ import * as RDF from '@dxos/pipeline-rdf/types';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as ReplyGeneration from '@dxos/plugin-inbox/ReplyGeneration';
 
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
 /** Default page size for {@link AnalyzeMailbox} fact-store commits. */
 export const DEFAULT_ANALYZE_MAILBOX_PAGE_SIZE = 10;
 
@@ -32,7 +28,7 @@ export const DEFAULT_ANALYZE_MAILBOX_PAGE_SIZE = 10;
  */
 export const AnalyzeMailbox = Operation.make({
   meta: {
-    key: makeKey('analyzeMailbox'),
+    key: DXN.make('org.dxos.operation.brain.analyzeMailbox'),
     name: 'Analyze Mailbox',
     description: 'Extracts RDF facts from every message in a mailbox feed into the shared space fact store.',
     icon: 'ph--brain--regular',
@@ -84,7 +80,7 @@ export const DEFAULT_QUERY_FACTS_LIMIT = 50;
 
 export const QueryFacts = Operation.make({
   meta: {
-    key: makeKey('queryFacts'),
+    key: DXN.make('org.dxos.operation.brain.queryFacts'),
     name: 'Query Facts',
     description:
       'Queries the space fact store (a semantic index of subject-predicate-object facts extracted from user content) with structured filters.',
@@ -118,7 +114,7 @@ export const QueryFacts = Operation.make({
 
 export const SummarizeSubject = Operation.make({
   meta: {
-    key: makeKey('summarizeSubject'),
+    key: DXN.make('org.dxos.operation.brain.summarizeSubject'),
     name: 'Summarize Subject',
     description:
       'Composes a grounded summary of everything the space fact store knows about a subject (person, organization, topic), citing fact ids.',
@@ -156,7 +152,7 @@ export const DEFAULT_GENERATE_REPLY_FACT_LIMIT = 20;
  */
 export const GenerateReply = Operation.make({
   meta: {
-    key: makeKey('generateReply'),
+    key: DXN.make('org.dxos.operation.brain.generateReply'),
     name: 'Generate Reply',
     description:
       'Drafts a reply to an email, grounded on the thread context and facts the space fact store knows about the participants.',
