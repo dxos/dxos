@@ -176,13 +176,24 @@ and nothing has been verified against a live instance.
 
 ### Tasks
 
-- [ ] **Authorize the `signoz` MCP server** (user action, interactive session)
+- [x] **Authorize the `signoz` MCP server** — done; reads work. **Writes do not**: the MCP
+      service account has no `dashboard:update` permission, so the dashboard cannot be
+      published from here.
+- [ ] **Grant the MCP service account dashboard write access**, or import
+      [`dashboard.json`](./dashboard.json) through the SigNoz UI. The spec is built and
+      validated (10 panels, every layout `$ref` resolves) — only publishing is blocked.
+- [x] **Confirm the metrics arrive** — verified against the live instance: `spaces.count`,
+      `spaces.ready.count`, `documents.count{local,remote}`, `documents.unsynced.count` and
+      the three `runtime.heap*` gauges all landed, tagged `ctx.tag=local-dm`,
+      `dxos.process.type=browser`. Declared units (`{space}`, `{document}`, `By`) are
+      present, which the pre-existing `dxos.client.*` metrics lack — proof the P5 fix is
+      live. `runtime.memory.bytes` is absent, as expected without cross-origin isolation.
 - [ ] **Cardinality check** — `signoz_check_metric_cardinality` on the existing
       `dxos.client.*` series to quantify what `session.id` and `key` already cost, and
       confirm the 65-series-per-device budget in DESIGN.md after Phases 1-4.
   - Histograms are 37 of those 65 series; if the number has to come down, cut
     bucket boundaries before attributes.
-- [ ] **Build the dashboard**
+- [x] **Build the dashboard** — spec authored as `dashboard.json`; see the blocked publish above.
   - Spaces: `avg`/`p90`/`max` of `dxos.client.spaces.count` across devices.
   - Connectivity: `avg` of `dxos.edge.ws.connected`; `sum by (reason)` rate of
     `dxos.edge.ws.reconnect.count`.
@@ -205,6 +216,20 @@ and nothing has been verified against a live instance.
     drains the metric reader — the export interval is 60s, so a short run otherwise
     reports false missing series. `test/e2e/tracing-invitation.test.ts:160` already
     uses this pattern for traces.
+
+### Surfaced by the live instance
+
+- **`deployment.environment` is `unknown` for local runs.** `DX_ENVIRONMENT` is absent from
+  `.env`, and `config.ts` falls back to `'unknown'`, so local traffic is not separable from
+  any other unlabelled source by environment alone. Add `DX_ENVIRONMENT=local` to `.env`;
+  until then `ctx.tag` is the only reliable discriminator.
+- **A pre-existing `dxos.echo.space.count` already exists**, distinct from this project's
+  `dxos.client.spaces.count`. Two space counts under different prefixes is a trap for panel
+  authors — reconcile before the dashboard is shared, keeping whichever the fleet already
+  queries.
+- The `dxos.echo.collection-sync.*` and `dxos.echo.replication.*` histograms export
+  **cumulative**, so they come from a different exporter than the browser `OtelMetrics`
+  this project set to delta. Any rate panel over those needs the cumulative treatment.
 
 ## References
 
