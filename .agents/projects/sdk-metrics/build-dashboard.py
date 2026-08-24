@@ -80,6 +80,10 @@ DOCS = "dxos.echo.documents.count"
 UNSYNCED = "dxos.echo.documents.unsynced.count"
 HEAP_USED = "dxos.client.runtime.heapUsed"
 HEAP_LIMIT = "dxos.client.runtime.heapSizeLimit"
+# A histogram lands as several series in SigNoz: one .bucket per boundary plus .min/.max/.sum/.count.
+# min/max read straight off their series; avg is .sum / .count as a formula.
+EPISODE = "dxos.echo.sync.episode.duration"
+STALLED = "dxos.echo.sync.stalled.duration"
 
 panels = {
   "stat-spaces": number("Spaces per client (avg)", "", [
@@ -121,6 +125,23 @@ panels = {
       unit="bytes", precision="2",
       thresholds=[{"color": "Orange", "label": "300MB target", "unit": "bytes", "value": 314572800},
                   {"color": "Red", "label": "400MB ceiling", "unit": "bytes", "value": 419430400}]),
+  "sync-duration": timeseries("Time to sync — min / avg / max",
+      "Duration of each completed sync episode, merged across clients. A client that never finishes syncing contributes nothing here — see the stall panel.",
+      [composite(
+          [bq("A", EPISODE + ".min", "min", "min", "min", "min"),
+           bq("B", EPISODE + ".max", "max", "max", "max", "max"),
+           bq("C", EPISODE + ".sum", "sum", "sum", "sum", "sum", disabled=True),
+           bq("D", EPISODE + ".count", "sum", "sum", "sum", "count", disabled=True)],
+          {"disabled": False, "expression": "C / D", "functions": None,
+           "having": {"expression": ""}, "legend": "avg", "name": "F1", "order": None},
+          kind="time_series")],
+      unit="s", precision="2"),
+  "sync-stalled": timeseries("Time without sync progress — avg / max",
+      "Age of the last decrease in the backlog while a client is not caught up; 0 when caught up. This is the stuck detector: >600s means a client has made no progress for ten minutes.",
+      series(bq("A", STALLED, "avg", "avg", "avg", "avg client"),
+             bq("B", STALLED, "max", "max", "max", "worst client")),
+      unit="s", precision="0",
+      thresholds=[{"color": "Red", "label": "10 min stalled", "unit": "s", "value": 600}]),
   "heap-by-device": table("Heaviest clients by heap",
       "One row per device; heapSizeLimit is the browser's cap for that client.",
       [composite([
@@ -130,9 +151,10 @@ panels = {
 }
 
 order = [("stat-spaces",0,0,3,3),("stat-docs",3,0,3,3),("stat-unsynced",6,0,3,3),("stat-heap-pressure",9,0,3,3),
-         ("spaces-dist",0,3,6,6),("spaces-ready",6,3,6,6),
-         ("docs-location",0,9,6,6),("unsynced-backlog",6,9,6,6),
-         ("heap-used",0,15,6,6),("heap-by-device",6,15,6,6)]
+         ("sync-duration",0,3,6,6),("sync-stalled",6,3,6,6),
+         ("spaces-dist",0,9,6,6),("spaces-ready",6,9,6,6),
+         ("docs-location",0,15,6,6),("unsynced-backlog",6,15,6,6),
+         ("heap-used",0,21,6,6),("heap-by-device",6,21,6,6)]
 
 dashboard = {
   "name": "client-metrics-vibptxv0",

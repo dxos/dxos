@@ -15,6 +15,7 @@ import { ConnectionState, type NetworkStatus, Platform } from '@dxos/protocols/p
 
 import { type DataProvider } from '../observability';
 import { type CrossRealmMemory, measureCrossRealmMemory, readHeap, supportsCrossRealmMemory } from './memory';
+import { SyncEpisodeTracker } from './sync-episodes';
 import { subscribeSyncSummary } from './sync-state';
 
 const SPACE_METRICS_MIN_INTERVAL = 1000 * 60 * 10; // 10 minutes
@@ -27,6 +28,7 @@ const MEMORY_SAMPLE_INTERVAL = 1000 * 30;
 const BYTES = { unit: 'By' } as const;
 const SPACES = { unit: '{space}' } as const;
 const DOCUMENTS = { unit: '{document}' } as const;
+const SECONDS = { unit: 's' } as const;
 
 // TODO(wittjosiah): Improve privacy of telemetry identifiers.
 //  - Identifier should be generated client-side with no attachment to identity.
@@ -307,6 +309,46 @@ export const documentsMetricsProvider = (client: Client): DataProvider =>
         () => summary().unsyncedDocumentCount,
         undefined,
         DOCUMENTS,
+      ),
+    );
+
+    return async () => {
+      await ctx.dispose();
+    };
+  });
+
+/**
+ * Publishes how long a client takes to sync, and how long it has been stuck.
+ *
+ * Both are needed. `episode.duration` records only when a backlog clears, so a client that never
+ * finishes syncing contributes nothing to it — `stalled.duration` is what makes that client visible.
+ */
+export const syncMetricsProvider = (client: Client): DataProvider =>
+  Effect.fn(function* (observability) {
+    const ctx = new Context();
+    const episodes = new SyncEpisodeTracker();
+
+    // Fed on every sync-state emission rather than at collection time: an episode that opens and
+    // closes inside one 60s export window would otherwise never be seen at all.
+    subscribeSyncSummary(client, ctx, (summary) => {
+      const closed = episodes.observe(Date.now(), summary.pendingWorkCount);
+      if (closed) {
+        log('sync episode closed', { durationMs: closed.durationMs, truncated: closed.truncated });
+        observability.metrics.distribution(
+          'dxos.echo.sync.episode.duration',
+          closed.durationMs / 1_000,
+          undefined,
+          SECONDS,
+        );
+      }
+    });
+
+    ctx.onDispose(
+      observability.metrics.observe(
+        'dxos.echo.sync.stalled.duration',
+        () => episodes.stalledForMs(Date.now()) / 1_000,
+        undefined,
+        SECONDS,
       ),
     );
 

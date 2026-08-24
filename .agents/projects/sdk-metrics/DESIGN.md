@@ -132,7 +132,10 @@ other direction: a percentile has to be derived from bucket counts, so the backe
 only compute one where buckets exist. Three ways out, in increasing cost:
 
 1. **Accept `avg` / `min` / `max`.** One series per metric, no code change. `max` already
-   answers "is any client pathological", which is most of the operational value.
+   answers "is any client pathological", which is most of the operational value. Note a
+   histogram gives these too: SigNoz exposes `.min` and `.max` series alongside the buckets,
+   and `avg` is `.sum / .count` — so `episode.duration` reports min/avg/max _and_ keeps
+   percentiles.
 2. **Export the metric as a histogram as well as a gauge**, when the distribution is the
    question rather than the extremes. Real percentiles, mergeable across the fleet, at
    `boundaries + 3` series each — see [Budget](#budget), where histograms already dominate.

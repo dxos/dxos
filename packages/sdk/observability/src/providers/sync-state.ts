@@ -40,6 +40,11 @@ const EMPTY: SyncSummary = {
 export class SyncStateTracker {
   readonly #states = new Map<string, Database.SyncState>();
   readonly #cleanups = new Map<string, CleanupFn>();
+  readonly #onChange: ((summary: SyncSummary) => void) | undefined;
+
+  constructor(onChange?: (summary: SyncSummary) => void) {
+    this.#onChange = onChange;
+  }
 
   get trackedIds(): string[] {
     return [...this.#cleanups.keys()];
@@ -59,6 +64,7 @@ export class SyncStateTracker {
       spaceId,
       subscribe((state) => {
         this.#states.set(spaceId, state);
+        this.#onChange?.(this.summary());
       }),
     );
   }
@@ -96,8 +102,12 @@ export class SyncStateTracker {
  * Reads `db.subscribeToSyncState`, which already selects the EDGE peer and owns a no-change poll
  * backoff, so this adds no timer of its own.
  */
-export const subscribeSyncSummary = (client: Client, ctx: Context): { summary: () => SyncSummary } => {
-  const tracker = new SyncStateTracker();
+export const subscribeSyncSummary = (
+  client: Client,
+  ctx: Context,
+  onChange?: (summary: SyncSummary) => void,
+): { summary: () => SyncSummary } => {
+  const tracker = new SyncStateTracker(onChange);
 
   const reconcile = (spaces: Space[]) => {
     tracker.retainOnly(spaces.map((space) => space.id));

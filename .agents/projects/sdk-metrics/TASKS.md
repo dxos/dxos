@@ -123,13 +123,13 @@ Emitted via `trace.metrics` from `packages/core/mesh/edge-client/src/edge-client
   - Beware the reset-backoff hazard noted at `edge-client.ts:325` — do not treat a
     dial that never opened as a success.
 
-## Phase 4: Sync stuck detection
+## Phase 4: Sync stuck detection — DONE
 
 The headline ask. Two instruments — neither alone answers it.
 
 ### Tasks
 
-- [ ] **Sync episode state machine** (pure, unit-tested)
+- [x] **Sync episode state machine** — `SyncEpisodeTracker` in `providers/sync-episodes.ts`, pure over `(now, pendingWorkCount)`, 9 tests.
   - Fold a stream of `(timestamp, pendingCount)` into: episode open/close transitions,
     and `lastProgressAt` = last time the episode's low-water mark decreased.
   - `pendingCount` is `unsyncedDocumentCount + blocksToPull + blocksToPush`, matching
@@ -149,7 +149,7 @@ The headline ask. Two instruments — neither alone answers it.
     Episode state is not persisted across reloads — out of scope.
   - Pure function over a sequence, so testable with no mocks. Cover startup and
     reload with a non-zero backlog, not just the transition cases.
-- [ ] **Non-React cross-space sync aggregator as a `DataProvider`** — UNBLOCKED
+- [x] **Non-React cross-space sync aggregator as a `DataProvider`** — `subscribeSyncSummary` gained an `onChange` callback so episodes are folded on every emission, not at collection time: an episode opening and closing inside one 60s export window would otherwise never be recorded.
   - Consume `db.subscribeToSyncState(cb, options)`
     (`packages/core/echo/echo-client/src/proxy-db/database.ts:778`), resubscribing on
     `client.spaces.subscribe`. **Not** `subscribeToAutomergeSyncState` (the
@@ -161,10 +161,12 @@ The headline ask. Two instruments — neither alone answers it.
     subscription is sufficient and introduces no idle churn.
   - Note the earlier claim that the backoff was "not on main" was checked in the wrong
     package (`packages/sdk/client/src/echo`); it landed in `echo-client/src/proxy-db`.
-- [ ] **`dxos.echo.sync.episode.duration`** histogram, buckets
+- [x] **`dxos.echo.sync.episode.duration`** histogram, buckets
       `[1, 5, 15, 30, 60, 120, 300, 600, 1800, 3600]` s
-  - "Longest stretch to sync" = `max` over merged buckets in SigNoz; `p99` for the tail.
-- [ ] **`dxos.echo.sync.stalled.duration`** observable gauge
+  - min/avg/max come off the histogram's own `.min` / `.max` series and a `.sum / .count`
+    formula. Percentiles remain available here — unlike the gauges, a histogram is the one
+    instrument type SigNoz will compute them for.
+- [x] **`dxos.echo.sync.stalled.duration`** observable gauge
   - "Time unsynced without progress". Required because an episode that never closes
     never records a histogram sample — a permanently stuck client is invisible in
     `episode.duration` by construction.

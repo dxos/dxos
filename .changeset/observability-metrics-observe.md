@@ -10,4 +10,6 @@ New client metrics: `dxos.client.spaces.count` / `.ready.count`, `dxos.echo.docu
 
 Three fixes to the OTLP metrics exporter: it now requests **delta** temporality, so a client reload is no longer read downstream as a counter reset; the metrics resource no longer carries `session.id`, which minted a new time series on every page load; and instruments are cached instead of re-created on every sample.
 
+Adds sync-timing metrics: `dxos.echo.sync.episode.duration` (how long a client takes to reach a synced state) and `dxos.echo.sync.stalled.duration` (how long it has made no progress). Both are needed — a client that never finishes syncing records no duration at all, so the stall gauge is what makes it visible.
+
 Breaking for anyone implementing the observability extension API directly: the `metrics` kind now requires an `observe` method.
