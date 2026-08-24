@@ -41,7 +41,7 @@ export const progressFileSink =
 /** Provides a `Progress` registry plus a throttled file reporter writing `progress.json`. */
 export const progressReportingLayer = (path: string = PROGRESS_PATH): Layer.Layer<Progress.Progress> =>
   ProgressReporter.layer({ sink: progressFileSink(path), throttle: '1 second' }).pipe(
-    Layer.provideMerge(Progress.Progress.layer),
+    Layer.provideMerge(Progress.layer),
   );
 
 export type ProgressTask = {
