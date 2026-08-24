@@ -1,6 +1,6 @@
 ---
 description: QA flows — list, show, and run `flow` blocks from .mdl specs against a live app
-argument-hint: '[list|show|run|help] [flow] [--skip-cleanup]'
+argument-hint: '[list|show|run|help] [<plugin> <flowId>] [--skip-cleanup]'
 allowed-tools: Bash, Read, Edit, Write, Glob, Grep, Skill
 ---
 
@@ -14,8 +14,11 @@ this command does not restate it** — invoke the skill and follow it.
 Enumerate flows with the plugin's own script rather than grepping:
 
 ```
-node "${CLAUDE_PLUGIN_ROOT}/scripts/list-flows.mjs" [filter] [--json]
+node "${CLAUDE_PLUGIN_ROOT}/scripts/list-flows.mjs" [<plugin> <flowId> | filter] [--json]
 ```
+
+Two positionals resolve **exactly** — `markdown QA-1` and `chess QA-1` are different flows, so a
+flow id on its own is ambiguous. One positional is a loose substring match over path, id and title.
 
 It scans every `.mdl` under the repo root (skipping dialect definitions, whose example flows are
 illustrations rather than plans) and prints a numbered table: id, status, step count, title, and
@@ -28,10 +31,11 @@ a later message refers to that row, exactly as `/dxos:project list` works.
   action that matters: which flow to run.
 - **`list [filter]`** — the same table, narrowed by a substring matched against the document path,
   flow id, or title. `list markdown` and `list QA-1` both work.
-- **`show <flow>`** — print one flow's block verbatim, so its `given`, steps and `cleanup` can be
-  read before committing to a run. Accepts a row number or a flow id.
-- **`run <flow> [--skip-cleanup]`** — execute it. Accepts a row number or a flow id; if either is
-  ambiguous across documents, show the candidates and ask rather than guessing.
+- **`show <plugin> <flowId>`** — print one flow's block verbatim, so its `given`, steps and
+  `cleanup` can be read before committing to a run. A row number from the last table also works.
+- **`run <plugin> <flowId> [--skip-cleanup]`** — execute it, e.g. `run markdown QA-2`. A row number
+  works too. Resolve with the script and **stop if it returns anything other than exactly one
+  flow** — show the candidates and ask rather than guessing which was meant.
 - **`help`** — this table of verbs.
 
 ## Running
@@ -42,9 +46,14 @@ improvise an execution path here; the skill exists because improvising one is wh
 first three rounds of defects.
 
 `--skip-cleanup` leaves the flow's artifacts in place so the final state can be inspected. It is a
-run option, never a property of the flow. When passed, say so beside the result, list what remains
-by name, and give the command that removes it later — the next run's `given` will refuse to start
-until it is gone.
+run option, never a property of the flow. When passed:
+
+1. Say so beside the result, not buried after it.
+2. List exactly what remains, by name.
+3. Give the command that removes it later.
+
+The next run's `given` will refuse to start until those artifacts are gone — deliberately, so a
+flow never asserts against its own residue.
 
 ## After a run
 

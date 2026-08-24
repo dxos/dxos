@@ -65,7 +65,12 @@ const parseFlows = (text, file) => {
 const root = process.env.DX_REPO_ROOT ?? process.cwd();
 const args = process.argv.slice(2);
 const asJson = args.includes('--json');
-const filter = args.find((arg) => !arg.startsWith('--'));
+const positional = args.filter((arg) => !arg.startsWith('--'));
+
+// Two positionals resolve exactly — `<plugin> <flowId>`. One is the loose substring filter, and a
+// flow id alone is genuinely ambiguous: QA-1 exists in more than one plugin.
+const [plugin, flowId] = positional.length >= 2 ? positional : [undefined, undefined];
+const filter = positional.length >= 2 ? undefined : positional[0];
 
 // A dialect definition (`org.dxos.spec.*`) carries example flows to document its own syntax; those
 // are illustrations, not plans, and listing them as runnable is a trap.
@@ -75,12 +80,18 @@ const flows = walk(root)
   .map((file) => ({ file, text: readFileSync(file, 'utf8') }))
   .filter(({ text }) => !isDialect(text))
   .flatMap(({ file, text }) => parseFlows(text, relative(root, file)))
-  .filter((flow) => !filter || `${flow.file} ${flow.id} ${flow.title}`.toLowerCase().includes(filter.toLowerCase()));
+  .filter((flow) => !filter || `${flow.file} ${flow.id} ${flow.title}`.toLowerCase().includes(filter.toLowerCase()))
+  .filter(
+    (flow) =>
+      !plugin || flow.file.includes(`plugin-${plugin.replace(/^plugin-/, '')}/`) || flow.file.includes(`/${plugin}/`),
+  )
+  .filter((flow) => !flowId || flow.id.toLowerCase() === flowId.toLowerCase());
 
 if (asJson) {
   console.log(JSON.stringify(flows, null, 2));
 } else if (flows.length === 0) {
-  console.log(filter ? `No flows matching "${filter}".` : 'No flows found.');
+  const what = plugin ? `${plugin} ${flowId}` : filter;
+  console.log(what ? `No flows matching "${what}".` : 'No flows found.');
 } else {
   const width = (key) => Math.max(...flows.map((flow) => String(flow[key]).length));
   const [idWidth, statusWidth] = [width('id'), width('status')];

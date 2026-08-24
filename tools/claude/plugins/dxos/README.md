@@ -47,9 +47,9 @@ journeys crossing plugins).
 | ---------------------------------- | ----------------------------------------------------------------------- |
 | `/dxos:qa`                         | Numbered table of every flow, with its `status:`                        |
 | `/dxos:qa list [filter]`           | The same table, narrowed by document path, flow id, or title            |
-| `/dxos:qa show <flow>`             | Print one flow verbatim — its `given`, steps and `cleanup`              |
-| `/dxos:qa run <flow>`              | Execute it against a live app and report a per-step pass/fail table     |
-| `/dxos:qa run <flow> --skip-cleanup` | Leave the artifacts in place so the final state can be inspected      |
+| `/dxos:qa show <plugin> <flowId>`  | Print one flow verbatim — its `given`, steps and `cleanup`              |
+| `/dxos:qa run <plugin> <flowId>`   | Execute it against a live app and report a per-step pass/fail table     |
+| `/dxos:qa run <plugin> <flowId> --skip-cleanup` | Leave the artifacts in place for inspection                |
 | `/dxos:qa help`                    | Table of every verb                                                     |
 
 Rows are addressable by number, as with `/dxos:project list`. Enumeration is
