@@ -1,6 +1,6 @@
 ---
 name: effect
-description: DXOS conventions for Effect 4: the pinned-source lookup order, BaseError in the error channel, layer stack composition, and Schema/SchemaAST rules. Use when writing or changing Effect code, defining services or layers, composing test layer stacks, working with Schema or SchemaAST, or reading pre-migration v3 code.
+description: Effect 4 in DXOS: the pinned copy in node_modules, and the house rules that override it. Use when writing or changing Effect code, composing test layer stacks, working with Schema or SchemaAST, or reading pre-migration v3 code.
 ---
 
 # Effect 4 in DXOS
@@ -9,7 +9,7 @@ Your Effect knowledge is v3. This repo is on a v4 release candidate, where servi
 errors, Schema, and the AST all moved. v3 written here is **compile-clean and
 test-silent**: it typechecks, the tests pass, and the behaviour is wrong.
 
-So do not write Effect from memory. Read the **pinned** copy.
+Read the **pinned** copy.
 
 ## The pinned copy
 
@@ -24,8 +24,7 @@ this is real source on disk, not `dist`:
 | `node_modules/effect/ai-docs/src/**` | 48 compiling examples, one per topic, linked from `AGENTS.md`                                                                                                                  |
 | `node_modules/effect/src/**`         | 436 files of implementation, JSDoc and every export, including the whole `unstable/` tree where v4 keeps `sql`, `http`, `httpapi`, `cli`, `ai`, `cluster`, and `observability` |
 
-Prefer these over effect.website, over an `effect-smol` checkout, and over recall.
-The website tracks `main`; the pinned copy tracks what you compile against.
+effect.website tracks `main`; the pinned copy tracks what you compile against.
 
 Tests are the one thing npm leaves out: the package has no `test/` or `dtslint/`.
 
@@ -45,8 +44,7 @@ Before writing Effect, in this order, stopping as soon as the answer is settled:
 4. **Check the divergences below.** Three DXOS rules override the pinned guide.
 
 Done when every Effect API in the change either came from a neighbouring DXOS file or
-was confirmed by grep in `node_modules/effect/src/`. An API you recalled and did not
-confirm is the one that will be wrong.
+was confirmed by grep in `node_modules/effect/src/`.
 
 ## Where DXOS diverges from the pinned guide
 
@@ -55,7 +53,9 @@ code. Everything else in it applies as written.
 
 **Domain errors are `BaseError.extend`, not `Schema.TaggedError`.** `BaseError` from
 `@dxos/errors` supplies a `_tag` getter, so `Effect.catchTag` still discriminates,
-and it carries `context`, `wrap`, and `is` that the rest of the stack expects.
+and it carries `context`, `wrap`, and `is` that the rest of the stack expects. Keep
+the channel typed either way: bare `Error` or `unknown` in `Effect<A, E, R>` erases
+the recovery `catchTag` depends on.
 
 ```ts
 import { BaseError } from '@dxos/errors';
@@ -76,9 +76,6 @@ form here. `return yield*` works only for the few `Schema.TaggedError` classes.
 for the span it attaches. This repo leans the other way, running `fnUntraced` roughly
 two to one and reserving the traced form for boundaries worth a span. Either beats a
 function that returns `Effect.gen`.
-
-Keep the error channel typed. Bare `Error` or `unknown` in `Effect<A, E, R>` erases
-the recovery that `catchTag` depends on.
 
 ## Layer stacks
 
