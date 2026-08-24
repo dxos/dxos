@@ -180,8 +180,8 @@ export type KeyFilterOptions = {
  *
  * @example
  * ```ts
- * Filter.key('org.example.type.foo');
- * Filter.key('org.example.type.foo', { version: '^1.2.3' });
+ * Filter.key('com.example.type.foo');
+ * Filter.key('com.example.type.foo', { version: '^1.2.3' });
  * ```
  */
 export const key = (key: string, options?: KeyFilterOptions): Any => {
@@ -456,6 +456,17 @@ export const childOf = (
     transitive: options?.transitive ?? true,
   });
 };
+
+/**
+ * Filter objects by whether they have a parent, regardless of which object it is.
+ * `Filter.hasParent(false)` selects root objects — those never passed to `Obj.setParent`.
+ * Unlike {@link childOf} this reads the object's own parent slot, so it costs no traversal.
+ */
+export const hasParent = (value = true): Any =>
+  new FilterClass({
+    type: 'has-parent',
+    value,
+  });
 
 /**
  * Negate the filter.

@@ -330,6 +330,28 @@ export class QueryPlanner {
         ]);
       }
 
+      // HasParent — a local predicate on the object's own parent slot, so inversion folds into
+      // the value rather than costing a negated plan.
+      case 'has-parent': {
+        const planned: QueryAST.Filter = context.selectionInverted
+          ? { ...filter, value: !filter.value }
+          : { ...filter };
+        return QueryPlan.Plan.make([
+          {
+            _tag: 'SelectStep',
+            scope: context.scope,
+            selector: {
+              _tag: 'WildcardSelector',
+            },
+          },
+          ...this._generateDeletedHandlingSteps(context),
+          {
+            _tag: 'FilterStep',
+            filter: planned,
+          },
+        ]);
+      }
+
       // Compare
       case 'compare':
         throw queryTooComplexError(context.originalQuery);
@@ -350,7 +372,10 @@ export class QueryPlanner {
         const flatFilters = _flattenAnd(filter.filters);
         const timestampFilters = flatFilters.filter((f): f is QueryAST.FilterTimestamp => f.type === 'timestamp');
         const childOfFilters = flatFilters.filter((f): f is QueryAST.FilterChildOf => f.type === 'child-of');
-        const otherFilters = flatFilters.filter((f) => f.type !== 'timestamp' && f.type !== 'child-of');
+        const hasParentFilters = flatFilters.filter((f): f is QueryAST.FilterHasParent => f.type === 'has-parent');
+        const otherFilters = flatFilters.filter(
+          (f) => f.type !== 'timestamp' && f.type !== 'child-of' && f.type !== 'has-parent',
+        );
 
         if (timestampFilters.length > 0 && context.selectionInverted) {
           throw new QueryError({
@@ -360,7 +385,12 @@ export class QueryPlanner {
           });
         }
 
-        if (timestampFilters.length > 0 && otherFilters.length <= 1 && childOfFilters.length === 0) {
+        if (
+          timestampFilters.length > 0 &&
+          otherFilters.length <= 1 &&
+          childOfFilters.length === 0 &&
+          hasParentFilters.length === 0
+        ) {
           const innerFilter = otherFilters[0];
           const innerPlan = innerFilter
             ? this._generateSelectionFromFilter(innerFilter, context)
@@ -394,7 +424,7 @@ export class QueryPlanner {
           ]);
         }
 
-        if (timestampFilters.length > 0 && childOfFilters.length === 0) {
+        if (timestampFilters.length > 0 && childOfFilters.length === 0 && hasParentFilters.length === 0) {
           throw new QueryError({
             message:
               'Timestamp filters can only be combined with a single type or property filter via AND. Split complex filters into a subquery.',
@@ -402,8 +432,30 @@ export class QueryPlanner {
           });
         }
 
-        if (childOfFilters.length > 0) {
-          const remainingFilters = flatFilters.filter((f) => f.type !== 'child-of');
+        // child-of and has-parent both plan as post-filters appended to the remaining filters'
+        // plan, so `and(type(X), hasParent(false))` keeps its type-indexed select.
+        if (childOfFilters.length > 0 || hasParentFilters.length > 0) {
+          // A negated conjunction cannot distribute over its conjuncts (`not(and(a, b))` is not
+          // `not(a) && b`), so under inversion the WHOLE negated AND becomes one post-filter —
+          // possible only when every conjunct is root-executable (child-of is not).
+          if (context.selectionInverted) {
+            if (childOfFilters.length > 0 || !flatFilters.every(isRootExecutable)) {
+              throw queryTooComplexError(context.originalQuery);
+            }
+            return QueryPlan.Plan.make([
+              {
+                _tag: 'SelectStep',
+                scope: context.scope,
+                selector: { _tag: 'WildcardSelector' },
+              },
+              ...this._generateDeletedHandlingSteps(context),
+              {
+                _tag: 'FilterStep',
+                filter: { type: 'not', filter: { type: 'and', filters: flatFilters } },
+              },
+            ]);
+          }
+          const remainingFilters: QueryAST.Filter[] = [...otherFilters, ...timestampFilters];
           const innerPlan =
             remainingFilters.length === 1
               ? this._generateSelectionFromFilter(remainingFilters[0], context)
@@ -418,14 +470,15 @@ export class QueryPlanner {
                     ...this._generateDeletedHandlingSteps(context),
                   ]);
 
-          const childOfSteps: QueryPlan.Step[] = childOfFilters.map((f) => ({
+          const postFilterSteps: QueryPlan.Step[] = [...childOfFilters, ...hasParentFilters].map((f) => ({
             _tag: 'FilterStep' as const,
             filter: f,
           }));
 
-          return QueryPlan.Plan.make([...innerPlan.steps, ...childOfSteps]);
+          return QueryPlan.Plan.make([...innerPlan.steps, ...postFilterSteps]);
         }
 
+        // Simple AND: all filters are root-executable against in-memory objects after a wildcard select.
         // The text search must drive the selection — the in-memory matcher cannot evaluate one —
         // and inverting it would need objects outside the FTS hits, which the index cannot produce.
         const textFilters = flatFilters.filter((f): f is QueryAST.FilterTextSearch => f.type === 'text-search');
@@ -983,10 +1036,10 @@ export class QueryPlanner {
         selectStepIndex = -1;
         orderStepIndex = -1;
       }
-      // A child-of FilterStep prunes results in-memory after the SelectStep, so pushing the
-      // limit into the SelectStep would slice candidates before the filter runs and starve
+      // A child-of/has-parent FilterStep prunes results in-memory after the SelectStep, so pushing
+      // the limit into the SelectStep would slice candidates before the filter runs and starve
       // the result set (e.g. wildcard select of 10 random objects, then child-of leaves 0).
-      if (step._tag === 'FilterStep' && _filterContainsChildOf(step.filter)) {
+      if (step._tag === 'FilterStep' && _filterContainsPostSelectPrune(step.filter)) {
         selectStepIndex = -1;
         orderStepIndex = -1;
       }
@@ -1116,17 +1169,21 @@ const createRelationTraversalStep = (direction: QueryPlan.RelationTraversal['dir
 });
 
 /**
- * Returns true if the filter is `child-of` or composes one via `and` / `or` / `not`.
+ * Returns true if the filter is `child-of` or `has-parent` — the post-select pruning filters —
+ * or composes one via `and` / `or` / `not`. Their FilterSteps genuinely subtract from the
+ * SelectStep's candidates (the step is not a re-check of the selector's own predicate), so a
+ * limit must never be pushed past them.
  */
-const _filterContainsChildOf = (filter: QueryAST.Filter): boolean => {
+const _filterContainsPostSelectPrune = (filter: QueryAST.Filter): boolean => {
   switch (filter.type) {
     case 'child-of':
+    case 'has-parent':
       return true;
     case 'not':
-      return _filterContainsChildOf(filter.filter);
+      return _filterContainsPostSelectPrune(filter.filter);
     case 'and':
     case 'or':
-      return filter.filters.some(_filterContainsChildOf);
+      return filter.filters.some(_filterContainsPostSelectPrune);
     default:
       return false;
   }
@@ -1287,6 +1344,7 @@ const isRootExecutable = (filter: QueryAST.Filter): boolean => {
   switch (filter.type) {
     case 'object':
     case 'tag':
+    case 'has-parent':
       return true;
     case 'not':
       return isRootExecutable(filter.filter);

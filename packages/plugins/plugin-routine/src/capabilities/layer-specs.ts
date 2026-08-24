@@ -158,7 +158,18 @@ const OperationsToRegistrySpec = LayerSpec.make(
         const sources = yield* Effect.promise(() =>
           Promise.all(sets.map((set) => (set.definitions ? set.definitions() : set.getHandlers()))),
         );
-        registry.add(sources.flat().map(Operation.serialize));
+        const definitions = sources.flat();
+        // The only point every operation in the app is visible at once. Tool names derive from keys
+        // non-injectively (`Operation.toolName`), so two keys can claim one name — which the resolver
+        // would only surface once a model asked for it.
+        const collisions = Operation.findToolNameCollisions(definitions);
+        invariant(
+          collisions.size === 0,
+          `Operations collide on derived tool name: ${[...collisions]
+            .map(([name, keys]) => `${name} <- ${keys.join(', ')}`)
+            .join('; ')}`,
+        );
+        registry.add(definitions.map(Operation.serialize));
         return registry;
       }),
     ),

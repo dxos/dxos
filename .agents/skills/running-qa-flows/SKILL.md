@@ -121,7 +121,7 @@ const invokeOp = async (key, input, space) => {
 ```
 
 **Match the key exactly — never by suffix.** `endsWith('create')` matches both
-`org.dxos.function.markdown.create` and `org.dxos.plugin.markdown.operation.create`, which is the
+`org.dxos.operation.markdown.create` and `org.dxos.operation.markdown.createDraft`, which is the
 precise ambiguity the `key:` field exists to remove; a suffix match silently reintroduces it and
 takes whichever came first. Failing on anything but exactly one match turns a renamed or duplicated
 key into an error rather than a wrong operation.
@@ -150,7 +150,7 @@ and an assert that only looks for the link label will not catch it, so match the
 
 ```js
 const path = `root/${space.id}/content/collections/${object.id}`;
-await composer.invoke('org.dxos.plugin.layout.operation.open', { subject: [path] });
+await composer.invoke('org.dxos.operation.appToolkit.open', { subject: [path] });
 ```
 
 For a view-holding object the last-but-one segment is the view's target type rather than

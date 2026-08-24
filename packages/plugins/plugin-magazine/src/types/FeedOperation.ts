@@ -10,12 +10,8 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, DXN, Obj, Ref, Registry } from '@dxos/echo';
 
-import { meta } from '#meta';
-
 import * as Magazine from './Magazine';
 import * as Subscription from './Subscription';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /** Fetches an RSS/Atom feed and appends new posts to the backing ECHO feed. */
 /**
@@ -37,7 +33,7 @@ export const createCurateProgressKey = (magazine: Magazine.Magazine) => createPr
 
 export const SyncFeed = Operation.make({
   meta: {
-    key: makeKey('syncFeed'),
+    key: DXN.make('org.dxos.operation.magazine.syncFeed'),
     name: 'Sync Feed',
     description: 'Fetches RSS/Atom feed and writes posts to the ECHO feed.',
     icon: 'ph--arrows-clockwise--regular',
@@ -57,7 +53,7 @@ export const SyncFeed = Operation.make({
  */
 export const FetchArticleContent = Operation.make({
   meta: {
-    key: makeKey('fetchArticleContent'),
+    key: DXN.make('org.dxos.operation.magazine.fetchArticleContent'),
     name: 'Fetch Article Content',
     description: "Fetches and extracts text + image URLs from a Post's article page.",
     icon: 'ph--article--regular',
@@ -86,7 +82,7 @@ export const FetchArticleContent = Operation.make({
  */
 export const LoadPostContent = Operation.make({
   meta: {
-    key: makeKey('loadPostContent'),
+    key: DXN.make('org.dxos.operation.magazine.loadPostContent'),
     name: 'Load Post Content',
     description: 'Fetches and stores the full article content on a Post.',
     icon: 'ph--download--regular',
@@ -112,7 +108,7 @@ export const LoadPostContent = Operation.make({
  */
 export const CurateMagazine = Operation.make({
   meta: {
-    key: makeKey('curateMagazine'),
+    key: DXN.make('org.dxos.operation.magazine.curate'),
     name: 'Curate Magazine',
     description: 'Syncs feeds, selects matching posts via the magazine skill, and applies per-feed keep limits.',
     icon: 'ph--sparkle--regular',
@@ -137,7 +133,7 @@ export const CurateMagazine = Operation.make({
  */
 export const ClearMagazine = Operation.make({
   meta: {
-    key: makeKey('clearMagazine'),
+    key: DXN.make('org.dxos.operation.magazine.clear'),
     name: 'Clear Magazine',
     description: "Removes a Magazine's posts, keeping any that are starred.",
     icon: 'ph--trash--regular',

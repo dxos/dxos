@@ -16,7 +16,7 @@ import * as Bookmark from './Bookmark';
 
 export const AddFromSnapshot = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.plugin.bookmarks.operation.addFromSnapshot'),
+    key: DXN.make('org.dxos.operation.bookmarks.addFromSnapshot'),
     name: 'Add bookmark',
     description: 'Save a web page snapshot as a bookmark.',
     icon: 'ph--bookmark-simple--regular',
@@ -36,7 +36,7 @@ export const AddFromSnapshot = Operation.make({
  */
 export const Summarize = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.plugin.bookmarks.operation.summarize'),
+    key: DXN.make('org.dxos.operation.bookmarks.summarize'),
     name: 'Summarize Bookmark',
     description: 'Summarizes the bookmarked page and links the summary.',
     icon: 'ph--text-align-left--regular',

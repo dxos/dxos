@@ -210,12 +210,12 @@ const invokeWithSpace = async (key, input) => {
   return data;
 };
 
-const { object } = await composer.invoke('org.dxos.plugin.markdown.operation.create', {
+const { object } = await composer.invoke('org.dxos.operation.markdown.createDraft', {
   name: 'Notes',
   content: '# Notes\n',
 });
 // `addObject` declares `Database.Service`, so it needs the invoker and a spaceId (gotcha 2).
-await invokeWithSpace('org.dxos.plugin.space.operation.addObject', { object, target: collection });
+await invokeWithSpace('org.dxos.operation.space.addObject', { object, target: collection });
 await space.db.flush();
 
 // Verify placement rather than trusting the return.
@@ -240,10 +240,10 @@ You have to build that string — `addObject` does not return one (its output sc
 `{ id, object }`):
 
 ```js
-const added = await invokeWithSpace('org.dxos.plugin.space.operation.addObject', { object, target: collection });
+const added = await invokeWithSpace('org.dxos.operation.space.addObject', { object, target: collection });
 await space.db.flush();
 const path = `root/${space.id}/content/collections/${object.id}`;
-await composer.invoke('org.dxos.plugin.layout.operation.open', { subject: [path] });
+await composer.invoke('org.dxos.operation.appToolkit.open', { subject: [path] });
 ```
 
 For a view-holding object the slug is the view's target type rather than `collections`; read it off

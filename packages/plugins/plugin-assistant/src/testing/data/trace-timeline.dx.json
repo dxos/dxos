@@ -294,7 +294,7 @@
       "key": "org.dxos.skill.assistant",
       "name": "Assistant",
       "tools": [
-        "org.dxos.plugin.layout.operation.open",
+        "org.dxos.operation.layout.open",
         "org.dxos.plugin.assistant.operation.resolve-navigation-targets"
       ]
     },
@@ -488,9 +488,9 @@
       "key": "org.dxos.skill.markdown",
       "name": "Markdown",
       "tools": [
-        "org.dxos.function.markdown.create",
-        "org.dxos.function.markdown.open",
-        "org.dxos.function.markdown.update"
+        "org.dxos.operation.markdown.create",
+        "org.dxos.operation.markdown.open",
+        "org.dxos.operation.markdown.update"
       ]
     },
     {
@@ -4927,7 +4927,7 @@
           "meta": {
             "pid": "75ca26ee-249d-45d0-a3ab-142323ccac07",
             "parentPid": "e80d7832-c3f5-4c5e-bb64-aec9897ebfd2",
-            "processName": "Create (org.dxos.function.markdown.create)"
+            "processName": "Create (org.dxos.operation.markdown.create)"
           },
           "isEphemeral": false,
           "events": [
@@ -4935,7 +4935,7 @@
               "type": "operation.start",
               "timestamp": 1777650622294,
               "data": {
-                "key": "org.dxos.function.markdown.create",
+                "key": "org.dxos.operation.markdown.create",
                 "name": "Create"
               }
             }
@@ -4956,7 +4956,7 @@
           "meta": {
             "pid": "75ca26ee-249d-45d0-a3ab-142323ccac07",
             "parentPid": "e80d7832-c3f5-4c5e-bb64-aec9897ebfd2",
-            "processName": "Create (org.dxos.function.markdown.create)"
+            "processName": "Create (org.dxos.operation.markdown.create)"
           },
           "isEphemeral": false,
           "events": [
@@ -4964,7 +4964,7 @@
               "type": "operation.end",
               "timestamp": 1777650622419,
               "data": {
-                "key": "org.dxos.function.markdown.create",
+                "key": "org.dxos.operation.markdown.create",
                 "name": "Create",
                 "outcome": "success"
               }

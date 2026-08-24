@@ -24,17 +24,7 @@ EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: DelegationHandlers,
-  types: [
-    Agent.Agent,
-    Outline.Outline,
-    Task.Task,
-    TaskSet.TaskSet,
-    Text.Text,
-    Chat.Chat,
-    Chat.CompanionTo,
-    Skill.Skill,
-    Feed.Feed,
-  ],
+  types: [Agent.Agent, Outline.Outline, Task.Task, TaskSet.TaskSet, Text.Text, Chat.Chat, Skill.Skill, Feed.Feed],
   skills: [DelegationSkill.make()],
   disableLlmMemoization: true,
 });

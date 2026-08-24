@@ -259,61 +259,61 @@ Comment-thread operations (keys `org.dxos.plugin.review.operation.<name>`):
 
 ```mdl
 op Create
-  key: org.dxos.plugin.review.operation.create
+  key: org.dxos.operation.review.create
   desc: Create a (staged) comment thread anchored to a subject; seeds CommentsState.drafts.
   input: { subject: Obj.Any, anchor?: String, name?: String, branch?: String }
 
 op AddMessage
-  key: org.dxos.plugin.review.operation.addMessage
+  key: org.dxos.operation.review.addMessage
   desc: |
     Append a user message to a thread (promoting a staged draft to active). Evaluates the agent
     trigger gate and schedules RespondToThread when it passes.
   input: { subject: Obj.Any, anchor: AnchoredTo, sender: Actor, text: String }
 
 op Delete
-  key: org.dxos.plugin.review.operation.delete
+  key: org.dxos.operation.review.delete
   desc: Delete a thread + its anchor. Undoable via Restore.
   input: { anchor: AnchoredTo, subject: Obj.Any, thread?: Thread }
   output: { thread?: Thread, anchor?: AnchoredTo }
 
 op Restore
-  key: org.dxos.plugin.review.operation.restore
+  key: org.dxos.operation.review.restore
   desc: Inverse of Delete.
   input: { thread: Thread, anchor: AnchoredTo }
 
 op DeleteMessage
-  key: org.dxos.plugin.review.operation.deleteMessage
+  key: org.dxos.operation.review.deleteMessage
   desc: Delete a single message from a thread. Undoable via RestoreMessage.
   input: { anchor: AnchoredTo, subject: Obj.Any, messageId: String }
   output: { message?: Message, messageIndex?: Number }
 
 op RestoreMessage
-  key: org.dxos.plugin.review.operation.restoreMessage
+  key: org.dxos.operation.review.restoreMessage
   desc: Inverse of DeleteMessage.
   input: { anchor: AnchoredTo, message: Message, messageIndex: Number }
 
 op ToggleResolved
-  key: org.dxos.plugin.review.operation.toggleResolved
+  key: org.dxos.operation.review.toggleResolved
   desc: Toggle thread.status between active and resolved.
   input: { thread: Thread }
 
 op Select
-  key: org.dxos.plugin.review.operation.select
+  key: org.dxos.operation.review.select
   desc: Set the currently-selected thread (CommentsState.current); omit `current` to clear it.
   input: { current?: String }
 
 op RespondToThread
-  key: org.dxos.plugin.review.operation.respondToThread
+  key: org.dxos.operation.review.respondToThread
   desc: Run one agent turn against a thread. Scheduled by AddMessage when the gate passes.
   input: { thread: Ref<Thread>, subject: Ref<Obj.Any> }
 
 op SetAgentConfig
-  key: org.dxos.plugin.review.operation.setAgentConfig
+  key: org.dxos.operation.review.setAgentConfig
   desc: Mutate thread.agent. Undefined config means off.
   input: { thread: Ref<Thread>, config?: AgentConfig }
 
 op CreateProposals
-  key: org.dxos.plugin.review.operation.createProposals
+  key: org.dxos.operation.review.createProposals
   desc: |
     Materialise assistant-proposed document edits as NEW proposal-block comment threads, one per
     diff, each anchored to the document at the diff's cursor range.

@@ -158,15 +158,15 @@ component EditableMarkdownCard
 
 ```mdl
 op create
-  key: org.dxos.function.markdown.create
+  key: org.dxos.operation.markdown.create
   desc: Creates a new markdown Document and adds it to the active space. Agent-facing (skill tool).
   input: { name: string, content: string }
   output: { id: string }        # DXN of created Document
   effects: [echo:write]
   requires: [Database.Service]
 
-op createMarkdown
-  key: org.dxos.plugin.markdown.operation.create
+op createDraft
+  key: org.dxos.operation.markdown.createDraft
   desc: |
     UI-facing factory invoked by the navtree create action. Returns a DETACHED Document —
     placement is a separate `space.addObject` call. Distinct from [op:create], which is the
@@ -176,7 +176,7 @@ op createMarkdown
   requires: [Capability.Service]
 
 op open
-  key: org.dxos.function.markdown.open
+  key: org.dxos.operation.markdown.open
   desc: Reads the current contents of a markdown Document.
   input: { doc: Ref<Document> }
   output: { content: string }
@@ -184,7 +184,7 @@ op open
   requires: [Database.Service]
 
 op update
-  key: org.dxos.function.markdown.update
+  key: org.dxos.operation.markdown.update
   desc: Applies a set of find/replace edits to a markdown Document (optionally on a branch).
   input: { doc: Ref<Document>, edits: Edit[], branchId?: string }
   output: { newContent: string }
@@ -399,7 +399,7 @@ flow QA-1: Create, place, open and edit a document
   steps:
     - name: Create the document
       do: In the navtree, click + on a collection and choose Markdown. Name it "QA Notes".
-      invoke: [op:createMarkdown] { name: "QA Notes", content: "# QA Notes\n\nThere is a tyop.\n" }
+      invoke: [op:createDraft] { name: "QA Notes", content: "# QA Notes\n\nThere is a tyop.\n" }
       capture: created
       expect: a Document named "QA Notes" now exists with that body
       assert: return !!$created.object
@@ -407,7 +407,7 @@ flow QA-1: Create, place, open and edit a document
     - name: Place it in the collection
       do: (no separate gesture — the navtree create action places it; the agent path splits the
         one gesture into a factory call and a placement)
-      invoke: org.dxos.plugin.space.operation.addObject { object: $created.object, target: $given.collection }
+      invoke: org.dxos.operation.space.addObject { object: $created.object, target: $given.collection }
       capture: added
       expect: "QA Notes" appears as a row under the collection in the navtree
       assert: |
@@ -419,7 +419,7 @@ flow QA-1: Create, place, open and edit a document
     - name: Open it
       id: open
       do: Click "QA Notes" in the navtree.
-      invoke: org.dxos.plugin.layout.operation.open { subject: ["root/$spaceId/content/collections/$created.object.id"] }
+      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$spaceId/content/collections/$created.object.id"] }
       expect: the editor renders "# QA Notes" and the navtree row is selected
       assert: |
         return Array.from(document.querySelectorAll('[aria-current], [aria-selected="true"]'))
@@ -436,7 +436,7 @@ flow QA-1: Create, place, open and edit a document
   cleanup:
     - name: Delete the document
       do: Right-click "QA Notes" in the navtree and choose Delete.
-      invoke: org.dxos.plugin.space.operation.removeObjects { objects: [$created.object], target: $given.collection }
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
       expect: the row leaves the navtree AND the open plank closes
       assert: |
         return !(await space.db.query(dxos.Filter.everything()).run()).some((o) => o.id === $created.object.id) &&
@@ -462,24 +462,24 @@ flow QA-2: Link one page to another
   steps:
     - name: Create Page 1
       do: In the navtree, click + on a collection and choose Markdown. Name it "Page 1" and type a heading and a sentence.
-      invoke: [op:createMarkdown] { name: "Page 1", content: "# Page 1\n\nThe first page.\n" }
+      invoke: [op:createDraft] { name: "Page 1", content: "# Page 1\n\nThe first page.\n" }
       capture: page1
       expect: a Document named "Page 1" is returned, its body reading "The first page."
       assert: return !!$created.object
       note: Coalesce with the placement step — `object` is live and cannot cross a snippet boundary.
     - name: Place Page 1
       do: (the navtree create action places it for you)
-      invoke: org.dxos.plugin.space.operation.addObject { object: $page1.object, target: $given.collection }
+      invoke: org.dxos.operation.space.addObject { object: $page1.object, target: $given.collection }
       expect: "Page 1" appears as a row under the collection
     - name: Create Page 2
       do: Repeat for a second document named "Page 2" with its own heading and sentence.
-      invoke: [op:createMarkdown] { name: "Page 2", content: "# Page 2\n\nThe second page.\n" }
+      invoke: [op:createDraft] { name: "Page 2", content: "# Page 2\n\nThe second page.\n" }
       capture: page2
       expect: a Document named "Page 2" is returned, its body reading "The second page."
       assert: return !!$created.object
     - name: Place Page 2
       do: (as above)
-      invoke: org.dxos.plugin.space.operation.addObject { object: $page2.object, target: $given.collection }
+      invoke: org.dxos.operation.space.addObject { object: $page2.object, target: $given.collection }
       expect: "Page 2" appears as a row alongside "Page 1"
     - name: Link Page 1 to Page 2
       id: link
@@ -506,7 +506,7 @@ flow QA-2: Link one page to another
   cleanup:
     - name: Delete both pages
       do: Right-click each of "Page 1" and "Page 2" in the navtree and choose Delete.
-      invoke: org.dxos.plugin.space.operation.removeObjects { objects: [$page1.object, $page2.object], target: $given.collection }
+      invoke: org.dxos.operation.space.removeObjects { objects: [$page1.object, $page2.object], target: $given.collection }
       expect: both rows leave the navtree and any open planks close
 ```
 
@@ -530,12 +530,12 @@ flow QA-3: A contributed slash-command runs
         and reports this one as unverified rather than asserting it passed.
     - name: Insert a paragraph
       do: Select "Lorem ipsum".
-      invoke: org.dxos.plugin.debug.operation.insertLoremIpsum { subject: $given.attendableId, head: 0 }
+      invoke: org.dxos.operation.debug.insertLoremIpsum { subject: $given.attendableId, head: 0 }
       expect: a paragraph of placeholder prose appears at the caret
       assert: return view.state.doc.length > 0;
     - name: Insert a second paragraph
       do: Repeat.
-      invoke: org.dxos.plugin.debug.operation.insertLoremIpsum { subject: $given.attendableId, head: 0 }
+      invoke: org.dxos.operation.debug.insertLoremIpsum { subject: $given.attendableId, head: 0 }
       expect: the second paragraph differs from the first — the text is generated, not a fixed string
   cleanup:
     - name: Clear the document

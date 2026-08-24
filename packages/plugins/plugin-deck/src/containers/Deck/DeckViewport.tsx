@@ -472,7 +472,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const handleExposeSelect = useCallback(() => {
     captureExposeGeometry();
     markExposeSelect(id);
-    void invokePromise(DeckOperation.ToggleExpose, { expose: false });
+    void invokePromise(DeckOperation.SetExpose, { expose: false });
     void invokePromise(LayoutOperation.ScrollIntoView, { subject: id });
   }, [invokePromise, id, captureExposeGeometry, markExposeSelect]);
 
@@ -1443,7 +1443,8 @@ export const DeckPlanks = () => {
           exposeReturnRef.current = navigationRef.current.attendedPlankId;
         }
         captureRef.current();
-        void invokePromise(DeckOperation.ToggleExpose, {});
+        // The shortcut flips, so it states the value it wants from the ref it already reads above.
+        void invokePromise(DeckOperation.SetExpose, { expose: !exposeRef.current });
         return;
       }
 
@@ -1457,7 +1458,7 @@ export const DeckPlanks = () => {
           focusPlank(restore);
         }
         captureRef.current();
-        void invokePromise(DeckOperation.ToggleExpose, { expose: false });
+        void invokePromise(DeckOperation.SetExpose, { expose: false });
         return;
       }
 
@@ -1471,7 +1472,7 @@ export const DeckPlanks = () => {
         const target = (focused && current.includes(focused) ? focused : undefined) ?? attended;
         captureRef.current();
         exposeSelectRef.current = target;
-        void invokePromise(DeckOperation.ToggleExpose, { expose: false });
+        void invokePromise(DeckOperation.SetExpose, { expose: false });
         if (target) {
           void invokePromise(LayoutOperation.ScrollIntoView, { subject: target });
         }
@@ -1544,7 +1545,7 @@ export const DeckPlanks = () => {
     (event: MouseEvent<HTMLDivElement>) => {
       if (expose && event.target instanceof Element && !event.target.closest('[role="listitem"]')) {
         captureExposeGeometry();
-        void invokePromise(DeckOperation.ToggleExpose, { expose: false });
+        void invokePromise(DeckOperation.SetExpose, { expose: false });
       }
     },
     [invokePromise, expose, captureExposeGeometry],

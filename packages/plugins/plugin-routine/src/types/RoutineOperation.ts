@@ -18,16 +18,12 @@ import { Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 // otherwise needs a transitive `@dxos/keys` import that's hard for d.ts emit to surface.
 import { EID as _EchoURIReference } from '@dxos/keys';
 
-import { meta } from '#meta';
-
 import { TriggerTemplate } from './Routine';
 export { _EchoURIReference };
 
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
 export const CreateTriggerFromTemplate = Operation.make({
   meta: {
-    key: makeKey('createTriggerFromTemplate'),
+    key: DXN.make('org.dxos.operation.routine.createTriggerFromTemplate'),
     name: 'Create Trigger From Template',
     icon: 'ph--lightning--regular',
   },
@@ -46,7 +42,7 @@ export const CreateTriggerFromTemplate = Operation.make({
 // ownership are established in one place. Output mirrors `SpaceCapabilities.CreateObjectResult`.
 export const CreateRoutine = Operation.make({
   meta: {
-    key: makeKey('createAutomation'),
+    key: DXN.make('org.dxos.operation.routine.createAutomation'),
     name: 'Create Routine',
     icon: 'ph--lightning--regular',
   },
@@ -65,7 +61,7 @@ export const CreateRoutine = Operation.make({
 
 export const RunPromptInNewChat = Operation.make({
   meta: {
-    key: makeKey('runPromptInNewChat'),
+    key: DXN.make('org.dxos.operation.routine.runPromptInNewChat'),
     name: 'Run Prompt In New Chat',
     icon: 'ph--chat-text--regular',
   },
@@ -95,7 +91,7 @@ export const RunPromptInNewChat = Operation.make({
 // would silently run an edge routine on the client.
 export const RunRoutine = Operation.make({
   meta: {
-    key: makeKey('runAutomation'),
+    key: DXN.make('org.dxos.operation.routine.runAutomation'),
     name: 'Run Routine',
     icon: 'ph--play--regular',
   },

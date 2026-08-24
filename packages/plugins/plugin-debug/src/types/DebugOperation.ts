@@ -11,9 +11,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/echo';
 import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
 
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`org.dxos.operation.debug.${name}`);
 
 /**
  * Fills the document with placeholder prose from the slash menu — the cheapest way to get a

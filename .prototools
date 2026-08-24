@@ -12,7 +12,8 @@
 # a CI job and the pin here wins once moon's toolchain cache exists, so a mismatch first bites on a cold
 # cache, long after the commit that introduced it.
 
-proto = "0.58.2"
+# moon 2.5's bun toolchain plugin refuses to load under a proto older than 0.60.0.
+proto = "0.60.2"
 node = "24.11.1"
 pnpm = "10.28.0"
 # 1.3.4 leaks `--smol` into `process.argv` of every `--compile`d binary, which makes the published
@@ -22,7 +23,7 @@ bun = "1.3.11"
 # Upgrading moon: https://moonrepo.dev/docs/install#upgrading
 # The root npm packages carry moon too, purely so Cloudflare Pages deploys work — they never run proto.
 # Developers are expected to use moon via proto.
-moon = "2.4.5"
+moon = "2.5.2"
 rust = "1.93.0"
 
 [settings]

@@ -107,7 +107,7 @@ surrounding tooling that the flow surfaced.
    → Asserts are now identity-shaped; `given` names the absence of the flow's own artifacts; the
    rule is Execution Rule 5 in `qa.mdl` and a step in the skill's §3.
 7. **The skill's `invokeOp` helper matched keys by `endsWith`** — which matches both
-   `org.dxos.function.markdown.create` and `org.dxos.plugin.markdown.operation.create`, the exact
+   `org.dxos.operation.markdown.create` and `org.dxos.operation.markdown.createDraft`, the exact
    ambiguity `key:` was introduced to remove. Now an exact match that fails unless there is exactly
    one hit (Execution Rule 6).
 8. **The skill never said to read the flow first.** It went from consent straight to starting a
@@ -129,7 +129,7 @@ surrounding tooling that the flow surfaced.
 11. **Authoring three more flows produced two more instances of the `key:` gap, and one worse case.**
     plugin-chess declares `startGame`, `submitMove`, `resignGame`, `getLegalMoves`, `validateMove`,
     `applyMove` — of which only `submitMove` has a runtime counterpart
-    (`org.dxos.function.chess.move`). `startGame` has NONE: a game is built with `Game.make` and
+    (`org.dxos.operation.chess.move`). `startGame` has NONE: a game is built with `Game.make` and
     placed with `addObject`, so an agent cannot start one through an operation at all. Chess QA-1
     is `actors: human` for that reason, recorded on the step rather than hidden.
     → Strengthens the case for routine part (a): every one of these was found by hand.

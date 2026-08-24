@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
 import type * as Node from '@dxos/app-graph/Node';
@@ -14,10 +15,13 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as Operation from '@dxos/compute/Operation';
 import { Collection, Obj } from '@dxos/echo';
+import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 
 import { meta } from '#meta';
 import { PresenterCapabilities, PresenterOperation } from '#types';
+
+import { isPresenting } from '../paths';
 
 /** Match nodes that can be presented (Collection or Document). */
 const whenPresentable = (node: Node.Node, get: Atom.AtomContext) =>
@@ -65,9 +69,14 @@ export default Capability.makeModule(
 
         return Effect.succeed([
           {
-            id: PresenterOperation.TogglePresentation.meta.key,
+            id: PresenterOperation.SetPresenting.meta.key,
+            // The menu item flips, so it reads the current state and states the one it wants.
             data: Effect.fnUntraced(function* () {
-              yield* Operation.invoke(PresenterOperation.TogglePresentation, { object });
+              const ephemeral = yield* Capabilities.getAtomValue(DeckCapabilities.EphemeralState);
+              yield* Operation.invoke(PresenterOperation.SetPresenting, {
+                object,
+                state: !isPresenting(ephemeral, object),
+              });
             }),
             properties: {
               label: ['toggle-presentation.label', { ns: meta.profile.key }],

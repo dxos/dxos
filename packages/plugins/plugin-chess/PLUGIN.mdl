@@ -243,7 +243,7 @@ op startGame
 
 ```mdl
 op playEngineMove
-  key: org.dxos.function.chess.play
+  key: org.dxos.operation.chess.play
   desc: Uses the chess engine to play the next move for a side.
   input:
     game: Ref<Game>
@@ -255,7 +255,7 @@ op playEngineMove
 
 ```mdl
 op submitMove
-  key: org.dxos.function.chess.move
+  key: org.dxos.operation.chess.move
   desc: Validates and applies a move, then persists the updated Game.
   input:
     game: Game
@@ -523,7 +523,7 @@ flow QA-1: Start a game and play the opening
   cleanup:
     - name: Delete the game
       do: Right-click "QA Game" in the navtree and choose Delete.
-      invoke: org.dxos.plugin.space.operation.removeObjects { objects: [$given.game], target: $given.collection }
+      invoke: org.dxos.operation.space.removeObjects { objects: [$given.game], target: $given.collection }
       expect: the row leaves the navtree and its plank closes
 ```
 
