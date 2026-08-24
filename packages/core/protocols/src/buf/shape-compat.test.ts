@@ -8,16 +8,15 @@ import { PublicKey } from '@dxos/keys';
 import { Timeframe } from '@dxos/timeframe';
 
 import { schema } from '../proto/index.ts';
+import { InvitationSchema } from './proto/gen/dxos/client/invitation_pb.ts';
 import { SpaceMetadataSchema } from './proto/gen/dxos/echo/metadata_pb.ts';
 import { HeadsSchema } from './proto/gen/dxos/echo/query_pb.ts';
 import { ClaimSchema } from './proto/gen/dxos/halo/credentials_pb.ts';
 import { KeyRecordSchema } from './proto/gen/dxos/halo/keyring_pb.ts';
 import { UnsupportedSubstitutionError, decodeCompat, encodeCompat } from './shape-compat.ts';
 
-// Conformance harness for the buf shape-compat layer: for each message, the protobuf.js codec and
-// the compat layer must agree on the wire bytes AND on the decoded object shape, in both
-// directions. Byte equality alone would miss a substitution that decodes to the wrong JS type,
-// and shape equality alone would miss a field-numbering divergence between the two generators.
+// Byte equality alone would miss a substitution decoding to the wrong JS type, and shape equality
+// alone would miss a field-numbering divergence between the two generators, so both are asserted.
 
 describe('buf shape-compat', () => {
   test('KeyRecord round-trips identically (no substituted fields)', ({ expect }) => {
@@ -63,8 +62,6 @@ describe('buf shape-compat', () => {
     const bufBytes = encodeCompat(SpaceMetadataSchema, value);
     expect(new Uint8Array(bufBytes)).toEqual(new Uint8Array(legacyBytes));
 
-    // The point of the layer: decoding buf bytes yields PublicKey/Timeframe instances, not the
-    // plain messages the generated buf types would otherwise hand back.
     const decoded = decodeCompat(SpaceMetadataSchema, legacyBytes);
     expect(PublicKey.isPublicKey(decoded.key)).toBe(true);
     expect(decoded.key.equals(spaceKey)).toBe(true);
@@ -72,15 +69,20 @@ describe('buf shape-compat', () => {
     expect(decoded.dataTimeframe).toBeInstanceOf(Timeframe);
     expect(decoded.dataTimeframe.get(feedKey)).toBe(7);
 
-    // And the legacy codec accepts what the layer produced.
     const legacyDecoded = codec.decode(bufBytes);
     expect(legacyDecoded.key.equals(spaceKey)).toBe(true);
     expect(legacyDecoded.dataTimeframe?.get(feedKey)).toBe(7);
   });
 
+  test('a pre-epoch Timestamp keeps nanos in proto range', ({ expect }) => {
+    // protobuf.js emits negative nanos before the epoch and decodes a second early; the layer
+    // canonicalises instead, so this case deliberately diverges from the legacy codec.
+    const decoded = decodeCompat(InvitationSchema, encodeCompat(InvitationSchema, { created: new Date(-1) }));
+    expect(decoded.created.getTime()).toBe(-1);
+  });
+
   test('a message carrying google.protobuf.Any is rejected rather than mis-encoded', ({ expect }) => {
-    // `Any` needs a buf-side type registry and the `preserve_any` field option; until that lands,
-    // failing loudly is the only safe behaviour for persisted or signed data.
+    // Resolving `Any` needs a buf-side type registry and the `preserve_any` field option.
     expect(() => encodeCompat(ClaimSchema, { id: PublicKey.random(), assertion: {} })).toThrow(
       UnsupportedSubstitutionError,
     );

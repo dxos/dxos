@@ -145,17 +145,34 @@ protobuf.js-shaped. Re-pointing devtools' type imports at `@dxos/protocols/buf/*
 holds would type buf shapes over protobuf.js values, and the only way to compile it is the casts
 the repo forbids. #5 is therefore ordered strictly after #7, not merely helped by it.
 
+### Where buf and protobuf.js bytes actually differ
+
+Measured while building the compat layer, so the ranking above understates #9c/#9d slightly:
+
+1. **Unset non-optional message fields.** protobuf.js materialises them as empty submessages; buf
+   omits them. `dxos.client.services.Invitation` with no `swarm_key` gains a `42 02 0a 00` run
+   under protobuf.js and nothing under buf. Both decode to the same value, so this is wire- but
+   not byte-compatible — byte equality holds only once every non-optional message field is set.
+   It does not affect `#9a`/`#9b`, whose messages have no message-typed fields.
+2. **Pre-epoch `Timestamp`.** protobuf.js computes `nanos` as `ms % 1000 * 1e6`, which is negative
+   before 1970 and decodes a second early (`new Date(-1)` round-trips to `…:58.999Z`). The compat
+   layer canonicalises instead, so it diverges from the legacy codec here — deliberately, since
+   reproducing the bug would carry a value corruption into new code.
+3. **`google.protobuf.Any`** is unsupported and throws.
+
 ### Scheduling status
 
-Landed: #1 (effect-proto deleted), #2/#3 (shape-compat layer plus its conformance harness), #9a
-(keyring `KeyRecord`), #9b (`echo.query.Heads`).
+Landed: `#1` (effect-proto deleted), `#3` (shape-compat layer plus a conformance harness), `#9a`
+(keyring `KeyRecord`), `#9b` (`echo.query.Heads`). `#2` is still open: the harness that `#3`
+needed was built against real dxos messages, so nothing under `tools/protobuf-test` or the
+`example/testing` protos has moved yet.
 
-Blocked, with the blocker established above rather than assumed: #4 needs a decision on
-`@dxos/config`'s public surface; #5 needs #7 first. #9c and #9d remain, in that order, and #9d
-additionally needs `Any` support in the compat layer, since credentials carry
+Blocked, with the blocker established above rather than assumed: `#4` needs a decision on
+`@dxos/config`'s public surface; `#5` needs `#7` first. `#9c` and `#9d` remain, in that order, and
+`#9d` additionally needs `Any` support in the compat layer, since credentials carry
 `google.protobuf.Any`.
 
-Still unscheduled: #6, #7, #8.
+Still unscheduled: `#2`, `#6`, `#7`, `#8`.
 
 ### Verified: devtools is already on effect-rpc
 
@@ -172,5 +189,7 @@ slices behind #3 — a rolling sweep rather than a milestone.
 
 Sequencing notes: `dxos/edge` (`hub-protocol`, `db-service`) follows whatever `@dxos/protocols`
 publishes and should not be scheduled separately; deleting `protobuf-compiler`/`codec-protobuf`
-and dropping `protobufjs` from the catalog is unblocked only once `#1` (phase 5), `#6`, `#8` and
-all of `#9a`–`#9d` have landed — `#1` is the last consumer of protobuf.js outside those packages.
+and dropping `protobufjs` from the catalog is unblocked only once EVERY consumer has moved:
+`#1` (done), `#4`, `#5`, `#6`, `#7`, `#8` and all of `#9a`–`#9d`. `#4`, `#5` and `#7` are easy to
+overlook here because they read protobuf.js through generated types and `protoMessage()` rather
+than through `codec-protobuf` directly, but they are consumers all the same.

@@ -15,8 +15,7 @@ import { translations } from '#translations';
 import { Form } from '../Form';
 import { ObjectTree } from './ObjectTree';
 
-// Mirrors the shape of `dxos.config.Config` so the story exercises what the viewer has to handle:
-// nested structs, arrays of structs, optional fields, and enums rendered as their string names.
+// Mirrors `dxos.config.Config` so the story exercises nested structs, arrays and enums.
 const ConfigSchema = Schema.Struct({
   version: Schema.Number,
   runtime: Schema.Struct({
@@ -58,7 +57,6 @@ const ConfigSchema = Schema.Struct({
 
 type ConfigType = Schema.Schema.Type<typeof ConfigSchema>;
 
-// A representative Config value that exercises nested messages, arrays, and enums.
 const value: ConfigType = {
   version: 1,
   runtime: {
@@ -136,9 +134,7 @@ export const JSON = () => (
   </Syntax.Root>
 );
 
-// Renders the same `ConfigSchema` + `value` through the interactive `Form` component, for
-// side-by-side comparison with the read-only ObjectTree above. `db` is intentionally omitted --
-// the schema is not an ECHO type, so there's no space/database in play.
+// `db` is omitted because `ConfigSchema` is not an ECHO type.
 export const WithForm = () => (
   <Form.Root
     schema={ConfigSchema}

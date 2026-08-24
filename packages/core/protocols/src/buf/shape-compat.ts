@@ -2,15 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-// Encodes and decodes buf (`@bufbuild/protobuf`) messages using the same JS object shapes the
-// protobuf.js codec produces, so call sites can move to buf one at a time without every
-// substituted field changing type under them.
+// Reproduces the protobuf.js codec's JS object shapes on top of buf, so call sites can migrate
+// one at a time without every substituted field changing type. Mirrors `src/proto/substitutions.ts`
+// plus `@dxos/codec-protobuf`'s well-known-type substitutions.
 //
-// The substitutions this mirrors live in `src/proto/substitutions.ts` (PublicKey, PrivateKey,
-// TimeframeVector) plus `@dxos/codec-protobuf`'s well-known-type substitutions (Struct,
-// Timestamp). `google.protobuf.Any` is NOT handled here: the protobuf.js version resolves the
-// payload through the schema registry via an `@type` discriminator and honours the `preserve_any`
-// field option, which needs a buf-side type registry — see `docs/audits/protobufjs-to-buf.md`.
+// Two documented divergences from protobuf.js, both in `docs/audits/protobufjs-to-buf.md`:
+// `google.protobuf.Any` throws, because resolving it needs a buf-side type registry and the
+// `preserve_any` option; and an unset non-optional message field is omitted rather than
+// materialised as an empty submessage, so byte equality holds only once those fields are set.
 
 import {
   type DescField,
@@ -51,7 +50,7 @@ const publicKeySubstitution: Substitution = {
 const substitutions: Record<string, Substitution> = {
   'dxos.keys.PublicKey': publicKeySubstitution,
 
-  // Matches the legacy substitution: encoded from a Buffer, decoded back to one.
+  // The legacy substitution decodes to a Buffer.
   'dxos.keys.PrivateKey': {
     toProto: (value: Buffer) => ({ data: new Uint8Array(value) }),
     fromProto: (value: any) => PublicKey.from(new Uint8Array(value.data)).asBuffer(),
@@ -74,23 +73,23 @@ const substitutions: Record<string, Substitution> = {
     fromProto: (value: any) => decodeStruct(value),
   },
 
-  // protobuf.js renders a Timestamp as a Date; buf's generated type keeps seconds as a bigint,
-  // so the seconds/nanos split is reproduced rather than reused.
+  // Nanos are derived from the floored-seconds boundary so they stay in proto's required
+  // [0, 1e9) range before the epoch; protobuf.js emits negative nanos there and decodes the
+  // value a second early, which this deliberately does not reproduce.
   'google.protobuf.Timestamp': {
     toProto: (value: Date) => {
       const unixMilliseconds = value.getTime();
+      const seconds = Math.floor(unixMilliseconds / 1000);
       return {
-        seconds: BigInt(Math.floor(unixMilliseconds / 1000)),
-        nanos: (unixMilliseconds % 1000) * 1e6,
+        seconds: BigInt(seconds),
+        nanos: (unixMilliseconds - seconds * 1000) * 1e6,
       };
     },
     fromProto: (value: any) => new Date(Number(value.seconds ?? 0n) * 1000 + (value.nanos ?? 0) / 1e6),
   },
 };
 
-//
-// google.protobuf.Struct
-//
+// google.protobuf.Struct.
 
 const encodeStructValue = (structValue: any, visited: WeakSet<any>): any => {
   switch (typeof structValue) {
@@ -151,9 +150,7 @@ const decodeStructValue = (structValue: any): any => {
 const decodeStruct = (struct: any): Record<string, any> =>
   Object.fromEntries(Object.entries(struct?.fields ?? {}).map(([key, value]) => [key, decodeStructValue(value)]));
 
-//
-// Traversal
-//
+// Field traversal.
 
 const ANY_TYPE_NAME = 'google.protobuf.Any';
 
@@ -222,9 +219,8 @@ const substituteField = (field: DescField, value: any, substitution: Substitutio
   }
 };
 
-// buf stamps every message with `$typeName`, and `fromBinary` hands back `bytes` fields as views
-// into the input buffer — so a Buffer input yields Buffer fields. Neither appears in protobuf.js
-// output, and both would show up in a `toEqual` or a `json-stable-stringify` of a decoded value.
+// buf returns `bytes` fields as views into the input buffer, so a Buffer input yields Buffer
+// fields that protobuf.js output never contains.
 const normalizeBytes = (value: any): any =>
   value instanceof Uint8Array && value.constructor !== Uint8Array ? new Uint8Array(value) : value;
 
