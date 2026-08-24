@@ -12,6 +12,7 @@ import {
   type DatabaseDirectory,
   SPACE_ROOT_TYPE,
   SpaceDocVersion,
+  type SpaceIdDerivation,
   type SpaceRoot,
   createIdFromRootDocumentId,
   createIdFromSpaceKey,
@@ -134,6 +135,11 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
     expect(isSpaceRoot(root)).to.be.true;
     expect(await verifySpaceRoot(root, documentId)).to.be.true;
     expect(await verifySpaceRoot(root, '4Y8mbUZP4bLTB1LWr8N4TRQY6ZWU')).to.be.false;
+
+    // An unrecognized derivation must not slip through as the unverifiable spaceKey case.
+    const malformed = { ...root, idDerivation: 'somethingElse' as SpaceIdDerivation };
+    expect(isSpaceRoot(malformed)).to.be.false;
+    expect(await verifySpaceRoot(malformed, documentId)).to.be.false;
   });
 
   test('a migrated space root is not checkable against its document id', async () => {
@@ -208,6 +214,10 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
         credentialsDocUrl,
         idDerivation: 'rootDoc',
       });
+
+      // Removing the space must not leave references a reused id could inherit.
+      await manager.removeSpace(spaceId);
+      expect(manager.getSpaceRootRefs(spaceId)).to.be.undefined;
 
       await manager.close();
       await dispose();

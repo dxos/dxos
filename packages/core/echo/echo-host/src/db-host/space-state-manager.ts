@@ -16,7 +16,7 @@ import isEqual from 'fast-deep-equal';
 
 import { Event, UpdateScheduler } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
-import { type DatabaseDirectory, type SpaceIdDerivation } from '@dxos/echo-protocol';
+import { type DatabaseDirectory, type SpaceIdDerivation, isSpaceIdDerivation } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
@@ -114,16 +114,13 @@ export class SpaceStateManager extends Resource {
     return this._spaceRootRefs.get(spaceId);
   }
 
-  /**
-   * Records the space root document and the references it carries. The root is immutable, so this is
-   * written once per space — at creation, or when a legacy space migrates and gains one.
-   */
+  /** The root is immutable, so this is written once per space — at creation, or when a legacy space gains one. */
   async setSpaceRootRefs(spaceId: SpaceId, refs: SpaceRootRefs): Promise<void> {
     // The refs are stored as columns on the space's row, so without one the UPDATE below matches
     // nothing and the refs would survive only in memory — lost on the next open.
     invariant(this._rootBySpace.has(spaceId), 'Space has no directory assigned.');
-    this._spaceRootRefs.set(spaceId, refs);
     await this._saveSpaceRootRefs(spaceId, refs);
+    this._spaceRootRefs.set(spaceId, refs);
   }
 
   /**
@@ -150,6 +147,7 @@ export class SpaceStateManager extends Resource {
     await this._deleteSpace(spaceId);
     this._rootBySpace.delete(spaceId);
     this._lastSpaceDocumentList.delete(spaceId);
+    this._spaceRootRefs.delete(spaceId);
 
     const rootCtx = this._perRootContext.get(documentId);
     if (rootCtx) {
@@ -274,7 +272,7 @@ export class SpaceStateManager extends Resource {
  * an unrecognized value can never be mistaken for a root that certifies the space id.
  */
 const parseIdDerivation = (spaceId: SpaceId, value: string | null): SpaceIdDerivation => {
-  if (value === 'rootDoc' || value === 'spaceKey') {
+  if (isSpaceIdDerivation(value)) {
     return value;
   }
 

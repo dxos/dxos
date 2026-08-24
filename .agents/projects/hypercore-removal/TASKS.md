@@ -31,7 +31,7 @@ matrix row below keys off, and the rollback lever if the new path misbehaves in 
 
 ### PR A — `dxos/dxos`
 
-1. Space root doc + `spaceIdFromRootDocumentId()` + `idDerivation` (Phase 1).
+1. Space root doc + `createIdFromRootDocumentId()` + `idDerivation` (Phase 1).
 2. `echo_spaces` migration: root/directory/credentials columns (Phase 1).
 3. `CredentialSource` extraction behind `ControlPipeline`, doc-backed implementation, ordering
    contract (Phase 2).
@@ -91,16 +91,22 @@ migration; crash mid-migration and resume.
 
 ## Phase 1: space root document
 
-- [ ] Define the space-root schema in `echo-protocol`, typed `dxn:org.dxos.document.spaceRoot:0.1.0`
+- [x] Define the space-root schema in `echo-protocol`, typed `dxn:org.dxos.document.spaceRoot:0.1.0`
       (versioned DXN per `keys/src/DXN.ts`, key spelled `type` not `@type` — see DESIGN).
-- [ ] `spaceIdFromRootDocumentId()` in `echo-protocol/src/space-id.ts` beside
+- [ ] `createIdFromRootDocumentId()` in `echo-protocol/src/space-id.ts` beside
       `createIdFromSpaceKey`; version-tag which scheme minted an id.
-- [ ] Extend `echo_spaces` (SQL migration under `db-host/../migrations/space-state`) with
-      `directory_doc_url` + `credentials_doc_url`; keep `root_doc_url` meaning the ROOT now,
-      not the directory.
-- [ ] `SpaceStateManager` loads/serves the root, directory and credentials refs; the
-      directory reference becomes indirect so rotation is a root write.
-- [ ] Root-doc creation path + self-certification check (recompute the id from the URL).
+- [x] Extend `echo_spaces` (SQL migration `0002_space_root.sql`) with `space_root_doc_url`,
+      `credentials_doc_url` and `id_derivation`. `root_doc_url` KEEPS meaning the directory —
+      every existing reader treats it that way, so the immutable root got its own column
+      instead. That is also why `_saveSpace` upserts: `INSERT OR REPLACE` deleted the row and
+      would have wiped these columns on each directory rotation.
+- [x] `SpaceStateManager` loads/serves the root, directory and credentials refs
+      (`getSpaceRootRefs`/`setSpaceRootRefs`).
+- [ ] Make the directory reference indirect so rotation is a root write (today the root doc is
+      recorded beside the directory rather than owning it).
+- [x] Self-certification check — `verifySpaceRoot` recomputes the id for `rootDoc` roots and
+      rejects an unknown derivation rather than treating it as the unverifiable `spaceKey` case.
+- [ ] Root-doc creation path (nothing writes a space root yet).
 
 ## Phase 2: credentials document
 

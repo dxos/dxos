@@ -44,9 +44,13 @@ Space root layout:
   "spaceId": "<space id>",
   "idDerivation": "rootDoc",
   "directory": "automerge:<url>",
-  "credentials": "dxn:<automerge url>"
+  "credentials": "automerge:<documentId>"
 }
 ```
+
+Both references are plain automerge URLs. The original sketch wrote `credentials` as
+`dxn:<automerge url>`; a DXN wrapping an automerge URL is a second encoding of the same pointer
+and nothing dereferences it, so both fields use the `automerge:` form the directory already had.
 
 `idDerivation` is `"rootDoc"` for new spaces and `"spaceKey"` for migrated ones. It is load-bearing, not decoration: a space migrated from the legacy world has a
 root doc whose id does NOT derive its space id, so a reader cannot tell the two cases apart

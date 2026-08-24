@@ -29,13 +29,7 @@ export const createIdFromSpaceKey = async (spaceKey: PublicKey): Promise<SpaceId
   return spaceId;
 };
 
-/**
- * Derives a space id from the id of its space root document.
- *
- * Mirrors {@link createIdFromSpaceKey} so both derivations produce the same shape: SHA-256 over the
- * document id, truncated to `SpaceId.byteLength`, multibase RFC4648 base-32 encoded. The root
- * document is immutable, so the id it mints is stable for the life of the space.
- */
+/** Derives a space id from its space root document id, in the same shape as {@link createIdFromSpaceKey}. */
 export const createIdFromRootDocumentId = async (documentId: string): Promise<SpaceId> => {
   const cachedValue = SPACE_IDS_FROM_DOCUMENT_CACHE.get(documentId);
   if (cachedValue !== undefined) {
