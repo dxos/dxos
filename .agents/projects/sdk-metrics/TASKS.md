@@ -253,12 +253,19 @@ collection-sync histograms). Three gaps that only the live data revealed:
       live `browser` series showing ~23s average was. The sampler now `suspend()`s while
       `document.visibilityState === 'hidden'`, discarding the reference timestamp so the first
       probe after the tab wakes cannot report a gap. 2 tests.
-- [ ] **`dxos.rpc.*` will never appear until RPC timing is switched on.** The middleware is
-      opt-in (`RpcTiming.isEnabled(options?.timing)` via `client-protocol/src/Rpc.ts`) and
-      nothing in the app passes `timing` — only the worker-framework tests and storybook do. So
-      `recordSample` never runs in production and neither histogram is ever recorded. Needs a
-      decision: enable it for the client-services channel (it costs a `Date.now()` pair and a
-      header per RPC), or drop those two metrics.
+- [x] **Enabled RPC timing on the client-services channel.** The middleware is opt-in
+      (`RpcTiming.isEnabled(options?.timing)`) and nothing in the app passed `timing`, so
+      `recordSample` never ran and neither histogram was ever recorded.
+  - Set on **both** ends in `client-protocol/src/service-rpc.ts` — the server in `ClientRpcServer`
+    and the client in `makeClientServicesRpc`. They must agree: the middleware is
+    `requiredForClient`, so a server applying it against a client that does not would reject
+    every request.
+  - The in-process path (`makeInProcessClientServicesRpc`) is deliberately left alone: no wire
+    hop means no queue wait to measure, and it never wraps the group, so there is no mismatch.
+  - Cost per RPC is a `Date.now()` pair plus one header. The existing log line stays gated at
+    `minLogMs` (100ms), so enabling this adds metrics without adding log volume.
+  - Verified no handshake regression: client-services 165 passed, client 30 passed,
+    client-protocol 4 passed, worker-framework 17 passed.
 
 ## Phase 5: Dashboard and validation
 
