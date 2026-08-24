@@ -104,14 +104,15 @@ export const migrations = [_routinesMigration];
  * to add either to a project that lacks one, so a project without them has nowhere to put its tasks
  * and nothing to draft in. Each parent edge is set alongside its ref so both cascade when the project
  * is deleted.
+ *
+ * Takes no `routines`: only {@link addRoutine} sets the parent edge that makes one owned, so a ref
+ * accepted here would advertise ownership the object does not have.
  */
 export const make = (
   props: Omit<Partial<Obj.MakeProps<typeof Project>>, 'artifacts' | 'routines'> & {
     artifacts?: ReadonlyArray<Ref.Ref<Obj.Unknown>>;
   } = {},
 ): Project => {
-  // `routines` is not a constructor input: a routine is owned, and only `addRoutine` sets the parent
-  // edge that makes it so. Taking refs here would advertise ownership the object does not have.
   const project = Obj.make(Project, { ...props, artifacts: props.artifacts ?? [], routines: [] });
   if (!props.taskSet) {
     const taskSet = TaskSet.make();
