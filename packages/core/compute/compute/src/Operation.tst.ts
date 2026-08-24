@@ -2,8 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// Deliberately-invalid usage lives here, so the diagnostic that reports it is the
-// assertion succeeding.
+// This file needs invalid usage, so the diagnostic reporting it is the assertion.
 /** @effect-diagnostics missingEffectContext:skip-file unnecessaryEffectGen:skip-file */
 
 import * as Context from 'effect/Context';
