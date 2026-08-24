@@ -3,7 +3,7 @@
 //
 
 import { defaultResource, resourceFromAttributes } from '@opentelemetry/resources';
-import { createServer, type Server } from 'node:http';
+import { type Server, createServer } from 'node:http';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
 import { OtelMetrics } from '../../src/extensions/otel/metrics';

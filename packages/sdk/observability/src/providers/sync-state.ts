@@ -2,17 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type CleanupFn } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { type Context } from '@dxos/context';
 import { type Database } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-/**
- * Sync backlog folded across every space, as read at collection time.
- * Feed blocks are `string` on the wire (they exceed the safe integer range in principle), so they
- * are summed as `number` here — a backlog large enough to lose precision is already pathological.
- */
+/** Sync backlog folded across every space. Feed blocks arrive as strings and are summed numerically. */
 export type SyncSummary = {
   localDocumentCount: number;
   remoteDocumentCount: number;
@@ -37,57 +34,97 @@ const EMPTY: SyncSummary = {
 };
 
 /**
- * Tracks the sync backlog of every space the client knows about.
- *
- * Reads `db.subscribeToSyncState`, which already selects the EDGE peer and owns a no-change poll
- * backoff, so this adds no timer of its own — a second ticker here would re-create the idle churn
- * that backoff exists to remove.
+ * Holds the latest sync state per space.
+ * Separate from the client subscription so the add/remove/fold behaviour is testable on its own.
  */
-export const subscribeSyncSummary = (client: Client, ctx: Context): { summary: () => SyncSummary } => {
-  const states = new Map<string, Database.SyncState>();
-  const cleanups = new Map<string, () => void>();
+export class SyncStateTracker {
+  readonly #states = new Map<string, Database.SyncState>();
+  readonly #cleanups = new Map<string, CleanupFn>();
 
-  const subscribe = (space: Space) => {
-    if (cleanups.has(space.id)) {
+  get trackedIds(): string[] {
+    return [...this.#cleanups.keys()];
+  }
+
+  isTracked(spaceId: string): boolean {
+    return this.#cleanups.has(spaceId);
+  }
+
+  /** Registers a space, ignoring one already tracked so a repeated update does not double-subscribe. */
+  add(spaceId: string, subscribe: (onState: (state: Database.SyncState) => void) => CleanupFn): void {
+    if (this.#cleanups.has(spaceId)) {
       return;
     }
 
-    try {
-      cleanups.set(
-        space.id,
-        space.db.subscribeToSyncState((state) => {
-          states.set(space.id, state);
-        }),
-      );
-    } catch (err) {
-      // A space that is not ready yet has no database to subscribe to; the spaces subscription
-      // below re-runs on every update, so it will be picked up once it opens.
-      log('sync state subscription deferred', { space: space.id, err });
+    this.#cleanups.set(
+      spaceId,
+      subscribe((state) => {
+        this.#states.set(spaceId, state);
+      }),
+    );
+  }
+
+  remove(spaceId: string): void {
+    this.#cleanups.get(spaceId)?.();
+    this.#cleanups.delete(spaceId);
+    this.#states.delete(spaceId);
+  }
+
+  /** Drops every space absent from `spaceIds`, whose last backlog would otherwise persist in the summary. */
+  retainOnly(spaceIds: Iterable<string>): void {
+    const present = new Set(spaceIds);
+    for (const spaceId of this.trackedIds) {
+      if (!present.has(spaceId)) {
+        this.remove(spaceId);
+      }
+    }
+  }
+
+  clear(): void {
+    for (const spaceId of this.trackedIds) {
+      this.remove(spaceId);
+    }
+  }
+
+  summary(): SyncSummary {
+    return foldSyncStates(this.#states.values());
+  }
+}
+
+/**
+ * Tracks the sync backlog of every space the client knows about.
+ *
+ * Reads `db.subscribeToSyncState`, which already selects the EDGE peer and owns a no-change poll
+ * backoff, so this adds no timer of its own.
+ */
+export const subscribeSyncSummary = (client: Client, ctx: Context): { summary: () => SyncSummary } => {
+  const tracker = new SyncStateTracker();
+
+  const reconcile = (spaces: Space[]) => {
+    tracker.retainOnly(spaces.map((space) => space.id));
+    for (const space of spaces) {
+      if (tracker.isTracked(space.id)) {
+        continue;
+      }
+
+      try {
+        tracker.add(space.id, (onState) => space.db.subscribeToSyncState(onState));
+      } catch (err) {
+        // A space that is not ready has no database yet; the subscription below re-runs on every
+        // update, so it is picked up once it opens.
+        log('sync state subscription deferred', { space: space.id, err });
+      }
     }
   };
 
-  for (const space of client.spaces.get()) {
-    subscribe(space);
-  }
-
-  const subscription = client.spaces.subscribe({
-    next: (spaces) => {
-      for (const space of spaces) {
-        subscribe(space);
-      }
-    },
-  });
+  reconcile(client.spaces.get());
+  const subscription = client.spaces.subscribe({ next: reconcile });
 
   ctx.onDispose(() => {
     subscription.unsubscribe();
-    for (const cleanup of cleanups.values()) {
-      cleanup();
-    }
-    cleanups.clear();
-    states.clear();
+    tracker.clear();
   });
 
-  return { summary: () => foldSyncStates(states.values()) };
+  return { summary: () => tracker.summary() };
 };
 
 /** Folds per-space sync state into one device-wide summary. */

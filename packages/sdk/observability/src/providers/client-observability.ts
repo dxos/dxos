@@ -21,12 +21,7 @@ const SPACE_METRICS_MIN_INTERVAL = 1000 * 60 * 10; // 10 minutes
 const NETWORK_METRICS_MIN_INTERVAL = 1000 * 60 * 10; // 10 minutes
 const RUNTIME_METRICS_MIN_INTERVAL = 1000 * 60 * 10; // 10 minutes
 
-/**
- * Cadence for the async memory reads behind the observed gauges.
- * Kept under the 60s export interval so a collection never reports a stale sample, and off the
- * collection path itself because both reads are async — the platform one is an RPC and
- * `measureUserAgentSpecificMemory` waits for a garbage collection.
- */
+/** Under the 60s export interval, so an observed gauge never reports a stale sample. */
 const MEMORY_SAMPLE_INTERVAL = 1000 * 30;
 
 const BYTES = { unit: 'By' } as const;
@@ -193,8 +188,7 @@ export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>):
       try {
         crossRealmMemory = await measureCrossRealmMemory();
       } catch (error) {
-        // Throws when the document is not cross-origin isolated, or when a measurement is already
-        // in flight. Neither is worth retrying inside this tick.
+        // Not cross-origin isolated, or a measurement is already in flight; neither is retryable here.
         log('cross-realm memory unavailable', { error });
       }
     };
@@ -211,7 +205,7 @@ export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>):
 export const spacesMetricsProvider = (client: Client): DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
-    // TODO(nf): update subscription on new spaces
+    // Pipeline subscriptions only; the gauges below read the live space list at collection time.
     const spaces = client.spaces.get();
     const subscriptions = new Map<string, { unsubscribe: () => void }>();
     ctx.onDispose(() => subscriptions.forEach((subscription) => subscription.unsubscribe()));
@@ -234,7 +228,7 @@ export const spacesMetricsProvider = (client: Client): DataProvider =>
       log('send space metrics');
       // Reported as device-wide totals rather than per space: the previous `key` attribute cost one
       // series per space per device, unbounded in the number of spaces a user creates.
-      const mapped = mapSpaces(spaces, { truncateKeys: true });
+      const mapped = mapSpaces(client.spaces.get(), { truncateKeys: true });
       const total = (pick: (data: (typeof mapped)[number]) => number | undefined) =>
         mapped.reduce((sum, data) => sum + (pick(data) ?? 0), 0);
 
@@ -285,11 +279,7 @@ export const spacesMetricsProvider = (client: Client): DataProvider =>
     };
   });
 
-/**
- * Publishes the document backlog folded across every space.
- * `localDocumentCount` is the "documents loaded" number; `unsyncedDocumentCount` is the backlog the
- * sync-stuck detection is built on.
- */
+/** Publishes the document backlog folded across every space. */
 export const documentsMetricsProvider = (client: Client): DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();

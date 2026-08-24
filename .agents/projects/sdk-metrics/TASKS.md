@@ -86,14 +86,23 @@ The straightforward gauges, all read at collection time via `observe()`. Lands i
   - Registry entry owned by jdw; it set the 300-400MB resting target and the
     `scripts/memory/soak.mjs` harness. This phase makes that target verifiable
     fleet-wide instead of on one machine.
+  - Contract to agree before any dashboard or alert ships, so both projects read the
+    same series: `dxos.client.runtime.memory.bytes` in `By`, with `scope` bounded to
+    `window | shared-worker | dedicated-worker | other`, and the resting-target panel
+    reading `dxos.client.runtime.heapUsed` (not the cross-realm metric, which is
+    absent wherever the browser is not cross-origin isolated).
 
-### Follow-ups surfaced
+### Staleness fixed after review
 
-- `spacesMetricsProvider` still captures `client.spaces.get()` once at provider start
-  (pre-existing `TODO(nf): update subscription on new spaces`), so the aggregated
-  per-space gauges miss spaces created later in the session. The new
-  `spaces.count`/`spaces.ready.count` gauges re-read on every collection and are
-  unaffected. Not fixed here — it is a change to existing behaviour, not this phase.
+- `spacesMetricsProvider` captured `client.spaces.get()` once at provider start, so the
+  aggregated per-space gauges missed spaces created later. Deferring this was the wrong
+  call: while each space had its own `key`-tagged series, a missing space merely meant a
+  missing series, but summed into one number it silently **understates** a total that
+  reads as authoritative. Now reads the live list at emit time.
+- `SyncStateTracker` never dropped a space removed from the client list, so its last
+  backlog persisted in the summary and its subscription leaked until provider disposal.
+  Now reconciles on every update. Split out of `subscribeSyncSummary` as a client-free
+  class precisely so the add/remove/fold behaviour is testable (6 tests).
 
 ## Phase 3: EDGE websocket
 

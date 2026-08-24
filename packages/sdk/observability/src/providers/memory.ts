@@ -29,14 +29,13 @@ export const readHeap = (): { used?: number; total?: number; limit?: number } =>
   return { used: memory.usedJSHeapSize, total: memory.totalJSHeapSize, limit: memory.jsHeapSizeLimit };
 };
 
+/** True when `measureUserAgentSpecificMemory` is available; it needs cross-origin isolation. */
 export const supportsCrossRealmMemory = (): boolean =>
   typeof (globalThis.performance as PerformanceWithMemory | undefined)?.measureUserAgentSpecificMemory === 'function';
 
 /**
- * Cross-realm memory usage, which is the only way to see the shared and dedicated workers —
- * `performance.memory` reports the calling realm alone, and Composer's heaviest consumers are workers.
- * Requires cross-origin isolation, and resolves only after a garbage collection, so callers must
- * sample it on their own cadence rather than inside a metric collection callback.
+ * Cross-realm usage — the only view of the shared and dedicated workers, since `performance.memory`
+ * reports the calling realm alone. Resolves only after a GC, so sample it off the collection path.
  */
 export const measureCrossRealmMemory = async (): Promise<CrossRealmMemory | undefined> => {
   const performanceWithMemory = globalThis.performance as PerformanceWithMemory | undefined;
@@ -48,11 +47,7 @@ export const measureCrossRealmMemory = async (): Promise<CrossRealmMemory | unde
   return foldBreakdown((await measure.call(performanceWithMemory)).breakdown);
 };
 
-/**
- * Folds a `measureUserAgentSpecificMemory` breakdown into per-realm totals.
- * An entry with no attribution is unattributed shared cost and is bucketed as `other` rather than
- * dropped, so the scopes still sum to the reported total.
- */
+/** Folds a breakdown into per-realm totals; unattributed cost buckets to `other` so scopes still sum to the total. */
 export const foldBreakdown = (breakdown: MemoryBreakdownEntry[]): CrossRealmMemory => {
   const totals: CrossRealmMemory = {};
   for (const entry of breakdown) {
