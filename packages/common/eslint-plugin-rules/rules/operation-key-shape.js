@@ -213,7 +213,6 @@ const isFixture = (filePath) =>
   /\.test\.tsx?$/.test(filePath) ||
   /\.tst\.tsx?$/.test(filePath) ||
   /\.stories\.tsx?$/.test(filePath) ||
-  filePath.includes('/typetest/') ||
   filePath.includes('/testing/') ||
   filePath.includes('/playground/') ||
   filePath.includes('/templates/') ||

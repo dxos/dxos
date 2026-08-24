@@ -7,5 +7,5 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["packages/**/typetest/**/*.tst.ts"]
+  "include": ["packages/**/*.tst.ts"]
 }

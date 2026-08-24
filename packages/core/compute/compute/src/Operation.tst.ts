@@ -11,8 +11,9 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, expect, it } from 'tstyche';
 
-import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
+
+import * as Operation from './Operation';
 
 class DeclaredService extends Context.Service<DeclaredService, { declared: () => void }>()('@test/DeclaredService') {}
 class UndeclaredService extends Context.Service<UndeclaredService, { undeclared: () => void }>()(
