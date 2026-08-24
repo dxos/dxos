@@ -140,8 +140,7 @@ export type ManagerOptions = {
   activationTimeout?: Duration.Input;
   /**
    * Completes when the host is idle, gating the Idle wave. Defaults to the real paint/idle wait,
-   * which resolves immediately off-browser — a test modelling a browser cold boot (where the wave
-   * lands seconds after startup) passes `Effect.never` to hold it open.
+   * which resolves immediately off-browser; `Effect.never` models a browser that has not idled.
    */
   whenIdle?: Effect.Effect<void>;
 };

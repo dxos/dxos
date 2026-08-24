@@ -38,8 +38,7 @@ export type TestAppOptions = {
   registerFrameworkCapabilities?: boolean;
   /**
    * Completes when the host is idle, gating the Idle wave. Off-browser the real wait resolves
-   * immediately, so the wave lands before the test body runs; pass `Effect.never` to model a
-   * browser cold boot, where idle-gated modules are still inactive while the app is starting up.
+   * immediately; pass `Effect.never` to keep idle-gated modules inactive, as on a browser cold boot.
    */
   whenIdle?: Effect.Effect<void>;
 };
