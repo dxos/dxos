@@ -99,6 +99,22 @@ export const QueryResponse = Schema.Struct({
 export interface QueryResponse extends Schema.Schema.Type<typeof QueryResponse> {}
 
 /**
+ * Looks up the objects holding a reference to `targetDXN`, via the reverse-reference index.
+ * The DXN names either an entity (`echo:`) or a named entity (`dxn:`).
+ */
+export const ReverseRefRequest = Schema.Struct({
+  spaceId: Schema.String,
+  targetDXN: Schema.String,
+});
+export interface ReverseRefRequest extends Schema.Schema.Type<typeof ReverseRefRequest> {}
+
+export const ReverseRefResponse = Schema.Struct({
+  /** Ids of the referencing objects, deduplicated. */
+  objectIds: mutableArray(Schema.String),
+});
+export interface ReverseRefResponse extends Schema.Schema.Type<typeof ReverseRefResponse> {}
+
+/**
  * Effect RPC definitions for `dxos.echo.query.QueryService`.
  * Payloads use hand-authored Effect schemas (not protobuf) so large string fields survive the wire intact.
  */
@@ -114,6 +130,11 @@ export class Rpcs extends RpcGroup.make(
     stream: true,
   }),
   Rpc.make('reindex', {
+    error: serviceError,
+  }),
+  Rpc.make('queryReverseRef', {
+    payload: ReverseRefRequest,
+    success: ReverseRefResponse,
     error: serviceError,
   }),
 ).prefix('QueryService.') {}

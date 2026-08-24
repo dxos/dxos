@@ -284,6 +284,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    * Backend for feed operations. Set on construction and refreshed on reconnect.
    */
   #feedService: FeedService.Client | undefined;
+  #queryService: QueryService.Client;
 
   /** Runtime used to run effect-rpc feed calls at Promise boundaries. */
   readonly #runtime: EffectContext.Context<never>;
@@ -303,6 +304,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     this.#feedService = params.feedService;
     this.#runtime = params.runtime;
 
+    this.#queryService = params.queryService;
     this._entityManager = new EntityManager({
       graph: params.graph,
       dataService: params.dataService,
@@ -782,9 +784,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   /**
    * Repoints every reference to the renamed entity at its new name.
-   *
-   * Named-entity DXNs are not covered by the reverse-ref index (it keys `echo:` entity ids only),
-   * so the reverse lookup is a scan of the space's objects.
    */
   async #runRenameMigration(migration: Migration.RenameMigration): Promise<void> {
     const fromName = DXN.getName(migration.from);
@@ -799,10 +798,19 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       return rewritten === uri ? undefined : rewritten;
     };
 
-    const objects = await this._hypergraph.query(Query.select(Filter.everything()).from(this)).run();
+    // Reverse-reference lookup: the index resolves the referencing objects directly, so nothing
+    // outside the reference graph of the renamed entity is read.
+    const { objectIds } = await runServiceCall(
+      this.#runtime,
+      this.#queryService['QueryService.queryReverseRef']({ spaceId: this.spaceId, targetDXN: migration.from }),
+    );
+
     let updated = 0;
-    for (const object of objects) {
-      const core = getObjectCore(object);
+    for (const objectId of objectIds) {
+      const core = await this._entityManager.loadObjectCoreById(EntityId.make(objectId));
+      if (!core) {
+        continue;
+      }
       const updates: { path: string[]; uri: URI.URI }[] = [];
       const visit = (path: string[], value: unknown): void => {
         if (EncodedReference.isEncodedReference(value)) {
@@ -826,7 +834,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       updated += updates.length;
     }
 
-    log.verbose('rename', { from: migration.from, to: migration.to, objects: objects.length, references: updated });
+    log.verbose('rename', { from: migration.from, to: migration.to, objects: objectIds.length, references: updated });
   }
 
   getAutomergeSyncState(): Promise<DataService.SpaceSyncState> {
@@ -1069,6 +1077,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     queryService: QueryService.Client;
     feedService?: FeedService.Client;
   }): void {
+    this.#queryService = queryService;
     this._entityManager._updateServices({ dataService, queryService });
     if (feedService !== undefined) {
       this.#feedService = feedService;
