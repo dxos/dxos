@@ -21,8 +21,7 @@
     "changeset:publish": "changeset publish",
     "changeset:version": "changeset version && node scripts/sync-versions.mjs && pnpm install --lockfile-only",
     "check-changeset": "node scripts/check-changeset.mjs",
-    "check-changeset-bumps": "node scripts/check-changeset-bumps.mjs",
-    "check-changeset-count": "node scripts/check-changeset-count.mjs",
+    "check-changesets": "node scripts/check-changesets.mjs",
     "check-cycles": "node scripts/check-cycles.mjs",
     "check-packages-published": "node scripts/check-packages-published.mjs",
     "check-public-dependencies": "node scripts/check-public-dependencies.mjs",
@@ -64,6 +63,7 @@
   "devDependencies": {
     "@changesets/changelog-git": "catalog:",
     "@changesets/cli": "catalog:",
+    "@changesets/parse": "catalog:",
     "@cloudflare/vitest-pool-workers": "catalog:",
     "@cloudflare/workers-types": "catalog:",
     "@dxos/async": "workspace:*",
