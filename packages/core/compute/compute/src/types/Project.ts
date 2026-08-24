@@ -70,10 +70,11 @@ export const make = (
   const project = Obj.make(Project, { ...props, artifacts: props.artifacts ?? [] });
   if (!props.taskSet) {
     const taskSet = TaskSet.make();
-    Obj.setParent(taskSet, project);
+    // Ref before parent edge: the ref is what declares the edge (see `Obj.isDeclaredParentEdge`).
     Obj.update(project, (project) => {
       project.taskSet = Ref.make(taskSet);
     });
+    Obj.setParent(taskSet, project);
   }
   return project;
 };

@@ -11,7 +11,7 @@ import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { asyncTimeout, sleep } from '@dxos/async';
-import { Err, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Error as EchoError, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
@@ -524,8 +524,8 @@ describe('Database', () => {
       const failures = exit.cause.reasons.filter(Cause.isFailReason).map((reason) => reason.error);
       expect(failures.length).toBeGreaterThan(0);
       const error = failures[0];
-      expect(Err.GetReactiveError.is(error)).toBe(true);
-      expect((error as Err.GetReactiveError).context?.reason).toBe('no-database');
+      expect(EchoError.GetReactiveError.is(error)).toBe(true);
+      expect((error as EchoError.GetReactiveError).context?.reason).toBe('no-database');
     });
 
     test('fails with object-not-found when object was removed from database', async ({ expect }) => {
@@ -542,9 +542,9 @@ describe('Database', () => {
       const failures = exit.cause.reasons.filter(Cause.isFailReason).map((reason) => reason.error);
       expect(failures.length).toBeGreaterThan(0);
       const error = failures[0];
-      expect(Err.GetReactiveError.is(error)).toBe(true);
-      expect((error as Err.GetReactiveError).context?.reason).toBe('object-not-found');
-      expect((error as Err.GetReactiveError).context?.snapshotId).toBe(obj.id);
+      expect(EchoError.GetReactiveError.is(error)).toBe(true);
+      expect((error as EchoError.GetReactiveError).context?.reason).toBe('object-not-found');
+      expect((error as EchoError.GetReactiveError).context?.snapshotId).toBe(obj.id);
     });
   });
 
@@ -667,8 +667,8 @@ describe('Database', () => {
         Obj.getReactiveOrThrow(snapshot);
         expect.fail('Expected throw');
       } catch (error) {
-        expect(Err.GetReactiveError.is(error)).toBe(true);
-        expect((error as Err.GetReactiveError).context?.reason).toBe('no-database');
+        expect(EchoError.GetReactiveError.is(error)).toBe(true);
+        expect((error as EchoError.GetReactiveError).context?.reason).toBe('no-database');
       }
     });
 
@@ -683,9 +683,9 @@ describe('Database', () => {
         Obj.getReactiveOrThrow(snapshot);
         expect.fail('Expected throw');
       } catch (error) {
-        expect(Err.GetReactiveError.is(error)).toBe(true);
-        expect((error as Err.GetReactiveError).context?.reason).toBe('object-not-found');
-        expect((error as Err.GetReactiveError).context?.snapshotId).toBe(obj.id);
+        expect(EchoError.GetReactiveError.is(error)).toBe(true);
+        expect((error as EchoError.GetReactiveError).context?.reason).toBe('object-not-found');
+        expect((error as EchoError.GetReactiveError).context?.snapshotId).toBe(obj.id);
       }
     });
   });

@@ -66,7 +66,7 @@ Discovery operations — read-only, no ECHO writes.
 
 ```mdl
 op GetSlackChannels
-  key: org.dxos.plugin.slack.operation.get-slack-channels
+  key: org.dxos.operation.slack.getChannels
   desc: |
     Lists all Slack conversations reachable from the integration's OAuth token
     without creating any local ECHO objects.  Returns one RemoteTarget per
@@ -86,7 +86,7 @@ Sync operations — pull messages from Slack and write to ECHO.
 
 ```mdl
 op SyncSlackChannel
-  key: org.dxos.plugin.slack.operation.sync-slack-channel
+  key: org.dxos.operation.slack.syncChannel
   desc: |
     Reconciles messages for the currently-selected Slack targets on an
     Integration.  For each selected target: materializes a local Channel (on

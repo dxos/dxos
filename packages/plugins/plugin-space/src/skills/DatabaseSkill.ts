@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
@@ -43,7 +44,8 @@ export const make = (): Skill.Skill =>
         - Query before you write: an object the user refers to usually exists already.
         - Query by typename to narrow, by text to search, or by neither to list everything.
         - Query returns identifiers only unless you pass includeContent; read the ones you need with
-          the get tool, passing every reference in one call rather than one at a time.
+          the ${Operation.toolName(SpaceOperation.GetObjects)} tool, passing every reference in one
+          call rather than one at a time.
         - Queue-backed content (mailbox email, calendar events) is invisible to a plain query: pass
           includeQueues, or scope with 'in' to the feed that holds it.
 

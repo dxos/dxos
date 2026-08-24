@@ -16,7 +16,6 @@ import { HasSubject, Message } from '@dxos/types';
 // fast-check/zod) that must stay out of the definition's static closure.
 const types: ReadonlyArray<Type.AnyEntity> = [
   Chat.Chat,
-  Chat.CompanionTo,
   Skill.Skill,
   AiContext.Binding,
   Feed.Feed,

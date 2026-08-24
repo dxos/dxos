@@ -214,6 +214,14 @@ tasks:
     extends: serve
     env:
       DX_PLUGIN_SET: production
+  # Dev server with the agent debug port already open, for QA flows an agent drives end to end
+  # (`packages/reflect/deus` — the `## QA` section of a PLUGIN.mdl). The session id is minted per
+  # server start and published to `temp/debug-port.json`; set `DX_DEBUG_PORT_SESSION` to choose it
+  # instead, which removes the read-it-back step for a caller that can set the env.
+  serve-qa:
+    extends: serve
+    env:
+      DX_DEBUG_PORT: 'true'
   # Production startup harness — all four `startup.spec.ts` scenarios (cold, warm-cold, throttled,
   # boot-loader paint) against `vite preview`. Its own task because the spec records benchmark rows
   # rather than asserting behaviour: `e2e` ignores it so a timing measurement never gates a merge.
