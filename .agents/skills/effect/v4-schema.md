@@ -118,14 +118,14 @@ pinned copy in `node_modules/effect` is the first stop and [SKILL.md](SKILL.md)
 describes it. These are the migration notes it does not carry, now on
 `Effect-TS/effect` (`effect-smol` is archived, and its links are dead):
 
-- [`MIGRATION.md`](https://github.com/Effect-TS/effect/blob/main/MIGRATION.md) —
+- [`MIGRATION.md`](https://github.com/Effect-TS/effect/blob/effect%404.0.0-rc.108/MIGRATION.md) —
   package consolidation, the `effect/unstable/*` split, versioning.
-- [`migration/schema.md`](https://github.com/Effect-TS/effect/blob/main/migration/schema.md)
-  and [`migration/v3-to-v4.md`](https://github.com/Effect-TS/effect/blob/main/migration/v3-to-v4.md)
+- [`migration/schema.md`](https://github.com/Effect-TS/effect/blob/effect%404.0.0-rc.108/migration/schema.md)
+  and [`migration/v3-to-v4.md`](https://github.com/Effect-TS/effect/blob/effect%404.0.0-rc.108/migration/v3-to-v4.md)
   — the rename tables `tools/codemods/effect-4-verified-renames.mjs` was built from.
-- [`migration/layer-memoization.md`](https://github.com/Effect-TS/effect/blob/main/migration/layer-memoization.md)
+- [`migration/layer-memoization.md`](https://github.com/Effect-TS/effect/blob/effect%404.0.0-rc.108/migration/layer-memoization.md)
   — background for §8 of [layer-composition.md](layer-composition.md).
-- [`migration/yieldable.md`](https://github.com/Effect-TS/effect/blob/main/migration/yieldable.md)
+- [`migration/yieldable.md`](https://github.com/Effect-TS/effect/blob/effect%404.0.0-rc.108/migration/yieldable.md)
   — why `return yield* new SomeError()` works for `Schema.TaggedError` and not for
   `BaseError.extend`.
 

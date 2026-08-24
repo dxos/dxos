@@ -5,9 +5,9 @@ description: Effect 4 in DXOS: the pinned copy in node_modules, and the house ru
 
 # Effect 4 in DXOS
 
-Your Effect knowledge is v3. This repo is on a v4 release candidate, where services,
-errors, Schema, and the AST all moved. v3 written here is **compile-clean and
-test-silent**: it typechecks, the tests pass, and the behaviour is wrong.
+This repo is on Effect 4, where services, errors, Schema and the AST all changed
+shape. v3 written against them is **compile-clean and test-silent**: it typechecks,
+the tests pass, and the behaviour is wrong.
 
 Read the **pinned** copy.
 
@@ -48,8 +48,8 @@ was confirmed by grep in `node_modules/effect/src/`.
 
 ## Where DXOS diverges from the pinned guide
 
-Three rules where following `AGENTS.md` literally produces broken or off-convention
-code. Everything else in it applies as written.
+`AGENTS.md` applies as written except on three points, where following it literally
+produces broken or off-convention code here.
 
 **Domain errors are `BaseError.extend`, not `Schema.TaggedError`.** `BaseError` from
 `@dxos/errors` supplies a `_tag` getter, so `Effect.catchTag` still discriminates,
@@ -67,10 +67,11 @@ export class HttpError extends BaseError.extend('HttpError', 'HTTP request faile
 }
 ```
 
-**Raise with `Effect.fail`, not `return yield*`.** `AGENTS.md` teaches
-`return yield* new SomeError()`, which needs the error to be yieldable. `BaseError`
-extends `Error` and is not, so `Effect.fail(new HttpError({ status: 404 }))` is the
-form here. `return yield*` works only for the few `Schema.TaggedError` classes.
+**Raise `BaseError` with `Effect.fail`.** `AGENTS.md` teaches
+`return yield* new SomeError()`, which needs an error implementing
+`Cause.YieldableError`. `Data.Error`, `Data.TaggedError` and `Schema.TaggedError` all
+do; `BaseError` is a plain `Error` subclass and does not. DXOS domain errors go
+through `Effect.fail(new HttpError({ status: 404 }))`.
 
 **`Effect.fnUntraced` is the default wrapper.** `AGENTS.md` prefers `Effect.fn('name')`
 for the span it attaches. This repo leans the other way, running `fnUntraced` roughly
