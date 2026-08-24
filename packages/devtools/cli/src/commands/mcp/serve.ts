@@ -101,7 +101,7 @@ export const serve = Command.make(
       process.stderr.write(`${formatReady({ watch: yield* devPluginPaths })}\n`);
     }
 
-    yield* Layer.launch(
+    return yield* Layer.launch(
       Layer.mergeAll(
         McpServer.layer({ reservedToolNames: STATIC_TOOL_NAMES }).pipe(
           Layer.provide(

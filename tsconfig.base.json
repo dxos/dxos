@@ -46,7 +46,15 @@
         // the language service will "follow" the re-export and import directly
         // from the original file where the symbol is defined,
         // instead of importing from the barrel.
-        "topLevelNamedReexports": "follow"
+        "topLevelNamedReexports": "follow",
+
+        // Effect diagnostics report without gating the build. All three are stated
+        // rather than inherited, because the warning and error defaults do gate and
+        // there is a standing backlog behind them. Promote a level once its findings
+        // are cleared; see the PR that introduced @effect/tsgo for current counts.
+        "ignoreEffectSuggestionsInTscExitCode": true,
+        "ignoreEffectWarningsInTscExitCode": true,
+        "ignoreEffectErrorsInTscExitCode": true
       }
     ]
   },

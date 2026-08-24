@@ -678,13 +678,13 @@ describe('Binding.syncAll', () => {
       const uri = Ref.make(binding).uri;
       synced.push(uri);
       if (runAgainFor.has(uri)) {
-        yield* Operation.runAgain();
+        return yield* Operation.runAgain();
       }
       if (dieFor.has(uri)) {
-        yield* Effect.die(dieFor.get(uri));
+        return yield* Effect.die(dieFor.get(uri));
       }
       if (failFor.has(uri)) {
-        yield* Effect.fail(failFor.get(uri));
+        return yield* Effect.fail(failFor.get(uri));
       }
     });
 
