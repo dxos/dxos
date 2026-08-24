@@ -524,6 +524,11 @@ export class DataSpaceManager extends Resource {
       }
 
       ctx.onDispose(space.inner.credentialProcessed.on((credential) => store.append(credential)));
+
+      // Read side: the document feeds the same state machine the feed does. Processing is idempotent
+      // by credential id, so during the migration window both sources can run without conflict — a
+      // space that has flipped simply stops gaining feed credentials.
+      store.subscribe(ctx, (credential) => space.inner.processDocumentCredential(credential));
     } catch (err) {
       log.warn('failed to mirror credentials to document', { spaceId: space.id, err });
     }

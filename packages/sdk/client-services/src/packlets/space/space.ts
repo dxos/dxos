@@ -143,6 +143,11 @@ export class Space extends Resource {
     return this._controlPipeline.spaceState;
   }
 
+  /** @see ControlPipeline.processDocumentCredential */
+  async processDocumentCredential(credential: Credential): Promise<boolean> {
+    return this._controlPipeline.processDocumentCredential(credential);
+  }
+
   /**
    * @test-only
    */

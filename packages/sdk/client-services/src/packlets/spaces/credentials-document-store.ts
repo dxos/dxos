@@ -4,6 +4,7 @@
 
 import { type AutomergeUrl, type DocHandle } from '@automerge/automerge-repo';
 
+import { scheduleMicroTask } from '@dxos/async';
 import { type Context } from '@dxos/context';
 import {
   CREDENTIALS_DOCUMENT_TYPE,
@@ -33,6 +34,24 @@ export class CredentialsDocumentStore {
   read(): OrderedCredential[] {
     const doc = this._handle.doc();
     return doc ? orderCredentials(doc) : [];
+  }
+
+  /**
+   * Replays the document into `process` and keeps doing so as it changes. Ordering is recomputed on
+   * every change because a late-arriving parent can reorder credentials that already arrived.
+   */
+  subscribe(ctx: Context, process: (credential: Credential) => Promise<boolean>): void {
+    const replay = () => {
+      scheduleMicroTask(ctx, async () => {
+        for (const { credential } of this.read()) {
+          await process(credential);
+        }
+      });
+    };
+
+    this._handle.addListener('change', replay);
+    ctx.onDispose(() => this._handle.removeListener('change', replay));
+    replay();
   }
 
   /**

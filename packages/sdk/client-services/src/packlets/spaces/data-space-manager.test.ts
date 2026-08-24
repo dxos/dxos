@@ -5,7 +5,7 @@
 import { interpretAsDocumentId } from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
 
-import { asyncTimeout, latch } from '@dxos/async';
+import { asyncTimeout, latch, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { SpaceStateMachine, createAdmissionCredentials, getCredentialAssertion } from '@dxos/credentials';
 import {
@@ -195,6 +195,10 @@ describe('DataSpaceManager', () => {
 
     // Replaying the document into a fresh state machine must reach the same state as the feed did:
     // this is the equivalence the source flip depends on.
+    // The document is written live, and a prefix of a chain is not processable on its own, so replay
+    // once it holds the whole chain rather than racing the writer.
+    await waitForCondition({ condition: () => store.read().length === fromFeed.length });
+
     const replayed = new SpaceStateMachine(space.key);
     for (const { credential } of store.read()) {
       expect(await replayed.process(credential, { sourceFeed: space.inner.genesisFeedKey })).to.be.true;

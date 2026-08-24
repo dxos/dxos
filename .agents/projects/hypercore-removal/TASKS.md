@@ -192,12 +192,19 @@ migration; crash mid-migration and resume.
       the same genesis credential, member set and membership policy as the feed-driven one. This is
       the equivalence the source flip depends on, and `process()` both dedupes by credential id and
       verifies signatures, so a tampered or repeated entry cannot change the outcome.
-- [ ] READ side: feed the LIVE state machine from the document (the `CredentialSource` split inside
-      `ControlPipeline`). Until then the document is written and provably replayable but never read
-      in production, so the feed is still the only source and no space has actually flipped.
-- [ ] **`ProcessOptions.sourceFeed` is required and feed-shaped** — it must become optional before a
-      document can be the source; `CredentialEntry.sourceFeed` has the same problem. Found while
-      writing the replay test, which passes the genesis feed key to get around it.
+- [x] **`ProcessOptions.sourceFeed` / `CredentialEntry.sourceFeed` are optional** — absent means the
+      credential came from the document. An `AdmittedFeed` assertion with no source feed is then inert
+      rather than invalid (a document-sourced space admits no feeds), and the control-pipeline snapshot
+      skips entries with no feed, since a snapshot only replays into the feed pipeline.
+- [x] **READ side live** — `CredentialsDocumentStore.subscribe()` replays the document into the same
+      state machine the feed drives, via `Space.processDocumentCredential`. Processing is idempotent by
+      credential id, so both sources run during the migration window without conflict.
+- [x] Ordering is recomputed on every document change, not once: a late-arriving parent reorders
+      credentials that already arrived, and a partially-replicated document is a chain PREFIX that
+      cannot be processed on its own — the state machine rejects it and the next change re-replays.
+      This surfaced as a flaky test before it could surface as a support ticket.
+- [ ] The flip itself: stop consulting the feed for a space whose document is complete, and stop
+      writing feed credentials for it. Both sources still run today.
 
 - [ ] Reader accepts BOTH sources (control feed and credentials doc) for the whole
       migration window — client and EDGE alike.
