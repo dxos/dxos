@@ -472,6 +472,16 @@ projects:
       op key gap is everywhere — chess declares six operations of which one has a runtime counterpart
       and startGame has none. NEXT: run the three unverified flows, then routine part (a) (reconcile a
       PLUGIN.mdl against Operation.make), then composer-app/APP.mdl."
+  - name: worktree-hooks-cleanup
+    status: active
+    user: burdon
+    host: burdon-studio-2022
+    created: 2026-08-24
+    summary: 'Retire the two PreToolUse guard hooks now that the harness quirk they mitigated appears fixed, make the current worktree always visible in the statusline, and settle whether worktree directory names should match their branch.'
+    tasks: .agents/projects/worktree-hooks-cleanup/TASKS.md
+    design: .agents/projects/worktree-hooks-cleanup/DESIGN.md
+    prs: []
+    resume: 'Phase 1 done and pushed (d55b388cdd on claude/worktree-hooks-cleanup): both PreToolUse guards unregistered from .claude/settings.json, scripts kept under .claude/hooks/ so restoring is a settings change only. NEXT is the trial period — watch a few days for an edit landing on main or an unrequested branch/worktree, then delete guard-worktree.sh and decide guard-branch.sh separately. Evidence for disabling: the stub quirk guard-worktree.sh documents (assigned branch checked out at the primary checkout, empty dir left beside it) produced three stubs on Aug 3 and Aug 11 and none since Aug 19; and the guard only matched Edit/Write/MultiEdit/NotebookEdit, so Bash writes (sed -i, heredocs, redirects) bypassed it entirely — which in auto mode is the normal editing path. Caveat: the pairing failure is NOT gone, it changed shape — the Aug 24 session had no claude/... branch at all (HEAD on main at the primary checkout), so guard-branch.sh is not obviously vestigial. Also note both hooks were inert that session because cwd was ~/Code/dxos, one level above the repo root, so .claude/settings.json never loaded and neither did CLAUDE.md or mode.sh. Phase 2 (statusline) is the highest-value remainder: ~/.claude/status-line.sh drops the worktree segment entirely when .worktree.name is empty, i.e. exactly when a session is mis-instantiated — render a loud NO WORKTREE instead, which also makes worktree-creation timing directly observable rather than inferred. That file is outside the repo and not covered by this branch. Phase 3 is a decision, not a fix: the user wants worktree dir to match branch (it is what the worktrunk path template assumes) but CLAUDE.md states they routinely differ by design and must not be corrected — 6 of 10 disagreed on Aug 24. Phase 4 disk work is mostly done (3 stubs deleted, user ran w --clean for ~16.5G, 55G to ~30G); what remains is 62 orphaned project dirs under ~/.claude/projects, already archived to ~/.claude/projects-orphaned-2026-08-24.tar.gz, whose deletion the agent is blocked from performing. Two agent denials are recorded in TASKS.md and both look correct: editing .claude/settings.json (own guardrail config) and bulk rm -rf inside ~/.claude. Cleanup heuristic finding worth keeping: main_state == integrated (the w --clean zsh function) is the right signal; last-session recency is not, since it would delete diverged worktrees with unmerged commits and keep integrated ones.'
 ended:
   - name: task-planning-skill
     user: burdon
