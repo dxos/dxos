@@ -106,7 +106,13 @@ migration; crash mid-migration and resume.
       recorded beside the directory rather than owning it).
 - [x] Self-certification check — `verifySpaceRoot` recomputes the id for `rootDoc` roots and
       rejects an unknown derivation rather than treating it as the unverifiable `spaceKey` case.
-- [ ] Root-doc creation path (nothing writes a space root yet).
+- [x] Root-doc creation path — `EchoHost.createSpaceWithRootDocument()` creates the root, derives
+      the space id from its document id, creates the directory beneath it and records the refs.
+      NOTE: the pre-existing `createSpaceRoot()` creates the DIRECTORY; that naming predates this
+      model and should be renamed with the diagnostics field below.
+- [ ] Wire it into `DataSpaceManager.createSpace()` behind `DX_SPACE_CREATE_LEGACY` — needs care,
+      since createSpace derives the space id from the space key before anything else and threads
+      that key through `SpaceMetadata`.
 
 ## Phase 2: credentials document
 

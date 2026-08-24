@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type AutomergeUrl } from '@automerge/automerge-repo';
+import { type AutomergeUrl, interpretAsDocumentId } from '@automerge/automerge-repo';
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, onTestFinished, test } from 'vitest';
@@ -255,6 +255,46 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
         idDerivation: 'rootDoc',
       }),
     ).rejects.toThrow();
+  });
+
+  test('EchoHost creates a space whose id derives from its space root document', async () => {
+    const dbPath = join(__dirname, 'test-create-space-with-root.db');
+    rmSync(dbPath, { force: true });
+    onTestFinished(() => {
+      rmSync(dbPath, { force: true });
+    });
+
+    const { runtime, dispose } = createTestSqliteRuntime(dbPath);
+    onTestFinished(() => {
+      void dispose();
+    });
+
+    const host = new EchoHost({ runtime });
+    await host.open(Context.default());
+    onTestFinished(() => {
+      void host.close();
+    });
+
+    const { spaceId, spaceRootUrl, directory } = await host.createSpaceWithRootDocument(Context.default());
+
+    // The id is recomputable from the root's own document id — that is what makes the root self-certifying.
+    const rootDocumentId = interpretAsDocumentId(spaceRootUrl);
+    expect(spaceId).to.equal(await createIdFromRootDocumentId(rootDocumentId));
+
+    // The root is a separate document from the directory it points at.
+    expect(directory.url).to.not.equal(spaceRootUrl);
+    expect(directory.doc()?.access?.spaceId).to.equal(spaceId);
+
+    const root = await host.loadDoc<SpaceRoot>(Context.default(), spaceRootUrl);
+    expect(isSpaceRoot(root?.doc())).to.be.true;
+    expect(await verifySpaceRoot(root!.doc()!, rootDocumentId)).to.be.true;
+    expect(root!.doc()!.directory).to.equal(directory.url);
+
+    expect(host.getSpaceRootRefs(spaceId)).to.deep.equal({
+      spaceRootDocUrl: spaceRootUrl,
+      credentialsDocUrl: undefined,
+      idDerivation: 'rootDoc',
+    });
   });
 
   test('EchoHost openSpaceRoot works without url on reopened host', async () => {

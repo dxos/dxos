@@ -120,7 +120,12 @@ export class SpaceStateManager extends Resource {
     // nothing and the refs would survive only in memory — lost on the next open.
     invariant(this._rootBySpace.has(spaceId), 'Space has no directory assigned.');
     await this._saveSpaceRootRefs(spaceId, refs);
-    this._spaceRootRefs.set(spaceId, refs);
+    // Normalized so a caller sees the same shape here as after a reload, where SQL yields every column.
+    this._spaceRootRefs.set(spaceId, {
+      spaceRootDocUrl: refs.spaceRootDocUrl,
+      credentialsDocUrl: refs.credentialsDocUrl,
+      idDerivation: refs.idDerivation,
+    });
   }
 
   /**

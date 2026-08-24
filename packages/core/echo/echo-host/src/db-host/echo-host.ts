@@ -18,7 +18,15 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { DeferredTask, scheduleTask, sleep } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
-import { DatabaseDirectory, EntityStructure, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
+import {
+  DatabaseDirectory,
+  EntityStructure,
+  SPACE_ROOT_TYPE,
+  SpaceDocVersion,
+  type SpaceRoot,
+  createIdFromRootDocumentId,
+  createIdFromSpaceKey,
+} from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
 import { IndexEngine, type IndexingResult } from '@dxos/index-core';
@@ -49,7 +57,7 @@ import { FeedDataSource } from './feed-data-source';
 import { hintFromIndexingResult } from './invalidation-hint';
 import { LocalFeedServiceImpl } from './local-feed-service';
 import { QueryServiceImpl } from './query-service';
-import { type SpaceDocumentListUpdatedEvent, SpaceStateManager } from './space-state-manager';
+import { type SpaceDocumentListUpdatedEvent, type SpaceRootRefs, SpaceStateManager } from './space-state-manager';
 
 /**
  * Documents walked between event-loop yields during a reachability traversal. Bounds how long one
@@ -455,6 +463,50 @@ export class EchoHost extends Resource {
     await this._automergeHost.flush(ctx, { documentIds: [automergeRoot.documentId] });
 
     return await this.updateSpaceRoot(ctx, spaceId, automergeRoot.url);
+  }
+
+  /**
+   * Creates a space anchored on an immutable space root document, whose id derives the space id.
+   *
+   * The root is written after its document exists because that document's id is the input to the
+   * derivation; automerge assigns the id at creation, before any content, so there is no cycle.
+   *
+   * NOTE: `createSpaceRoot` above creates the DIRECTORY, which predates this naming.
+   */
+  async createSpaceWithRootDocument(ctx: Context): Promise<CreatedSpace> {
+    invariant(this._lifecycleState === LifecycleState.OPEN);
+
+    const rootHandle = await this._automergeHost.createDoc<Partial<SpaceRoot>>({});
+    const spaceId = await createIdFromRootDocumentId(rootHandle.documentId);
+
+    const directoryHandle = await this._automergeHost.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceId },
+      objects: {},
+      links: {},
+    });
+
+    rootHandle.change((doc: Partial<SpaceRoot>) => {
+      doc.type = SPACE_ROOT_TYPE;
+      doc.spaceId = spaceId;
+      doc.idDerivation = 'rootDoc';
+      doc.directory = directoryHandle.url;
+    });
+
+    await this._automergeHost.flush(ctx, { documentIds: [rootHandle.documentId, directoryHandle.documentId] });
+
+    const directory = await this.updateSpaceRoot(ctx, spaceId, directoryHandle.url);
+    await this._spaceStateManager.setSpaceRootRefs(spaceId, {
+      spaceRootDocUrl: rootHandle.url,
+      idDerivation: 'rootDoc',
+    });
+
+    return { spaceId, spaceRootUrl: rootHandle.url, directory };
+  }
+
+  /** References carried by the space root document, or undefined for a space that predates it. */
+  getSpaceRootRefs(spaceId: SpaceId): SpaceRootRefs | undefined {
+    return this._spaceStateManager.getSpaceRootRefs(spaceId);
   }
 
   get spaces(): ReadonlyArray<{ spaceId: SpaceId; rootDocUrl: AutomergeUrl }> {
@@ -1071,6 +1123,16 @@ const _mergeInto = (acc: MutableIndexingAccumulator, r: IndexingResult): void =>
 export type EchoStatsDiagnostic = {
   loadedDocsCount: number;
   dataStats: EchoDataStats;
+};
+
+/** A space created from a space root document, before any credentials exist for it. */
+export type CreatedSpace = {
+  spaceId: SpaceId;
+
+  /** Automerge URL of the immutable root; goes into the `SpaceMember` credential as `spaceRootUrl`. */
+  spaceRootUrl: AutomergeUrl;
+
+  directory: DatabaseRoot;
 };
 
 export type EchoHostLayerOptions = Pick<
