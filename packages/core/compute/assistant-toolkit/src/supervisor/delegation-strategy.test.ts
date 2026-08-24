@@ -63,7 +63,6 @@ const TestLayer = AssistantTestLayer({
     Task.Task,
     TaskSet.TaskSet,
     Chat.Chat,
-    Chat.CompanionTo,
     AiContext.Binding,
     Text.Text,
     Message.Message,

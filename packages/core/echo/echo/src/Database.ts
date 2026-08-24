@@ -15,7 +15,7 @@ import { type SpaceId, type URI } from '@dxos/keys';
 
 import type * as Blob from './Blob';
 import type * as Entity from './Entity';
-import * as Err from './Err';
+import * as Error from './Error';
 import type * as Feed from './Feed';
 import type * as Filter from './Filter';
 import type * as Hypergraph from './Hypergraph';
@@ -287,14 +287,14 @@ export interface Database extends Queryable {
 
   /**
    * Hashes and uploads `bytes` via the chosen storage backend, returning an un-added Blob object.
-   * Rejects with `Err.BlobTooLargeError` (over inline storage's fixed cap, or the backend's own
-   * `maxSize`), `Err.BlobWriteError` (backend upload failure), or `Err.BlobNotAvailableError`
+   * Rejects with `Error.BlobTooLargeError` (over inline storage's fixed cap, or the backend's own
+   * `maxSize`), `Error.BlobWriteError` (backend upload failure), or `Error.BlobNotAvailableError`
    * (`reason: 'backend-not-registered'` — the requested storage name has no registered backend).
    */
   createBlob(bytes: Uint8Array, options?: { type?: string; storage?: string }): Promise<Blob.Blob>;
 
   /**
-   * Loads a blob's bytes. Rejects with `Err.BlobNotAvailableError` if the backend for the blob's
+   * Loads a blob's bytes. Rejects with `Error.BlobNotAvailableError` if the backend for the blob's
    * storage scheme is not registered, offline, or cannot find the bytes.
    */
   readBlob(blob: Blob.Blob): Promise<Uint8Array>;
@@ -369,7 +369,7 @@ export class Service extends Context.Service<
  */
 export const notAvailable = Layer.succeed(Service, {
   get db(): Database {
-    throw new Error('Database not available');
+    throw new globalThis.Error('Database not available');
   },
 });
 
@@ -409,11 +409,11 @@ export const resolve: {
   <S extends Type.AnyEntity>(
     ref: URI.URI | Ref<any>,
     schema: S,
-  ): Effect.Effect<Type.InstanceType<S>, Err.EntityNotFoundError, Service>;
+  ): Effect.Effect<Type.InstanceType<S>, Error.EntityNotFoundError, Service>;
 } = (<S extends Type.AnyEntity>(
   ref: URI.URI | Ref<any>,
   schema?: S,
-): Effect.Effect<Type.InstanceType<S>, Err.EntityNotFoundError, Service> =>
+): Effect.Effect<Type.InstanceType<S>, Error.EntityNotFoundError, Service> =>
   Effect.gen(function* () {
     const { db } = yield* Service;
     const dxn = typeof ref === 'string' ? ref : ref.uri;
@@ -428,7 +428,7 @@ export const resolve: {
     );
 
     if (!object) {
-      return yield* Effect.fail(new Err.EntityNotFoundError(dxn));
+      return yield* Effect.fail(new Error.EntityNotFoundError(dxn));
     }
     // `isInstanceOf` uses a conditional generic that TS can't resolve through
     // the local `S extends Type.AnyEntity` parameter — runtime accepts it fine.
@@ -446,11 +446,11 @@ export const resolve: {
  * ```
  *
  */
-export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.EntityNotFoundError, never> = Effect.fn('Database.load')(
+export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Error.EntityNotFoundError, never> = Effect.fn('Database.load')(
   function* (ref) {
     const object = yield* Effect.promise(() => ref.tryLoad());
     if (!object) {
-      return yield* Effect.fail(new Err.EntityNotFoundError(ref.uri));
+      return yield* Effect.fail(new Error.EntityNotFoundError(ref.uri));
     }
     return object;
   },

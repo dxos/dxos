@@ -56,7 +56,7 @@ const task = createEvalRunner({
       const chat = yield* Database.add(
         Chat.make({ name: `${PROJECT_NAME} Chat`, feed: Ref.make(feed), instructions: Ref.make(instructions) }),
       );
-      Obj.setParent(chat, project);
+      Chat.linkCompanion({ chat, subject: project });
       yield* Database.flush();
 
       return { objects: [Ref.make(project)], chat: Ref.make(chat) };

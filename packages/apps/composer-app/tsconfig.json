@@ -178,6 +178,9 @@
       "path": "../../plugins/plugin-file"
     },
     {
+      "path": "../../plugins/plugin-file-system"
+    },
+    {
       "path": "../../plugins/plugin-freeq"
     },
     {
@@ -245,9 +248,6 @@
     },
     {
       "path": "../../plugins/plugin-native"
-    },
-    {
-      "path": "../../plugins/plugin-native-filesystem"
     },
     {
       "path": "../../plugins/plugin-navtree"

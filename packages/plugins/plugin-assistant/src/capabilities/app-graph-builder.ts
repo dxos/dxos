@@ -23,7 +23,6 @@ import { Chat, RunInstructions } from '@dxos/assistant-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
-import * as Project from '@dxos/compute/Project';
 import { Sequence } from '@dxos/conductor';
 import { Database, DXN, Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -39,21 +38,12 @@ import { AssistantCapabilities, AssistantOperation } from '#types';
 const computeOperationsToImport = [RunInstructions] as const;
 
 /**
- * Chats belonging to the top-level Chats section: every chat minus the two kinds that already appear
- * elsewhere in the tree. A chat sourcing a `CompanionTo` relation belongs to its primary object's
- * companion panel; a chat parented to a `Project` is that project's navtree child (plugin-projects
- * `projectChats`). Without the second exclusion a project chat appears twice.
- *
- * The project exclusion subtracts every project child rather than just chats — `children()` takes no
- * type filter, and subtracting a non-chat from a chat-typed source is a no-op.
+ * Chats belonging to the top-level Chats section: unparented chats. Ownership is the ECHO parent
+ * edge — a companion chat is parented to its subject (and surfaces in that subject's companion
+ * panel), a project chat to its project (and is that project's navtree child, plugin-projects
+ * `projectChats`) — so "standalone" is simply "no parent".
  */
-export const standaloneChatsQuery = Query.without(
-  Query.without(
-    Query.select(Filter.type(Chat.Chat)),
-    Query.select(Filter.type(Chat.Chat)).sourceOf(Chat.CompanionTo).source(),
-  ),
-  Query.select(Filter.type(Project.Project)).children(),
-);
+export const standaloneChatsQuery = Query.select(Filter.and(Filter.type(Chat.Chat), Filter.hasParent(false)));
 
 /** Match ECHO objects that are NOT chats. */
 const whenNonChatObject = NodeMatcher.whenAll(
