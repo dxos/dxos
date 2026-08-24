@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: hypercore-removal
+    status: active
+    user: dmaretskyi
+    host: cloud-sandbox
+    created: 2026-08-24
+    summary: 'Delete hypercore: replicate the space credential chain as an Automerge document instead of a control feed, and re-anchor spaces on a small immutable space-root doc (space id = hash(root doc id)) that points at a rotatable directory doc and a rotatable credentials doc.'
+    tasks: .agents/projects/hypercore-removal/TASKS.md
+    design: .agents/projects/hypercore-removal/DESIGN.md
+    prs: []
+    resume: 'Created 2026-08-24 from the users spec; DESIGN.md written from a source survey (createIdFromSpaceKey in echo-protocol/src/space-id.ts, echo_spaces in db-host/space-state-manager.ts, control-feed genesis in client-services/packlets/spaces/genesis.ts). NO CODE YET. Phase 0 is an audit: split the ~100 hypercore references into credential-chain vs other-data consumers, and answer the four open questions — whether the space keypair survives as credential issuer, how this relates to the Keyhive/@dxos/halo Access direction, the EDGE-side feed replicator removal, and whether queues keep feed-store alive. Note the space id = hash(doc id) circularity is NOT a blocker (Repo.create assigns the doc id before content), but legacy spaces keep hash(space key) so the derivation is version-tagged, not a validity check.'
   - name: operation-keys
     status: active
     user: burdon
