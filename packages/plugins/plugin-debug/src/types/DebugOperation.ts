@@ -11,15 +11,13 @@ import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/echo';
 import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
 
-const makeKey = (name: string) => DXN.make(`org.dxos.operation.debug.${name}`);
-
 /**
  * Fills the document with placeholder prose from the slash menu — the cheapest way to get a
  * realistic amount of text in front of a layout or scrolling bug.
  */
 export const InsertLoremIpsum = Operation.make({
   meta: {
-    key: makeKey('insertLoremIpsum'),
+    key: DXN.make('org.dxos.operation.debug.insertLoremIpsum'),
     name: 'Lorem ipsum',
     description: 'Inserts a paragraph of placeholder text at the cursor.',
     icon: 'ph--text-align-left--regular',

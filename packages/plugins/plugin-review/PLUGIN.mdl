@@ -292,10 +292,14 @@ op RestoreMessage
   desc: Inverse of DeleteMessage.
   input: { anchor: AnchoredTo, message: Message, messageIndex: Number }
 
-op ToggleResolved
-  key: org.dxos.operation.review.toggleResolved
-  desc: Toggle thread.status between active and resolved.
-  input: { thread: Thread }
+op SetResolved
+  key: org.dxos.operation.review.setResolved
+  desc: Set thread.status to active or resolved.
+  input: { thread: Thread, resolved: boolean }
+  requires: [Capability.Service]
+  note: |
+    Renamed from ToggleResolved, and not only a rename: the caller now states the status it wants
+    rather than flipping whatever is current, so `resolved` is required.
 
 op Select
   key: org.dxos.operation.review.select
