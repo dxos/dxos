@@ -8,6 +8,9 @@ POSTHOG_CLI_API_KEY=${POSTHOG_CLI_API_KEY}
 DX_HUB_URL="https://hub.dxos.network/"
 DX_IPDATA_API_KEY=${IPDATA_API_KEY}
 DX_OTEL_ENDPOINT=/api/otel
+# Stamped on every metric, log and trace as `deployment.environment`; without it every
+# deployed client reports `unknown` and production is indistinguishable from preview.
+DX_ENVIRONMENT=staging
 DX_POSTHOG_API_HOST=https://o.composer.space
 IPFS_API_SECRET=${IPFS_API_SECRET}
 # End common vars
