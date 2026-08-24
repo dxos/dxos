@@ -504,6 +504,37 @@ export class EchoHost extends Resource {
     return { spaceId, spaceRootUrl: rootHandle.url, directory };
   }
 
+  /**
+   * Mints a space root over a legacy space's existing directory, keeping the space id: it was derived
+   * from the space key and cannot be reproduced from a document, which is what `spaceKey` derivation
+   * records. Idempotent — a space that already has a root keeps it, so a re-run cannot fork the anchor.
+   */
+  async migrateSpaceToRootDocument(ctx: Context, spaceId: SpaceId): Promise<SpaceRootRefs> {
+    invariant(this._lifecycleState === LifecycleState.OPEN);
+
+    const existing = this._spaceStateManager.getSpaceRootRefs(spaceId);
+    if (existing) {
+      return existing;
+    }
+
+    const directory = this._spaceStateManager.getRootBySpaceId(spaceId);
+    invariant(directory, `Space directory not found for space: ${spaceId}`);
+
+    const rootHandle = await this._automergeHost.createDoc<Partial<SpaceRoot>>({});
+    rootHandle.change((doc: Partial<SpaceRoot>) => {
+      doc.type = SPACE_ROOT_TYPE;
+      doc.spaceId = spaceId;
+      doc.idDerivation = 'spaceKey';
+      doc.directory = directory.url;
+    });
+
+    await this._automergeHost.flush(ctx, { documentIds: [rootHandle.documentId] });
+
+    const refs: SpaceRootRefs = { spaceRootDocUrl: rootHandle.url, idDerivation: 'spaceKey' };
+    await this._spaceStateManager.setSpaceRootRefs(spaceId, refs);
+    return refs;
+  }
+
   /** References carried by the space root document, or undefined for a space that predates it. */
   getSpaceRootRefs(spaceId: SpaceId): SpaceRootRefs | undefined {
     return this._spaceStateManager.getSpaceRootRefs(spaceId);

@@ -8,7 +8,14 @@ import { describe, expect, test } from 'vitest';
 import { asyncTimeout, latch } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { createAdmissionCredentials, getCredentialAssertion } from '@dxos/credentials';
-import { createIdFromRootDocumentId, createIdFromSpaceKey } from '@dxos/echo-protocol';
+import {
+  type SpaceRoot,
+  createIdFromRootDocumentId,
+  createIdFromSpaceKey,
+  documentIdFromUrl,
+  isSpaceRoot,
+  verifySpaceRoot,
+} from '@dxos/echo-protocol';
 import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -110,6 +117,48 @@ describe('DataSpaceManager', () => {
     // The joiner must not fall back to deriving an id from the space key.
     expect(space2.id).to.equal(space1.id);
     expect(space2.id).to.not.equal(await createIdFromSpaceKey(space1.key));
+  });
+
+  test('a legacy hypercore space migrates onto a space root document, keeping its id', async () => {
+    const builder = new TestBuilder();
+
+    const peer = builder.createPeer();
+    await peer.createIdentity();
+    await openAndClose(peer.echoHost, peer.dataSpaceManager);
+
+    // Old style: credential chain in the control feed, id derived from the space key.
+    const space = await peer.dataSpaceManager.createSpace(new Context(), { useSpaceRootDocument: false });
+    await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+
+    const legacyId = space.id;
+    const directoryUrl = peer.echoHost.spaces.find(({ spaceId }) => spaceId === legacyId)?.rootDocUrl;
+    expect(legacyId).to.equal(await createIdFromSpaceKey(space.key));
+    expect(peer.echoHost.getSpaceRootRefs(legacyId)).to.be.undefined;
+    expect(space.inner.spaceState.genesisCredential).to.exist;
+    const membersBefore = space.inner.spaceState.members.size;
+
+    const refs = await peer.dataSpaceManager.migrateSpaceToRootDocument(new Context(), space.key);
+
+    // The id is unchanged — it was minted from the space key and no document can reproduce it.
+    expect(space.id).to.equal(legacyId);
+    expect(refs.idDerivation).to.equal('spaceKey');
+    expect(refs.spaceRootDocUrl).to.not.equal(directoryUrl);
+
+    const root = await peer.echoHost.loadDoc<SpaceRoot>(new Context(), refs.spaceRootDocUrl);
+    expect(isSpaceRoot(root?.doc())).to.be.true;
+    expect(root!.doc()!.spaceId).to.equal(legacyId);
+    expect(root!.doc()!.directory).to.equal(directoryUrl);
+
+    // A migrated root cannot certify the id, so verification must accept it on the spaceKey branch only.
+    expect(await verifySpaceRoot(root!.doc()!, documentIdFromUrl(refs.spaceRootDocUrl))).to.be.true;
+
+    // The control feed keeps working: migration adds the anchor, it does not move credentials yet.
+    expect(space.inner.spaceState.genesisCredential).to.exist;
+    expect(space.inner.spaceState.members.size).to.equal(membersBefore);
+
+    // Idempotent: a re-run must not fork the anchor.
+    const again = await peer.dataSpaceManager.migrateSpaceToRootDocument(new Context(), space.key);
+    expect(again.spaceRootDocUrl).to.equal(refs.spaceRootDocUrl);
   });
 
   test('sync between peers', async () => {

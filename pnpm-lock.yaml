@@ -5830,6 +5830,9 @@ importers:
 
   packages/core/echo/echo-protocol:
     dependencies:
+      '@automerge/automerge-repo':
+        specifier: 'catalog:'
+        version: 2.6.0-subduction.40(patch_hash=c4764ed525f0bdb6137709c93b74398e61f657f155144a8401c9d3004177ebc7)
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../../../common/crypto
@@ -61513,7 +61516,7 @@ snapshots:
 
   p-queue@9.1.2:
     dependencies:
-      eventemitter3: 5.0.1
+      eventemitter3: 5.0.4
       p-timeout: 7.0.1
 
   p-race@3.1.0:

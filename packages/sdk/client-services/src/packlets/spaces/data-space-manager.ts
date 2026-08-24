@@ -28,6 +28,7 @@ import {
   EdgeAutomergeReplicatorService,
   type MeshEchoReplicator,
   MeshEchoReplicatorService,
+  type SpaceRootRefs,
   findInlineObjectOfType,
 } from '@dxos/echo-host';
 import {
@@ -308,6 +309,7 @@ export class DataSpaceManager extends Resource {
         }
         log('load space', { spaceMetadata });
         const space = await this._constructSpace(ctx, spaceMetadata);
+        await this._migrateSpaceToRootDocument(ctx, space);
         // Track spaces that were previously active for auto-activation (used in dedicated worker mode).
         if (this._runtimeProps?.autoActivateSpaces && spaceMetadata.state === SpaceState.SPACE_ACTIVE) {
           spacesToActivate.push(space);
@@ -488,6 +490,31 @@ export class DataSpaceManager extends Resource {
 
     this.updated.emit();
     return space;
+  }
+
+  /**
+   * Mints a space root over a legacy space, transparently and idempotently, keeping its space id. Never
+   * blocks opening the space: a space without an anchor still works, it just has not migrated yet.
+   */
+  private async _migrateSpaceToRootDocument(ctx: Context, space: DataSpace): Promise<void> {
+    if (this._echoHost.getSpaceRootRefs(space.id)) {
+      return;
+    }
+
+    try {
+      const refs = await this._echoHost.migrateSpaceToRootDocument(ctx, space.id);
+      log('migrated space to root document', { spaceId: space.id, refs });
+    } catch (err) {
+      log.warn('failed to migrate space to root document', { spaceId: space.id, err });
+    }
+  }
+
+  /**
+   * Migrates a legacy space onto a space root document, keeping its id. Idempotent.
+   */
+  async migrateSpaceToRootDocument(ctx: Context, spaceKey: PublicKey): Promise<SpaceRootRefs> {
+    const space = this._spaces.get(spaceKey) ?? failedInvariant();
+    return this._echoHost.migrateSpaceToRootDocument(ctx, space.id);
   }
 
   /**

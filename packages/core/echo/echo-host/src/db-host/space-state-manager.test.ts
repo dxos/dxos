@@ -2,7 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type AutomergeUrl, interpretAsDocumentId } from '@automerge/automerge-repo';
+import {
+  type AutomergeUrl,
+  type DocumentId,
+  interpretAsDocumentId,
+  stringifyAutomergeUrl,
+} from '@automerge/automerge-repo';
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, onTestFinished, test } from 'vitest';
@@ -129,7 +134,7 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
       type: SPACE_ROOT_TYPE,
       spaceId: await createIdFromRootDocumentId(documentId),
       idDerivation: 'rootDoc',
-      directory: 'automerge:4Y8mbUZP4bLTB1LWr8N4TRQY6ZWU',
+      directory: stringifyAutomergeUrl({ documentId: '4Y8mbUZP4bLTB1LWr8N4TRQY6ZWU' as DocumentId }),
     };
 
     expect(isSpaceRoot(root)).to.be.true;
@@ -149,7 +154,7 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
       type: SPACE_ROOT_TYPE,
       spaceId: await createIdFromSpaceKey(PublicKey.random()),
       idDerivation: 'spaceKey',
-      directory: 'automerge:4Y8mbUZP4bLTB1LWr8N4TRQY6ZWU',
+      directory: stringifyAutomergeUrl({ documentId: '4Y8mbUZP4bLTB1LWr8N4TRQY6ZWU' as DocumentId }),
     };
 
     expect(await verifySpaceRoot(root, '3Y8mbUZP4bLTB1LWr8N4TRQY6ZWU')).to.be.true;

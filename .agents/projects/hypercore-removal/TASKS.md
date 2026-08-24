@@ -171,6 +171,14 @@ migration; crash mid-migration and resume.
 
 ## Phase 3: migration (dual-path, per-space atomic cutover)
 
+- [x] **Anchor migration for legacy spaces** — `EchoHost.migrateSpaceToRootDocument()` mints a root
+      over the existing directory with `idDerivation: 'spaceKey'`, keeping the id (it came from the
+      space key and no document can reproduce it), and is idempotent so a re-run cannot fork the
+      anchor. `DataSpaceManager` runs it transparently on space load and never lets a failure block
+      opening. Covered end to end: a space created with `useSpaceRootDocument: false` migrates,
+      keeps its id and directory, keeps its control-feed credentials, and re-migrates to the same
+      root. This is the ANCHOR only — moving credentials into the document is the work below.
+
 - [ ] Reader accepts BOTH sources (control feed and credentials doc) for the whole
       migration window — client and EDGE alike.
 - [ ] **Dual-write during the window** — a migrating space writes every credential to BOTH
