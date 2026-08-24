@@ -1,4 +1,5 @@
 ---
+# multiple-changesets: an assistant tool-projection fix and an Interactive Brokers sync fix — unrelated bugs in different packages that a reader would look up separately.
 '@dxos/assistant': patch
 ---
 
