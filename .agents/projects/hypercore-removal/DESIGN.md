@@ -11,7 +11,7 @@ and one identity anchor.
 
 ## Today
 
-```
+```text
 space id  =  SHA-256(space key)[0..20]        (createIdFromSpaceKey, echo-protocol/src/space-id.ts)
 space key ->  credential chain (hypercore control feed)
           ->  root space doc == space directory  (echo_spaces.root_doc_url)
@@ -27,7 +27,7 @@ space key ->  credential chain (hypercore control feed)
 
 ## Target
 
-```
+```text
 space id  =  hash(space root doc id)
 space root doc (immutable, tiny)
    ├─ directory  -> automerge url   (rotatable)
@@ -42,10 +42,22 @@ Space root layout:
 {
   "type": "dxn:org.dxos.document.spaceRoot:0.1.0",
   "spaceId": "<space id>",
+  "idDerivation": "rootDoc",
   "directory": "automerge:<url>",
   "credentials": "dxn:<automerge url>"
 }
 ```
+
+`idDerivation` is `"rootDoc"` for new spaces and `"spaceKey"` for migrated ones. It is load-bearing, not decoration: a space migrated from the legacy world has a
+root doc whose id does NOT derive its space id, so a reader cannot tell the two cases apart
+from the id alone. `"rootDoc"` means the reader MUST recompute and reject a mismatch;
+`"spaceKey"` means the id is only checkable against the space key, exactly as today.
+
+**Derivation contract (`rootDoc`)** — mirrors `createIdFromSpaceKey` so both schemes produce
+the same shape: `SpaceId.encode(SHA-256(utf8(documentId))[0..20])`, i.e. SHA-256 over the
+document id string as it appears in the `automerge:` URL, truncated to `SpaceId.byteLength`
+(20) and multibase RFC4648 base-32 encoded with the `B` prefix
+(`packages/common/keys/src/space-id.ts`). Test vectors land with the implementation.
 
 The type is a versioned DXN in ECHO's own form — `dxn:<nsid>:<semver>`, final segment
 camelCase (`DXN_SPEC_REGEXP` in `keys/src/DXN.ts`), the same shape `EntitySystem.type`
@@ -63,8 +75,14 @@ structure. The version lives in the DXN, so the root needs no separate `SpaceDoc
   SQL read with no index pass.
 - **Credentials keep their current encoding** — the same signed protobuf bytes the control
   feed stores today, now as an append-only array in an Automerge doc. The credential
-  processor / state machine (`@dxos/credentials`) is fed from that array unchanged, so
-  membership, invitations and epochs are untouched by this change.
+  processor / state machine (`@dxos/credentials`) is fed from that array, so membership,
+  invitations and epochs keep their semantics. Two things do change and must not be papered
+  over: the two `AdmittedFeed` credentials stop being issued (nothing admits feeds any more),
+  and an Automerge array is not a feed — it has no single-writer total order. The **ordering
+  contract is therefore part of this design, not inherited**: concurrent appends from
+  different devices must converge to an order the processor accepts, duplicates must be
+  idempotent (credentials are content-addressable by signature), and migration replay must
+  produce the same state machine result as the feed it replaces.
 
 ## Key decisions
 
@@ -85,6 +103,21 @@ structure. The version lives in the DXN, so the root needs no separate `SpaceDoc
 4. **Feed machinery dies with hypercore, not before it.** Data feeds (queues) and the
    control feed have separate fates — the audit below has to establish which `feed-store`
    consumers are credential-chain-only.
+
+## Open questions (2)
+
+1. **Joiner bootstrap.** A fresh joiner must discover, be authorized for, and replicate the
+   credentials doc _before_ it is admitted to anything — the chicken-and-egg the control
+   feed solved with `SpaceMember.genesis_feed_key`
+   (`packages/core/protocols/src/proto/dxos/halo/credentials.proto`). Options: carry the
+   credentials-doc URL in the invitation payload; make the credentials doc world-readable
+   within the space root; or keep a genesis-equivalent field pointing at it. Needs deciding
+   before Phase 2 — it is the one place where "just replicate it like any other doc" is
+   circular.
+2. **Ordering/watermark for the migration copy.** Per-space atomic cutover (below) still
+   needs a defined cutoff: what happens to a credential appended to the control feed while
+   the copy is in flight. Simplest is to re-scan the feed after the copy and only publish
+   the root once the feed head is stable; dual-write is the alternative.
 
 ## Resolved (user, 2026-08-24)
 
