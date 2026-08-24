@@ -1,15 +1,12 @@
 ---
 name: effect
-description: Effect 4 in DXOS: the pinned copy in node_modules, and the house rules that override it. Use when writing or changing Effect code, composing test layer stacks, working with Schema or SchemaAST, or reading pre-migration v3 code.
+description: Effect in DXOS: the pinned copy in node_modules, and the house rules that override it. Use when writing or changing Effect code, composing test layer stacks, working with Schema or SchemaAST, or reading pre-migration code.
 ---
 
-# Effect 4 in DXOS
+# Effect in DXOS
 
-This repo is on Effect 4, where services, errors, Schema and the AST all changed
-shape. v3 written against them is **compile-clean and test-silent**: it typechecks,
-the tests pass, and the behaviour is wrong.
-
-Read the **pinned** copy.
+Effect written from memory is **compile-clean and test-silent**: it typechecks, the
+tests pass, and the behaviour is wrong. Read the **pinned** copy.
 
 ## The pinned copy
 
@@ -18,13 +15,18 @@ own agent documentation to npm, matched to the exact version this repo compiles
 against. Its `files` field ships `src/**/*.ts`, `AGENTS.md`, and `ai-docs/**`, so
 this is real source on disk, not `dist`:
 
-| Path                                 | What it holds                                                                                                                                                                  |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `node_modules/effect/AGENTS.md`      | The Effect team's authoring guide, 380 lines                                                                                                                                   |
-| `node_modules/effect/ai-docs/src/**` | 48 compiling examples, one per topic, linked from `AGENTS.md`                                                                                                                  |
-| `node_modules/effect/src/**`         | 436 files of implementation, JSDoc and every export, including the whole `unstable/` tree where v4 keeps `sql`, `http`, `httpapi`, `cli`, `ai`, `cluster`, and `observability` |
+| Path                                 | What it holds                                                                                                                                                       |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `node_modules/effect/AGENTS.md`      | The Effect team's authoring guide, 380 lines                                                                                                                        |
+| `node_modules/effect/ai-docs/src/**` | 48 compiling examples, one per topic, linked from `AGENTS.md`                                                                                                       |
+| `node_modules/effect/src/**`         | 436 files of implementation, JSDoc and every export, including the `unstable/` tree that holds `sql`, `http`, `httpapi`, `cli`, `ai`, `cluster` and `observability` |
 
 effect.website tracks `main`; the pinned copy tracks what you compile against.
+
+Research that reaches past the pinned copy, to an upstream issue, a migration note or
+a blog post, has to match the installed version first. `pnpm-workspace.yaml` pins the
+`effect` catalog entry, currently a 4.x release candidate; material written for 3.x
+describes a different library.
 
 Tests are the one thing npm leaves out: the package has no `test/` or `dtslint/`.
 
@@ -83,10 +85,10 @@ function that returns `Effect.gen`.
 Composing a layer stack, and test environments above all: read
 [layer-composition.md](layer-composition.md). One parameterized factory per
 environment, a flat `Layer.empty.pipe(...)`, `provide` for private dependencies
-against `provideMerge` for shared ones, and v4's shared memo map, which hands you the
+against `provideMerge` for shared ones, and the shared memo map, which hands you the
 same instance across two provides in one run with no compile error to warn you.
 
-## Schema, SchemaAST, and reading v3 code
+## Schema, SchemaAST, and pre-migration code
 
 Touching `Schema`, annotations, `toJsonSchema`, or anything under `SchemaAST`: read
 [v4-schema.md](v4-schema.md). It carries the rule that `effect/SchemaAST` is imported
@@ -94,6 +96,6 @@ only through `@dxos/effect`, the annotation reads that silently return `undefine
 refined types, `mutableKey` placement, lost brands, and the emitted-JSON-Schema wire
 contract.
 
-It also holds the **v3 to v4 name map**. Reach for that table when reading
-pre-migration code, an old PR, or an upstream issue, and when a v3 name you were about
-to write needs its v4 replacement.
+It also holds a **rename table**. Reach for it when reading an older file, an old PR
+or an upstream issue, and when a name you were about to write turns out to have been
+replaced.
