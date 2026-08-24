@@ -25,6 +25,7 @@ import { openAndClose } from '@dxos/test-utils';
 
 import { AuthStatus } from '../space';
 import { TestBuilder, type TestPeer } from '../testing';
+import { openCredentialsDocument } from './credentials-document-store';
 
 describe('DataSpaceManager', () => {
   test('create space', async () => {
@@ -159,6 +160,38 @@ describe('DataSpaceManager', () => {
     // Idempotent: a re-run must not fork the anchor.
     const again = await peer.dataSpaceManager.migrateSpaceToRootDocument(new Context(), space.key);
     expect(again.spaceRootDocUrl).to.equal(refs.spaceRootDocUrl);
+  });
+
+  test('a migrated space mirrors its control-feed credentials into the credentials document', async () => {
+    const builder = new TestBuilder();
+
+    const peer = builder.createPeer();
+    await peer.createIdentity();
+    await openAndClose(peer.echoHost, peer.dataSpaceManager);
+
+    const space = await peer.dataSpaceManager.createSpace(new Context(), { useSpaceRootDocument: false });
+    await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+    await peer.dataSpaceManager.migrateSpaceToRootDocument(new Context(), space.key);
+
+    const store = await openCredentialsDocument(new Context(), peer.echoHost, space.id);
+    for (const credential of space.inner.spaceState.credentials) {
+      store.append(credential);
+    }
+
+    // Replaying the document must reproduce the feed's chain exactly, ids and order alike.
+    const fromFeed = space.inner.spaceState.credentials.map((credential) => credential.id!.toHex());
+    const fromDocument = store.read().map(({ id }) => id);
+    expect(fromDocument.length).to.equal(fromFeed.length);
+    expect([...fromDocument].sort()).to.deep.equal([...fromFeed].sort());
+
+    // Appending again is a no-op, which is what makes the migration backfill re-runnable.
+    for (const credential of space.inner.spaceState.credentials) {
+      store.append(credential);
+    }
+    expect(store.read().length).to.equal(fromFeed.length);
+
+    // The document is linked from the root, which is what the per-space source flip keys off.
+    expect(peer.echoHost.getSpaceRootRefs(space.id)?.credentialsDocUrl).to.equal(store.url);
   });
 
   test('sync between peers', async () => {

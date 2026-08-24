@@ -79,6 +79,7 @@ import {
   type SpaceProtocol,
   type SpaceProtocolSession,
 } from '../space';
+import { openCredentialsDocument } from './credentials-document-store';
 import { DataSpace } from './data-space';
 import { spaceGenesis } from './genesis';
 
@@ -310,6 +311,7 @@ export class DataSpaceManager extends Resource {
         log('load space', { spaceMetadata });
         const space = await this._constructSpace(ctx, spaceMetadata);
         await this._migrateSpaceToRootDocument(ctx, space);
+        await this._mirrorCredentialsToDocument(ctx, space);
         // Track spaces that were previously active for auto-activation (used in dedicated worker mode).
         if (this._runtimeProps?.autoActivateSpaces && spaceMetadata.state === SpaceState.SPACE_ACTIVE) {
           spacesToActivate.push(space);
@@ -506,6 +508,24 @@ export class DataSpaceManager extends Resource {
       log('migrated space to root document', { spaceId: space.id, refs });
     } catch (err) {
       log.warn('failed to migrate space to root document', { spaceId: space.id, err });
+    }
+  }
+
+  /**
+   * Mirrors the space's credentials into its credentials document. Subscribing to processed
+   * credentials backfills the existing chain and dual-writes new ones through one path, since the
+   * control pipeline replays the whole feed on open.
+   */
+  private async _mirrorCredentialsToDocument(ctx: Context, space: DataSpace): Promise<void> {
+    try {
+      const store = await openCredentialsDocument(ctx, this._echoHost, space.id);
+      for (const credential of space.inner.spaceState.credentials) {
+        store.append(credential);
+      }
+
+      ctx.onDispose(space.inner.credentialProcessed.on((credential) => store.append(credential)));
+    } catch (err) {
+      log.warn('failed to mirror credentials to document', { spaceId: space.id, err });
     }
   }
 

@@ -181,7 +181,16 @@ migration; crash mid-migration and resume.
       anchor. `DataSpaceManager` runs it transparently on space load and never lets a failure block
       opening. Covered end to end: a space created with `useSpaceRootDocument: false` migrates,
       keeps its id and directory, keeps its control-feed credentials, and re-migrates to the same
-      root. This is the ANCHOR only — moving credentials into the document is the work below.
+      root.
+- [x] **Credential mirroring** — `CredentialsDocumentStore` (client-services, where echo-host and
+      credentials meet; echo-host itself does not depend on `@dxos/credentials`) appends credentials
+      keyed by id, and `DataSpaceManager` subscribes to `Space.credentialProcessed` on load. Since the
+      control pipeline replays the whole feed on open, one subscription both backfills the existing
+      chain and dual-writes new credentials. Covered: a migrated space's document replays to exactly
+      the feed's chain, and re-appending is a no-op so the backfill is re-runnable.
+- [ ] READ side: feed the state machine FROM the document (the `CredentialSource` split inside
+      `ControlPipeline`). Until then the document is written but never read, so the feed is still the
+      only source and no space has actually flipped.
 
 - [ ] Reader accepts BOTH sources (control feed and credentials doc) for the whole
       migration window — client and EDGE alike.

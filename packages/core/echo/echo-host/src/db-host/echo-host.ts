@@ -535,6 +535,31 @@ export class EchoHost extends Resource {
     return refs;
   }
 
+  /**
+   * Links an already-created credentials document from the space root, once. Idempotent — the link is
+   * what the per-space source flip keys off, so a second document would fork the chain. The document
+   * itself is built a layer up, where credential encoding lives.
+   */
+  async setCredentialsDocument(ctx: Context, spaceId: SpaceId, credentialsDocUrl: AutomergeUrl): Promise<AutomergeUrl> {
+    invariant(this._lifecycleState === LifecycleState.OPEN);
+
+    const refs = this._spaceStateManager.getSpaceRootRefs(spaceId);
+    invariant(refs, `Space has no root document: ${spaceId}`);
+    if (refs.credentialsDocUrl) {
+      return refs.credentialsDocUrl;
+    }
+
+    const rootHandle = await this._automergeHost.loadDoc<SpaceRoot>(ctx, refs.spaceRootDocUrl);
+    invariant(rootHandle, 'Space root document must load before linking credentials.');
+    rootHandle.change((doc: SpaceRoot) => {
+      doc.credentials = credentialsDocUrl;
+    });
+
+    await this._automergeHost.flush(ctx, { documentIds: [rootHandle.documentId] });
+    await this._spaceStateManager.setSpaceRootRefs(spaceId, { ...refs, credentialsDocUrl });
+    return credentialsDocUrl;
+  }
+
   /** References carried by the space root document, or undefined for a space that predates it. */
   getSpaceRootRefs(spaceId: SpaceId): SpaceRootRefs | undefined {
     return this._spaceStateManager.getSpaceRootRefs(spaceId);
