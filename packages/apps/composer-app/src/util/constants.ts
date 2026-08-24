@@ -22,3 +22,16 @@ export const LOG_STORE_MAX_BYTES = 50 * 1024 * 1024;
 
 /** Recovery mode entry point (minimal client, export, debug port). */
 export const RECOVERY_PATH = '/recovery.html';
+
+/** Worker route (`src/functions/_worker.ts`) that stores an uploaded feedback log bundle in R2. */
+export const FEEDBACK_LOGS_PATH = '/api/feedback-logs';
+
+/**
+ * Origins the bundled desktop app serves its webview from — one localhost port per release channel,
+ * mirroring `src-tauri/src/channel.rs`, where each port is permanent because it is the origin that
+ * channel's profile storage lives under. The desktop build has no `/api` route of its own, so its
+ * uploads reach the worker cross-origin and need an explicit allowance.
+ */
+export const DESKTOP_ORIGINS: ReadonlySet<string> = new Set(
+  [26777, 26778, 26779, 26780].map((port) => `http://localhost:${port}`),
+);
