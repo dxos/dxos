@@ -7,7 +7,11 @@ tasks:
   test-types:
     command: pnpm exec tstyche $projectSource
     deps:
-      - ^:build
+      # This project's build, which brings its dependencies' builds with it. The type
+      # test reads this package's source directly, so it does not consume the output,
+      # but a package that does not compile turns a type-test failure into a symptom
+      # rather than a finding.
+      - build
     inputs:
       - /tstyche.json
       - /tsconfig.typetest.json

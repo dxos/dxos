@@ -189,6 +189,9 @@ catalogs:
     '@effect/sql-sqlite-wasm':
       specifier: 4.0.0-rc.108
       version: 4.0.0-rc.108
+    '@effect/tsgo':
+      specifier: ^0.36.5
+      version: 0.36.5
     '@effect/vitest':
       specifier: 4.0.0-rc.108
       version: 4.0.0-rc.108
@@ -1299,6 +1302,9 @@ catalogs:
     oxc-resolver:
       specifier: ^11.9.0
       version: 11.19.1
+    oxlint-tsgolint:
+      specifier: ^7.0.2001
+      version: 7.0.2001
     parsimmon:
       specifier: ^1.18.1
       version: 1.18.1
@@ -1887,7 +1893,7 @@ importers:
         specifier: 'catalog:'
         version: 0.86.4
       '@effect/tsgo':
-        specifier: 0.36.5
+        specifier: 'catalog:'
         version: 0.36.5
       '@effect/vitest':
         specifier: 'catalog:'
@@ -2106,7 +2112,7 @@ importers:
         specifier: 1.78.0
         version: 1.78.0(oxlint-tsgolint@7.0.2001)
       oxlint-tsgolint:
-        specifier: 7.0.2001
+        specifier: 'catalog:'
         version: 7.0.2001
       pkg-up:
         specifier: 'catalog:'
