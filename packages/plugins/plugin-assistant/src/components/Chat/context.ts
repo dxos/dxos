@@ -7,11 +7,11 @@ import { createContext } from '@radix-ui/react-context';
 import { type Chat as ChatModule } from '@dxos/assistant-toolkit';
 import { type Event } from '@dxos/async';
 import { type Database } from '@dxos/echo';
-import { type MarkdownStreamController } from '@dxos/react-ui-markdown';
+import { type ChatThreadController } from '@dxos/react-ui-assistant';
+import { type MessageRange } from '@dxos/react-ui-feed';
 import { type Message } from '@dxos/types';
 
 import { type AiChatProcessor } from '../../processor';
-import { type MessageSpan } from '../ChatThread';
 import { type ChatEvent } from './events';
 
 /**
@@ -33,12 +33,12 @@ export type ChatContextValue = {
   messages: Message.Message[];
   processor: AiChatProcessor;
   requestTiming: ChatRequestTiming | null;
-  /** The thread's editor controller, shared between `Chat.Thread` and `Chat.Minimap`. */
-  controller: MarkdownStreamController | null;
-  setController: (controller: MarkdownStreamController | null) => void;
-  /** Per-message document offset ranges, published by `Chat.Thread`'s syncer. */
-  messageRanges: MessageSpan[];
-  setMessageRanges: (ranges: MessageSpan[]) => void;
+  /** The thread's controller, shared between `Chat.Thread` and `Chat.Outline`. */
+  controller: ChatThreadController | null;
+  setController: (controller: ChatThreadController | null) => void;
+  /** The visible index range, published by `Chat.Thread` as the reader scrolls. */
+  visibleRange?: MessageRange;
+  setVisibleRange: (range: MessageRange | undefined) => void;
 };
 
 // Internal: not re-exported from `Chat/index.ts`. Accessed by sibling components in this

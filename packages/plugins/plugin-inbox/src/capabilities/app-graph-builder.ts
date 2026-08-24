@@ -18,7 +18,8 @@ import { isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Connection, Cursor } from '@dxos/link';
-import { isCursorForTarget, syncTarget } from '@dxos/plugin-connector';
+import * as Binding from '@dxos/plugin-connector/Binding';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { DraftMessage, Event, Message } from '@dxos/types';
 import { AI_ACTION_ICON } from '@dxos/ui-types';
@@ -47,24 +48,21 @@ import { getMessageLabel } from '../util';
 const calendarTypename = Type.getTypename(Calendar.Calendar);
 
 /**
- * Whether an external sync connection targets this mailbox. Gates the pipeline actions: with nothing
- * connected there is no mail to act on, so offering them is a dead affordance. Mirrors the lookup the
- * sync action does — the cursor no longer relates to a Connection directly, so the Connection is found
- * by matching access tokens.
+ * The live external sync binding targeting `target`, read reactively so the extension re-runs when a
+ * cursor or connection appears. Every affordance that depends on being connected goes through this one
+ * lookup — the sync actions, and the pipeline actions that would otherwise offer work on a mailbox with
+ * no mail — and it is the same predicate the connector plugin's Connect action keys on, so a binding
+ * whose connection was deleted reads as unconnected everywhere at once.
  */
-const hasConnection = (mailbox: Mailbox.Mailbox, get: Atom.AtomContext): boolean => {
-  const db = Obj.getDatabase(mailbox);
-  if (!db) {
-    return false;
-  }
-  const cursor = get(db.query(Filter.type(Cursor.Cursor)).atom).find(
-    (candidate): candidate is Cursor.ExternalCursor =>
-      Cursor.isExternal(candidate) && isCursorForTarget(candidate, mailbox),
-  );
-  if (!cursor) {
-    return false;
-  }
-  return get(db.query(Filter.type(Connection.Connection, { accessToken: cursor.spec.source })).atom).length > 0;
+const liveBindingFor = (target: Obj.Unknown, get: Atom.AtomContext): Binding.Binding | undefined => {
+  const db = Obj.getDatabase(target);
+  return db
+    ? Binding.find(
+        get(db.query(Filter.type(Cursor.Cursor)).atom),
+        get(db.query(Filter.type(Connection.Connection)).atom),
+        target,
+      )
+    : undefined;
 };
 
 export const ATTACHMENT_NODE_TYPE = `${Type.getTypename(Message.Message)}-attachment`;
@@ -85,6 +83,11 @@ const FILTER_TYPE = `${Type.getTypename(Mailbox.Mailbox)}-filter`;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    // Hoisted so the sync actions below take a reactive dependency on the provider list: a connector
+    // module activates lazily, and reading the capability manager synchronously inside a graph
+    // extension registers no dependency, so a Sync disabled on a fresh load would stay disabled.
+    const connectorAtom = yield* Capability.atom(ConnectorSpec.Connector);
+
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'mailboxesSection',
@@ -118,10 +121,18 @@ export default Capability.makeModule(
         },
         connector: (space, get) => {
           const mailboxes = get(space.db.query(Filter.type(Mailbox.Mailbox)).atom);
+          // Read once for the whole section rather than per mailbox: `Binding.find` scans the space's
+          // cursors either way, and one atom read keeps the connector's subscription set flat.
+          const cursors = get(space.db.query(Filter.type(Cursor.Cursor)).atom);
+          const connections = get(space.db.query(Filter.type(Connection.Connection)).atom);
 
           return Effect.succeed(
             mailboxes.map((mailbox: Mailbox.Mailbox) => {
               const mailboxSnapshot = get(Obj.atom(mailbox));
+              // Every child here is a view onto synced mail, so an unbound mailbox listed seven
+              // folders that could only ever be empty — and buried its own Connect affordance under
+              // them. Unbound, it stays a leaf until a connection arrives.
+              const connected = Boolean(Binding.find(cursors, connections, mailbox)?.connection);
 
               return Node.make({
                 id: mailboxSnapshot.id,
@@ -131,147 +142,149 @@ export default Capability.makeModule(
                   label: mailboxSnapshot.name ?? ['object-name.placeholder', { ns: Type.getTypename(Mailbox.Mailbox) }],
                   icon: 'ph--tray--regular',
                   iconHue: 'rose',
-                  role: 'branch',
+                  role: connected ? 'branch' : undefined,
                   // Placeholder for a future "intelligent inbox"; resolved by the canonical `systemTag`,
                   // not this label string (see `MailboxArticle`'s `systemTag` prop).
                   filter: '#inbox',
                   systemTag: 'inbox' satisfies SystemTags.SystemTagId,
                 },
-                nodes: [
-                  // Pre-seeded, non-removable filter nodes — same mechanism as a saved user filter, just
-                  // static with no rename/delete actions.
-                  Node.make({
-                    id: getInboxId(),
-                    type: FILTER_TYPE,
-                    data: mailbox,
-                    properties: {
-                      label: ['inbox.label', { ns: meta.profile.key }],
-                      icon: 'ph--tray--regular',
-                      iconHue: 'rose',
-                      // Gmail/JMAP both model the inbox as positive membership (Gmail's INBOX label,
-                      // JMAP's inbox role), so archiving removes this tag rather than adding one —
-                      // no complement operator is needed here or in `MailboxArticle`.
-                      filter: '#inbox',
-                      systemTag: 'inbox' satisfies SystemTags.SystemTagId,
-                    },
-                  }),
-                  Node.make({
-                    id: getStarredId(),
-                    type: FILTER_TYPE,
-                    data: mailbox,
-                    properties: {
-                      label: ['starred.label', { ns: meta.profile.key }],
-                      icon: 'ph--star--regular',
-                      iconHue: 'rose',
-                      filter: '#starred',
-                      systemTag: 'starred' satisfies SystemTags.SystemTagId,
-                    },
-                  }),
-                  Node.make({
-                    id: getImportantId(),
-                    type: FILTER_TYPE,
-                    data: mailbox,
-                    properties: {
-                      label: ['important.label', { ns: meta.profile.key }],
-                      icon: 'ph--bookmark-simple--regular',
-                      iconHue: 'rose',
-                      filter: '#important',
-                      systemTag: 'important' satisfies SystemTags.SystemTagId,
-                    },
-                  }),
-                  Node.make({
-                    id: getAllMailId(),
-                    type: FILTER_TYPE,
-                    data: mailbox,
-                    properties: {
-                      label: ['all-mail.label', { ns: meta.profile.key }],
-                      icon: 'ph--stack--regular',
-                      iconHue: 'rose',
-                      filter: '',
-                    },
-                  }),
-                  Node.make({
-                    id: getSentId(),
-                    type: FILTER_TYPE,
-                    data: mailbox,
-                    properties: {
-                      label: ['sent.label', { ns: meta.profile.key }],
-                      icon: 'ph--paper-plane-tilt--regular',
-                      iconHue: 'rose',
-                      filter: '#sent',
-                      systemTag: 'sent' satisfies SystemTags.SystemTagId,
-                    },
-                  }),
-                  Node.make({
-                    id: getDraftsId(),
-                    type: FILTER_TYPE,
-                    data: mailbox,
-                    properties: {
-                      label: ['drafts.label', { ns: meta.profile.key }],
-                      icon: 'ph--pencil-simple--regular',
-                      iconHue: 'rose',
-                      filter: '',
-                      systemTag: 'draft' satisfies SystemTags.SystemTagId,
-                    },
-                  }),
-                  Node.make({
-                    id: getSubscriptionsId(),
-                    type: MAILBOX_SUBSCRIPTIONS_TYPE,
-                    data: mailbox,
-                    properties: {
-                      label: ['subscriptions.label', { ns: meta.profile.key }],
-                      icon: 'ph--envelope-simple--regular',
-                      iconHue: 'rose',
-                      mailbox,
-                    },
-                  }),
-                  ...(mailboxSnapshot.filters?.map(({ name, filter }: { name: string; filter: any }) =>
-                    Node.make({
-                      id: `filter-${kebabize(name)}`,
-                      type: FILTER_TYPE,
-                      data: mailbox,
-                      properties: {
-                        label: name,
-                        icon: 'ph--funnel--regular',
-                        iconHue: 'rose',
-                        filter,
-                      },
-                      actions: [
-                        Node.makeAction({
-                          id: 'rename-filter',
-                          data: (params?: Node.InvokeProps) =>
-                            Operation.invoke(InboxOperation.RenameFilter, {
-                              mailbox,
-                              name,
-                              caller: `${params?.caller}:${params?.parent?.id}`,
-                            }),
+                nodes: !connected
+                  ? []
+                  : [
+                      // Pre-seeded, non-removable filter nodes — same mechanism as a saved user filter, just
+                      // static with no rename/delete actions.
+                      Node.make({
+                        id: getInboxId(),
+                        type: FILTER_TYPE,
+                        data: mailbox,
+                        properties: {
+                          label: ['inbox.label', { ns: meta.profile.key }],
+                          icon: 'ph--tray--regular',
+                          iconHue: 'rose',
+                          // Gmail/JMAP both model the inbox as positive membership (Gmail's INBOX label,
+                          // JMAP's inbox role), so archiving removes this tag rather than adding one —
+                          // no complement operator is needed here or in `MailboxArticle`.
+                          filter: '#inbox',
+                          systemTag: 'inbox' satisfies SystemTags.SystemTagId,
+                        },
+                      }),
+                      Node.make({
+                        id: getStarredId(),
+                        type: FILTER_TYPE,
+                        data: mailbox,
+                        properties: {
+                          label: ['starred.label', { ns: meta.profile.key }],
+                          icon: 'ph--star--regular',
+                          iconHue: 'rose',
+                          filter: '#starred',
+                          systemTag: 'starred' satisfies SystemTags.SystemTagId,
+                        },
+                      }),
+                      Node.make({
+                        id: getImportantId(),
+                        type: FILTER_TYPE,
+                        data: mailbox,
+                        properties: {
+                          label: ['important.label', { ns: meta.profile.key }],
+                          icon: 'ph--bookmark-simple--regular',
+                          iconHue: 'rose',
+                          filter: '#important',
+                          systemTag: 'important' satisfies SystemTags.SystemTagId,
+                        },
+                      }),
+                      Node.make({
+                        id: getAllMailId(),
+                        type: FILTER_TYPE,
+                        data: mailbox,
+                        properties: {
+                          label: ['all-mail.label', { ns: meta.profile.key }],
+                          icon: 'ph--stack--regular',
+                          iconHue: 'rose',
+                          filter: '',
+                        },
+                      }),
+                      Node.make({
+                        id: getSentId(),
+                        type: FILTER_TYPE,
+                        data: mailbox,
+                        properties: {
+                          label: ['sent.label', { ns: meta.profile.key }],
+                          icon: 'ph--paper-plane-tilt--regular',
+                          iconHue: 'rose',
+                          filter: '#sent',
+                          systemTag: 'sent' satisfies SystemTags.SystemTagId,
+                        },
+                      }),
+                      Node.make({
+                        id: getDraftsId(),
+                        type: FILTER_TYPE,
+                        data: mailbox,
+                        properties: {
+                          label: ['drafts.label', { ns: meta.profile.key }],
+                          icon: 'ph--pencil-simple--regular',
+                          iconHue: 'rose',
+                          filter: '',
+                          systemTag: 'draft' satisfies SystemTags.SystemTagId,
+                        },
+                      }),
+                      Node.make({
+                        id: getSubscriptionsId(),
+                        type: MAILBOX_SUBSCRIPTIONS_TYPE,
+                        data: mailbox,
+                        properties: {
+                          label: ['subscriptions.label', { ns: meta.profile.key }],
+                          icon: 'ph--envelope-simple--regular',
+                          iconHue: 'rose',
+                          mailbox,
+                        },
+                      }),
+                      ...(mailboxSnapshot.filters?.map(({ name, filter }: { name: string; filter: any }) =>
+                        Node.make({
+                          id: `filter-${kebabize(name)}`,
+                          type: FILTER_TYPE,
+                          data: mailbox,
                           properties: {
-                            label: ['rename-filter.label', { ns: meta.profile.key }],
-                            icon: 'ph--pencil-simple--regular',
-                            disposition: 'list-item',
+                            label: name,
+                            icon: 'ph--funnel--regular',
+                            iconHue: 'rose',
+                            filter,
                           },
-                        }),
-                        Node.makeAction({
-                          id: 'delete-filter',
-                          data: () =>
-                            Effect.sync(() => {
-                              Obj.update(mailbox, (mailbox) => {
-                                const index = mailbox.filters.findIndex((f: any) => f.name === name);
-                                if (index >= 0) {
-                                  mailbox.filters.splice(index, 1);
-                                }
-                              });
+                          actions: [
+                            Node.makeAction({
+                              id: 'rename-filter',
+                              data: (params?: Node.InvokeProps) =>
+                                Operation.invoke(InboxOperation.RenameFilter, {
+                                  mailbox,
+                                  name,
+                                  caller: `${params?.caller}:${params?.parent?.id}`,
+                                }),
+                              properties: {
+                                label: ['rename-filter.label', { ns: meta.profile.key }],
+                                icon: 'ph--pencil-simple--regular',
+                                disposition: 'list-item',
+                              },
                             }),
-                          properties: {
-                            label: ['delete-filter.label', { ns: meta.profile.key }],
-                            icon: 'ph--trash--regular',
-                            disposition: 'list-item',
-                          },
+                            Node.makeAction({
+                              id: 'delete-filter',
+                              data: () =>
+                                Effect.sync(() => {
+                                  Obj.update(mailbox, (mailbox) => {
+                                    const index = mailbox.filters.findIndex((f: any) => f.name === name);
+                                    if (index >= 0) {
+                                      mailbox.filters.splice(index, 1);
+                                    }
+                                  });
+                                }),
+                              properties: {
+                                label: ['delete-filter.label', { ns: meta.profile.key }],
+                                icon: 'ph--trash--regular',
+                                disposition: 'list-item',
+                              },
+                            }),
+                          ],
                         }),
-                      ],
-                    }),
-                  ) ?? []),
-                ],
+                      ) ?? []),
+                    ],
               });
             }),
           );
@@ -386,7 +399,7 @@ export default Capability.makeModule(
             Node.makeAction({
               id: 'create-mailbox',
               data: () =>
-                Operation.invoke(SpaceOperation.OpenCreateObject, {
+                Operation.invoke(SpaceOperation.OpenObjectForm, {
                   target: space.db,
                   typename: Type.getTypename(Mailbox.Mailbox),
                   targetNodeId: getMailboxesPath(space.db.spaceId),
@@ -405,7 +418,7 @@ export default Capability.makeModule(
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.communications),
         groupSegment: GraphPath.GroupSegments.communications,
         createObject: (space) =>
-          Operation.invoke(SpaceOperation.OpenCreateObject, {
+          Operation.invoke(SpaceOperation.OpenObjectForm, {
             target: space.db,
             typename: calendarTypename,
             targetNodeId: getCalendarsPath(space.db.spaceId),
@@ -458,23 +471,19 @@ export default Capability.makeModule(
           if (!db) {
             return Effect.succeed([]);
           }
-          // The sync action appears only when an external-sync cursor targets this mailbox. The cursor
-          // no longer relates to Connection directly, so the Connection is found by matching access
-          // tokens (reactive queries; loading synchronously isn't reliable here).
-          const cursors = get(db.query(Filter.type(Cursor.Cursor)).atom);
-          const cursor = cursors.find(
-            (candidate): candidate is Cursor.ExternalCursor =>
-              Cursor.isExternal(candidate) && isCursorForTarget(candidate, mailbox),
-          );
-          if (!cursor) {
+          // Sync appears only for a live binding — a cursor targeting this mailbox whose Connection
+          // still exists. The connector plugin's Connect action keys on the same predicate, so exactly
+          // one of the two is offered.
+          const binding = liveBindingFor(mailbox, get);
+          if (!binding) {
             return Effect.succeed([]);
           }
-          const [connection] = get(
-            db.query(Filter.type(Connection.Connection, { accessToken: cursor.spec.source })).atom,
-          );
-          if (!connection) {
-            return Effect.succeed([]);
-          }
+          // A bound mailbox whose provider plugin is not registered cannot sync — `Binding.sync` resolves
+          // no connector and returns — so the button stays as the toolbar's affordance but disabled,
+          // rather than looking functional and doing nothing.
+          const hasConnector = get(connectorAtom)
+            .flat()
+            .some((entry) => entry.id === binding.connection.connectorId);
           return Effect.gen(function* () {
             // Progress registry is optional (absent when plugin-progress isn't loaded); the same
             // monitor `MailboxArticle`'s statusbar meter reads, so the action's spinner/disabled
@@ -487,12 +496,12 @@ export default Capability.makeModule(
             return [
               {
                 id: 'sync',
-                data: () => syncTarget(mailbox),
+                data: () => Binding.sync(mailbox),
                 properties: {
                   label: ['sync-mailbox.label', { ns: meta.profile.key }],
                   icon: isSyncing ? 'ph--spinner-gap--regular' : 'ph--arrows-clockwise--regular',
                   spin: isSyncing,
-                  disabled: isSyncing,
+                  disabled: isSyncing || !hasConnector,
                   // Appears both as a primary object-toolbar button and a nav-tree context-menu row.
                   disposition: ['toolbar', 'list-item'],
                   presentation: { toolbar: { variant: 'primary', iconOnly: false } },
@@ -511,9 +520,10 @@ export default Capability.makeModule(
         match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (mailbox, get) => {
           const db = Obj.getDatabase(mailbox);
+          const binding = liveBindingFor(mailbox, get);
           // Gated on a connection, not rendered disabled: a disabled primary button still reads as the
           // view's main call to action on a mailbox that has nothing to analyze yet.
-          if (!db || !hasConnection(mailbox, get)) {
+          if (!db || !binding) {
             return Effect.succeed([]);
           }
           return Effect.gen(function* () {
@@ -523,6 +533,12 @@ export default Capability.makeModule(
               onNone: () => false,
               onSome: (registry) => get(registry.monitorAtom(scanKey))?.status === 'running',
             });
+            // Analysis walks what sync brought down, so before the first completed run it has nothing
+            // to walk. `lastTick` is the signal: only `Cursor.recordSuccess` stamps it, and it
+            // survives restarts — a message count would also answer "is there anything here", but not
+            // "has the mailbox finished arriving". Read through the object atom so the button enables
+            // the moment the first sync lands.
+            const synced = Boolean(get(Obj.atom(binding.cursor)).lastTick);
             return [
               {
                 // The pipeline cascade the user runs by hand after a first sync: deterministic
@@ -544,6 +560,8 @@ export default Capability.makeModule(
                     ? ['stop-analyze-mailbox.label', { ns: meta.profile.key }]
                     : ['analyze-mailbox.label', { ns: meta.profile.key }],
                   icon: isScanning ? 'ph--stop--regular' : AI_ACTION_ICON,
+                  // Never disabled mid-run: the control is Stop then, and cancelling has to stay open.
+                  disabled: !isScanning && !synced,
                   disposition: ['toolbar', 'list-item'],
                   presentation: { toolbar: { variant: 'primary', iconOnly: false } },
                   testId: 'inbox.mailbox.analyze',
@@ -562,23 +580,23 @@ export default Capability.makeModule(
           if (!db) {
             return Effect.succeed([]);
           }
-          // The sync action appears only when an external-sync cursor targets this calendar; the
-          // cursor's `spec.source` access token authenticates the sync.
-          const cursors = get(db.query(Filter.type(Cursor.Cursor)).atom);
-          const binding = cursors.find(
-            (candidate): candidate is Cursor.ExternalCursor =>
-              Cursor.isExternal(candidate) && isCursorForTarget(candidate, calendar),
-          );
+          // Sync appears only for a live binding — see `syncMailbox`.
+          const binding = liveBindingFor(calendar, get);
           if (!binding) {
             return Effect.succeed([]);
           }
+          // Disabled rather than dropped when the provider plugin is absent — see `syncMailbox`.
+          const hasConnector = get(connectorAtom)
+            .flat()
+            .some((entry) => entry.id === binding.connection.connectorId);
           return Effect.succeed([
             {
               id: 'sync',
-              data: () => syncTarget(calendar),
+              data: () => Binding.sync(calendar),
               properties: {
                 label: ['sync-calendar.label', { ns: meta.profile.key }],
                 icon: 'ph--arrows-clockwise--regular',
+                disabled: !hasConnector,
                 // Appears both as a primary object-toolbar button and a nav-tree context-menu row.
                 // No progress monitor yet for calendar sync, so (unlike mailbox) there's no spinner.
                 disposition: ['toolbar', 'list-item'],

@@ -18,7 +18,7 @@ import { AgentHandlers } from '../operations';
 import { AgentWizardHandlers } from '../skills/agent-wizard/operations';
 import { AgentSkillHandlers } from '../skills/agent/operations';
 import { AlarmHandlers } from '../skills/alarm/operations';
-import { DatabaseHandlers } from '../skills/database/operations';
+import { ChatContextHandlers } from '../skills/chat-context/operations';
 import { DelegationHandlers } from '../skills/delegation/operations';
 import { MemoryHandlers } from '../skills/memory/operations';
 import { PlanningHandlers } from '../skills/planning/operations';
@@ -37,7 +37,7 @@ export const OperationTestLayer = AssistantTestLayerWithTriggers({
     AgentSkillHandlers,
     AgentWizardHandlers,
     AlarmHandlers,
-    DatabaseHandlers,
+    ChatContextHandlers,
     DelegationHandlers,
     MemoryHandlers,
     PlanningHandlers,
@@ -47,7 +47,6 @@ export const OperationTestLayer = AssistantTestLayerWithTriggers({
     Agent.Agent,
     AiContext.Binding,
     Chat.Chat,
-    Chat.CompanionTo,
     Collection.Collection,
     Employer.Employer,
     Feed.Feed,

@@ -100,6 +100,16 @@ export type ManagerOptions = {
   pluginLoader: (id: string) => Effect.Effect<LoadedPlugin, Error>;
   plugins?: Plugin.Plugin[];
   enabled?: string[];
+  /**
+   * Ids of plugins the host pins on: always enabled, never disableable.
+   *
+   * Defaults to every plugin declaring `system` in `meta.profile.tags`. Hosts pass
+   * this when the tag is the wrong authority — a plugin's `dx.config.ts` declares
+   * one `system` tag for every host, so without an override the CLI inherits
+   * Composer's judgment about what a user may turn off. Ids not present in
+   * `plugins` are ignored.
+   */
+  core?: string[];
   registry?: Registry.AtomRegistry;
   /**
    * Backend for the plugin registry catalog. When omitted the manager exposes a
@@ -128,6 +138,11 @@ export type ManagerOptions = {
    * pass `Duration.infinity` to disable.
    */
   activationTimeout?: Duration.Input;
+  /**
+   * Completes when the host is idle, gating the Idle wave. Defaults to the real paint/idle wait,
+   * which resolves immediately off-browser; `Effect.never` models a browser that has not idled.
+   */
+  whenIdle?: Effect.Effect<void>;
 };
 
 /**
@@ -297,18 +312,22 @@ class ManagerImpl implements PluginManager {
     pluginLoader,
     plugins = [],
     enabled = [],
+    core: coreProp,
     registry,
     pluginRegistryProvider,
     onRemove,
     loadTimeout = DEFAULT_LOAD_TIMEOUT,
     activationTimeout = DEFAULT_ACTIVATION_TIMEOUT,
+    whenIdle,
   }: ManagerOptions) {
-    // Core plugins are derived from `meta.tags.includes('system')`; the set is
-    // a snapshot of the initial `plugins` array (later `add()` calls do not
-    // promote plugins to core).
-    const core: string[] = plugins
-      .filter(({ meta }) => meta.profile.tags?.includes('system'))
-      .map(({ meta }) => meta.profile.key);
+    // Core plugins default to `meta.tags.includes('system')`, overridden by the host's
+    // explicit set. Either way the set is a snapshot of the initial `plugins` array
+    // (later `add()` calls do not promote plugins to core), and a host-supplied id
+    // that names no registered plugin is dropped rather than pinning a phantom.
+    const registered = new Set(plugins.map(({ meta }) => meta.profile.key));
+    const core: string[] = coreProp
+      ? coreProp.filter((id) => registered.has(id))
+      : plugins.filter(({ meta }) => meta.profile.tags?.includes('system')).map(({ meta }) => meta.profile.key);
     this.registry = registry ?? Registry.make();
     this.capabilities = CapabilityManager.make({
       registry: this.registry,
@@ -317,7 +336,7 @@ class ManagerImpl implements PluginManager {
 
     this._state = new ManagerState(this.registry, { plugins, core, enabled });
     this._loader = new ModuleLoader(this._state, this.capabilities, activationTimeout);
-    this._scheduler = new ActivationScheduler(this._state, this.capabilities, this._loader);
+    this._scheduler = new ActivationScheduler(this._state, this.capabilities, this._loader, whenIdle);
     this._catalog = new PluginCatalog(this._state, this._scheduler, this.pluginRegistry, {
       pluginLoader,
       loadTimeout,

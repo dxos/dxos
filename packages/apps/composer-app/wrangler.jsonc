@@ -4,7 +4,7 @@
   // paths run the Worker first (feedback-logs, RSS proxy, OTel -> SigNoz, the domain-verification
   // documents) while every other route is asset-first with SPA fallback.
   // Deployed by .github/workflows/scripts/deploy-env.mjs via `wrangler deploy --config <this> --env <env>`.
-  // `_worker.js` lives in the asset dir (the PR preview deploy — a `versions upload` against `env.main` —
+  // `_worker.js` lives in the asset dir (the PR preview deploy — a `versions upload` against `env.dev` —
   // also consumes it there), so it is kept out of the asset upload with a generated `.assetsignore`.
   // Bindings match what `_worker.ts` reads.
   // Local dev: `moon run composer-app:bundle && wrangler dev` (uses the default bindings below).
@@ -13,9 +13,10 @@
   "main": "./out/composer/_worker.js",
   "compatibility_date": "2024-04-05",
   // Default / local-dev bindings (wrangler dev); per-env deploys use the `env` sections below.
+  // `ENVIRONMENT` is `local` rather than `dev` so it cannot be mistaken for the deployed `env.dev`.
   "vars": {
     "APPLE_TEAM_ID": "9428WC5MR8",
-    "ENVIRONMENT": "dev",
+    "ENVIRONMENT": "local",
     "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud",
   },
   "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" }],
@@ -49,20 +50,23 @@
       },
       "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-preview" }],
     },
-    "labs": {
-      "name": "composer-labs",
+    // The daily dogfood build (preview.composer.space) — deployed from `main` on a schedule, talking to
+    // EDGE production. Distinct from the per-PR previews, which are Worker versions of `dev` below.
+    "preview": {
+      "name": "composer-preview",
       "vars": {
         "APPLE_TEAM_ID": "9428WC5MR8",
-        "ENVIRONMENT": "labs",
+        "ENVIRONMENT": "preview",
         "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud",
       },
       "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" }],
     },
-    "main": {
-      "name": "composer-main",
+    // Deployed on demand, talking to EDGE preview; also the Worker PR previews upload versions to.
+    "dev": {
+      "name": "composer-dev",
       "vars": {
         "APPLE_TEAM_ID": "9428WC5MR8",
-        "ENVIRONMENT": "main",
+        "ENVIRONMENT": "dev",
         "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud",
       },
       "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" }],

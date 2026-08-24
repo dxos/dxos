@@ -55,6 +55,7 @@ import {
   startupProfiler,
   translations,
 } from './util';
+import { initAutomergeWasm } from './util/automerge-wasm';
 
 // Fatal-error-only UI, loaded on demand: its FeedbackForm pulls the whole form stack
 // (react-ui-form, editor, pickers) which must stay out of the static boot graph.
@@ -80,6 +81,10 @@ const startupTimeout = (() => {
 
 // Injected by the `define` block in vite.config.ts; '' in production builds.
 declare const __DX_DEV_SERVER_BOOT_ID__: string;
+
+// Session id for the agent debug port when the dev server was launched with the debug-port flag.
+// Always '' in production builds, so the port cannot be auto-started on a deployed origin.
+declare const __DX_DEBUG_PORT_SESSION__: string;
 
 declare global {
   interface ImportMeta {
@@ -203,15 +208,15 @@ const main = async () => {
   profiler?.mark('dynamic-imports:start');
   bootStatus('Loading framework…');
 
-  // Load these in parallel; HTTP/2 multiplexes the four chunks and even on
-  // local-disk the parser can interleave parses.
-  const [{ Config, defs, SaveConfig }, { Client, createClientServices }, { Migrations }, { __COMPOSER_MIGRATIONS__ }] =
-    await Promise.all([
-      import('@dxos/config'),
-      import('@dxos/react-client'),
-      import('@dxos/migrations'),
-      import('./migrations'),
-    ]);
+  // Load these in parallel; HTTP/2 multiplexes the three chunks and even on
+  // local-disk the parser can interleave parses. The wasm init rides the same wave: it must
+  // complete before anything touches automerge (slim entrypoints — see util/automerge-wasm.ts).
+  const [{ Config, defs, SaveConfig }, { Client, createClientServices }, AppMigrations] = await Promise.all([
+    import('@dxos/config'),
+    import('@dxos/react-client'),
+    import('@dxos/app-toolkit/AppMigrations'),
+    initAutomergeWasm(),
+  ]);
 
   profiler?.mark('dynamic-imports:end');
   profiler?.measure('dynamic-imports', 'dynamic-imports:start', 'dynamic-imports:end');
@@ -237,7 +242,7 @@ const main = async () => {
   };
   (window as any).composer = { profiler, otel };
 
-  Migrations.define(APP_KEY, __COMPOSER_MIGRATIONS__);
+  AppMigrations.define();
 
   profiler?.mark('config:start');
   bootStatus('Reading configuration…');
@@ -441,6 +446,13 @@ const main = async () => {
   const client = new Client({ config, services });
   void client.initialize().catch((err) => log.catch(err));
 
+  // Started here rather than from plugin-debug, which a plain local `serve` leaves disabled —
+  // tying the flag to it would make the flag silently do nothing.
+  if (__DX_DEBUG_PORT_SESSION__) {
+    const { getDebugPortController } = await import('@dxos/client/devtools');
+    getDebugPortController().start({ session: __DX_DEBUG_PORT_SESSION__, persist: true });
+  }
+
   profiler?.mark('plugins:start');
 
   const isPwa = !isFalse(config.values.runtime?.app?.env?.DX_PWA);
@@ -459,13 +471,14 @@ const main = async () => {
     logStore,
     onFatalError: (error) => raiseFatalError(error),
 
-    isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
+    // Strictly the `dev` cloud environment (not preview) or a local `DX_DEV=true` opt-in, so a plain
+    // local `serve` keeps the lean default plugin set (see `getDefaults` in plugin-defs.tsx).
+    isDev: config.values.runtime?.app?.env?.DX_ENVIRONMENT === 'dev' || isTrue(config.values.runtime?.app?.env?.DX_DEV),
     isLocal: !isTauri && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
     isPwa,
     isTauri,
     isPopover,
     isMobile,
-    isLabs: isTrue(config.values.runtime?.app?.env?.DX_LABS),
     isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
   };
 

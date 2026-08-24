@@ -29,6 +29,7 @@
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-routine": "workspace:*",
     "@dxos/plugin-sandbox": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*"

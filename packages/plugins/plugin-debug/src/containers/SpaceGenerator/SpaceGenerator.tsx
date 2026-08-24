@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useOperationInvoker, useOptionalCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { ProgressMeter, useProgressMonitor } from '@dxos/app-toolkit/ui';
+import { useProgressMonitor } from '@dxos/app-toolkit/ui';
 import { ComputeGraph } from '@dxos/conductor';
 import { Filter, Obj, Type } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
@@ -16,8 +16,18 @@ import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { IconButton, Input, Panel, ScrollArea, ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import {
+  Flex,
+  IconButton,
+  Input,
+  Panel,
+  ScrollArea,
+  ThemedClassName,
+  useAsyncEffect,
+  useTranslation,
+} from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
+import { ProgressMeter } from '@dxos/react-ui-components';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Organization, Person, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -307,7 +317,7 @@ const ProgressGenerator = ({ classNames }: ProgressGeneratorProps) => {
 
   return (
     <div className={mx('flex flex-col gap-1 py-1', classNames)}>
-      <div className='flex items-center gap-2'>
+      <Flex gap='sm' align='center'>
         <span className='grow'>Progress Monitor</span>
         {running ? (
           <IconButton
@@ -318,7 +328,7 @@ const ProgressGenerator = ({ classNames }: ProgressGeneratorProps) => {
         ) : (
           <IconButton icon='ph--play--regular' label='Start test progress' disabled={!registry} onClick={handleStart} />
         )}
-      </div>
+      </Flex>
       {monitor && (monitor.status === 'running' || monitor.status === 'error') && (
         <ProgressMeter state={monitor} onCancel={() => registry?.cancel(TEST_PROGRESS_NAME)} />
       )}

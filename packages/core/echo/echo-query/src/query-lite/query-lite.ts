@@ -155,6 +155,8 @@ const _filterMatchEntityLocal = (filter: QueryAST.Filter, entity: any): boolean 
       }
       return true;
     }
+    case 'has-parent':
+      return ((entity?.['@parent'] ?? entity?.system?.parent) !== undefined) === filter.value;
     case 'not':
       return !_filterMatchEntityLocal(filter.filter, entity);
     case 'and':
@@ -398,6 +400,20 @@ class FilterClass implements Filter$.Any {
       type: 'child-of',
       parents: dxns,
       transitive: options?.transitive ?? true,
+    });
+  }
+
+  /** Selects objects that have (or, with `false`, lack) a parent — see `Filter.hasParent`. */
+  static hasParent(value = true): Filter$.Any {
+    return new FilterClass({ type: 'has-parent', value });
+  }
+
+  /** Selects the feed items inside the supplied cursor range, excluding the items its bounds name. */
+  static feedCursor(range: Filter$.FeedCursorRange = {}): Filter$.Any {
+    return new FilterClass({
+      type: 'feed-cursor',
+      ...(range.begin !== undefined ? { begin: range.begin } : {}),
+      ...(range.end !== undefined ? { end: range.end } : {}),
     });
   }
 
@@ -888,6 +904,10 @@ const prettyFilter = (filter: QueryAST.Filter): string => {
       return `Filter.childOf([${filter.parents.map((parent) => JSON.stringify(parent)).join(', ')}], { transitive: ${filter.transitive} })`;
     case 'timestamp':
       return `Filter.${filter.field}.${filter.operator}(${filter.value})`;
+    case 'feed-cursor':
+      return `Filter.feedCursor(${JSON.stringify({ begin: filter.begin, end: filter.end })})`;
+    case 'has-parent':
+      return `Filter.hasParent(${filter.value})`;
     case 'not':
       return `Filter.not(${prettyFilter(filter.filter)})`;
     case 'and':

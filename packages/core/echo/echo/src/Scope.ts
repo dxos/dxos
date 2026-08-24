@@ -43,6 +43,14 @@ export const registry = (location: 'local' | 'remote' = 'local'): QueryAST.Regis
 
 /**
  * Scope targeting a specific feed (by its underlying queue EID).
+ *
+ * To read only what follows a cursor, select with {@link Filter.feedCursor} — the bound is part of
+ * the query, not of the scope.
+ *
+ * @example
+ * ```ts
+ * db.query(Query.select(Filter.feedCursor(cursor)).from(Scope.feed(feedUri)));
+ * ```
  */
 export const feed = (feedUri: string): QueryAST.FeedScope => ({
   _tag: 'feed',

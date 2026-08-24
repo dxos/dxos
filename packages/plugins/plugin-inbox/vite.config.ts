@@ -6,6 +6,12 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'InboxSendSkill': 'src/skills/InboxSendSkill.ts',
+    'InboxSkill': 'src/skills/InboxSkill.ts',
+    'CalendarSkill': 'src/skills/CalendarSkill.ts',
+    'MessageExtractor': 'src/operations/extractor/index.ts',
+    'FeedCursor': 'src/operations/FeedCursor.ts',
+    'InboxOperationHandlerSet': 'src/operations/InboxOperationHandlerSet.ts',
     'index': 'src/index.ts',
     'InboxPlugin': 'src/InboxPlugin.ts',
     'plugin': 'src/plugin.tsx',

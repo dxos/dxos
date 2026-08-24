@@ -11,14 +11,12 @@ import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, DXN, Ref, Type } from '@dxos/echo';
-import { Connection, Cursor } from '@dxos/link';
+import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as MailSend from '@dxos/plugin-inbox/MailSend';
 // Referenced in the emitted .d.ts of the operations below; importing it lets TypeScript name it.
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { Event, type Message } from '@dxos/types';
-
-import { meta } from '#meta';
 
 /**
  * This provider's operations.
@@ -26,14 +24,13 @@ import { meta } from '#meta';
  * Defined here rather than in plugin-inbox so a deployment without this connector never sees them:
  * plugin-inbox owns the mail domain, each provider owns its own wire protocol.
  */
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const GetGoogleCalendars = Operation.make({
   // TODO(wittjosiah): Declaring services here forces DynamicRuntime validation to fail before the handler
   //   runs because composer's invoker doesn't carry per-space Database. The handler provides
   //   `Database.layer(db)` itself (same pattern as plugin-trello GetTrelloBoards).
   meta: {
-    key: makeKey('getGoogleCalendars'),
+    key: DXN.make('org.dxos.operation.google.getCalendars'),
     name: 'Get Google Calendars',
     description: 'Discover Google Calendars reachable from a connection without materializing local Calendars.',
     icon: 'ph--calendar--regular',
@@ -44,7 +41,7 @@ export const GetGoogleCalendars = Operation.make({
 
 export const GmailSend = Operation.make({
   meta: {
-    key: makeKey('googleMailSend'),
+    key: DXN.make('org.dxos.operation.google.sendMail'),
     name: 'Send Gmail',
     description: 'Send emails via Gmail.',
     icon: 'ph--paper-plane-tilt--regular',
@@ -59,15 +56,13 @@ export const GmailSend = Operation.make({
 
 export const GoogleMailSync = Operation.make({
   meta: {
-    key: makeKey('googleMailSync'),
+    key: DXN.make('org.dxos.operation.google.syncMail'),
     name: 'Sync Google Mail',
     description: 'Sync emails from Gmail to the mailbox feed.',
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor).annotate({
-      description: 'Binding whose connection owns credentials and whose target is the Mailbox to sync.',
-    }),
+    ...ConnectorSpec.SyncInput.fields,
     userId: Schema.String.pipe(Schema.optional),
     label: Schema.String.pipe(
       Schema.annotate({
@@ -84,7 +79,7 @@ export const GoogleMailSync = Operation.make({
 
 export const MaterializeGmailTarget = Operation.make({
   meta: {
-    key: makeKey('materializeGmailTarget'),
+    key: DXN.make('org.dxos.operation.google.materializeGmailTarget'),
     name: 'Materialize Gmail Target',
     description: 'Create the local Mailbox bound to a Gmail connection.',
     icon: 'ph--envelope--regular',
@@ -95,16 +90,14 @@ export const MaterializeGmailTarget = Operation.make({
 
 export const GoogleCalendarSync = Operation.make({
   meta: {
-    key: makeKey('googleCalendarSync'),
+    key: DXN.make('org.dxos.operation.google.syncCalendar'),
     name: 'Sync Google Calendar',
     description:
       'Sync events from Google Calendar. The initial sync uses startTime ordering for specified number of days. Subsequent syncs use updatedMin to catch all changes.',
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor).annotate({
-      description: 'Binding whose connection owns credentials and whose target is the Calendar to sync.',
-    }),
+    ...ConnectorSpec.SyncInput.fields,
     googleCalendarId: Schema.optional(Schema.String),
     syncBackDays: Schema.optional(Schema.Number),
     syncForwardDays: Schema.optional(Schema.Number),
@@ -118,7 +111,7 @@ export const GoogleCalendarSync = Operation.make({
 
 export const MaterializeGoogleCalendarTarget = Operation.make({
   meta: {
-    key: makeKey('materializeCalendarTarget'),
+    key: DXN.make('org.dxos.operation.google.materializeCalendarTarget'),
     name: 'Materialize Calendar Target',
     description: 'Create the local Calendar bound to a selected Google calendar.',
     icon: 'ph--calendar--regular',
@@ -129,7 +122,7 @@ export const MaterializeGoogleCalendarTarget = Operation.make({
 
 export const CreateGoogleCalendarEvent = Operation.make({
   meta: {
-    key: makeKey('createGoogleCalendarEvent'),
+    key: DXN.make('org.dxos.operation.google.createCalendarEvent'),
     name: 'Create Google Calendar Event',
     description: 'Create an event on Google Calendar.',
     icon: 'ph--calendar-plus--regular',
@@ -149,7 +142,7 @@ export const CreateGoogleCalendarEvent = Operation.make({
 
 export const GetGoogleContactGroups = Operation.make({
   meta: {
-    key: makeKey('getGoogleContactGroups'),
+    key: DXN.make('org.dxos.operation.google.getContactGroups'),
     name: 'Get Google Contact Groups',
     description: 'Discover Google Contact Groups reachable from a connection.',
     icon: 'ph--users--regular',
@@ -160,15 +153,13 @@ export const GetGoogleContactGroups = Operation.make({
 
 export const GoogleContactsSync = Operation.make({
   meta: {
-    key: makeKey('googleContactsSync'),
+    key: DXN.make('org.dxos.operation.google.syncContacts'),
     name: 'Sync Google Contacts',
     description: 'Sync contacts from a Google Contact group into Person objects in the space.',
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor).annotate({
-      description: 'Binding whose connection owns credentials and whose externalId is the contact group to sync.',
-    }),
+    ...ConnectorSpec.SyncInput.fields,
     pageSize: Schema.optional(Schema.Number),
   }),
   output: Schema.Struct({

@@ -10,6 +10,8 @@ import * as Schema from 'effect/Schema';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import { type AiService } from '@dxos/ai';
+import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Operation from '@dxos/compute/Operation';
@@ -21,11 +23,9 @@ import { TagIndex } from '@dxos/schema';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { InboxOperationHandlerSet } from '#operations';
+import { InboxCapabilities, InboxOperation, Mailbox } from '#types';
 
 import { inboxMailboxProcessors } from '../../capabilities/mailbox-processors';
-import * as InboxCapabilities from '../../types/InboxCapabilities';
-import * as InboxOperation from '../../types/InboxOperation';
-import * as Mailbox from '../../types/Mailbox';
 
 /** A service no layer in this test provides — the whole point of the stub below. */
 class MissingService extends Context.Service<MissingService, { readonly unused: true }>()(
@@ -40,7 +40,7 @@ class MissingService extends Context.Service<MissingService, { readonly unused: 
  * `AnalyzeMailbox` moved to plugin-brain.
  */
 const StubOperation = Operation.make({
-  meta: { key: DXN.make('org.dxos.plugin.inbox.testing.operation.stub'), name: 'Stub' },
+  meta: { key: DXN.make('com.example.operation.inbox.testing.stub'), name: 'Stub' },
   services: [MissingService],
   input: Schema.Struct({ mailbox: Ref.Ref(Mailbox.Mailbox) }),
   output: Schema.Void,
@@ -79,9 +79,12 @@ const capabilityService = (processors: readonly InboxCapabilities.MailboxProcess
  * operation runtime resolves declared services through the ServiceResolver rather than the caller's
  * Effect context.
  */
-const makeTestLayer = (processors: readonly InboxCapabilities.MailboxProcessor[] = inboxMailboxProcessors) =>
+const makeTestLayer = (
+  processors: readonly InboxCapabilities.MailboxProcessor[] = inboxMailboxProcessors,
+  { aiService }: { aiService?: Layer.Layer<AiService.AiService> } = {},
+) =>
   AssistantTestLayer({
-    operationHandlers: [InboxOperationHandlerSet, StubHandlerSet],
+    operationHandlers: [InboxOperationHandlerSet.handlers, StubHandlerSet],
     types: [
       Cursor.Cursor,
       Feed.Feed,
@@ -93,10 +96,20 @@ const makeTestLayer = (processors: readonly InboxCapabilities.MailboxProcessor[]
       TagIndex.TagIndex,
     ],
     disableLlmMemoization: true,
+    aiService,
     extraServices: Layer.sync(Capability.Service, () => capabilityService(processors)),
   });
 
 const TestLayer = makeTestLayer();
+
+/**
+ * Every model call fails as script-exhausted, so a test needing an AI tier to FAIL pins that
+ * outcome itself instead of inheriting whether the run happened to have a usable API key.
+ */
+const failingAiService = ScriptedLanguageModel.scriptedAiService([]);
+
+const makeFailingAiLayer = (processors?: readonly InboxCapabilities.MailboxProcessor[]) =>
+  makeTestLayer(processors, { aiService: failingAiService });
 
 const ME = ['me@example.com'];
 
@@ -197,8 +210,8 @@ describe('AnalyzeMailbox cascade', () => {
 
         // `tiers` is a SET: a caller naming the cheap LLM tier before the deterministic one must not
         // get a classification pass whose contact allow-list has not been built yet. Classification
-        // fails here (the client has no usable key in this environment), which is what pins the order —
-        // the deterministic stages ran first and the failure lands on the third stage, not the first.
+        // fails on the scripted model, which is what pins the order — the deterministic stages ran
+        // first and the failure lands on the third stage, not the first.
         const result = yield* Operation.invoke(InboxOperation.AnalyzeMailbox, {
           mailbox: Ref.make(mailbox),
           me: ME,
@@ -208,7 +221,7 @@ describe('AnalyzeMailbox cascade', () => {
         expect(result.stages.map((stage) => stage.tier)).toEqual(['deterministic', 'deterministic', 'classify']);
         expect(result.stages.map((stage) => stage.status)).toEqual(['completed', 'completed', 'failed']);
       },
-      Effect.provide(TestLayer),
+      Effect.provide(makeFailingAiLayer()),
       TestHelpers.provideTestContext,
     ),
   );
@@ -295,7 +308,7 @@ describe('AnalyzeMailbox cascade', () => {
       function* ({ expect }) {
         const { mailbox } = yield* seedMailbox();
 
-        // `classify` fails here (no usable key in this environment). `subscriptions` declares no edge
+        // `classify` fails on the scripted model. `subscriptions` declares no edge
         // to it, so it must still run — blocking by run POSITION would have stranded it purely for
         // sitting later in the list, which is the whole point of taking the order from the DAG.
         const result = yield* Operation.invoke(InboxOperation.AnalyzeMailbox, {
@@ -316,7 +329,7 @@ describe('AnalyzeMailbox cascade', () => {
         expect(result.completed).toBe(2);
         expect(result.failed).toBe(1);
       },
-      Effect.provide(TestLayer),
+      Effect.provide(makeFailingAiLayer()),
       TestHelpers.provideTestContext,
     ),
   );
@@ -436,7 +449,7 @@ describe('AnalyzeMailbox cascade', () => {
           error: '@dxos/plugin-inbox/testing/MissingService unavailable',
         });
       },
-      Effect.provide(makeTestLayer(withAnalyze)),
+      Effect.provide(makeFailingAiLayer(withAnalyze)),
       TestHelpers.provideTestContext,
     ),
   );

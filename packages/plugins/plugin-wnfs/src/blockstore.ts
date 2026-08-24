@@ -57,7 +57,7 @@ export class MixedBlockstore extends BaseBlockstore {
 
   url(apiHost: string, cid?: CID): string {
     const path = cid ? cid.toString() : '';
-    return `${apiHost}/api/file${path.length ? '/' + path : ''}`;
+    return `${apiHost}/blob/file${path.length ? '/' + path : ''}`;
   }
 
   // BLOCKSTORE IMPLEMENTATION

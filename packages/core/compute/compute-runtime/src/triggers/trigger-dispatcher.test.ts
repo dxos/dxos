@@ -7,6 +7,7 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
@@ -21,14 +22,14 @@ import { ExampleHandlers, Reply } from '@dxos/compute/testing';
 import * as Trace from '@dxos/compute/Trace';
 import * as Trigger from '@dxos/compute/Trigger';
 import * as TriggerEvent from '@dxos/compute/TriggerEvent';
-import { Database, DXN, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
+import { Annotation, Database, DXN, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { invariant } from '@dxos/invariant';
 import { Person, Task } from '@dxos/types';
 
 import * as ProcessManager from '../ProcessManager';
 import { credentialsLayerConfig } from '../services/credentials';
-import { TriggerDispatcher } from './trigger-dispatcher';
+import { LEGACY_KEY_FEED_CURSOR, TriggerDispatcher } from './trigger-dispatcher';
 import { TriggerStateStore } from './trigger-state-store';
 
 /**
@@ -66,20 +67,22 @@ const SpaceAwareResolverLayer = Layer.effect(
  * operation handler set registered with {@link OperationHandlerSet.provide} below.
  */
 const ProbeOp = Operation.make({
-  meta: { key: DXN.make('test.trigger-dispatcher.probeDatabase'), name: 'Probe Database' },
+  meta: { key: DXN.make('com.example.operation.triggerDispatcher.probeDatabase'), name: 'Probe Database' },
   input: Schema.Any,
   output: Schema.Struct({ spaceId: Schema.String }),
   services: [Database.Service],
 });
 
-class RetryCounter extends Type.makeObject<RetryCounter>(DXN.make('test.trigger-dispatcher.retryCounter', '0.1.0'))(
+class RetryCounter extends Type.makeObject<RetryCounter>(
+  DXN.make('com.example.operation.triggerDispatcher.retryCounter', '0.1.0'),
+)(
   Schema.Struct({
     count: Schema.Number,
   }),
 ) {}
 
 const RetryOp = Operation.make({
-  meta: { key: DXN.make('test.trigger-dispatcher.retry'), name: 'Retry' },
+  meta: { key: DXN.make('com.example.operation.triggerDispatcher.retry'), name: 'Retry' },
   input: Schema.Void,
   output: Schema.Void,
   services: [Database.Service],
@@ -90,7 +93,7 @@ const RetryOp = Operation.make({
  * resolved object's id — used to assert `subject` dereferences to the mutated object.
  */
 const SubjectProbeOp = Operation.make({
-  meta: { key: DXN.make('test.trigger-dispatcher.subjectProbe'), name: 'Subject Probe' },
+  meta: { key: DXN.make('com.example.operation.triggerDispatcher.subjectProbe'), name: 'Subject Probe' },
   input: Schema.Any,
   output: Schema.Struct({ type: Schema.String, subjectId: Schema.optional(Schema.String) }),
   services: [Database.Service],
@@ -142,8 +145,8 @@ const TestLayer = (
     timeControl?: 'natural' | 'manual';
     startingTime?: Date;
     failureCooldown?: Duration.Duration;
-    spaceAwareResolver?: boolean;
     livePollInterval?: Duration.Duration;
+    spaceAwareResolver?: boolean;
   } = {},
 ) =>
   Layer.empty.pipe(
@@ -599,6 +602,46 @@ describe('TriggerDispatcher', () => {
         Effect.provide(TestLayer({ timeControl: 'natural' })),
       ),
     );
+
+    // `it.live` (not `it.effect`): the reactive path is woken by real subscriptions, so the sleeps
+    // below must pass real time rather than a virtual clock nothing advances.
+    it.live(
+      'feed triggers fire on append without waiting for a poll tick',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const feed = yield* Database.add(Feed.make());
+          const functionObj = yield* registerOperation(Reply);
+          const trigger = Trigger.make({
+            runnable: Ref.make(functionObj),
+            enabled: true,
+            spec: Trigger.specFeed(feed),
+          });
+          yield* Database.add(trigger);
+
+          const dispatcher = yield* TriggerDispatcher;
+          yield* dispatcher.start();
+
+          // Stopped in a finalizer: a failure below would otherwise leave the detached timer fiber
+          // and the reactive subscriptions running into the next test.
+          yield* Effect.gen(function* () {
+            yield* Feed.append(feed, [Obj.make(Person.Person, { fullName: 'John Doe' })]);
+            yield* Database.flush();
+
+            // The poll interval is an hour, so anything observed here came from the feed subscription.
+            const registry = yield* Registry.AtomRegistry;
+            let fired = false;
+            for (let attempt = 0; attempt < 100 && !fired; attempt++) {
+              fired = registry.get(dispatcher.state).invocations.some((_) => _.trigger.id === trigger.id);
+              if (!fired) {
+                yield* Effect.sleep(Duration.millis(20));
+              }
+            }
+            expect(fired).toBe(true);
+          }).pipe(Effect.ensuring(dispatcher.stop()));
+        },
+        Effect.provide(TestLayer({ timeControl: 'natural', livePollInterval: Duration.hours(1) })),
+      ),
+    );
   });
 
   describe('Feed Triggers', () => {
@@ -669,6 +712,45 @@ describe('TriggerDispatcher', () => {
           const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
           expect(results.length).toBe(0);
         }
+      }, Effect.provide(TestLayer())),
+    );
+
+    it.effect(
+      'the cursor is an annotation, and a legacy foreign key is adopted',
+      Effect.fnUntraced(function* ({ expect }) {
+        const feed = yield* Database.add(Feed.make());
+        const functionObj = yield* registerOperation(Reply);
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specFeed(feed),
+        });
+        yield* Database.add(trigger);
+        yield* Feed.append(feed, [
+          Obj.make(Person.Person, { fullName: 'John Doe' }),
+          Obj.make(Person.Person, { fullName: 'Jane Smith' }),
+        ]);
+
+        const dispatcher = yield* TriggerDispatcher;
+        yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
+
+        // The checkpoint lands in the annotation, not in `@meta.keys`.
+        const cursor = Annotation.get(trigger, Feed.CursorAnnotation).pipe(Option.getOrUndefined);
+        expect(cursor).toBeDefined();
+        expect(Obj.getKeys(trigger, LEGACY_KEY_FEED_CURSOR)).toEqual([]);
+
+        // A trigger checkpointed by the release that used a foreign key resumes from it rather than
+        // re-dispatching its whole feed.
+        Obj.update(trigger, (trigger) => {
+          Obj.getMeta(trigger).annotations = {};
+          Obj.getMeta(trigger).keys.push({ source: LEGACY_KEY_FEED_CURSOR, id: cursor! });
+        });
+        yield* Database.flush();
+
+        const resumed = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
+        expect(resumed.length).toBe(1);
+        expect(resumed[0].feedCursor).not.toBe(cursor);
+        expect(Obj.getKeys(trigger, LEGACY_KEY_FEED_CURSOR)).toEqual([]);
       }, Effect.provide(TestLayer())),
     );
 

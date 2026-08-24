@@ -10,7 +10,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Order, Query, Ref, Scope } from '@dxos/echo';
-import { useQuery, useResolveRef } from '@dxos/echo-react';
+import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Panel } from '@dxos/react-ui';
@@ -97,6 +97,11 @@ export const MessageArticle = ({
 
   // Derived summaries live in the mailbox's annotation feed (immutable Messages naming their subject
   // via `parentMessage`), merged in here rather than stored on the messages, which are immutable.
+  // Subscribed to as a property, because the feed is provisioned lazily on the first annotation and a
+  // bare read establishes no subscription — the component would never re-render to see it. The ref is
+  // then taken from the live object, since the subscription yields a snapshot that cannot be resolved.
+  // TODO(wittjosiah): This additional hook call shouldn't be necessary, useResolveRef should handle this case.
+  useObject(mailbox, 'annotations');
   const annotationsFeed = useResolveRef(mailbox?.annotations);
   const annotationsUri = annotationsFeed ? Obj.getURI(annotationsFeed, { prefer: 'absolute' }) : undefined;
   const annotations = useQuery(
@@ -342,8 +347,8 @@ export const MessageArticle = ({
       onOpenAttachment={mailbox ? handleOpenAttachment : onOpenAttachment}
     >
       <Panel.Root role={role} data-testid={testId}>
-        <Panel.Toolbar asChild>
-          <ConversationStack.Toolbar />
+        <Panel.Toolbar>
+          <ConversationStack.Toolbar classNames='dx-document' />
         </Panel.Toolbar>
         <Panel.Content asChild>
           <ConversationStack.Content />

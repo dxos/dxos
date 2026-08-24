@@ -54,6 +54,15 @@ const ProjectSchema = Schema.Struct({
 });
 export type Project = Schema.Schema.Type<typeof ProjectSchema>;
 
+const ProjectMilestoneSchema = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+  description: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  // Linear's `TimelessDate` scalar, already `YYYY-MM-DD` unlike its datetime fields.
+  targetDate: Schema.NullOr(Schema.String).pipe(Schema.optional),
+});
+export type ProjectMilestone = Schema.Schema.Type<typeof ProjectMilestoneSchema>;
+
 /**
  * Linear workflow state types group user-defined states into a fixed set of
  * categories. We map by category, not by name, so renamed states keep working.
@@ -77,6 +86,10 @@ const IssueProjectRefSchema = Schema.Struct({
   id: Schema.String,
 });
 
+const IssueProjectMilestoneRefSchema = Schema.Struct({
+  id: Schema.String,
+});
+
 const IssueSchema = Schema.Struct({
   id: Schema.String,
   identifier: Schema.String,
@@ -87,6 +100,7 @@ const IssueSchema = Schema.Struct({
   state: IssueStateSchema,
   assignee: Schema.NullOr(IssueAssigneeSchema).pipe(Schema.optional),
   project: Schema.NullOr(IssueProjectRefSchema).pipe(Schema.optional),
+  projectMilestone: Schema.NullOr(IssueProjectMilestoneRefSchema).pipe(Schema.optional),
   createdAt: Schema.NullOr(Schema.String).pipe(Schema.optional),
   updatedAt: Schema.NullOr(Schema.String).pipe(Schema.optional),
 });
@@ -330,6 +344,41 @@ const TeamProjectsSchema = Schema.Struct({
 export const fetchTeamProjects = (teamId: string): LinearEffect<readonly Project[]> =>
   paginate(TEAM_PROJECTS_QUERY, { teamId }, (d) => d.team.projects, TeamProjectsSchema);
 
+const PROJECT_MILESTONES_QUERY = /* GraphQL */ `
+  query ProjectMilestones($projectId: String!, $first: Int!, $after: String) {
+    project(id: $projectId) {
+      projectMilestones(first: $first, after: $after) {
+        nodes {
+          id
+          name
+          description
+          targetDate
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  }
+`;
+
+const ProjectMilestonesSchema = Schema.Struct({
+  project: Schema.Struct({
+    projectMilestones: Schema.Struct({
+      nodes: Schema.Array(ProjectMilestoneSchema),
+      pageInfo: PageInfoSchema,
+    }),
+  }),
+});
+
+/**
+ * List milestones for a project. Milestones are per-project in Linear (issues point at one via
+ * `projectMilestone`), so this is fetched once per project pulled rather than once per team.
+ */
+export const fetchProjectMilestones = (projectId: string): LinearEffect<readonly ProjectMilestone[]> =>
+  paginate(PROJECT_MILESTONES_QUERY, { projectId }, (d) => d.project.projectMilestones, ProjectMilestonesSchema);
+
 /**
  * List issues for a team. `since` is an optional ISO timestamp; when set,
  * filters the GraphQL connection to issues with `updatedAt >= since`. When
@@ -356,6 +405,9 @@ const TEAM_ISSUES_QUERY = /* GraphQL */ `
             name
           }
           project {
+            id
+          }
+          projectMilestone {
             id
           }
           createdAt

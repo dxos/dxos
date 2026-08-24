@@ -23,6 +23,7 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { addEventListener } from '@dxos/async';
 import { useNode } from '@dxos/plugin-graph/hooks';
 import {
+  Flex,
   IconButton,
   Main,
   type MainContentProps,
@@ -51,7 +52,7 @@ import {
 import { meta } from '#meta';
 import { DeckOperation, DeckRole } from '#types';
 
-import { findAttendedPlank, getRenderedPlanks, layoutAppliesTopbar } from '../../util';
+import { findAttendedPlank, getRenderedPlanks, isCompanionOpen, layoutAppliesTopbar } from '../../util';
 import {
   ToggleComplementarySidebarButton as NaturalToggleComplementarySidebarButton,
   ToggleSidebarButton as NaturalToggleSidebarButton,
@@ -122,20 +123,22 @@ type PlankContextValue = RenderedPlanks & {
 };
 
 /**
- * The companion plank id to render beside `id`, or undefined when its companion is closed. Companion
- * state is *per plank* (`DeckState.companionPlanks`) and rendering resolves from exactly that state —
- * never from attention. Attention used to pick a single anchor here, which meant attention traffic
- * re-anchored the companion between planks: tiles widened and narrowed with no user gesture, the engine
- * answered a sticky tile's width change by silently shifting `scrollLeft` by the delta (zero scroll
- * commands — writer instrumentation finds nothing), and a companion could be "open" in state yet render
- * beside no visible plank. The variant (which tab) stays global view state, shared across planks.
+ * The companion plank id to render beside `id`, or undefined when its companion is closed. Whether it is
+ * open comes from `DeckState.companionPlanks` (deck-wide under `flatten`, per plank while the deck
+ * slides — see {@link isCompanionOpen}) and never from attention. Attention used to pick a single anchor
+ * here, which meant attention traffic re-anchored the companion between planks: tiles widened and
+ * narrowed with no user gesture, the engine answered a sticky tile's width change by silently shifting
+ * `scrollLeft` by the delta (zero scroll commands — writer instrumentation finds nothing), and a
+ * companion could be "open" in state yet render beside no visible plank. The variant (which tab) stays
+ * global view state, shared across planks.
  */
 const useDeckCompanion = (id: string | undefined): string | undefined => {
   const { deck } = useDeckContext('useDeckCompanion');
+  const { flatten } = useDeckSettings();
   const companions = useCompanions(id);
   const selectedVariant = useSelectedCompanionVariant();
   const { companionId } = useSelectedCompanion(companions, selectedVariant);
-  return id && deck.companionPlanks.includes(id) ? companionId : undefined;
+  return isCompanionOpen(deck.companionPlanks, flatten, id) ? companionId : undefined;
 };
 
 /**
@@ -217,10 +220,10 @@ export const DeckContentEmpty = () => {
   const { state } = useDeckState();
   const topbar = layoutAppliesTopbar(breakpoint, !!state.fullscreen);
   return (
-    <div className='grid place-items-center p-8 relative dx-deck-surface' data-testid='layoutPlugin.firstRunMessage'>
+    <Flex column center classNames='p-8 relative dx-deck-surface' data-testid='layoutPlugin.firstRunMessage'>
       <Surface.Surface type={DeckRole.Keyshortcuts} />
       {!topbar && <ToggleSidebarButton />}
-    </div>
+    </Flex>
   );
 };
 
@@ -469,7 +472,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const handleExposeSelect = useCallback(() => {
     captureExposeGeometry();
     markExposeSelect(id);
-    void invokePromise(DeckOperation.ToggleExpose, { expose: false });
+    void invokePromise(DeckOperation.SetExpose, { expose: false });
     void invokePromise(LayoutOperation.ScrollIntoView, { subject: id });
   }, [invokePromise, id, captureExposeGeometry, markExposeSelect]);
 
@@ -1440,7 +1443,8 @@ export const DeckPlanks = () => {
           exposeReturnRef.current = navigationRef.current.attendedPlankId;
         }
         captureRef.current();
-        void invokePromise(DeckOperation.ToggleExpose, {});
+        // The shortcut flips, so it states the value it wants from the ref it already reads above.
+        void invokePromise(DeckOperation.SetExpose, { expose: !exposeRef.current });
         return;
       }
 
@@ -1454,7 +1458,7 @@ export const DeckPlanks = () => {
           focusPlank(restore);
         }
         captureRef.current();
-        void invokePromise(DeckOperation.ToggleExpose, { expose: false });
+        void invokePromise(DeckOperation.SetExpose, { expose: false });
         return;
       }
 
@@ -1468,7 +1472,7 @@ export const DeckPlanks = () => {
         const target = (focused && current.includes(focused) ? focused : undefined) ?? attended;
         captureRef.current();
         exposeSelectRef.current = target;
-        void invokePromise(DeckOperation.ToggleExpose, { expose: false });
+        void invokePromise(DeckOperation.SetExpose, { expose: false });
         if (target) {
           void invokePromise(LayoutOperation.ScrollIntoView, { subject: target });
         }
@@ -1541,7 +1545,7 @@ export const DeckPlanks = () => {
     (event: MouseEvent<HTMLDivElement>) => {
       if (expose && event.target instanceof Element && !event.target.closest('[role="listitem"]')) {
         captureExposeGeometry();
-        void invokePromise(DeckOperation.ToggleExpose, { expose: false });
+        void invokePromise(DeckOperation.SetExpose, { expose: false });
       }
     },
     [invokePromise, expose, captureExposeGeometry],

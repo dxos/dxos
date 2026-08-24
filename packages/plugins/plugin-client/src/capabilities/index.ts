@@ -87,12 +87,18 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
 });
 export const SchemaDefs = Capability.lazyModule(
   'SchemaDefs',
-  { requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, AppCapabilities.Schema], provides: [] },
+  {
+    requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, AppCapabilities.Schema],
+    provides: [ClientCapabilities.SchemaRegistered],
+  },
   () => import('./schema-defs'),
 );
 export const RemoteTraceMonitor = Capability.lazyModule(
   'RemoteTraceMonitor',
-  { provides: [Capabilities.RemoteTraceMonitor] },
+  // Startup: the process-manager runtime snapshots this capability once, in the Startup pass, and
+  // bakes a no-op remote source if it has not been contributed yet — demand activation always loses
+  // that race, silencing remote traces for every ProcessMonitor consumer.
+  { provides: [Capabilities.RemoteTraceMonitor], activatesOn: ActivationEvents.Startup },
   () => import('./remote-trace-monitor'),
 );
 export const SpaceReplicationProgress = Capability.lazyModule(
@@ -110,8 +116,7 @@ export const SpaceReplicationProgress = Capability.lazyModule(
 export const TraceProgress = Capability.lazyModule(
   'TraceProgress',
   {
-    // ProgressRegistry is resolved lazily per trace message, so a host without it degrades to a
-    // no-op sink rather than failing to activate.
+    // ProgressRegistry is resolved lazily per message (a host without it degrades to a no-op sink).
     requires: [Capabilities.ProcessMonitor, Capabilities.ProcessManagerRuntime, Capabilities.ServiceResolver],
     provides: [],
     // Same activation as SpaceReplicationProgress: process-manager runtime, monitor, and

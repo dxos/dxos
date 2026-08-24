@@ -19,6 +19,11 @@ tasks:
       - $VITEST_DEBUG
       - $VITEST_ENV
       - $VITEST_XML_REPORT
+      # Tag gating lives in `/vitest.tags.ts` and is read from the environment, so a cached result
+      # would otherwise replay a run in which the tagged suites were skipped.
+      - $DX_RUN_MANUAL_TESTS
+      - $DX_RUN_MODEL_FIXTURE_TESTS
+      - $DX_UPDATE_MODEL_FIXTURES
     outputs:
       - /coverage/$project/browser/**
       - /test-results/$project/browser/**

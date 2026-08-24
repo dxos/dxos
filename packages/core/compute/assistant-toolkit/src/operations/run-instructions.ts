@@ -94,8 +94,11 @@ export default RunInstructions.pipe(
           You are an agent running in the non-interactive mode.
           The user is unable to see what you are doing, and cannot answer any questions.
           Do not ask questions.
-          Complete the task before you, and at the end call [completeJob] with the output.
-          If you are unable to complete the task, call [completeJob] with the failure reason.
+          Complete the task before you, and at the end call [completeJob] with {"success": <output>}.
+          The output goes inside "success" — never at the top level, and never wrapped in a second
+          "success" of its own.
+          If you are unable to complete the task, call [completeJob] with {"failure": {"message": "..."}}.
+          Pass one of the two, never both, and omit the field you do not use.
           If no output is required, call [completeJob] with an empty object: {}
           Do not stop until you call [completeJob].
         `;
@@ -184,32 +187,37 @@ const makePromptAgentToolkit = (options: {
 }) => {
   class PromptAgentToolkit extends Toolkit.make(
     Tool.make('completeJob', {
+      // Both fields accept `null` because models emit it for a field they mean to omit.
       parameters: Schema.Struct({
-        success: Schema.optional(options.output),
+        success: Schema.optional(Schema.NullOr(options.output)),
         failure: Schema.optional(
-          Schema.Struct({
-            message: Schema.String.annotate({
-              description: 'Short message describing the error.',
+          Schema.NullOr(
+            Schema.Struct({
+              message: Schema.String.annotate({
+                description: 'Short message describing the error.',
+              }),
+              description: Schema.optional(Schema.NullOr(Schema.String)).annotate({
+                description: 'Optional longer message describing in detail what went wrong',
+              }),
             }),
-            description: Schema.optional(Schema.String).annotate({
-              description: 'Optional longer message describing in detail what went wrong',
-            }),
-          }),
+          ),
         ),
       }),
     }),
   ) {}
   const layer = PromptAgentToolkit.toLayer({
     completeJob: Effect.fnUntraced(function* (result) {
-      if (result.failure) {
+      // A success payload wins over a failure sent alongside it, so a placeholder cannot discard
+      // completed work.
+      if (result.success == null && result.failure) {
         yield* Deferred.fail(
           options.resultSink,
           new PromptError(result.failure.message, {
-            description: result.failure.description,
+            description: result.failure.description ?? undefined,
           }),
         );
       } else {
-        yield* Deferred.succeed(options.resultSink, result.success);
+        yield* Deferred.succeed(options.resultSink, result.success ?? undefined);
       }
     }),
   });

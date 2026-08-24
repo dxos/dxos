@@ -13,6 +13,7 @@ export const makeProcess = (
   parentPid: null,
   key: `test.process.${overrides.name}`,
   params: { name: overrides.name, annotations: Annotation.buildDictionary(() => {}) },
+  environment: {},
   error: null,
   startedAt: Date.now() - 10_000,
   completedAt: Option.none(),

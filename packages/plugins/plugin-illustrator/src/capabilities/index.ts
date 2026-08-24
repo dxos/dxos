@@ -8,7 +8,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import { IllustratorEvents } from '#types';
+import { IllustratorCapabilities, IllustratorEvents } from '#types';
 
 export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config'), {
   activatesOn: IllustratorEvents.Start,
@@ -28,3 +28,8 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
 });
 export const Schema = AppCapability.schema(() => import('./schema'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+export const SvgVariant = Capability.lazyModule(
+  'IllustratorSvgVariant',
+  { provides: [IllustratorCapabilities.VariantProvider], activatesOn: IllustratorEvents.Start },
+  () => import('./svg-variant'),
+);

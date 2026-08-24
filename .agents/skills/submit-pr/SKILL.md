@@ -3,7 +3,7 @@ name: submit-pr
 description: >-
   Create and submit a pull request from the current branch — sync with main,
   format/lint/test, commit all changes, push, monitor the Check workflow, and
-  surface the Composer preview URL. Use when the user asks to open, submit, or
+  surface the Composer PR deploy URL. Use when the user asks to open, submit, or
   raise a PR. To land an existing PR, use the `land` skill instead.
 ---
 
@@ -40,11 +40,11 @@ runs in. To land (merge) an existing PR, use the `land` skill.
    Check; fix the root cause with `gh run view <id> --log-failed`.
 10. **Address and RESPOND to every PR review comment.**
 
-## Composer preview URL — always surface
+## Composer PR deploy URL — always surface
 
-The `preview-deploy.yml` workflow posts a sticky `composer-preview` comment with
+The `pr-deploy.yml` workflow posts a sticky `composer-preview` comment with
 a `*.workers.dev` preview-alias URL (a `wrangler versions upload --preview-alias`
-against composer-app's `main` env). Fetch it and include it verbatim next to the
+against composer-app's `dev` env). Fetch it and include it verbatim next to the
 PR link in chat summaries AND the final message:
 
 ```

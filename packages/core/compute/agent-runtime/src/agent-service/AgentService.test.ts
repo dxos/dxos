@@ -41,7 +41,7 @@ EntityId.dangerouslyDisableRandomness();
 
 const Research = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.research'),
+    key: DXN.make('com.example.operation.research'),
     name: 'Research',
     description: 'Research an organization',
   },
@@ -58,7 +58,7 @@ const Research = Operation.make({
  */
 const DelegatedWork = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.delegatedWork'),
+    key: DXN.make('com.example.operation.delegatedWork'),
     name: 'Delegated work',
     description: 'Performs a delegated unit of work',
   },

@@ -9,7 +9,7 @@ Copy to `/tmp/composer-forensics/reports/YYYY-MM-DD-<origin-slug>.md` at session
 | Field                   | Value                                            |
 | ----------------------- | ------------------------------------------------ |
 | **Date**                | YYYY-MM-DD                                       |
-| **Origin**              | e.g. `https://main.composer.space`               |
+| **Origin**              | e.g. `https://preview.composer.space`            |
 | **Agent**               | (optional)                                       |
 | **User report**         | (paste or summarize what the user said is wrong) |
 | **Recovery debug port** | open / not open                                  |

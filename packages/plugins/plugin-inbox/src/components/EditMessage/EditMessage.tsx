@@ -224,7 +224,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
             ref={forwardedRef}
           >
             {showHeader && (
-              <Column.Center classNames='flex items-center justify-between pbs-form-gap'>
+              <Column.Center classNames='flex items-center justify-between pt-form-gap'>
                 <h2 className='text-lg'>{title}</h2>
                 {onDelete && (
                   <IconButton

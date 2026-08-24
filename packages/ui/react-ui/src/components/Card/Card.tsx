@@ -436,8 +436,8 @@ const CardText = slottable<HTMLDivElement, CardTextProps>(
     const Comp = asChild ? Slot : Primitive.div;
 
     return (
-      <Comp {...rest} role={role ?? 'none'} className={tx('card.text', { variant }, className)} ref={forwardedRef}>
-        <span className={tx('card.text-span', { variant, truncate })}>{children}</span>
+      <Comp {...rest} role={role ?? 'none'} className={tx('card.text', { variant })} ref={forwardedRef}>
+        <span className={tx('card.text-span', { variant, truncate }, className)}>{children}</span>
       </Comp>
     );
   },

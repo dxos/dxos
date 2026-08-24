@@ -71,10 +71,10 @@ export const crmPipeline: ProjectCapabilities.Template = {
           concurrency: 1,
         }),
       });
-      Obj.setParent(routine, project);
-      Obj.update(project, (project) => {
-        project.routines = [...project.routines, Ref.make(routine)];
-      });
+      // Persisted here rather than reached through the returned project: the routine connects to the
+      // mailbox through its trigger, not through any ref the project holds, so nothing in the
+      // project's ref graph would carry it into the database.
+      yield* Database.add(routine);
 
       return project;
     }),

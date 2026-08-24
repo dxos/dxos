@@ -58,6 +58,9 @@
       "path": "../../core/compute/conductor"
     },
     {
+      "path": "../../core/compute/link"
+    },
+    {
       "path": "../../core/compute/operation"
     },
     {
@@ -106,6 +109,9 @@
       "path": "../../ui/react-ui-canvas-editor"
     },
     {
+      "path": "../../ui/react-ui-components"
+    },
+    {
       "path": "../../ui/react-ui-debug"
     },
     {
@@ -121,10 +127,16 @@
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
+      "path": "../../ui/ui-editor"
+    },
+    {
       "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-connector"
     },
     {
       "path": "../plugin-google"

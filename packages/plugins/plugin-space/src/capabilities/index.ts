@@ -23,7 +23,9 @@ export const CreateObject = SpaceCapability.createObject(() => import('./create-
 export const IdentityCreated = Capability.lazyModule(
   'IdentityCreated',
   {
-    requires: [ClientCapabilities.Client],
+    // `SchemaRegistered` pulls the idle-gated schema registration into this wave; the root
+    // collection is a typed object.
+    requires: [ClientCapabilities.Client, ClientCapabilities.SchemaRegistered],
     provides: [SpaceCapabilities.DefaultSpace],
     // Runtime event: the default space is created when a local identity is created, not at startup.
     activatesOn: ClientEvents.IdentityCreated,
@@ -85,6 +87,7 @@ export const SpacesReady = Capability.lazyModule(
   },
   () => import('./spaces-ready'),
 );
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const SpaceState = Capability.lazyModule(
   'SpaceState',
   {
@@ -93,10 +96,12 @@ export const SpaceState = Capability.lazyModule(
   },
   () => import('./state'),
 );
+export const ObservabilityMappings = AppCapability.observabilityMappings(() => import('./observability-mappings'), {
+  props: (options: SpaceSchema.SpacePluginOptions) => ({ observability: options.observability }),
+});
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'), {
   provides: [SpaceOperationConfig],
   props: (options: SpaceSchema.SpacePluginOptions) => ({
     createInvitationUrl: makeCreateInvitationUrl(options),
-    observability: options.observability,
   }),
 });

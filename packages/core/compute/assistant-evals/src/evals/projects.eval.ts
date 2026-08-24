@@ -9,7 +9,7 @@ import { evalite } from 'evalite';
 import { AiContext } from '@dxos/assistant';
 import { Chat, ProjectSkill } from '@dxos/assistant-toolkit';
 import * as Project from '@dxos/compute/Project';
-import { Collection, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
@@ -22,8 +22,8 @@ import { getDefaultSkills } from '../skills';
 // The plugin-projects system test: a Chat runs in a Project's context (the project's own
 // Instructions, passed by reference) and the model is directed to create a markdown document.
 // Graded on DB effects: the document exists, is bound into the session context, and is filed
-// into the project's artifacts collection (the ProjectSkill add-artifact tool) — binding alone
-// proves the session saw the object; only the collection check proves the project owns it.
+// into the project's artifacts (the ProjectSkill assistant-toolkit-add-artifact tool) — binding alone proves the
+// session saw the object; only the artifacts check proves the project owns it.
 
 const PROJECT_NAME = 'Voyage';
 
@@ -43,20 +43,12 @@ const task = createEvalRunner({
   output: Schema.Unknown,
   skills: [...getDefaultSkills(), Ref.make(ProjectSkill.make())],
   plugins: [MarkdownPlugin.make()],
-  types: [Project.Project, Collection.Collection],
+  types: [Project.Project],
   // Multi-tool scenario (create + context-add + artifact-add), so allow more round-trips.
   timeout: 150_000,
   seed: ({ instructions }) =>
     Effect.gen(function* () {
-      const collection = yield* Database.add(Collection.make());
-      const project = yield* Database.add(
-        Project.make({
-          name: PROJECT_NAME,
-          instructions: Ref.make(instructions),
-          artifacts: Ref.make(collection),
-        }),
-      );
-      Obj.setParent(collection, project);
+      const project = yield* Database.add(Project.make({ name: PROJECT_NAME, instructions: Ref.make(instructions) }));
 
       // The chat mirrors ProjectOperation.CreateChat: parented to the project, steering
       // instructions passed by reference (the project's own Instructions object).
@@ -64,7 +56,7 @@ const task = createEvalRunner({
       const chat = yield* Database.add(
         Chat.make({ name: `${PROJECT_NAME} Chat`, feed: Ref.make(feed), instructions: Ref.make(instructions) }),
       );
-      Obj.setParent(chat, project);
+      Chat.linkCompanion({ chat, subject: project });
       yield* Database.flush();
 
       return { objects: [Ref.make(project)], chat: Ref.make(chat) };
@@ -73,13 +65,12 @@ const task = createEvalRunner({
     Effect.gen(function* () {
       const document = yield* findObject(Markdown.Document, () => true);
       const project = yield* findObject(Project.Project, (project) => project.name === PROJECT_NAME);
-      if (!document || !project?.artifacts) {
+      if (!document || !project) {
         return { documentCreated: !!document, filed: false, bound: false };
       }
       const documentId = entityId(Obj.getURI(document));
 
-      const artifacts = yield* Database.load(project.artifacts);
-      const filed = artifacts.objects.some((ref) => entityId(ref.uri) === documentId);
+      const filed = project.artifacts.some((ref) => entityId(ref.uri) === documentId);
 
       // Bound = a Binding record in the chat feed added the document to the session context.
       const chat = yield* findObject(Chat.Chat, () => true);
@@ -105,7 +96,7 @@ evalite('Projects — project chat creates and files an artifact', {
     },
     {
       name: 'document-filed',
-      description: "The document is in the project's artifacts collection (add-artifact tool).",
+      description: "The document is in the project's artifacts (assistant-toolkit-add-artifact tool).",
       scorer: ({ output }) => (output.dbQuery.filed ? 1 : 0),
     },
     {

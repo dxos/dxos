@@ -36,6 +36,13 @@ enum ModelTags {
    * Used by DeepSeek.
    */
   THINK = 'think',
+
+  /**
+   * Chain of thought.
+   * Not prescribed by the instructions, but models write it unprompted; without the alias it
+   * falls through to the unknown-tag fallback and surfaces as literal text.
+   */
+  REASONING = 'reasoning',
   STATUS = 'status',
   ARTIFACT = 'artifact',
 
@@ -158,6 +165,13 @@ export const parseResponse =
         });
 
         const emitPartialBlock = Effect.fnUntraced(function* (streamBlock: StreamBlock, out: ContentBlock.Any[]) {
+          // An unclosed unknown tag would be serialized as its literal text (the fallback below),
+          // which flashes raw markup at the reader mid-stream; the text still arrives, complete,
+          // when the tag closes or the stream flushes.
+          if (streamBlock.type === 'tag' && !streamBlock.closed && !isModelTag(streamBlock.tag)) {
+            return;
+          }
+
           const parsed = makeContentBlock(streamBlock, { parseReasoningTags });
           if (parsed) {
             parsed.pending = true;
@@ -431,6 +445,8 @@ export const parseResponse =
       }),
     );
 
+const isModelTag = (tag: string): boolean => (Object.values(ModelTags) as string[]).includes(tag);
+
 /**
  * @returns Mutable content block made from stream block.
  */
@@ -455,7 +471,8 @@ const makeContentBlock = (
     case 'tag': {
       switch (block.tag) {
         case ModelTags.COT:
-        case ModelTags.THINK: {
+        case ModelTags.THINK:
+        case ModelTags.REASONING: {
           const content = block.content
             .map((block) => {
               switch (block.type) {

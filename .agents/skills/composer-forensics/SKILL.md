@@ -28,7 +28,7 @@ safe-mode storage.
 
 - **Live doctor session** — user can open `/recovery.html` and debug port; app broken or slow ([DOCTOR.md](DOCTOR.md)).
 - Inspect, extract, dump, or forensically analyze a Composer profile (offline).
-- Debug data loss, corruption, or unexpected state on `main.composer.space`, `labs.composer.space`, or preview deploys.
+- Debug data loss, corruption, or unexpected state on `composer.space`, `preview.composer.space`, retired origins (`main.composer.space`, `labs.composer.space`), or PR preview deploys.
 - Offline analysis of identity, spaces, feeds, objects, automerge documents.
 
 ## Safety
@@ -48,7 +48,7 @@ locate → extract → validate → probe → (automerge …) → record in MEMO
 
 ```bash
 python3 .agents/skills/composer-forensics/scripts/locate-origin.py \
-  --origin https://main.composer.space
+  --origin https://preview.composer.space
 ```
 
 ### 2. Extract
@@ -56,14 +56,14 @@ python3 .agents/skills/composer-forensics/scripts/locate-origin.py \
 ```bash
 python3 .agents/skills/composer-forensics/scripts/extract-opfs-sqlite.py \
   --opfs-dir "<opfs_pool_dir from locate>" \
-  --out /tmp/composer-forensics/main.composer.space
+  --out /tmp/composer-forensics/preview.composer.space
 ```
 
 ### 3. Validate
 
 ```bash
 bash .agents/skills/composer-forensics/scripts/validate-extract.sh \
-  /tmp/composer-forensics/main.composer.space/DXOS.sqlite
+  /tmp/composer-forensics/preview.composer.space/DXOS.sqlite
 ```
 
 ### 4. Probe (JS — uses `@dxos` packages)
@@ -71,14 +71,14 @@ bash .agents/skills/composer-forensics/scripts/validate-extract.sh \
 ```bash
 export PROTO_HOME="$HOME/.proto" PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"
 node .agents/skills/composer-forensics/scripts/probe.js \
-  /tmp/composer-forensics/main.composer.space/DXOS.sqlite
+  /tmp/composer-forensics/preview.composer.space/DXOS.sqlite
 ```
 
 ### 5. Automerge — find largest doc
 
 ```bash
 cd .agents/skills/composer-forensics/scripts
-node automerge-list.js /tmp/composer-forensics/main.composer.space/DXOS.sqlite
+node automerge-list.js /tmp/composer-forensics/preview.composer.space/DXOS.sqlite
 ```
 
 ### 6. Automerge — binary vs JSON size (perf debugging)
@@ -109,7 +109,7 @@ Produces `<document-id>.bin` (merged binary) + `<document-id>-report.md` (stats,
 ### 9. Automerge — bench load
 
 ```bash
-node automerge-bench-load.js /tmp/composer-forensics/main.composer.space/DXOS.sqlite --largest
+node automerge-bench-load.js /tmp/composer-forensics/preview.composer.space/DXOS.sqlite --largest
 node automerge-bench-load.js /tmp/.../DXOS.sqlite <document-id>
 ```
 

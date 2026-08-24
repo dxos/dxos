@@ -19,7 +19,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Blob, Database, Feed, Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
-import { useQuery, useResolveRef } from '@dxos/echo-react';
+import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -98,7 +98,7 @@ type StoryArgs = {
   conversations?: boolean;
   /** Seed the realistic `SAMPLE_MESSAGES` corpus instead of the lorem builder, for the `SearchFilter` play test. */
   seedSearchTerm?: boolean;
-  /** Seeds a sync binding (AccessToken → Connection → Cursor) so `InitializeMailbox` shows "Mailbox empty" instead of "No connections configured". */
+  /** Seeds a sync binding (AccessToken → Connection → Cursor) so `InitializeMailbox` shows "No messages" instead of "No connections configured". */
   bound?: boolean;
   /** Registers a running `#analyze` monitor so the statusbar progress meter renders (see `ProgressProbe`). */
   progress?: boolean;
@@ -185,6 +185,8 @@ const DefaultStory = ({ conversations, progress }: StoryArgs) => {
 
   // Summaries are immutable annotations on a second feed, keyed by `parentMessage` — shown here
   // because they are not on the message and would otherwise be invisible in this story.
+  // TODO(wittjosiah): This additional hook call shouldn't be necessary, useResolveRef should handle this case.
+  useObject(mailbox, 'annotations');
   const annotationsFeed = useResolveRef(mailbox?.annotations);
   const annotations = useQuery(
     space?.db,

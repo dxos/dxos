@@ -22,7 +22,7 @@ Standalone scripts (same logic):
   automerge-bench-load.js <db> <document-id|--largest>
 
 Examples:
-  node probe.js /tmp/composer-forensics/main.composer.space/DXOS.sqlite
+  node probe.js /tmp/composer-forensics/preview.composer.space/DXOS.sqlite
   node probe.js /tmp/.../DXOS.sqlite automerge list
   node probe.js /tmp/.../DXOS.sqlite automerge bench-load --largest
 

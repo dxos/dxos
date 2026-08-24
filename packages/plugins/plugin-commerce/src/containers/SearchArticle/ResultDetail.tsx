@@ -5,7 +5,7 @@
 import React, { Fragment } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { Carousel, IconButton, SystemIconButton, useTranslation } from '@dxos/react-ui';
+import { Carousel, Flex, IconButton, SystemIconButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { Result } from '#types';
@@ -26,16 +26,16 @@ export const ResultDetail = ({ result: subject, starred = false, onToggleStar, o
 
   if (!result) {
     return (
-      <div className='flex items-center justify-center h-full text-subdued text-sm'>
+      <Flex center classNames='h-full text-subdued text-sm'>
         {t('no-result-selected.message')}
-      </div>
+      </Flex>
     );
   }
 
   const properties = Object.entries(result.properties ?? {});
 
   return (
-    <div className='flex flex-col gap-3 p-3 overflow-y-auto'>
+    <Flex column gap='md' classNames='p-3 overflow-y-auto'>
       <div className='grid grid-cols-[minmax(0,1fr)_min-content_min-content] gap-2 items-start'>
         <h2 className='text-lg font-medium'>{result.title}</h2>
         <SystemIconButton.Star iconOnly variant='ghost' active={starred} onClick={onToggleStar} />
@@ -82,7 +82,7 @@ export const ResultDetail = ({ result: subject, starred = false, onToggleStar, o
           ))}
         </dl>
       )}
-    </div>
+    </Flex>
   );
 };
 

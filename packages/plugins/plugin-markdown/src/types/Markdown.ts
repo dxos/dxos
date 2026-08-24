@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { CardAnnotation, CollectionItemAnnotation, Text } from '@dxos/schema';
@@ -32,7 +33,7 @@ export class Document extends Type.makeObject<Document>(DXN.make('org.dxos.type.
     LabelAnnotation.set(['name', 'fallbackName']),
     DescriptionAnnotation.set('description'),
     Annotation.IconAnnotation.set({ icon: 'ph--text-aa--regular', hue: 'indigo' }),
-    AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
+    Skill.SkillsAnnotation.set([SKILL_KEY]),
     AppAnnotation.GraphPropsAnnotation.set({ managesAutofocus: true }),
     CardAnnotation.set(true),
     CollectionItemAnnotation.set(true),

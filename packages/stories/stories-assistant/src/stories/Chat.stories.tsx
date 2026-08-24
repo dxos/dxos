@@ -7,9 +7,16 @@ import { userEvent, within } from 'storybook/test';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { DelegationSkill, PlanningSkill, WebSearchSkill } from '@dxos/assistant-toolkit';
+import {
+  DelegationOperations,
+  DelegationSkill,
+  PlanningOperations,
+  PlanningSkill,
+  WebSearchSkill,
+} from '@dxos/assistant-toolkit';
+import * as Operation from '@dxos/compute/Operation';
 import { Filter } from '@dxos/echo';
-import { MarkdownSkill } from '@dxos/plugin-markdown';
+import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import { type Space } from '@dxos/react-client/echo';
 import { Outline } from '@dxos/types';
 
@@ -207,7 +214,7 @@ export const WithPlanningScripted: Story = {
           {
             parts: [
               text('Here is the plan.'),
-              toolCall('update-tasks', {
+              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), {
                 tasks: [
                   { title: 'Source the beans', status: 'in-progress' },
                   { title: 'Dial in the roast', status: 'todo' },
@@ -218,7 +225,7 @@ export const WithPlanningScripted: Story = {
           },
           {
             parts: [
-              toolCall('update-tasks', {
+              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), {
                 tasks: [
                   { title: 'Source the beans', status: 'done' },
                   { title: 'Dial in the roast', status: 'done' },
@@ -315,7 +322,12 @@ export const WithSubAgentsTest2: Story = {
         name: 'supervisor',
         match: () => true,
         turns: [
-          { parts: [text('On it — delegating.'), toolCall('delegate-task', { title: TASK_TITLE })] },
+          {
+            parts: [
+              text('On it — delegating.'),
+              toolCall(Operation.toolName(DelegationOperations.DelegateTask), { title: TASK_TITLE }),
+            ],
+          },
           { parts: [text('Delegated. I will report back when it completes.')] },
         ],
       },

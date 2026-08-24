@@ -11,10 +11,10 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { Filter, Query, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { AssistantSkill } from '@dxos/plugin-assistant';
-import { MarkdownSkill } from '@dxos/plugin-markdown';
+import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { CommentSkill } from '@dxos/plugin-review/skills';
+import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
+import * as CommentSkill from '@dxos/plugin-review/CommentSkill';
 import { Text } from '@dxos/schema';
 import { Cell } from '@dxos/storybook-testing';
 import { trim } from '@dxos/util';
@@ -195,7 +195,7 @@ export const WithScript: Story = {
       const { identityKey } = client.halo.identity.get()!;
       await client.halo.writeCredentials([getAccessCredential(identityKey)]);
 
-      const template = templates.find((template) => template.id === 'org.dxos.script.forex-effect');
+      const template = templates.find((template) => template.id === 'com.example.operation.script.forex-effect');
       invariant(template, 'Template not found');
       invariant(template.name, 'Template name not found');
 
@@ -218,7 +218,7 @@ export const WithScript: Story = {
               You can get the exchange rate between two currencies.
             `,
           }),
-          tools: [ToolId.make('org.dxos.script.forex-effect')],
+          tools: [ToolId.make('com.example.operation.script.forex-effect')],
         }),
       );
 

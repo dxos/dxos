@@ -214,101 +214,101 @@ describe('Query', () => {
     test('filter by meta key', async ({ expect }) => {
       const target = db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.foo', version: '1.2.3' },
+          [Obj.Meta]: { key: 'com.example.type.foo', version: '1.2.3' },
           value: 42,
         }),
       );
       db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.bar', version: '1.2.3' },
+          [Obj.Meta]: { key: 'com.example.type.bar', version: '1.2.3' },
           value: 43,
         }),
       );
       await db.flush();
 
-      const objects = await db.query(Filter.key('org.example.type.foo')).run();
+      const objects = await db.query(Filter.key('com.example.type.foo')).run();
       expect(objects).toEqual([target]);
     });
 
     test('filter by meta key matches any version when range omitted', async ({ expect }) => {
       const matchingA = db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.foo', version: '1.0.0' },
+          [Obj.Meta]: { key: 'com.example.type.foo', version: '1.0.0' },
           value: 1,
         }),
       );
       const matchingB = db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.foo' },
+          [Obj.Meta]: { key: 'com.example.type.foo' },
           value: 2,
         }),
       );
       db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.other', version: '1.0.0' },
+          [Obj.Meta]: { key: 'com.example.type.other', version: '1.0.0' },
           value: 3,
         }),
       );
       await db.flush();
 
-      const objects = await db.query(Filter.key('org.example.type.foo')).run();
+      const objects = await db.query(Filter.key('com.example.type.foo')).run();
       expect(new Set(objects.map((o) => o.id))).toEqual(new Set([matchingA.id, matchingB.id]));
     });
 
     test('filter by meta key with semver caret range', async ({ expect }) => {
       const match = db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.foo', version: '1.5.0' },
+          [Obj.Meta]: { key: 'com.example.type.foo', version: '1.5.0' },
           value: 1,
         }),
       );
       db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.foo', version: '2.0.0' },
+          [Obj.Meta]: { key: 'com.example.type.foo', version: '2.0.0' },
           value: 2,
         }),
       );
       db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.foo', version: '1.0.0' },
+          [Obj.Meta]: { key: 'com.example.type.foo', version: '1.0.0' },
           value: 3,
         }),
       );
       await db.flush();
 
-      const objects = await db.query(Filter.key('org.example.type.foo', { version: '^1.2.3' })).run();
+      const objects = await db.query(Filter.key('com.example.type.foo', { version: '^1.2.3' })).run();
       expect(objects).toEqual([match]);
     });
 
     test('filter by meta key with semver tilde range', async ({ expect }) => {
       const match = db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.foo', version: '1.2.7' },
+          [Obj.Meta]: { key: 'com.example.type.foo', version: '1.2.7' },
           value: 1,
         }),
       );
       db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.foo', version: '1.3.0' },
+          [Obj.Meta]: { key: 'com.example.type.foo', version: '1.3.0' },
           value: 2,
         }),
       );
       await db.flush();
 
-      const objects = await db.query(Filter.key('org.example.type.foo', { version: '~1.2.3' })).run();
+      const objects = await db.query(Filter.key('com.example.type.foo', { version: '~1.2.3' })).run();
       expect(objects).toEqual([match]);
     });
 
     test('filter by meta key excludes objects without version when range specified', async ({ expect }) => {
       db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.foo' },
+          [Obj.Meta]: { key: 'com.example.type.foo' },
           value: 1,
         }),
       );
       await db.flush();
 
-      const objects = await db.query(Filter.key('org.example.type.foo', { version: '^1.0.0' })).run();
+      const objects = await db.query(Filter.key('com.example.type.foo', { version: '^1.0.0' })).run();
       expect(objects).toEqual([]);
     });
 
@@ -2754,6 +2754,58 @@ describe('Query', () => {
       }
     });
 
+    test('full-text search scoped by type', async () => {
+      const { db, graph } = await builder.createDatabase();
+      graph.registry.add([TestSchema.Task, TestSchema.Person]);
+
+      db.add(Obj.make(TestSchema.Task, { title: 'Quarterly planning' }));
+      db.add(Obj.make(TestSchema.Person, { name: 'Quarterly Reviewer' }));
+      db.add(Obj.make(TestSchema.Person, { name: 'Unrelated Name' }));
+      await db.flush();
+
+      // Unscoped matches both entities containing the term.
+      {
+        const objects = await db.query(Query.select(Filter.text('Quarterly', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(2);
+      }
+
+      // Scoped to one type.
+      {
+        const objects: TestSchema.Task[] = await db
+          .query(
+            Query.select(Filter.and(Filter.text('Quarterly', { type: 'full-text' }), Filter.type(TestSchema.Task))),
+          )
+          .run();
+        expect(objects).toHaveLength(1);
+        expect(objects[0].title).toEqual('Quarterly planning');
+      }
+
+      // Scoped to multiple types via OR.
+      {
+        const objects = await db
+          .query(
+            Query.select(
+              Filter.and(
+                Filter.text('Quarterly', { type: 'full-text' }),
+                Filter.or(Filter.type(TestSchema.Task), Filter.type(TestSchema.Person)),
+              ),
+            ),
+          )
+          .run();
+        expect(objects).toHaveLength(2);
+      }
+
+      // A type scope the term never occurs under matches nothing.
+      {
+        const objects = await db
+          .query(
+            Query.select(Filter.and(Filter.text('Unrelated', { type: 'full-text' }), Filter.type(TestSchema.Task))),
+          )
+          .run();
+        expect(objects).toHaveLength(0);
+      }
+    });
+
     test('full-text search after content update', async () => {
       const { db } = await builder.createDatabase();
 
@@ -3730,6 +3782,87 @@ describe('Query', () => {
       expect(objects).toHaveLength(2);
       const names = objects.map((o: any) => o.name).sort();
       expect(names).toEqual(['Child1', 'Child2']);
+    });
+  });
+
+  describe('Filter.hasParent', () => {
+    test('selects parented vs unparented objects', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+      const parent = db.add(Obj.make(TestSchema.Expando, { name: 'Parent' }));
+      db.add(Obj.make(TestSchema.Expando, { [Obj.Parent]: parent, name: 'Child' }));
+      db.add(Obj.make(TestSchema.Expando, { name: 'Standalone' }));
+      await db.flush();
+
+      const roots = await db.query(Query.select(Filter.hasParent(false))).run();
+      expect(roots.map((obj: any) => obj.name).sort()).toEqual(['Parent', 'Standalone']);
+
+      const children = await db.query(Query.select(Filter.hasParent())).run();
+      expect(children.map((obj: any) => obj.name)).toEqual(['Child']);
+    });
+
+    test('combines with a type filter, keeping the type-indexed select', async ({ expect }) => {
+      const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
+      const person = db.add(Obj.make(TestSchema.Person, { name: 'Root' }));
+      db.add(Obj.make(TestSchema.Person, { [Obj.Parent]: person, name: 'Dependent' }));
+      db.add(Obj.make(TestSchema.Expando, { name: 'OtherType' }));
+      await db.flush();
+
+      const objects = await db
+        .query(Query.select(Filter.and(Filter.type(TestSchema.Person), Filter.hasParent(false))))
+        .run();
+      expect(objects).toHaveLength(1);
+      expect(objects[0]).toMatchObject({ name: 'Root' });
+    });
+
+    test('negation inverts the predicate', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+      const parent = db.add(Obj.make(TestSchema.Expando, { name: 'Parent' }));
+      db.add(Obj.make(TestSchema.Expando, { [Obj.Parent]: parent, name: 'Child' }));
+      await db.flush();
+
+      const objects = await db.query(Query.select(Filter.not(Filter.hasParent()))).run();
+      expect(objects.map((obj: any) => obj.name)).toEqual(['Parent']);
+    });
+
+    test('a negated type-and-parent conjunction negates the whole conjunction', async ({ expect }) => {
+      const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
+      const rootPerson = db.add(Obj.make(TestSchema.Person, { name: 'RootPerson' }));
+      db.add(Obj.make(TestSchema.Person, { [Obj.Parent]: rootPerson, name: 'ChildPerson' }));
+      db.add(Obj.make(TestSchema.Expando, { name: 'RootExpando' }));
+      await db.flush();
+
+      // not(and(type, hasParent(false))) must exclude ONLY the unparented person — a distributed
+      // negation (not(type) && hasParent(false)) would wrongly drop the parented person too.
+      const objects = await db
+        .query(Query.select(Filter.not(Filter.and(Filter.type(TestSchema.Person), Filter.hasParent(false)))))
+        .run();
+      const names = objects.map((obj: any) => obj.name);
+      expect(names).toContain('ChildPerson');
+      expect(names).toContain('RootExpando');
+      expect(names).not.toContain('RootPerson');
+    });
+
+    test('reacts to Obj.setParent after the fact', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+      const parent = db.add(Obj.make(TestSchema.Expando, { name: 'Parent' }));
+      const chat = db.add(Obj.make(TestSchema.Expando, { name: 'Chat' }));
+      await db.flush();
+
+      const query = db.query(Query.select(Filter.hasParent(false)));
+      const unsubscribe = query.subscribe(() => {});
+      onTestFinished(unsubscribe);
+      await waitForCondition({ condition: () => query.results.length === 2, timeout: 2000 });
+
+      // Adopting the chat must eject it from the unparented result set without a re-run.
+      Obj.setParent(chat, parent);
+      await db.flush({ updates: true });
+      await waitForCondition({ condition: () => query.results.length === 1, timeout: 2000 });
+      expect(query.results.map((obj: any) => obj.name)).toEqual(['Parent']);
+
+      // And orphaning it again must re-admit it.
+      Obj.setParent(chat, undefined);
+      await db.flush({ updates: true });
+      await waitForCondition({ condition: () => query.results.length === 2, timeout: 2000 });
     });
   });
 

@@ -61,8 +61,11 @@ export class Subscription extends Type.makeObject<Subscription>(DXN.make('org.dx
     type: FeedType.pipe(Schema.optional),
     /** Description of the feed. */
     description: Schema.String.pipe(Schema.optional),
-    /** URL of the feed's associated website. */
-    link: Schema.String.pipe(Schema.optional),
+    /**
+     * URL of the feed's own website — the RSS channel-level `<link>` / Atom `rel="alternate"`.
+     * Written by sync from the parsed channel, so it is not a form input.
+     */
+    link: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
     /** URL of the feed's icon/image. */
     iconUrl: Schema.String.pipe(Schema.optional),
     /**
