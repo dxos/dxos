@@ -9,6 +9,7 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { Chat } from '@dxos/assistant-toolkit';
 import * as Project from '@dxos/compute/Project';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
@@ -193,6 +194,24 @@ const useToolbarActions = (project: Project.Project) => {
   // the invocation fails with ServiceNotAvailable.
   const spaceId = Obj.getDatabase(project)?.spaceId;
 
+  // Persisted on click rather than on the first message, so the chat is in the navtree straight away;
+  // the parent edge before the add is what files it under the project rather than the space root.
+  const createChat = useCallback(async () => {
+    if (!spaceId) {
+      return;
+    }
+
+    const { data } = await invokePromise(AssistantOperation.CreateChat, {}, { spaceId });
+    const chat = data?.object;
+    if (!chat) {
+      return;
+    }
+
+    Chat.linkCompanion({ chat, subject: project });
+    await invokePromise(SpaceOperation.AddObject, { object: chat }, { spaceId });
+    await invokePromise(AssistantOperation.SetCurrentChat, { companionTo: project, chat }, { spaceId });
+  }, [invokePromise, project, spaceId]);
+
   return useMenuBuilder(
     (): ActionGraphProps =>
       MenuBuilder.make()
@@ -204,7 +223,7 @@ const useToolbarActions = (project: Project.Project) => {
             disposition: 'toolbar',
             testId: 'projectsPlugin.createChat',
           },
-          () => void invokePromise(AssistantOperation.CreateCompanionChat, { companionTo: project }, { spaceId }),
+          () => void createChat(),
         )
         // The growing gap pushes the routines button to the trailing edge: it opens a companion rather
         // than creating anything, so it reads as navigation, not a peer of the create actions.

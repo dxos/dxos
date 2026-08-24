@@ -29,7 +29,7 @@ describe('project app graph builder', () => {
 
     // Action ids are qualified by the node they hang off.
     expect(actions.map((action) => action.id)).toEqual([
-      qualifyId(Node.RootId, SUBJECT_ID, AssistantOperation.CreateCompanionChat.meta.key),
+      qualifyId(Node.RootId, SUBJECT_ID, AssistantOperation.CreateChat.meta.key),
     ]);
     // Navtree only: the toolbar builds its own create-chat, so a `toolbar` disposition here would
     // render a second, identical button.

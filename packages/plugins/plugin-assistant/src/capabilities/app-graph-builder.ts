@@ -244,7 +244,7 @@ export default Capability.makeModule(
                 Effect.gen(function* () {
                   const { object: chat } = yield* Operation.invoke(
                     AssistantOperation.CreateChat,
-                    { db: space.db },
+                    {},
                     { spaceId: space.db.spaceId },
                   );
                   yield* Operation.invoke(SpaceOperation.AddObject, { object: chat }, { spaceId: space.db.spaceId });

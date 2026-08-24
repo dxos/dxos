@@ -57,7 +57,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.EnsureCompanionCh
 
         // 3. Create a new transient chat, cache it, and return it without persisting.
         const { data } = yield* Effect.promise(() =>
-          operationInvoker.invokePromise(AssistantOperation.CreateChat, { db, addToSpace: false }),
+          operationInvoker.invokePromise(AssistantOperation.CreateChat, {}, { spaceId: db.spaceId }),
         );
         if (!data?.object) {
           return yield* Effect.fail(new Error('CreateChat did not return a chat object'));

@@ -20,17 +20,16 @@ export const CreateChat = Operation.make({
     name: 'Create Chat',
     icon: 'ph--chat-text--regular',
   },
-  services: [Capability.Service],
+  // The chat is returned unfiled, for the caller to add with `SpaceOperation.AddObject` when it wants
+  // a durable one. Its feed is added regardless — see the handler.
+  services: [Capability.Service, Database.Service],
   input: Schema.Struct({
-    db: Database.Database,
     name: Schema.optional(Schema.String),
     /**
      * Instructions steering the conversation, rendered into the system prompt at request time.
      * Held by reference so the chat follows later edits to them.
      */
     instructions: Schema.optional(Ref.Ref(Instructions.Instructions)),
-    /** If false, chat is created in-memory only and not added to space. Defaults to true. */
-    addToSpace: Schema.optional(Schema.Boolean),
   }),
   output: Schema.Struct({
     object: Type.getSchema(Chat.Chat),
@@ -103,26 +102,6 @@ export const BindChatContext = Operation.make({
     subject: Obj.Unknown,
   }),
   output: Schema.Void,
-});
-
-/**
- * Creates a persisted companion chat for a subject and makes it current — the explicit "new chat"
- * affordance, as against {@link EnsureCompanionChat}, which resolves whatever chat a plank should
- * already be showing and leaves it transient until the first message.
- */
-export const CreateCompanionChat = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.operation.assistant.createCompanionChat'),
-    name: 'Create Companion Chat',
-    icon: 'ph--chat-text--regular',
-  },
-  services: [Capability.Service],
-  input: Schema.Struct({
-    companionTo: Obj.Unknown,
-  }),
-  output: Schema.Struct({
-    chat: Type.getSchema(Chat.Chat),
-  }),
 });
 
 export const EnsureCompanionChat = Operation.make({

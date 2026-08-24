@@ -60,6 +60,7 @@ import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 import { Config } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
@@ -323,7 +324,8 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
         // skills and the chat), then apply any story-specific context bindings. The story-side
         // `onChatCreated` must run here: the operation handler that creates the chat is owned by
         // the assistant plugin and has no hook for it.
-        const { object: chat } = yield* invoke(AssistantOperation.CreateChat, { db: space.db });
+        const { object: chat } = yield* invoke(AssistantOperation.CreateChat, {}, { spaceId: space.db.spaceId });
+        yield* invoke(SpaceOperation.AddObject, { object: chat }, { spaceId: space.db.spaceId });
         if (onChatCreated) {
           const registry = yield* Capabilities.AtomRegistry;
           const feed = yield* Effect.promise(() => chat.feed.load());
