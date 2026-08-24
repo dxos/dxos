@@ -48,40 +48,52 @@ packages lint clean, and `composer-app:build` green downstream (285 tasks).
   - Also tightened `tags?: any` to `Attributes` and made `convertTags` drop nullish
     values, which are not valid OTel attribute values.
 
-## Phase 2: Spaces, documents, memory
+## Phase 2: Spaces, documents, memory — DONE
 
 The straightforward gauges, all read at collection time via `observe()`. Lands in
 `packages/sdk/observability/src/providers/client-observability.ts`.
 
 ### Tasks
 
-- [ ] **`dxos.client.spaces.count` + `dxos.client.spaces.ready.count`**
-  - In `spacesMetricsProvider` (`client-observability.ts:165`).
-- [ ] **Remove the `key` attribute from the existing per-space gauges**
-  - `dxos.client.space.{members,objects,epoch,currentDataMutations}` are tagged
-    `key: data.key` — one series per space per device, unbounded in spaces created.
-  - Report aggregates instead; per-space drilldown belongs in traces.
-- [ ] **`dxos.echo.documents.count{location=local|remote}` + `dxos.echo.documents.unsynced.count`**
-  - Sourced from `getSyncSummary()` (`packages/sdk/client/src/echo/util.ts:23`),
-    which already folds per-space `PeerState` into one fleet-comparable summary.
-- [ ] **Migrate the existing heap gauges to `observe()` and declare `By` units**
-  - `dxos.client.runtime.{heapUsed,heapTotal,heapSizeLimit}` and
-    `dxos.client.services.runtime.{rss,heapTotal,heapUsed}` in
-    `runtimeMetricsProvider` (`client-observability.ts:119`) — today they are sync
-    `gauge()` calls on a 10-min timer against a 60s export, so the series are mostly
-    gaps and no percentile panel works.
-  - Keep the existing names so SigNoz history is not orphaned.
-- [ ] **`dxos.client.runtime.memory.bytes{scope}`** observable gauge
-  - `performance.memory` is main-thread + Chromium only, so Composer's shared and
-    dedicated workers — the largest consumers — are unmeasured today.
-  - Use `performance.measureUserAgentSpecificMemory()`: feature-detect it (needs
-    cross-origin isolation), and read it on its own cadence, not inside the
-    collection callback — it waits for a GC before resolving.
-  - Bounded `scope` enum: `window | shared-worker | dedicated-worker | other`.
-- [ ] **Coordinate names with the `memory-usage` project**
+- [x] **`dxos.client.spaces.count` + `dxos.client.spaces.ready.count`** — observed in
+      `spacesMetricsProvider`, reading `client.spaces.get()` fresh at each collection
+      (`SpaceState.SPACE_READY` for the second).
+- [x] **Remove the `key` attribute from the existing per-space gauges** — the four
+      `dxos.client.space.*` gauges now report device-wide totals.
+  - `members`/`objects`/`currentDataMutations` sum; `epoch` takes the **max**, since
+    epochs are per-space sequence numbers and adding them means nothing.
+- [x] **`dxos.echo.documents.count{location=local|remote}` + `dxos.echo.documents.unsynced.count`**
+      — new `documentsMetricsProvider`, registered in `plugin-observability`.
+  - Sourced from `db.subscribeToSyncState` via the new `providers/sync-state.ts`, not
+    `getSyncSummary` as originally planned: only the former sees feed blocks, and it
+    already owns its poll backoff (see Phase 4).
+  - `subscribeSyncSummary` is the shared tracker Phase 4 extends; `foldSyncStates` is
+    split out as a pure function and unit-tested (5 tests, no mocks).
+- [x] **Migrate the existing heap gauges to `observe()` and declare `By` units** — all six
+      moved off the 10-minute push timer; names unchanged so SigNoz history is not orphaned.
+  - `dxos.client.runtime.*` reads `performance.memory` synchronously at collection time.
+  - `dxos.client.services.runtime.*` cannot: it is an RPC. Sampled on a 30s cadence
+    (under the 60s export, so a collection never reads a stale sample) with the gauge
+    reading the latest value, which keeps the `observe` contract synchronous.
+- [x] **`dxos.client.runtime.memory.bytes{scope}`** — new `providers/memory.ts`.
+  - Feature-detected (`supportsCrossRealmMemory`), so the four series are registered only
+    where `measureUserAgentSpecificMemory` exists; sampled on the same 30s cadence rather
+    than inside the collection callback, since it waits for a GC.
+  - Unattributed and unrecognised realms bucket to `other` rather than being dropped, so
+    the scopes still sum to the total the browser reported. `foldBreakdown` is pure and
+    unit-tested (5 tests).
+- [ ] **Coordinate names with the `memory-usage` project** — still open.
   - Registry entry owned by jdw; it set the 300-400MB resting target and the
     `scripts/memory/soak.mjs` harness. This phase makes that target verifiable
     fleet-wide instead of on one machine.
+
+### Follow-ups surfaced
+
+- `spacesMetricsProvider` still captures `client.spaces.get()` once at provider start
+  (pre-existing `TODO(nf): update subscription on new spaces`), so the aggregated
+  per-space gauges miss spaces created later in the session. The new
+  `spaces.count`/`spaces.ready.count` gauges re-read on every collection and are
+  unaffected. Not fixed here — it is a change to existing behaviour, not this phase.
 
 ## Phase 3: EDGE websocket
 

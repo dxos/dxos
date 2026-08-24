@@ -6,6 +6,8 @@ Metrics can now be observed rather than pushed. `trace.metrics.observe(name, cal
 
 Metric instruments now carry `unit` and `description`, supplied via the new fourth `meta` argument on `gauge`/`increment`/`distribution`/`observe`.
 
+New client metrics: `dxos.client.spaces.count` / `.ready.count`, `dxos.echo.documents.count{location}` and `dxos.echo.documents.unsynced.count`, and `dxos.client.runtime.memory.bytes{scope}` — the last reporting cross-realm usage via `measureUserAgentSpecificMemory`, which is the only way to see shared and dedicated worker heaps. The existing heap gauges keep their names but are now observed with declared `By` units, and the `dxos.client.space.*` gauges report device-wide totals instead of carrying a per-space `key` attribute that cost one series per space.
+
 Three fixes to the OTLP metrics exporter: it now requests **delta** temporality, so a client reload is no longer read downstream as a counter reset; the metrics resource no longer carries `session.id`, which minted a new time series on every page load; and instruments are cached instead of re-created on every sample.
 
 Breaking for anyone implementing the observability extension API directly: the `metrics` kind now requires an `observe` method.

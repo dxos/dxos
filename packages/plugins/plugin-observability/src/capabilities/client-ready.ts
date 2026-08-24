@@ -60,6 +60,10 @@ export default Capability.makeModule(
     yield* observability.addDataProvider(ObservabilityProvider.Client.spacesMetricsProvider(client));
     log('client-ready: space metrics data provider added');
 
+    log('client-ready: adding document metrics data provider');
+    yield* observability.addDataProvider(ObservabilityProvider.Client.documentsMetricsProvider(client));
+    log('client-ready: document metrics data provider added');
+
     return [];
   }),
 );
