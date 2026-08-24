@@ -16,7 +16,7 @@ import isEqual from 'fast-deep-equal';
 
 import { Event, UpdateScheduler } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
-import { type DatabaseDirectory } from '@dxos/echo-protocol';
+import { type DatabaseDirectory, type SpaceIdDerivation } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
@@ -39,6 +39,7 @@ export class SpaceStateManager extends Resource {
   private readonly _rootBySpace = new Map<SpaceId, DocumentId>();
   private readonly _perRootContext = new Map<DocumentId, Context>();
   private readonly _lastSpaceDocumentList = new Map<SpaceId, DocumentId[]>();
+  private readonly _spaceRootRefs = new Map<SpaceId, SpaceRootRefs>();
 
   public readonly spaceDocumentListUpdated = new Event<SpaceDocumentListUpdatedEvent>();
 
@@ -77,6 +78,7 @@ export class SpaceStateManager extends Resource {
     this._rootBySpace.clear();
     this._perRootContext.clear();
     this._lastSpaceDocumentList.clear();
+    this._spaceRootRefs.clear();
   }
 
   get roots(): ReadonlyMap<DocumentId, DatabaseRoot> {
@@ -102,6 +104,23 @@ export class SpaceStateManager extends Resource {
       return undefined;
     }
     return this._roots.get(documentId);
+  }
+
+  /**
+   * References carried by the space root document, or undefined for a space that has none yet
+   * (every space created before the root document existed).
+   */
+  getSpaceRootRefs(spaceId: SpaceId): SpaceRootRefs | undefined {
+    return this._spaceRootRefs.get(spaceId);
+  }
+
+  /**
+   * Records the space root document and the references it carries. The root is immutable, so this is
+   * written once per space — at creation, or when a legacy space migrates and gains one.
+   */
+  async setSpaceRootRefs(spaceId: SpaceId, refs: SpaceRootRefs): Promise<void> {
+    this._spaceRootRefs.set(spaceId, refs);
+    await this._saveSpaceRootRefs(spaceId, refs);
   }
 
   /**
@@ -190,7 +209,13 @@ export class SpaceStateManager extends Resource {
     const rows = await RuntimeProvider.runPromise(this._runtime)(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
-        return yield* sql<{ space_id: string; root_doc_url: string }>`SELECT space_id, root_doc_url FROM echo_spaces`;
+        return yield* sql<{
+          space_id: string;
+          root_doc_url: string;
+          space_root_doc_url: string | null;
+          credentials_doc_url: string | null;
+          id_derivation: string | null;
+        }>`SELECT space_id, root_doc_url, space_root_doc_url, credentials_doc_url, id_derivation FROM echo_spaces`;
       }),
     );
     for (const row of rows) {
@@ -198,6 +223,13 @@ export class SpaceStateManager extends Resource {
       const rootDocUrl = row.root_doc_url as AutomergeUrl;
       const documentId = interpretAsDocumentId(rootDocUrl);
       this._rootBySpace.set(spaceId, documentId);
+      if (row.space_root_doc_url) {
+        this._spaceRootRefs.set(spaceId, {
+          spaceRootDocUrl: row.space_root_doc_url as AutomergeUrl,
+          credentialsDocUrl: (row.credentials_doc_url ?? undefined) as AutomergeUrl | undefined,
+          idDerivation: (row.id_derivation ?? 'spaceKey') as SpaceIdDerivation,
+        });
+      }
     }
   }
 
@@ -205,7 +237,21 @@ export class SpaceStateManager extends Resource {
     await RuntimeProvider.runPromise(this._runtime)(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
-        yield* sql`INSERT OR REPLACE INTO echo_spaces (space_id, root_doc_url) VALUES (${spaceId}, ${rootDocUrl})`;
+        // Upsert rather than INSERT OR REPLACE: the latter deletes the row, discarding the space-root columns.
+        yield* sql`INSERT INTO echo_spaces (space_id, root_doc_url) VALUES (${spaceId}, ${rootDocUrl})
+          ON CONFLICT(space_id) DO UPDATE SET root_doc_url = excluded.root_doc_url`;
+      }),
+    );
+  }
+
+  private async _saveSpaceRootRefs(spaceId: SpaceId, refs: SpaceRootRefs): Promise<void> {
+    await RuntimeProvider.runPromise(this._runtime)(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`UPDATE echo_spaces SET space_root_doc_url = ${refs.spaceRootDocUrl},
+          credentials_doc_url = ${refs.credentialsDocUrl ?? null},
+          id_derivation = ${refs.idDerivation}
+          WHERE space_id = ${spaceId}`;
       }),
     );
   }
@@ -219,6 +265,16 @@ export class SpaceStateManager extends Resource {
     );
   }
 }
+
+/**
+ * The references a space root document carries, as persisted beside the space. The directory lives in
+ * `root_doc_url` and is reached through {@link SpaceStateManager.getRootBySpaceId}.
+ */
+export type SpaceRootRefs = {
+  spaceRootDocUrl: AutomergeUrl;
+  credentialsDocUrl?: AutomergeUrl;
+  idDerivation: SpaceIdDerivation;
+};
 
 export class SpaceDocumentListUpdatedEvent {
   constructor(
