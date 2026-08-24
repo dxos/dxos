@@ -70,7 +70,6 @@
       "@dxos/edge-compute",
       "@dxos/effect",
       "@dxos/effect-atom-solid",
-      "@dxos/effect-proto",
       "@dxos/effect-zod",
       "@dxos/env-tests",
       "@dxos/errors",

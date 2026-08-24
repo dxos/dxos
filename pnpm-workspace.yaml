@@ -55,6 +55,7 @@ catalog:
   '@ch-ui/tokens': 3.0.1
   '@changesets/changelog-git': ^1.0.0
   '@changesets/cli': ^3.0.0
+  '@changesets/parse': ^1.0.0
   '@cloudflare/ai-chat': ^0.0.6
   '@cloudflare/vitest-pool-workers': ^0.18.6
   '@cloudflare/workers-types': ^5.20260717.1

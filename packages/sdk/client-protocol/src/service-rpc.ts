@@ -14,8 +14,8 @@ import * as RpcSchema from 'effect/unstable/rpc/RpcSchema';
 import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 import * as RpcTest from 'effect/unstable/rpc/RpcTest';
 
+import { Stream as PbStream } from '@dxos/async';
 import { type RequestOptions } from '@dxos/codec-protobuf';
-import { Stream as PbStream } from '@dxos/codec-protobuf/stream';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { runServiceCall } from '@dxos/protocols';
