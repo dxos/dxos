@@ -30,31 +30,31 @@ const testRuntime = ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntim
 const Compute = Operation.make({
   input: Schema.Struct({ value: Schema.Number }),
   output: Schema.Struct({ value: Schema.Number }),
-  meta: { key: DXN.make('org.example.test.compute') },
+  meta: { key: DXN.make('com.example.operation.test.compute') },
 });
 
 const ToString = Operation.make({
   input: Schema.Struct({ value: Schema.Number }),
   output: Schema.Struct({ string: Schema.String }),
-  meta: { key: DXN.make('org.example.test.toString') },
+  meta: { key: DXN.make('com.example.operation.test.toString') },
 });
 
 const Add = Operation.make({
   input: Schema.Tuple([Schema.Number, Schema.Number]),
   output: Schema.Number,
-  meta: { key: DXN.make('org.example.test.add') },
+  meta: { key: DXN.make('com.example.operation.test.add') },
 });
 
 const SideEffect = Operation.make({
   input: Schema.Void,
   output: Schema.Void,
-  meta: { key: DXN.make('org.example.test.sideEffect') },
+  meta: { key: DXN.make('com.example.operation.test.sideEffect') },
 });
 
 const Fail = Operation.make({
   input: Schema.Struct({ value: Schema.Number }),
   output: Schema.Void,
-  meta: { key: DXN.make('org.example.test.fail') },
+  meta: { key: DXN.make('com.example.operation.test.fail') },
 });
 
 //
@@ -293,7 +293,7 @@ describe('OperationInvoker.invokePromise concurrency contract', () => {
     const Write = Operation.make({
       input: Schema.Struct({ value: Schema.String, stall: Schema.Boolean }),
       output: Schema.Void,
-      meta: { key: DXN.make('org.example.test.write') },
+      meta: { key: DXN.make('com.example.operation.test.write') },
     });
 
     const applied: string[] = [];
@@ -340,7 +340,7 @@ describe('Operation.withHandler type safety', () => {
     const opWithDeclaredService = Operation.make({
       input: Schema.Void,
       output: Schema.Void,
-      meta: { key: DXN.make('org.example.test.declaredService') },
+      meta: { key: DXN.make('com.example.operation.test.declaredService') },
       services: [DeclaredService],
     });
 

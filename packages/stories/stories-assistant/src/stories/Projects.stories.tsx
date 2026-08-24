@@ -66,10 +66,10 @@ const decorators = createDecorators({
       text: PROJECT_INSTRUCTIONS,
       commands: PROJECT_COMMANDS,
     });
-    Obj.setParent(instructions, project);
     Obj.update(project, (project) => {
       project.instructions = Ref.make(instructions);
     });
+    Obj.setParent(instructions, project);
     space.db.add(project);
     await space.db.flush({ indexes: true });
   },

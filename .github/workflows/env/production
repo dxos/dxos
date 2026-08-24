@@ -11,6 +11,9 @@ DX_IPDATA_API_KEY=${IPDATA_API_KEY}
 # deployment binds its own feedback-logs R2 bucket, so the channel names its own.
 DX_FEEDBACK_LOGS_ENDPOINT=https://composer.space/api/feedback-logs
 DX_OTEL_ENDPOINT=/api/otel
+# Stamped on every metric, log and trace as `deployment.environment`; without it every
+# deployed client reports `unknown` and production is indistinguishable from preview.
+DX_ENVIRONMENT=production
 DX_POSTHOG_API_HOST=https://o.composer.space
 IPFS_API_SECRET=${IPFS_API_SECRET}
 # End common vars

@@ -309,9 +309,11 @@ export const queryOperations = (
           // failing the call — `invokeOperation` is where a wrong key gets an actionable error.
           const operations = keys.flatMap((key) => {
             const record = viewInternal.lookup(registry, key);
-            return record != null && owners.has(viewInternal.nsid(Operation.getKey(record) ?? ''))
-              ? [viewInternal.operationView(record, owners, true)]
-              : [];
+            if (record == null) {
+              return [];
+            }
+            const toolName = viewInternal.toolNameOf(record);
+            return toolName != null && owners.has(toolName) ? [viewInternal.operationView(record, owners, true)] : [];
           });
           return Effect.succeed({ operations });
         }
@@ -319,7 +321,8 @@ export const queryOperations = (
           Effect.map((records) => ({
             operations: records
               .filter((record) => {
-                const ownersOfRecord = owners.get(viewInternal.nsid(Operation.getKey(record) ?? ''));
+                const recordToolName = viewInternal.toolNameOf(record);
+                const ownersOfRecord = recordToolName == null ? undefined : owners.get(recordToolName);
                 if (ownersOfRecord == null) {
                   return false;
                 }
@@ -374,9 +377,17 @@ export const invoke = (
       const skills = yield* viewInternal.mcpSkills(registry);
       const record = viewInternal.lookup(registry, key);
       const operationKey = record != null ? viewInternal.nsid(Operation.getKey(record) ?? '') : undefined;
+      // Governance is keyed by the derived tool name, the form a skill's `tools` list carries; the
+      // operation is still invoked by key below.
+      const governedName = record != null ? viewInternal.toolNameOf(record) : undefined;
       // Skills are the unit of governance: an operation in the registry but named by no opted-in
       // skill is exactly as uninvocable as one that does not exist.
-      if (record == null || operationKey == null || !viewInternal.ownersOf(skills).has(operationKey)) {
+      if (
+        record == null ||
+        operationKey == null ||
+        governedName == null ||
+        !viewInternal.ownersOf(skills).has(governedName)
+      ) {
         return yield* Effect.fail(
           failure(
             'invalid_request',

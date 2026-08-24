@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Clock from 'effect/Clock';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -22,7 +24,7 @@ export type RunStatus = 'idle' | 'running' | 'paused' | 'done' | 'error';
  * `layerSql` binds any `@effect/sql` client (browser wasm / node / DO SQLite); `layerMemory` serves
  * tests and throwaway runs.
  */
-export interface StateStoreApi {
+export interface Service {
   /** Push targets onto the frontier (LIFO ⇒ depth-first). Ids already present are ignored. */
   readonly pushTargets: (targets: readonly Type.Target[]) => Effect.Effect<void, StateError>;
   /** Peek the top frontier target whose status is `pending` or `active` (does not remove it). */
@@ -39,12 +41,14 @@ export interface StateStoreApi {
   readonly getRunStatus: () => Effect.Effect<RunStatus, StateError>;
 }
 
-export class StateStore extends Context.Service<StateStore, StateStoreApi>()('@dxos/crawler/StateStore') {
-  /** In-memory frontier (tests, demos, single-process browser runs). */
-  static layerMemory: Layer.Layer<StateStore> = Layer.sync(StateStore, () => makeMemory());
+export class StateStore extends Context.Service<StateStore, Service>()('@dxos/crawler/StateStore') {}
 
-  /** SQLite-backed frontier over a shared SqlClient (browser wasm / node / DO SQLite). */
-  static layerSql: Layer.Layer<StateStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> = Layer.effect(
+/** In-memory frontier (tests, demos, single-process browser runs). */
+export const layerMemory: Layer.Layer<StateStore> = Layer.sync(StateStore, () => makeMemory());
+
+/** SQLite-backed frontier over a shared SqlClient (browser wasm / node / DO SQLite). */
+export const layerSql: Layer.Layer<StateStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =
+  Layer.effect(
     StateStore,
     Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
@@ -53,9 +57,25 @@ export class StateStore extends Context.Service<StateStore, StateStoreApi>()('@d
       return makeSql(sql);
     }),
   );
-}
 
-const makeMemory = (): StateStoreApi => {
+export const pushTargets = (...args: Parameters<Service['pushTargets']>) =>
+  StateStore.use((store) => store.pushTargets(...args));
+export const nextActionable = (...args: Parameters<Service['nextActionable']>) =>
+  StateStore.use((store) => store.nextActionable(...args));
+export const hasActionable = (...args: Parameters<Service['hasActionable']>) =>
+  StateStore.use((store) => store.hasActionable(...args));
+export const setCursor = (...args: Parameters<Service['setCursor']>) =>
+  StateStore.use((store) => store.setCursor(...args));
+export const setStatus = (...args: Parameters<Service['setStatus']>) =>
+  StateStore.use((store) => store.setStatus(...args));
+export const listTargets = (...args: Parameters<Service['listTargets']>) =>
+  StateStore.use((store) => store.listTargets(...args));
+export const setRunStatus = (...args: Parameters<Service['setRunStatus']>) =>
+  StateStore.use((store) => store.setRunStatus(...args));
+export const getRunStatus = (...args: Parameters<Service['getRunStatus']>) =>
+  StateStore.use((store) => store.getRunStatus(...args));
+
+const makeMemory = (): Service => {
   // Frontier as a stack: index 0 is the bottom, the last index is the top.
   const frontier: Type.Target[] = [];
   const byId = new Map<string, Type.Target>();

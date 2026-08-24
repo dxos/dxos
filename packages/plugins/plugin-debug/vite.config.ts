@@ -19,6 +19,7 @@ export default defineConfig({
     'Debug': 'src/types/Debug.ts',
     'DebugEvents': 'src/types/DebugEvents.ts',
     'DebugNodes': 'src/types/DebugNodes.ts',
+    'DebugOperation': 'src/types/DebugOperation.ts',
     'DebugSurface': 'src/types/DebugSurface.ts',
     'Settings': 'src/types/Settings.ts',
     'types': 'src/types/index.ts',

@@ -12,12 +12,12 @@ import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 export type CrawlStores =
-  | StateStore
-  | AgentRegistry
+  | StateStore.StateStore
+  | AgentRegistry.AgentRegistry
   | FactStore
-  | MessageStore
-  | QuestionStore
-  | ExtractedQuestionStore;
+  | MessageStore.MessageStore
+  | QuestionStore.QuestionStore
+  | ExtractedQuestionStore.ExtractedQuestionStore;
 
 // In-memory wasm SQLite shared for the app session: crawl state survives across operation
 // invocations (pause/resume) but not reloads. The durable OPFS client is worker-only, so

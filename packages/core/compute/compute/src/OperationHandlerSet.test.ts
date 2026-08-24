@@ -14,8 +14,8 @@ import { DXN } from '@dxos/keys';
 import * as Operation from './Operation';
 import * as OperationHandlerSet from './OperationHandlerSet';
 
-const KEY_A = DXN.make('org.example.test.a');
-const KEY_B = DXN.make('org.example.test.b');
+const KEY_A = DXN.make('com.example.test.a');
+const KEY_B = DXN.make('com.example.test.b');
 
 const makeHandler = (key: DXN.DXN, output: string) =>
   Operation.withHandler(Operation.make({ input: Schema.Void, output: Schema.String, meta: { key } }), () =>

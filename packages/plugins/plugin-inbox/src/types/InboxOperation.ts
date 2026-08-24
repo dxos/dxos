@@ -17,14 +17,14 @@ import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Actor, Event, Message, type Person } from '@dxos/types';
 import { AI_ACTION_ICON } from '@dxos/ui-types';
 
-import { meta } from '#meta';
-
 import * as Mailbox from './Mailbox';
 
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
 export const AddMailbox = Operation.make({
-  meta: { key: makeKey('addMailbox'), name: 'Add Mailbox', icon: 'ph--envelope--regular' },
+  meta: {
+    key: DXN.make('org.dxos.operation.inbox.addMailbox'),
+    name: 'Add Mailbox',
+    icon: 'ph--envelope--regular',
+  },
   services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     object: Obj.Unknown,
@@ -41,7 +41,7 @@ export const AddMailbox = Operation.make({
 
 export const DraftEmail = Operation.make({
   meta: {
-    key: makeKey('draftEmail'),
+    key: DXN.make('org.dxos.operation.inbox.draftEmail'),
     name: 'Draft email',
     description: 'Creates a new email draft.',
     icon: 'ph--pencil--regular',
@@ -72,7 +72,7 @@ export const DraftEmail = Operation.make({
 // TODO(wittjosiah): Reconcile with above.
 export const DraftEmailAndOpen = Operation.make({
   meta: {
-    key: makeKey('draftEmailAndOpen'),
+    key: DXN.make('org.dxos.operation.inbox.draftEmailAndOpen'),
     name: 'Draft email and open',
     icon: 'ph--pencil--regular',
   },
@@ -116,7 +116,7 @@ export const DraftEmailAndOpen = Operation.make({
  */
 export const RenameFilter = Operation.make({
   meta: {
-    key: makeKey('renameFilter'),
+    key: DXN.make('org.dxos.operation.inbox.renameFilter'),
     name: 'Rename Filter',
     icon: 'ph--pencil-simple--regular',
   },
@@ -130,7 +130,7 @@ export const RenameFilter = Operation.make({
 
 export const ReadEmail = Operation.make({
   meta: {
-    key: makeKey('readEmail'),
+    key: DXN.make('org.dxos.operation.inbox.readEmail'),
     name: 'Read email',
     description: 'Opens and reads the contents of a mailbox.',
     icon: 'ph--envelope-open--regular',
@@ -159,7 +159,7 @@ export const ReadEmail = Operation.make({
 });
 export const ClassifyEmail = Operation.make({
   meta: {
-    key: makeKey('classifyEmail'),
+    key: DXN.make('org.dxos.operation.inbox.classifyEmail'),
     name: 'Classify email',
     description:
       'Classifies an email message by selecting and applying an appropriate tag from available tags in the database.',
@@ -186,7 +186,11 @@ export const ClassifyEmail = Operation.make({
 
 /** @deprecated Use {@link ExtractContactFromMessage} + the message extractor pipeline instead. */
 export const ExtractContact = Operation.make({
-  meta: { key: makeKey('extractContact'), name: 'Extract Contact', icon: 'ph--user--regular' },
+  meta: {
+    key: DXN.make('org.dxos.operation.inbox.extractContact'),
+    name: 'Extract Contact',
+    icon: 'ph--user--regular',
+  },
   services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     db: Database.Database,
@@ -230,7 +234,7 @@ export const ExtractResultSchema = Schema.Struct({
 
 export const ExtractContactFromMessage = Operation.make({
   meta: {
-    key: makeKey('extractContactFromMessage'),
+    key: DXN.make('org.dxos.operation.inbox.extractContactFromMessage'),
     name: 'Extract Contact from Message',
     icon: 'ph--user--regular',
   },
@@ -246,7 +250,7 @@ export const ExtractContactFromMessage = Operation.make({
  */
 export const ExtractSummaryFromMessage = Operation.make({
   meta: {
-    key: makeKey('extractSummaryFromMessage'),
+    key: DXN.make('org.dxos.operation.inbox.extractSummaryFromMessage'),
     name: 'Extract Summary from Message',
     icon: 'ph--text-aa--regular',
   },
@@ -256,7 +260,7 @@ export const ExtractSummaryFromMessage = Operation.make({
 });
 
 export const ExtractMessage = Operation.make({
-  meta: { key: makeKey('extractMessage'), name: 'Extract Message' },
+  meta: { key: DXN.make('org.dxos.operation.inbox.extractMessage'), name: 'Extract Message' },
   services: [Capability.Service, AiService.AiService, Database.Service],
   input: Schema.Struct({
     // Live object or an immutable snapshot (feed messages resolve to snapshots); the handler
@@ -278,7 +282,7 @@ export const DEFAULT_EXTRACT_MAILBOX_CONCURRENCY = 5;
 /** @deprecated Use batch dispatchers like on-arrival extractors or direct ExtractMessage invocations instead. */
 export const ExtractMailbox = Operation.make({
   meta: {
-    key: makeKey('extractMailbox'),
+    key: DXN.make('org.dxos.operation.inbox.extractMailbox'),
     name: 'Extract Mailbox',
     description: 'Runs a selected extractor over every message in a mailbox feed.',
     icon: 'ph--magic-wand--regular',
@@ -348,7 +352,7 @@ export const DEFAULT_SUMMARIZE_MAILBOX_BATCH_LIMIT = 25;
 
 export const SummarizeMailbox = Operation.make({
   meta: {
-    key: makeKey('summarizeMailbox'),
+    key: DXN.make('org.dxos.operation.inbox.summarizeMailbox'),
     name: 'Summarize Mailbox',
     description:
       "Summarizes mail from known contacts into the mailbox's annotation feed, one immutable summary per message.",
@@ -409,7 +413,7 @@ export const DEFAULT_ANALYZE_MAILBOX_TIERS: readonly MailboxTier[] = ['determini
 
 export const AnalyzeMailbox = Operation.make({
   meta: {
-    key: makeKey('analyzeMailbox'),
+    key: DXN.make('org.dxos.operation.inbox.analyzeMailbox'),
     name: 'Analyze Mailbox',
     description:
       'Runs the mailbox pipelines in cascade order — deterministic extraction, then cheap LLM classification, then optional per-message analysis.',
@@ -483,7 +487,7 @@ export const AnalyzeMailbox = Operation.make({
 
 export const ExtractCorrespondents = Operation.make({
   meta: {
-    key: makeKey('extractCorrespondents'),
+    key: DXN.make('org.dxos.operation.inbox.extractCorrespondents'),
     name: 'Extract Correspondents',
     description: 'Creates Person objects for everyone the user has sent or replied to, derived from the mailbox feed.',
     icon: 'ph--users--regular',
@@ -515,7 +519,7 @@ export const ExtractCorrespondents = Operation.make({
  */
 export const ResetFeedCursor = Operation.make({
   meta: {
-    key: makeKey('resetFeedCursor'),
+    key: DXN.make('org.dxos.operation.inbox.resetFeedCursor'),
     name: 'Reset Feed Cursor',
     description: "Clears a pipeline's cursor so its next run reprocesses the whole mailbox feed.",
     icon: 'ph--arrow-counter-clockwise--regular',
@@ -550,7 +554,7 @@ export const DEFAULT_CLASSIFY_MAILBOX_PAGE_SIZE = 20;
 
 export const ClassifyMailbox = Operation.make({
   meta: {
-    key: makeKey('classifyMailbox'),
+    key: DXN.make('org.dxos.operation.inbox.classifyMailbox'),
     name: 'Classify Mailbox',
     description:
       'LLM spam detection and category labeling over the mailbox feed; senders with a known Person are never spam.',
@@ -595,7 +599,7 @@ export const ClassifyMailbox = Operation.make({
 
 export const CreateProjectFromMessage = Operation.make({
   meta: {
-    key: makeKey('createProjectFromMessage'),
+    key: DXN.make('org.dxos.operation.inbox.createProjectFromMessage'),
     name: 'Create Project',
     description: "Creates a Project seeded from a message's thread, with an LLM summary.",
     icon: 'ph--stack--regular',
@@ -620,7 +624,7 @@ export const createSubscriptionsProgressKey = (mailbox: Mailbox.Mailbox) =>
 
 export const ExtractSubscriptions = Operation.make({
   meta: {
-    key: makeKey('extractSubscriptions'),
+    key: DXN.make('org.dxos.operation.inbox.extractSubscriptions'),
     name: 'Extract Subscriptions',
     description:
       'Extracts unsubscribe links (header and body) from the mailbox feed and records the per-sender subscriptions on the mailbox.',
@@ -644,7 +648,7 @@ export const ExtractSubscriptions = Operation.make({
 
 export const UnsubscribeSender = Operation.make({
   meta: {
-    key: makeKey('unsubscribeSender'),
+    key: DXN.make('org.dxos.operation.inbox.unsubscribeSender'),
     name: 'Unsubscribe',
     description: 'Adds a skip-sender filter and fires the List-Unsubscribe one-click request for a bulk sender.',
     icon: 'ph--prohibit--regular',

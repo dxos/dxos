@@ -22,7 +22,7 @@ const LAYOUT_PLUGIN = 'org.dxos.plugin.layout';
 
 export const UpdateSidebar = Operation.make({
   meta: {
-    key: DXN.make(`${LAYOUT_PLUGIN}.operation.updateSidebar`),
+    key: DXN.make('org.dxos.operation.appToolkit.updateSidebar'),
     name: 'Update Sidebar',
     description: 'Update the sidebar state.',
     icon: 'ph--sidebar--regular',
@@ -44,7 +44,7 @@ export const UpdateSidebar = Operation.make({
 
 export const UpdateComplementary = Operation.make({
   meta: {
-    key: DXN.make(`${LAYOUT_PLUGIN}.operation.updateComplementary`),
+    key: DXN.make('org.dxos.operation.appToolkit.updateComplementary'),
     name: 'Update Complementary Sidebar',
     description: 'Update the complementary sidebar state.',
     icon: 'ph--sidebar--regular',
@@ -70,7 +70,7 @@ export const UpdateComplementary = Operation.make({
 
 export const UpdateDialog = Operation.make({
   meta: {
-    key: DXN.make(`${LAYOUT_PLUGIN}.operation.updateDialog`),
+    key: DXN.make('org.dxos.operation.appToolkit.updateDialog'),
     name: 'Update Dialog',
     description: 'Open, close, or update the dialog.',
     icon: 'ph--app-window--regular',
@@ -156,7 +156,7 @@ const popoverVariantFields = {
 
 export const UpdatePopover = Operation.make({
   meta: {
-    key: DXN.make(`${LAYOUT_PLUGIN}.operation.updatePopover`),
+    key: DXN.make('org.dxos.operation.appToolkit.updatePopover'),
     name: 'Update Popover',
     description: 'Open, close, or update a popover.',
     icon: 'ph--chat-text--regular',
@@ -236,7 +236,7 @@ export const getNotifyOverride = (failure: unknown): NotifyOverride | null => {
 
 export const AddToast = Operation.make({
   meta: {
-    key: DXN.make(`${LAYOUT_PLUGIN}.operation.addToast`),
+    key: DXN.make('org.dxos.operation.appToolkit.addToast'),
     name: 'Add Toast',
     description: 'Add a toast notification.',
     icon: 'ph--broadcast--regular',
@@ -253,7 +253,7 @@ export const AddToast = Operation.make({
 
 export const SwitchWorkspace = Operation.make({
   meta: {
-    key: DXN.make(`${LAYOUT_PLUGIN}.operation.switchWorkspace`),
+    key: DXN.make('org.dxos.operation.appToolkit.switchWorkspace'),
     name: 'Switch Workspace',
     description: 'Switch to a different workspace.',
     icon: 'ph--arrows-clockwise--regular',
@@ -268,7 +268,7 @@ export const SwitchWorkspace = Operation.make({
 
 export const RevertWorkspace = Operation.make({
   meta: {
-    key: DXN.make(`${LAYOUT_PLUGIN}.operation.revertWorkspace`),
+    key: DXN.make('org.dxos.operation.appToolkit.revertWorkspace'),
     name: 'Revert Workspace',
     description: 'Revert to the previous workspace.',
     icon: 'ph--clock-counter-clockwise--regular',
@@ -287,7 +287,7 @@ const NavigationMode = Schema.Literals(['immediate', 'validate']);
 
 export const Open = Operation.make({
   meta: {
-    key: DXN.make(`${LAYOUT_PLUGIN}.operation.open`),
+    key: DXN.make('org.dxos.operation.appToolkit.open'),
     name: 'Open',
     description: 'Open items in the main content area. Takes navigation paths as subjects.',
     icon: 'ph--arrow-square-out--regular',
@@ -362,7 +362,7 @@ export const Open = Operation.make({
 
 export const Close = Operation.make({
   meta: {
-    key: DXN.make(`${LAYOUT_PLUGIN}.operation.close`),
+    key: DXN.make('org.dxos.operation.appToolkit.close'),
     name: 'Close',
     description: 'Close items in the main content area.',
     icon: 'ph--x--regular',
@@ -377,7 +377,7 @@ export const Close = Operation.make({
 
 export const Set = Operation.make({
   meta: {
-    key: DXN.make(`${LAYOUT_PLUGIN}.operation.set`),
+    key: DXN.make('org.dxos.operation.appToolkit.set'),
     name: 'Set',
     description: 'Override items in the main content area.',
     icon: 'ph--layout--regular',
@@ -396,7 +396,7 @@ export const Set = Operation.make({
 
 export const ScrollIntoView = Operation.make({
   meta: {
-    key: DXN.make(`${LAYOUT_PLUGIN}.operation.scrollIntoView`),
+    key: DXN.make('org.dxos.operation.appToolkit.scrollIntoView'),
     name: 'Scroll Into View',
     description: 'Scroll an item into view.',
     icon: 'ph--eye--regular',
@@ -412,7 +412,7 @@ export const ScrollIntoView = Operation.make({
 
 export const Expose = Operation.make({
   meta: {
-    key: DXN.make(`${LAYOUT_PLUGIN}.operation.expose`),
+    key: DXN.make('org.dxos.operation.appToolkit.expose'),
     name: 'Expose',
     description: 'Expose an item in the navigation area.',
     icon: 'ph--eye--regular',
@@ -430,7 +430,7 @@ export const Expose = Operation.make({
 
 export const UpdateCompanion = Operation.make({
   meta: {
-    key: DXN.make(`${LAYOUT_PLUGIN}.operation.updateCompanion`),
+    key: DXN.make('org.dxos.operation.appToolkit.updateCompanion'),
     name: 'Update Companion',
     description: 'Update the companion plank for a primary plank.',
     icon: 'ph--sidebar--regular',
@@ -455,7 +455,7 @@ export const UpdateCompanion = Operation.make({
 
 export const Select = Operation.make({
   meta: {
-    key: DXN.make(`${LAYOUT_PLUGIN}.operation.select`),
+    key: DXN.make('org.dxos.operation.appToolkit.select'),
     name: 'Select',
     description: 'Select items in an attention context.',
     icon: 'ph--check--regular',

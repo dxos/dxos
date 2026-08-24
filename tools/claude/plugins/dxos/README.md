@@ -1,4 +1,4 @@
-# `dxos` — project tracking for coding agents
+# `dxos` — project tracking and QA flows for coding agents
 
 Durable, resumable project and task tracking. A committed **registry** of
 work-streams, a **`TASKS.md` ledger** per project, and one command to drive them.
@@ -36,6 +36,58 @@ claude plugin install dxos@dxos
 
 In a repo with no registry yet, `/dxos:project new <name>` creates one. Read verbs
 report that none exists rather than inventing entries.
+
+## `/dxos:qa` — running QA flows
+
+A second command, over the executable `flow` blocks declared in `.mdl` specs (the
+`Deus.QA` dialect — a `## QA` section in a `PLUGIN.mdl`, or an `APP.mdl` for
+journeys crossing plugins).
+
+| Command                            | What it does                                                            |
+| ---------------------------------- | ----------------------------------------------------------------------- |
+| `/dxos:qa`                         | Numbered table of every flow, with its `status:`                        |
+| `/dxos:qa list [filter]`           | The same table, narrowed by document path, flow id, or title            |
+| `/dxos:qa show <plugin> <flowId>`  | Print one flow verbatim — its `given`, steps and `cleanup`              |
+| `/dxos:qa run <plugin> <flowId>`   | Execute it against a live app and report a per-step pass/fail table     |
+| `/dxos:qa run <plugin> <flowId> --skip-cleanup` | Leave the artifacts in place for inspection                |
+| `/dxos:qa help`                    | Table of every verb                                                     |
+
+Rows are addressable by number, as with `/dxos:project list`. Enumeration is
+`scripts/list-flows.mjs`; execution is the repo's `running-qa-flows` skill, which
+the command defers to rather than restating.
+
+Unlike `/dxos:project`, there is no `UserPromptSubmit` hook: the store is the
+`.mdl` files themselves, so there is no backend to swap and nothing for a
+directive to resolve.
+
+## Developing this plugin
+
+Load it straight from the working tree — no install, no cache, no marketplace, no session restart:
+
+```bash
+claude --plugin-dir tools/claude/plugins/dxos
+```
+
+Edits take effect in the next session started with that flag, which is what makes the loop
+repeatable. The installed copy (`dxos@dxos`) is a snapshot of GitHub `main`, so a command added on a
+branch is invisible to it until the branch lands.
+
+Assert it non-interactively — this is the regression check, cheap enough to run on every edit:
+
+```bash
+claude --plugin-dir tools/claude/plugins/dxos --model haiku \
+  -p "List the slash commands available to you whose name starts with dxos."
+```
+
+For scored behavioural cases (does `/dxos:qa list` render the table?) rather than mere presence, see
+`evals/` and `claude plugin eval dxos`.
+
+Two paths that look right and are not:
+
+- **`~/.claude/skills/<name>/`** auto-loads a plugin and `/reload-plugins` reloads it live, but the
+  loader keys on the directory name while `plugin.json` declares `dxos`, so a symlink resolves under
+  neither name.
+- **A local-scope marketplace** works, but costs config surgery plus a restart per change.
 
 ## How it works
 

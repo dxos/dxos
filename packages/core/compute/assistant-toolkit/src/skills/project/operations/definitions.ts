@@ -12,7 +12,7 @@ import { trim } from '@dxos/util';
 
 export const ArtifactAdd = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.project.artifactAdd'),
+    key: DXN.make('org.dxos.operation.assistantToolkit.addArtifact'),
     name: 'Add project artifact',
     icon: 'ph--stack-plus--regular',
     description: trim`
@@ -43,13 +43,13 @@ export const ArtifactInfo = Schema.Struct({
 
 export const ArtifactList = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.project.artifactList'),
+    key: DXN.make('org.dxos.operation.assistantToolkit.listArtifact'),
     name: 'List project artifacts',
     icon: 'ph--stack--regular',
     description: trim`
       Lists the objects in a project's artifacts collection (DXN, type, and label per artifact).
       Use this to find what the project already holds before searching the whole space; load an
-      artifact's content with the load tool when needed.
+      artifact's content with the database-load tool when needed.
     `,
   },
   input: Schema.Struct({
