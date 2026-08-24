@@ -12,12 +12,7 @@
   "compilerOptions": {
     "composite": false,
     "noEmit": true,
-    "types": ["node"],
-
-    // Resolve workspace packages through their `source` export to `src/*.ts`. Type tests
-    // then check current source rather than a built `dist/types`, which need not exist:
-    // CI runs `test-types` before anything is built.
-    "customConditions": ["source"]
+    "types": ["node"]
   },
   "include": ["packages/**/*.tst.ts"]
 }

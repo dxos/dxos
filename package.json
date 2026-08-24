@@ -52,7 +52,7 @@
     "test": "moon run :test -- --no-file-parallelism",
     "test-browser": "MOON_CONCURRENCY=4 moon run :test-browser -- --no-file-parallelism",
     "test-storybook": "MOON_CONCURRENCY=4 moon run :test-storybook -- --no-file-parallelism",
-    "test-types": "tstyche",
+    "test-types": "pnpm exec moon run :test-types",
     "toolbox": "vite-node tools/toolbox/src/main.ts"
   },
   "dependencies": {
