@@ -14,7 +14,7 @@ import { AssistantCapabilities } from '#types';
  * The bindings every chat gets from its subject: the subject itself, plus the skills its type declares
  * via {@link Skill.SkillsAnnotation}. Type-specific providers add to this rather than replace it.
  */
-export const subjectContext: AssistantCapabilities.SubjectContext = {
+const subjectContext: AssistantCapabilities.SubjectContext = {
   getBindings: Effect.fnUntraced(function* ({ subject }) {
     // A skill subject binds as a skill, so the session carries its instructions and tools.
     const self: AssistantCapabilities.SubjectBindings = Obj.instanceOf(Skill.Skill, subject)
