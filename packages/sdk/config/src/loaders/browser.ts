@@ -17,6 +17,7 @@ declare const __CONFIG_DEFAULTS__: ConfigInit | undefined;
 declare const __CONFIG_LOCAL__: ConfigInit | undefined;
 
 const CONFIG_ENDPOINT = '/.well-known/dx/config';
+const SETTINGS_KEY = 'org.dxos.settings.config';
 
 export const Profile = (_profile = 'default'): ConfigInit => ({});
 
@@ -24,6 +25,11 @@ export const Local = (): ConfigInit => {
   return typeof __CONFIG_LOCAL__ !== 'undefined' ? __CONFIG_LOCAL__ : {};
 };
 
+/**
+ * Config served by the host at {@link CONFIG_ENDPOINT}, enabled by `__DXOS_CONFIG__.dynamic`.
+ * Yields an empty config when disabled or when the request fails; throws `InvalidConfigError` when
+ * the response is served but does not match the schema.
+ */
 export const Dynamics = async (): Promise<ConfigInit> => {
   const { publicUrl = '', dynamic } = __DXOS_CONFIG__;
   if (!dynamic) {
@@ -63,9 +69,10 @@ export const Defaults = (_basePath?: string): ConfigInit => {
  */
 export const Storage = async (): Promise<ConfigInit> => {
   try {
-    const config = await localforage.getItem<ConfigInit>('org.dxos.settings.config');
+    const config = await localforage.getItem<unknown>(SETTINGS_KEY);
     if (config) {
-      return config;
+      // Persisted settings outlive the schema that wrote them, so they are validated on read.
+      return parseConfig(config, SETTINGS_KEY);
     }
   } catch (err) {
     log.warn('Failed to load config', { err });

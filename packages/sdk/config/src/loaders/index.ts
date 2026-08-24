@@ -69,8 +69,9 @@ export const Dynamics = (): ConfigInit => ({});
  * ENV variable (key/value) map.
  */
 export const Envs = (basePath = DEFAULT_BASE_PATH): ConfigInit => {
+  // `envs-map.yml` is a key/path spec rather than a config, so only its projection is validated.
   const content = maybeLoadFile(path.resolve(basePath, FILE_ENVS));
-  return content ? mapFromKeyValues(content, process.env) : {};
+  return content ? parseConfig(mapFromKeyValues(content, process.env), FILE_ENVS) : {};
 };
 
 /**
