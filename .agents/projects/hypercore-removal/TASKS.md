@@ -1,8 +1,76 @@
 # Hypercore removal — credentials over Automerge — Tasks
 
-_Resume: project created 2026-08-24; all four open questions answered by the user the same day and folded into DESIGN.md "Resolved". NOTHING IMPLEMENTED. Next: Phase 0 audit (now narrowed — the hypercore consumer split is already done)._
+_Resume: project created 2026-08-24; every open question resolved and both read seams located. NOTHING IMPLEMENTED. Next: start PR A item 1 (space root doc + id derivation) — see "Delivery plan" below._
 
 Branch `claude/remove-hypercore-automerge-creds-uo7lx9`. Rationale in `DESIGN.md`.
+
+## Delivery plan — two PRs to 90%
+
+Both PRs land the dual-path world: nothing is deleted, old spaces keep working, new spaces are
+opt-in. Hypercore deletion (Phase 4) is explicitly NOT in scope for either.
+
+`DX_SPACE_CREATE_LEGACY` (config flag, default OFF once PR A lands, ON until then) selects the
+old control-feed genesis at `DataSpaceManager.createSpace()`. It is the switch every test
+matrix row below keys off, and the rollback lever if the new path misbehaves in the field.
+
+### Seams (found 2026-08-24)
+
+- **Client read seam is `ControlPipeline`** (`packlets/space/control-pipeline.ts`): it wraps a
+  feed `Pipeline` and drives `SpaceStateMachine.process(credential)`. Dual support = extract a
+  `CredentialSource` behind it — `FeedCredentialSource` (today) and `DocCredentialSource` (new)
+  — both feeding the same state machine, plus a matching writer. The state machine, member
+  logic, invitations and epochs are untouched.
+- **Client write seam is `spaceGenesis()`** + `space.inner.controlPipeline.writer` (the three
+  `writeMessages` call sites in `space-invitation-protocol.ts`).
+- **EDGE read seam is the `SpaceStateMachine` DO**
+  (`db-service/src/worker/space/space-state-machine.ts`): it polls feed-replicator blocks and
+  runs `FeedMessageProcessor`s against a store that persists credentials, members and a feed
+  cursor. Doc-backed source = subscribe to the space credentials doc (db-service already hosts
+  automerge) and run the SAME processors; the cursor becomes automerge heads instead of a feed
+  cursor.
+
+### PR A — `dxos/dxos`
+
+1. Space root doc + `spaceIdFromRootDocumentId()` + `idDerivation` (Phase 1).
+2. `echo_spaces` migration: root/directory/credentials columns (Phase 1).
+3. `CredentialSource` extraction behind `ControlPipeline`, doc-backed implementation, ordering
+   contract (Phase 2).
+4. `SpaceMember` assertion carries the space root doc URL beside `genesis_feed_key`; both
+   invitation protocols and `cross-device-space-synchronizer.ts` read it (Phase 2).
+5. `DX_SPACE_CREATE_LEGACY` and dual-path readers.
+6. Client-side migration of a legacy space, dual-write, per-space flip (Phase 3).
+
+### PR B — `dxos/edge`
+
+1. Doc-backed credential source for the `SpaceStateMachine` DO, behind the same
+   per-space selector; feed path retained.
+2. Auth negative-cache invalidation on credential apply
+   (`automerge-replicator-auth.ts`).
+3. A space mid-flip refuses admissions.
+
+PR A can land first and is independently testable — a space that has flipped simply has no
+EDGE-side reader until PR B, which is why the flip is per-space and reversible.
+
+### Test matrix
+
+Coverage note: the credential flows do NOT live in `echo-client-e2e` — that suite is the
+object/query layer. They live in `sdk/client-services` (`data-space-manager.test.ts`,
+`invitations-handler.test.ts`, `control-pipeline.test.ts`) and `core/halo/halo-e2e`
+(`spaces.test.ts`). So the split is:
+
+- **`echo-client-e2e`** — space root doc, id derivation + test vectors, directory rotation,
+  `echo_spaces` load/persist. The storage-layer half.
+- **`client-services` + `halo-e2e`** — everything credential: genesis on both paths, space
+  invite, device/HALO invite, cross-device reconstruction, dual-write, and **the migration of a
+  real legacy hypercore space to the doc-backed form**, including a mid-migration crash and a
+  re-run.
+- **`edge`** — `*.workerd.test.ts` for the doc-backed DO source and the auth cache
+  invalidation.
+
+Rows to cover, each under both flag states where it applies: create → genesis → read back;
+invite a member; admit a second device; reconstruct on a third device from credentials alone;
+migrate legacy → doc; migrate with a concurrent credential append; re-run a completed
+migration; crash mid-migration and resume.
 
 ## Phase 0: audit (before any code)
 
@@ -11,13 +79,15 @@ Branch `claude/remove-hypercore-automerge-creds-uo7lx9`. Rationale in `DESIGN.md
       depend on hypercore / `@dxos/feed-store`: `common/hypercore`, `common/feed-store`,
       `mesh/teleport-extension-replicator`, `sdk/client-services`. The credential chain is
       the last consumer, so full deletion is reachable.
-- [ ] Map the control-feed read path: `data-space-manager.ts` → `Space` control pipeline →
-      `@dxos/credentials` processor/state-machine. Identify the single seam where a
-      credential array can be substituted for a feed iterator.
+- [x] **Client read seam found**: `ControlPipeline` (`packlets/space/control-pipeline.ts`)
+      wraps a feed `Pipeline` and drives `SpaceStateMachine.process()`. See "Seams" above.
 - [x] Space keypair survives as credential issuer; loses id-minting and feed admission.
 - [x] Keyhive: this is a prerequisite, lands first; credential bytes stay opaque so Keyhive
       needs no second topology migration.
-- [ ] Inventory EDGE-side control-feed storage + `edge-feed-replicator` (DESIGN Q3).
+- [x] **EDGE read seam found**: the `SpaceStateMachine` DO polls feed-replicator blocks into
+      `FeedMessageProcessor`s over a store holding credentials/members/feed cursor. See
+      "Seams" above.
+- [ ] Remaining: `edge-feed-replicator` teardown inventory (Phase 4 only, not either PR).
 
 ## Phase 1: space root document
 
