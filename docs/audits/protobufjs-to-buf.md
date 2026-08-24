@@ -54,8 +54,8 @@ Codegen is solved; the cost is concentrated in four runtime behaviours protobuf.
 1. **Substitutions.** `packages/core/protocols/src/proto/substitutions.ts` rewrites
    `dxos.keys.PublicKey` → `PublicKey`, `dxos.keys.PrivateKey` → `Buffer`,
    `dxos.echo.timeframe.TimeframeVector` → `Timeframe`, plus `Any`, `Struct` and `Timestamp`
-   handling. Generated buf types are plain messages, so every one of the 409 import sites that
-   touches a substituted field sees a different shape (`{ data: Uint8Array }` instead of a
+   handling. Generated buf types are plain messages, so any of the 409 declarations that touches
+   a substituted field sees a different shape (`{ data: Uint8Array }` instead of a
    `PublicKey` instance). This is the bulk of the mechanical work.
 2. **Credential signature stability.** `credentials/src/credentials/signing.ts` signs
    `json-stable-stringify` of the _substituted object_, not the wire bytes. Any change to the
@@ -108,9 +108,9 @@ behaviour at 409 sites, and enum/default-value semantics differing between the t
 
 ## Ranked threads (risk × complexity)
 
-Independently landable threads, lowest → highest risk×complexity. Three depend on another thread:
-#7 and #9a–#9d on the shape-compat layer (#3), and #8 on the `Stream` extraction (#6).
-Within #9, each slice is ordered by blast radius: 9a → 9b → 9c → 9d.
+Independently landable threads, lowest → highest risk×complexity. Six have a dependency, in three
+groups: `#7` and `#9a`–`#9d` on the shape-compat layer (`#3`), and `#8` on the `Stream` extraction
+(`#6`). Within `#9`, each slice is ordered by blast radius: 9a → 9b → 9c → 9d.
 
 | #   | Thread                                  | Scope                                                                                       | Risk        | Complexity | Notes                                                                                                                                                                                                                               |
 | --- | --------------------------------------- | ------------------------------------------------------------------------------------------- | ----------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -172,5 +172,5 @@ slices behind #3 — a rolling sweep rather than a milestone.
 
 Sequencing notes: `dxos/edge` (`hub-protocol`, `db-service`) follows whatever `@dxos/protocols`
 publishes and should not be scheduled separately; deleting `protobuf-compiler`/`codec-protobuf`
-and dropping `protobufjs` from the catalog is unblocked only once #1 (phase 5), #6, #8 and all of
-#9a–#9d have landed — #1 is the last consumer of protobuf.js outside those packages.
+and dropping `protobufjs` from the catalog is unblocked only once `#1` (phase 5), `#6`, `#8` and
+all of `#9a`–`#9d` have landed — `#1` is the last consumer of protobuf.js outside those packages.
