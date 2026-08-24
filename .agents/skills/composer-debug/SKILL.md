@@ -192,11 +192,30 @@ const space = dxos.client.spaces.get().find((s) => s.properties?.name === 'My Sp
 const objects = await space.db.query(dxos.Filter.everything()).run();
 const collection = objects.find((o) => dxos.Obj.getTypename(o) === 'org.dxos.type.collection');
 
-const { object } = await composer.invoke('org.dxos.operation.markdown.create', {
+// Gotcha 2's escape hatch, as a helper: exact key match, invoker, explicit spaceId.
+const invokeWithSpace = async (key, input) => {
+  const mgr = composer.manager;
+  const sets = mgr.capabilities.getAll({ identifier: 'org.dxos.app-framework.capability.operationHandler' });
+  const [def, ...rest] = sets.flatMap((set) =>
+    set.definitions().filter((d) => String(d.meta.key).replace(/^dxn:/, '') === key),
+  );
+  if (!def || rest.length) {
+    throw new Error(`expected exactly one operation for ${key}`);
+  }
+  const invoker = mgr.capabilities.get({ identifier: 'org.dxos.app-framework.capability.operationInvoker' });
+  const { data, error } = await invoker.invokePromise(def, input, { spaceId: space.id });
+  if (error) {
+    throw new Error(String(error));
+  }
+  return data;
+};
+
+const { object } = await composer.invoke('org.dxos.operation.markdown.createDraft', {
   name: 'Notes',
   content: '# Notes\n',
 });
-await composer.invoke('org.dxos.operation.space.addObject', { object, target: collection });
+// `addObject` declares `Database.Service`, so it needs the invoker and a spaceId (gotcha 2).
+await invokeWithSpace('org.dxos.operation.space.addObject', { object, target: collection });
 await space.db.flush();
 
 // Verify placement rather than trusting the return.
@@ -205,27 +224,30 @@ return { placed: after.some((o) => o.id === object.id), collectionCount: collect
 ```
 
 Passing `target: space.db` adds to the space root instead of a collection. `addObject` returns a
-result object, not an id: `{ id, subject, object }`, where `id` is DXN-form
-(`echo://<spaceId>/<objectId>`) rather than the bare object id, and `subject` is the navigation path
-array the next section feeds to `layout.operation.open`.
+result object, not an id: `{ id, object }`, where `id` is DXN-form
+(`echo://<spaceId>/<objectId>`) rather than the bare object id.
 
 ### …and opening it in the navtree
 
-`layout.operation.open` takes **navigation paths**, not object ids:
+`layout.operation.open` takes **navigation paths**, not object ids, and `subject` is an array of
+them:
 
 ```text
 root/BEJ6664GTXJQ3QAKERGFWHXILSL32S6YN/content/collections/01KZHX7Z1XHX0YS9QP9F23PZ7G
 ```
 
-Do not build that string. `addObject` already computed it — resolving the type slug, and for
-view-holding objects the view's target type — and returns it as `subject`, so step two's output
-is step three's input:
+You have to build that string — `addObject` does not return one (its output schema is
+`{ id, object }`):
 
 ```js
-const added = await composer.invoke('org.dxos.operation.space.addObject', { object, target: collection });
+const added = await invokeWithSpace('org.dxos.operation.space.addObject', { object, target: collection });
 await space.db.flush();
-await composer.invoke('org.dxos.plugin.layout.operation.open', { subject: added.subject });
+const path = `root/${space.id}/content/collections/${object.id}`;
+await composer.invoke('org.dxos.operation.appToolkit.open', { subject: [path] });
 ```
+
+For a view-holding object the slug is the view's target type rather than `collections`; read it off
+an existing navtree entry rather than guessing.
 
 Opening the path is what moves the navtree selection; confirm with `aria-selected`/`aria-current`
 rather than assuming. `layout.operation.select` is a different thing — it applies a selection
@@ -244,7 +266,8 @@ Each of these cost a retry in practice; they are why this file exists.
    `Invalid input for <key> — id: is missing`. It used to return `ok` and render nothing.)
 
 2. **Database-backed operations need a `spaceId`, which `composer.invoke` does not pass.** An
-   operation declaring `services: [Database.Service]` (`markdown.update`, most write paths) fails
+   operation declaring `services: [Database.Service]` (`markdown.update`, `space.addObject`, most
+   write paths) fails
    with `Service not available: @dxos/echo/Database/Service … spawn environment is missing space`.
    Check `services` on the definition via `dxos-introspect` (§4) _before_ invoking —
    `composer.operations()` does not report it, though the runtime definition the snippet below

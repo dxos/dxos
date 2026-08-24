@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type StoredMessage } from '../stores';
+import { MessageStore } from '../stores';
 
 /** A detected topic segment: the pure, storage-agnostic result of {@link detectTopics}. */
 export type TopicSegment = {
@@ -134,9 +134,14 @@ type OpenTopic = {
   lastAt: number;
 };
 
-const label = (message: StoredMessage): string => message.authorLabel ?? message.authorId;
+const label = (message: MessageStore.StoredMessage): string => message.authorLabel ?? message.authorId;
 
-const openTopic = (targetId: string, message: StoredMessage, at: number, tokens: Set<string>): OpenTopic => ({
+const openTopic = (
+  targetId: string,
+  message: MessageStore.StoredMessage,
+  at: number,
+  tokens: Set<string>,
+): OpenTopic => ({
   targetId,
   participants: [message.authorId],
   participantLabels: [label(message)],
@@ -151,7 +156,7 @@ const openTopic = (targetId: string, message: StoredMessage, at: number, tokens:
   lastAt: at,
 });
 
-const join = (topic: OpenTopic, message: StoredMessage, at: number, tokens: Set<string>): void => {
+const join = (topic: OpenTopic, message: MessageStore.StoredMessage, at: number, tokens: Set<string>): void => {
   if (!topic.authorIndex.has(message.authorId)) {
     topic.authorIndex.add(message.authorId);
     topic.participants.push(message.authorId);
@@ -173,7 +178,12 @@ const join = (topic: OpenTopic, message: StoredMessage, at: number, tokens: Set<
  * author already in the topic gets a small continuation bias. `tokens`/`mentions` are computed once
  * per message by the caller and reused across every open topic (avoiding O(M×N) recomputation).
  */
-const score = (topic: OpenTopic, message: StoredMessage, tokens: Set<string>, mentions: readonly string[]): number => {
+const score = (
+  topic: OpenTopic,
+  message: MessageStore.StoredMessage,
+  tokens: Set<string>,
+  mentions: readonly string[],
+): number => {
   let total = 0;
   for (const mention of mentions) {
     if (topic.labelIndex.has(mention.toLowerCase())) {
@@ -215,7 +225,7 @@ const toSegment = (topic: OpenTopic, threadId?: string): TopicSegment => ({
  */
 export const detectTopics = (
   target: { readonly id: string; readonly threadId?: string },
-  messages: readonly StoredMessage[],
+  messages: readonly MessageStore.StoredMessage[],
   options: DetectOptions = {},
 ): TopicSegment[] => {
   if (messages.length === 0) {

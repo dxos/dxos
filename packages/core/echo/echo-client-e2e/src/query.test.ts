@@ -2432,6 +2432,80 @@ describe('Query', () => {
       expect(names).toEqual(['Note about Alice']);
     });
 
+    describe('referencedBy a named entity', () => {
+      const FOO = DXN.make('org.example.operation.foo');
+      const BAR = DXN.make('org.example.operation.bar');
+
+      test('finds objects referencing a DXN that is not in the graph', async () => {
+        db.add(Obj.make(TestSchema.Expando, { name: 'Trigger 1', runnable: Ref.fromURI(FOO) }));
+        db.add(Obj.make(TestSchema.Expando, { name: 'Trigger 2', runnable: Ref.fromURI(FOO) }));
+        db.add(Obj.make(TestSchema.Expando, { name: 'Other', runnable: Ref.fromURI(BAR) }));
+        await db.flush();
+
+        const objects = await db.query(Query.select(Filter.key('org.example.operation.foo')).referencedBy()).run();
+        expect(objects.map((object) => object.name).sort()).toEqual(['Trigger 1', 'Trigger 2']);
+      });
+
+      test('accepts a full DXN as the key', async () => {
+        db.add(Obj.make(TestSchema.Expando, { name: 'Trigger', runnable: Ref.fromURI(FOO) }));
+        await db.flush();
+
+        const objects = await db.query(Query.select(Filter.key(FOO)).referencedBy()).run();
+        expect(objects.map((object) => object.name)).toEqual(['Trigger']);
+      });
+
+      test('matches a versioned reference from the unversioned name', async () => {
+        db.add(
+          Obj.make(TestSchema.Expando, {
+            name: 'Pinned',
+            runnable: Ref.fromURI(DXN.make('org.example.operation.foo', '1.2.3')),
+          }),
+        );
+        await db.flush();
+
+        const objects = await db.query(Query.select(Filter.key('org.example.operation.foo')).referencedBy()).run();
+        expect(objects.map((object) => object.name)).toEqual(['Pinned']);
+      });
+
+      test('narrows by referencing type and property', async () => {
+        db.add(Obj.make(TestSchema.Task, { title: 'Task N', assignee: Ref.fromURI(FOO) }));
+        db.add(Obj.make(TestSchema.Expando, { name: 'Expando N', assignee: Ref.fromURI(FOO) }));
+        db.add(Obj.make(TestSchema.Expando, { name: 'Other property', other: Ref.fromURI(FOO) }));
+        await db.flush();
+
+        const byType = await db
+          .query(Query.select(Filter.key('org.example.operation.foo')).referencedBy(TestSchema.Task))
+          .run();
+        expect(byType.map((object) => object.title)).toEqual(['Task N']);
+
+        const byProperty = await db
+          .query(Query.select(Filter.key('org.example.operation.foo')).referencedBy(TestSchema.Expando, 'assignee'))
+          .run();
+        expect(byProperty.map((object) => object.name)).toEqual(['Expando N']);
+      });
+
+      test('returns nothing when no object references the name', async () => {
+        const objects = await db.query(Query.select(Filter.key('org.example.operation.absent')).referencedBy()).run();
+        expect(objects).toEqual([]);
+      });
+
+      test('a version-constrained key keeps the composed meaning', async () => {
+        // The index keys a named entity without its version, so a range cannot be honoured there —
+        // the anchor is evaluated normally instead, and matches the meta key of a stored object.
+        const entry = db.add(
+          Obj.make(TestSchema.Expando, { [Obj.Meta]: { key: 'org.example.operation.foo', version: '1.2.3' } }),
+        );
+        db.add(Obj.make(TestSchema.Expando, { name: 'By entity', runnable: Ref.make(entry) }));
+        db.add(Obj.make(TestSchema.Expando, { name: 'By name', runnable: Ref.fromURI(FOO) }));
+        await db.flush();
+
+        const objects = await db
+          .query(Query.select(Filter.key('org.example.operation.foo', { version: '^1.0.0' })).referencedBy())
+          .run();
+        expect(objects.map((object) => object.name)).toEqual(['By entity']);
+      });
+    });
+
     test('traverse query started from id', async () => {
       const objects = await db
         .query(Query.select(Filter.id(person2.id)).sourceOf(TestSchema.HasManager).target())

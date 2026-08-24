@@ -2,11 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
-import { type Question, QuestionStore } from '@dxos/pipeline-discord';
+import { QuestionStore } from '@dxos/pipeline-discord';
 
 import { QuestionsPanel } from '../components';
 import { CrawlerStores } from '../testing';
@@ -14,11 +13,11 @@ import { CrawlerStores } from '../testing';
 /** LEFT (bottom): standing questions the crawl attempts as targets drain (from the crawler runtime). */
 export const QuestionsModule = () => {
   const crawler = useCapability(CrawlerStores);
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [questions, setQuestions] = useState<QuestionStore.Question[]>([]);
   const [busy, setBusy] = useState(false);
 
   const refresh = useCallback(async () => {
-    const listed = await crawler.runPromise(QuestionStore.pipe(Effect.flatMap((store) => store.list())));
+    const listed = await crawler.runPromise(QuestionStore.list());
     setQuestions(listed);
   }, [crawler]);
 
@@ -30,7 +29,7 @@ export const QuestionsModule = () => {
     (text: string) => {
       setBusy(true);
       void crawler
-        .runPromise(QuestionStore.pipe(Effect.flatMap((store) => store.add(text))))
+        .runPromise(QuestionStore.add(text))
         .then(() => refresh())
         .finally(() => setBusy(false));
     },
