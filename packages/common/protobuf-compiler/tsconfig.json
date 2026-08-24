@@ -10,6 +10,9 @@
   ],
   "references": [
     {
+      "path": "../async"
+    },
+    {
       "path": "../codec-protobuf"
     },
     {

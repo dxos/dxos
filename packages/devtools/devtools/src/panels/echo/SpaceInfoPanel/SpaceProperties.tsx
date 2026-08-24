@@ -6,7 +6,7 @@ import React, { type FC, useMemo } from 'react';
 
 import { MulticastObservable } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
-import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useMulticastObservable } from '@dxos/react-hooks';
 import { Timeframe } from '@dxos/timeframe';
