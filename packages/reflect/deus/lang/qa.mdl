@@ -78,6 +78,7 @@ ext step
     capture?:  Identifier     # names this step's result for later steps as `$<name>`
     assert?:   CodeBlock      # deterministic check evaluated in the debug port; must return truthy
     note?:     Prose          # a constraint the runner must respect (see Execution Rules)
+    blocked?:  Prose          # why this step cannot run at all, and what must change first
 ```
 
 Steps are items of a list, not repeated `step <n>:` keys. Core declares block bodies as
@@ -183,7 +184,11 @@ a runner that ignores them produces false failures.
    remove it later — since the next run's `given` will otherwise fail on its own leftovers
    (Rule 5).
 
-9. **Report by flow and step number** — `QA-1.3`, or `QA-1.<id>` for a step declaring one — so a
+9. **A step that cannot run says so in `blocked`, and the flow's `status` becomes `blocked`.**
+   Not `failing` — nothing was tested — and not silence, which reads as untried. A duplicate
+   operation key, a missing capability or a removed operation all land here.
+
+10. **Report by flow and step number** — `QA-1.3`, or `QA-1.<id>` for a step declaring one — so a
     failure is addressable without prose. Prefer the id where a step has one: it survives a step
     being inserted ahead of it, a position does not.
 

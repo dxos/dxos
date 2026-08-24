@@ -390,7 +390,7 @@ flow QA-1: Create, place, open and edit a document
   desc: The core markdown round-trip through the running app.
   actors: both
   covers: [F-1.1, F-1.3, T-1, T-2]
-  status: passing            # 2026-08-23, 3 runs: by hand, via the skill, and after the steps: rewrite
+  status: blocked            # step 3 blocked on a duplicate operation key in main (see the step)
   given:
     - an identity exists
     - space: a space is open
@@ -421,6 +421,12 @@ flow QA-1: Create, place, open and edit a document
       do: Click "QA Notes" in the navtree.
       invoke: org.dxos.operation.appToolkit.open { subject: ["root/$spaceId/content/collections/$created.object.id"] }
       expect: the editor renders "# QA Notes" and the navtree row is selected
+      blocked: |
+        `org.dxos.operation.appToolkit.open` is DECLARED TWICE in main — LayoutOperation's "Open"
+        and SettingsOperation's "Open Settings" — so a runner resolving by key finds two definitions
+        and cannot tell which it means. Verified live: the key returns 2 matches. Exact-key matching
+        turns that into an error rather than silently opening Settings, which is the right failure,
+        but the step cannot run until one of the two is renamed.
       assert: |
         return Array.from(document.querySelectorAll('[aria-current], [aria-selected="true"]'))
           .some((el) => el.textContent?.includes('QA Notes'));
