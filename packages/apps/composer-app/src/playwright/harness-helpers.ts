@@ -138,6 +138,7 @@ export const waitForReady = async (page: Page, timeout = 30_000): Promise<void> 
   await page.getByTestId('treeView.userAccount').waitFor({ timeout });
 };
 
+/** Throughput is bytes/second, as `Network.emulateNetworkConditions` expects; latency is ms. */
 export type ThrottleProfile = {
   latency: number;
   downloadThroughput: number;
