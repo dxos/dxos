@@ -140,7 +140,7 @@ describe('rename migration', () => {
 
     const settled = documentHeads(trigger);
     await expect(
-      // @ts-expect-error intentional type violation to exercise runtime validation
+      // @ts-expect-error intentional type violation to exercise runtime validation.
       db.runMigrations([rename, { [Migration.TypeId]: Migration.TypeId, kind: 'other' }]),
     ).rejects.toThrow(/Unknown migration kind/);
 
