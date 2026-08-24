@@ -5,13 +5,14 @@
 import { useMemo } from 'react';
 
 import { log } from '@dxos/log';
-import { downloadBlob, downloadUrl } from '@dxos/util';
+import { downloadBlob } from '@dxos/util';
 
 /**
- * File download anchor.
+ * Save a blob to disk.
  *
- * Blobs are saved via {@link downloadBlob} so the download also works inside the Tauri webview,
- * where `<a download>` is silently dropped. A string is treated as an already-addressable URL.
+ * Goes through {@link downloadBlob}, so the download also works inside the Tauri webview, where
+ * `<a download>` is silently dropped. Blob only: a URL would have to fall back to that anchor, and
+ * a caller has no way to notice it did nothing.
  *
  * ```
  * const download = useFileDownload();
@@ -20,14 +21,9 @@ import { downloadBlob, downloadUrl } from '@dxos/util';
  * };
  * ```
  */
-export const useFileDownload = (): ((data: Blob | string, filename: string) => void) => {
+export const useFileDownload = (): ((data: Blob, filename: string) => void) => {
   return useMemo(
-    () => (data: Blob | string, filename: string) => {
-      if (typeof data === 'string') {
-        downloadUrl(data, filename);
-        return;
-      }
-
+    () => (data: Blob, filename: string) => {
       void downloadBlob(data, filename).catch((err) => log.catch(err));
     },
     [],

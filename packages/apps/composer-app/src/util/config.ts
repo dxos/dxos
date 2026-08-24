@@ -71,14 +71,8 @@ const POSTHOG_DISABLED_CONFIG = {
 } as const;
 
 /**
- * Where feedback logs are uploaded. A native build serves its frontend from a localhost asset server
- * (`src-tauri/src/lib.rs`) that has no `/api` route, so the relative path the web deployment uses
- * would resolve to a 404 there and silently drop every log bundle — it posts to a deployment that
- * hosts the route, which admits it cross-origin (`src/functions/_worker.ts`).
- *
- * Each deployment binds its own R2 bucket, so a channel must name its own or its reports land in
- * another channel's storage; `DX_FEEDBACK_LOGS_ENDPOINT` per environment
- * (`.github/workflows/env/*`) is what picks it, and the canonical domain is only the fallback.
+ * Where feedback logs are uploaded. A native build has no `/api` route on its own origin, so it must
+ * name a deployment that does — its own, since each binds a separate R2 bucket.
  */
 const feedbackLogsEndpoint = (config: Config, isTauri: boolean): string | undefined =>
   isTauri

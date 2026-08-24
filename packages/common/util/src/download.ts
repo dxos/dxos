@@ -4,17 +4,14 @@
 
 import { isTauri } from './platform';
 
-/**
- * How long the object URL is kept alive after the click; WebKit resolves the blob asynchronously,
- * so revoking it in the same task aborts the download.
- */
+/** WebKit resolves the blob asynchronously, so revoking in the same task aborts the download. */
 const OBJECT_URL_TTL = 30_000;
 
 /**
- * Trigger a browser download of an already-addressable URL.
- * The anchor is attached to the document because Firefox ignores `click()` on a detached element.
+ * Trigger a browser download of an addressable URL. Not exported: the Tauri webview drops the click,
+ * and an anchor gives the caller no way to notice it did nothing.
  */
-export const downloadUrl = (url: string, filename: string): void => {
+const downloadUrl = (url: string, filename: string): void => {
   const element = document.createElement('a');
   element.href = url;
   element.download = filename;
@@ -68,8 +65,7 @@ const downloadBlobAnchor = (data: Blob, filename: string): void => {
 /**
  * Save a blob to disk, resolving false if the user cancelled.
  *
- * The Tauri webview registers no download handler, so `<a download>` is silently dropped there —
- * every download must go through the native save dialog instead.
+ * The Tauri webview registers no download handler, so `<a download>` is dropped there.
  */
 export const downloadBlob = async (data: Blob, filename: string): Promise<boolean> => {
   if (isTauri()) {

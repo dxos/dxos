@@ -4,24 +4,16 @@
 
 import { DESKTOP_ORIGINS, DEV_SERVER_ORIGIN } from './constants';
 
-/**
- * Origins a native build may reach a deployment from: every channel's asset server, plus the
- * `tauri dev` Vite server outside production, so the upload path is exercisable in native dev
- * without production trusting a port any local page can claim.
- */
+/** Origins a native build may reach a deployment from, adding the `tauri dev` server outside production. */
 export const nativeOrigins = (environment: string | undefined): ReadonlySet<string> =>
   environment === 'production' ? DESKTOP_ORIGINS : new Set([...DESKTOP_ORIGINS, DEV_SERVER_ORIGIN]);
 
 /**
- * Whether a request's `Origin` matches the origin this exact deployment is being served from, or one
- * of `nativeOrigins` when given. Derived from the request's own URL rather than a static per-channel
- * list, so it is correct for the canonical domain, a PR-preview `*.workers.dev` alias, and local dev
- * alike, with no edit needed when a channel is added, renamed, or given a domain — and a sibling
- * channel (preview calling dev's worker, say) is never permitted, since it is never this worker's own
- * origin.
+ * Whether a request's `Origin` is this deployment's own — read off the request URL, so a channel or
+ * preview alias needs no list — or one of `extraOrigins`.
  *
- * A missing `Origin` passes, for the same-origin GETs and HEADs that omit it; a handler that only
- * serves non-GET methods, which always carry one, should reject a missing `Origin` itself.
+ * A missing `Origin` passes, for the same-origin GETs and HEADs that omit it; a handler serving only
+ * non-GET methods, which always carry one, should reject a missing `Origin` itself.
  */
 export const isAllowedOrigin = (
   requestUrl: string,

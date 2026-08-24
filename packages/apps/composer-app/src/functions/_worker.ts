@@ -23,9 +23,8 @@ const FEEDBACK_LOGS_MAX_BODY_SIZE = LOG_STORE_MAX_BYTES;
 /**
  * Handle /api/feedback-logs — upload NDJSON debug logs to R2.
  *
- * Admits `nativeOrigins` as well as this deployment's own: a native build serves its frontend from
- * its own origin and has no `/api` route there, so its uploads are necessarily cross-origin. Every
- * response carries the CORS headers, since the client reads the returned key.
+ * Admits `nativeOrigins`, whose uploads are necessarily cross-origin, and carries the CORS headers on
+ * every response, since the client reads the returned key.
  */
 const handleFeedbackLogs = async (request: Request, env: Env): Promise<Response> => {
   const origin = request.headers.get('Origin');
@@ -39,9 +38,8 @@ const handleFeedbackLogs = async (request: Request, env: Env): Promise<Response>
     return new Response('Method not allowed', { status: 405, headers: cors });
   }
 
-  // Reject disallowed origins server-side, not just via CORS headers. A missing `Origin` is refused
-  // rather than allowed: every browser sends one on a POST, so its absence means a client that no
-  // same-origin policy is holding back — and this route writes megabytes to storage.
+  // Rejected server-side, not just via CORS headers; a missing `Origin` means a client no
+  // same-origin policy is holding back, on a route that writes megabytes to storage.
   if (!origin || !isAllowedOrigin(request.url, origin, allowed)) {
     return new Response('Forbidden', { status: 403, headers: cors });
   }
