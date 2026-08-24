@@ -19,6 +19,11 @@ const handler: Operation.WithHandler<typeof AssistantOperation.EnsureCompanionCh
         const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
         const companionUri = Obj.getURI(companionTo);
 
+        // Idempotent, so it runs on every branch rather than only on creation: re-binding an existing
+        // chat backfills whatever its subject's providers contribute now but did not when it was made.
+        const bindContext = (chat: Chat.Chat) =>
+          Operation.invoke(AssistantOperation.BindChatContext, { chat, subject: companionTo });
+
         // 1. Look for an existing persisted companion chat in the space: the subject's latest
         // chat child (entity ids are ULIDs, so id order is creation order).
         const children = yield* Effect.promise(() =>
@@ -38,6 +43,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.EnsureCompanionCh
           yield* Effect.promise(() =>
             operationInvoker.invokePromise(AssistantOperation.SetCurrentChat, { companionTo, chat: existingChat }),
           );
+          yield* bindContext(existingChat);
           return { chat: existingChat, persisted: true };
         }
 
@@ -45,6 +51,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.EnsureCompanionCh
         const cache = yield* Capabilities.getAtomValue(AssistantCapabilities.CompanionChatCache);
         const cached = cache[companionUri] as Chat.Chat | undefined;
         if (cached) {
+          yield* bindContext(cached);
           return { chat: cached, persisted: false };
         }
 
@@ -60,6 +67,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.EnsureCompanionCh
           ...current,
           [companionUri]: chat,
         }));
+        yield* bindContext(chat);
         return { chat, persisted: false };
       }),
     ),

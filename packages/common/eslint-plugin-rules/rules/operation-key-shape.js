@@ -32,6 +32,7 @@ const VERBS = new Set([
   'archive',
   'assign',
   'attach',
+  'bind',
   'build',
   'cancel',
   'capture',

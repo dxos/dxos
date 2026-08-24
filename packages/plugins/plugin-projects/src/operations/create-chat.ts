@@ -3,18 +3,13 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
-import * as Capabilities from '@dxos/app-framework/Capabilities';
-import * as Capability from '@dxos/app-framework/Capability';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AiContext } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
-import * as Skill from '@dxos/compute/Skill';
-import { Database, Ref, Type } from '@dxos/echo';
+import { Database, Type } from '@dxos/echo';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 
 import { ProjectOperation } from '#types';
@@ -35,27 +30,10 @@ const handler: Operation.WithHandler<typeof ProjectOperation.CreateChat> = Proje
       // also file the chat in the space root collection and surface it under Collections.
       Chat.linkCompanion({ chat, subject: project });
 
-      // Skills and context objects reach the session through bindings, not the system prompt.
-      // Always bound, on top of whatever the project's instructions add: the project itself (the
-      // project skill takes it as a tool argument, and the model can only name what is in context)
-      // and the type's annotated skills — `Project`'s `SkillsAnnotation` states why each key is there.
-      // Bound by registry URI rather than a DB clone, as the assistant's default skills are.
-      const annotatedSkills = Option.getOrElse(() => [] as string[])(
-        Skill.SkillsAnnotation.get(Type.getSchema(Project.Project)),
-      );
-      const { skills, objects } = Project.contextBindings(project);
-      const registry = yield* Capability.get(Capabilities.AtomRegistry);
-      const feed = yield* Database.load(chat.feed);
-      const runtime = yield* Effect.context<Database.Service>();
-      const binder = new AiContext.Binder({ feed, runtime, registry });
-      yield* Effect.promise(() =>
-        binder.use((binder: AiContext.Binder) =>
-          binder.bind({
-            skills: [...annotatedSkills.map((key) => Ref.fromURI(Skill.registryURI(key))), ...skills],
-            objects: [Ref.make(project), ...objects],
-          }),
-        ),
-      );
+      // Skills and context objects reach the session through bindings, not the system prompt. What
+      // gets bound is the `SubjectContext` contributions' business — the assistant's default provider
+      // binds the project and its type's annotated skills, this plugin's adds the instructions'.
+      yield* Operation.invoke(AssistantOperation.BindChatContext, { chat, subject: project });
 
       yield* Database.flush();
 

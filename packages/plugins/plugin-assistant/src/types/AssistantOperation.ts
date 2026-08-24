@@ -11,7 +11,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Chat } from '@dxos/assistant-toolkit';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Obj, Ref, Type } from '@dxos/echo';
+import { Database, Obj, Ref, Registry, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 export const CreateChat = Operation.make({
@@ -82,6 +82,27 @@ export const ForkChat = Operation.make({
   output: Schema.Struct({
     object: Type.getSchema(Chat.Chat),
   }),
+});
+
+/**
+ * Applies every applicable `AssistantCapabilities.SubjectContext` contribution to a chat, binding the
+ * subject and whatever else its providers derive from it (annotated skills, a project's instruction
+ * objects, ...). Idempotent: `AiContext.Binder.bind` drops refs already in the conversation, so
+ * re-running on an existing chat backfills bindings added since it was created.
+ */
+export const BindChatContext = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.assistant.bindChatContext'),
+    name: 'Bind Chat Context',
+    icon: 'ph--link--regular',
+  },
+  services: [Capability.Service, Registry.Service],
+  input: Schema.Struct({
+    chat: Type.getSchema(Chat.Chat),
+    /** The object the chat runs against — a companion's primary object, or a chat's originating object. */
+    subject: Obj.Unknown,
+  }),
+  output: Schema.Void,
 });
 
 export const EnsureCompanionChat = Operation.make({

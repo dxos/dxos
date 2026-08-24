@@ -232,6 +232,23 @@ export type Definition = {
 export const registryURI = (key: DXN.Name<string>): URI.URI => (DXN.tryMake(`dxn:${key}`) ?? URI.make(key)) as URI.URI;
 
 /**
+ * Registry skill refs declared by an object's type via {@link SkillsAnnotation}.
+ * Bound by URI rather than a DB clone, so the ref resolves through the hypergraph registry.
+ */
+export const annotatedSkillRefs = (object: Obj.Unknown): Ref.Ref<Skill>[] => {
+  const type = Obj.getType(object);
+  if (!type) {
+    return [];
+  }
+
+  return annotatedSkillKeys(type).map((key) => Ref.fromURI(registryURI(key)));
+};
+
+/** Skill keys declared by a type via {@link SkillsAnnotation}. */
+export const annotatedSkillKeys = (type: Type.AnyEntity): string[] =>
+  Option.getOrElse(() => [] as string[])(SkillsAnnotation.get(Type.getSchema(type)));
+
+/**
  * Resolves a skill from the registry by its meta key.
  * Does not check the local database for the skill.
  */
