@@ -69,7 +69,7 @@ Space root layout:
    it from the URL it fetched and reject a mismatch.
 2. **Two id derivations coexist.** Existing spaces keep `hash(space key)`; new spaces use
    `hash(root doc id)`. Nothing can re-derive a legacy space id from a doc id, so the
-   derivation is not a validity check but a *version-tagged* one: the root doc records which
+   derivation is not a validity check but a _version-tagged_ one: the root doc records which
    scheme minted the id.
 3. **Migration is reference-only for existing spaces.** A legacy space gets a new root doc
    created above its current directory doc, credentials copied out of the control feed into
@@ -83,7 +83,7 @@ Space root layout:
 ## Open questions
 
 1. Does the space **key** survive at all? Credentials are issued by `space.key` and the
-   admission chain roots in it; only the *feed* admission credentials become meaningless.
+   admission chain roots in it; only the _feed_ admission credentials become meaningless.
    Cheapest path: keep the keypair as the credential issuer, drop only its role as the id
    source and the feed admission.
 2. How does this interact with the Keyhive/`@dxos/halo` direction (`Access`
