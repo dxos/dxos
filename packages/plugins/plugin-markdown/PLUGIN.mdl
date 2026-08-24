@@ -454,7 +454,7 @@ flow QA-2: Link one page to another
   desc: Two documents and a reference between them — the `@` link path end to end.
   actors: both
   covers: [F-4.1, F-4.2, F-4.3, T-4]
-  status: unverified         # an Open Page 1 step was added; re-run required
+  status: passing            # 2026-08-23; test and after stages each run standalone
   given:
     - an identity exists
     - space: a space is open
