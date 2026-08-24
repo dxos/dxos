@@ -134,6 +134,9 @@ export type AcceptSpaceOptions = {
   spaceKey: PublicKey;
   genesisFeedKey: PublicKey;
 
+  /** From the admitting `SpaceMember` credential; absent for a space still on its control feed. */
+  spaceRootUrl?: string;
+
   /**
    * Latest known timeframe for the control pipeline.
    * We will try to catch up to this timeframe before starting the data pipeline.
@@ -157,6 +160,9 @@ export type AdmitMemberOptions = {
   profile?: ProfileDocument;
   delegationCredentialId?: PublicKey;
   tags?: string[];
+
+  /** Successor to `genesisFeedKey`: what lets the admitted member replicate from this credential alone. */
+  spaceRootUrl?: string;
 };
 
 export type DataSpaceManagerProps = {
@@ -549,6 +555,7 @@ export class DataSpaceManager extends Resource {
       options.profile,
       options.delegationCredentialId,
       space.spaceState.tags,
+      options.spaceRootUrl,
     );
 
     // TODO(dmaretskyi): Refactor.

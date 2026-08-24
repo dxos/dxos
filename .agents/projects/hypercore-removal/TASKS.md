@@ -110,9 +110,13 @@ migration; crash mid-migration and resume.
 
 ## Phase 2: credentials document
 
-- [ ] **Ordering contract first** — define convergence for concurrent appends, duplicate
-      idempotence (by signature), and replay equivalence with the feed. Everything below
-      depends on it; DESIGN "Credentials keep their current encoding".
+- [x] **Ordering contract** — `credentials-document.ts` in `@dxos/credentials`. Credentials are a
+      map keyed by credential id, so an append is idempotent and concurrent appends converge;
+      `orderCredentials()` produces the total order every peer computes identically —
+      `parentCredentialIds` win (clock skew can date a parent after its child), ties break on
+      `(issuanceDate, id)`. An unreplicated parent does not block its child (the state machine
+      rejects an unverifiable chain anyway) and a cycle keeps every credential rather than
+      dropping it.
 - [ ] Credentials doc: append-only array of the existing encoded credential bytes.
 - [ ] Write path — `spaceGenesis()` emits into the credentials doc instead of the control feed;
       drop the two `AdmittedFeed` credentials.
@@ -123,11 +127,15 @@ migration; crash mid-migration and resume.
       credential exactly as `genesisFeedKey` does today, and EDGE authorizes replication from
       its own SpaceMember state, not from what the joiner has read. See DESIGN "Bootstrap and
       cutover".
-- [ ] **Swap `SpaceMember.genesis_feed_key` for the space root doc URL** in the credential
-      ASSERTION (not just the AdmissionResponse envelope) — `space-invitation-protocol.ts`,
-      `device-invitation-protocol.ts`, and the `acceptSpace()` call in
-      `cross-device-space-synchronizer.ts`, which is the path that would silently lose its
-      pointer.
+- [x] **`SpaceMember.space_root_url` added beside `genesis_feed_key`** (field 7, optional) and
+      threaded through `createAdmissionCredentials` → `admitMember` → `acceptSpace`, including
+      `cross-device-space-synchronizer.ts`. Absent for a space still on its control feed.
+- [ ] Populate it at genesis — blocked on the root-doc creation path.
+- [ ] `device-invitation-protocol.ts` equivalent for the HALO space.
+- [ ] **NAME COLLISION to resolve**: `spaces-service.ts` already reports a `spaceRootUrl` in
+      pipeline diagnostics meaning the DIRECTORY (`space.databaseRoot?.url`). Two different
+      documents under one name will bite; rename the diagnostics field.
+- [ ] `createAdmissionCredentials` is now 10 positional parameters — convert to an options bag.
 - [ ] **Invalidate the EDGE auth negative cache on credential apply**
       (`automerge-replicator-auth.ts`, `AUTH_CACHE_TTL_MS`) — a joiner that dials before the
       admission lands is denied for up to 60s. Pre-existing, more reachable after this change.
