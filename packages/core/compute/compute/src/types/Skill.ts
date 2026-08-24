@@ -249,9 +249,8 @@ export const annotatedSkillKeys = (type: Type.AnyEntity): string[] =>
   Option.getOrElse(() => [] as string[])(SkillsAnnotation.get(Type.getSchema(type)));
 
 /**
- * Refs for an object's {@link SkillsAnnotation} keys, resolved across the registry and the space, a
- * space copy winning — that copy is a fork of the registry skill and carries the user's edits.
- * A key neither source serves contributes nothing.
+ * Refs for an object's {@link SkillsAnnotation} keys; a space copy wins, since it is a fork of the
+ * registry skill and carries the user's edits.
  *
  * TODO(wittjosiah): Lift this two-source merge into the query layer; it is how forking should work
  *  for any type, not just skills.

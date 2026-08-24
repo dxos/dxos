@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { Database, DXN, Obj, Type } from '@dxos/echo';
 import { registryLayer } from '@dxos/echo-client';
@@ -44,32 +44,12 @@ describe('Skill', () => {
   });
 
   describe('resolveAnnotatedSkills', () => {
-    /** Runs `resolveAnnotatedSkills` over a subject, against the given registry and space contents. */
-    const resolve = ({ registry = [], space = [] }: { registry?: Skill.Skill[]; space?: Skill.Skill[] } = {}) =>
-      EffectEx.runPromise(
-        Effect.gen(function* () {
-          const { db } = yield* Database.Service;
-          space.forEach((skill) => db.add(skill));
-          const subject = db.add(Obj.make(Annotated, {}));
-          yield* Database.flush();
-          const refs = yield* Skill.resolveAnnotatedSkills(subject);
-          return refs.map((ref) => ref.uri);
-        }).pipe(
-          Effect.provide(
-            Layer.mergeAll(
-              TestDatabaseLayer({ types: [Annotated, Skill.Skill] }),
-              registryLayer({ initial: registry }),
-            ),
-          ),
-        ),
-      );
-
-    test('a key only the registry serves binds by registry URI', async () => {
+    test('a key only the registry serves binds by registry URI', async ({ expect }) => {
       const uris = await resolve({ registry: [Skill.make({ key: SKILL_KEY, name: 'Registry' })] });
       expect(uris).toEqual([Skill.registryURI(SKILL_KEY)]);
     });
 
-    test('a space copy wins over the registry, so a fork carries the user edits', async () => {
+    test('a space copy wins over the registry, so a fork carries the user edits', async ({ expect }) => {
       const uris = await resolve({
         registry: [Skill.make({ key: SKILL_KEY, name: 'Registry' })],
         space: [Skill.make({ key: SKILL_KEY, name: 'Fork' })],
@@ -78,8 +58,25 @@ describe('Skill', () => {
       expect(uris[0]).not.toBe(Skill.registryURI(SKILL_KEY));
     });
 
-    test('a key neither source serves contributes nothing', async () => {
+    test('a key neither source serves contributes nothing', async ({ expect }) => {
       expect(await resolve()).toEqual([]);
     });
   });
 });
+
+/** Resolves against a database holding `space` and a registry holding `registry`. */
+const resolve = ({ registry = [], space = [] }: { registry?: Skill.Skill[]; space?: Skill.Skill[] } = {}) =>
+  EffectEx.runPromise(
+    Effect.gen(function* () {
+      const { db } = yield* Database.Service;
+      space.forEach((skill) => db.add(skill));
+      const subject = db.add(Obj.make(Annotated, {}));
+      yield* Database.flush();
+      const refs = yield* Skill.resolveAnnotatedSkills(subject);
+      return refs.map((ref) => ref.uri);
+    }).pipe(
+      Effect.provide(
+        Layer.mergeAll(TestDatabaseLayer({ types: [Annotated, Skill.Skill] }), registryLayer({ initial: registry })),
+      ),
+    ),
+  );
