@@ -112,3 +112,50 @@ describe('EventLoopLagTracker.suspend', () => {
     expect(rotated(tracker)).toEqual(1_500);
   });
 });
+
+describe('EventLoopLagTracker implausible-gap clamp', () => {
+  test('a frozen-timer gap is discarded even with no suspend call', () => {
+    const tracker = new EventLoopLagTracker(500, 10_000);
+    tracker.sample(0);
+
+    // The case the visibility check could not catch: timers were frozen, so no probe ran during
+    // the freeze and this is the first one after it. Nothing marked the suspension.
+    tracker.sample(70_000);
+
+    expect(rotated(tracker)).toEqual(0);
+  });
+
+  test('a real stall below the ceiling is still reported', () => {
+    const tracker = new EventLoopLagTracker(500, 10_000);
+    tracker.sample(0);
+    tracker.sample(4_000);
+
+    expect(rotated(tracker)).toEqual(3_500);
+  });
+
+  test('the discarded probe still becomes the new reference', () => {
+    const tracker = new EventLoopLagTracker(500, 10_000);
+    tracker.sample(0);
+    tracker.sample(70_000); // discarded
+    tracker.sample(72_000); // measured against 70_000, not 0
+
+    expect(rotated(tracker)).toEqual(1_500);
+  });
+
+  test('a gap exactly at the ceiling is kept', () => {
+    const tracker = new EventLoopLagTracker(500, 10_000);
+    tracker.sample(0);
+    tracker.sample(10_500);
+
+    expect(rotated(tracker)).toEqual(10_000);
+  });
+
+  test('one discarded probe does not erase a real stall from the same window', () => {
+    const tracker = new EventLoopLagTracker(500, 10_000);
+    tracker.sample(0);
+    tracker.sample(3_000); // 2500ms — real
+    tracker.sample(90_000); // frozen — discarded
+
+    expect(rotated(tracker)).toEqual(2_500);
+  });
+});

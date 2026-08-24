@@ -249,10 +249,22 @@ collection-sync histograms). Three gaps that only the live data revealed:
       `initializeObservability` (composer's `config.ts`), which both realms call, and removed the
       now-duplicate plugin registration.
 - [x] **Event loop lag counted background-tab throttling as jank.** A hidden tab has its timers
-      clamped, so a probe firing a minute late looks like a minute of lag — which is what the
-      live `browser` series showing ~23s average was. The sampler now `suspend()`s while
-      `document.visibilityState === 'hidden'`, discarding the reference timestamp so the first
-      probe after the tab wakes cannot report a gap. 2 tests.
+      throttled or frozen, so a probe firing a minute late looks like a minute of lag — the live
+      `browser` series averaging ~23s was this, not real jank.
+  - **The first fix was wrong.** Checking `document.visibilityState` when the probe fires cannot
+    work: with timers frozen outright, _no probe fires during the freeze_, so the gate never runs
+    and the first probe after the tab wakes still observes the whole gap. Confirmed in practice —
+    lag was still reported above a minute after that change.
+  - The real guard is in the tracker: a gap past `MAX_PLAUSIBLE_LAG_MS` (10s) is **discarded**,
+    not clamped, because clamping would still report a ceiling-valued stall that never happened.
+    This needs no cooperation from any listener and works in worker realms with no `document` —
+    which matters, since Chrome throttles the workers a hidden tab owns as well.
+  - 10s is the threshold because a main thread genuinely blocked that long means the app is hung
+    rather than janky; past that point a false reading is worse than a missed one.
+  - The `visibilitychange` listener stays as a refinement: it drops the reference timestamp on
+    transition, so a sub-clamp gap around a visibility change is discarded too.
+  - 15 tests, including the frozen-timer case with no `suspend()` call, a real 4s stall still
+    being reported, and a discarded probe not erasing a real stall from the same window.
 - [x] **Enabled RPC timing on the client-services channel.** The middleware is opt-in
       (`RpcTiming.isEnabled(options?.timing)`) and nothing in the app passed `timing`, so
       `recordSample` never ran and neither histogram was ever recorded.
