@@ -728,9 +728,16 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   async runMigrations(migrations: Migration.Any[]): Promise<void> {
+    // Validated up front so a batch containing an unrecognized migration cannot leave the
+    // preceding ones half-applied.
     for (const migration of migrations) {
-      // Widened for the error message: the `default` branch narrows `migration` to `never`.
       const kind: string = migration.kind;
+      if (kind !== 'object' && kind !== 'rename') {
+        throw new TypeError(`Unknown migration kind: ${kind}`);
+      }
+    }
+
+    for (const migration of migrations) {
       switch (migration.kind) {
         case 'object':
           await this.#runObjectMigration(migration);
@@ -738,8 +745,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
         case 'rename':
           await this.#runRenameMigration(migration);
           break;
-        default:
-          throw new TypeError(`Unknown migration kind: ${kind}`);
       }
     }
     await this._entityManager.flush();

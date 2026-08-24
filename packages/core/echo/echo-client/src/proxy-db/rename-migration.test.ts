@@ -2,12 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as A from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Filter, Migration, Obj, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
+import { getObjectCore } from '../echo-handler';
 import { EchoTestBuilder } from '../testing';
 
 const Operation = Type.makeObject(DXN.make('com.example.type.operation', '0.1.0'))(
@@ -84,12 +86,15 @@ describe('rename migration', () => {
     const { db, graph } = await builder.createDatabase();
     graph.registry.add([Operation, Trigger]);
 
-    db.add(makeTrigger());
+    const trigger = db.add(makeTrigger());
     await db.flush();
     await db.runMigrations([rename]);
-    await db.runMigrations([rename]);
+    await db.flush();
 
-    const [trigger] = await db.query(Filter.type(Trigger)).run();
+    const settled = documentHeads(trigger);
+    await db.runMigrations([rename]);
+    expect(documentHeads(trigger)).to.deep.eq(settled);
+
     expect(trigger.runnable.uri).to.eq(BAR);
     expect(trigger.steps.map((step) => step.uri)).to.deep.eq([BAR, OTHER]);
   });
@@ -119,14 +124,36 @@ describe('rename migration', () => {
 
     const trigger = db.add(makeTrigger());
     await db.flush();
+
+    const settled = documentHeads(trigger);
     await db.runMigrations([
       Migration.defineRename({ from: 'org.example.operation.foo', to: 'org.example.operation.foo' }),
     ]);
+    expect(documentHeads(trigger)).to.deep.eq(settled);
 
     expect(trigger.runnable.uri).to.eq(FOO);
     expect(trigger.steps.map((step) => step.uri)).to.deep.eq([FOO, OTHER]);
   });
+
+  test('rejects an unrecognized migration before applying any of the batch', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([Operation, Trigger]);
+
+    const trigger = db.add(makeTrigger());
+    await db.flush();
+
+    const settled = documentHeads(trigger);
+    await expect(
+      // @ts-expect-error intentional type violation to exercise runtime validation
+      db.runMigrations([rename, { [Migration.TypeId]: Migration.TypeId, kind: 'other' }]),
+    ).rejects.toThrow(/Unknown migration kind/);
+
+    expect(documentHeads(trigger)).to.deep.eq(settled);
+    expect(trigger.runnable.uri).to.eq(FOO);
+  });
 });
+
+const documentHeads = (object: Obj.Unknown) => A.getHeads(getObjectCore(object).docHandle!.doc());
 
 const makeTrigger = () =>
   Obj.make(Trigger, {
