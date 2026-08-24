@@ -86,11 +86,10 @@ The straightforward gauges, all read at collection time via `observe()`. Lands i
   - Registry entry owned by jdw; it set the 300-400MB resting target and the
     `scripts/memory/soak.mjs` harness. This phase makes that target verifiable
     fleet-wide instead of on one machine.
-  - Contract to agree before any dashboard or alert ships, so both projects read the
-    same series: `dxos.client.runtime.memory.bytes` in `By`, with `scope` bounded to
-    `window | shared-worker | dedicated-worker | other`, and the resting-target panel
-    reading `dxos.client.runtime.heapUsed` (not the cross-realm metric, which is
-    absent wherever the browser is not cross-origin isolated).
+  - The contract is now recorded in **both** documents — see "Fleet-wide memory metrics"
+    in [`memory-usage/TASKS.md`](../memory-usage/TASKS.md) for the series table, the
+    `scope` values, and why the resting-target panel reads `dxos.client.runtime.heapUsed`
+    rather than the cross-realm metric. Still open only on jdw's sign-off.
 
 ### Staleness fixed after review
 
