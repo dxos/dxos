@@ -279,6 +279,29 @@ collection-sync histograms). Three gaps that only the live data revealed:
   - Verified no handshake regression: client-services 165 passed, client 30 passed,
     client-protocol 4 passed, worker-framework 17 passed.
 
+## Phase 9: Deployed environments
+
+Checked what a deploy actually needs, rather than assuming.
+
+**Nothing, for metrics to flow.** `DX_OTEL_ENDPOINT=/api/otel` is already set in every deployed
+env file, and `/api/otel` is the Worker's SigNoz reverse proxy, which injects
+`signoz-ingestion-key` from the `SIGNOZ_INGESTION_KEY` Worker secret server-side
+(`composer-app/src/functions/_worker.ts`). So no ingestion key ever reaches a deployed browser —
+which is also why the open `moon.yml` credential finding is a **local-bundle** problem only.
+`metrics: true` is already passed in `config.ts`. Everything added in this project starts
+exporting on the next deploy with no further action.
+
+### Tasks
+
+- [x] **Set `DX_ENVIRONMENT` per deployed environment.** It was set nowhere but `check.yml`
+      (`ci`), so every deployed client reported `deployment.environment: unknown` and production
+      was indistinguishable from preview on any dashboard — the same defect fixed for local via
+      `dx-local.yml`, but fleet-wide. Now `dev` / `preview` / `staging` / `production` in
+      `.github/workflows/env/*`, with `default` left explicit as `unknown`.
+- [ ] **Grant `SIGNOZ_INGESTION_KEY` to any new Worker** — per-Worker secret matched by a
+      1Password section named after the raw Worker name, so a newly added environment needs
+      `pnpm secrets remote <env> composer` before its clients can export.
+
 ## Phase 5: Dashboard and validation
 
 Blocked on SigNoz auth — the `signoz` MCP server is configured but unauthenticated,
