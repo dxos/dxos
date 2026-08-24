@@ -36,6 +36,19 @@ The token set mirrors the CodeMirror extension in
 [`packages/reflect/deus/src/extension/fences.ts`](../../../packages/reflect/deus/src/extension/fences.ts),
 so the two editors agree on what is worth distinguishing.
 
+## Build and install
+
+```bash
+pnpm --filter vscode-mdl build          # -> dist/vscode-mdl.vsix
+code --install-extension tools/vscode/vscode-mdl/dist/vscode-mdl.vsix
+```
+
+Then reload VS Code (`Developer: Reload Window`) and open any `PLUGIN.mdl`.
+
+`vsce` runs via `npx` rather than as a devDependency: the workspace-installed copy hoists a
+minimatch whose default export it cannot call (`(0, minimatch_1.default) is not a function`), which
+breaks the sibling `vscode-file-templates` build too.
+
 ## Developing
 
 ```bash
