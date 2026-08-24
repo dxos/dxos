@@ -28,6 +28,8 @@ type Maker<C extends Capability$.AnyTag> = <
   const Requires extends readonly Capability$.AnyTag[] = readonly [],
   const Extra extends readonly Capability$.AnyTag[] = readonly [],
 >(
+  // `Requires` is an unresolved type parameter here, not a missing service
+  // @effect-diagnostics-next-line missingEffectContext:off
   loader: Capability$.LoadModule<Props, Requires, readonly [C, ...Extra]>,
   options?: Capability$.MakerOptions<Requires, Extra, Props, Options>,
 ) => Capability$.Module<Options>;
@@ -181,6 +183,8 @@ export const surface = <
   const Requires extends readonly Capability$.AnyTag[] = readonly [],
   const Extra extends readonly Capability$.AnyTag[] = readonly [],
 >(
+  // `Requires` is an unresolved type parameter here, not a missing service
+  // @effect-diagnostics-next-line missingEffectContext:off
   loader: Capability$.LoadModule<Props, Requires, readonly [typeof Capabilities.ReactSurface, ...Extra]>,
   options?: Capability$.MakerOptions<Requires, Extra, Props, Options> & { roles?: readonly string[] },
 ): Capability$.Module<Options> => {

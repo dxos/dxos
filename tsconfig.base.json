@@ -48,13 +48,25 @@
         // instead of importing from the barrel.
         "topLevelNamedReexports": "follow",
 
-        // Effect diagnostics report without gating the build. All three are stated
-        // rather than inherited, because the warning and error defaults do gate and
-        // there is a standing backlog behind them. Promote a level once its findings
-        // are cleared; see the PR that introduced @effect/tsgo for current counts.
-        "ignoreEffectSuggestionsInTscExitCode": true,
-        "ignoreEffectWarningsInTscExitCode": true,
-        "ignoreEffectErrorsInTscExitCode": true
+        // Effect diagnostics gate the build at warning and error, which is the default.
+        // Rules carrying a backlog are off rather than reported-and-ignored, so what
+        // still fires is actionable and a green build means something. Each TODO below
+        // is one cleanup; turn its rule back on as it is cleared.
+        //
+        // Style suggestions stay in the editor and out of build logs: 1529 of them
+        // across the repo would bury everything else.
+        "includeSuggestionsInTsc": false,
+        "diagnosticSeverity": {
+          // TODO(wittjosiah): Untagged errors in the failure channel, 340 findings.
+          "globalErrorInEffectFailure": "off",
+          "globalErrorInEffectCatch": "off",
+          // TODO(wittjosiah): Stacked Effect.provide calls, 82 findings.
+          "multipleEffectProvide": "off",
+          // TODO(wittjosiah): 7 findings between them.
+          "unknownInEffectCatch": "off",
+          "layerMergeAllWithDependencies": "off",
+          "lazyPromiseInEffectSync": "off"
+        }
       }
     ]
   },
