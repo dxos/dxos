@@ -18,9 +18,6 @@
       "path": "../../common/effect"
     },
     {
-      "path": "../../common/effect-proto"
-    },
-    {
       "path": "../../common/invariant"
     },
     {
