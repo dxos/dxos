@@ -67,6 +67,10 @@ export type StartupReport = {
     }>;
     /** Plugin-definition chunk imports (precede all module activation). */
     pluginLoads: Array<{ name: string; duration: number; startTime: number }>;
+    /** Which event activated each module. */
+    moduleCauses: Array<{ module: string; event: string; startTime: number }>;
+    /** Graph-builder extension bodies that ran before the snapshot (first run only). */
+    graphBodies: Array<{ id: string; kind: string; startTime: number }>;
   };
   /**
    * Static module inventory probed from `composer.manager.getModules()` — the classification
@@ -132,6 +136,38 @@ export const appendRunSample = (scenario: string, report: StartupReport): void =
 
 export const waitForReady = async (page: Page, timeout = 30_000): Promise<void> => {
   await page.getByTestId('treeView.userAccount').waitFor({ timeout });
+};
+
+/** Throughput is bytes/second, as `Network.emulateNetworkConditions` expects; latency is ms. */
+export type ThrottleProfile = {
+  latency: number;
+  downloadThroughput: number;
+  uploadThroughput: number;
+  cpuRate: number;
+};
+
+/**
+ * CDP emulation settings for the throttled cold start, defaulting to Fast 3G + 2x CPU. Each field
+ * is overridable: `DX_HARNESS_LATENCY_MS`, `DX_HARNESS_DOWN_MBPS`, `DX_HARNESS_UP_KBPS`,
+ * `DX_HARNESS_CPU`.
+ */
+export const throttleProfile = (): ThrottleProfile => {
+  const num = (name: string, fallback: number, min: number): number => {
+    const raw = process.env[name];
+    // Blank is a set-but-empty override, not an absent one; `Number('')` would silently pass it as 0.
+    const value = raw === undefined ? fallback : raw.trim() === '' ? NaN : Number(raw);
+    if (!Number.isFinite(value) || value < min) {
+      throw new Error(`${name} must be a finite number >= ${min}; got ${JSON.stringify(raw)}`);
+    }
+    return value;
+  };
+
+  return {
+    latency: num('DX_HARNESS_LATENCY_MS', 150, 0),
+    downloadThroughput: (num('DX_HARNESS_DOWN_MBPS', 1.5, 0) * 1024 * 1024) / 8,
+    uploadThroughput: (num('DX_HARNESS_UP_KBPS', 750, 0) * 1024) / 8,
+    cpuRate: num('DX_HARNESS_CPU', 2, 1),
+  };
 };
 
 /**
@@ -321,6 +357,8 @@ export const collectStartupReport = async (page: Page, scenario: Scenario): Prom
       })),
       modules,
       pluginLoads: data.snapshot?.pluginLoads ?? [],
+      moduleCauses: data.snapshot?.moduleCauses ?? [],
+      graphBodies: data.snapshot?.graphBodies ?? [],
     },
     inventory: data.inventory as StartupReport['inventory'],
     resources: data.resources,
