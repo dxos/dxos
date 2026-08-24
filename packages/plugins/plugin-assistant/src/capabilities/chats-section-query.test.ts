@@ -4,14 +4,13 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
+import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import { Chat } from '@dxos/assistant-toolkit';
 import * as Project from '@dxos/compute/Project';
 import { Feed, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 
-import { standaloneChatsQuery } from './app-graph-builder';
-
-describe('standalone chats query', () => {
+describe('chats section query', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
@@ -44,7 +43,7 @@ describe('standalone chats query', () => {
 
     await db.flush({ indexes: true });
 
-    const results = await db.query(standaloneChatsQuery).run();
+    const results = await db.query(TypeSection.sectionQuery(Chat.Chat)).run();
     expect(results.map((chat) => chat.id)).toEqual([standalone.id]);
     expect(results.map((chat) => chat.id)).not.toContain(companion.id);
     expect(results.map((chat) => chat.id)).not.toContain(projectChat.id);

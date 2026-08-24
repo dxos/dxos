@@ -16,7 +16,6 @@ import { SchemaAST } from '@dxos/effect';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Flex, Icon, Panel, useTranslation } from '@dxos/react-ui';
-import { Attention } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -249,19 +248,6 @@ const useToolbarActions = (project: Project.Project, onAddArtifact: () => void) 
             testId: 'projectsPlugin.addArtifact',
           },
           onAddArtifact,
-        )
-        // The growing gap pushes the routines button to the trailing edge: it opens a companion rather
-        // than creating anything, so it reads as navigation, not a peer of the create actions.
-        .separator()
-        .action(
-          'routines',
-          {
-            label: ['routines.label', { ns: meta.profile.key }],
-            icon: 'ph--lightning--regular',
-            disposition: 'toolbar',
-            testId: 'projectsPlugin.routines',
-          },
-          () => void invokePromise(LayoutOperation.UpdateCompanion, { subject: Attention.linkedSegment('automation') }),
         )
         .build(),
     [project, invokePromise, spaceId, onAddArtifact],

@@ -44,6 +44,15 @@ export const makeSectionRearrangeCallback = AppNode.createFactory(
 );
 
 /**
+ * The objects a type section lists: every object of the type that has no parent. An owned object
+ * (a project's chats and routines, a magazine's per-post state) is reached through its owner.
+ */
+export const sectionQuery = (type: Type.AnyEntity): Query.Any =>
+  // Filter.type's overload constraint (UnknownTypeSchema) is not publicly exported;
+  // the runtime accepts any schema with a typename annotation.
+  Query.select(Filter.and(Filter.type(type as any) as Filter.Any, Filter.hasParent(false)));
+
+/**
  * Creates a graph extension that surfaces all objects of an ECHO type under
  * each space as a dedicated sidebar section.
  *
@@ -65,8 +74,8 @@ export const createTypeSectionExtension = (
     /** Position hint for the section in the sidebar. */
     position?: Position.Position;
     /**
-     * Override the default `Filter.type(type)` query.
-     * Use to narrow or exclude objects (e.g. `Query.without` to hide companion-linked chats).
+     * Override the default query. Narrowing only — an override also has to exclude owned objects
+     * (`Filter.hasParent(false)`) if it wants the section's default ownership rule.
      */
     query?: Query.Any;
     /**
@@ -111,8 +120,7 @@ export const createTypeSectionExtension = (
 
   // Filter.type's overload constraint (UnknownTypeSchema) is not publicly exported;
   // the runtime accepts any schema with a typename annotation.
-  const filter = Filter.type(type as any) as Filter.Any;
-  const defaultQuery = Query.select(filter);
+  const defaultQuery = sectionQuery(type);
   const testId = `${typename}.section`;
 
   const label = AppNode.getDynamicLabel('typename.label', typename, { count: 2 });
@@ -191,8 +199,10 @@ export const createTypeSectionExtension = (
           id: typename,
           type: typename,
           // An addressable section carries the registered type entity so plugin-space's generic
-          // type-collection surface can render it. A bare container carries an opaque marker.
-          data: options.sectionUrlKey ? (typeEntity ?? `${typename}-root`) : `${typename}-root`,
+          // type-collection surface can render it. A bare container carries no data: the navtree
+          // opens whatever a selected node holds, and a marker value here opens an empty plank
+          // (`AppNode.makeSection`, which every hand-rolled section uses, is null for this reason).
+          data: options.sectionUrlKey ? (typeEntity ?? null) : null,
           properties: {
             label,
             icon,

@@ -31,7 +31,6 @@ export const researchBrief: RoutineCapabilities.Template = {
   label: 'Research Brief',
   icon: 'ph--newspaper--regular',
   // Scheduled space-level research — not meaningful for a specific object companion.
-  appliesTo: (subject) => subject == null,
   scaffold: ({ name }) =>
     makeScheduledRoutine({
       name: name ?? 'Research Brief',

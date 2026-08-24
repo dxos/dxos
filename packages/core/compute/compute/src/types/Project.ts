@@ -11,6 +11,7 @@ import { FormInlineAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Outline, TaskSet } from '@dxos/types';
 
 import * as Instructions from './Instructions';
+import * as Routine from './Routine';
 import * as Skill from './Skill';
 
 /** Work-stream lifecycle state; what done means lives on the task set's milestones. */
@@ -22,10 +23,9 @@ export type ProjectStatus = Schema.Schema.Type<typeof ProjectStatus>;
  * artifacts, tasks, and AI chat sessions in project context. Successor to `Topic`.
  *
  * Fields are the refs the project owns and orders; everything that merely accumulates around it is
- * a query — chats by the ECHO parent edge, routines by the connected-routines join (a routine
- * reaches its project through `instructions.objects`, like any other object), agents via chats.
+ * a query — chats by the ECHO parent edge, agents via chats.
  */
-export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.project', '0.4.0'))(
+export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.project', '0.5.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
     description: Schema.optional(Schema.String),
@@ -38,6 +38,9 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
 
     /** Artifacts (documents, outliners, tables, ...) the project owns, in order. */
     artifacts: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(Annotation.FormInputAnnotation.set(false)),
+
+    /** Routines the project owns, in order. Parented, so they cascade-delete with the project. */
+    routines: Schema.Array(Ref.Ref(Routine.Routine)).pipe(Annotation.FormInputAnnotation.set(false)),
 
     /** Ad hoc markdown checklist — the scratch surface; project chats write into it. */
     outline: Schema.optional(Ref.Ref(Outline.Outline)),
@@ -64,11 +67,16 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
  * is deleted.
  */
 export const make = (
-  props: Omit<Partial<Obj.MakeProps<typeof Project>>, 'artifacts'> & {
+  props: Omit<Partial<Obj.MakeProps<typeof Project>>, 'artifacts' | 'routines'> & {
     artifacts?: ReadonlyArray<Ref.Ref<Obj.Unknown>>;
+    routines?: ReadonlyArray<Ref.Ref<Routine.Routine>>;
   } = {},
 ): Project => {
-  const project = Obj.make(Project, { ...props, artifacts: props.artifacts ?? [] });
+  const project = Obj.make(Project, {
+    ...props,
+    artifacts: props.artifacts ?? [],
+    routines: props.routines ?? [],
+  });
   if (!props.taskSet) {
     const taskSet = TaskSet.make();
     // Ref before parent edge: the ref is what declares the edge (see `Obj.isDeclaredParentEdge`).
@@ -89,6 +97,17 @@ export const make = (
     }
   }
   return project;
+};
+
+/**
+ * Adds a routine to the project as an owned child: the ref (which declares the edge) and the parent
+ * edge, so a single `Database.add` of the project persists it and deleting the project removes it.
+ */
+export const addRoutine = (project: Project, routine: Routine.Routine): void => {
+  Obj.update(project, (project) => {
+    project.routines = [...project.routines, Ref.make(routine)];
+  });
+  Obj.setParent(routine, project);
 };
 
 /** Bindings a chat session should receive when running in a project's context. */

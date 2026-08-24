@@ -3,6 +3,7 @@
 //
 
 import type * as Effect from 'effect/Effect';
+import type * as Schema from 'effect/Schema';
 
 import type { DelegationStrategy } from '@dxos/agent-runtime';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -31,9 +32,8 @@ export const AgentDelegationStrategy = Capability.make<DelegationStrategy>()(
 export const BlankTemplateId = 'org.dxos.routine.blank';
 
 /**
- * An automation template contributed by a plugin. The create dialog and the per-object "Automations"
- * companion list contributed templates (`Capability.getAll(RoutineCapabilities.Template)`) and run the
- * chosen template's `scaffold` to build the automation.
+ * A routine template contributed by a plugin. The create dialog lists contributed templates
+ * (`Capability.getAll(RoutineCapabilities.Template)`) and runs the chosen template's `scaffold`.
  */
 export type Template = {
   /** Stable id (e.g. 'org.dxos.routine.blank'). */
@@ -43,19 +43,30 @@ export type Template = {
   /** Optional Phosphor icon name. */
   icon?: string;
   /**
-   * Whether this template applies to the given companion subject. The subject is the object whose
-   * "Automations" companion is open, or undefined in the global create dialog. Templates that need a
-   * specific subject (e.g. a feed-bearing Mailbox) gate themselves here. Defaults to always-applies.
+   * Omit from the create picker; reachable only by naming its {@link id}. For a template that cannot
+   * stand on its own because a caller must supply the `subject` (e.g. the connector's sync flow).
    */
-  appliesTo?: (subject?: Obj.Unknown) => boolean;
+  hidden?: boolean;
+  /**
+   * Values the template needs before it can scaffold, collected by the create panel as a form and
+   * passed back as `input` — e.g. `Schema.Struct({ mailbox: Ref.Ref(Mailbox.Mailbox) })` renders a
+   * mailbox picker. Omit and the picker scaffolds on selection.
+   */
+  inputSchema?: Schema.Codec<any, any>;
   /**
    * Build the routine as a fully-wired in-memory {@link Routine.Routine} graph — the routine plus its owned
    * trigger and instructions, assembled by `makeRoutine`. The create flow persists it with a single
    * `Database.add` (which cascades the owned children); scaffold must NOT call `Database.add` itself.
-   * `Database.Service` may still be used for read-only lookups (e.g. loading a feed ref). `subject` is set
-   * when scaffolding from an object's companion.
+   * `Database.Service` may still be used for read-only lookups (e.g. loading a feed ref). `input` carries
+   * the {@link inputSchema} values; `subject` is set only by a caller that seeds this template by id.
+   * `input` is untyped because form values arrive already decoded (a live `Ref`, not the encoded
+   * `{'/': uri}` a schema decode expects), so a template validates what it reads.
    */
-  scaffold: (ctx: { name?: string; subject?: Obj.Unknown }) => Effect.Effect<Routine.Routine, Error, Database.Service>;
+  scaffold: (ctx: {
+    name?: string;
+    subject?: Obj.Unknown;
+    input?: any;
+  }) => Effect.Effect<Routine.Routine, Error, Database.Service>;
 };
 
 export const Template = Capability.make<Template>()('org.dxos.plugin.routine.capability.template');

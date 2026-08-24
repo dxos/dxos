@@ -16,9 +16,8 @@ import { makeRoutine } from '../util';
 
 /**
  * Blank template: an instructions-action routine draft with an empty trigger; the action kind, schedule, and
- * body are configured in the form. In an object companion the instructions are seeded with the subject (in
- * `objects`) and its type's skills so the draft starts associated with the subject; the global create dialog
- * (no subject) starts with bare instructions.
+ * body are configured in the form. A caller that seeds this template by id passes a `subject`, whose ref (in
+ * `objects`) and type skills seed the instructions; the create dialog starts with bare instructions.
  */
 export const blank: RoutineCapabilities.Template = {
   id: RoutineCapabilities.BlankTemplateId,
