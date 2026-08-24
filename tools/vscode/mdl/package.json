@@ -1,0 +1,60 @@
+{
+  "name": "@dxos/vscode-mdl",
+  "displayName": "DEUS MDL",
+  "description": "Syntax highlighting for DEUS `.mdl` specifications and their ```mdl fenced blocks.",
+  "version": "0.1.0",
+  "private": true,
+  "publisher": "dxos",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "mdl",
+        "aliases": [
+          "DEUS MDL",
+          "mdl"
+        ],
+        "extensions": [
+          ".mdl"
+        ],
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "mdl-block",
+        "aliases": [
+          "DEUS MDL block"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "mdl",
+        "scopeName": "text.html.markdown.mdl",
+        "path": "./syntaxes/mdl.tmLanguage.json"
+      },
+      {
+        "scopeName": "markdown.mdl.codeblock",
+        "path": "./syntaxes/mdl-codeblock.tmLanguage.json",
+        "injectTo": [
+          "text.html.markdown",
+          "text.html.markdown.mdl"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.mdl": "mdl-block"
+        }
+      },
+      {
+        "language": "mdl-block",
+        "scopeName": "source.mdl-block",
+        "path": "./syntaxes/mdl-block.tmLanguage.json"
+      }
+    ]
+  }
+}
