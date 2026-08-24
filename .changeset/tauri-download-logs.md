@@ -3,4 +3,4 @@
 '@dxos/plugin-support': patch
 ---
 
-Fix file downloads inside the Tauri webview, which silently dropped `<a download>` clicks — logs and other blobs are now saved through the native save dialog.
+Fix logs in the native app, where both halves failed silently: downloads went through `<a download>`, which the Tauri webview drops, and are now saved via the native save dialog; feedback log uploads posted to a relative path that does not exist on the app's own origin, and can now be pointed at an absolute endpoint.
