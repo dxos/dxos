@@ -2,16 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type AutomergeUrl } from '@automerge/automerge-repo';
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
 import {
-  SPACE_ROOT_TYPE,
   type DatabaseDirectory,
-  type SpaceRoot,
+  SPACE_ROOT_TYPE,
   SpaceDocVersion,
+  type SpaceRoot,
   createIdFromRootDocumentId,
   createIdFromSpaceKey,
   isSpaceRoot,
@@ -156,8 +157,8 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
     });
 
     const spaceId = SpaceId.random();
-    const spaceRootDocUrl = 'automerge:3Y8mbUZP4bLTB1LWr8N4TRQY6ZWU' as const;
-    const credentialsDocUrl = 'automerge:5Y8mbUZP4bLTB1LWr8N4TRQY6ZWU' as const;
+    let spaceRootDocUrl: AutomergeUrl;
+    let credentialsDocUrl: AutomergeUrl;
     let rotatedDirectoryId: string;
 
     {
@@ -175,6 +176,10 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
         });
         return automergeHost.findWithProgress<DatabaseDirectory>(handle.documentId);
       };
+
+      // The refs are opaque URLs to the store, so real documents stand in for the root and credentials.
+      spaceRootDocUrl = (await automergeHost.createDoc({})).url;
+      credentialsDocUrl = (await automergeHost.createDoc({})).url;
 
       await manager.assignRootToSpace(spaceId, await directory());
       expect(manager.getSpaceRootRefs(spaceId)).to.be.undefined;
