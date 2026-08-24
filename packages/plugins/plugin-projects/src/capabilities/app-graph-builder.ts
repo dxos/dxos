@@ -18,6 +18,7 @@ import { Chat } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
+import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
@@ -150,7 +151,7 @@ export const createProjectActionExtension = () =>
     actions: (project) =>
       Effect.succeed([
         Node.makeAction({
-          id: ProjectOperation.CreateChat.meta.key,
+          id: AssistantOperation.SetCurrentChat.meta.key,
           data: () =>
             Effect.gen(function* () {
               const db = Obj.getDatabase(project);
@@ -158,7 +159,13 @@ export const createProjectActionExtension = () =>
                 return;
               }
 
-              yield* Operation.invoke(ProjectOperation.CreateChat, { project }, { spaceId: db.spaceId });
+              // Clearing the current chat is what starts a new one; the companion provisioner then
+              // resolves it. A project chat is an ordinary companion chat.
+              yield* Operation.invoke(
+                AssistantOperation.SetCurrentChat,
+                { companionTo: project, chat: undefined },
+                { spaceId: db.spaceId },
+              );
             }),
           properties: {
             label: ['create-chat.label', { ns: meta.profile.key }],

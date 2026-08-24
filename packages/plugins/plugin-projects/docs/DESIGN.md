@@ -525,23 +525,27 @@ construction, via `state.currentChat[objectUri]`, and carries no ownership edge)
 than a ref-array read. If `children()` does not re-emit when a chat is newly
 parented, fall back to the Collection field — only the enumeration source moves.
 
-### Creation: `ProjectOperation.CreateChat`
+### Creation (revised 2026-08-24): a project chat is a companion chat
 
-`ProjectOperation.CreateChat({ project })`, handled in plugin-projects:
+There is no project-specific chat operation. A project gets its chat the way every
+other object does — `AssistantOperation.EnsureCompanionChat`, driven by the assistant's
+companion-chat provisioner — and everything project-specific reaches the session through
+`AssistantCapabilities.SubjectContext`:
 
-1. Invoke `AssistantOperation.CreateChat({ db, instructions })` — chat + feed,
-   with the assistant's default skills already bound.
-2. `Obj.setParent(chat, project)`.
-3. Bind `instructions.skills`.
-4. Open it with `LayoutOperation.Open` (a plank in the deck).
+- plugin-assistant's default provider binds the project and the skills its type declares
+  via `Skill.SkillsAnnotation`.
+- plugin-projects' provider adds the instructions' skills and context objects, and the
+  `instructions` ref that `BindChatContext` backfills onto the chat.
 
-`SpaceOperation.AddObject` is deliberately **not** called: it would file the chat
-in the space's root collection, surfacing it under Collections as well. DB
-membership alone (`addToSpace: true`) is what a parented chat needs.
+Consequences of dropping the bespoke operation:
 
-Companion chats take the same instructions path: companion-chat creation sets
-`chat.instructions` from the project rather than binding it, so companion and
-standalone chats behave identically.
+- **Lazy persistence.** The chat exists in the DB after the first message, not on click,
+  so a project whose chat was never submitted has no navtree child.
+- **Companion pane, not a plank.** It opens beside the project; the navtree child gives
+  it a full plank once persisted.
+
+`Chat.linkCompanion` sets the parent edge either way, so the navtree children and the
+standalone-Chats exclusion below are unaffected.
 
 ### Navtree: chats as children of the project node
 
@@ -563,9 +567,10 @@ chat appears twice, once under its project and once at the space level.
 ### Toolbar
 
 `ProjectArticle` has a `Panel.Toolbar` (`asChild` + `Toolbar.Root`) whose
-`IconButton` invokes `ProjectOperation.CreateChat`. The same action is
-contributed to the project's navtree node (`disposition: 'list-item-primary'`)
-so `+` works from the tree.
+`IconButton` invokes `AssistantOperation.SetCurrentChat({ companionTo: project })` with no
+chat — clearing the current chat is what starts a new one. The same action is contributed
+to the project's navtree node (`disposition: 'list-item-primary'`) so `+` works from the
+tree.
 
 ## Routine staleness and deletion guards (decided 2026-08-14)
 
@@ -757,21 +762,21 @@ a Chat helper (rebuild the feed), not an Agent one.
 
 ### Where current Agent functionality lands
 
-| Today (Agent)                                                            | After                                                                                                                                            |
-| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `makeInitialized` (agent + chat + binder + CompanionTo)                  | create Agent (identity + instructions); chat creation is the chat factory's job (`ProjectOperation.CreateChat` or ad-hoc), with `chat.agent` set |
-| model files an artifact (`add-artifact`)                                 | `ProjectSkill.artifact-add` into the owning project's Collection                                                                                 |
-| model reads its context (`get-context`)                                  | instructions via the system prompt (`chat.instructions`); artifacts via `ProjectSkill.artifact-list`; plan via the chat, unchanged               |
-| scheduled run (`cron` → `sync-triggers` → timer trigger → `AgentWorker`) | Routine (timer trigger) whose run targets a chat carrying `chat.agent`                                                                           |
-| subscription run (qualifier trigger per feed)                            | Routine (feed trigger); qualifier folds into the routine                                                                                         |
-| `resetChatHistory`                                                       | Chat helper; the agent is untouched                                                                                                              |
-| chat attribution (`did`)                                                 | unchanged — the one thing that was always identity-shaped                                                                                        |
+| Today (Agent)                                                            | After                                                                                                                                 |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `makeInitialized` (agent + chat + binder + CompanionTo)                  | create Agent (identity + instructions); chat creation is the chat factory's job (the companion path or ad-hoc), with `chat.agent` set |
+| model files an artifact (`add-artifact`)                                 | `ProjectSkill.artifact-add` into the owning project's Collection                                                                      |
+| model reads its context (`get-context`)                                  | instructions via the system prompt (`chat.instructions`); artifacts via `ProjectSkill.artifact-list`; plan via the chat, unchanged    |
+| scheduled run (`cron` → `sync-triggers` → timer trigger → `AgentWorker`) | Routine (timer trigger) whose run targets a chat carrying `chat.agent`                                                                |
+| subscription run (qualifier trigger per feed)                            | Routine (feed trigger); qualifier folds into the routine                                                                              |
+| `resetChatHistory`                                                       | Chat helper; the agent is untouched                                                                                                   |
+| chat attribution (`did`)                                                 | unchanged — the one thing that was always identity-shaped                                                                             |
 
 Sequences for the three use cases, post-refactor:
 
 1. **Ad-hoc chat**: `AssistantOperation.CreateChat` → skills bound → model
    creates artifacts; nothing owns them unless the user files them.
-2. **Project chat**: `ProjectOperation.CreateChat` → `chat.instructions` =
+2. **Project chat**: the companion path → `chat.instructions` =
    project's, `ProjectSkill` bound → artifacts filed into the shared Collection.
 3. **Agent as preset**: pick an Agent at chat creation → `chat.agent` = ref,
    `chat.instructions` = `agent.instructions` (skills come along inside it) →
@@ -822,7 +827,7 @@ the whole loop, graded on database effects rather than on model wording:
 
 1. Seed a Project with instructions and an artifacts Collection.
 2. Seed a Chat under it — own feed, `instructions` pointing at the project's
-   own object, parented to the project (mirrors `ProjectOperation.CreateChat`).
+   own object, parented to the project (mirrors a project companion chat).
 3. Prompt the model to create a markdown document.
 4. Assert the document is bound into the session context (a `Binding` record in
    the chat feed) **and** present in the project's artifacts Collection.

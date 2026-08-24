@@ -13,6 +13,7 @@ import * as Project from '@dxos/compute/Project';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { SchemaAST } from '@dxos/effect';
+import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Flex, Icon, Panel, useTranslation } from '@dxos/react-ui';
@@ -24,7 +25,6 @@ import { type Milestone } from '@dxos/types';
 
 import { ObjectCard } from '#components';
 import { meta } from '#meta';
-import { ProjectOperation } from '#types';
 
 // Pick the editable header fields from the Project schema rather than redeclaring them. v4 exposes
 // `mapFields` only on a `Struct`, and `Type.getSchema` erases to `Codec`, so the pick runs on the AST
@@ -204,7 +204,14 @@ const useToolbarActions = (project: Project.Project) => {
             disposition: 'toolbar',
             testId: 'projectsPlugin.createChat',
           },
-          () => void invokePromise(ProjectOperation.CreateChat, { project }, { spaceId }),
+          // Clearing the current chat is what starts a new one; a project chat is an ordinary
+          // companion chat, so the generic operation owns the lifecycle.
+          () =>
+            void invokePromise(
+              AssistantOperation.SetCurrentChat,
+              { companionTo: project, chat: undefined },
+              { spaceId },
+            ),
         )
         // The growing gap pushes the routines button to the trailing edge: it opens a companion rather
         // than creating anything, so it reads as navigation, not a peer of the create actions.
