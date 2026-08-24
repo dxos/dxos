@@ -51,7 +51,7 @@ describe('extractQuestionsStage', () => {
       const replay = replayStream().pipe(extractQuestionsStage(), Pipeline.run({ sink: () => Effect.void }));
       yield* replay;
 
-      const store = yield* ExtractedQuestionStore;
+      const store = yield* ExtractedQuestionStore.ExtractedQuestionStore;
       const extracted = yield* store.list();
       // The fixture has exactly one interrogative message (Alice's OPFS question, id 1000).
       expect(extracted.length).toBe(1);
