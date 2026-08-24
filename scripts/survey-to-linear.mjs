@@ -32,11 +32,19 @@
 // Usage:
 //   node scripts/survey-to-linear.mjs [--since <days>] [--limit <n>] [--apply]
 //                                     [--survey-id <uuid>] [--team <key|name>] [--label <name>]...
-//                                     [--from-file <path>] [--json] [--verbose]
+//                                     [--from-file <path>] [--fire-routine [--routine-id <trig_…>]]
+//                                     [--json] [--verbose]
 //
 // `--from-file` replays captured `survey sent` events (a JSON array or NDJSON of PostHog rows)
 // instead of querying PostHog — for backfilling from an export, and for exercising the Linear half
 // without a read key.
+//
+// `--fire-routine` starts a Claude Code routine run for each issue the sweep CREATES (never for one
+// it skipped as already filed, and never in a dry run), handing it the issue key, the triage fields
+// and the R2 log location. Needs `FEEDBACK_FIXER_CLAUDE_ROUTINE_KEY` (or `CLAUDE_ROUTINE_TOKEN`) plus
+// `CLAUDE_ROUTINE_ID` / `--routine-id`; the id is the routine's `trig_…` value. One run per issue —
+// the endpoint has no idempotency key, so a retried sweep must not re-fire, which is why only
+// freshly created issues qualify.
 //
 // Dry run is the DEFAULT — nothing is created without `--apply`, so the normal way to inspect a
 // window is to run it bare.
@@ -45,6 +53,7 @@
 //   node scripts/survey-to-linear.mjs                      # last 7 days, dry run
 //   node scripts/survey-to-linear.mjs --since 30 --json     # a month, machine-readable
 //   node scripts/survey-to-linear.mjs --apply               # actually open the issues
+//   node scripts/survey-to-linear.mjs --apply --fire-routine # …and hand each one to a routine
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
@@ -55,6 +64,15 @@ const LINEAR_API_URL = 'https://api.linear.app/graphql';
 // Composer's PostHog project is EU Cloud. `DX_POSTHOG_API_HOST` is the app's ingestion proxy
 // (o.composer.space) and does NOT serve the authenticated read API, so the region host is separate.
 const DEFAULT_POSTHOG_HOST = 'https://eu.posthog.com';
+
+/** Claude Code routine fire endpoint — the `claude_code` namespace, NOT the claude.ai trigger API. */
+const ROUTINE_FIRE_URL = (routineId) => `https://api.anthropic.com/v1/claude_code/routines/${routineId}/fire`;
+
+/** Required beta for the (experimental) fire endpoint; breaking changes ship behind new dated values. */
+const ROUTINE_FIRE_BETA = 'experimental-cc-routine-2026-04-01';
+
+/** The endpoint's cap on the freeform `text` payload. */
+const ROUTINE_TEXT_MAX = 65_536;
 
 // Same account the deploy pipeline and `edge-compute/scripts/upload-modules.mjs` target; not a secret.
 const CLOUDFLARE_ACCOUNT_ID = '950816f3f59b079880a1ae33fb0ec320';
@@ -102,7 +120,7 @@ const usage = () => {
     [
       'usage: survey-to-linear.mjs [--since <days>] [--limit <n>] [--apply] [--survey-id <uuid>]',
       '                           [--team <key|name>] [--label <name>]... [--from-file <path>]',
-      '                           [--json] [--verbose]',
+      '                           [--fire-routine [--routine-id <trig_…>]] [--json] [--verbose]',
       '',
       'Dry run unless --apply is passed. See the header comment for credentials.',
     ].join('\n'),
@@ -122,6 +140,8 @@ const parseArgs = (argv) => {
     team: undefined,
     labels: [],
     fromFile: undefined,
+    fireRoutine: false,
+    routineId: undefined,
     json: false,
     verbose: false,
   };
@@ -158,6 +178,12 @@ const parseArgs = (argv) => {
         break;
       case '--from-file':
         options.fromFile = argv[++i];
+        break;
+      case '--fire-routine':
+        options.fireRoutine = true;
+        break;
+      case '--routine-id':
+        options.routineId = argv[++i];
         break;
       case '--help':
       case '-h':
@@ -422,6 +448,60 @@ const issueDescription = (response, { parsed, projectId, surveyId, uiHost, crede
 };
 
 //
+// Claude Code routine
+//
+
+/**
+ * Start a run of an existing routine. The token is per-routine and grants no read access, so there
+ * is nothing to look up first — a POST is the whole protocol. Each call creates a new session and
+ * there is no idempotency key, hence one fire per issue actually created, never per response seen.
+ */
+const fireRoutine = async ({ token, routineId, text }) => {
+  const response = await fetch(ROUTINE_FIRE_URL(routineId), {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'anthropic-version': '2023-06-01',
+      'anthropic-beta': ROUTINE_FIRE_BETA,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ text: text.slice(0, ROUTINE_TEXT_MAX) }),
+  });
+
+  const payload = await response.json().catch(() => undefined);
+  if (!response.ok) {
+    throw new Error(`Routine fire failed (${response.status}): ${payload?.error?.message ?? 'no detail'}`);
+  }
+  return { sessionId: payload?.claude_code_session_id, sessionUrl: payload?.claude_code_session_url };
+};
+
+/**
+ * Context handed to the run. The routine's own saved prompt does the work; this only has to say
+ * which issue to work in and where the evidence is, so the run does not have to rediscover either.
+ */
+const routineText = ({ issue, parsed, response, bucket, logKey }) => {
+  const hasLogs = Boolean(logKey) && logKey !== 'failed';
+  const header = [
+    `Linear issue ${issue.identifier} (${issue.url}) was just filed from a Composer feedback-panel survey response.`,
+    `Title: ${parsed.title}`,
+    parsed.type && `Type: ${parsed.type}`,
+    parsed.severity && `Severity: ${parsed.severity}`,
+    parsed.area && `Area: ${parsed.area}`,
+    parsed.version && `Version: ${parsed.version}`,
+    response.properties.environment && `Environment: ${response.properties.environment}`,
+    hasLogs
+      ? `Debug logs: R2 object ${bucket}/${logKey} — the issue body carries the curl that fetches it.`
+      : 'Debug logs: none attached (the submitter opted out, or the upload failed).',
+    `PostHog survey response uuid: ${response.uuid}`,
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+  // Kept as its own paragraph: the run should not mistake the reporter's prose for another metadata line.
+  return `${header}\n\nReported by the user:\n${parsed.body}`;
+};
+
+//
 // Linear
 //
 
@@ -531,6 +611,9 @@ const main = async () => {
   const posthogHost = env.POSTHOG_HOST ?? DEFAULT_POSTHOG_HOST;
   // Placeholder until the 1Password item exists; override without touching this file.
   const credentialUrl = env.FEEDBACK_LOGS_1P_URL ?? R2_CREDENTIAL_ITEM;
+  // Trimmed: a stray space around the value yields `Bearer  sk-…` and a bare 401 with no hint why.
+  const routineToken = (env.CLAUDE_ROUTINE_TOKEN ?? env.FEEDBACK_FIXER_CLAUDE_ROUTINE_KEY)?.trim();
+  const routineId = (options.routineId ?? env.CLAUDE_ROUTINE_ID)?.trim();
 
   // Replaying a capture needs neither the read key nor the project/survey coordinates.
   const missing = [
@@ -541,8 +624,22 @@ const main = async () => {
     !options.fromFile && !projectId && 'DX_POSTHOG_PROJECT_ID (composer-app/.env)',
     !options.fromFile && !surveyId && 'DX_POSTHOG_FEEDBACK_SURVEY_ID (composer-app/.env) or --survey-id',
   ].filter(Boolean);
-  if (missing.length > 0) {
-    console.error(`Missing credentials/config:\n${missing.map((entry) => `  - ${entry}`).join('\n')}`);
+  // Checked up front rather than at the first fire: a half-done run would leave issues filed with
+  // no routine started, and re-running skips them as already filed.
+  if (options.fireRoutine) {
+    missing.push(
+      !routineToken &&
+        'FEEDBACK_FIXER_CLAUDE_ROUTINE_KEY or CLAUDE_ROUTINE_TOKEN (root .env) — the per-routine `sk-ant-oat01-…` token',
+      !routineId && 'CLAUDE_ROUTINE_ID (root .env) or --routine-id <trig_…>',
+    );
+  }
+  if (missing.filter(Boolean).length > 0) {
+    console.error(
+      `Missing credentials/config:\n${missing
+        .filter(Boolean)
+        .map((entry) => `  - ${entry}`)
+        .join('\n')}`,
+    );
     process.exit(1);
   }
 
@@ -602,7 +699,9 @@ const main = async () => {
         description,
       });
       if (!options.json) {
-        console.error(`+ would create "${parsed.title}" [${labelNames.join(', ')}]`);
+        console.error(
+          `+ would create "${parsed.title}" [${labelNames.join(', ')}]${options.fireRoutine ? ' + fire routine' : ''}`,
+        );
         if (options.verbose) {
           console.error(description.replace(/^/gm, '    '));
         }
@@ -622,9 +721,33 @@ const main = async () => {
     if (!issueCreate.success) {
       throw new Error(`Linear refused to create an issue for ${response.uuid}`);
     }
-    outcomes.push({ uuid: response.uuid, action: 'created', issue: issueCreate.issue });
+    const outcome = { uuid: response.uuid, action: 'created', issue: issueCreate.issue };
+    outcomes.push(outcome);
     if (!options.json) {
       console.error(`+ ${issueCreate.issue.identifier} ${issueCreate.issue.url}`);
+    }
+
+    if (options.fireRoutine) {
+      const logKey = response.properties.debug_log_dump_key;
+      const bucket = LOG_BUCKET_BY_ENVIRONMENT[response.properties.environment] ?? DEFAULT_LOG_BUCKET;
+      // A failed fire must not abort the sweep: the issue is already filed, and re-running would
+      // skip it as such, so the run is reported against the outcome and the loop continues.
+      try {
+        const run = await fireRoutine({
+          token: routineToken,
+          routineId,
+          text: routineText({ issue: issueCreate.issue, parsed, response, bucket, logKey }),
+        });
+        outcome.routineRun = run;
+        if (!options.json) {
+          console.error(`  ↳ routine run ${run.sessionUrl ?? run.sessionId}`);
+        }
+      } catch (error) {
+        outcome.routineError = error.message;
+        if (!options.json) {
+          console.error(`  ! routine fire failed: ${error.message}`);
+        }
+      }
     }
   }
 
