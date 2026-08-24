@@ -138,6 +138,36 @@ export const waitForReady = async (page: Page, timeout = 30_000): Promise<void> 
   await page.getByTestId('treeView.userAccount').waitFor({ timeout });
 };
 
+export type ThrottleProfile = {
+  latency: number;
+  downloadThroughput: number;
+  uploadThroughput: number;
+  cpuRate: number;
+};
+
+/**
+ * CDP emulation settings for the throttled cold start, defaulting to Fast 3G + 2x CPU. Each field
+ * is overridable: `DX_HARNESS_LATENCY_MS`, `DX_HARNESS_DOWN_MBPS`, `DX_HARNESS_UP_KBPS`,
+ * `DX_HARNESS_CPU`.
+ */
+export const throttleProfile = (): ThrottleProfile => {
+  const num = (name: string, fallback: number, min: number): number => {
+    const raw = process.env[name];
+    const value = raw === undefined ? fallback : Number(raw);
+    if (!Number.isFinite(value) || value < min) {
+      throw new Error(`${name} must be a finite number >= ${min}; got ${JSON.stringify(raw)}`);
+    }
+    return value;
+  };
+
+  return {
+    latency: num('DX_HARNESS_LATENCY_MS', 150, 0),
+    downloadThroughput: (num('DX_HARNESS_DOWN_MBPS', 1.5, 0) * 1024 * 1024) / 8,
+    uploadThroughput: (num('DX_HARNESS_UP_KBPS', 750, 0) * 1024) / 8,
+    cpuRate: num('DX_HARNESS_CPU', 2, 1),
+  };
+};
+
 /**
  * Hooks `response` to count bytes and responses; the closure returned reads the accumulated
  * counters. Tracked node-side (not via the page's resource-timing entries, whose default

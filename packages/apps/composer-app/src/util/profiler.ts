@@ -108,23 +108,20 @@ export const startupProfiler = (): Profiler => {
         .filter((entry) => entry.name.startsWith('plugin-load:'))
         .sort((first, second) => second.duration - first.duration)
         .map((entry) => toRow(entry, 'plugin-load:')),
+      // Instants, so marks rather than measures. `detail` carries only what the name cannot: a
+      // trailing DXN has colons of its own and would be unparseable inside the mark name.
       moduleCauses: marks
         .filter((entry) => entry.name.startsWith('module-cause:'))
-        .map((entry) => {
-          // Module and event travel in `detail`; both are DXN-shaped and contain colons, so the
-          // mark name carries only the module id.
-          const detail = (entry as PerformanceMark).detail as { module?: string; event?: string } | null;
-          return {
-            module: detail?.module ?? entry.name.slice('module-cause:'.length),
-            event: detail?.event ?? '',
-            startTime: Math.round(entry.startTime),
-          };
-        }),
+        .map((entry) => ({
+          module: entry.name.slice('module-cause:'.length),
+          event: ((entry as PerformanceMark).detail as { event?: string } | null)?.event ?? '',
+          startTime: Math.round(entry.startTime),
+        })),
       graphBodies: marks
         .filter((entry) => entry.name.startsWith('graph-body:'))
         .map((entry) => {
-          const [kind, ...id] = entry.name.slice('graph-body:'.length).split(':');
-          return { kind, id: id.join(':'), startTime: Math.round(entry.startTime) };
+          const [kind, ...rest] = entry.name.slice('graph-body:'.length).split(':');
+          return { kind, id: rest.join(':'), startTime: Math.round(entry.startTime) };
         }),
     };
   };

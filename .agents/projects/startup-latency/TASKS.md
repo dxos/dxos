@@ -78,12 +78,15 @@ got here — checkpoints, measurements and findings, not work items.
       is `boot-8` (both automerge wasm glue modules), which `main.tsx` statically imports — so it is
       fully evaluated before any body `import()` and the race is unreachable on the bundle.
       Verified: 9/9 lock-off cold runs on Playwright's pre-fix WebKit (webkit-2227, Dec 2025), 226
-      modules and all 14 space modules every time. Lock deleted (with `webkitCheck`, no longer
-      needed); a short comment states the invariant + links. A/B/A/B chromium 3+3+3+3:
-      `profilerTotal` 3135 → 2621 (−514 ms, ranges disjoint), `navToReady` 4733 → 4255, core
-      plugins done at 793 ms instead of 3397; webkit cold −380 ms. `syncWasmInit` (composer-app
-      vite.config) stays as the DEV-SERVER fix for the same bug — dev is unbundled and does race —
-      now documented with the same links and a retire-when-Safari-27-is-the-floor TODO. Files:
+      modules and all 14 space modules every time. Lock and its `webkitCheck` deleted outright, with
+      no note at the call site (user-directed: the removed code needs no comment). A/B/A/B chromium
+      3+3+3+3: `profilerTotal` 3135 → 2621 (−514 ms, ranges disjoint), `navToReady` 4733 → 4255,
+      core plugins done at 793 ms instead of 3397; webkit cold −380 ms. Composer's `syncWasmInit` is
+      gone: #12684 replaced it with `slimWasm`, which resolves the three automerge packages to their
+      `slim` entrypoints and calls `initAutomergeWasm()` per realm, so the bundle carries no
+      top-level await at all and the bug is unreachable by construction rather than mitigated. Its
+      comment now carries both links. No retire-when-Safari-27 TODO: `slimWasm` also earns its keep
+      on bundle size and single-wasm-instance grounds, so the WebKit fix does not retire it. Files:
       `app-framework/src/core/plugin.ts`, `composer-app/vite.config.ts`.
 - [ ] **A5/A15/A11 — leaves lazy by construction** (2026-08-17). Census over 45 plugins: surface
       indices are 25.5 MB heavier than operation indices; ~75% is `react-ui-form` → CodeMirror /
@@ -128,15 +131,16 @@ got here — checkpoints, measurements and findings, not work items.
       it must be built (post-first-interactive event; narrow the baseline rule so Idle providers are
       pulled only when required). Related open item above ("Make `activatesOn` genuinely optional").
 - [x] **A13 — activation-cause / builder-body marks in the startup profile** (2026-08-17, landed).
-      `module-cause:<module>:<parentEvent>` at `module:start` (plus `detail.parentEvent` on the
-      start mark) and `graph-body:<kind>:<id>` the first time an extension body runs; the profiler
+      `module-cause:<module>` at `module:start`, carrying the activating event in `detail.event`
+      (a DXN has colons of its own, so it cannot ride in the mark name), and
+      `graph-body:<kind>:<id>` the first time an extension body runs; the profiler
       collects them as `moduleCauses` / `graphBodies` beside the catalog's pre-existing
       `plugin-load:` → `pluginLoads` (which was already in the report, unread until today), and the
       harness carries all three. Always-on like the existing `module:*` marks. Throttled-cold
-      profile env-tunable (`DX_HARNESS_LATENCY_MS/_DOWN_MBPS/_UP_MBPS/_CPU`, Fast 3G default).
+      profile env-tunable (`DX_HARNESS_LATENCY_MS/_DOWN_MBPS/_UP_KBPS/_CPU`, Fast 3G default).
       One run: 226 causes (all `event.startup` — see A14), 20 bodies, 33 loads.
 - [ ] **A8 — harness: `pluginSet` column in `appendBenchmarkRow`; keep the env-tunable throttle
-      profile** (`DX_HARNESS_LATENCY_MS/_DOWN_MBPS/_UP_MBPS/_CPU`, Fast 3G default). Fast 3G + 2×
+      profile** (`DX_HARNESS_LATENCY_MS/_DOWN_MBPS/_UP_KBPS/_CPU`, Fast 3G default). Fast 3G + 2×
       CPU cannot reach ready within `waitForReady`'s 300 s on the current bundle (three attempts,
       each exactly 300 s); a 4G profile (40 ms / 10 Mbps / 2×) completes at profilerTotal 5.4 s,
       navToReady 12.4 s — everything localhost hides is 2–3×, and the serial body queue is 4.6 s.

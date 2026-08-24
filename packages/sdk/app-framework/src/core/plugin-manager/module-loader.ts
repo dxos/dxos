@@ -332,10 +332,9 @@ export class ModuleLoader {
   ): Effect.Effect<Capability.Any[], Error, Plugin.Service> {
     return Effect.gen({ self: this }, function* () {
       log('loading module', { module: module.id, parentEvent });
-      performance.mark(`module:${module.id}:start`, { detail: { parentEvent } });
-      // Cause is a separate mark because the profiler reads measures by prefix and a measure
-      // cannot carry the start mark's detail; without it a profile shows WHAT activated, never why.
-      performance.mark(`module-cause:${module.id}`, { detail: { module: module.id, event: parentEvent } });
+      performance.mark(`module:${module.id}:start`);
+      // Separate mark: the profiler reads `module:` as a measure, and a measure drops mark detail.
+      performance.mark(`module-cause:${module.id}`, { detail: { event: parentEvent } });
       yield* PubSub.publish(this.#state.activation, { event: parentEvent, state: 'activating', module: module.id });
       const pluginId = this.#state.pluginIdOfModule(module.id);
       yield* this.#awaitProvidersInFlight(module);

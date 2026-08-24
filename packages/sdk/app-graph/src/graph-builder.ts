@@ -936,16 +936,12 @@ export type CreateExtensionOptions<TMatched = Node.Node, R = never, Id extends s
   url?: UrlBinding;
 };
 
-// First-run mark per extension body: the startup profile can then say which builders' bodies ran
-// before ready (their matcher hit a node that exists pre-navigation) — the extension list alone
-// cannot, since a matcher on a navigated-to node keeps its body dormant.
-const bodyMarked = new Set<string>();
-const markBodyRun = (extensionId: string, kind: string): void => {
-  const key = `${extensionId}:${kind}`;
-  if (bodyMarked.has(key) || typeof performance === 'undefined') {
+/** Marks an extension body's first run; which bodies ran is not derivable from the extension list. */
+const markBodyRun = (ran: Set<string>, extensionId: string, kind: string): void => {
+  if (ran.has(kind) || typeof performance === 'undefined') {
     return;
   }
-  bodyMarked.add(key);
+  ran.add(kind);
   performance.mark(`graph-body:${kind}:${extensionId}`);
 };
 
@@ -980,8 +976,11 @@ export const createExtension = <TMatched = Node.Node, R = never, const Id extend
 ): Effect.Effect<BuilderExtension[], never, R> =>
   Effect.map(Effect.context<R>(), (context) => {
     const { id, match, actions, actionGroups, connector, resolver, relation, position, url } = options;
+    const bodiesRun = new Set<string>();
 
-    const connectorExtension = connector ? createConnectorWithRuntime(id, match, connector, context) : undefined;
+    const connectorExtension = connector
+      ? createConnectorWithRuntime(id, match, connector, context, bodiesRun)
+      : undefined;
 
     const actionsExtension = actions
       ? (node: Atom.Atom<Option.Option<Node.Node>>) =>
@@ -990,7 +989,7 @@ export const createExtension = <TMatched = Node.Node, R = never, const Id extend
               get(node),
               Option.flatMap((matchedNode) => match(matchedNode, get)),
               Option.map((matched) => {
-                markBodyRun(id, 'actions');
+                markBodyRun(bodiesRun, id, 'actions');
                 return runEffectSyncWithFallback(actions(matched, get), context, id, []).map((action) => ({
                   ...action,
                   // Attach captured context for action execution.
@@ -1009,7 +1008,7 @@ export const createExtension = <TMatched = Node.Node, R = never, const Id extend
               get(node),
               Option.flatMap((matchedNode) => match(matchedNode, get)),
               Option.map((matched) => {
-                markBodyRun(id, 'actionGroups');
+                markBodyRun(bodiesRun, id, 'actionGroups');
                 return runEffectSyncWithFallback(actionGroups(matched, get), context, id, []).map((group) => ({
                   ...group,
                   // Attach captured context to the group's child actions so they execute with the
@@ -1025,7 +1024,7 @@ export const createExtension = <TMatched = Node.Node, R = never, const Id extend
     const resolverExtension = resolver
       ? (nodeId: string) =>
           Atom.make((get) => {
-            markBodyRun(id, 'resolver');
+            markBodyRun(bodiesRun, id, 'resolver');
             return runEffectSyncWithFallback(resolver(nodeId, get), context, id, null) ?? null;
           })
       : undefined;
@@ -1071,6 +1070,7 @@ const createConnectorWithRuntime = <TData, R>(
   matcher: (node: Node.Node, get: Atom.AtomContext) => Option.Option<TData>,
   factory: (data: TData, get: Atom.AtomContext) => Effect.Effect<Node.NodeArg<any>[], never, R>,
   context: Context.Context<R>,
+  bodiesRun: Set<string>,
 ): ConnectorExtension => {
   return (node: Atom.Atom<Option.Option<Node.Node>>) =>
     Atom.make((get) =>
@@ -1078,7 +1078,7 @@ const createConnectorWithRuntime = <TData, R>(
         get(node),
         Option.flatMap((matchedNode) => matcher(matchedNode, get)),
         Option.map((data) => {
-          markBodyRun(extensionId, 'connector');
+          markBodyRun(bodiesRun, extensionId, 'connector');
           return runEffectSyncWithFallback(factory(data, get), context, extensionId, []);
         }),
         Option.getOrElse(() => []),
