@@ -3273,9 +3273,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../invariant
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../log
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
@@ -3421,28 +3418,6 @@ importers:
       vite-plugin-solid:
         specifier: 'catalog:'
         version: 2.11.14(@testing-library/jest-dom@6.9.1)(solid-js@1.9.11)(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
-
-  packages/common/effect-proto:
-    dependencies:
-      effect:
-        specifier: 4.0.0-rc.108
-        version: 4.0.0-rc.108
-      protobufjs:
-        specifier: 'catalog:'
-        version: 8.0.0
-    devDependencies:
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../core/protocols
-      '@types/node':
-        specifier: 22.10.2
-        version: 22.10.2
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-      vitest:
-        specifier: 'catalog:'
-        version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
 
   packages/common/effect-zod:
     dependencies:
@@ -3832,6 +3807,9 @@ importers:
         specifier: 'catalog:'
         version: 16.0.0
     devDependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../async
       '@types/argparse':
         specifier: 'catalog:'
         version: 2.0.10
@@ -5720,9 +5698,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../../common/codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
@@ -6158,9 +6133,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../../common/codec-protobuf
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../../../common/crypto
@@ -6298,9 +6270,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../../common/codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
@@ -6600,6 +6569,9 @@ importers:
       '@bufbuild/protobuf':
         specifier: 'catalog:'
         version: 2.11.0
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
       '@dxos/codec-protobuf':
         specifier: workspace:*
         version: link:../../common/codec-protobuf
@@ -7378,9 +7350,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../common/codec-protobuf
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -17593,9 +17562,6 @@ importers:
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../client-services
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../common/codec-protobuf
       '@dxos/config':
         specifier: workspace:*
         version: link:../config
@@ -18204,9 +18170,6 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../client
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../common/codec-protobuf
       '@dxos/config':
         specifier: workspace:*
         version: link:../config
@@ -21154,12 +21117,6 @@ importers:
       '@codemirror/lang-xml':
         specifier: 'catalog:'
         version: 6.1.0
-      '@dxos/effect-proto':
-        specifier: workspace:*
-        version: link:../../common/effect-proto
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../core/protocols
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
