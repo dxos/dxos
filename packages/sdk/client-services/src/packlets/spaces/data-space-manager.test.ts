@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 
 import { asyncTimeout, latch } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { createAdmissionCredentials, getCredentialAssertion } from '@dxos/credentials';
+import { SpaceStateMachine, createAdmissionCredentials, getCredentialAssertion } from '@dxos/credentials';
 import {
   type SpaceRoot,
   createIdFromRootDocumentId,
@@ -192,6 +192,19 @@ describe('DataSpaceManager', () => {
 
     // The document is linked from the root, which is what the per-space source flip keys off.
     expect(peer.echoHost.getSpaceRootRefs(space.id)?.credentialsDocUrl).to.equal(store.url);
+
+    // Replaying the document into a fresh state machine must reach the same state as the feed did:
+    // this is the equivalence the source flip depends on.
+    const replayed = new SpaceStateMachine(space.key);
+    for (const { credential } of store.read()) {
+      expect(await replayed.process(credential, { sourceFeed: space.inner.genesisFeedKey })).to.be.true;
+    }
+
+    expect(replayed.genesisCredential?.id?.toHex()).to.equal(space.inner.spaceState.genesisCredential?.id?.toHex());
+    expect([...replayed.members.keys()].map((key) => key.toHex()).sort()).to.deep.equal(
+      [...space.inner.spaceState.members.keys()].map((key) => key.toHex()).sort(),
+    );
+    expect(replayed.membershipPolicy).to.equal(space.inner.spaceState.membershipPolicy);
   });
 
   test('sync between peers', async () => {

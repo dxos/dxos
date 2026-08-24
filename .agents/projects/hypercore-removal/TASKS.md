@@ -188,9 +188,16 @@ migration; crash mid-migration and resume.
       control pipeline replays the whole feed on open, one subscription both backfills the existing
       chain and dual-writes new credentials. Covered: a migrated space's document replays to exactly
       the feed's chain, and re-appending is a no-op so the backfill is re-runnable.
-- [ ] READ side: feed the state machine FROM the document (the `CredentialSource` split inside
-      `ControlPipeline`). Until then the document is written but never read, so the feed is still the
-      only source and no space has actually flipped.
+- [x] **Replay equivalence proven** — a fresh `SpaceStateMachine` fed only from the document reaches
+      the same genesis credential, member set and membership policy as the feed-driven one. This is
+      the equivalence the source flip depends on, and `process()` both dedupes by credential id and
+      verifies signatures, so a tampered or repeated entry cannot change the outcome.
+- [ ] READ side: feed the LIVE state machine from the document (the `CredentialSource` split inside
+      `ControlPipeline`). Until then the document is written and provably replayable but never read
+      in production, so the feed is still the only source and no space has actually flipped.
+- [ ] **`ProcessOptions.sourceFeed` is required and feed-shaped** — it must become optional before a
+      document can be the source; `CredentialEntry.sourceFeed` has the same problem. Found while
+      writing the replay test, which passes the genesis feed key to get around it.
 
 - [ ] Reader accepts BOTH sources (control feed and credentials doc) for the whole
       migration window — client and EDGE alike.
