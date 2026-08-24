@@ -3,7 +3,7 @@
 //
 
 // This file needs invalid usage, so the diagnostic reporting it is the assertion.
-/** @effect-diagnostics missingEffectContext:skip-file unnecessaryEffectGen:skip-file */
+/** @effect-diagnostics unnecessaryEffectGen:skip-file */
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
