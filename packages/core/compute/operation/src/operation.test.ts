@@ -13,6 +13,10 @@ import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
+// This file asserts that invalid usage is a type error, so the diagnostic reporting
+// it is the assertion succeeding.
+/** @effect-diagnostics missingEffectContext:skip-file */
+
 describe('Operation', () => {
   describe('make', () => {
     test('creates an operation definition with required fields', () => {
@@ -267,8 +271,6 @@ describe('Operation', () => {
       // Using an undeclared service should be a type error.
       Operation.withHandler(op, (_input) =>
         // @ts-expect-error - UndeclaredService is not in the operation's services
-        // The Effect diagnostic reporting it is the assertion succeeding.
-        // @effect-diagnostics-next-line missingEffectContext:off
         Effect.gen(function* () {
           yield* UndeclaredService;
         }),

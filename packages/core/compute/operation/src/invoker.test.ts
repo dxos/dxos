@@ -21,6 +21,10 @@ import { DXN } from '@dxos/keys';
 
 import * as OperationInvoker from './OperationInvoker';
 
+// This file asserts that invalid usage is a type error, so the diagnostic reporting
+// it is the assertion succeeding.
+/** @effect-diagnostics missingEffectContext:skip-file */
+
 const testRuntime = ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntime.ManagedRuntime<any, any>;
 
 //
@@ -354,8 +358,6 @@ describe('Operation.withHandler type safety', () => {
     // Using an undeclared service should be a type error.
     Operation.withHandler(opWithDeclaredService, (_input) =>
       // @ts-expect-error - UndeclaredService is not in the operation's services
-      // The Effect diagnostic reporting it is the assertion succeeding.
-      // @effect-diagnostics-next-line missingEffectContext:off
       Effect.gen(function* () {
         yield* UndeclaredService;
       }),
