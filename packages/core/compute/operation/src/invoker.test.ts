@@ -3,7 +3,6 @@
 //
 
 import { it } from '@effect/vitest';
-import * as Context from 'effect/Context';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
@@ -20,10 +19,6 @@ import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
 import * as OperationInvoker from './OperationInvoker';
-
-// This file asserts that invalid usage is a type error, so the diagnostic reporting
-// it is the assertion succeeding.
-/** @effect-diagnostics missingEffectContext:skip-file */
 
 const testRuntime = ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntime.ManagedRuntime<any, any>;
 
@@ -325,49 +320,5 @@ describe('OperationInvoker.invokePromise concurrency contract', () => {
     // Issued [stale, newest]; applied [newest, stale] — with last-write-wins state the stale value
     // wins, which is why such state must not be dispatched through invokePromise.
     expect(applied).toEqual(['newest', 'stale']);
-  });
-});
-
-//
-// Type-level tests for Operation.withHandler service constraints.
-//
-
-describe('Operation.withHandler type safety', () => {
-  test('handler using undeclared service is a type error', () => {
-    class DeclaredService extends Context.Service<DeclaredService, { declared: () => void }>()(
-      '@test/DeclaredService',
-    ) {}
-    class UndeclaredService extends Context.Service<UndeclaredService, { undeclared: () => void }>()(
-      '@test/UndeclaredService',
-    ) {}
-
-    const opWithDeclaredService = Operation.make({
-      input: Schema.Void,
-      output: Schema.Void,
-      meta: { key: DXN.make('com.example.operation.test.declaredService') },
-      services: [DeclaredService],
-    });
-
-    // Using the declared service is allowed.
-    Operation.withHandler(opWithDeclaredService, (_input) =>
-      Effect.gen(function* () {
-        yield* DeclaredService;
-      }),
-    );
-
-    // Using an undeclared service should be a type error.
-    Operation.withHandler(opWithDeclaredService, (_input) =>
-      // @ts-expect-error - UndeclaredService is not in the operation's services
-      Effect.gen(function* () {
-        yield* UndeclaredService;
-      }),
-    );
-
-    // Operation.Service is always available to handlers without declaring it.
-    Operation.withHandler(opWithDeclaredService, (_input) =>
-      Effect.gen(function* () {
-        yield* Operation.schedule(SideEffect);
-      }),
-    );
   });
 });

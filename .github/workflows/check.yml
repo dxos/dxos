@@ -102,6 +102,9 @@ jobs:
       - name: Check for import cycles
         run: pnpm run check-cycles
 
+      - name: Check type-level tests
+        run: pnpm run test-types
+
       - name: Check publish config
         run: pnpm run check-publish-config
 

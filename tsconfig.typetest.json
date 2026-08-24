@@ -1,0 +1,11 @@
+// tsconfig for type-level tests. tstyche needs the JavaScript TypeScript API, which the
+// TypeScript 7 Go compiler does not expose, so these run against @typescript/typescript6.
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "composite": false,
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["packages/**/typetest/**/*.tst.ts"]
+}

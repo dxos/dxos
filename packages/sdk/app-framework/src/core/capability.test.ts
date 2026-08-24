@@ -10,10 +10,6 @@ import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import * as Capability from './capability';
 import * as CapabilityManager from './capability-manager';
 
-// This file asserts that invalid usage is a type error, so the diagnostic reporting
-// it is the assertion succeeding.
-/** @effect-diagnostics missingEffectContext:skip-file */
-
 type Example = { example: string };
 
 describe('Capability tags', () => {
@@ -84,20 +80,6 @@ describe('Capability tags', () => {
       const contribution = Capability.contributeAll(multi, [{ example: 'one' }, { example: 'two' }]);
       expect(contribution.values).toHaveLength(2);
     });
-
-    it('rejects arity crossing at the type level', () => {
-      const single = Capability.makeSingleton<Example>()('org.dxos.test.single');
-      const multi = Capability.make<Example>()('org.dxos.test.multi');
-
-      // @ts-expect-error provideAll only accepts multi capabilities.
-      Capability.contributeAll(single, [{ example: 'value' }]);
-      // Singleton and multi tags are not interchangeable in typed positions (runtime still
-      // executes the push; only the type is rejected).
-      const singletonOnly: Capability.Tag<Example>[] = [single];
-      // @ts-expect-error a multi tag is not a singleton tag.
-      singletonOnly.push(multi);
-      expect(singletonOnly).toHaveLength(2);
-    });
   });
 
   describe('type-level enforcement', () => {
@@ -137,25 +119,6 @@ describe('Capability tags', () => {
       // @ts-expect-error the branded error type is unconstructible from a string.
       const uncovered: Capability.EnsureProvides<WrongReturn, Provides> = 'missing a';
       expect(uncovered).toBeDefined();
-    });
-
-    it('Requirements exposes the identifiers of the declared requires', () => {
-      const a = Capability.makeSingleton<Example>()('org.dxos.test.a');
-
-      // A program yielding the declared tag typechecks against Requirements.
-      const program: Effect.Effect<Example, never, Capability.Requirements<readonly [typeof a]>> = Effect.gen(
-        function* () {
-          return yield* a;
-        },
-      );
-
-      const undeclared = Capability.makeSingleton<Example>()('org.dxos.test.undeclared');
-      // @ts-expect-error yielding an undeclared capability is rejected by the R channel.
-      const invalid: Effect.Effect<Example, never, Capability.Requirements<readonly []>> = Effect.gen(function* () {
-        return yield* undeclared;
-      });
-      expect(program).toBeDefined();
-      expect(invalid).toBeDefined();
     });
   });
 });

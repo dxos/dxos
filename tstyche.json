@@ -1,0 +1,12 @@
+{
+  "$schema": "./node_modules/tstyche/schemas/config.json",
+  // Type-level tests: assertions about what the compiler accepts and rejects, which a
+  // runtime runner cannot make. `@ts-expect-error` asserts only that *some* error
+  // occurs on a line; `toRaiseError` pins which one.
+  //
+  // tstyche drives the JavaScript TypeScript API, so it runs on `@typescript/typescript6`
+  // rather than the TypeScript 7 Go compiler the repo builds with. The Effect project
+  // splits the same way (`tstyche` beside `check:tsgo`).
+  "testFileMatch": ["packages/*/*/typetest/**/*.tst.*", "packages/*/*/*/typetest/**/*.tst.*"],
+  "tsconfig": "./tsconfig.typetest.json"
+}
