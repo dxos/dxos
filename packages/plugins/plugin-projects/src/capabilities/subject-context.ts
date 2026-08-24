@@ -11,10 +11,7 @@ import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabili
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    /**
-     * A chat in a project's context carries the project's instructions: their skills and context
-     * objects as bindings, and the instructions themselves by reference so the chat follows later edits.
-     */
+    /** The instructions travel by reference, so the chat follows later edits to the project's. */
     return Capability.contribute(AssistantCapabilities.SubjectContext, {
       appliesTo: Obj.instanceOf(Project.Project),
       getBindings: Effect.fnUntraced(function* ({ subject }) {

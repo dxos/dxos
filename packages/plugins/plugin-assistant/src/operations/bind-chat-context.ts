@@ -41,8 +41,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.BindChatContext> 
         yield* Effect.gen(function* () {
           const contributions = yield* Effect.all(providers.map(({ getBindings }) => getBindings({ subject, chat })));
 
-          // Instructions reach the model through the system prompt rather than the bindings; the first
-          // provider that supplies them wins, and an existing ref is never overwritten.
+          // A backfill, not a sync: a chat created with its own instructions keeps them.
           const instructions = contributions.find(({ instructions }) => instructions)?.instructions;
           if (instructions && !chat.instructions) {
             Obj.update(chat, (chat) => {

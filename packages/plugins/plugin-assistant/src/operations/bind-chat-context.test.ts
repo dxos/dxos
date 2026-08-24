@@ -24,46 +24,94 @@ import { AssistantCapabilities, AssistantOperation } from '#types';
 
 EntityId.dangerouslyDisableRandomness();
 
-// The providers are contributed when the layer is built, before any test object exists; they read the
-// objects a test puts here so the contribution can be a plain closure.
-const scratch: { applicable?: Obj.Unknown; gated?: Obj.Unknown } = {};
+/** Objects the contributed providers bind, filled in by `seed` once a test's database exists. */
+type Scratch = { applicable?: Obj.Unknown; gated?: Obj.Unknown };
 
-const bindObject = (
-  get: () => Obj.Unknown | undefined,
-  appliesTo?: (subject: Obj.Unknown) => boolean,
-): AssistantCapabilities.SubjectContext => ({
-  appliesTo,
-  getBindings: () => {
-    const object = get();
-    return Effect.succeed(object ? { objects: [Ref.make(object)] } : {});
-  },
-});
-
-const TestLayer = (() => {
+/**
+ * A layer carrying two providers, one unconditional and one gated to `Text` subjects, over a scratch
+ * of its own. Called once per test: the layer is built before any test object exists, so the
+ * providers read the scratch lazily, and sharing one across tests would share that mutable state.
+ */
+const setup = () => {
+  const scratch: Scratch = {};
   const atomRegistry = AtomRegistry.make();
   const manager = CapabilityManager.make({ registry: atomRegistry });
   manager.contribute({ module: 'test', interface: Capabilities.AtomRegistry, implementation: atomRegistry });
-  // An unconditional provider and one gated to `Text` subjects only.
   manager.contribute({
     module: 'test',
     interface: AssistantCapabilities.SubjectContext,
-    implementation: bindObject(() => scratch.applicable),
+    implementation: {
+      getBindings: () => Effect.succeed(scratch.applicable ? { objects: [Ref.make(scratch.applicable)] } : {}),
+    },
   });
   manager.contribute({
     module: 'test',
     interface: AssistantCapabilities.SubjectContext,
-    implementation: bindObject(
-      () => scratch.gated,
-      (subject) => Obj.instanceOf(Text.Text, subject),
-    ),
+    implementation: {
+      appliesTo: Obj.instanceOf(Text.Text),
+      getBindings: () => Effect.succeed(scratch.gated ? { objects: [Ref.make(scratch.gated)] } : {}),
+    },
   });
 
-  return AssistantTestLayer({
+  const layer = AssistantTestLayer({
     operationHandlers: AssistantOperationHandlerSet,
     types: [Chat.Chat, Feed.Feed, Text.Text, AiContext.Binding],
     extraServices: Layer.succeed(Capability.Service, manager),
   });
-})();
+
+  return { scratch, layer };
+};
+
+describe('BindChatContext', () => {
+  const merging = setup();
+  it.effect(
+    'merges the bindings of every provider that applies',
+    Effect.fnUntraced(
+      function* (_) {
+        const { chat, applicable, gated } = yield* seed(merging.scratch);
+
+        yield* Operation.invoke(AssistantOperation.BindChatContext, { chat, subject: applicable });
+
+        const ids = yield* boundObjectIds(chat);
+        expect(ids).toContain(applicable.id);
+        expect(ids).toContain(gated.id);
+      },
+      Effect.provide(merging.layer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  const gating = setup();
+  it.effect(
+    'skips a provider whose appliesTo rejects the subject',
+    Effect.fnUntraced(
+      function* (_) {
+        const { chat, applicable, gated } = yield* seed(gating.scratch);
+
+        // A Chat subject: the gated provider only accepts Text.
+        yield* Operation.invoke(AssistantOperation.BindChatContext, { chat, subject: chat });
+
+        const ids = yield* boundObjectIds(chat);
+        expect(ids).toContain(applicable.id);
+        expect(ids).not.toContain(gated.id);
+      },
+      Effect.provide(gating.layer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+});
+
+/** A chat on its own feed, plus the two objects the scratch's providers will bind. */
+const seed = Effect.fnUntraced(function* (scratch: Scratch) {
+  const { db } = yield* Database.Service;
+  const chat = db.add(Chat.make({ feed: Ref.make(db.add(Feed.make())) }));
+  const applicable = db.add(Obj.make(Text.Text, { content: 'from the unconditional provider' }));
+  const gated = db.add(Obj.make(Text.Text, { content: 'from the gated provider' }));
+  scratch.applicable = applicable;
+  scratch.gated = gated;
+  yield* Database.flush();
+  return { chat, applicable, gated };
+});
 
 /**
  * Entity ids of the objects the conversation feed's binding events add up to. Ids rather than URIs:
@@ -77,60 +125,5 @@ const boundObjectIds = Effect.fnUntraced(function* (chat: Chat.Chat) {
       const uri = EID.tryParse(ref.uri);
       return uri ? EID.getEntityId(uri) : ref.uri;
     }),
-  );
-});
-
-const makeChat = Effect.fnUntraced(function* () {
-  const { db } = yield* Database.Service;
-  const feed = db.add(Feed.make());
-  const chat = db.add(Chat.make({ feed: Ref.make(feed) }));
-  yield* Database.flush();
-  return chat;
-});
-
-describe('BindChatContext', () => {
-  it.effect(
-    'merges the bindings of every provider that applies',
-    Effect.fnUntraced(
-      function* (_) {
-        const { db } = yield* Database.Service;
-        const chat = yield* makeChat();
-        const subject = db.add(Obj.make(Text.Text, { content: 'subject' }));
-        scratch.applicable = db.add(Obj.make(Text.Text, { content: 'from the default provider' }));
-        scratch.gated = db.add(Obj.make(Text.Text, { content: 'from the gated provider' }));
-        yield* Database.flush();
-
-        yield* Operation.invoke(AssistantOperation.BindChatContext, { chat, subject });
-
-        const ids = yield* boundObjectIds(chat);
-        expect(ids).toContain(scratch.applicable.id);
-        expect(ids).toContain(scratch.gated.id);
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-  );
-
-  it.effect(
-    'skips a provider whose appliesTo rejects the subject',
-    Effect.fnUntraced(
-      function* (_) {
-        const { db } = yield* Database.Service;
-        const chat = yield* makeChat();
-        // A Chat subject: the gated provider only accepts Text.
-        const subject = db.add(Chat.make({ feed: Ref.make(db.add(Feed.make())) }));
-        scratch.applicable = db.add(Obj.make(Text.Text, { content: 'from the default provider' }));
-        scratch.gated = db.add(Obj.make(Text.Text, { content: 'from the gated provider' }));
-        yield* Database.flush();
-
-        yield* Operation.invoke(AssistantOperation.BindChatContext, { chat, subject });
-
-        const ids = yield* boundObjectIds(chat);
-        expect(ids).toContain(scratch.applicable.id);
-        expect(ids).not.toContain(scratch.gated.id);
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
   );
 });

@@ -12,10 +12,7 @@ import { AssistantCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    /**
-     * The bindings every chat gets from its subject: the subject itself, plus the skills its type
-     * declares via {@link Skill.SkillsAnnotation}. Type-specific providers add to this, never replace it.
-     */
+    /** Type-specific providers add to these bindings, never replace them. */
     return Capability.contribute(AssistantCapabilities.SubjectContext, {
       getBindings: Effect.fnUntraced(function* ({ subject }) {
         // A skill subject binds as a skill, so the session carries its instructions and tools.
@@ -29,15 +26,14 @@ export default Capability.makeModule(
           return self;
         }
 
-        // Registry skills bind by key URI, since the ECHO ref resolver already spans the registry. A key
-        // the registry does not serve may still exist as a fork in the space.
+        // The registry wins: a key it serves binds by URI, and only the rest fall back to a space copy.
         const registrySkills = yield* Registry.runQuery(Filter.type(Skill.Skill));
         const registryKeys = keys.filter((key) => registrySkills.some((skill) => Obj.getMeta(skill).key === key));
-        const forkKeys = keys.filter((key) => !registryKeys.includes(key));
-        const forks =
-          forkKeys.length > 0
+        const spaceOnlyKeys = keys.filter((key) => !registryKeys.includes(key));
+        const spaceSkills =
+          spaceOnlyKeys.length > 0
             ? (yield* Database.query(Filter.type(Skill.Skill)).run).filter((skill) =>
-                forkKeys.includes(Obj.getMeta(skill).key ?? ''),
+                spaceOnlyKeys.includes(Obj.getMeta(skill).key ?? ''),
               )
             : [];
 
@@ -46,7 +42,7 @@ export default Capability.makeModule(
           skills: [
             ...(self.skills ?? []),
             ...registryKeys.map((key) => Ref.fromURI(Skill.registryURI(key))),
-            ...forks.map((skill) => Ref.make(skill)),
+            ...spaceSkills.map((skill) => Ref.make(skill)),
           ],
         };
       }),
