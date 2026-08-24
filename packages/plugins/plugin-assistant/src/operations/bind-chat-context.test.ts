@@ -27,11 +27,7 @@ EntityId.dangerouslyDisableRandomness();
 /** Objects the contributed providers bind, filled in by `seed` once a test's database exists. */
 type Scratch = { applicable?: Obj.Unknown; gated?: Obj.Unknown };
 
-/**
- * A layer carrying two providers, one unconditional and one gated to `Text` subjects, over a scratch
- * of its own. Called once per test: the layer is built before any test object exists, so the
- * providers read the scratch lazily, and sharing one across tests would share that mutable state.
- */
+/** Called once per test: a shared layer would share the scratch its providers read. */
 const setup = () => {
   const scratch: Scratch = {};
   const atomRegistry = AtomRegistry.make();
@@ -113,10 +109,7 @@ const seed = Effect.fnUntraced(function* (scratch: Scratch) {
   return { chat, applicable, gated };
 });
 
-/**
- * Entity ids of the objects the conversation feed's binding events add up to. Ids rather than URIs:
- * a bound ref may carry the space prefix where `Obj.getURI` does not.
- */
+/** Ids rather than URIs, since a bound ref may carry the space prefix where `Obj.getURI` does not. */
 const boundObjectIds = Effect.fnUntraced(function* (chat: Chat.Chat) {
   const feed = yield* Database.load(chat.feed);
   const bindings = yield* Feed.query(feed, Query.type(AiContext.Binding)).run;

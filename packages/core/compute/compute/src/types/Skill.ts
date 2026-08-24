@@ -249,6 +249,39 @@ export const annotatedSkillKeys = (type: Type.AnyEntity): string[] =>
   Option.getOrElse(() => [] as string[])(SkillsAnnotation.get(Type.getSchema(type)));
 
 /**
+ * Refs for an object's {@link SkillsAnnotation} keys, resolved across the registry and the space, a
+ * space copy winning — that copy is a fork of the registry skill and carries the user's edits.
+ * A key neither source serves contributes nothing.
+ *
+ * TODO(wittjosiah): Lift this two-source merge into the query layer; it is how forking should work
+ *  for any type, not just skills.
+ */
+export const resolveAnnotatedSkills = Effect.fnUntraced(function* (object: Obj.Unknown) {
+  const type = Obj.getType(object);
+  const keys = type ? annotatedSkillKeys(type) : [];
+  if (keys.length === 0) {
+    return [] as Ref.Ref<Skill>[];
+  }
+
+  const byKey = new Map<string, Ref.Ref<Skill>>();
+  for (const skill of yield* Registry.runQuery(Filter.type(Skill))) {
+    const key = Obj.getMeta(skill).key;
+    if (key && keys.includes(key)) {
+      // By URI rather than a clone: the ECHO ref resolver already spans the registry.
+      byKey.set(key, Ref.fromURI(registryURI(key)));
+    }
+  }
+  for (const skill of yield* Database.query(Filter.type(Skill)).run) {
+    const key = Obj.getMeta(skill).key;
+    if (key && keys.includes(key)) {
+      byKey.set(key, Ref.make(skill));
+    }
+  }
+
+  return [...byKey.values()];
+});
+
+/**
  * Resolves a skill from the registry by its meta key.
  * Does not check the local database for the skill.
  */
