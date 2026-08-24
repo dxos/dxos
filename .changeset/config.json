@@ -222,7 +222,6 @@
       "@dxos/vite-plugin-log-example",
       "@dxos/vite-plugin-shutdown",
       "@dxos/vscode-extension",
-      "@dxos/vscode-mdl",
       "@dxos/web-context",
       "@dxos/web-context-react",
       "@dxos/web-context-solid",
