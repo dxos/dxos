@@ -19,8 +19,8 @@ import { Position } from '@dxos/util';
 import { CompanionViewState, DeckCapabilities, DeckOperation, DeckSchema } from '#types';
 
 import { incrementPlank } from '../layout';
-import { computeActiveUpdates } from '../util';
-import { addCompanionPlank, updateActiveDeck } from './helpers';
+import { computeActiveUpdates, isCompanionOpen, openCompanionPlank } from '../util';
+import { updateActiveDeck } from './helpers';
 
 const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperation.Adjust.pipe(
   Operation.withHandler(
@@ -30,8 +30,9 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
       const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
 
       if (input.type === 'increment-end' || input.type === 'increment-start') {
+        const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
         const next = incrementPlank(deck.active, input);
-        const { deckUpdates } = computeActiveUpdates({ next, deck, attention });
+        const { deckUpdates } = computeActiveUpdates({ next, deck, attention, flatten });
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, deckUpdates));
       }
 
@@ -64,7 +65,8 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
         // selected variant (global view state); if none is selected yet (or the stored one is not a
         // companion of this plank), seed it with this plank's first companion so the URL and render
         // agree. `UpdateCompanion` (tab switch) overrides it thereafter.
-        if (!deck.companionPlanks.includes(input.id)) {
+        const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
+        if (!isCompanionOpen(deck.companionPlanks, flatten, input.id)) {
           const companions = Function.pipe(
             AppGraph.getNode(graph, input.id),
             Option.map((node) =>
@@ -92,7 +94,13 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
               }));
             }
             yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-              updateActiveDeck(state, { companionPlanks: addCompanionPlank(state, input.id) }),
+              updateActiveDeck(state, {
+                companionPlanks: openCompanionPlank(
+                  state.decks[state.activeDeck]?.companionPlanks ?? [],
+                  flatten,
+                  input.id,
+                ),
+              }),
             );
           }
         }

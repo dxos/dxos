@@ -18,7 +18,7 @@ const SandboxRef = Ref.Ref(Sandbox.Sandbox).annotate({
 
 export const CreateSandbox = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.sandbox.create'),
+    key: DXN.make('org.dxos.operation.sandbox.create'),
     name: 'CreateSandbox',
     description:
       'Creates a new sandbox environment in the current space. The sandbox is a persistent isolated container.',
@@ -42,7 +42,7 @@ export const CreateSandbox = Operation.make({
 
 export const Exec = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.sandbox.exec'),
+    key: DXN.make('org.dxos.operation.sandbox.exec'),
     name: 'Exec',
     description: 'Runs a shell command in the sandbox and returns stdout, stderr, and exit code.',
     icon: 'ph--terminal-window--regular',
@@ -74,7 +74,7 @@ export const Exec = Operation.make({
 
 export const UploadFile = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.sandbox.uploadFile'),
+    key: DXN.make('org.dxos.operation.sandbox.uploadFile'),
     name: 'UploadFile',
     description: 'Uploads a file from ECHO into the sandbox filesystem.',
     icon: 'ph--upload--regular',
@@ -98,7 +98,7 @@ export const UploadFile = Operation.make({
 
 export const DownloadFile = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.sandbox.downloadFile'),
+    key: DXN.make('org.dxos.operation.sandbox.downloadFile'),
     name: 'DownloadFile',
     description: 'Downloads a file from the sandbox filesystem into ECHO.',
     icon: 'ph--download--regular',

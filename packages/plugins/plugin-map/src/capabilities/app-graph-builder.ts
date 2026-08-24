@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
@@ -25,7 +26,7 @@ export default Capability.makeModule(
     const markerProvidersAtom = yield* Capability.atom(MapCapabilities.MarkerProvider);
 
     const extensions = yield* AppGraphBuilder.createExtension({
-      id: MapOperation.Toggle.meta.key,
+      id: MapOperation.SetControlType.meta.key,
       match: (node, get) => Option.map(AppNodeMatcher.whenEchoType(View.View)(node, get), (view) => ({ view, node })),
       actions: ({ view, node }, get) => {
         const presentationRef = (node.properties as any).presentation;
@@ -36,7 +37,13 @@ export default Capability.makeModule(
         return Effect.succeed([
           AppGraphNode.makeAction({
             id: `${view.id}.toggle-map`,
-            data: () => Operation.invoke(MapOperation.Toggle, undefined),
+            // The menu item flips, so it reads the current view and states the one it wants.
+            data: () =>
+              Effect.gen(function* () {
+                const state = yield* Capabilities.getAtomValue(MapCapabilities.State);
+                const type = state.type === 'globe' ? ('map' as const) : ('globe' as const);
+                yield* Operation.invoke(MapOperation.SetControlType, { type });
+              }),
             properties: {
               label: ['toggle-type.label', { ns: meta.profile.key }],
               icon: 'ph--compass--regular',

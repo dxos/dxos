@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
@@ -36,8 +37,8 @@ const make = () =>
         Available shapes for generation: cube, wall, sphere, cylinder, tower.
         Available hues: red, orange, amber, yellow, lime, green, emerald, teal, cyan, sky, blue, indigo, violet, purple, fuchsia, pink, rose.
 
-        When asked to build structures, use the generate-shape tool for standard shapes
-        or add-voxels for custom placements. Always query the world first to understand
+        When asked to build structures, use the ${Operation.toolName(VoxelOperation.GenerateShape)} tool for standard shapes
+        or ${Operation.toolName(VoxelOperation.AddVoxels)} for custom placements. Always query the world first to understand
         the current state before making modifications.
       `,
     }),

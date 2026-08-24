@@ -9,16 +9,12 @@ import * as Schema from 'effect/Schema';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 
-import { meta } from '#meta';
-
 import * as ChessComAccount from './ChessComAccount';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /** Removes all synced games and chess state from the account feed. */
 export const ClearSyncedGames = Operation.make({
   meta: {
-    key: makeKey('clearSyncedGames'),
+    key: DXN.make('org.dxos.operation.chessCom.clearSyncedGames'),
     name: 'Clear Synced Games',
     description: 'Remove all synced games from the Chess.com account feed.',
     icon: 'ph--trash--regular',
@@ -35,7 +31,7 @@ export const ClearSyncedGames = Operation.make({
 /** Fetches archived games from chess.com and appends new Game objects to the account feed. */
 export const SyncGames = Operation.make({
   meta: {
-    key: makeKey('syncGames'),
+    key: DXN.make('org.dxos.operation.chessCom.syncGames'),
     name: 'Sync Games',
     description: 'Sync archived Chess.com games into the account feed.',
     icon: 'ph--arrows-clockwise--regular',

@@ -22,9 +22,11 @@ fi
 
 command -v claude >/dev/null 2>&1 || exit 0
 
-# Register from the local checkout rather than the GitHub source: it needs no network and
-# pins the plugin to the tree the session is actually working in.
-if ! grep -q '"dxos"' "${PLUGINS_DIR}/known_marketplaces.json" 2>/dev/null; then
+# Register from the local checkout rather than the GitHub source: it needs no network and pins the
+# plugin to the tree the session is actually working in. Keyed on the SOURCE, not the name — a
+# `dxos` marketplace already exists from `extraKnownMarketplaces` in `.claude/settings.json`, so a
+# name-only check skipped this every time and the plugin silently tracked GitHub `main` instead.
+if ! grep -q "\"installLocation\": *\"${REPO_ROOT}\"" "${PLUGINS_DIR}/known_marketplaces.json" 2>/dev/null; then
   claude plugin marketplace add "$REPO_ROOT" >/dev/null 2>&1
 fi
 

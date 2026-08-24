@@ -171,7 +171,12 @@ export class ClientRpcServer {
     }
 
     const handlers = makeClientServicesHandlers(this.#params);
-    const options = { disableTracing: true, concurrency: 'unbounded' } as const;
+    // `timing` publishes dxos.rpc.queueWait/service.duration. Queue wait is the only signal that
+    // shows the worker being saturated rather than slow, and it is measurable only from the client
+    // side of the port. Both ends must agree: the middleware is `requiredForClient`, so a server
+    // that applies it while the client does not would reject every request — see
+    // `makeClientServicesRpc` below.
+    const options = { disableTracing: true, concurrency: 'unbounded', timing: true } as const;
     if (this.#params.protocol) {
       this.#server = Rpc.serveOverProtocol(
         Layer.succeed(RpcServer.Protocol, this.#params.protocol),
@@ -318,8 +323,11 @@ export const makeClientServicesRpc = (
   // An RpcPort (byte transport) carries the legacy iframe/devtools bridges; a MessagePort uses the
   // native Worker-platform protocol.
   ('send' in port
-    ? Rpc.makeClientOverProtocol(layerProtocolRpcPortClient(port), ClientServicesRpcs, { disableTracing: true })
-    : Rpc.makeClient(port, ClientServicesRpcs, { disableTracing: true })
+    ? Rpc.makeClientOverProtocol(layerProtocolRpcPortClient(port), ClientServicesRpcs, {
+        disableTracing: true,
+        timing: true,
+      })
+    : Rpc.makeClient(port, ClientServicesRpcs, { disableTracing: true, timing: true })
   ).pipe(Effect.map((client) => client as ClientServicesRpc));
 
 /**

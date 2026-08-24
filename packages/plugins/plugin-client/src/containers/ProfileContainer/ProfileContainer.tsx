@@ -111,7 +111,7 @@ export const ProfileContainer = () => {
                 value={getValue()}
                 onChange={handleChange}
                 placeholder={t('display-name-input.placeholder')}
-                classNames='min-w-64'
+                classNames='w-64 max-w-full min-w-0'
               />
             </Input.Root>
           </Form.Row>
@@ -157,7 +157,7 @@ export const ProfileContainer = () => {
           <Form.Row label={label} description={t('did.description')}>
             <Input.Root>
               <ButtonGroup classNames='w-full'>
-                <Input.TextInput value={getValue()} disabled classNames='min-w-64' />
+                <Input.TextInput value={getValue()} disabled classNames='w-full min-w-0' />
                 <Clipboard.IconButton value={getValue() ?? ''} />
               </ButtonGroup>
             </Input.Root>

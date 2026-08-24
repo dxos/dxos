@@ -52,7 +52,7 @@ describe('project chats graph extension', () => {
     const addChat = async (name: string) => {
       const feed = db.add(Feed.make());
       const chat = db.add(Chat.make({ name, feed: Ref.make(feed) }));
-      Obj.setParent(chat, project);
+      Chat.linkCompanion({ chat, subject: project });
       await db.flush();
       await context.flush();
       return chat;

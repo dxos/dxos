@@ -27,6 +27,7 @@ import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 import { createConfig as createTestConfig } from '../../../vitest.base.config.ts';
 import { bootChunking } from './src/vite/boot-chunking.ts';
 import { bootMarkPath, channelFaviconPlugin, channelVariant } from './src/vite/channel-branding.ts';
+import { debugPortSidecarPlugin, resolveDebugPortSession } from './src/vite/debug-port.ts';
 import { optimizeDepsInclude } from './src/vite/optimize-deps.ts';
 import { traceBootLeak } from './src/vite/trace-boot-leak.ts';
 
@@ -36,6 +37,8 @@ const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
 // `DX_PLUGIN_SET=production` swaps in plugin-defs.production.tsx at build time (not a runtime flag),
 // so a non-shipped plugin never enters the bundle.
 const isProductionPluginSet = process.env.DX_PLUGIN_SET === 'production';
+// Non-empty only when a dev server is launched with the debug-port flag; see `src/vite/debug-port.ts`.
+const debugPortSession = resolveDebugPortSession();
 const pluginSetFile = isProductionPluginSet ? 'src/plugin-defs.production.tsx' : 'src/plugin-defs.tsx';
 
 const rootDir = searchForWorkspaceRoot(process.cwd());
@@ -47,10 +50,12 @@ const dirname = import.meta.dirname;
 // Boot-path chunk grouping; `entry` is the page whose static closure defines the boot set.
 const boot = bootChunking({ entry: path.resolve(dirname, 'src/main.tsx') });
 
-// These packages' `browser`-conditioned entrypoints initialize their wasm with top-level await,
-// which WebKit evaluates out of order under concurrent dynamic imports (TDZ, "undefined is not an
-// object" at plugin activation) — so resolve them to their `slim` entrypoints and initialize
-// explicitly per realm via `initAutomergeWasm()` before the client boots.
+// These packages' `browser`-conditioned entrypoints initialize their wasm with top-level await.
+// Besides its bundle cost, top-level await is what trips WebKit's out-of-order evaluation under
+// concurrent dynamic imports before Safari 27 (TDZ, "undefined is not an object" at plugin
+// activation: https://bugs.webkit.org/show_bug.cgi?id=242740, fixed by the module-loader rewrite
+// in https://github.com/WebKit/WebKit/pull/57827). Resolving to `slim` and initializing explicitly
+// per realm via `initAutomergeWasm()` before the client boots avoids both.
 const SLIM_WASM_PACKAGES = ['@automerge/automerge', '@automerge/automerge-repo', '@automerge/automerge-subduction'];
 
 /**
@@ -162,6 +167,8 @@ export default defineConfig((env) => ({
     // coordinator instead of attaching to a stale-code instance (SharedWorkers are keyed by
     // URL + name). Empty in production builds — the name must stay stable across deploys.
     __DX_DEV_SERVER_BOOT_ID__: JSON.stringify(env.command === 'serve' ? Date.now().toString(36) : ''),
+    // Hardcoded empty for `build`: the port is arbitrary eval and must not reach a deployed origin.
+    __DX_DEBUG_PORT_SESSION__: JSON.stringify(env.command === 'serve' ? debugPortSession : ''),
   },
   server: {
     host: true,
@@ -431,6 +438,9 @@ export default defineConfig((env) => ({
         });
       },
     },
+
+    // Dev-only: publish the debug-port session id for an agent that cannot read this process's env.
+    debugPortSidecarPlugin(debugPortSession, rootDir),
 
     // Dev-only: serve forensics test profile for recovery import testing.
     {

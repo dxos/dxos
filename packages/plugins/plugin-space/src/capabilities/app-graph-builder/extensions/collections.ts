@@ -316,7 +316,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
       actions: (space) =>
         Effect.succeed([
           AppGraphNode.makeAction({
-            id: SpaceOperation.OpenCreateObject.meta.key,
+            id: SpaceOperation.OpenObjectForm.meta.key,
             data: () =>
               Effect.gen(function* () {
                 // Target the root collection so the create dialog offers collection-eligible types, like
@@ -324,7 +324,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
                 const rootCollection = Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(
                   Option.getOrUndefined,
                 )?.target;
-                yield* Operation.invoke(SpaceOperation.OpenCreateObject, {
+                yield* Operation.invoke(SpaceOperation.OpenObjectForm, {
                   // Qualified id of the collections section node (root/<spaceId>/collections), so the new
                   // object's navigation path resolves under the section — the bare segment would not.
                   target: rootCollection ?? space.db,
@@ -368,8 +368,8 @@ const constructObjectActions = ({
     ...(Obj.instanceOf(Collection.Collection, object)
       ? [
           AppGraphNode.makeAction({
-            id: SpaceOperation.OpenCreateObject.meta.key,
-            data: () => Operation.invoke(SpaceOperation.OpenCreateObject, { target: object, targetNodeId: nodeId }),
+            id: SpaceOperation.OpenObjectForm.meta.key,
+            data: () => Operation.invoke(SpaceOperation.OpenObjectForm, { target: object, targetNodeId: nodeId }),
             properties: {
               label: CREATE_OBJECT_IN_COLLECTION_LABEL,
               icon: 'ph--plus--regular',

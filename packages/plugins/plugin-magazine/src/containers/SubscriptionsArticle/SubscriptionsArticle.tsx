@@ -77,7 +77,7 @@ export const SubscriptionsArticle = ({ role, space, attendableId }: Subscription
   );
 
   const handleCreate = useCallback(() => {
-    void invokePromise(SpaceOperation.OpenCreateObject, {
+    void invokePromise(SpaceOperation.OpenObjectForm, {
       target: space.db,
       typename: Type.getTypename(Subscription.Subscription),
     });

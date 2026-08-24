@@ -62,7 +62,7 @@ export const translations = [
         'no-connections.label': 'No connections configured',
 
         'sync-mailbox.label': 'Sync',
-        'empty-mailbox.message': 'Mailbox empty',
+        'empty-mailbox.message': 'No messages',
 
         'analyze-mailbox.label': 'Analyze',
         'stop-analyze-mailbox.label': 'Stop',
