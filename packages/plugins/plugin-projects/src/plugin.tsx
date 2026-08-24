@@ -10,8 +10,8 @@ import {
   CreateObject,
   OperationHandler,
   ReactSurface,
-  SkillDefinition,
   Schema,
+  SkillDefinition,
   Templates,
 } from '#capabilities';
 import { meta } from '#meta';
