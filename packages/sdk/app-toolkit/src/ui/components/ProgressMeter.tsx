@@ -76,13 +76,17 @@ export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
           </div>
         )}
 
-        <div className='flex items-center'>
+        <div className='flex items-center justify-between gap-2'>
           {status === 'error' && state.error ? (
             <div className='text-xs text-error-text truncate'>{state.error}</div>
           ) : (
-            !indeterminate &&
-            eta !== undefined &&
-            status === 'running' && <div className='text-xs text-subdued'>{formatDuration(eta)} remaining</div>
+            <>
+              {/* The producer's breakdown of what is outstanding (e.g. per-kind counts). */}
+              <div className='text-xs text-subdued truncate'>{state.note}</div>
+              {!indeterminate && eta !== undefined && status === 'running' && (
+                <div className='text-xs text-subdued shrink-0'>{formatDuration(eta)} remaining</div>
+              )}
+            </>
           )}
         </div>
       </div>

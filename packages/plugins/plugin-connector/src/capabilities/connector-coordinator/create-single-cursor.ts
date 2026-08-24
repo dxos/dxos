@@ -14,10 +14,22 @@ import { ConnectorSpec } from '#types';
 
 import * as Binding from '../../Binding';
 
+/** Outcome of binding a single-target connector. */
+export type SingleCursorResult = {
+  cursor: Cursor.ExternalCursor;
+  target: Obj.Unknown;
+  /**
+   * The connector declares a recurring sync trigger and the connection has no sync routine yet — the
+   * caller offers one through the create-routine form (nothing is persisted here; see
+   * `openCreateSyncRoutineDialog`).
+   */
+  needsSyncRoutine: boolean;
+};
+
 /**
- * Create exactly one binding for a single-target connector (no `getSyncTargets`):
- * bind a supplied `existingTarget` or materialize a fresh local root. Replaces
- * the old `onTokenCreated`-creates-the-target path (e.g. Gmail's Mailbox).
+ * Create exactly one binding for a single-target connector (no `getSyncTargets`): bind a supplied
+ * `existingTarget` or materialize a fresh local root. The sync routine stays with the caller's
+ * create-routine form, so nothing is persisted without the user seeing it.
  */
 export const createSingleCursor = (
   invoker: Operation.OperationService,
@@ -25,7 +37,7 @@ export const createSingleCursor = (
   connector: ConnectorSpec.ConnectorEntry,
   connection: Connection.Connection,
   existingTarget: Ref.Ref<Obj.Any> | undefined,
-): Effect.Effect<void, never> =>
+): Effect.Effect<SingleCursorResult | undefined, never> =>
   Effect.gen(function* () {
     const accessToken = yield* Database.load(connection.accessToken);
     const account = accessToken.account;
@@ -40,7 +52,8 @@ export const createSingleCursor = (
           recorded: Binding.readAccount(target, accessToken.source),
           account,
         });
-        return yield* Binding.reportAccountMismatch.pipe(Effect.provideService(Operation.Service, invoker));
+        yield* Binding.reportAccountMismatch.pipe(Effect.provideService(Operation.Service, invoker));
+        return undefined;
       }
       if (account) {
         Obj.update(target, (target) => Obj.setLabel(target, account));
@@ -55,7 +68,7 @@ export const createSingleCursor = (
     }
     if (!target) {
       log.warn('single-target connector cannot create a binding', { connectorId: connection.connectorId });
-      return;
+      return undefined;
     }
     // A target the user is re-connecting may hold the dormant binding of an earlier connection; resuming
     // it keeps the synced range so the sync picks up where it left off.
@@ -63,7 +76,6 @@ export const createSingleCursor = (
       target,
       accessToken,
       source: connection.accessToken,
-      connector,
     });
     const cursor =
       adopted ??
@@ -75,15 +87,24 @@ export const createSingleCursor = (
       bound: existingTarget ? 'existing' : 'materialized',
       resumed: adopted !== undefined,
     });
-    // Sets up recurring background sync for the binding, if the connector declares a trigger spec.
-    // Its own failure is not special-cased — a defect here is caught by this function's own outer
-    // `catchAllDefect` below, same as any other step in this flow.
-    yield* Binding.ensureTrigger({ connector, cursor });
+    const needsSyncRoutine = !!connector.sync?.trigger && !(yield* Binding.findTrigger(connection));
     // Flush the index so a caller that queries cursors right after (e.g. the mailbox/calendar
-    // article this navigates to) observes the new binding immediately, matching `reconcileCursors`.
+    // article this navigates to, or the sync template's scaffold) observes the new binding
+    // immediately, matching `reconcileCursors`.
     yield* Database.flush({ indexes: true });
+    return { cursor, target, needsSyncRoutine };
   }).pipe(
     Effect.provide(Database.layer(db)),
-    Effect.catch((error) => Effect.sync(() => log.warn('create single binding failed', { error }))),
-    Effect.catchDefect((defect) => Effect.sync(() => log.warn('create single binding defect', { defect }))),
+    Effect.catch((error) =>
+      Effect.sync(() => {
+        log.warn('create single binding failed', { error });
+        return undefined;
+      }),
+    ),
+    Effect.catchDefect((defect) =>
+      Effect.sync(() => {
+        log.warn('create single binding defect', { defect });
+        return undefined;
+      }),
+    ),
   );

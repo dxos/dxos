@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type RefObject, useCallback, useRef } from 'react';
+import { type RefObject, useCallback, useMemo, useRef } from 'react';
+
+import { type WindowController } from '@dxos/react-ui-virtual';
 
 import { type Stop } from '../model';
-import { type WindowController } from '../virtualizer';
 
 /** How long a commanded destination outranks the scroll offset as "where the reader is". */
 const PENDING_WINDOW = 1_500;
@@ -17,8 +18,6 @@ export type UseFeedNavigationOptions = {
   /** The row containing the scroll offset — the cursor, derived and never set beside the scroll. */
   current: () => number;
   count: () => number;
-  /** Align the last stop to the end unless space is reserved past it (the reserve is scrollable). */
-  scrollPastEnd?: boolean;
   /**
    * Told before every jump, with the target index — the follow's `onNavigate` goes here. Without
    * it a navigation races the follow's correction effect, which runs before the jump's scroll
@@ -56,7 +55,6 @@ export const useFeedNavigation = ({
   stops,
   current,
   count,
-  scrollPastEnd,
   onNavigate,
 }: UseFeedNavigationOptions): FeedNavigation => {
   // The last commanded destination, while its travel may still be in flight. A step during a glide
@@ -66,18 +64,26 @@ export const useFeedNavigation = ({
   // waiting on arrival, because a scroll the reader takes over is theirs again.
   const pending = useRef<{ index: number; at: number } | undefined>(undefined);
 
+  // Hosts hand the accessors as inline closures, so their identity churns per render; read through
+  // a ref so the seam itself is stable — a controller derived from it and stored in a host's state
+  // otherwise republishes every render, which is a setState-in-effect loop.
+  const optionsRef = useRef({ stops, current, count, onNavigate });
+  optionsRef.current = { stops, current, count, onNavigate };
+
   const jumpTo = useCallback(
     (index: number, behavior: ScrollBehavior = 'auto') => {
+      const { count, onNavigate } = optionsRef.current;
       pending.current = { index, at: performance.now() };
       onNavigate?.(index);
-      const align = !scrollPastEnd && index >= count() - 1 ? 'end' : 'start';
+      const align = index >= count() - 1 ? 'end' : 'start';
       controller.current?.scrollToIndex(index, align, behavior);
     },
-    [controller, count, scrollPastEnd, onNavigate],
+    [controller],
   );
 
   const step = useCallback(
     (delta: number) => {
+      const { stops, current } = optionsRef.current;
       const all = stops();
       if (!all.length) {
         return;
@@ -95,18 +101,15 @@ export const useFeedNavigation = ({
 
       jumpTo(next.index, 'smooth');
     },
-    [stops, current, jumpTo],
+    [jumpTo],
   );
 
   const first = useCallback(() => jumpTo(0), [jumpTo]);
 
-  // With space reserved past the end, "the bottom" is the reading position the reserve exists for:
-  // the last stop (the final prompt) at the top of the viewport — not the last row's start.
   const last = useCallback(() => {
-    const all = stops();
-    const target = scrollPastEnd && all.length ? all[all.length - 1].index : count() - 1;
-    jumpTo(target);
-  }, [jumpTo, count, stops, scrollPastEnd]);
+    const { count } = optionsRef.current;
+    jumpTo(count() - 1);
+  }, [jumpTo]);
 
-  return { step, jumpTo, first, last };
+  return useMemo(() => ({ step, jumpTo, first, last }), [step, jumpTo, first, last]);
 };

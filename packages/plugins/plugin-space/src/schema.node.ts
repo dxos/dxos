@@ -11,6 +11,7 @@ import {
   HasConnection,
   HasRelationship,
   HasSubject,
+  Milestone,
   Organization,
   Person,
   Pipeline,
@@ -32,6 +33,7 @@ export default [
   Organization.Organization,
   Person.Person,
   Pipeline.Pipeline,
+  Milestone.Milestone,
   Tag.Tag,
   Task.Task,
 ];

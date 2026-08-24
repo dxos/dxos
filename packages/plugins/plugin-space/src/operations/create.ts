@@ -11,7 +11,6 @@ import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { hues } from '@dxos/ui-types';
@@ -20,7 +19,6 @@ import { iconValues } from '@dxos/ui-types';
 import { SpaceCapabilities, SpaceEvents, SpaceOperation } from '#types';
 
 import { SpaceNotReadyError } from '../errors';
-import { SpaceOperationConfig } from './helpers';
 
 /** Bounds how long space creation waits for the new space's properties object to become available. */
 const SPACE_READY_TIMEOUT = Duration.seconds(10);
@@ -72,14 +70,6 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
           onCreateSpace({ space, isDefault: false, rootCollection: collection }),
         ),
       );
-
-      const { observability } = yield* Capability.get(SpaceOperationConfig);
-      if (observability) {
-        yield* Operation.schedule(ObservabilityOperation.SendEvent, {
-          name: 'space.create',
-          properties: { spaceId: space.id },
-        });
-      }
 
       return { id: space.id, subject: [space.id], space };
     }),

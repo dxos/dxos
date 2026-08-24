@@ -201,7 +201,9 @@ which Composer reads first — an invisible override channel, not a default.
    its own.** Revised by decision (Mykola, 2026-08-18) from the original "empty
    first-run profile": the objection was never that a CLI user ends up pointed at
    DXOS hosts, it was that code substituted them invisibly on every load. So
-   `ConfigService.load` writes `defaultProfileEndpoints` (hub, edge, ICE, IPFS)
+   `ConfigService.load` writes `defaultProfileEndpoints` (hub, edge, ICE, IPFS;
+   PR #12658's `localDevConfig` forks the written edge URL under `DX_LOCAL_DEV`,
+   a creation-time choice, not a read-time substitute)
    into the profile it creates, where the user can read and change them, and
    **nothing falls back afterwards** — `profileBuiltinDefaults` carries only
    features and storage (which track the code), and the CLI's `hubBaseUrl` fails

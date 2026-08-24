@@ -11,14 +11,12 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Chat } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
-import * as Routine from '@dxos/compute/Routine';
 import { Database, Obj, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
 
 import { meta } from '#meta';
-import { CodeProjectSkill } from '#skills';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
@@ -28,7 +26,17 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
  * scaffolds the owned instructions/artifacts graph, and files the project in the Projects section.
  */
 export const Create = Operation.make({
-  meta: { key: makeKey('create'), name: 'Create Project', icon: 'ph--stack--regular' },
+  meta: {
+    // `projectCreate`, not `create`: the key's final segment is the projected tool name, and a bare
+    // `create` is too generic to stand alone among the other tools.
+    key: makeKey('projectCreate'),
+    name: 'Create Project',
+    description:
+      'Creates a project and its owned graph: agent instructions, an artifacts collection, and a ' +
+      'task set for its tasks. Returns the project with a `taskSet` reference — pass that reference ' +
+      'to taskCreate to record work against it.',
+    icon: 'ph--stack--regular',
+  },
   services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
@@ -42,18 +50,7 @@ export const Create = Operation.make({
     subject: Schema.Array(Schema.String),
     project: Type.getSchema(Project.Project),
   }),
-}).pipe(
-  Operation.mcpTool({
-    name: 'projectCreate',
-    description:
-      'Creates a project and its owned graph: agent instructions, an artifacts collection, and a ' +
-      'task set for its tasks. Returns the project with a `taskSet` reference — pass that reference ' +
-      'to taskCreate to record work against it.',
-    safety: 'write',
-    aspect: 'projects',
-    skill: CodeProjectSkill,
-  }),
-);
+}).pipe(Operation.mutation('write'));
 
 export const CreateChat = Operation.make({
   meta: { key: makeKey('createChat'), name: 'Create Project Chat', icon: 'ph--chat-text--regular' },
@@ -63,17 +60,6 @@ export const CreateChat = Operation.make({
   }),
   output: Schema.Struct({
     chat: Type.getSchema(Chat.Chat),
-  }),
-});
-
-export const CreateRoutine = Operation.make({
-  meta: { key: makeKey('createRoutine'), name: 'Create Project Routine', icon: 'ph--lightning--regular' },
-  services: [Capability.Service, Database.Service],
-  input: Schema.Struct({
-    project: Type.getSchema(Project.Project),
-  }),
-  output: Schema.Struct({
-    routine: Type.getSchema(Routine.Routine),
   }),
 });
 

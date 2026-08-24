@@ -8,12 +8,14 @@ import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
+import { translations as assistantTranslations } from '@dxos/react-ui-assistant';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 
 import { meta } from '#meta';
 
 export const translations: Resource[] = [
+  ...assistantTranslations,
   ...componentsTranslations,
   ...formTranslations,
   {
@@ -143,6 +145,7 @@ export const translations: Resource[] = [
         'context-objects.button': 'Add to context',
         'context-settings.button': 'Chat settings',
         'microphone.button': 'Click to speak',
+        'microphone-denied.label': 'Microphone blocked — allow access in system settings',
         'recording.placeholder': 'Recording…',
         'stop-recording.label': 'Stop recording',
         'hold-to-record.label': 'Hold to record',

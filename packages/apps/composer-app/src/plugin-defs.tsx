@@ -4,7 +4,6 @@
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
-import * as AtprotoPlugin from '@dxos/plugin-atproto/AtprotoPlugin';
 import * as BloggerPlugin from '@dxos/plugin-blogger/BloggerPlugin';
 import * as BlueskyPlugin from '@dxos/plugin-bluesky/BlueskyPlugin';
 import * as BoardPlugin from '@dxos/plugin-board/BoardPlugin';
@@ -48,14 +47,11 @@ import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as MeetingPlugin from '@dxos/plugin-meeting/MeetingPlugin';
 import * as MermaidPlugin from '@dxos/plugin-mermaid/MermaidPlugin';
 import * as NativeFilesystemPlugin from '@dxos/plugin-native-filesystem/NativeFilesystemPlugin';
-import * as NativePlugin from '@dxos/plugin-native/NativePlugin';
 import * as OsrmPlugin from '@dxos/plugin-osrm/OsrmPlugin';
 import * as PaymentsPlugin from '@dxos/plugin-payments/PaymentsPlugin';
 import * as PipelinePlugin from '@dxos/plugin-pipeline/PipelinePlugin';
 import * as PresenterPlugin from '@dxos/plugin-presenter/PresenterPlugin';
-import * as PreviewPlugin from '@dxos/plugin-preview/PreviewPlugin';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
-import * as PwaPlugin from '@dxos/plugin-pwa/PwaPlugin';
 import * as ReviewPlugin from '@dxos/plugin-review/ReviewPlugin';
 import * as SamplePlugin from '@dxos/plugin-sample/SamplePlugin';
 import * as SandboxPlugin from '@dxos/plugin-sandbox/SandboxPlugin';
@@ -68,7 +64,6 @@ import * as SlackPlugin from '@dxos/plugin-slack/SlackPlugin';
 import * as SpacetimePlugin from '@dxos/plugin-spacetime/SpacetimePlugin';
 import * as StackPlugin from '@dxos/plugin-stack/StackPlugin';
 import * as StudioPlugin from '@dxos/plugin-studio/StudioPlugin';
-import * as SupportPlugin from '@dxos/plugin-support/SupportPlugin';
 import * as TablePlugin from '@dxos/plugin-table/TablePlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import * as TerraPlugin from '@dxos/plugin-terra/TerraPlugin';
@@ -85,14 +80,13 @@ import * as ZenPlugin from '@dxos/plugin-zen/ZenPlugin';
 import { isTruthy } from '@dxos/util';
 
 import { type PluginConfig, getCorePlugins } from './plugin-defs.core';
-import { steps } from './util';
 
 export type { PluginConfig, State } from './plugin-defs.core';
 
 /**
- * Plugin keys enabled by default for new users, per environment (dev/local/labs).
+ * Plugin keys enabled by default for new users, per environment (dev/local).
  */
-export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] =>
+export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[] =>
   [
     // Default
     AssistantPlugin.meta.profile.key,
@@ -111,16 +105,19 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     TablePlugin.meta.profile.key,
     ThreadPlugin.meta.profile.key,
 
-    // Dev
-    isDev && [DebugPlugin.meta.profile.key, DevtoolsPlugin.meta.profile.key],
-
     // Local
     isLocal && SamplePlugin.meta.profile.key,
 
-    // Labs. Enabled only under the labs flag — a local dev build should not start with a
-    // different (larger) default set than production, which is what `isDev` here used to produce.
-    // They stay in the registry either way, so enabling one is still a settings toggle away.
-    isLabs && [
+    // Transcription. On by default everywhere: the chat prompt picks the microphone up on its own —
+    // it reads the plugin's capabilities optionally, so enabling it changes no other surface. Still
+    // listed under labs below; the dedupe at the end collapses the two entries.
+    TranscriptionPlugin.meta.profile.key,
+
+    // Dev-only defaults (`isDev`: the `dev` environment or local `DX_DEV=true` — not preview, not a
+    // plain `serve`). Sidekick is also gated on `isDev` for availability, not just defaults (below).
+    isDev && [
+      DebugPlugin.meta.profile.key,
+      DevtoolsPlugin.meta.profile.key,
       BloggerPlugin.meta.profile.key,
       BookmarksPlugin.meta.profile.key,
       CallsPlugin.meta.profile.key,
@@ -150,17 +147,19 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     ],
   ]
     .filter(isTruthy)
-    .flat();
+    .flat()
+    // Deduped: a mobile labs build lists transcription in both sets.
+    .filter((key, index, keys) => keys.indexOf(key) === index);
 
 /**
- * Full Composer plugin registry: shared core infrastructure plus every content plugin.
+ * Full Composer plugin registry (preview and dev): shared core infrastructure plus every content
+ * plugin. `plugin-defs.production.tsx` is the curated set `composer.space` ships.
  */
 export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
-  const { logStore, isDev, isLocal, isLabs, isPwa, isTauri, isPopover, isMobile } = config;
+  const { logStore, isDev, isLocal, isTauri, isPopover, isMobile } = config;
   return [
     ...getCorePlugins(config),
     AssistantPlugin.make(),
-    AtprotoPlugin.make(),
     BoardPlugin.make(),
     BookmarksPlugin.make(),
     BrainPlugin.make(),
@@ -169,10 +168,9 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     ChessComPlugin.make(),
     ReviewPlugin.make(),
     ConductorPlugin.make(),
-    // Dev-only coding harness: the assistant gets a bash tool and a file-edit tool. Deliberately
-    // absent from `getDefaults` — the developer enables it, and its tools stay unusable until the
-    // dev server mounts the route (see `ComputerShellPlugin` in vite.config.ts).
-    (isDev || isLabs) && ComputerPlugin.make(),
+    // Dev-only coding harness, gated on `isDev` for availability (not just defaults, unlike
+    // Debug/Devtools below) since its tools need the dev server's route (vite.config.ts).
+    isDev && ComputerPlugin.make(),
     !isTauri && CrxPlugin.make(),
     DebugPlugin.make({ logStore }),
     DevtoolsPlugin.make(),
@@ -196,30 +194,28 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     MarkdownPlugin.make(),
     MeetingPlugin.make(),
     MermaidPlugin.make(),
-    isTauri && !isMobile && !isPopover && NativePlugin.make(),
+    // Desktop-only, and not core: the native file picker is a full-catalog capability, unlike
+    // plugin-native's host integration.
     isTauri && !isMobile && !isPopover && NativeFilesystemPlugin.make(),
     OsrmPlugin.make(),
     TasksPlugin.make(),
     PaymentsPlugin.make(),
     PipelinePlugin.make(),
     PresenterPlugin.make(),
-    PreviewPlugin.make(),
     ProjectsPlugin.make(),
     CommercePlugin.make(),
     CrmPlugin.make(),
-    !isTauri && isPwa && PwaPlugin.make(),
     isLocal && SamplePlugin.make(),
     SandboxPlugin.make(),
     ScriptPlugin.make(),
     SearchPlugin.make(),
-    (isDev || isLabs) && SidekickPlugin.make(),
+    isDev && SidekickPlugin.make(),
     SheetPlugin.make(),
     IllustratorPlugin.make(),
     TldrawPlugin.make(),
     ExcalidrawPlugin.make(),
     CodePlugin.make(),
     StackPlugin.make(),
-    SupportPlugin.make({ helpSteps: steps }),
     TablePlugin.make(),
     TerraPlugin.make(),
     ThreadPlugin.make(),

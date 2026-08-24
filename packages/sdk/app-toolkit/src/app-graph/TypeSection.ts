@@ -11,7 +11,7 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
 import * as Node from '@dxos/app-graph/Node';
 import { type Space, isSpace } from '@dxos/client/echo';
-import { Annotation, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Annotation, Filter, Obj, Query, Ref, Registry, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { type TreeData } from '@dxos/react-ui-list';
@@ -172,12 +172,9 @@ export const createTypeSectionExtension = (
         return Effect.succeed([]);
       }
 
-      // Mirror AppNode.makeObject: look up the registered Type.Type entity to read icon/hue.
-      // Raw schema classes don't carry annotations reliably; the registry copy does.
-      const typeEntity = space.db.graph.registry
-        .list()
-        .filter(Type.isType)
-        .find((entry) => Type.getTypename(entry) === typename);
+      // Raw schema classes don't carry annotations reliably, and schemas register lazily, so read
+      // the registry copy through the atom.
+      const typeEntity = get(Registry.typeAtom(space.db.graph.registry, typename));
       const registeredSchema = typeEntity ? Type.getSchema(typeEntity) : undefined;
       const annotation = (() => {
         try {

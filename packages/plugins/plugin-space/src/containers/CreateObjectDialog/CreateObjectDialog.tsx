@@ -11,8 +11,9 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { useActivationSignal, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
-import { PluginRegistryButton } from '@dxos/app-toolkit/ui';
+import { PluginRegistryButton, usePluginRegistryAvailable } from '@dxos/app-toolkit/ui';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -111,6 +112,9 @@ export const CreateObjectDialog = ({
 
   // The type selector is shown while no type has been resolved; the registry button is only relevant then.
   const showTypeSelector = !(typename && resolve(typename));
+  // Gated here as well as in the button: `Dialog.Close asChild` needs an element child, so the
+  // action bar cannot wrap a button that renders nothing.
+  const registryAvailable = usePluginRegistryAvailable();
 
   const viewTypenames = useMemo(() => {
     const set = new Set<string>();
@@ -195,14 +199,21 @@ export const CreateObjectDialog = ({
         invariant(db, 'Missing database');
         const result = yield* metadata.createObject(data, { db, target, targetNodeId });
         const shouldNavigate = _shouldNavigate ?? (() => true);
-        if (result.subject.length > 0 && shouldNavigate(result.object)) {
-          yield* invoke(LayoutOperation.Open, {
-            subject: [...result.subject],
-            navigation: 'immediate',
+        if (shouldNavigate(result.object)) {
+          // Where an object lands in the tree is the resolver's question, not the create's.
+          const { targets } = yield* invoke(NavigationOperation.ResolveNavigationTargets, {
+            query: { uri: Obj.getURI(result.object) },
           });
-          yield* invoke(LayoutOperation.Expose, {
-            subject: result.subject[0],
-          });
+          const navigationTarget = targets[0];
+          if (navigationTarget) {
+            yield* invoke(LayoutOperation.Open, {
+              subject: [navigationTarget.path],
+              navigation: 'immediate',
+            });
+            yield* invoke(LayoutOperation.Expose, {
+              subject: navigationTarget.path,
+            });
+          }
         }
 
         onCreateObject?.(result.object);
@@ -239,7 +250,7 @@ export const CreateObjectDialog = ({
           onTypenameChange={setTypename}
         />
       </Dialog.Body>
-      {showTypeSelector && (
+      {showTypeSelector && registryAvailable && (
         <Dialog.ActionBar>
           <Dialog.Close asChild>
             <PluginRegistryButton />

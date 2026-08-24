@@ -78,7 +78,7 @@ export class Skill extends Type.makeObject<Skill>(DXN.make('org.dxos.type.skill'
     hooks: Schema.optional(Schema.Array(Schema.suspend(() => Hook))),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--blueprint--regular', hue: 'sky' }),
+    Annotation.IconAnnotation.set({ icon: 'ph--blueprint--regular', hue: 'amber' }),
   ),
 ) {}
 
@@ -154,16 +154,23 @@ export const make: {
  * Annotation opting a skill into MCP projection: it becomes a prompt and is loadable by name
  * through the server's `skillLoad` tool.
  *
- * Opt-in, for the same reason {@link Operation.McpToolAnnotation} is. A skill written for an
- * in-app chat runtime assumes tools that an MCP client does not have — instructing an external
- * agent to call an operation that was never projected, or to enable another skill through
- * machinery MCP does not expose. Only the author can judge whether the workflow still holds when
- * the available surface is the MCP one, so the projection asks rather than assumes. Absent ⇒ the
+ * Opt-in: a skill written for an in-app chat runtime may assume tools an MCP client does not have,
+ * and only the author can judge whether the workflow still holds on the MCP surface. Absent ⇒ the
  * skill stays internal to hosts that resolve skills directly.
  *
  * Rides in the object's meta rather than on `Definition`, so it survives into a persisted skill —
  * `Definition` is a build-time factory type and cannot describe a skill stored in a space.
  */
+/**
+ * Skill keys a session scoped to an instance of the annotated type should carry — read by the AI
+ * companion, the blank routine template, and project chat creation. Held as plain dotted keys so the
+ * annotated type does not depend on the plugin that owns each skill.
+ */
+export const SkillsAnnotation = Annotation.make<string[]>({
+  id: 'org.dxos.annotation.skills',
+  schema: Schema.mutable(Schema.Array(Schema.String)),
+});
+
 export const McpPromptAnnotation = Annotation.make({
   id: 'org.dxos.skill.mcp-prompt',
   schema: Schema.Boolean,
@@ -196,8 +203,8 @@ export const toolDefinitions = ({
   tools = [],
   operations = [],
 }: {
-  tools?: string[];
-  operations?: Operation.Definition.Any[];
+  tools?: readonly string[];
+  operations?: readonly Operation.Definition.Any[];
 }) => [...operations.map((op) => ToolId.make(DXN.getName(op.meta.key))), ...tools.map((tool) => ToolId.make(tool))];
 
 /**
@@ -206,6 +213,12 @@ export const toolDefinitions = ({
 export type Definition = {
   key: DXN.Name<string>;
   make: () => Skill;
+  /**
+   * Operation definitions behind the skill's `tools` list, for hosts that serve the skill without
+   * a registry to resolve ToolIds against (see mcp-server `McpServer.fromSkills`). Absent ⇒ the skill is
+   * only served through a registry-backed host.
+   */
+  operations?: readonly Operation.Definition.Any[];
 };
 
 /**

@@ -54,6 +54,9 @@ warnings/errors.
 - [x] **Remove them** — shipped in this branch:
   - `@dxos/config`: `defaultConfig` DELETED; `ConfigService.load` writes
     `defaultProfileEndpoints` (hub, edge, ICE, IPFS) into the profile it creates
+    (under `DX_LOCAL_DEV` — monorepo `bin/dx` only — `localDevConfig` from PR
+    #12658 forks the written edge URL to `main.dxos.network`, layered over the
+    same endpoint set)
     and merges `profileBuiltinDefaults` — features and storage only — on both
     load branches (fixing the first-run branch that skipped the merge). Endpoints
     live in the user's file; no code path substitutes them on load.

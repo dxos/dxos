@@ -40,7 +40,7 @@ export const defaultProfileEndpoints = new Config({
         url: DEFAULT_HUB_URL,
       },
       edge: {
-        url: 'wss://dxos.network/',
+        url: 'https://dxos.network/',
       },
       iceProviders: [
         {
@@ -54,6 +54,12 @@ export const defaultProfileEndpoints = new Config({
     },
   },
 });
+
+/** Aligns a fresh monorepo CLI profile with the backend Composer's local dev server talks to. */
+export const localDevConfig = new Config(
+  { runtime: { services: { edge: { url: 'https://main.dxos.network' } } } },
+  defaultProfileEndpoints.values,
+);
 
 export class ConfigService extends Context.Service<ConfigService, Config>()('ConfigService') {
   static layerMemory = Layer.effect(ConfigService, Effect.succeed(memoryConfig));
@@ -81,8 +87,11 @@ export class ConfigService extends Context.Service<ConfigService, Config>()('Con
               const Yaml = yield* Effect.promise(() => import('yaml'));
               // First run materializes the endpoints, and only the endpoints: features and storage
               // keep coming from profileBuiltinDefaults so they track the code, while what the CLI
-              // talks to is stated in the file the user owns.
-              const configValues = defaultProfileEndpoints.values;
+              // talks to is stated in the file the user owns. `DX_LOCAL_DEV` is set only by the
+              // monorepo's `bin/dx` wrapper, never by the published binary, so it cannot redirect a
+              // real user's first run to staging.
+              const useLocalDev = process.env.DX_LOCAL_DEV !== undefined && process.env.DX_LOCAL_DEV !== '0';
+              const configValues = (useLocalDev ? localDevConfig : defaultProfileEndpoints).values;
               const fs = yield* FileSystem.FileSystem;
               const pathToCreate = Option.getOrElse(args.config, () => defaultConfigPath);
               yield* fs.makeDirectory(dirname(pathToCreate), { recursive: true });

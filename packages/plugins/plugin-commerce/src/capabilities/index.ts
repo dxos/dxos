@@ -10,6 +10,7 @@ import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   requires: [AttentionCapabilities.Attention],
 });
+export const NavigationTargetResolver = AppCapability.navigationResolver(() => import('./navigation-target-resolver'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
 });

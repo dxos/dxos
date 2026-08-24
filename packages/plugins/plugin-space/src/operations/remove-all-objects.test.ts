@@ -27,8 +27,6 @@ class TestObject extends Type.makeObject<TestObject>(DXN.make('com.example.type.
   }),
 ) {}
 
-// The full `SpaceOperationHandlerSet` is not registrable here: the test layer serializes every
-// definition and some (e.g. `ImportSpace`) carry non-JSON-serializable schemas.
 const TestLayer = AssistantTestLayer({
   operationHandlers: OperationHandlerSet.make(RemoveAllObjectsHandler),
   types: [SpaceProperties, Collection.Collection, Skill.Skill, Feed.Feed, TestObject],

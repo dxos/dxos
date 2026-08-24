@@ -55,6 +55,7 @@ import {
   startupProfiler,
   translations,
 } from './util';
+import { initAutomergeWasm } from './util/automerge-wasm';
 
 // Fatal-error-only UI, loaded on demand: its FeedbackForm pulls the whole form stack
 // (react-ui-form, editor, pickers) which must stay out of the static boot graph.
@@ -203,15 +204,15 @@ const main = async () => {
   profiler?.mark('dynamic-imports:start');
   bootStatus('Loading framework…');
 
-  // Load these in parallel; HTTP/2 multiplexes the four chunks and even on
-  // local-disk the parser can interleave parses.
-  const [{ Config, defs, SaveConfig }, { Client, createClientServices }, { Migrations }, { __COMPOSER_MIGRATIONS__ }] =
-    await Promise.all([
-      import('@dxos/config'),
-      import('@dxos/react-client'),
-      import('@dxos/migrations'),
-      import('./migrations'),
-    ]);
+  // Load these in parallel; HTTP/2 multiplexes the three chunks and even on
+  // local-disk the parser can interleave parses. The wasm init rides the same wave: it must
+  // complete before anything touches automerge (slim entrypoints — see util/automerge-wasm.ts).
+  const [{ Config, defs, SaveConfig }, { Client, createClientServices }, AppMigrations] = await Promise.all([
+    import('@dxos/config'),
+    import('@dxos/react-client'),
+    import('@dxos/app-toolkit/AppMigrations'),
+    initAutomergeWasm(),
+  ]);
 
   profiler?.mark('dynamic-imports:end');
   profiler?.measure('dynamic-imports', 'dynamic-imports:start', 'dynamic-imports:end');
@@ -237,7 +238,7 @@ const main = async () => {
   };
   (window as any).composer = { profiler, otel };
 
-  Migrations.define(APP_KEY, __COMPOSER_MIGRATIONS__);
+  AppMigrations.define();
 
   profiler?.mark('config:start');
   bootStatus('Reading configuration…');
@@ -459,13 +460,14 @@ const main = async () => {
     logStore,
     onFatalError: (error) => raiseFatalError(error),
 
-    isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
+    // Strictly the `dev` cloud environment (not preview) or a local `DX_DEV=true` opt-in, so a plain
+    // local `serve` keeps the lean default plugin set (see `getDefaults` in plugin-defs.tsx).
+    isDev: config.values.runtime?.app?.env?.DX_ENVIRONMENT === 'dev' || isTrue(config.values.runtime?.app?.env?.DX_DEV),
     isLocal: !isTauri && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
     isPwa,
     isTauri,
     isPopover,
     isMobile,
-    isLabs: isTrue(config.values.runtime?.app?.env?.DX_LABS),
     isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
   };
 

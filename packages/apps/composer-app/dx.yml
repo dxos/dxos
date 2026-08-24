@@ -12,7 +12,7 @@ runtime:
 
   services:
     edge:
-      url: wss://dxos.network/
+      url: https://dxos.network/
     iceProviders:
       - urls: https://dxos.network/ice
     sandbox:

@@ -25,7 +25,7 @@ const authFlow: Partial<ConnectorSpec.ConnectorEntry> = { oauth: { provider: OAu
 
 const TestSync = Operation.make({
   meta: { key: DXN.make('org.dxos.test.connectorAuth.sync'), name: 'Test Sync' },
-  input: Schema.Struct({ binding: Ref.Ref(Cursor.Cursor) }),
+  input: Schema.Struct({ connection: Ref.Ref(Connection.Connection), priority: Schema.optional(Schema.String) }),
   output: Schema.Any,
 });
 
@@ -148,7 +148,7 @@ describe('ConnectorAuth.actions', () => {
     ]);
   });
 
-  test('reuse binds a cursor to the existing target and sets its sync routine up', async ({ expect }) => {
+  test('reuse binds a cursor to the existing target without creating a routine', async ({ expect }) => {
     const { db, addConnection } = await setup();
     const connection = addConnection('b');
     const target = db.add(Obj.make(AccessToken.AccessToken, { source: 'target.example', token: 'tok' }));
@@ -170,10 +170,11 @@ describe('ConnectorAuth.actions', () => {
     expect(cursors).toHaveLength(1);
     expect(cursors[0].spec.kind).toBe('external');
 
-    // The connector declares a schedule, so the new binding gets a trigger bound to it.
+    // The new binding is covered by the account's routine (its fan-out queries the cursors at run
+    // time); no trigger is persisted at bind time — the routine is offered through the create-routine
+    // form by the target's own sync affordance when the account has none.
     const triggers = await db.query(Filter.type(Trigger.Trigger)).run();
-    expect(triggers).toHaveLength(1);
-    expect(triggers[0].input?.binding?.uri).toBe(Ref.make(cursors[0]).uri);
+    expect(triggers).toHaveLength(0);
   });
 
   test('reuse renames the existing target after the connection account', async ({ expect }) => {

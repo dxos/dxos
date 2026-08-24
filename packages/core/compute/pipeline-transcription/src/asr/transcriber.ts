@@ -44,7 +44,8 @@ export type WhisperSegment = {
   /**
    * Probability of no speech in the segment.
    */
-  no_speech_prob: number;
+  /** Absent from some Whisper-compatible endpoints; treated as confident speech. */
+  no_speech_prob?: number;
 
   words: WhisperWord[];
 };
@@ -102,6 +103,12 @@ export type TranscriberProps = {
  * If user is not speaking, the last `minChunksAmount` chunks are saved and transcribed.
  * If user is speaking, the chunks are added to the buffer until the user is done talking.
  */
+/**
+ * Above this, the model's own estimate that a segment contains no speech is treated as decisive.
+ * Whisper's default for the same judgement.
+ */
+const NO_SPEECH_THRESHOLD = 0.6;
+
 export class Transcriber extends Resource {
   private _audioChunks: AudioChunk[] = [];
   private _lastTimestamp = 0;
@@ -213,8 +220,13 @@ export class Transcriber extends Resource {
     }
 
     const audio = await this._mergeAudioChunks(chunks);
-    const segments = await this._fetchTranscription(audio);
-    if (!Array.isArray(segments) || segments.length === 0) {
+    const fetched = await this._fetchTranscription(audio);
+    // Whisper-family models confabulate over silence — a quiet room or a paused speaker yields
+    // phantom text ("Thank you.", subtitle credits) rather than nothing, because the model has no
+    // strong "no speech" output. `no_speech_prob` is the model's own confidence that a segment holds
+    // no speech, so dropping the confident ones removes the hallucinations at their source.
+    const segments = fetched.filter((segment) => (segment.no_speech_prob ?? 0) < NO_SPEECH_THRESHOLD);
+    if (segments.length === 0) {
       return;
     }
 

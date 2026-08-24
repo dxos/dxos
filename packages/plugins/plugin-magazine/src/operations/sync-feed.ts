@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { DevFlag, getDevFlag } from '@dxos/util';
 
 import { FeedOperation, Subscription } from '#types';
 
@@ -29,6 +30,15 @@ const getFetcher = (type: Subscription.FeedType | undefined): FeedFetcher => {
 const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperation.SyncFeed.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ feed }) {
+      // Developer convenience: the running dev app does not reach out to feed publishers unless the
+      // toggle on the home screen says so, so a working session generates no live traffic to third
+      // parties. `DEV` alone is not the condition — it is also true under vitest, where blocking the
+      // fetch would just make the sync tests assert against an empty queue — so the gate is scoped to
+      // the dev server's own mode, and production drops the branch entirely.
+      if (import.meta.env.DEV && import.meta.env.MODE === 'development' && !getDevFlag(DevFlag.RemoteFeedPull)) {
+        return;
+      }
+
       const subscriptionFeed = yield* Database.load(feed);
       const url = subscriptionFeed.url;
       invariant(url, 'Feed URL is required.');

@@ -236,12 +236,12 @@ export const Uniform: Story = {
  */
 /** Tall uneven rows and space past the end: the case where the opening jump is most wrong. */
 export const PlainPastEnd: Story = {
-  args: { scenario: 'plain', count: 500, scrollPastEnd: true },
+  args: { scenario: 'plain', count: 500, tailLines: 4 },
   play: playFill('plain past-end'),
 };
 
 export const UniformPastEnd: Story = {
-  args: { scenario: 'uniform', count: 500, scrollPastEnd: true },
+  args: { scenario: 'uniform', count: 500, tailLines: 4 },
   // This was the one rung that moved: eighteen rows travelled on the frame the layout was rebuilt,
   // pinned at what was measured so a regression past it would fail. There is no rebuild any more —
   // it existed because the old engine could only revise the rows below the last one it had measured,
