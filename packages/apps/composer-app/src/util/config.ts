@@ -6,14 +6,13 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Match from 'effect/Match';
 
-import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { DXOS_VERSION, Remote } from '@dxos/client';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { Observability, ObservabilityExtension, ObservabilityProvider } from '@dxos/observability';
 import { getHostPlatform } from '@dxos/util';
 
-import { FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from './constants';
+import { APP_DOMAIN, FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from './constants';
 
 export const PARAM_PROFILER = 'profiler';
 export const PARAM_SAFE_MODE = 'safe';
@@ -83,8 +82,7 @@ const POSTHOG_DISABLED_CONFIG = {
  */
 const feedbackLogsEndpoint = (config: Config, isTauri: boolean): string | undefined =>
   isTauri
-    ? (config.values.runtime?.app?.env?.DX_FEEDBACK_LOGS_ENDPOINT ??
-      `https://${NativePasskey.APP_DOMAIN}${FEEDBACK_LOGS_PATH}`)
+    ? (config.values.runtime?.app?.env?.DX_FEEDBACK_LOGS_ENDPOINT ?? `https://${APP_DOMAIN}${FEEDBACK_LOGS_PATH}`)
     : undefined;
 
 /** Initialize observability extensions and data providers for Composer. */

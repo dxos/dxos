@@ -31,37 +31,28 @@ export const downloadUrl = (url: string, filename: string): void => {
   }
 };
 
-/**
- * Ask Tauri's native dialog where to save, resolving undefined where the dialog is unreachable —
- * a platform whose capability set omits `dialog`/`fs`, such as the iOS build, which rejects the
- * import or the command itself. Null is the user dismissing it.
- */
-const promptSavePath = async (filename: string): Promise<string | null | undefined> => {
+type NativeSave = 'saved' | 'cancelled' | 'unavailable';
+
+/** Save through Tauri's native dialog. */
+const saveBlobNative = async (data: Blob, filename: string): Promise<NativeSave> => {
+  let path: string | null;
   try {
     const { save } = await import('@tauri-apps/plugin-dialog');
-    return await save({ defaultPath: filename });
+    path = await save({ defaultPath: filename });
   } catch {
-    return undefined;
+    // A platform whose capability set omits `dialog`/`fs`, such as the iOS build, rejects the import
+    // or the command itself; the caller is no worse off attempting the anchor.
+    return 'unavailable';
   }
-};
 
-/**
- * Save through Tauri's native dialog. Resolves false if the user dismissed it, and undefined where
- * the dialog is unreachable, leaving the caller no worse off for attempting the anchor.
- */
-const saveBlobNative = async (data: Blob, filename: string): Promise<boolean | undefined> => {
-  const path = await promptSavePath(filename);
-  if (path === undefined) {
-    return undefined;
-  }
-  if (path === null) {
-    return false;
+  if (!path) {
+    return 'cancelled';
   }
 
   // Past the dialog the plugins are known reachable, so a write failure is a real error to surface.
   const { writeFile } = await import('@tauri-apps/plugin-fs');
   await writeFile(path, new Uint8Array(await data.arrayBuffer()));
-  return true;
+  return 'saved';
 };
 
 /** Trigger an anchor download of a blob, keeping the object URL alive past the click. */
@@ -82,9 +73,9 @@ const downloadBlobAnchor = (data: Blob, filename: string): void => {
  */
 export const downloadBlob = async (data: Blob, filename: string): Promise<boolean> => {
   if (isTauri()) {
-    const saved = await saveBlobNative(data, filename);
-    if (saved !== undefined) {
-      return saved;
+    const outcome = await saveBlobNative(data, filename);
+    if (outcome !== 'unavailable') {
+      return outcome === 'saved';
     }
   }
 

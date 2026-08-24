@@ -23,6 +23,13 @@ export const LOG_STORE_MAX_BYTES = 50 * 1024 * 1024;
 /** Recovery mode entry point (minimal client, export, debug port). */
 export const RECOVERY_PATH = '/recovery.html';
 
+/**
+ * Domain the production web deployment is served from. Distinct from the passkey relying-party id
+ * in `@dxos/app-toolkit/NativePasskey`, which the two coincide with today but which is a WebAuthn
+ * identifier pinned to the apex domain rather than a statement about where the app is deployed.
+ */
+export const APP_DOMAIN = 'composer.space';
+
 /** Worker route (`src/functions/_worker.ts`) that stores an uploaded feedback log bundle in R2. */
 export const FEEDBACK_LOGS_PATH = '/api/feedback-logs';
 
