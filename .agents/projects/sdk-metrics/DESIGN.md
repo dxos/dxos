@@ -96,9 +96,13 @@ observe(name: string, callback: () => number | undefined, data?: MetricData): Cl
 ```
 
 mapped to `createObservableGauge` in `OtelMetrics`, so "current value" metrics are
-read at collection time. **Every gauge in this project uses `observe`, not
-`gauge`.** Existing `dxos.client.network.*` / `dxos.client.runtime.*` gauges are
-migrated opportunistically, not as a blocker.
+read at collection time. **Every gauge in this project uses `observe`, not `gauge`.**
+
+In scope, and required before release: `dxos.client.runtime.*` and
+`dxos.client.services.runtime.*` — the Memory section depends on them being observed,
+since on the 10-minute push cadence their series are too sparse to average.
+Explicitly **out of scope**: `dxos.client.network.*`, which this project does not
+touch and which keeps its existing push cadence.
 
 ### P5 — Honor `unit` and `description`
 
@@ -150,15 +154,14 @@ Suggested buckets for `connect.duration`: `[0.1, 0.25, 0.5, 1, 2, 5, 10, 30, 60]
 
 ### Documents
 
-| Metric                               | Instrument       | Unit         | Attributes               | Source                                                          |
-| ------------------------------------ | ---------------- | ------------ | ------------------------ | --------------------------------------------------------------- |
-| `dxos.echo.documents.count`          | observable gauge | `{document}` | `location=local\|remote` | `getSyncSummary()` `localDocumentCount` / `remoteDocumentCount` |
-| `dxos.echo.documents.unsynced.count` | observable gauge | `{document}` | —                        | `getSyncSummary().unsyncedDocumentCount`                        |
+| Metric                               | Instrument       | Unit         | Attributes               | Source                                                    |
+| ------------------------------------ | ---------------- | ------------ | ------------------------ | --------------------------------------------------------- |
+| `dxos.echo.documents.count`          | observable gauge | `{document}` | `location=local\|remote` | `SyncSummary.localDocumentCount` / `.remoteDocumentCount` |
+| `dxos.echo.documents.unsynced.count` | observable gauge | `{document}` | —                        | `SyncSummary.unsyncedDocumentCount`                       |
 
-`getSyncSummary` (`packages/sdk/client/src/echo/util.ts:23`) already folds
-per-space `SpaceSyncState.PeerState` into a single fleet-comparable summary, so
-this is a read of data the client already maintains. `localDocumentCount` is the
-"documents loaded" number.
+Folded across spaces by `SyncStateTracker` (`providers/sync-state.ts`) from the same
+`db.subscribeToSyncState` stream the sync instruments use, so both read one source.
+`localDocumentCount` is the "documents loaded" number.
 
 > A _count of load events_ (as opposed to a resident count) would need a counter
 > at the repo `find`/load boundary in `@dxos/echo-host`. Deliberately out of scope
@@ -169,14 +172,23 @@ this is a read of data the client already maintains. `localDocumentCount` is the
 
 Both instruments are needed; neither alone answers the question.
 
-| Metric                            | Instrument       | Unit | Attributes | Source                                                      |
-| --------------------------------- | ---------------- | ---- | ---------- | ----------------------------------------------------------- |
-| `dxos.echo.sync.episode.duration` | histogram        | `s`  | —          | recorded on the `unsynced > 0` → `unsynced == 0` transition |
-| `dxos.echo.sync.stalled.duration` | observable gauge | `s`  | —          | `now − lastProgressAt` while unsynced; `0` when synced      |
+**One backlog definition, `pendingWorkCount`.** Every instrument, transition, alert and
+test in this section reads
+`unsyncedDocumentCount + blocksToPull + blocksToPush` — implemented as
+`pendingWorkCount` in `providers/sync-state.ts`. Using `unsyncedDocumentCount` for some
+and total pending for others would leave a feed-only backlog able to stall
+`stalled.duration` while the alert condition read false. `unsyncedDocumentCount` alone
+survives only in the `dxos.echo.documents.*` gauges, which are document counts by
+definition.
+
+| Metric                            | Instrument       | Unit | Attributes | Source                                                    |
+| --------------------------------- | ---------------- | ---- | ---------- | --------------------------------------------------------- |
+| `dxos.echo.sync.episode.duration` | histogram        | `s`  | —          | recorded on the `pending > 0` → `pending == 0` transition |
+| `dxos.echo.sync.stalled.duration` | observable gauge | `s`  | —          | `now − lastProgressAt` while pending; `0` when caught up  |
 
 **`episode.duration`** — "the longest stretch of time it takes a client to sync".
-A _sync episode_ opens when `getSyncSummary().unsyncedDocumentCount` goes from 0
-to non-zero and closes when it returns to 0; the histogram records the episode's
+A _sync episode_ opens when `pendingWorkCount` goes from 0 to non-zero and closes
+when it returns to 0; the histogram records the episode's
 wall-clock duration. Because OTel exports explicit-bucket histograms, SigNoz merges
 buckets across every client before computing the statistic — so `max` gives the
 worst episode in the fleet and `p99` the tail, and neither can be obtained from a
@@ -187,10 +199,11 @@ This is the stuck-detector, and it is why the histogram is not sufficient: an
 episode that _never closes_ never records a histogram sample, so a permanently
 stuck client is invisible in `episode.duration` by construction. The gauge is read
 at collection time and reports the age of the last observed decrease in
-`unsyncedDocumentCount`. `> 600` while `documents.unsynced.count > 0` is the
-alertable condition.
+`pendingWorkCount`. **`> 600` alone is the alert condition** — the gauge is 0 whenever
+the client is caught up, so a second `documents.unsynced.count > 0` conjunct is both
+redundant and wrong: it would suppress the alert for a feed-only backlog.
 
-Progress is defined as a **decrease in `unsyncedDocumentCount`**, not any state
+Progress is defined as a **decrease in `pendingWorkCount`**, not any state
 emission — otherwise a client that keeps re-reporting the same backlog looks
 healthy. Note that a client concurrently _creating_ documents raises the count, so
 the definition tracks the low-water mark within the episode rather than the raw
@@ -198,10 +211,10 @@ value.
 
 **First-sample policy (startup and reload).** An episode opens on a
 `0 → non-zero` transition, but a provider that starts — or a tab that reloads —
-with `unsyncedDocumentCount` already non-zero never sees that transition. Without
+with `pendingWorkCount` already non-zero never sees that transition. Without
 a rule, the in-flight episode is invisible to both instruments. The rule:
 
-- On the **first observation** with `unsynced > 0`, open an episode with
+- On the **first observation** with `pending > 0`, open an episode with
   `openedAt = lastProgressAt = now`. Both are lower bounds: the backlog may have
   existed for hours before the process started.
 - `stalled.duration` therefore starts from 0 at startup and becomes meaningful
@@ -222,8 +235,8 @@ Suggested buckets for `episode.duration`:
 
 Source of truth is `db.subscribeToSyncState(cb, options)`
 (`packages/core/echo/echo-client/src/proxy-db/database.ts:778`), **not** the
-automerge-only `subscribeToAutomergeSyncState` path `useSyncState` uses. Since
-#12561 landed it already selects the EDGE peer and owns its own no-change poll
+automerge-only `subscribeToAutomergeSyncState` path `useSyncState` uses. Since PR
+PR #12561 landed it already selects the EDGE peer and owns its own no-change poll
 backoff (2s, doubling to a 15s ceiling, snapping back the moment the backlog
 moves), so a `DataProvider` consuming it needs no timer of its own — which is
 what the earlier "must not own a poll" constraint was waiting for.
@@ -335,8 +348,8 @@ than trusting the arithmetic.
 ## Verification
 
 - Unit-testable: the sync episode/stall state machine is pure given a sequence of
-  `(timestamp, unsyncedDocumentCount)` — test it directly, no mocks (see the
-  repo's no-mock-tests rule).
+  `(timestamp, pendingWorkCount)` — test it directly, no mocks (see the repo's
+  no-mock-tests rule).
 - `RemoteMetrics.observe` fan-out and cleanup: pure unit test in
   `packages/common/tracing`.
 - Exported-payload test for P2: `session.id` absent from the metrics payload,

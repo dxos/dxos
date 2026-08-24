@@ -193,8 +193,9 @@ and nothing has been verified against a live instance.
   - Memory: `p50`/`p90`/`max` of `dxos.client.runtime.heapUsed` against the
     300-400MB target; `dxos.client.runtime.memory.bytes` stacked by `scope`.
 - [ ] **Alert: sync stuck**
-  - `dxos.echo.sync.stalled.duration > 600` while
-    `dxos.echo.documents.unsynced.count > 0`.
+  - `dxos.echo.sync.stalled.duration > 600`, with no second condition: the gauge is 0
+    whenever the client is caught up, so an `unsynced.count > 0` conjunct is redundant
+    and would suppress the alert for a feed-only backlog.
 - [ ] **Alert: heap pressure**
   - `dxos.client.runtime.heapUsed / dxos.client.runtime.heapSizeLimit > 0.9` — the
     ratio is computed in SigNoz, not exported as a third metric. This is the
