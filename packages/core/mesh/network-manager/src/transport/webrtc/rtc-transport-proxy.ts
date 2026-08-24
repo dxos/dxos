@@ -5,7 +5,7 @@
 import { Writable } from 'node:stream';
 
 import { Event, scheduleTask } from '@dxos/async';
-import { type Stream } from '@dxos/codec-protobuf/stream';
+import { type Stream } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';

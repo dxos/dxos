@@ -7,6 +7,8 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type MaybePromise, throwUnhandledError } from '@dxos/util';
 
+import { Trigger } from './trigger';
+
 type Callbacks<T> = {
   ctx: Context;
 
@@ -337,3 +339,16 @@ export class Stream<T> {
     this._producerCleanup = undefined;
   }
 }
+
+export const getFirstStreamValue = async <T extends {}>(
+  stream: Stream<T>,
+  { timeout }: { timeout?: number } = {},
+): Promise<T> => {
+  try {
+    const trigger = new Trigger<T>();
+    stream.subscribe((value) => trigger.wake(value));
+    return await trigger.wait({ timeout });
+  } finally {
+    await stream.close();
+  }
+};
