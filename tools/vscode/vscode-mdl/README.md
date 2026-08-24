@@ -39,7 +39,7 @@ so the two editors agree on what is worth distinguishing.
 ## Developing
 
 ```bash
-code --extensionDevelopmentPath=$(pwd)/tools/vscode/mdl
+code --extensionDevelopmentPath=$(pwd)/tools/vscode/vscode-mdl
 ```
 
 Open any `PLUGIN.mdl`. `Developer: Inspect Editor Tokens and Scopes` shows the scope under the
