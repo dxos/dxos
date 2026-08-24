@@ -69,6 +69,17 @@ describe('credentials document', () => {
     expect(orderCredentials(doc)).to.deep.equal([]);
   });
 
+  test('genesis is processed first even when a later credential shares its timestamp', () => {
+    // Genesis carries no parent link and is issued in the same millisecond as the first membership
+    // credential, so without an explicit rule the id tiebreak decides the order.
+    const issued = '2026-01-01T00:00:00.000Z';
+    const genesis = credential(issued, [], 'dxos.halo.credentials.SpaceGenesis');
+    const members = Array.from({ length: 8 }, () => credential(issued));
+
+    const ordered = orderCredentials(document([...members, genesis]));
+    expect(ordered[0].id).to.equal(keyOf(genesis));
+  });
+
   test('an empty document orders to nothing', () => {
     expect(orderCredentials(document([]))).to.deep.equal([]);
   });
@@ -82,14 +93,18 @@ describe('credentials document', () => {
 
 const credentialCodec = schema.getCodecForType('dxos.halo.credentials.Credential');
 
-const credential = (issuanceDate: string, parentCredentialIds: PublicKey[] = []): Credential => ({
+const credential = (
+  issuanceDate: string,
+  parentCredentialIds: PublicKey[] = [],
+  type = 'dxos.halo.credentials.SpaceMember',
+): Credential => ({
   id: PublicKey.random(),
   issuer: PublicKey.random(),
   issuanceDate: new Date(issuanceDate),
   parentCredentialIds,
   subject: {
     id: PublicKey.random(),
-    assertion: { '@type': 'dxos.halo.credentials.SpaceMember' },
+    assertion: { '@type': type },
   },
 });
 

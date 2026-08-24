@@ -203,6 +203,15 @@ migration; crash mid-migration and resume.
       credentials that already arrived, and a partially-replicated document is a chain PREFIX that
       cannot be processed on its own — the state machine rejects it and the next change re-replays.
       This surfaced as a flaky test before it could surface as a support ticket.
+- [x] **Genesis orders first, explicitly** — genesis carries no parent link and is issued in the same
+      millisecond as the first membership credential, so the `(issuanceDate, id)` tiebreak decided
+      their order and half the time the state machine saw a member admitted into a space that did not
+      exist yet. The feed's implicit order hid this; a computed order cannot.
+- [x] **Every space is anchored, not only ones loaded at startup** — `_anchorSpaceOnRootDocument` runs
+      on load, on creation (root-anchored only) and on explicit migration, which now means anchor AND
+      mirror. A space created legacy stays unanchored until it is loaded, or there would be no way to
+      produce the pre-migration state the migration path is tested from. A space with no directory yet
+      (an accepted space still catching up) is skipped rather than failing.
 - [ ] The flip itself: stop consulting the feed for a space whose document is complete, and stop
       writing feed credentials for it. Both sources still run today.
 

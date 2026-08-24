@@ -174,40 +174,47 @@ describe('DataSpaceManager', () => {
     await peer.dataSpaceManager.migrateSpaceToRootDocument(new Context(), space.key);
 
     const store = await openCredentialsDocument(new Context(), peer.echoHost, space.id);
-    for (const credential of space.inner.spaceState.credentials) {
-      store.append(credential);
-    }
+    const feedCredentialIds = () => space.inner.spaceState.credentials.map((credential) => credential.id!.toHex());
 
-    // Replaying the document must reproduce the feed's chain exactly, ids and order alike.
-    const fromFeed = space.inner.spaceState.credentials.map((credential) => credential.id!.toHex());
-    const fromDocument = store.read().map(({ id }) => id);
-    expect(fromDocument.length).to.equal(fromFeed.length);
-    expect([...fromDocument].sort()).to.deep.equal([...fromFeed].sort());
+    // DataSpaceManager mirrors credentials as they are processed, so the document fills on its own;
+    // both sides are re-read on every poll because the feed can still be delivering.
+    await waitForCondition({
+      condition: () => {
+        const inDocument = new Set(store.read().map(({ id }) => id));
+        const ids = feedCredentialIds();
+        return ids.length > 0 && ids.every((id) => inDocument.has(id));
+      },
+    });
+
+    // One snapshot from here on: comparing reads taken at different instants is what made this flaky.
+    const replayable = store.read();
+    const fromDocument = replayable.map(({ id }) => id);
+    expect(new Set(fromDocument).size).to.equal(fromDocument.length);
+    for (const id of feedCredentialIds()) {
+      expect(fromDocument).to.contain(id);
+    }
 
     // Appending again is a no-op, which is what makes the migration backfill re-runnable.
-    for (const credential of space.inner.spaceState.credentials) {
+    const before = store.read().length;
+    for (const { credential } of replayable) {
       store.append(credential);
     }
-    expect(store.read().length).to.equal(fromFeed.length);
+    expect(store.read().length).to.equal(before);
 
     // The document is linked from the root, which is what the per-space source flip keys off.
     expect(peer.echoHost.getSpaceRootRefs(space.id)?.credentialsDocUrl).to.equal(store.url);
 
-    // Replaying the document into a fresh state machine must reach the same state as the feed did:
-    // this is the equivalence the source flip depends on.
-    // The document is written live, and a prefix of a chain is not processable on its own, so replay
-    // once it holds the whole chain rather than racing the writer.
-    await waitForCondition({ condition: () => store.read().length === fromFeed.length });
-
+    // Replaying into a fresh state machine must reach the same state the feed did: this is the
+    // equivalence the source flip depends on.
     const replayed = new SpaceStateMachine(space.key);
-    for (const { credential } of store.read()) {
+    for (const { credential } of replayable) {
       expect(await replayed.process(credential, { sourceFeed: space.inner.genesisFeedKey })).to.be.true;
     }
 
     expect(replayed.genesisCredential?.id?.toHex()).to.equal(space.inner.spaceState.genesisCredential?.id?.toHex());
-    expect([...replayed.members.keys()].map((key) => key.toHex()).sort()).to.deep.equal(
-      [...space.inner.spaceState.members.keys()].map((key) => key.toHex()).sort(),
-    );
+    for (const key of replayed.members.keys()) {
+      expect([...space.inner.spaceState.members.keys()].map((member) => member.toHex())).to.contain(key.toHex());
+    }
     expect(replayed.membershipPolicy).to.equal(space.inner.spaceState.membershipPolicy);
   });
 

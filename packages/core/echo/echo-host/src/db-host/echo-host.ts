@@ -509,7 +509,7 @@ export class EchoHost extends Resource {
    * from the space key and cannot be reproduced from a document, which is what `spaceKey` derivation
    * records. Idempotent — a space that already has a root keeps it, so a re-run cannot fork the anchor.
    */
-  async migrateSpaceToRootDocument(ctx: Context, spaceId: SpaceId): Promise<SpaceRootRefs> {
+  async migrateSpaceToRootDocument(ctx: Context, spaceId: SpaceId): Promise<SpaceRootRefs | undefined> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
     const existing = this._spaceStateManager.getSpaceRootRefs(spaceId);
@@ -517,8 +517,12 @@ export class EchoHost extends Resource {
       return existing;
     }
 
+    // A space whose directory is not assigned yet (an accepted space still catching up) has nothing to
+    // anchor; it migrates on a later load rather than failing here.
     const directory = this._spaceStateManager.getRootBySpaceId(spaceId);
-    invariant(directory, `Space directory not found for space: ${spaceId}`);
+    if (!directory) {
+      return undefined;
+    }
 
     const rootHandle = await this._automergeHost.createDoc<Partial<SpaceRoot>>({});
     rootHandle.change((doc: Partial<SpaceRoot>) => {

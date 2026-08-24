@@ -57,6 +57,14 @@ export const orderCredentials = (doc: CredentialsDocument): OrderedCredential[] 
   }
 
   const byTiebreak = (a: OrderedCredential, b: OrderedCredential) => {
+    // Genesis roots the chain and carries no parent link, and it is issued in the same millisecond as
+    // the first membership credential — so without this the id tiebreak decides, and half the time the
+    // state machine sees a member admitted into a space that does not exist yet.
+    const genesis = rankGenesis(a.credential) - rankGenesis(b.credential);
+    if (genesis !== 0) {
+      return genesis;
+    }
+
     const issuance = a.credential.issuanceDate.getTime() - b.credential.issuanceDate.getTime();
     return issuance === 0 ? a.id.localeCompare(b.id) : issuance;
   };
@@ -91,6 +99,9 @@ export const orderCredentials = (doc: CredentialsDocument): OrderedCredential[] 
 
   return ordered;
 };
+
+const rankGenesis = (credential: Credential): number =>
+  credential.subject?.assertion?.['@type'] === 'dxos.halo.credentials.SpaceGenesis' ? 0 : 1;
 
 const decodeCredential = (id: string, entry: CredentialsDocumentEntry): Credential | undefined => {
   let credential: Credential;

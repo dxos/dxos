@@ -310,8 +310,7 @@ export class DataSpaceManager extends Resource {
         }
         log('load space', { spaceMetadata });
         const space = await this._constructSpace(ctx, spaceMetadata);
-        await this._migrateSpaceToRootDocument(ctx, space);
-        await this._mirrorCredentialsToDocument(ctx, space);
+        await this._anchorSpaceOnRootDocument(ctx, space);
         // Track spaces that were previously active for auto-activation (used in dedicated worker mode).
         if (this._runtimeProps?.autoActivateSpaces && spaceMetadata.state === SpaceState.SPACE_ACTIVE) {
           spacesToActivate.push(space);
@@ -426,6 +425,11 @@ export class DataSpaceManager extends Resource {
 
     const space = await this._constructSpace(ctx, metadata);
     await space.open(ctx);
+    if (createdSpace) {
+      // A space deliberately created legacy stays unanchored until it is loaded, since anchoring it
+      // here would leave no way to produce the pre-migration state the migration path is tested from.
+      await this._anchorSpaceOnRootDocument(ctx, space);
+    }
 
     log('adding space...', { spaceKey });
 
@@ -483,6 +487,7 @@ export class DataSpaceManager extends Resource {
 
     const space = await this._constructSpace(ctx, metadata);
     await space.open(ctx);
+    await this._anchorSpaceOnRootDocument(ctx, space);
     await this._metadataStore.addSpace(metadata);
     // Use DSM lifecycle ctx: the invitation accept flow disposes `ctx` as soon as
     // `acceptSpace` returns (guardedState.complete -> ctx.dispose). Detached data-pipeline
@@ -498,16 +503,20 @@ export class DataSpaceManager extends Resource {
    * Mints a space root over a legacy space, transparently and idempotently, keeping its space id. Never
    * blocks opening the space: a space without an anchor still works, it just has not migrated yet.
    */
-  private async _migrateSpaceToRootDocument(ctx: Context, space: DataSpace): Promise<void> {
-    if (this._echoHost.getSpaceRootRefs(space.id)) {
-      return;
-    }
-
+  private async _anchorSpaceOnRootDocument(ctx: Context, space: DataSpace): Promise<void> {
     try {
-      const refs = await this._echoHost.migrateSpaceToRootDocument(ctx, space.id);
-      log('migrated space to root document', { spaceId: space.id, refs });
+      if (!this._echoHost.getSpaceRootRefs(space.id)) {
+        const refs = await this._echoHost.migrateSpaceToRootDocument(ctx, space.id);
+        if (!refs) {
+          return;
+        }
+
+        log('migrated space to root document', { spaceId: space.id, refs });
+      }
+
+      await this._mirrorCredentialsToDocument(ctx, space);
     } catch (err) {
-      log.warn('failed to migrate space to root document', { spaceId: space.id, err });
+      log.warn('failed to anchor space on a root document', { spaceId: space.id, err });
     }
   }
 
@@ -517,7 +526,7 @@ export class DataSpaceManager extends Resource {
    * control pipeline replays the whole feed on open.
    */
   private async _mirrorCredentialsToDocument(ctx: Context, space: DataSpace): Promise<void> {
-    try {
+    {
       const store = await openCredentialsDocument(ctx, this._echoHost, space.id);
       for (const credential of space.inner.spaceState.credentials) {
         store.append(credential);
@@ -529,17 +538,17 @@ export class DataSpaceManager extends Resource {
       // by credential id, so during the migration window both sources can run without conflict — a
       // space that has flipped simply stops gaining feed credentials.
       store.subscribe(ctx, (credential) => space.inner.processDocumentCredential(credential));
-    } catch (err) {
-      log.warn('failed to mirror credentials to document', { spaceId: space.id, err });
     }
   }
 
   /**
-   * Migrates a legacy space onto a space root document, keeping its id. Idempotent.
+   * Migrates a legacy space onto a space root document, keeping its id, and starts mirroring its
+   * credentials into the document. Idempotent.
    */
   async migrateSpaceToRootDocument(ctx: Context, spaceKey: PublicKey): Promise<SpaceRootRefs> {
     const space = this._spaces.get(spaceKey) ?? failedInvariant();
-    return this._echoHost.migrateSpaceToRootDocument(ctx, space.id);
+    await this._anchorSpaceOnRootDocument(ctx, space);
+    return this._echoHost.getSpaceRootRefs(space.id) ?? failedInvariant();
   }
 
   /**
