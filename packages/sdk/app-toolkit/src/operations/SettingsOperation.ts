@@ -15,7 +15,9 @@ const SETTINGS_OPERATION = `${SETTINGS_PLUGIN}.operation`;
 
 export const Open = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.appToolkit.open'),
+    // Not `…appToolkit.open` — that is LayoutOperation's, and a shared key makes the pair
+    // unresolvable by key alone. Matches its sibling `openPluginRegistry`.
+    key: DXN.make('org.dxos.operation.appToolkit.openSettings'),
     name: 'Open Settings',
     description: 'Open the settings panel.',
     icon: 'ph--gear--regular',
