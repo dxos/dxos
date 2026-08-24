@@ -7,22 +7,23 @@
 import localforage from 'localforage';
 
 import { log } from '@dxos/log';
-import { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
+
+import { type ConfigInit } from '../types';
 
 declare const __DXOS_CONFIG__: { publicUrl?: string; dynamic?: boolean };
-declare const __CONFIG_ENVS__: Partial<ConfigProto> | undefined;
-declare const __CONFIG_DEFAULTS__: Partial<ConfigProto> | undefined;
-declare const __CONFIG_LOCAL__: Partial<ConfigProto> | undefined;
+declare const __CONFIG_ENVS__: ConfigInit | undefined;
+declare const __CONFIG_DEFAULTS__: ConfigInit | undefined;
+declare const __CONFIG_LOCAL__: ConfigInit | undefined;
 
 const CONFIG_ENDPOINT = '/.well-known/dx/config';
 
-export const Profile = (_profile = 'default'): Partial<ConfigProto> => ({});
+export const Profile = (_profile = 'default'): ConfigInit => ({});
 
-export const Local = (): Partial<ConfigProto> => {
+export const Local = (): ConfigInit => {
   return typeof __CONFIG_LOCAL__ !== 'undefined' ? __CONFIG_LOCAL__ : {};
 };
 
-export const Dynamics = async (): Promise<Partial<ConfigProto>> => {
+export const Dynamics = async (): Promise<ConfigInit> => {
   const { publicUrl = '', dynamic } = __DXOS_CONFIG__;
   if (!dynamic) {
     log('dynamics disabled');
@@ -38,20 +39,20 @@ export const Dynamics = async (): Promise<Partial<ConfigProto>> => {
     });
 };
 
-export const Envs = (_basePath?: string): Partial<ConfigProto> => {
+export const Envs = (_basePath?: string): ConfigInit => {
   return typeof __CONFIG_ENVS__ !== 'undefined' ? __CONFIG_ENVS__ : {};
 };
 
-export const Defaults = (_basePath?: string): Partial<ConfigProto> => {
+export const Defaults = (_basePath?: string): ConfigInit => {
   return typeof __CONFIG_DEFAULTS__ !== 'undefined' ? __CONFIG_DEFAULTS__ : {};
 };
 
 /**
  * Settings config from browser storage.
  */
-export const Storage = async (): Promise<Partial<ConfigProto>> => {
+export const Storage = async (): Promise<ConfigInit> => {
   try {
-    const config = await localforage.getItem<Partial<ConfigProto>>('org.dxos.settings.config');
+    const config = await localforage.getItem<ConfigInit>('org.dxos.settings.config');
     if (config) {
       return config;
     }
@@ -61,7 +62,7 @@ export const Storage = async (): Promise<Partial<ConfigProto>> => {
   return {};
 };
 
-export const Remote = (target: string | undefined, authenticationToken?: string): Partial<ConfigProto> => {
+export const Remote = (target: string | undefined, authenticationToken?: string): ConfigInit => {
   if (!target) {
     return {};
   }

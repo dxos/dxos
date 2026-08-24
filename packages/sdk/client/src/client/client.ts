@@ -369,7 +369,8 @@ export class Client {
     performance.mark('client.initialize:called');
     log('initializing client');
     const { createClientServices, IFrameManager, ShellManager } = await import('../services');
-    const { Runtime } = await import('@dxos/protocols/proto/dxos/config');
+    const { Runtime_Client_ServicesMode, Runtime_Client_Storage_SqliteMode } =
+      await import('@dxos/protocols/buf/dxos/config_pb');
     performance.mark('client.initialize:imports-loaded');
     log('client.initialize: imports loaded');
 
@@ -381,7 +382,7 @@ export class Client {
       // services in-thread (HOST); the dedicated worker is a composer-app-level choice.
       const clientCfg = this._config.values.runtime?.client;
       if (!clientCfg?.servicesMode && !clientCfg?.remoteSource) {
-        const servicesMode = Runtime.Client.ServicesMode.HOST;
+        const servicesMode = Runtime_Client_ServicesMode.HOST;
         // Default SQLite backing when the caller didn't set one:
         // - OPFS when a createOpfsWorker callback was supplied (browser with persistent indexing)
         // - FILE when a sqlitePath or dataRoot is supplied (Node/Bun CLI or persistent config)
@@ -389,10 +390,10 @@ export class Client {
         const sqliteMode = clientCfg?.storage?.sqliteMode
           ? undefined
           : this._options.createOpfsWorker
-            ? Runtime.Client.Storage.SqliteMode.OPFS
+            ? Runtime_Client_Storage_SqliteMode.OPFS
             : this._options.sqlitePath || clientCfg?.storage?.dataRoot
-              ? Runtime.Client.Storage.SqliteMode.FILE
-              : Runtime.Client.Storage.SqliteMode.MEMORY;
+              ? Runtime_Client_Storage_SqliteMode.FILE
+              : Runtime_Client_Storage_SqliteMode.MEMORY;
         this._config = new Config(
           { runtime: { client: { servicesMode, ...(sqliteMode !== undefined && { storage: { sqliteMode } }) } } },
           this._config.values,

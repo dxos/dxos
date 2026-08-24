@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type Message, fromBinary, toBinary } from '@bufbuild/protobuf';
+import { type GenMessage } from '@bufbuild/protobuf/codegenv2';
 import * as Schema from 'effect/Schema';
 import * as SchemaTransformation from 'effect/SchemaTransformation';
 
@@ -20,6 +22,22 @@ export const protoMessage = <K extends keyof TYPES & string>(typeName: K): Schem
       SchemaTransformation.transform({
         decode: (bytes) => schema.getCodecForType(typeName).decode(bytes),
         encode: (value) => schema.getCodecForType(typeName).encode(value),
+      }),
+    ),
+  );
+
+/**
+ * Effect schema for a buf message type, encoded as protobuf bytes on the wire.
+ * The wire format matches `protoMessage` for the same message; the difference is the TypeScript
+ * shape callers see, so a package that has migrated to buf keeps its own types across RPC.
+ */
+export const bufMessage = <T extends Message>(messageSchema: GenMessage<T>): Schema.Codec<T, Uint8Array> =>
+  Schema.Uint8Array.pipe(
+    Schema.decodeTo(
+      Schema.declare<T>((_): _ is T => true),
+      SchemaTransformation.transform({
+        decode: (bytes) => fromBinary(messageSchema, bytes),
+        encode: (value) => toBinary(messageSchema, value),
       }),
     ),
   );

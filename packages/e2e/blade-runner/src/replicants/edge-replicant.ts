@@ -17,7 +17,7 @@ import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { dataGenerator } from '@dxos/plugin-script/templates';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type Runtime_Client_Storage } from '@dxos/protocols/buf/dxos/config_pb';
 import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
 
@@ -199,7 +199,7 @@ export class EdgeReplicant {
 
 ReplicantRegistry.instance.register(EdgeReplicant);
 
-const getStorageConfig = (env: ReplicantEnv): Runtime.Client.Storage => ({
+const getStorageConfig = (env: ReplicantEnv): Runtime_Client_Storage => ({
   persistent: true,
   dataRoot: env.params.outDir,
 });

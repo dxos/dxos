@@ -3,9 +3,9 @@
 //
 
 // TODO(burdon): Why is this exported? (Rename).
-export * as defs from '@dxos/protocols/proto/dxos/config';
+export * as defs from '@dxos/protocols/buf/dxos/config_pb';
 
-export { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
+export { type Config as ConfigProto } from '@dxos/protocols/buf/dxos/config_pb';
 
 export * from './config';
 export * from './config-service';

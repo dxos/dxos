@@ -2,7 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type MessageInitShape } from '@bufbuild/protobuf';
+
+import { type Runtime_ServicesSchema } from '@dxos/protocols/buf/dxos/config_pb';
 
 /**
  * pnpm -w nx dev ai-service --port 8788
@@ -10,7 +12,7 @@ import { type Runtime } from '@dxos/protocols/proto/dxos/config';
  */
 // TODO(burdon): Move to dxos/config.
 // TODO(burdon): Reconcile all static defs.
-export const SERVICES_CONFIG: Record<string, Runtime.Services> = {
+export const SERVICES_CONFIG: Record<string, MessageInitShape<typeof Runtime_ServicesSchema>> = {
   LOCAL: {
     ai: {
       server: 'http://localhost:8788',
