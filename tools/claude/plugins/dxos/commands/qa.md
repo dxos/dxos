@@ -1,6 +1,6 @@
 ---
 description: QA flows — list, show, and run `flow` blocks from .mdl specs against a live app
-argument-hint: '[list|show|run|help] [<plugin> <flowId>] [--skip-cleanup]'
+argument-hint: '[list|show|run|help] [<plugin> <flowId>] [--stage=before|test|after]'
 allowed-tools: Bash, Read, Edit, Write, Glob, Grep, Skill
 ---
 
@@ -32,8 +32,8 @@ a later message refers to that row, exactly as `/dxos:project list` works.
 - **`list [filter]`** — the same table, narrowed by a substring matched against the document path,
   flow id, or title. `list markdown` and `list QA-1` both work.
 - **`show <plugin> <flowId>`** — print one flow's block verbatim, so its `given`, steps and
-  `cleanup` can be read before committing to a run. A row number from the last table also works.
-- **`run <plugin> <flowId> [--skip-cleanup]`** — execute it, e.g. `run markdown QA-2`. A row number
+  `after` can be read before committing to a run. A row number from the last table also works.
+- **`run <plugin> <flowId> [--stage=…]`** — execute it, e.g. `run markdown QA-2`. A row number
   works too. Resolve with the script and **stop if it returns anything other than exactly one
   flow** — show the candidates and ask rather than guessing which was meant.
 - **`help`** — this table of verbs.
@@ -45,15 +45,19 @@ the flow and what it will change, then wait), its `given` check, and its report 
 improvise an execution path here; the skill exists because improvising one is what produced its
 first three rounds of defects.
 
-`--skip-cleanup` leaves the flow's artifacts in place so the final state can be inspected. It is a
-run option, never a property of the flow. When passed:
+A flow has three stages — `before` (fixture), `steps` (the test), `after` (teardown) — run in that
+order. **`--stage=before|test|after`** runs just one; omitted, all three run. It is a run option,
+never a property of the flow: `--stage=before` stands a fixture up to inspect, `--stage=after`
+tears one down, `--stage=test` re-tests against a fixture already standing.
+
+Whenever a stage is skipped:
 
 1. Say so beside the result, not buried after it.
 2. List exactly what remains, by name.
-3. Give the command that removes it later.
+3. Give the command that removes it later — `--stage=after`.
 
-The next run's `given` will refuse to start until those artifacts are gone — deliberately, so a
-flow never asserts against its own residue.
+The next full run's `given` will refuse to start until those artifacts are gone — deliberately, so
+a flow never asserts against its own residue.
 
 ## After a run
 

@@ -396,7 +396,7 @@ flow QA-1: Create, place, open and edit a document
     - space: a space is open
     - collection: a collection in that space, to create into
     - no document named "QA Notes" exists — ABORT rather than deleting one this flow did not create
-  steps:
+  before:
     - name: Create the document
       do: In the navtree, click + on a collection and choose Markdown. Name it "QA Notes".
       invoke: [op:createDraft] { name: "QA Notes", content: "# QA Notes\n\nThere is a tyop.\n" }
@@ -416,6 +416,7 @@ flow QA-1: Create, place, open and edit a document
         Coalesced with the previous step — `created.object` is live and cannot cross a snippet
         boundary. Only serializable values survive one; `$created.object.id` is a scalar and does.
 
+  steps:
     - name: Open it
       id: open
       do: Click "QA Notes" in the navtree.
@@ -435,7 +436,7 @@ flow QA-1: Create, place, open and edit a document
       invoke: [op:update] { doc: $created.object, edits: [{ oldString: "tyop", newString: "typo" }] }
       expect: the document body reads "There is a typo." and the editor re-renders
       assert: return $result.newContent.includes('There is a typo.') && !document.body.innerText.includes('tyop');
-  cleanup:
+  after:
     - name: Delete the document
       do: Right-click "QA Notes" in the navtree and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
@@ -454,14 +455,14 @@ flow QA-2: Link one page to another
   desc: Two documents and a reference between them — the `@` link path end to end.
   actors: both
   covers: [F-4.1, F-4.2, F-4.3, T-4]
-  status: passing            # 2026-08-23; the final click is human (see the last step)
+  status: unverified         # an Open Page 1 step was added; re-run required
   given:
     - an identity exists
     - space: a space is open
     - collection: a collection in that space, to create into
     - no documents named "Page 1" or "Page 2" exist — ABORT rather than deleting ones this flow
       did not create
-  steps:
+  before:
     - name: Create Page 1
       do: In the navtree, click + on a collection and choose Markdown. Name it "Page 1" and type a heading and a sentence.
       invoke: [op:createDraft] { name: "Page 1", content: "# Page 1\n\nThe first page.\n" }
@@ -473,6 +474,19 @@ flow QA-2: Link one page to another
       do: (the navtree create action places it for you)
       invoke: org.dxos.operation.space.addObject { object: $page1.object, target: $given.collection }
       expect: "Page 1" appears as a row under the collection
+    - name: Open Page 1
+      id: open-page-1
+      do: Click "Page 1" in the navtree.
+      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$given.space.id/content/collections/$page1.object.id"] }
+      expect: Page 1 opens in the editor and its navtree row is selected
+      assert: |
+        return Array.from(document.querySelectorAll('[aria-current], [aria-selected="true"]'))
+          .some((el) => el.textContent?.includes('Page 1'));
+      note: |
+        The later edit binds to whichever document the editor holds, so Page 1 must be the open
+        plank before it — an edit invoked against an unopened document lands in the database
+        without the surface the human is watching ever showing it.
+
     - name: Create Page 2
       do: Repeat for a second document named "Page 2" with its own heading and sentence.
       invoke: [op:createDraft] { name: "Page 2", content: "# Page 2\n\nThe second page.\n" }
@@ -483,10 +497,11 @@ flow QA-2: Link one page to another
       do: (as above)
       invoke: org.dxos.operation.space.addObject { object: $page2.object, target: $given.collection }
       expect: "Page 2" appears as a row alongside "Page 1"
+  steps:
     - name: Link Page 1 to Page 2
       id: link
       do: |
-        Select "Page 1" in the navtree to open it, put the caret at the end, then type `/` and choose
+        With Page 1 open (previous steps), put the caret at the end, then type `/` and choose
         "Inline link" (or type `@Page 2` directly) and pick Page 2 from the query.
       invoke: [op:update] { doc: $page1.object, edits: [{ newString: "\nSee [Page 2]($page2.uri).\n" }] }
       expect: the end of Page 1 shows an internal reference to Page 2, not a plain web hyperlink
@@ -505,7 +520,7 @@ flow QA-2: Link one page to another
         NO `invoke` — opening Page 2 by path would pass without the link being involved at all, so
         it would assert nothing about the previous step. Following the reference is a click; leave
         it to the human rather than substituting an operation that tests something else.
-  cleanup:
+  after:
     - name: Delete both pages
       do: Right-click each of "Page 1" and "Page 2" in the navtree and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [$page1.object, $page2.object], target: $given.collection }
@@ -539,7 +554,7 @@ flow QA-3: A contributed slash-command runs
       do: Repeat.
       invoke: org.dxos.operation.debug.insertLoremIpsum { subject: $given.attendableId, head: 0 }
       expect: the second paragraph differs from the first — the text is generated, not a fixed string
-  cleanup:
+  after:
     - name: Clear the document
       do: Select all and delete.
 ```

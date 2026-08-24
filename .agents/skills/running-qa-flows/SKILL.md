@@ -25,11 +25,11 @@ is at **flow granularity**: the user approves a named flow, you run all of its s
 1. Name the flow and summarise what it will change before starting. Do not run an unapproved flow.
 2. Never run a flow against the user's own Composer profile without saying so — prefer a dev
    server you started, whose profile is disposable.
-3. `cleanup:` is part of the flow, and runs unless the user asks to skip it (see §7).
+3. All three stages run unless `--stage` narrows it (see §6).
 
 ## 1. Read the flow
 
-Read the `flow` block itself first — `given`, the `steps` list, and `cleanup`. Steps are items of
+Read the `flow` block itself first — `given`, and the `before` / `steps` / `after` lists. Steps are items of
 a list, numbered by position from 1; a step carrying an `id:` is referenced by that instead. For
 each step read `do` / `invoke` / `expect` / `assert` and any `note`. A `note` is a constraint on
 how the step must be run, not commentary: ignoring one produces a false failure. Restate what the
@@ -71,7 +71,7 @@ Every precondition, before step 1. If one cannot be met, **abort and say which**
 against unmet preconditions reports failures that belong to the fixture, not the application.
 
 **Check that the flow's own artifacts are absent, whether or not `given` says so.** A previous run
-whose `cleanup` was skipped leaves objects behind, and an existence-shaped assert
+whose `after` stage was skipped leaves objects behind, and an existence-shaped assert
 (`some((o) => o.name === 'QA Notes')`) is then already true before step 1 — the step reports pass
 having done nothing.
 
@@ -174,23 +174,31 @@ One row per step, in `steps` order, labelled with the step's `name`. Report a fa
 Execution Rule 9 in the dialect; the two must not diverge. Give the observed value next to the
 expected one, and never report a step as passing because the invocation returned without throwing.
 
-## 6. Cleanup
+## 6. Stages
 
-`cleanup` removes **only what this run created** — the objects it captured, by identity. It is a
+A flow has three step lists, run in order: **`before`** builds the fixture, **`steps`** is the
+test, **`after`** tears it down. Keep the distinction when reporting — a `before` failure is a
+broken fixture, a `steps` failure is a defect in the application.
+
+`--stage=before|test|after` runs one of them. Omitted, all three run in order. `test` names the
+`steps` list, matching how the flag reads aloud.
+
+`after` removes **only what this run created** — the objects it captured, by identity. It is a
 step list like any other, run through operations, not raw database calls. The
 difference is not pedantry: `space.db.remove` deletes the object but leaves a plank pointing at it,
 and **the user cannot close a plank whose object no longer exists**. `space.removeObjects` unlinks
 from the collection and closes what was open, reporting it as `wasActive`.
 
-**Skipping is a supported option.** "Run QA-1 but skip cleanup" is a normal request — inspecting the
-final state is why flows exist. When you skip:
+**A partial run is a normal request** — `--stage=before` stands a fixture up to look at,
+`--stage=after` tears one down, `--stage=test` re-tests against a fixture already standing.
+Whenever a stage is skipped:
 
 1. Say so in the report, next to the result rather than buried after it.
 2. List exactly what remains, by name.
-3. Give the command or snippet that removes it later.
+3. Give the command that removes it later — `--stage=after`.
 
-The next run's `given` will fail on those leftovers (§3), which is the intended behaviour: a flow
-should refuse to run against its own residue rather than assert vacuously against it.
+The next full run's `given` will fail on those leftovers (§3), which is intended: a flow should
+refuse to run against its own residue rather than assert vacuously against it.
 
 ## 7. Feed findings back
 
@@ -208,6 +216,7 @@ the run is how it earns its accuracy.
 - [ ] Steps threading a live object coalesced into one snippet
 - [ ] Each step judged on its effect (db or DOM), never on a return value
 - [ ] Per-step pass/fail table reported, failures by QA-n.m (or by step `id` where declared)
-- [ ] `cleanup` run through operations (never `db.remove`), or its omission stated with what remains
+- [ ] Stages run in order; any skipped stage stated with what remains
+- [ ] `after` run through operations (never `db.remove`)
 - [ ] Flow updated where the run contradicted it
 ```

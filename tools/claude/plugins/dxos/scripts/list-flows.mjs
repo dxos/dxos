@@ -35,6 +35,23 @@ const walk = (dir, out = []) => {
   return out;
 };
 
+/** Steps per stage. A stage header sits at two spaces; its steps are `- name:`/`- do:` at four. */
+const countStages = (body) => {
+  const counts = { before: 0, steps: 0, after: 0 };
+  let stage;
+  for (const line of body.split('\n')) {
+    const header = line.match(/^ {2}(\w+):\s*$/);
+    if (header) {
+      stage = header[1] in counts ? header[1] : undefined;
+      continue;
+    }
+    if (stage && /^ {4}- +(?:name|do):/.test(line)) {
+      counts[stage]++;
+    }
+  }
+  return counts;
+};
+
 /** Flows in one document, with the fields a caller needs to decide what to run. */
 const parseFlows = (text, file) => {
   const flows = [];
@@ -53,9 +70,10 @@ const parseFlows = (text, file) => {
       title: (header[2] ?? '').trim(),
       status: body.match(/^\s*status:\s*(\w+)/m)?.[1] ?? 'unverified',
       actors: body.match(/^\s*actors:\s*([\w|\s]+?)\s*$/m)?.[1]?.trim() ?? 'both',
-      // Only the `steps:` section — `cleanup:` is a step list too, and counting it would overstate
-      // the work a run does.
-      steps: (body.split(/^\s*cleanup:/m)[0].match(/^\s{4}-\s+(?:name|do):/gm) ?? []).length,
+      // Per stage, so a partial run's size is visible; `steps` is the test, the other two are fixture.
+      // Line-walked rather than matched: a lazy regex with an `m`-flag `$` in its lookahead stops
+      // at the first line break, which silently reported one step per stage.
+      stages: countStages(body),
       covers: body.match(/^\s*covers:\s*\[(.*?)\]/m)?.[1] ?? '',
     });
   }
@@ -97,8 +115,10 @@ if (asJson) {
   const [idWidth, statusWidth] = [width('id'), width('status')];
   flows.forEach((flow, index) => {
     const num = String(index + 1).padStart(2);
+    const { before = 0, steps = 0, after = 0 } = flow.stages ?? {};
     console.log(
-      `${num}. ${flow.id.padEnd(idWidth)}  ${flow.status.padEnd(statusWidth)}  ${String(flow.steps).padStart(2)} steps  ${flow.title}`,
+      `${num}. ${flow.id.padEnd(idWidth)}  ${flow.status.padEnd(statusWidth)}  ${String(steps).padStart(2)} steps` +
+        ` (${before} before, ${after} after)  ${flow.title}`,
     );
     console.log(`    ${flow.file}${flow.covers ? `  covers: ${flow.covers}` : ''}`);
   });

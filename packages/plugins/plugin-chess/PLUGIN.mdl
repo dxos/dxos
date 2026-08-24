@@ -484,7 +484,7 @@ flow QA-1: Start a game and play the opening
       it is on. Enabling is a UI action (Settings -> plugin registry); `manager.enable()` returns
       without error from the debug port and does not enable it.
     - no game named "QA Game" exists — ABORT rather than deleting one this flow did not create
-  steps:
+  before:
     - name: Create the game
       do: In the navtree, click + on a collection and choose Chess. Name it "QA Game".
       expect: a Game appears under the collection with pieces in their starting positions, white to move
@@ -492,6 +492,7 @@ flow QA-1: Start a game and play the opening
         NO `invoke` — [op:startGame] has no runtime counterpart (see its note), so this step is
         human-only and the flow is `actors: human` until chess gains a create operation. That is
         the finding, not an omission.
+  steps:
     - name: Play 1. e4
       do: Drag the e2 pawn to e4.
       invoke: [op:submitMove] { game: $given.game, move: "e4" }
@@ -520,7 +521,7 @@ flow QA-1: Start a game and play the opening
         This step first read "drag the f3 knight to f6" against `Nf6`, which after 1. e4 e5 2. Nf3 is
         BLACK's knight and perfectly legal (Petrov) — the human and agent paths described different
         moves and the step failed against a correct engine.
-  cleanup:
+  after:
     - name: Delete the game
       do: Right-click "QA Game" in the navtree and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [$given.game], target: $given.collection }

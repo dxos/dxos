@@ -55,9 +55,10 @@ ext flow
     covers?:   RefList                  # feat / req / test ids this flow exercises
     status?:   passing | failing | unverified   # last known result, with a date in a comment
     given?:    GivenList                # preconditions; `name: prose` binds `$given.name` (see below)
-    steps:     StepList                 # ordered list of step maps (see below)
+    before?:   StepList                 # fixture the test needs, but is not itself testing
+    steps:     StepList                 # the test — the steps whose failure is a defect
+    after?:    StepList                 # returning the app to its pre-flow state
     then?:     ProseList                # whole-flow criteria, beyond the per-step ones
-    cleanup?:  StepList                 # returning the app to its pre-flow state; steps, not prose
     tags?:     TagList
   nesting: none
 ```
@@ -83,7 +84,7 @@ ext step
 
 Steps are items of a list, not repeated `step <n>:` keys. Core declares block bodies as
 `key[?]: value`, with `key:` followed by an indented `-` list as the multi-line form — which
-`given` and `cleanup` already use. A pseudo-key carrying a positional id is not core syntax, and
+`given` already uses. A pseudo-key carrying a positional id is not core syntax, and
 it forces every later step to be renumbered by hand when one is inserted.
 
 ### Field rules
@@ -171,18 +172,21 @@ a runner that ignores them produces false failures.
    `org.dxos.operation.markdown.create` and `org.dxos.operation.markdown.createDraft` — the very
    ambiguity `key:` exists to remove.
 
-7. **`cleanup` is steps, not prose, and goes through operations like any other step.** A prose
-   instruction ("delete the document") leaves each actor to pick a mechanism, and they diverge: a
-   human uses the navtree's delete action, which routes through `space.removeObjects` and closes
-   any open plank; a runner reaching for `space.db.remove` skips that and strands a plank pointing
-   at an object that no longer exists — which the user cannot then close. Give cleanup the same
-   `invoke:`/`expect:` as the steps it undoes.
+7. **Three stages, run in order: `before`, `steps`, `after`.** `before` builds the fixture,
+   `steps` is the test, `after` undoes it. The split is what makes a partial run meaningful — and
+   what makes a failure legible, since a `before` failure is a broken fixture while a `steps`
+   failure is a defect in the application. Every stage is a step list; `after` in particular is
+   steps, not prose, and goes through operations like any other. A prose instruction ("delete the
+   document") leaves each actor to pick a mechanism, and they diverge: a human uses the navtree's
+   delete action, which routes through `space.removeObjects` and closes any open plank; a runner
+   reaching for `space.db.remove` strands a plank pointing at an object that no longer exists,
+   which the user cannot then close.
 
-8. **Skipping cleanup is the runner's option, not the flow's.** A flow always declares how to undo
-   itself; whether to run it is decided per invocation, because inspecting the final state is a
-   legitimate reason to leave it. A skipped cleanup must be reported — what remains, and how to
-   remove it later — since the next run's `given` will otherwise fail on its own leftovers
-   (Rule 5).
+8. **A partial run is the runner's option, not the flow's.** A flow always declares all three
+   stages; which of them to run is decided per invocation. Running `before` alone stands a fixture
+   up to look at; `after` alone tears one down; `steps` alone re-tests against a fixture already
+   standing. Whatever is skipped must be reported — what remains and how to remove it — since the
+   next full run's `given` will otherwise fail on its own leftovers (Rule 5).
 
 9. **A step that cannot run says so in `blocked`, and the flow's `status` becomes `blocked`.**
    Not `failing` — nothing was tested — and not silence, which reads as untried. A duplicate
@@ -217,7 +221,7 @@ flow QA-1: Create and open a document
       expect: "Notes" appears as a row under the collection
       assert: return (await space.db.query(dxos.Filter.everything()).run()).some((o) => o.id === $created.object.id)
       note: Coalesced with the previous step — `created.object` is live and cannot cross a snippet boundary.
-  cleanup:
+  after:
     - name: Delete the document
       do: Right-click "Notes" in the navtree and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }

@@ -368,6 +368,10 @@ step no human can perform is a design smell rather than a shortcut. `invoke` and
 agent's affordances, and their absence is meaningful: a flow containing a step with no operation
 behind it (a drag, a reload, a judgement about flicker) cannot declare `actors: agent`.
 
+A flow runs in three stages — `before` (fixture), `steps` (the test), `after` (teardown) — so a
+partial run is meaningful and a failure is legible: a `before` failure is a broken fixture, a
+`steps` failure is a defect.
+
 Flows live in a `## QA` section of each `PLUGIN.mdl`, or in `APP.mdl` for journeys crossing
 plugins. Agents execute them per the `running-qa-flows` skill; the transport is the agent debug
 port.
