@@ -4,10 +4,11 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Instructions from '@dxos/compute/Instructions';
-import { Database, Feed, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { Annotation, Database, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
@@ -19,15 +20,7 @@ import { Chat } from '../types';
 EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  types: [
-    Chat.Chat,
-    Chat.CompanionTo,
-    Outline.Outline,
-    Feed.Feed,
-    Text.Text,
-    Instructions.Instructions,
-    Message.Message,
-  ],
+  types: [Chat.Chat, Outline.Outline, Feed.Feed, Text.Text, Instructions.Instructions, Message.Message],
   disableLlmMemoization: true,
 });
 
@@ -50,8 +43,8 @@ describe('Chat', () => {
         expect(chat.name).toBe('Test');
 
         // Asserted on the schema, not the instance: `in` reports false for any declared-but-unset
-        // optional field. The agent a chat runs as is reached through CompanionTo, never a field —
-        // that field was the edge that made Agent and Chat mutually dependent.
+        // optional field. The agent a chat runs as is reached through the ECHO parent edge, never a
+        // field — a field was the edge that made Agent and Chat mutually dependent.
         expect(Object.keys(Chat.Chat.fields).sort()).toEqual(['feed', 'instructions', 'name', 'outline', 'viewType']);
       },
       Effect.provide(TestLayer),
@@ -79,22 +72,22 @@ describe('Chat', () => {
   );
 
   it.effect(
-    'CompanionTo links a chat to an arbitrary companion object',
+    'linkCompanion links a chat to an arbitrary subject: annotation ref + parent edge',
     Effect.fnUntraced(
       function* (_) {
         const chat = yield* makeChat;
-        const companion = yield* Database.add(Instructions.make({ text: 'Steer.' }));
-        const relation = yield* Database.add(
-          Relation.make(Chat.CompanionTo, {
-            [Relation.Source]: chat,
-            [Relation.Target]: companion,
-          }),
-        );
+        const subject = yield* Database.add(Instructions.make({ text: 'Steer.' }));
+        Chat.linkCompanion({ chat, subject });
         yield* Database.flush();
 
-        expect(Relation.getSource(relation).id).toBe(chat.id);
-        expect(Relation.getTarget(relation).id).toBe(companion.id);
-        expect(Obj.instanceOf(Chat.Chat, Relation.getSource(relation))).toBe(true);
+        expect(Obj.getParent(chat)?.id).toBe(subject.id);
+        const chats = Annotation.get(subject, Chat.CompanionChatAnnotation).pipe(Option.getOrElse(() => []));
+        expect(chats.map((ref) => ref.uri)).toEqual([Ref.make(chat).uri]);
+
+        // Idempotent per chat: linking again adds no duplicate ref.
+        Chat.linkCompanion({ chat, subject });
+        const again = Annotation.get(subject, Chat.CompanionChatAnnotation).pipe(Option.getOrElse(() => []));
+        expect(again).toHaveLength(1);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

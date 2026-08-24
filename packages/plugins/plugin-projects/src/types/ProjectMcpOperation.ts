@@ -8,13 +8,8 @@ import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
-import { trim } from '@dxos/util';
-
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /**
  * Project verbs projected as MCP tools (MILESTONE-5.md §7.2/§7.4).
@@ -30,7 +25,7 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
 
 export const ListProjects = Operation.make({
   meta: {
-    key: makeKey('projectList'),
+    key: DXN.make('org.dxos.operation.projects.list'),
     name: 'List Projects',
     description: 'List the projects in the space: id, name, status, description, and whether a task set is linked.',
     icon: 'ph--list-bullets--regular',
@@ -56,7 +51,7 @@ export const ListProjects = Operation.make({
 
 export const GetProject = Operation.make({
   meta: {
-    key: makeKey('projectGet'),
+    key: DXN.make('org.dxos.operation.projects.get'),
     name: 'Get Project',
     description: 'Read a project in full: status, task-set summary (open/total per set), outline, and artifacts.',
     icon: 'ph--info--regular',
@@ -86,7 +81,7 @@ export const GetProject = Operation.make({
 
 export const UpdateProject = Operation.make({
   meta: {
-    key: makeKey('projectUpdate'),
+    key: DXN.make('org.dxos.operation.projects.update'),
     name: 'Update Project',
     description: 'Patch a project: name, status, or description.',
     icon: 'ph--pencil-simple--regular',
@@ -103,56 +98,3 @@ export const UpdateProject = Operation.make({
     project: Schema.Unknown,
   }),
 }).pipe(Operation.mutation('write'));
-
-/** One artifact row: enough to identify and load the object, without inlining its content. */
-export const ArtifactInfo = Schema.Struct({
-  dxn: Schema.String,
-  typename: Schema.optional(Schema.String),
-  label: Schema.optional(Schema.String),
-});
-
-export const ArtifactAdd = Operation.make({
-  meta: {
-    key: makeKey('artifactAdd'),
-    name: 'Add project artifact',
-    icon: 'ph--stack-plus--regular',
-    description: trim`
-      Files an object into a project's artifacts collection.
-      Use this after creating an object (document, outline, sheet, contact, …) while working in a
-      project's context, so the project owns it and it appears in the project's artifacts list.
-      Adding the same object twice is a no-op.
-    `,
-  },
-  input: Schema.Struct({
-    project: Ref.Ref(Project.Project).annotate({
-      description: 'The project to file into (its reference is in the chat context).',
-    }),
-    object: Ref.Ref(Obj.Unknown).annotate({
-      description: 'The object to file as an artifact.',
-    }),
-  }),
-  output: Schema.Void,
-  services: [Database.Service],
-}).pipe(Operation.mutation('write'));
-
-export const ArtifactList = Operation.make({
-  meta: {
-    key: makeKey('artifactList'),
-    name: 'List project artifacts',
-    icon: 'ph--stack--regular',
-    description: trim`
-      Lists the objects in a project's artifacts collection (DXN, type, and label per artifact).
-      Use this to find what the project already holds before searching the whole space; load an
-      artifact's content with the load tool when needed.
-    `,
-  },
-  input: Schema.Struct({
-    project: Ref.Ref(Project.Project).annotate({
-      description: 'The project whose artifacts to list (its reference is in the chat context).',
-    }),
-  }),
-  output: Schema.Struct({
-    artifacts: Schema.Array(ArtifactInfo),
-  }),
-  services: [Database.Service],
-}).pipe(Operation.mutation('none'));

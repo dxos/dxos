@@ -85,7 +85,7 @@ describe('Template', () => {
   });
 
   describe('processTemplate', () => {
-    const GREET_KEY = DXN.make('org.example.test.greet');
+    const GREET_KEY = DXN.make('com.example.test.greet');
 
     const greet = Operation.withHandler(
       Operation.make({

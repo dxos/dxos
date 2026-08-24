@@ -16,6 +16,7 @@ import {
   DelegationSkill,
   MemorySkill,
   PlanningSkill,
+  ProjectSkill,
   SkillManagerSkill,
   WebSearchSkill,
   makeDelegationStrategy,
@@ -41,6 +42,7 @@ const skillDefinition = () =>
       AgentWizardSkill,
       DelegationSkill,
       AlarmSkill,
+      ProjectSkill,
     ]),
 
     // Run the conversational agent as a supervisor: delegate in-progress plan tasks to sub-agents

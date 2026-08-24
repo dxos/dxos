@@ -31,8 +31,8 @@ describe('Sandbox', { tags: ['manual'] }, () => {
       instructions: trim`
         The database starts empty. The sandbox service is available at http://localhost:8792.
         Enable the sandbox skill (key: org.dxos.skill.sandbox) using the skill manager.
-        Use CreateSandbox (org.dxos.function.sandbox.create) to create a sandbox named "assistant-e2e-test".
-        Use Exec (org.dxos.function.sandbox.exec) on that sandbox to run: echo hello world
+        Use CreateSandbox (org.dxos.operation.sandbox.create) to create a sandbox named "assistant-e2e-test".
+        Use Exec (org.dxos.operation.sandbox.exec) on that sandbox to run: echo hello world
         Report the exec result in your completion output.
       `,
       completionCriteria: [

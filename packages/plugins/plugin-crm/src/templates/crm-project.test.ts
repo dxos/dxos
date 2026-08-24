@@ -77,7 +77,7 @@ describe('crm sender-research project template', () => {
     expect(routineInstructions?.objects?.map((ref) => ref.target?.id)).toEqual([project.id]);
     const routineSkills = routineInstructions?.skills.map((ref) => ref.uri.toString()) ?? [];
     expect(routineSkills).toContain(Skill.registryURI('org.dxos.skill.crm').toString());
-    expect(routineSkills).toContain(Skill.registryURI('org.dxos.plugin.projects.skill.project').toString());
+    expect(routineSkills).toContain(Skill.registryURI('org.dxos.skill.project').toString());
 
     // Feed trigger, off by default, message as input.
     const trigger = await routine.triggers[0].tryLoad();

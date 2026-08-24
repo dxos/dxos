@@ -6,13 +6,11 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
-    'ProjectSkill': 'src/skills/ProjectSkill.ts',
     'ProjectOperationHandlerSet': 'src/operations/ProjectOperationHandlerSet.ts',
     'index': 'src/index.ts',
     'ProjectsPlugin': 'src/ProjectsPlugin.ts',
     'plugin': 'src/plugin.tsx',
     'plugin.workerd': 'src/plugin.workerd.ts',
-    'skills': 'src/skills/index.ts',
     'capabilities': 'src/capabilities/index.ts',
     'capabilities.workerd': 'src/capabilities/workerd.ts',
     'components': 'src/components/index.ts',

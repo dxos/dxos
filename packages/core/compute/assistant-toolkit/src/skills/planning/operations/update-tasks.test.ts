@@ -25,7 +25,7 @@ EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: PlanningHandlers,
-  types: [Agent.Agent, Outline.Outline, Text.Text, Chat.Chat, Chat.CompanionTo, Skill.Skill, Feed.Feed],
+  types: [Agent.Agent, Outline.Outline, Text.Text, Chat.Chat, Skill.Skill, Feed.Feed],
   skills: [PlanningSkill.make()],
   disableLlmMemoization: true,
 });

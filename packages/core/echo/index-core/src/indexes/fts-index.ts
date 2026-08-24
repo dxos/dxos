@@ -15,7 +15,7 @@ import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/fts';
 import { chunkArray } from '../utils';
-import type { EntityMeta } from './entity-meta-index';
+import { type EntityMeta, buildTypeDxnCondition } from './entity-meta-index';
 import type { Index, IndexerObject } from './interface';
 
 // SQLite bound-variable limit (SQLITE_LIMIT_VARIABLE_NUMBER) is 999 in most builds.
@@ -45,6 +45,13 @@ export interface FtsQuery {
    * Queue IDs to search within.
    */
   queueIds: readonly EntityId[] | null;
+
+  /**
+   * Type identifiers to restrict matches to (any form accepted by the meta index — typename
+   * DXN or stored-schema EID). Null or undefined disables type scoping; an empty list matches
+   * nothing.
+   */
+  typeDxns?: readonly string[] | null;
 }
 
 /**
@@ -114,10 +121,16 @@ export class FtsIndex implements Index {
     spaceId,
     includeAllQueues,
     queueIds,
+    typeDxns,
   }: FtsQuery): Effect.Effect<readonly FtsQueryResult[], SqlError.SqlError, SqlClient.SqlClient> {
     return Effect.gen(function* () {
       const trimmed = query.trim();
       if (trimmed.length === 0) {
+        return [];
+      }
+
+      // An explicit empty type scope admits no type, so no row can match.
+      if (typeDxns && typeDxns.length === 0) {
         return [];
       }
 
@@ -160,6 +173,11 @@ export class FtsIndex implements Index {
 
       if (sourceConditions.length > 0) {
         conditions.push(sql`(${sql.or(sourceConditions)})`);
+      }
+
+      // `typeDXN` is unambiguous in the join: the FTS virtual table only exposes `snapshot`.
+      if (typeDxns && typeDxns.length > 0) {
+        conditions.push(sql`(${buildTypeDxnCondition(sql, typeDxns)})`);
       }
 
       if (useBm25) {

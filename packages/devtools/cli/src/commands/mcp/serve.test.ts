@@ -45,7 +45,7 @@ const REQUESTS = [
     jsonrpc: '2.0',
     id: 7,
     method: 'tools/call',
-    params: { name: 'invokeOperation', arguments: { key: 'org.dxos.plugin.registry.operation.queryPlugins' } },
+    params: { name: 'invokeOperation', arguments: { key: 'org.dxos.operation.registry.queryPlugins' } },
   },
   { jsonrpc: '2.0', id: 8, method: 'tools/call', params: { name: 'whoami', arguments: {} } },
   { jsonrpc: '2.0', id: 9, method: 'tools/call', params: { name: 'queryOperations', arguments: {} } },
@@ -53,7 +53,7 @@ const REQUESTS = [
     jsonrpc: '2.0',
     id: 10,
     method: 'tools/call',
-    params: { name: 'queryOperations', arguments: { keys: ['org.dxos.plugin.space.operation.addObject'] } },
+    params: { name: 'queryOperations', arguments: { keys: ['org.dxos.operation.space.addObject'] } },
   },
   {
     jsonrpc: '2.0',
@@ -66,7 +66,7 @@ const REQUESTS = [
     jsonrpc: '2.0',
     id: 13,
     method: 'tools/call',
-    params: { name: 'invokeOperation', arguments: { key: 'org.dxos.plugin.space.operation.queryTypes' } },
+    params: { name: 'invokeOperation', arguments: { key: 'org.dxos.operation.space.queryTypes' } },
   },
 ];
 
@@ -186,8 +186,9 @@ describe('dx mcp serve', () => {
     const { operations } = JSON.parse(responses.get(9)!.result.content[0].text);
     const keys: string[] = operations.map((operation: { key: string }) => operation.key);
     // The registry the CLI assembles carries the project/task verbs and plugin-space's object CRUD.
-    expect(keys.some((key) => key.endsWith('.taskCreate'))).to.be.true;
-    expect(keys.some((key) => key.endsWith('.projectCreate'))).to.be.true;
+    // Full keys, not suffixes: several packages now have a bare `create` verb.
+    expect(keys).to.include('org.dxos.operation.tasks.create');
+    expect(keys).to.include('org.dxos.operation.projects.create');
     for (const verb of [...PROJECTED_OBJECT_OPERATIONS, ...PROJECTED_HOST_OPERATIONS]) {
       expect(
         keys.some((key) => key.endsWith(`.${verb}`)),
@@ -196,12 +197,12 @@ describe('dx mcp serve', () => {
     }
 
     // A view is compact: what it costs the model is a description, not a schema.
-    const row = operations.find((operation: { key: string }) => operation.key.endsWith('.taskCreate'));
+    const row = operations.find((operation: { key: string }) => operation.key === 'org.dxos.operation.tasks.create');
     expect(row).to.not.have.property('schema');
     expect(row.skills).to.include(SKILL);
 
     const detail = JSON.parse(responses.get(10)!.result.content[0].text).operations[0];
-    expect(detail.key).to.equal('org.dxos.plugin.space.operation.addObject');
+    expect(detail.key).to.equal('org.dxos.operation.space.addObject');
     expect(detail.schema.input.type).to.equal('object');
     expect(detail.hints.mutation).to.be.a('string');
   });
@@ -218,7 +219,7 @@ describe('dx mcp serve', () => {
   test('serves the same skill through loadSkill and prompts/get', ({ expect }) => {
     const loaded = JSON.parse(responses.get(4)!.result.content[0].text);
     expect(loaded.skills[0].name).to.equal(SKILL);
-    expect(loaded.skills[0].key).to.equal('org.dxos.plugin.projects.skill.project');
+    expect(loaded.skills[0].key).to.equal('org.dxos.skill.project');
     expect(loaded.instructions).to.be.a('string').and.to.have.length.greaterThan(0);
 
     const messages: { role: string; content: { type: string; text: string } }[] = responses.get(5)!.result.messages;

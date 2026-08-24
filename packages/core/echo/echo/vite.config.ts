@@ -14,7 +14,7 @@ export default defineConfig({
     Annotation: 'src/Annotation.ts',
     Blob: 'src/Blob.ts',
     Database: 'src/Database.ts',
-    Err: 'src/Err.ts',
+    Error: 'src/Error.ts',
     Feed: 'src/Feed.ts',
     Filter: 'src/Filter.ts',
     Format: 'src/Format.ts',

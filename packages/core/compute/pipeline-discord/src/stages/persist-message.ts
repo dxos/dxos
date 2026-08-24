@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import { type StateError, StateStore, type Type } from '@dxos/crawler';
 import { Stage } from '@dxos/pipeline';
 
-import { MessageStore, type StoredMessage } from '../stores';
+import { MessageStore } from '../stores';
 
-const toStored = (target: Type.Target, message: Type.Message): StoredMessage => ({
+const toStored = (target: Type.Target, message: Type.Message): MessageStore.StoredMessage => ({
   id: message.id,
   targetId: target.id,
   authorId: message.author.id,
@@ -31,30 +31,33 @@ const toStored = (target: Type.Target, message: Type.Message): StoredMessage => 
  * forwarded) so the commit sink cannot advance the durable cursor past an un-stored message —
  * the message is refetched and retried on the next resume.
  */
-export const persistMessageStage = (): Stage.Stage<Type.Event, Type.Event, StateError, MessageStore | StateStore> =>
+export const persistMessageStage = (): Stage.Stage<
+  Type.Event,
+  Type.Event,
+  StateError,
+  MessageStore.MessageStore | StateStore.StateStore
+> =>
   Stage.map(
     'persist-message',
-    (event: Type.Event): Effect.Effect<Type.Event | undefined, StateError, MessageStore | StateStore> =>
+    (
+      event: Type.Event,
+    ): Effect.Effect<Type.Event | undefined, StateError, MessageStore.MessageStore | StateStore.StateStore> =>
       event._tag !== 'Message'
         ? Effect.succeed(event)
         : Effect.gen(function* () {
-            const messages = yield* MessageStore;
-            if (yield* messages.has(event.message.id)) {
+            if (yield* MessageStore.has(event.message.id)) {
               // Replayed message (resume overlap) — drop before it reaches downstream stages. The
               // commit sink also never sees it, which is safe: the cursor already covers this id.
               return undefined;
             }
-            yield* messages.put(toStored(event.target, event.message));
+            yield* MessageStore.put(toStored(event.target, event.message));
             return event;
           }).pipe(
             Effect.catch((error) =>
-              Effect.flatMap(StateStore, (store) =>
-                store
-                  .setStatus(event.target.id, event.target.status, `persist-message: ${error.message}`)
-                  // Drop the event: forwarding it would let the commit sink advance the cursor past
-                  // a message that was never stored, silently losing it on resume.
-                  .pipe(Effect.as(undefined)),
-              ),
+              StateStore.setStatus(event.target.id, event.target.status, `persist-message: ${error.message}`)
+                // Drop the event: forwarding it would let the commit sink advance the cursor past
+                // a message that was never stored, silently losing it on resume.
+                .pipe(Effect.as(undefined)),
             ),
           ),
   );

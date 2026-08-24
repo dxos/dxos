@@ -12,6 +12,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import { ProjectSkill } from '@dxos/assistant-toolkit';
 import { type Client, ClientService } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -21,7 +22,6 @@ import { McpServer } from '@dxos/mcp-server';
 // Narrow subpath imports: these plugins declare React surfaces, and a bundler follows the dynamic
 // import behind a lazy capability, so activating them would pull React into the CLI binary.
 import * as ProjectOperationHandlerSet from '@dxos/plugin-projects/ProjectOperationHandlerSet';
-import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
 import * as TasksOperationHandlerSet from '@dxos/plugin-tasks/TasksOperationHandlerSet';
 
 import { chatLayer, operationHandlers } from '../../util';

@@ -18,10 +18,10 @@ import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
+import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { type Space, isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
-import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { EffectEx } from '@dxos/effect';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ViewAnnotation } from '@dxos/schema';
@@ -110,14 +110,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         );
 
         const userSchemas = allSchemas.filter((type) => {
-          if (Type.isRelation(type)) {
-            return false;
-          }
-          if (Type.isTypeKind(type)) {
-            return false;
-          }
-          const schema = Type.getSchema(type);
-          if (!showHidden && HiddenAnnotation.get(schema).pipe(Option.getOrElse(() => false))) {
+          if (!TypeOptions.isUserType(type, { includeHidden: showHidden })) {
             return false;
           }
           if (Type.getTypename(type) === Type.getTypename(Collection.Collection)) {
@@ -378,10 +371,10 @@ const createSchemaActions = ({
     ...(createObjectFn
       ? [
           Node.makeAction({
-            id: SpaceOperation.OpenCreateObject.meta.key,
+            id: SpaceOperation.OpenObjectForm.meta.key,
             data: Effect.fnUntraced(function* () {
               if (inputSchema) {
-                yield* Operation.invoke(SpaceOperation.OpenCreateObject, {
+                yield* Operation.invoke(SpaceOperation.OpenObjectForm, {
                   target: space.db,
                   typename,
                 });
@@ -418,12 +411,12 @@ const createSchemaActions = ({
     Node.makeAction({
       id: `${SpaceOperation.AddObject.meta.key}-view`,
       data: () =>
-        Operation.invoke(SpaceOperation.OpenCreateObject, {
+        Operation.invoke(SpaceOperation.OpenObjectForm, {
           target: space.db,
           views: true,
           // The type-picker field value is the type URI (see TypeOptions), so seed the default with
           // the URI — not the bare typename — for the option to be pre-selected.
-          initialFormValues: { typename: Type.getURI(type) },
+          defaults: { typename: Type.getURI(type) },
         }),
       properties: {
         label: ADD_VIEW_TO_SCHEMA_LABEL,

@@ -13,9 +13,9 @@ import { ProjectCapabilities } from '#types';
 // React surface into a worker bundle that cannot load it.
 
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const Templates = Capability.lazyModule(
   'Templates',
   { provides: [ProjectCapabilities.Template] },
   () => import('./templates'),
 );
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));

@@ -430,8 +430,8 @@ const constructSpaceActions = ({ space, migrating }: { space: Space; migrating?:
   if (state === SpaceState.SPACE_READY && !hasPendingMigration) {
     actions.push(
       Node.makeAction({
-        id: SpaceOperation.OpenCreateObject.meta.key,
-        data: () => Operation.invoke(SpaceOperation.OpenCreateObject, { target: space.db }),
+        id: SpaceOperation.OpenObjectForm.meta.key,
+        data: () => Operation.invoke(SpaceOperation.OpenObjectForm, { target: space.db }),
         properties: {
           label: CREATE_OBJECT_IN_SPACE_LABEL,
           icon: 'ph--plus--regular',

@@ -5,8 +5,8 @@
 import type * as Tool from 'effect/unstable/ai/Tool';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Icon, IconBlock, useTranslation } from '@dxos/react-ui';
-import { NumericTabs, TextCrawl, TogglePanel, type TogglePanelRootProps } from '@dxos/react-ui-components';
+import { Icon, IconBlock, TextCrawl, useTranslation } from '@dxos/react-ui';
+import { NumericTabs, TogglePanel, type TogglePanelRootProps } from '@dxos/react-ui-components';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type ContentBlock } from '@dxos/types';
 import { type XmlWidgetProps, getXmlTextChild } from '@dxos/ui-editor';

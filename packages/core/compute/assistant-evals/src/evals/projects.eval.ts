@@ -7,13 +7,12 @@ import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
 import { AiContext } from '@dxos/assistant';
-import { Chat } from '@dxos/assistant-toolkit';
+import { Chat, ProjectSkill } from '@dxos/assistant-toolkit';
 import * as Project from '@dxos/compute/Project';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
-import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
 import { trim } from '@dxos/util';
 
 import { findObject } from '../assertions';
@@ -23,7 +22,7 @@ import { getDefaultSkills } from '../skills';
 // The plugin-projects system test: a Chat runs in a Project's context (the project's own
 // Instructions, passed by reference) and the model is directed to create a markdown document.
 // Graded on DB effects: the document exists, is bound into the session context, and is filed
-// into the project's artifacts (the project skill's artifactAdd tool) — binding alone proves the
+// into the project's artifacts (the ProjectSkill assistant-toolkit-add-artifact tool) — binding alone proves the
 // session saw the object; only the artifacts check proves the project owns it.
 
 const PROJECT_NAME = 'Voyage';
@@ -57,7 +56,7 @@ const task = createEvalRunner({
       const chat = yield* Database.add(
         Chat.make({ name: `${PROJECT_NAME} Chat`, feed: Ref.make(feed), instructions: Ref.make(instructions) }),
       );
-      Obj.setParent(chat, project);
+      Chat.linkCompanion({ chat, subject: project });
       yield* Database.flush();
 
       return { objects: [Ref.make(project)], chat: Ref.make(chat) };
@@ -97,7 +96,7 @@ evalite('Projects — project chat creates and files an artifact', {
     },
     {
       name: 'document-filed',
-      description: "The document is in the project's artifacts (add-artifact tool).",
+      description: "The document is in the project's artifacts (assistant-toolkit-add-artifact tool).",
       scorer: ({ output }) => (output.dbQuery.filed ? 1 : 0),
     },
     {

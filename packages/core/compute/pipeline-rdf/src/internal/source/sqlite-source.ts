@@ -66,6 +66,8 @@ export const makeSqliteSource = (sql: SqlClient.SqlClient) => {
     if (bound(g)) {
       filters.push(sql`g = ${g.termType === 'DefaultGraph' ? '' : g.value}`);
     }
+    // Rows are materialized rather than streamed: `sql`…`.stream` dies with "executeStream not
+    // implemented" on @effect/sql-sqlite-node, the client every node-side crawl and replay binds.
     const query = filters.length
       ? sql<Row>`SELECT s, p, o, oType, g FROM triples WHERE ${sql.and(filters)}`
       : sql<Row>`SELECT s, p, o, oType, g FROM triples`;

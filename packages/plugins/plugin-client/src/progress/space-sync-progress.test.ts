@@ -25,7 +25,7 @@ describe('toSpaceUpdate', () => {
       }),
     );
     expect(update).toEqual({
-      label: 'Notes',
+      label: 'Syncing Notes',
       current: 98,
       total: 110,
       note: '4 CRDTs · ↓6 ↑2',
@@ -34,7 +34,7 @@ describe('toSpaceUpdate', () => {
 
   test('unsynced documents alone keep the meter up', () => {
     expect(toSpaceUpdate(undefined, makeState({ unsyncedDocumentCount: 3 }))).toEqual({
-      label: 'Space',
+      label: 'Syncing space',
       current: 0,
       total: 3,
       note: '3 CRDTs',
@@ -43,7 +43,7 @@ describe('toSpaceUpdate', () => {
 
   test('feed blocks alone keep the meter up', () => {
     expect(toSpaceUpdate('Notes', makeState({ totalBlocks: '10', blocksToPush: '2' }))).toEqual({
-      label: 'Notes',
+      label: 'Syncing Notes',
       current: 8,
       total: 10,
       note: '↓0 ↑2',
