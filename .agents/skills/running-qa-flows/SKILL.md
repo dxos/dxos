@@ -29,8 +29,7 @@ is at **flow granularity**: the user approves a named flow, you run all of its s
 
 ## 1. Read the flow
 
-Read the `flow` block itself first — `given`, and the `before` / `steps` / `after` lists. Steps are items of
-a list, numbered by position from 1; a step carrying an `id:` is referenced by that instead. For
+Read the `flow` block itself first — `given`, and the `before` / `test` / `after` lists. Each stage is an array of steps, numbered by position from 1; a step carrying an `id:` is referenced by that instead. For
 each step read `do` / `invoke` / `expect` / `assert` and any `note`. A `note` is a constraint on
 how the step must be run, not commentary: ignoring one produces a false failure. Restate what the
 flow will change before asking for consent.
@@ -168,7 +167,7 @@ QA-1  Create, place, open and edit a document          4/4 pass
   4       Fix the typo                 FAIL    expected "There is a typo.", DOM still has "tyop"
 ```
 
-One row per step, in `steps` order, labelled with the step's `name`. Report a failure as
+One row per step, in `test` order, labelled with the step's `name`. Report a failure as
 `QA-<flow>.<step>` — the position (`QA-1.4`), or the step's `id` where it declares one
 (`QA-1.open`), preferring the id since it survives a step being inserted ahead of it. This is
 Execution Rule 9 in the dialect; the two must not diverge. Give the observed value next to the
@@ -176,14 +175,10 @@ expected one, and never report a step as passing because the invocation returned
 
 ## 6. Stages
 
-A flow has three step lists, run in order: **`before`** builds the fixture, **`steps`** is the
-test, **`after`** tears it down. Keep the distinction when reporting — a `before` failure is a
-broken fixture, a `steps` failure is a defect in the application.
+A flow has three step lists, run in order: **`before`** builds the fixture, **`test`** is the test, **`after`** tears it down. Keep the distinction when reporting — a `before` failure is a
+broken fixture, a `test` failure is a defect in the application.
 
-`--stage=before|test|after` runs one of them. Omitted, all three run in order. `test` names the
-`steps` list, matching how the flag reads aloud.
-
-`after` removes **only what this run created** — the objects it captured, by identity. It is a
+`--stage=before|test|after` runs one of them. Omitted, all three run in order. `after` removes **only what this run created** — the objects it captured, by identity. It is a
 step list like any other, run through operations, not raw database calls. The
 difference is not pedantry: `space.db.remove` deletes the object but leaves a plank pointing at it,
 and **the user cannot close a plank whose object no longer exists**. `space.removeObjects` unlinks

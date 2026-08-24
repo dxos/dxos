@@ -56,8 +56,9 @@ ext flow
     status?:   passing | failing | unverified   # last known result, with a date in a comment
     given?:    GivenList                # preconditions; `name: prose` binds `$given.name` (see below)
     before?:   StepList                 # fixture the test needs, but is not itself testing
-    steps:     StepList                 # the test — the steps whose failure is a defect
+    test:      StepList                 # the test — the steps whose failure is a defect
     after?:    StepList                 # returning the app to its pre-flow state
+                                        # all three are arrays of the same `step` shape
     then?:     ProseList                # whole-flow criteria, beyond the per-step ones
     tags?:     TagList
   nesting: none
@@ -172,9 +173,12 @@ a runner that ignores them produces false failures.
    `org.dxos.operation.markdown.create` and `org.dxos.operation.markdown.createDraft` — the very
    ambiguity `key:` exists to remove.
 
-7. **Three stages, run in order: `before`, `steps`, `after`.** `before` builds the fixture,
-   `steps` is the test, `after` undoes it. The split is what makes a partial run meaningful — and
-   what makes a failure legible, since a `before` failure is a broken fixture while a `steps`
+7. **Three stages, run in order: `before`, `test`, `after` — each an array of the same `step`.**
+   Put a step in `before` only when it is fixture the test is not itself exercising. Creating the
+   subject usually IS the test: QA-2 tests that two documents can be made and linked, so the
+   creating belongs in `test`, and `before` stays empty. `before` builds the fixture,
+   `test` is the test, `after` undoes it. The split is what makes a partial run meaningful — and
+   what makes a failure legible, since a `before` failure is a broken fixture while a `test`
    failure is a defect in the application. Every stage is a step list; `after` in particular is
    steps, not prose, and goes through operations like any other. A prose instruction ("delete the
    document") leaves each actor to pick a mechanism, and they diverge: a human uses the navtree's
@@ -207,7 +211,7 @@ flow QA-1: Create and open a document
   given:
     - an identity exists
     - collection: a collection in the open space, to create into
-  steps:
+  test:
     - name: Create the document
       do: In the navtree, click + on a collection and choose Markdown. Name it "Notes".
       invoke: [op:createMarkdown] { name: "Notes", content: "# Notes\n" }

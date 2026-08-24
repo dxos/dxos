@@ -31,8 +31,8 @@ a later message refers to that row, exactly as `/dxos:project list` works.
   action that matters: which flow to run.
 - **`list [filter]`** — the same table, narrowed by a substring matched against the document path,
   flow id, or title. `list markdown` and `list QA-1` both work.
-- **`show <plugin> <flowId>`** — print one flow's block verbatim, so its `given`, steps and
-  `after` can be read before committing to a run. A row number from the last table also works.
+- **`show <plugin> <flowId>`** — print one flow's block verbatim, so its `given` and its
+  `before` / `test` / `after` stages can be read before committing to a run. A row number from the last table also works.
 - **`run <plugin> <flowId> [--stage=…]`** — execute it, e.g. `run markdown QA-2`. A row number
   works too. Resolve with the script and **stop if it returns anything other than exactly one
   flow** — show the candidates and ask rather than guessing which was meant.
@@ -45,7 +45,7 @@ the flow and what it will change, then wait), its `given` check, and its report 
 improvise an execution path here; the skill exists because improvising one is what produced its
 first three rounds of defects.
 
-A flow has three stages — `before` (fixture), `steps` (the test), `after` (teardown) — run in that
+A flow has three stages — `before` (fixture), `test`, `after` (teardown) — run in that
 order. **`--stage=before|test|after`** runs just one; omitted, all three run. It is a run option,
 never a property of the flow: `--stage=before` stands a fixture up to inspect, `--stage=after`
 tears one down, `--stage=test` re-tests against a fixture already standing.

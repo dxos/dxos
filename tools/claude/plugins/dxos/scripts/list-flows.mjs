@@ -37,7 +37,7 @@ const walk = (dir, out = []) => {
 
 /** Steps per stage. A stage header sits at two spaces; its steps are `- name:`/`- do:` at four. */
 const countStages = (body) => {
-  const counts = { before: 0, steps: 0, after: 0 };
+  const counts = { before: 0, test: 0, after: 0 };
   let stage;
   for (const line of body.split('\n')) {
     const header = line.match(/^ {2}(\w+):\s*$/);
@@ -115,9 +115,9 @@ if (asJson) {
   const [idWidth, statusWidth] = [width('id'), width('status')];
   flows.forEach((flow, index) => {
     const num = String(index + 1).padStart(2);
-    const { before = 0, steps = 0, after = 0 } = flow.stages ?? {};
+    const { before = 0, test = 0, after = 0 } = flow.stages ?? {};
     console.log(
-      `${num}. ${flow.id.padEnd(idWidth)}  ${flow.status.padEnd(statusWidth)}  ${String(steps).padStart(2)} steps` +
+      `${num}. ${flow.id.padEnd(idWidth)}  ${flow.status.padEnd(statusWidth)}  ${String(test).padStart(2)} test` +
         ` (${before} before, ${after} after)  ${flow.title}`,
     );
     console.log(`    ${flow.file}${flow.covers ? `  covers: ${flow.covers}` : ''}`);
