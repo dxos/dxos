@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { create } from '@bufbuild/protobuf';
+import { create, fromJsonString } from '@bufbuild/protobuf';
 import defaultsDeep from 'lodash.defaultsdeep';
 import isMatch from 'lodash.ismatch';
 
@@ -116,6 +116,16 @@ export const validateConfig = (config: ConfigInit): ConfigProto => {
 export const getEnvString = (config: Config | undefined, key: string): string | undefined => {
   const value = config?.values.runtime?.app?.env?.[key];
   return typeof value === 'string' ? value : undefined;
+};
+
+/** Validates config data from an untrusted source -- a file, an endpoint, browser storage. */
+export const parseConfig = (data: unknown, source: string): ConfigInit => {
+  try {
+    // Serialising through JSON reaches `fromJsonString` without casting to `JsonValue`.
+    return fromJsonString(ConfigSchema, JSON.stringify(data), { ignoreUnknownFields: true });
+  } catch (err) {
+    throw new InvalidConfigError({ message: `Invalid config from ${source}: ${err}` });
+  }
 };
 
 /**

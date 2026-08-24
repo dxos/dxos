@@ -2,47 +2,44 @@
 // Copyright 2021 DXOS.org
 //
 
-import { fromJson } from '@bufbuild/protobuf';
 import fs from 'node:fs';
 import path from 'node:path';
 import { parse } from 'yaml';
 
 import { log } from '@dxos/log';
 import { InvalidConfigError } from '@dxos/protocols';
-import { ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 
-import { mapFromKeyValues } from '../config';
+import { mapFromKeyValues, parseConfig } from '../config';
 import { type ConfigInit, FILE_DEFAULTS, FILE_ENVS } from '../types';
 
 // TODO(burdon): Move code out of index file.
 
 const DEFAULT_BASE_PATH = path.resolve(process.cwd(), 'config');
 
+// An absent file is a normal outcome; anything else means the file exists but could not be read or
+// parsed, which is surfaced rather than silently dropping the config it was meant to supply.
 const maybeLoadFile = (file: string): any => {
+  let content: string;
   try {
-    return parse(fs.readFileSync(file, { encoding: 'utf8' }));
+    content = fs.readFileSync(file, { encoding: 'utf8' });
   } catch (err: any) {
-    // Ignored.
+    if (err?.code === 'ENOENT') {
+      return undefined;
+    }
+    throw new InvalidConfigError({ message: `Cannot read ${file}: ${err}` });
+  }
+
+  try {
+    return parse(content);
+  } catch (err: any) {
+    throw new InvalidConfigError({ message: `Cannot parse ${file}: ${err}` });
   }
 };
 
-/**
- * Loads a config file, validating it against the schema.
- * This is the boundary where untrusted YAML enters, so field types are checked here rather than in
- * `validateConfig`, which the compiler already covers via `ConfigInit`.
- */
+/** Validates as it loads, since this is where untrusted YAML enters. */
 const maybeLoadConfigFile = (file: string): ConfigInit | undefined => {
   const content = maybeLoadFile(file);
-  if (content === undefined || content === null) {
-    return undefined;
-  }
-
-  try {
-    // Unknown fields are ignored, matching the protobuf.js `verify` this replaced.
-    return fromJson(ConfigSchema, content, { ignoreUnknownFields: true });
-  } catch (err) {
-    throw new InvalidConfigError({ message: `Invalid config in ${file}: ${err}` });
-  }
+  return content === undefined || content === null ? undefined : parseConfig(content, file);
 };
 
 //

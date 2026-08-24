@@ -8,6 +8,7 @@ import localforage from 'localforage';
 
 import { log } from '@dxos/log';
 
+import { parseConfig } from '../config';
 import { type ConfigInit } from '../types';
 
 declare const __DXOS_CONFIG__: { publicUrl?: string; dynamic?: boolean };
@@ -31,12 +32,17 @@ export const Dynamics = async (): Promise<ConfigInit> => {
   }
 
   log('fetching config...', { publicUrl });
-  return await fetch(`${publicUrl}${CONFIG_ENDPOINT}`)
-    .then((res) => res.json())
-    .catch((error) => {
-      log.warn('Failed to fetch dynamic config.', error);
-      return {};
-    });
+  const endpoint = `${publicUrl}${CONFIG_ENDPOINT}`;
+  let data: unknown;
+  try {
+    data = await fetch(endpoint).then((res) => res.json());
+  } catch (error) {
+    log.warn('Failed to fetch dynamic config.', error);
+    return {};
+  }
+
+  // Served config is remote input, so it is validated before it reaches `Config`.
+  return parseConfig(data, endpoint);
 };
 
 export const Envs = (_basePath?: string): ConfigInit => {
