@@ -241,8 +241,8 @@ catalogs:
       specifier: ^1.0.8
       version: 1.0.8
     '@moonrepo/cli':
-      specifier: 2.4.5
-      version: 2.4.5
+      specifier: 2.5.2
+      version: 2.5.2
     '@ngneat/falso':
       specifier: ^7.1.1
       version: 7.1.1
@@ -1891,7 +1891,7 @@ importers:
         version: 4.0.0-rc.108(effect@4.0.0-rc.108)(vitest@4.1.10)
       '@moonrepo/cli':
         specifier: 'catalog:'
-        version: 2.4.5
+        version: 2.5.2
       '@octokit/rest':
         specifier: 'catalog:'
         version: 22.0.1
@@ -2442,6 +2442,9 @@ importers:
       '@dxos/plugin-file':
         specifier: workspace:*
         version: link:../../plugins/plugin-file
+      '@dxos/plugin-file-system':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-file-system
       '@dxos/plugin-freeq':
         specifier: workspace:*
         version: link:../../plugins/plugin-freeq
@@ -2511,9 +2514,6 @@ importers:
       '@dxos/plugin-native':
         specifier: workspace:*
         version: link:../../plugins/plugin-native
-      '@dxos/plugin-native-filesystem':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-native-filesystem
       '@dxos/plugin-navtree':
         specifier: workspace:*
         version: link:../../plugins/plugin-navtree
@@ -10371,6 +10371,103 @@ importers:
         specifier: '>=8.2.1'
         version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
 
+  packages/plugins/plugin-file-system:
+    dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../../sdk/app-graph
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute/compute
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-client
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../plugin-markdown
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
+      '@dxos/react-ui-pickers':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-pickers
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+      '@dxos/ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/ui-editor
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@tauri-apps/api':
+        specifier: 'catalog:'
+        version: 2.11.1
+      '@tauri-apps/plugin-dialog':
+        specifier: 'catalog:'
+        version: 2.7.2
+      '@tauri-apps/plugin-fs':
+        specifier: 'catalog:'
+        version: 2.5.1
+      effect:
+        specifier: 4.0.0-rc.108
+        version: 4.0.0-rc.108
+      localforage:
+        specifier: 'catalog:'
+        version: 1.10.0
+    devDependencies:
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      react:
+        specifier: ~19.2.7
+        version: 19.2.7
+      vite:
+        specifier: '>=8.2.1'
+        version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
+
   packages/plugins/plugin-freeq:
     dependencies:
       '@dxos/app-framework':
@@ -12405,103 +12502,6 @@ importers:
       effect:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
-      react:
-        specifier: ~19.2.7
-        version: 19.2.7
-      vite:
-        specifier: '>=8.2.1'
-        version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
-
-  packages/plugins/plugin-native-filesystem:
-    dependencies:
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../sdk/app-framework
-      '@dxos/app-graph':
-        specifier: workspace:*
-        version: link:../../sdk/app-graph
-      '@dxos/app-toolkit':
-        specifier: workspace:*
-        version: link:../../sdk/app-toolkit
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../common/async
-      '@dxos/client':
-        specifier: workspace:*
-        version: link:../../sdk/client
-      '@dxos/compute':
-        specifier: workspace:*
-        version: link:../../core/compute/compute
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../../core/echo/echo
-      '@dxos/echo-client':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-client
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../common/effect
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../common/keys
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/plugin-client':
-        specifier: workspace:*
-        version: link:../plugin-client
-      '@dxos/plugin-markdown':
-        specifier: workspace:*
-        version: link:../plugin-markdown
-      '@dxos/plugin-space':
-        specifier: workspace:*
-        version: link:../plugin-space
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../core/protocols
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-client
-      '@dxos/react-ui-form':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-form
-      '@dxos/react-ui-pickers':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-pickers
-      '@dxos/schema':
-        specifier: workspace:*
-        version: link:../../sdk/schema
-      '@dxos/ui-editor':
-        specifier: workspace:*
-        version: link:../../ui/ui-editor
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      '@tauri-apps/api':
-        specifier: 'catalog:'
-        version: 2.11.1
-      '@tauri-apps/plugin-dialog':
-        specifier: 'catalog:'
-        version: 2.7.2
-      '@tauri-apps/plugin-fs':
-        specifier: 'catalog:'
-        version: 2.5.1
-      effect:
-        specifier: 4.0.0-rc.108
-        version: 4.0.0-rc.108
-      localforage:
-        specifier: 'catalog:'
-        version: 1.10.0
-    devDependencies:
-      '@dxos/plugin-testing':
-        specifier: workspace:*
-        version: link:../plugin-testing
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -27144,46 +27144,46 @@ packages:
     peerDependencies:
       three: '>= 0.159.0'
 
-  '@moonrepo/cli@2.4.5':
-    resolution: {integrity: sha512-AYdIBRpdTwhzfDgGcFzHexiIMEDxiQoUUmlwcajA64NaLglFM3D4pRv5ZmbR1cK+qMm+szwYCK6lnFJ1l57hOw==}
+  '@moonrepo/cli@2.5.2':
+    resolution: {integrity: sha512-hdR3OueUdvDqUu7shBdqLKtuEf9RdLQX2D9i8GGRynBCLirqfqatWubLTyX+u03dnCe71SWn0KffO+4KG6nBSQ==}
     hasBin: true
 
-  '@moonrepo/core-linux-arm64-gnu@2.4.5':
-    resolution: {integrity: sha512-pvcANFo5cYvRlT4pFkwd3qaB536mLoTkaXH+PQeGj+Ox0be3Nfk3xZ9tlisD/OENLsy17vLHifqbJaRY28kkTQ==}
+  '@moonrepo/core-linux-arm64-gnu@2.5.2':
+    resolution: {integrity: sha512-VjxhkJteNAJyk87TFCcXMIem/OdhTGtIuVmWJjJarlkkkrw0NyJ9BMa/ZLMTTyIjApJ8Nfmt77tKxgxFH+qI4A==}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@moonrepo/core-linux-arm64-musl@2.4.5':
-    resolution: {integrity: sha512-s+HIrTMgUt6ekQSmOSJRzDguTxWWYmceMZOGe01wEx6U5a/cka8qJKWjKet2Wgs3sub0GGHguLZcCCVyPW79LA==}
+  '@moonrepo/core-linux-arm64-musl@2.5.2':
+    resolution: {integrity: sha512-l/bUs6QzlnG9P+bFvlZcyins2Fw2A+8aW6vO9Y0SmLQKmEszN6pieklTmjOFPZyeaaGgPOU4GE+77A1hClC2uw==}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@moonrepo/core-linux-x64-gnu@2.4.5':
-    resolution: {integrity: sha512-ZOR9EbKuFA40xZeJ4wIAAJRpjin/Vz9uxNDAywYvPw3Uzx1K+m4VeZVuc/0V8x/jWd+UeXB4yKUCDPZG/7UPnQ==}
+  '@moonrepo/core-linux-x64-gnu@2.5.2':
+    resolution: {integrity: sha512-A0RBhByQ/bf9yqIXts42x4YCscGgDt11UdC4gN5xa9Kscok+q2tiJUVBnkQ5iyILEBk27O579xDAEpyBXAFPrA==}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@moonrepo/core-linux-x64-musl@2.4.5':
-    resolution: {integrity: sha512-ocJQvGay5A47pxnM+gY9u//UQWHuLVh1h+mQwOU6gFIY49vyJvPuth6e7Tz3kxnnzTE7Fq1N7AbUV5XpN59JTA==}
+  '@moonrepo/core-linux-x64-musl@2.5.2':
+    resolution: {integrity: sha512-/LJR0U/vnpbwbyDKpfg4GIUHAcoT37tqovEDwMeoT0phQFCoV59VYK51xGAifO/pZgY5YmWbS9ZEfQz8qOnbGw==}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@moonrepo/core-macos-arm64@2.4.5':
-    resolution: {integrity: sha512-D4EBmxvISKzeR42wzLFfU9Kl0Eg3f8XDxRo9IdQn7cwFx3s4IMhEdoIm0MWmy9w9hYvRCwNIDTZT7U+fuFqOVg==}
+  '@moonrepo/core-macos-arm64@2.5.2':
+    resolution: {integrity: sha512-ItdYO18TXtW+fUfLbT++ygLEZ45/AU5bsvYjB7gvfWJZSv5IrSGlRm2ZkJINnwZ2Zq/imAktsfeRVNFBvlodpQ==}
     cpu: [arm64]
     os: [darwin]
 
-  '@moonrepo/core-macos-x64@2.4.5':
-    resolution: {integrity: sha512-Ovt7YFiTLWdy+s3RL/PEQxVOMsMgk+f8AIKoJT++aA3HiyM+R46jJ9LgGVq0IjcMOlgAoI07bKRRS0Gd2YFeMQ==}
+  '@moonrepo/core-macos-x64@2.5.2':
+    resolution: {integrity: sha512-lASLJC/B3FZMfPnNEmY2e5bqCGOtszbgp/HdvHgeIfzpSYdCTFr4GplUSyxCEJAgJNaV0Q5up6WN3+KswqhS0g==}
     cpu: [x64]
     os: [darwin]
 
-  '@moonrepo/core-windows-x64-msvc@2.4.5':
-    resolution: {integrity: sha512-4GS+vVCpBuOCAai+G2vIOM13AmIHAMJ7rFRhodanYBuZqfQgPzxEJd1q4nGac25gsbtv85kGy2idaf93D2v6Jg==}
+  '@moonrepo/core-windows-x64-msvc@2.5.2':
+    resolution: {integrity: sha512-jl4qJHb9UeBf8NAEXwlGdbfLzJ4BsOlOAYUep2c9Ef7Z/L3ezU1bKrfZYYIE7uargoj0BeXRfuLOKyK3fjVTwg==}
     cpu: [x64]
     os: [win32]
 
@@ -49203,37 +49203,37 @@ snapshots:
       promise-worker-transferable: 1.0.4
       three: 0.178.0
 
-  '@moonrepo/cli@2.4.5':
+  '@moonrepo/cli@2.5.2':
     dependencies:
       detect-libc: 2.1.2
     optionalDependencies:
-      '@moonrepo/core-linux-arm64-gnu': 2.4.5
-      '@moonrepo/core-linux-arm64-musl': 2.4.5
-      '@moonrepo/core-linux-x64-gnu': 2.4.5
-      '@moonrepo/core-linux-x64-musl': 2.4.5
-      '@moonrepo/core-macos-arm64': 2.4.5
-      '@moonrepo/core-macos-x64': 2.4.5
-      '@moonrepo/core-windows-x64-msvc': 2.4.5
+      '@moonrepo/core-linux-arm64-gnu': 2.5.2
+      '@moonrepo/core-linux-arm64-musl': 2.5.2
+      '@moonrepo/core-linux-x64-gnu': 2.5.2
+      '@moonrepo/core-linux-x64-musl': 2.5.2
+      '@moonrepo/core-macos-arm64': 2.5.2
+      '@moonrepo/core-macos-x64': 2.5.2
+      '@moonrepo/core-windows-x64-msvc': 2.5.2
 
-  '@moonrepo/core-linux-arm64-gnu@2.4.5':
+  '@moonrepo/core-linux-arm64-gnu@2.5.2':
     optional: true
 
-  '@moonrepo/core-linux-arm64-musl@2.4.5':
+  '@moonrepo/core-linux-arm64-musl@2.5.2':
     optional: true
 
-  '@moonrepo/core-linux-x64-gnu@2.4.5':
+  '@moonrepo/core-linux-x64-gnu@2.5.2':
     optional: true
 
-  '@moonrepo/core-linux-x64-musl@2.4.5':
+  '@moonrepo/core-linux-x64-musl@2.5.2':
     optional: true
 
-  '@moonrepo/core-macos-arm64@2.4.5':
+  '@moonrepo/core-macos-arm64@2.5.2':
     optional: true
 
-  '@moonrepo/core-macos-x64@2.4.5':
+  '@moonrepo/core-macos-x64@2.5.2':
     optional: true
 
-  '@moonrepo/core-windows-x64-msvc@2.4.5':
+  '@moonrepo/core-windows-x64-msvc@2.5.2':
     optional: true
 
   '@msgpack/msgpack@3.1.3': {}

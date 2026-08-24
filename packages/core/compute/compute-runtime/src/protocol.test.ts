@@ -19,7 +19,7 @@ describe('wrapFunctionHandler', () => {
   test('wraps reply function and executes handler', async ({ expect }) => {
     const wrapped = wrapFunctionHandler(ReplyHandler);
 
-    expect(wrapped.meta.key).toBe(DXN.make('org.example.function.reply'));
+    expect(wrapped.meta.key).toBe(DXN.make('com.example.operation.reply'));
     expect(wrapped.meta.name).toBe('Reply');
 
     const testData = { message: 'hello' };
@@ -36,7 +36,7 @@ describe('wrapFunctionHandler', () => {
   test('wraps fibonacci function with valid input', async ({ expect }) => {
     const wrapped = wrapFunctionHandler(FibonacciHandler);
 
-    expect(wrapped.meta.key).toBe(DXN.make('org.example.function.fib'));
+    expect(wrapped.meta.key).toBe(DXN.make('com.example.operation.fib'));
     expect(wrapped.meta.name).toBe('Fibonacci');
 
     const result = await wrapped.handler({
@@ -65,7 +65,7 @@ describe('wrapFunctionHandler', () => {
 
 describe('EDGE Operation.Service', () => {
   const Deployed = Operation.make({
-    meta: { key: DXN.make('org.example.operation.deployed'), name: 'Deployed', deployedId: 'fn-deployed' },
+    meta: { key: DXN.make('com.example.operation.deployed'), name: 'Deployed', deployedId: 'fn-deployed' },
     input: Schema.Struct({ value: Schema.String }),
     output: Schema.Void,
   });
@@ -73,7 +73,7 @@ describe('EDGE Operation.Service', () => {
   // No `deployedId`: the shape of any definition a handler imported directly rather than
   // deserializing from the registry — e.g. `space.addObject` scheduling `observability.sendEvent`.
   const Local = Operation.make({
-    meta: { key: DXN.make('org.example.operation.local'), name: 'Local' },
+    meta: { key: DXN.make('com.example.operation.local'), name: 'Local' },
     input: Schema.Struct({ value: Schema.String }),
     output: Schema.Void,
   });
@@ -81,7 +81,7 @@ describe('EDGE Operation.Service', () => {
   // Scheduling from inside a wrapped handler exercises the service the EDGE runtime actually
   // installs, including the branch taken when no `functionsService` is configured.
   const Scheduler = Operation.make({
-    meta: { key: DXN.make('org.example.operation.scheduler'), name: 'Scheduler' },
+    meta: { key: DXN.make('com.example.operation.scheduler'), name: 'Scheduler' },
     input: Schema.Void,
     output: Schema.Void,
   }).pipe(Operation.withHandler(() => Operation.schedule(Local, { value: 'x' })));

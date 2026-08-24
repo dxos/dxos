@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
@@ -23,13 +24,13 @@ const make = () =>
 
         ## Reading data
 
-        Use the \`getValues\` tool to read cell values from the sheet.
+        Use the \`${Operation.toolName(SheetOperation.GetValues)}\` tool to read cell values from the sheet.
         It returns a 2D array indexed [row][col] and the A1 range it covers.
         Omit the \`range\` parameter to read the entire occupied area, or pass a range like "A1:C5" to read a subset.
 
         ## Writing data
 
-        Use \`setValues\` to write one or more cells at once.
+        Use \`${Operation.toolName(SheetOperation.SetValues)}\` to write one or more cells at once.
         Pass a map of A1 addresses to values, e.g. \`{ "A1": "Name", "B1": 42, "C1": "=SUM(A1:A5)" }\`.
         Cell values can be plain scalars (string, number, boolean) or formula strings starting with "=".
         Formula examples: "=SUM(A1:A5)", "=A1*B1", "=IF(C2>0,\"yes\",\"no\")".

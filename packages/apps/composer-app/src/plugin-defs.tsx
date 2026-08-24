@@ -25,6 +25,7 @@ import * as DoctorPlugin from '@dxos/plugin-doctor/DoctorPlugin';
 import * as DuffelPlugin from '@dxos/plugin-duffel/DuffelPlugin';
 import * as ExcalidrawPlugin from '@dxos/plugin-excalidraw/ExcalidrawPlugin';
 import * as ExplorerPlugin from '@dxos/plugin-explorer/ExplorerPlugin';
+import * as FileSystemPlugin from '@dxos/plugin-file-system/FileSystemPlugin';
 import * as FilePlugin from '@dxos/plugin-file/FilePlugin';
 import * as FreeqPlugin from '@dxos/plugin-freeq/FreeqPlugin';
 import * as GamePlugin from '@dxos/plugin-game/GamePlugin';
@@ -47,7 +48,6 @@ import * as MapPlugin from '@dxos/plugin-map/MapPlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as MeetingPlugin from '@dxos/plugin-meeting/MeetingPlugin';
 import * as MermaidPlugin from '@dxos/plugin-mermaid/MermaidPlugin';
-import * as NativeFilesystemPlugin from '@dxos/plugin-native-filesystem/NativeFilesystemPlugin';
 import * as OsrmPlugin from '@dxos/plugin-osrm/OsrmPlugin';
 import * as PaymentsPlugin from '@dxos/plugin-payments/PaymentsPlugin';
 import * as PipelinePlugin from '@dxos/plugin-pipeline/PipelinePlugin';
@@ -199,7 +199,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     MermaidPlugin.make(),
     // Desktop-only, and not core: the native file picker is a full-catalog capability, unlike
     // plugin-native's host integration.
-    isTauri && !isMobile && !isPopover && NativeFilesystemPlugin.make(),
+    isTauri && !isMobile && !isPopover && FileSystemPlugin.make(),
     OsrmPlugin.make(),
     TasksPlugin.make(),
     PaymentsPlugin.make(),

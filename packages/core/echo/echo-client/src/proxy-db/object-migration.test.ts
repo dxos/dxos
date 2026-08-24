@@ -141,7 +141,7 @@ test('migration moves data key/version into meta', async () => {
 
   db.add(
     Obj.make(RegistryEntryV1, {
-      key: 'org.example.type.foo',
+      key: 'com.example.type.foo',
       name: 'foo',
       version: '1.2.3',
     }),
@@ -152,16 +152,16 @@ test('migration moves data key/version into meta', async () => {
   const objects = await db.query(Filter.type(RegistryEntryV2)).run();
   expect(objects).to.have.length(1);
   expect(objects[0].name).to.eq('foo');
-  expect(Obj.getMeta(objects[0]).key).to.eq('org.example.type.foo');
+  expect(Obj.getMeta(objects[0]).key).to.eq('com.example.type.foo');
   expect(Obj.getMeta(objects[0]).version).to.eq('1.2.3');
 
   // The migrated object should be queryable by its meta key.
-  const byKey = await db.query(Filter.and(Filter.type(RegistryEntryV2), Filter.key('org.example.type.foo'))).run();
+  const byKey = await db.query(Filter.and(Filter.type(RegistryEntryV2), Filter.key('com.example.type.foo'))).run();
   expect(byKey).to.have.length(1);
 
   // And by semver range.
   const byRange = await db
-    .query(Filter.and(Filter.type(RegistryEntryV2), Filter.key('org.example.type.foo', { version: '^1.0.0' })))
+    .query(Filter.and(Filter.type(RegistryEntryV2), Filter.key('com.example.type.foo', { version: '^1.0.0' })))
     .run();
   expect(byRange).to.have.length(1);
 });

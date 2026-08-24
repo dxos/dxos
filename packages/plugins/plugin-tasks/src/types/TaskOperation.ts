@@ -14,10 +14,6 @@ import { DXN } from '@dxos/keys';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { Actor, Milestone, type Person, Task, TaskSet } from '@dxos/types';
 
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
 /**
  * Linear-shaped task verbs (MILESTONE-5.md §7.2). Verbs enforce what models get wrong with raw
  * object CRUD: defaults (`status: 'todo'`), set membership, schema-checked patches.
@@ -32,7 +28,7 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
 
 export const CreateTask = Operation.make({
   meta: {
-    key: makeKey('taskCreate'),
+    key: DXN.make('org.dxos.operation.tasks.create'),
     name: 'Create Task',
     description: 'Create a task in a task set. Defaults status to todo.',
     icon: 'ph--check-circle--regular',
@@ -61,7 +57,7 @@ export const CreateTask = Operation.make({
 
 export const UpdateTask = Operation.make({
   meta: {
-    key: makeKey('taskUpdate'),
+    key: DXN.make('org.dxos.operation.tasks.update'),
     name: 'Update Task',
     description: 'Patch task fields: title, description, status, priority, estimate, assignee.',
     icon: 'ph--pencil-simple--regular',
@@ -90,7 +86,7 @@ export const UpdateTask = Operation.make({
 
 export const CompleteTask = Operation.make({
   meta: {
-    key: makeKey('taskComplete'),
+    key: DXN.make('org.dxos.operation.tasks.complete'),
     name: 'Complete Task',
     description: 'Mark a task done — the 90% action as one verb.',
     icon: 'ph--check--regular',
@@ -109,7 +105,7 @@ export const CompleteTask = Operation.make({
 
 export const AssignTask = Operation.make({
   meta: {
-    key: makeKey('taskAssign'),
+    key: DXN.make('org.dxos.operation.tasks.assign'),
     name: 'Assign Task',
     description: 'Assign a task to a person (contact/email/name) or an agent (role assistant + DID).',
     icon: 'ph--user-circle--regular',
@@ -129,7 +125,7 @@ export const AssignTask = Operation.make({
 
 export const DeleteTask = Operation.make({
   meta: {
-    key: makeKey('taskDelete'),
+    key: DXN.make('org.dxos.operation.tasks.delete'),
     name: 'Delete Task',
     description: 'Delete a task and its sub-tasks, removing them from the task set.',
     icon: 'ph--trash--regular',
@@ -146,7 +142,7 @@ export const DeleteTask = Operation.make({
 
 export const MoveTask = Operation.make({
   meta: {
-    key: makeKey('taskMove'),
+    key: DXN.make('org.dxos.operation.tasks.move'),
     name: 'Move Task',
     description: 'Reposition a task within its task set — array order is the task order.',
     icon: 'ph--arrows-down-up--regular',
@@ -167,7 +163,7 @@ export const TaskCursor = Schema.String;
 
 export const ListTasks = Operation.make({
   meta: {
-    key: makeKey('taskList'),
+    key: DXN.make('org.dxos.operation.tasks.list'),
     name: 'List Tasks',
     description:
       "List tasks in a task set (or a project's task set), in set order. Filter by status, assignee, or milestone; page with `after`/`limit`.",
@@ -205,7 +201,7 @@ export const ListTasks = Operation.make({
 
 export const CreateMilestone = Operation.make({
   meta: {
-    key: makeKey('milestoneCreate'),
+    key: DXN.make('org.dxos.operation.tasks.createMilestone'),
     name: 'Create Milestone',
     description: 'Create a milestone in a task set, appended to the milestone sequence.',
     icon: 'ph--flag-banner--regular',
@@ -225,7 +221,7 @@ export const CreateMilestone = Operation.make({
 
 export const UpdateMilestone = Operation.make({
   meta: {
-    key: makeKey('milestoneUpdate'),
+    key: DXN.make('org.dxos.operation.tasks.updateMilestone'),
     name: 'Update Milestone',
     description: 'Patch milestone fields: name, description, target date.',
     icon: 'ph--pencil-simple--regular',
@@ -246,7 +242,7 @@ export const UpdateMilestone = Operation.make({
 
 export const DeleteMilestone = Operation.make({
   meta: {
-    key: makeKey('milestoneDelete'),
+    key: DXN.make('org.dxos.operation.tasks.deleteMilestone'),
     name: 'Delete Milestone',
     description: 'Delete a milestone. Its tasks are kept and fall back to the backlog.',
     icon: 'ph--trash--regular',
@@ -263,7 +259,7 @@ export const DeleteMilestone = Operation.make({
 
 export const MoveMilestone = Operation.make({
   meta: {
-    key: makeKey('milestoneMove'),
+    key: DXN.make('org.dxos.operation.tasks.moveMilestone'),
     name: 'Move Milestone',
     description: 'Reposition a milestone within its task set — array order is the milestone sequence.',
     icon: 'ph--arrows-down-up--regular',
@@ -281,7 +277,7 @@ export const MoveMilestone = Operation.make({
 
 export const ListMilestones = Operation.make({
   meta: {
-    key: makeKey('milestoneList'),
+    key: DXN.make('org.dxos.operation.tasks.listMilestone'),
     name: 'List Milestones',
     description: "List a task set's milestones in sequence, with progress derived from their tasks.",
     icon: 'ph--flag-banner--regular',

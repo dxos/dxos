@@ -192,11 +192,11 @@ const space = dxos.client.spaces.get().find((s) => s.properties?.name === 'My Sp
 const objects = await space.db.query(dxos.Filter.everything()).run();
 const collection = objects.find((o) => dxos.Obj.getTypename(o) === 'org.dxos.type.collection');
 
-const { object } = await composer.invoke('org.dxos.plugin.markdown.operation.create', {
+const { object } = await composer.invoke('org.dxos.operation.markdown.create', {
   name: 'Notes',
   content: '# Notes\n',
 });
-await composer.invoke('org.dxos.plugin.space.operation.addObject', { object, target: collection });
+await composer.invoke('org.dxos.operation.space.addObject', { object, target: collection });
 await space.db.flush();
 
 // Verify placement rather than trusting the return.
@@ -222,7 +222,7 @@ view-holding objects the view's target type — and returns it as `subject`, so 
 is step three's input:
 
 ```js
-const added = await composer.invoke('org.dxos.plugin.space.operation.addObject', { object, target: collection });
+const added = await composer.invoke('org.dxos.operation.space.addObject', { object, target: collection });
 await space.db.flush();
 await composer.invoke('org.dxos.plugin.layout.operation.open', { subject: added.subject });
 ```

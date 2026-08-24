@@ -42,10 +42,10 @@ describe('operation serialization', () => {
     );
 
     expect(annotated).toEqual({
-      projectCreate: 'write',
-      projectGet: 'none',
-      projectList: 'none',
-      projectUpdate: 'write',
+      create: 'write',
+      get: 'none',
+      list: 'none',
+      update: 'write',
     });
   });
 });
