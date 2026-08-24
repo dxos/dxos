@@ -110,7 +110,20 @@ export const makeToolResolverFromOperations = <R = never>({
                 .map((record) => Operation.getKey(record))
                 .join(', ')}`,
             );
-            return projectFunctionToTool(Operation.deserialize(matches[0]));
+            // A registry record is untrusted input: its persisted schema may be one the projection
+            // cannot express as tool parameters. Throwing here would surface as a defect and fail
+            // the whole request, so one unprojectable operation is logged and dropped instead —
+            // `resolveToolkit` filters a not-found tool out and the agent runs with the rest.
+            try {
+              return projectFunctionToTool(Operation.deserialize(matches[0]));
+            } catch (err) {
+              log.error('operation cannot be projected to a tool; excluded from context', {
+                id,
+                key: Operation.getKey(matches[0]),
+                err,
+              });
+              return yield* Effect.fail(new AiToolNotFoundError(id));
+            }
           }),
       } satisfies Context.Service.Shape<typeof ToolResolverService>;
     }),
@@ -360,7 +373,13 @@ export const createStructFieldsFromSchema = (
         ]),
       );
     }
+    // All three spell "this operation takes no input". `Void` is the authored form; the other two
+    // are what it degrades to across `Operation.serialize`/`deserialize`, which routes the schema
+    // through JSON Schema: `Schema.Void` emits `{type: 'null'}` and reads back as `Null`, and an
+    // operation persisted with no `inputSchema` at all reads back as `Schema.Unknown`.
     case 'Void':
+    case 'Null':
+    case 'Unknown':
       return {};
     default:
       return todo(`Unsupported schema AST: ${schema.ast._tag}`);
