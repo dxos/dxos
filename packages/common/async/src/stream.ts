@@ -345,18 +345,21 @@ export class Stream<T> {
  * Rejects if the stream closes first — with the stream's error where it had one — so a caller
  * without a `timeout` cannot wait forever on a stream that will never emit.
  */
-export const getFirstStreamValue = async <T extends {}>(
-  stream: Stream<T>,
-  { timeout }: { timeout?: number } = {},
-): Promise<T> => {
+export const getFirstStreamValue = async <T>(stream: Stream<T>, { timeout }: { timeout?: number } = {}): Promise<T> => {
+  // Closing only what this call subscribed to, since `subscribe` throws on an already-subscribed
+  // stream and closing it there would cut off the existing subscriber.
+  let subscribed = false;
   try {
     const trigger = new Trigger<T>();
     stream.subscribe(
       (value) => trigger.wake(value),
       (err) => trigger.throw(err ?? new Error('Stream closed before emitting a value.')),
     );
+    subscribed = true;
     return await trigger.wait({ timeout });
   } finally {
-    await stream.close();
+    if (subscribed) {
+      await stream.close();
+    }
   }
 };

@@ -2,8 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// Reproduces protobuf.js's JS object shapes on top of buf so call sites can migrate one at a
-// time; the divergences it cannot bridge are listed in `docs/audits/protobufjs-to-buf.md`.
+// Preserves protobuf.js object shapes so call sites can migrate to buf one at a time.
 
 import {
   type DescField,
@@ -233,8 +232,7 @@ const convertField = (field: DescField, fieldValue: any, direction: keyof Substi
   return mapValue(field, fieldValue, (nested, entry) => convert(nested, entry, direction));
 };
 
-// buf carries a oneof as `{ case, value }` under the group name where protobuf.js writes the
-// selected member as a plain field, so the two forms are translated rather than copied through.
+// Translates oneof groups, which buf shapes as `{ case, value }` and protobuf.js as a flat field.
 const convertOneofs = (schema: DescMessage, value: any, result: Record<string, any>, direction: keyof Substitution) => {
   for (const oneof of schema.oneofs) {
     if (direction === 'toProto') {

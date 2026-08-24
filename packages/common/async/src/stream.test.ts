@@ -120,4 +120,20 @@ describe('getFirstStreamValue', () => {
     const stream = new Stream<number>(({ close }) => close());
     await expect(getFirstStreamValue(stream)).rejects.toThrow('Stream closed before emitting a value.');
   });
+
+  test('leaves an already-subscribed stream open when it cannot subscribe', async ({ expect }) => {
+    let emit!: (value: number) => void;
+    const stream = new Stream<number>(({ next }) => {
+      emit = next;
+    });
+    const received: number[] = [];
+    stream.subscribe((value) => received.push(value));
+
+    await expect(getFirstStreamValue(stream)).rejects.toThrow('already subscribed');
+
+    // The original subscriber still gets values, so the failed call did not close its stream.
+    emit(1);
+    expect(received).toEqual([1]);
+    await stream.close();
+  });
 });
