@@ -18,7 +18,6 @@ export type TypeId = typeof TypeId;
 
 /**
  * Base of every migration definition.
- * `kind` discriminates the concrete variants ({@link ObjectMigration}, {@link RenameMigration}).
  */
 export interface Migration {
   readonly [TypeId]: TypeId;
@@ -28,8 +27,15 @@ export interface Migration {
 /**
  * Type guard for values produced by {@link define} / {@link defineRename}.
  */
-export const isMigration = (value: unknown): value is Migration =>
-  typeof value === 'object' && value !== null && (value as { [TypeId]?: unknown })[TypeId] === TypeId;
+export const isMigration = (value: unknown): value is Migration => {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  const candidate = value as { [TypeId]?: unknown; kind?: unknown };
+  // `kind` is checked too: a branded value carrying an unknown kind is not a migration any
+  // consumer can dispatch on.
+  return candidate[TypeId] === TypeId && (candidate.kind === 'object' || candidate.kind === 'rename');
+};
 
 /**
  * Result returned by a migration's `transform` callback.
@@ -158,10 +164,8 @@ export interface RenameMigration extends Migration {
 /**
  * Define a migration that renames a named entity.
  *
- * Applying it rewrites every reference pointing at `from` to point at `to`, preserving any
- * version suffix on the reference. The migration is idempotent: references already pointing at
- * `to` are left untouched, so re-running it (or running it on a peer that already replicated the
- * result) is a no-op.
+ * Applying it rewrites every reference pointing at `from` to point at `to`, preserving the
+ * reference's version suffix. Idempotent: a reference that already reads correctly is not written.
  *
  * @example
  * ```ts

@@ -787,8 +787,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     const fromName = DXN.getName(migration.from);
     const toName = DXN.getName(migration.to);
 
-    // Rewrites a reference URI, preserving any version suffix; undefined when the URI already
-    // reads correctly (a miss, or a rename whose target equals its source).
+    // Undefined when the URI already reads correctly, so a re-run writes nothing.
     const rewrite = (uri: URI.URI): URI.URI | undefined => {
       if (!DXN.isDXN(uri) || DXN.getName(uri) !== fromName) {
         return undefined;
@@ -818,7 +817,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       };
       visit([], core.getDecoded([DATA_NAMESPACE]));
 
-      // Writing only actual hits keeps re-runs (and peers that already replicated the result) no-ops.
       for (const { path, uri } of updates) {
         core.setDecoded([DATA_NAMESPACE, ...path], EncodedReference.fromURI(uri));
       }
