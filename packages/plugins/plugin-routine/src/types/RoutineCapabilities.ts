@@ -42,16 +42,9 @@ export type Template = {
   label: string;
   /** Optional Phosphor icon name. */
   icon?: string;
-  /**
-   * Omit from the create picker; reachable only by naming its {@link id}. For a template that cannot
-   * stand on its own because a caller must supply the `subject` (e.g. the connector's sync flow).
-   */
+  /** Omit from the create picker; reachable only by id, for a template that needs a caller's `subject`. */
   hidden?: boolean;
-  /**
-   * Values the template needs before it can scaffold, collected by the create panel as a form and
-   * passed back as `input` — e.g. `Schema.Struct({ mailbox: Ref.Ref(Mailbox.Mailbox) })` renders a
-   * mailbox picker. Omit and the picker scaffolds on selection.
-   */
+  /** Values the create panel collects as a form before scaffolding; omit and it scaffolds on selection. */
   inputSchema?: Schema.Codec<any, any>;
   /**
    * Build the routine as a fully-wired in-memory {@link Routine.Routine} graph — the routine plus its owned

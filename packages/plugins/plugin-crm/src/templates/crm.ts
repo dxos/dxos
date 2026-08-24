@@ -19,10 +19,8 @@ const Input = Schema.Struct({
 
 /**
  * CRM automation template: the routine-only counterpart of the `crmPipeline` project template. The
- * trigger binds `ProcessMailbox` directly (kind: runnable) so the loop is deterministic — no model
- * between trigger and operation. The operation's durable feed cursor plus the identity index make
- * per-item firing idempotent: each firing catches up on everything new and extra firings process
- * nothing.
+ * trigger binds `ProcessMailbox` directly so no model sits between trigger and operation; the
+ * operation's durable feed cursor makes per-item firing idempotent.
  */
 export const crm: RoutineCapabilities.Template = {
   id: 'org.dxos.routine.crm',

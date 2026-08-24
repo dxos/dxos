@@ -43,10 +43,7 @@ export const makeSectionRearrangeCallback = AppNode.createFactory(
   (space, typename) => `${typename}:${space.id}`,
 );
 
-/**
- * The objects a type section lists: every object of the type that has no parent. An owned object
- * (a project's chats and routines, a magazine's per-post state) is reached through its owner.
- */
+/** The objects a type section lists: an owned object is reached through its owner, not listed here. */
 export const sectionQuery = (type: Type.AnyEntity): Query.Any =>
   // Filter.type's overload constraint (UnknownTypeSchema) is not publicly exported;
   // the runtime accepts any schema with a typename annotation.
@@ -73,10 +70,7 @@ export const createTypeSectionExtension = (
   options: {
     /** Position hint for the section in the sidebar. */
     position?: Position.Position;
-    /**
-     * Override the default query. Narrowing only — an override also has to exclude owned objects
-     * (`Filter.hasParent(false)`) if it wants the section's default ownership rule.
-     */
+    /** Overrides the default query; an override must exclude owned objects itself. */
     query?: Query.Any;
     /**
      * Override the default {@link AppNodeMatcher.whenSpace} match function.
@@ -198,10 +192,8 @@ export const createTypeSectionExtension = (
         Node.make({
           id: typename,
           type: typename,
-          // An addressable section carries the registered type entity so plugin-space's generic
-          // type-collection surface can render it. A bare container carries no data: the navtree
-          // opens whatever a selected node holds, and a marker value here opens an empty plank
-          // (`AppNode.makeSection`, which every hand-rolled section uses, is null for this reason).
+          // The navtree opens whatever a selected node holds, so a bare container must hold nothing
+          // or its header opens an empty plank; an addressable section carries the type entity to render.
           data: options.sectionUrlKey ? (typeEntity ?? null) : null,
           properties: {
             label,

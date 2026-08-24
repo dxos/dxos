@@ -213,8 +213,7 @@ export default Capability.makeModule(
           ]),
       }),
 
-      // Section node: standalone Chat.Chat objects per AI group. Companion and project chats are
-      // parented to their subject, so the section's default ownership rule already excludes them.
+      // Companion and project chats are parented to their subject, which the section already excludes.
       TypeSection.createTypeSectionExtension(Chat.Chat, {
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
         groupSegment: GraphPath.GroupSegments.ai,

@@ -147,7 +147,8 @@ export const CreateRoutinePanel = ({
         key={pending.id}
         db={db}
         schema={pending.inputSchema}
-        onSave={(input) => void scaffold(pending, input)}
+        // Returned, not discarded: the form holds its `saving` guard until the scaffold settles.
+        onSave={(input) => scaffold(pending, input)}
         onCancel={() => setPending(undefined)}
       >
         <Form.Content>

@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Migration, Obj, Ref, Type } from '@dxos/echo';
 import { FormInlineAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Outline, TaskSet } from '@dxos/types';
 
@@ -59,6 +59,45 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
 ) {}
 
 /**
+ * Project schema v0.4.0 — before the project owned its routines.
+ * @deprecated Use {@link Project} (v0.5.0); {@link migrations} carries v0.4.0 objects forward.
+ */
+export class Project_v0_4_0 extends Type.makeObject<Project_v0_4_0>(DXN.make('org.dxos.type.project', '0.4.0'))(
+  Schema.Struct({
+    name: Schema.optional(Schema.String),
+    description: Schema.optional(Schema.String),
+    status: Schema.optional(ProjectStatus),
+    instructions: Schema.optional(Ref.Ref(Instructions.Instructions)),
+    artifacts: Schema.Array(Ref.Ref(Obj.Unknown)),
+    outline: Schema.optional(Ref.Ref(Outline.Outline)),
+    taskSet: Schema.optional(Ref.Ref(TaskSet.TaskSet)),
+  }),
+) {}
+
+// `Filter.type` matches the versioned type exactly, so without this a v0.4.0 project stops being
+// returned by every project query. Purely additive: `routines` starts empty.
+const _routinesMigration = Migration.define({
+  from: Project_v0_4_0,
+  to: Project,
+  transform: async ({ name, description, status, instructions, artifacts, outline, taskSet }) => ({
+    name,
+    description,
+    status,
+    instructions,
+    artifacts,
+    outline,
+    taskSet,
+    routines: [],
+  }),
+});
+
+/**
+ * Schema migrations exported by this module.
+ * Exported as an array for extensibility — append future versions here.
+ */
+export const migrations = [_routinesMigration];
+
+/**
  * Factory wrapper around `Obj.make` for {@link Project}.
  *
  * Materializes the owned task set and scratch outline unless the caller supplies them: there is no UI
@@ -69,14 +108,11 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
 export const make = (
   props: Omit<Partial<Obj.MakeProps<typeof Project>>, 'artifacts' | 'routines'> & {
     artifacts?: ReadonlyArray<Ref.Ref<Obj.Unknown>>;
-    routines?: ReadonlyArray<Ref.Ref<Routine.Routine>>;
   } = {},
 ): Project => {
-  const project = Obj.make(Project, {
-    ...props,
-    artifacts: props.artifacts ?? [],
-    routines: props.routines ?? [],
-  });
+  // `routines` is not a constructor input: a routine is owned, and only `addRoutine` sets the parent
+  // edge that makes it so. Taking refs here would advertise ownership the object does not have.
+  const project = Obj.make(Project, { ...props, artifacts: props.artifacts ?? [], routines: [] });
   if (!props.taskSet) {
     const taskSet = TaskSet.make();
     // Ref before parent edge: the ref is what declares the edge (see `Obj.isDeclaredParentEdge`).
