@@ -622,7 +622,7 @@ export const moduleMaker =
     const Requires extends readonly AnyTag[] = readonly [],
     const Extra extends readonly AnyTag[] = readonly [],
   >(
-    // `Requires` is an unresolved type parameter here, not a missing service
+    // `Requires` is an unresolved type parameter here, not a missing service.
     // @effect-diagnostics-next-line missingEffectContext:off
     loader: LoadModule<Props, Requires, readonly [C, ...Extra]>,
     options?: MakerOptions<Requires, Extra, Props, Options>,

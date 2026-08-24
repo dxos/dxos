@@ -354,7 +354,7 @@ describe('Operation.withHandler type safety', () => {
     // Using an undeclared service should be a type error.
     Operation.withHandler(opWithDeclaredService, (_input) =>
       // @ts-expect-error - UndeclaredService is not in the operation's services
-      // the diagnostic reporting it is the assertion succeeding
+      // The Effect diagnostic reporting it is the assertion succeeding.
       // @effect-diagnostics-next-line missingEffectContext:off
       Effect.gen(function* () {
         yield* UndeclaredService;
