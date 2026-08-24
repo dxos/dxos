@@ -20,7 +20,10 @@ const AUTOMERGE_URL_PREFIX = 'automerge:';
 /** Document id from an `automerge:<documentId>` URL, since the derivation hashes the id rather than the URL. */
 export const documentIdFromUrl = (url: AutomergeUrl | string): string => {
   invariant(url.startsWith(AUTOMERGE_URL_PREFIX), 'Not an automerge URL');
-  return url.slice(AUTOMERGE_URL_PREFIX.length);
+  const documentId = url.slice(AUTOMERGE_URL_PREFIX.length);
+  // `automerge:` alone would otherwise hash to a valid-looking space id.
+  invariant(documentId.length > 0, 'Automerge URL has no document id');
+  return documentId;
 };
 
 /** Whether a value is a derivation this build understands. */

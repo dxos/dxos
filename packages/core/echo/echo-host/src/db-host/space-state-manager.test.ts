@@ -21,6 +21,7 @@ import {
   type SpaceRoot,
   createIdFromRootDocumentId,
   createIdFromSpaceKey,
+  documentIdFromUrl,
   isSpaceRoot,
   verifySpaceRoot,
 } from '@dxos/echo-protocol';
@@ -140,6 +141,9 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
     expect(isSpaceRoot(root)).to.be.true;
     expect(await verifySpaceRoot(root, documentId)).to.be.true;
     expect(await verifySpaceRoot(root, '4Y8mbUZP4bLTB1LWr8N4TRQY6ZWU')).to.be.false;
+
+    // A URL with no document id would otherwise hash to a valid-looking space id.
+    expect(() => documentIdFromUrl('automerge:')).to.throw();
 
     // An unrecognized derivation must not slip through as the unverifiable spaceKey case.
     const malformed = { ...root, idDerivation: 'somethingElse' as SpaceIdDerivation };

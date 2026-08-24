@@ -6,8 +6,9 @@ Branch `claude/remove-hypercore-automerge-creds-uo7lx9`. Rationale in `DESIGN.md
 
 ## Delivery plan — two PRs to 90%
 
-Both PRs land the dual-path world: nothing is deleted, old spaces keep working, new spaces are
-opt-in. Hypercore deletion (Phase 4) is explicitly NOT in scope for either.
+Both PRs land the dual-path world: nothing is deleted, old spaces keep working, and new spaces are
+root-anchored by DEFAULT — legacy key-derived creation is the explicit opt-out. Hypercore deletion
+(Phase 4) is explicitly NOT in scope for either.
 
 `CreateSpaceOptions.useSpaceRootDocument` (per-space, default TRUE) selects the anchor at
 `DataSpaceManager.createSpace()`; pass `false` for a legacy key-derived space. It is the switch
@@ -139,7 +140,10 @@ migration; crash mid-migration and resume.
       keyed by something other than its credential id, or that does not decode, is dropped. An
       unreplicated parent does not block its child (the state machine rejects an unverifiable
       chain anyway) and a cycle keeps every credential rather than dropping it.
-- [ ] Credentials doc: append-only array of the existing encoded credential bytes.
+- [ ] Credentials doc physical shape (as implemented in `credentials-document.ts`): a MAP keyed by
+      credential id whose values hold only the encoded bytes — not an array. The key is what makes a
+      duplicate append idempotent and concurrent appends converge; an array would need a separate
+      dedup rule and would race for indices. Order is computed on read by `orderCredentials()`.
 - [ ] Write path — `spaceGenesis()` emits into the credentials doc instead of the control feed;
       drop the two `AdmittedFeed` credentials.
 - [ ] Read path — feed the credential processor from the doc array; preserve ordering
