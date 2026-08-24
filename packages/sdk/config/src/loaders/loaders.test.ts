@@ -5,22 +5,20 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { describe, test } from 'vitest';
+import { afterEach, describe, test } from 'vitest';
 
 import { InvalidConfigError } from '@dxos/protocols';
 
 import { FILE_DEFAULTS } from '../types';
 import { Defaults } from './index';
 
-const withBasePath = (contents?: string): string => {
-  const basePath = fs.mkdtempSync(path.join(os.tmpdir(), 'dxos-config-'));
-  if (contents !== undefined) {
-    fs.writeFileSync(path.join(basePath, FILE_DEFAULTS), contents);
-  }
-  return basePath;
-};
+const basePaths: string[] = [];
 
 describe('config loaders', () => {
+  afterEach(() => {
+    basePaths.splice(0).forEach((basePath) => fs.rmSync(basePath, { recursive: true, force: true }));
+  });
+
   test('an absent file is not an error', ({ expect }) => {
     expect(Defaults(withBasePath())).toEqual({});
   });
@@ -30,12 +28,20 @@ describe('config loaders', () => {
     expect(config.runtime?.app?.theme).toBe('dark');
   });
 
-  // Malformed YAML used to be swallowed as an absent file, so the config it supplied vanished.
-  test('malformed YAML is surfaced rather than treated as absent', ({ expect }) => {
+  test('malformed YAML raises InvalidConfigError', ({ expect }) => {
     expect(() => Defaults(withBasePath('runtime: ['))).toThrow(InvalidConfigError);
   });
 
-  test('a schema-invalid file is surfaced', ({ expect }) => {
+  test('a schema-invalid file raises InvalidConfigError', ({ expect }) => {
     expect(() => Defaults(withBasePath('version: not-a-number\n'))).toThrow(InvalidConfigError);
   });
 });
+
+const withBasePath = (contents?: string): string => {
+  const basePath = fs.mkdtempSync(path.join(os.tmpdir(), 'dxos-config-'));
+  basePaths.push(basePath);
+  if (contents !== undefined) {
+    fs.writeFileSync(path.join(basePath, FILE_DEFAULTS), contents);
+  }
+  return basePath;
+};

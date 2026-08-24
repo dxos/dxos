@@ -35,7 +35,12 @@ export const Dynamics = async (): Promise<ConfigInit> => {
   const endpoint = `${publicUrl}${CONFIG_ENDPOINT}`;
   let data: unknown;
   try {
-    data = await fetch(endpoint).then((res) => res.json());
+    // `fetch` resolves for 4xx/5xx, whose body would otherwise be read as config.
+    const response = await fetch(endpoint);
+    if (!response.ok) {
+      throw new Error(`${response.status} ${response.statusText}`);
+    }
+    data = await response.json();
   } catch (error) {
     log.warn('Failed to fetch dynamic config.', error);
     return {};
