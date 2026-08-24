@@ -1265,6 +1265,324 @@
           ]
         }
       },
+      "loop-lag": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Event loop lag \u2014 avg / max",
+            "description": "Peak time a timer fired behind schedule per export window, i.e. how long the realm was blocked. Group by dxos.process.type to separate the tab from the workers."
+          },
+          "links": [],
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "axes": {
+                "isLogScale": false,
+                "softMax": 0,
+                "softMin": 0
+              },
+              "chartAppearance": {
+                "fillMode": "none",
+                "lineInterpolation": "spline",
+                "lineStyle": "solid",
+                "showPoints": false,
+                "spanGaps": {
+                  "fillLessThan": "",
+                  "fillOnlyBelow": false
+                }
+              },
+              "formatting": {
+                "decimalPrecision": "3",
+                "unit": "s"
+              },
+              "legend": {
+                "customColors": null,
+                "mode": "list",
+                "position": "bottom"
+              },
+              "thresholds": null,
+              "visualization": {
+                "fillSpans": false,
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.client.runtime.eventLoop.lag",
+                              "reduceTo": "avg",
+                              "spaceAggregation": "avg",
+                              "temporality": "",
+                              "timeAggregation": "avg"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [
+                            {
+                              "name": "dxos.process.type",
+                              "fieldContext": "attribute",
+                              "fieldDataType": "string",
+                              "signal": "metrics"
+                            }
+                          ],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "avg {{dxos.process.type}}",
+                          "name": "A",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.client.runtime.eventLoop.lag",
+                              "reduceTo": "max",
+                              "spaceAggregation": "max",
+                              "temporality": "",
+                              "timeAggregation": "max"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [
+                            {
+                              "name": "dxos.process.type",
+                              "fieldContext": "attribute",
+                              "fieldDataType": "string",
+                              "signal": "metrics"
+                            }
+                          ],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "max {{dxos.process.type}}",
+                          "name": "B",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "rpc-timings": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "RPC queue wait vs service time \u2014 max",
+            "description": "Queue wait is time the message spent waiting for the thread; service time is time spent working. Queue wait rising while service time is flat means the receiving realm is saturated, not slow."
+          },
+          "links": [],
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "axes": {
+                "isLogScale": false,
+                "softMax": 0,
+                "softMin": 0
+              },
+              "chartAppearance": {
+                "fillMode": "none",
+                "lineInterpolation": "spline",
+                "lineStyle": "solid",
+                "showPoints": false,
+                "spanGaps": {
+                  "fillLessThan": "",
+                  "fillOnlyBelow": false
+                }
+              },
+              "formatting": {
+                "decimalPrecision": "3",
+                "unit": "s"
+              },
+              "legend": {
+                "customColors": null,
+                "mode": "list",
+                "position": "bottom"
+              },
+              "thresholds": null,
+              "visualization": {
+                "fillSpans": false,
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.rpc.queueWait.duration.max",
+                              "reduceTo": "max",
+                              "spaceAggregation": "max",
+                              "temporality": "",
+                              "timeAggregation": "max"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "queue wait max",
+                          "name": "A",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.rpc.service.duration.max",
+                              "reduceTo": "max",
+                              "spaceAggregation": "max",
+                              "temporality": "",
+                              "timeAggregation": "max"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "service max",
+                          "name": "B",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.rpc.queueWait.duration.sum",
+                              "reduceTo": "sum",
+                              "spaceAggregation": "sum",
+                              "temporality": "",
+                              "timeAggregation": "sum"
+                            }
+                          ],
+                          "disabled": true,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "qw sum",
+                          "name": "C",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.rpc.queueWait.duration.count",
+                              "reduceTo": "sum",
+                              "spaceAggregation": "sum",
+                              "temporality": "",
+                              "timeAggregation": "sum"
+                            }
+                          ],
+                          "disabled": true,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "qw count",
+                          "name": "D",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_formula",
+                        "spec": {
+                          "disabled": false,
+                          "expression": "C / D",
+                          "functions": null,
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "queue wait avg",
+                          "name": "F1",
+                          "order": null
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
       "heap-by-device": {
         "kind": "Panel",
         "spec": {
@@ -1492,6 +1810,24 @@
               "width": 6,
               "x": 6,
               "y": 21
+            },
+            {
+              "content": {
+                "$ref": "#/spec/panels/loop-lag"
+              },
+              "height": 6,
+              "width": 6,
+              "x": 0,
+              "y": 27
+            },
+            {
+              "content": {
+                "$ref": "#/spec/panels/rpc-timings"
+              },
+              "height": 6,
+              "width": 6,
+              "x": 6,
+              "y": 27
             }
           ]
         }

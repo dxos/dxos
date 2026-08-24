@@ -84,6 +84,9 @@ HEAP_LIMIT = "dxos.client.runtime.heapSizeLimit"
 # min/max read straight off their series; avg is .sum / .count as a formula.
 EPISODE = "dxos.echo.sync.episode.duration"
 STALLED = "dxos.echo.sync.stalled.duration"
+LAG = "dxos.client.runtime.eventLoop.lag"
+QUEUE_WAIT = "dxos.rpc.queueWait.duration"
+RPC_SERVICE = "dxos.rpc.service.duration"
 
 panels = {
   "stat-spaces": number("Spaces per client (avg)", "", [
@@ -142,6 +145,22 @@ panels = {
              bq("B", STALLED, "max", "max", "max", "worst client")),
       unit="s", precision="0",
       thresholds=[{"color": "Red", "label": "10 min stalled", "unit": "s", "value": 600}]),
+  "loop-lag": timeseries("Event loop lag — avg / max",
+      "Peak time a timer fired behind schedule per export window, i.e. how long the realm was blocked. Group by dxos.process.type to separate the tab from the workers.",
+      series(bq("A", LAG, "avg", "avg", "avg", "avg {{dxos.process.type}}", group=["dxos.process.type"]),
+             bq("B", LAG, "max", "max", "max", "max {{dxos.process.type}}", group=["dxos.process.type"])),
+      unit="s", precision="3"),
+  "rpc-timings": timeseries("RPC queue wait vs service time — max",
+      "Queue wait is time the message spent waiting for the thread; service time is time spent working. Queue wait rising while service time is flat means the receiving realm is saturated, not slow.",
+      [composite(
+          [bq("A", QUEUE_WAIT + ".max", "max", "max", "max", "queue wait max"),
+           bq("B", RPC_SERVICE + ".max", "max", "max", "max", "service max"),
+           bq("C", QUEUE_WAIT + ".sum", "sum", "sum", "sum", "qw sum", disabled=True),
+           bq("D", QUEUE_WAIT + ".count", "sum", "sum", "sum", "qw count", disabled=True)],
+          {"disabled": False, "expression": "C / D", "functions": None,
+           "having": {"expression": ""}, "legend": "queue wait avg", "name": "F1", "order": None},
+          kind="time_series")],
+      unit="s", precision="3"),
   "heap-by-device": table("Heaviest clients by heap",
       "One row per device; heapSizeLimit is the browser's cap for that client.",
       [composite([
@@ -154,7 +173,8 @@ order = [("stat-spaces",0,0,3,3),("stat-docs",3,0,3,3),("stat-unsynced",6,0,3,3)
          ("sync-duration",0,3,6,6),("sync-stalled",6,3,6,6),
          ("spaces-dist",0,9,6,6),("spaces-ready",6,9,6,6),
          ("docs-location",0,15,6,6),("unsynced-backlog",6,15,6,6),
-         ("heap-used",0,21,6,6),("heap-by-device",6,21,6,6)]
+         ("heap-used",0,21,6,6),("heap-by-device",6,21,6,6),
+         ("loop-lag",0,27,6,6),("rpc-timings",6,27,6,6)]
 
 dashboard = {
   "name": "client-metrics-vibptxv0",

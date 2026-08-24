@@ -12,4 +12,6 @@ Three fixes to the OTLP metrics exporter: it now requests **delta** temporality,
 
 Adds sync-timing metrics: `dxos.echo.sync.episode.duration` (how long a client takes to reach a synced state) and `dxos.echo.sync.stalled.duration` (how long it has made no progress). Both are needed — a client that never finishes syncing records no duration at all, so the stall gauge is what makes it visible.
 
+Adds runtime responsiveness metrics: `dxos.client.runtime.eventLoop.lag` reports the peak time a timer fired behind schedule per export window (per realm, so the tab and the workers are separable), and `@dxos/worker-framework`'s `RpcTiming` now publishes `dxos.rpc.queueWait.duration` and `dxos.rpc.service.duration`. Queue wait is the cross-thread signal — time a message spent waiting for the receiving thread rather than time spent working — which makes a blocked worker visible without instrumenting it.
+
 Breaking for anyone implementing the observability extension API directly: the `metrics` kind now requires an `observe` method.

@@ -171,6 +171,32 @@ The headline ask. Two instruments — neither alone answers it.
     never records a histogram sample — a permanently stuck client is invisible in
     `episode.duration` by construction.
 
+## Phase 6: Runtime responsiveness — DONE
+
+Event loop lag and RPC timings. The user recalled worker-framework already having these;
+what it actually had was `RpcTiming` (queue wait + service time in a 100-sample ring buffer,
+read only via `getStatsSnapshot`) and **no event-loop-lag metric at all**.
+
+### Tasks
+
+- [x] **`dxos.client.runtime.eventLoop.lag`** observable gauge, `s`
+  - `EventLoopLagTracker` (`providers/event-loop-lag.ts`) probes every 500ms and reports the
+    **peak per export window**, not an instantaneous value: a gauge read only at collection
+    time can never observe a stall, because a blocked loop delays the collection callback too.
+  - Grouped by the `dxos.process.type` resource attribute, so one provider separates the tab
+    from the shared and dedicated workers with no per-realm wiring. 6 tests.
+- [x] **`dxos.rpc.queueWait.duration` + `dxos.rpc.service.duration`** histograms, `s`
+  - Emitted from `RpcTiming.recordSample` via `trace.metrics`, so worker-framework took a
+    dep on `@dxos/tracing` and none on `@dxos/observability` — the emission contract holds.
+  - Queue wait is the cross-thread responsiveness signal: time the message spent waiting for
+    the receiving thread rather than time spent working. It is what makes worker lag visible
+    from the tab without instrumenting the worker.
+  - **Untagged by design.** `rpc._tag` is the interesting breakdown but would multiply a
+    12-series histogram by the method count — more series than the whole rest of the fleet's
+    metrics. Per-method detail stays in the existing log line and `getStatsSnapshot`.
+  - Explicit bucket views registered (`[0.01 … 10]s`), since the default boundaries are
+    ms-shaped.
+
 ## Phase 5: Dashboard and validation
 
 Blocked on SigNoz auth — the `signoz` MCP server is configured but unauthenticated,

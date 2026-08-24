@@ -14,6 +14,7 @@ import { log } from '@dxos/log';
 import { ConnectionState, type NetworkStatus, Platform } from '@dxos/protocols/proto/dxos/client/services';
 
 import { type DataProvider } from '../observability';
+import { EventLoopLagTracker, LAG_SAMPLE_INTERVAL_MS } from './event-loop-lag';
 import { type CrossRealmMemory, measureCrossRealmMemory, readHeap, supportsCrossRealmMemory } from './memory';
 import { SyncEpisodeTracker } from './sync-episodes';
 import { subscribeSyncSummary } from './sync-state';
@@ -309,6 +310,34 @@ export const documentsMetricsProvider = (client: Client): DataProvider =>
         () => summary().unsyncedDocumentCount,
         undefined,
         DOCUMENTS,
+      ),
+    );
+
+    return async () => {
+      await ctx.dispose();
+    };
+  });
+
+/**
+ * Publishes how long this realm's event loop was blocked.
+ *
+ * Reports peak lag per export window, tagged only by the `dxos.process.type` resource attribute —
+ * so the same provider distinguishes the tab from the shared and dedicated workers without any
+ * per-realm wiring.
+ */
+export const eventLoopLagProvider = (): DataProvider =>
+  Effect.fn(function* (observability) {
+    const ctx = new Context();
+    const lag = new EventLoopLagTracker(LAG_SAMPLE_INTERVAL_MS);
+
+    scheduleTaskInterval(ctx, async () => lag.sample(Date.now()), LAG_SAMPLE_INTERVAL_MS);
+
+    ctx.onDispose(
+      observability.metrics.observe(
+        'dxos.client.runtime.eventLoop.lag',
+        () => lag.takeMaxMs() / 1_000,
+        undefined,
+        SECONDS,
       ),
     );
 

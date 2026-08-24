@@ -45,6 +45,23 @@ const HISTOGRAM_VIEWS: ViewOptions[] = [
     },
   },
   {
+    // RPC round trips are sub-second when healthy; the tail past ~10s is what matters.
+    instrumentType: InstrumentType.HISTOGRAM,
+    instrumentName: 'dxos.rpc.queueWait.duration',
+    aggregation: {
+      type: AggregationType.EXPLICIT_BUCKET_HISTOGRAM,
+      options: { boundaries: [0.01, 0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10] },
+    },
+  },
+  {
+    instrumentType: InstrumentType.HISTOGRAM,
+    instrumentName: 'dxos.rpc.service.duration',
+    aggregation: {
+      type: AggregationType.EXPLICIT_BUCKET_HISTOGRAM,
+      options: { boundaries: [0.01, 0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10] },
+    },
+  },
+  {
     instrumentType: InstrumentType.HISTOGRAM,
     instrumentName: 'dxos.echo.sync.episode.duration',
     aggregation: {

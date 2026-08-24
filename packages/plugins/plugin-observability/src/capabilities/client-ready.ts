@@ -63,6 +63,7 @@ export default Capability.makeModule(
     log('client-ready: adding document metrics data provider');
     yield* observability.addDataProvider(ObservabilityProvider.Client.documentsMetricsProvider(client));
     yield* observability.addDataProvider(ObservabilityProvider.Client.syncMetricsProvider(client));
+    yield* observability.addDataProvider(ObservabilityProvider.Client.eventLoopLagProvider());
     log('client-ready: document metrics data provider added');
 
     return [];
