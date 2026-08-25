@@ -139,11 +139,16 @@ const BUNDLE_SYNC_THRESHOLD = 50;
 const OPTIMIZED_SHARE_POLICY = true;
 
 /**
- * Consecutive collection-sync passes a (collection, peer) pair may fail to converge before we
- * warn. Collection state is re-queried every ~10s, so this is ~1min of a genuinely stuck sync —
- * long enough that in-flight replication of a large document does not trip it.
+ * Consecutive non-converging collection-sync passes before warning, at a ~10s poll — ~1min, so
+ * in-flight replication of a large document does not trip it.
  */
 const NON_CONVERGENCE_WARN_THRESHOLD = 6;
+
+/**
+ * Passes between repeat non-convergence warnings, so a permanently stuck pair stays visible in a
+ * short log-buffer window without emitting the diagnostic on every poll.
+ */
+const NON_CONVERGENCE_WARN_INTERVAL = 30;
 
 /**
  * Wall-clock cap for `_repo.shutdown()` during host teardown. Healthy
@@ -214,9 +219,8 @@ export class AutomergeHost extends Resource {
   private _documentsToRequest = new Set<DocumentId>();
 
   /**
-   * Consecutive non-converging collection-sync passes, keyed by `<collectionId>:<peerId>`.
-   * A pair that keeps diffing without shrinking is sync silently making no progress, which is
-   * otherwise indistinguishable from idle polling in the logs.
+   * Consecutive non-converging collection-sync passes, keyed by `<collectionId>:<peerId>` — a pair
+   * making no progress is otherwise indistinguishable from idle polling in the logs.
    */
   private _nonConvergingSyncPasses = new Map<string, number>();
 
@@ -335,6 +339,12 @@ export class AutomergeHost extends Resource {
       if (!subductionDebugRequested) {
         setSubductionLogLevel('error');
       }
+      // Recorded so a log bundle states whether sedimentree-level warnings were being dropped.
+      log('subduction log level', {
+        level: subductionDebugRequested ? 'warn' : 'error',
+        suppressed: !subductionDebugRequested,
+        enableWith: "localStorage.debug='subduction'",
+      });
     } else {
       // Classical automerge-repo wiring: the EchoNetworkAdapter is registered as a
       // network adapter and document bytes flow through the standard sync protocol.
@@ -777,20 +787,39 @@ export class AutomergeHost extends Resource {
     },
     authorizeFetch: async (subductionPeerId, sedimentreeId) => {
       const allow = await this._shouldShareDocumentWithSubductionPeer(subductionPeerId, sedimentreeId);
+      // The throw below is the only record of a denial, and the peer's matching WASM warning is
+      // suppressed (see `_open`), so a refused document is otherwise invisible on both sides.
+      log.verbose('subduction authorizeFetch', {
+        documentId: sedimentreeIdToDocumentId(sedimentreeId),
+        subductionPeerId: subductionPeerId.toString(),
+        allow,
+      });
       if (!allow) {
         throw new Error('authorizeFetch denied by client share policy');
       }
     },
-    authorizePut: async (_requestor, _author, _sedimentreeId) => {
-      // Intentionally permissive — see class-level comment above.
+    authorizePut: async (_requestor, _author, sedimentreeId) => {
+      // Intentionally permissive — see class-level comment above. Logged because this is the
+      // only signal that a peer actually delivered changes for a document.
+      log.verbose('subduction authorizePut', { documentId: sedimentreeIdToDocumentId(sedimentreeId) });
     },
     filterAuthorizedFetch: async (subductionPeerId, sedimentreeIds) => {
       const allowed: SedimentreeId[] = [];
+      const denied: string[] = [];
       for (const sid of sedimentreeIds) {
         if (await this._shouldShareDocumentWithSubductionPeer(subductionPeerId, sid)) {
           allowed.push(sid);
+        } else {
+          denied.push(sedimentreeIdToDocumentId(sid));
         }
       }
+      // Silently dropping ids from the response would otherwise leave no trace of the omission.
+      log.verbose('subduction filterAuthorizedFetch', {
+        subductionPeerId: subductionPeerId.toString(),
+        requested: sedimentreeIds.length,
+        allowed: allowed.length,
+        denied,
+      });
       return allowed;
     },
   };
@@ -806,11 +835,15 @@ export class AutomergeHost extends Resource {
   ): Promise<boolean> {
     const subductionPeerIdHex = subductionPeerId.toString();
     const repoPeerId = this._subductionPeerIdHexToRepoPeerId.get(subductionPeerIdHex);
+    const documentId = sedimentreeIdToDocumentId(sedimentreeId);
     if (!repoPeerId) {
+      // Default-allow on the unbound-peer race; logged because it bypasses the share policy.
+      log.verbose('subduction share probe: peer not bound, allowing', { documentId, subductionPeerIdHex });
       return true;
     }
-    const documentId = sedimentreeIdToDocumentId(sedimentreeId);
-    return this._echoNetworkAdapter.shouldAdvertise(repoPeerId, { documentId });
+    const allow = await this._echoNetworkAdapter.shouldAdvertise(repoPeerId, { documentId });
+    log.verbose('subduction share probe', { documentId, peerId: repoPeerId, allow });
+    return allow;
   }
 
   private _shouldSyncCollection(collectionId: string, peerId: PeerId): boolean {
@@ -1098,6 +1131,12 @@ export class AutomergeHost extends Resource {
   }
 
   private _onPeerDisconnected(peerId: PeerId): void {
+    // Passes are only consecutive within one connection.
+    for (const syncKey of this._nonConvergingSyncPasses.keys()) {
+      if (syncKey.endsWith(`:${peerId}`)) {
+        this._nonConvergingSyncPasses.delete(syncKey);
+      }
+    }
     this._collectionSynchronizer.onConnectionClosed(peerId);
   }
 
@@ -1124,12 +1163,11 @@ export class AutomergeHost extends Resource {
       return;
     }
 
-    // A pair that never converges produces no errors and no warnings — only an
-    // indistinguishable-from-idle diff every ~10s. Surface it, with the heads on both sides, so
-    // a stuck document is diagnosable from a log bundle instead of requiring storage forensics.
+    // Both sides' heads, so a stuck document is diagnosable from a log bundle alone.
     const passes = (this._nonConvergingSyncPasses.get(syncKey) ?? 0) + 1;
     this._nonConvergingSyncPasses.set(syncKey, passes);
-    if (passes >= NON_CONVERGENCE_WARN_THRESHOLD) {
+    const overThreshold = passes - NON_CONVERGENCE_WARN_THRESHOLD;
+    if (overThreshold >= 0 && overThreshold % NON_CONVERGENCE_WARN_INTERVAL === 0) {
       log.warn('collection sync not converging', {
         collectionId,
         peerId,
@@ -1152,8 +1190,7 @@ export class AutomergeHost extends Resource {
       const { syncInteractively } = await this._pushInBundles(ctx, peerId, missingOnRemote);
       toReplicateWithoutBatching.push(...syncInteractively);
     } else {
-      // Not a failure: bundling is skipped when the peer lacks bundle sync or the batch is
-      // below `BUNDLE_SYNC_THRESHOLD`, which is the common case (often zero docs).
+      // Not a failure: bundling is skipped below `BUNDLE_SYNC_THRESHOLD` or without peer support.
       log.verbose('pushing without bundle', {
         collectionId,
         peerId,
@@ -1167,7 +1204,7 @@ export class AutomergeHost extends Resource {
       const { syncInteractively } = await this._pullInBundles(ctx, peerId, missingOnLocal);
       toReplicateWithoutBatching.push(...syncInteractively);
     } else {
-      // Not a failure: see the push branch above.
+      // Not a failure: bundling is skipped below `BUNDLE_SYNC_THRESHOLD` or without peer support.
       log.verbose('pulling without bundle', {
         collectionId,
         peerId,
