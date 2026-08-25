@@ -459,6 +459,9 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
       // `node:events` etc. directly). Without this vite externalises them and browser
       // tests fail with "Module has been externalized for browser compatibility".
       nodeStdResolvePlugin(),
+      // A story that builds a plugin imports its descriptor; without this the JSONC is served raw
+      // and the browser parses it as JS.
+      dxPluginManifest(),
       storybookTest({
         configDir: path.join(dirname, '.storybook'),
         // The --ci flag will skip prompts and not open a browser.
