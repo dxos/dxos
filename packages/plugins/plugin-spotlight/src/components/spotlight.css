@@ -1,0 +1,18 @@
+/*
+ * Copyright 2026 DXOS.org
+ */
+
+/*
+ * The spotlight panel is a transparent NSPanel whose content view already carries the rounded
+ * corners, mask and shadow, so the dialog inside it must contribute no frame of its own —
+ * otherwise the two rounded rects nest and read as a double border. Unlayered so these
+ * declarations win over `dx-components` without competing on specificity.
+ */
+[data-spotlight] .dx-dialog__content {
+  inline-size: 100%;
+  max-inline-size: none;
+  block-size: 100%;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
