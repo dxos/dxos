@@ -88,6 +88,8 @@ export type { PluginConfig, State } from './plugin-defs.core';
 
 /**
  * Plugin keys enabled by default for new users, per environment (dev/local).
+ *
+ * NOTE: Keep alphabetically sorted.
  */
 export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[] =>
   [
@@ -119,33 +121,33 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
     // Dev-only defaults (`isDev`: the `dev` environment or local `DX_DEV=true` — not preview, not a
     // plain `serve`). Sidekick is also gated on `isDev` for availability, not just defaults (below).
     isDev && [
-      DebugPlugin.meta.profile.key,
-      DevtoolsPlugin.meta.profile.key,
       BloggerPlugin.meta.profile.key,
       BookmarksPlugin.meta.profile.key,
       CallsPlugin.meta.profile.key,
-      MeetingPlugin.meta.profile.key,
       CodePlugin.meta.profile.key,
+      CommercePlugin.meta.profile.key,
+      CrmPlugin.meta.profile.key,
+      DebugPlugin.meta.profile.key,
+      DevtoolsPlugin.meta.profile.key,
       DuffelPlugin.meta.profile.key,
+      GamePlugin.meta.profile.key,
+      HeyGenPlugin.meta.profile.key,
+      IdeogramPlugin.meta.profile.key,
+      IrohBeaconPlugin.meta.profile.key,
+      LaMetricPlugin.meta.profile.key,
       LibraryPlugin.meta.profile.key,
       LingoPlugin.meta.profile.key,
       MagazinePlugin.meta.profile.key,
-      GamePlugin.meta.profile.key,
-      IdeogramPlugin.meta.profile.key,
-      HeyGenPlugin.meta.profile.key,
-      StreamDeckPlugin.meta.profile.key,
-      LaMetricPlugin.meta.profile.key,
-      StudioPlugin.meta.profile.key,
-      IrohBeaconPlugin.meta.profile.key,
+      MeetingPlugin.meta.profile.key,
       OsrmPlugin.meta.profile.key,
-      TasksPlugin.meta.profile.key,
       PaymentsPlugin.meta.profile.key,
       PipelinePlugin.meta.profile.key,
-      CommercePlugin.meta.profile.key,
-      CrmPlugin.meta.profile.key,
-      SequencerPlugin.meta.profile.key,
       SandboxPlugin.meta.profile.key,
+      SequencerPlugin.meta.profile.key,
       SidekickPlugin.meta.profile.key,
+      StreamDeckPlugin.meta.profile.key,
+      StudioPlugin.meta.profile.key,
+      TasksPlugin.meta.profile.key,
       TranscriptionPlugin.meta.profile.key,
       TypefullyPlugin.meta.profile.key,
       VideoPlugin.meta.profile.key,
@@ -160,6 +162,8 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
 /**
  * Full Composer plugin registry (preview and dev): shared core infrastructure plus every content
  * plugin. `plugin-defs.production.tsx` is the curated set `composer.space` ships.
+ *
+ * NOTE: Keep alphabetically sorted.
  */
 export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
   const { logStore, isDev, isLocal, isTauri, isPopover, isMobile } = config;
@@ -173,29 +177,33 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     ChessPlugin.make(),
     ChessComPlugin.make(),
     ClaudeAgentsPlugin.make(),
-    ReviewPlugin.make(),
-    ConductorPlugin.make(),
+    CodePlugin.make(),
+    CommercePlugin.make(),
     // Dev-only coding harness, gated on `isDev` for availability (not just defaults, unlike
     // Debug/Devtools below) since its tools need the dev server's route (vite.config.ts).
     isDev && ComputerPlugin.make(),
+    ConductorPlugin.make(),
+    CrmPlugin.make(),
     !isTauri && CrxPlugin.make(),
     DebugPlugin.make({ logStore }),
     DevtoolsPlugin.make(),
     DiscordPlugin.make(),
     DoctorPlugin.make(),
     DuffelPlugin.make(),
-    IbkrPlugin.make(),
-    IdeogramPlugin.make(),
-    HeyGenPlugin.make(),
-    StudioPlugin.make(),
+    ExcalidrawPlugin.make(),
     ExplorerPlugin.make(),
-    MagazinePlugin.make(),
     GamePlugin.make(),
     GooglePlugin.make(),
+    HeyGenPlugin.make(),
+    IbkrPlugin.make(),
+    IdeogramPlugin.make(),
+    IllustratorPlugin.make(),
     InboxPlugin.make(),
     JmapPlugin.make(),
     KanbanPlugin.make(),
+    LaMetricPlugin.make(),
     LibraryPlugin.make(),
+    MagazinePlugin.make(),
     MapPlugin.make(),
     isLocal && MapPluginSolid.make(),
     MarkdownPlugin.make(),
@@ -205,50 +213,54 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     // plugin-native's host integration.
     isTauri && !isMobile && !isPopover && FileSystemPlugin.make(),
     OsrmPlugin.make(),
-    TasksPlugin.make(),
     PaymentsPlugin.make(),
     PipelinePlugin.make(),
     PresenterPlugin.make(),
     ProjectsPlugin.make(),
-    CommercePlugin.make(),
-    CrmPlugin.make(),
+    ReviewPlugin.make(),
     isLocal && SamplePlugin.make(),
     SandboxPlugin.make(),
     ScriptPlugin.make(),
     isDev && SidekickPlugin.make(),
     SheetPlugin.make(),
-    IllustratorPlugin.make(),
-    TldrawPlugin.make(),
-    ExcalidrawPlugin.make(),
-    CodePlugin.make(),
     StackPlugin.make(),
     StreamDeckPlugin.make(),
-    LaMetricPlugin.make(),
+    StudioPlugin.make(),
     TablePlugin.make(),
-    TerraPlugin.make(),
+    TasksPlugin.make(),
     ThreadPlugin.make(),
+    TldrawPlugin.make(),
     TranscriptionPlugin.make(),
-
-    // TODO(wittjosiah): Consider factoring these out as standalone plugins published through the registry.
-    BloggerPlugin.make(),
-    BlueskyPlugin.make(),
-    FreeqPlugin.make(),
-    GitHubPlugin.make(),
-    IrohBeaconPlugin.make(),
-    LinearPlugin.make(),
-    LingoPlugin.make(),
-    SequencerPlugin.make(),
-    SlackPlugin.make(),
-    SpacetimePlugin.make(),
-    TrelloPlugin.make(),
-    TripPlugin.make(),
-    TypefullyPlugin.make(),
-    VideoPlugin.make(),
-    VoxelPlugin.make(),
-    FilePlugin.make(),
-    WnfsPlugin.make(),
-    ZenPlugin.make(),
+    ...experimental,
   ]
     .filter(isTruthy)
     .flat();
 };
+
+/**
+ * Experimental plugins.
+ *
+ * NOTE: Keep alphabetically sorted.
+ */
+// TODO(wittjosiah): Consider factoring these out as standalone plugins published through the registry.
+const experimental: Plugin.Plugin[] = [
+  BloggerPlugin.make(),
+  BlueskyPlugin.make(),
+  FilePlugin.make(),
+  FreeqPlugin.make(),
+  GitHubPlugin.make(),
+  IrohBeaconPlugin.make(),
+  LinearPlugin.make(),
+  LingoPlugin.make(),
+  SequencerPlugin.make(),
+  SlackPlugin.make(),
+  SpacetimePlugin.make(),
+  TerraPlugin.make(),
+  TrelloPlugin.make(),
+  TripPlugin.make(),
+  TypefullyPlugin.make(),
+  VideoPlugin.make(),
+  VoxelPlugin.make(),
+  WnfsPlugin.make(),
+  ZenPlugin.make(),
+];

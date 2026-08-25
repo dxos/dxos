@@ -20,6 +20,7 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
+import type { DeckCapabilities } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
@@ -29,7 +30,7 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 // TODO(Zan): Move this to a more global location if we use immer more broadly.
 setAutoFreeze(false);
 
-export const DeckPlugin = Plugin.define(meta).pipe(
+export const DeckPlugin = Plugin.define<DeckCapabilities.DeckPluginOptions>(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(ReactSurface),

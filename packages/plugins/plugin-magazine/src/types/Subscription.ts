@@ -7,7 +7,6 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { type Space } from '@dxos/client/echo';
 import { Annotation, Database, DXN, Feed, Filter, Obj, Query, Ref, Scope, Tag, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { EffectEx } from '@dxos/effect';
@@ -347,7 +346,7 @@ const ensureContentFeed = (subscription: Subscription): Feed.Feed => {
  * `contentFeed`, lazily creating the feed on first use.
  */
 export const appendPostContent = async (
-  space: Pick<Space, 'db'>,
+  db: Database.Database,
   subscription: Subscription,
   entry: {
     post: Post | Obj.Snapshot<Post>;
@@ -365,5 +364,5 @@ export const appendPostContent = async (
     ...(entry.imageUrl ? { imageUrl: entry.imageUrl } : {}),
     fetchedAt: entry.fetchedAt ?? new Date().toISOString(),
   });
-  await Feed.append(echoFeed, [content]).pipe(Effect.provide(Database.layer(space.db)), EffectEx.runAndForwardErrors);
+  await Feed.append(echoFeed, [content]).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
 };

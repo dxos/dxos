@@ -12,10 +12,9 @@ import { OutlineOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof OutlineOperation.ConvertToTask> = OutlineOperation.ConvertToTask.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ outline, title }) {
+    Effect.fnUntraced(function* ({ taskSet, title }) {
       const { db } = yield* Database.Service;
-      const task = yield* Effect.promise(() => Outline.createTask(outline, db, title));
-      return { task };
+      return { task: Outline.addTask(db, taskSet, title) };
     }),
   ),
 );
