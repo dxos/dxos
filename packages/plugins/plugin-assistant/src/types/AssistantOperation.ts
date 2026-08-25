@@ -110,9 +110,8 @@ export const EnsureCompanionChat = Operation.make({
     name: 'Ensure Companion Chat',
     icon: 'ph--chat-text--regular',
   },
-  services: [Capability.Service],
+  services: [Capability.Service, Database.Service],
   input: Schema.Struct({
-    db: Database.Database,
     companionTo: Obj.Unknown,
   }),
   output: Schema.Struct({
@@ -136,8 +135,8 @@ export const GenerateHomeSuggestions = Operation.make({
     // Internal UI operation — not exposed as an agent tool.
     skipRegistry: true,
   },
-  services: [Capability.Service, AiService.AiService],
-  input: Schema.Struct({ db: Database.Database }),
+  services: [Capability.Service, AiService.AiService, Database.Service],
+  input: Schema.Struct({}),
   output: Schema.Struct({ prompts: Schema.Array(Schema.String) }),
 });
 

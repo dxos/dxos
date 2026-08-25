@@ -5,18 +5,17 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import * as Capability from '@dxos/app-framework/Capability';
 import { Chat } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
-import { Filter, Obj, Query } from '@dxos/echo';
+import { Database, Filter, Obj, Query } from '@dxos/echo';
 
 import { AssistantCapabilities, AssistantOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.EnsureCompanionChat> =
   AssistantOperation.EnsureCompanionChat.pipe(
     Operation.withHandler(
-      Effect.fnUntraced(function* ({ db, companionTo }) {
-        const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
+      Effect.fnUntraced(function* ({ companionTo }) {
+        const { db } = yield* Database.Service;
         const companionUri = Obj.getURI(companionTo);
 
         // Idempotent, so it runs on every branch rather than only on creation: re-binding an existing
@@ -40,9 +39,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.EnsureCompanionCh
             ...current,
             [companionUri]: existingChat,
           }));
-          yield* Effect.promise(() =>
-            operationInvoker.invokePromise(AssistantOperation.SetCurrentChat, { companionTo, chat: existingChat }),
-          );
+          yield* Operation.invoke(AssistantOperation.SetCurrentChat, { companionTo, chat: existingChat });
           yield* bindContext(existingChat);
           return { chat: existingChat, persisted: true };
         }
@@ -56,13 +53,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.EnsureCompanionCh
         }
 
         // 3. Create a new transient chat, cache it, and return it without persisting.
-        const { data } = yield* Effect.promise(() =>
-          operationInvoker.invokePromise(AssistantOperation.CreateChat, {}, { spaceId: db.spaceId }),
-        );
-        if (!data?.object) {
-          return yield* Effect.fail(new Error('CreateChat did not return a chat object'));
-        }
-        const chat = data.object;
+        const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, {});
         yield* Capabilities.updateAtomValue(AssistantCapabilities.CompanionChatCache, (current) => ({
           ...current,
           [companionUri]: chat,
