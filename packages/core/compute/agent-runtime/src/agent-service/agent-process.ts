@@ -187,7 +187,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 // of the failure being silently discarded.
                 const exit = yield* fiber.await;
                 if (Exit.isFailure(exit)) {
-                  yield* Effect.failCause(exit.cause);
+                  return yield* Effect.failCause(exit.cause);
                 }
               }).pipe(Effect.asVoid, Effect.orDie),
           });

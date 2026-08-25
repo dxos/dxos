@@ -49,7 +49,7 @@ export const httpPlugin: Plugin = {
       return Effect.gen(function* () {
         const response = yield* HttpClient.get(args.path);
         if (response.status !== 200) {
-          yield* Effect.fail(
+          return yield* Effect.fail(
             new HttpPluginError({
               message: `failed to fetch ${args.path}, status: ${response.status}`,
             }),

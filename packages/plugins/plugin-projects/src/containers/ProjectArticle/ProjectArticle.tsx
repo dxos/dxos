@@ -9,14 +9,15 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { Chat } from '@dxos/assistant-toolkit';
 import * as Project from '@dxos/compute/Project';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { SchemaAST } from '@dxos/effect';
+import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Flex, Icon, Panel, useTranslation } from '@dxos/react-ui';
-import { Attention } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -24,7 +25,6 @@ import { type Milestone } from '@dxos/types';
 
 import { ObjectCard } from '#components';
 import { meta } from '#meta';
-import { ProjectOperation } from '#types';
 
 // Pick the editable header fields from the Project schema rather than redeclaring them. v4 exposes
 // `mapFields` only on a `Struct`, and `Type.getSchema` erases to `Codec`, so the pick runs on the AST
@@ -46,6 +46,7 @@ export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>
  */
 export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = useOperationInvoker();
   const actions = useToolbarActions(subject, () => void handleAddArtifact());
   const [project, updateProject] = useObject(subject);
   const db = Obj.getDatabase(subject);
@@ -69,7 +70,6 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     [subject],
   );
 
-  const { invokePromise } = useOperationInvoker();
   const handleOpen = useCallback(
     (object: Obj.Unknown) => {
       void invokePromise(LayoutOperation.Open, {
@@ -227,6 +227,24 @@ const useToolbarActions = (project: Project.Project, onAddArtifact: () => void) 
   // the invocation fails with ServiceNotAvailable.
   const spaceId = Obj.getDatabase(project)?.spaceId;
 
+  // Persisted on click rather than on the first message, so the chat is in the navtree straight away;
+  // the parent edge before the add is what files it under the project rather than the space root.
+  const createChat = useCallback(async () => {
+    if (!spaceId) {
+      return;
+    }
+
+    const { data } = await invokePromise(AssistantOperation.CreateChat, {}, { spaceId });
+    const chat = data?.object;
+    if (!chat) {
+      return;
+    }
+
+    Chat.linkCompanion({ chat, subject: project });
+    await invokePromise(SpaceOperation.AddObject, { object: chat }, { spaceId });
+    await invokePromise(AssistantOperation.SetCurrentChat, { companionTo: project, chat }, { spaceId });
+  }, [invokePromise, project, spaceId]);
+
   return useMenuBuilder(
     (): ActionGraphProps =>
       MenuBuilder.make()
@@ -238,7 +256,7 @@ const useToolbarActions = (project: Project.Project, onAddArtifact: () => void) 
             disposition: 'toolbar',
             testId: 'projectsPlugin.createChat',
           },
-          () => void invokePromise(ProjectOperation.CreateChat, { project }, { spaceId }),
+          () => void createChat(),
         )
         .action(
           'add-artifact',
@@ -249,19 +267,6 @@ const useToolbarActions = (project: Project.Project, onAddArtifact: () => void) 
             testId: 'projectsPlugin.addArtifact',
           },
           onAddArtifact,
-        )
-        // The growing gap pushes the routines button to the trailing edge: it opens a companion rather
-        // than creating anything, so it reads as navigation, not a peer of the create actions.
-        .separator()
-        .action(
-          'routines',
-          {
-            label: ['routines.label', { ns: meta.profile.key }],
-            icon: 'ph--lightning--regular',
-            disposition: 'toolbar',
-            testId: 'projectsPlugin.routines',
-          },
-          () => void invokePromise(LayoutOperation.UpdateCompanion, { subject: Attention.linkedSegment('automation') }),
         )
         .build(),
     [project, invokePromise, spaceId, onAddArtifact],

@@ -203,7 +203,7 @@ export const MessageChrome = ({ message, selected, children }: MessageChromeProp
         <div className='min-w-0 flex flex-col items-end'>
           <div className='max-w-[70%] min-w-0'>
             <SyntheticContext message={message} />
-            <div className='px-4 py-3 border-s-2 border-accent-bg rounded-sm bg-input-surface'>{children}</div>
+            <div className='px-3 py-2 border-s-2 border-accent-bg rounded-sm bg-input-surface'>{children}</div>
             <PromptToolbar classNames={mx('justify-end', reveal, !streaming && revealOnHover)} message={message} />
           </div>
         </div>

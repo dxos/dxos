@@ -8,7 +8,6 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Chat } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Database, Obj, Ref, Type } from '@dxos/echo';
@@ -18,7 +17,7 @@ import { Message } from '@dxos/types';
 
 /**
  * Programmatic project creation — the entry point other plugins use to create (and pre-wire)
- * projects without reaching into plugin internals. Resolves the template (blank by default),
+ * projects without reaching into plugin internals. Resolves the template (the default one when unspecified),
  * scaffolds the owned instructions/artifacts graph, and files the project in the Projects section.
  */
 export const Create = Operation.make({
@@ -36,7 +35,7 @@ export const Create = Operation.make({
   services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
-    /** Template id (`ProjectCapabilities.Template`); defaults to the blank template. */
+    /** Template id (`ProjectCapabilities.Template`); defaults to the default template. */
     templateId: Schema.optional(Schema.String),
     /** The object the project is created for (passed to the template's `appliesTo`/`scaffold`). */
     subject: Schema.optional(Obj.Unknown),
@@ -47,21 +46,6 @@ export const Create = Operation.make({
     project: Type.getSchema(Project.Project),
   }),
 }).pipe(Operation.mutation('write'));
-
-export const CreateChat = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.operation.projects.createChat'),
-    name: 'Create Project Chat',
-    icon: 'ph--chat-text--regular',
-  },
-  services: [Capability.Service, Database.Service],
-  input: Schema.Struct({
-    project: Type.getSchema(Project.Project),
-  }),
-  output: Schema.Struct({
-    chat: Type.getSchema(Chat.Chat),
-  }),
-});
 
 //
 // Mailbox pipelines that contribute to a project (see `operations/mailbox/`): each scans the

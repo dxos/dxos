@@ -42,6 +42,11 @@ export default Capability.makeModule(
       return [];
     }
     const deckStateAtom = deckStateOption.value;
+    // The mobile drawer and the desktop companion plank record "which companion is on screen" in
+    // different fields, so the host has to be known before that state can be read.
+    const platform = yield* Capability.get(DeckCapabilities.Platform).pipe(
+      Effect.catch(() => Effect.succeed('desktop' as const)),
+    );
 
     const cacheAtom = yield* AssistantCapabilities.CompanionChatCache;
     const stateAtom = yield* AssistantCapabilities.State;
@@ -98,7 +103,7 @@ export default Capability.makeModule(
       }
 
       void operationInvoker
-        .invokePromise(AssistantOperation.EnsureCompanionChat, { db, companionTo: object })
+        .invokePromise(AssistantOperation.EnsureCompanionChat, { companionTo: object }, { spaceId: db.spaceId })
         .catch((error) => log.warn('Failed to provision companion chat', { plankId, error }));
 
       return false;
@@ -107,12 +112,16 @@ export default Capability.makeModule(
     const provision = () => {
       const deckState: DeckSchema.StoredDeckState = registry.get(deckStateAtom);
       const deck = deckState.decks[deckState.activeDeck];
-      if (!deck?.companionPlanks.length) {
+      const { open, variant: companionVariant } = DeckSchema.getCompanionSelection(
+        platform,
+        deckState,
+        registry.get(variantAtom),
+      );
+      if (!deck || !open) {
         unsubAllPlanks();
         return;
       }
 
-      const companionVariant = registry.get(variantAtom);
       const plankIds = new Set(deck.active);
 
       // Remove subscriptions for planks that are no longer active.

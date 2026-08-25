@@ -157,6 +157,7 @@ export const translations: Resource[] = [
         'audio-device.label': 'Microphone',
         'audio-device.default.label': 'System default',
         'settings.entity-extraction.label': 'Entity extraction',
+        'send.label': 'Send',
         'cancel-processing.button': 'Stop processing',
 
         'options.skills.title': 'Skills',
