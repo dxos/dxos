@@ -30,8 +30,9 @@ Each extension is defined in the Appendix or resolved via its URI.
 ```mdl
 type ClaudeManagedAgent
   desc: |
-    The configuration of a Claude managed agent. `agentId` / `agentVersion` are
-    absent until the agent has been deployed at least once.
+    The configuration of a Claude managed agent. The Anthropic `agent_…` id is a
+    foreign key in object meta (source "anthropic.com"), not a field; it and
+    `agentVersion` are absent until the agent has been deployed at least once.
   fields:
     name: string
     description?: string
@@ -42,18 +43,18 @@ type ClaudeManagedAgent
     skills?: string[]            # Anthropic skill ids, e.g. xlsx
     mcpServers?: { name, url }[]
     environmentId?: string       # env_… sessions run in
-    agentId?: string             # agent_… assigned by the last deploy
     agentVersion?: number
     status: string               # draft | deployed | archived
 ```
 
 ```mdl
 type ClaudeAgentSession
-  desc: One run of a ClaudeManagedAgent, hosted by Anthropic.
+  desc: |
+    One run of a ClaudeManagedAgent, hosted by Anthropic. The Anthropic `sess_…`
+    id is a foreign key in object meta (source "anthropic.com"), not a field.
   fields:
     title: string
     agent: Ref<ClaudeManagedAgent>
-    sessionId: string            # sess_… assigned at creation
     environmentId: string
     status?: string              # last observed API status
     stopReason?: string          # why the agent last went idle
@@ -90,16 +91,18 @@ feat F-2: Agent Configuration
 feat F-3: Deployment
 
   req F-3.1:
-    when: Deploy Claude Agent is invoked for an agent with no agentId
+    when: Deploy Claude Agent is invoked for an agent with no Anthropic key
     then: |
-      POST /v1/agents is called with the projected configuration, and the
-      returned id and version are stored on the object with status "deployed"
+      POST /v1/agents is called with the projected configuration, the returned
+      id is written as a foreign key under source "anthropic.com", and the
+      version is stored with status "deployed"
 
   req F-3.2:
-    when: Deploy Claude Agent is invoked for an agent that already has an agentId
+    when: Deploy Claude Agent is invoked for an agent that already has a key
     then: |
       POST /v1/agents/{agentId} is called with the stored agentVersion for
-      optimistic concurrency, and the new version is stored
+      optimistic concurrency, the key is replaced rather than appended, and the
+      new version is stored
 
   req F-3.3:
     when: the projected configuration has no tools, skills or MCP servers
@@ -126,7 +129,7 @@ feat F-4: Sessions
     then: |
       POST /v1/sessions is called with the agent id, environment id and the
       message as a single `user.message` initial event, and a ClaudeAgentSession
-      is added to the space carrying the returned session id
+      is added to the space keyed by the returned session id
 
   req F-4.4:
     when: Send Message To Claude Agent is invoked

@@ -9,12 +9,13 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
+import { ANTHROPIC_SOURCE } from '../constants';
 import * as ClaudeManagedAgent from './ClaudeManagedAgent';
 
 /**
  * A run of a {@link ClaudeManagedAgent.ClaudeManagedAgent}: one Anthropic-hosted session and its
- * container. Records the server's session id so the transcript can be read back later; the events
- * themselves stay on Anthropic's side and are fetched on demand rather than mirrored into the space.
+ * container. The server's `sess_…` id is held as a foreign key so the transcript can be read back
+ * later; the events stay on Anthropic's side and are fetched on demand rather than mirrored here.
  */
 export class ClaudeAgentSession extends Type.makeObject<ClaudeAgentSession>(
   DXN.make('org.dxos.type.claudeAgentSession', '0.1.0'),
@@ -25,8 +26,6 @@ export class ClaudeAgentSession extends Type.makeObject<ClaudeAgentSession>(
       Schema.annotate({ description: 'The agent this session runs.' }),
       FormInputAnnotation.set(false),
     ),
-    /** Server-assigned `sess_…` id. */
-    sessionId: Schema.String.annotate({ title: 'Session id' }),
     environmentId: Schema.String.annotate({ title: 'Environment id' }),
     /**
      * Last observed session status, as reported by the API (`running`, `idle`, `terminated`, …).
@@ -41,6 +40,13 @@ export class ClaudeAgentSession extends Type.makeObject<ClaudeAgentSession>(
   ),
 ) {}
 
-/** Creates a ClaudeAgentSession object. */
-export const make = (props: Obj.MakeProps<typeof ClaudeAgentSession>): ClaudeAgentSession =>
-  Obj.make(ClaudeAgentSession, props);
+/** The session's `sess_…` id, held as a foreign key: it identifies this run in Anthropic's system. */
+export const getSessionId = (session: ClaudeAgentSession): string | undefined =>
+  Obj.getKeys(session, ANTHROPIC_SOURCE)[0]?.id;
+
+/** Creates a ClaudeAgentSession object, keyed by the Anthropic session id. */
+export const make = ({
+  sessionId,
+  ...props
+}: Obj.MakeProps<typeof ClaudeAgentSession> & { sessionId: string }): ClaudeAgentSession =>
+  Obj.make(ClaudeAgentSession, { ...props, [Obj.Meta]: { keys: [{ source: ANTHROPIC_SOURCE, id: sessionId }] } });

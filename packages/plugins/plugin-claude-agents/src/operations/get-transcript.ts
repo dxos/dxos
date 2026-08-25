@@ -8,23 +8,26 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
 import { getSession, listEvents, toTranscript } from '#api';
-import { ClaudeAgentOperation } from '#types';
+import { ClaudeAgentOperation, ClaudeAgentSession } from '#types';
 
 import { DEFAULT_TRANSCRIPT_LIMIT } from '../constants';
 import { getApiKey } from '../credentials';
+import { SessionNotLinkedError } from '../errors';
 
 const handler: Operation.WithHandler<typeof ClaudeAgentOperation.GetTranscript> =
   ClaudeAgentOperation.GetTranscript.pipe(
     Operation.withHandler(
       Effect.fn(function* ({ session, limit }) {
         const sessionObj = yield* Database.load(session);
+        const sessionId = ClaudeAgentSession.getSessionId(sessionObj);
+        if (!sessionId) {
+          return yield* Effect.fail(new SessionNotLinkedError());
+        }
+
         const apiKey = yield* getApiKey;
 
         const [state, events] = yield* Effect.all(
-          [
-            getSession(apiKey, sessionObj.sessionId),
-            listEvents(apiKey, sessionObj.sessionId, limit ?? DEFAULT_TRANSCRIPT_LIMIT),
-          ],
+          [getSession(apiKey, sessionId), listEvents(apiKey, sessionId, limit ?? DEFAULT_TRANSCRIPT_LIMIT)],
           { concurrency: 2 },
         );
 

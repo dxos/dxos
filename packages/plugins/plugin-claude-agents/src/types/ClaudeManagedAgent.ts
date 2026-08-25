@@ -9,6 +9,8 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Format, Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 
+import { ANTHROPIC_SOURCE } from '../constants';
+
 /** Default model for a newly created agent. */
 export const DEFAULT_MODEL = 'claude-opus-5';
 
@@ -36,8 +38,8 @@ export interface McpServer extends Schema.Schema.Type<typeof McpServer> {}
 /**
  * A Claude managed agent: the versioned configuration Anthropic stores and runs on your behalf.
  *
- * The object is the source of truth for the configuration; `agentId` and `agentVersion` are the
- * server's answer to the last deploy and are absent until the agent has been deployed once.
+ * The object is the source of truth for the configuration; the Anthropic `agent_…` id lives in the
+ * object's foreign keys and `agentVersion` records the last deploy, both absent until first deploy.
  */
 export class ClaudeManagedAgent extends Type.makeObject<ClaudeManagedAgent>(
   DXN.make('org.dxos.type.claudeManagedAgent', '0.1.0'),
@@ -63,13 +65,24 @@ export class ClaudeManagedAgent extends Type.makeObject<ClaudeManagedAgent>(
      * may be configured (and deployed) before an environment has been provisioned.
      */
     environmentId: Schema.optional(Schema.String.annotate({ title: 'Environment id' })),
-    /** Server-assigned `agent_…` id; present once deployed. */
-    agentId: Schema.optional(Schema.String.annotate({ title: 'Agent id' })),
     /** Server-assigned version of the last deploy, used for optimistic concurrency on update. */
     agentVersion: Schema.optional(Schema.Number.annotate({ title: 'Agent version' })),
     status: Status.annotate({ title: 'Status' }),
   }).pipe(LabelAnnotation.set(['name']), Annotation.IconAnnotation.set({ icon: 'ph--robot--regular', hue: 'indigo' })),
 ) {}
+
+/**
+ * The agent's `agent_…` id, held as a foreign key rather than a field: it identifies this object in
+ * Anthropic's system, so a deployed agent is addressable with `Filter.foreignKeys`.
+ */
+export const getAgentId = (agent: ClaudeManagedAgent): string | undefined =>
+  Obj.getKeys(agent, ANTHROPIC_SOURCE)[0]?.id;
+
+/** Stamps the deployed id onto the agent. Must be called within an `Obj.update` callback. */
+export const setAgentId = (agent: ClaudeManagedAgent, agentId: string): void => {
+  Obj.deleteKeys(agent, ANTHROPIC_SOURCE);
+  Obj.getMeta(agent).keys.push({ source: ANTHROPIC_SOURCE, id: agentId });
+};
 
 /** Creates a ClaudeManagedAgent object, defaulting the model, toolset and status. */
 export const make = ({

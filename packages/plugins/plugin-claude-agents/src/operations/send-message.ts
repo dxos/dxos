@@ -8,18 +8,24 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 
 import { sendUserMessage } from '#api';
-import { ClaudeAgentOperation } from '#types';
+import { ClaudeAgentOperation, ClaudeAgentSession } from '#types';
 
 import { getApiKey } from '../credentials';
+import { SessionNotLinkedError } from '../errors';
 
 const handler: Operation.WithHandler<typeof ClaudeAgentOperation.SendMessage> = ClaudeAgentOperation.SendMessage.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ session, message }) {
       const sessionObj = yield* Database.load(session);
-      const apiKey = yield* getApiKey;
-      yield* sendUserMessage(apiKey, sessionObj.sessionId, message);
+      const sessionId = ClaudeAgentSession.getSessionId(sessionObj);
+      if (!sessionId) {
+        return yield* Effect.fail(new SessionNotLinkedError());
+      }
 
-      return { sessionId: sessionObj.sessionId };
+      const apiKey = yield* getApiKey;
+      yield* sendUserMessage(apiKey, sessionId, message);
+
+      return { sessionId };
     }),
   ),
 );

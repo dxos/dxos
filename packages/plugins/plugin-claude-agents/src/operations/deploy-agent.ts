@@ -8,7 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
 import { createAgent, toAgentConfig, updateAgent } from '#api';
-import { ClaudeAgentOperation } from '#types';
+import { ClaudeAgentOperation, ClaudeManagedAgent } from '#types';
 
 import { getApiKey } from '../credentials';
 
@@ -19,12 +19,13 @@ const handler: Operation.WithHandler<typeof ClaudeAgentOperation.DeployAgent> = 
       const apiKey = yield* getApiKey;
       const config = toAgentConfig(agentObj);
 
-      const response = agentObj.agentId
-        ? yield* updateAgent(apiKey, agentObj.agentId, config, agentObj.agentVersion)
+      const agentId = ClaudeManagedAgent.getAgentId(agentObj);
+      const response = agentId
+        ? yield* updateAgent(apiKey, agentId, config, agentObj.agentVersion)
         : yield* createAgent(apiKey, config);
 
       Obj.update(agentObj, (agentObj) => {
-        agentObj.agentId = response.id;
+        ClaudeManagedAgent.setAgentId(agentObj, response.id);
         agentObj.agentVersion = response.version;
         agentObj.status = 'deployed';
       });

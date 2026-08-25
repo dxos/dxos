@@ -20,7 +20,7 @@ const handler: Operation.WithHandler<typeof ClaudeAgentOperation.ListAgents> = C
           name: agent.name,
           model: agent.model,
           status: agent.status,
-          agentId: agent.agentId,
+          agentId: ClaudeManagedAgent.getAgentId(agent),
           environmentId: agent.environmentId,
         })),
       };

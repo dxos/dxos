@@ -21,6 +21,12 @@ export class AgentNotDeployedError extends BaseError.extend(
   'Agent has not been deployed; run Deploy Claude Agent first.',
 ) {}
 
+/** The session object carries no Anthropic session key, so there is nothing to address. */
+export class SessionNotLinkedError extends BaseError.extend(
+  'SessionNotLinkedError',
+  'Session is not linked to an Anthropic session id.',
+) {}
+
 /** No Anthropic credential is stored in the space, so the API cannot be called. */
 export class MissingCredentialError extends BaseError.extend(
   'MissingCredentialError',

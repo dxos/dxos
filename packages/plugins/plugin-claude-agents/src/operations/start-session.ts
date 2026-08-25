@@ -8,7 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 
 import { createEnvironment, createSession } from '#api';
-import { ClaudeAgentOperation, ClaudeAgentSession } from '#types';
+import { ClaudeAgentOperation, ClaudeAgentSession, ClaudeManagedAgent } from '#types';
 
 import { DEFAULT_ENVIRONMENT_NAME } from '../constants';
 import { getApiKey } from '../credentials';
@@ -18,7 +18,8 @@ const handler: Operation.WithHandler<typeof ClaudeAgentOperation.StartSession> =
   Operation.withHandler(
     Effect.fn(function* ({ agent, message, title, environmentId }) {
       const agentObj = yield* Database.load(agent);
-      if (!agentObj.agentId) {
+      const agentId = ClaudeManagedAgent.getAgentId(agentObj);
+      if (!agentId) {
         return yield* Effect.fail(new AgentNotDeployedError());
       }
 
@@ -36,7 +37,7 @@ const handler: Operation.WithHandler<typeof ClaudeAgentOperation.StartSession> =
 
       const sessionTitle = title ?? `${agentObj.name} session`;
       const response = yield* createSession(apiKey, {
-        agentId: agentObj.agentId,
+        agentId,
         environmentId: environment,
         title: sessionTitle,
         message,
