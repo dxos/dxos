@@ -4,6 +4,7 @@
 
 import { OPFS_SQLITE_DB_FILENAME, createSqliteProfileArchive, encodeProfileArchive } from '@dxos/client-services';
 import * as OpfsPool from '@dxos/sql-sqlite/OpfsPool';
+import { downloadBlob } from '@dxos/util';
 
 import { verifyOpfsSqliteImport } from './opfs-import-verify';
 
@@ -32,25 +33,19 @@ export const importOpfsSqlite = async (bytes: Uint8Array): Promise<number> => {
   return verifyOpfsSqliteImport(bytes);
 };
 
-/** Trigger a browser download of a `.dxprofile` archive. */
-export const downloadProfileArchiveExport = (bytes: Uint8Array, filename?: string) => {
+/** Save a `.dxprofile` archive to disk. Resolves false if the user cancelled. */
+export const downloadProfileArchiveExport = (bytes: Uint8Array, filename?: string): Promise<boolean> => {
   const date = new Date().toISOString().slice(0, 10);
-  downloadBinaryExport(bytes, filename ?? `composer-${date}.dxprofile`, 'application/octet-stream');
+  return downloadBinaryExport(bytes, filename ?? `composer-${date}.dxprofile`, 'application/octet-stream');
 };
 
-/** Trigger a browser download of raw SQLite bytes. */
-export const downloadSqliteExport = (bytes: Uint8Array, filename = `${DB_NAME}.sqlite`) => {
-  downloadBinaryExport(bytes, filename, 'application/x-sqlite3');
+/** Save raw SQLite bytes to disk. Resolves false if the user cancelled. */
+export const downloadSqliteExport = (bytes: Uint8Array, filename = `${DB_NAME}.sqlite`): Promise<boolean> => {
+  return downloadBinaryExport(bytes, filename, 'application/x-sqlite3');
 };
 
-const downloadBinaryExport = (bytes: Uint8Array, filename: string, mimeType: string) => {
+const downloadBinaryExport = (bytes: Uint8Array, filename: string, mimeType: string): Promise<boolean> => {
   const copy = new Uint8Array(bytes.byteLength);
   copy.set(bytes);
-  const blob = new Blob([copy], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.click();
-  URL.revokeObjectURL(url);
+  return downloadBlob(new Blob([copy], { type: mimeType }), filename);
 };

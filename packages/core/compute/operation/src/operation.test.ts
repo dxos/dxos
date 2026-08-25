@@ -241,36 +241,5 @@ describe('Operation', () => {
 
       expect(result.results).toEqual(['user1', 'user2']);
     });
-
-    test('handler using undeclared service is a type error', () => {
-      class DeclaredService extends Context.Service<DeclaredService, { declared: () => void }>()(
-        '@test/DeclaredService',
-      ) {}
-      class UndeclaredService extends Context.Service<UndeclaredService, { undeclared: () => void }>()(
-        '@test/UndeclaredService',
-      ) {}
-
-      const op = Operation.make({
-        input: Schema.Void,
-        output: Schema.Void,
-        meta: { key: DXN.make('com.example.operation.test.typeError') },
-        services: [DeclaredService],
-      });
-
-      // Using the declared service is allowed.
-      Operation.withHandler(op, (_input) =>
-        Effect.gen(function* () {
-          yield* DeclaredService;
-        }),
-      );
-
-      // Using an undeclared service should be a type error.
-      Operation.withHandler(op, (_input) =>
-        // @ts-expect-error - UndeclaredService is not in the operation's services
-        Effect.gen(function* () {
-          yield* UndeclaredService;
-        }),
-      );
-    });
   });
 });

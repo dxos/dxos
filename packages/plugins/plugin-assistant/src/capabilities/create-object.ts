@@ -30,10 +30,11 @@ export default Capability.makeModule(
         id: Type.getTypename(Chat.Chat),
         createObject: (props, options) =>
           Effect.gen(function* () {
-            const { object } = yield* Operation.invoke(AssistantOperation.CreateChat, {
-              db: options.db,
-              name: props?.name,
-            });
+            const { object } = yield* Operation.invoke(
+              AssistantOperation.CreateChat,
+              { name: props?.name },
+              { spaceId: options.db.spaceId },
+            );
             return yield* Operation.invoke(
               SpaceOperation.AddObject,
               {
