@@ -87,8 +87,10 @@ export const buildImportGraph = (
     let source: string;
     try {
       source = fs.readFileSync(fileKey, 'utf8');
-    } catch {
-      continue;
+    } catch (err) {
+      // Same reasoning as a parse failure: skipping the file silently removes its subtree and
+      // turns "could not look" into "found nothing", which reads as a pass.
+      throw new Error(`failed to read ${fileKey}: ${err instanceof Error ? err.message : String(err)}`);
     }
 
     const deps = new Set<string>();

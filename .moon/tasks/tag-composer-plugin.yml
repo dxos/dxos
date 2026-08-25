@@ -13,15 +13,20 @@ tasks:
     deps:
       - app-framework:compile-plugin-cli
     inputs:
-      - src/capabilities/index.ts
-      - src/capabilities/overrides.*.ts
+      # The whole source tree, not just `src/capabilities/index.ts`: `parseBarrel` follows
+      # `export * from` and `export { X } from` into arbitrary files and slices statements out of
+      # them, so the barrel's own path is not the read set. plugin-space reaches
+      # `src/capabilities/app-graph-builder/index.ts` (which carries an `environments` annotation)
+      # and `src/util/space-display.ts` that way. Naming the read set by hand is how this went
+      # stale before; the task takes under a second, so over-invalidating is the cheap side.
+      - src/**/*
       - package.json
-      # The modules declaring the per-family `environments` defaults: the generator reads those
-      # literals statically, so a default changing there changes every plugin's output while
-      # leaving the barrel untouched. Without these a family-default edit is invisible to the
-      # cache and moon restores a stale barrel.
+      # Modules declaring per-family `environments` defaults, which the generator reads statically
+      # from another package's source — a default changing there changes every plugin's output
+      # while leaving the barrel untouched. This list is necessarily incomplete: defaults resolve
+      # from any namespace import, so a new family package must be added here or its plugins cache
+      # stale. See DESIGN.md §6.8.
       - /packages/sdk/app-toolkit/src/app-framework/AppCapability.ts
-      - /packages/plugins/plugin-space/src/types/SpaceCapability.ts
     outputs:
       # Optional: a plugin that declares no conditions produces zero gen files, and a required
       # output fails the task when nothing was written.

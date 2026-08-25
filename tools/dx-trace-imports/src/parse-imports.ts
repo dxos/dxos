@@ -107,8 +107,11 @@ export const parseImportSpecifiers = (source: string, filePath: string): string[
   let ast: ReturnType<typeof parseSync>;
   try {
     ast = parseSync(source, parseOptionsFor(filePath));
-  } catch {
-    return [];
+  } catch (err) {
+    // Returning no specifiers here drops the file's entire subtree from the graph, and the trace
+    // then reports "no import paths" — a pass produced by not looking. A guard has to fail when it
+    // cannot reach what it is checking.
+    throw new Error(`failed to parse ${filePath}: ${err instanceof Error ? err.message : String(err)}`);
   }
   const specifiers = new Set<string>();
   collectSpecifiers(ast.body, specifiers);

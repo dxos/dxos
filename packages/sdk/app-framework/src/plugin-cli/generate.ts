@@ -18,7 +18,7 @@ import {
 export type GenerateResult = {
   pluginDir: string;
   environments: string[];
-  files: Array<{ path: string; included: number; stubbed: number }>;
+  files: Array<{ path: string; included: number; stubbed: number; values: number }>;
 };
 
 const findFirst = (dir: string, names: string[]): string | null =>
@@ -42,6 +42,12 @@ export const generate = (pluginDir: string): GenerateResult => {
 
   const members = parseBarrel(indexPath);
   const moduleMembers = [...members.values()].filter((member) => member.kind === 'maker-call');
+  // Everything the barrel exports that is not a module: helpers, constants, re-exported utilities.
+  // These have no environment to be split on, and the generated barrel is a drop-in for the
+  // canonical one under its condition — so its export surface has to match, or an importer of
+  // `#capabilities` resolves a name that exists in one runtime and not another. TypeScript cannot
+  // catch that: the `types` condition always points at the canonical declaration.
+  const valueMembers = [...members.values()].filter((member) => member.kind === 'non-call-initializer');
   const environments = [...new Set(moduleMembers.flatMap((member) => member.environments ?? []))].sort();
 
   const genDir = path.join(capabilitiesDir, 'gen');
@@ -61,13 +67,21 @@ export const generate = (pluginDir: string): GenerateResult => {
     // to be false. Excluding it instead would silently narrow a plugin — dropping React-free state
     // from headless hosts — and the omission would look identical to a deliberate choice.
     const carries = (member: BarrelMember) => member.environments === null || member.environments.includes(env);
-    const included = moduleMembers.filter(carries);
+    const modules = moduleMembers.filter(carries);
+    // Values first: a module's maker call may reference a helper the barrel also exports, and the
+    // emitted statements are evaluated in order.
+    const included = [...valueMembers, ...modules];
     const stubbed = moduleMembers.filter((member) => !carries(member));
 
     const text = renderBarrel({ env, genDir, included, stubbed });
     const outPath = path.join(genDir, `${env}.ts`);
     fs.writeFileSync(outPath, text);
-    result.files.push({ path: outPath, included: included.length, stubbed: stubbed.length });
+    result.files.push({
+      path: outPath,
+      included: modules.length,
+      stubbed: stubbed.length,
+      values: valueMembers.length,
+    });
   }
 
   syncPackageImports(pluginDir, environments);
