@@ -6,7 +6,8 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
-import { Column, Input, useTranslation } from '@dxos/react-ui';
+import { Input, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 
 import { meta } from '#meta';
@@ -47,36 +48,40 @@ export const CreateProjectPanel = ({ onCreateObject, templates: templatesProp }:
   );
 
   return (
-    <Column.Root>
-      <Column.Center>
-        <Input.Root>
-          <Input.TextInput
-            autoFocus
-            data-testid='create-project-panel.name-input'
-            placeholder={t('create-panel.name.placeholder')}
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-          />
-        </Input.Root>
-      </Column.Center>
-      <SearchList.Root onSearch={handleSearch}>
-        <SearchList.Input
-          classNames='mb-form-gap'
-          data-testid='create-project-panel.template-input'
-          placeholder={t('create-panel.template.placeholder')}
-        />
-        <SearchList.Viewport>
-          {results.map((template) => (
-            <SearchList.Item
-              key={template.id}
-              value={template.id}
-              label={template.label}
-              icon={template.icon ?? 'ph--stack--regular'}
-              onSelect={() => handleSelect(template.id)}
+    // `Form` rather than a bare Column: its viewport owns the gutter and its content places itself in
+    // the centre track, so the picker's rows align with the fields above them.
+    <Form.Root>
+      <Form.Viewport>
+        <Form.Content classNames='gap-form-gap'>
+          <Input.Root>
+            <Input.TextInput
+              autoFocus
+              data-testid='create-project-panel.name-input'
+              placeholder={t('create-panel.name.placeholder')}
+              value={name}
+              onChange={(event) => setName(event.target.value)}
             />
-          ))}
-        </SearchList.Viewport>
-      </SearchList.Root>
-    </Column.Root>
+          </Input.Root>
+          <SearchList.Root onSearch={handleSearch}>
+            <SearchList.Input
+              classNames='mb-form-gap'
+              data-testid='create-project-panel.template-input'
+              placeholder={t('create-panel.template.placeholder')}
+            />
+            <SearchList.Viewport>
+              {results.map((template) => (
+                <SearchList.Item
+                  key={template.id}
+                  value={template.id}
+                  label={template.label}
+                  icon={template.icon ?? 'ph--stack--regular'}
+                  onSelect={() => handleSelect(template.id)}
+                />
+              ))}
+            </SearchList.Viewport>
+          </SearchList.Root>
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   );
 };
