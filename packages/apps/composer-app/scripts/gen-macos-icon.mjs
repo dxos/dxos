@@ -18,7 +18,7 @@
 // Usage: pnpm icons:macos
 
 import { execFileSync } from 'node:child_process';
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -35,10 +35,11 @@ const CHANNELS = [
 ];
 
 /**
- * The only files macOS reads: the `.icns` the bundle installs, plus the loose PNGs `bundle.icon` names.
- * `icon.ico` is deliberately absent — Windows expects the square artwork.
+ * The `.icns` is the whole macOS surface: the bundler installs it as the app's icon and reads nothing
+ * else. The loose PNGs `bundle.icon` also names belong to the Linux deb/AppImage bundles and `icon.ico`
+ * to Windows, neither of which wants a rounded tile, so both keep the square artwork.
  */
-const MACOS_ICONS = ['32x32.png', '128x128.png', '128x128@2x.png', 'icon.icns'];
+const MACOS_ICONS = ['icon.icns'];
 
 /**
  * The macOS icon grid, as a fraction of the canvas for the tile and of the tile for its corner radius.
@@ -54,8 +55,8 @@ const RADIUS = 47 / 214;
  * `source` is stamped into the output so a hand edit here is visibly the wrong place to make one.
  */
 const squircle = (svg, source) => {
-  const viewBox = svg.match(/viewBox="0 0 (\d+(?:\.\d+)?) /);
-  if (!viewBox) {
+  const viewBox = svg.match(/viewBox="0 0 (\d+(?:\.\d+)?) (\d+(?:\.\d+)?)\s*"/);
+  if (!viewBox || viewBox[1] !== viewBox[2]) {
     throw new Error(`${source}: expected a square viewBox starting at 0 0`);
   }
 
@@ -101,8 +102,12 @@ for (const { source, icons } of CHANNELS) {
   try {
     writeFileSync(join(scratch, 'icon.svg'), svg);
     execFileSync(tauri, ['icon', 'icon.svg', '-o', 'out'], { cwd: scratch, stdio: 'inherit' });
+    // The channel directories are checked in; creating one here would quietly accept a typo in CHANNELS
+    // and leave the real directory stale.
     const dir = join(root, 'src-tauri', icons);
-    mkdirSync(dir, { recursive: true });
+    if (!existsSync(dir)) {
+      throw new Error(`src-tauri/${icons}: no such directory`);
+    }
     for (const icon of MACOS_ICONS) {
       copyFileSync(join(scratch, 'out', icon), join(dir, icon));
     }
