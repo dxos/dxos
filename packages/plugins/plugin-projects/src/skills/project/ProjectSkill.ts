@@ -30,7 +30,6 @@ export const operations: readonly Operation.Definition.Any[] = [
   SpaceOperation.UpdateObject,
   ProjectOperation.Create,
   ProjectOperation.GetProject,
-  ProjectOperation.UpdateProject,
   TaskOperation.CreateTask,
   TaskOperation.UpdateTask,
   TaskOperation.ListTasks,

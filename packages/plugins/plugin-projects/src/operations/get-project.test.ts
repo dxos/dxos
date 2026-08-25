@@ -13,7 +13,6 @@ import { Text } from '@dxos/schema';
 import { Outline, Task, TaskSet } from '@dxos/types';
 
 import getProject from './get-project';
-import updateProject from './update-project';
 
 const testLayer = () =>
   TestDatabaseLayer({
@@ -54,11 +53,13 @@ describe('get-project', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
-  it.effect('reports the status a project was updated to', () =>
+  it.effect('reports the project status', () =>
     Effect.gen(function* () {
       const project = yield* Database.add(Project.make({ name: 'Spring Blend' }));
       yield* Database.flush();
-      yield* updateProject.handler({ project: Ref.make(project), status: 'blocked' });
+      Obj.update(project, (project) => {
+        project.status = 'blocked';
+      });
 
       const detail = yield* getProject.handler({ project: Ref.make(project) });
 

@@ -94,30 +94,6 @@ export const GetProject = Operation.make({
   }),
 }).pipe(Operation.mutation('none'));
 
-/**
- * The thinnest verb here: a field patch, and little a generic object update lacks beyond skipping
- * an empty patch, which would otherwise bump meta and wake every reactive consumer for nothing.
- */
-export const UpdateProject = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.operation.projects.update'),
-    name: 'Update Project',
-    description: 'Patch a project: name, status, or description.',
-    icon: 'ph--pencil-simple--regular',
-  },
-  services: [Database.Service],
-  input: Schema.Struct({
-    project: Ref.Ref(Project.Project),
-    name: Schema.optional(Schema.String),
-    status: Schema.optional(Project.ProjectStatus),
-    description: Schema.optional(Schema.String),
-  }),
-  // JSON snapshot, not a live object — see MILESTONE-5.md §7.4.
-  output: Schema.Struct({
-    project: Type.getSchema(Project.Project),
-  }),
-}).pipe(Operation.mutation('write'));
-
 //
 // Artifacts — the project's work products. The skill's own verbs: `Project.artifacts` is a plain
 // ref array, but adding is idempotent by entity id, which a generic object patch cannot be.

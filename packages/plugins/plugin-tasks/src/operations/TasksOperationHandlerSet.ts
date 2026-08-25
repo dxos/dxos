@@ -10,7 +10,6 @@ import { OutlineOperation, TaskOperation } from '#types';
 export const handlers = OperationHandlerSet.lazy([
   OutlineOperation.ConvertToTask.pipe(Operation.lazyHandler(() => import('./convert-to-task'))),
   TaskOperation.CreateMilestone.pipe(Operation.lazyHandler(() => import('./create-milestone'))),
-  OutlineOperation.CreateOutline.pipe(Operation.lazyHandler(() => import('./create-outline'))),
   TaskOperation.CreateTask.pipe(Operation.lazyHandler(() => import('./create-task'))),
   TaskOperation.DeleteMilestone.pipe(Operation.lazyHandler(() => import('./delete-milestone'))),
   TaskOperation.DeleteTask.pipe(Operation.lazyHandler(() => import('./delete-task'))),

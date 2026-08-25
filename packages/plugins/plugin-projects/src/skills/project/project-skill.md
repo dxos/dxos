@@ -161,7 +161,7 @@ verbs work without the space binding the slash verbs below require.
   open/total task counts. If more than one project is `active`, list them numbered and ask
   which, rather than guessing.
 - **`/project new <name>`** — `projects-create { name, spaceId }`, then
-  `projects-update { project: {"/": "echo:///<id>"}, status: 'active', description: '<one-line summary>',
+  `space-update-object { object: {"/": "echo:///<id>"}, properties: { status: 'active', description: '<one-line summary>' },
 spaceId }`. Report the new project id.
 - **`/project tasks`** — `tasks-list-milestone { project: {"/": "echo:///<id>"}, spaceId }` plus
   `tasks-list { project: {"/": "echo:///<id>"}, includeSubtasks: true, spaceId }` for the active
@@ -178,12 +178,12 @@ spaceId }`. Report the new project id.
   3. Reconcile the milestone sequence: `tasks-create-milestone` anything newly scoped, `space-update-object`
      a description or target date that moved, `tasks-delete-milestone` what was dropped (its tasks fall
      back to the backlog). A milestone has no status to set — completing its tasks is what closes
-     it. Update `projects-update.status` if the work-stream's state changed.
+     it. Patch the project's `status` with `space-update-object` if the work-stream's state changed.
   4. Push durable _why_ (decisions, findings) into the design document, not the outline — the
      outline is scratch, the document is the record.
   5. Confirm the checkpoint in one short block (done / in-progress / next).
 - **`/project end`** — close out a work-stream: run the hydrate checkpoint first, then
-  `projects-update { project: {"/": "echo:///<id>"}, status: 'ended', spaceId }`. Ended projects stay
+  `space-update-object { object: {"/": "echo:///<id>"}, properties: { status: 'ended' }, spaceId }`. Ended projects stay
   queryable; nothing is deleted.
 - **`/project resume`** — reload at the start of a session:
   1. `space-query-objects { typename: 'org.dxos.type.project' }` to discover projects. If one was named, match it; otherwise pick

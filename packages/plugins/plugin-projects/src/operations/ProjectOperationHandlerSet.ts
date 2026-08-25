@@ -18,7 +18,6 @@ export const handlers = OperationHandlerSet.lazy([
   ),
   ProjectMailboxOperation.UpdateTravelLog.pipe(Operation.lazyHandler(() => import('./mailbox/update-travel-log'))),
   ProjectOperation.GetProject.pipe(Operation.lazyHandler(() => import('./get-project'))),
-  ProjectOperation.UpdateProject.pipe(Operation.lazyHandler(() => import('./update-project'))),
   // The project skill's own verbs: one set, so a host that registers the plugin's handlers gets
   // everything the skill declares rather than the two halves separately.
   ProjectOperation.ArtifactAdd.pipe(Operation.lazyHandler(() => import('./artifact-add'))),
