@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 
 import { JsonSchema } from '@dxos/echo';
 
-import { makeCompleteJobTool } from './run-instructions';
+import { makeCompleteJobTool } from './complete-job-tool';
 
 /** Anthropic rejects a strict tool whose schema contains one, so nothing may serialize to `{}`. */
 const hasEmptySchema = (node: unknown): boolean => {
@@ -30,7 +30,6 @@ describe('completeJob tool', () => {
   });
 
   test('an undeclared output drops strict, because its payload schema is empty', ({ expect }) => {
-    // `Instructions.make` defaults `output` to `Schema.Void`.
     const tool = makeCompleteJobTool(JsonSchema.toJsonSchema(Schema.Void));
     expect(Tool.getStrictMode(tool)).toBe(false);
     expect(hasEmptySchema(Tool.getJsonSchema(tool))).toBe(true);
