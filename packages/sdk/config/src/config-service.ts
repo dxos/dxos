@@ -107,7 +107,7 @@ export class ConfigService extends Context.Service<ConfigService, Config>()('Con
  * Both load branches (existing file, first-run write) must layer env, file, and builtins in the same
  * order, or a freshly created profile would come up without storage or the hub.
  */
-const withProfileDefaults = (configValues: ConfigProto, profile: string) =>
+const withProfileDefaults = (configValues: ConfigInit, profile: string) =>
   ConfigService.of(new Config(processEnvDefaults(), configValues, profileBuiltinDefaults(profile).values));
 
 /**
