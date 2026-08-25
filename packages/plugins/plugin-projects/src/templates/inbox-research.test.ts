@@ -71,7 +71,6 @@ describe('inbox research project template', () => {
     expect(projectSkills).toContain(Skill.registryURI('org.dxos.skill.inbox').toString());
     expect(projectSkills).toContain(Skill.registryURI('org.dxos.skill.table').toString());
 
-    // Starter routine: owned by the project, so it is reached through `project.routines`.
     expect(project.routines).toHaveLength(1);
     const routine = await project.routines[0].tryLoad();
 

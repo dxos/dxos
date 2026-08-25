@@ -18,9 +18,7 @@ const Input = Schema.Struct({
 });
 
 /**
- * CRM automation template: the routine-only counterpart of the `crmPipeline` project template. The
- * trigger binds `ProcessMailbox` directly so no model sits between trigger and operation; the
- * operation's durable feed cursor makes per-item firing idempotent.
+ * CRM automation template: the routine-only counterpart of the `crmPipeline` project template.
  */
 export const crm: RoutineCapabilities.Template = {
   id: 'org.dxos.routine.crm',
@@ -32,7 +30,6 @@ export const crm: RoutineCapabilities.Template = {
       if (!Ref.isRef(input?.mailbox)) {
         return yield* Effect.fail(new Error('CRM template requires a mailbox.'));
       }
-      // `Database.resolve`, not `Database.load`: a ref built by the form's picker carries no resolver.
       const mailbox = yield* Database.resolve(input.mailbox, Mailbox.Mailbox);
 
       // The feed spec requires the live feed object; Database.load is a read-only DB operation.

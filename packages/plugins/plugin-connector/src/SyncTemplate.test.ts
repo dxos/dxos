@@ -36,7 +36,6 @@ describe('SyncTemplate', () => {
   });
 
   test('stays out of the create picker', async ({ expect }) => {
-    // Only the connector flow knows which account to sync, so the template is reachable by id alone.
     expect(SyncTemplate.make(capabilities({ scheduled: true })).hidden).toBe(true);
   });
 
@@ -86,7 +85,6 @@ describe('SyncTemplate', () => {
   test('fails when the subject has no connection to sync', async ({ expect }) => {
     const { db } = await setup();
     const template = SyncTemplate.make(capabilities({ scheduled: true }));
-    // An unbound object of the connector's target type: the binding lookup finds nothing.
     const unbound = db.add(Obj.make(Expando.Expando, { name: 'Unbound' }));
     await db.flush({ indexes: true });
 

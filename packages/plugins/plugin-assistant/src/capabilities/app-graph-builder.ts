@@ -213,7 +213,6 @@ export default Capability.makeModule(
           ]),
       }),
 
-      // Companion and project chats are parented to their subject, which the section already excludes.
       TypeSection.createTypeSectionExtension(Chat.Chat, {
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
         groupSegment: GraphPath.GroupSegments.ai,

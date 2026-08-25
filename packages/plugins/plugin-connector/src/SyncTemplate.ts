@@ -30,8 +30,7 @@ export const ID = 'org.dxos.routine.connectorSync';
  *
  * The subject may be the Connection itself (the connection flow, the multi-target picker) or a bound
  * target such as a Mailbox (a target's sync affordance); a target resolves to its binding's
- * connection. Hidden from the create picker: without a subject there is nothing to sync, and only
- * the connector flow knows which one.
+ * connection.
  */
 export const make = (capabilities: CapabilityManager.CapabilityManager): RoutineCapabilities.Template => ({
   id: ID,

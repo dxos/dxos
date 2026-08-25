@@ -233,7 +233,6 @@ FormLayoutController.displayName = FORM_LAYOUT_NAME;
 const FORM_ACTIONS_NAME = 'Form.Actions';
 
 export type FormActionsProps = ThemedClassName<{
-  /** Overrides the submit button's label and icon, for a form that is a step rather than the commit. */
   submitLabel?: string;
   submitIcon?: string;
 }>;

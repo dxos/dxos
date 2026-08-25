@@ -16,8 +16,6 @@ import { RoutineCapabilities, RoutineEvents, RoutineOperation } from '#types';
 const handler: Operation.WithHandler<typeof RoutineOperation.CreateRoutine> = RoutineOperation.CreateRoutine.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ db, templateId, name, subject, input }) {
-      // Templates other than the built-in blank are contributed by other plugins and parked until this
-      // event; a headless caller (no create panel to signal demand) has to pull them itself.
       yield* Plugin.activate(RoutineEvents.Start);
       const templates = yield* Capability.getAll(RoutineCapabilities.Template);
       const template = templates.find((entry) => entry.id === templateId);

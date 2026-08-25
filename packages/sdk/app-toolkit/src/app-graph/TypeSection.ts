@@ -43,7 +43,7 @@ export const makeSectionRearrangeCallback = AppNode.createFactory(
   (space, typename) => `${typename}:${space.id}`,
 );
 
-/** The objects a type section lists: an owned object is reached through its owner, not listed here. */
+/** The objects a type section lists: those without a parent, an owned object being reached through its owner. */
 export const sectionQuery = (type: Type.AnyEntity): Query.Any =>
   Query.select(Filter.and(Filter.type(type), Filter.hasParent(false)));
 
@@ -68,8 +68,6 @@ export const createTypeSectionExtension = (
   options: {
     /** Position hint for the section in the sidebar. */
     position?: Position.Position;
-    /** Overrides the default query; an override must exclude owned objects itself. */
-    query?: Query.Any;
     /**
      * Override the default {@link AppNodeMatcher.whenSpace} match function.
      * Use when the section should live under a group node rather than directly under a space.
@@ -112,7 +110,7 @@ export const createTypeSectionExtension = (
 
   // Filter.type's overload constraint (UnknownTypeSchema) is not publicly exported;
   // the runtime accepts any schema with a typename annotation.
-  const defaultQuery = sectionQuery(type);
+  const query = sectionQuery(type);
   const testId = `${typename}.section`;
 
   const label = AppNode.getDynamicLabel('typename.label', typename, { count: 2 });
@@ -126,7 +124,7 @@ export const createTypeSectionExtension = (
 
   /** The section's objects in their persisted order; empty means the section is suppressed. */
   const queryOrderedObjects = (space: Space, get: Atom.AtomContext): Obj.Unknown[] => {
-    const objects = get(space.db.query(options.query ?? defaultQuery).atom) as Obj.Unknown[];
+    const objects = get(space.db.query(query).atom) as Obj.Unknown[];
     if (objects.length === 0) {
       return [];
     }
@@ -190,8 +188,6 @@ export const createTypeSectionExtension = (
         Node.make({
           id: typename,
           type: typename,
-          // The navtree opens whatever a selected node holds, so a bare container must hold nothing
-          // or its header opens an empty plank; an addressable section carries the type entity to render.
           data: options.sectionUrlKey ? (typeEntity ?? null) : null,
           properties: {
             label,

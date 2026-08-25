@@ -65,9 +65,6 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
  * to add either to a project that lacks one, so a project without them has nowhere to put its tasks
  * and nothing to draft in. Each parent edge is set alongside its ref so both cascade when the project
  * is deleted.
- *
- * Takes no `routines`: only {@link addRoutine} sets the parent edge that makes one owned, so a ref
- * accepted here would advertise ownership the object does not have.
  */
 export const make = (
   props: Omit<Partial<Obj.MakeProps<typeof Project>>, 'artifacts' | 'routines'> & {
@@ -97,10 +94,7 @@ export const make = (
   return project;
 };
 
-/**
- * Adds a routine to the project as an owned child: the ref (which declares the edge) and the parent
- * edge, so a single `Database.add` of the project persists it and deleting the project removes it.
- */
+/** Adds a routine to the project as an owned child: the ref, plus the parent edge that cascades it. */
 export const addRoutine = (project: Project, routine: Routine.Routine): void => {
   Obj.update(project, (project) => {
     project.routines = [...project.routines, Ref.make(routine)];

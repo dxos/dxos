@@ -30,13 +30,10 @@ describe('chats section query', () => {
 
     const standalone = makeChat('Standalone');
 
-    // Companion: linked to its subject (annotation ref + parent edge), so it belongs to that
-    // object's companion panel.
     const companionSubject = db.add(Project.make({ name: 'Subject' }));
     const companion = makeChat('Companion');
     Chat.linkCompanion({ chat: companion, subject: companionSubject });
 
-    // Project chat: linked to its project, so it is that project's navtree child.
     const project = db.add(Project.make({ name: 'Project' }));
     const projectChat = makeChat('Project chat');
     Chat.linkCompanion({ chat: projectChat, subject: project });

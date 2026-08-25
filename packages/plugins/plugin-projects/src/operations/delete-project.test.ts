@@ -56,11 +56,9 @@ describe('deleting a project', () => {
     const chat = db.add(Chat.make({ name: 'Chat', feed: Ref.make(feed) }));
     Chat.linkCompanion({ chat, subject: project });
 
-    // Mirrors a project template's starter routine: owned via `Project.addRoutine`.
     const ownedRoutine = Routine.make({ name: 'Owned', triggers: [] });
     Project.addRoutine(project, ownedRoutine);
 
-    // Created from the Routines section, naming the project as context: referenced, not owned.
     const standaloneInstructions = db.add(Instructions.make({ objects: [Ref.make(project)] }));
     const standaloneRoutine = db.add(
       Routine.make({
@@ -106,8 +104,6 @@ describe('deleting a project', () => {
     const { db, project, instructions } = await setup();
     expect(await countOf(db, Filter.type(Project.Project))).toEqual(1);
     expect(await countOf(db, Filter.type(Chat.Chat))).toEqual(1);
-    // By id, not by a type count: the standalone routine owns Instructions of its own, and only the
-    // project's are supposed to go.
     expect(await countOf(db, Filter.id(instructions.id))).toEqual(1);
 
     db.remove(project);

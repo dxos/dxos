@@ -52,8 +52,6 @@ export type Template = {
    * `Database.add` (which cascades the owned children); scaffold must NOT call `Database.add` itself.
    * `Database.Service` may still be used for read-only lookups (e.g. loading a feed ref). `input` carries
    * the {@link inputSchema} values; `subject` is set only by a caller that seeds this template by id.
-   * `input` is untyped because form values arrive already decoded (a live `Ref`, not the encoded
-   * `{'/': uri}` a schema decode expects), so a template validates what it reads.
    */
   scaffold: (ctx: {
     name?: string;

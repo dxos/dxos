@@ -33,7 +33,6 @@ export const magazineCuration: RoutineCapabilities.Template = {
       if (!Ref.isRef(input?.magazine)) {
         return yield* Effect.fail(new Error('Magazine curation template requires a magazine.'));
       }
-      // `Database.resolve`, not `Database.load`: a ref built by the form's picker carries no resolver.
       const magazine = yield* Database.resolve(input.magazine, Magazine.Magazine);
 
       // Pre-populate the trigger's input so the magazine binding is preserved through the save flow.

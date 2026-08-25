@@ -39,7 +39,6 @@ export const analyzeMailbox: RoutineCapabilities.Template = {
       if (!Ref.isRef(input?.mailbox)) {
         return yield* Effect.fail(new Error('Analyze Mailbox template requires a mailbox.'));
       }
-      // `Database.resolve`, not `Database.load`: a ref built by the form's picker carries no resolver.
       const mailbox = yield* Database.resolve(input.mailbox, Mailbox.Mailbox);
 
       return makeRoutine({

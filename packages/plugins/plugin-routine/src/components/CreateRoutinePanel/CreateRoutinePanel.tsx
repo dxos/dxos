@@ -38,9 +38,6 @@ type Draft = {
  * `{ templateId, draft }`; plugin-routine's CreateObjectEntry.createObject persists the draft (a single
  * `Database.add` cascades the owned trigger/instructions). Cancel returns to the picker.
  *
- * A template with an `inputSchema` takes one step more: its form is collected first and the values reach
- * the scaffold as `input` (e.g. the mailbox an Analyze Mailbox routine watches).
- *
  * A caller can seed the panel via `initialFormValues`: `templateId` skips the picker and scaffolds that
  * template immediately, and `subject` is passed to the scaffold (e.g. the connector flow seeds its sync
  * template with the just-bound target so the user sees — and can edit — the routine being created).
@@ -52,16 +49,13 @@ export const CreateRoutinePanel = ({
   templates: templatesProp,
 }: CreateRoutinePanelProps) => {
   const { t } = useTranslation(meta.profile.key);
-  // Demand signal: every template but the built-in blank is contributed by another plugin and parked
-  // until this event; the picker reads them reactively, so they pop in as their chunks arrive.
   useActivationSignal(RoutineEvents.Start);
   const capabilityTemplates = useCapabilities(RoutineCapabilities.Template);
   const { invokePromise } = useOperationInvoker();
   const templates = templatesProp ?? capabilityTemplates;
   const db = Database.isDatabase(target) ? target : Obj.getDatabase(target);
   const [draft, setDraft] = useState<Draft | undefined>();
-  // Template awaiting its `inputSchema` values before it can scaffold.
-  const [pending, setPending] = useState<RoutineCapabilities.Template | undefined>();
+  const [pendingTemplate, setPendingTemplate] = useState<RoutineCapabilities.Template | undefined>();
   const seededTemplateId: string | undefined = initialFormValues?.templateId;
   const subject: Obj.Unknown | undefined = initialFormValues?.subject;
 
@@ -83,11 +77,9 @@ export const CreateRoutinePanel = ({
         const scaffolded = await EffectEx.runPromise(
           template.scaffold({ subject, input }).pipe(Effect.provideService(Database.Service, Database.makeService(db))),
         );
-        setPending(undefined);
+        setPendingTemplate(undefined);
         setDraft({ templateId: template.id, routine: scaffolded });
       } catch (error) {
-        // A scaffold that requires context its input lacks (e.g. a sync binding) fails typed; keep the
-        // picker up and toast the reason, or the click looks ignored.
         log.catch(error);
         void invokePromise?.(LayoutOperation.AddToast, {
           id: `${meta.profile.key}.scaffold-failed`,
@@ -106,7 +98,7 @@ export const CreateRoutinePanel = ({
         return;
       }
       if (template.inputSchema) {
-        setPending(template);
+        setPendingTemplate(template);
         return;
       }
 
@@ -115,9 +107,6 @@ export const CreateRoutinePanel = ({
     [templates, scaffold],
   );
 
-  // Seeded flow: skip the picker and scaffold the named template. Latched on the template arriving
-  // rather than on mount — a seeded template is contributed by another plugin and lands a tick or
-  // more after the panel opens, and a one-shot mount effect would find nothing and never retry.
   const seededRef = useRef(false);
   useEffect(() => {
     if (!seededTemplateId || seededRef.current || !templates.some(({ id }) => id === seededTemplateId)) {
@@ -141,19 +130,17 @@ export const CreateRoutinePanel = ({
     return <RoutineForm db={db} routine={draft.routine} onSave={handleSave} onCancel={handleCancel} />;
   }
 
-  if (pending?.inputSchema) {
+  if (pendingTemplate?.inputSchema) {
     return (
       <Form.Root
-        key={pending.id}
+        key={pendingTemplate.id}
         db={db}
-        schema={pending.inputSchema}
-        // Returned, not discarded: the form holds its `saving` guard until the scaffold settles.
-        onSave={(input) => scaffold(pending, input)}
-        onCancel={() => setPending(undefined)}
+        schema={pendingTemplate.inputSchema}
+        onSave={(input) => scaffold(pendingTemplate, input)}
+        onCancel={() => setPendingTemplate(undefined)}
       >
         <Form.Content>
           <Form.FieldSet />
-          {/* Continue, not Save: the routine form is the next step and the commit. */}
           <Form.Actions submitLabel={t('continue.label')} submitIcon='ph--arrow-right--regular' />
         </Form.Content>
       </Form.Root>
