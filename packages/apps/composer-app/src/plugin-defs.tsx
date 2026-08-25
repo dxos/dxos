@@ -12,6 +12,7 @@ import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
 import * as CallsPlugin from '@dxos/plugin-calls/CallsPlugin';
 import * as ChessComPlugin from '@dxos/plugin-chess-com/ChessComPlugin';
 import * as ChessPlugin from '@dxos/plugin-chess/ChessPlugin';
+import * as ClaudeAgentsPlugin from '@dxos/plugin-claude-agents/ClaudeAgentsPlugin';
 import * as CodePlugin from '@dxos/plugin-code/CodePlugin';
 import * as CommercePlugin from '@dxos/plugin-commerce/CommercePlugin';
 import * as ComputerPlugin from '@dxos/plugin-computer/ComputerPlugin';
@@ -167,6 +168,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     CallsPlugin.make(),
     ChessPlugin.make(),
     ChessComPlugin.make(),
+    ClaudeAgentsPlugin.make(),
     ReviewPlugin.make(),
     ConductorPlugin.make(),
     // Dev-only coding harness, gated on `isDev` for availability (not just defaults, unlike
