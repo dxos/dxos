@@ -162,11 +162,11 @@ migration; crash mid-migration and resume.
       joiner built a key-derived id and disagreed with the creator about which space it was in.
 - [x] **HALO space anchored on a root document.** `IdentityManager` mints a directory (HALO never
       had one — its state lived entirely in the control feed), then a root, and mirrors the chain
-      into a credentials document, reusing `openCredentialsDocument` unchanged since
-      `identity.space` is the same `Space` class as `DataSpace.inner`.
-      - The host is set late via `IdentityManager.setEchoHost`: `EchoHostLayer` already depends on
-        `IdentityManagerService` for its peer id, so a constructor dependency would make the layer
-        graph circular. Same pattern the file already uses for `setFeedSyncHandlers`.
+      into a credentials document. `openCredentialsDocument` is reused unchanged, since
+      `identity.space` is the same `Space` class as `DataSpace.inner`. The host is supplied after
+      construction via `IdentityManager.setEchoHost`, because `EchoHostLayer` already depends on
+      `IdentityManagerService` for its peer id and a constructor dependency would make the layer
+      graph circular — the same late-wiring the file already uses for `setFeedSyncHandlers`.
 - [ ] **HALO stays `idDerivation: 'spaceKey'` — and this is not a migration compromise.** Recovery
       reconstructs the halo space from `haloSpaceKey` alone (`identity-recovery-manager.ts`, from
       `RecoverIdentityResponse` in `edge.ts`), and device invitations carry `haloSpaceKey`. A
