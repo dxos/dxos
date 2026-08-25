@@ -15,28 +15,12 @@ const PACKAGE_DIR = join(__dirname, '..');
 
 const descriptor = readFileSync(join(PACKAGE_DIR, 'dxplugin.jsonc'), 'utf-8');
 
-const forPlatform = (platform: Plugin.FromManifestOptions['platform']) =>
-  Plugin.fromManifest(descriptor, { baseUrl: `file://${PACKAGE_DIR}/`, platform })();
-
 /**
- * Fidelity of the serialized entrypoint against the hand-written ones. The descriptor is the
- * plugin's shape as data, so what has to hold is that it reconstructs the *same* activation graph —
- * same modules, same order, same waves, same capability edges — not merely that it parses.
- *
- * Compared against the node and workerd entrypoints rather than the browser one because
- * `#capabilities` resolves to a server-safe barrel here: importing the browser entrypoint under the
- * node condition yields undefined module references, which is exactly the platform split
- * `platforms` exists to express.
+ * Asserts the descriptor reconstructs the same activation graph as the hand-written entrypoints, not
+ * merely that it parses. Compared against the node and workerd variants because `#capabilities`
+ * resolves to a server-safe barrel here, so the browser entrypoint's module references are undefined.
  */
 describe('dxplugin.jsonc', () => {
-  const spec = (plugin: Plugin.Plugin) =>
-    plugin.modules.map(({ id, activation }) => ({
-      id,
-      activatesOn: activation.activatesOn,
-      requires: activation.requires.map(({ identifier, arity }) => `${arity}:${identifier}`),
-      provides: activation.provides.map(({ identifier, arity }) => `${arity}:${identifier}`),
-    }));
-
   test('declares the same metadata', ({ expect }) => {
     expect(forPlatform('node').meta.profile).toMatchObject(MarkdownPlugin().meta.profile);
   });
@@ -63,3 +47,14 @@ describe('dxplugin.jsonc', () => {
     }
   });
 });
+
+const forPlatform = (platform: Plugin.FromManifestOptions['platform']) =>
+  Plugin.fromManifest(descriptor, { baseUrl: `file://${PACKAGE_DIR}/`, platform })();
+
+const spec = (plugin: Plugin.Plugin) =>
+  plugin.modules.map(({ id, activation }) => ({
+    id,
+    activatesOn: activation.activatesOn,
+    requires: activation.requires.map(({ identifier, arity }) => `${arity}:${identifier}`),
+    provides: activation.provides.map(({ identifier, arity }) => `${arity}:${identifier}`),
+  }));
