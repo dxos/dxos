@@ -862,6 +862,20 @@ export class AutomergeHost extends Resource {
       return undefined;
     }
 
+    if (path[0] === SUBDUCTION_PREFIX) {
+      // Subduction keys are `[prefix, family, sedimentreeId, ...]`, so they carry no documentId and
+      // fall through the handle lookup below unnoticed. A `remote-heads` write is the only
+      // persisted evidence that a head exchange with a peer completed for a document.
+      const [, family, sedimentreeId] = path;
+      if (family === 'remote-heads' && sedimentreeId) {
+        log.verbose('subduction remote-heads persisted', {
+          documentId: sedimentreeHexToDocumentId(sedimentreeId),
+          sedimentreeId,
+        });
+      }
+      return;
+    }
+
     const documentId = path[0] as DocumentId;
     const handle = this._repo.getHandle(documentId);
     if (!handle) {
@@ -1241,6 +1255,17 @@ export class AutomergeHost extends Resource {
     // query for the sedimentreeId. Either way, once bytes arrive `_afterSave` populates
     // `SqliteHeadsStore` so collection sync sees the updated heads on the next diff.
     for (const documentId of toReplicateWithoutBatching) {
+      // `findWithProgress` resolves from the existing query for an already-`ready` document and
+      // `_documentsToSync` feeds a share policy Subduction does not consult, so a diverged
+      // document reaching here gets no retry from either — the diff simply repeats next pass.
+      if (this._useSubduction && getHandleState(this._repo, documentId) === 'ready' && different.includes(documentId)) {
+        log.warn('diverged document has no subduction retry path', {
+          collectionId,
+          peerId,
+          documentId,
+          sedimentreeId: documentIdToSedimentreeIdHex(documentId),
+        });
+      }
       this._documentsToSync.add(documentId);
       this._repo.findWithProgress(documentId as DocumentId);
     }
@@ -1451,6 +1476,18 @@ const sedimentreeIdToDocumentId = (sedimentreeId: SedimentreeId): DocumentId =>
  * subduction WASM module to be initialized; `sqlite-storage-adapter.test.ts` pins the two against
  * each other.
  */
+/**
+ * Inverse of {@link documentIdToSedimentreeIdHex}, for naming the document behind a storage key.
+ * Decodes the leading 16 bytes by hand — `Buffer` is not available in the browser worker.
+ */
+const sedimentreeHexToDocumentId = (sedimentreeIdHex: string): DocumentId => {
+  const bytes = new Uint8Array(16);
+  for (let index = 0; index < 16; index++) {
+    bytes[index] = Number.parseInt(sedimentreeIdHex.slice(index * 2, index * 2 + 2), 16);
+  }
+  return bs58check.encode(bytes) as DocumentId;
+};
+
 export const documentIdToSedimentreeIdHex = (documentId: DocumentId): string => {
   const bytes = new Uint8Array(32);
   bytes.set(bs58check.decode(documentId).subarray(0, 16));
