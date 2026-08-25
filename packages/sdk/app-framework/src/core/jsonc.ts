@@ -34,8 +34,11 @@ export const parseJsonc = (text: string): unknown => {
       continue;
     }
     if (char === '/' && text[index + 1] === '*') {
+      // Replaced by a space, not deleted: `[1/* c */2]` must stay two tokens rather than become `12`.
       const close = text.indexOf('*/', index + 2);
+      out += ' ';
       index = close === -1 ? text.length : close + 2;
+      pendingComma = undefined;
       continue;
     }
     if ((char === '}' || char === ']') && pendingComma !== undefined) {

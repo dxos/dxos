@@ -14,7 +14,9 @@ import * as MarkdownPlugin from './MarkdownPlugin';
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('MarkdownPlugin', () => {
-  test('modules activate on the expected events', async ({ expect }) => {
+  // Raised from the 15s default: descriptor modules are imported by URL rather than through a
+  // vite-transformed relative import, which leaves no headroom under a loaded CI shard.
+  test('modules activate on the expected events', { timeout: 30_000 }, async ({ expect }) => {
     await using harness = await createComposerTestApp({
       plugins: [ClientPlugin.make({}), MarkdownPlugin.make()],
     });

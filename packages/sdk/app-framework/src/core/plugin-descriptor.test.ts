@@ -92,6 +92,12 @@ describe('Plugin.fromManifest', () => {
     expect(descriptor.name).toEqual('A, } B');
   });
 
+  test('does not merge tokens either side of a block comment', ({ expect }) => {
+    expect(() => Plugin.parseDescriptor('{"key":"a.b.c","name":"N","modules":[],"version":"1"/* x */"2"}')).toThrow(
+      Plugin.PluginDescriptorError,
+    );
+  });
+
   test('reports a malformed descriptor as a descriptor error', ({ expect }) => {
     expect(() => Plugin.parseDescriptor('{ not json')).toThrow(Plugin.PluginDescriptorError);
     expect(() => Plugin.parseDescriptor('{"name":"no key"}')).toThrow(Plugin.PluginDescriptorError);
