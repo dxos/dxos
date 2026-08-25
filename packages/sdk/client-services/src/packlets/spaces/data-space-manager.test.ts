@@ -265,6 +265,21 @@ describe('DataSpaceManager', () => {
     await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
     await peer.dataSpaceManager.migrateSpaceToRootDocument(new Context(), space.key);
 
+    // Admit a second member, so the chain the document has to reproduce includes an admission
+    // credential and a role — not just genesis and this device.
+    const invitee = await peer.keyring.createKey();
+    await peer.dataSpaceManager.admitMember({
+      spaceKey: space.key,
+      identityKey: invitee,
+      role: SpaceMember.Role.EDITOR,
+    });
+
+    // The admission must have been processed by the feed before the document can be expected to
+    // mirror it.
+    await waitForCondition({
+      condition: () => [...space.inner.spaceState.members.keys()].some((key) => key.equals(invitee)),
+    });
+
     const store = await openCredentialsDocument(new Context(), peer.echoHost, space.id);
     const feedCredentialIds = () => space.inner.spaceState.credentials.map((credential) => credential.id!.toHex());
 
@@ -308,6 +323,12 @@ describe('DataSpaceManager', () => {
       expect([...space.inner.spaceState.members.keys()].map((member) => member.toHex())).to.contain(key.toHex());
     }
     expect(replayed.membershipPolicy).to.equal(space.inner.spaceState.membershipPolicy);
+
+    // The admitted member and its role survive the round trip, which is the part the feed carried
+    // and the document now has to carry instead.
+    const replayedInvitee = [...replayed.members.entries()].find(([key]) => key.equals(invitee));
+    expect(replayedInvitee, 'the admitted member is missing from the replayed state').to.exist;
+    expect(replayedInvitee![1].role).to.equal(SpaceMember.Role.EDITOR);
   });
 
   test('sync between peers', async () => {

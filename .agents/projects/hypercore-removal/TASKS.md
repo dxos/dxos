@@ -94,8 +94,10 @@ migration; crash mid-migration and resume.
 
 - [x] Define the space-root schema in `echo-protocol`, typed `dxn:org.dxos.document.spaceRoot:0.1.0`
       (versioned DXN per `keys/src/DXN.ts`, key spelled `type` not `@type` — see DESIGN).
-- [ ] `createIdFromRootDocumentId()` in `echo-protocol/src/space-id.ts` beside
-      `createIdFromSpaceKey`; version-tag which scheme minted an id.
+- [x] `createIdFromRootDocumentId()` in `echo-protocol/src/space-id.ts` beside
+      `createIdFromSpaceKey` — SHA-256 over the document id, truncated to `SpaceId.byteLength` and
+      multibase-encoded, so both schemes mint the same shape of id. Which scheme minted it is
+      recorded as `idDerivation` on the root rather than inside the id.
 - [x] Extend `echo_spaces` (SQL migration `0002_space_root.sql`) with `space_root_doc_url`,
       `credentials_doc_url` and `id_derivation`. `root_doc_url` KEEPS meaning the directory —
       every existing reader treats it that way, so the immutable root got its own column
@@ -140,7 +142,7 @@ migration; crash mid-migration and resume.
       keyed by something other than its credential id, or that does not decode, is dropped. An
       unreplicated parent does not block its child (the state machine rejects an unverifiable
       chain anyway) and a cycle keeps every credential rather than dropping it.
-- [ ] Credentials doc physical shape (as implemented in `credentials-document.ts`): a MAP keyed by
+- [x] Credentials doc physical shape (as implemented in `credentials-document.ts`): a MAP keyed by
       credential id whose values hold only the encoded bytes — not an array. The key is what makes a
       duplicate append idempotent and concurrent appends converge; an array would need a separate
       dedup rule and would race for indices. Order is computed on read by `orderCredentials()`.
@@ -167,7 +169,7 @@ migration; crash mid-migration and resume.
       construction via `IdentityManager.setEchoHost`, because `EchoHostLayer` already depends on
       `IdentityManagerService` for its peer id and a constructor dependency would make the layer
       graph circular — the same late-wiring the file already uses for `setFeedSyncHandlers`.
-- [ ] **HALO stays `idDerivation: 'spaceKey'` — and this is not a migration compromise.** Recovery
+- [x] **HALO stays `idDerivation: 'spaceKey'` — and this is not a migration compromise.** Recovery
       reconstructs the halo space from `haloSpaceKey` alone (`identity-recovery-manager.ts`, from
       `RecoverIdentityResponse` in `edge.ts`), and device invitations carry `haloSpaceKey`. A
       root-derived halo id would leave a recovering device computing an id no replicated document
@@ -208,8 +210,10 @@ migration; crash mid-migration and resume.
       and re-asks with the same authenticator instance.
 - [ ] Replication: credentials doc joins normal subduction; fresh-joiner test that reads
       credentials before being admitted to anything else.
-- [ ] Replay test: old feed vs new document produce identical membership/invitation/epoch
-      state.
+- [x] Replay test: replaying the document into a fresh `SpaceStateMachine` reaches the same genesis,
+      members and membership policy the feed did, including an admitted member and its role, and the
+      append is idempotent. Epoch equivalence is NOT covered — these tests produce no epochs, so it
+      needs a fixture that does.
 
 ## Phase 3: migration (dual-path, per-space atomic cutover)
 
