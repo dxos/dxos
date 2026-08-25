@@ -14,7 +14,8 @@ const DEFAULT_CONDITIONS = ['workerd', 'worker', 'node'] as const;
 type FailMode = 'present' | 'missing';
 
 interface ParsedArgs {
-  from: string | null;
+  /** One trace per file, for entries a package does not expose as an export — a descriptor's modules. */
+  fromFiles: string[];
   /** One trace per subpath; a guard usually covers every entry a headless host imports. */
   exportSubpaths: string[];
   to: string;
@@ -60,7 +61,11 @@ const parseArgs = async (): Promise<ParsedArgs> => {
   const argv: any = await yargs(hideBin(process.argv))
     .scriptName('dx-trace-imports')
     .usage('$0 (--from <entry.ts> | --export <subpath>) --to <package-or-pattern-or-path> [options]')
-    .option('from', { type: 'string', describe: 'Entry file (relative path or absolute)' })
+    .option('from', {
+      type: 'string',
+      array: true,
+      describe: 'Entry file (relative path or absolute). Repeatable.',
+    })
     .option('export', {
       type: 'string',
       array: true,
@@ -91,10 +96,11 @@ const parseArgs = async (): Promise<ParsedArgs> => {
     })
     .check((args) => {
       const exports = stringList(args.export);
-      if (!args.from && exports.length === 0) {
+      const files = stringList(args.from);
+      if (files.length === 0 && exports.length === 0) {
         throw new Error('Provide either --from <entry.ts> or --export <subpath>.');
       }
-      if (args.from && exports.length > 0) {
+      if (files.length > 0 && exports.length > 0) {
         throw new Error('Use only one of --from or --export.');
       }
       return true;
@@ -113,7 +119,7 @@ const parseArgs = async (): Promise<ParsedArgs> => {
   }
 
   return {
-    from: argv.from ? String(argv.from) : null,
+    fromFiles: stringList(argv.from),
     exportSubpaths: stringList(argv.export),
     to: foldTargets(targets),
     maxChains,
@@ -124,9 +130,10 @@ const parseArgs = async (): Promise<ParsedArgs> => {
 };
 
 /** Traces one entry; returns whether it violated `--fail-on`. */
-const traceEntry = (args: ParsedArgs, exportSubpath: string | undefined): boolean => {
+const traceEntry = (args: ParsedArgs, entry: { file?: string; exportSubpath?: string }): boolean => {
+  const { file, exportSubpath } = entry;
   const result = traceImports({
-    from: args.from ?? undefined,
+    from: file,
     exportSubpath,
     to: args.to,
     maxChains: args.maxChains,
@@ -134,7 +141,7 @@ const traceEntry = (args: ParsedArgs, exportSubpath: string | undefined): boolea
     packagesOnly: args.packagesOnly,
   });
 
-  const label = exportSubpath ? `${exportSubpath} (${result.entryPath})` : (args.from ?? result.entryPath);
+  const label = exportSubpath ? `${exportSubpath} (${result.entryPath})` : (file ?? result.entryPath);
   console.error(`graph: ${result.metafilePath}`);
 
   if (result.labelChains.length === 0) {
@@ -164,7 +171,10 @@ const main = async () => {
 
   // Every entry is traced even after one fails, so a single run reports every offending export
   // rather than only the first — the guard is usually asserting a property of all of them.
-  const entries: (string | undefined)[] = args.exportSubpaths.length > 0 ? args.exportSubpaths : [undefined];
+  const entries: { file?: string; exportSubpath?: string }[] =
+    args.exportSubpaths.length > 0
+      ? args.exportSubpaths.map((exportSubpath) => ({ exportSubpath }))
+      : args.fromFiles.map((file) => ({ file }));
   let failed = false;
   for (const entry of entries) {
     failed = traceEntry(args, entry) || failed;
