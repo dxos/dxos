@@ -16,16 +16,10 @@ export const DevPluginLoader = Capability.lazyModule(
   () => import('./dev-plugin-loader'),
 );
 export const Commands = AppCapability.commands(() => import('#commands'));
-// `workerd` added (this plugin previously had no workerd-active modules at all): with the
-// three-entry split gone, the canonical `plugin.tsx` always imports `#capabilities`, so if no
-// module here carries a `workerd` annotation the generator never emits `gen/workerd.ts` and a
-// workerd host's `#capabilities` condition falls through to `default` — this full browser barrel,
-// React included. Flagging this as a judgment call: not preserving prior behavior (which was
-// "nothing active"), but the minimal fix that keeps a workerd host safe; `node` is deliberately
-// left off since `plugin.node.ts` never activated this module.
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  environments: ['workerd'],
-});
+// node and workerd both via the maker family default: main began activating these in the node
+// entry (`plugin.node.ts`), so the earlier workerd-only pin no longer matches how they are used.
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.dialog'],
 });

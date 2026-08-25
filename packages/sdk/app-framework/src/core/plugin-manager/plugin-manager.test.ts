@@ -1926,7 +1926,7 @@ describe('PluginManager', () => {
       Effect.gen(function* () {
         const FailingEvent = ActivationEvent.make('org.dxos.test.activationError');
         const FailingPlugin = Plugin.define(
-          Plugin.makeMeta({ key: DXN.make('org.dxos.test.failing'), name: 'Failing' }),
+          Plugin.makeMeta({ key: DXN.make('com.example.operation.test.failing'), name: 'Failing' }),
         ).pipe(
           Plugin.addModule({
             provides: [],

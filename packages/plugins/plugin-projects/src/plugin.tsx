@@ -11,6 +11,7 @@ import {
   ReactSurface,
   Schema,
   SkillDefinition,
+  SubjectContext,
   Templates,
   Translations,
 } from '#capabilities';
@@ -26,6 +27,7 @@ export const ProjectsPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(ReactSurface),
   Plugin.addModule(Schema),
   Plugin.addModule(SkillDefinition),
+  Plugin.addModule(SubjectContext),
   Plugin.addModule(Templates),
   Plugin.addModule(Translations),
   Plugin.make,

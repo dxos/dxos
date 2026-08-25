@@ -95,12 +95,23 @@ const dedupeByKey = <T extends { readonly key: string }>(entries: readonly T[]):
 export const ownersOf = (skills: readonly McpSkill[]): Map<string, string[]> => {
   const owners = new Map<string, string[]>();
   for (const candidate of skills) {
+    // A skill's `tools` entries are derived tool names (`Skill.toolDefinitions`), not operation
+    // NSIDs, so membership is keyed by the name a record derives — see {@link toolNameOf}.
     for (const tool of candidate.skill.tools) {
-      const id = nsid(tool);
-      owners.set(id, [...(owners.get(id) ?? []), candidate.promptName]);
+      owners.set(tool, [...(owners.get(tool) ?? []), candidate.promptName]);
     }
   }
   return owners;
+};
+
+/**
+ * The key an operation record is governed by: its derived tool name, the form a skill's `tools` list
+ * carries. Undefined when the record's key cannot derive a valid name, which makes it ungoverned
+ * rather than aborting the surface — registry records arrive as untrusted JSON.
+ */
+export const toolNameOf = (record: Operation.PersistentOperation): string | undefined => {
+  const key = Operation.getKey(record);
+  return key == null ? undefined : Operation.tryToolNameFromKey(key);
 };
 
 /** Operation records matching an optional text query, whose semantics are echo's `Filter.text`. */
@@ -165,19 +176,29 @@ export type OperationView = {
   };
 };
 
+/**
+ * Whether the operation acts on a space, which is what makes `invokeOperation`'s `spaceId`
+ * load-bearing: `Database.Service` materializes from it and from nothing else.
+ */
+export const requiresSpace = (record: Operation.PersistentOperation): boolean =>
+  (record.services ?? []).includes(Database.Service.key);
+
 export const operationView = (
   record: Operation.PersistentOperation,
   owners: Map<string, string[]>,
   withSchema: boolean,
 ): OperationView => {
+  // The client addresses an operation by key, so that is what rides in the view; skill membership is
+  // keyed by the derived tool name instead, the form a skill's `tools` list carries.
   const key = nsid(Operation.getKey(record) ?? '');
+  const toolName = toolNameOf(record);
   const idempotent = Option.getOrUndefined(Annotation.get(record, Operation.IdempotentAnnotation));
   return {
     key,
     name: record.name.length > 0 ? record.name : undefined,
     description: record.description,
-    skills: owners.get(key) ?? [],
-    requiresSpace: (record.services ?? []).includes(Database.Service.key),
+    skills: (toolName == null ? undefined : owners.get(toolName)) ?? [],
+    requiresSpace: requiresSpace(record),
     hints: {
       mutation: mutationOf(record),
       idempotent: idempotent === true ? true : undefined,

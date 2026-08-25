@@ -13,6 +13,7 @@ import {
   RoutineTemplates,
   Schema,
   SkillDefinition,
+  TextContent,
   Translations,
 } from '#capabilities';
 import { meta } from '#meta';
@@ -29,6 +30,7 @@ export const MagazinePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(RoutineTemplates),
   Plugin.addModule(Schema),
   Plugin.addModule(SkillDefinition),
+  Plugin.addModule(TextContent),
   Plugin.addModule(Translations),
   Plugin.make,
 );

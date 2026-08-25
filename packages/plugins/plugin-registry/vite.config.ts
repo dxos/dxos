@@ -15,6 +15,7 @@ export default defineConfig({
     containers: 'src/containers/index.ts',
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
+    skills: 'src/skills/index.ts',
     types: 'src/types.ts',
   },
   jsx: 'react',

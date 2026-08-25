@@ -198,6 +198,8 @@ export const getVersion = (skill: Skill): string | undefined => Obj.getMeta(skil
 
 /**
  * Util to create tool definitions for a skill.
+ * Operation tool ids are the model-facing names (see {@link Operation.toolName}), so the skill's
+ * `tools` array and the session toolkit speak one identifier space.
  */
 export const toolDefinitions = ({
   tools = [],
@@ -205,7 +207,7 @@ export const toolDefinitions = ({
 }: {
   tools?: readonly string[];
   operations?: readonly Operation.Definition.Any[];
-}) => [...operations.map((op) => ToolId.make(DXN.getName(op.meta.key))), ...tools.map((tool) => ToolId.make(tool))];
+}) => [...operations.map((op) => ToolId.make(Operation.toolName(op))), ...tools.map((tool) => ToolId.make(tool))];
 
 /**
  * Factory for the skills.
@@ -228,6 +230,55 @@ export type Definition = {
  * TODO(wittjosiah): Should use Obj.getURI instead once it supports options to prefer meta key over EID.
  */
 export const registryURI = (key: DXN.Name<string>): URI.URI => (DXN.tryMake(`dxn:${key}`) ?? URI.make(key)) as URI.URI;
+
+/**
+ * Registry skill refs declared by an object's type via {@link SkillsAnnotation}.
+ * Bound by URI rather than a DB clone, so the ref resolves through the hypergraph registry.
+ */
+export const annotatedSkillRefs = (object: Obj.Unknown): Ref.Ref<Skill>[] => {
+  const type = Obj.getType(object);
+  if (!type) {
+    return [];
+  }
+
+  return annotatedSkillKeys(type).map((key) => Ref.fromURI(registryURI(key)));
+};
+
+/** Skill keys declared by a type via {@link SkillsAnnotation}. */
+export const annotatedSkillKeys = (type: Type.AnyEntity): string[] =>
+  Option.getOrElse(() => [] as string[])(SkillsAnnotation.get(Type.getSchema(type)));
+
+/**
+ * Refs for an object's {@link SkillsAnnotation} keys; a space copy wins, since it is a fork of the
+ * registry skill and carries the user's edits.
+ *
+ * TODO(wittjosiah): Lift this two-source merge into the query layer; it is how forking should work
+ *  for any type, not just skills.
+ */
+export const resolveAnnotatedSkills = Effect.fnUntraced(function* (object: Obj.Unknown) {
+  const type = Obj.getType(object);
+  const keys = type ? annotatedSkillKeys(type) : [];
+  if (keys.length === 0) {
+    return [] as Ref.Ref<Skill>[];
+  }
+
+  const byKey = new Map<string, Ref.Ref<Skill>>();
+  for (const skill of yield* Registry.runQuery(Filter.type(Skill))) {
+    const key = Obj.getMeta(skill).key;
+    if (key && keys.includes(key)) {
+      // By URI rather than a clone: the ECHO ref resolver already spans the registry.
+      byKey.set(key, Ref.fromURI(registryURI(key)));
+    }
+  }
+  for (const skill of yield* Database.query(Filter.type(Skill)).run) {
+    const key = Obj.getMeta(skill).key;
+    if (key && keys.includes(key)) {
+      byKey.set(key, Ref.make(skill));
+    }
+  }
+
+  return [...byKey.values()];
+});
 
 /**
  * Resolves a skill from the registry by its meta key.

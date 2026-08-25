@@ -24,7 +24,7 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { Text } from '@dxos/schema';
-import { Milestone, Task, TaskSet } from '@dxos/types';
+import { Milestone, Outline, Task, TaskSet } from '@dxos/types';
 
 import { translations } from '#translations';
 
@@ -34,6 +34,7 @@ const PROJECT_NAME = 'Project 1';
 const TASK_TITLE = 'Ship the tasks section';
 const ARTIFACT_TITLE = 'Design Notes';
 const MILESTONE_NAME = 'Beta';
+const OUTLINE_ITEM = 'Draft the launch checklist';
 
 /**
  * The seeded graph, kept so a play function can mutate the source objects and assert the article
@@ -50,7 +51,6 @@ let seeded: { space: Space; project: Project.Project; taskSet: TaskSet.TaskSet }
 const seedProject = (space: Space) => {
   const project = Project.make({ name: PROJECT_NAME, description: 'Track the plugin-projects milestone.' });
   const instructions = Instructions.make({ text: 'You are an assistant focused on this project.' });
-  Obj.setParent(instructions, project);
   // `Project.make` materializes the owned task set, so the seed uses that one rather than
   // substituting its own — swapping it would leave the project's own set orphaned.
   const taskSet = project.taskSet?.target;
@@ -62,6 +62,17 @@ const seedProject = (space: Space) => {
     project.instructions = Ref.make(instructions);
     project.artifacts = [Ref.make(artifact)];
   });
+
+  // `Project.make` materializes the outline too, so the seed writes into that one rather than
+  // substituting its own — a replacement would leave the project's own outline orphaned.
+  const outline = project.outline?.target;
+  if (!outline?.content.target) {
+    throw new Error('Expected the project to own an outline.');
+  }
+  Obj.update(outline.content.target, (text) => {
+    text.content = `- [ ] ${OUTLINE_ITEM}\n- [ ] Book the launch review\n`;
+  });
+  Obj.setParent(instructions, project);
 
   space.db.add(project);
 
@@ -113,6 +124,7 @@ const meta = {
             Instructions.Instructions,
             Skill.Skill,
             Text.Text,
+            Outline.Outline,
             TaskSet.TaskSet,
             Task.Task,
             Milestone.Milestone,

@@ -11,8 +11,6 @@ import { AgentWizardSkill, AlarmSkill, Chat, ChatContextSkill } from '@dxos/assi
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
-import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 
 import { AssistantSkill } from '#skills';
@@ -20,22 +18,22 @@ import { AssistantOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = AssistantOperation.CreateChat.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ db, name, instructions, addToSpace = true }) {
+    Effect.fnUntraced(function* ({ name, instructions }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
-      const client = yield* Capability.get(ClientCapabilities.Client);
-      const space = client.spaces.get(db.spaceId);
-      invariant(space, 'Space not found');
-      const feed = space.db.add(Feed.make());
+      const { db } = yield* Database.Service;
+
+      // The chat is left for the caller to add (`SpaceOperation.AddObject`); the feed is added here only
+      // because the default bindings below are written immediately, and `Feed.query` asserts a stored feed.
+      // TODO(wittjosiah): Defer binding until the caller has added the chat, so the feed can stay in
+      //  memory too — nothing needs to write to a feed before its chat is in the database.
+      const feed = db.add(Feed.make());
       const chat = Chat.make({ name, feed: Ref.make(feed), instructions });
       Obj.setParent(feed, chat);
-      if (addToSpace) {
-        space.db.add(chat);
-      }
 
       // Dynamic import to avoid circular dependency with the barrel that also exports SkillManagerHandlers.
       const { SkillManagerSkill } = yield* Effect.promise(() => import('@dxos/assistant-toolkit'));
 
-      const runtime = yield* Effect.context<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
+      const runtime = yield* Effect.context<Database.Service>();
       const binder = new AiContext.Binder({ feed, runtime, registry });
 
       // Bind default skills via registry refs — no DB clone needed since the ECHO ref

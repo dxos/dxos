@@ -66,10 +66,10 @@ export const upsertTask = (
     const taskSet = yield* Database.load(project.taskSet);
     const task = db.add(Obj.make(Task.Task, { title, description, status: 'todo', [Obj.Meta]: { keys: [key] } }));
     // Membership and order are the set's `tasks` array; the parent edge rides along for cascade.
-    Obj.setParent(task, taskSet);
     Obj.update(taskSet, (taskSet) => {
       taskSet.tasks = [...taskSet.tasks, Ref.make(task)];
     });
+    Obj.setParent(task, taskSet);
     return true;
   });
 

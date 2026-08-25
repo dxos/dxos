@@ -65,8 +65,8 @@ export default Capability.makeModule(
                 label: ['search-action.label', { ns: meta.profile.key }],
                 icon: 'ph--magnifying-glass--regular',
                 keyBinding: {
-                  macos: 'shift+meta+f',
-                  windows: 'shift+alt+f',
+                  macos: 'meta+k',
+                  windows: 'ctrl+k',
                 },
               },
             },

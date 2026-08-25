@@ -81,7 +81,9 @@ const RssCreate = Schema.Struct({
   ),
 });
 
-const CreateSubscriptionSchema = Schema.Union([StandardSiteCreate, RssCreate]);
+// RSS first: the form opens on the union's first member, and an RSS URL is the common case — a
+// standard-site subscription additionally needs a handle lookup before it can be submitted.
+const CreateSubscriptionSchema = Schema.Union([RssCreate, StandardSiteCreate]);
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

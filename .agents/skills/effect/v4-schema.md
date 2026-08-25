@@ -58,12 +58,6 @@ The **type** side of a `Ref` field admits only a live `Ref` instance. Callers se
 `{'/': dxn}` form, so validating the raw input against `Schema.toType(...)` rejects every
 ref-bearing payload. Hydrate refs first, then validate.
 
-## `Schema.Date` is not `DateFromString`
-
-v4's `Schema.Date` is a `declare<globalThis.Date>` — the identity/instance schema, the direct
-replacement for v3's `DateFromSelf`. Decoding _from a string_ is `Schema.DateFromString`. Swapping
-one for the other changes the wire format of every field that uses it.
-
 ## The `toJsonSchema` output shape is a wire contract
 
 ECHO's emitted JSON Schema has consumers on both sides of the LLM boundary (the assistant's
@@ -105,7 +99,7 @@ Useful when reading pre-migration code, old PRs, or upstream issues.
 | `S.extend`                             | removed — `S.StructWithRest`                             |
 | `S.optionalWith(X, { default })`       | `X.pipe(S.withDecodingDefault(...))` on the bare field   |
 | `schema.pick(...)` / `.omit(...)`      | `schema.mapFields(Struct.pick([...]))`                   |
-| `S.DateFromSelf`                       | `S.Date`                                                 |
+| `S.DateFromSelf`                       | `S.Date` (decoding from a string is `S.DateFromString`)  |
 | `S.asserts(schema)(input)`             | `S.asserts(schema, input)`                               |
 | `effect/Either`                        | `effect/Result` (`isFailure`/`isSuccess`, `.failure`)    |
 | `decodeUnknownEither`                  | `decodeUnknownResult`                                    |
@@ -119,19 +113,21 @@ Useful when reading pre-migration code, old PRs, or upstream issues.
 
 ## Upstream docs
 
-Read these rather than recalling v4 from memory — the beta moves.
+Read these rather than recalling v4 from memory; the release candidate moves. The
+pinned copy in `node_modules/effect` is the first stop and [SKILL.md](SKILL.md)
+describes it. These are the migration notes it does not carry, now on
+`Effect-TS/effect` (`effect-smol` is archived, and its links are dead):
 
-- **`node_modules/effect/ai-docs/src/`** — the installed version's own guides, so they always match
-  the pinned beta. `01_effect/02_schema` is the Schema guide; `10_predicate`, `03_stream`,
-  `50_http-client`, `70_cli`, `71_ai` cover the other tiers. `node_modules/effect/AGENTS.md` is the
-  short-form authoring guide.
-- [effect-smol `MIGRATION.md`](https://github.com/Effect-TS/effect-smol/blob/main/MIGRATION.md) —
+- [`MIGRATION.md`](https://github.com/Effect-TS/effect/blob/effect%404.0.0-rc.108/MIGRATION.md) —
   package consolidation, the `effect/unstable/*` split, versioning.
-- [`migration/schema.md`](https://github.com/Effect-TS/effect-smol/blob/main/migration/schema.md) and
-  [`migration/v3-to-v4.md`](https://github.com/Effect-TS/effect-smol/blob/main/migration/v3-to-v4.md)
+- [`migration/schema.md`](https://github.com/Effect-TS/effect/blob/effect%404.0.0-rc.108/migration/schema.md)
+  and [`migration/v3-to-v4.md`](https://github.com/Effect-TS/effect/blob/effect%404.0.0-rc.108/migration/v3-to-v4.md)
   — the rename tables `tools/codemods/effect-4-verified-renames.mjs` was built from.
-- [`migration/layer-memoization.md`](https://github.com/Effect-TS/effect-smol/blob/main/migration/layer-memoization.md)
+- [`migration/layer-memoization.md`](https://github.com/Effect-TS/effect/blob/effect%404.0.0-rc.108/migration/layer-memoization.md)
   — background for §8 of [layer-composition.md](layer-composition.md).
+- [`migration/yieldable.md`](https://github.com/Effect-TS/effect/blob/effect%404.0.0-rc.108/migration/yieldable.md)
+  — why `return yield* new SomeError()` works for `Schema.TaggedError` and not for
+  `BaseError.extend`.
 
 ## Bundling: watch for dynamic imports in `export *` chains
 

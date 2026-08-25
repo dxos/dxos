@@ -11,6 +11,7 @@ import {
   OperationHandler,
   ReactSurface,
   RegistrySettings,
+  SkillDefinition,
   Translations,
 } from '#capabilities';
 import { meta } from '#meta';
@@ -28,6 +29,7 @@ export const RegistryPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(RegistrySettings),
+  Plugin.addModule(SkillDefinition),
   Plugin.addModule(Translations),
   Plugin.make,
 );

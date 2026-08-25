@@ -96,7 +96,7 @@ export const SchemaDefs = Capability.lazyModule(
   'SchemaDefs',
   {
     requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, AppCapabilities.Schema],
-    provides: [],
+    provides: [ClientCapabilities.SchemaRegistered],
     environments: ['node'],
   },
   () => import('./schema-defs'),

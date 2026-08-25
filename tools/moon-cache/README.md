@@ -42,13 +42,66 @@ To bypass the remote cache for one command, blank the host — moon then uses th
 MOON_REMOTE_HOST= moon run :build
 ```
 
+## The local cache
+
+The remote cache is the second place moon looks. The first is a content-addressable store on your
+own disk, and `.moon/workspace.yml` turns on two settings that govern it:
+
+```yaml
+experiments:
+  casOutputsCache: true
+
+cache:
+  unstable_sharedWorktreeCache: true
+```
+
+`casOutputsCache` moves task outputs out of `.moon/cache/outputs`, which held one tar archive per
+task hash, and into `blobs/` and `manifests/` beside it. `unstable_sharedWorktreeCache` then points
+every git worktree of this repo at one such store, held in the base checkout's `.moon/cache`. The
+base checkout is the one whose `.git` directory `git rev-parse --git-common-dir` names, which is
+how to find it from inside a worktree. Only blobs and manifests are shared. Hashes, locks and
+states stay per-worktree because they embed absolute paths, so a worktree still decides for itself
+what is stale.
+
+The payoff is that a worktree created this morning builds from artifacts another worktree produced
+last week, without touching the network. A cold worktree on its own branch hydrated a 14-task build
+chain in 0.2 s of task time against 25 s to rebuild it, with the remote cache switched off.
+
+Two things follow from where the store lives. A plain clone is its own base checkout, so on a CI
+runner the setting resolves to the same directory it would have used anyway and changes nothing.
+And the store grows inside the base checkout rather than under `~`, so it needs a bound of its own.
+`cache.cas.maxSize` is set to 10 GB, evicted least-recently-used. A full 332-task `:build` occupies
+463 MB of it, so that is roughly twenty distinct build states before anything is dropped. Left
+unset the store is unbounded, which on a laptop is a slow leak rather than an error.
+
+Mind the spelling of that value. moon accepts `maxSize: 'not-a-size'` without a word, at any log
+level, and runs unbounded. A typo here reads exactly like a working bound. `MOON_LOG=debug` is how
+you check the whole arrangement is live; it names the shared directory before anything else happens:
+
+```text
+DEBUG moon_app::session  In a VCS worktree, using a shared cache directory for blobs and manifests  dir=Some("/Users/you/Code/dxos/.moon/cache")
+DEBUG moon_cas::cas      Creating CAS store  root="/Users/you/Code/dxos/.moon/cache/blobs"
+```
+
+`unstable_sharedWorktreeCache` is unstable in the sense moon means it: the name carries the prefix
+and may be renamed. moon rejects unknown keys outright, so if a future release drops the prefixed
+spelling this file stops parsing until the key is updated. To opt out of either setting for one
+command, without editing config:
+
+```bash
+MOON_CACHE_SHARED_WORKTREE_CACHE=false MOON_EXPERIMENT_CAS_OUTPUTS_CACHE=false moon run :build
+```
+
 ## Things that will catch you out
 
 1. **The `cache.dxos.network` A record must stay DNS-only in Cloudflare.** The proxy does not pass
    gRPC on 9092, and moon answers an unreachable cache with one warning and a green build — so
    proxying it looks like nothing is wrong.
 2. **Any edit to `.moon/workspace.yml` re-hashes every task**, so the next run after a config
-   change is a full cold build regardless of which cache is configured.
+   change is a full cold build regardless of which cache is configured. So does a moon version
+   bump, on its own: the same task hashed `ad0ce946` under 2.4.5 and `78dc6382` under 2.5.2 with
+   identical inputs. Bundle a config change into the same commit as a version bump and the two
+   share one invalidation instead of costing two.
 3. **Disk is bounded by `--max_size 200`** (GiB), enforced as an LRU: `bazel-remote` evicts the
    least recently used blobs rather than filling the disk. Size it under the volume with room for
    the OS — 200 GiB on the current 320 GiB disk, leaving roughly 110 GiB of headroom.

@@ -21,7 +21,7 @@ const SPACE = SpaceId.random();
 const SPACE_A = SpaceId.random();
 const SPACE_B = SpaceId.random();
 
-const KEY = 'org.dxos.function.tasks.taskCreate';
+const KEY = 'com.example.operation.tasks.createTask';
 
 const CreateTask = Operation.make({
   meta: { key: DXN.make(KEY), name: 'Create Task', description: 'Creates a task.' },
@@ -32,7 +32,7 @@ const CreateTask = Operation.make({
 
 /** Declares `spaceId` in its own input, so the call states its target there rather than ambiently. */
 const ArchiveSpace = Operation.make({
-  meta: { key: DXN.make('org.dxos.function.space.archive'), name: 'Archive Space' },
+  meta: { key: DXN.make('com.example.operation.space.archive'), name: 'Archive Space' },
   input: Schema.Struct({ spaceId: Schema.String }),
   output: Schema.Struct({ archived: Schema.Boolean }),
   services: [Database.Service],
@@ -40,7 +40,7 @@ const ArchiveSpace = Operation.make({
 
 const QueryObjects = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.space.queryObjects'),
+    key: DXN.make('com.example.operation.space.queryObjects'),
     name: 'Query Objects',
     description: 'Queries objects in a space.',
   },
@@ -48,6 +48,20 @@ const QueryObjects = Operation.make({
   output: Schema.Struct({ objects: Schema.Array(Schema.Unknown) }),
   services: [Database.Service],
 }).pipe(Operation.mutation('none'));
+
+/** Declares no database: it asks about the host rather than about a space's data. */
+const QueryPlugins = Operation.make({
+  meta: { key: DXN.make('com.example.operation.registry.queryPlugins'), name: 'Query Plugins' },
+  input: Schema.Struct({ enabled: Schema.optional(Schema.Boolean) }),
+  output: Schema.Struct({ plugins: Schema.Array(Schema.Unknown) }),
+}).pipe(Operation.mutation('none'));
+
+/** Declares no database either, but is space-addressed: its space comes from the refs it is given. */
+const RemoveObjects = Operation.make({
+  meta: { key: DXN.make('com.example.operation.space.removeObjects'), name: 'Remove Objects' },
+  input: Schema.Struct({ objects: Schema.Array(Schema.Unknown) }),
+  output: Schema.Struct({ removed: Schema.Number }),
+}).pipe(Operation.mutation('destructive'));
 
 const makeSkill = (props: {
   key: string;
@@ -99,7 +113,7 @@ const testHost = (
 };
 
 const runInvoke = (
-  args: { key?: string; input?: Record<string, unknown>; spaceId?: string },
+  args: { key?: string; input?: Record<string, unknown>; spaceId?: SpaceId },
   options: { registry?: Registry.Registry; host?: ReturnType<typeof testHost> } = {},
 ) => {
   const registry = options.registry ?? testRegistry();
@@ -116,10 +130,19 @@ const runInvoke = (
 
 describe('McpServer', () => {
   describe('invokeOperation', () => {
-    test('dispatches the named operation into the session default space', async ({ expect }) => {
-      const { invocations, result } = runInvoke({ input: { title: 'Write tests' } });
+    test('dispatches the named operation into the space the call named', async ({ expect }) => {
+      const { invocations, result } = runInvoke({ input: { title: 'Write tests' }, spaceId: SPACE_A });
       expect(successOf(await result)).to.deep.equal({ ok: true });
       expect(invocations).to.deep.equal([{ key: KEY, input: { title: 'Write tests' }, spaceId: SPACE_A }]);
+    });
+
+    // The session's first space has no relationship to the caller's task, so defaulting to it
+    // files work into an arbitrary space. Refused instead, naming how to choose one.
+    test('an operation that acts on a space is refused when the call names none', async ({ expect }) => {
+      const { invocations, result } = runInvoke({ input: { title: 'Write tests' } });
+      expect(failureOf(await result).code).to.equal('invalid_request');
+      expect(failureOf(await result).message).to.include('spaceId');
+      expect(invocations).to.have.length(0);
     });
 
     test('an unknown key points at queryOperations rather than failing opaquely', async ({ expect }) => {
@@ -130,7 +153,7 @@ describe('McpServer', () => {
     });
 
     test('a key spelled with its dxn: prefix or version still dispatches', async ({ expect }) => {
-      const { invocations, result } = runInvoke({ key: `dxn:${KEY}:0.0.0`, input: { title: 'x' } });
+      const { invocations, result } = runInvoke({ key: `dxn:${KEY}:0.0.0`, input: { title: 'x' }, spaceId: SPACE_A });
       successOf(await result);
       expect(invocations[0].key).to.equal(KEY);
     });
@@ -138,19 +161,19 @@ describe('McpServer', () => {
     // Skills are the unit of governance: present in the registry is not the same as reachable.
     test('an operation no opted-in skill names is as uninvocable as one that does not exist', async ({ expect }) => {
       const registry = testRegistry({ operations: [CreateTask, QueryObjects] });
-      const { result, invocations } = runInvoke({ key: 'org.dxos.function.space.queryObjects' }, { registry });
+      const { result, invocations } = runInvoke({ key: 'com.example.operation.space.queryObjects' }, { registry });
       expect(failureOf(await result).code).to.equal('invalid_request');
       expect(invocations).to.have.length(0);
     });
 
     test('a non-object output is wrapped, because structuredContent must be an object', async ({ expect }) => {
-      const { result } = runInvoke({ input: { title: 'x' } }, { host: testHost({ output: 42 }) });
+      const { result } = runInvoke({ input: { title: 'x' }, spaceId: SPACE_A }, { host: testHost({ output: 42 }) });
       expect(successOf(await result)).to.deep.equal({ output: 42 });
     });
 
     test('space-less references in the result are qualified with the space they resolved in', async ({ expect }) => {
       const output = { taskSet: { '/': 'echo:///01J000000000000000000000000' } };
-      const { result } = runInvoke({ input: { title: 'x' } }, { host: testHost({ output }) });
+      const { result } = runInvoke({ input: { title: 'x' }, spaceId: SPACE_A }, { host: testHost({ output }) });
       expect(successOf(await result)).to.deep.equal({
         taskSet: { '/': `echo://${SPACE_A}/01J000000000000000000000000` },
       });
@@ -172,7 +195,7 @@ describe('McpServer', () => {
       const host = testHost({ spaceIds: [SPACE_A, SPACE_B] });
 
       const { result, invocations } = runInvoke(
-        { key: 'org.dxos.function.space.archive', input: { spaceId: SPACE_B } },
+        { key: 'com.example.operation.space.archive', input: { spaceId: SPACE_B } },
         { registry, host },
       );
 
@@ -195,8 +218,50 @@ describe('McpServer', () => {
       expect(unrestricted.invocations[0].spaceId).to.equal(SPACE_B);
     });
 
+    // `queryPlugins` asks what this host has installed, which is answerable before any space
+    // exists — and a profile with no identity yet is exactly when it is most useful.
+    test('an operation declaring no database answers where the session has no space', async ({ expect }) => {
+      const registry = testRegistry({
+        operations: [QueryPlugins],
+        skills: [makeSkill({ key: 'org.dxos.skill.registry', operations: [QueryPlugins] })],
+      });
+      const { result, invocations } = runInvoke(
+        { key: 'com.example.operation.registry.queryPlugins' },
+        { registry, host: testHost({ spaceIds: [], output: { plugins: [] } }) },
+      );
+
+      expect(successOf(await result)).to.deep.equal({ plugins: [] });
+      expect(invocations[0].spaceId).to.be.undefined;
+    });
+
+    test('an operation declaring no database still takes the space its refs name', async ({ expect }) => {
+      const registry = testRegistry({
+        operations: [RemoveObjects],
+        skills: [makeSkill({ key: 'org.dxos.skill.database', operations: [RemoveObjects] })],
+      });
+      const { result, invocations } = runInvoke(
+        {
+          key: 'com.example.operation.space.removeObjects',
+          input: { objects: [{ '/': `echo://${SPACE_B}/01J000000000000000000000000` }] },
+        },
+        { registry, host: testHost({ spaceIds: [SPACE_A, SPACE_B] }) },
+      );
+
+      successOf(await result);
+      expect(invocations[0].spaceId).to.equal(SPACE_B);
+    });
+
+    test('a space named where the session has none is refused as out of context', async ({ expect }) => {
+      const { result, invocations } = runInvoke(
+        { input: { title: 'x' }, spaceId: SPACE_A },
+        { host: testHost({ spaceIds: [] }) },
+      );
+      expect(failureOf(await result).code).to.equal('space_not_in_context');
+      expect(invocations).to.have.length(0);
+    });
+
     test('a host failure carries the underlying message, not an Effect envelope', async ({ expect }) => {
-      const { result } = runInvoke({ input: { title: 'x' } }, { host: testHost({ fail: true }) });
+      const { result } = runInvoke({ input: { title: 'x' }, spaceId: SPACE_A }, { host: testHost({ fail: true }) });
       expect(failureOf(await result).code).to.equal('operation_failed');
       expect(failureOf(await result).message).to.include('host unavailable');
     });
@@ -204,7 +269,7 @@ describe('McpServer', () => {
     // Input arrives as raw JSON rather than through a per-operation tool schema, so this handler is
     // the only thing standing between a malformed call and the operation's own internals.
     test('input is validated against the schema, naming the lookup that returns it', async ({ expect }) => {
-      const { result, invocations } = runInvoke({ input: { title: 42 as unknown as string } });
+      const { result, invocations } = runInvoke({ input: { title: 42 as unknown as string }, spaceId: SPACE_A });
       expect(failureOf(await result).code).to.equal('invalid_request');
       expect(failureOf(await result).message).to.include('queryOperations');
       expect(invocations).to.have.length(0);
@@ -251,7 +316,7 @@ describe('McpServer', () => {
       const registry = twoSkills();
       expect((await run(registry, { query: 'CREATES task' })).map((row) => row.key)).to.deep.equal([KEY]);
       expect((await run(registry, { query: 'queryObjects' })).map((row) => row.key)).to.deep.equal([
-        'org.dxos.function.space.queryObjects',
+        'com.example.operation.space.queryObjects',
       ]);
       expect(await run(registry, { query: 'creates nonexistent' })).to.have.length(0);
     });
@@ -259,7 +324,7 @@ describe('McpServer', () => {
     test('a skill filter narrows to the operations that skill governs', async ({ expect }) => {
       const registry = twoSkills();
       expect((await run(registry, { skill: 'database' })).map((row) => row.key)).to.deep.equal([
-        'org.dxos.function.space.queryObjects',
+        'com.example.operation.space.queryObjects',
       ]);
       expect(await run(registry, { skill: 'noSuchSkill' })).to.have.length(0);
     });
@@ -291,14 +356,16 @@ describe('McpServer', () => {
       const { host, invocations } = testHost();
       expect(await run(registry)).to.have.length(0);
       const dark = await EffectEx.runPromise(
-        Effect.result(McpServer.invoke(registry, host, { key: 'org.dxos.function.space.queryObjects' })),
+        Effect.result(McpServer.invoke(registry, host, { key: 'com.example.operation.space.queryObjects' })),
       );
       expect(failureOf(dark).code).to.equal('invalid_request');
       expect(invocations).to.have.length(0);
 
       registry.add([makeSkill({ key: 'org.dxos.skill.database', operations: [QueryObjects] })]);
-      expect((await run(registry)).map((row) => row.key)).to.deep.equal(['org.dxos.function.space.queryObjects']);
-      await EffectEx.runPromise(McpServer.invoke(registry, host, { key: 'org.dxos.function.space.queryObjects' }));
+      expect((await run(registry)).map((row) => row.key)).to.deep.equal(['com.example.operation.space.queryObjects']);
+      await EffectEx.runPromise(
+        McpServer.invoke(registry, host, { key: 'com.example.operation.space.queryObjects', spaceId: SPACE_A }),
+      );
       expect(invocations).to.have.length(1);
       // CreateTask is still governed by no skill, so the new arrival widened nothing else.
       expect((await run(registry)).map((row) => row.key)).to.not.include(KEY);
@@ -396,7 +463,9 @@ describe('McpServer', () => {
               key: 'org.dxos.skill.codeProject',
               name: 'Code project',
               mcpPrompt: true,
-              tools: [KEY],
+              // A skill's `tools` carry derived tool names, not operation NSIDs — the form
+              // `Skill.toolDefinitions` emits and governance matches on.
+              tools: [Operation.toolNameFromKey(KEY)],
               instructions: 'Bind a space first.',
             },
           ],
@@ -413,7 +482,9 @@ describe('McpServer', () => {
       expect(listing.instructions).to.equal('Bind a space first.');
 
       const { host, invocations } = testHost();
-      await EffectEx.runPromise(McpServer.invoke(registry, host, { key: KEY, input: { title: 'Ship' } }));
+      await EffectEx.runPromise(
+        McpServer.invoke(registry, host, { key: KEY, input: { title: 'Ship' }, spaceId: SPACE_A }),
+      );
       expect(invocations).to.deep.equal([{ key: KEY, input: { title: 'Ship' }, spaceId: SPACE_A }]);
     });
 

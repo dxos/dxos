@@ -187,9 +187,6 @@
       "path": "packages/common/effect-atom-solid/tsconfig.json"
     },
     {
-      "path": "packages/common/effect-proto/tsconfig.json"
-    },
-    {
       "path": "packages/common/effect-zod/tsconfig.json"
     },
     {
@@ -433,6 +430,9 @@
       "path": "packages/plugins/plugin-file/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-file-system/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-freeq/tsconfig.json"
     },
     {
@@ -478,6 +478,9 @@
       "path": "packages/plugins/plugin-linear/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-lingo/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-magazine/tsconfig.json"
     },
     {
@@ -497,9 +500,6 @@
     },
     {
       "path": "packages/plugins/plugin-native/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/plugin-native-filesystem/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-navtree/tsconfig.json"
