@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Entity, Obj } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 
 import { ProjectMcpOperation } from '#types';
 
@@ -16,7 +16,7 @@ const handler: Operation.WithHandler<typeof ProjectMcpOperation.UpdateProject> =
       // An empty patch must not mutate: `Obj.update` bumps meta and notifies reactive consumers
       // even when every assignment is skipped.
       if (name === undefined && status === undefined && description === undefined) {
-        return { project: Entity.toJSON(project) };
+        return { project: project };
       }
 
       Obj.update(project, (project) => {
@@ -31,7 +31,7 @@ const handler: Operation.WithHandler<typeof ProjectMcpOperation.UpdateProject> =
         }
       });
 
-      return { project: Entity.toJSON(project) };
+      return { project: project };
     }),
   ),
 );

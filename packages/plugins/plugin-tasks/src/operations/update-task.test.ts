@@ -5,7 +5,7 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { Database, EID, Obj, Ref } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
@@ -19,12 +19,11 @@ describe('update-task', () => {
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({}));
       yield* Database.flush();
-      const { task: snapshot } = yield* createTask.handler({
+      const { task } = yield* createTask.handler({
         taskSet: Ref.make(taskSet),
         title: 'Draft',
         priority: 'low',
       });
-      const task = yield* loadTask(snapshot);
 
       yield* updateTask.handler({ task: Ref.make(task), status: 'in-progress', estimate: 3 });
 
@@ -39,14 +38,12 @@ describe('update-task', () => {
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
       yield* Database.flush();
-      const { task: parentSnapshot } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Parent' });
-      const parent = yield* loadTask(parentSnapshot);
-      const { task: childSnapshot } = yield* createTask.handler({
+      const { task: parent } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Parent' });
+      const { task: child } = yield* createTask.handler({
         taskSet: Ref.make(taskSet),
         title: 'Child',
         parentTask: Ref.make(parent),
       });
-      const child = yield* loadTask(childSnapshot);
 
       const exit = yield* Effect.exit(updateTask.handler({ task: Ref.make(parent), parentTask: Ref.make(child) }));
       expect(exit._tag).toBe('Failure');
@@ -57,14 +54,12 @@ describe('update-task', () => {
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
       yield* Database.flush();
-      const { task: parentSnapshot } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Parent' });
-      const parent = yield* loadTask(parentSnapshot);
-      const { task: childSnapshot } = yield* createTask.handler({
+      const { task: parent } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Parent' });
+      const { task: child } = yield* createTask.handler({
         taskSet: Ref.make(taskSet),
         title: 'Child',
         parentTask: Ref.make(parent),
       });
-      const child = yield* loadTask(childSnapshot);
 
       yield* updateTask.handler({ task: Ref.make(child), parentTask: null });
 
@@ -75,7 +70,3 @@ describe('update-task', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 });
-
-/** Handlers return a JSON snapshot (wire-safe); reload the live object to assert graph state. */
-const loadTask = (snapshot: unknown) =>
-  Database.resolve(EID.parse(`echo:///${(snapshot as { id: string }).id}`), Task.Task);

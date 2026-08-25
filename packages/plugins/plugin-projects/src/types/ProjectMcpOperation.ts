@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
-import { Database, Ref } from '@dxos/echo';
+import { Database, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 /**
@@ -95,6 +95,6 @@ export const UpdateProject = Operation.make({
   }),
   // JSON snapshot, not a live object — see MILESTONE-5.md §7.4.
   output: Schema.Struct({
-    project: Schema.Unknown,
+    project: Type.getSchema(Project.Project),
   }),
 }).pipe(Operation.mutation('write'));

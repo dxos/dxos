@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Entity, Ref } from '@dxos/echo';
+import { Database, Ref } from '@dxos/echo';
 import { Task, TaskSet } from '@dxos/types';
 
 import { TaskOperation } from '#types';
@@ -61,7 +61,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.CreateTask> = TaskOper
       );
       addTaskToSet(taskSet, task, parent);
       yield* Database.flush();
-      return { task: Entity.toJSON(task) };
+      return { task: task };
     }),
   ),
 );

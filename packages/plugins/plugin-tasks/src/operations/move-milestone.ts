@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Entity, Obj } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 
 import { TaskOperation } from '#types';
 
@@ -29,7 +29,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.MoveMilestone> = TaskO
         taskSet.milestones = reorder(taskSet.milestones, milestone.id, beforeId);
       });
 
-      return { milestone: Entity.toJSON(milestone) };
+      return { milestone: milestone };
     }),
   ),
 );

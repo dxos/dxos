@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Format, Obj, Ref } from '@dxos/echo';
+import { Database, Format, Obj, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 // Person is referenced in Actor.Actor's inferred type (via the contact ref); importing it lets
 // the compiler name the operation types portably (TS2883).
@@ -51,7 +51,7 @@ export const CreateTask = Operation.make({
   // operation-service) where only serializable values cross the wire — same contract as
   // `database.objectCreate`.
   output: Schema.Struct({
-    task: Schema.Unknown,
+    task: Type.getSchema(Task.Task),
   }),
 }).pipe(Operation.mutation('write'));
 
@@ -80,7 +80,7 @@ export const UpdateTask = Operation.make({
   // operation-service) where only serializable values cross the wire — same contract as
   // `database.objectCreate`.
   output: Schema.Struct({
-    task: Schema.Unknown,
+    task: Type.getSchema(Task.Task),
   }),
 }).pipe(Operation.mutation('write'));
 
@@ -99,7 +99,7 @@ export const CompleteTask = Operation.make({
   // operation-service) where only serializable values cross the wire — same contract as
   // `database.objectCreate`.
   output: Schema.Struct({
-    task: Schema.Unknown,
+    task: Type.getSchema(Task.Task),
   }),
 }).pipe(Operation.mutation('write'));
 
@@ -119,7 +119,7 @@ export const AssignTask = Operation.make({
   // operation-service) where only serializable values cross the wire — same contract as
   // `database.objectCreate`.
   output: Schema.Struct({
-    task: Schema.Unknown,
+    task: Type.getSchema(Task.Task),
   }),
 }).pipe(Operation.mutation('write'));
 
@@ -154,7 +154,7 @@ export const MoveTask = Operation.make({
     before: Schema.optional(Ref.Ref(Task.Task)),
   }),
   output: Schema.Struct({
-    task: Schema.Unknown,
+    task: Type.getSchema(Task.Task),
   }),
 }).pipe(Operation.mutation('write'));
 
@@ -188,7 +188,7 @@ export const ListTasks = Operation.make({
   }),
   // JSON snapshots, not live objects — see the create/update verbs above.
   output: Schema.Struct({
-    tasks: Schema.Array(Schema.Unknown),
+    tasks: Schema.Array(Type.getSchema(Task.Task)),
     /** Present when more results remain; pass back as `after`. */
     nextCursor: Schema.optional(TaskCursor),
   }),
@@ -215,7 +215,7 @@ export const CreateMilestone = Operation.make({
     targetDate: Schema.optional(Format.DateOnly).annotate({ description: 'Target date as YYYY-MM-DD.' }),
   }),
   output: Schema.Struct({
-    milestone: Schema.Unknown,
+    milestone: Type.getSchema(Milestone.Milestone),
   }),
 }).pipe(Operation.mutation('write'));
 
@@ -236,7 +236,7 @@ export const UpdateMilestone = Operation.make({
     }),
   }),
   output: Schema.Struct({
-    milestone: Schema.Unknown,
+    milestone: Type.getSchema(Milestone.Milestone),
   }),
 }).pipe(Operation.mutation('write'));
 
@@ -271,7 +271,7 @@ export const MoveMilestone = Operation.make({
     before: Schema.optional(Ref.Ref(Milestone.Milestone)),
   }),
   output: Schema.Struct({
-    milestone: Schema.Unknown,
+    milestone: Type.getSchema(Milestone.Milestone),
   }),
 }).pipe(Operation.mutation('write'));
 

@@ -5,7 +5,7 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { Database, EID, Ref } from '@dxos/echo';
+import { Database, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
@@ -20,14 +20,12 @@ describe('delete-milestone', () => {
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
       yield* Database.flush();
-      const { milestone: snapshot } = yield* createMilestone.handler({ taskSet: Ref.make(taskSet), name: 'Alpha' });
-      const milestone = yield* loadMilestone(snapshot);
-      const { task: taskSnapshot } = yield* createTask.handler({
+      const { milestone } = yield* createMilestone.handler({ taskSet: Ref.make(taskSet), name: 'Alpha' });
+      const { task } = yield* createTask.handler({
         taskSet: Ref.make(taskSet),
         title: 'Survives',
         milestone: Ref.make(milestone),
       });
-      const task = yield* loadTask(taskSnapshot);
 
       const { releasedTasks } = yield* deleteMilestone.handler({ milestone: Ref.make(milestone) });
 
@@ -39,10 +37,3 @@ describe('delete-milestone', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 });
-
-/** Handlers return a JSON snapshot (wire-safe); reload the live object to assert graph state. */
-const loadTask = (snapshot: unknown) =>
-  Database.resolve(EID.parse(`echo:///${(snapshot as { id: string }).id}`), Task.Task);
-
-const loadMilestone = (snapshot: unknown) =>
-  Database.resolve(EID.parse(`echo:///${(snapshot as { id: string }).id}`), Milestone.Milestone);

@@ -5,7 +5,7 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { Database, EID, Ref } from '@dxos/echo';
+import { Database, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
@@ -23,11 +23,9 @@ describe('list-tasks', () => {
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
       yield* Database.flush();
 
-      const { task: doneSnapshot } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Done thing' });
-      const done = yield* loadTask(doneSnapshot);
+      const { task: done } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Done thing' });
       yield* completeTask.handler({ task: Ref.make(done) });
-      const { task: openSnapshot } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Open thing' });
-      const open = yield* loadTask(openSnapshot);
+      const { task: open } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Open thing' });
       yield* assignTask.handler({ task: Ref.make(open), assignee: { email: 'kai@example.com' } });
       yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Sub thing', parentTask: Ref.make(open) });
 
@@ -77,8 +75,7 @@ describe('list-tasks', () => {
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
       yield* Database.flush();
-      const { milestone: snapshot } = yield* createMilestone.handler({ taskSet: Ref.make(taskSet), name: 'Alpha' });
-      const milestone = yield* loadMilestone(snapshot);
+      const { milestone } = yield* createMilestone.handler({ taskSet: Ref.make(taskSet), name: 'Alpha' });
       yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Filed', milestone: Ref.make(milestone) });
       yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Unfiled' });
 
@@ -89,12 +86,4 @@ describe('list-tasks', () => {
   );
 });
 
-/** Titles off either the JSON snapshots a handler returns or live task objects. */
-const titles = (tasks: readonly unknown[]): string[] => tasks.map((task) => (task as { title: string }).title);
-
-/** Handlers return a JSON snapshot (wire-safe); reload the live object to assert graph state. */
-const loadTask = (snapshot: unknown) =>
-  Database.resolve(EID.parse(`echo:///${(snapshot as { id: string }).id}`), Task.Task);
-
-const loadMilestone = (snapshot: unknown) =>
-  Database.resolve(EID.parse(`echo:///${(snapshot as { id: string }).id}`), Milestone.Milestone);
+const titles = (tasks: readonly Task.Task[]): (string | undefined)[] => tasks.map((task) => task.title);

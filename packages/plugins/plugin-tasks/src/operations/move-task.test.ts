@@ -5,7 +5,7 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { Database, EID, Ref } from '@dxos/echo';
+import { Database, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
@@ -22,7 +22,7 @@ describe('move-task', () => {
       const created = [];
       for (const title of ['a', 'b', 'c']) {
         const { task: snapshot } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title });
-        created.push(yield* loadTask(snapshot));
+        created.push(snapshot);
       }
       const [first, , third] = created;
 
@@ -35,9 +35,4 @@ describe('move-task', () => {
   );
 });
 
-/** Titles off either the JSON snapshots a handler returns or live task objects. */
-const titles = (tasks: readonly unknown[]): string[] => tasks.map((task) => (task as { title: string }).title);
-
-/** Handlers return a JSON snapshot (wire-safe); reload the live object to assert graph state. */
-const loadTask = (snapshot: unknown) =>
-  Database.resolve(EID.parse(`echo:///${(snapshot as { id: string }).id}`), Task.Task);
+const titles = (tasks: readonly Task.Task[]): (string | undefined)[] => tasks.map((task) => task.title);

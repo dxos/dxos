@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Entity, type Obj, type Ref } from '@dxos/echo';
+import { Database, type Obj, type Ref } from '@dxos/echo';
 import { Task, TaskSet } from '@dxos/types';
 
 import { TaskOperation } from '#types';
@@ -78,7 +78,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.ListTasks> = TaskOpera
       const nextOffset = offset + page.length;
 
       return {
-        tasks: page.map((task) => Entity.toJSON(task)),
+        tasks: page,
         nextCursor: nextOffset < filtered.length ? encodeCursor(nextOffset) : undefined,
       };
     }),

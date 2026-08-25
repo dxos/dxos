@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Entity, Obj } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 
 import { TaskOperation } from '#types';
 
@@ -16,7 +16,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.CompleteTask> = TaskOp
       Obj.update(task, (task) => {
         task.status = 'done';
       });
-      return { task: Entity.toJSON(task) };
+      return { task: task };
     }),
   ),
 );

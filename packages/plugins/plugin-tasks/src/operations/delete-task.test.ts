@@ -5,7 +5,7 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { Database, EID, Ref } from '@dxos/echo';
+import { Database, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
@@ -19,16 +19,13 @@ describe('delete-task', () => {
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
       yield* Database.flush();
-      const { task: parentSnapshot } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Epic' });
-      const parent = yield* loadTask(parentSnapshot);
-      const { task: childSnapshot } = yield* createTask.handler({
+      const { task: parent } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Epic' });
+      const { task: child } = yield* createTask.handler({
         taskSet: Ref.make(taskSet),
         title: 'Step',
         parentTask: Ref.make(parent),
       });
-      const child = yield* loadTask(childSnapshot);
-      const { task: keptSnapshot } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Kept' });
-      const kept = yield* loadTask(keptSnapshot);
+      const { task: kept } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Kept' });
 
       const { deleted } = yield* deleteTask.handler({ task: Ref.make(parent) });
 
@@ -39,7 +36,3 @@ describe('delete-task', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 });
-
-/** Handlers return a JSON snapshot (wire-safe); reload the live object to assert graph state. */
-const loadTask = (snapshot: unknown) =>
-  Database.resolve(EID.parse(`echo:///${(snapshot as { id: string }).id}`), Task.Task);
