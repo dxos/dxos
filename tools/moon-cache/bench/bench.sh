@@ -67,11 +67,21 @@ for i in $(seq 1 "$REPS"); do
     exit 1
   fi
   cp .moon/cache/runReport.json "$OUT/report-$ARM$i.json"
-  hits=$(grep -c 'cached from remote' "$OUT/$ARM$i.log")
+  # `|| true` because grep exits 1 on no match, and this script runs without errexit, so the
+  # count would otherwise be read from a command whose failure went unnoticed.
+  hits=$(grep -c 'cached from remote' "$OUT/$ARM$i.log" || true)
   echo "== $ARM$i exit=$code hits=$hits"
   if [ "$hits" -eq 0 ]; then
-    echo "== $ARM$i hydrated nothing — the remote was not consulted, this rep measures nothing."
+    # Zero does not separate "the remote was never asked" from "the remote had nothing", and
+    # neither is a measurement — the rep timed a cold build. Rep 1 is exempt because populating an
+    # empty server is the documented way to start an arm; from rep 2 on, zero is a hard failure.
+    echo "== $ARM$i observed no remote hits."
     grep -m1 'disabling it' "$OUT/$ARM$i.log" || true
+    if [ "$i" -gt 1 ]; then
+      echo "== $ARM$i measures nothing — see $OUT/$ARM$i.log. Not continuing."
+      exit 1
+    fi
+    echo "== treating rep 1 as a populate pass; rep 2 must hydrate or this arm aborts."
   fi
 done
 

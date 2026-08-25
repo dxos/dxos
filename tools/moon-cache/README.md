@@ -106,9 +106,12 @@ MOON_CACHE_SHARED_WORKTREE_CACHE=false MOON_EXPERIMENT_CAS_OUTPUTS_CACHE=false m
    `bazel-remote` evicts the least recently used blobs rather than filling the volume. The
    temptation is to size it against the 320 GiB disk, and that is how it was first set, at 200.
    The real constraint is that `bazel-remote` holds one index entry per cache file, measured here
-   at ~1.1 KB. Budget half of RAM for the index, divide by the observed mean file size (~14.6 KB
-   compressed), and on this 16 GB droplet that lands near 50 GiB. See item 7 for what happens
-   when the cap is set from the disk instead.
+   at ~1.2 KB against a mean compressed blob of ~14.3 KB. Budget **a quarter of RAM** for the
+   index, not half: the heap has to leave room for the GC target above it and the page cache
+   beside it, and the 16 GB droplet was already thrashing at a 11.7 GB heap. A quarter of 16 GB
+   is 4 GB, which buys 4 GB / 1.2 KB = ~3.3M files, which at 14.3 KB each is ~44 GiB. 50 GiB is
+   that rounded up, and it measured out at 3.78M files and a 4.59 GB heap. See item 7 for what
+   happens when the cap is set from the disk instead.
 4. **Release workflows deliberately skip the cache** — `remote-cache: 'false'` on the setup action,
    or a workflow-level `MOON_REMOTE_HOST` where the workflow does not use that action.
 5. **`--access_log_level` defaults to `all`.** At CI volume that's one line per request: 8 days
@@ -144,8 +147,10 @@ MOON_CACHE_SHARED_WORKTREE_CACHE=false MOON_EXPERIMENT_CAS_OUTPUTS_CACHE=false m
    The related failure it was originally blamed for is real but separate: a saturated host also
    queues the CI setup action's `/status` preflight past its 20 s budget, which reddened three
    otherwise-unrelated jobs between 2026-08-09 and 2026-08-19 with a false "unreachable or
-   certificate does not verify" error while the host was up the whole time. The fix there is the
-   setup action retrying the preflight before failing the job (see `.github/actions/setup/action.yml`).
+   certificate does not verify" error while the host was up the whole time. That one is already
+   handled: `.github/actions/setup/action.yml` retries the probe (`--retry 3 --retry-all-errors`)
+   and its `degrade()` then warns, blanks `MOON_REMOTE_HOST` and exits 0 rather than failing the
+   job, so an unreachable cache costs a slower build instead of a red one.
 
 ## The server
 
