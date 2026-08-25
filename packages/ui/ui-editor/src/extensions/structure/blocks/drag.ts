@@ -92,13 +92,13 @@ const AUTOSCROLL_MAX_SPEED = 14;
 const DRAG_THRESHOLD = 4;
 
 // The gutters on each side of the content, where the grip (left) and menu (right) float, centered within.
-// `GUTTER_WIDTH` (3rem) is the strip width; `CONTENT_WIDTH` reserves one on each side (`6rem` = 2×3rem)
-// and centers the column — keep the two in sync.
+// `GUTTER_WIDTH` (2rem) is the strip width;
+// `CONTENT_WIDTH` reserves one on each side (`4rem` = 2×2rem) and centers the column — keep the two in sync.
 // Shared by the grip (`drag.ts`), menu (`menu.ts`), and the outliner content (`outliner.ts`).
 // Both utilities need `!`: CodeMirror's own `.ͼ1 .cm-content` rule sets `margin: 0` at a higher
 // specificity, which otherwise drops the centering and collapses both gutters onto one side.
-export const GUTTER_WIDTH = 48;
-export const CONTENT_WIDTH = 'max-w-[min(50rem,100%-6rem)]! mx-auto!';
+export const GUTTER_WIDTH = 32; // 2rem
+export const CONTENT_WIDTH = 'max-w-[min(50rem,100%-4rem)]! mx-auto!';
 
 const GRIP_ICON = 'ph--dots-six-vertical--regular';
 

@@ -48,11 +48,9 @@ export const CreateProjectPanel = ({ onCreateObject, templates: templatesProp }:
   );
 
   return (
-    // `Form` rather than a bare Column: its viewport owns the gutter and its content places itself in
-    // the centre track, so the picker's rows align with the fields above them.
     <Form.Root>
       <Form.Viewport>
-        <Form.Content classNames='gap-form-gap'>
+        <Form.Content classNames='my-form-gap'>
           <Input.Root>
             <Input.TextInput
               autoFocus
@@ -64,7 +62,7 @@ export const CreateProjectPanel = ({ onCreateObject, templates: templatesProp }:
           </Input.Root>
           <SearchList.Root onSearch={handleSearch}>
             <SearchList.Input
-              classNames='mb-form-gap'
+              classNames='py-form-gap'
               data-testid='create-project-panel.template-input'
               placeholder={t('create-panel.template.placeholder')}
             />
