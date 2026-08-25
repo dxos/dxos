@@ -169,8 +169,8 @@ The two candidate directions (user, 2026-07-28):
    the ONLY standing context a routine gets: `RunInstructions`
    (`assistant-toolkit/src/operations/run-instructions.ts:70`) runs headless — no `Chat`, no
    `Chat.instructions`, no project — so removing the field from the chat path is safe but removing it
-   outright silently strips context from every routine (`RoutineCompanion` demonstrates exactly this
-   wiring). A routine would need either its own context field or a project it inherits scope from.
+   outright silently strips context from every routine. A routine would need either its own context
+   field or a project it inherits scope from.
 
 Review these together rather than piecemeal — each pair already has an unresolved edge:
 
@@ -550,8 +550,9 @@ deletion guards (Phase 5) are separate planned follow-ups.**
       programmatic warn-level Continue; block unacknowledgeable on both surfaces.
 - [ ] **Undo unit** — executed alternative + primary delete commit as one undo; costed as the
       hardest piece, design before building.
-- [ ] **Consumer 1: projects/routines guard** — warn + subjects via `connectedRoutinesQuery` +
-      alternative "Delete N routines".
+- [ ] **Consumer 1: projects/routines guard** — warn for routines that reference a project without
+      being owned by it (owned ones cascade) + alternative "Delete N routines". Needs a replacement
+      for `connectedRoutinesQuery`, removed with the companion.
 - [ ] **Consumer 2: type-deletion guard** — block when instances/views reference the stored type +
       alternative "Delete N objects of this type" (reverse-ref machinery).
 
@@ -612,8 +613,9 @@ deletion guards (Phase 5) are separate planned follow-ups.**
 - [x] **Project companion chat misses `ProjectSkill` + artifact skills** — resolved 2026-08-18 by
       the same `SkillsAnnotation` on `Project` (see above): `ChatCompanion.useSkills` reads the
       annotation, so the companion chat now binds the same skills `ProjectOperation.CreateChat`
-      binds. The two chat flows' remaining differences are lifecycle/placement and cardinality only
-      (see the TODO in `create-chat.ts`).
+      binds. The two chat flows' remaining differences are lifecycle/placement and cardinality only.
+      Closed out 2026-08-24: `ProjectOperation.CreateChat` deleted, both create actions rewired to
+      `AssistantOperation.SetCurrentChat` — a project chat is an ordinary companion chat.
 
 - [x] **`Chat.agent` removed; linkage is the `CompanionTo` relation** — the field (phase B) was the
       edge that closed the Agent↔Chat import cycle and forced both types into one module behind

@@ -189,6 +189,9 @@ catalogs:
     '@effect/sql-sqlite-wasm':
       specifier: 4.0.0-rc.108
       version: 4.0.0-rc.108
+    '@effect/tsgo':
+      specifier: ^0.36.5
+      version: 0.36.5
     '@effect/vitest':
       specifier: 4.0.0-rc.108
       version: 4.0.0-rc.108
@@ -1299,6 +1302,9 @@ catalogs:
     oxc-resolver:
       specifier: ^11.9.0
       version: 11.19.1
+    oxlint-tsgolint:
+      specifier: ^7.0.2001
+      version: 7.0.2001
     parsimmon:
       specifier: ^1.18.1
       version: 1.18.1
@@ -1566,6 +1572,9 @@ catalogs:
     tslib:
       specifier: ^2.8.1
       version: 2.8.1
+    tstyche:
+      specifier: ^7.2.3
+      version: 7.2.3
     tsx:
       specifier: ^4.21.0
       version: 4.21.0
@@ -1883,6 +1892,9 @@ importers:
       '@effect/language-service':
         specifier: 'catalog:'
         version: 0.86.4
+      '@effect/tsgo':
+        specifier: 'catalog:'
+        version: 0.36.5
       '@effect/vitest':
         specifier: 'catalog:'
         version: 4.0.0-rc.108(effect@4.0.0-rc.108)(vitest@4.1.10)
@@ -2100,7 +2112,7 @@ importers:
         specifier: 1.78.0
         version: 1.78.0(oxlint-tsgolint@7.0.2001)
       oxlint-tsgolint:
-        specifier: ^7.0.2001
+        specifier: 'catalog:'
         version: 7.0.2001
       pkg-up:
         specifier: 'catalog:'
@@ -2144,6 +2156,9 @@ importers:
       tsdown:
         specifier: 'catalog:'
         version: 0.22.14(@volar/typescript@2.4.28)(oxc-resolver@11.19.1(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1))(tsx@4.21.0)
+      tstyche:
+        specifier: 'catalog:'
+        version: 7.2.3
       tsx:
         specifier: 'catalog:'
         version: 4.21.0
@@ -2388,6 +2403,9 @@ importers:
       '@dxos/plugin-chess-com':
         specifier: workspace:*
         version: link:../../plugins/plugin-chess-com
+      '@dxos/plugin-claude-agents':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-claude-agents
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugins/plugin-client
@@ -8627,6 +8645,40 @@ importers:
         specifier: '>=8.2.1'
         version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
 
+  packages/plugins/plugin-claude-agents:
+    dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute/compute
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../core/mesh/edge-client
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      effect:
+        specifier: 4.0.0-rc.108
+        version: 4.0.0-rc.108
+    devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      vite:
+        specifier: '>=8.2.1'
+        version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
+
   packages/plugins/plugin-client:
     dependencies:
       '@dxos/app-framework':
@@ -13249,9 +13301,6 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
-      '@dxos/assistant':
-        specifier: workspace:*
-        version: link:../../core/compute/assistant
       '@dxos/assistant-toolkit':
         specifier: workspace:*
         version: link:../../core/compute/assistant-toolkit
@@ -13303,9 +13352,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
-      '@dxos/react-ui-attention':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-attention
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
@@ -13745,9 +13791,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
-      '@dxos/link':
-        specifier: workspace:*
-        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -25779,6 +25822,45 @@ packages:
     peerDependencies:
       '@effect/wa-sqlite': '>=0.1.2 <0.2.0'
       effect: 4.0.0-rc.108
+
+  '@effect/tsgo-darwin-arm64@0.36.5':
+    resolution: {integrity: sha512-+JPS65Ekod5NS41Kg9OIyuUsygNcSw5/4Y+UNbY6Wob6dvP+CkEa51pGBAmHKQp3Z/D3g/A9GNE66ndu9kz8dw==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@effect/tsgo-darwin-x64@0.36.5':
+    resolution: {integrity: sha512-S67mS1GTSvfeN5Tsij7QarJNuv3q7U/PMhjTbGtKO9mqgDTOA2IOlxq7YPIxkWq+AiOIv0H3aHGk7ToRjcPWxg==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@effect/tsgo-linux-arm64@0.36.5':
+    resolution: {integrity: sha512-bNLzLrQ/4Sf0N7NlAqcEpr+g+RW/ERIvmSFQN9Nu+hSFti4Kx9Nrfo1LJ4V0qASry5Rj2DG4Wa9C5ydQAD9qqA==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@effect/tsgo-linux-arm@0.36.5':
+    resolution: {integrity: sha512-UqtTPUgoVMRHAOcHiK7sddxjUEj6kOkXAlu4Y2TL/MhGiu81ZBzZrg8TXf0ApNeEMOD0EIK8hwU2kik8O+buxA==}
+    cpu: [arm]
+    os: [linux]
+
+  '@effect/tsgo-linux-x64@0.36.5':
+    resolution: {integrity: sha512-QWdyuUcAb1kZBeItycHg1ZKloNbVDtlVm1C0bbDVHqZIZ/d2rqhKi6Zajm64GnHtfdwPTn8Oi1iOCH1IYgo0IQ==}
+    cpu: [x64]
+    os: [linux]
+
+  '@effect/tsgo-win32-arm64@0.36.5':
+    resolution: {integrity: sha512-5tO5em1DfplFz5GqpQVGRSrAoE+kEgIc7Y0ClbT9jkxaK18IFVq9KIYybt4d6VT4+QnNQGdqWOahMcGE4JAZ8w==}
+    cpu: [arm64]
+    os: [win32]
+
+  '@effect/tsgo-win32-x64@0.36.5':
+    resolution: {integrity: sha512-pmaKwdYAIs9GFpMV9glIUks0UZDHE1/xwP6+GCGhSFxB76cDLMnrHr/IBt5VfGddT65SK+Dyw/vAtcX7fRp4KA==}
+    cpu: [x64]
+    os: [win32]
+
+  '@effect/tsgo@0.36.5':
+    resolution: {integrity: sha512-BHxVjeRK1/XlqYHWXkbT4W9JpOrT3sNA2wrfwQPBTojD5OSyxI2TUIltobYhWudyfuCrn770qP6uOpDjdrmghA==}
+    hasBin: true
 
   '@effect/vitest@4.0.0-rc.108':
     resolution: {integrity: sha512-XD2GP1JATN28wnIeFGsBqYMuQDCHIodKKgFulGyG91GvuHqgf2gz+WxR2LPdyNoKMtr7lsbRzVj07niSYtIKzA==}
@@ -40982,6 +41064,11 @@ packages:
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
+  tstyche@7.2.3:
+    resolution: {integrity: sha512-UqlBOleg3VR9U/BFUzamjD8GK/SeR5qnupJeiX8js9LUpzOAMaDd9tU8nfTLpDdf6AccTm6iqhA6NPd1RdO/yg==}
+    engines: {node: '>=22'}
+    hasBin: true
+
   tsx@4.21.0:
     resolution: {integrity: sha512-5C1sg4USs1lfG0GFb2RLXsdpXqBSEhAaA/0kPL01wxzpMqLILNxIxIOKiILz+cdg/pLnOUxFYOR5yhHU666wbw==}
     engines: {node: '>=18.0.0'}
@@ -47414,6 +47501,37 @@ snapshots:
     dependencies:
       '@effect/wa-sqlite': 0.1.2
       effect: 4.0.0-rc.108
+
+  '@effect/tsgo-darwin-arm64@0.36.5':
+    optional: true
+
+  '@effect/tsgo-darwin-x64@0.36.5':
+    optional: true
+
+  '@effect/tsgo-linux-arm64@0.36.5':
+    optional: true
+
+  '@effect/tsgo-linux-arm@0.36.5':
+    optional: true
+
+  '@effect/tsgo-linux-x64@0.36.5':
+    optional: true
+
+  '@effect/tsgo-win32-arm64@0.36.5':
+    optional: true
+
+  '@effect/tsgo-win32-x64@0.36.5':
+    optional: true
+
+  '@effect/tsgo@0.36.5':
+    optionalDependencies:
+      '@effect/tsgo-darwin-arm64': 0.36.5
+      '@effect/tsgo-darwin-x64': 0.36.5
+      '@effect/tsgo-linux-arm': 0.36.5
+      '@effect/tsgo-linux-arm64': 0.36.5
+      '@effect/tsgo-linux-x64': 0.36.5
+      '@effect/tsgo-win32-arm64': 0.36.5
+      '@effect/tsgo-win32-x64': 0.36.5
 
   '@effect/vitest@4.0.0-rc.108(effect@4.0.0-rc.108)(vitest@4.1.10)':
     dependencies:
@@ -57163,10 +57281,6 @@ snapshots:
     dependencies:
       pend: 1.2.0
 
-  fdir@6.5.0(picomatch@4.0.4):
-    optionalDependencies:
-      picomatch: 4.0.4
-
   fdir@6.5.0(picomatch@4.0.5):
     optionalDependencies:
       picomatch: 4.0.5
@@ -64593,8 +64707,8 @@ snapshots:
 
   tinyglobby@0.2.15:
     dependencies:
-      fdir: 6.5.0(picomatch@4.0.4)
-      picomatch: 4.0.4
+      fdir: 6.5.0(picomatch@4.0.5)
+      picomatch: 4.0.5
 
   tinyglobby@0.2.17:
     dependencies:
@@ -64800,6 +64914,10 @@ snapshots:
   tslib@2.6.2: {}
 
   tslib@2.8.1: {}
+
+  tstyche@7.2.3:
+    dependencies:
+      typescript: 6.0.3
 
   tsx@4.21.0:
     dependencies:

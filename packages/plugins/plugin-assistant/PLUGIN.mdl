@@ -227,8 +227,10 @@ feat F-2: Companion Chat
     when: companion chat does not yet exist
     then: op:EnsureCompanionChat creates one and optionally persists it
   req F-2.3:
-    when: user sends a message in the companion chat
-    then: the primary object is automatically bound as AI context
+    when: op:EnsureCompanionChat resolves a companion chat
+    then: op:BindChatContext runs every cap:SubjectContext contribution that applies to the primary
+      object and binds the merged result — by default the object itself plus the skills its type
+      declares via Skill.SkillsAnnotation
 ```
 
 ```mdl
@@ -267,7 +269,7 @@ feat F-5: Tool Execution
 ```mdl
 feat F-6: ECHO Integration
 
-  req F-6.1: Chat, CompanionTo, Skill, Feed, Message, Memory, Plan, Routine, Agent, McpServer, and Sequence schemas are registered with ECHO.
+  req F-6.1: Chat, Skill, Feed, Message, Memory, Plan, Routine, Agent, McpServer, and Sequence schemas are registered with ECHO. A chat's subject is recorded by Chat.CompanionChatAnnotation on that subject, not by a type.
   req F-6.2:
     when: a new space is created
     then: op:OnCreateSpace provisions default assistant objects

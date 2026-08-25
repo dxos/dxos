@@ -454,7 +454,13 @@ const setup = async (runtime?: ReturnType<typeof createTestSqliteRuntime>['runti
     automergeHost: host,
     spaceStateManager: new SpaceStateManager({ runtime }),
     updateIndexes: async () => {},
-    getSpaceStats: async () => ({ objects: { alive: 0, deleted: 0 }, documents: 0, feeds: 0, feedBlocks: 0 }),
+    getSpaceStats: async () => ({
+      objects: { alive: 0, deleted: 0 },
+      documents: 0,
+      feeds: 0,
+      feedBlocks: 0,
+      loaded: { documents: 0, documentsTotal: 0, queriesTotal: 0 },
+    }),
     runGarbageCollection: async () => ({
       unlinkedObjects: 0,
       removedDocuments: 0,

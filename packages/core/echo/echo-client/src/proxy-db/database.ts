@@ -1046,7 +1046,25 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   async stats(): Promise<Database.DatabaseStats> {
-    return this._entityManager.stats();
+    const { loaded: host, ...stored } = await this._entityManager.stats();
+    return { ...stored, loaded: { client: this.#clientLoadedStats(), host } };
+  }
+
+  /** Residency of this database's own caches — synchronous, so it samples one moment. */
+  #clientLoadedStats(): Database.ClientLoadedStats {
+    let feedObjects = 0;
+    for (const handle of this.#feeds.values()) {
+      feedObjects += handle.residentObjectCount;
+    }
+
+    const { documents, objects } = this._entityManager.loadedStats();
+    return {
+      documents,
+      objects,
+      feeds: this.#feeds.size,
+      feedObjects,
+      registryTotal: this.registry.local.length,
+    };
   }
 
   async runGarbageCollection(options?: Database.GarbageCollectionOptions): Promise<Database.GarbageCollectionReport> {

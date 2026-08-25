@@ -1,0 +1,25 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+tasks:
+  # Type-level tests: assertions about what the compiler accepts and rejects, which a
+  # runtime runner cannot make. Scoped per package so moon caches it and an untouched
+  # package does not re-run, and so each program covers one package rather than every
+  # source file in the repo.
+  test-types:
+    command: pnpm exec tstyche $projectSource
+    deps:
+      # This project's build, which brings its dependencies' builds with it. The type
+      # test reads this package's source directly, so it does not consume the output,
+      # but a package that does not compile turns a type-test failure into a symptom
+      # rather than a finding.
+      - build
+    inputs:
+      - /tstyche.json
+      - /tsconfig.typetest.json
+      - /tsconfig.base.json
+      - '@group(sources)'
+    options:
+      # tstyche.json paths are relative to the workspace root.
+      runFromWorkspaceRoot: true
+
+inheritedBy:
+  tags: typetest

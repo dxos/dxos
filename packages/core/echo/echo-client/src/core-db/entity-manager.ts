@@ -780,10 +780,19 @@ export class EntityManager implements IDatabaseBinding {
     await runServiceCall(this._runtime, this._dataService['DataService.updateIndexes']());
   }
 
-  async stats(): Promise<Database.DatabaseStats> {
+  /** Host-side stats only; the client's own residency is added by {@link DatabaseImpl.stats}. */
+  async stats(): Promise<DataService.DatabaseStats> {
     return runServiceCall(this._runtime, this._dataService['DataService.stats']({ spaceId: this.spaceId }), {
       timeout: RPC_TIMEOUT,
     });
+  }
+
+  /** What this space holds in the client realm: proxied document handles and object cores. */
+  loadedStats(): { documents: number; objects: number } {
+    return {
+      documents: Object.keys(this._repoProxy.handles).length,
+      objects: this._objects.size,
+    };
   }
 
   async runGarbageCollection(options?: Database.GarbageCollectionOptions): Promise<Database.GarbageCollectionReport> {
