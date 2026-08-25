@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { type PostHogConfig } from 'posthog-js';
 
-import { type Config } from '@dxos/config';
+import { type Config, getEnvString } from '@dxos/config';
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 
@@ -78,8 +78,8 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   }
 
   const feedbackSurveyId = config.get('runtime.app.env.DX_POSTHOG_FEEDBACK_SURVEY_ID');
-  const apiKey = config.get('runtime.app.env.DX_POSTHOG_API_KEY');
-  const api_host = config.get('runtime.app.env.DX_POSTHOG_API_HOST');
+  const apiKey = getEnvString(config, 'DX_POSTHOG_API_KEY');
+  const api_host = getEnvString(config, 'DX_POSTHOG_API_HOST');
   if (!apiKey || !api_host) {
     log.info('Missing POSTHOG_API_KEY or POSTHOG_API_HOST');
     return stubExtension;

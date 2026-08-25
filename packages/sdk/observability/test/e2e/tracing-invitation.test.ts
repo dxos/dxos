@@ -32,7 +32,7 @@ import { identityProvider } from '../../src/providers/client-observability';
 // ...and flip `describe.skip` to `describe` below.
 
 const LOCAL = false;
-const EDGE_URL = LOCAL ? 'http://localhost:8787' : 'https://edge-main.dxos.workers.dev';
+const EDGE_URL = LOCAL ? 'http://localhost:8787' : 'https://edge-preview.dxos.workers.dev';
 
 const createEdgeConfig = () =>
   new Config({

@@ -72,6 +72,20 @@
     "allow-get-xattr",
     "allow-set-xattr",
     "allow-remove-xattr",
-    "allow-hide-spotlight"
+    "allow-hide-spotlight",
+    {
+      "identifier": "http:default",
+      "allow": [
+        {
+          "url": "https://developer.lametric.com/*"
+        },
+        {
+          "url": "http://*:8080/*"
+        },
+        {
+          "url": "https://*:4343/*"
+        }
+      ]
+    }
   ]
 }

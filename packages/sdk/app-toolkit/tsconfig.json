@@ -93,6 +93,9 @@
       "path": "../client-protocol"
     },
     {
+      "path": "../config"
+    },
+    {
       "path": "../migrations"
     },
     {

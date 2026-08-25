@@ -40,6 +40,7 @@ import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as IrohBeaconPlugin from '@dxos/plugin-iroh-beacon/IrohBeaconPlugin';
 import * as JmapPlugin from '@dxos/plugin-jmap/JmapPlugin';
 import * as KanbanPlugin from '@dxos/plugin-kanban/KanbanPlugin';
+import * as LaMetricPlugin from '@dxos/plugin-lametric/LaMetricPlugin';
 import * as LibraryPlugin from '@dxos/plugin-library/LibraryPlugin';
 import * as LinearPlugin from '@dxos/plugin-linear/LinearPlugin';
 import * as LingoPlugin from '@dxos/plugin-lingo/LingoPlugin';
@@ -64,6 +65,7 @@ import * as SidekickPlugin from '@dxos/plugin-sidekick/SidekickPlugin';
 import * as SlackPlugin from '@dxos/plugin-slack/SlackPlugin';
 import * as SpacetimePlugin from '@dxos/plugin-spacetime/SpacetimePlugin';
 import * as StackPlugin from '@dxos/plugin-stack/StackPlugin';
+import * as StreamDeckPlugin from '@dxos/plugin-stream-deck/StreamDeckPlugin';
 import * as StudioPlugin from '@dxos/plugin-studio/StudioPlugin';
 import * as TablePlugin from '@dxos/plugin-table/TablePlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
@@ -132,6 +134,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       HeyGenPlugin.meta.profile.key,
       IdeogramPlugin.meta.profile.key,
       IrohBeaconPlugin.meta.profile.key,
+      LaMetricPlugin.meta.profile.key,
       LibraryPlugin.meta.profile.key,
       LingoPlugin.meta.profile.key,
       MagazinePlugin.meta.profile.key,
@@ -142,6 +145,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       SandboxPlugin.meta.profile.key,
       SequencerPlugin.meta.profile.key,
       SidekickPlugin.meta.profile.key,
+      StreamDeckPlugin.meta.profile.key,
       StudioPlugin.meta.profile.key,
       TasksPlugin.meta.profile.key,
       TranscriptionPlugin.meta.profile.key,
@@ -197,6 +201,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     InboxPlugin.make(),
     JmapPlugin.make(),
     KanbanPlugin.make(),
+    LaMetricPlugin.make(),
     LibraryPlugin.make(),
     MagazinePlugin.make(),
     MapPlugin.make(),
@@ -219,6 +224,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     isDev && SidekickPlugin.make(),
     SheetPlugin.make(),
     StackPlugin.make(),
+    StreamDeckPlugin.make(),
     StudioPlugin.make(),
     TablePlugin.make(),
     TasksPlugin.make(),

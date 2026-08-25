@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type Message, fromBinary, toBinary } from '@bufbuild/protobuf';
+import { type GenMessage } from '@bufbuild/protobuf/codegenv2';
 import * as Schema from 'effect/Schema';
 import * as SchemaTransformation from 'effect/SchemaTransformation';
 
@@ -20,6 +22,18 @@ export const protoMessage = <K extends keyof TYPES & string>(typeName: K): Schem
       SchemaTransformation.transform({
         decode: (bytes) => schema.getCodecForType(typeName).decode(bytes),
         encode: (value) => schema.getCodecForType(typeName).encode(value),
+      }),
+    ),
+  );
+
+/** Matches `protoMessage`'s wire format while exposing the buf message type to callers. */
+export const bufMessage = <T extends Message>(messageSchema: GenMessage<T>): Schema.Codec<T, Uint8Array> =>
+  Schema.Uint8Array.pipe(
+    Schema.decodeTo(
+      Schema.declare<T>((_): _ is T => true),
+      SchemaTransformation.transform({
+        decode: (bytes) => fromBinary(messageSchema, bytes),
+        encode: (value) => toBinary(messageSchema, value),
       }),
     ),
   );
