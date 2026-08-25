@@ -164,7 +164,6 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-tasks": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-masonry": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",

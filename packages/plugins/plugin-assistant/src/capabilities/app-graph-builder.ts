@@ -24,7 +24,7 @@ import { isSpace } from '@dxos/client/echo';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import { Sequence } from '@dxos/conductor';
-import { Database, DXN, Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
+import { Database, DXN, Filter, Obj, type Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
@@ -36,14 +36,6 @@ import { AssistantCapabilities, AssistantOperation } from '#types';
 
 /** Operation definitions to seed as `PersistentOperation` records for automation / triggers. */
 const computeOperationsToImport = [RunInstructions] as const;
-
-/**
- * Chats belonging to the top-level Chats section: unparented chats. Ownership is the ECHO parent
- * edge — a companion chat is parented to its subject (and surfaces in that subject's companion
- * panel), a project chat to its project (and is that project's navtree child, plugin-projects
- * `projectChats`) — so "standalone" is simply "no parent".
- */
-export const standaloneChatsQuery = Query.select(Filter.and(Filter.type(Chat.Chat), Filter.hasParent(false)));
 
 /** Match ECHO objects that are NOT chats. */
 const whenNonChatObject = NodeMatcher.whenAll(
@@ -221,9 +213,7 @@ export default Capability.makeModule(
           ]),
       }),
 
-      // Section node: standalone Chat.Chat objects per AI group (companions and project chats excluded).
       TypeSection.createTypeSectionExtension(Chat.Chat, {
-        query: standaloneChatsQuery,
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
         groupSegment: GraphPath.GroupSegments.ai,
         urlKey: 'chat',
