@@ -91,10 +91,7 @@ const _routinesMigration = Migration.define({
   }),
 });
 
-/**
- * Schema migrations exported by this module.
- * Exported as an array for extensibility — append future versions here.
- */
+/** Schema migrations for {@link Project}, for a plugin to contribute to `ClientCapabilities.Migration`. */
 export const migrations = [_routinesMigration];
 
 /**
