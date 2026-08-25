@@ -32,8 +32,16 @@ import { type Checkpoint, aliveCount, capture, makePayload, report } from './tes
 const OBJECT_COUNT = 200;
 const HALF = OBJECT_COUNT / 2;
 
-/** Smaller than the feed suite's: every object here is its own automerge document. */
-const PAYLOAD_BYTES = 64 * 1024;
+/**
+ * Far smaller than the feed suite's, and deliberately so: every object here is its own automerge
+ * document, and documents are never evicted, so both tests' documents accumulate in the one WASM
+ * instance this file's process shares. 3.1MB of payload already costs ~21MB of heap. At 12.5MB
+ * (200 x 64KB) the WASM allocator aborts mid-`loadIncremental` — `__rg_oom` into a
+ * `RuntimeError: unreachable` trap — after which every automerge call in the process, on any
+ * document, fails with "recursive use of an object detected". Raise these numbers and the suite
+ * stops measuring retention and starts measuring that.
+ */
+const PAYLOAD_BYTES = 16 * 1024;
 
 const SCALE = { objectCount: OBJECT_COUNT, payloadBytes: PAYLOAD_BYTES };
 
