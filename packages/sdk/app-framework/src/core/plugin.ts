@@ -686,9 +686,8 @@ const decodeDescriptor = Schema.decodeUnknownSync(Config2.Descriptor);
 export const parseJsonc = (text: string): unknown => {
   let out = '';
   let index = 0;
-  // Offset in `out` of a comma that is still a candidate for being a trailing one. Tracked during
-  // the scan rather than stripped by a regex afterwards, because a copied string literal can itself
-  // contain `, }` — a descriptor's description is free text.
+  // Tracked during the scan rather than stripped afterwards, because a copied string literal can
+  // itself contain `, }`.
   let pendingComma: number | undefined;
 
   while (index < text.length) {
@@ -751,8 +750,7 @@ const resolveSrc = (src: string, baseUrl?: string | URL): string => {
 
 /**
  * Decodes a descriptor from any {@link ManifestSource} without building a plugin from it. Malformed
- * JSONC and schema violations both surface as {@link PluginDescriptorError}, so a caller has one
- * failure type to handle rather than a `SyntaxError` from one path and a schema issue from another.
+ * JSONC and schema violations alike surface as {@link PluginDescriptorError}.
  */
 export const parseDescriptor = (source: ManifestSource): Config2.Descriptor => {
   try {

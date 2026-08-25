@@ -10,8 +10,7 @@ import { DXPLUGIN_SCHEMA_FILENAME, descriptorJsonSchema } from './plugin-schema'
 
 describe('dxplugin.schema.json', () => {
   test('matches the runtime descriptor schema', ({ expect }) => {
-    // The checked-in file exists so editors can resolve a plain file; this is what stops it drifting
-    // from `Config2.Descriptor`. Regenerate with `scripts/generate-dxplugin-schema.ts`.
+    // The checked-in copy exists for editors to resolve, so nothing else stops it drifting.
     const checkedIn = readFileSync(join(__dirname, '../..', DXPLUGIN_SCHEMA_FILENAME), 'utf-8');
     expect(JSON.parse(checkedIn)).toEqual(descriptorJsonSchema());
   });

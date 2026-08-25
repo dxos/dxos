@@ -56,10 +56,8 @@ export const dxPluginManifest = (): VitePlugin => {
       const descriptor = decodeDescriptor(Plugin.parseJsonc(readFileSync(path, 'utf-8')));
       const dir = dirname(path);
 
-      // `src` is emitted as a JS expression, not a string, so the build form can be
-      // `import.meta.ROLLUP_FILE_URL_*` — which rollup only substitutes in code position. Each
-      // module is serialized on its own, rather than by patching placeholders in a serialized
-      // document, where any authored field holding the same text would capture the substitution.
+      // `src` is a JS expression because rollup substitutes `import.meta.ROLLUP_FILE_URL_*` only in
+      // code position, and each module is serialized alone so no authored field can capture it.
       const modules = descriptor.modules.map((module) => {
         const absolute = resolve(dir, module.src);
         const src = isBuild
