@@ -1,4 +1,6 @@
 ---
+# multiple-changesets: the mobile layout split and the Quick Access panel frame are unrelated;
+# a reader chasing either would look it up on its own package.
 '@dxos/plugin-spotlight': patch
 ---
 
