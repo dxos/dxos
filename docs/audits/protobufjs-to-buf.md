@@ -6,26 +6,60 @@ at the bottom — read those before picking up a thread.
 
 ## Status
 
-| #   | Thread                                  | State    | Notes                                                                    |
-| --- | --------------------------------------- | -------- | ------------------------------------------------------------------------ |
-| 1   | `@dxos/effect-proto` removal            | **done** | Package deleted; storybook rewritten on a hand-authored Effect Schema.   |
-| 2   | Test/example protos                     | todo     | Untouched — `#3`'s harness was built against real dxos messages instead. |
-| 3   | Shape-compat layer                      | **done** | `@dxos/protocols/buf-shape-compat` + conformance harness (5 tests).      |
-| 4   | `dxos.config`                           | **done** | Converted natively; `@dxos/config` inputs are `ConfigInit`, values buf.  |
-| 5   | devtools                                | **part** | Enum imports moved; the rest needs `#7` first.                           |
-| 6   | `Stream` extraction                     | **done** | Moved to `@dxos/async`; generator emits it from there.                   |
-| 7   | `protoMessage()` / `serviceError` → buf | todo     | The chokepoint. Unblocks `#5` and most of the import sweep.              |
-| 8   | Remaining `ServiceDescriptor` RPC       | todo     | Cross-peer wire compatibility; sequence after `#6` (now done).           |
-| 9a  | keyring `KeyRecord`                     | **done** | No substituted fields; wire format unchanged, asserted byte-for-byte.    |
-| 9b  | `echo.query.Heads`                      | **done** | Same; also dropped the workerd lazy-codec workaround.                    |
-| 9c  | `echo/metadata` + `echo/feed`           | todo     | Needs fixture profiles per storage version.                              |
-| 9d  | credentials signing/verification        | todo     | Highest risk; additionally needs `Any` support in the compat layer.      |
+| #   | Thread                                  | State    | Notes                                                                     |
+| --- | --------------------------------------- | -------- | ------------------------------------------------------------------------- |
+| 1   | `@dxos/effect-proto` removal            | **done** | Package deleted; storybook rewritten on a hand-authored Effect Schema.    |
+| 2   | Test/example protos                     | todo     | Untouched — `#3`'s harness was built against real dxos messages instead.  |
+| 3   | Shape-compat layer                      | **done** | `@dxos/protocols/buf-shape-compat` + conformance harness (5 tests).       |
+| 4   | `dxos.config`                           | **done** | Converted natively; `@dxos/config` inputs are `ConfigInit`, values buf.   |
+| 5   | devtools                                | **part** | Enum imports moved; the rest needs `#7` first.                            |
+| 6   | `Stream` extraction                     | **done** | Moved to `@dxos/async`; generator emits it from there.                    |
+| 7   | `protoMessage()` / `serviceError` → buf | **part** | Mechanical remainder exhausted; the rest is the sweep. See `#7` re-scope. |
+| 8   | Remaining `ServiceDescriptor` RPC       | todo     | 21 production sites / 10 services, all cross-peer; 49 more are tests.     |
+| 9a  | keyring `KeyRecord`                     | **done** | No substituted fields; wire format unchanged, asserted byte-for-byte.     |
+| 9b  | `echo.query.Heads`                      | **done** | Same; also dropped the workerd lazy-codec workaround.                     |
+| 9c  | `echo/metadata` + `echo/feed`           | todo     | Needs fixture profiles per storage version.                               |
+| 9d  | credentials signing/verification        | todo     | Highest risk; additionally needs `Any` support in the compat layer.       |
 
-**Next up, in order:** `#7` (unblocks `#5` and the sweep) → rest of `#5` → `#9c` → `#8` → `#9d`.
-`#2` is independent and can slot in anywhere.
+**Next up, in order:** the `#7` sweep slices below (each unblocks its share of `#5`) → `#9c` → `#8` →
+`#9d`. `#2` is independent and can slot in anywhere.
 
 Deleting `protobuf-compiler`/`codec-protobuf` and dropping `protobufjs` from the catalog is the
 last step, and needs every thread above done.
+
+## `#7` re-scope: it is the sweep, not a precursor to it
+
+The first draft sized `#7` as re-pointing `protoMessage()` at buf in one file, 2–3 days, unblocking
+the sweep. That is wrong, and the reason is in `plans/worker-package/service-rpc-schemas.md`: a
+message is still on `protoMessage` **precisely because it is consumed outside the RPC boundary**.
+Service-only payloads were already inlined as Effect schemas. So flipping a type to `bufMessage`
+changes its type at every external consumer — `#7` and the import sweep are the same work, sliced
+per message type.
+
+Measured on `22bea85f`: **46 distinct types** across 14 `src/*Service.ts` modules (65 call sites),
+totalling **505 consumer-file references** outside `@dxos/protocols`. Counted per type as files
+importing that type's own `@dxos/protocols/proto/<pkg>` module and naming the message.
+
+There is no mechanical remainder. Every one of the 46 hits at least one generator divergence at its
+consumers, which is what the Findings below predicted:
+
+| Blocker at the consumers                              | Types    | Example                                                                          |
+| ----------------------------------------------------- | -------- | -------------------------------------------------------------------------------- |
+| Substituted field (`PublicKey`/`Struct`/`Timestamp`)  | most     | `LogEntry` (`Struct` + `Timestamp`), `ConnectionRequest` (`PublicKey`)           |
+| `oneof` — buf exposes `{ case, value }`               | 1 family | `BridgeEvent`: the WebRTC proxy branches on `event.connection`/`.data`/`.signal` |
+| Nested enum — buf renames, TypeScript rejects the mix | several  | `QueryAgentStatusResponse.AgentStatus`, `QueryLogsRequest.MatchingOptions`       |
+| `Timeframe` (substitution class with methods)         | 3        | `CreateEpochResponse`, `Get`/`SaveSpaceSnapshotResponse`                         |
+| `google.protobuf.Any` — unsupported in `#3`           | 1        | `SpacesService.postMessage`                                                      |
+
+`dxos.halo.signed.SignedMessage` was the sole exception — zero consumers, and its only RPC
+(`DevtoolsHost.subscribeToCredentialMessages`) is an unimplemented stub. It is now on `bufMessage`,
+which is what `#7` has left to show. `Any` rides the wire fine through `toBinary`/`fromBinary`
+(only `toJson` needs a registry), so it gates the shape-compat layer rather than the flip itself.
+
+Slice the rest by consumer count, smallest first, each its own PR with its consumers converted in
+the same change: bridge family (2–3 files each, but pay the `oneof` + map-key rewrite once),
+devtools `SubscribeTo*Response` (4–8), edge signal/messenger (5–11), then the long tail —
+`ProfileDocument` (29), `Identity` (30), `Space` (36), `Invitation` (65), `Credential` (80).
 
 Before starting any thread, read **Findings** at the bottom: the five generator divergences are
 what make the mechanical-looking parts non-mechanical, and two of them (`Any`, nested enums) are
@@ -123,19 +157,20 @@ Per open thread, assuming no behaviour change and no proto edits.
 
 | Thread | Work                                                                                                 | Estimate    |
 | ------ | ---------------------------------------------------------------------------------------------------- | ----------- |
-| 7      | Re-point `protoMessage()` / `serviceError` at buf (64 sites, one file)                               | 2–3 days    |
+| 7      | 46 types / 65 sites, each with its consumers — merged into the sweep row below                       | —           |
 | 5      | Rest of devtools, behind `#7` — message type imports, the nested enum, `JsonView`                    | 2–3 days    |
 | 9c     | `echo/metadata` + `echo/feed`, with a fixture profile per storage version                            | 1 week      |
 | 8      | `ServiceDescriptor`/`createProtoRpcPeer` for mesh/teleport, iframe, bridge, agentmanager             | 1.5–2 weeks |
 | 9d     | Credentials signing/verification, incl. `Any` support in the compat layer                            | 1–1.5 weeks |
 | 2      | Test/example protos                                                                                  | 2–3 days    |
-| —      | Import sweep of the remaining `@dxos/protocols/proto/*` declarations, behind `#7`                    | 2–3 weeks   |
+| —      | Import sweep, incl. `#7`'s 46 types and their 505 consumer references (the two are one job)          | 3–4 weeks   |
 | —      | Delete `protobuf-compiler`, `codec-protobuf`, `substitutions.ts`; drop `protobufjs` from the catalog | 3–5 days    |
 
-**Remaining: roughly 7.5–11.5 engineer-weeks**, of which the import sweep is the long tail and the
-only item that touches most of the repo. That is the sum of the rows above at five days
-to the week, and it is still close to the 7–10.5 weeks the first draft estimated for the _whole_
-migration: the early threads surfaced generator divergences that the first pass had not priced.
+**Remaining: roughly 8–12 engineer-weeks**, of which the import sweep is the long tail and the only
+item that touches most of the repo. That is the sum of the rows above at five days to the week. It
+has grown rather than shrunk as threads landed, for one reason each time: the first draft priced the
+mechanical-looking parts as mechanical, and the generator divergences keep turning a type flip into
+a rewrite at that type's consumers. `#7` folding into the sweep is the latest instance.
 
 Main risks, in order: credential signature stability (`#9d`), decoded-shape drift silently changing
 behaviour across the sweep, and the five generator divergences below.
@@ -146,20 +181,20 @@ Independently landable threads, lowest → highest risk×complexity. Six have a 
 groups: `#7` and `#9a`–`#9d` on the shape-compat layer (`#3`), and `#8` on the `Stream` extraction
 (`#6`). Within `#9`, each slice is ordered by blast radius: 9a → 9b → 9c → 9d.
 
-| #   | Thread                                  | Scope                                                                                       | Risk        | Complexity | Notes                                                                                                                                                                                                                               |
-| --- | --------------------------------------- | ------------------------------------------------------------------------------------------- | ----------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | `@dxos/effect-proto` removal            | 2 files                                                                                     | very low    | very low   | The only real consumer is `react-ui-form`'s `ObjectTree.stories.tsx` (`parseProto`) — a storybook. Deletes an entire protobuf.js dependent.                                                                                         |
-| 2   | Test/example protos                     | `tools/protobuf-test`, `codec-protobuf/test`, `protobuf-compiler/test`, `example/testing/*` | very low    | low        | No persisted data, no signatures. Doubles as the conformance harness for #3.                                                                                                                                                        |
-| 3   | Shape-compat layer                      | new module in `@dxos/protocols`                                                             | low         | high       | Buf encode/decode reproducing the substituted shapes (PublicKey, PrivateKey, TimeframeVector, Any, Struct, Timestamp) plus byte/JSON-equality tests against protobuf.js. Nothing switches over, so risk stays low; gates #7 and #9. |
-| 4   | `dxos.config`                           | 55 files                                                                                    | low         | medium     | Read-mostly, not persisted, not signed — but a public API change, since `@dxos/config` re-exported the generated namespace. Landed natively; see findings.                                                                          |
-| 5   | devtools                                | 20 files                                                                                    | low         | low–medium | Diagnostic-only; regressions are visible and harmless. Already on effect-rpc (verified — see below), so this is a type-import sweep that rides on #7, not an RPC-seam exercise.                                                     |
-| 6   | `Stream` extraction                     | 26 import sites                                                                             | low         | medium     | Move `Stream` out of `codec-protobuf` into its own package; unblocks deleting that package.                                                                                                                                         |
-| 7   | `protoMessage()` / `serviceError` → buf | 64 sites, 1 file                                                                            | medium      | low        | The chokepoint: re-points the whole effect-rpc stack off protobuf.js in one file. Highest leverage per line changed, but a shape mismatch breaks every client service at once.                                                      |
-| 8   | Remaining `ServiceDescriptor` RPC       | mesh/teleport, iframe, bridge, agentmanager — 18 services / 36 rpcs, ~60 sites              | medium–high | high       | Cross-peer wire compatibility: a mismatch breaks replication between versions, not just a local call. Sequence after #6.                                                                                                            |
-| 9a  | keyring `KeyRecord`                     | `halo/keyring/src/{keyring,sqlite-keyring}.ts`                                              | medium      | low        | One message, two codec sites, local SQLite only. Smallest persisted slice — do it first to validate #3 against real on-disk rows.                                                                                                   |
-| 9b  | `echo.query.Heads`                      | `echo-host/src/automerge/sqlite-heads-store.ts`                                             | medium      | low        | One message, one codec site. Rebuildable from Automerge if a migration goes wrong, which caps the downside.                                                                                                                         |
-| 9c  | `echo/metadata` + `echo/feed`           | 31 + 22 declarations across echo-host, feed-store, client-services                          | medium–high | medium     | Broad on-disk state with no cheap rebuild path; needs a fixture profile per storage version.                                                                                                                                        |
-| 9d  | credentials signing/verification        | `halo/credentials/src/credentials/*`, 94 declarations                                       | highest     | high       | `signing.ts` stringifies the _substituted object_, so any shape drift invalidates every existing credential. Do last, behind 9a–9c, with fixtures of real signed credentials from released versions.                                |
+| #   | Thread                                  | Scope                                                                                                             | Risk        | Complexity | Notes                                                                                                                                                                                                                                                                                                                                              |
+| --- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `@dxos/effect-proto` removal            | 2 files                                                                                                           | very low    | very low   | The only real consumer is `react-ui-form`'s `ObjectTree.stories.tsx` (`parseProto`) — a storybook. Deletes an entire protobuf.js dependent.                                                                                                                                                                                                        |
+| 2   | Test/example protos                     | `tools/protobuf-test`, `codec-protobuf/test`, `protobuf-compiler/test`, `example/testing/*`                       | very low    | low        | No persisted data, no signatures. Doubles as the conformance harness for #3.                                                                                                                                                                                                                                                                       |
+| 3   | Shape-compat layer                      | new module in `@dxos/protocols`                                                                                   | low         | high       | Buf encode/decode reproducing the substituted shapes (PublicKey, PrivateKey, TimeframeVector, Any, Struct, Timestamp) plus byte/JSON-equality tests against protobuf.js. Nothing switches over, so risk stays low; gates #7 and #9.                                                                                                                |
+| 4   | `dxos.config`                           | 55 files                                                                                                          | low         | medium     | Read-mostly, not persisted, not signed — but a public API change, since `@dxos/config` re-exported the generated namespace. Landed natively; see findings.                                                                                                                                                                                         |
+| 5   | devtools                                | 20 files                                                                                                          | low         | low–medium | Diagnostic-only; regressions are visible and harmless. Already on effect-rpc (verified — see below), so this is a type-import sweep that rides on #7, not an RPC-seam exercise.                                                                                                                                                                    |
+| 6   | `Stream` extraction                     | 26 import sites                                                                                                   | low         | medium     | Move `Stream` out of `codec-protobuf` into its own package; unblocks deleting that package.                                                                                                                                                                                                                                                        |
+| 7   | `protoMessage()` / `serviceError` → buf | 46 types / 65 sites in 14 modules, plus 505 consumer-file references                                              | medium      | high       | Not a chokepoint in one file: the remaining types are on `protoMessage` _because_ they are consumed outside the RPC boundary, so each flip is a rewrite at its consumers. Mechanical remainder is exhausted — see the `#7` re-scope above.                                                                                                         |
+| 8   | Remaining `ServiceDescriptor` RPC       | 21 production `schema.getService()` sites / 10 services; 49 further sites are tests on `example.testing.*` protos | medium–high | high       | Cross-peer wire compatibility: a mismatch breaks replication between versions, not just a local call. Sequence after #6. `ServiceDescriptor` itself is only 8 references, all plumbing — the surface to migrate is `getService()` + `createProtoRpcPeer` (21 files). The test two-thirds carry no wire risk and can go first to prove the pattern. |
+| 9a  | keyring `KeyRecord`                     | `halo/keyring/src/{keyring,sqlite-keyring}.ts`                                                                    | medium      | low        | One message, two codec sites, local SQLite only. Smallest persisted slice — do it first to validate #3 against real on-disk rows.                                                                                                                                                                                                                  |
+| 9b  | `echo.query.Heads`                      | `echo-host/src/automerge/sqlite-heads-store.ts`                                                                   | medium      | low        | One message, one codec site. Rebuildable from Automerge if a migration goes wrong, which caps the downside.                                                                                                                                                                                                                                        |
+| 9c  | `echo/metadata` + `echo/feed`           | 31 + 22 declarations across echo-host, feed-store, client-services                                                | medium–high | medium     | Broad on-disk state with no cheap rebuild path; needs a fixture profile per storage version.                                                                                                                                                                                                                                                       |
+| 9d  | credentials signing/verification        | `halo/credentials/src/credentials/*`, 94 declarations                                                             | highest     | high       | `signing.ts` stringifies the _substituted object_, so any shape drift invalidates every existing credential. Do last, behind 9a–9c, with fixtures of real signed credentials from released versions.                                                                                                                                               |
 
 ## Findings
 
