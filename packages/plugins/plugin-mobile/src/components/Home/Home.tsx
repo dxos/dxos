@@ -14,7 +14,6 @@ import { Card } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/react-ui-search';
 import { mx } from '@dxos/ui-theme';
-import { Position, getHostPlatform, isTauri } from '@dxos/util';
 
 import { meta } from '#meta';
 
