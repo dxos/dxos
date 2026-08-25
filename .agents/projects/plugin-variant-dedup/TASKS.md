@@ -79,6 +79,43 @@ the task graph owns it (echo-query `prebuild-lezer` is the template).
       plugin-presenter (`PresenterContext` moved from `types/` to `components/`), plugin-debug
       (`DebugContext` deleted — zero consumers repo-wide), plugin-assistant (`Attention` imported
       from the root barrel instead of `/types` for a pure string helper)
-- [ ] Per-maker `environments` defaults for the headless-safe families (`schema`,
-      `operationHandler`, `skillDefinition`) — `moduleMaker` plumbing is in, no maker declares
-      one yet. See DESIGN.md §6.3 for the annotation audit and blast radius
+- [x] Per-maker `environments` defaults for the headless-safe families (`schema`,
+      `operationHandler`, `skillDefinition`) — landed; each `AppCapability.*` helper declares its
+      default inline and `dx-plugin gen` reads that literal statically, so there is no second copy
+      and deliberately no exported `environmentDefaults` map. 58 annotations that only restated
+      their family's default are gone. See DESIGN.md §6.3
+
+## Phase 6 — merge with main, decisions, remaining follow-ups
+
+- [x] Merge `origin/main` into the branch (`9794ecb428`, 35 commits). Beyond mechanical conflict
+      resolution it ported two real fixes out of variant files this branch deletes (`318bbad844`
+      schema-registration ordering; the stale plugin-registry `environments` pin) and needed six
+      fixes a passing build would not have caught. Full rationale is in the commit message
+- [x] DESIGN.md §6.5 decided (Josiah, 2026-08-25): **keep the isomorphic default.** The structure
+      guards are the intended safety net; inverting it would make every unannotated module a
+      silent opt-out from headless builds. The accepted cost is written into §6.5 — the guards
+      measure React reachability and cannot see unmet `requires` or missing config
+- [x] DESIGN.md refreshed: §5.4 escape hatch marked removed (zero `overrides.*.ts` remain), §5.6
+      estimates replaced with the landed counts, §6.2 inbox entry corrected, §6.4 corrected to
+      record the plugin-computer exception
+- [ ] **Verify the merge is green.** The merge commit was pushed with the test sweep still
+      running and five suites failing (`pipeline-discord`, `plugin-calls`, `plugin-sample`,
+      `plugin-transformer`, `plugin-zen`); three match the known 15s-timeout flake, two were never
+      examined. Its own message says the sweep is NOT part of its verification
+- [ ] Tag `plugin-computer` (or add the check below and let it force the issue). It has
+      `src/capabilities/index.ts`, no `composer-plugin` tag, and an unconditioned `#capabilities`.
+      Safe today only because both its modules are headless families and its barrel imports no
+      React. See DESIGN.md §6.4
+- [ ] Check that fails when a package has `src/capabilities/index.ts` but lacks the
+      `composer-plugin` tag. Four plugins have slipped this net so far (plugin-google,
+      plugin-jmap, plugin-lingo, plugin-computer), and it will keep happening. Inverts the
+      default from opt-in-to-safety to opt-out-deliberately
+- [ ] `plugin-client`'s `plugin.test.ts > modules activate on the expected events` needs a timeout
+      above vitest's 15s default. Measured at 12.5s against a 15s budget, so it flakes under
+      full-suite concurrency. Not a regression from this branch (12.1s with the change reverted)
+- [ ] Stale glob: `.moon/tasks/tag-composer-plugin.yml` still lists
+      `src/capabilities/overrides.*.ts` as an input. Harmless (matches nothing) but misleading now
+      that the override mechanism is deleted
+- [ ] Re-merge `origin/main` before landing: main gained 3 commits after `9794ecb428`, including
+      `plugin-claude-agents` (#12741), which arrives with a capabilities barrel and no tag and so
+      needs the same treatment plugin-lingo did

@@ -216,15 +216,23 @@ statements regardless of `sideEffects` (which is why O2's canonical entry stays 
    barrel too (canonical index stays authored, all consumed barrels generated); no current
    plugin needs it for browser, but plugin-connector/plugin-registry's node-only `Commands`
    land here.
-4. **Escape hatch**: a per-env override file (e.g. `capabilities/workerd.overrides.ts`)
-   whose exports the generator splices in place of the sliced statement — covers inbox's
-   lazy→inline conversion.
+4. ~~**Escape hatch**: a per-env override file (e.g. `capabilities/workerd.overrides.ts`)
+   whose exports the generator splices in place of the sliced statement.~~ **Removed.** The
+   mechanism shipped, then proved unnecessary: once per-family defaults landed (§6.3), every
+   remaining override restated what an `environments` annotation already said. All override
+   files and the generator's splice path are deleted; the repo now has zero `overrides.*.ts`.
+   A per-environment difference is expressed as an `environments` annotation at the module, or
+   not at all. There is deliberately no way to give one module a different _body_ per
+   environment: that is custom per-environment composition, which is out of scope by decision.
 5. **Schema**: collapse `schema.node.ts`/`schema.workerd.ts` (byte-identical everywhere)
    into one `schema.headless.ts` referenced by both generated barrels; longer term, per-type
    env annotations in the canonical schema list, generated the same way.
 6. **Deletions per plugin**: `plugin.node.ts`, `plugin.workerd.ts`, the `#plugin`
-   conditions, two vite entries, one schema copy. Repo-wide: ~70 files immediately, ~100
-   after schema/overrides consolidation.
+   conditions, two vite entries, one schema copy. Estimated repo-wide at ~70 files
+   immediately and ~100 after consolidation. **Actual, as landed**: zero
+   `plugin.{node,workerd}.ts`, zero `schema.{node,workerd}.ts`, and zero `overrides.*.ts`
+   remain anywhere under `packages/plugins`, across 94 plugins carrying a capabilities
+   barrel and the `composer-plugin` tag.
 7. **Guard-rail updates**: `check-module-structure` needed more than the spike suggested.
    `dx-trace-imports --conditions` is now **repeatable**, each occurrence an independent set:
    `#capabilities` resolves to a different barrel per runtime, so the previous single set only
@@ -246,7 +254,8 @@ Migration is mechanical per plugin (the two spike commits are the template) and 
 1. ~~Stale headless schema lists~~ — resolved during migration; no `schema.node.ts` /
    `schema.workerd.ts` files remain.
 2. ~~inbox's lazy→inline workerd conversion~~ — resolved; inbox annotates its canonical barrel
-   and uses `overrides.{node,workerd}.ts` for the schema-list divergence.
+   directly (two `environments: ['node']` modules) and needs no override file. The
+   `overrides.<env>.ts` mechanism it originally used is gone repo-wide; see §5.4.
 3. ~~Per-maker `environments` defaults~~ — **done** (Josiah, 2026-08-15), and it subsumed the
    global-default question. Each `AppCapability.*` helper declares its own default inline — the
    `environments` literal it passes to `moduleMaker`, or the `options?.environments ?? [...]`
@@ -275,12 +284,30 @@ Migration is mechanical per plugin (the two spike commits are the template) and 
    plugin-google and plugin-jmap, both untagged, so their `#capabilities` stayed unconditioned
    and the CLI resolved the full browser barrel.
 
-   Every plugin with a capabilities barrel is now tagged and guarded (94). The cost is low: a
+   94 plugins with a capabilities barrel are now tagged and guarded. The cost is low: a
    plugin whose modules are all UI families stubs every module out, so its barrel is empty and
    its guard passes with nothing included. A plugin that produces no conditions at all carries no
    guard — tracing it would assert a property of a bundle no headless host loads.
 
-5. **The isomorphic default has a second axis the guards cannot see — OPEN.** A module with no
+   **One exception, found 2026-08-25 and still open: plugin-computer.** It has
+   `src/capabilities/index.ts` but no `composer-plugin` tag, so `dx-plugin gen` never runs for it
+   and its `#capabilities` map carries only `source`/`types`/`default` — no `node`, no `workerd`.
+   It is harmless today by accident rather than by design: both its modules (`SkillDefinition`,
+   `OperationHandler`) are headless families and its canonical barrel imports no React, so the
+   unconditioned fall-through to the browser barrel resolves something safe. It stops being
+   harmless the moment anyone adds a `surface` or `reactRoot` module to that barrel, at which
+   point a headless host silently resolves React and nothing in the build says so. It does carry a
+   hand-written `check-module-structure`, but that guard asserts a different property (the browser
+   entry cannot reach `node:child_process`), not headless React reachability.
+
+   This is the case for inverting the default: tag membership is opt-in-to-safety, so a new plugin
+   is unprotected until someone remembers. plugin-google, plugin-jmap and plugin-lingo each slipped
+   the net this way before plugin-computer did. The follow-up is a check that fails when a package
+   has `src/capabilities/index.ts` and lacks the tag, making the safe state automatic and the
+   exception deliberate.
+
+5. **The isomorphic default has a second axis the guards cannot see — DECIDED: keep it**
+   (Josiah, 2026-08-25). A module with no
    annotation and no family default is carried into every variant, on the theory that the structure
    guards will catch anything that turns out not to be isomorphic. That holds for React
    reachability, which is all `dx-trace-imports` measures. It does not hold for two other ways a
@@ -298,11 +325,31 @@ Migration is mechanical per plugin (the two spike commits are the template) and 
    shipped only the `OperationHandler` stub) — the isomorphic default silently overrode a documented
    decision.
 
-   The alternative, and the current recommendation: keep the per-family defaults, which are
-   evidence-driven and headless-by-construction, and let an unannotated raw `Capability.lazyModule`
-   generate no variant, as it did before. That removes this class rather than relying on boot errors
-   in whichever hosts happen to have end-to-end coverage. The change is one predicate in
-   `generate.ts` (`member.environments === null` → excluded rather than carried) plus regeneration.
+   A third piece of evidence arrived during the merge with main. Four modules turned out to be
+   genuinely browser-only and were caught by the React guard alone, never by a type error:
+   plugin-illustrator's `SvgVariant`, plugin-excalidraw's and plugin-tldraw's `DrawingVariant`,
+   and plugin-projects' `Templates`. All four are variant or provider modules handing React
+   components to another plugin, which is a shape the guard happens to catch precisely because
+   React is what it measures.
+
+   **The alternative that was rejected.** Keep the per-family defaults but let an unannotated raw
+   `Capability.lazyModule` generate no variant, as it did before. One predicate in `generate.ts`
+   (`member.environments === null` excluded rather than carried) plus regeneration. That would
+   remove this class outright instead of relying on boot errors in whichever hosts happen to have
+   end-to-end coverage.
+
+   **Decision: keep the isomorphic default.** The structure guards are the intended safety net,
+   and inverting the default would make every unannotated module a silent opt-out from headless
+   builds, which is the failure mode this project set out to remove. The cost is accepted and
+   stated here rather than designed away: an unannotated module that is browser-only for a reason
+   the guard cannot see (unmet `requires`, missing config) will fail at boot in a headless host,
+   not at build time. `dx-trace-imports` measures React reachability and nothing else.
+
+   What this obliges going forward: a module whose headless behaviour depends on capabilities or
+   configuration no headless host provides must carry an explicit `environments: []`, and the
+   reviewer's question on any new raw `lazyModule` is "does this boot with no app shell and no
+   config?". The `dx` CLI's e2e tests are the only automated check that answers it, and they
+   cover 22 of ~95 plugins.
 
 6. **What the widened defaults caught.** Eleven real leaks, every one pre-existing on main and
    invisible until the guards traced both condition sets:
