@@ -12,7 +12,6 @@ import { TaskOperation } from '#types';
 import { InvalidOperationInput } from '../errors';
 import { findTaskSet, refEntityId, reorder } from './task-set-membership';
 
-/** Repositions a task in its set's `tasks` array — there is no sort key, the array order is the order. */
 const handler: Operation.WithHandler<typeof TaskOperation.MoveTask> = TaskOperation.MoveTask.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ task: taskRef, before }) {

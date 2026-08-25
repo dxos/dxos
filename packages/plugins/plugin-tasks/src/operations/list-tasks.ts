@@ -15,13 +15,6 @@ import { InvalidOperationInput } from '../errors';
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;
 
-/**
- * Reads the tasks of a set straight off its `tasks` array: membership and order are both stated
- * there, so listing is one read with no tree walk, and sub-tasks are already present (the array is
- * flat) rather than gathered by recursion.
- *
- * Pagination stays an opaque offset cursor so the wire shape survives a later key-cursor swap.
- */
 const handler: Operation.WithHandler<typeof TaskOperation.ListTasks> = TaskOperation.ListTasks.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({

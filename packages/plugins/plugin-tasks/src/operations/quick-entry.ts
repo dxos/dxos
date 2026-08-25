@@ -12,10 +12,6 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { Journal, OutlineOperation } from '#types';
 
-/**
- * Appends a bullet to today's journal entry, creating the journal and the entry when absent: a
- * get-or-create chain across three objects rather than a write to a known one.
- */
 const handler: Operation.WithHandler<typeof OutlineOperation.QuickJournalEntry> =
   OutlineOperation.QuickJournalEntry.pipe(
     Operation.withHandler(({ text }) =>

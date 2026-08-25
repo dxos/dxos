@@ -30,6 +30,11 @@ import { Message } from '@dxos/types';
  * project's task set and artifacts, and `CreateTrackingProject` creates the project itself.
  */
 
+/**
+ * Scans a mailbox feed and files one task per matching message, idempotently: re-running must not
+ * resurrect a task the user completed or edited. Reading a feed and reconciling against existing
+ * tasks is not something a generic create expresses.
+ */
 export const UpdateProjectTasks = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.projects.updateTasks'),
@@ -54,6 +59,10 @@ export const UpdateProjectTasks = Operation.make({
   }),
 }).pipe(Operation.idempotent);
 
+/**
+ * Scans a mailbox feed for itinerary mail and maintains the project's travel-log artifact — a
+ * derived document rewritten from the feed, not a field a generic update could patch.
+ */
 export const UpdateTravelLog = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.projects.updateTravelLog'),
@@ -74,6 +83,10 @@ export const UpdateTravelLog = Operation.make({
   }),
 }).pipe(Operation.idempotent);
 
+/**
+ * Scans a mailbox feed and asks the model to maintain the project's investor log. The only project
+ * verb that needs `AiService`: the artifact's content is generated, not copied.
+ */
 export const UpdateInvestorLog = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.projects.updateInvestorLog'),
@@ -125,6 +138,11 @@ export type TrackingScope = Schema.Schema.Type<typeof TrackingScope>;
 export const TrackingPipeline = Schema.Literals(['tasks', 'summaries', 'contacts']);
 export type TrackingPipeline = Schema.Schema.Type<typeof TrackingPipeline>;
 
+/**
+ * Scaffolds the whole tracking setup from one message: a project, the routine that binds a pipeline
+ * below to a feed trigger, and a backfill over the mail already there. Several objects and a
+ * trigger binding, where a generic create makes one object.
+ */
 export const CreateTrackingProject = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.projects.createTracking'),

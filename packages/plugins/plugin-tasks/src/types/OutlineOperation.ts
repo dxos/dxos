@@ -12,6 +12,11 @@ import { Database, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { Outline, Task } from '@dxos/types';
 
+/**
+ * Returns an unsaved `Outline` for the caller to place, which is the plugin's create-flow contract
+ * (`SpaceCapabilities.CreateObjectEntry`) rather than an agent verb — a generic object create both
+ * makes and adds, and the create flow parents the result itself.
+ */
 export const CreateOutline = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.createOutline'),
@@ -26,6 +31,10 @@ export const CreateOutline = Operation.make({
   }),
 });
 
+/**
+ * Promotes an outline bullet to a task, creating the outline's own task set on first use and
+ * appending to its membership array — a three-object write no generic create expresses.
+ */
 export const ConvertToTask = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.convert'),
@@ -42,6 +51,10 @@ export const ConvertToTask = Operation.make({
   }),
 });
 
+/**
+ * Appends a bullet to today's journal entry, creating the journal and the entry when either is
+ * absent: a get-or-create chain across three objects, not a write to a known one.
+ */
 export const QuickJournalEntry = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.appendJournalEntry'),
@@ -59,6 +72,10 @@ export const QuickJournalEntry = Operation.make({
 // MCP-projected verbs (MILESTONE-5.md §7.2/§7.4): refs in, plain values out, Database-only.
 //
 
+/**
+ * Reads an outline with its checklist parsed out of the markdown. `items` is derived from the text,
+ * not stored, so a generic object read returns only the raw content.
+ */
 export const GetOutline = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.getOutline'),
@@ -78,6 +95,11 @@ export const GetOutline = Operation.make({
   }),
 }).pipe(Operation.mutation('none'));
 
+/**
+ * Upserts checklist items into the markdown so an agent can flip one box without rewriting the
+ * document — the text is a human surface too, and prose between items has to survive. A generic
+ * update can only replace the whole string.
+ */
 export const UpdateOutline = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.updateOutline'),

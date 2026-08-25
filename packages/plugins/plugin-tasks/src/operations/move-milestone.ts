@@ -12,7 +12,6 @@ import { TaskOperation } from '#types';
 import { InvalidOperationInput } from '../errors';
 import { findMilestoneTaskSet, refEntityId, reorder } from './task-set-membership';
 
-/** Repositions a milestone in its set's `milestones` array, which is the milestone sequence. */
 const handler: Operation.WithHandler<typeof TaskOperation.MoveMilestone> = TaskOperation.MoveMilestone.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ milestone: milestoneRef, before }) {

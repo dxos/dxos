@@ -26,6 +26,10 @@ import { Actor, Milestone, type Person, Task, TaskSet } from '@dxos/types';
  * operation-service projects them as MCP tools) where only the reference crosses the wire.
  */
 
+/**
+ * Files a task into a set's `tasks` array — the membership-and-order record, which a generic object
+ * create leaves untouched — and rejects a milestone or parent belonging to another set.
+ */
 export const CreateTask = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.create'),
@@ -55,6 +59,10 @@ export const CreateTask = Operation.make({
   }),
 }).pipe(Operation.mutation('write'));
 
+/**
+ * The only writer that may re-parent a task: a generic object update cannot reject a cycle or a
+ * cross-set parent, nor move the lifecycle edge that decides what the task cascades with.
+ */
 export const UpdateTask = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.update'),
@@ -84,6 +92,11 @@ export const UpdateTask = Operation.make({
   }),
 }).pipe(Operation.mutation('write'));
 
+/**
+ * Removes a task and its sub-tasks. `Database.remove` cascades along the parent edge, but the set's
+ * `tasks` array is a separate membership record, so a generic delete leaves the whole subtree's
+ * entries dangling behind it.
+ */
 export const DeleteTask = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.delete'),
@@ -101,6 +114,10 @@ export const DeleteTask = Operation.make({
   }),
 }).pipe(Operation.mutation('destructive'));
 
+/**
+ * Repositions a task within its set's `tasks` array. There is no sort key to patch — the array
+ * order is the order — so ordering is unreachable from a generic object update.
+ */
 export const MoveTask = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.move'),
@@ -122,6 +139,11 @@ export const MoveTask = Operation.make({
 /** Opaque forward cursor; currently an encoded offset, so the wire shape survives a key-cursor swap. */
 export const TaskCursor = Schema.String;
 
+/**
+ * Reads a set's tasks in order, which a generic query cannot: order lives in the `tasks` array,
+ * root-vs-subtask is derived from the parent refs, and a task's effective milestone is inherited up
+ * the parent chain rather than stored. Also filters by an assignee's DID, email or name.
+ */
 export const ListTasks = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.list'),
@@ -160,6 +182,10 @@ export const ListTasks = Operation.make({
 // its own, so `milestoneList` reports progress derived from the tasks filed under it.
 //
 
+/**
+ * Appends to the set's `milestones` array, which is both the membership record and the sequence
+ * `milestoneMove` reorders — neither reachable from a generic object create.
+ */
 export const CreateMilestone = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.createMilestone'),
@@ -180,6 +206,10 @@ export const CreateMilestone = Operation.make({
   }),
 }).pipe(Operation.mutation('write'));
 
+/**
+ * Removes a milestone and releases its tasks to the backlog, matching Linear and GitHub. A generic
+ * delete would leave both the set's `milestones` entry and every task's `milestone` ref behind.
+ */
 export const DeleteMilestone = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.deleteMilestone'),
@@ -197,6 +227,10 @@ export const DeleteMilestone = Operation.make({
   }),
 }).pipe(Operation.mutation('destructive'));
 
+/**
+ * Repositions a milestone within its set's `milestones` array, which is the milestone sequence —
+ * order is the array, not a field a generic update could patch.
+ */
 export const MoveMilestone = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.moveMilestone'),
@@ -215,6 +249,10 @@ export const MoveMilestone = Operation.make({
   }),
 }).pipe(Operation.mutation('write'));
 
+/**
+ * Lists a set's milestones in sequence with progress. A milestone stores no status: `done`/`total`
+ * are counted from the tasks filed under it, so a generic query returns neither.
+ */
 export const ListMilestones = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.listMilestone'),

@@ -10,10 +10,6 @@ import { TaskSet } from '@dxos/types';
 
 import { ProjectOperation } from '#types';
 
-/**
- * The detail read behind `projectList`: per-task-set open/total counts, the checklist markdown, and
- * the artifact inventory — everything an external agent needs to orient in one call.
- */
 const handler: Operation.WithHandler<typeof ProjectOperation.GetProject> = ProjectOperation.GetProject.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ project: projectRef }) {

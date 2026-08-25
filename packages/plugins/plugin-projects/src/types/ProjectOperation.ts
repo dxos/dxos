@@ -28,6 +28,9 @@ import { trim } from '@dxos/util';
  * Programmatic project creation — the entry point other plugins use to create (and pre-wire)
  * projects without reaching into plugin internals. Resolves the template (blank by default),
  * scaffolds the owned instructions/artifacts graph, and files the project in the Projects section.
+ *
+ * A generic object create makes one empty object; this one returns a whole wired graph, and the
+ * navigation path to the result.
  */
 export const Create = Operation.make({
   meta: {
@@ -56,6 +59,11 @@ export const Create = Operation.make({
   }),
 }).pipe(Operation.mutation('write'));
 
+/**
+ * The detail read behind a project reference: per-task-set open/total counts, the outline's text,
+ * and the artifact inventory with typenames — derived figures and a ref walk that a generic read
+ * would leave the caller to do one object at a time.
+ */
 export const GetProject = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.projects.get'),
@@ -86,6 +94,10 @@ export const GetProject = Operation.make({
   }),
 }).pipe(Operation.mutation('none'));
 
+/**
+ * The thinnest verb here: a field patch, and little a generic object update lacks beyond skipping
+ * an empty patch, which would otherwise bump meta and wake every reactive consumer for nothing.
+ */
 export const UpdateProject = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.projects.update'),
@@ -111,6 +123,11 @@ export const UpdateProject = Operation.make({
 // ref array, but adding is idempotent by entity id, which a generic object patch cannot be.
 //
 
+/**
+ * Files an object into `Project.artifacts`, idempotently. The array is plain refs, but membership is
+ * compared by entity id — the same object can be addressed local or space-qualified — so a generic
+ * patch would need a read-modify-write and would still double-file a differently-spelled URI.
+ */
 export const ArtifactAdd = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.projects.addArtifact'),
@@ -142,6 +159,10 @@ export const ArtifactInfo = Schema.Struct({
   label: Schema.optional(Schema.String),
 });
 
+/**
+ * Lists the project's artifacts as identity-only rows (DXN, typename, label) rather than inlining
+ * their content, and degrades a broken ref to a placeholder row instead of failing the listing.
+ */
 export const ArtifactList = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.projects.listArtifact'),

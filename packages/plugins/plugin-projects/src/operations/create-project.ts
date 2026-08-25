@@ -18,10 +18,6 @@ import { ProjectCapabilities, ProjectOperation } from '#types';
 // bundle, which a worker registering this handler cannot load.
 import { blank } from '../templates/blank';
 
-/**
- * Scaffolds a project from a template — a whole in-memory graph (owned instructions, artifacts
- * collection, starter routines) added in one cascade — which a generic object create cannot build.
- */
 const handler: Operation.WithHandler<typeof ProjectOperation.Create> = ProjectOperation.Create.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ name, templateId, subject }) {
