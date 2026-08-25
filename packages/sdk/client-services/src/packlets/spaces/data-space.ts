@@ -19,8 +19,8 @@ import { type KeyringApi } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { CancelledError, type FeedProtocol, SystemError } from '@dxos/protocols';
+import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { type Space as SpaceProto, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import {
   AdmittedFeed,
@@ -78,7 +78,7 @@ export type DataSpaceProps = {
   tags?: string[];
   edgeConnection?: EdgeConnection;
   edgeHttpClient?: EdgeHttpClient;
-  edgeFeatures?: Runtime.Client.EdgeFeatures;
+  edgeFeatures?: Runtime_Client_EdgeFeatures;
   activeEdgeNotarizationPollingInterval?: number;
 };
 

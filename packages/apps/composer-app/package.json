@@ -29,6 +29,7 @@
     "@automerge/automerge": "catalog:",
     "@automerge/automerge-repo": "catalog:",
     "@automerge/automerge-subduction": "catalog:",
+    "@bufbuild/protobuf": "catalog:",
     "@codemirror/autocomplete": "catalog:",
     "@codemirror/commands": "catalog:",
     "@codemirror/lang-javascript": "catalog:",
