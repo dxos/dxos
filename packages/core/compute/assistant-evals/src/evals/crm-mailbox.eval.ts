@@ -10,7 +10,7 @@ import { Obj, Relation } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import * as CrmPlugin from '@dxos/plugin-crm/CrmPlugin';
 import * as ProfileOf from '@dxos/plugin-crm/ProfileOf';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 

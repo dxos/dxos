@@ -129,7 +129,7 @@ export const WithTrip: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
       const [MarkdownPlugin, { Map }, MapPlugin] = await Promise.all([
-        import('@dxos/plugin-markdown/MarkdownPlugin'),
+        import('@dxos/plugin-markdown/dxplugin.jsonc'),
         import('@dxos/plugin-map'),
         import('@dxos/plugin-map/MapPlugin'),
       ]);

@@ -188,6 +188,18 @@ const lazyImportedEntry = (dir: string): string[] => {
 };
 
 /**
+ * Module bodies a plugin's `dxplugin.jsonc` names — real entry points that nothing imports. Matched
+ * with a regex because this config runs before any build, so it cannot import the decoding schema.
+ */
+const descriptorEntry = (dir: string): string[] => {
+  const descriptor = globSync(`${dir}/dxplugin.jsonc`).map((file) => readFileSync(file, 'utf8'))[0];
+  if (!descriptor) {
+    return [];
+  }
+  return [...new Set([...descriptor.matchAll(/"src"\s*:\s*"(\.[^"]+)"/g)].map(([, src]) => src.replace(/^\.\//, '')))];
+};
+
+/**
  * Read a repeated `--flag=value` build argument out of a workspace's moon task definition. Packages
  * with a browser build declare their entry points and the packages bundled into them there, and
  * neither is visible in the import graph.
@@ -380,7 +392,13 @@ const workspaces: KnipConfig['workspaces'] = {
   '.': {
     entry: ['*.{ts,mts}', 'scripts/**/*.{ts,mjs}', 'vitest/**/*.{ts,mjs}'],
     project: ['*.{ts,mts}', 'scripts/**/*.{ts,mjs}', 'vitest/**/*.{ts,mjs}'],
-    ignoreDependencies: Object.keys({ ...rootManifest.dependencies, ...rootManifest.devDependencies }),
+    ignoreDependencies: [
+      ...Object.keys({ ...rootManifest.dependencies, ...rootManifest.devDependencies }),
+      // Imported by checked-in developer scripts, which run through `vite-node` against the
+      // workspace rather than the root's own dependency closure.
+      '@dxos/app-framework',
+      '@dxos/protocols',
+    ],
   },
 };
 
@@ -433,6 +451,7 @@ for (const manifest of globSync(
   // standing in for it.
   const supplemental = [
     ...configuredEntry(dir),
+    ...descriptorEntry(dir),
     ...lazyImportedEntry(dir),
     ...pathResolvedEntry(dir),
     ...moonReferencedEntry(dir),

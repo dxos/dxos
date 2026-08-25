@@ -15,7 +15,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import solid from 'vite-plugin-solid';
 import wasm from 'vite-plugin-wasm';
 
-import { bootLoaderPlugin, importMapPlugin } from '@dxos/app-framework/vite-plugin';
+import { bootLoaderPlugin, dxPluginManifest, importMapPlugin } from '@dxos/app-framework/vite-plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { isNonNullable } from '@dxos/util';
@@ -513,6 +513,10 @@ export default defineConfig((env) => ({
     // on the plugin definition (it raced with Vite's optimize-deps and produced
     // a chunk-content drift + partial-batch crash cascade).
     importMapPlugin(),
+
+    // Resolves `@dxos/plugin-*/dxplugin.jsonc` — a plugin's serialized entrypoint — and makes each
+    // module it references a first-class module of this build (see `dxPluginManifest`).
+    dxPluginManifest(),
     boot.plugin,
 
     // Hand the boot loader the Composer brand mark so the visual identity

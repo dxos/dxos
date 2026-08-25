@@ -49,8 +49,8 @@ import {
 } from '@dxos/pipeline-transcription';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import * as ProgressPlugin from '@dxos/plugin-progress/ProgressPlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';

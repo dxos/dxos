@@ -8,11 +8,14 @@ tags:
   - storybook
 tasks:
   check-module-structure:
-    # Fail when the ./plugin export pulls in `@dxos/react-ui`. The plugin entry must
-    # remain UI-free under workerd so it can load in non-DOM environments.
+    # Fail when a module body the descriptor runs everywhere pulls in `@dxos/react-ui`: those are the
+    # modules a non-DOM host loads, since `fromManifest` drops the ones declaring a `platforms` list.
+    # Named as files because a descriptor's modules are package-internal, not exported subpaths.
     command: >-
       pnpm exec dx-trace-imports
-      --export ./MarkdownPlugin
+      --from ./src/capabilities/skill-definition.ts
+      --from ./src/capabilities/operation-handler.ts
+      --from ./src/capabilities/schema.ts
       --to "@dxos/react-ui"
       --conditions workerd,worker
       --fail-on present

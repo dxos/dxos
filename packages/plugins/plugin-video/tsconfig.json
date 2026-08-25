@@ -4,6 +4,7 @@
   ],
   "compilerOptions": {
     "types": [
+      "../../sdk/app-framework/src/dxplugin.d.ts",
       "node"
     ]
   },

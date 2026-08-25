@@ -17,6 +17,8 @@ import { Config2, PluginProfileSchema, PluginReleaseSchema } from '@dxos/protoco
 
 import * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
+import { parseJsonc } from './jsonc';
+import { currentPlatform } from './platform';
 import type * as PluginManager from './plugin-manager';
 
 //
@@ -283,6 +285,15 @@ export const getURI = (meta: Meta): DXN.DXN => DXN.make(meta.profile.key, meta.r
  */
 export const getMetaFromConfig = ({ plugin }: Config2.Config): Meta => {
   const { key, ...rest } = plugin;
+  return makeMeta({ key: DXN.make(key), ...rest });
+};
+
+/**
+ * Derives a runtime {@link Meta} from a loaded `dxplugin.jsonc` descriptor — the descriptor's
+ * profile fields, minus the parts that describe the file rather than the plugin.
+ */
+export const getMetaFromDescriptor = (descriptor: Config2.Descriptor): Meta => {
+  const { $schema: _schema, version: _version, modules: _modules, key, ...rest } = descriptor;
   return makeMeta({ key: DXN.make(key), ...rest });
 };
 
@@ -638,3 +649,118 @@ export const resolveLazy = (plugin: Plugin): Effect.Effect<Plugin, LazyPluginErr
     }
     return result;
   });
+
+//
+// Serializable entrypoints (`dxplugin.jsonc`)
+//
+
+/**
+ * Accepted inputs to {@link fromManifest}: a decoded descriptor, the module namespace produced by
+ * `await import('@dxos/plugin-x/dxplugin.jsonc')`, or the raw JSONC text of a descriptor fetched
+ * over HTTP. One entry point covers the bundler path and the published-plugin path.
+ */
+export { DXPLUGIN_SCHEMA_FILENAME, DXPLUGIN_SCHEMA_PATH, descriptorJsonSchema } from './plugin-schema';
+
+export type ManifestSource = Config2.Descriptor | { readonly default: Config2.Descriptor } | string;
+
+export type FromManifestOptions = {
+  /**
+   * URL the descriptor was loaded from; module `src` values are resolved against it. Required
+   * only when they are relative — the vite loader rewrites them to absolute URLs at build time.
+   */
+  baseUrl?: string | URL;
+  /**
+   * Drops modules that do not declare this platform. Defaults to the running platform, so a plugin
+   * never has to know which one it is on; pass `'all'` to keep every module.
+   */
+  platform?: Config2.Platform | 'all';
+};
+
+/** Tagged error for a descriptor that fails to decode, or whose module bodies fail to load. */
+export class PluginDescriptorError extends BaseError.extend('PluginDescriptorError', 'Plugin descriptor is invalid') {}
+
+const decodeDescriptor = Schema.decodeUnknownSync(Config2.Descriptor);
+
+/** Decodes a descriptor from any {@link ManifestSource} without building a plugin from it. */
+
+/**
+ * Shape a descriptor module's file must have: a default export taking the plugin options and
+ * returning the module's activation effect. Unenforceable at the import — the file is named by a
+ * string — so it is checked at runtime and reported as a `missing-default` descriptor error.
+ */
+type ModuleBody<T> = { default?: (options: T) => Effect.Effect<ModuleActivateResult, Error, any> };
+
+/** Resolves a module `src` against the descriptor's URL, leaving already-absolute values alone. */
+const resolveSrc = (src: string, baseUrl?: string | URL): string => {
+  if (/^[a-z][a-z0-9+.-]*:/i.test(src) || src.startsWith('/')) {
+    return src;
+  }
+  if (baseUrl === undefined) {
+    throw new PluginDescriptorError({ context: { src, reason: 'relative-src-without-base' } });
+  }
+  return new URL(src, baseUrl).toString();
+};
+
+/**
+ * Decodes a descriptor from any {@link ManifestSource} without building a plugin from it. Malformed
+ * JSONC and schema violations alike surface as {@link PluginDescriptorError}.
+ */
+export { parseJsonc };
+
+export const parseDescriptor = (source: ManifestSource): Config2.Descriptor => {
+  try {
+    return decodeDescriptor(
+      typeof source === 'string' ? parseJsonc(source) : 'default' in source ? source.default : source,
+    );
+  } catch (cause) {
+    throw new PluginDescriptorError({ context: { reason: 'decode-failed' }, cause });
+  }
+};
+
+/**
+ * Builds a {@link Plugin} factory from a serialized descriptor — the counterpart of hand-writing
+ * `Plugin.define(meta).pipe(Plugin.addModule(…), Plugin.make)`.
+ *
+ * ```ts
+ * const MarkdownPlugin = Plugin.fromManifest(await import('@dxos/plugin-markdown/dxplugin.jsonc'));
+ * ```
+ *
+ * Each module activates by importing its `src` and calling that file's default export with the
+ * plugin options, so a module body is the same file whether it is reached through a descriptor or
+ * through {@link Capability.lazyModule}. The import is deliberately opaque to the bundler: the
+ * vite loader has already emitted the module as a build entrypoint and rewritten `src` to the
+ * built asset, so re-analyzing it here would duplicate the chunk.
+ */
+export const fromManifest = <T = void>(source: ManifestSource, options?: FromManifestOptions): PluginFactory<T> => {
+  const descriptor = parseDescriptor(source);
+  const meta = getMetaFromDescriptor(descriptor);
+
+  const platform = options?.platform ?? currentPlatform();
+  const builder = descriptor.modules
+    .filter((module) => platform === 'all' || !module.platforms || module.platforms.includes(platform))
+    .reduce<PluginBuilder<T>>((acc, module) => {
+      const url = resolveSrc(module.src, options?.baseUrl);
+      return acc.addModule((pluginOptions: T) => ({
+        id: module.id,
+        ...(module.activatesOn !== undefined ? { activatesOn: ActivationEvent.fromRef(module.activatesOn) } : {}),
+        requires: (module.requires ?? []).map(Capability.fromRef),
+        provides: (module.provides ?? []).map(Capability.fromRef),
+        activate: () =>
+          Effect.gen(function* () {
+            const loaded = yield* Effect.tryPromise<ModuleBody<T>, PluginDescriptorError>({
+              try: () => import(/* @vite-ignore */ url),
+              catch: (cause) =>
+                new PluginDescriptorError({ context: { id: module.id, url, reason: 'load-failed' }, cause }),
+            });
+            if (typeof loaded.default !== 'function') {
+              return yield* Effect.fail(
+                new PluginDescriptorError({ context: { id: module.id, url, reason: 'missing-default' } }),
+              );
+            }
+            return yield* loaded.default(pluginOptions);
+          }),
+      }));
+    }, define<T>(meta));
+
+  return make(builder);
+};

@@ -1,0 +1,298 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DXOS plugin descriptor",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "$ref": "#/$defs/Union_"
+    },
+    "key": {
+      "type": "string",
+      "allOf": [
+        {
+          "minLength": 1
+        }
+      ]
+    },
+    "name": {
+      "type": "string",
+      "allOf": [
+        {
+          "minLength": 1
+        }
+      ]
+    },
+    "description": {
+      "$ref": "#/$defs/Union_"
+    },
+    "author": {
+      "$ref": "#/$defs/Union_"
+    },
+    "homePage": {
+      "$ref": "#/$defs/Union_"
+    },
+    "source": {
+      "$ref": "#/$defs/Union_"
+    },
+    "screenshots": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "light": {
+                "$ref": "#/$defs/Union_"
+              },
+              "dark": {
+                "$ref": "#/$defs/Union_"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "tags": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "icon": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string",
+              "allOf": [
+                {
+                  "minLength": 1
+                }
+              ]
+            },
+            "hue": {
+              "$ref": "#/$defs/Union_"
+            }
+          },
+          "required": ["key"],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "spec": {
+      "$ref": "#/$defs/Union_"
+    },
+    "dependsOn": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "version": {
+      "$ref": "#/$defs/Union_"
+    },
+    "modules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "allOf": [
+              {
+                "minLength": 1
+              }
+            ]
+          },
+          "src": {
+            "type": "string",
+            "allOf": [
+              {
+                "minLength": 1
+              }
+            ]
+          },
+          "activatesOn": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Union_1"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "oneOf": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/$defs/Union_1"
+                        }
+                      }
+                    },
+                    "required": ["oneOf"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "allOf": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/$defs/Union_1"
+                        }
+                      }
+                    },
+                    "required": ["allOf"],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "requires": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/Union_2"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "provides": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/Union_2"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "platforms": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["browser", "node", "workerd"]
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": ["id", "src"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["key", "name", "modules"],
+  "additionalProperties": false,
+  "$defs": {
+    "Union_": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "Union_1": {
+      "anyOf": [
+        {
+          "type": "string",
+          "allOf": [
+            {
+              "minLength": 1
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "allOf": [
+                {
+                  "minLength": 1
+                }
+              ]
+            },
+            "specifier": {
+              "$ref": "#/$defs/Union_"
+            }
+          },
+          "required": ["id"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Union_2": {
+      "anyOf": [
+        {
+          "type": "string",
+          "allOf": [
+            {
+              "minLength": 1
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "allOf": [
+                {
+                  "minLength": 1
+                }
+              ]
+            },
+            "arity": {
+              "type": "string",
+              "enum": ["single", "multi"]
+            }
+          },
+          "required": ["id", "arity"],
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}

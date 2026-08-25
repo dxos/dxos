@@ -708,3 +708,23 @@ export const makeModule = <
 >(
   fn: (props: TProps) => Effect.Effect<TReturn, E, R | Scope.Scope>,
 ): ((props: TProps) => Effect.Effect<TReturn, E, R | Scope.Scope>) => fn;
+
+/**
+ * Serializable reference to a capability, as it appears in a plugin's `dxplugin.jsonc`.
+ * A bare string names a `multi` capability — the default arity produced by {@link make}.
+ */
+export type CapabilityRef = string | { readonly id: string; readonly arity: Arity };
+
+/**
+ * Rehydrates a capability tag from its serialized {@link CapabilityRef}.
+ *
+ * Sound because a tag's identity is its identifier: `buildTag` wraps `Context.Service(identifier)`,
+ * which keys on that string, so a tag rebuilt here is the same context key as the one the
+ * capability's owner exported. The service type is necessarily lost — a descriptor-loaded module
+ * body is type-checked where it is authored, not here — and arity travels in the reference because
+ * the manager orders modules by it before any module body loads.
+ */
+export const fromRef = (ref: CapabilityRef): AnyTag => {
+  const { id, arity } = typeof ref === 'string' ? { id: ref, arity: 'multi' as const } : ref;
+  return buildTag<unknown, string, Arity>(id, arity);
+};

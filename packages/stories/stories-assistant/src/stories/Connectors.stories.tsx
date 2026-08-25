@@ -44,7 +44,7 @@ export const WithMail: Story = {
     lazyPlugins: async () => {
       const [InboxPlugin, MarkdownPlugin, ThreadPlugin] = await Promise.all([
         import('@dxos/plugin-inbox/InboxPlugin'),
-        import('@dxos/plugin-markdown/MarkdownPlugin'),
+        import('@dxos/plugin-markdown/dxplugin.jsonc'),
         import('@dxos/plugin-thread/ThreadPlugin'),
       ]);
       return {

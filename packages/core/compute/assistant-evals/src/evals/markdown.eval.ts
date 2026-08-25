@@ -7,8 +7,8 @@ import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
 import { Database } from '@dxos/echo';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import { trim } from '@dxos/util';
 
 import { findObject, objectExists } from '../assertions';

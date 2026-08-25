@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: serializable-plugin-entrypoints
+    status: active
+    user: dmaretskyi
+    host: cloud-sandbox
+    created: 2026-08-25
+    summary: 'Plugin entrypoints become data: every plugin ships a dxplugin.jsonc next to its package.json carrying the metadata plus the full module list (activation events, capability edges, and a relative URL per module file), loaded by a vite plugin modelled on vite HTML handling and rehydrated by Plugin.fromManifest.'
+    tasks: .agents/projects/serializable-plugin-entrypoints/TASKS.md
+    design: .agents/projects/serializable-plugin-entrypoints/DESIGN.md
+    prs: ['https://github.com/dxos/dxos/pull/12743']
+    resume: 'PR #12743 OPEN. Phases 1, 1.5 and 2 are DONE and green. plugin-markdown now runs ENTIRELY off dxplugin.jsonc: src/plugin.tsx, plugin.node.ts, plugin.workerd.ts, dx.config.ts, src/platform*.ts, the src/capabilities/{index,node,workerd}.ts barrels + #capabilities subpath, and the default export are all DELETED; meta.ts is Plugin.getMetaFromDescriptor(descriptor). KEY DESIGN FINDING: the plugin manager only ever reads a capability tag identifier + arity (module-loader.ts / activation-graph.ts), never the service type, so a tag rebuilt from {identifier, arity} is the SAME context key the owner exported — that is what makes the graph serializable at all. Second finding: surface roles are already sugar for activatesOn: oneOf(SurfacesRequested(role)), so they serialize with no new concept. THE THREE PHASE-2 BLOCKERS RESOLVED AS: (1) the ambient declare module lives in @dxos/typings (packages/common/typings/src/dxplugin.d.ts) — app-framework provably cannot host it, since a wildcard declaration loads only from a file in the consumers own program and a types-only exports subpath breaks composer-app:bundle; (2) dxplugin.jsonc is EXCLUDED from the library builds external predicate, so the loader inlines it into dist/lib/chunk-dxplugin.mjs with each src as new URL("chunk-<module>.mjs", import.meta.url) — real emitted assets, so no non-vite host needs a jsonc loader (the bun-compiled CLI, which reads the raw file, passes baseUrl instead); (3) platform is DETECTED by Plugin.currentPlatform() (workerd -> process.versions.node -> browser; window identifies nothing because the node vitest project defines it), not declared per plugin. Four host environments each needed their own fix and are all verified: vite dev (/@fs/), node vitest (file URLs), the storybook browser project (loader registered in createStorybookProject), and the app bundle guard (check-plugin-set.mjs counts dxplugin.jsonc as a plugin body). REMAINING: Phase 3, the other ~60 plugins under packages/plugins — mechanical via scripts/generate-dxplugin.ts, with per-plugin work only where a module body is an inline value rather than a file — plus a lint rule requiring every plugin package to ship and export a descriptor. NOT YET CONFIRMED WITH THE USER whether Phase 3 goes on this PR or a follow-up.'
   - name: sdk-metrics
     status: active
     user: dmaretskyi

@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { meta } from '#meta';
