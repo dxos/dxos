@@ -89,6 +89,8 @@ export type IdentityManagerProps = {
   edgeFeatures?: Runtime.Client.EdgeFeatures;
   devicePresenceAnnounceInterval?: number;
   devicePresenceOfflineTimeout?: number;
+  /** See {@link DataSpaceManagerRuntimeProps.automergeCredentials}. Off by default. */
+  automergeCredentials?: boolean;
 };
 
 /**
@@ -136,6 +138,7 @@ export class IdentityManager {
   private _pendingHaloSpaceRootUrl: string | undefined;
   private readonly _devicePresenceAnnounceInterval: number;
   private readonly _devicePresenceOfflineTimeout: number;
+  private readonly _automergeCredentials: boolean;
   private readonly _edgeConnection: EdgeConnection | undefined;
   private readonly _edgeFeatures: Runtime.Client.EdgeFeatures | undefined;
 
@@ -153,6 +156,7 @@ export class IdentityManager {
     this._edgeFeatures = params.edgeFeatures;
     this._devicePresenceAnnounceInterval = params.devicePresenceAnnounceInterval ?? DEVICE_PRESENCE_ANNOUNCE_INTERVAL;
     this._devicePresenceOfflineTimeout = params.devicePresenceOfflineTimeout ?? DEVICE_PRESENCE_OFFLINE_TIMEOUT;
+    this._automergeCredentials = params.automergeCredentials ?? false;
   }
 
   get identity() {
@@ -472,7 +476,8 @@ export class IdentityManager {
    * recovering device computing an id no replicated document belongs to.
    */
   private async _anchorHaloOnRootDocument(ctx: Context, identity: Identity): Promise<void> {
-    if (!this._echoHost) {
+    // Opt-in: without the flag the HALO keeps its control feed and grows no documents.
+    if (!this._echoHost || !this._automergeCredentials) {
       return;
     }
     const echoHost = this._echoHost;
@@ -550,7 +555,7 @@ export class IdentityManager {
 
 export type IdentityManagerLayerOptions = Pick<
   IdentityManagerProps,
-  'devicePresenceAnnounceInterval' | 'devicePresenceOfflineTimeout' | 'edgeFeatures'
+  'devicePresenceAnnounceInterval' | 'devicePresenceOfflineTimeout' | 'edgeFeatures' | 'automergeCredentials'
 >;
 
 /**

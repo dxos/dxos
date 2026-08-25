@@ -146,6 +146,7 @@ export const ServiceContextLayer = (
         devicePresenceOfflineTimeout: options.devicePresenceOfflineTimeout,
         devicePresenceAnnounceInterval: options.devicePresenceAnnounceInterval,
         edgeFeatures: options.edgeFeatures,
+        automergeCredentials: options.automergeCredentials,
       }),
     ),
     Layer.provideMerge(SpaceManagerLayer({ disableP2pReplication: options.disableP2pReplication })),

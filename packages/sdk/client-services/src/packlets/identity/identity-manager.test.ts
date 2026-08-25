@@ -54,7 +54,14 @@ describe('identity/identity-manager', () => {
       networkManager,
       metadataStore,
     });
-    const identityManager = new IdentityManager({ metadataStore, keyring, feedStore, spaceManager });
+    // The automerge scheme is opt-in in the product; these tests are what cover it.
+    const identityManager = new IdentityManager({
+      metadataStore,
+      keyring,
+      feedStore,
+      spaceManager,
+      automergeCredentials: true,
+    });
 
     return {
       networkManager,

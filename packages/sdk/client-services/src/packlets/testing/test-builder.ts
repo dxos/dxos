@@ -74,6 +74,9 @@ export const createServiceContext = async ({
     runtime: runtime.contextEffect,
     runtimeProps: {
       invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
+      // Tests cover the automerge scheme, which is opt-in in the product; pass
+      // `automergeCredentials: false` to exercise the legacy default.
+      automergeCredentials: true,
       ...runtimeProps,
     },
   });
@@ -207,6 +210,8 @@ export class TestPeer {
   }
 
   get dataSpaceManager(): DataSpaceManager {
+    // Tests cover the automerge scheme, which is opt-in in the product; a test that wants the legacy
+    // default passes `automergeCredentials: false` through `dataSpaceProps`.
     return (this._props.dataSpaceManager ??= new DataSpaceManager({
       spaceManager: this.spaceManager,
       metadataStore: this.metadataStore,
@@ -218,7 +223,7 @@ export class TestPeer {
       edgeConnection: undefined,
       meshReplicator: this.meshEchoReplicator,
       echoEdgeReplicator: undefined,
-      runtimeProps: this._opts.dataSpaceProps,
+      runtimeProps: { automergeCredentials: true, ...this._opts.dataSpaceProps },
     }));
   }
 

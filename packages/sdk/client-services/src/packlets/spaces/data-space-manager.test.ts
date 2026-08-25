@@ -77,6 +77,35 @@ describe('DataSpaceManager', () => {
     expect(assertion.spaceRootUrl).to.equal(refs!.spaceRootDocUrl);
   });
 
+  test('without the automergeCredentials flag a space is key-derived and never anchors', async () => {
+    const builder = new TestBuilder();
+
+    // The product default: the flag is off, so nothing opts in to the automerge scheme.
+    const peer = builder.createPeer({ dataSpaceProps: { automergeCredentials: false } });
+    await peer.createIdentity();
+    await openAndClose(peer.echoHost, peer.dataSpaceManager);
+
+    const space = await peer.dataSpaceManager.createSpace(new Context());
+    await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+
+    expect(space.id).to.equal(await createIdFromSpaceKey(space.key));
+    expect(peer.echoHost.getSpaceRootRefs(space.id)).to.be.undefined;
+    expect(space.inner.spaceState.genesisCredential).to.exist;
+
+    // Reloading must not migrate it either — that is the behaviour the flag gates.
+    await peer.dataSpaceManager.close();
+    peer.props.dataSpaceManager = undefined;
+    await openAndClose(peer.dataSpaceManager);
+
+    const reloaded = getFirstSpace(peer);
+    await reloaded.activate(new Context());
+    await asyncTimeout(
+      reloaded.stateUpdate.waitForCondition(() => reloaded.state === SpaceState.SPACE_READY),
+      5_000,
+    );
+    expect(peer.echoHost.getSpaceRootRefs(space.id)).to.be.undefined;
+  });
+
   test('a legacy space can still be created, for migration coverage', async () => {
     const builder = new TestBuilder();
 

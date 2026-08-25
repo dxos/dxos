@@ -198,13 +198,19 @@ export type DataSpaceManagerRuntimeProps = {
    * This is used in dedicated worker mode to restore space state after leader changeover.
    */
   autoActivateSpaces?: boolean;
+
+  /**
+   * Anchor spaces on a space root document and mirror credentials into a credentials document.
+   * Off by default — a space then keeps its key-derived id and its control feed, as before.
+   */
+  automergeCredentials?: boolean;
 };
 
 export type CreateSpaceOptions = {
   /**
    * Anchor the space on a space root document, taking its id from that document instead of from the
-   * space key. Defaults to true; pass false to create a legacy key-derived space, which tests need to
-   * cover the migration path. Ignored for an imported space, which brings its own root.
+   * space key. Defaults to the `automergeCredentials` runtime flag, which is off — so a space is
+   * key-derived unless the flag opts in. Ignored for an imported space, which brings its own root.
    */
   useSpaceRootDocument?: boolean;
 
@@ -236,6 +242,11 @@ export class DataSpaceManager extends Resource {
   private readonly _meshReplicator?: MeshEchoReplicator = undefined;
   private readonly _echoEdgeReplicator?: EdgeAutomergeReplicator = undefined;
   private readonly _runtimeProps?: DataSpaceManagerRuntimeProps = undefined;
+
+  /** Opt-in to the automerge-backed credential scheme; see {@link DataSpaceManagerRuntimeProps}. */
+  private get _automergeCredentials(): boolean {
+    return this._runtimeProps?.automergeCredentials ?? false;
+  }
 
   constructor(params: DataSpaceManagerProps) {
     super();
@@ -362,7 +373,8 @@ export class DataSpaceManager extends Resource {
     const dataFeedKey = await this._keyring.createKey();
 
     // An imported space brings its own root document, so it keeps the key-derived id.
-    const anchorOnRootDocument = (options.useSpaceRootDocument ?? true) && !options.rootUrl && !options.documents;
+    const anchorOnRootDocument =
+      (options.useSpaceRootDocument ?? this._automergeCredentials) && !options.rootUrl && !options.documents;
     const createdSpace = anchorOnRootDocument ? await this._echoHost.createSpaceWithRootDocument(ctx) : undefined;
     const spaceId = createdSpace?.spaceId ?? (await createIdFromSpaceKey(spaceKey));
     if (!createdSpace) {
@@ -503,6 +515,12 @@ export class DataSpaceManager extends Resource {
    * blocks opening the space: a space without an anchor still works, it just has not migrated yet.
    */
   private async _anchorSpaceOnRootDocument(ctx: Context, space: DataSpace, force = false): Promise<void> {
+    // Migrating a space is the opt-in behaviour, so without the flag a space keeps its control feed
+    // and never grows a root. An explicit `migrateSpaceToRootDocument` call still forces it.
+    if (!force && !this._automergeCredentials) {
+      return;
+    }
+
     // A space created legacy stays unanchored for this session, or there would be no way to produce
     // the pre-migration state the migration path starts from. It anchors on the next load, which is
     // exactly the migration this project is for.
