@@ -13,9 +13,8 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { translations } from '#translations';
 import { ObservabilityCapabilities, ObservabilityEvents, ObservabilityOptions } from '#types';
 
-// Browser-only, with the rest of the observability runtime below: the telemetry pipeline reads
-// browser storage and the user's telemetry preference, neither of which exists headlessly. Both
-// headless variants on main carried only the `OperationHandler` stub, and its overrides still do.
+// The telemetry pipeline reads browser storage and the user's telemetry preference, neither of
+// which exists headlessly; only `OperationHandler` ships to headless runtimes.
 export const ClientReady = Capability.lazyModule(
   'ClientReady',
   {

@@ -16,8 +16,6 @@ export const DevPluginLoader = Capability.lazyModule(
   () => import('./dev-plugin-loader'),
 );
 export const Commands = AppCapability.commands(() => import('#commands'));
-// node and workerd both via the maker family default: main began activating these in the node
-// entry (`plugin.node.ts`), so the earlier workerd-only pin no longer matches how they are used.
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {

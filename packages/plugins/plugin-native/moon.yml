@@ -8,8 +8,6 @@ tags:
 
 tasks:
   check-module-structure:
-    # Every plugin generates headless capability barrels, so the plugin entry must stay UI-free
-    # under each condition it produces: fail if React ever becomes reachable from it.
     command: >-
       pnpm exec dx-trace-imports
       --export ./NativePlugin

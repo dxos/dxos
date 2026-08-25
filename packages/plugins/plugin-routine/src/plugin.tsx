@@ -23,9 +23,6 @@ import { translations } from '#translations';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
 
-// Canonical single-entry composition: lists every module once; per-environment filtering happens
-// in the `#capabilities` barrel resolution — the generated headless barrels stub excluded modules
-// as `undefined`, which `Plugin.addModule` skips.
 export const RoutinePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   // TODO(wittjosiah): Could some of these commands make use of operations?

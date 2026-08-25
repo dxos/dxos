@@ -18,9 +18,6 @@ import { meta } from '#meta';
 // TODO(burdon): Only scale markdown content.
 // TODO(burdon): Map stack content; Slide content type (e.g., markdown, sketch, IPFS image, table, etc.)
 
-// Canonical single-entry composition: lists every module once; per-environment filtering happens
-// in the `#capabilities` barrel resolution — the generated headless barrels stub excluded modules
-// as `undefined`, which `Plugin.addModule` skips.
 export const PresenterPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(MarkdownExtension),

@@ -23,9 +23,6 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 
-// Canonical single-entry composition: lists every module once; per-environment filtering happens
-// in the `#capabilities` barrel resolution — the generated headless barrels stub excluded modules
-// as `undefined`, which `Plugin.addModule` skips.
 export const SamplePlugin = Plugin.define(meta).pipe(
   // Registers graph builder extensions (actions, connectors, companions).
   // Activates when the app graph builder capability can be resolved.

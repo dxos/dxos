@@ -27,8 +27,8 @@ export const BuiltinConnectors = Capability.lazyModule(
   { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
   () => import('./connectors'),
 );
-// Empty in the browser: `connector oauth` needs a Bun callback server, so only the node barrel
-// loads the real command graph, via overrides.node.ts. Also included in browser: `AppCapability
+// `#commands` resolves to `commands.browser.ts` under the browser: `connector oauth` needs a Bun
+// callback server, so only headless runtimes get the real command graph.
 export const Commands = AppCapability.commands(() => import('#commands'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
   environments: ['node'],

@@ -23,9 +23,6 @@ import {
 import { meta } from '#meta';
 import { translations } from '#translations';
 
-// Canonical single-entry composition: lists every module once; per-environment filtering happens
-// in the `#capabilities` barrel resolution — the generated headless barrels stub excluded modules
-// as `undefined`, which `Plugin.addModule` skips.
 export const InboxPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(AutomationTemplates),
