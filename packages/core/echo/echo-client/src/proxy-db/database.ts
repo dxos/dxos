@@ -48,7 +48,6 @@ import { DXN, EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxo
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
-import { defaultMap } from '@dxos/util';
 
 import type { SaveStateChangedEvent } from '../automerge';
 import { type DocHandleProxy, type RepoProxy } from '../automerge';
@@ -1106,11 +1105,9 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       return undefined;
     }
 
-    const obj = defaultMap(
-      this._rootProxies,
-      core,
-      () => core.rootProxy ?? initEchoReactiveObjectRootProxy(core, this),
-    );
+    // `core.rootProxy` is the identity map; a second one keyed by core here held every proxy the
+    // database had ever handed out, so nothing it loaded could be collected.
+    const obj = core.rootProxy ?? initEchoReactiveObjectRootProxy(core, this);
     invariant(isProxy(obj));
     return obj;
   }
@@ -1119,9 +1116,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   /** @deprecated */
   readonly pendingBatch = new Event<unknown>();
-
-  /** @internal */
-  private readonly _rootProxies = new Map<any, Entity.Unknown>();
 }
 
 // TODO(burdon): Create APIError class.

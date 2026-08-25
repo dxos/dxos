@@ -70,6 +70,13 @@ export class RepoProxy extends Resource {
   private _sendUpdatesJob?: UpdateScheduler = undefined;
 
   /**
+   * Documents whose {@link release} was refused because a write was still in flight. Retried once
+   * the send settles: nothing holds these handles any more, so a refusal that was never revisited
+   * would keep the document resident for the life of the space.
+   */
+  private readonly _deferredReleaseIds = new Set<DocumentId>();
+
+  /**
    * How a failed batch becomes visible to {@link flush} — `_sendUpdates` cannot throw. Each flush
    * attempt compares the counter before and after, so concurrent flushes cannot mask each other's
    * failure (a single cleared field would).
@@ -104,6 +111,43 @@ export class RepoProxy extends Resource {
    */
   get handles(): Record<string, DocHandleProxy<any>> {
     return this._handles;
+  }
+
+  /**
+   * Drops a cached handle nothing holds any more and unsubscribes the host from its document.
+   *
+   * This is the only way a proxied document leaves memory: handles are otherwise kept for the life
+   * of the space, so a client's footprint tracked every document it had ever opened. A handle with
+   * changes the host has not taken yet is kept — releasing it would lose the write — and the next
+   * `find` for the same id simply loads it again.
+   *
+   * @returns Whether the handle was released.
+   */
+  release(documentId: DocumentId): boolean {
+    const handle = this._handles[documentId];
+    if (!handle) {
+      return false;
+    }
+    if (
+      this._pendingUpdateIds.has(documentId) ||
+      this._pendingCreations.has(handle._internalId) ||
+      // The pending-id sets are cleared at the start of a send, so they go quiet while a mutation is
+      // still in flight; the handle's own acknowledgement is what actually settles it.
+      !handle._isAcknowledged()
+    ) {
+      this._deferredReleaseIds.add(documentId);
+      return false;
+    }
+    this._deferredReleaseIds.delete(documentId);
+
+    // Every listener, not just this class's: the entity manager subscribes to each handle too, and a
+    // released handle must not keep either alive.
+    handle.off('change');
+    delete this._handles[documentId];
+    this._pendingAddIds.delete(documentId);
+    this._pendingRemoveIds.add(documentId);
+    this._sendUpdatesJob?.trigger();
+    return true;
   }
 
   find<T>(id: AnyDocumentId): DocHandleProxy<T> {
@@ -281,6 +325,9 @@ export class RepoProxy extends Resource {
     handle.on('change', onChange);
     this._handles[documentId] = handle;
 
+    // A queued unsubscribe for this id would otherwise travel in the same batch as this subscribe,
+    // leaving the host unsubscribed from a document someone is now waiting for.
+    this._pendingRemoveIds.delete(documentId);
     this._pendingAddIds.add(documentId);
     this._sendUpdatesJob!.trigger();
 
@@ -353,6 +400,14 @@ export class RepoProxy extends Resource {
     );
 
     return handle;
+  }
+
+  /** Retries the releases refused while a write was in flight, now that the send has settled. */
+  private _releaseDeferred(): void {
+    for (const documentId of [...this._deferredReleaseIds]) {
+      this._deferredReleaseIds.delete(documentId);
+      this.release(documentId);
+    }
   }
 
   private _receiveUpdate({ updates }: DataService.BatchedDocumentUpdates): void {
@@ -453,6 +508,7 @@ export class RepoProxy extends Resource {
         }
       }
 
+      this._releaseDeferred();
       this._emitSaveStateEvent();
     } catch (err) {
       // Don't restore pending updates if generation changed - this task is abandoned.

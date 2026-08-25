@@ -43,6 +43,7 @@ import { type ChangeEvent, type DocHandleProxy, RepoProxy, type SaveStateChanged
 import { type HypergraphImpl } from '../hypergraph';
 import { type BranchStore, forkDump, referencedObjectIds } from './branching';
 import { type IDatabaseBinding, ObjectCore } from './object-core';
+import { ObjectCoreRegistry } from './object-core-registry';
 import {
   type AddCoreOptions,
   type AtomicReplaceObjectProps,
@@ -51,6 +52,7 @@ import {
   type ItemsUpdatedEvent,
   type LoadObjectDocumentOptions,
   type LoadObjectOptions,
+  type ReleaseObjectOptions,
   type SpaceDocumentHeads,
 } from './types';
 import { getInlineAndLinkChanges, getRemovedObjectIds } from './util';
@@ -104,7 +106,12 @@ export class EntityManager implements IDatabaseBinding {
   readonly _repoProxy: RepoProxy;
 
   // ── Object storage ──────────────────────────────────────────────────────
-  private readonly _objects = new Map<string, ObjectCore>();
+  /**
+   * Loaded cores, held weakly: a space holds what the caller has open rather than everything it has
+   * ever read. A collected core takes its document handle and satisfaction request with it — see
+   * {@link _releaseObject}.
+   */
+  private readonly _objects = new ObjectCoreRegistry({ onRelease: (id) => this._releaseObject(id) });
 
   /**
    * Device-local, non-synced: object id -> currently-selected branch name (`'main'` omitted).
@@ -125,11 +132,17 @@ export class EntityManager implements IDatabaseBinding {
   private readonly _unavailableObjects = new Set<EntityId>();
 
   /**
-   * Per-entity closure-aware satisfaction requests. Strong-dependency satisfaction is delegated to
-   * the {@link RefResolver}: each surfaced entity holds a disk-bound request whose `ready` state is
-   * the surface gate, spanning same-space db, cross-space db, feed queues, and the registry.
+   * Per-entity closure-aware satisfaction requests, with the unsubscribes that keep the database
+   * context's dispose list proportional to them. Strong-dependency satisfaction is delegated to the
+   * {@link RefResolver}: each surfaced entity holds a disk-bound request whose `ready` state is the
+   * surface gate, spanning same-space db, cross-space db, feed queues, and the registry.
+   *
+   * Neither map holds the entity: a request reaches it only through its load op, whose result is weak
+   * ({@link LoadOp.result}), so an object is released with its core rather than pinned by the gate
+   * that surfaced it.
    */
   private readonly _satisfactionRequests = new Map<EntityId, RefResolverRequest>();
+  private readonly _satisfactionSubscriptions = new Map<EntityId, CleanupFn>();
 
   private _refResolver: RefResolver | undefined;
 
@@ -157,6 +170,14 @@ export class EntityManager implements IDatabaseBinding {
   private _spaceRootDocHandle: DocHandleProxy<DatabaseDirectory> | null = null;
 
   private readonly _objectDocumentHandles = new Map<string, DocHandleProxy<DatabaseDirectory>>();
+
+  /**
+   * Object ids per document, the inverse of {@link _objectDocumentHandles}. Releasing one object's
+   * core must not drop a document another loaded object is still mounted in, and a linked document
+   * can hold several — so the last object out is what makes the handle evictable, which this answers
+   * without a scan of the loaded set.
+   */
+  private readonly _documentObjects = new Map<DocHandleProxy<DatabaseDirectory>, Set<string>>();
 
   private readonly _objectsPendingDocumentLoad = new Map<string, LoadObjectDocumentOptions>();
 
@@ -222,6 +243,10 @@ export class EntityManager implements IDatabaseBinding {
         request.abort();
       }
       this._satisfactionRequests.clear();
+      for (const unsubscribe of this._satisfactionSubscriptions.values()) {
+        unsubscribe();
+      }
+      this._satisfactionSubscriptions.clear();
     });
   }
 
@@ -342,7 +367,7 @@ export class EntityManager implements IDatabaseBinding {
       throw new Error('Database is not ready.');
     }
 
-    const objCore = this._objects.get(id);
+    const objCore = this._objects.get(id) ?? this._rehydrateCore(id);
     if (!objCore) {
       if (load) {
         this._loadObjectDocument(id);
@@ -352,6 +377,39 @@ export class EntityManager implements IDatabaseBinding {
 
     invariant(objCore instanceof ObjectCore);
     return objCore;
+  }
+
+  /**
+   * Recreates a core from a document this space already holds — the case where the previous core was
+   * collected but its document did not go with it (an inline object in the space root, or a linked
+   * document whose release was deferred).
+   *
+   * Without this a re-read would wait on a document load that never comes: the loader short-circuits
+   * on the handle it already has, so nothing would ever emit the update the read is waiting for.
+   */
+  private _rehydrateCore(objectId: string): ObjectCore | undefined {
+    const handle = this._objectDocumentHandles.get(objectId) ?? this._findLoadedDocumentHandle(objectId);
+    if (handle == null || !handle.isReady() || handle.doc()?.objects?.[objectId] == null) {
+      return undefined;
+    }
+    return this._createObjectInDocument(handle, objectId);
+  }
+
+  /**
+   * The already-loaded document an object lives in — the space root for an inline object, otherwise
+   * the linked document if the repo still holds it. Never starts a load: this answers "can the core
+   * be rebuilt from what is here", and a miss falls through to the regular load path.
+   */
+  private _findLoadedDocumentHandle(objectId: string): DocHandleProxy<DatabaseDirectory> | undefined {
+    const root = this._spaceRootDocHandle;
+    if (root == null || !root.isReady()) {
+      return undefined;
+    }
+    if (DatabaseDirectory.getInlineObject(root.doc(), objectId) != null) {
+      return root;
+    }
+    const url = this._getLinkedDocumentUrl(objectId);
+    return url == null ? undefined : this._repoProxy.handles[interpretAsDocumentId(url)];
   }
 
   async loadObjectCoreById(
@@ -610,7 +668,7 @@ export class EntityManager implements IDatabaseBinding {
     // document is still being created, which is bound before its link is written.
     for (const id of dropped) {
       this._objects.delete(id);
-      this._objectDocumentHandles.delete(id as EntityId);
+      this._releaseObject(id, { releaseDocument: true });
     }
     this._updateScheduler.trigger();
 
@@ -1384,7 +1442,44 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   private _onObjectBoundToDocument(handle: DocHandleProxy<DatabaseDirectory>, objectId: string): void {
+    this._bindObjectDocument(objectId, handle);
+  }
+
+  /** Records the object -> document mapping in both directions. */
+  private _bindObjectDocument(objectId: string, handle: DocHandleProxy<DatabaseDirectory>): void {
+    const previous = this._objectDocumentHandles.get(objectId);
+    if (previous !== undefined && previous !== handle) {
+      this._forgetDocumentObject(objectId, previous);
+    }
     this._objectDocumentHandles.set(objectId, handle);
+    // Keyed by the handle itself, not its documentId: a locally created document has no id until the
+    // host assigns one, and an entry keyed on `undefined` would make unrelated objects look like
+    // they share a document. The map only ever holds handles with at least one loaded object, so it
+    // is not itself a reason for a handle to stay resident.
+    const objects = this._documentObjects.get(handle) ?? new Set<string>();
+    objects.add(objectId);
+    this._documentObjects.set(handle, objects);
+  }
+
+  /** Drops the object -> document mapping, returning the handle it was bound to. */
+  private _unbindObjectDocument(objectId: string): DocHandleProxy<DatabaseDirectory> | undefined {
+    const handle = this._objectDocumentHandles.get(objectId);
+    this._objectDocumentHandles.delete(objectId);
+    if (handle !== undefined) {
+      this._forgetDocumentObject(objectId, handle);
+    }
+    return handle;
+  }
+
+  private _forgetDocumentObject(objectId: string, handle: DocHandleProxy<DatabaseDirectory>): void {
+    const objects = this._documentObjects.get(handle);
+    if (objects === undefined) {
+      return;
+    }
+    objects.delete(objectId);
+    if (objects.size === 0) {
+      this._documentObjects.delete(handle);
+    }
   }
 
   private _createDocumentForObject(objectId: string): DocHandleProxy<DatabaseDirectory> {
@@ -1427,6 +1522,7 @@ export class EntityManager implements IDatabaseBinding {
   private _clearHandleReferences(): string[] {
     const objectsWithHandles = [...this._objectDocumentHandles.keys()];
     this._objectDocumentHandles.clear();
+    this._documentObjects.clear();
     this._spaceRootDocHandle = null;
     return objectsWithHandles;
   }
@@ -1464,7 +1560,7 @@ export class EntityManager implements IDatabaseBinding {
       }
       const handle = this._repoProxy.find<DatabaseDirectory>(automergeUrl as DocumentId);
       log.debug('document loading triggered', logMeta);
-      this._objectDocumentHandles.set(objectId, handle);
+      this._bindObjectDocument(objectId, handle);
       void this._loadHandleForObject(handle, objectId, opts);
     }
   }
@@ -1644,10 +1740,54 @@ export class EntityManager implements IDatabaseBinding {
 
     for (const objectId of removed) {
       this._objects.delete(objectId);
-      this._objectDocumentHandles.delete(objectId as EntityId);
+      this._releaseObject(objectId, { releaseDocument: true });
     }
     log('evicted objects removed from the space directory', { count: removed.length });
     this._updateScheduler.trigger();
+  }
+
+  /**
+   * Drops everything this space keeps beside a core once that core is gone — because the caller let
+   * go of the object and it was collected, or because its directory entry was removed.
+   *
+   * `releaseDocument` separates the two: an unlinked object's document is dropped too (with the last
+   * object mounted in it, and never the space root), since it is the document that holds the payload.
+   * A merely collected core leaves its document alone — see the comment inline.
+   */
+  private _releaseObject(objectId: string, { releaseDocument = false }: ReleaseObjectOptions = {}): void {
+    // Only a settled request is dropped: aborting one still resolving releases its load ops, and the
+    // last release cancels their IO — cancelling a load a reader is waiting on. An unsettled request
+    // is left to finish and is dropped when the object is next released, or on close. It pins
+    // nothing: its result is weak (see {@link LoadOp.result}).
+    const request = this._satisfactionRequests.get(objectId as EntityId);
+    if (request != null && (request.state === 'ready' || request.state === 'unavailable')) {
+      request.abort();
+      this._satisfactionRequests.delete(objectId as EntityId);
+      this._satisfactionSubscriptions.get(objectId as EntityId)?.();
+      this._satisfactionSubscriptions.delete(objectId as EntityId);
+    }
+
+    if (!releaseDocument) {
+      // The core was transient; its document is not. A collected core says nothing about whether the
+      // document is still being read — another object may share it, a load may be in flight — so the
+      // document stays and the next read rebuilds the core from it.
+      return;
+    }
+
+    this._objectsPendingDocumentLoad.delete(objectId);
+    const handle = this._unbindObjectDocument(objectId);
+    if (handle == null || handle === this._spaceRootDocHandle || handle.documentId == null) {
+      return;
+    }
+    // In-flight load bookkeeping is keyed by document url, which a re-load reuses: an entry left
+    // behind would make the next read report "already loading" against a handle that is gone.
+    if (handle.url != null) {
+      this._currentlyLoadingObjects.delete({ url: handle.url, objectId });
+    }
+    if ((this._documentObjects.get(handle)?.size ?? 0) > 0 || this._pendingDocumentCreations.has(objectId)) {
+      return;
+    }
+    this._repoProxy.release(handle.documentId);
   }
 
   private _processDocumentUpdate(event: ChangeEvent<DatabaseDirectory>): DocumentChanges {
@@ -1756,13 +1896,19 @@ export class EntityManager implements IDatabaseBinding {
    * subscribes to its state changes so the query pipeline re-evaluates as the closure loads.
    */
   private _ensureSatisfactionRequest(core: ObjectCore): RefResolverRequest {
-    let request = this._satisfactionRequests.get(core.id);
+    // The id, not the core: a closure over `core` is a strong reference from the database context's
+    // dispose list to every object ever surfaced by a query, which no eviction could undo.
+    const objectId = core.id;
+    let request = this._satisfactionRequests.get(objectId);
     if (request == null) {
       this._refResolver ??= this._hypergraph.createRefResolver({ context: { space: this._spaceId } });
-      const uri = EID.make({ spaceId: this._spaceId, entityId: core.id });
+      const uri = EID.make({ spaceId: this._spaceId, entityId: objectId });
       request = this._refResolver.resolve(uri, { source: 'disk' });
-      this._satisfactionRequests.set(core.id, request);
-      request.stateChanged.on(this._ctx!, () => this._scheduleThrottledUpdate([core.id]));
+      this._satisfactionRequests.set(objectId, request);
+      this._satisfactionSubscriptions.set(
+        objectId,
+        request.stateChanged.on(this._ctx!, () => this._scheduleThrottledUpdate([objectId])),
+      );
     }
     return request;
   }

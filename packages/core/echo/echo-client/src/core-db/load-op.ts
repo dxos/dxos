@@ -33,7 +33,16 @@ export interface LoadOp {
   /** Highest ceiling currently pursued; only ever escalated, never lowered. */
   maxCeiling: RefSource;
   state: LoadOpState;
-  result: AnyProperties | null;
+  /**
+   * The materialized entity, held weakly — `null` once nothing else refers to it.
+   *
+   * Strongly would make this table the reason every entity a query ever touched stays resident: the
+   * op outlives the read (its request is kept for the entity's lifetime), and the entity's core
+   * cannot be collected while the op names it. A collected result reads as "not loaded", which is
+   * what it is, and `state` still records that the body was reachable at that ceiling.
+   */
+  get result(): AnyProperties | null;
+  set result(value: AnyProperties | null);
   /** Direct strong-dep URIs of {@link result}; empty unless `state === 'ready'`. */
   strongDeps: URI.URI[];
   /** Fires on any state / result / strongDeps change. */
@@ -88,11 +97,17 @@ export class LoadOpTable {
       return existing;
     }
 
+    let resultRef: WeakRef<AnyProperties> | null = null;
     const op: LoadOp = {
       uri,
       maxCeiling: source,
       state: 'pending',
-      result: null,
+      get result() {
+        return resultRef?.deref() ?? null;
+      },
+      set result(value: AnyProperties | null) {
+        resultRef = value == null ? null : new WeakRef(value);
+      },
       strongDeps: [],
       changed: new Event<void>(),
       refcount: 1,
