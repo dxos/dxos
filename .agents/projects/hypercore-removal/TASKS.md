@@ -178,13 +178,13 @@ migration; crash mid-migration and resume.
       delete cannot erase an entry, and a rewrite cannot displace one (first write wins).
       Values are bytes because only a scalar is a single op carrying its own value; a JS string
       becomes a text CRDT that would have to be replayed character by character.
-- [ ] **Wire the credentials document onto `AddOnlySet` — until this lands the erasure hole is
-      still open.** Steps, in order: 1. Flatten the entry from `{ [id]: { data: bytes } }` to `{ [id]: bytes }`; `AddOnlySet`
-      cannot read a nested map from history. Safe to change now — the format is unreleased. 2. Change `orderCredentials` in `@dxos/credentials` to take the already-read entries rather
-      than the document, keeping that package free of any automerge dependency. The edge copy
-      already takes `EncodedCredential[]`, so the two signatures converge. 3. `credentials-document-store.ts` reads via `AddOnlySet.read(doc, ['credentials'])` and
-      writes via `AddOnlySet.add`. 4. Mirror both on the edge side (`space-root.ts`, `space-credentials-source.ts`), which is
-      the security-critical reader since it decides membership.
+- [x] **Credentials document reads from the change history, on both sides.** The entry is flat
+      (`{ [id]: bytes }`) because a nested map cannot be recovered from history; `orderCredentials`
+      takes the already-read entries rather than the document, which keeps `@dxos/credentials` free
+      of any automerge dependency and converges it with the edge copy. The edge reader — the
+      security-critical one, since it decides membership — goes through the same scan, covered end
+      to end by `space-credentials-source.workerd.test.ts` deleting a credential from the replicated
+      document and still being served it.
 - [ ] `device-invitation-protocol.ts` equivalent for the HALO space: thread the halo space root URL
       through `DeviceAdmissionCredentials` so a joining device replicates the root, not just the feed.
 - [ ] **NAME COLLISION to resolve**: `spaces-service.ts` already reports a `spaceRootUrl` in

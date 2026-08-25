@@ -7,7 +7,12 @@ import { describe, expect, test } from 'vitest';
 
 import { asyncTimeout, latch, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { SpaceStateMachine, createAdmissionCredentials, getCredentialAssertion } from '@dxos/credentials';
+import {
+  type CredentialsDocument,
+  SpaceStateMachine,
+  createAdmissionCredentials,
+  getCredentialAssertion,
+} from '@dxos/credentials';
 import {
   type SpaceRoot,
   createIdFromRootDocumentId,
@@ -160,6 +165,32 @@ describe('DataSpaceManager', () => {
     // Idempotent: a re-run must not fork the anchor.
     const again = await peer.dataSpaceManager.migrateSpaceToRootDocument(new Context(), space.key);
     expect(again.spaceRootDocUrl).to.equal(refs.spaceRootDocUrl);
+  });
+
+  test('a credential deleted from the document is still read back', async () => {
+    const builder = new TestBuilder();
+
+    const peer = builder.createPeer();
+    await peer.createIdentity();
+    await openAndClose(peer.echoHost, peer.dataSpaceManager);
+
+    const space = await peer.dataSpaceManager.createSpace(new Context());
+    const store = await openCredentialsDocument(new Context(), peer.echoHost, space.id);
+    await waitForCondition({ condition: () => store.read().length > 0 });
+
+    const before = store.read().map(({ id }) => id);
+    const handle = await peer.echoHost.loadDoc<CredentialsDocument>(
+      new Context(),
+      peer.echoHost.getSpaceRootRefs(space.id)!.credentialsDocUrl!,
+    );
+
+    // A member with write access revokes another by deleting their credential.
+    handle!.change((doc: CredentialsDocument) => {
+      delete doc.credentials[before[0]];
+    });
+    expect(Object.keys(handle!.doc()!.credentials)).to.not.contain(before[0]);
+
+    expect(store.read().map(({ id }) => id)).to.deep.equal(before);
   });
 
   test('a migrated space mirrors its control-feed credentials into the credentials document', async () => {

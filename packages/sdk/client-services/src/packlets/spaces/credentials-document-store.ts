@@ -12,6 +12,7 @@ import {
   type OrderedCredential,
   orderCredentials,
 } from '@dxos/credentials';
+import { AddOnlySet } from '@dxos/echo-doc';
 import { type EchoHost } from '@dxos/echo-host';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
@@ -19,6 +20,8 @@ import { schema } from '@dxos/protocols/proto';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 const credentialCodec = schema.getCodecForType('dxos.halo.credentials.Credential');
+
+const CREDENTIALS_PATH = ['credentials'];
 
 /**
  * Read/write access to a space's credentials document, the successor to its control feed.
@@ -30,10 +33,15 @@ export class CredentialsDocumentStore {
     return this._handle.url;
   }
 
-  /** Credentials in the order the state machine must process them. */
+  /**
+   * Credentials in the order the state machine must process them.
+   *
+   * Read from the change history rather than the current state: a member who can write to the
+   * document must not be able to revoke another by deleting their credential.
+   */
   read(): OrderedCredential[] {
     const doc = this._handle.doc();
-    return doc ? orderCredentials(doc) : [];
+    return doc ? orderCredentials(AddOnlySet.read(doc, CREDENTIALS_PATH)) : [];
   }
 
   /**
@@ -67,7 +75,7 @@ export class CredentialsDocumentStore {
 
     this._handle.change((doc: CredentialsDocument) => {
       doc.credentials ??= {};
-      doc.credentials[id] = { data: credentialCodec.encode(credential) };
+      AddOnlySet.add(doc.credentials, id, credentialCodec.encode(credential));
     });
   }
 }

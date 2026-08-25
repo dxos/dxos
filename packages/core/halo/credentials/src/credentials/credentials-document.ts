@@ -12,10 +12,12 @@ const credentialCodec = schema.getCodecForType('dxos.halo.credentials.Credential
 /** Versioned DXN in the same form `EntitySystem.type` carries. */
 export const CREDENTIALS_DOCUMENT_TYPE = 'dxn:org.dxos.document.spaceCredentials:0.1.0';
 
-/** Holds only the encoded credential, so nothing outside the signature can influence how it is processed. */
-export type CredentialsDocumentEntry = {
-  data: Uint8Array;
-};
+/**
+ * Holds only the encoded credential, so nothing outside the signature can influence how it is
+ * processed, and flat rather than nested because a nested map cannot be recovered from the automerge
+ * change history that makes the set append-only.
+ */
+export type CredentialsDocumentEntry = Uint8Array;
 
 /**
  * The credential chain of a space, replacing its control feed. Keyed by credential id so an append is
@@ -36,7 +38,8 @@ export type OrderedCredential = { id: string; credential: Credential };
 
 /**
  * Total order every peer computes identically, since an Automerge map has no inherent one and the state
- * machine must see a credential after the ones it depends on.
+ * machine must see a credential after the ones it depends on. Takes the already-read entries rather
+ * than the document, so this package needs no automerge dependency to order them.
  *
  * Every ordering input is read from the encoded credential rather than from the entry around it, so a
  * peer cannot reorder processing by editing the document: altering those fields invalidates the
@@ -47,9 +50,9 @@ export type OrderedCredential = { id: string; credential: Credential };
  * its child. A parent that has not replicated yet does not block its child — the state machine rejects a
  * chain it cannot verify, so ordering need not enforce that too.
  */
-export const orderCredentials = (doc: CredentialsDocument): OrderedCredential[] => {
+export const orderCredentials = (encoded: ReadonlyMap<string, CredentialsDocumentEntry>): OrderedCredential[] => {
   const entries: OrderedCredential[] = [];
-  for (const [id, entry] of Object.entries(doc.credentials ?? {})) {
+  for (const [id, entry] of encoded) {
     const credential = decodeCredential(id, entry);
     if (credential) {
       entries.push({ id, credential });
@@ -106,7 +109,7 @@ const rankGenesis = (credential: Credential): number =>
 const decodeCredential = (id: string, entry: CredentialsDocumentEntry): Credential | undefined => {
   let credential: Credential;
   try {
-    credential = credentialCodec.decode(entry.data);
+    credential = credentialCodec.decode(entry);
   } catch (err) {
     log.warn('undecodable credential entry', { id, err });
     return undefined;
