@@ -46,7 +46,7 @@ When you connect a Google account to Composer, we access the following data thro
 
 ### Where this data lives
 
-Synced Google data is stored in your private workspace on infrastructure we operate, hosted on Cloudflare. Message data and the OAuth tokens that authorize our access are encrypted at rest using keys we manage, with key rotation. Access within our systems is limited to the automated services that provide these features.
+Synced Google data is stored in your private workspace on infrastructure we operate, hosted on Cloudflare. Message data and the OAuth tokens that authorize our access are encrypted at rest using keys we manage, with key rotation. Routine access within our systems is limited to the automated services that provide these features; humans access this data only with your explicit consent, for security purposes, or as required by law, as described under Limited Use below.
 
 ### Limited Use
 
