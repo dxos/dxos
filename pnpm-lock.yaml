@@ -90,6 +90,9 @@ catalogs:
     '@changesets/cli':
       specifier: ^3.0.0
       version: 3.0.0
+    '@changesets/parse':
+      specifier: ^1.0.0
+      version: 1.0.0
     '@cloudflare/ai-chat':
       specifier: ^0.0.6
       version: 0.0.6
@@ -1823,6 +1826,9 @@ importers:
       '@changesets/cli':
         specifier: 'catalog:'
         version: 3.0.0
+      '@changesets/parse':
+        specifier: 'catalog:'
+        version: 1.0.0
       '@cloudflare/vitest-pool-workers':
         specifier: 'catalog:'
         version: 0.18.6(@cloudflare/workers-types@5.20260719.1)(@vitest/runner@4.1.10)(@vitest/snapshot@4.1.10)(vitest@4.1.10)
@@ -3267,9 +3273,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../invariant
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../log
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
@@ -3415,28 +3418,6 @@ importers:
       vite-plugin-solid:
         specifier: 'catalog:'
         version: 2.11.14(@testing-library/jest-dom@6.9.1)(solid-js@1.9.11)(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
-
-  packages/common/effect-proto:
-    dependencies:
-      effect:
-        specifier: 4.0.0-rc.108
-        version: 4.0.0-rc.108
-      protobufjs:
-        specifier: 'catalog:'
-        version: 8.0.0
-    devDependencies:
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../core/protocols
-      '@types/node':
-        specifier: 22.10.2
-        version: 22.10.2
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-      vitest:
-        specifier: 'catalog:'
-        version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
 
   packages/common/effect-zod:
     dependencies:
@@ -3826,6 +3807,9 @@ importers:
         specifier: 'catalog:'
         version: 16.0.0
     devDependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../async
       '@types/argparse':
         specifier: 'catalog:'
         version: 2.0.10
@@ -4081,6 +4065,12 @@ importers:
       '@hazae41/symbol-dispose-polyfill':
         specifier: 'catalog:'
         version: 1.1.2
+      '@tauri-apps/plugin-dialog':
+        specifier: 'catalog:'
+        version: 2.7.2
+      '@tauri-apps/plugin-fs':
+        specifier: 'catalog:'
+        version: 2.5.1
     devDependencies:
       '@dxos/crypto':
         specifier: workspace:*
@@ -5714,9 +5704,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../../common/codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
@@ -6152,9 +6139,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../../common/codec-protobuf
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../../../common/crypto
@@ -6227,6 +6211,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols
+      '@dxos/tracing':
+        specifier: workspace:*
+        version: link:../../../common/tracing
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -6289,9 +6276,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../../common/codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
@@ -6591,6 +6575,9 @@ importers:
       '@bufbuild/protobuf':
         specifier: 'catalog:'
         version: 2.11.0
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
       '@dxos/codec-protobuf':
         specifier: workspace:*
         version: link:../../common/codec-protobuf
@@ -7369,9 +7356,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../common/codec-protobuf
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -17578,9 +17562,6 @@ importers:
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../client-services
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../common/codec-protobuf
       '@dxos/config':
         specifier: workspace:*
         version: link:../config
@@ -18086,6 +18067,9 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -18186,9 +18170,6 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../client
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../common/codec-protobuf
       '@dxos/config':
         specifier: workspace:*
         version: link:../config
@@ -18539,6 +18520,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/tracing':
+        specifier: workspace:*
+        version: link:../../common/tracing
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -19478,6 +19462,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0-rc.108(effect@4.0.0-rc.108)(react@19.2.7)(scheduler@0.27.0)
@@ -21133,12 +21120,6 @@ importers:
       '@codemirror/lang-xml':
         specifier: 'catalog:'
         version: 6.1.0
-      '@dxos/effect-proto':
-        specifier: workspace:*
-        version: link:../../common/effect-proto
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../core/protocols
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -31759,6 +31740,7 @@ packages:
 
   '@ungap/structured-clone@1.2.0':
     resolution: {integrity: sha512-zuVdFrMJiuCDQUMCzQaD6KL28MjnqqN8XnAqiEq9PNm/hCPTSGfrXCOfwj1ow4LFb/tNymJPwsNbVePc1xFqrQ==}
+    deprecated: Potential CWE-502 - Update to 1.3.1 or higher
 
   '@unrs/resolver-binding-android-arm-eabi@1.11.1':
     resolution: {integrity: sha512-ppLRUgHVaGRWUx0R0Ut06Mjo9gBaBkg3v/8AxusGLhsIotbBLuRk51rAzqLC8gq6NyyAojEXglNjzf6R948DNw==}
@@ -32776,7 +32758,7 @@ packages:
   basic-ftp@5.0.4:
     resolution: {integrity: sha512-8PzkB0arJFV4jJWSGOYR+OEic6aeKMu/osRhBULN6RY0ykby6LKhbmuQ5ublvaas5BOwboah5D87nrHyuh8PPA==}
     engines: {node: '>=10.0.0'}
-    deprecated: Security vulnerability fixed in 5.2.0, please upgrade
+    deprecated: Security vulnerability fixed in 5.2.1, please upgrade
 
   bcp-47-match@2.0.3:
     resolution: {integrity: sha512-JtTezzbAibu8G0R9op9zb3vcWZd9JF6M0xOYGPn0fNCd7wOpRB1mU2mH9T8gaBGbAAyIIVgB2G7xG0GP98zMAQ==}
@@ -34280,6 +34262,7 @@ packages:
   discord.js@14.14.1:
     resolution: {integrity: sha512-/hUVzkIerxKHyRKopJy5xejp4MYKDPTszAnpYxzVVv4qJYf+Tkt+jnT2N29PIPschicaEEpXwF2ARrTYHYwQ5w==}
     engines: {node: '>=16.11.0'}
+    deprecated: This version is deprecated. Please use a newer version
 
   dns-packet@5.6.1:
     resolution: {integrity: sha512-l4gcSouhcgIKRvyy99RNVOgxXiicE+2jZoNmaNmZ6JXiGajBOJAesk1OBlJuM5k2c+eudGdLxDqXuPCKIj6kpw==}
@@ -34692,6 +34675,7 @@ packages:
   eslint@9.39.4:
     resolution: {integrity: sha512-XoMjdBOwe/esVgEvLmNsD3IRHkm7fbKIUGvrleloJXUZgDHig2IPWNniv+GwjyJXzuNqVjlr5+4yVUZjycJwfQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
     peerDependencies:
       jiti: '*'
@@ -40945,6 +40929,7 @@ packages:
   tsconfck@3.1.6:
     resolution: {integrity: sha512-ks6Vjr/jEw0P1gmOVwutM3B7fWxoWBL2KRDb1JfqGVawBmO5UsvmWOQFGHBPl5yxYz4eERr19E6L7NMv+Fej4w==}
     engines: {node: ^18 || >=20}
+    deprecated: unmaintained
     hasBin: true
 
   tsconfig-paths@4.2.0:
@@ -41511,6 +41496,7 @@ packages:
 
   uuid@10.0.0:
     resolution: {integrity: sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   uuid@11.1.0:
@@ -41528,6 +41514,7 @@ packages:
 
   uuid@9.0.1:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   uvu@0.5.6:

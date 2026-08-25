@@ -30,6 +30,8 @@ export const translations = [
         'milestones.label': 'Milestones',
         'tasks.label': 'Tasks',
         'artifacts.label': 'Artifacts',
+        'outline.label': 'Outline',
+        'add-artifact.label': 'Add artifact',
         'create-panel.name.placeholder': 'Project name (optional)',
         'create-panel.template.placeholder': 'Filter templates…',
         'setup-project.label': 'Set up project',

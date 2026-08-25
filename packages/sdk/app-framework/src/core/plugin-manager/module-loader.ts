@@ -333,6 +333,8 @@ export class ModuleLoader {
     return Effect.gen({ self: this }, function* () {
       log('loading module', { module: module.id, parentEvent });
       performance.mark(`module:${module.id}:start`);
+      // Separate mark: the profiler reads `module:` as a measure, and a measure drops mark detail.
+      performance.mark(`module-cause:${module.id}`, { detail: { event: parentEvent } });
       yield* PubSub.publish(this.#state.activation, { event: parentEvent, state: 'activating', module: module.id });
       const pluginId = this.#state.pluginIdOfModule(module.id);
       yield* this.#awaitProvidersInFlight(module);

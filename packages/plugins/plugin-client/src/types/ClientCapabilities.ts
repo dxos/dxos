@@ -8,8 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 // Aliased: unwrapping the enclosing `namespace` put these in the same scope as the
 // capabilities named after them.
 import { type Client as Client$ } from '@dxos/client';
-import { type ObjectMigration } from '@dxos/client/echo';
-import { type Type } from '@dxos/echo';
+import { type Type, type Migration as Migration$ } from '@dxos/echo';
 import { type HubHttpClient as HubHttpClient$ } from '@dxos/edge-client';
 import { type Identity as Identity$, type Space as Space$ } from '@dxos/halo';
 
@@ -25,7 +24,7 @@ export const Schema = Capability.make<Type.AnyEntity[]>()(`${meta.profile.key}.c
  * `true` rather than `void` — the loader reads an `undefined` implementation as not contributed.
  */
 export const SchemaRegistered = Capability.makeSingleton<true>()(`${meta.profile.key}.capability.schemaRegistered`);
-export const Migration = Capability.make<ObjectMigration[]>()(`${meta.profile.key}.capability.migration`);
+export const Migration = Capability.make<Migration$.Migration[]>()(`${meta.profile.key}.capability.migration`);
 export const AccountCache = Capability.makeSingleton<Atom.Writable<AccountCacheType>>()(
   `${meta.profile.key}.capability.accountCache`,
 );

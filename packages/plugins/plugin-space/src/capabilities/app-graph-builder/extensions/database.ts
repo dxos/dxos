@@ -26,7 +26,7 @@ import { EffectEx } from '@dxos/effect';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ViewAnnotation } from '@dxos/schema';
 import { isLabel, toLocalizedString } from '@dxos/ui-types/translations';
-import { createFilename, isNonNullable } from '@dxos/util';
+import { createFilename, downloadBlob, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
 import { SpaceCapabilities, SpaceEvents, SpaceOperation } from '#types';
@@ -38,7 +38,6 @@ import {
   SCHEMA_NODE_TYPE,
   SNAPSHOT_BY_SCHEMA_LABEL,
   buildViewIndex,
-  downloadBlob,
 } from './shared';
 
 //

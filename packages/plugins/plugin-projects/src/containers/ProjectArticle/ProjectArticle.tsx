@@ -46,7 +46,7 @@ export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>
  */
 export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const actions = useToolbarActions(subject);
+  const actions = useToolbarActions(subject, () => void handleAddArtifact());
   const [project, updateProject] = useObject(subject);
   const db = Obj.getDatabase(subject);
   // Resolve reactively: on a cold load (deep link) the owned ref's target is not yet in memory,
@@ -58,6 +58,9 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   // components — the boundary is surfaces/operations only).
   const [taskSetSnapshot] = useObject(project.taskSet);
   const taskSet = Obj.getReactiveOrUndefined(taskSetSnapshot);
+  // The project's scratch outline (created lazily by its chats). Resolved reactively, as above.
+  const [outlineSnapshot] = useObject(project.outline);
+  const outline = Obj.getReactiveOrUndefined(outlineSnapshot);
   const milestoneRefs = taskSetSnapshot?.milestones ?? [];
 
   // Read once per project identity; the uncontrolled form owns edits after mount.
@@ -90,6 +93,27 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     [invokePromise, updateProject],
   );
 
+  // The create dialog places the object in the space; the ref array is what makes it this project's,
+  // so the link is written here. A dismissed dialog returns nothing and leaves the project untouched.
+  const handleAddArtifact = useCallback(async () => {
+    if (!db) {
+      return;
+    }
+
+    const { data: ref } = await invokePromise(SpaceOperation.OpenObjectForm, {
+      target: db,
+      targetNodeId: attendableId,
+      navigable: false,
+    });
+    if (!ref) {
+      return;
+    }
+
+    updateProject((project) => {
+      project.artifacts = [...project.artifacts, ref];
+    });
+  }, [db, attendableId, invokePromise, updateProject]);
+
   const handleValuesChanged = useCallback(
     (values: Partial<HeaderValues>) => {
       updateProject((project) => {
@@ -105,9 +129,6 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   }
 
   return (
-    // `Menu.Root` wraps the panel rather than sitting inside the toolbar: `ToolbarMenu` disables itself
-    // unless the menu scope's `attendableId` has attention, so the scope has to span the surface that
-    // receives attention, not just the toolbar row.
     <Menu.Root {...actions} attendableId={attendableId}>
       <Panel.Root role={role}>
         <Panel.Toolbar>
@@ -131,15 +152,28 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                   </Form.Section>
                 )}
 
-                {milestoneRefs.length > 0 && (
-                  <Form.Section title={t('milestones.label')}>
-                    <MilestoneList refs={milestoneRefs} />
+                {/* Above Tasks: the outline is where work is drafted, the task set where it lands.
+                    `taskSet` rides along so promoting an item files it into THIS project's ledger
+                    rather than into a set owned by the outline. */}
+                {outline && (
+                  <Form.Section title={t('outline.label')}>
+                    <Surface.Surface
+                      type={AppSurface.Section}
+                      data={{ subject: outline, attendableId, taskSet }}
+                      limit={1}
+                    />
                   </Form.Section>
                 )}
 
                 {taskSet && (
                   <Form.Section title={t('tasks.label')}>
                     <Surface.Surface type={AppSurface.Section} data={{ subject: taskSet, attendableId }} limit={1} />
+                  </Form.Section>
+                )}
+
+                {milestoneRefs.length > 0 && (
+                  <Form.Section title={t('milestones.label')}>
+                    <MilestoneList refs={milestoneRefs} />
                   </Form.Section>
                 )}
 
@@ -187,7 +221,7 @@ const MilestoneRow = ({ milestoneRef }: { milestoneRef: Ref.Ref<Milestone.Milest
  * actions are expected to diverge as the toolbar grows, and the graph's create-chat action serves
  * the navtree row.
  */
-const useToolbarActions = (project: Project.Project) => {
+const useToolbarActions = (project: Project.Project, onAddArtifact: () => void) => {
   const { invokePromise } = useOperationInvoker();
   // The handler resolves `Database.Service`, which only the space context supplies — without this
   // the invocation fails with ServiceNotAvailable.
@@ -206,6 +240,16 @@ const useToolbarActions = (project: Project.Project) => {
           },
           () => void invokePromise(ProjectOperation.CreateChat, { project }, { spaceId }),
         )
+        .action(
+          'add-artifact',
+          {
+            label: ['add-artifact.label', { ns: meta.profile.key }],
+            icon: 'ph--plus--regular',
+            disposition: 'toolbar',
+            testId: 'projectsPlugin.addArtifact',
+          },
+          onAddArtifact,
+        )
         // The growing gap pushes the routines button to the trailing edge: it opens a companion rather
         // than creating anything, so it reads as navigation, not a peer of the create actions.
         .separator()
@@ -220,7 +264,7 @@ const useToolbarActions = (project: Project.Project) => {
           () => void invokePromise(LayoutOperation.UpdateCompanion, { subject: Attention.linkedSegment('automation') }),
         )
         .build(),
-    [project, invokePromise, spaceId],
+    [project, invokePromise, spaceId, onAddArtifact],
   );
 };
 

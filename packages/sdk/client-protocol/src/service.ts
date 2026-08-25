@@ -3,7 +3,8 @@
 //
 
 import { type Event } from '@dxos/async';
-import type { RequestOptions, Stream } from '@dxos/codec-protobuf';
+import type { Stream } from '@dxos/async';
+import type { RequestOptions } from '@dxos/codec-protobuf';
 import { schema } from '@dxos/protocols/proto';
 import type {
   CreateEpochResponse,

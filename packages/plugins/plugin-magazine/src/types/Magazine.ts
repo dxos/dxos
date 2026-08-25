@@ -60,10 +60,16 @@ export const CurationOutput = Schema.Struct({
   posts: Schema.Array(
     Schema.Struct({
       id: Obj.ID,
-      /** Concise 1-2 sentence snippet summarising why this article is relevant to the magazine topic. */
-      snippet: Schema.optional(Schema.String),
-      /** Best image URL found for this article (from the post or fetched content). */
-      imageUrl: Schema.optional(Schema.String),
+      /**
+       * Concise 1-2 sentence snippet summarising why this article is relevant to the magazine topic.
+       * Nullable, not merely optional: this schema is serialized to JSON Schema and rebuilt as
+       * `completeJob`'s parameters, so a decode-time transformation would not survive the round trip —
+       * and models emit `null` for a field they mean to omit, which `Schema.optional` alone rejects
+       * and which fails the whole curation run. {@link resolveSelected} normalizes null to absent.
+       */
+      snippet: Schema.optional(Schema.NullOr(Schema.String)),
+      /** Best image URL found for this article (from the post or fetched content); nullable, as {@link snippet}. */
+      imageUrl: Schema.optional(Schema.NullOr(Schema.String)),
     }),
   ),
 });
