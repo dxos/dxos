@@ -8,12 +8,12 @@ import { projectFunctionToTool } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 
 import instructions from './project-skill.md?raw';
-import * as ProjectSkill from './skill';
+import * as ProjectSkill from './ProjectSkill';
 
 /** Backticked tokens in the workflow prose that are shaped like one of our tool names. */
 const NAMED_TOOL = /`(projects-[a-z-]+|tasks-[a-z-]+|space-[a-z-]+)\b/g;
 
-describe('project skill tools', () => {
+describe('ProjectSkill', () => {
   test('every operation projects to tool parameters', ({ expect }) => {
     // `makeToolResolverFromOperations` drops an operation whose input will not project — a
     // non-struct input throws `Unsupported schema AST` — and only logs, so the verb would be

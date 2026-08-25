@@ -8,7 +8,6 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
 
-import { AssistantTestLayerWithTriggers } from '@dxos/agent-runtime/testing';
 import { TriggerDispatcher } from '@dxos/compute-runtime';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -22,13 +21,15 @@ import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 import { Outline, Task, TaskSet } from '@dxos/types';
 
+import { AssistantTestLayerWithTriggers } from './assistant-test-layer';
+
 // A project's routine is the headless half of the project loop: the chat drives work a person is
 // present for, the routine drives work that happens on a schedule. This asserts the whole path —
 // ownership, the trigger's own input binding, and the run's effect on the project's ledger.
 //
 // It fires the trigger through `TriggerDispatcher` rather than plugin-routine's `RunRoutine`
-// operation: plugin-routine depends on this package (its handler imports `RunInstructions`), so
-// importing it back would cycle. The dispatcher is the path `RunRoutine` itself delegates to.
+// operation: plugin-routine sits above this package, so importing it back would cycle. The
+// dispatcher is the path `RunRoutine` itself delegates to.
 
 /** Stands in for a project pipeline: appends a task to the project's ledger, like the mailbox verbs. */
 const AppendTask = Operation.make({

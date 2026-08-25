@@ -11,7 +11,8 @@ import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Message, Task } from '@dxos/types';
 
-import * as ProjectOperation from '../../types/ProjectOperation';
+import { ProjectMailboxOperation } from '#types';
+
 import createTrackingProject from './create-tracking-project';
 import { seed, testLayer } from './testing';
 import updateProjectTasks from './update-project-tasks';
@@ -90,7 +91,7 @@ describe('create-tracking-project', () => {
       // Compared against the operation's own key, so renaming the operation moves this assertion
       // with it rather than leaving a stale string behind.
       expect(routine.spec?.kind === 'runnable' && routine.spec.runnable.uri.toString()).toContain(
-        ProjectOperation.UpdateInvestorLog.meta.key.toString(),
+        ProjectMailboxOperation.UpdateInvestorLog.meta.key.toString(),
       );
     }).pipe(Effect.provide(testLayer())),
   );

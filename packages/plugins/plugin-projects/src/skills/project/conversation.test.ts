@@ -21,7 +21,7 @@ import { Message, Outline, TaskSet } from '@dxos/types';
 
 import { ProjectOperationHandlerSet } from '#operations';
 
-import * as ProjectSkill from './skill';
+import * as ProjectSkill from './ProjectSkill';
 
 const { text, toolCall } = ScriptedLanguageModel;
 

@@ -8,13 +8,13 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { TaskSet } from '@dxos/types';
 
-import { ProjectMcpOperation } from '#types';
+import { ProjectOperation } from '#types';
 
 /**
  * The detail read behind `projectList`: per-task-set open/total counts, the checklist markdown, and
  * the artifact inventory — everything an external agent needs to orient in one call.
  */
-const handler: Operation.WithHandler<typeof ProjectMcpOperation.GetProject> = ProjectMcpOperation.GetProject.pipe(
+const handler: Operation.WithHandler<typeof ProjectOperation.GetProject> = ProjectOperation.GetProject.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ project: projectRef }) {
       const project = yield* Database.load(projectRef);

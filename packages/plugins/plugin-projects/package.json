@@ -89,11 +89,6 @@
       "types": "./dist/types/src/types/ProjectCapabilities.d.ts",
       "import": "./dist/lib/ProjectCapabilities.mjs"
     },
-    "./ProjectMcpOperation": {
-      "source": "./src/types/ProjectMcpOperation.ts",
-      "types": "./dist/types/src/types/ProjectMcpOperation.d.ts",
-      "import": "./dist/lib/ProjectMcpOperation.mjs"
-    },
     "./ProjectOperation": {
       "source": "./src/types/ProjectOperation.ts",
       "types": "./dist/types/src/types/ProjectOperation.d.ts",
@@ -115,9 +110,14 @@
       "import": "./dist/lib/ProjectOperationHandlerSet.mjs"
     },
     "./ProjectSkill": {
-      "source": "./src/skills/ProjectSkill.ts",
-      "types": "./dist/types/src/skills/ProjectSkill.d.ts",
+      "source": "./src/skills/project/ProjectSkill.ts",
+      "types": "./dist/types/src/skills/project/ProjectSkill.d.ts",
       "import": "./dist/lib/ProjectSkill.mjs"
+    },
+    "./ProjectMailboxOperation": {
+      "source": "./src/types/ProjectMailboxOperation.ts",
+      "types": "./dist/types/src/types/ProjectMailboxOperation.d.ts",
+      "import": "./dist/lib/ProjectMailboxOperation.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

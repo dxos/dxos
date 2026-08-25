@@ -21,10 +21,9 @@ import { McpServer } from '@dxos/mcp-server';
 // Narrow subpath imports: these plugins declare React surfaces, and a bundler follows the dynamic
 // import behind a lazy capability, so activating them would pull React into the CLI binary.
 import * as ProjectOperationHandlerSet from '@dxos/plugin-projects/ProjectOperationHandlerSet';
-import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
 import * as TasksOperationHandlerSet from '@dxos/plugin-tasks/TasksOperationHandlerSet';
 
-import { chatLayer, operationHandlers } from '../../util';
+import { chatLayer, operationHandlers, skillDefinitions } from '../../util';
 
 /**
  * What this host wires beneath the projected surface — echo's registry holding the operations and
@@ -65,7 +64,7 @@ export const makeLocalServer = Effect.fn(function* () {
     TasksOperationHandlerSet.handlers,
   );
   const handlers = dedupeOperations(yield* handlerSet.handlers);
-  const skills = dedupeByKey([...capabilities.getAll(AppCapabilities.SkillDefinition), ProjectSkill]);
+  const skills = dedupeByKey([...capabilities.getAll(AppCapabilities.SkillDefinition), ...skillDefinitions]);
 
   // The client's own hypergraph registry, not a separate instance: plugin-routine's registry-sync
   // already fills it with the capability-contributed skills and serialized operation handlers, so

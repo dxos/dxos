@@ -8,7 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, type Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
-import { ArtifactAdd } from './definitions';
+import { ProjectOperation } from '#types';
 
 /** Compare refs by entity id when possible — space-qualified and local URIs may name the same object. */
 const refKey = (ref: Ref.Ref<Obj.Unknown>): string => {
@@ -16,7 +16,7 @@ const refKey = (ref: Ref.Ref<Obj.Unknown>): string => {
   return (eid && EID.getEntityId(eid)) ?? ref.uri;
 };
 
-const handler: Operation.WithHandler<typeof ArtifactAdd> = ArtifactAdd.pipe(
+const handler: Operation.WithHandler<typeof ProjectOperation.ArtifactAdd> = ProjectOperation.ArtifactAdd.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ project: projectRef, object: objectRef }) {
       const project = yield* Database.load(projectRef);

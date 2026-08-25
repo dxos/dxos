@@ -7,13 +7,13 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
-import { ProjectMcpOperation } from '#types';
+import { ProjectOperation } from '#types';
 
 /**
  * A plain field write apart from the no-op guard below, which a generic object update would not
  * make.
  */
-const handler: Operation.WithHandler<typeof ProjectMcpOperation.UpdateProject> = ProjectMcpOperation.UpdateProject.pipe(
+const handler: Operation.WithHandler<typeof ProjectOperation.UpdateProject> = ProjectOperation.UpdateProject.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ project: projectRef, name, status, description }) {
       const project = yield* Database.load(projectRef);
