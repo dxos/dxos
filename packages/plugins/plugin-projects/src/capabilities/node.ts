@@ -8,9 +8,8 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { ProjectCapabilities } from '#types';
 
-// The capabilities `ProjectsPlugin.node` activates, and only those. A lazy module defers its import
-// at runtime but a bundler still walks it, so listing `ReactSurface` — or `CreateObject`, whose
-// entry carries the create panel — would pull the plugin's components into every node build.
+// A bundler walks a lazy module's import, so naming `ReactSurface` or `CreateObject` — whose entry
+// carries the create panel — would pull React into every node build.
 
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,

@@ -23,8 +23,7 @@ describe('ProjectsPlugin', () => {
       plugins: [ClientPlugin.make({}), ProjectsPlugin()],
     });
 
-    // The headless/node variant, which is what `#plugin` resolves to here. OperationHandler is a
-    // dependency-mode root, so it activates immediately too.
+    // OperationHandler is a dependency-mode root, so it activates immediately too.
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([moduleId('schema'), moduleId('OperationHandler'), moduleId('Templates')]),
     );
@@ -48,8 +47,7 @@ describe('ProjectsPlugin', () => {
   });
 
   test('registers the project types with the client', async ({ expect }) => {
-    // The regression the CLI hit: without a registered `Project` type, every project verb fails at
-    // the point it stores the object, and the plugin is the only thing that registers it headlessly.
+    // Without a registered `Project` type every project verb fails where it stores the object.
     await using harness = await createComposerTestApp({
       plugins: [ClientPlugin.make({}), ProjectsPlugin()],
     });

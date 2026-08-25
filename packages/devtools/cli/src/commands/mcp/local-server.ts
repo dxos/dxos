@@ -49,10 +49,8 @@ export const makeLocalServer = Effect.fn(function* () {
   // this host assembled, and the space verbs reach the client through its capability.
   const ambient = yield* Effect.context<ClientService | Capability.Service | Plugin.Service>();
 
-  // The project and task verbs are the skill-governed ones, and they arrive here as capabilities
-  // like every other: both plugins are in the CLI's set and `serve` activates them, so their
-  // headless variants contribute the handlers and the skill. `operationHandlers` brings the rest
-  // the CLI already curates for chat.
+  // The project and task verbs arrive as capabilities like every other, because `serve` activates
+  // both plugins; `operationHandlers` brings the rest the CLI curates for chat.
   const handlerSet = OperationHandlerSet.merge(
     ...capabilities.getAll(Capabilities.OperationHandler),
     operationHandlers,

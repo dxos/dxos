@@ -513,7 +513,7 @@ Follow-ups from the 2026-08-19 audit (none block PR #12616):
       the existing `projectSkills` output (`SkillRecord` maps 1:1 onto the frontmatter), keep
       `loadSkill` as the polyfill indefinitely. Do not build the manifest/asset part until the PR
       settles. The stale Server.ts comment is fixed in the Milestone 8 projection work.
-- [ ] **`code-project-skill.md` fs fallback** (audit G5) — the space-binding gate reads
+- [ ] **`project-skill.md` fs fallback** (audit G5) — the space-binding gate reads
       `.agents/projects/space.yml`, silently inapplicable on an fs-less client (claude.ai
       connector). One line: no filesystem → ask the user for the space.
 - [ ] **CLAUDE.md fallback snippet** (audit) — the "point at the MCP server, no skills required"

@@ -158,7 +158,7 @@ export const QueryOperations = Tool.make('queryOperations', {
       }),
     ),
     skill: Schema.optional(
-      Schema.String.annotate({ description: "Only operations belonging to this skill (e.g. 'codeProject')." }),
+      Schema.String.annotate({ description: "Only operations belonging to this skill (e.g. 'project')." }),
     ),
     keys: Schema.optional(
       Schema.Array(Schema.String).annotate({

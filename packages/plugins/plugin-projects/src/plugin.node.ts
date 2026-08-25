@@ -8,12 +8,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { OperationHandler, SkillDefinition, Templates } from '#capabilities';
 import { meta } from '#meta';
 
-/**
- * Headless variant registered by node hosts (the CLI, agents), where rendering is unavailable.
- * The capabilities come from `#capabilities`, which resolves a server-safe barrel under the `node`
- * condition — the browser barrel declares React surfaces, and a bundler follows the dynamic import
- * behind a lazy capability, so resolving it here would drag React into a node build.
- */
+/** Headless variant for node hosts: `#capabilities` resolves the barrel free of React surfaces. */
 export const ProjectsPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),
   Plugin.addModule(SkillDefinition),

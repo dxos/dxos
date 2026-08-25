@@ -8,12 +8,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { CreateObject, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
 
-/**
- * Headless variant registered by node hosts (the CLI, agents), where rendering is unavailable.
- * The capabilities come from `#capabilities`, which resolves a server-safe barrel under the `node`
- * condition — the browser barrel declares React surfaces, and a bundler follows the dynamic import
- * behind a lazy capability, so resolving it here would drag React into a node build.
- */
+/** Headless variant for node hosts: `#capabilities` resolves the barrel free of React surfaces. */
 export const TasksPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),

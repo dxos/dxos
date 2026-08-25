@@ -188,19 +188,19 @@ edge `mcp-operations` (tool surface).
 
 Largely landed by #12616 ("skills are the atomic unit of MCP projection", merged 2026-08-20 as
 63e500bb): the skill's `tools` list now decides projection (`Operation.mcpTool` deleted),
-`ProjectOperation.Create` is keyed `projectCreate` and sits in `CodeProjectSkill.operations`,
+`ProjectOperation.Create` is keyed `projectCreate` and sits in `ProjectSkill.operations`,
 safety became `Operation.mutation`, observability moved to registered `ObservabilityMapping`s, and
 plugin-space CRUD projects from one definition for both hosts (the CLI's hand-written object
 toolkit is deleted; `Gateway`/`Server` became `McpRegistry`/`McpServer`).
 
-- [x] **Project `projectCreate`** — landed in #12616 via `CodeProjectSkill.operations` membership.
+- [x] **Project `projectCreate`** — landed in #12616 via `ProjectSkill.operations` membership.
       Residual: the handler still resolves templates via `Capability.getAll` — the live round-trip
       must confirm headless invoke works in the CLI registry (blank-template fallback exists).
 - [x] **Operation ownership** — resolved by #12616's design, without moving code: membership lives
       solely in the skill's `tools` list; `task*`/`milestone*`/`outline*` stay in `plugin-tasks`
       (`skill-keys.ts` deleted).
 - [x] **Absorbed `org.dxos.skill.project`** (2026-08-21) — `artifactAdd`/`artifactList` moved into
-      `ProjectMcpOperation` (keys under `org.dxos.plugin.projects.operation.*`) with handlers in
+      `ProjectOperation` (keys under `org.dxos.operation.projects.*`) with handlers in
       plugin-projects; the toolkit skill is deleted. Consumers updated in the same change, no
       shims: `Project`'s `SkillsAnnotation`, both routine templates + tests, plugin-assistant's
       registrations, the CLI host, and two assistant-evals files (which needed a new
@@ -264,7 +264,7 @@ toolkit is deleted; `Gateway`/`Server` became `McpRegistry`/`McpServer`).
 ### Bridge and retirement
 
 - [ ] **Bridge posture while the server churns** — two distinguishable surfaces: `/dxos:project` +
-      `file` stays the daily driver; `codeProject` dogfoods under its own name;
+      `file` stays the daily driver; the space-backed `project` skill dogfoods under its own name;
       `DX_PROJECT_BACKEND` stays as the session kill switch. Never dual-write — the Phase 2
       no-cascade decision generalises to one writable store per project.
 - [ ] **Optional middle step: per-project ownership** — a registry/space.yml field names the store
@@ -289,6 +289,5 @@ toolkit is deleted; `Gateway`/`Server` became `McpRegistry`/`McpServer`).
   final segment; collisions throw; prompts take no parameters — `skillLoad` is the model-side
   fetch). Was `internal/projection.ts` until #12692 split it into `view.ts`/`input.ts` and folded
   `McpRegistry` into `McpServer`; the CLI host is now `commands/mcp/local-server.ts`.
-- Runtime skill: `packages/plugins/plugin-projects/src/skills/CodeProjectSkill.ts` +
-  `code-project-skill.md`; artifact skill:
-  `packages/core/compute/assistant-toolkit/src/skills/project/`
+- Runtime skill: `packages/plugins/plugin-projects/src/skills/project/ProjectSkill.ts` +
+  `project-skill.md` (the assistant-toolkit artifact skill was absorbed into it)

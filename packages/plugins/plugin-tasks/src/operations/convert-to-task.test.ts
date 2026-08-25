@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 
 import { Database, Filter, Obj } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
-import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 import { Outline, Task, TaskSet } from '@dxos/types';
 
@@ -16,15 +15,12 @@ import convertToTask from './convert-to-task';
 const testLayer = () => TestDatabaseLayer({ types: [Outline.Outline, Task.Task, TaskSet.TaskSet, Text.Text] });
 
 describe('convert-to-task', () => {
-  it.effect("promotes an item into the outline's own task set, created on first use", () =>
+  it.effect('promotes an item into the task set the caller names', () =>
     Effect.gen(function* () {
-      const outline = yield* seed('- [ ] first\n- [ ] second');
-      expect(outline.taskSet).toBeUndefined();
+      const taskSet = yield* seed();
 
-      const { task } = yield* convertToTask.handler({ outline, title: '  first  ' });
+      const { task } = yield* convertToTask.handler({ taskSet, title: '  first  ' });
 
-      const taskSet = yield* loadTaskSet(outline);
-      expect(taskSet.name).toBe('Launch plan');
       expect(taskSet.tasks.map((ref) => ref.target?.id)).toEqual([task.id]);
       expect(task.title).toBe('first');
       expect(task.status).toBe('todo');
@@ -32,25 +28,26 @@ describe('convert-to-task', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
-  it.effect('a second promotion files into the same set rather than linking another', () =>
+  it.effect('a second promotion appends to the same set rather than creating another', () =>
     Effect.gen(function* () {
-      const outline = yield* seed('- [ ] first\n- [ ] second');
+      const taskSet = yield* seed();
 
-      const { task: first } = yield* convertToTask.handler({ outline, title: 'first' });
-      const { task: second } = yield* convertToTask.handler({ outline, title: 'second' });
+      const { task: first } = yield* convertToTask.handler({ taskSet, title: 'first' });
+      const { task: second } = yield* convertToTask.handler({ taskSet, title: 'second' });
 
-      const taskSet = yield* loadTaskSet(outline);
       expect(taskSet.tasks.map((ref) => ref.target?.id)).toEqual([first.id, second.id]);
       const sets = yield* Database.query(Filter.type(TaskSet.TaskSet)).run;
       expect(sets).toHaveLength(1);
     }).pipe(Effect.provide(testLayer())),
   );
 
-  it.effect('the checklist markdown is left untouched — the item is copied, not moved', () =>
+  it.effect('the outline markdown is left untouched — the item is copied, not moved', () =>
     Effect.gen(function* () {
-      const outline = yield* seed('- [ ] first\n- [ ] second');
+      const taskSet = yield* seed();
+      const outline = yield* Database.add(Outline.make({ name: 'Launch plan', content: '- [ ] first\n- [ ] second' }));
+      yield* Database.flush();
 
-      yield* convertToTask.handler({ outline, title: 'first' });
+      yield* convertToTask.handler({ taskSet, title: 'first' });
 
       const content = yield* Database.load(outline.content);
       expect(content.content).toBe('- [ ] first\n- [ ] second');
@@ -59,25 +56,18 @@ describe('convert-to-task', () => {
 
   it.effect('a title matching no checklist item is still promoted', () =>
     Effect.gen(function* () {
-      const outline = yield* seed('- [ ] first');
+      const taskSet = yield* seed();
 
-      const { task } = yield* convertToTask.handler({ outline, title: 'invented' });
+      const { task } = yield* convertToTask.handler({ taskSet, title: 'invented' });
 
       expect(task.title).toBe('invented');
     }).pipe(Effect.provide(testLayer())),
   );
 });
 
-const seed = (content: string) =>
+const seed = () =>
   Effect.gen(function* () {
-    const outline = yield* Database.add(Outline.make({ name: 'Launch plan', content }));
+    const taskSet = yield* Database.add(TaskSet.make({ name: 'Launch plan' }));
     yield* Database.flush();
-    return outline;
-  });
-
-const loadTaskSet = (outline: Outline.Outline) =>
-  Effect.gen(function* () {
-    const taskSet = outline.taskSet;
-    invariant(taskSet, 'Expected the outline to link a task set.');
-    return yield* Database.load(taskSet);
+    return taskSet;
   });

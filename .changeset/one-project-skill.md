@@ -1,7 +1,5 @@
 ---
-'@dxos/cli': minor
 '@dxos/plugin-projects': minor
-'@dxos/plugin-tasks': minor
 '@dxos/assistant-toolkit': minor
 ---
 

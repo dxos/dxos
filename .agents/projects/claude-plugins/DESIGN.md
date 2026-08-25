@@ -81,9 +81,9 @@ drop the discipline for every session that never invokes the command.
 
 Once the Composer backend is trusted (Phase 2 round-trip green), the plugin stops carrying the
 workflow and starts pointing at it. The canonical skill is `plugin-projects`'
-`code-project-skill.md`, renamed from `codeProject` to `project` — that name was only ever a
-prompt-collision workaround against assistant-toolkit's `org.dxos.skill.project`, which Phase 4
-absorbs (its two artifact ops join the consolidated skill) to free the name.
+`skills/project/project-skill.md`, renamed from `codeProject` to `project` — that name was only ever
+a prompt-collision workaround against assistant-toolkit's `org.dxos.skill.project`, which Phase 4
+absorbed (its two artifact ops joined the consolidated skill) to free the name.
 
 Where each hook job goes:
 
@@ -102,8 +102,8 @@ The determinism the hook was built for is relocated, not lost: today's fragile m
 hand-editing YAML per prose instructions — is exactly the part that disappears. And the hook is
 already dead in the cloud sandbox, so everything moved out of it starts working in remote sessions.
 
-Bridge before cutover: two distinguishable surfaces (file stays the daily driver, `codeProject`
-dogfoods under its own name), optionally per-project store ownership for gradual migration, and
+Bridge before cutover: two distinguishable surfaces (file stays the daily driver, the space-backed
+`project` skill dogfoods under its own name), optionally per-project store ownership for gradual migration, and
 `DX_PROJECT_BACKEND` as the kill switch throughout. Never dual-write. The offline story (read-only
 generated mirror vs nothing) must be decided before the `file` branch is deleted — it is the one
 irreversible UX regression in an otherwise mechanical cleanup.

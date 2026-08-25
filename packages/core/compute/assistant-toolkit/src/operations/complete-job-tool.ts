@@ -9,11 +9,17 @@ import { JsonSchema } from '@dxos/echo';
 
 /** `Instructions.make` defaults `output` to `Schema.Void`; this is what that serializes to. */
 const UNDECLARED_OUTPUT = JsonSchema.toJsonSchema(Schema.Void);
+const UNDECLARED_TYPE = 'type' in UNDECLARED_OUTPUT ? UNDECLARED_OUTPUT.type : undefined;
 
+/**
+ * Whether the routine's stored output carries a payload contract. `Instructions` keeps only the
+ * serialized schema, so a declared `null` output is indistinguishable from a defaulted one — and
+ * wants the same tool either way, having no payload to validate.
+ */
 const isUndeclaredOutput = (output: JsonSchema.JsonSchema): boolean =>
-  ('$id' in output && output.$id === '/schemas/unknown') ||
-  ('type' in output && output.type === (UNDECLARED_OUTPUT as { type?: unknown }).type);
+  ('$id' in output && output.$id === '/schemas/unknown') || ('type' in output && output.type === UNDECLARED_TYPE);
 
+/** The tool a routine signals completion with: its declared output under `success`, or a failure. */
 export const makeCompleteJobTool = (output: JsonSchema.JsonSchema) => {
   // A routine that declares no output still has to let `completeJob` carry an arbitrary success
   // payload — decoding against the default would reject one with `Expected null | undefined`.

@@ -167,7 +167,7 @@ spaceId }`. Report the new project id.
   `tasks-list { project: {"/": "echo:///<id>"}, includeSubtasks: true, spaceId }` for the active
   project; render each milestone with its derived done/total and the tasks filed under it.
 - **`/project track <text>`** — `tasks-create` on the active project's task set (`taskSet` ref
-  from `projects-get`; bootstrap one first if missing — see "The shape of a project"). If the text
+  from `projects-get`; if it is missing, stop and say so — see "The shape of a project"). If the text
   names a milestone, pass that milestone's ref; otherwise ask which milestone if the project has
   several — never guess silently.
 - **`/project hydrate`** — checkpoint before stopping or handing off:

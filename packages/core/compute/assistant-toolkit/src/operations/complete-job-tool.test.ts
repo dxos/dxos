@@ -34,4 +34,11 @@ describe('completeJob tool', () => {
     expect(Tool.getStrictMode(tool)).toBe(false);
     expect(hasEmptySchema(Tool.getJsonSchema(tool))).toBe(true);
   });
+
+  test('a declared `null` output is treated as undeclared, which the stored schema cannot distinguish', ({
+    expect,
+  }) => {
+    expect(JsonSchema.toJsonSchema(Schema.Null)).toEqual(JsonSchema.toJsonSchema(Schema.Void));
+    expect(Tool.getStrictMode(makeCompleteJobTool(JsonSchema.toJsonSchema(Schema.Null)))).toBe(false);
+  });
 });

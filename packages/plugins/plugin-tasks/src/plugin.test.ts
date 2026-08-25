@@ -21,8 +21,7 @@ describe('TasksPlugin', () => {
       plugins: [ClientPlugin.make({}), TasksPlugin()],
     });
 
-    // The headless/node variant, which is what `#plugin` resolves to here. OperationHandler is a
-    // dependency-mode root, so it activates immediately too.
+    // OperationHandler is a dependency-mode root, so it activates immediately too.
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([moduleId('schema'), moduleId('OperationHandler')]),
     );
@@ -33,8 +32,7 @@ describe('TasksPlugin', () => {
   });
 
   test('registers the task types with the client', async ({ expect }) => {
-    // A headless host registers nothing on its own, so the plugin owns every type its operations
-    // write — without them the task verbs fail at the point they store the object.
+    // Without these registered, every task verb fails where it stores the object.
     await using harness = await createComposerTestApp({
       plugins: [ClientPlugin.make({}), TasksPlugin()],
     });
