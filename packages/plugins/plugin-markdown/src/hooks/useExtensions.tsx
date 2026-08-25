@@ -216,7 +216,7 @@ const createBaseExtensions = ({
               // to the placeholder minimum while the embed resolves (prevents scroll jitter / blank).
               estimatedHeight: ({ label }: XmlWidgetProps<{ label?: string }>) =>
                 label ? parseEmbedLabel(label).height : undefined,
-              Component: (props: Omit<PreviewComponentProps, 'space'>) => <PreviewComponent {...props} space={space} />,
+              Component: (props: Omit<PreviewComponentProps, 'db'>) => <PreviewComponent {...props} db={space?.db} />,
             },
             'link-preview': {
               block: false,
