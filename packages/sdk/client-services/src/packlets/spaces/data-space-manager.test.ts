@@ -197,6 +197,37 @@ describe('DataSpaceManager', () => {
     expect(after.doc()?.links?.[objectId]).to.equal(objectUrl);
   });
 
+  test('a legacy space anchors itself on the next load, with nobody calling migrate', async () => {
+    const builder = new TestBuilder();
+
+    const peer = builder.createPeer();
+    await peer.createIdentity();
+    await openAndClose(peer.echoHost, peer.dataSpaceManager);
+
+    const space = await peer.dataSpaceManager.createSpace(new Context(), { useSpaceRootDocument: false });
+    await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+    const legacyId = space.id;
+
+    // A space created legacy stays unanchored for the session that created it, so that the next
+    // load is the one that migrates it.
+    expect(peer.echoHost.getSpaceRootRefs(legacyId)).to.be.undefined;
+
+    // A restart, not just a reopen: the suppression above lives on the manager instance, and a
+    // reopened one would still be the session that created the space.
+    await peer.dataSpaceManager.close();
+    peer.props.dataSpaceManager = undefined;
+    await openAndClose(peer.dataSpaceManager);
+
+    // Anchoring waits for the space to be open, so a lazily loaded space migrates when it is used.
+    const reloaded = getFirstSpace(peer);
+    expect(reloaded.id).to.equal(legacyId);
+    await reloaded.activate(new Context());
+
+    // Nothing calls migrateSpaceToRootDocument — opening the space is what anchors it.
+    await waitForCondition({ condition: () => peer.echoHost.getSpaceRootRefs(legacyId) !== undefined });
+    expect(peer.echoHost.getSpaceRootRefs(legacyId)!.idDerivation).to.equal('spaceKey');
+  });
+
   test('a credential deleted from the document is still read back', async () => {
     const builder = new TestBuilder();
 
