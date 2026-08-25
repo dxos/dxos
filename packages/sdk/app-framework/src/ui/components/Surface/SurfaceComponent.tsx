@@ -272,6 +272,12 @@ export const SurfaceComponent = memo(
       return null;
     }
 
+    // An explicit `limit={0}` means render nothing — including while a role is still activating,
+    // where the placeholder below would otherwise reintroduce output the caller opted out of.
+    if (limit === 0) {
+      return null;
+    }
+
     if (candidates.length === 0) {
       // A held fallback is not a miss: the role's own module is still loading, and rendering
       // nothing here (rather than `null`) keeps the plank's placeholder up until it lands.
