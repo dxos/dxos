@@ -29,7 +29,7 @@ const gen = (args: string[]): void => {
   for (const file of result.files) {
     // eslint-disable-next-line no-console
     console.log(
-      `dx-plugin gen: ${path.relative(pluginDir, file.path)} (${file.included} modules, ${file.stubbed} stubs${file.overridden ? `, ${file.overridden} overrides` : ''})`,
+      `dx-plugin gen: ${path.relative(pluginDir, file.path)} (${file.included} modules, ${file.stubbed} stubs)`,
     );
   }
 };
