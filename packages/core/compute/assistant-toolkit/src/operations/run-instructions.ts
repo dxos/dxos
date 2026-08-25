@@ -36,14 +36,24 @@ const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-4-8.def
 /** `Instructions.make` defaults `output` to `Schema.Void`; this is what that serializes to. */
 const UNDECLARED_OUTPUT = JsonSchema.toJsonSchema(Schema.Void);
 
-const routineOutputSchema = (output: JsonSchema.JsonSchema): Schema.Top => {
+// Accepts any JSON value, unlike `Schema.Any`, without serializing to the empty `{}` subschema
+// the Anthropic API rejects ("Empty schema that accepts any JSON value is not supported").
+const JsonPayload = Schema.Union([
+  Schema.String,
+  Schema.Number,
+  Schema.Boolean,
+  Schema.Record(Schema.String, Schema.Any),
+  Schema.Array(Schema.Any),
+]);
+
+export const routineOutputSchema = (output: JsonSchema.JsonSchema): Schema.Codec<any, any> => {
   // A routine that declares no output still has to let `completeJob` carry an arbitrary success
   // payload — decoding against the default would reject one with `Expected null | undefined`.
   const undeclared =
     ('$id' in output && output.$id === '/schemas/unknown') ||
     ('type' in output && output.type === (UNDECLARED_OUTPUT as { type?: unknown }).type);
   if (undeclared) {
-    return Schema.Any;
+    return JsonPayload;
   }
   return JsonSchema.toEffectSchema(output);
 };
@@ -181,30 +191,32 @@ export default RunInstructions.pipe(
   Operation.opaqueHandler,
 );
 
+/** Exported for tests asserting the serialized tool schema. */
+export const makeCompleteJobTool = (output: Schema.Top) =>
+  Tool.make('completeJob', {
+    // Both fields accept `null` because models emit it for a field they mean to omit.
+    parameters: Schema.Struct({
+      success: Schema.optional(Schema.NullOr(output)),
+      failure: Schema.optional(
+        Schema.NullOr(
+          Schema.Struct({
+            message: Schema.String.annotate({
+              description: 'Short message describing the error.',
+            }),
+            description: Schema.optional(Schema.NullOr(Schema.String)).annotate({
+              description: 'Optional longer message describing in detail what went wrong',
+            }),
+          }),
+        ),
+      ),
+    }),
+  });
+
 const makePromptAgentToolkit = (options: {
   output: Schema.Top;
   resultSink: Deferred.Deferred<unknown, PromptError>;
 }) => {
-  class PromptAgentToolkit extends Toolkit.make(
-    Tool.make('completeJob', {
-      // Both fields accept `null` because models emit it for a field they mean to omit.
-      parameters: Schema.Struct({
-        success: Schema.optional(Schema.NullOr(options.output)),
-        failure: Schema.optional(
-          Schema.NullOr(
-            Schema.Struct({
-              message: Schema.String.annotate({
-                description: 'Short message describing the error.',
-              }),
-              description: Schema.optional(Schema.NullOr(Schema.String)).annotate({
-                description: 'Optional longer message describing in detail what went wrong',
-              }),
-            }),
-          ),
-        ),
-      }),
-    }),
-  ) {}
+  class PromptAgentToolkit extends Toolkit.make(makeCompleteJobTool(options.output)) {}
   const layer = PromptAgentToolkit.toLayer({
     completeJob: Effect.fnUntraced(function* (result) {
       // A success payload wins over a failure sent alongside it, so a placeholder cannot discard

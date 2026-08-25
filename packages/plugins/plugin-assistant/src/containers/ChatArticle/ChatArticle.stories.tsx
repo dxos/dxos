@@ -149,6 +149,7 @@ const meta = {
                 const [space] = client.spaces.get();
                 yield* Effect.promise(() => space.waitUntilReady());
                 const feed = space.db.add(Feed.make());
+                // TODO(burdon): Use TaskSet (not outline).
                 const outline = tasks.length
                   ? space.db.add(Outline.make({ content: tasks.map(Outline.renderChecklistItem).join('\n') }))
                   : undefined;

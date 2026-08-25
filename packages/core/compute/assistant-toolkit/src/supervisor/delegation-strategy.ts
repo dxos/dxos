@@ -225,15 +225,20 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
         }
       }
 
-      // Surface the actual failure cause (not just "failed") so delegation errors are debuggable.
-      const failureCause = Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined;
-      if (failureCause) {
-        log.warn('sub-agent failed', { taskId: id, title, cause: failureCause });
+      // The full cause (with stack traces) goes to the log; the conversation gets the error
+      // messages only, so delegation errors stay debuggable without dumping a stack in the chat.
+      if (Exit.isFailure(exit)) {
+        log.warn('sub-agent failed', { taskId: id, title, cause: Cause.pretty(exit.cause) });
       }
+      const failureSummary = Exit.isFailure(exit)
+        ? Cause.prettyErrors(exit.cause)
+            .map((error) => error.message)
+            .join('; ')
+        : undefined;
 
       const text = Exit.isSuccess(exit)
         ? `The sub-agent completed "${title}".${artifactRefs.length === 0 ? ` ${formatResult(exit.value)}` : ''}`
-        : `The sub-agent failed to complete "${title}": ${failureCause ?? 'unknown error'}`;
+        : `The sub-agent failed to complete "${title}": ${failureSummary || 'unknown error'}`;
 
       // Embed each produced artifact as a `reference` block — the chat renders these as a dx-anchor
       // tag with an inline object preview, rather than a raw `echo://` URI in the text.

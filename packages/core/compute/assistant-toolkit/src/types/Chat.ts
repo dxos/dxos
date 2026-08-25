@@ -43,6 +43,7 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
      * A project chat leaves this unset and writes the project's outline instead — see
      * {@link ensureOutline}.
      */
+    // TODO(burdon): Replace with TaskSet.
     outline: Schema.optional(Ref.Ref(Outline.Outline).pipe(FormInputAnnotation.set(false))),
   }).pipe(
     LabelAnnotation.set(['name']),

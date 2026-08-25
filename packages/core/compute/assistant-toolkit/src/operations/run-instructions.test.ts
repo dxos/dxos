@@ -7,6 +7,7 @@ import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
+import * as Tool from 'effect/unstable/ai/Tool';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
@@ -22,7 +23,7 @@ import { Message, Outline } from '@dxos/types';
 
 import * as Chat from '../types/Chat';
 import { RunInstructions } from './definitions';
-import defaultAgentPrompt from './run-instructions';
+import defaultAgentPrompt, { makeCompleteJobTool, routineOutputSchema } from './run-instructions';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -155,6 +156,20 @@ describe('RunInstructions', () => {
       TestHelpers.provideTestContext,
     ),
   );
+
+  it('serializes completeJob without empty subschemas for an undeclared output', ({ expect }) => {
+    // The Anthropic API rejects any `{}` subschema ("Empty schema that accepts any JSON value"),
+    // so the undeclared-output stand-in must serialize to concrete types.
+    const output = routineOutputSchema(JsonSchema.toJsonSchema(Schema.Void));
+    const json = Tool.getJsonSchema(makeCompleteJobTool(output));
+    expect(JSON.stringify(json)).not.toContain('{}');
+
+    // The stand-in still accepts an arbitrary JSON success payload.
+    const parameters = Schema.Struct({ success: Schema.optional(Schema.NullOr(output)) });
+    for (const success of ['summary', 42, true, { summary: 'done', artifactIds: ['1'] }, ['a', 'b']]) {
+      expect(Schema.decodeUnknownSync(parameters)({ success })).toEqual({ success });
+    }
+  });
 });
 
 // Scripting the `completeJob` call drives the whole operation without a live model, so what is
