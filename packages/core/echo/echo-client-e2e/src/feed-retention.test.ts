@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Feed, Filter, Obj, Query } from '@dxos/echo';
+import { type Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
@@ -24,7 +24,7 @@ import { TestSchema } from '@dxos/echo/testing';
  * TASKS: `.agents/projects/memory-usage/TASKS.md` (Phase 2, Linear DX-1148).
  */
 
-const OBJECT_COUNT = 100;
+const OBJECT_COUNT = 1000;
 const HALF = OBJECT_COUNT / 2;
 
 /** Large enough that per-object payload dominates fixed entity overhead and heap noise. */
@@ -37,6 +37,8 @@ type Checkpoint = {
   rss: number;
   /** Objects from the original query still reachable, once refs are being tracked. */
   alive?: number;
+  /** Residency reported by the database itself, for attributing the heap to a cache. */
+  stats?: Database.DatabaseStats;
 };
 
 /**
@@ -57,25 +59,44 @@ const aliveCount = (refs: WeakRef<object>[]): number => refs.filter((ref) => ref
  * Settle, then read heap and (once the caller is tracking them) liveness. Both are sampled in the
  * same pass so the printed table and the assertions describe one moment rather than two.
  */
-const capture = async (label: string, checkpoints: Checkpoint[], refs?: WeakRef<object>[]): Promise<Checkpoint> => {
+const capture = async (
+  label: string,
+  checkpoints: Checkpoint[],
+  db: EchoDatabase,
+  refs?: WeakRef<object>[],
+): Promise<Checkpoint> => {
   await settle();
   const { heapUsed, external, rss } = process.memoryUsage();
-  const checkpoint = { label, heapUsed, external, rss, ...(refs ? { alive: aliveCount(refs) } : {}) };
+  // Read after the memory sample: `stats()` walks the space on the host, so anything it allocates
+  // belongs to the next checkpoint's settle rather than to this reading.
+  const stats = await db.stats();
+  const checkpoint = { label, heapUsed, external, rss, stats, ...(refs ? { alive: aliveCount(refs) } : {}) };
   checkpoints.push(checkpoint);
   return checkpoint;
 };
 
 const MB = (bytes: number): string => `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
 
+const column = (value: number | string, width: number): string => String(value).padStart(width);
+
 const report = (title: string, checkpoints: Checkpoint[]): void => {
   const floor = checkpoints[0].heapUsed;
   console.log(`\n[${title}] ${OBJECT_COUNT} objects x ${MB(PAYLOAD_BYTES)} = ${MB(OBJECT_COUNT * PAYLOAD_BYTES)}`);
-  for (const { label, heapUsed, external, rss, alive: live } of checkpoints) {
+  console.log(
+    `  ${'checkpoint'.padEnd(32)}${column('heap', 9)}${column('delta', 9)}${column('rss', 9)}` +
+      `${column('alive', 7)}${column('objs', 6)}${column('feeds', 6)}${column('feedObjs', 9)}` +
+      `${column('docs.c', 8)}${column('docs.h', 8)}${column('queries', 8)}`,
+  );
+  for (const { label, heapUsed, rss, alive: live, stats } of checkpoints) {
     const delta = heapUsed - floor;
+    const client = stats?.loaded.client;
+    const host = stats?.loaded.host;
     console.log(
-      `  ${label.padEnd(34)} heap ${MB(heapUsed).padStart(8)}  ${(delta >= 0 ? '+' : '') + MB(delta)}`.padEnd(70) +
-        `external ${MB(external).padStart(8)}  rss ${MB(rss).padStart(8)}` +
-        (live === undefined ? '' : `  alive ${String(live).padStart(4)}/${OBJECT_COUNT}`),
+      `  ${label.padEnd(32)}${column(MB(heapUsed), 9)}${column((delta >= 0 ? '+' : '') + MB(delta), 9)}` +
+        `${column(MB(rss), 9)}${column(live ?? '-', 7)}${column(client?.objects ?? '-', 6)}` +
+        `${column(client?.feeds ?? '-', 6)}${column(client?.feedObjects ?? '-', 9)}` +
+        `${column(client?.documents ?? '-', 8)}${column(host?.documents ?? '-', 8)}` +
+        `${column(host?.queriesTotal ?? '-', 8)}`,
     );
   }
 };
@@ -112,7 +133,7 @@ describe('feed object retention', { tags: ['memory'] }, () => {
     const checkpoints: Checkpoint[] = [];
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
     const db = await peer.createDatabase();
-    await capture('A: empty database', checkpoints);
+    await capture('A: empty database', checkpoints, db);
 
     const feed = db.add(Feed.make({ name: 'retention' }));
     await appendObjects(db, feed);
@@ -121,18 +142,18 @@ describe('feed object retention', { tags: ['memory'] }, () => {
     // object, so without this A' would carry the whole working set and measure the writer rather
     // than the reader.
     await db.evictFeedHandle(feed);
-    const baseline = await capture("A': on disk, handle evicted", checkpoints);
+    const baseline = await capture("A': on disk, handle evicted", checkpoints, db);
 
     let queried: Obj.Unknown[] | undefined = await db
       .query(Query.select(Filter.type(TestSchema.Task)).from(feed))
       .run();
     expect(queried.length).toBe(OBJECT_COUNT);
     const refs = queried.map((object) => new WeakRef(object));
-    await capture('B: all held by the caller', checkpoints, refs);
+    await capture('B: all held by the caller', checkpoints, db, refs);
 
     queried = undefined;
     await db.evictFeedHandle(feed);
-    const evicted = await capture('E: handle evicted', checkpoints, refs);
+    const evicted = await capture('E: handle evicted', checkpoints, db, refs);
 
     report('control', checkpoints);
     expect(evicted.alive).toBe(0);
@@ -149,27 +170,27 @@ describe('feed object retention', { tags: ['memory'] }, () => {
     const checkpoints: Checkpoint[] = [];
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
     const db = await peer.createDatabase();
-    await capture('A: empty database', checkpoints);
+    await capture('A: empty database', checkpoints, db);
 
     const feed = db.add(Feed.make({ name: 'retention' }));
     await appendObjects(db, feed);
     await db.flush();
     await db.evictFeedHandle(feed);
-    await capture("A': on disk, handle evicted", checkpoints);
+    await capture("A': on disk, handle evicted", checkpoints, db);
 
     let queried: Obj.Unknown[] = await db.query(Query.select(Filter.type(TestSchema.Task)).from(feed)).run();
     expect(queried.length).toBe(OBJECT_COUNT);
     const refs = queried.map((object) => new WeakRef(object));
-    await capture('B: all held by the caller', checkpoints, refs);
+    await capture('B: all held by the caller', checkpoints, db, refs);
 
     queried = queried.slice(0, HALF);
-    const half = await capture('C: half held by the caller', checkpoints, refs);
+    const half = await capture('C: half held by the caller', checkpoints, db, refs);
     // Sampled here, not at the end: after D every ref is expected dead, so a tail reading taken
     // then would pass whether or not C released anything.
     const aliveTailAtHalf = aliveCount(refs.slice(HALF));
 
     queried = [];
-    const none = await capture('D: none held by the caller', checkpoints, refs);
+    const none = await capture('D: none held by the caller', checkpoints, db, refs);
 
     report('retention', checkpoints);
     expect(aliveTailAtHalf).toBe(0);

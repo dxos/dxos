@@ -213,6 +213,15 @@ export class FeedHandle {
   }
 
   /**
+   * Objects resident in this handle's core cache. A superset of the queried working set: a core is
+   * registered for every object the handle has hydrated, and is dropped only on `delete` or
+   * `dispose`, so this is the retention-relevant count rather than `_objects.length`.
+   */
+  get residentObjectCount(): number {
+    return this.#cores.size;
+  }
+
+  /**
    * Insert into feed with optimistic update, awaiting the append RPC. Re-appending an id that
    * already has a core is an update (see `EntityMetaIndex`'s upsert-by-id): the argument's state is
    * applied onto the existing working-set instance, which stays canonical, rather than registering a
