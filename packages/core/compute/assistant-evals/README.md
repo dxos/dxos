@@ -11,9 +11,11 @@ Call the live LLM via `DX_ANTHROPIC_API_KEY` — no conversation cache. Shared r
 `src/runner.ts`.
 
 ```bash
-export DX_ANTHROPIC_API_KEY=...
-moon run assistant-evals:evals
+export DX_ANTHROPIC_API_KEY=...          # or: eval "$(pnpm -ws 1p-credentials)"
 
-# Single file (the moon task hardcodes `args: [src/evals]`, so bypass it for one file):
-cd packages/core/compute/assistant-evals && npx evalite run src/evals/database.eval.ts
+moon run assistant-evals:evals                                  # every scenario
+moon run assistant-evals:eval -- src/evals/database.eval.ts     # one scenario
 ```
+
+`evals` hardcodes `args: [src/evals]`, so appending a file to it gives evalite two positionals and
+it exits on "Too many arguments" — `eval` is the single-file task.
