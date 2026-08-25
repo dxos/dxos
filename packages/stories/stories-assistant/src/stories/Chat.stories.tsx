@@ -113,6 +113,7 @@ export const WithSubAgents: Story = {
     createAgent: {
       name: 'Supervisor',
       instructions: 'You delegate units of work to sub-agents using the available tools.',
+      project: 'Delegation',
     },
     lazyPlugins: async () => {
       const MarkdownPlugin = await import('@dxos/plugin-markdown/MarkdownPlugin');
@@ -298,6 +299,7 @@ export const WithSubAgentsTest2: Story = {
     createAgent: {
       name: 'Supervisor',
       instructions: 'You delegate units of work to sub-agents using the available tools.',
+      project: 'Delegation',
     },
     lazyPlugins: async () => {
       const MarkdownPlugin = await import('@dxos/plugin-markdown/MarkdownPlugin');
