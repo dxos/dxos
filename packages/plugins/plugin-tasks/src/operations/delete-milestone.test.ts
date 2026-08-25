@@ -29,7 +29,6 @@ describe('delete-milestone', () => {
 
       const { releasedTasks } = yield* deleteMilestone.handler({ milestone: Ref.make(milestone) });
 
-      // Matches Linear/GitHub: removing a milestone is not a way to delete the work under it.
       expect(releasedTasks).toBe(1);
       expect(taskSet.milestones).toHaveLength(0);
       expect(taskSet.tasks.map((ref) => ref.target?.id)).toEqual([task.id]);

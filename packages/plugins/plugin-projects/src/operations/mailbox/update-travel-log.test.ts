@@ -27,7 +27,6 @@ describe('update-travel-log', () => {
       expect(contents[0]).toContain('Hotel reservation confirmed');
       expect(contents[0]).not.toContain('Lunch?');
 
-      // Regeneration: a new booking appears; still ONE document artifact.
       yield* Effect.promise(() =>
         db.appendToFeed(feed, [makeMessage({ email: 'noreply@delta.com', subject: 'Itinerary DL42' }, 9)]),
       );

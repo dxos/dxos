@@ -31,7 +31,6 @@ describe('get-outline', () => {
   );
 });
 
-/** Seeds an outline with the given checklist markdown. */
 const seed = (content: string) =>
   Effect.gen(function* () {
     const outline = yield* Database.add(Outline.make({ name: 'Launch plan', content }));

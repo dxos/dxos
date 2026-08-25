@@ -64,7 +64,6 @@ describe('update-task', () => {
       yield* updateTask.handler({ task: Ref.make(child), parentTask: null });
 
       expect(child.parentTask).toBeUndefined();
-      // Lifecycle follows: a root task cascades with the set, not with its former parent.
       expect(Obj.getParent(child)?.id).toBe(taskSet.id);
       expect(taskSet.tasks.map((ref) => ref.target?.id)).toEqual([parent.id, child.id]);
     }).pipe(Effect.provide(testLayer())),

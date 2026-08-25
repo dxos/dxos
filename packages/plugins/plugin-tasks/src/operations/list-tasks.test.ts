@@ -28,7 +28,6 @@ describe('list-tasks', () => {
       yield* updateTask.handler({ task: Ref.make(open), assignee: { email: 'kai@example.com' } });
       yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Sub thing', parentTask: Ref.make(open) });
 
-      // Root tasks only.
       const all = yield* listTasks.handler({ taskSet: Ref.make(taskSet) });
       expect(titles(all.tasks)).toEqual(['Done thing', 'Open thing']);
 

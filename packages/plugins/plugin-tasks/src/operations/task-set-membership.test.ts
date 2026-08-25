@@ -42,7 +42,6 @@ describe('task set membership', () => {
         const stranger = yield* Database.add(Task.make({ title: 'stranger', status: 'todo' }));
 
         expect(titles(reorder(refs, tasks[0].id, undefined))).toEqual(['b', 'c', 'a']);
-        // An anchor outside the array is treated as "no anchor" rather than as a failure.
         expect(titles(reorder(refs, tasks[0].id, stranger.id))).toEqual(['b', 'c', 'a']);
       }).pipe(Effect.provide(testLayer())),
     );
@@ -53,9 +52,7 @@ describe('task set membership', () => {
         const refs = tasks.map((task) => Ref.make(task));
         const stranger = yield* Database.add(Task.make({ title: 'stranger', status: 'todo' }));
 
-        // A concurrently removed entry must not be resurrected at the end of the array.
         expect(titles(reorder(refs, stranger.id, tasks[0].id))).toEqual(['a', 'b']);
-        // Self-anchoring: removing first would strand the entry at the end instead of no-op.
         expect(titles(reorder(refs, tasks[0].id, tasks[0].id))).toEqual(['a', 'b']);
       }).pipe(Effect.provide(testLayer())),
     );
@@ -82,7 +79,6 @@ describe('task set membership', () => {
         addMilestoneToSet(taskSet, milestone);
         yield* Database.flush();
 
-        // Membership is stated once, in the set's arrays; the lookup is the reverse-ref index.
         expect((yield* findTaskSet(task))?.id).toBe(taskSet.id);
         expect((yield* findMilestoneTaskSet(milestone))?.id).toBe(taskSet.id);
       }).pipe(Effect.provide(testLayer())),
@@ -116,8 +112,6 @@ describe('task set membership', () => {
 
         removeTasksFromSet(taskSet, new Set([root.id, child.id, grandchild.id]));
 
-        // The parent-edge cascade deletes the objects; the array entry is ours to remove or it
-        // reads as a dangling ref forever.
         expect(taskSet.tasks.map((ref) => refEntityId(ref))).toEqual([sibling.id]);
       }).pipe(Effect.provide(testLayer())),
     );
@@ -134,7 +128,6 @@ const seedTasks = (titles: readonly string[]) =>
     return tasks;
   });
 
-/** A set holding `root → child → grandchild` plus an unrelated sibling. */
 const seedTree = () =>
   Effect.gen(function* () {
     const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));

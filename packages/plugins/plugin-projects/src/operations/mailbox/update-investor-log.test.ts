@@ -37,7 +37,6 @@ describe('update-investor-log', () => {
         .pipe(Effect.provide(AiService.notAvailable));
       expect(result).toMatchObject({ scanned: 4, matched: 3, threads: 2, contacts: 2 });
 
-      // Contact graph: a Person per investor sender, each linked to a derived Organization.
       const people = yield* Database.query(Filter.type(Person.Person)).run;
       expect(people.map((person) => person.emails?.[0]?.value).sort()).toEqual([
         'lucia@backed.vc',

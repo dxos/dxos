@@ -29,7 +29,6 @@ describe('create-tracking-project', () => {
       const [message] = yield* Feed.query(feed, Filter.type(Message.Message)).run;
 
       const result = yield* createTrackingProject.handler({ mailbox: Ref.make(mailbox), message });
-      // The sender's corporate domain defines the tracked group — colleagues included.
       expect(result.senders).toEqual(['kirkconsult.com']);
       expect(result.pipeline).toBe('tasks');
       expect(result.tasks).toBe(2);
@@ -38,8 +37,6 @@ describe('create-tracking-project', () => {
       const project = projects.find((candidate) => candidate.id === result.projectId);
       expect(project?.name).toBe('Kirkconsult — Requests');
 
-      // The tracking routine: a standalone object (the project neither owns nor lists it),
-      // runnable-bound, feed-triggered, disabled.
       invariant(project);
       const routines = yield* Database.query(Filter.type(Routine.Routine)).run;
       expect(routines).toHaveLength(1);
@@ -50,7 +47,6 @@ describe('create-tracking-project', () => {
       expect(trigger.enabled).toBe(false);
       expect(trigger.spec?.kind).toBe('feed');
 
-      // The backfill is idempotent with the routine's later firings: re-running the sync creates nothing.
       const rerun = yield* updateProjectTasks.handler({
         project: Ref.make(project),
         mailbox: Ref.make(mailbox),
@@ -69,8 +65,6 @@ describe('create-tracking-project', () => {
       const feed = yield* Database.load(mailbox.feed);
       const [message] = yield* Feed.query(feed, Filter.type(Message.Message)).run;
 
-      // `sender` scope narrows to the individual, and the summaries pipeline binds a different
-      // runnable — so no task backfill happens.
       const result = yield* createTrackingProject.handler({
         mailbox: Ref.make(mailbox),
         message,
@@ -88,8 +82,6 @@ describe('create-tracking-project', () => {
       expect(project?.name).toBe('Nicole — Threads');
       invariant(project);
       const [routine] = yield* Database.query(Filter.type(Routine.Routine)).run;
-      // Compared against the operation's own key, so renaming the operation moves this assertion
-      // with it rather than leaving a stale string behind.
       expect(routine.spec?.kind === 'runnable' && routine.spec.runnable.uri.toString()).toContain(
         ProjectMailboxOperation.UpdateInvestorLog.meta.key.toString(),
       );

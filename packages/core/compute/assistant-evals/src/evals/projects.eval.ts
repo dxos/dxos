@@ -22,16 +22,8 @@ import { findObject, toolInvocations } from '../assertions';
 import { createEvalRunner } from '../runner';
 import { getDefaultSkills } from '../skills';
 
-// The project skill end to end: a rough outline becomes a task ledger under a milestone, one item is
-// closed, and the outline is filed as an artifact. Both halves of the skill in one run — the
-// `tasks-*` verbs it names as plain strings, and the `artifactAdd` operation it owns.
-//
-// The string-named verbs are why the plugins below are registered: `resolveToolkit` drops a ToolId
-// it cannot resolve with only a log line, so without them the model simply never sees those tools.
-
 const PROJECT_NAME = 'Harbor';
 
-/** Each bullet plus the word that identifies its task, so grading survives the model rewording. */
 const PLAN = [
   { bullet: 'Draft the schema', keyword: 'schema' },
   { bullet: 'Wire the importer', keyword: 'importer' },
@@ -42,10 +34,8 @@ const PLAN = [
 const MILESTONE_NAME = 'Alpha';
 const DONE_KEYWORD = 'schema';
 const DESIGN_DOC_NAME = 'Harbor design';
-/** The finding the design doc has to carry, so an empty document does not pass. */
 const DESIGN_KEYWORD = 'columnar';
 
-/** The verbs the scenario cannot be completed without, named as the model sees them. */
 const REQUIRED_TOOLS = [
   'tasks-get-outline',
   'tasks-create',
@@ -79,7 +69,6 @@ const task = createEvalRunner({
   skills: [...getDefaultSkills(), Ref.make(ProjectSkill.make())],
   plugins: [ProjectsPlugin.make(), TasksPlugin.make(), MarkdownPlugin.make()],
   types: [Project.Project, Markdown.Document, Milestone.Milestone, Outline.Outline, Task.Task, TaskSet.TaskSet],
-  // Reading the outline, four creates, a milestone, four files, a completion, a document and two artifacts.
   timeout: 300_000,
   seed: ({ instructions }) =>
     Effect.gen(function* () {
@@ -90,7 +79,6 @@ const task = createEvalRunner({
         Project.make({ name: PROJECT_NAME, instructions: Ref.make(instructions), outline: Ref.make(outline) }),
       );
 
-      // Mirrors a project companion chat: parented to the project, steered by its own instructions.
       const feed = yield* Database.add(Feed.make());
       const chat = yield* Database.add(
         Chat.make({ name: `${PROJECT_NAME} Chat`, feed: Ref.make(feed), instructions: Ref.make(instructions) }),
@@ -125,7 +113,6 @@ const task = createEvalRunner({
       }
 
       const tasks = yield* Effect.forEach(taskSet.tasks, (ref) => Database.load(ref));
-      // Matched on the distinguishing word rather than the whole title, so a reworded task still counts.
       const matched = PLAN.map((item) =>
         tasks.find((candidate) => candidate.title?.toLowerCase().includes(item.keyword)),
       );
@@ -143,7 +130,6 @@ const task = createEvalRunner({
       const outlineId = project.outline ? entityId(project.outline.uri) : undefined;
       const outlineFiled = !!outlineId && project.artifacts.some((ref) => entityId(ref.uri) === outlineId);
 
-      // Filed AND non-empty: the document has to carry the finding, not just exist under the name.
       const artifacts = yield* Effect.forEach(project.artifacts, (ref) =>
         Database.load(ref).pipe(Effect.orElseSucceed(() => undefined)),
       );

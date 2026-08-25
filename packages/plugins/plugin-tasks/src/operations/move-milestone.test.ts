@@ -44,7 +44,6 @@ describe('move-milestone', () => {
 
       yield* moveMilestone.handler({ milestone: Ref.make(alpha), before: Ref.make(alpha) });
 
-      // Without the self-anchor guard the entry would be removed and stranded at the end.
       expect(names(taskSet)).toEqual(['alpha', 'beta']);
     }).pipe(Effect.provide(testLayer())),
   );
@@ -62,7 +61,6 @@ describe('move-milestone', () => {
   );
 });
 
-/** A task set holding the named milestones in order. */
 const seed = (names: readonly string[]) =>
   Effect.gen(function* () {
     const taskSet = yield* Database.add(TaskSet.make({ name: 'Roadmap' }));

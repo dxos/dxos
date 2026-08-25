@@ -38,8 +38,6 @@ describe('list-milestones', () => {
 
       const { milestones } = yield* listMilestones.handler({ taskSet: Ref.make(taskSet) });
 
-      // Progress is derived, so a milestone cannot disagree with the work filed under it — and the
-      // unfiled task counts toward nothing.
       expect(milestones).toEqual([
         { id: milestone.id, name: 'Alpha', description: 'Ships to staging', targetDate: undefined, total: 2, done: 1 },
       ]);

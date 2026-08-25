@@ -19,25 +19,15 @@ import { findObject, toolInvocations } from '../assertions';
 import { createEvalRunner } from '../runner';
 import { getDefaultSkills } from '../skills';
 
-// Ledger upkeep without the sugar. `tasks-complete`, `tasks-assign`, `milestoneUpdate` and
-// `projects-list` were removed once it was clear they guarded no invariant a generic verb lacks;
-// this asserts an agent still reaches the same end state through `tasks-update` and the generic
-// space verbs, which is the only thing that made those four safe to drop.
-//
-// The project ref is deliberately NOT bound into the chat: discovery has to go through
-// `space-query-objects`, the path that replaced `projects-list`.
-
 const PROJECT_NAME = 'Beacon';
 const MILESTONE_NAME = 'Preview';
 const TARGET_DATE = '2026-09-30';
 const ASSIGNEE_EMAIL = 'kai@example.com';
 
-/** Each task plus the word identifying it, so grading survives the model rewording a title. */
 const COMPLETE_KEYWORD = 'retry';
 const ASSIGN_KEYWORD = 'rollout';
 const TASK_TITLES = ['Ship the beacon', 'Tune the retry budget', 'Document the rollout'];
 
-/** The generic verbs that have to carry the work now that the type-specific ones are gone. */
 const REQUIRED_TOOLS = ['space-query-objects', 'tasks-update', 'space-update-object'];
 
 const task = createEvalRunner({
@@ -54,7 +44,6 @@ const task = createEvalRunner({
   skills: [...getDefaultSkills(), Ref.make(ProjectSkill.make())],
   plugins: [ProjectsPlugin.make(), TasksPlugin.make()],
   types: [Project.Project, Milestone.Milestone, Outline.Outline, Task.Task, TaskSet.TaskSet],
-  // A discovery query, a task read, two task patches and a milestone patch.
   timeout: 240_000,
   seed: ({ instructions }) =>
     Effect.gen(function* () {
@@ -71,7 +60,6 @@ const task = createEvalRunner({
         Project.make({ name: PROJECT_NAME, instructions: Ref.make(instructions), taskSet: Ref.make(taskSet) }),
       );
 
-      // A chat with no project bound: the agent has the name and nothing else to go on.
       const feed = yield* Database.add(Feed.make());
       const chat = yield* Database.add(
         Chat.make({ name: `${PROJECT_NAME} Chat`, feed: Ref.make(feed), instructions: Ref.make(instructions) }),
@@ -107,7 +95,6 @@ const task = createEvalRunner({
         completed: byKeyword(COMPLETE_KEYWORD)?.status === 'done',
         assigned: byKeyword(ASSIGN_KEYWORD)?.assignee?.email === ASSIGNEE_EMAIL,
         milestoneDated: milestone?.targetDate === TARGET_DATE,
-        // The third task must be left alone — a blanket "mark everything done" is not a pass.
         untouched: tasks.filter((candidate) => (candidate.status ?? 'todo') !== 'done').length,
       };
     }),

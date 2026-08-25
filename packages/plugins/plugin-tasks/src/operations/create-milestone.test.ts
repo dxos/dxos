@@ -30,7 +30,6 @@ describe('create-milestone', () => {
       const beta = second;
       expect(alpha.name).toBe('Alpha');
       expect(alpha.description).toBe('Ships to staging');
-      // Sequence is the array order, so a new milestone lands at the end.
       expect(taskSet.milestones.map((ref) => ref.target?.id)).toEqual([alpha.id, beta.id]);
       expect(Obj.getParent(alpha)?.id).toBe(taskSet.id);
     }).pipe(Effect.provide(testLayer())),

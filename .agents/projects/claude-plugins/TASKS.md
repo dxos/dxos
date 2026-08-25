@@ -212,6 +212,18 @@ toolkit is deleted; `Gateway`/`Server` became `McpRegistry`/`McpServer`).
 - [x] **Renamed `…skill.codeProject` → `…skill.project`** (2026-08-21) — prompt is now `/project`.
       Files renamed `ProjectSkill.ts` / `project-skill.md`; public subpath is
       `@dxos/plugin-projects/ProjectSkill`. Changeset added for the breaking export changes.
+- [ ] **Skill lives in the plugin; factoring it back down is blocked** — a headless host has to
+      pull the plugins in to serve the project skill. The blocker is where the operations live:
+      every verb in `ProjectSkill.operations` is defined by a plugin (`plugin-space`,
+      `plugin-tasks`, plugin-projects), so a lower home could only name them as strings again —
+      the failure mode that put the skill here. Moving the operation definitions down is the
+      prerequisite; moving the skill is not the first step.
+- [ ] **An unresolvable tool is dropped, not reported** — `ToolResolverService.resolveToolkit`
+      (`packages/core/compute/ai/src/tools/tool-resolver-service.ts`) demotes a resolver defect to
+      `AiToolNotFoundError` and filters it out with only a `log.warn`, so a re-keyed or
+      unprojectable operation costs the model a tool and nothing fails.
+      `skills/project/tool-resolution.test.ts` exists solely to catch that per-skill. Make the drop
+      a typed failure the caller must handle and the guard test dissolves.
 
 ### One prose source
 

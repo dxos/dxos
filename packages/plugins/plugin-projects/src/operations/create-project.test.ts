@@ -30,8 +30,6 @@ describe('ProjectOperation.Create', () => {
 
     expect(id).toBeTypeOf('string');
     expect(project.name).toBe('Voyage');
-    // Instructions, task set and outline are owned children, so each carries the parent edge that
-    // both persists it in the same cascade and cascades its deletion.
     const instructions = await project.instructions?.tryLoad();
     const taskSet = await project.taskSet?.tryLoad();
     const outline = await project.outline?.tryLoad();
@@ -49,7 +47,6 @@ describe('ProjectOperation.Create', () => {
       Operation.invoke(ProjectOperation.Create, { name: 'Voyage' }, { spaceId: spaceId(harness) }),
     );
 
-    // The caller navigates to what it just created, so the path has to name this space.
     expect(subject).toHaveLength(1);
     expect(subject[0]).toContain(spaceId(harness));
   });
@@ -72,8 +69,6 @@ describe('ProjectOperation.Create', () => {
   test('an unnamed template resolves to blank', async ({ expect }) => {
     await using harness = await setup();
 
-    // Blank has to be in the contributed set, since it is what an unnamed template resolves to;
-    // the handler carries its own copy as a fallback for hosts that activate no template module.
     const templates = harness.getAll(ProjectCapabilities.Template);
     expect(templates.map((template) => template.id)).toContain(ProjectCapabilities.BlankTemplateId);
 

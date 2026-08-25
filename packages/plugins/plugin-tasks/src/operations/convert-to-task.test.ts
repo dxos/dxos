@@ -26,10 +26,8 @@ describe('convert-to-task', () => {
       const taskSet = yield* loadTaskSet(outline);
       expect(taskSet.name).toBe('Launch plan');
       expect(taskSet.tasks.map((ref) => ref.target?.id)).toEqual([task.id]);
-      // `Outline.addTask` trims, so a markdown line's surrounding whitespace never reaches the title.
       expect(task.title).toBe('first');
       expect(task.status).toBe('todo');
-      // Membership is the array; the parent edge rides along so the task cascades with the set.
       expect(Obj.getParent(task)?.id).toBe(taskSet.id);
     }).pipe(Effect.provide(testLayer())),
   );
@@ -54,8 +52,6 @@ describe('convert-to-task', () => {
 
       yield* convertToTask.handler({ outline, title: 'first' });
 
-      // Promotion takes a title, not a line: nothing strikes the bullet or links the new task back
-      // into the document, so the same item can be promoted twice.
       const content = yield* Database.load(outline.content);
       expect(content.content).toBe('- [ ] first\n- [ ] second');
     }).pipe(Effect.provide(testLayer())),
@@ -72,7 +68,6 @@ describe('convert-to-task', () => {
   );
 });
 
-/** Seeds an outline with the given checklist markdown. */
 const seed = (content: string) =>
   Effect.gen(function* () {
     const outline = yield* Database.add(Outline.make({ name: 'Launch plan', content }));
@@ -80,7 +75,6 @@ const seed = (content: string) =>
     return outline;
   });
 
-/** The set the outline linked on its first promotion. */
 const loadTaskSet = (outline: Outline.Outline) =>
   Effect.gen(function* () {
     const taskSet = outline.taskSet;

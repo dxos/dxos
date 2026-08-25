@@ -24,7 +24,6 @@ describe('create-task', () => {
 
       expect(task.title).toBe('Ship it');
       expect(task.status).toBe('todo');
-      // Membership is the array; the parent edge rides along so the task cascades with the set.
       expect(taskSet.tasks.map((ref) => ref.target?.id)).toEqual([task.id]);
       expect(Obj.getParent(task)?.id).toBe(taskSet.id);
     }).pipe(Effect.provide(testLayer())),
@@ -43,10 +42,8 @@ describe('create-task', () => {
       });
 
       expect(child.parentTask?.target?.id).toBe(parent.id);
-      // Flat: enumerating the set is one array read, sub-tasks included.
       expect(taskSet.tasks.map((ref) => ref.target?.id)).toEqual([parent.id, child.id]);
       expect(TaskSet.rootTasks(TaskSet.resolveTasks(taskSet)).map((task) => task.id)).toEqual([parent.id]);
-      // The parent edge follows the hierarchy so the sub-task cascades with its parent task.
       expect(Obj.getParent(child)?.id).toBe(parent.id);
     }).pipe(Effect.provide(testLayer())),
   );

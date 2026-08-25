@@ -29,8 +29,6 @@ describe('delete-task', () => {
 
       const { deleted } = yield* deleteTask.handler({ task: Ref.make(parent) });
 
-      // The database cascade takes the sub-task, so the array sweep must take it too — otherwise
-      // the set keeps a ref to an object that no longer exists.
       expect([...deleted].sort()).toEqual([child.id, parent.id].sort());
       expect(taskSet.tasks.map((ref) => ref.target?.id)).toEqual([kept.id]);
     }).pipe(Effect.provide(testLayer())),

@@ -18,14 +18,9 @@ import { Message, Organization, Person, Task, TaskSet } from '@dxos/types';
 
 import { scaffoldProject } from '../../templates';
 
-/**
- * Shared fixture for the mailbox pipeline tests. Each pipeline scans the same mailbox feed and
- * writes into the same project, so the seed lives here rather than being restated per operation.
- */
 export const testLayer = () =>
   TestDatabaseLayer({
     types: [
-      // The task pipeline keeps a per-project cursor over the mailbox feed.
       Cursor.Cursor,
       Feed.Feed,
       Instructions.Instructions,
@@ -80,7 +75,6 @@ export const seed = Effect.fnUntraced(function* (messages: MessageProps[]) {
   return seeded;
 });
 
-/** The markdown of the artifact documents with the given name — one per regeneration, so callers assert the count. */
 export const artifactContents = Effect.fnUntraced(function* (project: Project.Project, name: string) {
   const documents: Markdown.Document[] = [];
   for (const ref of project.artifacts) {

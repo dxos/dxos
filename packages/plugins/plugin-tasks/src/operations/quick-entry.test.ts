@@ -53,7 +53,6 @@ describe('OutlineOperation.QuickJournalEntry', () => {
 
     await harness.runPromise(Operation.invoke(OutlineOperation.QuickJournalEntry, { text: '   \n  ' }));
 
-    // Nothing is written at all — not even the journal, which is created lazily on the first entry.
     const journals = await defaultSpace(harness).db.query(Filter.type(Journal.Journal)).run();
     expect(journals).toEqual([]);
   });
@@ -61,7 +60,6 @@ describe('OutlineOperation.QuickJournalEntry', () => {
 
 type Harness = Awaited<ReturnType<typeof createComposerTestApp>>;
 
-/** An app with an identity and its default space ready, which is what the operation reads through. */
 const setup = async (): Promise<Harness> => {
   const harness = await createComposerTestApp({ plugins: [ClientPlugin.make({}), TasksPlugin()] });
   const client = harness.get(ClientCapabilities.Client);
@@ -76,7 +74,6 @@ const defaultSpace = (harness: Harness) => {
   return space;
 };
 
-/** The markdown of today's journal entry in the default space. */
 const todayContent = async (harness: Harness): Promise<string | undefined> => {
   const space = defaultSpace(harness);
   const [journal] = await space.db.query(Filter.type(Journal.Journal)).run();
