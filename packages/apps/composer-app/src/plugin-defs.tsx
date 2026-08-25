@@ -64,6 +64,7 @@ import * as SidekickPlugin from '@dxos/plugin-sidekick/SidekickPlugin';
 import * as SlackPlugin from '@dxos/plugin-slack/SlackPlugin';
 import * as SpacetimePlugin from '@dxos/plugin-spacetime/SpacetimePlugin';
 import * as StackPlugin from '@dxos/plugin-stack/StackPlugin';
+import * as StreamDeckPlugin from '@dxos/plugin-stream-deck/StreamDeckPlugin';
 import * as StudioPlugin from '@dxos/plugin-studio/StudioPlugin';
 import * as TablePlugin from '@dxos/plugin-table/TablePlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
@@ -131,6 +132,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       GamePlugin.meta.profile.key,
       IdeogramPlugin.meta.profile.key,
       HeyGenPlugin.meta.profile.key,
+      StreamDeckPlugin.meta.profile.key,
       StudioPlugin.meta.profile.key,
       IrohBeaconPlugin.meta.profile.key,
       OsrmPlugin.meta.profile.key,
@@ -218,6 +220,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     ExcalidrawPlugin.make(),
     CodePlugin.make(),
     StackPlugin.make(),
+    StreamDeckPlugin.make(),
     TablePlugin.make(),
     TerraPlugin.make(),
     ThreadPlugin.make(),

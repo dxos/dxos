@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: stream-deck
+    status: active
+    user: burdon
+    host: burdon-studio-2022
+    created: 2026-08-19
+    summary: 'Hardware dashboard of a Composer space on a Stream Deck + — 8 keys show the space favorites (objects tagged `favorite`), 4 dial segments show progress monitors or space stats. Shipped as an Elgato .sdPlugin (coexists with the Elgato app, which holds the HID device exclusively) with Composer as the brain over a loopback WebSocket.'
+    tasks: .agents/projects/stream-deck/TASKS.md
+    design: .agents/projects/stream-deck/DESIGN.md
+    prs: []
+    resume: 'M1-M3 DONE and green: 39 node + 6 storybook tests (plugin-stream-deck), 11 node + 10 smoke checks (composer-stream-deck), forced composer-app typecheck clean, PLUGIN.mdl authored. Architecture: plugin-stream-deck holds the protocol (src/protocol/Protocol.ts, ./Protocol subpath), the favorites model (NOTE: Filter.tag matches a tag URI not a label; KeySpec.target is a GRAPH PATH so a press feeds LayoutOperation.Open directly), the monitor/stats model, pure SVG renderers + buildFrame, the StreamDeckBridge client, and capabilities/bridge-driver.ts which owns the ONLY bridge (headless, gated on ClientEvents.SpacesReady) and publishes StreamDeckCapabilities.BridgeStatus - the panel deliberately does NOT connect, since the device accepts one client. composer-stream-deck (packages/apps, layer: application, Elgato UUID org.dxos.composer) is the Elgato plugin: WS server on 127.0.0.1:21435, positional slots, setImage/setFeedback, offline state. `moon run composer-stream-deck:smoke` runs the assembled bundle against a stand-in Stream Deck app and is what catches bundle-only defects (it has caught 4). NEXT: install on the real device (streamdeck link <pkg>/org.dxos.composer.sdPlugin then streamdeck restart org.dxos.composer) and tune the 144x144 key rendering, then open the PR. Not built: settings surface (registry toggle suffices), dial bindings (undecided). Tracked for later: a LaMetric TIME surface (no keys, so only the dial half carries over).'
   - name: sdk-metrics
     status: active
     user: dmaretskyi

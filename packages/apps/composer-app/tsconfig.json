@@ -340,6 +340,9 @@
       "path": "../../plugins/plugin-status-bar"
     },
     {
+      "path": "../../plugins/plugin-stream-deck"
+    },
+    {
       "path": "../../plugins/plugin-studio"
     },
     {
