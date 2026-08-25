@@ -61,9 +61,12 @@ const substitutions: Record<string, Substitution> = {
       ),
   },
 
+  // `protoc-gen-es` already presents a Struct field as a plain `JsonObject` -- the same shape the
+  // legacy substitution produces -- and buf converts it on the wire, so the value passes straight
+  // through. Building `{ fields: ... }` here instead encodes a Struct whose one key is `fields`.
   'google.protobuf.Struct': {
-    toProto: (value: Record<string, any>) => encodeStruct(value),
-    fromProto: (value: any) => decodeStruct(value),
+    toProto: (value: Record<string, any>) => value,
+    fromProto: (value: any) => value,
   },
 
   // Nanos are derived from the floored-seconds boundary so they stay in proto's required
@@ -81,67 +84,6 @@ const substitutions: Record<string, Substitution> = {
     fromProto: (value: any) => new Date(Number(value.seconds ?? 0n) * 1000 + (value.nanos ?? 0) / 1e6),
   },
 };
-
-// google.protobuf.Struct.
-
-const encodeStructValue = (structValue: any, visited: WeakSet<any>): any => {
-  switch (typeof structValue) {
-    case 'undefined':
-      return { kind: { case: 'nullValue', value: 0 } };
-    case 'number':
-      return { kind: { case: 'numberValue', value: structValue } };
-    case 'string':
-      return { kind: { case: 'stringValue', value: structValue } };
-    case 'boolean':
-      return { kind: { case: 'boolValue', value: structValue } };
-    case 'object': {
-      if (structValue === null || visited.has(structValue)) {
-        return { kind: { case: 'nullValue', value: 0 } };
-      }
-      visited.add(structValue);
-      try {
-        if (Array.isArray(structValue)) {
-          return {
-            kind: {
-              case: 'listValue',
-              value: { values: structValue.map((value) => encodeStructValue(value, visited)) },
-            },
-          };
-        }
-        return { kind: { case: 'structValue', value: encodeStruct(structValue, visited) } };
-      } finally {
-        visited.delete(structValue);
-      }
-    }
-    default:
-      return { kind: { case: 'nullValue', value: 0 } };
-  }
-};
-
-const encodeStruct = (struct: Record<string, any>, visited = new WeakSet<any>()): any => ({
-  fields: Object.fromEntries(Object.entries(struct).map(([key, value]) => [key, encodeStructValue(value, visited)])),
-});
-
-const decodeStructValue = (structValue: any): any => {
-  const kind = structValue?.kind;
-  switch (kind?.case) {
-    case 'nullValue':
-      return null;
-    case 'numberValue':
-    case 'stringValue':
-    case 'boolValue':
-      return kind.value;
-    case 'structValue':
-      return decodeStruct(kind.value);
-    case 'listValue':
-      return (kind.value.values ?? []).map(decodeStructValue);
-    default:
-      throw new Error(`Unsupported struct value: ${kind?.case}`);
-  }
-};
-
-const decodeStruct = (struct: any): Record<string, any> =>
-  Object.fromEntries(Object.entries(struct?.fields ?? {}).map(([key, value]) => [key, decodeStructValue(value)]));
 
 // Field traversal.
 

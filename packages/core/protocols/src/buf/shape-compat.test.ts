@@ -11,6 +11,7 @@ import { schema } from '../proto/index.ts';
 import { InvitationSchema } from './proto/gen/dxos/client/invitation_pb.ts';
 import { SpaceMetadataSchema } from './proto/gen/dxos/echo/metadata_pb.ts';
 import { HeadsSchema } from './proto/gen/dxos/echo/query_pb.ts';
+import { ErrorSchema } from './proto/gen/dxos/error_pb.ts';
 import { ClaimSchema } from './proto/gen/dxos/halo/credentials_pb.ts';
 import { KeyRecordSchema } from './proto/gen/dxos/halo/keyring_pb.ts';
 import { CommandSchema } from './proto/gen/dxos/mesh/muxer_pb.ts';
@@ -20,6 +21,23 @@ import { UnsupportedSubstitutionError, decodeCompat, encodeCompat } from './shap
 // alone would miss a field-numbering divergence between the two generators, so both are asserted.
 
 describe('buf shape-compat', () => {
+  test('a Struct field round-trips as a plain object', ({ expect }) => {
+    // `protoc-gen-es` types a Struct field as `JsonObject`, so re-encoding it here produced a Struct
+    // keyed `fields` -- 105 bytes against the legacy 43, and legacy bytes decoding to `{}`.
+    // `dxos.error.Error` carries the only Struct on the RPC error channel, so this covers every
+    // service call's error context.
+    const codec = schema.getCodecForType('dxos.error.Error');
+    const value = {
+      name: 'TestError',
+      message: 'failed',
+      context: { attempt: 2, nested: { ok: true }, list: [1, 'a'] },
+    };
+
+    const legacyBytes = codec.encode(value);
+    expect(new Uint8Array(encodeCompat(ErrorSchema, value))).toEqual(new Uint8Array(legacyBytes));
+    expect(decodeCompat(ErrorSchema, legacyBytes)).toMatchObject(value);
+  });
+
   test('KeyRecord round-trips identically (no substituted fields)', ({ expect }) => {
     const codec = schema.getCodecForType('dxos.halo.keyring.KeyRecord');
     const value = {

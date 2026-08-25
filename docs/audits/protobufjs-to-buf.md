@@ -6,60 +6,67 @@ at the bottom — read those before picking up a thread.
 
 ## Status
 
-| #   | Thread                                  | State    | Notes                                                                     |
-| --- | --------------------------------------- | -------- | ------------------------------------------------------------------------- |
-| 1   | `@dxos/effect-proto` removal            | **done** | Package deleted; storybook rewritten on a hand-authored Effect Schema.    |
-| 2   | Test/example protos                     | todo     | Untouched — `#3`'s harness was built against real dxos messages instead.  |
-| 3   | Shape-compat layer                      | **done** | `@dxos/protocols/buf-shape-compat` + conformance harness (5 tests).       |
-| 4   | `dxos.config`                           | **done** | Converted natively; `@dxos/config` inputs are `ConfigInit`, values buf.   |
-| 5   | devtools                                | **part** | Enum imports moved; the rest needs `#7` first.                            |
-| 6   | `Stream` extraction                     | **done** | Moved to `@dxos/async`; generator emits it from there.                    |
-| 7   | `protoMessage()` / `serviceError` → buf | **part** | Mechanical remainder exhausted; the rest is the sweep. See `#7` re-scope. |
-| 8   | Remaining `ServiceDescriptor` RPC       | todo     | 21 production sites / 10 services, all cross-peer; 49 more are tests.     |
-| 9a  | keyring `KeyRecord`                     | **done** | No substituted fields; wire format unchanged, asserted byte-for-byte.     |
-| 9b  | `echo.query.Heads`                      | **done** | Same; also dropped the workerd lazy-codec workaround.                     |
-| 9c  | `echo/metadata` + `echo/feed`           | todo     | Needs fixture profiles per storage version.                               |
-| 9d  | credentials signing/verification        | todo     | Highest risk; additionally needs `Any` support in the compat layer.       |
+| #   | Thread                                  | State    | Notes                                                                    |
+| --- | --------------------------------------- | -------- | ------------------------------------------------------------------------ |
+| 1   | `@dxos/effect-proto` removal            | **done** | Package deleted; storybook rewritten on a hand-authored Effect Schema.   |
+| 2   | Test/example protos                     | todo     | Untouched — `#3`'s harness was built against real dxos messages instead. |
+| 3   | Shape-compat layer                      | **done** | `@dxos/protocols/buf-shape-compat` + conformance harness (5 tests).      |
+| 4   | `dxos.config`                           | **done** | Converted natively; `@dxos/config` inputs are `ConfigInit`, values buf.  |
+| 5   | devtools                                | **part** | Enum imports moved; the rest needs `#7` first.                           |
+| 6   | `Stream` extraction                     | **done** | Moved to `@dxos/async`; generator emits it from there.                   |
+| 7   | `protoMessage()` / `serviceError` → buf | **part** | 31 of 46 types route through buf; 15 `Any` carriers wait on `#3`.        |
+| 8   | Remaining `ServiceDescriptor` RPC       | todo     | 21 production sites / 10 services, all cross-peer; 49 more are tests.    |
+| 9a  | keyring `KeyRecord`                     | **done** | No substituted fields; wire format unchanged, asserted byte-for-byte.    |
+| 9b  | `echo.query.Heads`                      | **done** | Same; also dropped the workerd lazy-codec workaround.                    |
+| 9c  | `echo/metadata` + `echo/feed`           | todo     | Needs fixture profiles per storage version.                              |
+| 9d  | credentials signing/verification        | todo     | Highest risk; additionally needs `Any` support in the compat layer.      |
 
-**Next up, in order:** the `#7` sweep slices below (each unblocks its share of `#5`) → `#9c` → `#8` →
-`#9d`. `#2` is independent and can slot in anywhere.
+**Next up, in order:** `Any` support in `#3` (finishes `#7`, needed by `#9d`) → rest of `#5` → `#9c`
+→ `#8` → `#9d`, with the import sweep alongside. `#2` is independent and can slot in anywhere.
 
 Deleting `protobuf-compiler`/`codec-protobuf` and dropping `protobufjs` from the catalog is the
 last step, and needs every thread above done.
 
-## `#7` re-scope: it is the sweep, not a precursor to it
+## `#7` as landed: one file, no consumer changes
 
-The first draft sized `#7` as re-pointing `protoMessage()` at buf in one file, 2–3 days, unblocking
-the sweep. That is wrong, and the reason is in `plans/worker-package/service-rpc-schemas.md`: a
-message is still on `protoMessage` **precisely because it is consumed outside the RPC boundary**.
-Service-only payloads were already inlined as Effect schemas. So flipping a type to `bufMessage`
-changes its type at every external consumer — `#7` and the import sweep are the same work, sliced
-per message type.
+`protoMessage(typeName)` now resolves the type in a buf `Registry` built over the generated file
+descriptors (`src/buf/registry.ts`) and encodes through the shape-compat layer (`#3`), which
+reproduces the protobuf.js field shapes -- `PublicKey`, `Timeframe`, plain-object `Struct`, `Date`.
+Callers are untouched and cannot observe which codec carried a type, which is what makes this one
+file rather than a sweep.
 
-Measured on `22bea85f`: **46 distinct types** across 14 `src/*Service.ts` modules (65 call sites),
-totalling **505 consumer-file references** outside `@dxos/protocols`. Counted per type as files
-importing that type's own `@dxos/protocols/proto/<pkg>` module and naming the message.
+Routing is decided per type when `protoMessage()` is called, by walking the descriptor for a
+transitive `google.protobuf.Any` field: shape-compat cannot represent one, so those types stay on
+the protobuf.js codec. A construction-time decision rather than a runtime throw on the first
+payload. Measured on `22bea85f`: **31 of 46 types route through buf, 15 stay legacy.**
 
-There is no mechanical remainder. Every one of the 46 hits at least one generator divergence at its
-consumers, which is what the Findings below predicted:
+The 15 are the `Any` carriers: `Space`, `QuerySpacesResponse`, `JoinSpaceResponse`,
+`CreateEpochResponse`, `Credential`, `Presentation`, `SignedMessage`, `GossipMessage`,
+`QueryResponse`, `edge.signal.Message`, `SignalResponse`, `SubscribeToFeedBlocksResponse`,
+`Get`/`SaveSpaceSnapshotResponse`, and top-level `google.protobuf.Any` itself. Clearing them is
+`Any` support in `#3`, which `#9d` needs anyway -- do it once, there.
 
-| Blocker at the consumers                              | Types    | Example                                                                          |
-| ----------------------------------------------------- | -------- | -------------------------------------------------------------------------------- |
-| Substituted field (`PublicKey`/`Struct`/`Timestamp`)  | most     | `LogEntry` (`Struct` + `Timestamp`), `ConnectionRequest` (`PublicKey`)           |
-| `oneof` — buf exposes `{ case, value }`               | 1 family | `BridgeEvent`: the WebRTC proxy branches on `event.connection`/`.data`/`.signal` |
-| Nested enum — buf renames, TypeScript rejects the mix | several  | `QueryAgentStatusResponse.AgentStatus`, `QueryLogsRequest.MatchingOptions`       |
-| `Timeframe` (substitution class with methods)         | 3        | `CreateEpochResponse`, `Get`/`SaveSpaceSnapshotResponse`                         |
-| `google.protobuf.Any` — unsupported in `#3`           | 1        | `SpacesService.postMessage`                                                      |
+An earlier revision of this section claimed `#7` _was_ the import sweep, on the reasoning that a
+type still on `protoMessage` is one consumed outside the RPC boundary
+(`plans/worker-package/service-rpc-schemas.md`), so flipping it rewrites its consumers. That is true
+of moving a type to `bufMessage`, and it is why the sweep is separately expensive -- but `#7` never
+required it. Re-pointing the implementation keeps the shapes.
 
-`dxos.halo.signed.SignedMessage` was the sole exception — zero consumers, and its only RPC
-(`DevtoolsHost.subscribeToCredentialMessages`) is an unimplemented stub. It is now on `bufMessage`,
-which is what `#7` has left to show. `Any` rides the wire fine through `toBinary`/`fromBinary`
-(only `toJson` needs a registry), so it gates the shape-compat layer rather than the flip itself.
+### Struct was double-encoded
 
-Slice the rest by consumer count, smallest first, each its own PR with its consumers converted in
-the same change: bridge family (2–3 files each, but pay the `oneof` + map-key rewrite once),
-devtools `SubscribeTo*Response` (4–8), edge signal/messenger (5–11), then the long tail —
-`ProfileDocument` (29), `Identity` (30), `Space` (36), `Invitation` (65), `Credential` (80).
+Fixing `#7` surfaced a live bug in `#3`: `protoc-gen-es` types a `google.protobuf.Struct` field as
+`JsonObject` -- already a plain object -- so shape-compat's substitution re-encoded it into a Struct
+keyed `fields`. 105 bytes against the legacy 43, and valid legacy bytes decoding to `{}`. It reached
+every service call, because `dxos.error.Error` carries the only Struct on the RPC error channel and
+`serviceError` rides all of them. No shape-compat test covered a Struct field. Now a passthrough,
+with a regression test over nested objects and arrays.
+
+Two lessons for the threads still open. Byte equality against the legacy codec is not optional even
+for a type that looks unsubstituted, and it is worth checking what `protoc-gen-es` already maps a
+well-known type to before writing a substitution for it. And prefer a JSON-string field over
+`google.protobuf.Struct` in new protos: the substituted plain-object shape is what makes `Struct`
+diverge between the generators, and it is what consumers reach through
+(`signalEvent.payload.payload.data?.type` in the WebRTC proxy only parses because of it).
 
 Before starting any thread, read **Findings** at the bottom: the five generator divergences are
 what make the mechanical-looking parts non-mechanical, and two of them (`Any`, nested enums) are
@@ -157,13 +164,13 @@ Per open thread, assuming no behaviour change and no proto edits.
 
 | Thread | Work                                                                                                 | Estimate    |
 | ------ | ---------------------------------------------------------------------------------------------------- | ----------- |
-| 7      | 46 types / 65 sites, each with its consumers — merged into the sweep row below                       | —           |
+| 7      | Done for the 31 non-`Any` types; the remaining 15 ride `Any` support in `#3`                         | done        |
 | 5      | Rest of devtools, behind `#7` — message type imports, the nested enum, `JsonView`                    | 2–3 days    |
 | 9c     | `echo/metadata` + `echo/feed`, with a fixture profile per storage version                            | 1 week      |
 | 8      | `ServiceDescriptor`/`createProtoRpcPeer` for mesh/teleport, iframe, bridge, agentmanager             | 1.5–2 weeks |
 | 9d     | Credentials signing/verification, incl. `Any` support in the compat layer                            | 1–1.5 weeks |
 | 2      | Test/example protos                                                                                  | 2–3 days    |
-| —      | Import sweep, incl. `#7`'s 46 types and their 505 consumer references (the two are one job)          | 3–4 weeks   |
+| —      | Import sweep: moving the 46 types' 505 consumer references to buf shapes (independent of `#7`)       | 3–4 weeks   |
 | —      | Delete `protobuf-compiler`, `codec-protobuf`, `substitutions.ts`; drop `protobufjs` from the catalog | 3–5 days    |
 
 **Remaining: roughly 8–12 engineer-weeks**, of which the import sweep is the long tail and the only
@@ -189,7 +196,7 @@ groups: `#7` and `#9a`–`#9d` on the shape-compat layer (`#3`), and `#8` on the
 | 4   | `dxos.config`                           | 55 files                                                                                                          | low         | medium     | Read-mostly, not persisted, not signed — but a public API change, since `@dxos/config` re-exported the generated namespace. Landed natively; see findings.                                                                                                                                                                                         |
 | 5   | devtools                                | 20 files                                                                                                          | low         | low–medium | Diagnostic-only; regressions are visible and harmless. Already on effect-rpc (verified — see below), so this is a type-import sweep that rides on #7, not an RPC-seam exercise.                                                                                                                                                                    |
 | 6   | `Stream` extraction                     | 26 import sites                                                                                                   | low         | medium     | Move `Stream` out of `codec-protobuf` into its own package; unblocks deleting that package.                                                                                                                                                                                                                                                        |
-| 7   | `protoMessage()` / `serviceError` → buf | 46 types / 65 sites in 14 modules, plus 505 consumer-file references                                              | medium      | high       | Not a chokepoint in one file: the remaining types are on `protoMessage` _because_ they are consumed outside the RPC boundary, so each flip is a rewrite at its consumers. Mechanical remainder is exhausted — see the `#7` re-scope above.                                                                                                         |
+| 7   | `protoMessage()` / `serviceError` → buf | One file: registry + shape-compat routing behind the existing API                                                 | medium      | low        | The chokepoint, as first rated: shapes are preserved so no call site changes. Blocked only on `Any` for 15 of 46 types. Surfaced the Struct double-encoding bug in `#3` — see above.                                                                                                                                                               |
 | 8   | Remaining `ServiceDescriptor` RPC       | 21 production `schema.getService()` sites / 10 services; 49 further sites are tests on `example.testing.*` protos | medium–high | high       | Cross-peer wire compatibility: a mismatch breaks replication between versions, not just a local call. Sequence after #6. `ServiceDescriptor` itself is only 8 references, all plumbing — the surface to migrate is `getService()` + `createProtoRpcPeer` (21 files). The test two-thirds carry no wire risk and can go first to prove the pattern. |
 | 9a  | keyring `KeyRecord`                     | `halo/keyring/src/{keyring,sqlite-keyring}.ts`                                                                    | medium      | low        | One message, two codec sites, local SQLite only. Smallest persisted slice — do it first to validate #3 against real on-disk rows.                                                                                                                                                                                                                  |
 | 9b  | `echo.query.Heads`                      | `echo-host/src/automerge/sqlite-heads-store.ts`                                                                   | medium      | low        | One message, one codec site. Rebuildable from Automerge if a migration goes wrong, which caps the downside.                                                                                                                                                                                                                                        |
