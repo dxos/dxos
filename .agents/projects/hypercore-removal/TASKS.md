@@ -1,6 +1,24 @@
 # Hypercore removal — credentials over Automerge — Tasks
 
-_Resume: project created 2026-08-24; every open question resolved and both read seams located. NOTHING IMPLEMENTED. Next: start PR A item 1 (space root doc + id derivation) — see "Delivery plan" below._
+_Resume (2026-08-25): PR A `dxos/dxos#12726`, PR B `dxos/edge#945`. Phase 1 is done; Phase 2 is done on the
+WRITE side (root + credentials document minted, populated and mirrored, on both data spaces and HALO) and
+on the EDGE read side. What is NOT done is the CLIENT read flip: there is no `CredentialSource` behind
+`ControlPipeline`, so the client still reads its credentials from the control feed and the document is
+written but never authoritative. That flip (Phase 2 write/read path + notarization) and all of Phase 3 are
+the remaining work, and Phase 3 is blocked on a design decision — see "Open decision" below. Phase 4 is out
+of scope for both PRs by design._
+
+## Open decision — blocks Phase 3
+
+Client-initiated migration executed by EDGE. Two shapes, not yet chosen:
+
+1. EDGE performs the migration and returns the new document ids. Matches the original framing; the
+   recovery/invitation resolver (returning `haloSpaceRootUrl`) falls out of it for free; larger build.
+2. The client creates the documents and EDGE records them. Smaller, and delivers the resolver now, but it
+   moves migration authority to the client, which is weaker than what was asked for.
+
+Until this is settled EDGE has nothing to put in `haloSpaceRootUrl`, because it locates space roots by
+derivation and nothing on EDGE records a root-document url for any space.
 
 Branch `claude/remove-hypercore-automerge-creds-uo7lx9`. Rationale in `DESIGN.md`.
 
