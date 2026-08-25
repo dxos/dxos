@@ -174,6 +174,17 @@ migration; crash mid-migration and resume.
       belongs to. Consequence: **the EDGE derivation-based root resolution cannot find a HALO
       root**, so HALO cannot read credentials from the document on EDGE until either the recovery
       response carries the root URL, or EDGE learns the root some way other than by derivation.
+- [x] **`AddOnlySet` (`@dxos/echo-doc`)** — reads a map from the automerge change history so a
+      delete cannot erase an entry, and a rewrite cannot displace one (first write wins).
+      Values are bytes because only a scalar is a single op carrying its own value; a JS string
+      becomes a text CRDT that would have to be replayed character by character.
+- [ ] **Wire the credentials document onto `AddOnlySet` — until this lands the erasure hole is
+      still open.** Steps, in order: 1. Flatten the entry from `{ [id]: { data: bytes } }` to `{ [id]: bytes }`; `AddOnlySet`
+      cannot read a nested map from history. Safe to change now — the format is unreleased. 2. Change `orderCredentials` in `@dxos/credentials` to take the already-read entries rather
+      than the document, keeping that package free of any automerge dependency. The edge copy
+      already takes `EncodedCredential[]`, so the two signatures converge. 3. `credentials-document-store.ts` reads via `AddOnlySet.read(doc, ['credentials'])` and
+      writes via `AddOnlySet.add`. 4. Mirror both on the edge side (`space-root.ts`, `space-credentials-source.ts`), which is
+      the security-critical reader since it decides membership.
 - [ ] `device-invitation-protocol.ts` equivalent for the HALO space: thread the halo space root URL
       through `DeviceAdmissionCredentials` so a joining device replicates the root, not just the feed.
 - [ ] **NAME COLLISION to resolve**: `spaces-service.ts` already reports a `spaceRootUrl` in

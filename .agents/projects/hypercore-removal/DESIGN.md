@@ -175,3 +175,27 @@ consulting the feed; the feed write stops when the dual path is retired.
    `@dxos/feed-store` — `common/hypercore`, `common/feed-store`,
    `mesh/teleport-extension-replicator`, `sdk/client-services` — so removing the credential
    chain removes the last consumer and `@dxos/hypercore` can be deleted outright.
+
+## Resolved (user, 2026-08-25)
+
+5. **EDGE is the resolver for the minimal join set.** A guest joining a space or an identity
+   needs a small, fixed set of facts, and EDGE already holds them: rather than deriving the
+   space root, EDGE returns its document id. `RecoverIdentityResponse` gains the halo space
+   root, exactly as `SpaceMember` gained `space_root_url` for space invitations. This removes
+   the constraint recorded below — with the root arriving from EDGE, the halo space no longer
+   has to keep a key-derived id to stay recoverable, and derivation stops being the only way
+   EDGE can locate a root.
+6. **Migration is client-initiated and EDGE-executed.** The client calls migrate for a space or
+   identity; EDGE performs it idempotently and returns the ids of the new documents; the client
+   waits for those documents to sync and only then updates local state. This replaces the
+   client-side `migrateSpaceToRootDocument` path as the durable mechanism — the client's own
+   anchoring stays only as the offline/no-EDGE case — and makes the cutover a single
+   acknowledged step rather than something each peer rediscovers.
+7. **Credential erasure is prevented by reading history, not current state.** A peer with write
+   access can delete another member's credential from the document, and the materialized map
+   loses it. Automerge keeps the change that added the entry, so the set is read from the change
+   history instead: `AddOnlySet` in `@dxos/echo-doc`. Two constraints fell out of the automerge
+   API and are load-bearing:
+   - Only a **scalar** value is a single op carrying its own value. A JS string is stored as a
+     text CRDT whose value exists only after replaying its character ops, so entries hold bytes.
+   - `decodeChange` returns a byte value as a plain array, not the `Uint8Array` that was stored.
