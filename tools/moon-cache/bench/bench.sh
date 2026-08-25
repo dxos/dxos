@@ -16,6 +16,18 @@ set -uo pipefail
 
 ROOT=$(git rev-parse --show-toplevel)
 OUT="${OUT:-$ROOT/.moon-bench}"
+
+# `.moon/workspace.yml` names the client certificate by a repo-relative path, which only exists on
+# a CI runner. On a dev machine the certificate lives in ~/.config and is found through absolute
+# MOON_REMOTE_MTLS_*, exported by a profile line that a non-interactive shell never sources. Absent
+# them moon logs "Failed to connect to storage backend, disabling it" and every rep silently
+# measures the local cache — a green run reporting hits=0.
+[ -f "$HOME/.config/dxos/moon-cache/env.sh" ] && . "$HOME/.config/dxos/moon-cache/env.sh"
+
+# Give this checkout its own blob store so the per-rep wipe below can empty it. Under
+# `unstable_sharedWorktreeCache` the store lives in the *base* checkout, where a wipe would take
+# every other worktree's outputs with it.
+export MOON_CACHE_SHARED_WORKTREE_CACHE=false
 # Not a bare `moon`: `proto activate` can put an older version ahead of the shims on PATH, and the
 # client version is part of what is being measured.
 MOON="${MOON:-$HOME/.proto/shims/moon}"
@@ -35,7 +47,11 @@ for i in $(seq 1 "$REPS"); do
   # stay warm deliberately — they are not under test.
   # The report is removed as well as the caches: without this, a failed rep would leave the
   # previous rep's report in place and get copied as if it were this one's.
-  rm -rf .moon/cache/outputs .moon/cache/states .moon/cache/hashes .moon/cache/runReport.json
+  # `blobs` and `manifests` are where `casOutputsCache` puts task outputs; `outputs` is the
+  # pre-CAS location and is empty under the current config. Miss them and the local store answers
+  # every task and the remote is never asked.
+  rm -rf .moon/cache/outputs .moon/cache/blobs .moon/cache/manifests \
+         .moon/cache/states .moon/cache/hashes .moon/cache/runReport.json
   if [ -n "$HOST" ]; then
     MOON_REMOTE_HOST="$HOST" "$MOON" run ":$TARGET" > "$OUT/$ARM$i.log" 2>&1
   else
@@ -51,7 +67,12 @@ for i in $(seq 1 "$REPS"); do
     exit 1
   fi
   cp .moon/cache/runReport.json "$OUT/report-$ARM$i.json"
-  echo "== $ARM$i exit=$code hits=$(grep -c 'cached from remote' "$OUT/$ARM$i.log")"
+  hits=$(grep -c 'cached from remote' "$OUT/$ARM$i.log")
+  echo "== $ARM$i exit=$code hits=$hits"
+  if [ "$hits" -eq 0 ]; then
+    echo "== $ARM$i hydrated nothing — the remote was not consulted, this rep measures nothing."
+    grep -m1 'disabling it' "$OUT/$ARM$i.log" || true
+  fi
 done
 
 echo "== node tools/moon-cache/bench/analyze.mjs $OUT"
