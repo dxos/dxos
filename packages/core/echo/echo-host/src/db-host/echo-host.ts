@@ -22,11 +22,11 @@ import {
   DatabaseDirectory,
   EntityStructure,
   SPACE_ROOT_TYPE,
-  isSpaceRoot,
   SpaceDocVersion,
   type SpaceRoot,
   createIdFromRootDocumentId,
   createIdFromSpaceKey,
+  isSpaceRoot,
 } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
