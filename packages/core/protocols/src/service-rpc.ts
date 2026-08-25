@@ -15,9 +15,8 @@ import { type TYPES, schema } from './proto/gen/index.ts';
 const ANY_TYPE_NAME = 'google.protobuf.Any';
 
 /**
- * Whether any field reachable from `desc` is a `google.protobuf.Any`, which the shape-compat layer
- * cannot represent. Recursion is guarded because protobuf messages may be mutually recursive
- * (`KeyChain` holds `SignedMessage`, which holds `KeyChain`).
+ * Whether any field reachable from `desc` is a `google.protobuf.Any`, which shape-compat cannot
+ * represent. Guarded against the mutual recursion protobuf messages permit.
  */
 const containsAny = (desc: DescMessage, seen = new Set<string>()): boolean => {
   if (seen.has(desc.typeName)) {
@@ -35,8 +34,7 @@ const containsAny = (desc: DescMessage, seen = new Set<string>()): boolean => {
 
 /**
  * The buf descriptor to encode `typeName` through, or `undefined` to stay on the protobuf.js codec.
- * Resolved once per `protoMessage()` call rather than per message, so a type that buf cannot carry
- * is a startup-time routing decision instead of a runtime throw on the first payload.
+ * Resolved per `protoMessage()` call so an uncarryable type fails routing rather than a payload.
  */
 const bufDescriptorFor = (typeName: string): DescMessage | undefined => {
   const desc = bufRegistry.getMessage(typeName);
@@ -45,8 +43,7 @@ const bufDescriptorFor = (typeName: string): DescMessage | undefined => {
 
 /**
  * Effect schema for a protobuf message type, encoded as protobuf bytes on the wire.
- * Values keep the protobuf.js field shapes (`PublicKey`, `Timeframe`, plain-object `Struct`, `Date`)
- * whichever codec runs, so callers cannot observe which one carried a given type.
+ * Values keep the protobuf.js field shapes whichever codec carries them.
  */
 export const protoMessage = <K extends keyof TYPES & string>(typeName: K): Schema.Codec<TYPES[K], Uint8Array> => {
   const desc = bufDescriptorFor(typeName);

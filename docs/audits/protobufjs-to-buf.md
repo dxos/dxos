@@ -14,14 +14,14 @@ at the bottom — read those before picking up a thread.
 | 4   | `dxos.config`                           | **done** | Converted natively; `@dxos/config` inputs are `ConfigInit`, values buf.  |
 | 5   | devtools                                | **part** | Enum imports moved; the rest needs `#7` first.                           |
 | 6   | `Stream` extraction                     | **done** | Moved to `@dxos/async`; generator emits it from there.                   |
-| 7   | `protoMessage()` / `serviceError` → buf | **part** | 31 of 46 types route through buf; 15 `Any` carriers wait on `#3`.        |
+| 7   | `protoMessage()` / `serviceError` → buf | **part** | 31 of 45 types route through buf; 14 `Any` carriers wait on `#3`.        |
 | 8   | Remaining `ServiceDescriptor` RPC       | todo     | 21 production sites / 10 services, all cross-peer; 49 more are tests.    |
 | 9a  | keyring `KeyRecord`                     | **done** | No substituted fields; wire format unchanged, asserted byte-for-byte.    |
 | 9b  | `echo.query.Heads`                      | **done** | Same; also dropped the workerd lazy-codec workaround.                    |
 | 9c  | `echo/metadata` + `echo/feed`           | **part** | `EchoMetadata` fixture landed; the other two types are `Any`-blocked.    |
 | 9d  | credentials signing/verification        | todo     | Highest risk; additionally needs `Any` support in the compat layer.      |
 
-**Next up, in order:** `Any` support in `#3` -- it gates `#7`'s last 15 types, two of `#9c`'s three,
+**Next up, in order:** `Any` support in `#3` -- it gates `#7`'s last 14 types, two of `#9c`'s three,
 and all of `#9d` -- then `#9c`'s store swap, `#8`, `#9d`, with the import sweep (which is what `#5`'s
 remainder needs) alongside. `#2` is independent and can slot in anywhere.
 
@@ -39,11 +39,13 @@ file rather than a sweep.
 Routing is decided per type when `protoMessage()` is called, by walking the descriptor for a
 transitive `google.protobuf.Any` field: shape-compat cannot represent one, so those types stay on
 the protobuf.js codec. A construction-time decision rather than a runtime throw on the first
-payload. Measured on `22bea85f`: **31 of 46 types route through buf, 15 stay legacy.**
+payload. Measured on `22bea85f`: **31 of 45 types route through buf, 14 stay legacy.** The count is
+of types `protoMessage()` still resolves; `SignedMessage` is not among them, having moved to an
+explicit `bufMessage()` in this same change.
 
-The 15 are the `Any` carriers: `Space`, `QuerySpacesResponse`, `JoinSpaceResponse`,
-`CreateEpochResponse`, `Credential`, `Presentation`, `SignedMessage`, `GossipMessage`,
-`QueryResponse`, `edge.signal.Message`, `SignalResponse`, `SubscribeToFeedBlocksResponse`,
+The 14 are the `Any` carriers: `Space`, `QuerySpacesResponse`, `JoinSpaceResponse`,
+`CreateEpochResponse`, `Credential`, `Presentation`, `GossipMessage`, `QueryResponse`,
+`edge.signal.Message`, `SignalResponse`, `SubscribeToFeedBlocksResponse`,
 `Get`/`SaveSpaceSnapshotResponse`, and top-level `google.protobuf.Any` itself. Clearing them is
 `Any` support in `#3`, which `#9d` needs anyway -- do it once, there.
 
@@ -72,12 +74,12 @@ diverge between the generators, and it is what consumers reach through
 ## `Any` support in `#3` is the one gate left
 
 Measured while landing `#7` and `#9c`, and it reshapes the order of everything remaining:
-`google.protobuf.Any` blocks `#7`'s last 15 types, two of `#9c`'s three, and all of `#9d`. Every
+`google.protobuf.Any` blocks `#7`'s last 14 types, two of `#9c`'s three, and all of `#9d`. Every
 `Any` reached is the same field -- `Credential.subject.assertion`:
 
 | Thread | Blocked on `Any` at                                                                |
 | ------ | ---------------------------------------------------------------------------------- |
-| `#7`   | 15 of 46 types, via `Credential` / `Presentation` / `SignedMessage`                |
+| `#7`   | 14 of 45 types, via `Credential` / `Presentation`                                  |
 | `#9c`  | `LargeSpaceMetadata.controlPipelineSnapshot.messages.credential.subject.assertion` |
 | `#9c`  | `FeedMessage.payload.credential.credential.subject.assertion`                      |
 | `#9d`  | the credential itself                                                              |
@@ -217,7 +219,7 @@ Per open thread, assuming no behaviour change and no proto edits.
 
 | Thread | Work                                                                                                 | Estimate    |
 | ------ | ---------------------------------------------------------------------------------------------------- | ----------- |
-| 7      | Done for the 31 non-`Any` types; the remaining 15 ride `Any` support in `#3`                         | done        |
+| 7      | Done for the 31 non-`Any` types; the remaining 14 ride `Any` support in `#3`                         | done        |
 | 5      | `JsonView` done; the 17 remaining imports need their types swept (see `#5` above)                    | in sweep    |
 | 9c     | `EchoMetadata` fixture done; store swap needs the downgrade fix, other two types need `Any`          | 3–5 days    |
 | 8      | `ServiceDescriptor`/`createProtoRpcPeer` for mesh/teleport, iframe, bridge, agentmanager             | 1.5–2 weeks |
@@ -249,7 +251,7 @@ groups: `#7` and `#9a`–`#9d` on the shape-compat layer (`#3`), and `#8` on the
 | 4   | `dxos.config`                           | 55 files                                                                                                          | low         | medium     | Read-mostly, not persisted, not signed — but a public API change, since `@dxos/config` re-exported the generated namespace. Landed natively; see findings.                                                                                                                                                                                         |
 | 5   | devtools                                | 20 files                                                                                                          | low         | low–medium | Diagnostic-only; regressions are visible and harmless. Already on effect-rpc (verified — see below), so this is a type-import sweep that rides on #7, not an RPC-seam exercise.                                                                                                                                                                    |
 | 6   | `Stream` extraction                     | 26 import sites                                                                                                   | low         | medium     | Move `Stream` out of `codec-protobuf` into its own package; unblocks deleting that package.                                                                                                                                                                                                                                                        |
-| 7   | `protoMessage()` / `serviceError` → buf | One file: registry + shape-compat routing behind the existing API                                                 | medium      | low        | The chokepoint, as first rated: shapes are preserved so no call site changes. Blocked only on `Any` for 15 of 46 types. Surfaced the Struct double-encoding bug in `#3` — see above.                                                                                                                                                               |
+| 7   | `protoMessage()` / `serviceError` → buf | One file: registry + shape-compat routing behind the existing API                                                 | medium      | low        | The chokepoint, as first rated: shapes are preserved so no call site changes. Blocked only on `Any` for 14 of 45 types. Surfaced the Struct double-encoding bug in `#3` — see above.                                                                                                                                                               |
 | 8   | Remaining `ServiceDescriptor` RPC       | 21 production `schema.getService()` sites / 10 services; 49 further sites are tests on `example.testing.*` protos | medium–high | high       | Cross-peer wire compatibility: a mismatch breaks replication between versions, not just a local call. Sequence after #6. `ServiceDescriptor` itself is only 8 references, all plumbing — the surface to migrate is `getService()` + `createProtoRpcPeer` (21 files). The test two-thirds carry no wire risk and can go first to prove the pattern. |
 | 9a  | keyring `KeyRecord`                     | `halo/keyring/src/{keyring,sqlite-keyring}.ts`                                                                    | medium      | low        | One message, two codec sites, local SQLite only. Smallest persisted slice — do it first to validate #3 against real on-disk rows.                                                                                                                                                                                                                  |
 | 9b  | `echo.query.Heads`                      | `echo-host/src/automerge/sqlite-heads-store.ts`                                                                   | medium      | low        | One message, one codec site. Rebuildable from Automerge if a migration goes wrong, which caps the downside.                                                                                                                                                                                                                                        |

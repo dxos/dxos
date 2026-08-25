@@ -48,10 +48,12 @@ const replacer =
 
       if (value?.['@type'] === 'google.protobuf.Any') {
         try {
-          const desc = bufRegistry.getMessage(value.type_url);
+          // `type_url` may carry a prefix (`type.googleapis.com/example.Message`), which the
+          // registry keys do not.
+          const desc = bufRegistry.getMessage(value.type_url.slice(value.type_url.lastIndexOf('/') + 1));
           if (desc) {
-            // Decoded through the compat layer rather than buf directly, so a substituted field
-            // renders as the shape the rest of this viewer formats (`PublicKey`, `Timeframe`).
+            // Decoded through the compat layer so a substituted field renders as the shape this
+            // viewer formats.
             return {
               '@type': value.type_url,
               ...decodeCompat(desc, value.value),

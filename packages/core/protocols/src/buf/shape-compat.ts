@@ -61,9 +61,8 @@ const substitutions: Record<string, Substitution> = {
       ),
   },
 
-  // `protoc-gen-es` already presents a Struct field as a plain `JsonObject` -- the same shape the
-  // legacy substitution produces -- and buf converts it on the wire, so the value passes straight
-  // through. Building `{ fields: ... }` here instead encodes a Struct whose one key is `fields`.
+  // `protoc-gen-es` presents a Struct field as the same plain `JsonObject` the legacy substitution
+  // produces, so re-encoding it would emit a Struct whose one key is `fields`.
   'google.protobuf.Struct': {
     toProto: (value: Record<string, any>) => value,
     fromProto: (value: any) => value,

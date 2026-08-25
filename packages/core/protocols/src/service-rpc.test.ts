@@ -23,14 +23,11 @@ const generatedModulePaths = (dir: string): string[] =>
     return entry.isDirectory() ? generatedModulePaths(path) : entry.name.endsWith('_pb.ts') ? [path] : [];
   });
 
-// Messages, enums and services all carry `typeName`; the registry resolves each by kind, so
-// completeness is checked with the kind-agnostic `get`.
+// Messages, enums and services all carry `typeName`, so completeness uses the kind-agnostic `get`.
 const isGenDesc = (value: unknown): value is GenMessage<never> =>
   typeof value === 'object' && value !== null && typeof (value as { typeName?: unknown }).typeName === 'string';
 
-// Types routed through buf must serialise byte-identically to the protobuf.js codec, or the peer on
-// the other side of an RPC decodes garbage. These cover what the routing has to get right: a
-// substituted `Struct`, a substituted `PublicKey`, an enum, and a repeated message field.
+// A type routed through buf must serialise byte-identically, or the peer decodes garbage.
 const CASES: Array<{ typeName: string; value: any }> = [
   { typeName: 'dxos.error.Error', value: { name: 'TestError', message: 'failed', context: { attempt: 2 } } },
   { typeName: 'dxos.client.services.ContactBook', value: { contacts: [{ identityKey: PublicKey.random() }] } },
@@ -43,8 +40,7 @@ const CASES: Array<{ typeName: string; value: any }> = [
 
 describe('service-rpc codec routing', () => {
   test('the registry covers every generated buf module', async ({ expect }) => {
-    // A `.proto` file added without being listed in `buf/registry.ts` would silently keep its types
-    // on protobuf.js rather than failing, so assert coverage from the generated tree itself.
+    // An unlisted `.proto` file would silently keep its types on protobuf.js rather than failing.
     const missing: string[] = [];
     for (const path of generatedModulePaths(GEN_DIR)) {
       const module: Record<string, unknown> = await import(path);

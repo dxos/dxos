@@ -22,10 +22,8 @@ import { UnsupportedSubstitutionError, decodeCompat, encodeCompat } from './shap
 
 describe('buf shape-compat', () => {
   test('a Struct field round-trips as a plain object', ({ expect }) => {
-    // `protoc-gen-es` types a Struct field as `JsonObject`, so re-encoding it here produced a Struct
-    // keyed `fields` -- 105 bytes against the legacy 43, and legacy bytes decoding to `{}`.
-    // `dxos.error.Error` carries the only Struct on the RPC error channel, so this covers every
-    // service call's error context.
+    // `dxos.error.Error` carries the only Struct on the RPC error channel, so a re-encoding
+    // regression here empties every service call's error context.
     const codec = schema.getCodecForType('dxos.error.Error');
     const value = {
       name: 'TestError',
@@ -94,10 +92,8 @@ describe('buf shape-compat', () => {
   });
 
   test('EchoMetadata round-trips a populated profile record', ({ expect }) => {
-    // `#9c`'s fixture: `EchoMetadata` is the persisted profile root, so a divergence here makes an
-    // existing profile unreadable rather than failing a request. Populated across every substitution
-    // it carries -- `PublicKey` (scalar and repeated), `Timestamp`, `Timeframe` -- plus a nested
-    // record and a repeated message, since an empty value would pass on almost any implementation.
+    // `EchoMetadata` is the persisted profile root, so a divergence makes an existing profile
+    // unreadable rather than failing a request.
     const codec = schema.getCodecForType('dxos.echo.metadata.EchoMetadata');
     const identityKey = PublicKey.random();
     const deviceKey = PublicKey.random();

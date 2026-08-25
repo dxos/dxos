@@ -48,9 +48,8 @@ import { file_example_testing_data } from './proto/gen/example/testing/data_pb.t
 import { file_example_testing_rpc } from './proto/gen/example/testing/rpc_pb.ts';
 
 /**
- * Every generated buf file descriptor, so a message can be resolved from the protobuf type name the
- * legacy codec is keyed by. `registry-completeness.test.ts` fails if a new `.proto` file is added
- * without being listed here.
+ * Every generated buf file descriptor, so a message resolves from the type name the legacy codec is
+ * keyed by. `service-rpc.test.ts` fails when a new `.proto` file is missing from this list.
  */
 export const bufRegistry: Registry = createRegistry(
   file_dxos_client_invitation,
