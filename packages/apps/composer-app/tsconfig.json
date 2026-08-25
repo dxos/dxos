@@ -127,6 +127,9 @@
       "path": "../../plugins/plugin-chess-com"
     },
     {
+      "path": "../../plugins/plugin-claude-agents"
+    },
+    {
       "path": "../../plugins/plugin-client"
     },
     {

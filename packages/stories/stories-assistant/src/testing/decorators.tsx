@@ -323,7 +323,9 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
         // skills and the chat), then apply any story-specific context bindings. The story-side
         // `onChatCreated` must run here: the operation handler that creates the chat is owned by
         // the assistant plugin and has no hook for it.
-        const { object: chat } = yield* invoke(AssistantOperation.CreateChat, { db: space.db });
+        const { object: chat } = yield* invoke(AssistantOperation.CreateChat, {}, { spaceId: space.db.spaceId });
+        // Added directly: this harness registers no plugin-space handlers, so `AddObject` has none.
+        space.db.add(chat);
         if (onChatCreated) {
           const registry = yield* Capabilities.AtomRegistry;
           const feed = yield* Effect.promise(() => chat.feed.load());

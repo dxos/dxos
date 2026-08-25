@@ -37,9 +37,6 @@
       "path": "../../core/compute/ai"
     },
     {
-      "path": "../../core/compute/assistant"
-    },
-    {
       "path": "../../core/compute/assistant-toolkit"
     },
     {
@@ -80,9 +77,6 @@
     },
     {
       "path": "../../ui/react-ui"
-    },
-    {
-      "path": "../../ui/react-ui-attention"
     },
     {
       "path": "../../ui/react-ui-form"

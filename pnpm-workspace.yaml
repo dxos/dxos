@@ -101,6 +101,7 @@ catalog:
   '@effect/sql-sqlite-bun': 4.0.0-rc.108
   '@effect/sql-sqlite-node': 4.0.0-rc.108
   '@effect/sql-sqlite-wasm': 4.0.0-rc.108
+  '@effect/tsgo': ^0.36.5
   '@effect/vitest': 4.0.0-rc.108
   '@effect/wa-sqlite': ^0.1.2
   '@elgato/streamdeck': ^2.1.2
@@ -549,6 +550,7 @@ catalog:
   once: ^1.4.0
   openapi-types: ^12.1.3
   oxc-resolver: ^11.9.0
+  oxlint-tsgolint: ^7.0.2001
   papaparse: ^5.5.3
   parjs: ^1.3.9
   parsimmon: ^1.18.1
@@ -666,6 +668,7 @@ catalog:
   type-fest: 4.10.1
   typedoc: 0.28.1
   types-package-json: ^2.0.39
+  tstyche: ^7.2.3
   typescript: ^7.0.2
   ua-parser-js: ^1.0.39
   uint8arrays: ^5.1.0

@@ -605,6 +605,43 @@ export interface DatabaseStats {
   readonly feeds: number;
   /** Total feed blocks stored locally for the space. */
   readonly feedBlocks: number;
+  /**
+   * What is resident in memory right now, as opposed to the stored counts above. Split by realm
+   * because the client and the host cache independently — a client-side working set that is never
+   * released reads as nothing at all in the host's numbers, and vice versa.
+   */
+  readonly loaded: {
+    readonly client: ClientLoadedStats;
+    readonly host: HostLoadedStats;
+  };
+}
+
+/**
+ * Client-side residency. Space-scoped except where noted.
+ */
+export interface ClientLoadedStats {
+  /** Document handles held by this space's repo proxy. */
+  readonly documents: number;
+  /** Object cores held by this space's entity manager. */
+  readonly objects: number;
+  /** Feed handles cached by this database. */
+  readonly feeds: number;
+  /** Objects resident across those feed handles — the feeds' working set, not what is stored. */
+  readonly feedObjects: number;
+  /** Entities in the runtime registry (types and other static entities), across the whole client. */
+  readonly registryTotal: number;
+}
+
+/**
+ * Host-side residency. A document on disk costs nothing until a handle for it is cached.
+ */
+export interface HostLoadedStats {
+  /** Automerge handles cached for this space. */
+  readonly documents: number;
+  /** Automerge handles cached across every space on this host. */
+  readonly documentsTotal: number;
+  /** Active reactive queries registered with the host, across every space. */
+  readonly queriesTotal: number;
 }
 
 /**
