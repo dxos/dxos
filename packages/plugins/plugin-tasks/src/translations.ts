@@ -40,7 +40,7 @@ export const translations = [
         'task-create.placeholder': 'Add task',
         'backlog.label': 'Backlog',
         'milestone-progress.label': '{{done}}/{{total}}',
-        'task-status.todo.label': 'Todo',
+        'task-status.todo.label': 'To Do',
         'task-status.in-progress.label': 'In progress',
         'task-status.done.label': 'Done',
         'task-status.failed.label': 'Failed',

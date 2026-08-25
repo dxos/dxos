@@ -12,7 +12,7 @@ import { type IdbLogStore } from '@dxos/log-store-idb';
 import { Observability, ObservabilityExtension, ObservabilityProvider } from '@dxos/observability';
 import { getHostPlatform } from '@dxos/util';
 
-import { LOG_STORE_MAX_BYTES } from './constants';
+import { APP_DOMAIN, FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from './constants';
 
 export const PARAM_PROFILER = 'profiler';
 export const PARAM_SAFE_MODE = 'safe';
@@ -70,6 +70,15 @@ const POSTHOG_DISABLED_CONFIG = {
   autocapture: false,
 } as const;
 
+/**
+ * Where feedback logs are uploaded. A native build has no `/api` route on its own origin, so it must
+ * name a deployment that does — its own, since each binds a separate R2 bucket.
+ */
+const feedbackLogsEndpoint = (config: Config, isTauri: boolean): string | undefined =>
+  isTauri
+    ? (config.values.runtime?.app?.env?.DX_FEEDBACK_LOGS_ENDPOINT ?? `https://${APP_DOMAIN}${FEEDBACK_LOGS_PATH}`)
+    : undefined;
+
 /** Initialize observability extensions and data providers for Composer. */
 export const initializeObservability = async (
   config: Config,
@@ -98,6 +107,7 @@ export const initializeObservability = async (
         environment: getEnvString(config, 'DX_ENVIRONMENT') ?? 'unknown',
         logStore,
         feedbackLogMaxSize: LOG_STORE_MAX_BYTES,
+        feedbackLogsEndpoint: feedbackLogsEndpoint(config, isTauri),
         posthog: observabilityDisabled ? POSTHOG_DISABLED_CONFIG : undefined,
       }),
     ),
