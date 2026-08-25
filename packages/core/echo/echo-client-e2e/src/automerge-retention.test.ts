@@ -45,6 +45,22 @@ const PAYLOAD_BYTES = 1 * 1024;
 
 const SCALE = { objectCount: OBJECT_COUNT, payloadBytes: PAYLOAD_BYTES };
 
+/**
+ * Reads the whole set, retrying a short result.
+ *
+ * The index source caps each hit's load at two seconds (`INDEX_OBJECT_LOAD_TIMEOUT`), and every hit
+ * in a cold read starts that clock at once while the documents arrive over the following minute — so
+ * on a loaded runner the tail of the first pass can expire. The retry reads what has since landed;
+ * what is under test is what the space releases afterwards, not how fast a cold read completes.
+ */
+const queryAll = async (db: EchoDatabase, expected: number): Promise<Obj.Unknown[]> => {
+  let objects: Obj.Unknown[] = [];
+  for (let attempt = 0; attempt < 5 && objects.length < expected; attempt++) {
+    objects = await db.query(Query.select(Filter.type(TestSchema.Task))).run();
+  }
+  return objects;
+};
+
 /** @see the call site: a nested frame, so no stack slot outlives the removal. */
 const removeAll = (db: EchoDatabase, objects: Obj.Unknown[]): void => {
   for (const object of objects) {
@@ -108,7 +124,7 @@ describe('automerge object retention', { tags: ['memory'] }, () => {
     await using _peer = peer;
     const baseline = await capture('A: cold client, data on disk', checkpoints, db);
 
-    let queried: Obj.Unknown[] | undefined = await db.query(Query.select(Filter.type(TestSchema.Task))).run();
+    let queried: Obj.Unknown[] | undefined = await queryAll(db, OBJECT_COUNT);
     expect(queried.length).toBe(OBJECT_COUNT);
     const refs = queried.map((object) => new WeakRef(object));
     const held = await capture('B: all held by the caller', checkpoints, db, refs);
@@ -146,7 +162,7 @@ describe('automerge object retention', { tags: ['memory'] }, () => {
     await using _peer = peer;
     await capture('A: cold client, data on disk', checkpoints, db);
 
-    let queried: Obj.Unknown[] = await db.query(Query.select(Filter.type(TestSchema.Task))).run();
+    let queried: Obj.Unknown[] = await queryAll(db, OBJECT_COUNT);
     expect(queried.length).toBe(OBJECT_COUNT);
     const refs = queried.map((object) => new WeakRef(object));
     await capture('B: all held by the caller', checkpoints, db, refs);

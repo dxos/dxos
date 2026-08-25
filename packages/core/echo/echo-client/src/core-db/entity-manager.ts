@@ -388,28 +388,15 @@ export class EntityManager implements IDatabaseBinding {
    * on the handle it already has, so nothing would ever emit the update the read is waiting for.
    */
   private _rehydrateCore(objectId: string): ObjectCore | undefined {
-    const handle = this._objectDocumentHandles.get(objectId) ?? this._findLoadedDocumentHandle(objectId);
+    // Only from the handle already bound for this object: a miss is the common case during a cold
+    // read, and every automerge lookup taken to answer it is paid thousands of times over. Deriving
+    // the document from the space root instead (its `objects`, then its `links`) cost two extra
+    // WASM crossings per miss, which is enough to push an index hit past its load timeout.
+    const handle = this._objectDocumentHandles.get(objectId);
     if (handle == null || !handle.isReady() || handle.doc()?.objects?.[objectId] == null) {
       return undefined;
     }
     return this._createObjectInDocument(handle, objectId);
-  }
-
-  /**
-   * The already-loaded document an object lives in — the space root for an inline object, otherwise
-   * the linked document if the repo still holds it. Never starts a load: this answers "can the core
-   * be rebuilt from what is here", and a miss falls through to the regular load path.
-   */
-  private _findLoadedDocumentHandle(objectId: string): DocHandleProxy<DatabaseDirectory> | undefined {
-    const root = this._spaceRootDocHandle;
-    if (root == null || !root.isReady()) {
-      return undefined;
-    }
-    if (DatabaseDirectory.getInlineObject(root.doc(), objectId) != null) {
-      return root;
-    }
-    const url = this._getLinkedDocumentUrl(objectId);
-    return url == null ? undefined : this._repoProxy.handles[interpretAsDocumentId(url)];
   }
 
   async loadObjectCoreById(
