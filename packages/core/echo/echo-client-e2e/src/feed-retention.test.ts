@@ -58,23 +58,23 @@ describe('feed object retention', { tags: ['memory'] }, () => {
     const checkpoints: Checkpoint[] = [];
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
     const db = await peer.createDatabase();
-    await capture('A: empty database', checkpoints, db);
+    await capture('0: empty client, no data', checkpoints, db);
 
     const feed = db.add(Feed.make({ name: 'retention' }));
     await appendObjects(db, feed);
     await db.flush();
     // Evicted before the baseline is taken: the writing path materializes a core per appended
-    // object, so without this A' would carry the whole working set and measure the writer rather
+    // object, so without this A would carry the whole working set and measure the writer rather
     // than the reader.
     await db.evictFeedHandle(feed);
-    const baseline = await capture("A': on disk, handle evicted", checkpoints, db);
+    const baseline = await capture('A: data on disk, handle evicted', checkpoints, db);
 
     let queried: Obj.Unknown[] | undefined = await db
       .query(Query.select(Filter.type(TestSchema.Task)).from(feed))
       .run();
     expect(queried.length).toBe(OBJECT_COUNT);
     const refs = queried.map((object) => new WeakRef(object));
-    await capture('B: all held by the caller', checkpoints, db, refs);
+    const held = await capture('B: all held by the caller', checkpoints, db, refs);
 
     queried = undefined;
     await db.evictFeedHandle(feed);
@@ -82,8 +82,10 @@ describe('feed object retention', { tags: ['memory'] }, () => {
 
     report('control', checkpoints, SCALE);
     expect(evicted.alive).toBe(0);
-    // Generous: the host keeps its own index/query state, which this bound is not trying to pin.
-    expect(evicted.heapUsed - baseline.heapUsed).toBeLessThan(0.35 * OBJECT_COUNT * PAYLOAD_BYTES);
+    // At least two thirds of what holding the objects cost is given back. Stated against the
+    // measured cost rather than the raw payload, which is only a fraction of what an object
+    // actually occupies and would make the bound depend on the suite's constants.
+    expect(evicted.heapUsed - baseline.heapUsed).toBeLessThan(0.35 * (held.heapUsed - baseline.heapUsed));
   });
 
   // Regression guard for the strong `#cores` / `_objects` pair this replaced: a feed's footprint
@@ -94,13 +96,13 @@ describe('feed object retention', { tags: ['memory'] }, () => {
     const checkpoints: Checkpoint[] = [];
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
     const db = await peer.createDatabase();
-    await capture('A: empty database', checkpoints, db);
+    await capture('0: empty client, no data', checkpoints, db);
 
     const feed = db.add(Feed.make({ name: 'retention' }));
     await appendObjects(db, feed);
     await db.flush();
     await db.evictFeedHandle(feed);
-    await capture("A': on disk, handle evicted", checkpoints, db);
+    await capture('A: data on disk, handle evicted', checkpoints, db);
 
     let queried: Obj.Unknown[] = await db.query(Query.select(Filter.type(TestSchema.Task)).from(feed)).run();
     expect(queried.length).toBe(OBJECT_COUNT);

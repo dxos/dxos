@@ -237,6 +237,51 @@ jobs:
       - name: Check boot budget
         run: moon run composer-app:check-boot-budget
 
+  # Retention suites (the `memory` tag), which the normal `test` job skips: they need `--expose-gc`
+  # and force a single non-isolated fork, neither of which the sharded matrix can provide. Gated on
+  # DX_DEBUG_LEAKS, the one variable that both un-skips the tag and supplies the flag.
+  #
+  # Split in two on purpose. The feed suite is green and guards the fix that made feed objects
+  # collectable, so it gates. The automerge suite is known-red — dropping every reference to a
+  # queried object frees nothing — and runs `continue-on-error` so its checkpoint tables land in the
+  # log on every PR without blocking merges. Fold it into the gating step once it passes; do NOT
+  # silence it with `test.fails`, which would also swallow an unrelated crash (the WASM allocator
+  # abort this suite can provoke looks identical to an assertion failure from the outside).
+  memory:
+    permissions:
+      contents: read
+      packages: read
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 30
+    env:
+      DX_DEBUG_LEAKS: '1'
+      # Heap snapshots land beside the samples file; keep them out of the workspace.
+      DX_DEBUG_LEAKS_DIR: ${{ runner.temp }}/profiles
+      VITEST_ENV: 'node'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Feed retention
+        run: moon run echo-client-e2e:test -- src/feed-retention.test.ts
+
+      - name: Automerge retention (known red, reporting only)
+        continue-on-error: true
+        run: moon run echo-client-e2e:test -- src/automerge-retention.test.ts
+
   # Every vitest flavour in one sharded job: unit (`:test`), browser (`:test-browser`), storybook
   # (`:test-storybook`) and the Cloudflare Workers runtime (`:test-workerd`). They used to be three
   # jobs split by flavour, which fixed each shard's size to its flavour's total — storybook alone ran

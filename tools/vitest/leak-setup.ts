@@ -36,15 +36,25 @@ writeFileSync(samplesFile, '');
  */
 // Weak, and pruned on read: holding instances strongly would stop a discarded module's memory from
 // ever being freed, so the probe would create the growth it claims to measure.
-const wasmInstances: WeakRef<WebAssembly.Instance>[] = [];
-const OriginalInstance = WebAssembly.Instance;
-WebAssembly.Instance = new Proxy(OriginalInstance, {
-  construct: (target, args) => {
-    const instance = Reflect.construct(target, args) as WebAssembly.Instance;
-    wasmInstances.push(new WeakRef(instance));
-    return instance;
-  },
-});
+//
+// Registry and proxy live on `globalThis`, installed once. This setup file is evaluated per test
+// FILE, but `DX_DEBUG_LEAKS` runs the fork non-isolated, so a second file shares a process in which
+// the wasm-bindgen glue has already instantiated — a fresh per-file registry would see none of it
+// and report zero.
+const REGISTRY_KEY = '__DXOS_WASM_REGISTRY__';
+const globals = globalThis as Record<string, unknown>;
+const wasmInstances = (globals[REGISTRY_KEY] ??= []) as WeakRef<WebAssembly.Instance>[];
+
+if (globals.__DXOS_WASM_BYTES__ === undefined) {
+  const OriginalInstance = WebAssembly.Instance;
+  WebAssembly.Instance = new Proxy(OriginalInstance, {
+    construct: (target, args) => {
+      const instance = Reflect.construct(target, args) as WebAssembly.Instance;
+      wasmInstances.push(new WeakRef(instance));
+      return instance;
+    },
+  });
+}
 
 const wasmBytes = (): number => {
   let total = 0;
@@ -60,10 +70,10 @@ const wasmBytes = (): number => {
   return total;
 };
 
-(globalThis as Record<string, unknown>).__DXOS_WASM_BYTES__ = wasmBytes;
+globals.__DXOS_WASM_BYTES__ = wasmBytes;
 // Instance count alongside the total, so a large figure can be read as one module's growth rather
 // than mistaken for many modules each holding a little.
-(globalThis as Record<string, unknown>).__DXOS_WASM_INSTANCES__ = (): number => {
+globals.__DXOS_WASM_INSTANCES__ = (): number => {
   wasmBytes();
   return wasmInstances.length;
 };

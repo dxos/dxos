@@ -29,19 +29,20 @@ import { type Checkpoint, aliveCount, capture, makePayload, report } from './tes
  *   DX_DEBUG_LEAKS=1 moon run echo-client-e2e:test -- src/automerge-retention.test.ts
  */
 
-const OBJECT_COUNT = 200;
+const OBJECT_COUNT = 2000;
 const HALF = OBJECT_COUNT / 2;
 
 /**
  * Far smaller than the feed suite's, and deliberately so: every object here is its own automerge
- * document, and documents are never evicted, so both tests' documents accumulate in the one WASM
- * instance this file's process shares. 3.1MB of payload already costs ~21MB of heap. At 12.5MB
- * (200 x 64KB) the WASM allocator aborts mid-`loadIncremental` — `__rg_oom` into a
- * `RuntimeError: unreachable` trap — after which every automerge call in the process, on any
- * document, fails with "recursive use of an object detected". Raise these numbers and the suite
- * stops measuring retention and starts measuring that.
+ * document, documents are never evicted, and both tests' documents accumulate in the one WASM
+ * instance this file's process shares. The amplification is severe — a few MB of payload costs an
+ * order of magnitude more heap and two orders more WASM — and past roughly 12MB of total payload
+ * the WASM allocator aborts mid-`loadIncremental` (`__rg_oom` into a `RuntimeError: unreachable`),
+ * after which every automerge call in the process, on any document, fails with "recursive use of an
+ * object detected". Raise these numbers and the suite stops measuring retention and starts
+ * measuring that.
  */
-const PAYLOAD_BYTES = 16 * 1024;
+const PAYLOAD_BYTES = 1 * 1024;
 
 const SCALE = { objectCount: OBJECT_COUNT, payloadBytes: PAYLOAD_BYTES };
 
@@ -60,10 +61,15 @@ const addObjects = async (db: EchoDatabase): Promise<void> => {
  * Writes the objects, then reopens the peer so the reading client starts cold. Without the reopen
  * the writer's own cores would already hold the whole working set and every later checkpoint would
  * measure the writer rather than the reader.
+ *
+ * Takes checkpoint 0 against the open-but-empty client, before a single object exists, so every
+ * later delta is read against a real floor rather than against a client that already holds data.
  */
-const setupColdPeer = async (builder: EchoTestBuilder) => {
+const setupColdPeer = async (builder: EchoTestBuilder, checkpoints: Checkpoint[]) => {
   const peer = await builder.createPeer({ types: [TestSchema.Task] });
   const writer = await peer.createDatabase();
+  await capture('0: empty client, no data', checkpoints, writer);
+
   await addObjects(writer);
   await writer.flush();
   await peer.host.updateIndexes();
@@ -94,14 +100,14 @@ describe('automerge object retention', { tags: ['memory'] }, () => {
     expect(typeof global.gc).toBe('function');
 
     const checkpoints: Checkpoint[] = [];
-    const { peer, db } = await setupColdPeer(builder);
+    const { peer, db } = await setupColdPeer(builder, checkpoints);
     await using _peer = peer;
     const baseline = await capture('A: cold client, data on disk', checkpoints, db);
 
     let queried: Obj.Unknown[] | undefined = await db.query(Query.select(Filter.type(TestSchema.Task))).run();
     expect(queried.length).toBe(OBJECT_COUNT);
     const refs = queried.map((object) => new WeakRef(object));
-    await capture('B: all held by the caller', checkpoints, db, refs);
+    const held = await capture('B: all held by the caller', checkpoints, db, refs);
 
     for (const object of queried) {
       db.remove(object);
@@ -116,7 +122,8 @@ describe('automerge object retention', { tags: ['memory'] }, () => {
 
     report('after collection', checkpoints, SCALE);
     expect(removed.alive).toBe(0);
-    expect(removed.heapUsed - baseline.heapUsed).toBeLessThan(0.35 * OBJECT_COUNT * PAYLOAD_BYTES);
+    // Relative to what holding the objects cost, not to the raw payload — see the feed suite's twin.
+    expect(removed.heapUsed - baseline.heapUsed).toBeLessThan(0.35 * (held.heapUsed - baseline.heapUsed));
   });
 
   // FAILS TODAY. `EntityManager._objects` holds an `ObjectCore` per object and only ever shrinks
@@ -127,7 +134,7 @@ describe('automerge object retention', { tags: ['memory'] }, () => {
     expect(typeof global.gc).toBe('function');
 
     const checkpoints: Checkpoint[] = [];
-    const { peer, db } = await setupColdPeer(builder);
+    const { peer, db } = await setupColdPeer(builder, checkpoints);
     await using _peer = peer;
     await capture('A: cold client, data on disk', checkpoints, db);
 
