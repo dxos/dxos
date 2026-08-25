@@ -3,38 +3,34 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
 import { proxyFetchLegacy } from '@dxos/edge-client';
 
 import { ANTHROPIC_API_URL, ANTHROPIC_VERSION, MANAGED_AGENTS_BETA, REQUEST_TIMEOUT_MS } from '../constants';
 import { ClaudeAgentApiError } from '../errors';
-import {
-  type AgentConfig,
-  type AgentResponse,
-  type EnvironmentResponse,
-  type EventPage,
-  type SessionResponse,
-} from './types';
+import { type AgentConfig, AgentResponse, EnvironmentResponse, EventPage, Ignored, SessionResponse } from './types';
 
-type Request = {
+type Request<A> = {
   apiKey: string;
   method: 'GET' | 'POST';
   path: string;
+  schema: Schema.Codec<A>;
   body?: unknown;
 };
 
 /**
  * Single entry point for the Managed Agents control plane. Routed through the DXOS edge CORS proxy:
  * api.anthropic.com does not permit browser origins, and the proxy passes `x-api-key` through
- * unchanged.
+ * unchanged. The response is decoded against `schema`, so a body missing a field the caller persists
+ * fails here rather than downstream.
  */
-export const request = <T>({ apiKey, method, path, body }: Request): Effect.Effect<T, ClaudeAgentApiError> =>
+export const request = <A>({ apiKey, method, path, schema, body }: Request<A>): Effect.Effect<A, ClaudeAgentApiError> =>
   Effect.tryPromise({
-    try: async (): Promise<T> => {
+    try: async (): Promise<unknown> => {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-      // Cleared only once the body has been consumed: `fetch` resolves on headers, so a timer
-      // cleared at that point would leave a stalled body stream unbounded.
+      // Cleared only after the body is consumed, so a stalled body stream stays bounded.
       try {
         const response = await proxyFetchLegacy(new URL(`${ANTHROPIC_API_URL}${path}`), {
           method,
@@ -59,11 +55,17 @@ export const request = <T>({ apiKey, method, path, body }: Request): Effect.Effe
     },
     // A transport failure (offline, abort, proxy error) has no HTTP status of its own.
     catch: (error) => (error instanceof ClaudeAgentApiError ? error : new ClaudeAgentApiError(0, String(error))),
-  });
+  }).pipe(
+    Effect.flatMap((json) =>
+      Schema.decodeUnknownEffect(schema)(json).pipe(
+        Effect.mapError((error) => new ClaudeAgentApiError(0, `Unexpected response shape: ${error}`)),
+      ),
+    ),
+  );
 
 /** Creates a saved agent configuration. */
 export const createAgent = (apiKey: string, config: AgentConfig): Effect.Effect<AgentResponse, ClaudeAgentApiError> =>
-  request({ apiKey, method: 'POST', path: '/v1/agents', body: config });
+  request({ apiKey, method: 'POST', path: '/v1/agents', schema: AgentResponse, body: config });
 
 /**
  * Updates an existing agent, bumping its version. `version` is sent for optimistic concurrency: a
@@ -79,13 +81,11 @@ export const updateAgent = (
     apiKey,
     method: 'POST',
     path: `/v1/agents/${agentId}`,
+    schema: AgentResponse,
     body: version === undefined ? config : { ...config, version },
   });
 
-/**
- * Creates a cloud environment: the container template sessions run in. Unrestricted networking so the
- * agent's own tools can reach the network; a caller wanting egress limits configures it in the Console.
- */
+/** Creates the cloud environment sessions run in, with unrestricted egress for the agent's tools. */
 export const createEnvironment = (
   apiKey: string,
   name: string,
@@ -94,6 +94,7 @@ export const createEnvironment = (
     apiKey,
     method: 'POST',
     path: '/v1/environments',
+    schema: EnvironmentResponse,
     body: { name, config: { type: 'cloud', networking: { type: 'unrestricted' } } },
   });
 
@@ -106,6 +107,7 @@ export const createSession = (
     apiKey,
     method: 'POST',
     path: '/v1/sessions',
+    schema: SessionResponse,
     body: {
       agent: params.agentId,
       environment_id: params.environmentId,
@@ -118,7 +120,7 @@ export const createSession = (
 
 /** Reads a session's current state, including its status and stop reason. */
 export const getSession = (apiKey: string, sessionId: string): Effect.Effect<SessionResponse, ClaudeAgentApiError> =>
-  request({ apiKey, method: 'GET', path: `/v1/sessions/${sessionId}` });
+  request({ apiKey, method: 'GET', path: `/v1/sessions/${sessionId}`, schema: SessionResponse });
 
 /** Sends a user message into a running session. */
 export const sendUserMessage = (
@@ -130,6 +132,7 @@ export const sendUserMessage = (
     apiKey,
     method: 'POST',
     path: `/v1/sessions/${sessionId}/events`,
+    schema: Ignored,
     body: { events: [{ type: 'user.message', content: [{ type: 'text', text: message }] }] },
   });
 
@@ -139,4 +142,4 @@ export const listEvents = (
   sessionId: string,
   limit: number,
 ): Effect.Effect<EventPage, ClaudeAgentApiError> =>
-  request({ apiKey, method: 'GET', path: `/v1/sessions/${sessionId}/events?limit=${limit}` });
+  request({ apiKey, method: 'GET', path: `/v1/sessions/${sessionId}/events?limit=${limit}`, schema: EventPage });

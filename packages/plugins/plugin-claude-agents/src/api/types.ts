@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
+
 import { type ClaudeAgentOperation } from '#types';
 
 /** The `CreateAgent` / `UpdateAgent` request body. Snake-cased to match the wire format. */
@@ -15,40 +17,55 @@ export type AgentConfig = {
   mcp_servers?: { type: 'url'; name: string; url: string }[];
 };
 
-export type AgentResponse = {
-  id: string;
-  version?: number;
-};
+/**
+ * Response schemas, decoded before use. Every identifier below is persisted on an object that later
+ * requests are addressed by, so a response missing one has to fail the operation rather than store
+ * `undefined` and leave a record pointing at nothing.
+ */
 
-export type EnvironmentResponse = {
-  id: string;
-  name?: string;
-};
+export const AgentResponse = Schema.Struct({
+  id: Schema.String,
+  version: Schema.optional(Schema.Number),
+});
+export interface AgentResponse extends Schema.Schema.Type<typeof AgentResponse> {}
 
-export type SessionResponse = {
-  id: string;
-  status?: string;
-  stop_reason?: { type: string } | null;
-  title?: string;
-};
+export const EnvironmentResponse = Schema.Struct({
+  id: Schema.String,
+  name: Schema.optional(Schema.String),
+});
+export interface EnvironmentResponse extends Schema.Schema.Type<typeof EnvironmentResponse> {}
+
+export const SessionResponse = Schema.Struct({
+  id: Schema.String,
+  status: Schema.optional(Schema.String),
+  stop_reason: Schema.optional(Schema.NullOr(Schema.Struct({ type: Schema.String }))),
+  title: Schema.optional(Schema.String),
+});
+export interface SessionResponse extends Schema.Schema.Type<typeof SessionResponse> {}
 
 /** A content block on a message event; only text blocks carry readable content. */
-export type ContentBlock = {
-  type: string;
-  text?: string;
-};
+export const ContentBlock = Schema.Struct({
+  type: Schema.String,
+  text: Schema.optional(Schema.String),
+});
+export interface ContentBlock extends Schema.Schema.Type<typeof ContentBlock> {}
 
-export type SessionEvent = {
-  id?: string;
-  type: string;
-  content?: ContentBlock[];
-  processed_at?: string | null;
-};
+export const SessionEvent = Schema.Struct({
+  id: Schema.optional(Schema.String),
+  type: Schema.String,
+  content: Schema.optional(Schema.Array(ContentBlock)),
+  processed_at: Schema.optional(Schema.NullOr(Schema.String)),
+});
+export interface SessionEvent extends Schema.Schema.Type<typeof SessionEvent> {}
 
-export type EventPage = {
-  data?: SessionEvent[];
-  next_page?: string | null;
-};
+export const EventPage = Schema.Struct({
+  data: Schema.optional(Schema.Array(SessionEvent)),
+  next_page: Schema.optional(Schema.NullOr(Schema.String)),
+});
+export interface EventPage extends Schema.Schema.Type<typeof EventPage> {}
+
+/** Accepted where the response body carries nothing the caller reads. */
+export const Ignored = Schema.Unknown;
 
 /**
  * One turn of a session transcript, flattened for the assistant. Aliased from the operation schema

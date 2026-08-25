@@ -10,16 +10,16 @@ import { ANTHROPIC_SOURCE } from './constants';
 import { MissingCredentialError } from './errors';
 
 /**
- * Resolves the Anthropic API key from the space's connected credentials.
- *
- * Queries rather than calling `Credential.getApiKeyValue`, whose lookup dies on a missing
- * credential: absence is the ordinary "not connected yet" state and has to reach the model as a
- * typed failure it can prompt the user about.
+ * Resolves the Anthropic API key from the space's connected credentials, as a typed failure when
+ * there is none so the model can prompt the user to connect rather than crashing.
  */
 export const getApiKey: Effect.Effect<string, MissingCredentialError, Credential.CredentialsService> = Effect.gen(
   function* () {
     const credentials = yield* Credential.CredentialsService;
-    const matches = yield* Effect.promise(() => credentials.queryCredentials({ service: ANTHROPIC_SOURCE }));
+    const matches = yield* Effect.tryPromise({
+      try: () => credentials.queryCredentials({ service: ANTHROPIC_SOURCE }),
+      catch: (cause) => new MissingCredentialError({ cause }),
+    });
     const apiKey = matches.find((credential) => credential.apiKey)?.apiKey;
     if (!apiKey) {
       return yield* Effect.fail(new MissingCredentialError());

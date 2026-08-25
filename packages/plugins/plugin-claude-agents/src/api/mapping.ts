@@ -26,7 +26,7 @@ export const toAgentConfig = (agent: ClaudeManagedAgent.ClaudeManagedAgent): Age
     : {}),
 });
 
-const textOf = (content: ContentBlock[] | undefined): string =>
+const textOf = (content: readonly ContentBlock[] | undefined): string =>
   (content ?? [])
     .filter((block) => block.type === 'text' && typeof block.text === 'string')
     .map((block) => block.text)

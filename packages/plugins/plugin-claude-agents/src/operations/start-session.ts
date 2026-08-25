@@ -24,8 +24,7 @@ const handler: Operation.WithHandler<typeof ClaudeAgentOperation.StartSession> =
 
       const apiKey = yield* getApiKey;
 
-      // Provisioning on demand rather than failing: an environment is a container template with no
-      // per-existence cost, and requiring one up front blocks the first run on a Console visit.
+      // Provisioned on demand so the first run does not require a Console visit.
       const configured = environmentId ?? agentObj.environmentId;
       const environment = configured ?? (yield* createEnvironment(apiKey, DEFAULT_ENVIRONMENT_NAME)).id;
       const provisioned = configured === undefined;
