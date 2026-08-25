@@ -29,8 +29,6 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
 export const Schema = AppCapability.schema(() => import('./schema'), {
   environments: ['workerd'],
 });
-// Headless environments register ungated (Idle) via ./overrides.workerd.ts — the workerd variant
-// never fires `ProjectsEvents.Start` (no UI surface to trigger it).
 export const Templates = Capability.lazyModule(
   'Templates',
   {

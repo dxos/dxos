@@ -58,8 +58,6 @@ export const AutomationTemplates = Capability.lazyModule(
 export const NavigationTargetResolver = AppCapability.navigationResolver(() => import('./navigation-target-resolver'), {
   requires: [ClientCapabilities.Client],
 });
-// Workerd uses the inline form via ./overrides.workerd.ts to avoid a dynamic-import chunk in the
-// worker bundle.
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
 });
