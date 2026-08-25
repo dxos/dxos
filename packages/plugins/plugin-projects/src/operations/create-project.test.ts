@@ -51,7 +51,7 @@ describe('ProjectOperation.Create', () => {
     expect(subject[0]).toContain(spaceId(harness));
   });
 
-  test('an unknown template id is rejected rather than silently falling back to blank', async ({ expect }) => {
+  test('an unknown template id is rejected rather than silently falling back to the default', async ({ expect }) => {
     await using harness = await setup();
 
     const exit = await harness.runPromise(
@@ -66,18 +66,18 @@ describe('ProjectOperation.Create', () => {
     expect(String(exit)).toContain('Unknown project template');
   });
 
-  test('an unnamed template resolves to blank', async ({ expect }) => {
+  test('an unnamed template resolves to the default', async ({ expect }) => {
     await using harness = await setup();
 
     const templates = harness.getAll(ProjectCapabilities.Template);
-    expect(templates.map((template) => template.id)).toContain(ProjectCapabilities.BlankTemplateId);
+    expect(templates.map((template) => template.id)).toContain(ProjectCapabilities.DefaultTemplateId);
 
     const { project } = await harness.runPromise(
       Operation.invoke(ProjectOperation.Create, { name: 'Unnamed' }, { spaceId: spaceId(harness) }),
     );
 
     const instructions = await project.instructions?.tryLoad();
-    invariant(instructions, 'Expected the blank template to seed instructions.');
+    invariant(instructions, 'Expected the default template to seed instructions.');
     const body = await instructions.text.load();
     expect(body.content).toContain('assistant focused on this project');
   });
