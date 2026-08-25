@@ -6,7 +6,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
-import { Input, useTranslation } from '@dxos/react-ui';
+import { Column, Input, useTranslation } from '@dxos/react-ui';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 
 import { meta } from '#meta';
@@ -26,6 +26,7 @@ export const CreateProjectPanel = ({ onCreateObject, templates: templatesProp }:
   const { t } = useTranslation(meta.profile.key);
   const [name, setName] = useState('');
   const capabilityTemplates = useCapabilities(ProjectCapabilities.Template);
+
   const templates = templatesProp ?? capabilityTemplates;
   // The global create dialog has no subject, so subject-required templates (e.g. an inbox research
   // template needing a Mailbox) are excluded; they are offered from the relevant object instead.
@@ -46,16 +47,18 @@ export const CreateProjectPanel = ({ onCreateObject, templates: templatesProp }:
   );
 
   return (
-    <div role='none' className='flex flex-col gap-form-gap'>
-      <Input.Root>
-        <Input.TextInput
-          autoFocus
-          data-testid='create-project-panel.name-input'
-          placeholder={t('create-panel.name.placeholder')}
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-        />
-      </Input.Root>
+    <Column.Root>
+      <Column.Center>
+        <Input.Root>
+          <Input.TextInput
+            autoFocus
+            data-testid='create-project-panel.name-input'
+            placeholder={t('create-panel.name.placeholder')}
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+          />
+        </Input.Root>
+      </Column.Center>
       <SearchList.Root onSearch={handleSearch}>
         <SearchList.Input
           classNames='mb-form-gap'
@@ -74,6 +77,6 @@ export const CreateProjectPanel = ({ onCreateObject, templates: templatesProp }:
           ))}
         </SearchList.Viewport>
       </SearchList.Root>
-    </div>
+    </Column.Root>
   );
 };

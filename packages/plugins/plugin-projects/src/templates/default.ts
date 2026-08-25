@@ -11,12 +11,12 @@ import { ProjectCapabilities } from '#types';
 import { scaffoldProject } from './scaffold';
 
 /**
- * Blank template: the default instructions brief; a subject (when created from an object's context)
+ * Default template: the default instructions brief; a subject (when created from an object's context)
  * is seeded as standing context, mirroring plugin-routine's blank template.
  */
-export const blank: ProjectCapabilities.Template = {
-  id: ProjectCapabilities.BlankTemplateId,
-  label: 'Blank',
+export const defaultTemplate: ProjectCapabilities.Template = {
+  id: ProjectCapabilities.DefaultTemplateId,
+  label: 'Default',
   icon: 'ph--stack--regular',
   scaffold: ({ name, subject }) =>
     Effect.succeed(scaffoldProject({ name, objects: subject ? [Ref.make(subject)] : undefined })),

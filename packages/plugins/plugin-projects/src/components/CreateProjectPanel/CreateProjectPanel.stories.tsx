@@ -16,7 +16,7 @@ import { defaultTemplates, scaffoldProject } from '../../templates';
 import { CreateProjectPanel } from './CreateProjectPanel';
 
 const meta: Meta<typeof CreateProjectPanel> = {
-  title: 'plugins/plugin-projects/CreateProjectPanel',
+  title: 'plugins/plugin-projects/components/CreateProjectPanel',
   component: CreateProjectPanel,
   // An empty plugin manager satisfies the component's unconditional `useCapabilities` hook; the
   // story supplies templates via the prop override.
@@ -44,14 +44,14 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    await waitFor(async () => expect(canvas.getByText('Blank')).toBeInTheDocument());
+    await waitFor(async () => expect(canvas.getByText('Default')).toBeInTheDocument());
     await expect(canvas.getByText('Example Research')).toBeInTheDocument();
 
     // Typing a name and picking a template submits both.
     await userEvent.type(await canvas.findByTestId('create-project-panel.name-input'), 'Voyage');
-    await userEvent.click(canvas.getByText('Blank'));
+    await userEvent.click(canvas.getByText('Default'));
     await waitFor(async () =>
-      expect(args.onCreateObject).toHaveBeenCalledWith({ name: 'Voyage', templateId: 'org.dxos.project.blank' }),
+      expect(args.onCreateObject).toHaveBeenCalledWith({ name: 'Voyage', templateId: 'org.dxos.project.default' }),
     );
   },
 };

@@ -97,7 +97,12 @@ const addTask = (space: Space, taskSet: TaskSet.TaskSet, title: string, mileston
   return task;
 };
 
-const DefaultStory = () => {
+type StoryArgs = {
+  role: string;
+  attendableId: string;
+};
+
+const DefaultStory = ({ role, attendableId }: StoryArgs) => {
   const [space] = useSpaces();
   const projects = useQuery(space?.db, Filter.type(Project.Project));
   const project = projects.find((entry) => entry.name === PROJECT_NAME);
@@ -105,7 +110,7 @@ const DefaultStory = () => {
     return <Loading data={{ db: !!space?.db, project: !!project }} />;
   }
 
-  return <ProjectArticle role='article' subject={project} attendableId='test' />;
+  return <ProjectArticle role={role} subject={project} attendableId={attendableId} />;
 };
 
 const meta = {
@@ -160,6 +165,19 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  args: {
+    role: 'article',
+    attendableId: 'test',
+  },
+};
+
+/**
+ * Every section the article composes — header form, instructions editor, artifacts, tasks — renders
+ * from the seeded project. An invalid surface id is dropped silently, so each section is asserted by
+ * its content, not its heading.
+ */
+export const Sections: Story = {
+  ...Default,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -189,6 +207,7 @@ export const Default: Story = {
  * behaved (`Query.children()` never re-emitted on a member's property change).
  */
 export const Updates: Story = {
+  ...Default,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
