@@ -34,12 +34,16 @@ import { traceBootLeak } from './src/vite/trace-boot-leak.ts';
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
 const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
-// `DX_PLUGIN_SET=production` swaps in plugin-defs.production.tsx at build time (not a runtime flag),
-// so a non-shipped plugin never enters the bundle.
-const isProductionPluginSet = process.env.DX_PLUGIN_SET === 'production';
+// `DX_PLUGIN_SET=<name>` swaps in that set's definitions at build time (not a runtime flag), so a
+// plugin outside the set never enters the bundle. Unset (or unknown) selects the full catalog.
+const PLUGIN_SETS: Record<string, string> = {
+  production: 'src/plugin-defs.production.tsx',
+  mobile: 'src/plugin-defs.mobile.tsx',
+};
+const pluginSetFile = PLUGIN_SETS[process.env.DX_PLUGIN_SET ?? ''] ?? 'src/plugin-defs.tsx';
 // Non-empty only when a dev server is launched with the debug-port flag; see `src/vite/debug-port.ts`.
 const debugPortSession = resolveDebugPortSession();
-const pluginSetFile = isProductionPluginSet ? 'src/plugin-defs.production.tsx' : 'src/plugin-defs.tsx';
+const isReducedPluginSet = pluginSetFile !== 'src/plugin-defs.tsx';
 
 const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
@@ -107,12 +111,12 @@ const slimWasm = (): PluginOption => {
 const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'] as const;
 
 /**
- * Glob matching the entry of every plugin the production set can reach, for optimize-deps
- * scanning. Derived from the set's sources so adding a plugin to `plugin-defs.production.tsx`
- * needs no edit here; a specifier scan is enough because a missed plugin costs a
- * "discovered new dependencies" reload rather than a wrong build.
+ * Glob matching the entry of every plugin the selected set can reach, for optimize-deps scanning.
+ * Derived from the set's own sources so adding a plugin to it needs no edit here; a specifier scan
+ * is enough because a missed plugin costs a "discovered new dependencies" reload rather than a wrong
+ * build.
  */
-const productionPluginEntries = () => {
+const reducedPluginEntries = () => {
   const names = new Set<string>();
   for (const file of [pluginSetFile, 'src/plugin-defs.core.tsx']) {
     const source = readFileSync(path.join(dirname, file), 'utf8');
@@ -314,9 +318,9 @@ export default defineConfig((env) => ({
     // also listed as direct deps of composer-app in package.json. An entry that stops resolving
     // costs a warning per start, not a failed scan.
     //
-    // `DX_PLUGIN_SET=production` keeps the scan instead: the list covers the full registry, and
-    // pre-bundling all of it is the cost that mode exists to avoid.
-    include: isProductionPluginSet ? undefined : optimizeDepsInclude,
+    // A reduced `DX_PLUGIN_SET` keeps the scan instead: the list covers the full registry, and
+    // pre-bundling all of it is the cost those sets exist to avoid.
+    include: isReducedPluginSet ? undefined : optimizeDepsInclude,
     // Scan the auxiliary HTML entrypoints during pre-bundle so navigations
     // to `internal.html` / `devtools.html` / `reset.html` don't trip a
     // "discovered new dependencies" reload mid-session.
@@ -335,12 +339,10 @@ export default defineConfig((env) => ({
       './devtools.html',
       './reset.html',
       './recovery.html',
-      // Under DX_PLUGIN_SET=production, scan only the plugins that set can reach, read from its
+      // Under a reduced DX_PLUGIN_SET, scan only the plugins that set can reach, read from its
       // sources themselves — the hand-maintained list this replaces had drifted from them
       // (missing `tasks`/`progress`, still naming a removed `outliner`).
-      isProductionPluginSet
-        ? productionPluginEntries()
-        : path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
+      isReducedPluginSet ? reducedPluginEntries() : path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
     ],
   },
   resolve: {
@@ -349,11 +351,9 @@ export default defineConfig((env) => ({
     // Use regex `find: /^util$/` (array form) to bind the bare module name only and let Vite's
     // native node: polyfill layer handle subpaths like `node:util/types`.
     alias: [
-      // Applies to `build` as much as `serve`: this alias is the whole mechanism by which the
-      // production bundle's module graph never reaches a non-shipped plugin.
-      ...(isProductionPluginSet
-        ? [{ find: /^\.\/plugin-defs$/, replacement: path.resolve(dirname, pluginSetFile) }]
-        : []),
+      // Applies to `build` as much as `serve`: this alias is the whole mechanism by which a reduced
+      // set's module graph never reaches a plugin outside it.
+      ...(isReducedPluginSet ? [{ find: /^\.\/plugin-defs$/, replacement: path.resolve(dirname, pluginSetFile) }] : []),
       { find: /^node-fetch$/, replacement: 'isomorphic-fetch' },
       { find: /^node:util$/, replacement: '@dxos/node-std/util' },
       { find: /^node:path$/, replacement: '@dxos/node-std/path' },
