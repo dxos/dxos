@@ -99,7 +99,9 @@ const chunks = reachable(pageEntries('index.html'));
 // `sources` entries are relative to the map file, so the repo-root prefix varies; the `plugins/`
 // parent is the stable part. Platform variants (`plugin.node.ts`, `plugin.workerd.ts`) count too —
 // none of them belongs in a browser bundle, and matching them makes a mis-resolved condition visible.
-const BODY_MODULE = /(?:^|\/)plugins\/(plugin-[a-z0-9-]+)\/src\/plugin(?:\.[a-z]+)?\.tsx?$/;
+// `dxplugin.jsonc` is the same landmark for a plugin whose entrypoint is its descriptor: the app
+// imports it statically, so it is reachable by the same walk.
+const BODY_MODULE = /(?:^|\/)plugins\/(plugin-[a-z0-9-]+)\/(?:src\/plugin(?:\.[a-z]+)?\.tsx?|dxplugin\.jsonc)$/;
 
 // `<plugin-name>` -> the reachable chunks whose sourcemap names its body module.
 const found = new Map();
@@ -134,10 +136,11 @@ console.log(
     `${shippedSeen.size}/${shipped.size} shipped bodies seen, ${found.size} unexpected`,
 );
 
-// Fail closed. Every shipped plugin is a `Plugin.lazy` stub whose body rolldown emits as its own
-// chunk, reached by a dynamic import from the app graph — so all of them must show up here. A missing
-// one means the walk under-approximates (an import form `SPECIFIER` does not match, a chunk-naming
-// change) and "0 unexpected" would be the walk seeing nothing rather than the invariant holding.
+// Fail closed. Every shipped plugin is reached from the app graph — a `Plugin.lazy` stub's dynamic
+// import, or a statically imported `dxplugin.jsonc` descriptor — so all of them must show up here. A
+// missing one means the walk under-approximates (an import form `SPECIFIER` does not match, a
+// chunk-naming change) and "0 unexpected" would be the walk seeing nothing rather than the
+// invariant holding.
 const missing = [...shipped].filter((name) => !shippedSeen.has(name)).sort();
 if (missing.length > 0) {
   console.error(
