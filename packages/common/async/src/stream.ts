@@ -7,6 +7,8 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type MaybePromise, throwUnhandledError } from '@dxos/util';
 
+import { Trigger } from './trigger';
+
 type Callbacks<T> = {
   ctx: Context;
 
@@ -337,3 +339,27 @@ export class Stream<T> {
     this._producerCleanup = undefined;
   }
 }
+
+/**
+ * Resolves with the first value the stream emits, then closes it.
+ * Rejects if the stream closes first — with the stream's error where it had one — so a caller
+ * without a `timeout` cannot wait forever on a stream that will never emit.
+ */
+export const getFirstStreamValue = async <T>(stream: Stream<T>, { timeout }: { timeout?: number } = {}): Promise<T> => {
+  // Closing only what this call subscribed to, since `subscribe` throws on an already-subscribed
+  // stream and closing it there would cut off the existing subscriber.
+  let subscribed = false;
+  try {
+    const trigger = new Trigger<T>();
+    stream.subscribe(
+      (value) => trigger.wake(value),
+      (err) => trigger.throw(err ?? new Error('Stream closed before emitting a value.')),
+    );
+    subscribed = true;
+    return await trigger.wait({ timeout });
+  } finally {
+    if (subscribed) {
+      await stream.close();
+    }
+  }
+};

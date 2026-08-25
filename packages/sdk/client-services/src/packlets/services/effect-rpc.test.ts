@@ -18,6 +18,7 @@ import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
+import { Stream as PbStream } from '@dxos/async';
 import {
   ClientRpcServer,
   type ClientServicesHandlers,
@@ -25,7 +26,6 @@ import {
   makeClientServicesRpc,
   makeServicesFromRpc,
 } from '@dxos/client-protocol';
-import { Stream as PbStream } from '@dxos/codec-protobuf/stream';
 import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { IdentityNotInitializedError, TimeoutError } from '@dxos/protocols';
