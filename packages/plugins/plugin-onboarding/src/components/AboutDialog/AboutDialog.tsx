@@ -14,12 +14,15 @@ import { meta } from '../../meta';
 // legacy `edge[-<env>].dxos.workers.dev` names still present in stored configs.
 const ENV_LABELS: Record<string, string> = {
   'edge.dxos.workers.dev': 'Dev',
-  'edge-main.dxos.workers.dev': 'Main',
-  'edge-labs.dxos.workers.dev': 'Labs',
+  'dev.dxos.network': 'Dev',
+  'edge-preview.dxos.workers.dev': 'Preview',
+  'preview.dxos.network': 'Preview',
+  'edge-main.dxos.workers.dev': 'Main (retired)',
+  'edge-labs.dxos.workers.dev': 'Labs (retired)',
   'edge-staging.dxos.workers.dev': 'Staging',
   'edge-production.dxos.workers.dev': 'Production',
-  'main.dxos.network': 'Main',
-  'labs.dxos.network': 'Labs',
+  'main.dxos.network': 'Preview',
+  'labs.dxos.network': 'Labs (retired)',
   'staging.dxos.network': 'Staging',
   'dxos.network': 'Production',
 };
