@@ -32,11 +32,7 @@ import DXOS_CONTENT from '../content/DXOS.md?raw';
 import README_CONTENT from '../content/README.md?raw';
 import { DXOS_DOCUMENT_NAME, DXOS_URI_PLACEHOLDER, README_DOCUMENT_NAME } from './default-content';
 
-/**
- * Contributes the assistant's prompt-run extension so the ```prompt block in the README renders its
- * run button. The story stub logs the prompt rather than spawning a chat, so the interaction is
- * testable without an LLM.
- */
+/** Contributes the prompt-run extension so the README's ```prompt block renders its run button, logging instead of calling an LLM. */
 const PromptExtensionPlugin = Plugin.define(
   Plugin.makeMeta({
     key: DXN.make('org.dxos.plugin.onboarding.story.promptExtension'),
