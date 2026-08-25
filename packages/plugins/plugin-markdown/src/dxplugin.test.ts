@@ -36,7 +36,7 @@ describe('dxplugin.jsonc', () => {
 
   test('narrows to a subset of the browser modules on each server platform', ({ expect }) => {
     expect(forPlatform('browser').modules).toHaveLength(12);
-    expect(forPlatform(undefined).modules).toHaveLength(12);
+    expect(forPlatform('all').modules).toHaveLength(12);
     expect(forPlatform('node').modules).toHaveLength(4);
     expect(forPlatform('workerd').modules).toHaveLength(3);
   });

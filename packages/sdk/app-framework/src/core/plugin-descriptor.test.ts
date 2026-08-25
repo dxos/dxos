@@ -8,6 +8,7 @@ import { pathToFileURL } from 'node:url';
 
 import * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
+import { currentPlatform } from './platform';
 import * as Plugin from './plugin';
 
 const DESCRIPTOR = `
@@ -45,14 +46,20 @@ describe('Plugin.fromManifest', () => {
   });
 
   test('derives module ids from the plugin key', ({ expect }) => {
-    expect(parse()().modules.map(({ id }) => id)).toEqual([
+    expect(parse({ platform: 'all' })().modules.map(({ id }) => id)).toEqual([
       'org.dxos.plugin.test.module.Surface',
       'org.dxos.plugin.test.module.NodeOnly',
     ]);
   });
 
+  test('detects the running platform, so a plugin never declares its own', ({ expect }) => {
+    expect(currentPlatform()).toEqual('node');
+    // The node-only module survives detection here; the browser-only one would not.
+    expect(parse()().modules.map(({ id }) => id)).toContain('org.dxos.plugin.test.module.NodeOnly');
+  });
+
   test('rehydrates capability references, defaulting a bare string to multi arity', ({ expect }) => {
-    const [surface] = parse()().modules;
+    const [surface] = parse({ platform: 'all' })().modules;
     expect(surface.activation.provides).toEqual([
       expect.objectContaining({ identifier: 'org.dxos.test.surface', arity: 'multi' }),
     ]);
@@ -67,14 +74,14 @@ describe('Plugin.fromManifest', () => {
   });
 
   test('rehydrates activation events', ({ expect }) => {
-    const [surface] = parse()().modules;
+    const [surface] = parse({ platform: 'all' })().modules;
     expect(surface.activation.activatesOn).toEqual(
       ActivationEvent.oneOf(ActivationEvent.make('org.dxos.test.event.surfacesRequested', 'org.dxos.role.article')),
     );
   });
 
   test('defaults an unstated activation to the idle wave', ({ expect }) => {
-    const [, nodeOnly] = parse()().modules;
+    const [, nodeOnly] = parse({ platform: 'all' })().modules;
     expect(nodeOnly.activation.activatesOn).toEqual(ActivationEvent.Idle);
   });
 

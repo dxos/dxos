@@ -49,17 +49,6 @@
       "types": "./dist/types/src/operations/index.d.ts",
       "default": "./dist/lib/operations.mjs"
     },
-    "#platform": {
-      "source": {
-        "workerd": "./src/platform.workerd.ts",
-        "node": "./src/platform.node.ts",
-        "default": "./src/platform.ts"
-      },
-      "types": "./dist/types/src/platform.d.ts",
-      "workerd": "./dist/lib/platform.workerd.mjs",
-      "node": "./dist/lib/platform.node.mjs",
-      "default": "./dist/lib/platform.mjs"
-    },
     "#skills": {
       "source": "./src/skills/index.ts",
       "types": "./dist/types/src/skills/index.d.ts",

@@ -18,6 +18,7 @@ import { Config2, PluginProfileSchema, PluginReleaseSchema } from '@dxos/protoco
 import * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
 import { parseJsonc } from './jsonc';
+import { currentPlatform } from './platform';
 import type * as PluginManager from './plugin-manager';
 
 //
@@ -668,8 +669,11 @@ export type FromManifestOptions = {
    * only when they are relative — the vite loader rewrites them to absolute URLs at build time.
    */
   baseUrl?: string | URL;
-  /** Drops modules that do not declare this platform. Omit to keep every module. */
-  platform?: Config2.Platform;
+  /**
+   * Drops modules that do not declare this platform. Defaults to the running platform, so a plugin
+   * never has to know which one it is on; pass `'all'` to keep every module.
+   */
+  platform?: Config2.Platform | 'all';
 };
 
 /** Tagged error for a descriptor that fails to decode, or whose module bodies fail to load. */
@@ -731,8 +735,9 @@ export const fromManifest = <T = void>(source: ManifestSource, options?: FromMan
   const descriptor = parseDescriptor(source);
   const meta = getMetaFromDescriptor(descriptor);
 
+  const platform = options?.platform ?? currentPlatform();
   const builder = descriptor.modules
-    .filter((module) => !options?.platform || !module.platforms || module.platforms.includes(options.platform))
+    .filter((module) => platform === 'all' || !module.platforms || module.platforms.includes(platform))
     .reduce<PluginBuilder<T>>((acc, module) => {
       const url = resolveSrc(module.src, options?.baseUrl);
       return acc.addModule((pluginOptions: T) => ({
