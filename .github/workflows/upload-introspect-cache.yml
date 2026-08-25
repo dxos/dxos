@@ -1,7 +1,8 @@
 # Builds the @dxos/introspect core.json (symbol cache) and plugins.json
 # (plugin metadata sidecar) and uploads both to R2 so the
-# @dxos/mcp-introspect-service edge worker can read them. Triggers on push to the
-# `labs` branch; manual dispatch is also supported for ad-hoc reruns.
+# @dxos/mcp-introspect-service edge worker can read them. Runs on a daily schedule
+# (the old `labs` branch trigger died with trunk-based development); manual dispatch
+# is also supported for ad-hoc reruns.
 #
 # Secrets required:
 #   CLOUDFLARE_API_TOKEN     — R2 write on the `dxos-introspect-cache` bucket.
@@ -10,9 +11,9 @@
 name: Upload Introspect Cache to R2
 
 on:
-  push:
-    branches:
-      - labs
+  schedule:
+    # Daily; content tracks the trunk. 05:17 UTC avoids the top-of-hour crunch.
+    - cron: '17 5 * * *'
   workflow_dispatch:
 
 permissions:
@@ -66,12 +67,12 @@ jobs:
             node_modules/.cache/dxos-introspect/core.json \
             node_modules/.cache/dxos-introspect/plugins.json
           pnpm exec wrangler r2 object put \
-            dxos-introspect-cache/dxos/labs/core.json \
+            dxos-introspect-cache/dxos/main/core.json \
             --file=node_modules/.cache/dxos-introspect/core.json \
             --content-type=application/json \
             --remote
           pnpm exec wrangler r2 object put \
-            dxos-introspect-cache/dxos/labs/plugins.json \
+            dxos-introspect-cache/dxos/main/plugins.json \
             --file=node_modules/.cache/dxos-introspect/plugins.json \
             --content-type=application/json \
             --remote

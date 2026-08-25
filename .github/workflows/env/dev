@@ -20,6 +20,6 @@ IPFS_API_SECRET=${IPFS_API_SECRET}
 DX_PWA=false
 DX_MINIFY=true
 DX_EDGE_ECHO_REPLICATOR=true
-# EDGE preview. TODO(wittjosiah): `https://preview.dxos.network/` once DX-1150 renames EDGE's `main`
+# EDGE preview (renamed from `main` by DX-1150; `main.dxos.network` still aliases it).
 # environment — the instance is the same one, only the name changes.
-DX_EDGE_BASE_URL="https://main.dxos.network/"
+DX_EDGE_BASE_URL="https://preview.dxos.network/"
