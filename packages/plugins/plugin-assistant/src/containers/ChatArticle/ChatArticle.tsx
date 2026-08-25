@@ -9,8 +9,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Chat as ChatType } from '@dxos/assistant-toolkit';
-import { getSpace } from '@dxos/client/echo';
-import { type Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { ClientOperation } from '@dxos/plugin-client';
 import { useRegistry } from '@dxos/react-client/echo';
@@ -35,14 +34,14 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     const settings = useAtomCapability(AssistantCapabilities.Settings);
     const atomRegistry = useCapability(Capabilities.AtomRegistry);
     const stateAtom = useCapability(AssistantCapabilities.State);
-    // Transient (pre-submit) chats have no database; fall back to the companion's space.
-    const space = getSpace(chat) ?? getSpace(companionTo);
-    const runtime = useChatServices({ id: space?.id });
+    // Transient (pre-submit) chats have no database; fall back to the companion's.
+    const db = Obj.getDatabase(chat) ?? (companionTo && Obj.getDatabase(companionTo));
+    const runtime = useChatServices({ id: db?.spaceId });
 
     const { preset, ...chatProps } = usePresets(settings);
     // The provider is configured in settings; the chat surfaces it as a read-only online indicator.
     const online = preset?.provider === Provider.edge.id;
-    const processor = useChatProcessor({ space, chat, preset, runtime, registry, settings });
+    const processor = useChatProcessor({ db, chat, preset, runtime, registry, settings });
     const getContext = useSelectionContext(companionTo);
 
     // Subscribe to the view type via `useObject` so the thread re-renders when ChatOptions changes it;
@@ -87,7 +86,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     return (
       <ChatComponent.Root
         chat={chat}
-        db={space?.db}
+        db={db}
         processor={processor}
         debug={debug}
         getContext={getContext}

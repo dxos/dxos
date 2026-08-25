@@ -63,7 +63,7 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
     };
   }, [space, nonce, invokePromise]);
 
-  const processor = useChatProcessor({ space, chat, preset, runtime, registry });
+  const processor = useChatProcessor({ db: space?.db, chat, preset, runtime, registry });
 
   const event = useMemo(() => new Event<ChatEvent>(), []);
   useEffect(() => {

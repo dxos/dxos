@@ -56,15 +56,15 @@ export type ExtensionsOptions = {
   compact?: boolean;
   viewMode?: EditorViewMode;
   editable?: boolean;
+  platform?: 'mobile' | 'desktop';
   viewState?: ViewState.Manager;
   editorStateStore?: EditorStateStore;
-  setWidgets?: (widgets: XmlWidgetState[]) => void;
-  platform?: 'mobile' | 'desktop';
   /**
    * Local identity for collaboration awareness. Optional so the editor can bind to a raw ECHO object
    * with no client (awareness only activates when both a space and an identity are present).
    */
   identity?: Identity.Info | null;
+  setWidgets?: (widgets: XmlWidgetState[]) => void;
   /**
    * Callback when an internal link is clicked, with the link's URL pathname — resolving one to a node
    * walks the app graph, which only a container may reach. `modifiers.shift` reflects the originating
@@ -82,8 +82,8 @@ export const useExtensions = ({
   viewMode,
   viewState,
   editorStateStore,
-  setWidgets,
   identity,
+  setWidgets,
   onSelectLink,
 }: ExtensionsOptions): Extension[] => {
   const { platform } = useThemeContext();
@@ -111,8 +111,8 @@ export const useExtensions = ({
         compact,
         viewMode,
         viewState,
-        setWidgets,
         platform,
+        setWidgets,
         onSelectLink,
       }),
     [
@@ -122,13 +122,13 @@ export const useExtensions = ({
       compact,
       viewMode,
       viewState,
+      platform,
       setWidgets,
       settings,
       settings?.debug,
       settings?.editorInputMode,
       settings?.folding,
       settings?.numberedHeadings,
-      platform,
       onSelectLink,
     ],
   );
