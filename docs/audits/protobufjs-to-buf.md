@@ -126,9 +126,10 @@ nested-enum access (`WsStatus.ConnectionState.CONNECTED`, which buf emits as
 Before starting any thread, read **Findings** at the bottom: the five generator divergences are
 what make the mechanical-looking parts non-mechanical, and two of them (`Any`, nested enums) are
 hard gates rather than nuisances. Two habits earned their keep here and are worth repeating:
-assert byte **and** shape equality against the protobuf.js codec for anything persisted, and when
-a switch looks safe, attempt it and let `tsc` rule rather than reasoning about it — that is how
-both the nested-enum gate and the `Buffer`-view divergence surfaced.
+assert byte **and** shape equality against the protobuf.js codec for anything **signed**, and
+cross-codec round-trips for data that is only **persisted** (byte identity is unachievable there --
+see `#9c`); and when a switch looks safe, attempt it and let `tsc` rule rather than reasoning about
+it — that is how both the nested-enum gate and the `Buffer`-view divergence surfaced.
 
 ## Summary
 

@@ -124,9 +124,13 @@ describe('buf shape-compat', () => {
     expect(decoded.spaces[0].dataTimeframe.get(feedKey)).toBe(12);
     expect(decoded.deletedSpaces.every((key: unknown) => PublicKey.isPublicKey(key))).toBe(true);
     expect(decoded.created.getTime()).toBe(1_700_000_000_000);
+    expect(decoded.updated.getTime()).toBe(1_700_000_060_500);
 
-    // The legacy codec must also read what buf wrote, or a downgrade loses the profile.
+    // The legacy codec must also read what buf wrote, or a downgrade loses the profile. `updated` is
+    // asserted in both directions because it is the field the two generators disagree about.
     const legacyDecoded = codec.decode(encodeCompat(EchoMetadataSchema, value));
+    expect(legacyDecoded.created?.getTime()).toBe(1_700_000_000_000);
+    expect(legacyDecoded.updated?.getTime()).toBe(1_700_000_060_500);
     expect(legacyDecoded.identity?.deviceKey.equals(deviceKey)).toBe(true);
     expect(legacyDecoded.spaces?.[0].dataTimeframe?.get(feedKey)).toBe(12);
   });
