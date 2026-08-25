@@ -268,77 +268,90 @@ describe('client services effect-rpc', () => {
 });
 
 describe('effect-rpc tests', () => {
-  test(
-    '1. just regular test with a couple rpcs',
-    Effect.fnUntraced(function* () {
-      const { port1, port2 } = yield* makeMessageChannel();
+  test('1. just regular test with a couple rpcs', () =>
+    EffectEx.runPromise(
+      Effect.scoped(
+        Effect.gen(function* () {
+          const { port1, port2 } = yield* makeMessageChannel();
 
-      const serverLayer = Layer.mergeAll(
-        handlers,
-        RpcServer.layerProtocolWorkerRunner.pipe(Layer.provide(BrowserWorkerRunner.layerMessagePort(port2))),
-      );
+          const serverLayer = Layer.mergeAll(
+            handlers,
+            RpcServer.layerProtocolWorkerRunner.pipe(Layer.provide(BrowserWorkerRunner.layerMessagePort(port2))),
+          );
 
-      yield* RpcServer.make(TestGroup, { disableTracing: true }).pipe(Effect.provide(serverLayer), Effect.forkScoped);
+          yield* RpcServer.make(TestGroup, { disableTracing: true }).pipe(
+            Effect.provide(serverLayer),
+            Effect.forkScoped,
+          );
 
-      const clientLayer = RpcClient.layerProtocolWorker({ size: 1 }).pipe(
-        Layer.provide(BrowserWorker.layer(() => port1)),
-      );
+          const clientLayer = RpcClient.layerProtocolWorker({ size: 1 }).pipe(
+            Layer.provide(BrowserWorker.layer(() => port1)),
+          );
 
-      yield* Effect.gen(function* () {
-        const client = yield* RpcClient.make(TestGroup, { disableTracing: true });
-        const pongResult = yield* client.ping({ message: 'hello' });
-        expect(pongResult).toBe('pong: hello');
+          yield* Effect.gen(function* () {
+            const client = yield* RpcClient.make(TestGroup, { disableTracing: true });
+            const pongResult = yield* client.ping({ message: 'hello' });
+            expect(pongResult).toBe('pong: hello');
 
-        const userResult = yield* client.getUser({ id: '42' });
-        expect(userResult.id).toBe('42');
-        expect(userResult.name).toBe('User 42');
-      }).pipe(Effect.provide(clientLayer));
-    }),
-  );
+            const userResult = yield* client.getUser({ id: '42' });
+            expect(userResult.id).toBe('42');
+            expect(userResult.name).toBe('User 42');
+          }).pipe(Effect.provide(clientLayer));
+        }),
+      ),
+    ));
 
-  test(
-    '3. two message channels to one server (simulating 2 tabs one worker)',
-    Effect.fnUntraced(function* () {
-      const channel1 = yield* makeMessageChannel();
-      const channel2 = yield* makeMessageChannel();
+  test('3. two message channels to one server (simulating 2 tabs one worker)', () =>
+    EffectEx.runPromise(
+      Effect.scoped(
+        Effect.gen(function* () {
+          const channel1 = yield* makeMessageChannel();
+          const channel2 = yield* makeMessageChannel();
 
-      const serverLayer1 = Layer.mergeAll(
-        handlers,
-        Layer.fresh(RpcServer.layerProtocolWorkerRunner).pipe(
-          Layer.provide(BrowserWorkerRunner.layerMessagePort(channel1.port2)),
-        ),
-      );
+          const serverLayer1 = Layer.mergeAll(
+            handlers,
+            Layer.fresh(RpcServer.layerProtocolWorkerRunner).pipe(
+              Layer.provide(BrowserWorkerRunner.layerMessagePort(channel1.port2)),
+            ),
+          );
 
-      const serverLayer2 = Layer.mergeAll(
-        handlers,
-        Layer.fresh(RpcServer.layerProtocolWorkerRunner).pipe(
-          Layer.provide(BrowserWorkerRunner.layerMessagePort(channel2.port2)),
-        ),
-      );
+          const serverLayer2 = Layer.mergeAll(
+            handlers,
+            Layer.fresh(RpcServer.layerProtocolWorkerRunner).pipe(
+              Layer.provide(BrowserWorkerRunner.layerMessagePort(channel2.port2)),
+            ),
+          );
 
-      yield* RpcServer.make(TestGroup, { disableTracing: true }).pipe(Effect.provide(serverLayer1), Effect.forkScoped);
+          yield* RpcServer.make(TestGroup, { disableTracing: true }).pipe(
+            Effect.provide(serverLayer1),
+            Effect.forkScoped,
+          );
 
-      yield* RpcServer.make(TestGroup, { disableTracing: true }).pipe(Effect.provide(serverLayer2), Effect.forkScoped);
+          yield* RpcServer.make(TestGroup, { disableTracing: true }).pipe(
+            Effect.provide(serverLayer2),
+            Effect.forkScoped,
+          );
 
-      const clientLayer1 = RpcClient.layerProtocolWorker({ size: 1 }).pipe(
-        Layer.provide(BrowserWorker.layer(() => channel1.port1)),
-      );
+          const clientLayer1 = RpcClient.layerProtocolWorker({ size: 1 }).pipe(
+            Layer.provide(BrowserWorker.layer(() => channel1.port1)),
+          );
 
-      yield* Effect.gen(function* () {
-        const client = yield* RpcClient.make(TestGroup, { disableTracing: true });
-        const result = yield* client.ping({ message: 'tab1' });
-        expect(result).toBe('pong: tab1');
-      }).pipe(Effect.provide(clientLayer1));
+          yield* Effect.gen(function* () {
+            const client = yield* RpcClient.make(TestGroup, { disableTracing: true });
+            const result = yield* client.ping({ message: 'tab1' });
+            expect(result).toBe('pong: tab1');
+          }).pipe(Effect.provide(clientLayer1));
 
-      const clientLayer2 = RpcClient.layerProtocolWorker({ size: 1 }).pipe(
-        Layer.provide(BrowserWorker.layer(() => channel2.port1)),
-      );
+          const clientLayer2 = RpcClient.layerProtocolWorker({ size: 1 }).pipe(
+            Layer.provide(BrowserWorker.layer(() => channel2.port1)),
+          );
 
-      yield* Effect.gen(function* () {
-        const client = yield* RpcClient.make(TestGroup, { disableTracing: true });
-        const result = yield* client.ping({ message: 'tab2' });
-        expect(result).toBe('pong: tab2');
-      }).pipe(Effect.provide(clientLayer2));
-    }),
-  );
+          yield* Effect.gen(function* () {
+            const client = yield* RpcClient.make(TestGroup, { disableTracing: true });
+            const result = yield* client.ping({ message: 'tab2' });
+            expect(result).toBe('pong: tab2');
+          }).pipe(Effect.provide(clientLayer2));
+        }),
+      ),
+    ));
 });
