@@ -753,7 +753,7 @@ overrides:
   '@automerge/automerge': 'catalog:'
   '@automerge/automerge-subduction': 'catalog:'
   '@dxos/docs>vite': ^7.3.2
-  '@dxos/edge-protocol': https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@d5cfa61
+  '@dxos/edge-protocol': https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@b8fcd38
   # edge-protocol's `@dxos/{compute,echo,echo-protocol,keys,protocols,timeframe}` peerDependencies
   # use a bare "*" range. A bare-range peer is resolved relative to whatever ambient peer context
   # the CONSUMER already sits in — so a consumer with its own large peer bucket (e.g. anything

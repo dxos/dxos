@@ -69,7 +69,7 @@ describe.skipIf(!EDGE_URL)('edge api (live)', { tags: ['sync-e2e'], timeout: 60_
           return yield* client.status.health();
         }),
       );
-      expect(response.data.status).toBe('ok');
+      expect(response.data.ok).toBe(true);
     });
 
     test('auth returns an identity key for a presented credential', async ({ expect }) => {

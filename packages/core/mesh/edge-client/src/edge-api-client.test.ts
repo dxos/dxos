@@ -22,9 +22,7 @@ const TestApi = HttpApi.make('edge').add(StatusApiGroup);
 
 const TestApiLive = HttpApiBuilder.group(TestApi, 'status', (handlers) =>
   handlers
-    .handle('health', () =>
-      Effect.succeed({ success: true as const, data: { status: 'ok' as const, service: 'edge' } }),
-    )
+    .handle('health', () => Effect.succeed({ success: true as const, data: { ok: true as const, service: 'edge' } }))
     .handle('auth', () => Effect.die('not implemented in this mock'))
     .handle('testTraceContext', () => Effect.die('not implemented in this mock'))
     .handle('systemStatus', () => Effect.die('not implemented in this mock')),
@@ -46,7 +44,7 @@ describe('EdgeApiClient (mocked transport)', () => {
     globalThis.fetch = mockFetch;
     try {
       const result = await checkEdgeApiHealth('http://edge.test');
-      expect(result).toEqual({ status: 'ok', service: 'edge' });
+      expect(result).toEqual({ ok: true, service: 'edge' });
     } finally {
       globalThis.fetch = originalFetch;
     }
@@ -97,8 +95,8 @@ describe('EdgeApiService (auth + error mapping)', () => {
   });
 
   test('round-trips a success envelope through the service', async ({ expect }) => {
-    globalThis.fetch = async () => jsonResponse(200, { success: true, data: { status: 'ok', service: 'edge' } });
-    expect(await callHealth()).toEqual({ success: true, data: { status: 'ok', service: 'edge' } });
+    globalThis.fetch = async () => jsonResponse(200, { success: true, data: { ok: true, service: 'edge' } });
+    expect(await callHealth()).toEqual({ success: true, data: { ok: true, service: 'edge' } });
   });
 
   test('maps a non-enveloped HTTP 500 to a retryable EdgeRequestError', async ({ expect }) => {
@@ -163,9 +161,9 @@ describe('EdgeApiService (auth + error mapping)', () => {
           },
         });
       }
-      return jsonResponse(200, { success: true, data: { status: 'ok', service: 'edge' } });
+      return jsonResponse(200, { success: true, data: { ok: true, service: 'edge' } });
     };
-    expect(await callHealth(identity)).toEqual({ success: true, data: { status: 'ok', service: 'edge' } });
+    expect(await callHealth(identity)).toEqual({ success: true, data: { ok: true, service: 'edge' } });
     expect(presented).toBe(1);
   });
 
@@ -199,7 +197,7 @@ describe('EdgeApiService (auth + error mapping)', () => {
           },
         });
       }
-      return jsonResponse(200, { success: true, data: { status: 'ok', service: 'edge' } });
+      return jsonResponse(200, { success: true, data: { ok: true, service: 'edge' } });
     };
 
     await Effect.gen(function* () {

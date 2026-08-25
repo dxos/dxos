@@ -38,7 +38,7 @@ export type EdgeApiClient = Effect.Success<ReturnType<typeof makeEdgeApiClient>>
 /**
  * Promise-based smoke-test helper for manually verifying the derived client against a live edge instance.
  */
-export const checkEdgeApiHealth = (baseUrl: string): Promise<{ status: 'ok' }> =>
+export const checkEdgeApiHealth = (baseUrl: string): Promise<{ ok: true; service: string; env?: string }> =>
   Effect.gen(function* () {
     const client = yield* makeEdgeApiClient(baseUrl);
     const response = yield* client.status.health();
