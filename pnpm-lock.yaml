@@ -11685,9 +11685,6 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0-rc.108(effect@4.0.0-rc.108)(react@19.2.7)(scheduler@0.27.0)
@@ -11698,9 +11695,6 @@ importers:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
     devDependencies:
-      '@dxos/plugin-theme':
-        specifier: workspace:*
-        version: link:../plugin-theme
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.5.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.5.8(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -15528,9 +15522,6 @@ importers:
       '@dxos/plugin-status-bar':
         specifier: workspace:*
         version: link:../plugin-status-bar
-      '@dxos/progress':
-        specifier: workspace:*
-        version: link:../../core/compute/progress
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -15550,15 +15541,9 @@ importers:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
     devDependencies:
-      '@dxos/echo-client':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-client
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
-      '@dxos/plugin-theme':
-        specifier: workspace:*
-        version: link:../plugin-theme
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
