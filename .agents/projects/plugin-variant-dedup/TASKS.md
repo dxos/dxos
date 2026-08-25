@@ -166,10 +166,9 @@ were more interesting than the reported symptoms.
       of deferring a wave. Fixed with an explicit host signal rather than a browser-API sniff:
       inline only when the manager owns the default gate, whose headless branch completes
       immediately; a host-supplied gate goes back to forked, because its completion is the host's
-      business. `app-framework:test` 247/247, including `start-gated modules stay off startup and
-    join their plugin start wave` — the test that caught the earlier attempt at this.
-      Post-fix the test runs in **1072ms**, so the timeout bump was reverted: it was never
-      warranted and would have hidden the next hang for 45 extra seconds
+      business. `app-framework:test` passes 247/247, including the start-gate test that caught
+      the earlier attempt at this. Post-fix the test runs in **1072ms**, so the timeout bump was
+      reverted: it was never warranted and would have hidden the next hang for 45 extra seconds
 - [x] **client-e2e** — `Timeout [200ms]` on a networked test. Passed on the next sweep;
       environmental, not a defect
 - [x] **pipeline-discord** — `replay-fixture.test.ts` is deliberately non-CI: it guards on
