@@ -12,9 +12,9 @@ import { blockSelectionField, setBlockSelection } from '../blocks';
 import {
   deleteItem,
   getItemText,
-  isItemLink,
   indentItemLess,
   indentItemMore,
+  isItemLink,
   moveItemDown,
   moveItemUp,
   replaceItemWithLink,

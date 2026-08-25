@@ -11,7 +11,6 @@ import React, { useMemo } from 'react';
 import { Annotation, Format } from '@dxos/echo';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 import { type FieldContext, type FormFieldRenderer, type FormFieldRendererProps } from '#types';

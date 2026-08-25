@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Card } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Outline } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -42,7 +42,7 @@ const DefaultStory = ({ content, name }: StoryArgs) => {
   }
 
   return (
-    <div className='p-4 is-96'>
+    <div className='p-4 w-96'>
       <Card.Root id={outline.id}>
         <Card.Header>
           <Card.Title>{name ?? 'Untitled'}</Card.Title>

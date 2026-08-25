@@ -6,10 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Role from '@dxos/app-framework/Role';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import * as Role from '@dxos/app-framework/Role';
-import { Outline, type TaskSet as TaskSetType, TaskSet } from '@dxos/types';
+import { Outline, TaskSet, type TaskSet as TaskSetType } from '@dxos/types';
 
 import { JournalArticle, OutlineArticle, OutlineCard, QuickEntryDialog, TaskSetArticle } from '#containers';
 import { QUICK_ENTRY_DIALOG } from '#meta';
