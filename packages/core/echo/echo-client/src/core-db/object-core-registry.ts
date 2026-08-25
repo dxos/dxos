@@ -45,7 +45,7 @@ export class ObjectCoreRegistry {
    * a caller who kept the object holds it from then on.
    */
   #pinned = new Set<ObjectCore>();
-  #drainScheduled = false;
+  #drainTimer: ReturnType<typeof setTimeout> | undefined = undefined;
 
   // Prunes the index as cores are collected. Lookup prunes too, so this only bounds ids that are
   // never looked up again — the common case for an object read once and moved past.
@@ -94,14 +94,13 @@ export class ObjectCoreRegistry {
 
   #pin(core: ObjectCore): void {
     this.#pinned.add(core);
-    if (this.#drainScheduled) {
-      return;
-    }
-    this.#drainScheduled = true;
     // A macrotask, not a microtask: a load resolves across timer/IO turns, and a microtask drain
-    // would close the window while the same operation is still awaiting its document.
-    setTimeout(() => {
-      this.#drainScheduled = false;
+    // would close the window while the same operation is still awaiting its document. Re-armed on
+    // every touch, so the window ends a macrotask after the LAST read rather than the first — a core
+    // pinned just before a pending drain would otherwise be held for almost no time.
+    clearTimeout(this.#drainTimer);
+    this.#drainTimer = setTimeout(() => {
+      this.#drainTimer = undefined;
       this.#pinned = new Set();
     });
   }
@@ -142,6 +141,8 @@ export class ObjectCoreRegistry {
   }
 
   clear(): void {
+    clearTimeout(this.#drainTimer);
+    this.#drainTimer = undefined;
     this.#pinned = new Set();
     for (const [, ref] of this.#cores) {
       const core = ref.deref();

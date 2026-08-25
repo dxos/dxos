@@ -396,7 +396,12 @@ export class EntityManager implements IDatabaseBinding {
     if (handle == null || !handle.isReady() || handle.doc()?.objects?.[objectId] == null) {
       return undefined;
     }
-    return this._createObjectInDocument(handle, objectId);
+    const core = this._createObjectInDocument(handle, objectId);
+    // The handle is whatever the object was last bound to, which is the branch document while a
+    // branch is selected — so the fresh core has to carry that selection too, or `Obj.getBranch`
+    // would report `main` for an object reading and writing a branch.
+    core.branch = this.getCurrentBranch(objectId);
+    return core;
   }
 
   async loadObjectCoreById(

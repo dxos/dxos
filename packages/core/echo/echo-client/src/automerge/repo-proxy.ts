@@ -288,8 +288,12 @@ export class RepoProxy extends Resource {
     documentId: DocumentId;
   }): DocHandleProxy<T> {
     // If we have the handle cached, return it
-    if (this._handles[documentId]) {
-      return this._handles[documentId];
+    const cached = this._handles[documentId];
+    if (cached) {
+      // Someone wants this document again, so a release refused earlier must not go through when the
+      // send settles: it would strip the listeners and drop the handle under a live holder.
+      this._deferredReleaseIds.delete(documentId);
+      return cached;
     }
     // If not, create a new handle, cache it, and return it.
     if (!documentId) {
@@ -328,6 +332,7 @@ export class RepoProxy extends Resource {
     // A queued unsubscribe for this id would otherwise travel in the same batch as this subscribe,
     // leaving the host unsubscribed from a document someone is now waiting for.
     this._pendingRemoveIds.delete(documentId);
+    this._deferredReleaseIds.delete(documentId);
     this._pendingAddIds.add(documentId);
     this._sendUpdatesJob!.trigger();
 

@@ -88,6 +88,17 @@ export class LoadOpTable {
     const existing = this.#ops.get(uri);
     if (existing) {
       existing.refcount++;
+      // `ready` with no result means the entity was collected since. The op still describes a body
+      // that exists, so re-probe the working set and fall back to a load: leaving it would answer
+      // every future resolution of this URI with `undefined` for as long as the op is cached.
+      if (existing.state === 'ready' && existing.result == null) {
+        const probed = this._routeBackend(uri)?.probe(uri);
+        if (probed) {
+          this.#set(existing, 'ready', probed);
+        } else if (source !== 'working-set') {
+          this.#startLoad(existing, existing.maxCeiling);
+        }
+      }
       if (isHigherCeiling(source, existing.maxCeiling)) {
         existing.maxCeiling = source;
         if (existing.state !== 'ready') {
