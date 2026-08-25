@@ -58,9 +58,10 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
 /**
  * Factory wrapper around `Obj.make` for {@link Project}.
  *
- * Materializes the owned task set unless the caller supplies one: there is no UI to add a ledger to
- * a project that lacks one, so a project without it has nowhere to put its tasks. The parent edge is
- * set alongside the ref so the set cascades when the project is deleted.
+ * Materializes the owned task set and scratch outline unless the caller supplies them: there is no UI
+ * to add either to a project that lacks one, so a project without them has nowhere to put its tasks
+ * and nothing to draft in. Each parent edge is set alongside its ref so both cascade when the project
+ * is deleted.
  */
 export const make = (
   props: Omit<Partial<Obj.MakeProps<typeof Project>>, 'artifacts'> & {
@@ -75,6 +76,17 @@ export const make = (
       project.taskSet = Ref.make(taskSet);
     });
     Obj.setParent(taskSet, project);
+  }
+  if (!props.outline) {
+    const outline = Outline.make({ name: props.name });
+    Obj.update(project, (project) => {
+      project.outline = Ref.make(outline);
+    });
+    Obj.setParent(outline, project);
+    // The outline's text is a separate object, parented to the outline so it cascades too.
+    if (outline.content.target) {
+      Obj.setParent(outline.content.target, outline);
+    }
   }
   return project;
 };
