@@ -24,7 +24,14 @@ import { getRange, outlinerTree, treeFacet } from './tree';
 // TODO(burdon): Handle backspace at start of line (or empty line).
 // TODO(burdon): Convert to task object and insert link (menu button).
 
-export type OutlinerProps = {};
+export type OutlinerProps = {
+  /**
+   * Presentation only: no editing affordances. Drops the drag grips, the floating menu, and the
+   * gutters reserved for them — a read-only surface (a card preview) has nothing to grab and no room
+   * to spare. Pair with `readOnly` on the basic extensions, which is what actually blocks edits.
+   */
+  readonly?: boolean;
+};
 
 /**
  * Outliner extension.
@@ -33,7 +40,7 @@ export type OutlinerProps = {};
  * - Constrains editor to outline structure.
  * - Supports smart cut-and-paste.
  */
-export const outliner = (_options: OutlinerProps = {}): Extension => [
+export const outliner = ({ readonly }: OutlinerProps = {}): Extension => [
   // Commands.
   Prec.highest(commands()),
 
@@ -43,20 +50,23 @@ export const outliner = (_options: OutlinerProps = {}): Extension => [
   // Filter and possibly modify changes.
   editor(),
 
-  // Block selection, drag-to-reorder, highlight, and clipboard (built on the `blocks` extensions).
-  outlinerDnd(),
-
   // Current-item indicator (the selection highlight is drawn by `outlinerDnd`).
   decorations(),
 
   // Default markdown decorations.
   decorateMarkdown({ listPaddingLeft: 8 }),
 
-  // Floating menu (with reserved margins left/right for the grip and menu).
-  menu(),
-  EditorView.contentAttributes.of({
-    class: CONTENT_WIDTH,
-  }),
+  // Editing affordances: block selection, drag-to-reorder, highlight, and clipboard (built on the
+  // `blocks` extensions), the floating menu, and the margins reserved left/right for both.
+  ...(readonly
+    ? []
+    : [
+        outlinerDnd(),
+        menu(),
+        EditorView.contentAttributes.of({
+          class: CONTENT_WIDTH,
+        }),
+      ]),
 ];
 
 /**

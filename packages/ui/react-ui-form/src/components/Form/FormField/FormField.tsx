@@ -318,10 +318,10 @@ FormField.displayName = 'Form.FormField';
 
 // End-of-row form buttons occupy a consistent 32px block (matching the standard `h-8` label row) with
 // the button inset so its hover fill never touches the row's top/bottom/right edges.
-export const CompactIconButton = ({ classNames, ...props }: IconButtonProps) => {
+export const CompactIconButton = (props: IconButtonProps) => {
   return (
     <span className='grid size-8 shrink-0 place-items-center'>
-      <IconButton variant='ghost' iconOnly {...props} classNames={mx('min-h-0 h-7 w-7 p-0', classNames)} />
+      <IconButton variant='ghost' iconOnly density='sm' {...props} />
     </span>
   );
 };
