@@ -7,11 +7,11 @@ import { describe, test } from 'vitest';
 
 import { AgentResponse, EventPage, SessionResponse } from './types';
 
-const decodeAgent = Schema.decodeUnknownOption(AgentResponse);
-const decodeSession = Schema.decodeUnknownOption(SessionResponse);
-const decodeEvents = Schema.decodeUnknownOption(EventPage);
-
 describe('response schemas', () => {
+  const decodeAgent = Schema.decodeUnknownOption(AgentResponse);
+  const decodeSession = Schema.decodeUnknownOption(SessionResponse);
+  const decodeEvents = Schema.decodeUnknownOption(EventPage);
+
   test('an agent response without an id is rejected', ({ expect }) => {
     // The id is persisted and later requests are addressed by it, so accepting the body would mark
     // the agent deployed with nothing to deploy against.

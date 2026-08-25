@@ -19,12 +19,7 @@ type Request<A> = {
   body?: unknown;
 };
 
-/**
- * Single entry point for the Managed Agents control plane. Routed through the DXOS edge CORS proxy:
- * api.anthropic.com does not permit browser origins, and the proxy passes `x-api-key` through
- * unchanged. The response is decoded against `schema`, so a body missing a field the caller persists
- * fails here rather than downstream.
- */
+/** Calls the Managed Agents control plane through the edge CORS proxy, which api.anthropic.com requires. */
 export const request = <A>({ apiKey, method, path, schema, body }: Request<A>): Effect.Effect<A, ClaudeAgentApiError> =>
   Effect.tryPromise({
     try: async (): Promise<unknown> => {

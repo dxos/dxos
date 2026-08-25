@@ -17,11 +17,7 @@ export type AgentConfig = {
   mcp_servers?: { type: 'url'; name: string; url: string }[];
 };
 
-/**
- * Response schemas, decoded before use. Every identifier below is persisted on an object that later
- * requests are addressed by, so a response missing one has to fail the operation rather than store
- * `undefined` and leave a record pointing at nothing.
- */
+/** Response schemas: the identifiers below are persisted, so they are validated before use. */
 
 export const AgentResponse = Schema.Struct({
   id: Schema.String,
