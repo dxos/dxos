@@ -4,8 +4,5 @@
 
 import { ClaudeAgentSession, ClaudeManagedAgent } from '#types';
 
-/**
- * Schemas this plugin registers, loaded on demand: the capability activates at idle, so naming them
- * here keeps them out of the plugin body's module graph.
- */
+/** Schemas this plugin registers; a separate module so they stay out of the plugin body's graph. */
 export default [ClaudeManagedAgent.ClaudeManagedAgent, ClaudeAgentSession.ClaudeAgentSession];

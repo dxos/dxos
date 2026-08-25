@@ -27,9 +27,10 @@ export const request = <T>({ apiKey, method, path, body }: Request): Effect.Effe
     try: async (): Promise<T> => {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-      let response: Response;
+      // Cleared only once the body has been consumed: `fetch` resolves on headers, so a timer
+      // cleared at that point would leave a stalled body stream unbounded.
       try {
-        response = await proxyFetchLegacy(new URL(`${ANTHROPIC_API_URL}${path}`), {
+        const response = await proxyFetchLegacy(new URL(`${ANTHROPIC_API_URL}${path}`), {
           method,
           headers: {
             'x-api-key': apiKey,
@@ -40,15 +41,15 @@ export const request = <T>({ apiKey, method, path, body }: Request): Effect.Effe
           ...(body === undefined ? {} : { body: JSON.stringify(body) }),
           signal: controller.signal,
         });
+
+        if (!response.ok) {
+          throw new ClaudeAgentApiError(response.status, await response.text().catch(() => ''));
+        }
+
+        return await response.json();
       } finally {
         clearTimeout(timeout);
       }
-
-      if (!response.ok) {
-        throw new ClaudeAgentApiError(response.status, await response.text().catch(() => ''));
-      }
-
-      return await response.json();
     },
     // A transport failure (offline, abort, proxy error) has no HTTP status of its own.
     catch: (error) => (error instanceof ClaudeAgentApiError ? error : new ClaudeAgentApiError(0, String(error))),

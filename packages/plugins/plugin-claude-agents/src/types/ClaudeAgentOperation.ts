@@ -103,6 +103,7 @@ export const DeployAgent = Operation.make({
     version: Schema.optional(Schema.Number),
   }),
   services: [Database.Service, Credential.CredentialsService],
+  types: [ClaudeManagedAgent.ClaudeManagedAgent],
 });
 
 /** Starts a session against a deployed agent, optionally with the first instruction. */
@@ -126,7 +127,7 @@ export const StartSession = Operation.make({
     sessionId: Schema.String.annotate({ description: 'Anthropic session id.' }),
   }),
   services: [Database.Service, Credential.CredentialsService],
-  types: [ClaudeAgentSession.ClaudeAgentSession],
+  types: [ClaudeManagedAgent.ClaudeManagedAgent, ClaudeAgentSession.ClaudeAgentSession],
 });
 
 /** Sends a follow-up message into a running session. */
@@ -145,6 +146,7 @@ export const SendMessage = Operation.make({
     sessionId: Schema.String,
   }),
   services: [Database.Service, Credential.CredentialsService],
+  types: [ClaudeAgentSession.ClaudeAgentSession],
 });
 
 /** Reads back the session transcript and refreshes the stored status. */
@@ -169,4 +171,5 @@ export const GetTranscript = Operation.make({
     messages: Schema.Array(TranscriptMessage),
   }),
   services: [Database.Service, Credential.CredentialsService],
+  types: [ClaudeAgentSession.ClaudeAgentSession],
 });
