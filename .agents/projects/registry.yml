@@ -6,6 +6,26 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: hardware-devices
+    status: active
+    user: burdon
+    host: burdon-mbp-2092
+    created: 2026-08-19
+    summary: 'Projecting a Composer space onto physical desk hardware. Two surfaces built: a Stream Deck + (favorites on 8 keys, progress/stats on 4 dials, via an Elgato .sdPlugin) and a LaMetric TIME (progress or stats cycled through frames, pushed straight to the device). Both consume one device-agnostic projection, `SpaceCapabilities.Dashboard`, contributed by plugin-space so N peripherals cost one set of queries.'
+    tasks: .agents/projects/stream-deck/TASKS.md
+    design: .agents/projects/stream-deck/DESIGN.md
+    prs: [12678]
+    resume: "Supersedes the `stream-deck` entry in scope — the ledger and design at the paths above now cover both devices; fold or end `stream-deck` when convenient. LaMetric is DONE and verified on real hardware (branch claude/stream-deck-lametric-plugin-731d52, pushed, stacked on PR #12678 which is open and green). Two defects only hardware could find, both fixed: every frame needs an explicit `index` (without it the device renders only the first), and the My Data (DIY) app must be set to Push mode in the LaMetric mobile app (unset, it answers ok and ignores the update). Beware: the device does NOT validate the widget id, so a 2xx is not evidence anything rendered. Local push is `/api/v2/widget/update/com.lametric.diy.devwidget/<widget>` with Basic dev:<device api key> — NOT the v1 developer path with X-Access-Token, which is cloud-only; only the {frames} body is shared. NEXT GOAL: the Stream Deck hardware pass (streamdeck link <pkg>/org.dxos.composer.sdPlugin then streamdeck restart org.dxos.composer, then tune 144x144 key rendering). AFTER THAT: design an edge-hosted LaMetric app — the DIY app offers Poll as well as Push, so a published DXOS app could fetch frames from a DXOS edge endpoint, removing the device key, the IP, the CORS problem and the Tauri dependency at once, and converging with the project's existing edge-mode item. Publishing a market app is DEFERRED until that design exists."
+  - name: stream-deck
+    status: active
+    user: burdon
+    host: burdon-studio-2022
+    created: 2026-08-19
+    summary: 'Hardware dashboard of a Composer space on a Stream Deck + — 8 keys show the space favorites (objects tagged `favorite`), 4 dial segments show progress monitors or space stats. Shipped as an Elgato .sdPlugin (coexists with the Elgato app, which holds the HID device exclusively) with Composer as the brain over a loopback WebSocket.'
+    tasks: .agents/projects/stream-deck/TASKS.md
+    design: .agents/projects/stream-deck/DESIGN.md
+    prs: []
+    resume: 'M1-M3 DONE and green: 39 node + 6 storybook tests (plugin-stream-deck), 11 node + 10 smoke checks (composer-stream-deck), forced composer-app typecheck clean, PLUGIN.mdl authored. Architecture: plugin-stream-deck holds the protocol (src/protocol/Protocol.ts, ./Protocol subpath), the favorites model (NOTE: Filter.tag matches a tag URI not a label; KeySpec.target is a GRAPH PATH so a press feeds LayoutOperation.Open directly), the monitor/stats model, pure SVG renderers + buildFrame, the StreamDeckBridge client, and capabilities/bridge-driver.ts which owns the ONLY bridge (headless, gated on ClientEvents.SpacesReady) and publishes StreamDeckCapabilities.BridgeStatus - the panel deliberately does NOT connect, since the device accepts one client. composer-stream-deck (packages/apps, layer: application, Elgato UUID org.dxos.composer) is the Elgato plugin: WS server on 127.0.0.1:21435, positional slots, setImage/setFeedback, offline state. `moon run composer-stream-deck:smoke` runs the assembled bundle against a stand-in Stream Deck app and is what catches bundle-only defects (it has caught 4). NEXT: install on the real device (streamdeck link <pkg>/org.dxos.composer.sdPlugin then streamdeck restart org.dxos.composer) and tune the 144x144 key rendering, then open the PR. Not built: settings surface (registry toggle suffices), dial bindings (undecided). Tracked for later: a LaMetric TIME surface (no keys, so only the dial half carries over).'
   - name: sdk-metrics
     status: active
     user: dmaretskyi
