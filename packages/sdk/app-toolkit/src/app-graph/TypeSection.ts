@@ -45,9 +45,7 @@ export const makeSectionRearrangeCallback = AppNode.createFactory(
 
 /** The objects a type section lists: an owned object is reached through its owner, not listed here. */
 export const sectionQuery = (type: Type.AnyEntity): Query.Any =>
-  // Filter.type's overload constraint (UnknownTypeSchema) is not publicly exported;
-  // the runtime accepts any schema with a typename annotation.
-  Query.select(Filter.and(Filter.type(type as any) as Filter.Any, Filter.hasParent(false)));
+  Query.select(Filter.and(Filter.type(type), Filter.hasParent(false)));
 
 /**
  * Creates a graph extension that surfaces all objects of an ECHO type under
