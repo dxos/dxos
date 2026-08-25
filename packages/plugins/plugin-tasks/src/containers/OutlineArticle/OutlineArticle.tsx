@@ -9,7 +9,7 @@ import { Filter, Obj, Type } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';
 import { URI } from '@dxos/keys';
-import { getSpace, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { Panel, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -39,14 +39,11 @@ export const OutlineArticle = ({
   toolbar = true,
 }: OutlineArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const space = getSpace(outline);
+  const db = Obj.getDatabase(outline);
 
   // Link the user navigated into; the back button clears it to return to the outline.
   const [selected, setSelected] = useState<URI.URI>();
-  const ref = useMemo(
-    () => (selected && space ? space.db.makeRef<Obj.Unknown>(selected) : undefined),
-    [selected, space],
-  );
+  const ref = useMemo(() => (selected && db ? db.makeRef<Obj.Unknown>(selected) : undefined), [selected, db]);
   // The document is editable markdown and every object link renders as a chip, so the target is
   // whatever the user linked — only render the task form once it really is a task.
   const target = useResolveRef(ref);
@@ -54,16 +51,16 @@ export const OutlineArticle = ({
 
   const handleConvertToTask = useCallback(
     async (text: string) => {
-      if (!space) {
+      if (!db) {
         return undefined;
       }
 
       const task = destination
-        ? OutlineType.addTask(destination, space.db, text)
-        : await OutlineType.createTask(outline, space.db, text);
+        ? OutlineType.addTask(destination, db, text)
+        : await OutlineType.createTask(outline, db, text);
       return { label: task.title, url: Obj.getURI(task).toString() };
     },
-    [outline, space, destination],
+    [outline, db, destination],
   );
 
   const handleSelectLink = useCallback((url: string) => setSelected(URI.make(url)), []);
@@ -79,7 +76,7 @@ export const OutlineArticle = ({
   // unrelated tasks in the space are dropped before the map is built.
   // The set the links point into: the embedder's when one was supplied, else the outline's own.
   const taskSet = destination ?? outline.taskSet?.target;
-  const tasks = useQuery(space?.db, taskSet ? Filter.type(Task.Task) : Filter.nothing());
+  const tasks = useQuery(db, taskSet ? Filter.type(Task.Task) : Filter.nothing());
   // `useQuery` re-emits only when result membership changes, never on a member's property change,
   // so renames are observed by subscribing to each task; the bump rebuilds the resolver, whose new
   // identity re-runs the editor's label sync.
@@ -155,7 +152,7 @@ export const OutlineArticle = ({
       ref={outlineRef}
       id={outline.content.target.id}
       text={outline.content.target}
-      onConvertToTask={space ? handleConvertToTask : undefined}
+      onConvertToTask={db ? handleConvertToTask : undefined}
       onConvertibleChange={setConvertible}
       onSelectLink={handleSelectLink}
       resolveLinkLabel={resolveLinkLabel}

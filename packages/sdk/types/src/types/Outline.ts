@@ -35,8 +35,6 @@ export const make = ({ name, content }: { name?: string; content?: string } = {}
   });
 };
 
-export const DEFAULT_TASK_SET_NAME = 'Untitled task set';
-
 /**
  * Get the outline's task set, creating and linking one on first use.
  *
@@ -49,7 +47,7 @@ export const getOrCreateTaskSet = async (outline: Outline, db: Database.Database
     return existing.load();
   }
 
-  const taskSet = db.add(TaskSet.make({ name: outline.name ?? DEFAULT_TASK_SET_NAME }));
+  const taskSet = db.add(TaskSet.make({ name: outline.name }));
   Obj.update(outline, (outline) => {
     outline.taskSet = Ref.make(taskSet);
   });
@@ -85,7 +83,10 @@ export const createTask = async (
   db: Database.Database,
   title: string,
   props: Partial<Omit<Obj.MakeProps<typeof Task.Task>, 'title'>> = {},
-): Promise<Task.Task> => addTask(await getOrCreateTaskSet(outline, db), db, title, props);
+): Promise<Task.Task> => {
+  const taskSet = await getOrCreateTaskSet(outline, db);
+  return addTask(taskSet, db, title, props);
+};
 
 //
 // Checklist markdown — the canonical text grammar of an outline (`- [ ]` / `- [x]` lines).
@@ -131,6 +132,7 @@ export const upsertChecklistItems = (markdown: string, items: readonly Checklist
     pending.delete(item.title);
     return renderChecklistItem(item);
   });
+
   for (const item of pending.values()) {
     next.push(renderChecklistItem(item));
   }

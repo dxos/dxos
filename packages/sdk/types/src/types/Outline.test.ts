@@ -40,15 +40,6 @@ describe('Outline', () => {
       expect(outline.taskSet?.target?.id).to.eq(taskSet.id);
     });
 
-    test('falls back to a default name for an unnamed outline', async ({ expect }) => {
-      const outline = db.add(Outline.make());
-      await db.flush();
-
-      const taskSet = await Outline.getOrCreateTaskSet(outline, db);
-
-      expect(taskSet.name).to.eq(Outline.DEFAULT_TASK_SET_NAME);
-    });
-
     test('links a single task set when conversions race', async ({ expect }) => {
       const outline = db.add(Outline.make({ name: 'Roadmap' }));
       await db.flush();

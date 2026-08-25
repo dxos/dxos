@@ -12,7 +12,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
-import { getSpace, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Panel, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
@@ -74,13 +74,13 @@ const Column = ({ children }: PropsWithChildren) => (
  * lazily created `TaskSet`. Nothing renders until the first conversion creates that set.
  */
 const TaskSetView = ({ outline }: { outline: Outline.Outline }) => {
-  const space = getSpace(outline);
+  const db = Obj.getDatabase(outline);
   // The set is created on the first conversion, so resolve the ref reactively rather than reading
   // `.target` once.
   const [taskSet] = useObject(outline.taskSet);
   // Queried by type and filtered to the set's members: `useQuery` re-emits on membership changes
   // but not on a member's property change, and the form edits titles in place.
-  const tasks = useQuery(space?.db, Filter.type(Task.Task));
+  const tasks = useQuery(db, Filter.type(Task.Task));
   const filtered = useMemo(() => {
     const members = new Set(taskSet?.tasks.map((ref) => ref.target?.id));
     return tasks.filter((task) => members.has(task.id));
@@ -88,11 +88,11 @@ const TaskSetView = ({ outline }: { outline: Outline.Outline }) => {
 
   const handleCreate = useCallback(
     (title: string) => {
-      if (space) {
-        void Outline.createTask(outline, space.db, title);
+      if (db) {
+        void Outline.createTask(outline, db, title);
       }
     },
-    [outline, space],
+    [outline, db],
   );
 
   const handleUpdate = useCallback((task: Task.Task, patch: TaskPatch) => {
@@ -103,9 +103,9 @@ const TaskSetView = ({ outline }: { outline: Outline.Outline }) => {
 
   const handleDelete = useCallback(
     (task: Task.Task) => {
-      space?.db.remove(task);
+      db?.remove(task);
     },
-    [space],
+    [db],
   );
 
   return (
