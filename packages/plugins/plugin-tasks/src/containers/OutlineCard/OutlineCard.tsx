@@ -18,10 +18,13 @@ export const OutlineCard = ({ subject }: OutlineCardProps) => {
   }
 
   return (
-    <Outline.Root id={subject.content.target.id} text={subject.content.target}>
-      <Card.Root id={subject.id} classNames='p-2'>
-        <Outline.Content />
-      </Card.Root>
+    // Read-only: a card is a preview, so no editing, no drag grips, and no floating menu.
+    <Outline.Root id={subject.content.target.id} text={subject.content.target} readonly>
+      <Card.Body>
+        <Card.Row>
+          <Outline.Content />
+        </Card.Row>
+      </Card.Body>
     </Outline.Root>
   );
 };

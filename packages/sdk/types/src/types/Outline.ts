@@ -58,16 +58,19 @@ export const getOrCreateTaskSet = async (outline: Outline, db: Database.Database
 };
 
 /**
- * Create a task in the outline's task set. Membership is the set's `tasks` array; the parent edge
- * is set alongside so the task cascade-deletes with the set.
+ * Create a task in a given task set. Membership is the set's `tasks` array; the parent edge is set
+ * alongside so the task cascade-deletes with the set.
+ *
+ * Takes the set rather than deriving it: an outline embedded in another object promotes into THAT
+ * object's set (a project's inline outline files into the project's ledger), which only the embedder
+ * knows. {@link createTask} is the self-owned case.
  */
-export const createTask = async (
-  outline: Outline,
+export const addTask = (
+  taskSet: TaskSet.TaskSet,
   db: Database.Database,
   title: string,
   props: Partial<Omit<Obj.MakeProps<typeof Task.Task>, 'title'>> = {},
-): Promise<Task.Task> => {
-  const taskSet = await getOrCreateTaskSet(outline, db);
+): Task.Task => {
   const task = db.add(Task.make({ title: title.trim(), status: 'todo', ...props }));
   Obj.setParent(task, taskSet);
   Obj.update(taskSet, (taskSet) => {
@@ -75,6 +78,14 @@ export const createTask = async (
   });
   return task;
 };
+
+/** Create a task in the outline's own task set, creating that set on first use. */
+export const createTask = async (
+  outline: Outline,
+  db: Database.Database,
+  title: string,
+  props: Partial<Omit<Obj.MakeProps<typeof Task.Task>, 'title'>> = {},
+): Promise<Task.Task> => addTask(await getOrCreateTaskSet(outline, db), db, title, props);
 
 //
 // Checklist markdown — the canonical text grammar of an outline (`- [ ]` / `- [x]` lines).
