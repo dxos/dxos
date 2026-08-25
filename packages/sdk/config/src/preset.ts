@@ -23,7 +23,7 @@ const edgeUrl = (edge: NonNullable<ConfigPresetOptions['edge']>) =>
   Match.value(edge).pipe(
     Match.when('local', () => 'http://localhost:8787'),
     Match.when('dev', () => 'https://edge.dxos.workers.dev'),
-    // `preview` replaced `main` (DX-1150); `main` is kept as a deprecated alias of the same worker.
+    // Preserve `main` as a deprecated alias for existing profiles.
     Match.when('preview', () => 'https://preview.dxos.network'),
     Match.when('main', () => 'https://preview.dxos.network'),
     Match.when('production', () => 'https://dxos.network'),

@@ -39,7 +39,7 @@ const makeTemplate = (edgeUrl: string) => trim`
 const TEMPLATES = {
   default: makeTemplate('https://dxos.network'),
   preview: makeTemplate('https://preview.dxos.network'),
-  // Deprecated alias of `preview` (the env was renamed by DX-1150).
+  // Preserve `main` as a deprecated alias for existing profiles.
   main: makeTemplate('https://preview.dxos.network'),
   dev: makeTemplate('https://edge.dxos.workers.dev'),
   local: makeTemplate('http://localhost:8787'),
