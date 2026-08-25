@@ -72,10 +72,9 @@ export const make = (config: Config): Config => config;
 //
 
 /**
- * Reference to a capability by its NSID. The bare-string form names a `multi` capability — the
- * default arity — so the common case stays a plain string; a singleton spells its arity out.
- * Arity travels with the reference because the plugin manager orders modules by it (multi
- * requires never block) and must do so without loading the capability's defining module.
+ * Reference to a capability by its NSID; a bare string names a `multi` capability, the default
+ * arity. Arity travels with the reference because the plugin manager orders modules by it before
+ * any module body loads.
  */
 export const CapabilityRef = Schema.Union([
   Schema.String.pipe(Schema.check(Schema.isNonEmpty())),

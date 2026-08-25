@@ -1,7 +1,5 @@
 ---
-'@dxos/protocols': minor
 '@dxos/app-framework': minor
-'@dxos/plugin-markdown': patch
 ---
 
 Plugin entrypoints can be declared as data. A plugin publishes a `dxplugin.jsonc` next to its

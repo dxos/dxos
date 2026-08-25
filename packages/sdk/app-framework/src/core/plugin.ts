@@ -686,16 +686,22 @@ const decodeDescriptor = Schema.decodeUnknownSync(Config2.Descriptor);
 export const parseJsonc = (text: string): unknown => {
   let out = '';
   let index = 0;
+  // Offset in `out` of a comma that is still a candidate for being a trailing one. Tracked during
+  // the scan rather than stripped by a regex afterwards, because a copied string literal can itself
+  // contain `, }` — a descriptor's description is free text.
+  let pendingComma: number | undefined;
+
   while (index < text.length) {
     const char = text[index];
     if (char === '"') {
       const start = index++;
       while (index < text.length && text[index] !== '"') {
-        // A backslash consumes the next character whatever it is, so an escaped backslash
-        // cannot be mistaken for the escape of a following quote.
+        // A backslash consumes the next character whatever it is, so an escaped backslash cannot be
+        // mistaken for the escape of a following quote.
         index += text[index] === '\\' ? 2 : 1;
       }
       out += text.slice(start, ++index);
+      pendingComma = undefined;
       continue;
     }
     if (char === '/' && text[index + 1] === '/') {
@@ -705,16 +711,24 @@ export const parseJsonc = (text: string): unknown => {
       continue;
     }
     if (char === '/' && text[index + 1] === '*') {
-      index = text.indexOf('*/', index + 2);
-      index = index === -1 ? text.length : index + 2;
+      const close = text.indexOf('*/', index + 2);
+      index = close === -1 ? text.length : close + 2;
       continue;
+    }
+    if ((char === '}' || char === ']') && pendingComma !== undefined) {
+      out = out.slice(0, pendingComma) + out.slice(pendingComma + 1);
+      pendingComma = undefined;
     }
     out += char;
     index++;
+    if (char === ',') {
+      pendingComma = out.length - 1;
+    } else if (char.trim() !== '') {
+      pendingComma = undefined;
+    }
   }
-  // Trailing commas are outside string literals by construction: the scan above copied every
-  // string verbatim and nothing else can contain an unquoted comma before a closing bracket.
-  return JSON.parse(out.replace(/,(\s*[}\]])/g, '$1'));
+
+  return JSON.parse(out);
 };
 
 /**
@@ -736,6 +750,21 @@ const resolveSrc = (src: string, baseUrl?: string | URL): string => {
 };
 
 /**
+ * Decodes a descriptor from any {@link ManifestSource} without building a plugin from it. Malformed
+ * JSONC and schema violations both surface as {@link PluginDescriptorError}, so a caller has one
+ * failure type to handle rather than a `SyntaxError` from one path and a schema issue from another.
+ */
+export const parseDescriptor = (source: ManifestSource): Config2.Descriptor => {
+  try {
+    return decodeDescriptor(
+      typeof source === 'string' ? parseJsonc(source) : 'default' in source ? source.default : source,
+    );
+  } catch (cause) {
+    throw new PluginDescriptorError({ context: { reason: 'decode-failed' }, cause });
+  }
+};
+
+/**
  * Builds a {@link Plugin} factory from a serialized descriptor — the counterpart of hand-writing
  * `Plugin.define(meta).pipe(Plugin.addModule(…), Plugin.make)`.
  *
@@ -749,15 +778,11 @@ const resolveSrc = (src: string, baseUrl?: string | URL): string => {
  * vite loader has already emitted the module as a build entrypoint and rewritten `src` to the
  * built asset, so re-analyzing it here would duplicate the chunk.
  */
-export const parseDescriptor = (source: ManifestSource): Config2.Descriptor =>
-  decodeDescriptor(typeof source === 'string' ? parseJsonc(source) : 'default' in source ? source.default : source);
-
 export const fromManifest = <T = void>(source: ManifestSource, options?: FromManifestOptions): PluginFactory<T> => {
   const descriptor = parseDescriptor(source);
-  const { modules, version, ...profile } = descriptor;
-  const meta = makeMeta({ ...profile, key: DXN.make(descriptor.key) });
+  const meta = getMetaFromDescriptor(descriptor);
 
-  const builder = modules
+  const builder = descriptor.modules
     .filter((module) => !options?.platform || !module.platforms || module.platforms.includes(options.platform))
     .reduce<PluginBuilder<T>>((acc, module) => {
       const url = resolveSrc(module.src, options?.baseUrl);

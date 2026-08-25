@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, it } from '@effect/vitest';
+import { describe, test } from '@effect/vitest';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -37,19 +37,19 @@ describe('dxplugin.jsonc', () => {
       provides: activation.provides.map(({ identifier, arity }) => `${arity}:${identifier}`),
     }));
 
-  it('declares the same metadata', () => {
+  test('declares the same metadata', ({ expect }) => {
     expect(forPlatform('node').meta.profile).toMatchObject(MarkdownPlugin().meta.profile);
   });
 
-  it('reconstructs the node entrypoint', () => {
+  test('reconstructs the node entrypoint', ({ expect }) => {
     expect(spec(forPlatform('node'))).toEqual(spec(MarkdownPlugin()));
   });
 
-  it('reconstructs the workerd entrypoint', () => {
+  test('reconstructs the workerd entrypoint', ({ expect }) => {
     expect(spec(forPlatform('workerd'))).toEqual(spec(MarkdownWorkerPlugin()));
   });
 
-  it('narrows to a subset of the browser modules on each server platform', () => {
+  test('narrows to a subset of the browser modules on each server platform', ({ expect }) => {
     // Every module is browser-capable, so the browser view is the whole descriptor.
     expect(forPlatform('browser').modules).toHaveLength(12);
     expect(forPlatform(undefined).modules).toHaveLength(12);
@@ -57,7 +57,7 @@ describe('dxplugin.jsonc', () => {
     expect(forPlatform('workerd').modules).toHaveLength(3);
   });
 
-  it('names a module file that exists', () => {
+  test('names a module file that exists', ({ expect }) => {
     for (const { src } of Plugin.parseDescriptor(descriptor).modules) {
       expect(existsSync(join(PACKAGE_DIR, src)), src).toBe(true);
     }

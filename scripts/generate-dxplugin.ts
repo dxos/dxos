@@ -3,20 +3,13 @@
 //
 
 /**
- * One-time migration aid: seeds a plugin's `dxplugin.jsonc` from its existing TypeScript entrypoint.
+ * Seeds a plugin's `dxplugin.jsonc` from its TypeScript entrypoint. One-time: the descriptor is the
+ * source of truth once written, so this must never be re-run over hand edits.
  *
- * The descriptor is the SOURCE OF TRUTH once written — hand-authored against
- * `dxplugin.schema.json`, and the TypeScript entrypoint is what gets deleted. This script exists
- * only to do the initial transcription without transcribing ~60 plugins by hand; it is not part of
- * any build, and a descriptor must never be regenerated over hand edits.
+ * The activation spec is read off the constructed plugin and each `src` off the capabilities
+ * barrel's loaders, because only the former survives to runtime and only the latter names a file.
  *
- * The two halves of a module declaration live in different places and only one of them survives
- * to runtime: the activation spec (requires/provides/activatesOn) is on the constructed `Plugin`,
- * while the module's source file is inside an opaque `() => import('./x')` closure. So the spec is
- * read by evaluating the plugin, and the `src` is recovered by scanning the capabilities barrel
- * for the import each exported module name is declared with.
- *
- * Usage: `pnpm vite-node scripts/generate-dxplugin.ts -- packages/plugins/plugin-markdown`
+ * Usage: `pnpm vite-node -c scripts/dxplugin.vite.config.ts scripts/generate-dxplugin.ts -- <dir>`
  */
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -37,11 +30,13 @@ const withExtension = (packageDir: string, path: string): string =>
 const readModuleSources = (packageDir: string): Map<string, string> => {
   const source = readFileSync(join(packageDir, CAPABILITIES_BARREL), 'utf-8');
   const sources = new Map<string, string>();
-  // One export per module, each ending in a `() => import('./body')` loader; the export name ties
-  // the loader back to the identifier the plugin entrypoint adds.
-  for (const match of source.matchAll(/export const (\w+)[\s\S]*?import\('(\.[^']+)'\)/g)) {
-    const [, name, path] = match;
-    if (!sources.has(name)) {
+  // Split per declaration rather than matching across the file: a lazy match from one `export
+  // const` reaches into the next declaration's `import()`, mapping a loader-less export to its
+  // neighbour's path.
+  for (const declaration of source.split(/^export const /m).slice(1)) {
+    const name = declaration.match(/^(\w+)/)?.[1];
+    const path = declaration.match(/import\('(\.[^']+)'\)/)?.[1];
+    if (name && path && !sources.has(name)) {
       sources.set(name, withExtension(packageDir, path.replace(/^\.\//, './src/capabilities/')));
     }
   }
@@ -49,11 +44,9 @@ const readModuleSources = (packageDir: string): Map<string, string> => {
 };
 
 /**
- * The identifier each `Plugin.addModule(...)` call names, in source order.
- *
- * Positional rather than by name: a module's runtime name comes from its maker's default (`schema`,
- * `Settings`) and routinely differs from the barrel export it was added as, whereas the entrypoint's
- * call order and the constructed plugin's module order are the same list by construction.
+ * The identifier each `Plugin.addModule(...)` call names, in source order. Positional because a
+ * module's runtime name comes from its maker's default (`schema`, `Settings`) and routinely differs
+ * from the barrel export it was added as.
  */
 const readAddedModules = (entryPath: string): string[] =>
   [...readFileSync(entryPath, 'utf-8').matchAll(/Plugin\.addModule\(\s*([\w.]+)/g)].map(([, name]) => name);
@@ -82,6 +75,7 @@ const toActivationRef = (events: any): Config2.ActivationRef | undefined => {
   return toNsid(events.id) === 'org.dxos.app-framework.event.idle' ? undefined : toEventRef(events);
 };
 
+/** Returns the descriptor JSON for the plugin at `packageDir`; `overrides` supplies inline modules' files. */
 export const generate = async (packageDir: string, overrides: Map<string, string>): Promise<string> => {
   // The import is extensionless so vite picks the platform variant; the source scan needs the file.
   const entryPath = ['src/plugin.tsx', 'src/plugin.ts']

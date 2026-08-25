@@ -12,11 +12,8 @@ import { translations } from '#translations';
 
 /**
  * Contributes the plugin's translations, plus the editor's — the markdown surface is a CodeMirror
- * editor, so its strings are only ever needed where markdown is.
- *
- * A module file rather than an inline list on the entrypoint: the descriptor names modules by
- * file, and the resource bundles are a chunk's worth of strings that no longer have to be resident
- * before the plugin activates.
+ * editor, so its strings are only needed where markdown is. A file rather than an inline list
+ * because the descriptor names modules by file, which also defers the bundles to their own chunk.
  */
 export default () =>
   Effect.succeed([Capability.contribute(AppCapabilities.Translations, [...translations, ...editorTranslations])]);

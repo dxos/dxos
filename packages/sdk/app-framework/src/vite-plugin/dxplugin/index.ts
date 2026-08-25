@@ -16,9 +16,6 @@ export const DXPLUGIN_FILENAME = 'dxplugin.jsonc';
 
 const decodeDescriptor = Schema.decodeUnknownSync(Config2.Descriptor);
 
-/** Marks where a module `src` sits in the generated JS, so it can be swapped for a live expression. */
-const SRC_PLACEHOLDER = (index: number) => `__dxplugin_src_${index}__`;
-
 /**
  * Loader for `dxplugin.jsonc` plugin descriptors, modelled on vite's own HTML handling: a
  * descriptor is not an opaque asset but a *document that references modules*, so the loader walks
@@ -58,26 +55,22 @@ export const dxPluginManifest = (): VitePlugin => {
 
       const descriptor = decodeDescriptor(Plugin.parseJsonc(readFileSync(path, 'utf-8')));
       const dir = dirname(path);
-      const sources: string[] = [];
 
-      const modules = descriptor.modules.map((module, index) => {
+      // `src` is emitted as a JS expression, not a string, so the build form can be
+      // `import.meta.ROLLUP_FILE_URL_*` — which rollup only substitutes in code position. Each
+      // module is serialized on its own, rather than by patching placeholders in a serialized
+      // document, where any authored field holding the same text would capture the substitution.
+      const modules = descriptor.modules.map((module) => {
         const absolute = resolve(dir, module.src);
-        if (isBuild) {
-          const referenceId = this.emitFile({ type: 'chunk', id: absolute, preserveSignature: 'exports-only' });
-          sources.push(`import.meta.ROLLUP_FILE_URL_${referenceId}`);
-        } else {
-          sources.push(JSON.stringify(`/@fs/${absolute}`));
-        }
-        return { ...module, src: SRC_PLACEHOLDER(index) };
+        const src = isBuild
+          ? `import.meta.ROLLUP_FILE_URL_${this.emitFile({ type: 'chunk', id: absolute, preserveSignature: 'exports-only' })}`
+          : JSON.stringify(`/@fs/${absolute}`);
+        const { src: _src, ...rest } = module;
+        return `{ ...${JSON.stringify(rest)}, src: ${src} }`;
       });
 
-      // The placeholders are the only occurrences of their text in the serialized descriptor
-      // (they are generated, not authored), so a plain string swap is unambiguous.
-      const body = sources.reduce(
-        (code, src, index) => code.replace(JSON.stringify(SRC_PLACEHOLDER(index)), src),
-        JSON.stringify({ ...descriptor, modules }, null, 2),
-      );
-
+      const { modules: _modules, ...profile } = descriptor;
+      const body = `{ ...${JSON.stringify(profile, null, 2)}, modules: [${modules.join(', ')}] }`;
       return { code: `export default ${body};\n`, moduleSideEffects: false };
     },
   };

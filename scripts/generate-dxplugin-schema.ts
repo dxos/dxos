@@ -3,10 +3,8 @@
 //
 
 /**
- * Regenerates `packages/sdk/app-framework/dxplugin.schema.json` from `Config2.Descriptor`.
- *
- * The file is checked in so an editor can resolve it without running any code; this script (and the
- * drift test beside the schema) is what keeps it equal to the runtime schema.
+ * Regenerates `dxplugin.schema.json`, which is checked in so an editor resolves it without running
+ * any code; the drift test beside the schema keeps it equal to `Config2.Descriptor`.
  *
  * Usage: `pnpm vite-node -c scripts/dxplugin.vite.config.ts scripts/generate-dxplugin-schema.ts`
  */

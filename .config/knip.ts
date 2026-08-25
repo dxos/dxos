@@ -188,10 +188,8 @@ const lazyImportedEntry = (dir: string): string[] => {
 };
 
 /**
- * Module bodies a plugin's `dxplugin.jsonc` names by relative URL. The descriptor is the plugin's
- * entrypoint, so those files are its real entry points — but nothing imports them, and knip cannot
- * read a JSONC file. Parsed with a regex over `"src"` rather than by decoding the descriptor: this
- * config runs before any build, so it cannot import the schema that would decode it.
+ * Module bodies a plugin's `dxplugin.jsonc` names — real entry points that nothing imports. Matched
+ * with a regex because this config runs before any build, so it cannot import the decoding schema.
  */
 const descriptorEntry = (dir: string): string[] => {
   const descriptor = globSync(`${dir}/dxplugin.jsonc`).map((file) => readFileSync(file, 'utf8'))[0];
@@ -396,9 +394,8 @@ const workspaces: KnipConfig['workspaces'] = {
     project: ['*.{ts,mts}', 'scripts/**/*.{ts,mjs}', 'vitest/**/*.{ts,mjs}'],
     ignoreDependencies: [
       ...Object.keys({ ...rootManifest.dependencies, ...rootManifest.devDependencies }),
-      // Imported by checked-in developer scripts (`scripts/generate-dxplugin*.ts`), which run
-      // through `vite-node` against the workspace rather than the root's own dependency closure.
-      // Declaring them at the root would only add two entries nothing installs for.
+      // Imported by checked-in developer scripts, which run through `vite-node` against the
+      // workspace rather than the root's own dependency closure.
       '@dxos/app-framework',
       '@dxos/protocols',
     ],
