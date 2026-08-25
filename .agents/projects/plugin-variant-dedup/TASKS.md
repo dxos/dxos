@@ -113,9 +113,56 @@ the task graph owns it (echo-query `prebuild-lezer` is the template).
 - [ ] `plugin-client`'s `plugin.test.ts > modules activate on the expected events` needs a timeout
       above vitest's 15s default. Measured at 12.5s against a 15s budget, so it flakes under
       full-suite concurrency. Not a regression from this branch (12.1s with the change reverted)
+- [ ] `@dxos/plugin-routine/util` is a convention of one. plugin-magazine's
+      `magazine-curation.ts` is the only file importing `makeRoutine` from the subpath; eight
+      siblings import it from the root barrel (plugin-brain, plugin-connector, plugin-crm ×3,
+      plugin-inbox, plugin-projects ×2). Traced directly: the root barrel is React-free under
+      both `workerd,worker` and `node`, so the subpath buys nothing today and nothing enforces
+      it. Either sweep the eight onto `/util` or drop the divergence — but decide, rather than
+      leaving one file different for a reason that no longer holds
+- [ ] Guard-target drift: plugin-magazine, plugin-markdown, plugin-inbox and plugin-assistant
+      trace `--to "@dxos/react-ui"`, while the 87 generated guards trace `--to "{react,react-dom}"`.
+      A bare `import { createContext } from 'react'` — the exact leak class §6.6 catalogues for
+      plugin-presenter and plugin-support — passes the narrower target. Normalize them
 - [ ] Stale glob: `.moon/tasks/tag-composer-plugin.yml` still lists
       `src/capabilities/overrides.*.ts` as an input. Harmless (matches nothing) but misleading now
       that the override mechanism is deleted
-- [ ] Re-merge `origin/main` before landing: main gained 3 commits after `9794ecb428`, including
-      `plugin-claude-agents` (#12741), which arrives with a capabilities barrel and no tag and so
-      needs the same treatment plugin-lingo did
+- [x] Re-merge `origin/main` (`eaf9c7e3fa`, 3 commits). `plugin-claude-agents` (#12741) arrived
+      with a capabilities barrel and no tag, as predicted, and got the plugin-lingo treatment:
+      tag + dual-condition React guard, barrels generated (3 modules, 0 stubs), and the
+      `capabilities.{node,workerd}.mjs` bundles confirmed present so the declared conditions have
+      a build behind them. The one substantive conflict was plugin-magazine's
+      `magazine-curation.ts`: main rewrote the template, the branch had only moved `makeRoutine`
+      to `@dxos/plugin-routine/util`; resolution keeps main's rewrite with the subpath import
+
+## Phase 7 — the first full test sweep this branch has had
+
+`eaf9c7e3fa`: build exit 0 / 0 `error TS`; `check-module-structure` exit 0 with 180 traces and 0
+unresolved; **tests exit 1 — 659 tasks, 5 failed.** `app-framework:test` and `cli:test` (the `dx`
+CLI's 47-test headless coverage) both passed. The five, triaged:
+
+- [ ] **plugin-excalidraw** — `plugin.test.ts > modules activate on the event that gates them`
+      asserts `drawing-variant` is active, but branch commit `cedd3ea6b5` annotated
+      `DrawingVariant` with `environments: []`, so under vitest's `node` condition it resolves to
+      `export const DrawingVariant = undefined` and `Plugin.addModule` skips it. The assertion is
+      unsatisfiable by construction. **Reproduces in isolation** (1.9s), so it is not the
+      concurrency flake. The annotation is right; the test asserts browser behaviour in a node
+      runtime. This is DESIGN.md §1's "test blindness" in its second form: `plugin.test.ts`
+      resolves the _node_ barrel under vitest, so no browser-only module can ever be asserted
+      active there
+- [ ] **plugin-space** (3 tests) — `open-object-form.test.ts` fails with
+      `CapabilityNotFoundError: org.dxos.plugin.space.capability.ephemeralState`. The test
+      supplies that capability itself, from a stub layout plugin declared inline in the test file
+      (its comment: the real `state.ts` "needs a layout to activate"). That stub is a
+      `Capability.inlineModule` with no `activatesOn`, so this is an activation-timing failure,
+      not barrel generation — `SpaceState` _is_ present in `gen/node.ts`. Needs a root cause
+- [ ] **plugin-client** (2 tests) — both `Test timed out in 15000ms` on
+      `schema-defs.test.ts > registers contributed schema before an IdentityCreated consumer
+    runs`. The documented 15s-budget flake, measured pre-branch at 12.1s. Not a regression;
+      needs the timeout raised. Note main carries this test in two files
+      (`src/schema-defs.test.ts` and `src/capabilities/schema-defs.test.ts`) and both fail
+- [ ] **client-e2e** — `spaces.test.ts > post and listen to messages`, `Error: Timeout [200ms]`.
+      A 200ms budget on a networked test; almost certainly environmental
+- [ ] **pipeline-discord** — `replay-fixture.test.ts`, `expected 0 to be greater than 0`, replay
+      over a crawled SQLite fixture. Also failed in the previous session's sweep, before this
+      merge, so it is pre-existing and likely a missing local fixture

@@ -231,8 +231,8 @@ statements regardless of `sideEffects` (which is why O2's canonical entry stays 
    conditions, two vite entries, one schema copy. Estimated repo-wide at ~70 files
    immediately and ~100 after consolidation. **Actual, as landed**: zero
    `plugin.{node,workerd}.ts`, zero `schema.{node,workerd}.ts`, and zero `overrides.*.ts`
-   remain anywhere under `packages/plugins`, across 94 plugins carrying a capabilities
-   barrel and the `composer-plugin` tag.
+   remain anywhere under `packages/plugins`, across the 97 plugins carrying a capabilities
+   barrel.
 7. **Guard-rail updates**: `check-module-structure` needed more than the spike suggested.
    `dx-trace-imports --conditions` is now **repeatable**, each occurrence an independent set:
    `#capabilities` resolves to a different barrel per runtime, so the previous single set only
@@ -240,9 +240,12 @@ statements regardless of `sideEffects` (which is why O2's canonical entry stays 
    `node`, so node-side React leaks passed a green check — the corrected guards found three
    (plugin-assistant, plugin-debug, plugin-presenter), all pre-existing on main.
 
-   Each plugin's guard now traces exactly the conditions it produces: 25 trace workerd and node,
-   4 trace node only, and the two plugins that declare no conditions (map-solid, wnfs) drop the
-   guard entirely — tracing them would assert a property of a bundle no headless host loads.
+   Each plugin's guard traces exactly the conditions it produces. Those counts were written
+   during the narrow phase and are superseded by the widened defaults; see §6.4 for the current
+   census. As landed, 87 plugins carry the dual `workerd,worker` + `node` React guard, and
+   plugin-map-solid is the one plugin that deliberately carries no guard at all — it declares no
+   conditions, so tracing it would assert a property of a bundle no headless host loads. (An
+   earlier draft of this section paired map-solid with plugin-wnfs; wnfs does carry a guard.)
    Also fix `toolbox lintPackageExports` which would flatten nested `source` maps if ever
    pointed at plugins (pre-existing hazard).
 
@@ -284,7 +287,16 @@ Migration is mechanical per plugin (the two spike commits are the template) and 
    plugin-google and plugin-jmap, both untagged, so their `#capabilities` stayed unconditioned
    and the CLI resolved the full browser barrel.
 
-   94 plugins with a capabilities barrel are now tagged and guarded. The cost is low: a
+   Four different sets are involved and it is worth keeping them apart, because "tagged" and
+   "guarded" are not the same population. Measured at `eaf9c7e3fa`: **97** plugins carry a
+   capabilities barrel, **96** carry the `composer-plugin` tag, **88** define a
+   `check-module-structure` task, and **85** declare a `capabilities.workerd` condition. Of
+   those 88 tasks, 87 are the dual-condition React guard; plugin-computer's is a different
+   assertion entirely (its browser entry must not reach `node:child_process`). The
+   invariant that actually holds is the narrow one: every plugin whose `#capabilities` declares
+   a headless condition carries a guard. The 8 tagged-but-unguarded plugins (heygen, ideogram,
+   iroh-beacon, mermaid, osrm, progress, status-bar, typefully) declare no conditions, so there
+   is no headless bundle to trace. The cost of tagging is low: a
    plugin whose modules are all UI families stubs every module out, so its barrel is empty and
    its guard passes with nothing included. A plugin that produces no conditions at all carries no
    guard — tracing it would assert a property of a bundle no headless host loads.
@@ -325,12 +337,19 @@ Migration is mechanical per plugin (the two spike commits are the template) and 
    shipped only the `OperationHandler` stub) — the isomorphic default silently overrode a documented
    decision.
 
-   A third piece of evidence arrived during the merge with main. Four modules turned out to be
-   genuinely browser-only and were caught by the React guard alone, never by a type error:
-   plugin-illustrator's `SvgVariant`, plugin-excalidraw's and plugin-tldraw's `DrawingVariant`,
-   and plugin-projects' `Templates`. All four are variant or provider modules handing React
-   components to another plugin, which is a shape the guard happens to catch precisely because
-   React is what it measures.
+   A third piece of evidence arrived during the merge with main. **Three** modules turned out to
+   be genuinely browser-only and were caught by the React guard alone, never by a type error:
+   plugin-illustrator's `SvgVariant`, plugin-excalidraw's and plugin-tldraw's `DrawingVariant`.
+   All three carry `environments: []` and are variant/provider modules handing React components
+   to plugin-illustrator, a shape the guard catches precisely because React is what it measures.
+
+   A fourth module, plugin-projects' `Templates`, was previously recorded here as a browser-only
+   case. That was wrong and is corrected: it carries `environments: ['workerd']`, so it is
+   excluded from _node_ and shipped in the workerd barrel — not browser-only, and the opposite
+   axis from the other three. It hands out no React (nothing under `src/templates/` references
+   react or tsx); the exclusion is a node-condition reachability matter through its import chain,
+   which is a different and still-unnamed fact. Worth pinning down, because a module excluded
+   from one headless runtime but not the other is the case this design reasons about least.
 
    **The alternative that was rejected.** Keep the per-family defaults but let an unannotated raw
    `Capability.lazyModule` generate no variant, as it did before. One predicate in `generate.ts`
