@@ -104,7 +104,20 @@ export const dxPluginManifest = (): VitePlugin => {
       });
 
       const body = `{ ...${JSON.stringify(profile, null, 2)}, modules: [${modules.join(', ')}] }`;
-      return { code: `export default ${body};\n`, moduleSideEffects: false };
+
+      // Named `make`/`meta` alongside the data, so a consumer imports the descriptor as it would a
+      // plugin namespace and never restates `fromManifest` at the call site. Only the loader can
+      // offer them: a host reading the raw file gets data and calls `Plugin.fromManifest` itself.
+      const code = [
+        "import * as Plugin from '@dxos/app-framework/Plugin';",
+        `const descriptor = ${body};`,
+        'export const meta = Plugin.getMetaFromDescriptor(descriptor);',
+        'export const make = Plugin.fromManifest(descriptor);',
+        'export default descriptor;',
+        '',
+      ].join('\n');
+
+      return { code, moduleSideEffects: false };
     },
   };
 };

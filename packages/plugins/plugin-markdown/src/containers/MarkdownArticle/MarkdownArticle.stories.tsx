@@ -19,6 +19,7 @@ import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
@@ -38,8 +39,6 @@ import { Organization, Person } from '@dxos/types';
 
 import { translations } from '#translations';
 import { Markdown, MarkdownCapabilities } from '#types';
-
-import * as MarkdownPlugin from '../../MarkdownPlugin';
 
 random.seed(1);
 

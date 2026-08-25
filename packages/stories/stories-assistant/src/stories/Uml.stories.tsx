@@ -94,7 +94,7 @@ const decorators = createDecorators<StoryArgs>(({ args }) => ({
     const [{ Drawing }, IllustratorPlugin, MarkdownPlugin, SpacePlugin, TldrawPlugin] = await Promise.all([
       import('@dxos/plugin-illustrator'),
       import('@dxos/plugin-illustrator/IllustratorPlugin'),
-      import('@dxos/plugin-markdown/MarkdownPlugin'),
+      import('@dxos/plugin-markdown/dxplugin.jsonc'),
       import('@dxos/plugin-space/SpacePlugin'),
       import('@dxos/plugin-tldraw/TldrawPlugin'),
     ]);

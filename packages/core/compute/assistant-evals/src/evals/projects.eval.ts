@@ -11,8 +11,8 @@ import { Chat, ProjectSkill } from '@dxos/assistant-toolkit';
 import * as Project from '@dxos/compute/Project';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import { trim } from '@dxos/util';
 
 import { findObject } from '../assertions';

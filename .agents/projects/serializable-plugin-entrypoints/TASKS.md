@@ -50,7 +50,7 @@ Every blocker below was measured against the real build; the resolutions are rec
 - [x] **Decide what the published lib does with the descriptor.** `dxplugin.jsonc` is excluded from
       the library build's `external` predicate, so the loader compiles it into
       `dist/lib/chunk-dxplugin.mjs` with each `src` as `new URL("chunk-<module>.mjs",
-      import.meta.url)` — real emitted assets any runtime can import, no jsonc loader required at
+import.meta.url)` — real emitted assets any runtime can import, no jsonc loader required at
       the host. A host that reads the raw file instead (the bun-compiled CLI) passes
       `baseUrl: new URL('..', import.meta.url)`.
 - [x] **Deleted `plugin.tsx` / `plugin.node.ts` / `plugin.workerd.ts`**, plus `dx.config.ts`, the

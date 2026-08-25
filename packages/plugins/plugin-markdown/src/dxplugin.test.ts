@@ -7,8 +7,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-
-import * as MarkdownPlugin from './MarkdownPlugin';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
 
 const PACKAGE_DIR = join(__dirname, '..');
 

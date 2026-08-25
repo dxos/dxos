@@ -84,7 +84,7 @@ export const WithMarkdown: Story = {
       // (and the versioning UI) reads; without it the story throws "No capability found".
       // ReviewPlugin contributes the `history` companion surface the HistoryModule renders into.
       const [MarkdownPlugin, ReviewPlugin, SpacePlugin] = await Promise.all([
-        import('@dxos/plugin-markdown/MarkdownPlugin'),
+        import('@dxos/plugin-markdown/dxplugin.jsonc'),
         import('@dxos/plugin-review/ReviewPlugin'),
         import('@dxos/plugin-space/SpacePlugin'),
       ]);
@@ -149,7 +149,7 @@ export const WithSkills: Story = {
     lazyPlugins: async () => {
       const [InboxPlugin, MarkdownPlugin, TablePlugin] = await Promise.all([
         import('@dxos/plugin-inbox/InboxPlugin'),
-        import('@dxos/plugin-markdown/MarkdownPlugin'),
+        import('@dxos/plugin-markdown/dxplugin.jsonc'),
         import('@dxos/plugin-table/TablePlugin'),
       ]);
       return {
@@ -179,7 +179,7 @@ export const WithScript: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
       const [MarkdownPlugin, ScriptPlugin] = await Promise.all([
-        import('@dxos/plugin-markdown/MarkdownPlugin'),
+        import('@dxos/plugin-markdown/dxplugin.jsonc'),
         import('@dxos/plugin-script/ScriptPlugin'),
       ]);
       return {

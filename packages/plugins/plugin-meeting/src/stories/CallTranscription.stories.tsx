@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import * as CallsPlugin from '@dxos/plugin-calls/CallsPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';

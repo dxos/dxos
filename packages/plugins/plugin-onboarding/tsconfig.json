@@ -6,7 +6,8 @@
     "outDir": "dist/types",
     "types": [
       "node",
-      "vite/client"
+      "vite/client",
+      "../../sdk/app-framework/src/dxplugin.d.ts"
     ]
   },
   "exclude": [

@@ -151,7 +151,7 @@ split, and the fidelity test asserts the descriptor reproduces both server varia
 chunk the same build emitted. No host needs a jsonc loader. A host that deliberately reads the raw
 file — the bun-compiled CLI, which bundles no vite — passes `baseUrl` to `fromManifest` instead.
 
-The `platforms` array then became redundant as *authored* data too: `Plugin.currentPlatform()`
+The `platforms` array then became redundant as _authored_ data too: `Plugin.currentPlatform()`
 detects the host (workerd → `process.versions.node` → browser, ordered by how forgeable each signal
 is; `window` identifies nothing, since the node vitest project defines it), so a plugin declares
 which platforms a module supports and never which platform it is running on.

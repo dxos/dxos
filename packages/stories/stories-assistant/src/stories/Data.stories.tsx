@@ -70,7 +70,7 @@ export const WithResearch: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
       const [MarkdownPlugin, TablePlugin, ThreadPlugin] = await Promise.all([
-        import('@dxos/plugin-markdown/MarkdownPlugin'),
+        import('@dxos/plugin-markdown/dxplugin.jsonc'),
         import('@dxos/plugin-table/TablePlugin'),
         import('@dxos/plugin-thread/ThreadPlugin'),
       ]);
@@ -179,7 +179,7 @@ export const WithProject: Story = {
     lazyPlugins: async () => {
       const [InboxPlugin, MarkdownPlugin, PipelinePlugin] = await Promise.all([
         import('@dxos/plugin-inbox/InboxPlugin'),
-        import('@dxos/plugin-markdown/MarkdownPlugin'),
+        import('@dxos/plugin-markdown/dxplugin.jsonc'),
         import('@dxos/plugin-pipeline/PipelinePlugin'),
       ]);
       return {
@@ -362,7 +362,7 @@ export const WithCRM: Story = {
       const [CrmPlugin, InboxPlugin, MarkdownPlugin, SpacePlugin, TablePlugin] = await Promise.all([
         import('@dxos/plugin-crm/CrmPlugin'),
         import('@dxos/plugin-inbox/InboxPlugin'),
-        import('@dxos/plugin-markdown/MarkdownPlugin'),
+        import('@dxos/plugin-markdown/dxplugin.jsonc'),
         // Registers the object-verb handlers behind the Database skill.
         import('@dxos/plugin-space/SpacePlugin'),
         import('@dxos/plugin-table/TablePlugin'),

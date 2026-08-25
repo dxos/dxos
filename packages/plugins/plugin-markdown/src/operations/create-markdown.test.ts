@@ -6,11 +6,10 @@ import { describe, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { Markdown, MarkdownOperation } from '#types';
-
-import * as MarkdownPlugin from '../MarkdownPlugin';
 
 describe('CreateMarkdown', () => {
   test('returns an unpersisted document with the given name and content', async ({ expect }) => {

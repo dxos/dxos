@@ -4,7 +4,7 @@
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as ReviewPlugin from '@dxos/plugin-review/ReviewPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';

@@ -3,7 +3,6 @@
 //
 
 import './dxos';
-import './dxplugin';
 import './growing-file';
 import './hypercore';
 import './hypercore-crypto';

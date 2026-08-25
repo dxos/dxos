@@ -7,7 +7,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as CrmPlugin from '@dxos/plugin-crm/CrmPlugin';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
 
 import { StoryRole } from '../modules';
 import { ModuleContainer, createDecorators, storyParameters } from '../testing';
