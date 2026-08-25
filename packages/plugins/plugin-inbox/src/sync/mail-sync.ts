@@ -791,7 +791,7 @@ export const runMailSync = (
       // More to sync — either additions capped, or the delta had more chunks. A durable re-run (rather
       // than an in-process loop) keeps this invocation bounded and lets the runtime schedule the
       // continuation; committed progress + the advanced token/cursor mean the next run resumes forward.
-      yield* Operation.runAgain().pipe(Effect.orDie);
+      return yield* Operation.runAgain().pipe(Effect.orDie);
     }
 
     log('sync complete', {

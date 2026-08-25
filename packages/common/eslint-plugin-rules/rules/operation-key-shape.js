@@ -211,6 +211,7 @@ const packageDomain = (filePath) => {
 /** A fixture is not part of the product surface and must not squat a real namespace. */
 const isFixture = (filePath) =>
   /\.test\.tsx?$/.test(filePath) ||
+  /\.tst\.tsx?$/.test(filePath) ||
   /\.stories\.tsx?$/.test(filePath) ||
   filePath.includes('/testing/') ||
   filePath.includes('/playground/') ||

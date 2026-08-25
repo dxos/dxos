@@ -417,5 +417,9 @@
   "vitest.rootConfig": "vitest.all.config.ts",
   // TypeScript 7 is the native compiler; its language service speaks LSP, so the classic
   // `typescript.tsdk` no longer applies — the native-preview extension drives it instead.
-  "typescript.native-preview.tsdk": "node_modules/typescript"
+  "typescript.native-preview.tsdk": "node_modules/typescript",
+  "js/ts.tsdk.additionalLocations": ["./node_modules/typescript/bin"],
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true,
+  "js/ts.tsdk.path": "./node_modules/typescript/bin",
+  "js/ts.experimental.useTsgo": true
 }

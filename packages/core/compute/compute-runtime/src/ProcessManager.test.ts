@@ -132,7 +132,7 @@ const handlers = OperationHandlerSet.make(
   RunAgain.pipe(
     Operation.withHandler(
       Effect.fn(function* () {
-        yield* Operation.runAgain();
+        return yield* Operation.runAgain();
       }),
     ),
   ),
@@ -1501,7 +1501,7 @@ describe('durability', () => {
             onInput: () =>
               Effect.gen(function* () {
                 if (gate) {
-                  yield* Effect.never;
+                  return yield* Effect.never;
                 }
                 handled++;
               }),
@@ -1545,7 +1545,7 @@ describe('durability', () => {
           Operation.withHandler(
             Effect.fn(function* () {
               if (gate) {
-                yield* Effect.never;
+                return yield* Effect.never;
               }
             }),
           ),
@@ -1596,7 +1596,7 @@ describe('durability', () => {
           Operation.withHandler(
             Effect.fn(function* () {
               if (gate) {
-                yield* Effect.never;
+                return yield* Effect.never;
               }
               handled++;
             }),
