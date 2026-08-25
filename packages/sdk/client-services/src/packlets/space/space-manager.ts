@@ -110,7 +110,7 @@ export class SpaceManager {
 
     const spaceKey = metadata.key;
     // A space anchored on a root document carries its id, since it is not recoverable from the key.
-    const spaceId = metadata.spaceId ? SpaceId.make(metadata.spaceId) : await createIdFromSpaceKey(spaceKey);
+    const spaceId = await createIdFromSpaceKey(spaceKey);
     const protocol = new SpaceProtocol({
       topic: spaceKey,
       swarmIdentity,

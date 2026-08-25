@@ -96,7 +96,6 @@ describe('identity/identity-manager', () => {
 
     // The id stays key-derived: recovery reconstructs the halo space from `haloSpaceKey` alone, so a
     // root-derived id would leave a recovering device computing an id no document belongs to.
-    expect(refs?.idDerivation).to.equal('spaceKey');
     expect(spaceId).to.equal(await createIdFromSpaceKey(identity.haloSpaceKey));
 
     const root = await peer.echoHost.loadDoc<SpaceRoot>(new Context(), refs!.spaceRootDocUrl);

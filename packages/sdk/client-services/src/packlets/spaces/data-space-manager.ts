@@ -31,12 +31,7 @@ import {
   type SpaceRootRefs,
   findInlineObjectOfType,
 } from '@dxos/echo-host';
-import {
-  type DatabaseDirectory,
-  createIdFromRootDocumentId,
-  createIdFromSpaceKey,
-  documentIdFromUrl,
-} from '@dxos/echo-protocol';
+import { type DatabaseDirectory, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import {
   type EdgeConnection,
   EdgeConnectionService,
@@ -375,7 +370,9 @@ export class DataSpaceManager extends Resource {
     // An imported space brings its own root document, so it keeps the key-derived id.
     const anchorOnRootDocument =
       (options.useSpaceRootDocument ?? this._automergeCredentials) && !options.rootUrl && !options.documents;
-    const createdSpace = anchorOnRootDocument ? await this._echoHost.createSpaceWithRootDocument(ctx) : undefined;
+    const createdSpace = anchorOnRootDocument
+      ? await this._echoHost.createSpaceWithRootDocument(ctx, spaceKey)
+      : undefined;
     const spaceId = createdSpace?.spaceId ?? (await createIdFromSpaceKey(spaceKey));
     if (!createdSpace) {
       this._legacyCreatedSpaces.add(spaceId);
@@ -383,7 +380,6 @@ export class DataSpaceManager extends Resource {
 
     const metadata: SpaceMetadata = {
       key: spaceKey,
-      spaceId: createdSpace ? spaceId : undefined,
       genesisFeedKey: controlFeedKey,
       controlFeedKey,
       dataFeedKey,
@@ -483,14 +479,8 @@ export class DataSpaceManager extends Resource {
     invariant(!this.isSpaceDeleted(opts.spaceKey), 'Cannot accept a deleted space.');
 
     const tags = opts.tags ? Array.from(opts.tags) : [];
-    // Without this the joiner derives an id from the space key and disagrees with the creator about
-    // which space this is.
-    const spaceId = opts.spaceRootUrl
-      ? await createIdFromRootDocumentId(documentIdFromUrl(opts.spaceRootUrl))
-      : undefined;
     const metadata: SpaceMetadata = {
       key: opts.spaceKey,
-      spaceId,
       genesisFeedKey: opts.genesisFeedKey,
       controlTimeframe: opts.controlTimeframe,
       dataTimeframe: opts.dataTimeframe,

@@ -470,7 +470,7 @@ export class IdentityManager {
    * Gives the HALO space a space root document and mirrors its credential chain into a credentials
    * document, so the chain replicates as automerge rather than only as a control feed.
    *
-   * The root records `idDerivation: 'spaceKey'` and the space keeps its key-derived id. That is not a
+   * The space keeps its key-derived id, exactly as a data space does. That is not a
    * migration compromise here as it is for data spaces: recovery reconstructs the HALO space from
    * `haloSpaceKey` alone (the only identifier EDGE returns), so a root-derived id would leave a
    * recovering device computing an id no replicated document belongs to.

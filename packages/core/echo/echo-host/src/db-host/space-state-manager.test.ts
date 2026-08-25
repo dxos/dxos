@@ -17,13 +17,9 @@ import {
   type DatabaseDirectory,
   SPACE_ROOT_TYPE,
   SpaceDocVersion,
-  type SpaceIdDerivation,
   type SpaceRoot,
-  createIdFromRootDocumentId,
   createIdFromSpaceKey,
-  documentIdFromUrl,
   isSpaceRoot,
-  verifySpaceRoot,
 } from '@dxos/echo-protocol';
 import { PublicKey, SpaceId } from '@dxos/keys';
 
@@ -119,51 +115,6 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
     }
   });
 
-  test('space id derives from the root document id, stably and in SpaceId shape', async () => {
-    const spaceId = await createIdFromRootDocumentId('3Y8mbUZP4bLTB1LWr8N4TRQY6ZWU');
-    expect(SpaceId.isValid(spaceId)).to.be.true;
-    expect(await createIdFromRootDocumentId('3Y8mbUZP4bLTB1LWr8N4TRQY6ZWU')).to.equal(spaceId);
-    expect(await createIdFromRootDocumentId('4Y8mbUZP4bLTB1LWr8N4TRQY6ZWU')).to.not.equal(spaceId);
-
-    // Fixed vector: the derivation is a wire contract, so a change here breaks every existing space.
-    expect(spaceId).to.equal('BPBU3KVI3MDFWXLLDCR2KKAO35OHLF754');
-  });
-
-  test('a rootDoc space root verifies against its own document id and rejects another', async () => {
-    const documentId = '3Y8mbUZP4bLTB1LWr8N4TRQY6ZWU';
-    const root: SpaceRoot = {
-      type: SPACE_ROOT_TYPE,
-      spaceId: await createIdFromRootDocumentId(documentId),
-      idDerivation: 'rootDoc',
-      directory: stringifyAutomergeUrl({ documentId: '4Y8mbUZP4bLTB1LWr8N4TRQY6ZWU' as DocumentId }),
-    };
-
-    expect(isSpaceRoot(root)).to.be.true;
-    expect(await verifySpaceRoot(root, documentId)).to.be.true;
-    expect(await verifySpaceRoot(root, '4Y8mbUZP4bLTB1LWr8N4TRQY6ZWU')).to.be.false;
-
-    // A URL with no document id would otherwise hash to a valid-looking space id.
-    expect(() => documentIdFromUrl('automerge:')).to.throw();
-
-    // An unrecognized derivation must not slip through as the unverifiable spaceKey case.
-    const malformed = { ...root, idDerivation: 'somethingElse' as SpaceIdDerivation };
-    expect(isSpaceRoot(malformed)).to.be.false;
-    expect(await verifySpaceRoot(malformed, documentId)).to.be.false;
-  });
-
-  test('a migrated space root is not checkable against its document id', async () => {
-    // A legacy space keeps its spaceKey-derived id, so the root that gets minted over it cannot
-    // reproduce that id — which is exactly what idDerivation records.
-    const root: SpaceRoot = {
-      type: SPACE_ROOT_TYPE,
-      spaceId: await createIdFromSpaceKey(PublicKey.random()),
-      idDerivation: 'spaceKey',
-      directory: stringifyAutomergeUrl({ documentId: '4Y8mbUZP4bLTB1LWr8N4TRQY6ZWU' as DocumentId }),
-    };
-
-    expect(await verifySpaceRoot(root, '3Y8mbUZP4bLTB1LWr8N4TRQY6ZWU')).to.be.true;
-  });
-
   test('SpaceStateManager persists space root references and keeps them across a directory rotation', async () => {
     const dbPath = join(__dirname, 'test-space-root-refs.db');
     rmSync(dbPath, { force: true });
@@ -199,7 +150,7 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
       await manager.assignRootToSpace(spaceId, await directory());
       expect(manager.getSpaceRootRefs(spaceId)).to.be.undefined;
 
-      await manager.setSpaceRootRefs(spaceId, { spaceRootDocUrl, credentialsDocUrl, idDerivation: 'rootDoc' });
+      await manager.setSpaceRootRefs(spaceId, { spaceRootDocUrl, credentialsDocUrl });
       expect(manager.getSpaceRootRefs(spaceId)?.spaceRootDocUrl).to.equal(spaceRootDocUrl);
 
       // Rotating the directory must not disturb the immutable root — the upsert writes only root_doc_url.
@@ -221,7 +172,6 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
       expect(manager.getSpaceRootRefs(spaceId)).to.deep.equal({
         spaceRootDocUrl,
         credentialsDocUrl,
-        idDerivation: 'rootDoc',
       });
 
       // Removing the space must not leave references a reused id could inherit.
@@ -261,12 +211,11 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
     await expect(
       manager.setSpaceRootRefs(SpaceId.random(), {
         spaceRootDocUrl: (await automergeHost.createDoc({})).url,
-        idDerivation: 'rootDoc',
       }),
     ).rejects.toThrow();
   });
 
-  test('EchoHost creates a space whose id derives from its space root document', async () => {
+  test('EchoHost anchors a space on a root document while keeping its key-derived id', async () => {
     const dbPath = join(__dirname, 'test-create-space-with-root.db');
     rmSync(dbPath, { force: true });
     onTestFinished(() => {
@@ -284,25 +233,26 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
       void host.close();
     });
 
-    const { spaceId, spaceRootUrl, directory } = await host.createSpaceWithRootDocument(Context.default());
+    const spaceKey = PublicKey.random();
+    const { spaceId, spaceRootUrl, directory } = await host.createSpaceWithRootDocument(Context.default(), spaceKey);
 
-    // The id is recomputable from the root's own document id — that is what makes the root self-certifying.
-    const rootDocumentId = interpretAsDocumentId(spaceRootUrl);
-    expect(spaceId).to.equal(await createIdFromRootDocumentId(rootDocumentId));
+    // The id comes from the space genesis key, exactly as a feed-backed space's does: the root
+    // changes where credentials live, not how the space is identified.
+    expect(spaceId).to.equal(await createIdFromSpaceKey(spaceKey));
 
     // The root is a separate document from the directory it points at.
     expect(directory.url).to.not.equal(spaceRootUrl);
     expect(directory.doc()?.access?.spaceId).to.equal(spaceId);
+    expect(directory.doc()?.access?.spaceKey).to.equal(spaceKey.toHex());
 
     const root = await host.loadDoc<SpaceRoot>(Context.default(), spaceRootUrl);
     expect(isSpaceRoot(root?.doc())).to.be.true;
-    expect(await verifySpaceRoot(root!.doc()!, rootDocumentId)).to.be.true;
     expect(root!.doc()!.directory).to.equal(directory.url);
+    expect(root!.doc()!.spaceId).to.equal(spaceId);
 
     expect(host.getSpaceRootRefs(spaceId)).to.deep.equal({
       spaceRootDocUrl: spaceRootUrl,
       credentialsDocUrl: undefined,
-      idDerivation: 'rootDoc',
     });
 
     // The refs must survive a restart: without them a reopened host cannot tell a rootDoc space
@@ -324,8 +274,32 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
     expect(reopenedHost.getSpaceRootRefs(spaceId)).to.deep.equal({
       spaceRootDocUrl: spaceRootUrl,
       credentialsDocUrl: undefined,
-      idDerivation: 'rootDoc',
     });
+  });
+
+  test('createSpaceRoot leaves a space key-derived and unanchored', async () => {
+    // The ECHO-layer default: `createSpaceRoot` makes the DIRECTORY only. Anchoring is
+    // `createSpaceWithRootDocument`, which nothing here calls on its own — a caller opts in.
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => {
+      void dispose();
+    });
+
+    const host = new EchoHost({ runtime });
+    await host.open(Context.default());
+    onTestFinished(() => {
+      void host.close();
+    });
+
+    const spaceKey = PublicKey.random();
+    const spaceId = await createIdFromSpaceKey(spaceKey);
+    const directory = await host.createSpaceRoot(Context.default(), spaceKey);
+
+    expect(host.spaceIds).to.deep.equal([spaceId]);
+    expect(directory.doc()?.access?.spaceId).to.equal(spaceId);
+
+    // No root document, so nothing certifies the id and nothing carries credentials.
+    expect(host.getSpaceRootRefs(spaceId)).to.be.undefined;
   });
 
   test('EchoHost openSpaceRoot works without url on reopened host', async () => {

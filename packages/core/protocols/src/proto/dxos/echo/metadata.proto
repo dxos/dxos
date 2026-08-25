@@ -51,11 +51,6 @@ message SpaceMetadata {
   /// Space key.
   dxos.keys.PublicKey key = 1;
 
-  /// Space id, when it was NOT derived from the key.
-  /// A space anchored on a space root document takes its id from that document, so the id cannot be
-  /// recovered from the key and has to be carried. Absent for spaces created before the root existed.
-  optional string space_id = 13;
-
   /// Immutable tags assigned at space creation time.
   repeated string tags = 12;
 

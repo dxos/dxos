@@ -24,7 +24,6 @@ import {
   SPACE_ROOT_TYPE,
   SpaceDocVersion,
   type SpaceRoot,
-  createIdFromRootDocumentId,
   createIdFromSpaceKey,
   isSpaceRoot,
 } from '@dxos/echo-protocol';
@@ -467,22 +466,22 @@ export class EchoHost extends Resource {
   }
 
   /**
-   * Creates a space anchored on an immutable space root document, whose id derives the space id.
-   *
-   * The root is written after its document exists because that document's id is the input to the
-   * derivation; automerge assigns the id at creation, before any content, so there is no cycle.
+   * Creates a space anchored on an immutable space root document, which carries the credentials
+   * document. The id still derives from the space genesis key, exactly as a feed-backed space's
+   * does — the root changes where credentials live, not how the space is identified.
    *
    * NOTE: `createSpaceRoot` above creates the DIRECTORY, which predates this naming.
    */
-  async createSpaceWithRootDocument(ctx: Context): Promise<CreatedSpace> {
+  async createSpaceWithRootDocument(ctx: Context, spaceKey: PublicKey): Promise<CreatedSpace> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
+    const spaceId = await createIdFromSpaceKey(spaceKey);
     const rootHandle = await this._automergeHost.createDoc<Partial<SpaceRoot>>({});
-    const spaceId = await createIdFromRootDocumentId(rootHandle.documentId);
 
     const directoryHandle = await this._automergeHost.createDoc<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
-      access: { spaceId },
+      // spaceKey is deprecated but still written so older clients can resolve the owning space.
+      access: { spaceId, spaceKey: spaceKey.toHex() },
       objects: {},
       links: {},
     });
@@ -490,7 +489,6 @@ export class EchoHost extends Resource {
     rootHandle.change((doc: Partial<SpaceRoot>) => {
       doc.type = SPACE_ROOT_TYPE;
       doc.spaceId = spaceId;
-      doc.idDerivation = 'rootDoc';
       doc.directory = directoryHandle.url;
     });
 
@@ -499,7 +497,6 @@ export class EchoHost extends Resource {
     const directory = await this.updateSpaceRoot(ctx, spaceId, directoryHandle.url);
     await this._spaceStateManager.setSpaceRootRefs(spaceId, {
       spaceRootDocUrl: rootHandle.url,
-      idDerivation: 'rootDoc',
     });
 
     return { spaceId, spaceRootUrl: rootHandle.url, directory };
@@ -529,13 +526,12 @@ export class EchoHost extends Resource {
     rootHandle.change((doc: Partial<SpaceRoot>) => {
       doc.type = SPACE_ROOT_TYPE;
       doc.spaceId = spaceId;
-      doc.idDerivation = 'spaceKey';
       doc.directory = directory.url;
     });
 
     await this._automergeHost.flush(ctx, { documentIds: [rootHandle.documentId] });
 
-    const refs: SpaceRootRefs = { spaceRootDocUrl: rootHandle.url, idDerivation: 'spaceKey' };
+    const refs: SpaceRootRefs = { spaceRootDocUrl: rootHandle.url };
     await this._spaceStateManager.setSpaceRootRefs(spaceId, refs);
     return refs;
   }
@@ -572,7 +568,6 @@ export class EchoHost extends Resource {
     const refs: SpaceRootRefs = {
       spaceRootDocUrl: spaceRootUrl,
       credentialsDocUrl: root.credentials,
-      idDerivation: root.idDerivation,
     };
     await this._spaceStateManager.setSpaceRootRefs(spaceId, refs);
     return refs;

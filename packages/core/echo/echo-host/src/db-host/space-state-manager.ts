@@ -16,7 +16,7 @@ import isEqual from 'fast-deep-equal';
 
 import { Event, UpdateScheduler } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
-import { type DatabaseDirectory, type SpaceIdDerivation, isSpaceIdDerivation } from '@dxos/echo-protocol';
+import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
@@ -124,7 +124,6 @@ export class SpaceStateManager extends Resource {
     this._spaceRootRefs.set(spaceId, {
       spaceRootDocUrl: refs.spaceRootDocUrl,
       credentialsDocUrl: refs.credentialsDocUrl,
-      idDerivation: refs.idDerivation,
     });
   }
 
@@ -220,8 +219,7 @@ export class SpaceStateManager extends Resource {
           root_doc_url: string;
           space_root_doc_url: string | null;
           credentials_doc_url: string | null;
-          id_derivation: string | null;
-        }>`SELECT space_id, root_doc_url, space_root_doc_url, credentials_doc_url, id_derivation FROM echo_spaces`;
+        }>`SELECT space_id, root_doc_url, space_root_doc_url, credentials_doc_url FROM echo_spaces`;
       }),
     );
     for (const row of rows) {
@@ -233,7 +231,6 @@ export class SpaceStateManager extends Resource {
         this._spaceRootRefs.set(spaceId, {
           spaceRootDocUrl: row.space_root_doc_url as AutomergeUrl,
           credentialsDocUrl: (row.credentials_doc_url ?? undefined) as AutomergeUrl | undefined,
-          idDerivation: parseIdDerivation(spaceId, row.id_derivation),
         });
       }
     }
@@ -255,8 +252,7 @@ export class SpaceStateManager extends Resource {
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
         yield* sql`UPDATE echo_spaces SET space_root_doc_url = ${refs.spaceRootDocUrl},
-          credentials_doc_url = ${refs.credentialsDocUrl ?? null},
-          id_derivation = ${refs.idDerivation}
+          credentials_doc_url = ${refs.credentialsDocUrl ?? null}
           WHERE space_id = ${spaceId}`;
       }),
     );
@@ -273,28 +269,12 @@ export class SpaceStateManager extends Resource {
 }
 
 /**
- * A derivation this build does not know is read as `spaceKey`: that is the weaker claim of the two, so
- * an unrecognized value can never be mistaken for a root that certifies the space id.
- */
-const parseIdDerivation = (spaceId: SpaceId, value: string | null): SpaceIdDerivation => {
-  if (isSpaceIdDerivation(value)) {
-    return value;
-  }
-
-  if (value !== null) {
-    log.warn('unknown space id derivation, reading as spaceKey', { spaceId, value });
-  }
-  return 'spaceKey';
-};
-
-/**
  * The references a space root document carries, as persisted beside the space. The directory lives in
  * `root_doc_url` and is reached through {@link SpaceStateManager.getRootBySpaceId}.
  */
 export type SpaceRootRefs = {
   spaceRootDocUrl: AutomergeUrl;
   credentialsDocUrl?: AutomergeUrl;
-  idDerivation: SpaceIdDerivation;
 };
 
 export class SpaceDocumentListUpdatedEvent {

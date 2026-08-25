@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { interpretAsDocumentId } from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
 
 import { asyncTimeout, latch, waitForCondition } from '@dxos/async';
@@ -13,15 +12,7 @@ import {
   createAdmissionCredentials,
   getCredentialAssertion,
 } from '@dxos/credentials';
-import {
-  type DatabaseDirectory,
-  type SpaceRoot,
-  createIdFromRootDocumentId,
-  createIdFromSpaceKey,
-  documentIdFromUrl,
-  isSpaceRoot,
-  verifySpaceRoot,
-} from '@dxos/echo-protocol';
+import { type DatabaseDirectory, type SpaceRoot, createIdFromSpaceKey, isSpaceRoot } from '@dxos/echo-protocol';
 import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -52,7 +43,7 @@ describe('DataSpaceManager', () => {
     expect(space.inner.protocol.feeds.size).to.equal(2);
   });
 
-  test('a space takes its id from its root document by default', async () => {
+  test('an anchored space still takes its id from the space genesis key', async () => {
     const builder = new TestBuilder();
 
     const peer = builder.createPeer();
@@ -62,14 +53,12 @@ describe('DataSpaceManager', () => {
     const space = await peer.dataSpaceManager.createSpace(new Context());
     await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
 
+    // The root anchors the credentials document; it does not identify the space. Both derivations
+    // stay on the space key, so a peer that never sees the root still computes the same id.
     const refs = peer.echoHost.getSpaceRootRefs(space.id);
-    expect(refs?.idDerivation).to.equal('rootDoc');
-    expect(space.id).to.equal(await createIdFromRootDocumentId(interpretAsDocumentId(refs!.spaceRootDocUrl)));
+    expect(space.id).to.equal(await createIdFromSpaceKey(space.key));
 
-    // The key-derived id is a DIFFERENT id, which is the whole reason it has to be carried.
-    expect(space.id).to.not.equal(await createIdFromSpaceKey(space.key));
-
-    // The admitted member can find the root from the genesis credentials alone.
+    // The admitted member can still find the root from the genesis credentials alone.
     const memberCredential = space.inner.spaceState.credentials.find(
       (credential) => getCredentialAssertion(credential)['@type'] === 'dxos.halo.credentials.SpaceMember',
     );
@@ -150,9 +139,9 @@ describe('DataSpaceManager', () => {
     });
     await peer2.dataSpaceManager.waitUntilSpaceReady(space2.key);
 
-    // The joiner must not fall back to deriving an id from the space key.
+    // Both sides derive from the space key, so they agree without the root having to carry the id.
     expect(space2.id).to.equal(space1.id);
-    expect(space2.id).to.not.equal(await createIdFromSpaceKey(space1.key));
+    expect(space2.id).to.equal(await createIdFromSpaceKey(space1.key));
   });
 
   test('a legacy hypercore space migrates onto a space root document, keeping its id', async () => {
@@ -177,16 +166,12 @@ describe('DataSpaceManager', () => {
 
     // The id is unchanged — it was minted from the space key and no document can reproduce it.
     expect(space.id).to.equal(legacyId);
-    expect(refs.idDerivation).to.equal('spaceKey');
     expect(refs.spaceRootDocUrl).to.not.equal(directoryUrl);
 
     const root = await peer.echoHost.loadDoc<SpaceRoot>(new Context(), refs.spaceRootDocUrl);
     expect(isSpaceRoot(root?.doc())).to.be.true;
     expect(root!.doc()!.spaceId).to.equal(legacyId);
     expect(root!.doc()!.directory).to.equal(directoryUrl);
-
-    // A migrated root cannot certify the id, so verification must accept it on the spaceKey branch only.
-    expect(await verifySpaceRoot(root!.doc()!, documentIdFromUrl(refs.spaceRootDocUrl))).to.be.true;
 
     // The control feed keeps working: migration adds the anchor, it does not move credentials yet.
     expect(space.inner.spaceState.genesisCredential).to.exist;
@@ -254,7 +239,6 @@ describe('DataSpaceManager', () => {
 
     // Nothing calls migrateSpaceToRootDocument — opening the space is what anchors it.
     await waitForCondition({ condition: () => peer.echoHost.getSpaceRootRefs(legacyId) !== undefined });
-    expect(peer.echoHost.getSpaceRootRefs(legacyId)!.idDerivation).to.equal('spaceKey');
   });
 
   test('a credential deleted from the document is still read back', async () => {
