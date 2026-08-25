@@ -47,7 +47,6 @@ export const Default: Story = {
     await waitFor(async () => expect(canvas.getByText('Default')).toBeInTheDocument());
     await expect(canvas.getByText('Example Research')).toBeInTheDocument();
 
-    // Typing a name and picking a template submits both.
     await userEvent.type(await canvas.findByTestId('create-project-panel.name-input'), 'Voyage');
     await userEvent.click(canvas.getByText('Default'));
     await waitFor(async () =>

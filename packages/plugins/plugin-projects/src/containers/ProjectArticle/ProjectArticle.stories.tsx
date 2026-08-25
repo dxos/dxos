@@ -186,9 +186,8 @@ export const Default: Story = {
 };
 
 /**
- * Every section the article composes — header form, instructions editor, artifacts, tasks — renders
- * from the seeded project. An invalid surface id is dropped silently, so each section is asserted by
- * its content, not its heading.
+ * Each section is asserted by its content rather than its heading, since an invalid surface id is
+ * dropped silently and leaves the heading rendering over an empty section.
  */
 export const Sections: Story = {
   ...Default,
