@@ -16,10 +16,12 @@
     "#capabilities": {
       "source": {
         "workerd": "./src/capabilities/workerd.ts",
+        "node": "./src/capabilities/node.ts",
         "default": "./src/capabilities/index.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
       "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities/node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
     "#components": {
@@ -45,10 +47,12 @@
     "#plugin": {
       "source": {
         "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
         "default": "./src/plugin.tsx"
       },
       "types": "./dist/types/src/plugin.d.ts",
       "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
       "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {

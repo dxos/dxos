@@ -1,4 +1,5 @@
 ---
+'@dxos/cli': minor
 '@dxos/plugin-projects': minor
 '@dxos/plugin-tasks': minor
 '@dxos/assistant-toolkit': minor
@@ -24,3 +25,12 @@ now `space-update-object`; `projects-list` was a type query plus a projection, n
 here, and every operation now carries a JSDoc saying which side of that line it falls on. The
 `RunInstructions` routine tool `completeJob` also drops strict mode when the routine declares no
 output, since an arbitrary payload cannot be expressed under Anthropic's strict tool validation.
+
+Also: `@dxos/plugin-projects` and `@dxos/plugin-tasks` gain headless `node` variants — `#plugin` and
+`#capabilities` now resolve `plugin.node.ts` and `capabilities/node.ts` under the `node` condition,
+registering schema, operations and (for projects) the skill without the React surfaces the browser
+barrel declares. Both plugins join the CLI's set and its default-enabled list, so `dx mcp serve`
+reaches the project and task verbs the way it reaches every other plugin's, rather than through
+direct handler-set imports — and the types those verbs write are registered, which is what a project
+create needs to store its graph. A profile that has already been configured needs
+`dx plugin enable org.dxos.plugin.projects org.dxos.plugin.tasks`; a fresh one gets both.

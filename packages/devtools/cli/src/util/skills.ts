@@ -36,7 +36,6 @@ import * as MapSkill from '@dxos/plugin-map/MapSkill';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownOperationHandlerSet from '@dxos/plugin-markdown/MarkdownOperationHandlerSet';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
-import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
 import * as CommentOperationHandlerSet from '@dxos/plugin-review/CommentOperationHandlerSet';
 import * as CommentSkill from '@dxos/plugin-review/CommentSkill';
 import * as ScriptOperationHandlerSet from '@dxos/plugin-script/ScriptOperationHandlerSet';
@@ -82,13 +81,6 @@ export const skillRegistry = makeRegistry({
     TranscriptionSkill.make(),
   ],
 });
-
-/**
- * Skill definitions the CLI curates for hosts that assemble from `AppCapabilities.SkillDefinition`
- * (`dx mcp serve`). They are listed here, not activated, for the reason the imports above give:
- * this binary never activates the plugins that would contribute them.
- */
-export const skillDefinitions: Skill.Definition[] = [ProjectSkill];
 
 // TODO(dmaretskyi): In Composer, those are handled by the plugins and capabilities mechanism.
 //  But since CLI doesn't have this, we have to manually collect them and configure them here.
