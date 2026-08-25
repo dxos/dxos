@@ -28,7 +28,11 @@ Design: [DESIGN.md](./DESIGN.md)
 - [x] `$schema` set on plugin-markdown's descriptor + `**/dxplugin.jsonc` mapped in
       `.vscode/settings.json`.
 - [x] `Plugin.getMetaFromDescriptor` — the descriptor's counterpart to `getMetaFromConfig`.
-- [x] Ambient `declare module '*/dxplugin.jsonc'` (`packages/sdk/app-framework/dxplugin.d.ts`).
+- [x] Ambient `declare module '*/dxplugin.jsonc'` (`packages/sdk/app-framework/dxplugin.d.ts`) —
+      present but NOT wired to consumers, and deliberately not an `exports` subpath: a types-only
+      subpath broke `composer-app:bundle`, because its import map enumerates and `this.resolve`s
+      every export and a types-only target resolves under no runtime condition. A third constraint
+      on the Phase 2 distribution route.
 - [x] knip: `descriptorEntry()` in `.config/knip.ts` treats a descriptor's `modules[].src` as entry
       points — without it every module body a descriptor names reads as an unused file (this is what
       made CI's `check` job red).

@@ -10,8 +10,12 @@ import type { Config2 } from '@dxos/protocols';
  * which serves the descriptor as a JS module with the parsed object as its default export; tsc only
  * needs to know its shape.
  *
- * Declared here rather than per plugin package so a plugin depending on `@dxos/app-framework` — as
- * every plugin does — gets it for free.
+ * NOT yet wired up to consumers. Two things are settled by experiment: TypeScript applies a wildcard
+ * `declare module` only to NON-relative specifiers (so a plugin must import its own descriptor as
+ * `@dxos/plugin-x/dxplugin.jsonc`), and naming this file in a consumer's tsconfig `types` does not
+ * load it. It is also deliberately NOT an `exports` subpath — a types-only subpath breaks any
+ * consumer that enumerates and resolves every export, as composer-app's import map does. Picking a
+ * distribution route that satisfies all three is Phase 2; see the project DESIGN.md.
  */
 declare module '*/dxplugin.jsonc' {
   const descriptor: Config2.Descriptor;

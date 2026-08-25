@@ -128,10 +128,7 @@
       "import": "./dist/lib/ui.mjs"
     },
     "./package.json": "./package.json",
-    "./dxplugin.schema.json": "./dxplugin.schema.json",
-    "./dxplugin": {
-      "types": "./dxplugin.d.ts"
-    }
+    "./dxplugin.schema.json": "./dxplugin.schema.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
