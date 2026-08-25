@@ -98,6 +98,7 @@
       "import": "./dist/lib/translations.mjs"
     },
     "./package.json": "./package.json",
+    "./dxplugin.jsonc": "./dxplugin.jsonc",
     "./Markdown": {
       "source": "./src/types/Markdown.ts",
       "types": "./dist/types/src/types/Markdown.d.ts",
@@ -162,6 +163,7 @@
   "files": [
     "dist",
     "dx.config.ts",
+    "dxplugin.jsonc",
     "src"
   ],
   "dependencies": {

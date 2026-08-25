@@ -100,3 +100,28 @@ export const Idle = make('org.dxos.app-framework.event.idle');
  * without importing its package.
  */
 export const pluginStart = (pluginKey: string | DXN.DXN) => make(`${pluginKey}.event.start`);
+
+/**
+ * Serializable reference to a single activation event, as it appears in a plugin's
+ * `dxplugin.jsonc`. A bare string is the event's NSID with no specifier.
+ */
+export type EventRef = string | { readonly id: string; readonly specifier?: string };
+
+/** Serializable reference to an activation condition — one event, or a `oneOf` / `allOf` of them. */
+export type EventsRef = EventRef | { readonly oneOf: readonly EventRef[] } | { readonly allOf: readonly EventRef[] };
+
+const eventFromRef = (ref: EventRef): ActivationEvent =>
+  typeof ref === 'string'
+    ? { id: DXN.make(ref) }
+    : { id: DXN.make(ref.id), ...(ref.specifier !== undefined ? { specifier: ref.specifier } : {}) };
+
+/** Rehydrates an activation condition from its serialized {@link EventsRef}. */
+export const fromRef = (ref: EventsRef): Events => {
+  if (typeof ref === 'object' && 'oneOf' in ref) {
+    return oneOf(...ref.oneOf.map(eventFromRef));
+  }
+  if (typeof ref === 'object' && 'allOf' in ref) {
+    return allOf(...ref.allOf.map(eventFromRef));
+  }
+  return eventFromRef(ref);
+};
