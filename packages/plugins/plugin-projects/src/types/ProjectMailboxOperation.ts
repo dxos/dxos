@@ -22,6 +22,12 @@ import { Message } from '@dxos/types';
  * Their own module because they are the only project verbs that reach into another plugin
  * (`@dxos/plugin-inbox`) and the model (`@dxos/ai`); the project skill drives none of them, so
  * `ProjectOperation` stays free of that graph.
+ *
+ * TODO(wittjosiah): Consider moving these to `plugin-inbox` instead. A project is the core piece a
+ * mailbox contributes to, not the other way around, and these read like the inbox's verbs for
+ * feeding one: this plugin depends on `plugin-inbox` for them, so the dependency would invert to
+ * match. What argues for keeping them: their keys are in the `projects` domain, they write a
+ * project's task set and artifacts, and `CreateTrackingProject` creates the project itself.
  */
 
 export const UpdateProjectTasks = Operation.make({
