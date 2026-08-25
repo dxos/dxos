@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type ClaudeAgentOperation } from '#types';
+
 /** The `CreateAgent` / `UpdateAgent` request body. Snake-cased to match the wire format. */
 export type AgentConfig = {
   name: string;
@@ -43,8 +45,8 @@ export type EventPage = {
   next_page?: string | null;
 };
 
-/** One turn of a session transcript, flattened for the assistant. */
-export type TranscriptMessage = {
-  role: 'user' | 'agent';
-  text: string;
-};
+/**
+ * One turn of a session transcript, flattened for the assistant. Aliased from the operation schema
+ * so the wire shape and the schema `GetTranscript.output` validates against cannot drift apart.
+ */
+export type TranscriptMessage = ClaudeAgentOperation.TranscriptMessage;

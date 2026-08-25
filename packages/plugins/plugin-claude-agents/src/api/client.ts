@@ -95,6 +95,7 @@ export const createSession = (
     },
   });
 
+/** Reads a session's current state, including its status and stop reason. */
 export const getSession = (apiKey: string, sessionId: string): Effect.Effect<SessionResponse, ClaudeAgentApiError> =>
   request({ apiKey, method: 'GET', path: `/v1/sessions/${sessionId}` });
 

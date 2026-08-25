@@ -19,7 +19,7 @@ const handler: Operation.WithHandler<typeof ClaudeAgentOperation.CreateAgent> = 
           model,
           effort,
           systemPrompt,
-          // `skills` arrives readonly from the decoded input; the object field is mutable.
+          // Copied because the decoded input is readonly and the object field is mutable.
           skills: skills ? [...skills] : undefined,
           environmentId,
         }),

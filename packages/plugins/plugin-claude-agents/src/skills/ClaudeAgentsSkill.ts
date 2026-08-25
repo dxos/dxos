@@ -20,6 +20,7 @@ export const operations = [
   ClaudeAgentOperation.GetTranscript,
 ] as const;
 
+/** Builds the skill, binding the operations above as its tools. */
 export const make = (): Skill.Skill =>
   Skill.make({
     key,

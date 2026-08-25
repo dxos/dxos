@@ -8,8 +8,5 @@ import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 
 import { meta } from '#meta';
 
-/**
- * The feature's start event: the plugin's start-gated modules activate here. Fired on demand and by
- * the host's idle trickle.
- */
+/** The feature's start event: the plugin's start-gated modules activate here. */
 export const Start = ActivationEvent.pluginStart(meta.profile.key);
