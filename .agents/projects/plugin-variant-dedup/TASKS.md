@@ -120,10 +120,62 @@ the task graph owns it (echo-query `prebuild-lezer` is the template).
       both `workerd,worker` and `node`, so the subpath buys nothing today and nothing enforces
       it. Either sweep the eight onto `/util` or drop the divergence — but decide, rather than
       leaving one file different for a reason that no longer holds
-- [ ] Guard-target drift: plugin-magazine, plugin-markdown, plugin-inbox and plugin-assistant
-      trace `--to "@dxos/react-ui"`, while the 87 generated guards trace `--to "{react,react-dom}"`.
+- [ ] Guard-target drift: **8** guards trace `--to "@dxos/react-ui"` (assistant, google, inbox,
+      jmap, magazine, markdown, projects, tasks) while **79** trace `--to "{react,react-dom}"`.
       A bare `import { createContext } from 'react'` — the exact leak class §6.6 catalogues for
-      plugin-presenter and plugin-support — passes the narrower target. Normalize them
+      plugin-presenter and plugin-support — passes the narrower target without touching
+      `@dxos/react-ui`. Normalize them. (An earlier draft of this line said "four" and "87";
+      both were wrong, measured 2026-08-25.)
+- [ ] **Generator drops non-maker barrel exports silently.** `parseBarrel` classifies an
+      `export const` whose initializer is not a `CallExpression` as `non-call-initializer`, and
+      `generate.ts` then filters to `maker-call` — so such a member is neither sliced nor stubbed,
+      it is simply absent from every generated barrel, with no warning. Live today: plugin-space
+      re-exports `makeCreateObjectEntryForDatabaseType` from `../util`, and it appears in neither
+      `gen/node.ts` nor `gen/workerd.ts`; `ObjectFormDialog.tsx` imports it from `#capabilities`.
+      A fleet-wide audit found exactly this one name, so blast radius is small and the container
+      is browser-only, but TypeScript cannot ever catch this class: `#capabilities.types` always
+      points at the canonical `.d.ts`, so a generated barrel's export surface is never
+      typechecked. `export function`, `export class` and `satisfies`-wrapped exports vanish the
+      same way. Every canonical export should be sliced, stubbed, or refused with an error naming
+      the construct
+- [ ] **Gen-task cache key does not cover what the generator reads.**
+      `.moon/tasks/tag-composer-plugin.yml` lists `src/capabilities/index.ts` plus two absolute
+      maker-default paths, but `parseBarrel` follows `export * from` / `export { X } from` into
+      arbitrary files. plugin-space's `AppGraphBuilder` annotation lives at
+      `src/capabilities/app-graph-builder/index.ts:14` — matching no input glob — so flipping its
+      `environments` cache-hits and restores a stale barrel. Same class as §6.8, which was fixed
+      for one file rather than at the root. Widen to `src/capabilities/**/*` (excluding `gen/`),
+      or have the generator emit a depfile of what it actually parsed
+- [ ] **Generator and guard have zero tests.** 988 lines of AST slicing plus ~1,120 lines of
+      `dx-trace-imports`, and `find` returns no `*.test.ts` in either. `app-framework/src` has 17
+      test files, none touching `plugin-cli`. The dropped-export bug above is a ten-line fixture
+      test. The spike prototype had a `compare.mjs` that diffed generated against handwritten
+      barrels; the production tool shipped with less verification than its prototype
+- [ ] **Guard truncation paths report a silent pass.** `parse-imports.ts:110` catches a parse
+      failure and returns `[]`, so the file's whole subtree leaves the graph and the guard prints
+      "No import paths" — a pass. Same shape for an unreadable file and for a dependency whose
+      dist is missing. DESIGN §6.7 states the lesson ("a structure guard needs to fail when it
+      cannot reach what it is checking") and it was applied only to unresolved `#` subpaths in the
+      entry package. Also: the crawl only recurses into `@dxos/*`, so React reached through any
+      third-party package is invisible — defensible, but narrower than the task comments claim
+- [ ] **`undefined` is an undiscriminating stub sentinel.** `addModule(undefined)` returns
+      identity. Before this branch that call threw. It now silently absorbs a dropped export, a
+      circular-import TDZ binding, or a barrel that failed to generate — all producing a plugin
+      that boots with fewer modules than its author wrote. Emitting a branded sentinel
+      (`Plugin.excluded('X')`) and throwing on bare `undefined` restores the loud failure for
+      genuine mistakes at the cost of one exported constant
+- [ ] Latent slicer bugs, none reachable with today's barrels: sliced local helpers are emitted in
+      discovery order rather than source order (TDZ crash for `const a = …; const b = f(a)`), a
+      multi-declarator `const a = 1, b = 2` is emitted once per declarator needed, `parseBarrel`
+      has no cycle guard for mutually re-exporting files, and a non-literal options bag at a call
+      site resolves to `null`, which the design reads as isomorphic
+- [ ] `syncPackageImports` rebuilds the `#capabilities` entry from scratch, so any condition a
+      human added by hand (`require`, `browser`, `deno`, a private one) is dropped on the next
+      `dx-plugin gen`. Sits awkwardly against `Environment` being deliberately an open string.
+      Merge into the existing entry instead of replacing it
+- [ ] `.moon/tasks/tag-composer-plugin.yml` names `SpaceCapability.ts` as one of "the modules
+      declaring the per-family `environments` defaults". It declares none — verified by grep. The
+      comment is wrong and the input is inert
 - [ ] Stale glob: `.moon/tasks/tag-composer-plugin.yml` still lists
       `src/capabilities/overrides.*.ts` as an input. Harmless (matches nothing) but misleading now
       that the override mechanism is deleted
