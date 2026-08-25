@@ -22,7 +22,14 @@ OUT="${OUT:-$ROOT/.moon-bench}"
 # MOON_REMOTE_MTLS_*, exported by a profile line that a non-interactive shell never sources. Absent
 # them moon logs "Failed to connect to storage backend, disabling it" and every rep silently
 # measures the local cache — a green run reporting hits=0.
-[ -f "$HOME/.config/dxos/moon-cache/env.sh" ] && . "$HOME/.config/dxos/moon-cache/env.sh"
+# An `&&` list that fails does not abort a script running without errexit, so source explicitly:
+# a half-read env file would otherwise leave the run credential-less and looking deliberate.
+if [ -f "$HOME/.config/dxos/moon-cache/env.sh" ]; then
+  if ! . "$HOME/.config/dxos/moon-cache/env.sh"; then
+    echo "== could not source $HOME/.config/dxos/moon-cache/env.sh — fix it or move it aside." >&2
+    exit 1
+  fi
+fi
 
 # Give this checkout its own blob store so the per-rep wipe below can empty it. Under
 # `unstable_sharedWorktreeCache` the store lives in the *base* checkout, where a wipe would take
@@ -67,17 +74,20 @@ for i in $(seq 1 "$REPS"); do
     exit 1
   fi
   cp .moon/cache/runReport.json "$OUT/report-$ARM$i.json"
-  # `|| true` because grep exits 1 on no match, and this script runs without errexit, so the
-  # count would otherwise be read from a command whose failure went unnoticed.
-  hits=$(grep -c 'cached from remote' "$OUT/$ARM$i.log" || true)
+  # Counted from the run report rather than by grepping the console: MOON_LOG and MOON_QUIET are
+  # inherited from whatever shell runs this, and either can suppress the "cached from remote" line
+  # while the hydration still happens. The report is the same source `analyze.mjs` reads, and the
+  # same query the README gives for checking a cache by hand.
+  hits=$(node -e 'const r=require(process.argv[1]);console.log(r.actions.flatMap(a=>a.operations??[]).filter(o=>o.meta?.type==="output-hydration"&&o.status==="cached-from-remote").length)' "$OUT/report-$ARM$i.json")
   echo "== $ARM$i exit=$code hits=$hits"
   if [ "$hits" -eq 0 ]; then
     # Zero does not separate "the remote was never asked" from "the remote had nothing", and
-    # neither is a measurement — the rep timed a cold build. Rep 1 is exempt because populating an
-    # empty server is the documented way to start an arm; from rep 2 on, zero is a hard failure.
+    # neither is a measurement — the rep timed a cold build. Populating an empty server is the
+    # documented way to start an arm, so rep 1 is exempt when more reps follow; a single-rep run
+    # has nothing to follow it and fails, rather than reporting a local-only build as a success.
     echo "== $ARM$i observed no remote hits."
     grep -m1 'disabling it' "$OUT/$ARM$i.log" || true
-    if [ "$i" -gt 1 ]; then
+    if [ "$i" -gt 1 ] || [ "$REPS" -eq 1 ]; then
       echo "== $ARM$i measures nothing — see $OUT/$ARM$i.log. Not continuing."
       exit 1
     fi
