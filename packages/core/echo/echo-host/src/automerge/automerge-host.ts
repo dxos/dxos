@@ -1177,6 +1177,11 @@ export class AutomergeHost extends Resource {
         different,
         localHeads: Object.fromEntries(different.map((documentId) => [documentId, localState.documents[documentId]])),
         remoteHeads: Object.fromEntries(different.map((documentId) => [documentId, remoteState.documents[documentId]])),
+        // Subduction addresses documents by sedimentree id, so without this a log bundle cannot be
+        // searched for the diverged document's storage or policy activity.
+        sedimentreeIds: Object.fromEntries(
+          different.map((documentId) => [documentId, documentIdToSedimentreeIdHex(documentId)]),
+        ),
         handleStates: Object.fromEntries(
           different.map((documentId) => [documentId, getHandleState(this._repo, documentId)]),
         ),
