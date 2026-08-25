@@ -19,6 +19,7 @@
     "deep-link:default",
     "dialog:default",
     "dialog:allow-open",
+    "dialog:allow-save",
     "fs:read-all",
     {
       "identifier": "fs:allow-watch",

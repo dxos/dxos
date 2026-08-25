@@ -162,6 +162,20 @@ export type ItemLink = {
   url: string;
 };
 
+/** A whole item consisting of one markdown link, e.g. the result of {@link replaceItemWithLink}. */
+const ITEM_LINK = /^\[[^\]]*\]\([^)]+\)$/;
+
+/**
+ * Whether the action scope's first item is already a single markdown link.
+ *
+ * Converting such an item again would replace the link with a link to a NEW object titled after the
+ * old link's label, silently orphaning the first one — so callers gate the convert action on this.
+ */
+export const isItemLink = (state: EditorState): boolean => {
+  const text = getItemText(state)?.trim();
+  return !!text && ITEM_LINK.test(text);
+};
+
 /**
  * Replaces the action scope's first item with a markdown link to `url`.
  * A task marker is demoted to a bullet since completion state now belongs to the linked object.

@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { DXN, Obj, Ref, Type, URI } from '@dxos/echo';
-import { TaskSet } from '@dxos/types';
+import { Outline, TaskSet } from '@dxos/types';
 
 import * as Instructions from './Instructions';
 import * as Project from './Project';
@@ -30,6 +30,22 @@ describe('Project', () => {
     expect(taskSet).toBeDefined();
     expect(TaskSet.instanceOf(taskSet)).toBe(true);
     expect(Obj.getParent(taskSet!)?.id).toBe(project.id);
+  });
+
+  test('a project owns an outline from the start, parented for cascade', ({ expect }) => {
+    const project = Project.make({ name: 'test' });
+    const outline = project.outline?.target;
+    expect(outline).toBeDefined();
+    expect(Obj.instanceOf(Outline.Outline, outline!)).toBe(true);
+    expect(Obj.getParent(outline!)?.id).toBe(project.id);
+    // The outline's text is its own object; it cascades through the outline, not the project.
+    expect(Obj.getParent(outline!.content.target!)?.id).toBe(outline!.id);
+  });
+
+  test('an explicitly supplied outline is kept', ({ expect }) => {
+    const existing = Outline.make({ name: 'Adopted' });
+    const project = Project.make({ name: 'test', outline: Ref.make(existing) });
+    expect(project.outline?.target?.id).toBe(existing.id);
   });
 
   test('an explicitly supplied task set is kept', ({ expect }) => {

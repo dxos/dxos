@@ -6,7 +6,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { Fragment, type KeyboardEvent, type PropsWithChildren, useCallback, useMemo, useState } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { Icon, IconButton, Input, Tag, composable, composableProps } from '@dxos/react-ui';
+import { Icon, IconButton, IconButtonProps, Input, Tag, composable, composableProps } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { type Actor, type Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -19,9 +19,10 @@ export type TaskStatus = NonNullable<Task.Task['status']>;
 /** Linear-style status groups, most active first. */
 export const STATUS_ORDER: TaskStatus[] = ['in-progress', 'todo', 'done', 'failed', 'cancelled'];
 
+/** Fallback status labels. */
 const DEFAULT_STATUS_LABELS: Record<TaskStatus, string> = {
   'in-progress': 'In progress',
-  'todo': 'Todo',
+  'todo': 'To Do',
   'done': 'Done',
   'failed': 'Failed',
   'cancelled': 'Cancelled',
@@ -34,9 +35,9 @@ export type TaskPatch = Partial<Pick<Task.Task, 'title' | 'status' | 'priority' 
  * a fixed icon gutter (the status toggle above the add `+`), the flexible label, then trailing
  * chips/actions pinned to the far edge. `w-full` is load-bearing — the listbox item is a flex
  * container, so without it the grid shrinks to its content and the trailing actions float
- * mid-row. `px-3` matches the listbox item's own inset, which `Create` does not inherit.
+ * mid-row.
  */
-const ROW_GRID = 'grid grid-cols-[1.5rem_1fr_auto] items-center gap-2 w-full min-w-0 px-3 h-8';
+const ROW_GRID = 'grid grid-cols-[2rem_1fr_2rem] items-center gap-2 w-full min-w-0 h-8';
 
 //
 // Context — plain Radix context (un-scoped); nesting task lists has no meaning today.
@@ -163,7 +164,7 @@ type TaskListGroupLabelProps = ComposableProps;
 const TaskListGroupLabel = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps(props);
   return (
-    <div {...rest} className={mx('px-2 pt-3 pb-1 text-xs text-subdued uppercase', className)} ref={forwardedRef}>
+    <div {...rest} className={mx('pt-3 pb-1 text-xs text-subdued uppercase', className)} ref={forwardedRef}>
       {children}
     </div>
   );
@@ -221,11 +222,10 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task }>(({ task, ...
           {current.priority && current.priority !== 'none' && <Tag hue='neutral'>{current.priority}</Tag>}
           {current.assignee && <TaskListAssignee assignee={current.assignee} />}
           {onTaskDelete && (
-            <IconButton
+            <CompactIconButton
               variant='ghost'
-              density='sm'
               icon='ph--x--regular'
-              iconOnly
+              // TODO(burdon): Translate.
               label='Delete task'
               classNames='invisible group-hover:visible'
               onClick={() => onTaskDelete(task)}
@@ -238,6 +238,15 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task }>(({ task, ...
 });
 
 TaskListItem.displayName = 'TaskList.Item';
+
+// TODO(burdon): Reconcile with `CompactIconButton` from `react-ui-form`.
+const CompactIconButton = (props: IconButtonProps) => {
+  return (
+    <span className='grid size-8 shrink-0 place-items-center'>
+      <IconButton variant='ghost' iconOnly density='sm' {...props} />
+    </span>
+  );
+};
 
 //
 // Create — the add row; renders nothing unless the root supplies `onTaskCreate`.
@@ -271,6 +280,7 @@ const TaskListCreate = composable<HTMLDivElement, { placeholder?: string }>(
         <Input.Root>
           <Input.TextInput
             variant='subdued'
+            classNames='px-0'
             placeholder={placeholder}
             value={title}
             onChange={(event) => setTitle(event.target.value)}

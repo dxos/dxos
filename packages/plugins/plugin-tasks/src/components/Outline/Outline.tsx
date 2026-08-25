@@ -3,7 +3,7 @@
 //
 
 import { EditorSelection } from '@codemirror/state';
-import { type EditorView } from '@codemirror/view';
+import { EditorView } from '@codemirror/view';
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import React, {
@@ -39,6 +39,7 @@ import {
   deleteItem,
   getItemText,
   hashtag,
+  isItemLink,
   outliner,
   replaceItemWithLink,
   syncLinkLabels,
@@ -92,6 +93,9 @@ type OutlineContextValue = {
   text: Text.Text;
   scrollable: boolean;
   showSelected: boolean;
+  readonly?: boolean;
+  /** Reports whether the caret's item can still be promoted (an item that is already a link cannot). */
+  onConvertibleChange?: (convertible: boolean) => void;
   autoFocus?: boolean;
   onConvertToTask?: (text: string) => Promise<OutlineLink | undefined>;
   onSelectLink?: (url: string) => void;
@@ -112,8 +116,16 @@ type OutlineRootProps = PropsWithChildren<
     text: Text.Text;
     scrollable?: boolean;
     showSelected?: boolean;
+    /** Presentation only: blocks edits and drops the drag grips and floating menu (e.g. a card preview). */
+    readonly?: boolean;
     /** Converts an item's text into an object; the item is replaced by a link to the returned target. */
     onConvertToTask?: (text: string) => Promise<OutlineLink | undefined>;
+    /**
+     * Called as the caret moves with whether the item under it can be promoted — false once it is a
+     * link, since converting again would orphan the object the link points at. Drives the toolbar's
+     * disabled state; the editor's own menu hides the entry itself.
+     */
+    onConvertibleChange?: (convertible: boolean) => void;
     /** Called when the user activates a link inserted by a conversion. */
     onSelectLink?: (url: string) => void;
     /** Current label of a link's target; the document text is reconciled against it. */
@@ -130,7 +142,9 @@ const OutlineRoot = forwardRef<OutlineController, OutlineRootProps>(
       autoFocus,
       scrollable = true,
       showSelected = true,
+      readonly,
       onConvertToTask,
+      onConvertibleChange,
       onSelectLink,
       resolveLinkLabel,
     },
@@ -158,6 +172,8 @@ const OutlineRoot = forwardRef<OutlineController, OutlineRootProps>(
         text={text}
         scrollable={scrollable}
         showSelected={showSelected}
+        readonly={readonly}
+        onConvertibleChange={onConvertibleChange}
         autoFocus={autoFocus}
         onConvertToTask={onConvertToTask}
         onSelectLink={onSelectLink}
@@ -181,8 +197,19 @@ const OUTLINE_CONTENT_NAME = 'Outline.Content';
 type OutlineContentProps = {};
 
 const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, forwardedRef) => {
-  const { id, text, scrollable, showSelected, autoFocus, onConvertToTask, onSelectLink, resolveLinkLabel, viewRef } =
-    useOutlineContext(OUTLINE_CONTENT_NAME);
+  const {
+    id,
+    text,
+    scrollable,
+    showSelected,
+    readonly,
+    onConvertibleChange,
+    autoFocus,
+    onConvertToTask,
+    onSelectLink,
+    resolveLinkLabel,
+    viewRef,
+  } = useOutlineContext(OUTLINE_CONTENT_NAME);
   const { t } = useTranslation(meta.profile.key);
   const { themeMode } = useThemeContext();
 
@@ -194,7 +221,7 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, f
       initialValue: text.content,
       extensions: [
         createDataExtensions({ id, text: Doc.createAccessor(text, ['content']) }),
-        createBasicExtensions({ readOnly: false, search: true }),
+        createBasicExtensions({ readOnly: !!readonly, search: true }),
         createMarkdownExtensions(),
         createThemeExtensions({
           themeMode,
@@ -202,7 +229,15 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, f
             scroller: { className: scrollable ? '' : '!overflow-hidden' },
           },
         }),
-        outliner({ showSelected }),
+        // `showSelected` is NOT forwarded: `outliner` has never had such an option (its props were
+        // typed `{}`, which accepted the argument and dropped it), and the selection highlight is drawn
+        // unconditionally by its dnd extension. Threading it here would only re-hide that.
+        outliner({ readonly }),
+        EditorView.updateListener.of((update) => {
+          if (update.selectionSet || update.docChanged) {
+            reportConvertible.current(!isItemLink(update.state));
+          }
+        }),
         // Renders links to converted objects as anchor chips (which dispatch `DX_ANCHOR_ACTIVATE`).
         xmlTags({
           registry: {
@@ -217,18 +252,36 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, f
         hashtag(),
       ],
     }),
-    [id, text, autoFocus, themeMode],
+    [id, text, autoFocus, themeMode, readonly],
   );
 
   // Publish view to Root so the controller can access it.
   viewRef.current = view;
+
+  // An item that is already a link cannot be promoted again (see `isItemLink`). Tracked as state
+  // because both consumers render off it: this menu, and the caller's toolbar via `onConvertibleChange`.
+  const [convertible, setConvertible] = useState(true);
+  // Held in a ref so the editor's extensions (rebuilt only on identity/theme changes) can call the
+  // latest callback without a reconfigure.
+  const reportConvertible = useRef<(convertible: boolean) => void>(() => {});
+  reportConvertible.current = (next: boolean) => {
+    setConvertible(next);
+    onConvertibleChange?.(next);
+  };
+
+  // Seed from the initial selection; subsequent changes arrive through the update listener.
+  useEffect(() => {
+    if (view) {
+      reportConvertible.current(!isItemLink(view.state));
+    }
+  }, [view]);
 
   const commandGroups: EditorMenuGroup[] = useMemo(
     () => [
       {
         id: 'outliner-actions',
         items: [
-          ...(onConvertToTask
+          ...(onConvertToTask && convertible
             ? [
                 {
                   id: 'convert-to-task',
@@ -254,7 +307,7 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, f
         ],
       },
     ],
-    [t, onConvertToTask],
+    [t, onConvertToTask, convertible],
   );
 
   const handleSelect = useCallback<NonNullable<EditorMenuProviderProps['onSelect']>>(({ view, item }) => {
