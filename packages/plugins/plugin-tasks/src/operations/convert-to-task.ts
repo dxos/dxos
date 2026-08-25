@@ -14,7 +14,7 @@ const handler: Operation.WithHandler<typeof OutlineOperation.ConvertToTask> = Ou
   Operation.withHandler(
     Effect.fnUntraced(function* ({ taskSet, title }) {
       const { db } = yield* Database.Service;
-      return { task: Outline.addTask(taskSet, db, title) };
+      return { task: Outline.addTask(db, taskSet, title) };
     }),
   ),
 );

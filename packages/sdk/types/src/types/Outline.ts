@@ -42,8 +42,8 @@ export const make = ({ name, content }: { name?: string; content?: string } = {}
  * outline with no such owner simply cannot promote, and callers offer no promote affordance.
  */
 export const addTask = (
-  taskSet: TaskSet.TaskSet,
   db: Database.Database,
+  taskSet: TaskSet.TaskSet,
   title: string,
   props: Partial<Omit<Obj.MakeProps<typeof Task.Task>, 'title'>> = {},
 ): Task.Task => {

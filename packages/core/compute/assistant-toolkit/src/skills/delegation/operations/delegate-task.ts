@@ -37,7 +37,7 @@ const handler: Operation.WithHandler<typeof DelegateTask> = DelegateTask.pipe(
       const { db } = yield* Database.Service;
       const taskSet = yield* Database.load(taskSetRef);
 
-      const task = Outline.addTask(taskSet, db, title, {
+      const task = Outline.addTask(db, taskSet, title, {
         status: 'in-progress',
         assignee: { role: 'assistant' },
       });
