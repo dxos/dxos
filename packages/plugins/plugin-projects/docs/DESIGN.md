@@ -103,13 +103,14 @@ Three fields change:
   its routines, discoverable only via the companion of a deleted object or the
   routines list) is accepted; preferring the canonical routine model over a
   project-shaped special case is worth the window.
+  **Reversed 2026-08-24 — see "Routine ownership" below.**
 
 What's left is the line worth keeping: **refs for what the project owns and orders**
-(instructions, artifacts, outline, taskSet); **queries for what accumulates around
-it** (chats by parent edge, routines by companion join, agents via their chats).
-Chats stay parent-edge attached — numerous, append-only, naturally time-ordered, so a
-ref array would be a CRDT hot spot with no ordering benefit; this is the recorded
-justification for the one deviation from schema-visible structure.
+(instructions, artifacts, routines, outline, taskSet); **queries for what accumulates
+around it** (chats by parent edge, agents via their chats). Chats stay parent-edge
+attached — numerous, append-only, naturally time-ordered, so a ref array would be a
+CRDT hot spot with no ordering benefit; this is the recorded justification for the one
+deviation from schema-visible structure.
 
 The type lives in `@dxos/compute` (next to Instructions, Skill, Trigger) so
 brain/inbox/EDGE-side code can reference it without a plugin dependency.
@@ -575,6 +576,37 @@ persists the chat immediately so it appears in the navtree before the first mess
 action is contributed to the project's navtree node (`disposition: 'list-item-primary'`) so `+`
 works from the tree.
 
+## Routine ownership (decided 2026-08-24)
+
+> **A routine is standalone unless an object owns it. Being triggered by an object is
+> not ownership.**
+
+The routines companion is gone. It answered "which routines touch this object?" with a
+four-hop reverse-ref join (`connectedRoutinesQuery`), and the answer read as arbitrary:
+a routine appeared because some ref path happened to reach the object, which is not the
+same as the routine changing it, and changes made any other way were invisible. History
+and change attribution replace it; both are deferred.
+
+That leaves ownership explicit rather than inferred:
+
+- `Project.routines` (`Ref(Routine)[]`) is back, alongside the routine→project parent
+  edge, so a project's starter routines cascade-delete with it. Magazine gets the same
+  treatment (one owned routine) in follow-up work.
+- Templates seed the array via `Project.addRoutine`; nothing creates a project-owned
+  routine by hand until the project-routines UI is designed.
+- **An object with a parent is not listed in a top-level section**
+  (`TypeSection.sectionQuery` filters `Filter.hasParent(false)`). A project's routines
+  and chats are reached through the project, so no deletion guard is needed for them —
+  there is no top-level row to delete. This subsumes the per-section
+  `standaloneChatsQuery` the Chats section carried.
+- Routine templates are all global: `appliesTo` is gone, a template that needs an object
+  declares an `inputSchema` the create panel collects first, and one that cannot stand
+  alone at all (the connector's Sync) sets `hidden` and is reachable only by id.
+
+The 2026-08-14 argument for removal still stands on its own terms — the join _is_ the
+canonical way to find routines that reference an object. What it got wrong is that the
+question users were asking was ownership, not reference.
+
 ## Routine staleness and deletion guards (decided 2026-08-14)
 
 Removing `Project.routines` (and the routine→project parent edge) means deleting a
@@ -614,9 +646,9 @@ a Routine is, keeping EDGE compatible):
 - **`RunInstructions`**: a dead context ref is skipped as today (degrade, don't crash)
   but now records a warning on the run trace (`RoutineTraceCompanion`), so degradation
   is diagnosable post-hoc instead of silent.
-- **UI**: the companion/card badge is computed live from the refs (dangling source or
-  context ref via `Obj.isDeleted` on resolution — same predicate family as
-  `routinesForObject`), so a never-firing stale routine still shows flagged. A
+- **UI**: the card badge is computed live from the refs (dangling source or context ref
+  via `Obj.isDeleted` on resolution), so a never-firing stale routine still shows
+  flagged. A
   space-level stale-routines list (disabled-for-staleness + live dangling refs) gives
   the sweep; delete cascades trigger + instructions via the routine's own parent
   edges. Flag-and-confirm always — never auto-delete.
@@ -662,8 +694,9 @@ meaningful (`warn` alone: "3 chats reference this"; `warn`+alt: the routines cas
 
 First two consumers:
 
-1. **plugin-projects**: deleting a Project with connected routines ⇒ `warn`, subjects =
-   the routines (via `connectedRoutinesQuery`), alternative = "Delete N routines".
+1. **plugin-projects**: deleting a Project with routines that merely _reference_ it (not
+   the owned ones, which cascade) ⇒ `warn`, alternative = "Delete N routines". Needs a
+   replacement for `connectedRoutinesQuery`, which went with the companion.
 2. **Schema/space layer**: deleting a stored type with instances or views pointing at
    it ⇒ `block` (dangling-typed objects would be unopenable), alternative = "Delete
    N objects of this type". "Anything that points at the type" resolves via the same

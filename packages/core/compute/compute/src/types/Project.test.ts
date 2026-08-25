@@ -10,6 +10,7 @@ import { Outline, TaskSet } from '@dxos/types';
 
 import * as Instructions from './Instructions';
 import * as Project from './Project';
+import * as Routine from './Routine';
 
 // Stand-in `Obj.Unknown` type for context objects, mirroring the ad-hoc test types used in
 // `AiContext.test.ts` — no database needed since `Ref.make` inlines the target.
@@ -18,10 +19,19 @@ const TestObject = Type.makeObject(DXN.make('org.dxos.type.testObject', '0.1.0')
 describe('Project', () => {
   test('typename, version, and defaults', ({ expect }) => {
     expect(Type.getTypename(Project.Project)).toBe('org.dxos.type.project');
-    expect(Type.getVersion(Project.Project)).toBe('0.4.0');
+    expect(Type.getVersion(Project.Project)).toBe('0.5.0');
     const project = Project.make({ name: 'test' });
     expect(Obj.instanceOf(Project.Project, project)).toBe(true);
     expect(project.artifacts).toEqual([]);
+    expect(project.routines).toEqual([]);
+  });
+
+  test('addRoutine links a routine by ref and parents it for cascade', ({ expect }) => {
+    const project = Project.make({ name: 'test' });
+    const routine = Routine.make({ name: 'Starter', triggers: [] });
+    Project.addRoutine(project, routine);
+    expect(project.routines.map((ref) => ref.target?.id)).toEqual([routine.id]);
+    expect(Obj.getParent(routine)?.id).toBe(project.id);
   });
 
   test('a project owns a task set from the start, parented for cascade', ({ expect }) => {
