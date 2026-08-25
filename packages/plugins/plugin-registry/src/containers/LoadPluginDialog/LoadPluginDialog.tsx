@@ -7,7 +7,6 @@ import React, { useCallback, useRef, useState } from 'react';
 
 import { usePluginManager } from '@dxos/app-framework/ui';
 import { EffectEx } from '@dxos/effect';
-import { DXN } from '@dxos/keys';
 import { Button, Dialog, Flex, Input, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
