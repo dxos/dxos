@@ -14,6 +14,7 @@ import {
   getCredentialAssertion,
 } from '@dxos/credentials';
 import {
+  type DatabaseDirectory,
   type SpaceRoot,
   createIdFromRootDocumentId,
   createIdFromSpaceKey,
@@ -165,6 +166,35 @@ describe('DataSpaceManager', () => {
     // Idempotent: a re-run must not fork the anchor.
     const again = await peer.dataSpaceManager.migrateSpaceToRootDocument(new Context(), space.key);
     expect(again.spaceRootDocUrl).to.equal(refs.spaceRootDocUrl);
+  });
+
+  test('data written before migration is still readable through the space root afterwards', async () => {
+    const builder = new TestBuilder();
+
+    const peer = builder.createPeer();
+    await peer.createIdentity();
+    await openAndClose(peer.echoHost, peer.dataSpaceManager);
+
+    const space = await peer.dataSpaceManager.createSpace(new Context(), { useSpaceRootDocument: false });
+    await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+
+    // Data the application wrote while the space was still hypercore-backed.
+    const objectId = PublicKey.random().toHex();
+    const objectUrl = (await peer.echoHost.createDoc({})).url;
+    const before = await peer.echoHost.openSpaceRoot(new Context(), space.id);
+    before.handle.change((draft: DatabaseDirectory) => {
+      draft.links ??= {};
+      draft.links[objectId] = objectUrl;
+    });
+    const directoryUrl = before.url;
+
+    await peer.dataSpaceManager.migrateSpaceToRootDocument(new Context(), space.key);
+
+    // Migration anchors the space on a root document; the directory it points at is the same one,
+    // so nothing the application stored has to move for the space to keep resolving.
+    const after = await peer.echoHost.openSpaceRoot(new Context(), space.id);
+    expect(after.url).to.equal(directoryUrl);
+    expect(after.doc()?.links?.[objectId]).to.equal(objectUrl);
   });
 
   test('a credential deleted from the document is still read back', async () => {
