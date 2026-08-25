@@ -46,19 +46,14 @@ const PAYLOAD_BYTES = 1 * 1024;
 const SCALE = { objectCount: OBJECT_COUNT, payloadBytes: PAYLOAD_BYTES };
 
 /**
- * Reads the whole set, retrying a short result.
- *
- * The index source caps each hit's load at two seconds (`INDEX_OBJECT_LOAD_TIMEOUT`), and every hit
- * in a cold read starts that clock at once while the documents arrive over the following minute — so
- * on a loaded runner the tail of the first pass can expire. The retry reads what has since landed;
- * what is under test is what the space releases afterwards, not how fast a cold read completes.
+ * Reads the whole set, retrying a short result: a cold read starts every hit's two-second
+ * `INDEX_OBJECT_LOAD_TIMEOUT` at once while the documents arrive over the following minute.
  */
 const queryAll = async (db: EchoDatabase, expected: number): Promise<Obj.Unknown[]> => {
   let objects: Obj.Unknown[] = [];
   for (let attempt = 0; attempt < 5 && objects.length < expected; attempt++) {
     if (attempt > 0) {
-      // An immediate retry would re-read the same not-yet-loaded state; a pass takes seconds, so the
-      // documents that expired are landing while this waits.
+      // An immediate retry would re-read the same not-yet-loaded state.
       await new Promise((resolve) => setTimeout(resolve, 1_000));
     }
     objects = await db.query(Query.select(Filter.type(TestSchema.Task))).run();

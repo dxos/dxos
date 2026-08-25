@@ -388,10 +388,8 @@ export class EntityManager implements IDatabaseBinding {
    * on the handle it already has, so nothing would ever emit the update the read is waiting for.
    */
   private _rehydrateCore(objectId: string): ObjectCore | undefined {
-    // Only from the handle already bound for this object: a miss is the common case during a cold
-    // read, and every automerge lookup taken to answer it is paid thousands of times over. Deriving
-    // the document from the space root instead (its `objects`, then its `links`) cost two extra
-    // WASM crossings per miss, which is enough to push an index hit past its load timeout.
+    // Only the already-bound handle: deriving the document from the space root instead cost two
+    // automerge lookups on every cold-read miss, enough to push an index hit past its load timeout.
     const handle = this._objectDocumentHandles.get(objectId);
     if (handle == null || !handle.isReady() || handle.doc()?.objects?.[objectId] == null) {
       return undefined;
