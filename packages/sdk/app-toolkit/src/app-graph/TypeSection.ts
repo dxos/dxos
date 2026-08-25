@@ -43,6 +43,19 @@ export const makeSectionRearrangeCallback = AppNode.createFactory(
   (space, typename) => `${typename}:${space.id}`,
 );
 
+/**
+ * How a section node is addressed. Both the URL binding and the node's `data` derive from this, and
+ * they have to agree: the navtree opens whatever a selected node holds, so a container that held
+ * data would open a plank nothing renders.
+ */
+export type Addressing = { readonly kind: 'container' } | { readonly kind: 'addressable'; readonly urlKey: string };
+
+/** A section that only holds its objects; selecting its header opens nothing. */
+export const container: Addressing = { kind: 'container' };
+
+/** A section worth linking to in its own right (e.g. `'library'` → `/w/<space>/library`). */
+export const addressable = (urlKey: string): Addressing => ({ kind: 'addressable', urlKey });
+
 /** The objects a type section lists: an owned object is reached through its owner, not listed here. */
 export const sectionQuery = (type: Type.AnyEntity): Query.Any =>
   // Filter.type's overload constraint (UnknownTypeSchema) is not publicly exported;
@@ -97,16 +110,11 @@ export const createTypeSectionExtension = (
      */
     urlKey: string;
     /**
-     * Registered URL key making the section node itself addressable (e.g. `library` → `/w/<space>/library`),
-     * for a section that is worth linking to in its own right. Omit and the section stays a bare container:
-     * only its objects are addressable, which is the default because `urlKey` alone cannot describe the
-     * node sitting *at* its own path.
-     *
-     * Opting in splits the section into two extensions — one owning the section node, one owning its
-     * objects — since a node is stamped from its producing extension's binding, and the two need different
-     * ones. The objects are then materialized on expand rather than inline.
+     * How the section node itself is addressed; {@link container} by default. {@link addressable} splits
+     * the section into two extensions — one owning the section node, one owning its objects — since a
+     * node is stamped from its producing extension's binding and the two need different ones.
      */
-    sectionUrlKey?: string;
+    addressing?: Addressing;
   },
 ): Effect.Effect<GraphBuilder.BuilderExtension[], never, never> => {
   const typename = Type.getTypename(type);
@@ -125,6 +133,33 @@ export const createTypeSectionExtension = (
 
   /** Node-id segments from the space down to the section node — the section's own path. */
   const sectionSegments = options.groupSegment ? [options.groupSegment, typename] : [typename];
+
+  const addressing = options.addressing ?? container;
+
+  /** The section node's URL binding, or none for a container. */
+  const sectionUrl = (): GraphBuilder.UrlBinding | undefined => {
+    switch (addressing.kind) {
+      case 'container':
+        return undefined;
+      case 'addressable':
+        return { key: addressing.urlKey, kind: 'singleton', path: sectionSegments };
+      default: {
+        // `undefined` is a legitimate return here, so a missing case would pass silently without this.
+        const _exhaustive: never = addressing;
+        return _exhaustive;
+      }
+    }
+  };
+
+  /** What the section node holds: nothing for a container, the registered type for an addressable one. */
+  const sectionData = (typeEntity: Type.AnyEntity | undefined): Type.AnyEntity | null => {
+    switch (addressing.kind) {
+      case 'container':
+        return null;
+      case 'addressable':
+        return typeEntity ?? null;
+    }
+  };
 
   /** The section's objects in their persisted order; empty means the section is suppressed. */
   const queryOrderedObjects = (space: Space, get: Atom.AtomContext): Obj.Unknown[] => {
@@ -162,12 +197,9 @@ export const createTypeSectionExtension = (
     return node.type === typename && node.properties.testId === testId && space ? Option.some(space) : Option.none();
   };
 
-  // The section node itself. Addressable in its own right only when sectionUrlKey is declared —
-  // that makes it a singleton so selecting it opens a plank. Without it the node is a bare
-  // container and only its objects get a URL.
   const sectionExtension = GraphBuilder.createExtension({
     id: typename,
-    url: options.sectionUrlKey ? { key: options.sectionUrlKey, kind: 'singleton', path: sectionSegments } : undefined,
+    url: sectionUrl(),
     match: options.match ?? AppNodeMatcher.whenSpace,
     connector: (space, get) => {
       if (queryOrderedObjects(space, get).length === 0) {
@@ -192,9 +224,7 @@ export const createTypeSectionExtension = (
         Node.make({
           id: typename,
           type: typename,
-          // The navtree opens whatever a selected node holds, so a bare container must hold nothing
-          // or its header opens an empty plank; an addressable section carries the type entity to render.
-          data: options.sectionUrlKey ? (typeEntity ?? null) : null,
+          data: sectionData(typeEntity),
           properties: {
             label,
             icon,
