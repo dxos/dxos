@@ -612,8 +612,9 @@ deletion guards (Phase 5) are separate planned follow-ups.**
 - [x] **Project companion chat misses `ProjectSkill` + artifact skills** — resolved 2026-08-18 by
       the same `SkillsAnnotation` on `Project` (see above): `ChatCompanion.useSkills` reads the
       annotation, so the companion chat now binds the same skills `ProjectOperation.CreateChat`
-      binds. The two chat flows' remaining differences are lifecycle/placement and cardinality only
-      (see the TODO in `create-chat.ts`).
+      binds. The two chat flows' remaining differences are lifecycle/placement and cardinality only.
+      Closed out 2026-08-24: `ProjectOperation.CreateChat` deleted, both create actions rewired to
+      `AssistantOperation.SetCurrentChat` — a project chat is an ordinary companion chat.
 
 - [x] **`Chat.agent` removed; linkage is the `CompanionTo` relation** — the field (phase B) was the
       edge that closed the Agent↔Chat import cycle and forced both types into one module behind

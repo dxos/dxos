@@ -14,9 +14,8 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-
-import { ProjectOperation } from '#types';
 
 import {
   ARTIFACTS_SECTION_TYPE,
@@ -37,7 +36,7 @@ describe('project app graph builder', () => {
 
     // Action ids are qualified by the node they hang off.
     expect(actions.map((action) => action.id)).toEqual([
-      qualifyId(Node.RootId, SUBJECT_ID, ProjectOperation.CreateChat.meta.key),
+      qualifyId(Node.RootId, SUBJECT_ID, AssistantOperation.CreateChat.meta.key),
     ]);
     // Navtree only: the toolbar builds its own create-chat, so a `toolbar` disposition here would
     // render a second, identical button.

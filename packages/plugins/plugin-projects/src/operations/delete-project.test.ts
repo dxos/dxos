@@ -51,7 +51,7 @@ describe('deleting a project', () => {
     });
     Obj.setParent(instructions, project);
 
-    // Mirrors ProjectOperation.CreateChat: the chat is owned by the parent edge, not a ref field.
+    // Mirrors a project companion chat: the chat is owned by the parent edge, not a ref field.
     const feed = db.add(Feed.make());
     const chat = db.add(Chat.make({ name: 'Chat', feed: Ref.make(feed) }));
     Chat.linkCompanion({ chat, subject: project });
