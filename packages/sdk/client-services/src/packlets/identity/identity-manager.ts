@@ -11,6 +11,7 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { CredentialGenerator, createCredentialSignerWithKey, createDidFromIdentityKey } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
+import { type EchoHost } from '@dxos/echo-host';
 import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
 import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
@@ -35,6 +36,7 @@ import { deferFunction, isNode, isTauri } from '@dxos/util';
 
 import { type IMetadataStore, IMetadataStoreService } from '../metadata';
 import { type SpaceManager, SpaceManagerService, type SwarmIdentity } from '../space';
+import { openCredentialsDocument } from '../spaces/credentials-document-store';
 import { createAuthProvider } from './authenticator';
 import { Identity } from './identity';
 
@@ -118,12 +120,20 @@ export class IdentityManager {
   private readonly _keyring: KeyringApi;
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _spaceManager: SpaceManager;
+  /**
+   * Set late by the service stack: `EchoHostLayer` already depends on this manager for its peer id,
+   * so taking the host as a constructor dependency would make the layer graph circular. Anchoring is
+   * driven by whichever of the two arrives last.
+   */
+  private _echoHost: EchoHost | undefined;
   private readonly _devicePresenceAnnounceInterval: number;
   private readonly _devicePresenceOfflineTimeout: number;
   private readonly _edgeConnection: EdgeConnection | undefined;
   private readonly _edgeFeatures: Runtime.Client.EdgeFeatures | undefined;
 
   private _identity?: Identity;
+  /** Owns the HALO anchoring subscriptions, which outlive any single open() call. */
+  private readonly _ctx = new Context();
 
   // TODO(dmaretskyi): Perhaps this should take/generate the peerKey outside of an initialized identity.
   constructor(params: IdentityManagerProps) {
@@ -141,6 +151,17 @@ export class IdentityManager {
     return this._identity;
   }
 
+  /**
+   * Supplies the echo host used to anchor the HALO space on a root document. Anchors immediately when
+   * an identity is already open, since the two are wired in either order.
+   */
+  async setEchoHost(echoHost: EchoHost): Promise<void> {
+    this._echoHost = echoHost;
+    if (this._identity) {
+      await this._anchorHaloOnRootDocument(this._ctx, this._identity);
+    }
+  }
+
   @Trace.span({ showInBrowserTimeline: true })
   async open(ctx: Context): Promise<void> {
     log('opening identity manager');
@@ -151,6 +172,7 @@ export class IdentityManager {
       this._identity = await this._constructIdentity(identityRecord);
       await this._identity.open(ctx);
       await this._identity.ready();
+      await this._anchorHaloOnRootDocument(this._ctx, this._identity);
       log.trace('dxos.halo.identity', {
         identityKey: identityRecord.identityKey,
         displayName: this._identity.profileDocument?.displayName,
@@ -162,6 +184,7 @@ export class IdentityManager {
   }
 
   async close(ctx: Context): Promise<void> {
+    await this._ctx.dispose();
     await this._identity?.close(ctx);
   }
 
@@ -225,6 +248,7 @@ export class IdentityManager {
     await this._metadataStore.setIdentityRecord(identityRecord);
     this._identity = identity;
     await this._identity.ready();
+    await this._anchorHaloOnRootDocument(this._ctx, this._identity);
     log.trace('dxos.halo.identity', {
       identityKey: identityRecord.identityKey,
       displayName: this._identity.profileDocument?.displayName,
@@ -426,6 +450,52 @@ export class IdentityManager {
 
     identity.stateUpdate.on(() => this.stateUpdate.emit());
     return identity;
+  }
+
+  /**
+   * Gives the HALO space a space root document and mirrors its credential chain into a credentials
+   * document, so the chain replicates as automerge rather than only as a control feed.
+   *
+   * The root records `idDerivation: 'spaceKey'` and the space keeps its key-derived id. That is not a
+   * migration compromise here as it is for data spaces: recovery reconstructs the HALO space from
+   * `haloSpaceKey` alone (the only identifier EDGE returns), so a root-derived id would leave a
+   * recovering device computing an id no replicated document belongs to.
+   */
+  private async _anchorHaloOnRootDocument(ctx: Context, identity: Identity): Promise<void> {
+    if (!this._echoHost) {
+      return;
+    }
+    const echoHost = this._echoHost;
+
+    const spaceId = identity.haloSpaceId;
+    try {
+      if (!echoHost.getSpaceRootRefs(spaceId)) {
+        // HALO has never had a directory — its data has always lived in the control feed — so one is
+        // created here to give the root something to point at.
+        if (!echoHost.spaceIds.includes(spaceId)) {
+          await echoHost.createSpaceRoot(ctx, identity.haloSpaceKey);
+        }
+
+        const refs = await echoHost.migrateSpaceToRootDocument(ctx, spaceId);
+        if (!refs) {
+          return;
+        }
+
+        log('anchored halo space on a root document', { spaceId, refs });
+      }
+
+      const store = await openCredentialsDocument(ctx, echoHost, spaceId);
+      for (const credential of identity.space.spaceState.credentials) {
+        store.append(credential);
+      }
+      ctx.onDispose(identity.space.credentialProcessed.on((credential) => store.append(credential)));
+
+      // The document feeds the same state machine the feed does; processing is idempotent by
+      // credential id, so both sources can run during the migration window.
+      store.subscribe(ctx, (credential) => identity.space.processDocumentCredential(credential));
+    } catch (err) {
+      log.warn('failed to anchor the halo space on a root document', { spaceId, err });
+    }
   }
 
   private async _constructSpace({ spaceRecord, swarmIdentity, identityKey, gossip }: ConstructSpaceProps) {

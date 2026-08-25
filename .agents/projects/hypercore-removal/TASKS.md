@@ -160,7 +160,22 @@ migration; crash mid-migration and resume.
       can emit a credential without it.
 - [x] `acceptSpace` derives the space id from the admitting credential's root URL — without it the
       joiner built a key-derived id and disagreed with the creator about which space it was in.
-- [ ] `device-invitation-protocol.ts` equivalent for the HALO space.
+- [x] **HALO space anchored on a root document.** `IdentityManager` mints a directory (HALO never
+      had one — its state lived entirely in the control feed), then a root, and mirrors the chain
+      into a credentials document, reusing `openCredentialsDocument` unchanged since
+      `identity.space` is the same `Space` class as `DataSpace.inner`.
+      - The host is set late via `IdentityManager.setEchoHost`: `EchoHostLayer` already depends on
+        `IdentityManagerService` for its peer id, so a constructor dependency would make the layer
+        graph circular. Same pattern the file already uses for `setFeedSyncHandlers`.
+- [ ] **HALO stays `idDerivation: 'spaceKey'` — and this is not a migration compromise.** Recovery
+      reconstructs the halo space from `haloSpaceKey` alone (`identity-recovery-manager.ts`, from
+      `RecoverIdentityResponse` in `edge.ts`), and device invitations carry `haloSpaceKey`. A
+      root-derived halo id would leave a recovering device computing an id no replicated document
+      belongs to. Consequence: **the EDGE derivation-based root resolution cannot find a HALO
+      root**, so HALO cannot read credentials from the document on EDGE until either the recovery
+      response carries the root URL, or EDGE learns the root some way other than by derivation.
+- [ ] `device-invitation-protocol.ts` equivalent for the HALO space: thread the halo space root URL
+      through `DeviceAdmissionCredentials` so a joining device replicates the root, not just the feed.
 - [ ] **NAME COLLISION to resolve**: `spaces-service.ts` already reports a `spaceRootUrl` in
       pipeline diagnostics meaning the DIRECTORY (`space.databaseRoot?.url`). Two different
       documents under one name will bite; rename the diagnostics field.
