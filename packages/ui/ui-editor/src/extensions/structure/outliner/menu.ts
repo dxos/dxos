@@ -13,7 +13,7 @@ import { GUTTER_WIDTH } from '../blocks';
 // Square trigger size (px), matching the drag grip (`dx-button` density `xs` + `aspect-square` → `size-6`).
 // The right-hand strip (`GUTTER_WIDTH`, shared with the grip's left strip) centers the trigger within it.
 // No size constant: the trigger is a `dx-button` whose box follows the theme, so it is centred on a point
-// by CSS (`translate(-50%, -50%)`) — see `.cm-popover-trigger` below.
+// by CSS (`translate(-50%, -50%)`) — see `.cm-outliner-menu` below.
 
 export type MenuOptions = {
   icon?: string;

@@ -25,7 +25,7 @@ could not be. The hazard (a role that never settles stranding the placeholder) i
 manager itself: a plugin that fails, including by exceeding the module timeout, is excluded from
 `modules` and auto-disabled, so the hold lifts.
 
-## Capability API## Capability API
+## Capability API
 
 - [ ] **Review `useCapability` vs `useCapabilities` selection** — `useCapability` throws when no
       contribution exists, so every optional-capability consumer has drifted to the
