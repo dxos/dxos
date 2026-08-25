@@ -127,9 +127,19 @@
       "types": "./dist/types/src/ui/index.d.ts",
       "import": "./dist/lib/ui.mjs"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./dxplugin.schema.json": "./dxplugin.schema.json",
+    "./dxplugin": {
+      "types": "./dxplugin.d.ts"
+    }
   },
   "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "dxplugin.d.ts",
+    "dxplugin.schema.json",
+    "src"
+  ],
   "scripts": {
     "typedoc": "typedoc --out typedoc"
   },

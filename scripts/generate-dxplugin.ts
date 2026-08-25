@@ -3,7 +3,12 @@
 //
 
 /**
- * Generates a plugin's `dxplugin.jsonc` from its existing TypeScript entrypoint.
+ * One-time migration aid: seeds a plugin's `dxplugin.jsonc` from its existing TypeScript entrypoint.
+ *
+ * The descriptor is the SOURCE OF TRUTH once written — hand-authored against
+ * `dxplugin.schema.json`, and the TypeScript entrypoint is what gets deleted. This script exists
+ * only to do the initial transcription without transcribing ~60 plugins by hand; it is not part of
+ * any build, and a descriptor must never be regenerated over hand edits.
  *
  * The two halves of a module declaration live in different places and only one of them survives
  * to runtime: the activation spec (requires/provides/activatesOn) is on the constructed `Plugin`,

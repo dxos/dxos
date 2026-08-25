@@ -86,9 +86,62 @@ published `dxplugin.jsonc` over HTTP.
 `./dxplugin.jsonc` export to `package.json`, and repoint consumers at
 `Plugin.fromManifest(await import('@dxos/plugin-x/dxplugin.jsonc'))`.
 
-## Open questions
+### 5. Authoring: JSON Schema
 
-1. `meta` is currently imported by name from most plugins (translations keys, graph nodes). It
-   has to come from the manifest instead — either a generated `meta` export or a lookup by key.
-2. Modules whose maker bakes in a **value** rather than a file (e.g.
-   `AppCapability.translations([...])`) need a small module file to point `src` at.
+The descriptor is hand-authored, so the schema is what makes it writable. `dxplugin.schema.json`
+(draft 2020-12) is derived from `Config2.Descriptor` by `Plugin.descriptorJsonSchema()`, checked in
+at the app-framework package root, and drift-tested against the runtime schema. Each descriptor sets
+`$schema` to a workspace-relative path into `node_modules/@dxos/app-framework/` — it resolves
+offline, in every editor, and always to the schema the installed SDK validates against, which a
+hosted URL would not. `.vscode/settings.json` also maps `**/dxplugin.jsonc` to it for editors that
+ignore `$schema`.
+
+## What blocks deleting the TypeScript entrypoints
+
+Measured, not assumed — each of these was reproduced against the real build.
+
+### `meta.ts`
+
+21 uses across plugin-markdown, of which **18 are `meta.profile.key`** — the plugin's NSID string,
+nothing more. The type does not narrow: `Plugin.Meta.profile.key` is `Schema.String`, so it is
+already `string` and never a literal. So the NSID-literal branding on `Capability.makeSingleton<T>()`
+(`` `${meta.profile.key}.capability.settings` ``) is unaffected by where `meta` comes from — that is
+NOT a blocker, as first suspected.
+
+What is left is two mechanical facts:
+
+1. **TypeScript applies an ambient wildcard `declare module` only to NON-relative specifiers.**
+   `import descriptor from '../dxplugin.jsonc'` cannot be typed by any ambient declaration —
+   reproduced as `TS2307: Cannot find module '../dxplugin.jsonc'`. A plugin must import its own
+   descriptor by package specifier (`@dxos/plugin-markdown/dxplugin.jsonc`), which the wildcard does
+   match. Confirmed working.
+2. **The declaration has to be in the consumer's program.** `dxplugin.d.ts` shipped from
+   app-framework and named in the consumer's tsconfig `types` did NOT load (still TS2307); the same
+   declaration placed in the plugin's own `src/` did. So the central declaration needs a working
+   distribution route — a `types` entry that actually resolves, or `@dxos/typings` (already in every
+   plugin's tsconfig `types`, but layered below protocols).
+
+### `plugin.tsx` / `plugin.node.ts` / `plugin.workerd.ts`
+
+One real blocker, and it is a **runtime** one, not a type one. With `meta.ts` importing the
+descriptor, `plugin-markdown:build` goes green — but rolldown **externalizes** the specifier, so
+`dist/lib/meta.mjs` ships:
+
+```js
+import descriptor from '@dxos/plugin-markdown/dxplugin.jsonc';
+```
+
+That resolves wherever the vite loader runs (the app) and fails wherever it does not (plain node —
+the edge operation-service and agent runtime, which is exactly what `plugin.node.ts` /
+`plugin.workerd.ts` exist to serve). So the decision is whether a plugin's published lib may carry a
+`.jsonc` import — which obliges every non-vite host to install a loader — or whether the descriptor
+is inlined at build time for the lib output.
+
+Everything else about deleting them is settled: `platforms` already expresses the browser/node/workerd
+split, and the fidelity test asserts the descriptor reproduces both server variants exactly.
+
+### Remaining smaller item
+
+Modules whose maker bakes in a **value** rather than a file (`AppCapability.translations([...])`,
+inline `schema([...])` lists) need a module file to point `src` at. Done for markdown
+(`capabilities/translations.ts`), and a lazily-loaded chunk is the better shape anyway.

@@ -144,6 +144,12 @@ export type Module = Schema.Schema.Type<typeof Module>;
  * and capability graph without evaluating any of the plugin's code.
  */
 export const Descriptor = Schema.Struct({
+  /**
+   * JSON Schema the file is authored against, for editor completion and validation. Declared on
+   * the schema rather than tolerated as an excess key so the contract is explicit and a descriptor
+   * round-trips through decode/encode without losing it.
+   */
+  $schema: Schema.optional(Schema.String),
   ...Plugin.fields,
   /** Plugin version (semver); optional for workspace plugins, whose version comes from the build. */
   version: Schema.optional(Schema.String),

@@ -287,6 +287,15 @@ export const getMetaFromConfig = ({ plugin }: Config2.Config): Meta => {
 };
 
 /**
+ * Derives a runtime {@link Meta} from a loaded `dxplugin.jsonc` descriptor — the descriptor's
+ * profile fields, minus the parts that describe the file rather than the plugin.
+ */
+export const getMetaFromDescriptor = (descriptor: Config2.Descriptor): Meta => {
+  const { $schema: _schema, version: _version, modules: _modules, key, ...rest } = descriptor;
+  return makeMeta({ key: DXN.make(key), ...rest });
+};
+
+/**
  * Identifier denoting a Plugin.
  */
 export const PluginTypeId: unique symbol = Symbol.for('@dxos/app-framework/Plugin');
@@ -648,6 +657,8 @@ export const resolveLazy = (plugin: Plugin): Effect.Effect<Plugin, LazyPluginErr
  * `await import('@dxos/plugin-x/dxplugin.jsonc')`, or the raw JSONC text of a descriptor fetched
  * over HTTP. One entry point covers the bundler path and the published-plugin path.
  */
+export { DXPLUGIN_SCHEMA_FILENAME, DXPLUGIN_SCHEMA_PATH, descriptorJsonSchema } from './plugin-schema';
+
 export type ManifestSource = Config2.Descriptor | { readonly default: Config2.Descriptor } | string;
 
 export type FromManifestOptions = {
