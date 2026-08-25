@@ -22,6 +22,52 @@ const samplesFile = join(outDir, 'heap-samples.ndjson');
 mkdirSync(outDir, { recursive: true });
 writeFileSync(samplesFile, '');
 
+/**
+ * WASM linear memory is invisible to `heapUsed` and is never returned to the OS, so a suite whose
+ * cost is mostly WASM (anything automerge-backed) reads as flat while its real footprint climbs.
+ * There is no API for "how much WASM memory exists", so instances are recorded as they are
+ * constructed and their `memory` exports summed on demand.
+ *
+ * Installed here rather than in a test helper because setup files run before the test module graph
+ * is imported, which is the only point still ahead of the wasm-bindgen glue instantiating at import
+ * time. Published on `globalThis` for the same reason — a setup file has no other channel to a
+ * helper module. Measured against automerge: this tracks `process.memoryUsage().external` to within
+ * a ~2MB constant, `external` being where V8 accounts WASM backing stores (never `arrayBuffers`).
+ */
+// Weak, and pruned on read: holding instances strongly would stop a discarded module's memory from
+// ever being freed, so the probe would create the growth it claims to measure.
+const wasmInstances: WeakRef<WebAssembly.Instance>[] = [];
+const OriginalInstance = WebAssembly.Instance;
+WebAssembly.Instance = new Proxy(OriginalInstance, {
+  construct: (target, args) => {
+    const instance = Reflect.construct(target, args) as WebAssembly.Instance;
+    wasmInstances.push(new WeakRef(instance));
+    return instance;
+  },
+});
+
+const wasmBytes = (): number => {
+  let total = 0;
+  for (let index = wasmInstances.length - 1; index >= 0; index--) {
+    const instance = wasmInstances[index].deref();
+    if (instance === undefined) {
+      wasmInstances.splice(index, 1);
+      continue;
+    }
+    const memory = instance.exports?.memory as WebAssembly.Memory | undefined;
+    total += memory?.buffer?.byteLength ?? 0;
+  }
+  return total;
+};
+
+(globalThis as Record<string, unknown>).__DXOS_WASM_BYTES__ = wasmBytes;
+// Instance count alongside the total, so a large figure can be read as one module's growth rather
+// than mistaken for many modules each holding a little.
+(globalThis as Record<string, unknown>).__DXOS_WASM_INSTANCES__ = (): number => {
+  wasmBytes();
+  return wasmInstances.length;
+};
+
 // `--expose-gc` (added to the fork's execArgv when DX_DEBUG_LEAKS is set) is what makes `global.gc`
 // callable; without it the snapshots still write but retain garbage, so the deltas are meaningless.
 if (typeof global.gc !== 'function') {
@@ -55,7 +101,7 @@ let completed = 0;
 afterEach(async () => {
   await settle();
   const heapUsed = process.memoryUsage().heapUsed;
-  appendFileSync(samplesFile, JSON.stringify({ test: ++completed, heapUsed }) + '\n');
+  appendFileSync(samplesFile, JSON.stringify({ test: ++completed, heapUsed, wasmBytes: wasmBytes() }) + '\n');
   if (completed === 1) {
     snapshot('before.heapsnapshot');
   }
