@@ -18,5 +18,3 @@ export const make = Plugin.fromManifest(descriptor, {
   // resolves its relative `src` values. Ignored on the vite and lib paths, where they are absolute.
   baseUrl: new URL('..', import.meta.url),
 });
-
-export default make;
