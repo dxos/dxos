@@ -17,7 +17,7 @@ type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObjec
 
 /**
  * Contributes the "create Project" entry so a new `Project` can be created from the nav menu (the
- * Projects type-section `+` action). The panel offers contributed project templates (blank by
+ * Projects type-section `+` action). The panel offers contributed project templates (the default by
  * default); `ProjectOperation.Create` runs the chosen template's scaffold, which materializes the
  * owned instructions and artifacts collection.
  */
