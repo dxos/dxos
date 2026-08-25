@@ -18,6 +18,7 @@ import { Chat } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { EID, Filter, Obj, Query, Type } from '@dxos/echo';
+import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
@@ -154,7 +155,7 @@ export const createProjectActionExtension = () =>
     actions: (project) =>
       Effect.succeed([
         Node.makeAction({
-          id: ProjectOperation.CreateChat.meta.key,
+          id: AssistantOperation.CreateChat.meta.key,
           data: () =>
             Effect.gen(function* () {
               const db = Obj.getDatabase(project);
@@ -162,7 +163,12 @@ export const createProjectActionExtension = () =>
                 return;
               }
 
-              yield* Operation.invoke(ProjectOperation.CreateChat, { project }, { spaceId: db.spaceId });
+              const spaceId = db.spaceId;
+              const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, {}, { spaceId });
+              // Parent edge before the add: it files the chat under the project, not the space root.
+              Chat.linkCompanion({ chat, subject: project });
+              yield* Operation.invoke(SpaceOperation.AddObject, { object: chat }, { spaceId });
+              yield* Operation.invoke(AssistantOperation.SetCurrentChat, { companionTo: project, chat }, { spaceId });
             }),
           properties: {
             label: ['create-chat.label', { ns: meta.profile.key }],
