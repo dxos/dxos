@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf/stream';
+import { Stream } from '@dxos/async';
 import { log } from '@dxos/log';
 import { type TestStreamService } from '@dxos/protocols/proto/example/testing/rpc';
 

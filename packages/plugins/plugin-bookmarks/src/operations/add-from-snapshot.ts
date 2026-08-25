@@ -13,7 +13,11 @@ const handler: Operation.WithHandler<typeof BookmarkOperation.AddFromSnapshot> =
   Operation.withHandler(
     Effect.fn(function* ({ snapshot, target }) {
       const bookmark = Bookmark.fromSnapshot(snapshot);
-      const { id } = yield* Operation.invoke(SpaceOperation.AddObject, { object: bookmark, target });
+      const { id } = yield* Operation.invoke(
+        SpaceOperation.AddObject,
+        { object: bookmark },
+        { spaceId: target.spaceId },
+      );
       return { id };
     }),
   ),

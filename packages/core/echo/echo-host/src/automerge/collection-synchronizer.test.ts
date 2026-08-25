@@ -159,6 +159,78 @@ describe('CollectionSynchronizer', () => {
     expect(sentTo).to.deep.equal([peerId1]);
   });
 
+  test('re-emits for a stalled peer that keeps repeating an out-of-sync state', async ({ expect }) => {
+    // Regression: `onRemoteStateReceived` used to skip the diff whenever the incoming state
+    // matched the previous one, regardless of whether that state was in sync with ours. A peer
+    // stuck advertising stale heads therefore silenced `peerCollectionStateUpdated` — and with
+    // it the `_handleCollectionSync` replication retry — no matter how often the poll re-queried
+    // it. Observed in the wild as a document stalled for 10 minutes across ~48 identical polls,
+    // cleared only by a reconnect.
+    const peerId = 'peer1' as PeerId;
+    const collectionId = 'collection-test';
+
+    const peer = await new CollectionSynchronizer({
+      queryCollectionState: () => {},
+      sendCollectionState: () => {},
+      shouldSyncCollection: () => true,
+    }).open();
+    onTestFinished(async () => {
+      await peer.close();
+    });
+
+    const updates: PeerId[] = [];
+    peer.peerCollectionStateUpdated.on((ev) => {
+      updates.push(ev.peerId);
+    });
+
+    peer.onConnectionOpen(peerId);
+    peer.setLocalCollectionState(collectionId, STATE_1);
+    await sleep(10);
+    updates.length = 0;
+
+    // STATE_2 diverges from STATE_1 on `b`, and is missing `c` entirely.
+    peer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_2));
+    expect(updates).to.deep.equal([peerId]);
+
+    // The poll re-delivers the identical (still diverging) state; each delivery must retry.
+    peer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_2));
+    peer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_2));
+    expect(updates).to.deep.equal([peerId, peerId, peerId]);
+  });
+
+  test('dedupes an unchanged state once the peer is in sync', async ({ expect }) => {
+    // The complement of the regression above: repeating an already-converged state must stay
+    // silent, or every healthy peer re-triggers replication on each poll.
+    const peerId = 'peer1' as PeerId;
+    const collectionId = 'collection-test';
+
+    const peer = await new CollectionSynchronizer({
+      queryCollectionState: () => {},
+      sendCollectionState: () => {},
+      shouldSyncCollection: () => true,
+    }).open();
+    onTestFinished(async () => {
+      await peer.close();
+    });
+
+    const updates: PeerId[] = [];
+    peer.peerCollectionStateUpdated.on((ev) => {
+      updates.push(ev.peerId);
+    });
+
+    peer.onConnectionOpen(peerId);
+    peer.setLocalCollectionState(collectionId, STATE_1);
+    await sleep(10);
+    updates.length = 0;
+
+    peer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_1));
+    expect(updates).to.deep.equal([peerId]);
+
+    peer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_1));
+    peer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_1));
+    expect(updates).to.deep.equal([peerId]);
+  });
+
   test('diff collection state', ({ expect }) => {
     const diff = diffCollectionState(STATE_1, STATE_2);
 

@@ -35,6 +35,7 @@
     "ts-morph": "catalog:"
   },
   "devDependencies": {
+    "@dxos/async": "workspace:*",
     "@types/argparse": "catalog:",
     "@types/mocha": "catalog:",
     "@typescript/typescript6": "catalog:",

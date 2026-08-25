@@ -14,6 +14,7 @@ import {
   PROGRESS_STATUS_CANCELLED,
   PROGRESS_STATUS_COMPLETE,
   PROGRESS_STATUS_FAILED,
+  PROGRESS_STATUS_STALLED,
   createProgressTraceSink,
   resolveTriggerId,
 } from './progress-trace-sink';
@@ -50,6 +51,41 @@ describe('createProgressTraceSink', () => {
     expect(task?.current).toBe(3);
     expect(task?.total).toBe(10);
     expect(task?.status).toBe('running');
+  });
+
+  // Mail sync's shape: the run starts with no total and accumulates one as each page is enumerated,
+  // so the meter is briefly indeterminate and must become determinate the moment a total arrives.
+  test('a total that arrives mid-run makes the task determinate', () => {
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    const sink = createProgressTraceSink(progress);
+    const key = 'mailbox-uri#sync';
+
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 0 } }));
+    expect(registry.get(progress.monitorAtom(key))?.total).toBeUndefined();
+
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 0, total: 468 } }));
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 12, total: 468 } }));
+
+    const task = registry.get(progress.monitorAtom(key));
+    expect(task?.total).toBe(468);
+    expect(task?.current).toBe(12);
+  });
+
+  // The same run reported from a different process (an EDGE continuation) re-registers the monitor;
+  // the total it already reported has to survive that, or the meter falls back to a sweep mid-run.
+  test('a total survives the monitor being re-registered by another pid', () => {
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    const sink = createProgressTraceSink(progress);
+    const key = 'mailbox-uri#sync';
+
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 4, total: 468 } }, { pid: 'run-1' }));
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 9 } }, { pid: 'run-2' }));
+
+    const task = registry.get(progress.monitorAtom(key));
+    expect(task?.total).toBe(468);
+    expect(task?.current).toBe(9);
   });
 
   test('completes and removes the monitor on progress.complete', () => {
@@ -170,6 +206,212 @@ describe('createProgressTraceSink', () => {
     expect(cancelled[0]?.space).toBe(space);
     expect(cancelled[0]?.runtimeName).toBe(Trace.CommonRuntimeName.edgeIntrinsic);
     expect(cancelled[0]?.trigger).toBe(trigger);
+  });
+});
+
+// `plugin-magazine`'s curate run, which is what surfaced this: phase 0 counts the feeds, phase 1 is a
+// single opaque agent call over every candidate and so reports no total. Observed in the statusbar as
+// "Syncing feeds  0 / 1" with the stepper already on step 2 — phase 1 drawing phase 0's count.
+describe('phase counts', () => {
+  test('entering a phase clears the count the previous one reported', () => {
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    const sink = createProgressTraceSink(progress);
+    const key = 'magazine-uri#curate';
+
+    sink.write(
+      statusMessage({ message: 'Syncing feeds', progress: { key, phases: 3, phase: 0, current: 0, total: 1 } }),
+    );
+    expect(registry.get(progress.monitorAtom(key))?.total).toBe(1);
+
+    sink.write(statusMessage({ message: 'Selecting articles', progress: { key, phases: 3, phase: 1, current: 0 } }));
+    const task = registry.get(progress.monitorAtom(key));
+    // Uncountable: the meter must sweep, not claim 0 of the feed count it is no longer counting.
+    expect(task?.total).toBeUndefined();
+    expect(task?.phase).toBe(1);
+  });
+
+  test('a phase that declares its own total keeps it', () => {
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    const sink = createProgressTraceSink(progress);
+    const key = 'magazine-uri#curate';
+
+    sink.write(statusMessage({ progress: { key, phases: 3, phase: 1, current: 0 } }));
+    sink.write(statusMessage({ progress: { key, phases: 3, phase: 2, current: 0, total: 7 } }));
+
+    const task = registry.get(progress.monitorAtom(key));
+    expect(task?.total).toBe(7);
+    expect(task?.current).toBe(0);
+  });
+
+  // Updates WITHIN a phase are the common case and must not be mistaken for a phase change, or the
+  // count would be wiped on every tick.
+  test('progress within a phase keeps its count', () => {
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    const sink = createProgressTraceSink(progress);
+    const key = 'magazine-uri#curate';
+
+    sink.write(statusMessage({ progress: { key, phases: 3, phase: 2, current: 0, total: 7 } }));
+    sink.write(statusMessage({ progress: { key, phases: 3, phase: 2, current: 3 } }));
+    sink.write(statusMessage({ progress: { key, phases: 3, phase: 2, current: 5 } }));
+
+    const task = registry.get(progress.monitorAtom(key));
+    expect(task?.total).toBe(7);
+    expect(task?.current).toBe(5);
+  });
+});
+
+// Measured against a live mailbox on 2026-08-23: an edge sync emitted its opening status and nothing
+// further — no total, no increments, and no terminal — leaving the meter sweeping indefinitely over a
+// run that was no longer reporting. Every terminal a producer can emit travels the same lossy path
+// its progress does (a killed process runs no finalizer, a defect escapes the error channel, a swarm
+// broadcast is fire-and-forget), so the sink cannot rely on being told a run ended.
+describe('stall bound', () => {
+  const STALL = 90_000;
+
+  const withFakeTimers = () => {
+    vi.useFakeTimers();
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
+  };
+
+  test('fails a monitor that stops reporting, and says only that it stopped', () => {
+    withFakeTimers();
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    const sink = createProgressTraceSink(progress);
+    const key = 'mailbox-uri#sync';
+
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 0 } }));
+    expect(registry.get(progress.monitorAtom(key))?.status).toBe('running');
+
+    vi.advanceTimersByTime(STALL - 1);
+    expect(registry.get(progress.monitorAtom(key))?.status).toBe('running');
+
+    vi.advanceTimersByTime(1);
+    const task = registry.get(progress.monitorAtom(key));
+    expect(task?.status).toBe('error');
+    // Not "failed": the run may have finished or still be going — what is known is that it went quiet.
+    expect(task?.error).toBe(PROGRESS_STATUS_STALLED);
+  });
+
+  // The clock measures the gap between updates, not the run's length: a long sync that keeps
+  // reporting is healthy and must never be failed for taking its time.
+  test('a run that keeps reporting is never stalled, however long it takes', () => {
+    withFakeTimers();
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    const sink = createProgressTraceSink(progress);
+    const key = 'mailbox-uri#sync';
+
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 0, total: 500 } }));
+    for (let current = 1; current <= 10; ++current) {
+      vi.advanceTimersByTime(STALL - 1_000);
+      sink.write(statusMessage({ message: 'Syncing', progress: { key, current } }));
+    }
+
+    const task = registry.get(progress.monitorAtom(key));
+    expect(task?.status).toBe('running');
+    expect(task?.current).toBe(10);
+  });
+
+  // An edge continuation reports under a fresh pid against the same run, so it re-points the entry
+  // rather than re-registering — the path that would most easily lose the timer.
+  test('a continuation under a new pid keeps the run bounded', () => {
+    withFakeTimers();
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    const sink = createProgressTraceSink(progress);
+    const key = 'mailbox-uri#sync';
+
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 1, total: 9 } }, { pid: 'run-1' }));
+    vi.advanceTimersByTime(1_000);
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 4 } }, { pid: 'run-2' }));
+
+    vi.advanceTimersByTime(STALL);
+    expect(registry.get(progress.monitorAtom(key))?.status).toBe('error');
+  });
+
+  test('a completed run is not failed afterwards', () => {
+    withFakeTimers();
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    const sink = createProgressTraceSink(progress);
+    const key = 'mailbox-uri#sync';
+
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 0, total: 2 } }));
+    sink.write(statusMessage({ message: PROGRESS_STATUS_COMPLETE, progress: { key } }));
+
+    vi.advanceTimersByTime(STALL * 2);
+    expect(registry.get(progress.monitorAtom(key))).toBeUndefined();
+  });
+
+  // A reported failure names a cause; a stall firing over it would replace that with a guess.
+  test('a reported failure keeps its own reason', () => {
+    withFakeTimers();
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    const sink = createProgressTraceSink(progress);
+    const key = 'mailbox-uri#sync';
+
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 1, total: 5 } }));
+    sink.write(statusMessage({ message: PROGRESS_STATUS_FAILED, progress: { key } }));
+
+    vi.advanceTimersByTime(STALL * 2);
+    expect(registry.get(progress.monitorAtom(key))?.error).toBe(PROGRESS_STATUS_FAILED);
+  });
+
+  // The stall is a giving-up, not a verdict on the key: the next run gets a clean meter, and starts
+  // from its own numbers rather than inheriting the abandoned run's.
+  test('a later run recovers the meter and does not inherit the stalled run count', () => {
+    withFakeTimers();
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    const sink = createProgressTraceSink(progress);
+    const key = 'mailbox-uri#sync';
+
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 40, total: 468 } }, { pid: 'run-1' }));
+    vi.advanceTimersByTime(STALL);
+    expect(registry.get(progress.monitorAtom(key))?.status).toBe('error');
+
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 0 } }, { pid: 'run-2' }));
+    const task = registry.get(progress.monitorAtom(key));
+    expect(task?.status).toBe('running');
+    expect(task?.current).toBe(0);
+    expect(task?.total).toBeUndefined();
+    expect(task?.error).toBeUndefined();
+  });
+
+  // The dismiss control on a failed meter routes back through the sink, which has to still know the
+  // key — a stall that forgot the monitor would leave a meter nothing can clear.
+  test('a stalled monitor can still be dismissed', () => {
+    withFakeTimers();
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    const sink = createProgressTraceSink(progress, { cancelProcess: () => {} });
+    const key = 'mailbox-uri#sync';
+
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 1 } }, { pid: 'run-1' }));
+    vi.advanceTimersByTime(STALL);
+    expect(registry.get(progress.monitorAtom(key))?.status).toBe('error');
+
+    progress.cancel(key);
+    expect(registry.get(progress.monitorAtom(key))).toBeUndefined();
+  });
+
+  test('the bound can be disabled for a producer whose terminal cannot be lost', () => {
+    withFakeTimers();
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    const sink = createProgressTraceSink(progress, { stallTimeout: 0 });
+    const key = 'mailbox-uri#sync';
+
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 0 } }));
+    vi.advanceTimersByTime(STALL * 10);
+    expect(registry.get(progress.monitorAtom(key))?.status).toBe('running');
   });
 });
 

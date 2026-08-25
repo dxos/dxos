@@ -34,8 +34,8 @@ describe('channelVariant', () => {
     expect(channelVariant('build', undefined)).toBeUndefined();
   });
 
-  test('nightly is the one that runs beside production, so it gets its own mark', ({ expect }) => {
-    expect(channelVariant('build', 'nightly')).toEqual('purple');
+  test('preview is the one that runs beside production, so it gets its own mark', ({ expect }) => {
+    expect(channelVariant('build', 'preview')).toEqual('purple');
   });
 
   test('every other channel shares the rust mark', ({ expect }) => {
@@ -45,7 +45,7 @@ describe('channelVariant', () => {
 
   // Only a deployed bundle is branded, so `DX_ENVIRONMENT` in a shell does not repaint localhost.
   test('a dev server keeps the released mark whatever the environment says', ({ expect }) => {
-    expect(channelVariant('serve', 'nightly')).toBeUndefined();
+    expect(channelVariant('serve', 'preview')).toBeUndefined();
     expect(channelVariant('serve', 'dev')).toBeUndefined();
   });
 });

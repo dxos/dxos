@@ -31,10 +31,11 @@ export const scaffoldProject = ({ name, description, text, ...instructionsProps 
     text: text ?? DEFAULT_PROJECT_INSTRUCTIONS,
     ...instructionsProps,
   });
-  Obj.setParent(instructions, project);
-  // The task set comes from `Project.make` — every project owns a ledger from the start.
+  // Ref before parent edge: the ref is what declares the edge (see `Obj.isDeclaredParentEdge`).
   Obj.update(project, (project) => {
     project.instructions = Ref.make(instructions);
   });
+  Obj.setParent(instructions, project);
+  // The task set comes from `Project.make` — every project owns a ledger from the start.
   return project;
 };

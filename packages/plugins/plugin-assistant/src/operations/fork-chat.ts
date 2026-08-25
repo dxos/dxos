@@ -14,7 +14,6 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Message } from '@dxos/types';
 
 import { AssistantOperation } from '#types';
@@ -85,12 +84,8 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
 
       if (companionTo) {
         // Wire the forked chat as a companion and switch to it without navigating away.
-        yield* Operation.invoke(SpaceOperation.AddRelation, {
-          db,
-          schema: Chat.CompanionTo,
-          source: newChat,
-          target: companionTo,
-        });
+        Chat.linkCompanion({ chat: newChat, subject: companionTo });
+        yield* Database.flush();
         const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
         yield* Effect.promise(() =>
           operationInvoker.invokePromise(AssistantOperation.SetCurrentChat, { companionTo, chat: newChat }),

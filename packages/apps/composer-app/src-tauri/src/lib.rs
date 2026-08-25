@@ -3,6 +3,7 @@
 #[cfg(target_os = "ios")]
 mod audio_input;
 mod asset_cache;
+pub mod channel;
 #[cfg(desktop)]
 mod oauth;
 #[cfg(desktop)]
@@ -19,11 +20,48 @@ use oauth::OAuthServerState;
 #[cfg(desktop)]
 use window_state::WindowState;
 
-/// Fixed port for the localhost asset server in production builds (CMPSR = 26777).
-pub const LOCALHOST_PORT: u16 = 26777;
+/// Port the desktop webview loads the app from: the Vite dev server in development, and in release the
+/// asset-server port this build's release channel owns.
+#[cfg(desktop)]
+pub fn webview_port(identifier: &str) -> u16 {
+    if cfg!(debug_assertions) {
+        channel::DEV_SERVER_PORT
+    } else {
+        channel::ReleaseChannel::from_identifier(identifier).localhost_port()
+    }
+}
+
+/// Whether the asset server can still claim this channel's port. `tauri-plugin-localhost` only panics
+/// on a background thread when its bind fails, leaving the webview to load whatever else answers there
+/// — so the port is probed before the plugin is registered rather than after it has failed.
+///
+/// Every address `localhost` resolves to has to be free, not merely the first: the plugin binds whichever
+/// one it reaches first while the webview resolves the name itself, so a port held on the other address
+/// family would still hand the window foreign content.
+#[cfg(all(not(debug_assertions), desktop))]
+fn port_available(port: u16) -> bool {
+    use std::net::{TcpListener, ToSocketAddrs};
+
+    match ("localhost", port).to_socket_addrs() {
+        Ok(addresses) => addresses.into_iter().all(|address| TcpListener::bind(address).is_ok()),
+        // A resolver failure is no evidence the port is taken; leave the verdict to the plugin's own bind.
+        Err(_) => true,
+    }
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // `tauri.conf.json` is compiled in, so the identifier here is the one `.github/actions/cn-config`
+    // rewrote for this channel — the only thing a running build knows about which channel it is.
+    let context = tauri::generate_context!();
+
+    #[cfg(all(not(debug_assertions), desktop))]
+    let release_channel = channel::ReleaseChannel::from_identifier(&context.config().identifier);
+    #[cfg(all(not(debug_assertions), desktop))]
+    let localhost_port = release_channel.localhost_port();
+    #[cfg(all(not(debug_assertions), desktop))]
+    let port_taken = !port_available(localhost_port);
+
     let builder = tauri::Builder::default()
         .manage(asset_cache::AssetCacheState::default())
         // Custom URI scheme: serves cached third-party plugin assets so plugins keep
@@ -39,7 +77,11 @@ pub fn run() {
     // Serve bundled assets via localhost plugin on desktop only (needed for SharedWorker support).
     // Mobile uses Tauri's default asset protocol instead.
     #[cfg(all(not(debug_assertions), desktop))]
-    let builder = builder.plugin(tauri_plugin_localhost::Builder::new(LOCALHOST_PORT).build());
+    let builder = if port_taken {
+        builder
+    } else {
+        builder.plugin(tauri_plugin_localhost::Builder::new(localhost_port).build())
+    };
 
     // Only include updater plugin for non-mobile targets.
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
@@ -113,6 +155,7 @@ pub fn run() {
         oauth::start_oauth_server,
         oauth::stop_oauth_server,
         oauth::get_oauth_result,
+        oauth::get_oauth_recovery_result,
         oauth::initiate_oauth_flow,
         #[cfg(unix)]
         xattr_cmd::get_xattr,
@@ -160,8 +203,36 @@ pub fn run() {
             {
                 use tauri::WebviewWindowBuilder;
 
-                // In production, use the localhost plugin port; in dev, use the Vite dev server.
-                let app_port: u16 = if cfg!(debug_assertions) { 5173 } else { LOCALHOST_PORT };
+                // Something else already answers on this channel's port, so the window would render that
+                // process's build as if it were ours. Report it and quit rather than create the window.
+                #[cfg(not(debug_assertions))]
+                if port_taken {
+                    let message = format!(
+                        "Composer's {} channel serves its app from port {}, which another program is already using — most often a second copy of Composer that is still running.\n\nQuit it and open Composer again.",
+                        release_channel.label(),
+                        localhost_port,
+                    );
+                    log::error!("{}", message);
+                    eprintln!("[composer] {}", message);
+
+                    // `blocking_show` deadlocks on the main thread, and the dialog is the only UI this
+                    // failure has — no window is created.
+                    let handle = app.handle().clone();
+                    std::thread::spawn(move || {
+                        use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
+                        handle
+                            .dialog()
+                            .message(message)
+                            .title("Composer cannot start")
+                            .kind(MessageDialogKind::Error)
+                            .blocking_show();
+                        handle.exit(1);
+                    });
+
+                    return Ok(());
+                }
+
+                let app_port = webview_port(&app.config().identifier);
                 let url: tauri::Url = format!("http://localhost:{}", app_port).parse().unwrap();
                 let main_window = WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::External(url))
                     .title("Composer")
@@ -206,6 +277,6 @@ pub fn run() {
 
             Ok(())
         })
-        .run(tauri::generate_context!())
+        .run(context)
         .expect("error while running tauri application");
 }

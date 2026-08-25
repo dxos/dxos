@@ -27,6 +27,7 @@ import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 import { createConfig as createTestConfig } from '../../../vitest.base.config.ts';
 import { bootChunking } from './src/vite/boot-chunking.ts';
 import { bootMarkPath, channelFaviconPlugin, channelVariant } from './src/vite/channel-branding.ts';
+import { debugPortSidecarPlugin, resolveDebugPortSession } from './src/vite/debug-port.ts';
 import { optimizeDepsInclude } from './src/vite/optimize-deps.ts';
 import { traceBootLeak } from './src/vite/trace-boot-leak.ts';
 
@@ -36,6 +37,8 @@ const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
 // `DX_PLUGIN_SET=production` swaps in plugin-defs.production.tsx at build time (not a runtime flag),
 // so a non-shipped plugin never enters the bundle.
 const isProductionPluginSet = process.env.DX_PLUGIN_SET === 'production';
+// Non-empty only when a dev server is launched with the debug-port flag; see `src/vite/debug-port.ts`.
+const debugPortSession = resolveDebugPortSession();
 const pluginSetFile = isProductionPluginSet ? 'src/plugin-defs.production.tsx' : 'src/plugin-defs.tsx';
 
 const rootDir = searchForWorkspaceRoot(process.cwd());
@@ -47,39 +50,51 @@ const dirname = import.meta.dirname;
 // Boot-path chunk grouping; `entry` is the page whose static closure defines the boot set.
 const boot = bootChunking({ entry: path.resolve(dirname, 'src/main.tsx') });
 
-// Only these packages' default-condition entry is free of top-level await; the `browser` one imports
-// `.wasm` as a module.
-const SYNC_WASM_PACKAGES = ['@automerge/automerge', '@automerge/automerge-subduction'];
+// These packages' `browser`-conditioned entrypoints initialize their wasm with top-level await.
+// Besides its bundle cost, top-level await is what trips WebKit's out-of-order evaluation under
+// concurrent dynamic imports before Safari 27 (TDZ, "undefined is not an object" at plugin
+// activation: https://bugs.webkit.org/show_bug.cgi?id=242740, fixed by the module-loader rewrite
+// in https://github.com/WebKit/WebKit/pull/57827). Resolving to `slim` and initializing explicitly
+// per realm via `initAutomergeWasm()` before the client boots avoids both.
+const SLIM_WASM_PACKAGES = ['@automerge/automerge', '@automerge/automerge-repo', '@automerge/automerge-subduction'];
 
 /**
- * Resolves {@link SYNC_WASM_PACKAGES} without the `browser` condition, selecting their
- * synchronous-init entrypoints so no top-level await enters the module graph.
+ * Resolves {@link SLIM_WASM_PACKAGES} to `slim`, and their subpaths without the `browser`
+ * condition — subduction's `browser`-conditioned `/slim` is still the top-level-await bundler
+ * glue, so pinning the non-browser resolution keeps one wasm instance shared by every importer.
  */
-// TODO(wittjosiah): Remove the need for this rather than waiting on a WebKit fix — either the
-//  automerge wasm packages stop requiring top-level await, or our bundling and dependencies change
-//  so the TDZ is unreachable. Only `serve` needs it, but the Tauri app renders in a WebKit web
-//  view, so that covers dev there too.
-const syncWasmInit = (): PluginOption => {
+const slimWasm = (): PluginOption => {
   // `browser` is deliberately absent; the rest mirrors what vite would apply for the client.
   const resolver = new ResolverFactory({ conditionNames: ['source', 'import', 'module', 'default'] });
+  let isBuild = false;
 
   return {
-    name: 'dxos-sync-wasm-init',
+    name: 'dxos-slim-wasm',
     enforce: 'pre',
-    // The base64 entry costs ~33% over the binary, which a production bundle must not pay.
-    apply: 'serve',
+    configResolved: (config) => {
+      isBuild = config.command === 'build';
+    },
     resolveId: {
       order: 'pre',
       handler: (source, importer) => {
-        // Subpaths too: `./slim` re-exports the same wasm glue as the package root, so redirecting
-        // only the root would split the two across separate wasm instances and leave the signer
-        // that `/slim` hands out uninitialized.
-        const matched = SYNC_WASM_PACKAGES.some((pkg) => source === pkg || source.startsWith(`${pkg}/`));
-        if (!importer || !matched) {
+        if (!importer) {
           return null;
         }
-
-        const resolved = resolver.sync(path.dirname(importer), source);
+        const pkg = SLIM_WASM_PACKAGES.find((name) => source === name || source.startsWith(`${name}/`));
+        if (!pkg) {
+          return null;
+        }
+        // automerge-repo is redirected only at build: a serve-time redirect would hand out a raw
+        // `/@fs` path that bypasses its optimizer chunk, and repo's dist imports CJS deps
+        // (`debug`, …) that only the prebundle's ESM interop makes importable. The prebundled
+        // fullfat chunk's automerge/subduction imports are externalized and still land here.
+        if (pkg === '@automerge/automerge-repo' && !isBuild) {
+          return null;
+        }
+        // Subpaths resolve as requested (`/slim`, `/slim/next`); asset requests (`?url`) fail the
+        // resolver and fall through to vite.
+        const target = source === pkg ? `${pkg}/slim` : source;
+        const resolved = resolver.sync(path.dirname(importer), target);
         return resolved.error || !resolved.path ? null : resolved.path;
       },
     },
@@ -134,7 +149,7 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   }),
   // WebKit evaluates a module before its dependencies when a graph reached by concurrent dynamic
   // imports contains top-level await, leaving bindings in TDZ.
-  syncWasmInit(),
+  slimWasm(),
   // Dev log file sink (serve only) + Rolldown log-meta injection (serve + build).
   DxosLogPlugin(),
   wasm(),
@@ -152,6 +167,8 @@ export default defineConfig((env) => ({
     // coordinator instead of attaching to a stale-code instance (SharedWorkers are keyed by
     // URL + name). Empty in production builds — the name must stay stable across deploys.
     __DX_DEV_SERVER_BOOT_ID__: JSON.stringify(env.command === 'serve' ? Date.now().toString(36) : ''),
+    // Hardcoded empty for `build`: the port is arbitrary eval and must not reach a deployed origin.
+    __DX_DEBUG_PORT_SESSION__: JSON.stringify(env.command === 'serve' ? debugPortSession : ''),
   },
   server: {
     host: true,
@@ -272,10 +289,13 @@ export default defineConfig((env) => ({
     },
   },
   optimizeDeps: {
-    // The wasm packages `syncWasmInit` redirects must not be pre-bundled: the optimizer resolves
+    // The wasm packages `slimWasm` redirects must not be pre-bundled: the optimizer resolves
     // with its own pipeline (the `browser` condition, so the bundler entry) and importers would
-    // land on that chunk's top-level await regardless of what the plugin resolves.
-    exclude: ['@dxos/wa-sqlite', ...SYNC_WASM_PACKAGES],
+    // land on that chunk's top-level await regardless of what the plugin resolves. automerge-repo
+    // is deliberately NOT excluded: it has CJS deps (`debug`, …) that need the prebundle's ESM
+    // interop, and its prebundled chunk's externalized automerge/subduction imports still resolve
+    // through `slimWasm` at serve time.
+    exclude: ['@dxos/wa-sqlite', '@automerge/automerge', '@automerge/automerge-subduction'],
     // The full set of dep entrypoints the app reaches, so vite's optimize-deps phase pre-bundles
     // them up front rather than discovering them mid-load (when a dynamic import unwraps a new
     // subpath), which forces a full page reload with the "Discovered new dependencies" banner —
@@ -418,6 +438,9 @@ export default defineConfig((env) => ({
         });
       },
     },
+
+    // Dev-only: publish the debug-port session id for an agent that cannot read this process's env.
+    debugPortSidecarPlugin(debugPortSession, rootDir),
 
     // Dev-only: serve forensics test profile for recovery import testing.
     {

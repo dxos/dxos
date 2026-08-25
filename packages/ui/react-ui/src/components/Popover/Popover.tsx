@@ -35,6 +35,7 @@ import { RemoveScroll } from 'react-remove-scroll';
 
 import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
+import { ColumnContext } from '../Column/ColumnContext';
 import {
   POPOVER_NAME,
   PopoverProvider,
@@ -222,7 +223,11 @@ const PopoverPortal = (props: PopoverScopedProps<PopoverPortalProps>) => {
     <PortalProvider scope={__scopePopover} forceMount={forceMount}>
       <Presence present={forceMount || context.open}>
         <PortalPrimitive asChild container={container}>
-          {children}
+          {/* The portal escapes the declaring tree's DOM, but React context follows the element tree,
+              so content declared inside a Column would otherwise believe it still has that host's
+              gutter and place itself in a content track no ancestor provides — rendering flush
+              against the popover's own edges. */}
+          <ColumnContext.Provider value={false}>{children}</ColumnContext.Provider>
         </PortalPrimitive>
       </Presence>
     </PortalProvider>

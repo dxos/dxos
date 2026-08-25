@@ -936,6 +936,15 @@ export type CreateExtensionOptions<TMatched = Node.Node, R = never, Id extends s
   url?: UrlBinding;
 };
 
+/** Marks an extension body's first run; which bodies ran is not derivable from the extension list. */
+const markBodyRun = (ran: Set<string>, extensionId: string, kind: string): void => {
+  if (ran.has(kind) || typeof performance === 'undefined') {
+    return;
+  }
+  ran.add(kind);
+  performance.mark(`graph-body:${kind}:${extensionId}`);
+};
+
 /**
  * Run an Effect synchronously with the provided context.
  * Defects are caught, logged, and the fallback value is returned.
@@ -967,8 +976,11 @@ export const createExtension = <TMatched = Node.Node, R = never, const Id extend
 ): Effect.Effect<BuilderExtension[], never, R> =>
   Effect.map(Effect.context<R>(), (context) => {
     const { id, match, actions, actionGroups, connector, resolver, relation, position, url } = options;
+    const bodiesRun = new Set<string>();
 
-    const connectorExtension = connector ? createConnectorWithRuntime(id, match, connector, context) : undefined;
+    const connectorExtension = connector
+      ? createConnectorWithRuntime(id, match, connector, context, bodiesRun)
+      : undefined;
 
     const actionsExtension = actions
       ? (node: Atom.Atom<Option.Option<Node.Node>>) =>
@@ -976,13 +988,14 @@ export const createExtension = <TMatched = Node.Node, R = never, const Id extend
             Function.pipe(
               get(node),
               Option.flatMap((matchedNode) => match(matchedNode, get)),
-              Option.map((matched) =>
-                runEffectSyncWithFallback(actions(matched, get), context, id, []).map((action) => ({
+              Option.map((matched) => {
+                markBodyRun(bodiesRun, id, 'actions');
+                return runEffectSyncWithFallback(actions(matched, get), context, id, []).map((action) => ({
                   ...action,
                   // Attach captured context for action execution.
                   _actionContext: context,
-                })),
-              ),
+                }));
+              }),
               Option.getOrElse(() => []),
             ),
           )
@@ -994,14 +1007,15 @@ export const createExtension = <TMatched = Node.Node, R = never, const Id extend
             Function.pipe(
               get(node),
               Option.flatMap((matchedNode) => match(matchedNode, get)),
-              Option.map((matched) =>
-                runEffectSyncWithFallback(actionGroups(matched, get), context, id, []).map((group) => ({
+              Option.map((matched) => {
+                markBodyRun(bodiesRun, id, 'actionGroups');
+                return runEffectSyncWithFallback(actionGroups(matched, get), context, id, []).map((group) => ({
                   ...group,
                   // Attach captured context to the group's child actions so they execute with the
                   // extension's services (e.g. Capability.Service) even without an explicit runner.
                   actions: group.actions?.map((action) => ({ ...action, _actionContext: context })),
-                })),
-              ),
+                }));
+              }),
               Option.getOrElse(() => []),
             ),
           )
@@ -1009,7 +1023,10 @@ export const createExtension = <TMatched = Node.Node, R = never, const Id extend
 
     const resolverExtension = resolver
       ? (nodeId: string) =>
-          Atom.make((get) => runEffectSyncWithFallback(resolver(nodeId, get), context, id, null) ?? null)
+          Atom.make((get) => {
+            markBodyRun(bodiesRun, id, 'resolver');
+            return runEffectSyncWithFallback(resolver(nodeId, get), context, id, null) ?? null;
+          })
       : undefined;
 
     return createExtensionRaw({
@@ -1053,13 +1070,17 @@ const createConnectorWithRuntime = <TData, R>(
   matcher: (node: Node.Node, get: Atom.AtomContext) => Option.Option<TData>,
   factory: (data: TData, get: Atom.AtomContext) => Effect.Effect<Node.NodeArg<any>[], never, R>,
   context: Context.Context<R>,
+  bodiesRun: Set<string>,
 ): ConnectorExtension => {
   return (node: Atom.Atom<Option.Option<Node.Node>>) =>
     Atom.make((get) =>
       Function.pipe(
         get(node),
         Option.flatMap((matchedNode) => matcher(matchedNode, get)),
-        Option.map((data) => runEffectSyncWithFallback(factory(data, get), context, extensionId, [])),
+        Option.map((data) => {
+          markBodyRun(bodiesRun, extensionId, 'connector');
+          return runEffectSyncWithFallback(factory(data, get), context, extensionId, []);
+        }),
         Option.getOrElse(() => []),
       ),
     );

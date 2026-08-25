@@ -20,6 +20,8 @@ export type DebugPortStartOptions = {
   /** Resolved at each command so a late-booting client is picked up; defaults to the mounted devtools hook. */
   scope?: () => DebugPortScope;
   origin?: string;
+  /** Use this id instead of minting one; callers that omit it get a fresh random id per activation. */
+  session?: string;
   /** Additional sink for the loop's lines, for hosts with no log surface of their own (the recovery page). */
   onLog?: (line: string) => void;
   /**
@@ -75,9 +77,11 @@ const clearPersisted = (): void => {
 /**
  * Start/stop handle for the agent debug port.
  *
- * The port evaluates arbitrary code in the page, so it is never started implicitly: activation is
- * always an explicit gesture, the session id is regenerated each time, and nothing is persisted —
- * a reload leaves it stopped.
+ * The port evaluates arbitrary code in the page, so activation is always a deliberate act: flipping
+ * the switch in the running app, or launching a dev server with the debug-port flag (compiled out of
+ * production builds, so it cannot reach a deployed origin). The flag's caller knows the session id
+ * up front only when it supplied `DX_DEBUG_PORT_SESSION`; with `DX_DEBUG_PORT` alone the id is
+ * generated and read back from `temp/debug-port.json`.
  */
 export interface DebugPortController {
   getStatus(): DebugPortStatus;
@@ -111,7 +115,7 @@ class DebugPortControllerImpl implements DebugPortController {
   }
 
   start(options: DebugPortStartOptions = {}): string {
-    return this.#run(randomSession(), options);
+    return this.#run(options.session ?? randomSession(), options);
   }
 
   resume(options: DebugPortStartOptions = {}): string | undefined {

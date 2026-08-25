@@ -209,8 +209,8 @@ const getEntityKeyDXNs = (entity: Entity.Unknown): DXN.DXN[] => {
   }
   const version = meta?.version;
   const dxns: DXN.DXN[] = [];
-  // `key` may be either a raw nsid (`org.example.function`) or an already-canonical
-  // DXN (`dxn:org.example.function`); normalize to the bare nsid for construction.
+  // `key` may be either a raw nsid (`com.example.function`) or an already-canonical
+  // DXN (`dxn:com.example.function`); normalize to the bare nsid for construction.
   const nsid = DXN.isDXN(key) ? key.slice('dxn:'.length) : key;
   const unversioned = DXN.tryMake(`dxn:${nsid}`);
   if (unversioned != null) {
@@ -266,7 +266,8 @@ const normalizeURI = (uri: string): URI.URI => DXN.tryMake(uri) ?? EID.tryParse(
  * - `from` and `options` clauses — unwrapped; scope is ignored (a direct registry query always
  *   targets the registry's own entities).
  *
- * Server-side concerns such as traversal, ordering, and text/timestamp filters are not supported.
+ * Full-text filters evaluate in memory as case-insensitive all-terms containment, not ranked FTS.
+ * Vector search, traversal, ordering, and timestamp filters are not supported.
  */
 class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
   readonly #registry: Registry.Registry;

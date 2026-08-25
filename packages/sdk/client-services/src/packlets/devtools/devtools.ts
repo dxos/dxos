@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 import * as EffectStream from 'effect/Stream';
 
 import { Event as AsyncEvent } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
@@ -101,7 +100,7 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
   ['DevtoolsHost.subscribeToKeyringKeys'](
     _request: DevtoolsHost.SubscribeToKeyringKeysRequest,
   ): EffectStream.Stream<DevtoolsHost.SubscribeToKeyringKeysResponse, Error> {
-    return toEffectStream(subscribeToKeyringKeys({ keyring: this.params.context.keyring }));
+    return subscribeToKeyringKeys({ keyring: this.params.context.keyring });
   }
 
   ['DevtoolsHost.subscribeToCredentialMessages'](
@@ -113,7 +112,7 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
   ['DevtoolsHost.subscribeToSpaces'](
     request: DevtoolsHost.SubscribeToSpacesRequest,
   ): EffectStream.Stream<SubscribeToSpacesResponse, Error> {
-    return toEffectStream(subscribeToSpaces(this.params.context, request));
+    return subscribeToSpaces(this.params.context, request);
   }
 
   ['DevtoolsHost.subscribeToItems'](
@@ -125,17 +124,17 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
   ['DevtoolsHost.subscribeToFeeds'](
     request: DevtoolsHost.SubscribeToFeedsRequest,
   ): EffectStream.Stream<DevtoolsHost.SubscribeToFeedsResponse, Error> {
-    return toEffectStream(subscribeToFeeds(this.params.context, request));
+    return subscribeToFeeds(this.params.context, request);
   }
 
   ['DevtoolsHost.subscribeToFeedBlocks'](
     request: DevtoolsHost.SubscribeToFeedBlocksRequest,
   ): EffectStream.Stream<SubscribeToFeedBlocksResponse, Error> {
-    return toEffectStream(subscribeToFeedBlocks({ feedStore: this.params.context.feedStore }, request));
+    return subscribeToFeedBlocks({ feedStore: this.params.context.feedStore }, request);
   }
 
   ['DevtoolsHost.subscribeToMetadata'](): EffectStream.Stream<SubscribeToMetadataResponse, Error> {
-    return toEffectStream(subscribeToMetadata({ context: this.params.context }));
+    return subscribeToMetadata({ context: this.params.context });
   }
 
   ['DevtoolsHost.getSpaceSnapshot'](
@@ -168,22 +167,20 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
   }
 
   ['DevtoolsHost.subscribeToSignalStatus'](): EffectStream.Stream<DevtoolsHost.SubscribeToSignalStatusResponse, Error> {
-    return toEffectStream(subscribeToNetworkStatus({ signalManager: this.params.context.signalManager }));
+    return subscribeToNetworkStatus({ signalManager: this.params.context.signalManager });
   }
 
   ['DevtoolsHost.subscribeToSignal'](): EffectStream.Stream<SignalResponse, Error> {
-    return toEffectStream(
-      subscribeToSignal({
-        signalManager: this.params.context.signalManager,
-        networkManager: this.params.context.networkManager,
-      }),
-    );
+    return subscribeToSignal({
+      signalManager: this.params.context.signalManager,
+      networkManager: this.params.context.networkManager,
+    });
   }
 
   ['DevtoolsHost.subscribeToSwarmInfo'](
     _request: DevtoolsHost.SubscribeToSwarmInfoRequest,
   ): EffectStream.Stream<DevtoolsHost.SubscribeToSwarmInfoResponse, Error> {
-    return toEffectStream(subscribeToSwarmInfo({ networkManager: this.params.context.networkManager }));
+    return subscribeToSwarmInfo({ networkManager: this.params.context.networkManager });
   }
 
   ['DevtoolsHost.exportSqliteDatabase'](): Effect.Effect<DevtoolsHost.ExportSqliteDatabaseResponse, Error> {
@@ -212,17 +209,3 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
     });
   }
 }
-
-/**
- * Bridges a codec-protobuf {@link Stream} into an Effect {@link EffectStream.Stream}.
- * The underlying stream is closed (disposing its resources) when the Effect stream terminates.
- */
-const toEffectStream = <T>(stream: Stream<T>): EffectStream.Stream<T, Error> =>
-  EffectEx.streamFromEmitter<T, Error>((emit) => {
-    stream.subscribe(
-      (message) => void emit.single(message),
-      (error) => (error ? void emit.fail(error) : void emit.end()),
-    );
-
-    return Effect.promise(() => stream.close());
-  });

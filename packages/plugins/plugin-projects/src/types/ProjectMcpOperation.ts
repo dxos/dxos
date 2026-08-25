@@ -11,20 +11,13 @@ import * as Project from '@dxos/compute/Project';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import { meta } from '#meta';
-import { CodeProjectSkill } from '#skills';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
 /**
  * Project verbs projected as MCP tools (MILESTONE-5.md §7.2/§7.4).
  *
  * Deliberately a leaf module: it imports only compute/echo/keys, so a remote host (edge
  * operation-service, workerd) can load these definitions without dragging the app-only graph
  * that `ProjectOperation`'s creation verbs pull in (`@dxos/app-framework`,
- * `@dxos/assistant-toolkit`). Placement is about that import graph, not about projectability:
- * `projects.create` is itself projected as `projectCreate` (#12591) and a host satisfies its
- * `Capability.Service` by building a PluginManager, as the CLI gateway does.
+ * `@dxos/assistant-toolkit`).
  *
  * Exported as its own namespace (not re-exported through `ProjectOperation`): the namespace-export
  * lint rule forbids re-exporting an `@import-as-namespace` module's members individually.
@@ -32,7 +25,7 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
 
 export const ListProjects = Operation.make({
   meta: {
-    key: makeKey('projectList'),
+    key: DXN.make('org.dxos.operation.projects.list'),
     name: 'List Projects',
     description: 'List the projects in the space: id, name, status, description, and whether a task set is linked.',
     icon: 'ph--list-bullets--regular',
@@ -54,11 +47,11 @@ export const ListProjects = Operation.make({
       }),
     ),
   }),
-}).pipe(Operation.mcpTool({ name: 'projectList', safety: 'read', aspect: 'projects', skill: CodeProjectSkill }));
+}).pipe(Operation.mutation('none'));
 
 export const GetProject = Operation.make({
   meta: {
-    key: makeKey('projectGet'),
+    key: DXN.make('org.dxos.operation.projects.get'),
     name: 'Get Project',
     description: 'Read a project in full: status, task-set summary (open/total per set), outline, and artifacts.',
     icon: 'ph--info--regular',
@@ -84,11 +77,11 @@ export const GetProject = Operation.make({
     outline: Schema.optional(Schema.Struct({ id: Schema.String, content: Schema.String })),
     artifacts: Schema.Array(Schema.Struct({ id: Schema.String, typename: Schema.String })),
   }),
-}).pipe(Operation.mcpTool({ name: 'projectGet', safety: 'read', aspect: 'projects', skill: CodeProjectSkill }));
+}).pipe(Operation.mutation('none'));
 
 export const UpdateProject = Operation.make({
   meta: {
-    key: makeKey('projectUpdate'),
+    key: DXN.make('org.dxos.operation.projects.update'),
     name: 'Update Project',
     description: 'Patch a project: name, status, or description.',
     icon: 'ph--pencil-simple--regular',
@@ -104,4 +97,4 @@ export const UpdateProject = Operation.make({
   output: Schema.Struct({
     project: Schema.Unknown,
   }),
-}).pipe(Operation.mcpTool({ name: 'projectUpdate', safety: 'write', aspect: 'projects', skill: CodeProjectSkill }));
+}).pipe(Operation.mutation('write'));

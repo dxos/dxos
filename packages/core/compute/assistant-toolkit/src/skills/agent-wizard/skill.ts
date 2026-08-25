@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
@@ -30,15 +31,15 @@ const make = () =>
         Agents can subscribe to emails, and durable work products belong to a project's artifacts.
 
         Automation (subscriptions and an optional cron schedule) is compiled into routines, not stored
-        on the agent: pass subscriptions when creating the agent, and use the sync-automation tool with
+        on the agent: pass subscriptions when creating the agent, and use the ${Operation.toolName(SyncAutomation)} tool with
         the FULL desired config to change automation later (a cron expression schedules periodic wakes,
         e.g. \`0 9 * * *\` for daily at 09:00; \`enabled\` on the agent is applied to every trigger).
 
         The agent itself is an ECHO object and can be edited like any other object using the database skill.
         You can edit the agent's instructions, name, and other properties directly.
-        If you edit the agent's \`enabled\` field, you MUST call sync-automation afterward so triggers pick it up.
+        If you edit the agent's \`enabled\` field, you MUST call ${Operation.toolName(SyncAutomation)} afterward so triggers pick it up.
 
-        IMPORTANT: Before attempting to create an agent call the [agent-rules] tool to get the rules for creating an agent.
+        IMPORTANT: Before attempting to create an agent call the [${Operation.toolName(AgentRules)}] tool to get the rules for creating an agent.
       `,
     }),
     tools: Skill.toolDefinitions({ operations: [AgentRules, CreateAgent, SyncAutomation] }),

@@ -16,18 +16,23 @@ import { DXN } from '@dxos/keys';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
 
-import { meta } from '#meta';
-import { CodeProjectSkill } from '#skills';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
 /**
  * Programmatic project creation — the entry point other plugins use to create (and pre-wire)
  * projects without reaching into plugin internals. Resolves the template (blank by default),
  * scaffolds the owned instructions/artifacts graph, and files the project in the Projects section.
  */
 export const Create = Operation.make({
-  meta: { key: makeKey('create'), name: 'Create Project', icon: 'ph--stack--regular' },
+  meta: {
+    // `projectCreate`, not `create`: the whole key derives the tool name, so a bare `create` would
+    // read as `projects-create` — accurate, but the verb alone is too generic to stand on its own.
+    key: DXN.make('org.dxos.operation.projects.create'),
+    name: 'Create Project',
+    description:
+      'Creates a project and its owned graph: agent instructions, an artifacts collection, and a ' +
+      'task set for its tasks. Returns the project with a `taskSet` reference — pass that reference ' +
+      'to taskCreate to record work against it.',
+    icon: 'ph--stack--regular',
+  },
   services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
@@ -41,21 +46,14 @@ export const Create = Operation.make({
     subject: Schema.Array(Schema.String),
     project: Type.getSchema(Project.Project),
   }),
-}).pipe(
-  Operation.mcpTool({
-    name: 'projectCreate',
-    description:
-      'Creates a project and its owned graph: agent instructions, an artifacts collection, and a ' +
-      'task set for its tasks. Returns the project with a `taskSet` reference — pass that reference ' +
-      'to taskCreate to record work against it.',
-    safety: 'write',
-    aspect: 'projects',
-    skill: CodeProjectSkill,
-  }),
-);
+}).pipe(Operation.mutation('write'));
 
 export const CreateChat = Operation.make({
-  meta: { key: makeKey('createChat'), name: 'Create Project Chat', icon: 'ph--chat-text--regular' },
+  meta: {
+    key: DXN.make('org.dxos.operation.projects.createChat'),
+    name: 'Create Project Chat',
+    icon: 'ph--chat-text--regular',
+  },
   services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     project: Type.getSchema(Project.Project),
@@ -73,7 +71,7 @@ export const CreateChat = Operation.make({
 
 export const UpdateProjectTasks = Operation.make({
   meta: {
-    key: makeKey('updateProjectTasks'),
+    key: DXN.make('org.dxos.operation.projects.updateTasks'),
     name: 'Update Project Tasks',
     description:
       "Tracks requests from the given senders as tasks in the project's task set (one task per message, idempotent).",
@@ -97,7 +95,7 @@ export const UpdateProjectTasks = Operation.make({
 
 export const UpdateTravelLog = Operation.make({
   meta: {
-    key: makeKey('updateTravelLog'),
+    key: DXN.make('org.dxos.operation.projects.updateTravelLog'),
     name: 'Update Travel Log',
     description:
       "Regenerates the project's Travel Bookings document from the travel-service messages in the mailbox feed.",
@@ -117,7 +115,7 @@ export const UpdateTravelLog = Operation.make({
 
 export const UpdateInvestorLog = Operation.make({
   meta: {
-    key: makeKey('updateInvestorLog'),
+    key: DXN.make('org.dxos.operation.projects.updateInvestorLog'),
     name: 'Update Investor Log',
     description:
       "Extracts contacts for investor-domain senders and regenerates the project's Investor Conversations document (one section per thread, optional LLM summaries).",
@@ -168,7 +166,7 @@ export type TrackingPipeline = Schema.Schema.Type<typeof TrackingPipeline>;
 
 export const CreateTrackingProject = Operation.make({
   meta: {
-    key: makeKey('createTrackingProject'),
+    key: DXN.make('org.dxos.operation.projects.createTracking'),
     name: 'Create Tracking Project',
     description:
       "Creates a project that follows a message's sender (or their whole domain): scaffolds the project, wires a feed-triggered routine binding the chosen pipeline, and backfills from the existing feed.",

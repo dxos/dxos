@@ -20,6 +20,7 @@ export * from './composite-key';
 export * from './deep';
 export * from './defer-function';
 export * from './defer';
+export * from './download';
 export * from './entry';
 export * from './error-format';
 export * from './filename';

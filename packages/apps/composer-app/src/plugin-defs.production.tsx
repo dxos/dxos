@@ -22,7 +22,8 @@ export type { PluginConfig, State } from './plugin-defs.core';
  */
 export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => [
   ...getCorePlugins({ ...config, isExtensible: false }),
-  AssistantPlugin.make(),
+  // `Agent` and `Sequence` are unfinished, so the curated set does not offer creating them.
+  AssistantPlugin.make({ experimentalTypes: false }),
   MarkdownPlugin.make(),
   ProjectsPlugin.make(),
   ReviewPlugin.make(),

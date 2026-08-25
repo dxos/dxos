@@ -36,11 +36,12 @@
   also matches). It is shipped by the **`dxos` plugin**
   (`tools/claude/plugins/dxos`), enabled for this repo via `extraKnownMarketplaces`
   - `enabledPlugins` in `.claude/settings.json` — it is NOT a `.claude/` hook any
-    more. **Enabling is not installing:** on a fresh machine run
-    `claude plugin install dxos@dxos` once, or every invocation answers
-    `Unknown command`. The plugin's `UserPromptSubmit` hook reads the raw text before the
-    command expands and injects the matching directive, ending with a `BACKEND:`
-    line naming the store — follow the directive and obey that line.
+    more. **Enabling is not installing:** run `bash .claude/scripts/bootstrap-plugins.sh`
+    once per machine — and per cloud container, where `.config/claude-code-setup.sh`
+    runs it — or every invocation answers `Unknown command`. The plugin's
+    `UserPromptSubmit` hook reads the raw text before the command expands and
+    injects the matching directive, ending with a `BACKEND:` line naming the
+    store — follow the directive and obey that line.
   * `/dxos:project` (bare) — status of the CURRENT project: worktree + branch, the
     registry entry's status/docs/PRs, uncommitted files (as clickable links),
     and the next action.

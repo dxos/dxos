@@ -361,13 +361,13 @@ describe('QueryExecutor.matchesHint — nested Filter.in(projection)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// QueryExecutor.matchesHint — id-rooted relation traversal (companion chat history)
+// QueryExecutor.matchesHint — id-rooted relation traversal
 //
-// The companion chat-history toolbar queries:
-//   Query.select(Filter.id(primary.id)).targetOf(CompanionTo).source()
-// i.e. it is rooted at a FIXED object id and traverses inbound relations. When a new chat +
-// CompanionTo relation are persisted, the primary object is NOT re-indexed, so the indexing hint
-// mentions only the new relation/chat (their ids + the relation typename) — not the primary's id.
+// The shape:
+//   Query.select(Filter.id(primary.id)).targetOf(SomeRelation).source()
+// i.e. it is rooted at a FIXED object id and traverses inbound relations. When a new source +
+// relation are persisted, the primary object is NOT re-indexed, so the indexing hint mentions
+// only the new relation/source (their ids + the relation typename) — not the primary's id.
 // The user's hypothesis: such a query is skipped by hint matching because its only constrained
 // dimension (objectIds = {primary.id}) does not overlap the hint.
 // ---------------------------------------------------------------------------

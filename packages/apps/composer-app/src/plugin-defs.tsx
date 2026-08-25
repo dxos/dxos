@@ -25,6 +25,7 @@ import * as DoctorPlugin from '@dxos/plugin-doctor/DoctorPlugin';
 import * as DuffelPlugin from '@dxos/plugin-duffel/DuffelPlugin';
 import * as ExcalidrawPlugin from '@dxos/plugin-excalidraw/ExcalidrawPlugin';
 import * as ExplorerPlugin from '@dxos/plugin-explorer/ExplorerPlugin';
+import * as FileSystemPlugin from '@dxos/plugin-file-system/FileSystemPlugin';
 import * as FilePlugin from '@dxos/plugin-file/FilePlugin';
 import * as FreeqPlugin from '@dxos/plugin-freeq/FreeqPlugin';
 import * as GamePlugin from '@dxos/plugin-game/GamePlugin';
@@ -41,13 +42,13 @@ import * as KanbanPlugin from '@dxos/plugin-kanban/KanbanPlugin';
 import * as LaMetricPlugin from '@dxos/plugin-lametric/LaMetricPlugin';
 import * as LibraryPlugin from '@dxos/plugin-library/LibraryPlugin';
 import * as LinearPlugin from '@dxos/plugin-linear/LinearPlugin';
+import * as LingoPlugin from '@dxos/plugin-lingo/LingoPlugin';
 import * as MagazinePlugin from '@dxos/plugin-magazine/MagazinePlugin';
 import * as MapPluginSolid from '@dxos/plugin-map-solid/MapPlugin';
 import * as MapPlugin from '@dxos/plugin-map/MapPlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as MeetingPlugin from '@dxos/plugin-meeting/MeetingPlugin';
 import * as MermaidPlugin from '@dxos/plugin-mermaid/MermaidPlugin';
-import * as NativeFilesystemPlugin from '@dxos/plugin-native-filesystem/NativeFilesystemPlugin';
 import * as OsrmPlugin from '@dxos/plugin-osrm/OsrmPlugin';
 import * as PaymentsPlugin from '@dxos/plugin-payments/PaymentsPlugin';
 import * as PipelinePlugin from '@dxos/plugin-pipeline/PipelinePlugin';
@@ -57,7 +58,6 @@ import * as ReviewPlugin from '@dxos/plugin-review/ReviewPlugin';
 import * as SamplePlugin from '@dxos/plugin-sample/SamplePlugin';
 import * as SandboxPlugin from '@dxos/plugin-sandbox/SandboxPlugin';
 import * as ScriptPlugin from '@dxos/plugin-script/ScriptPlugin';
-import * as SearchPlugin from '@dxos/plugin-search/SearchPlugin';
 import * as SequencerPlugin from '@dxos/plugin-sequencer/SequencerPlugin';
 import * as SheetPlugin from '@dxos/plugin-sheet/SheetPlugin';
 import * as SidekickPlugin from '@dxos/plugin-sidekick/SidekickPlugin';
@@ -115,7 +115,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
     // listed under labs below; the dedupe at the end collapses the two entries.
     TranscriptionPlugin.meta.profile.key,
 
-    // Dev-only defaults (`isDev`: the `dev` environment or local `DX_DEV=true` — not nightly, not a
+    // Dev-only defaults (`isDev`: the `dev` environment or local `DX_DEV=true` — not preview, not a
     // plain `serve`). Sidekick is also gated on `isDev` for availability, not just defaults (below).
     isDev && [
       DebugPlugin.meta.profile.key,
@@ -127,6 +127,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       CodePlugin.meta.profile.key,
       DuffelPlugin.meta.profile.key,
       LibraryPlugin.meta.profile.key,
+      LingoPlugin.meta.profile.key,
       MagazinePlugin.meta.profile.key,
       GamePlugin.meta.profile.key,
       IdeogramPlugin.meta.profile.key,
@@ -156,7 +157,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
     .filter((key, index, keys) => keys.indexOf(key) === index);
 
 /**
- * Full Composer plugin registry (nightly and dev): shared core infrastructure plus every content
+ * Full Composer plugin registry (preview and dev): shared core infrastructure plus every content
  * plugin. `plugin-defs.production.tsx` is the curated set `composer.space` ships.
  */
 export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
@@ -200,7 +201,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     MermaidPlugin.make(),
     // Desktop-only, and not core: the native file picker is a full-catalog capability, unlike
     // plugin-native's host integration.
-    isTauri && !isMobile && !isPopover && NativeFilesystemPlugin.make(),
+    isTauri && !isMobile && !isPopover && FileSystemPlugin.make(),
     OsrmPlugin.make(),
     TasksPlugin.make(),
     PaymentsPlugin.make(),
@@ -212,7 +213,6 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     isLocal && SamplePlugin.make(),
     SandboxPlugin.make(),
     ScriptPlugin.make(),
-    SearchPlugin.make(),
     isDev && SidekickPlugin.make(),
     SheetPlugin.make(),
     IllustratorPlugin.make(),
@@ -234,6 +234,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     GitHubPlugin.make(),
     IrohBeaconPlugin.make(),
     LinearPlugin.make(),
+    LingoPlugin.make(),
     SequencerPlugin.make(),
     SlackPlugin.make(),
     SpacetimePlugin.make(),

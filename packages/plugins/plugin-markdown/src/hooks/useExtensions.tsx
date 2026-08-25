@@ -33,9 +33,9 @@ import {
   formattingKeymap,
   linkTooltip,
   listener,
-  replacer,
   selectionState,
   snippets,
+  substitutions,
   xmlTags,
 } from '@dxos/ui-editor';
 import { type EditorViewMode, type RenderCallback } from '@dxos/ui-editor/types';
@@ -227,7 +227,7 @@ const createBaseExtensions = ({
           },
           setWidgets,
         }),
-        replacer(),
+        substitutions(),
       ],
     );
   }

@@ -7,7 +7,7 @@ tags:
 tasks:
   build:
     deps:
-      - prebuild
+      - ~:#prebuild
   gen-buf:
     command: buf generate
     inputs:
@@ -27,6 +27,8 @@ tasks:
       - gen-buf
     outputs:
       - src/proto/gen
+    tags:
+      - prebuild
   test:
     deps:
-      - prebuild
+      - ~:#prebuild
