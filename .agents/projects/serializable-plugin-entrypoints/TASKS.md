@@ -37,28 +37,33 @@ Design: [DESIGN.md](./DESIGN.md)
       points — without it every module body a descriptor names reads as an unused file (this is what
       made CI's `check` job red).
 
-## Phase 2 — retire the TypeScript entrypoints
+## Phase 2 — retire the TypeScript entrypoints (DONE)
 
-Blockers measured against the real build (details + repro in DESIGN.md):
+Every blocker below was measured against the real build; the resolutions are recorded in DESIGN.md.
 
-- [ ] **Distribute the ambient declaration.** Proven: TS applies a wildcard `declare module` only to
-      NON-relative specifiers, so a plugin must import its own descriptor as
-      `@dxos/plugin-x/dxplugin.jsonc` (works); and the declaration must be in the consumer's
-      program — shipping it from app-framework and naming it in the consumer's tsconfig `types` did
-      NOT load it, while the same file in the plugin's own `src/` did. Pick the distribution route
-      (a resolving `types` entry, or `@dxos/typings`, which is already in every plugin's tsconfig).
-- [ ] **Decide what the published lib does with the descriptor.** With `meta.ts` importing it, the
-      build is green but rolldown externalizes the specifier — `dist/lib/meta.mjs` ships
-      `import descriptor from '@dxos/plugin-markdown/dxplugin.jsonc'`, which resolves under vite and
-      fails under plain node (the edge/agent hosts `plugin.node.ts` exists for). Either every
-      non-vite host installs a jsonc loader, or the lib build inlines the descriptor.
-- [ ] **Then delete `plugin.tsx` / `plugin.node.ts` / `plugin.workerd.ts`.** Nothing else blocks it:
-      `platforms` expresses the split and the fidelity test proves both server variants reproduce.
-- [ ] Repoint `composer-app` (and the plugin-registry catalog) at
-      `Plugin.fromManifest(await import('@dxos/plugin-x/dxplugin.jsonc'))`.
-- [ ] Fold `dx.config.ts` into the descriptor — `Config2.Descriptor` is a superset of
-      `Config2.Config`'s `plugin` block, so `loadDxConfig` and `composerPlugin`'s manifest emit
-      should read the descriptor instead.
+- [x] **Distribute the ambient declaration.** Landed in `@dxos/typings`
+      (`packages/common/typings/src/dxplugin.d.ts`, re-exported from its `index.d.ts`), which is
+      already in every plugin's tsconfig. app-framework provably cannot host it: a wildcard
+      `declare module` loads only from a file in the consumer's own program, and a types-only
+      `exports` subpath breaks `composer-app:bundle`, whose import map `this.resolve`s every export
+      under runtime conditions.
+- [x] **Decide what the published lib does with the descriptor.** `dxplugin.jsonc` is excluded from
+      the library build's `external` predicate, so the loader compiles it into
+      `dist/lib/chunk-dxplugin.mjs` with each `src` as `new URL("chunk-<module>.mjs",
+      import.meta.url)` — real emitted assets any runtime can import, no jsonc loader required at
+      the host. A host that reads the raw file instead (the bun-compiled CLI) passes
+      `baseUrl: new URL('..', import.meta.url)`.
+- [x] **Deleted `plugin.tsx` / `plugin.node.ts` / `plugin.workerd.ts`**, plus `dx.config.ts`, the
+      `src/platform*.ts` split, the `src/capabilities/{index,node,workerd}.ts` barrels and their
+      `#capabilities` subpath, and `export default make`. plugin-markdown now runs entirely off its
+      descriptor; `meta.ts` is `Plugin.getMetaFromDescriptor(descriptor)`.
+- [x] **Platform is detected, not declared.** `Plugin.currentPlatform()` (workerd → node → browser,
+      ordered by how forgeable each signal is — `window` identifies nothing, the node vitest project
+      defines it) replaces the per-plugin `#platform` export; `fromManifest` filters
+      `modules[].platforms` against it, and `platform: 'all'` disables the filter for tests.
+- [x] Four host environments verified: the vite dev server (`/@fs/`), node vitest (file URLs), the
+      storybook browser project (loader registered in `createStorybookProject`), and the app bundle
+      guard (`check-plugin-set.mjs` counts `dxplugin.jsonc` as a plugin body).
 
 ## Phase 3 — migrate the remaining plugins
 

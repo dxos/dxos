@@ -96,9 +96,10 @@ offline, in every editor, and always to the schema the installed SDK validates a
 hosted URL would not. `.vscode/settings.json` also maps `**/dxplugin.jsonc` to it for editors that
 ignore `$schema`.
 
-## What blocks deleting the TypeScript entrypoints
+## What blocked deleting the TypeScript entrypoints (all resolved)
 
-Measured, not assumed — each of these was reproduced against the real build.
+Measured, not assumed — each of these was reproduced against the real build. They are kept here
+because the measurements, not the conclusions, are what justify the shapes that landed.
 
 ### `meta.ts`
 
@@ -121,6 +122,10 @@ What is left is two mechanical facts:
    distribution route — a `types` entry that actually resolves, or `@dxos/typings` (already in every
    plugin's tsconfig `types`, but layered below protocols).
 
+**Resolved** via `@dxos/typings`: `packages/common/typings/src/dxplugin.d.ts`, re-exported from its
+`index.d.ts`. The layering objection does not bite — the declaration only names
+`import('@dxos/protocols').Config2.Descriptor` as a type, which costs no runtime edge.
+
 ### `plugin.tsx` / `plugin.node.ts` / `plugin.workerd.ts`
 
 One real blocker, and it is a **runtime** one, not a type one. With `meta.ts` importing the
@@ -139,6 +144,17 @@ is inlined at build time for the lib output.
 
 Everything else about deleting them is settled: `platforms` already expresses the browser/node/workerd
 split, and the fidelity test asserts the descriptor reproduces both server variants exactly.
+
+**Resolved by inlining**, the second option: `dxplugin.jsonc` is excluded from the library build's
+`external` predicate, so the loader runs on the lib path too and compiles the descriptor into
+`dist/lib/chunk-dxplugin.mjs`, each `src` a `new URL("chunk-<module>.mjs", import.meta.url)` over a
+chunk the same build emitted. No host needs a jsonc loader. A host that deliberately reads the raw
+file — the bun-compiled CLI, which bundles no vite — passes `baseUrl` to `fromManifest` instead.
+
+The `platforms` array then became redundant as *authored* data too: `Plugin.currentPlatform()`
+detects the host (workerd → `process.versions.node` → browser, ordered by how forgeable each signal
+is; `window` identifies nothing, since the node vitest project defines it), so a plugin declares
+which platforms a module supports and never which platform it is running on.
 
 ### Remaining smaller item
 
