@@ -13,7 +13,7 @@ import { type DelegateInvitationCredential, type MemberInfo, getCredentialAssert
 import { failUndefined } from '@dxos/debug';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
-import { PublicKey, SpaceId } from '@dxos/keys';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SwarmNetworkManager, SwarmNetworkManagerService } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';

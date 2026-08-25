@@ -2,12 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import {
-  type AutomergeUrl,
-  type DocumentId,
-  interpretAsDocumentId,
-  stringifyAutomergeUrl,
-} from '@automerge/automerge-repo';
+import { type AutomergeUrl } from '@automerge/automerge-repo';
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, onTestFinished, test } from 'vitest';
@@ -15,7 +10,6 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Context } from '@dxos/context';
 import {
   type DatabaseDirectory,
-  SPACE_ROOT_TYPE,
   SpaceDocVersion,
   type SpaceRoot,
   createIdFromSpaceKey,
