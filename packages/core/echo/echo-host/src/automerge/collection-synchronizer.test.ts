@@ -338,6 +338,43 @@ describe('CollectionSynchronizer', () => {
     const event = await eventPromise;
     expect(event.newDocsAppeared).to.equal(false);
   });
+
+  // Field regression (stuck-sync report): an edge peer's `getAllHeads()` mixes raw commit tips
+  // with fragment heads, so it legitimately reports a superset of the host's change tips —
+  // sharing one head is convergence. Sharing none is real divergence, and only that case may be
+  // reported as `different`; conflating the two either spams repair or hides a stuck document.
+  describe('edge head-set asymmetry', () => {
+    const documentId = 'doc-1' as DocumentId;
+    const localHeads = TEST_HEADS[0];
+    const asEdge = { isEdgePeer: true };
+
+    test('a superset that shares a head is not different', ({ expect }) => {
+      const diff = diffCollectionStateForPeer(
+        { documents: { [documentId]: localHeads } as Record<DocumentId, A.Heads> },
+        {
+          documents: {
+            [documentId]: [...localHeads, ...TEST_HEADS[1], ...TEST_HEADS[2], ...TEST_HEADS[3]],
+          } as Record<DocumentId, A.Heads>,
+        },
+        asEdge,
+      );
+      expect(diff.different).toEqual([]);
+      expect(diff.missingOnLocal).toEqual([]);
+      expect(diff.missingOnRemote).toEqual([]);
+    });
+
+    test('a disjoint head set is different, and stays different when re-diffed', ({ expect }) => {
+      const local = { documents: { [documentId]: localHeads } as Record<DocumentId, A.Heads> };
+      const remote = { documents: { [documentId]: TEST_HEADS[1] } as Record<DocumentId, A.Heads> };
+
+      // The observed failure re-diffs identically every poll: the diff is a pure function of the
+      // two states, so nothing about repeating it converges. Repair has to come from elsewhere.
+      for (const _pass of range(3)) {
+        const diff = diffCollectionStateForPeer(local, remote, asEdge);
+        expect(diff.different).toEqual([documentId]);
+      }
+    });
+  });
 });
 
 const TEST_HEADS = range(4).map((i) => A.getHeads(A.from({ i: i.toString() })));
