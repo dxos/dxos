@@ -3,7 +3,6 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import {
   AppGraphBuilder,
@@ -19,9 +18,9 @@ import {
   Schema,
   SkillDefinition,
   SummarizeExtractor,
+  Translations,
 } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
 
 export const InboxPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
@@ -37,7 +36,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(Schema),
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(SummarizeExtractor),
-  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

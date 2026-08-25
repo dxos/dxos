@@ -14,6 +14,7 @@ import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { MessageExtractor } from '#operations';
+import { translations } from '#translations';
 import { InboxCapabilities } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
@@ -75,3 +76,4 @@ export const InboxSettings = AppCapability.settings(() => import('./settings'), 
   provides: [InboxCapabilities.Settings],
   activatesOn: ActivationEvents.Idle,
 });
+export const Translations = AppCapability.translations(translations);

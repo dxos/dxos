@@ -10,7 +10,12 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
+import { meta } from '#meta';
+import { translations } from '#translations';
 import { RoutineCapabilities } from '#types';
+
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   environments: ['node'],
@@ -26,6 +31,12 @@ export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs'),
   provides: [Capabilities.TraceSink],
 });
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
+});
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent'],
 });
@@ -49,6 +60,7 @@ export const Templates = Capability.lazyModule(
   { provides: [RoutineCapabilities.Template], environments: ['node', 'workerd'] },
   () => import('./templates'),
 );
+export const Translations = AppCapability.translations(translations);
 export const TriggerRuntimeController = Capability.lazyModule(
   'TriggerRuntimeController',
   {

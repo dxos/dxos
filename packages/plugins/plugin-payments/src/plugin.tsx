@@ -3,16 +3,14 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { ReactSurface, Settings } from '#capabilities';
+import { ReactSurface, Settings, Translations } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
 
 export const PaymentsPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(ReactSurface),
   Plugin.addModule(Settings),
-  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

@@ -1,11 +1,11 @@
 //
-// Copyright 2026 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
-import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { meta } from '#meta';
+import { translations } from '#translations';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
@@ -16,7 +16,5 @@ export const PluginAsset = AppCapability.pluginAsset({
   content: pluginSpec,
   mimeType: 'application/x-mdl',
 });
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  activatesOn: ActivationEvents.Idle,
-});
+export const Schema = AppCapability.schema([]);
+export const Translations = AppCapability.translations(translations);

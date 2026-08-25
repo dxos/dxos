@@ -8,7 +8,12 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import * as IllustratorEvents from '@dxos/plugin-illustrator/IllustratorEvents';
 
+import { meta } from '#meta';
+import { translations } from '#translations';
 import { TldrawCapabilities } from '#types';
+
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
 
 // Browser-only: the variant supplies the React article/card components that render a drawing.
 export const DrawingVariant = Capability.lazyModule(
@@ -17,7 +22,14 @@ export const DrawingVariant = Capability.lazyModule(
   () => import('./drawing-variant'),
 );
 
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
+});
 export const TldrawSettings = AppCapability.settings(() => import('./settings'), {
   activatesOn: ActivationEvents.Idle,
   provides: [TldrawCapabilities.Settings],
 });
+export const Translations = AppCapability.translations(translations);

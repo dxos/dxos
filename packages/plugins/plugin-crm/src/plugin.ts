@@ -3,7 +3,6 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import {
   AppGraphBuilder,
@@ -11,16 +10,14 @@ import {
   MailboxAction,
   MailboxProcessor,
   OperationHandler,
+  PluginAsset,
   ProjectTemplates,
   Schema,
   SenderAction,
   SkillDefinition,
+  Translations,
 } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
-
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const CrmPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
@@ -29,19 +26,12 @@ export const CrmPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(MailboxAction),
   Plugin.addModule(MailboxProcessor),
   Plugin.addModule(OperationHandler),
+  Plugin.addModule(PluginAsset),
   Plugin.addModule(ProjectTemplates),
   Plugin.addModule(Schema),
   Plugin.addModule(SenderAction),
   Plugin.addModule(SkillDefinition),
-  Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(
-    AppCapability.pluginAsset({
-      pluginId: meta.profile.key,
-      path: 'PLUGIN.mdl',
-      content: pluginSpec,
-      mimeType: 'application/x-mdl',
-    }),
-  ),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

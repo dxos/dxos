@@ -3,23 +3,20 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import {
   FactStore,
   MailboxProcessor,
   OperationHandler,
+  PluginAsset,
   ProjectTemplates,
   ReactSurface,
   ReplyGenerator,
   Settings,
   SkillDefinition,
+  Translations,
 } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
-
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const BrainPlugin = Plugin.define(meta).pipe(
   // Provisions the per-space FactStore LayerSpec + registry; the mailbox `AnalyzeMailbox` operation
@@ -32,21 +29,14 @@ export const BrainPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),
   // Contributes the "Mailbox Facts" project template: a scheduled AnalyzeMailbox routine plus
   // brain-skill chats, scoped to one project.
+  Plugin.addModule(PluginAsset),
   Plugin.addModule(ProjectTemplates),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(ReplyGenerator),
   // Owns the fact-analysis settings (model/provider/strict) and registers them in the settings UI.
   Plugin.addModule(Settings),
   Plugin.addModule(SkillDefinition),
-  Plugin.addModule(
-    AppCapability.pluginAsset({
-      pluginId: meta.profile.key,
-      path: 'PLUGIN.mdl',
-      content: pluginSpec,
-      mimeType: 'application/x-mdl',
-    }),
-  ),
-  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

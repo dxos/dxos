@@ -3,7 +3,6 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import {
   AppGraphBuilder,
@@ -12,10 +11,10 @@ import {
   ReactSurface,
   SpotlightDismiss,
   State,
+  Translations,
   UrlHandler,
 } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
 
 export type SimpleLayoutPluginOptions = {
   /** Determines if running in popover window context (hides mobile-specific UI). */
@@ -29,8 +28,8 @@ export const SimpleLayoutPlugin = Plugin.define<SimpleLayoutPluginOptions>(meta)
   Plugin.addModule(ReactSurface),
   Plugin.addModule(SpotlightDismiss),
   Plugin.addModule(State),
+  Plugin.addModule(Translations),
   Plugin.addModule(UrlHandler),
-  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.make,
 );
 

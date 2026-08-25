@@ -8,6 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
+import { translations } from '#translations';
 import { SimpleLayoutCapabilities } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
@@ -35,6 +36,7 @@ export const State = Capability.lazyModule(
   },
   () => import('./state'),
 );
+export const Translations = AppCapability.translations(translations);
 export const UrlHandler = Capability.lazyModule(
   'UrlHandler',
   {
