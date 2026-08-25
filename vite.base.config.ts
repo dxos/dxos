@@ -20,6 +20,9 @@ import type { Reporter, TestModule, TestRunEndReason } from 'vitest/node';
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
 import PluginImportSource from '@dxos/vite-plugin-import-source';
 
+// Imported by path, not by package: `@dxos/app-framework` itself builds through this config, so a
+// package import would be a cycle. The loader is dependency-free for exactly this reason.
+import { dxPluginManifest } from './packages/sdk/app-framework/src/vite-plugin/dxplugin/index.ts';
 // NOTE: Imported by relative path on purpose. Going through `@dxos/vite-plugin-log`
 // would force every package's `:test`/`:test-browser`/`:test-storybook` task to
 // build the plugin first, which introduces a moon dep cycle through @dxos/log
@@ -490,6 +493,7 @@ const createBrowserProject = ({
       // loads it.
       ...(jsx === 'solid' ? [solid({ include: `${process.cwd()}/src/**/*.{tsx,jsx}` })] : []),
       ...plugins,
+      dxPluginManifest(),
       // Resolve `@dxos/*` to their `source` export (src/*.ts) so browser tests exercise source
       // instead of stale `dist/` build artifacts (mirrors the node project).
       PluginImportSource({ include: ['@dxos/**', '#*'] }),
@@ -579,6 +583,7 @@ const createWorkerdProject = ({
   defineProject({
     plugins: [
       ...plugins,
+      dxPluginManifest(),
       // Resolve `@dxos/*` to their `source` export (src/*.ts) so tests exercise source
       // instead of stale `dist/` build artifacts (mirrors the node/browser projects).
       PluginImportSource({ include: ['@dxos/**', '#*'] }),
@@ -659,6 +664,7 @@ const createNodeProject = ({
     // http://localhost:51204/__inspect/#/
     plugins: [
       ...plugins,
+      dxPluginManifest(),
       PluginImportSource({ include: ['@dxos/**', '#*'] }),
       process.env.VITE_INSPECT ? Inspect() : undefined,
       // Log-meta injection only — no dev file sink (vitest is a test runner, not a dev server).
@@ -858,6 +864,8 @@ export interface DxConfigOptions {
    * for packages that import large binary assets (e.g. plugin-zen's `.m4a` soundscapes).
    */
   assetsAsFiles?: boolean;
+  /** Extra vite plugins for the library build (e.g. a descriptor loader). */
+  plugins?: Plugin[];
   /** Vitest configuration; omit for build-only packages. */
   test?: TestOptions;
 }
@@ -906,6 +914,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
     jsx,
     jsxRuntime,
     assetsAsFiles = false,
+    plugins = [],
     test,
   } = options;
   // Solid: ssr-aware client transform.
@@ -961,6 +970,11 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
           if (id.startsWith('node:')) {
             return false;
           }
+          // A plugin descriptor is package content, not a runtime dependency: externalizing it would
+          // ship an import of a `.jsonc` file that only a vite host can resolve.
+          if (id.endsWith('dxplugin.jsonc')) {
+            return false;
+          }
           return (
             !id.startsWith('@oxc-project/runtime') && !id.startsWith('.') && !id.startsWith('/') && !id.startsWith('\0')
           );
@@ -980,6 +994,8 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
       ...jsxPlugin,
       DxosLogPlugin({ logToFile: false, transform: { enabled: true } }),
       DxDeclarationsPlugin(),
+      dxPluginManifest(),
+      ...plugins,
     ],
     ...(test ? { test: buildTestConfig(process.cwd(), test, jsx) } : {}),
   });

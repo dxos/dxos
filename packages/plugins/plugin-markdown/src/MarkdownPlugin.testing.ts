@@ -2,15 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { meta as pluginMeta } from '#meta';
-import { MarkdownPlugin } from '#plugin';
+import * as MarkdownPlugin from './MarkdownPlugin';
 
-/** Plugin metadata, available without loading the plugin body. */
-export const meta = pluginMeta;
+/** Plugin metadata, available without loading any module body. */
+export const meta = MarkdownPlugin.meta;
 
 /**
- * Constructs the plugin. Eager by design, unlike the lazy `make` on `MarkdownPlugin`: storybook runs
- * under vite-dev, where webkit cannot reliably settle the lazy stub's dynamic import (see
- * `@dxos/plugin-testing/src/core.ts`).
+ * Constructs the plugin. A plain re-export now that the descriptor builds it eagerly — the previous
+ * lazy stub could not settle its dynamic import under webkit in storybook.
  */
-export const make = MarkdownPlugin;
+export const make = MarkdownPlugin.make;

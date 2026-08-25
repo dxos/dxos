@@ -39,7 +39,7 @@ import { Organization, Person } from '@dxos/types';
 import { translations } from '#translations';
 import { Markdown, MarkdownCapabilities } from '#types';
 
-import { MarkdownPlugin } from '../../plugin';
+import * as MarkdownPlugin from '../../MarkdownPlugin';
 
 random.seed(1);
 
@@ -168,7 +168,7 @@ const meta = {
 
         // Contributes the versioning-state atom consumed by useVersioning.
         SpacePlugin({}),
-        MarkdownPlugin(),
+        MarkdownPlugin.make(),
         PreviewPlugin.make(),
       ],
     })),

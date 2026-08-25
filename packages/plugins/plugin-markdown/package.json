@@ -49,16 +49,16 @@
       "types": "./dist/types/src/operations/index.d.ts",
       "default": "./dist/lib/operations.mjs"
     },
-    "#plugin": {
+    "#platform": {
       "source": {
-        "workerd": "./src/plugin.workerd.ts",
-        "node": "./src/plugin.node.ts",
-        "default": "./src/plugin.tsx"
+        "workerd": "./src/platform.workerd.ts",
+        "node": "./src/platform.node.ts",
+        "default": "./src/platform.ts"
       },
-      "types": "./dist/types/src/plugin.d.ts",
-      "workerd": "./dist/lib/plugin.workerd.mjs",
-      "node": "./dist/lib/plugin.node.mjs",
-      "default": "./dist/lib/plugin.mjs"
+      "types": "./dist/types/src/platform.d.ts",
+      "workerd": "./dist/lib/platform.workerd.mjs",
+      "node": "./dist/lib/platform.node.mjs",
+      "default": "./dist/lib/platform.mjs"
     },
     "#skills": {
       "source": "./src/skills/index.ts",
@@ -162,7 +162,6 @@
   },
   "files": [
     "dist",
-    "dx.config.ts",
     "dxplugin.jsonc",
     "src"
   ],

@@ -8,37 +8,48 @@ import { join } from 'node:path';
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 
-import { MarkdownPlugin } from './plugin.node';
-import { MarkdownPlugin as MarkdownWorkerPlugin } from './plugin.workerd';
+import * as MarkdownPlugin from './MarkdownPlugin';
 
 const PACKAGE_DIR = join(__dirname, '..');
 
 const descriptor = readFileSync(join(PACKAGE_DIR, 'dxplugin.jsonc'), 'utf-8');
 
 /**
- * Asserts the descriptor reconstructs the same activation graph as the hand-written entrypoints, not
- * merely that it parses. Compared against the node and workerd variants because `#capabilities`
- * resolves to a server-safe barrel here, so the browser entrypoint's module references are undefined.
+ * The descriptor is the plugin's whole entrypoint, so these assert the shape it produces rather than
+ * comparing against a hand-written entrypoint — there is no longer one to compare against.
  */
 describe('dxplugin.jsonc', () => {
-  test('declares the same metadata', ({ expect }) => {
-    expect(forPlatform('node').meta.profile).toMatchObject(MarkdownPlugin().meta.profile);
+  test('is the source of the plugin metadata', ({ expect }) => {
+    expect(MarkdownPlugin.meta.profile).toMatchObject({ key: 'org.dxos.plugin.markdown', name: 'Markdown' });
+    expect(MarkdownPlugin.meta.profile).not.toHaveProperty('$schema');
   });
 
-  test('reconstructs the node entrypoint', ({ expect }) => {
-    expect(spec(forPlatform('node'))).toEqual(spec(MarkdownPlugin()));
-  });
-
-  test('reconstructs the workerd entrypoint', ({ expect }) => {
-    expect(spec(forPlatform('workerd'))).toEqual(spec(MarkdownWorkerPlugin()));
+  test('builds the plugin, narrowed to the loading platform', ({ expect }) => {
+    // Resolved under the node condition here, so the browser-only modules are absent.
+    expect(MarkdownPlugin.make().modules.map(({ id }) => id)).toEqual([
+      'org.dxos.plugin.markdown.module.SkillDefinition',
+      'org.dxos.plugin.markdown.module.CreateObject',
+      'org.dxos.plugin.markdown.module.OperationHandler',
+      'org.dxos.plugin.markdown.module.schema',
+    ]);
   });
 
   test('narrows to a subset of the browser modules on each server platform', ({ expect }) => {
-    // Every module is browser-capable, so the browser view is the whole descriptor.
     expect(forPlatform('browser').modules).toHaveLength(12);
     expect(forPlatform(undefined).modules).toHaveLength(12);
     expect(forPlatform('node').modules).toHaveLength(4);
     expect(forPlatform('workerd').modules).toHaveLength(3);
+  });
+
+  test('declares an activation graph over rehydrated capability tags', ({ expect }) => {
+    const state = forPlatform('browser').modules.find(({ id }) => id.endsWith('.MarkdownState'));
+    expect(state?.activation.requires.map(({ identifier, arity }) => `${arity}:${identifier}`)).toEqual([
+      'single:org.dxos.plugin.attention.capability.viewState',
+    ]);
+    expect(state?.activation.provides.map(({ identifier }) => identifier)).toEqual([
+      'org.dxos.plugin.markdown.capability.editorState',
+      'org.dxos.plugin.markdown.capability.editorViews',
+    ]);
   });
 
   test('names a module file that exists', ({ expect }) => {
@@ -50,11 +61,3 @@ describe('dxplugin.jsonc', () => {
 
 const forPlatform = (platform: Plugin.FromManifestOptions['platform']) =>
   Plugin.fromManifest(descriptor, { baseUrl: `file://${PACKAGE_DIR}/`, platform })();
-
-const spec = (plugin: Plugin.Plugin) =>
-  plugin.modules.map(({ id, activation }) => ({
-    id,
-    activatesOn: activation.activatesOn,
-    requires: activation.requires.map(({ identifier, arity }) => `${arity}:${identifier}`),
-    provides: activation.provides.map(({ identifier, arity }) => `${arity}:${identifier}`),
-  }));

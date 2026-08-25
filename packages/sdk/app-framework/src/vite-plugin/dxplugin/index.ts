@@ -2,19 +2,41 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { type Plugin as VitePlugin } from 'vite';
 
-import { Config2 } from '@dxos/protocols';
-
-import { Plugin } from '../../core';
+import { parseJsonc } from '../../core/jsonc.ts';
 
 /** Filename every plugin publishes next to its `package.json`. */
 export const DXPLUGIN_FILENAME = 'dxplugin.jsonc';
 
-const decodeDescriptor = Schema.decodeUnknownSync(Config2.Descriptor);
+/** A descriptor module, as the loader needs it: anything else on the entry rides through untouched. */
+type RawModule = { src: string } & Record<string, unknown>;
+
+const isModule = (value: unknown): value is RawModule =>
+  typeof value === 'object' && value !== null && 'src' in value && typeof value.src === 'string';
+
+/**
+ * Narrows the parsed descriptor structurally rather than against the schema: keeping the loader
+ * schema-free is what lets `vite.base.config.ts` import it by path without a build-order dependency
+ * on this package. `Plugin.fromManifest` validates against `Config2.Descriptor` at load time.
+ */
+const readDescriptor = (raw: unknown): { modules: RawModule[]; profile: Record<string, unknown> } => {
+  if (typeof raw !== 'object' || raw === null) {
+    throw new Error('Plugin descriptor is not an object.');
+  }
+  const entries = Object.entries({ ...raw });
+  const declared = entries.find(([key]) => key === 'modules')?.[1];
+  const profile = Object.fromEntries(entries.filter(([key]) => key !== 'modules'));
+  const listed: unknown[] = Array.isArray(declared) ? declared : [];
+  const modules = listed.filter(isModule);
+  if (modules.length !== listed.length) {
+    throw new Error('Every plugin descriptor module must name a `src`.');
+  }
+  return { modules, profile };
+};
 
 /**
  * Loader for `dxplugin.jsonc` plugin descriptors, modelled on vite's own HTML handling: a
@@ -47,27 +69,40 @@ export const dxPluginManifest = (): VitePlugin => {
       isBuild = config.command === 'build';
     },
 
+    // A library build externalizes every non-relative import, and an externalized id never reaches
+    // `load` — so a descriptor imported by its package specifier has to be resolved to its file here.
+    async resolveId(id, importer) {
+      if (!id.endsWith(DXPLUGIN_FILENAME)) {
+        return null;
+      }
+      const resolved = await this.resolve(id, importer, { skipSelf: true });
+      return resolved ? { id: resolved.id, external: false } : null;
+    },
+
     load(id) {
       const [path] = id.split('?');
       if (!path.endsWith(DXPLUGIN_FILENAME)) {
         return null;
       }
 
-      const descriptor = decodeDescriptor(Plugin.parseJsonc(readFileSync(path, 'utf-8')));
+      const { modules: declared, profile } = readDescriptor(parseJsonc(readFileSync(path, 'utf-8')));
       const dir = dirname(path);
+
+      // Only the browser dev server serves `/@fs/`; a node consumer (vitest, an SSR transform) has to
+      // import the file itself, so the dev form follows the environment rather than assuming a browser.
+      const servesFs = this.environment?.name === 'client';
 
       // `src` is a JS expression because rollup substitutes `import.meta.ROLLUP_FILE_URL_*` only in
       // code position, and each module is serialized alone so no authored field can capture it.
-      const modules = descriptor.modules.map((module) => {
+      const modules = declared.map((module) => {
         const absolute = resolve(dir, module.src);
         const src = isBuild
           ? `import.meta.ROLLUP_FILE_URL_${this.emitFile({ type: 'chunk', id: absolute, preserveSignature: 'exports-only' })}`
-          : JSON.stringify(`/@fs/${absolute}`);
+          : JSON.stringify(servesFs ? `/@fs/${absolute}` : pathToFileURL(absolute).href);
         const { src: _src, ...rest } = module;
         return `{ ...${JSON.stringify(rest)}, src: ${src} }`;
       });
 
-      const { modules: _modules, ...profile } = descriptor;
       const body = `{ ...${JSON.stringify(profile, null, 2)}, modules: [${modules.join(', ')}] }`;
       return { code: `export default ${body};\n`, moduleSideEffects: false };
     },

@@ -24,7 +24,7 @@ export const AnchorSort = AppCapability.anchorSort(() => import('./anchor-sort')
 });
 export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
-export const Schema = AppCapability.schema(() => import('./schema'));
+export const Schema = Capability.lazyModule('schema', { provides: [AppCapabilities.Schema] }, () => import('./schema'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {

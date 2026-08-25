@@ -8,14 +8,15 @@ import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { meta } from '#meta';
-import { MarkdownPlugin } from '#plugin';
+
+import * as MarkdownPlugin from './MarkdownPlugin';
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('MarkdownPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await createComposerTestApp({
-      plugins: [ClientPlugin.make({}), MarkdownPlugin()],
+      plugins: [ClientPlugin.make({}), MarkdownPlugin.make()],
     });
 
     expect(harness.manager.getActive()).toEqual(

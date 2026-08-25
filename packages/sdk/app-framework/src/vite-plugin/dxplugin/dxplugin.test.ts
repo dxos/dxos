@@ -82,6 +82,8 @@ const invoke = (hook: unknown, self: unknown, ...args: unknown[]): any =>
 
 /** Stub context recording the chunks `load` emits, and handing back a fixed reference id. */
 const context = (emitted: { id?: string }[]) => ({
+  // Names the browser dev-server environment, which is what selects the `/@fs/` form.
+  environment: { name: 'client' },
   emitFile: (file: { id: string }) => {
     emitted.push(file);
     return 'ref123';
