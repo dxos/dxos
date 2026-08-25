@@ -101,11 +101,16 @@ export const SpacesReady = Capability.lazyModule(
   () => import('./spaces-ready'),
 );
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+// Browser-only: holds view state (space names, viewers, merge preview) whose consumers are the
+// React surfaces, the app-graph builder and `SpacesReady` — all three already browser-only. The
+// hand-written node barrel excluded it before this generator existed; the isomorphic default put
+// it back, where it shadowed a test's own `EphemeralState` provider without ever activating.
 export const SpaceState = Capability.lazyModule(
   'SpaceState',
   {
     requires: [Capabilities.AtomRegistry, Capabilities.PluginManager],
     provides: [SpaceCapabilities.State, SpaceCapabilities.EphemeralState],
+    environments: [],
   },
   () => import('./state'),
 );

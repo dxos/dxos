@@ -52,6 +52,8 @@ export class ActivationScheduler {
   readonly #capabilities: CapabilityManager.CapabilityManager;
   readonly #loader: ModuleLoader;
   readonly #whenIdle: Effect.Effect<void>;
+  /** False when the host supplied its own idle gate, which makes its completion the host's business. */
+  readonly #ownsIdleGate: boolean;
 
   constructor(
     state: ManagerState,
@@ -63,6 +65,7 @@ export class ActivationScheduler {
     this.#capabilities = capabilities;
     this.#loader = loader;
     this.#whenIdle = whenIdleEffect;
+    this.#ownsIdleGate = whenIdleEffect === whenIdle;
   }
 
   /**
@@ -166,7 +169,11 @@ export class ActivationScheduler {
       // manager that has already reset re-activates modules after teardown. A headless host has no
       // paint to lose the race to and completes `whenIdle` immediately, so forking there would only
       // let `start()` return before the wave ran.
-      if (hostYieldsToPaint()) {
+      // Inlining is only safe for the gate this module owns, whose headless branch completes
+      // immediately. A host that passes its own gate decides when (or whether) idle arrives —
+      // `Effect.never` is a legitimate "do not run the idle wave" — and awaiting that inline would
+      // hang `start()` rather than defer a wave.
+      if (hostYieldsToPaint() || !this.#ownsIdleGate) {
         yield* this.#state.fibers.trackForked(yield* this.#activateWhenIdle().pipe(Effect.forkDetach));
       } else {
         yield* this.#activateWhenIdle();

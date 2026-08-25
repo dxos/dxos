@@ -135,34 +135,45 @@ the task graph owns it (echo-query `prebuild-lezer` is the template).
       `magazine-curation.ts`: main rewrote the template, the branch had only moved `makeRoutine`
       to `@dxos/plugin-routine/util`; resolution keeps main's rewrite with the subpath import
 
-## Phase 7 — the first full test sweep this branch has had
+## Phase 7 — the first full test sweep this branch has had, and the three defects it found
 
-`eaf9c7e3fa`: build exit 0 / 0 `error TS`; `check-module-structure` exit 0 with 180 traces and 0
-unresolved; **tests exit 1 — 659 tasks, 5 failed.** `app-framework:test` and `cli:test` (the `dx`
-CLI's 47-test headless coverage) both passed. The five, triaged:
+The sweep at `eaf9c7e3fa` was the first one this branch ever completed: 659 tasks, 5 failed. Two
+of the five diagnoses carried over from the handoff turned out to be wrong, and the real causes
+were more interesting than the reported symptoms.
 
-- [ ] **plugin-excalidraw** — `plugin.test.ts > modules activate on the event that gates them`
-      asserts `drawing-variant` is active, but branch commit `cedd3ea6b5` annotated
-      `DrawingVariant` with `environments: []`, so under vitest's `node` condition it resolves to
-      `export const DrawingVariant = undefined` and `Plugin.addModule` skips it. The assertion is
-      unsatisfiable by construction. **Reproduces in isolation** (1.9s), so it is not the
-      concurrency flake. The annotation is right; the test asserts browser behaviour in a node
-      runtime. This is DESIGN.md §1's "test blindness" in its second form: `plugin.test.ts`
-      resolves the _node_ barrel under vitest, so no browser-only module can ever be asserted
-      active there
-- [ ] **plugin-space** (3 tests) — `open-object-form.test.ts` fails with
-      `CapabilityNotFoundError: org.dxos.plugin.space.capability.ephemeralState`. The test
-      supplies that capability itself, from a stub layout plugin declared inline in the test file
-      (its comment: the real `state.ts` "needs a layout to activate"). That stub is a
-      `Capability.inlineModule` with no `activatesOn`, so this is an activation-timing failure,
-      not barrel generation — `SpaceState` _is_ present in `gen/node.ts`. Needs a root cause
-- [ ] **plugin-client** (2 tests) — both `Test timed out in 15000ms` on
-      `schema-defs.test.ts > registers contributed schema before an IdentityCreated consumer
-    runs`. The documented 15s-budget flake, measured pre-branch at 12.1s. Not a regression;
-      needs the timeout raised. Note main carries this test in two files
-      (`src/schema-defs.test.ts` and `src/capabilities/schema-defs.test.ts`) and both fail
-- [ ] **client-e2e** — `spaces.test.ts > post and listen to messages`, `Error: Timeout [200ms]`.
-      A 200ms budget on a networked test; almost certainly environmental
-- [ ] **pipeline-discord** — `replay-fixture.test.ts`, `expected 0 to be greater than 0`, replay
-      over a crawled SQLite fixture. Also failed in the previous session's sweep, before this
-      merge, so it is pre-existing and likely a missing local fixture
+- [x] **plugin-excalidraw** — `plugin.test.ts` asserted `drawing-variant` active, but branch
+      commit `cedd3ea6b5` annotated `DrawingVariant` with `environments: []`, so under vitest's
+      `node` condition it resolves to `export const DrawingVariant = undefined` and
+      `Plugin.addModule` skips it. Unsatisfiable by construction, and it reproduced in isolation
+      (1.9s), so not the concurrency flake. The annotation is right and the assertion was wrong:
+      inverted to `not.toContain`, which turns a broken browser claim into a real headless one —
+      proof the annotation keeps the module and its React out of the node barrel.
+      plugin-illustrator and plugin-tldraw never asserted variant activation at all, so
+      excalidraw was the outlier. DESIGN.md §1's "test blindness" in its second form
+- [x] **plugin-space** (3 tests) — `CapabilityNotFoundError` on `ephemeralState`. `SpaceState` is
+      an unannotated raw `lazyModule`, so the isomorphic default carried it into the node barrel
+      where main's hand-written barrel had deliberately excluded it; there it shadowed the test's
+      own `EphemeralState` provider without ever activating. Annotated `environments: []`. Its
+      consumers are the React surfaces, `SpacesReady` and `AppGraphBuilder` (all already
+      browser-only) plus three UI-flow operations main also left unprovided headlessly. **This is
+      §6.5's documented cost landing for real** — the third instance after plugin-observability
+      and plugin-connector, and the guards cannot see any of them
+- [x] **plugin-client** (2 tests) — reported as the 15s-budget flake. It is not. Raising the
+      timeout to 60s made it hang for 60s. `activation-scheduler.ts` inferred headlessness from
+      `typeof requestIdleCallback === 'function'` and, when false, ran the idle wave **inline**
+      rather than forked; since `plugin-manager.ts` lets a host supply its own `whenIdle` and the
+      scheduler awaits it, a headless host passing `Effect.never` hung `start()` forever instead
+      of deferring a wave. Fixed with an explicit host signal rather than a browser-API sniff:
+      inline only when the manager owns the default gate, whose headless branch completes
+      immediately; a host-supplied gate goes back to forked, because its completion is the host's
+      business. `app-framework:test` 247/247, including `start-gated modules stay off startup and
+    join their plugin start wave` — the test that caught the earlier attempt at this.
+      Post-fix the test runs in **1072ms**, so the timeout bump was reverted: it was never
+      warranted and would have hidden the next hang for 45 extra seconds
+- [x] **client-e2e** — `Timeout [200ms]` on a networked test. Passed on the next sweep;
+      environmental, not a defect
+- [x] **pipeline-discord** — `replay-fixture.test.ts` is deliberately non-CI: it guards on
+      `existsSync(fixturePath) && !process.env.CI`. The fixture is committed, so it runs locally
+      and fails on stale data; under `CI=true` it skips and the package passes 40/41, exit 0. No
+      action — but it means a local `moon :test` sweep can never be fully green while that
+      fixture is stale, which is worth knowing before chasing it again
