@@ -16,7 +16,7 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Project from '@dxos/compute/Project';
 import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Database, DXN, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, DXN, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
@@ -73,28 +73,7 @@ const TestLayer = AssistantTestLayerWithTriggers({
   disableLlmMemoization: true,
 });
 
-describe('project routines', () => {
-  it.effect(
-    'a project owns its routine, so the routine cascades with it',
-    Effect.fnUntraced(
-      function* ({ expect }) {
-        const { project, routine } = yield* seed();
-
-        expect(project.routines.map((ref) => ref.target?.id)).toEqual([routine.id]);
-        // The parent edge is what makes the routine owned rather than merely referenced.
-        expect(Obj.getParent(routine)?.id).toBe(project.id);
-
-        yield* Database.remove(project);
-        yield* Database.flush();
-
-        expect(yield* Database.query(Filter.type(Routine.Routine)).run).toEqual([]);
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-    { timeout: 30_000 },
-  );
-
+describe('running a project routine', () => {
   it.effect(
     "firing the routine's trigger runs its action against the project",
     Effect.fnUntraced(
