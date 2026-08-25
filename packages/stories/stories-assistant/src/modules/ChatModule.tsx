@@ -31,7 +31,7 @@ const ChatModuleContainer = ({ space }: { space: Space }) => {
 
   const registry = useRegistry();
   const runtime = useProcessManagerRuntime();
-  const processor = useChatProcessor({ runtime, space, chat, preset, registry });
+  const processor = useChatProcessor({ runtime, db: space.db, chat, preset, registry });
 
   // Honor the view mode selected in ChatOptions (persisted on `chat.viewType`). Subscribe via
   // `useObject` so changing the mode re-renders, and narrow the stored string to a valid ChatView.

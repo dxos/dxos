@@ -10,7 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
-import { Outline, Task } from '@dxos/types';
+import { Outline, Task, TaskSet } from '@dxos/types';
 
 /**
  * Promotes an outline bullet to a task, creating the outline's own task set on first use and
@@ -24,7 +24,9 @@ export const ConvertToTask = Operation.make({
   },
   services: [Database.Service],
   input: Schema.Struct({
-    outline: Type.getSchema(Outline.Outline),
+    // The destination is explicit: an outline owns no task set, so promotion files into the ledger
+    // of whatever owns the outline, which only the caller knows.
+    taskSet: Type.getSchema(TaskSet.TaskSet),
     title: Schema.String,
   }),
   output: Schema.Struct({

@@ -26,7 +26,7 @@ import { trim } from '@dxos/util';
 
 /**
  * Programmatic project creation — the entry point other plugins use to create (and pre-wire)
- * projects without reaching into plugin internals. Resolves the template (blank by default),
+ * projects without reaching into plugin internals. Resolves the template (the default one when unspecified),
  * scaffolds the owned instructions/artifacts graph, and files the project in the Projects section.
  *
  * A generic object create makes one empty object; this one returns a whole wired graph, and the
@@ -47,7 +47,7 @@ export const Create = Operation.make({
   services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
-    /** Template id (`ProjectCapabilities.Template`); defaults to the blank template. */
+    /** Template id (`ProjectCapabilities.Template`); defaults to the default template. */
     templateId: Schema.optional(Schema.String),
     /** The object the project is created for (passed to the template's `appliesTo`/`scaffold`). */
     subject: Schema.optional(Obj.Unknown),

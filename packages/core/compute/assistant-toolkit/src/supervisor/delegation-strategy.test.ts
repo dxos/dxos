@@ -10,7 +10,8 @@ import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
 import { getSession } from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
-import { Database } from '@dxos/echo';
+import * as Project from '@dxos/compute/Project';
+import { Database, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
@@ -66,6 +67,7 @@ const TestLayer = AssistantTestLayer({
     AiContext.Binding,
     Text.Text,
     Message.Message,
+    Project.Project,
   ],
 });
 
@@ -85,6 +87,12 @@ describe('makeDelegationStrategy', () => {
 
         const chat = yield* Agent.loadChat(agent);
         invariant(chat, 'Agent chat not found.');
+        // Delegation files into the PROJECT's task set — an outline owns none — so the conversation
+        // has to sit under a project for the strategy to have anything to reconcile. The agent is
+        // parented rather than the chat, which reaches the project through it.
+        const project = yield* Database.add(Project.make({ name: 'Test project' }));
+        Obj.setParent(agent, project);
+        yield* Database.flush();
         const feed = yield* Database.load(chat.feed);
 
         const session = yield* getSession(feed);
@@ -101,10 +109,8 @@ describe('makeDelegationStrategy', () => {
           .join('');
         expect(streamedText).toContain('On it');
 
-        // DelegateTask promoted the work to a durable agent task under the outline's task set.
-        const outlineAfterTurn = chat.outline ? yield* Database.load(chat.outline) : undefined;
-        invariant(outlineAfterTurn, 'Outline not created.');
-        const taskSet = outlineAfterTurn.taskSet ? yield* Database.load(outlineAfterTurn.taskSet) : undefined;
+        // DelegateTask promoted the work to a durable agent task under the project's task set.
+        const taskSet = project.taskSet ? yield* Database.load(project.taskSet) : undefined;
         invariant(taskSet, 'Task set not created.');
         const tasks = TaskSet.resolveTasks(taskSet);
         expect(tasks).toHaveLength(1);
@@ -118,6 +124,8 @@ describe('makeDelegationStrategy', () => {
 
         // ...marked the durable task done and checked off the checklist line.
         expect(tasks[0].status).toEqual('done');
+        const outlineAfterTurn = project.outline ? yield* Database.load(project.outline) : undefined;
+        invariant(outlineAfterTurn, 'Outline not created.');
         const outlineText = yield* Database.load(outlineAfterTurn.content);
         expect(Outline.parseChecklist(outlineText.content)).toEqual([{ title: TASK_TITLE, done: true }]);
       },

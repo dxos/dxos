@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import * as BrowserWorker from '@effect/platform-browser/BrowserWorker';
 import * as BrowserWorkerRunner from '@effect/platform-browser/BrowserWorkerRunner';
 import * as Context from 'effect/Context';
@@ -29,6 +30,7 @@ import {
 import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { IdentityNotInitializedError, TimeoutError } from '@dxos/protocols';
+import { ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { SpaceState, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { SpacesService, SystemService } from '@dxos/protocols/rpc';
@@ -189,7 +191,7 @@ describe('client services effect-rpc', () => {
     const gate = new Trigger();
     const proxy = await setup(() => ({
       SystemService: mockService<SystemService.Handlers>({
-        ['SystemService.getConfig']: () => Effect.promise(() => gate.wait().then(() => ({}))),
+        ['SystemService.getConfig']: () => Effect.promise(() => gate.wait().then(() => create(ConfigSchema, {}))),
       }),
     }));
 
@@ -221,7 +223,7 @@ describe('client services effect-rpc', () => {
           ['SystemService.getConfig']: () =>
             Effect.sync(() => {
               called = true;
-              return {};
+              return create(ConfigSchema, {});
             }),
         }),
       }),
@@ -251,7 +253,7 @@ describe('client services effect-rpc', () => {
     const rpc = await setupRpc(() => ({
       SystemService: mockService<SystemService.Handlers>({
         ['SystemService.getConfig']: () =>
-          Effect.succeed({ runtime: { client: { remoteSource: 'https://example.com' } } }),
+          Effect.succeed(create(ConfigSchema, { runtime: { client: { remoteSource: 'https://example.com' } } })),
         ['SystemService.queryStatus']: (): Stream.Stream<SystemService.QueryStatusResponse, Error> =>
           Stream.make({ status: SystemStatus.ACTIVE }),
       }),

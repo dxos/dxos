@@ -11,6 +11,7 @@ import * as Schema from 'effect/Schema';
 import { type Client } from '@dxos/client';
 import { DEFAULT_HUB_URL } from '@dxos/client-protocol';
 import { type Identity } from '@dxos/client/halo';
+import { getEnvString } from '@dxos/config';
 import { Context as DxContext } from '@dxos/context';
 import { createDidFromIdentityKey } from '@dxos/credentials';
 import { Ref } from '@dxos/echo';
@@ -111,9 +112,7 @@ export const accountErrorType = (error: unknown): AccountErrorType | undefined =
  * raw config path rather than this resolver, since a default would silently arm them.
  */
 export const getHubUrl = (client: Pick<Client, 'config'>): string =>
-  client.config.values?.runtime?.app?.env?.DX_HUB_URL ??
-  client.config.values?.runtime?.services?.hub?.url ??
-  DEFAULT_HUB_URL;
+  getEnvString(client.config, 'DX_HUB_URL') ?? client.config.values?.runtime?.services?.hub?.url ?? DEFAULT_HUB_URL;
 
 /** Client for the configured hub-service (accounts, invitations, email verification). */
 export const createHubClient = (clientOrUrl: Client | string): HubHttpClient =>

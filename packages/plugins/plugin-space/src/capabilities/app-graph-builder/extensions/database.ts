@@ -65,6 +65,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
             id: GraphPath.GroupSegments.system,
             type: GraphPath.GroupTypes.system,
             label: ['nav-tree-group-system.label', { ns: meta.profile.key }],
+            icon: 'ph--gear--regular',
             space,
             position: 900,
           }),

@@ -15,7 +15,7 @@ import { Annotation, Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/e
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { type EntityNotFoundError } from '@dxos/echo/Error';
 import { type Text } from '@dxos/schema';
-import { Outline } from '@dxos/types';
+import { Outline, type TaskSet } from '@dxos/types';
 
 import { HarnessContextError } from '../errors';
 
@@ -84,14 +84,13 @@ export const linkCompanion = ({ chat, subject }: { chat: Chat; subject: Obj.Unkn
 
 /**
  * Returns the conversation's working outline, creating one lazily: a project chat (parented to a
- * `Project`) resolves — and if needed creates — the PROJECT's outline, so all of a project's
- * chats share one scratch surface; a standalone chat owns its own.
+ * project, directly or through its agent) resolves — and if needed creates — the PROJECT's outline,
+ * so all of a project's chats share one scratch surface; a standalone chat owns its own.
  */
 export const ensureOutline = (chat: Chat): Effect.Effect<Outline.Outline, EntityNotFoundError, Database.Service> =>
   Effect.gen(function* () {
-    const parent = Obj.getParent(chat);
-    if (parent && Obj.instanceOf(Project.Project, parent)) {
-      const project = parent;
+    const project = peekProject(chat);
+    if (project) {
       if (project.outline) {
         return yield* Database.load(project.outline);
       }
@@ -128,16 +127,41 @@ export const ensureOutlineText = (
     return { outline, text };
   });
 
+/** Bound on the parent walk below; a conversation sits one or two edges under its project. */
+const MAX_OWNER_DEPTH = 8;
+
+/**
+ * The project a conversation belongs to, if any.
+ *
+ * Walks the parent chain rather than reading the immediate parent, because a chat reaches its project
+ * through whatever owns it — directly for a project chat, through the agent for an agent's chat.
+ */
+export const peekProject = (chat: Chat): Project.Project | undefined => {
+  let owner: Obj.Unknown | undefined = Obj.getParent(chat);
+  for (let depth = 0; owner && depth < MAX_OWNER_DEPTH; depth++) {
+    if (Obj.instanceOf(Project.Project, owner)) {
+      return owner;
+    }
+    owner = Obj.getParent(owner);
+  }
+  return undefined;
+};
+
+/**
+ * The task set a conversation's promoted items are filed into: the owning project's ledger.
+ *
+ * An outline owns no task set, so a conversation with no project above it has nowhere to promote to;
+ * callers withhold the affordance rather than create a set nothing else can find.
+ */
+export const peekTaskSetRef = (chat: Chat): Ref.Ref<TaskSet.TaskSet> | undefined => peekProject(chat)?.taskSet;
+
 /**
  * The conversation's working-outline ref if one already exists (the parent project's, else the
  * chat's own) — never creates. See {@link ensureOutline} for the creating variant.
  */
 export const peekOutlineRef = (chat: Chat): Ref.Ref<Outline.Outline> | undefined => {
-  const parent = Obj.getParent(chat);
-  if (parent && Obj.instanceOf(Project.Project, parent)) {
-    return parent.outline;
-  }
-  return chat.outline;
+  const project = peekProject(chat);
+  return project ? project.outline : chat.outline;
 };
 
 /** The conversation's checklist markdown, or a placeholder when none exists. Never creates. */

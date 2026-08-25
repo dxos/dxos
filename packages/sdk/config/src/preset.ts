@@ -11,7 +11,7 @@ export type ConfigPresetOptions = {
    * Edge service.
    * @default main
    */
-  edge?: 'local' | 'dev' | 'main' | 'production';
+  edge?: 'local' | 'dev' | 'preview' | 'main' | 'production';
 
   /**
    * Sandbox service (standalone worker; API at /api/sandbox).
@@ -23,7 +23,9 @@ const edgeUrl = (edge: NonNullable<ConfigPresetOptions['edge']>) =>
   Match.value(edge).pipe(
     Match.when('local', () => 'http://localhost:8787'),
     Match.when('dev', () => 'https://edge.dxos.workers.dev'),
-    Match.when('main', () => 'https://main.dxos.network'),
+    // Preserve `main` as a deprecated alias for existing profiles.
+    Match.when('preview', () => 'https://preview.dxos.network'),
+    Match.when('main', () => 'https://preview.dxos.network'),
     Match.when('production', () => 'https://dxos.network'),
     Match.exhaustive,
   );
