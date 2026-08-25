@@ -18,11 +18,12 @@ at the bottom — read those before picking up a thread.
 | 8   | Remaining `ServiceDescriptor` RPC       | todo     | 21 production sites / 10 services, all cross-peer; 49 more are tests.    |
 | 9a  | keyring `KeyRecord`                     | **done** | No substituted fields; wire format unchanged, asserted byte-for-byte.    |
 | 9b  | `echo.query.Heads`                      | **done** | Same; also dropped the workerd lazy-codec workaround.                    |
-| 9c  | `echo/metadata` + `echo/feed`           | todo     | Needs fixture profiles per storage version.                              |
+| 9c  | `echo/metadata` + `echo/feed`           | **part** | `EchoMetadata` fixture landed; the other two types are `Any`-blocked.    |
 | 9d  | credentials signing/verification        | todo     | Highest risk; additionally needs `Any` support in the compat layer.      |
 
-**Next up, in order:** `Any` support in `#3` (finishes `#7`, needed by `#9d`) → rest of `#5` → `#9c`
-→ `#8` → `#9d`, with the import sweep alongside. `#2` is independent and can slot in anywhere.
+**Next up, in order:** `Any` support in `#3` -- it gates `#7`'s last 15 types, two of `#9c`'s three,
+and all of `#9d` -- then `#9c`'s store swap, `#8`, `#9d`, with the import sweep (which is what `#5`'s
+remainder needs) alongside. `#2` is independent and can slot in anywhere.
 
 Deleting `protobuf-compiler`/`codec-protobuf` and dropping `protobufjs` from the catalog is the
 last step, and needs every thread above done.
@@ -67,6 +68,58 @@ well-known type to before writing a substitution for it. And prefer a JSON-strin
 `google.protobuf.Struct` in new protos: the substituted plain-object shape is what makes `Struct`
 diverge between the generators, and it is what consumers reach through
 (`signalEvent.payload.payload.data?.type` in the WebRTC proxy only parses because of it).
+
+## `Any` support in `#3` is the one gate left
+
+Measured while landing `#7` and `#9c`, and it reshapes the order of everything remaining:
+`google.protobuf.Any` blocks `#7`'s last 15 types, two of `#9c`'s three, and all of `#9d`. Every
+`Any` reached is the same field -- `Credential.subject.assertion`:
+
+| Thread | Blocked on `Any` at                                                                |
+| ------ | ---------------------------------------------------------------------------------- |
+| `#7`   | 15 of 46 types, via `Credential` / `Presentation` / `SignedMessage`                |
+| `#9c`  | `LargeSpaceMetadata.controlPipelineSnapshot.messages.credential.subject.assertion` |
+| `#9c`  | `FeedMessage.payload.credential.credential.subject.assertion`                      |
+| `#9d`  | the credential itself                                                              |
+
+So `Any` support is not `#9d`'s tail-end problem, it is the prerequisite for three threads. Do it
+once in `#3` -- it needs a buf-side type registry (`buf/registry.ts` now provides one) and the
+`preserve_any` field option -- rather than per thread.
+
+## `#9c`: byte identity is not achievable, and that is the finding
+
+`EchoMetadata` is the one `#9c` type not `Any`-blocked, and its fixture is in
+`shape-compat.test.ts`. It does **not** encode byte-identically, for two reasons that apply to any
+message with an unset non-optional message field:
+
+- protobuf.js materialises the unset `updated` field as an empty `Timestamp`; buf omits it.
+- protobuf.js writes `nanos: 0` explicitly; buf omits the proto3 default.
+
+18 bytes against 10 on a minimal record. They stay wire-compatible, which is what a persisted
+profile actually needs, so the fixture asserts that each codec reads the other's output rather than
+that the bytes match. This qualifies the habit stated above: assert byte equality for anything
+_signed_, but for merely _persisted_ data assert cross-codec round-trips, because byte equality is
+unachievable wherever protobuf.js materialises an empty submessage.
+
+The metadata store's codec is deliberately **not** switched yet. Decoding is asymmetric: bytes buf
+wrote read back through the legacy codec as `updated: { seconds, nanos }` rather than a `Date`,
+because the legacy substitution does not fire on a field buf omitted. That is a downgrade hazard for
+existing profiles -- a client rolled back after writing buf-encoded metadata sees a raw object where
+it expects a `Date` -- and wants either an `updated` default on write or a legacy-side fix first.
+
+## `#5`: what is left needs sweep slices, not devtools edits
+
+`JsonView` no longer resolves `google.protobuf.Any` through the protobuf.js schema; it uses the buf
+registry and the compat layer, so a substituted field still renders in the shape the viewer formats.
+That is the last piece of `#5` that stands alone.
+
+The remaining 17 legacy imports in `devtools/src` are consumers of types `protoMessage` still hands
+out in protobuf.js shape, so switching an import to buf makes the annotation disagree with the
+runtime value. Each needs its type moved to `bufMessage` first, and the two that would unblock
+`EdgePanel` are not small: `QueryEdgeStatusResponse` embeds `EdgeStatus`, which reaches **22 source
+files** across edge-client, echo-host, client-services and plugin-space's sync UI. `EdgePanel`'s
+nested-enum access (`WsStatus.ConnectionState.CONNECTED`, which buf emits as
+`EdgeStatus_ConnectionState`) is a one-line fix gated behind that slice.
 
 Before starting any thread, read **Findings** at the bottom: the five generator divergences are
 what make the mechanical-looking parts non-mechanical, and two of them (`Any`, nested enums) are
@@ -165,8 +218,8 @@ Per open thread, assuming no behaviour change and no proto edits.
 | Thread | Work                                                                                                 | Estimate    |
 | ------ | ---------------------------------------------------------------------------------------------------- | ----------- |
 | 7      | Done for the 31 non-`Any` types; the remaining 15 ride `Any` support in `#3`                         | done        |
-| 5      | Rest of devtools, behind `#7` — message type imports, the nested enum, `JsonView`                    | 2–3 days    |
-| 9c     | `echo/metadata` + `echo/feed`, with a fixture profile per storage version                            | 1 week      |
+| 5      | `JsonView` done; the 17 remaining imports need their types swept (see `#5` above)                    | in sweep    |
+| 9c     | `EchoMetadata` fixture done; store swap needs the downgrade fix, other two types need `Any`          | 3–5 days    |
 | 8      | `ServiceDescriptor`/`createProtoRpcPeer` for mesh/teleport, iframe, bridge, agentmanager             | 1.5–2 weeks |
 | 9d     | Credentials signing/verification, incl. `Any` support in the compat layer                            | 1–1.5 weeks |
 | 2      | Test/example protos                                                                                  | 2–3 days    |
@@ -200,7 +253,7 @@ groups: `#7` and `#9a`–`#9d` on the shape-compat layer (`#3`), and `#8` on the
 | 8   | Remaining `ServiceDescriptor` RPC       | 21 production `schema.getService()` sites / 10 services; 49 further sites are tests on `example.testing.*` protos | medium–high | high       | Cross-peer wire compatibility: a mismatch breaks replication between versions, not just a local call. Sequence after #6. `ServiceDescriptor` itself is only 8 references, all plumbing — the surface to migrate is `getService()` + `createProtoRpcPeer` (21 files). The test two-thirds carry no wire risk and can go first to prove the pattern. |
 | 9a  | keyring `KeyRecord`                     | `halo/keyring/src/{keyring,sqlite-keyring}.ts`                                                                    | medium      | low        | One message, two codec sites, local SQLite only. Smallest persisted slice — do it first to validate #3 against real on-disk rows.                                                                                                                                                                                                                  |
 | 9b  | `echo.query.Heads`                      | `echo-host/src/automerge/sqlite-heads-store.ts`                                                                   | medium      | low        | One message, one codec site. Rebuildable from Automerge if a migration goes wrong, which caps the downside.                                                                                                                                                                                                                                        |
-| 9c  | `echo/metadata` + `echo/feed`           | 31 + 22 declarations across echo-host, feed-store, client-services                                                | medium–high | medium     | Broad on-disk state with no cheap rebuild path; needs a fixture profile per storage version.                                                                                                                                                                                                                                                       |
+| 9c  | `echo/metadata` + `echo/feed`           | 3 codec sites (`metadata-store`, `sqlite-metadata-store`, `pipeline/codec`); 46 files touch the types             | medium–high | medium     | Broad on-disk state with no cheap rebuild path. `LargeSpaceMetadata` and `FeedMessage` are `Any`-blocked; `EchoMetadata` is safe but cannot be byte-identical — see below.                                                                                                                                                                         |
 | 9d  | credentials signing/verification        | `halo/credentials/src/credentials/*`, 94 declarations                                                             | highest     | high       | `signing.ts` stringifies the _substituted object_, so any shape drift invalidates every existing credential. Do last, behind 9a–9c, with fixtures of real signed credentials from released versions.                                                                                                                                               |
 
 ## Findings
