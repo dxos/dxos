@@ -7,7 +7,10 @@ import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols/proto';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-const credentialCodec = schema.getCodecForType('dxos.halo.credentials.Credential');
+// Resolved on first use, not at import: building the codec generates a mapper from source, which
+// workerd rejects as codegen-from-strings, and this module is reachable from a worker bundle.
+let credentialCodec: ReturnType<typeof schema.getCodecForType<'dxos.halo.credentials.Credential'>> | undefined;
+const getCredentialCodec = () => (credentialCodec ??= schema.getCodecForType('dxos.halo.credentials.Credential'));
 
 /** Versioned DXN in the same form `EntitySystem.type` carries. */
 export const CREDENTIALS_DOCUMENT_TYPE = 'dxn:org.dxos.document.spaceCredentials:0.1.0';
@@ -109,7 +112,7 @@ const rankGenesis = (credential: Credential): number =>
 const decodeCredential = (id: string, entry: CredentialsDocumentEntry): Credential | undefined => {
   let credential: Credential;
   try {
-    credential = credentialCodec.decode(entry);
+    credential = getCredentialCodec().decode(entry);
   } catch (err) {
     log.warn('undecodable credential entry', { id, err });
     return undefined;
