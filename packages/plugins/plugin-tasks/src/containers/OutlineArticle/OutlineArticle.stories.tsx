@@ -158,7 +158,7 @@ const meta = {
   title: 'plugins/plugin-tasks/containers/OutlineArticle',
   decorators: [
     withTheme(),
-    withLayout({ layout: 'column' }),
+    withLayout({ layout: 'fullscreen' }),
     withClientProvider({
       createIdentity: true,
       createSpace: true,

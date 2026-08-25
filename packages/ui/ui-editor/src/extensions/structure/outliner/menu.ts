@@ -41,7 +41,7 @@ export const menu = (options: MenuOptions = {}): Extension => [
         // Outer `dx-anchor` (fires `dx-anchor-activate`, driving the popover) styled as a `dx-button`;
         // inner element holds the phosphor glyph. Mirrors the drag grip's construction.
         this.tag = Domino.of('dx-anchor')
-          .classNames('dx-button aspect-square cm-popover-trigger')
+          .classNames('dx-button aspect-square cm-popover-trigger cm-outliner-menu')
           .attributes({ 'data-variant': 'ghost', 'data-density': 'xs' })
           .append(
             Domino.of('div')
@@ -130,6 +130,11 @@ const styles = EditorView.theme({
     position: 'fixed',
     opacity: '0',
     cursor: 'pointer',
+  },
+  // Scoped to this menu's own trigger rather than the shared `cm-popover-trigger`: that class is also
+  // on the inline `dx-anchor` decorations `popover.ts` puts in the document, and centring those on a
+  // point would shift them out from under their own text.
+  '.cm-outliner-menu': {
     // `left`/`top` name the centre point; the browser centres the real box on it, whatever its size.
     transform: 'translate(-50%, -50%)',
   },

@@ -50,18 +50,22 @@ export const outliner = ({ readonly }: OutlinerProps = {}): Extension => [
   // Filter and possibly modify changes.
   editor(),
 
+  // Block selection, drag-to-reorder, highlight, and clipboard (built on the `blocks` extensions).
+  // Kept in its original position: CodeMirror resolves decorations and themes by extension order, so
+  // moving this below the markdown decorations changes what the document renders as.
+  ...(readonly ? [] : [outlinerDnd()]),
+
   // Current-item indicator (the selection highlight is drawn by `outlinerDnd`).
   decorations(),
 
   // Default markdown decorations.
   decorateMarkdown({ listPaddingLeft: 8 }),
 
-  // Editing affordances: block selection, drag-to-reorder, highlight, and clipboard (built on the
-  // `blocks` extensions), the floating menu, and the margins reserved left/right for both.
+  // Floating menu (with reserved margins left/right for the grip and menu). A read-only surface has
+  // neither, so it also reclaims the margins.
   ...(readonly
     ? []
     : [
-        outlinerDnd(),
         menu(),
         EditorView.contentAttributes.of({
           class: CONTENT_WIDTH,

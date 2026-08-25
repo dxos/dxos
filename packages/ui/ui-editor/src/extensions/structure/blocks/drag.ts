@@ -97,8 +97,8 @@ const DRAG_THRESHOLD = 4;
 // Shared by the grip (`drag.ts`), menu (`menu.ts`), and the outliner content (`outliner.ts`).
 // Both utilities need `!`: CodeMirror's own `.ͼ1 .cm-content` rule sets `margin: 0` at a higher
 // specificity, which otherwise drops the centering and collapses both gutters onto one side.
-export const GUTTER_WIDTH = 32; // 2rem
-export const CONTENT_WIDTH = 'max-w-[min(50rem,100%-4rem)]! mx-auto!';
+export const GUTTER_WIDTH = 48;
+export const CONTENT_WIDTH = 'max-w-[min(50rem,100%-6rem)]! mx-auto!';
 
 const GRIP_ICON = 'ph--dots-six-vertical--regular';
 
