@@ -196,7 +196,7 @@ migration; crash mid-migration and resume.
       correctly mints nothing instead. Until this is solved the halo conversion is write-side only.- [ ] **NAME COLLISION to resolve**: `spaces-service.ts` already reports a `spaceRootUrl` in
       pipeline diagnostics meaning the DIRECTORY (`space.databaseRoot?.url`). Two different
       documents under one name will bite; rename the diagnostics field.
-- [ ] `createAdmissionCredentials` is now 10 positional parameters — convert to an options bag.
+- [x] `createAdmissionCredentials` is now 10 positional parameters — convert to an options bag.
 - [ ] **Invalidate the EDGE auth negative cache on credential apply**
       (`automerge-replicator-auth.ts`, `AUTH_CACHE_TTL_MS`) — a joiner that dials before the
       admission lands is denied for up to 60s. Pre-existing, more reachable after this change.
