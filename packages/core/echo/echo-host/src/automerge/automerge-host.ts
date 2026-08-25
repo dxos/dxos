@@ -139,6 +139,13 @@ const BUNDLE_SYNC_THRESHOLD = 50;
 const OPTIMIZED_SHARE_POLICY = true;
 
 /**
+ * Consecutive collection-sync passes a (collection, peer) pair may fail to converge before we
+ * warn. Collection state is re-queried every ~10s, so this is ~1min of a genuinely stuck sync —
+ * long enough that in-flight replication of a large document does not trip it.
+ */
+const NON_CONVERGENCE_WARN_THRESHOLD = 6;
+
+/**
  * Wall-clock cap for `_repo.shutdown()` during host teardown. Healthy
  * shutdowns finish in single-digit ms; see the comment in
  * {@link AutomergeHost._close} for why the cap is still here.
@@ -205,6 +212,13 @@ export class AutomergeHost extends Resource {
    * Documents that are not available locally that should be requested.
    */
   private _documentsToRequest = new Set<DocumentId>();
+
+  /**
+   * Consecutive non-converging collection-sync passes, keyed by `<collectionId>:<peerId>`.
+   * A pair that keeps diffing without shrinking is sync silently making no progress, which is
+   * otherwise indistinguishable from idle polling in the logs.
+   */
+  private _nonConvergingSyncPasses = new Map<string, number>();
 
   /**
    * Documents requested by remote peers.
@@ -1104,8 +1118,31 @@ export class AutomergeHost extends Resource {
       isEdgePeer: isEdgePeerId(peerId),
     });
 
+    const syncKey = `${collectionId}:${peerId}`;
     if (different.length === 0 && missingOnLocal.length === 0 && missingOnRemote.length === 0) {
+      this._nonConvergingSyncPasses.delete(syncKey);
       return;
+    }
+
+    // A pair that never converges produces no errors and no warnings — only an
+    // indistinguishable-from-idle diff every ~10s. Surface it, with the heads on both sides, so
+    // a stuck document is diagnosable from a log bundle instead of requiring storage forensics.
+    const passes = (this._nonConvergingSyncPasses.get(syncKey) ?? 0) + 1;
+    this._nonConvergingSyncPasses.set(syncKey, passes);
+    if (passes >= NON_CONVERGENCE_WARN_THRESHOLD) {
+      log.warn('collection sync not converging', {
+        collectionId,
+        peerId,
+        passes,
+        missingOnLocal,
+        missingOnRemote,
+        different,
+        localHeads: Object.fromEntries(different.map((documentId) => [documentId, localState.documents[documentId]])),
+        remoteHeads: Object.fromEntries(different.map((documentId) => [documentId, remoteState.documents[documentId]])),
+        handleStates: Object.fromEntries(
+          different.map((documentId) => [documentId, getHandleState(this._repo, documentId)]),
+        ),
+      });
     }
 
     const toReplicateWithoutBatching = [...different];
@@ -1115,10 +1152,13 @@ export class AutomergeHost extends Resource {
       const { syncInteractively } = await this._pushInBundles(ctx, peerId, missingOnRemote);
       toReplicateWithoutBatching.push(...syncInteractively);
     } else {
-      log.verbose('failed to push bundle, replicating interactively', {
+      // Not a failure: bundling is skipped when the peer lacks bundle sync or the batch is
+      // below `BUNDLE_SYNC_THRESHOLD`, which is the common case (often zero docs).
+      log.verbose('pushing without bundle', {
         collectionId,
         peerId,
         amount: missingOnRemote.length,
+        reason: bundleSyncEnabled ? 'below-threshold' : 'bundle-sync-unavailable',
       });
       toReplicateWithoutBatching.push(...missingOnRemote);
     }
@@ -1127,10 +1167,12 @@ export class AutomergeHost extends Resource {
       const { syncInteractively } = await this._pullInBundles(ctx, peerId, missingOnLocal);
       toReplicateWithoutBatching.push(...syncInteractively);
     } else {
-      log.verbose('failed to pull bundle, replicating interactively', {
+      // Not a failure: see the push branch above.
+      log.verbose('pulling without bundle', {
         collectionId,
         peerId,
         amount: missingOnLocal.length,
+        reason: bundleSyncEnabled ? 'below-threshold' : 'bundle-sync-unavailable',
       });
       toReplicateWithoutBatching.push(...missingOnLocal);
     }
