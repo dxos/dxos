@@ -260,8 +260,6 @@ jobs:
     timeout-minutes: 30
     env:
       DX_DEBUG_LEAKS: '1'
-      # Heap snapshots land beside the samples file; keep them out of the workspace.
-      DX_DEBUG_LEAKS_DIR: ${{ runner.temp }}/profiles
       VITEST_ENV: 'node'
     steps:
       - name: Checkout
@@ -275,11 +273,19 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
+      # `DX_DEBUG_LEAKS_DIR` keeps the heap snapshots the probe writes out of the workspace. It is
+      # set per step, not on the job: `runner` is not among the contexts available to job-level `env`
+      # (only github/needs/strategy/matrix/vars/inputs), and referencing it there fails the whole
+      # workflow to parse — no jobs run at all.
       - name: Feed retention
+        env:
+          DX_DEBUG_LEAKS_DIR: ${{ runner.temp }}/profiles
         run: moon run echo-client-e2e:test -- src/feed-retention.test.ts
 
       - name: Automerge retention (known red, reporting only)
         continue-on-error: true
+        env:
+          DX_DEBUG_LEAKS_DIR: ${{ runner.temp }}/profiles
         run: moon run echo-client-e2e:test -- src/automerge-retention.test.ts
 
   # Every vitest flavour in one sharded job: unit (`:test`), browser (`:test-browser`), storybook
