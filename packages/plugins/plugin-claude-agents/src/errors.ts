@@ -21,8 +21,8 @@ export class AgentNotDeployedError extends BaseError.extend(
   'Agent has not been deployed; run Deploy Claude Agent first.',
 ) {}
 
-/** No environment is configured, so a session cannot be created. */
-export class EnvironmentNotConfiguredError extends BaseError.extend(
-  'EnvironmentNotConfiguredError',
-  'No Anthropic environment id configured for this agent.',
+/** No Anthropic credential is stored in the space, so the API cannot be called. */
+export class MissingCredentialError extends BaseError.extend(
+  'MissingCredentialError',
+  'No Anthropic API credential is connected in this space.',
 ) {}

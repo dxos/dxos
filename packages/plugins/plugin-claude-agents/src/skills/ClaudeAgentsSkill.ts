@@ -40,14 +40,27 @@ export const make = (): Skill.Skill =>
         2. Deploy Claude Agent — pushes that configuration to Anthropic and records the returned
            \`agentId\`. Re-run it after ANY change to the name, model, system prompt, skills or MCP
            servers; a session always runs the deployed copy, never the space's unpushed edits.
-        3. Start Claude Agent Session — provisions a container and starts a run. Requires a deployed
-           agent AND an environment id.
+        3. Start Claude Agent Session — provisions a container and starts a run. Requires only a
+           deployed agent; the environment is reused or provisioned for you.
         4. Send Message To Claude Agent / Get Claude Agent Transcript — drive and read the session.
 
+        ## Credentials
+        Every step past Create Claude Agent calls Anthropic and needs the space's "anthropic.com"
+        credential. When an operation fails with MissingCredentialError the credential is not connected
+        yet — that is a setup gap, not an error to report and stop on:
+        1. Enable the \`org.dxos.skill.connectors\` skill with Enable skills.
+        2. Emit its connector prompt so the user can connect inline:
+           \`<surface role='integration-prompt' data='{"service":"anthropic.com"}' />\`
+        3. Say that connecting Anthropic lets you continue, then stop and wait — do not retry the
+           operation in the same turn, and never ask the user to paste a key into the conversation.
+
         ## Environments
-        An environment id (\`env_…\`) is where sessions run and cannot be created from here — the user
-        provisions it via the Anthropic Console or the \`ant\` CLI. If an agent has none, ask the user
-        for it rather than guessing one; Start Claude Agent Session fails without it.
+        An environment id (\`env_…\`) is the container template a session runs in. You do not need one
+        up front: Start Claude Agent Session reuses the agent's, and provisions a default cloud
+        environment when the agent has none, recording it on the agent so later runs reuse it. When the
+        result has \`provisionedEnvironment: true\`, mention that you created one and name it — the user
+        may want a configured environment from the Anthropic Console instead. Pass \`environmentId\`
+        only when the user names a specific environment.
 
         ## Running a session
         - Sessions are asynchronous. Start Claude Agent Session returns as soon as the session exists;

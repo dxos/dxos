@@ -8,7 +8,13 @@ import { proxyFetchLegacy } from '@dxos/edge-client';
 
 import { ANTHROPIC_API_URL, ANTHROPIC_VERSION, MANAGED_AGENTS_BETA, REQUEST_TIMEOUT_MS } from '../constants';
 import { ClaudeAgentApiError } from '../errors';
-import { type AgentConfig, type AgentResponse, type EventPage, type SessionResponse } from './types';
+import {
+  type AgentConfig,
+  type AgentResponse,
+  type EnvironmentResponse,
+  type EventPage,
+  type SessionResponse,
+} from './types';
 
 type Request = {
   apiKey: string;
@@ -74,6 +80,21 @@ export const updateAgent = (
     method: 'POST',
     path: `/v1/agents/${agentId}`,
     body: version === undefined ? config : { ...config, version },
+  });
+
+/**
+ * Creates a cloud environment: the container template sessions run in. Unrestricted networking so the
+ * agent's own tools can reach the network; a caller wanting egress limits configures it in the Console.
+ */
+export const createEnvironment = (
+  apiKey: string,
+  name: string,
+): Effect.Effect<EnvironmentResponse, ClaudeAgentApiError> =>
+  request({
+    apiKey,
+    method: 'POST',
+    path: '/v1/environments',
+    body: { name, config: { type: 'cloud', networking: { type: 'unrestricted' } } },
   });
 
 /** Starts a session against a deployed agent, optionally seeding it with the first user message. */

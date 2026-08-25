@@ -116,7 +116,10 @@ feat F-4: Sessions
   req F-4.2:
     when: Start Claude Agent Session is invoked with no environment id on the
           agent and none in the input
-    then: the operation fails with EnvironmentNotConfiguredError
+    then: |
+      a default cloud environment is created via POST /v1/environments, its id
+      is stored on the agent so later runs reuse it, and the operation returns
+      provisionedEnvironment: true
 
   req F-4.3:
     when: Start Claude Agent Session is invoked with a message
@@ -158,6 +161,13 @@ feat F-6: Credentials
     when: any operation calls the Anthropic API
     then: the API key is resolved from the credential stored under the
           "anthropic.com" service and sent as the `x-api-key` header
+
+  req F-6.3:
+    when: no "anthropic.com" credential exists in the space
+    then: |
+      the operation fails with MissingCredentialError (a typed failure, not a
+      defect), and the skill instructs the model to enable the connectors skill
+      and render the integration prompt for anthropic.com rather than stopping
 
   req F-6.2:
     when: the API returns a non-2xx response

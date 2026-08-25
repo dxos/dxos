@@ -4,15 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Ref } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 
-import { createSession } from '#api';
+import { createEnvironment, createSession } from '#api';
 import { ClaudeAgentOperation, ClaudeAgentSession } from '#types';
 
-import { ANTHROPIC_SOURCE } from '../constants';
-import { AgentNotDeployedError, EnvironmentNotConfiguredError } from '../errors';
+import { DEFAULT_ENVIRONMENT_NAME } from '../constants';
+import { getApiKey } from '../credentials';
+import { AgentNotDeployedError } from '../errors';
 
 const handler: Operation.WithHandler<typeof ClaudeAgentOperation.StartSession> = ClaudeAgentOperation.StartSession.pipe(
   Operation.withHandler(
@@ -22,12 +22,19 @@ const handler: Operation.WithHandler<typeof ClaudeAgentOperation.StartSession> =
         return yield* Effect.fail(new AgentNotDeployedError());
       }
 
-      const environment = environmentId ?? agentObj.environmentId;
-      if (!environment) {
-        return yield* Effect.fail(new EnvironmentNotConfiguredError());
+      const apiKey = yield* getApiKey;
+
+      // Provisioning on demand rather than failing: an environment is a container template with no
+      // per-existence cost, and requiring one up front blocks the first run on a Console visit.
+      const configured = environmentId ?? agentObj.environmentId;
+      const environment = configured ?? (yield* createEnvironment(apiKey, DEFAULT_ENVIRONMENT_NAME)).id;
+      const provisioned = configured === undefined;
+      if (provisioned) {
+        Obj.update(agentObj, (agentObj) => {
+          agentObj.environmentId = environment;
+        });
       }
 
-      const apiKey = yield* Credential.getApiKeyValue({ service: ANTHROPIC_SOURCE });
       const sessionTitle = title ?? `${agentObj.name} session`;
       const response = yield* createSession(apiKey, {
         agentId: agentObj.agentId,
@@ -46,7 +53,12 @@ const handler: Operation.WithHandler<typeof ClaudeAgentOperation.StartSession> =
         }),
       );
 
-      return { id: session.id, sessionId: response.id };
+      return {
+        id: session.id,
+        sessionId: response.id,
+        environmentId: environment,
+        provisionedEnvironment: provisioned,
+      };
     }),
   ),
 );

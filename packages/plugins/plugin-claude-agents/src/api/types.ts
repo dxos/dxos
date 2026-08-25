@@ -20,6 +20,11 @@ export type AgentResponse = {
   version?: number;
 };
 
+export type EnvironmentResponse = {
+  id: string;
+  name?: string;
+};
+
 export type SessionResponse = {
   id: string;
   status?: string;

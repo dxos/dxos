@@ -119,12 +119,19 @@ export const StartSession = Operation.make({
     message: Schema.optional(Schema.String.annotate({ description: 'First user message sent to the agent.' })),
     title: Schema.optional(Schema.String.annotate({ description: 'Title for the session.' })),
     environmentId: Schema.optional(
-      Schema.String.annotate({ description: "Overrides the agent's configured environment id." }),
+      Schema.String.annotate({
+        description:
+          "Overrides the agent's configured environment id. Omit to reuse the agent's, or to have one provisioned.",
+      }),
     ),
   }),
   output: Schema.Struct({
     id: Schema.String.annotate({ description: 'Object id of the created session.' }),
     sessionId: Schema.String.annotate({ description: 'Anthropic session id.' }),
+    environmentId: Schema.String.annotate({ description: 'Environment the session runs in.' }),
+    provisionedEnvironment: Schema.Boolean.annotate({
+      description: 'Whether an environment was created for this run because the agent had none.',
+    }),
   }),
   services: [Database.Service, Credential.CredentialsService],
   types: [ClaudeManagedAgent.ClaudeManagedAgent, ClaudeAgentSession.ClaudeAgentSession],

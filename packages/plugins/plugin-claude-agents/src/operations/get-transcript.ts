@@ -4,21 +4,21 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
 import { getSession, listEvents, toTranscript } from '#api';
 import { ClaudeAgentOperation } from '#types';
 
-import { ANTHROPIC_SOURCE, DEFAULT_TRANSCRIPT_LIMIT } from '../constants';
+import { DEFAULT_TRANSCRIPT_LIMIT } from '../constants';
+import { getApiKey } from '../credentials';
 
 const handler: Operation.WithHandler<typeof ClaudeAgentOperation.GetTranscript> =
   ClaudeAgentOperation.GetTranscript.pipe(
     Operation.withHandler(
       Effect.fn(function* ({ session, limit }) {
         const sessionObj = yield* Database.load(session);
-        const apiKey = yield* Credential.getApiKeyValue({ service: ANTHROPIC_SOURCE });
+        const apiKey = yield* getApiKey;
 
         const [state, events] = yield* Effect.all(
           [
