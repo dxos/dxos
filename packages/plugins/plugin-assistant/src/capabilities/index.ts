@@ -41,6 +41,11 @@ export const AutomationTemplates = Capability.lazyModule(
   () => import('./automation-templates'),
 );
 export const Schema = AppCapability.schema(() => import('./schema-defs'));
+export const SubjectContext = Capability.lazyModule(
+  'SubjectContext',
+  { provides: [AssistantCapabilities.SubjectContext], activatesOn: AssistantEvents.Start },
+  () => import('./subject-context'),
+);
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
   provides: [RoutineCapabilities.AgentDelegationStrategy],
 });

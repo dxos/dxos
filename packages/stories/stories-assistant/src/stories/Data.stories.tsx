@@ -395,12 +395,7 @@ export const WithCRM: Story = {
       // cells always have a subject to render.
       const [existing] = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
       const mailbox = existing ?? space.db.add(Mailbox.make({ name: 'Mailbox' }));
-      return [
-        [StoryRole.Chat],
-        [Cell.article(mailbox)],
-        [Cell.companion(mailbox, 'automation'), AppSurface.deckCompanion('trace')],
-        [StoryRole.Database],
-      ];
+      return [[StoryRole.Chat], [Cell.article(mailbox)], [AppSurface.deckCompanion('trace')], [StoryRole.Database]];
     },
     onChatCreated: async ({ space, binder }) => {
       const mailboxes = await space.db.query(Filter.type(Mailbox.Mailbox)).run();

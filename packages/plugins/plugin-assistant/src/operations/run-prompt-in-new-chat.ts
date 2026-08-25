@@ -18,6 +18,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Text } from '@dxos/schema';
 
 import { AssistantCapabilities, AssistantOperation } from '#types';
@@ -30,7 +31,8 @@ const handler: Operation.WithHandler<typeof RoutineOperation.RunPromptInNewChat>
       Effect.fnUntraced(
         function* ({ db, instructions, objects, skills, background }) {
           const registry = yield* Capability.get(Capabilities.AtomRegistry);
-          const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, { db });
+          const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, {}, { spaceId: db.spaceId });
+          yield* Operation.invoke(SpaceOperation.AddObject, { object: chat }, { spaceId: db.spaceId });
 
           if ((objects && objects.length > 0) || (skills && skills.length > 0)) {
             const feedTarget = yield* Database.load(chat.feed);
