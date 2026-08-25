@@ -193,13 +193,19 @@ migration; crash mid-migration and resume.
       space, so the root and credentials documents written there are local to each device and reach
       neither the other device nor EDGE. The credential chain therefore still travels only as a feed
       for HALO, and a joining device can never actually adopt the root it is told about — it
-      correctly mints nothing instead. Until this is solved the halo conversion is write-side only.- [ ] **NAME COLLISION to resolve**: `spaces-service.ts` already reports a `spaceRootUrl` in
-      pipeline diagnostics meaning the DIRECTORY (`space.databaseRoot?.url`). Two different
-      documents under one name will bite; rename the diagnostics field.
+      correctly mints nothing instead. Until this is solved the halo conversion is write-side only.
+- [x] **NAME COLLISION resolved.** The pipeline diagnostics field meaning the DIRECTORY is now
+      `directory_url` (`services.proto` field 22, number unchanged so the wire is unaffected), leaving
+      `spaceRootUrl` to mean the space root document everywhere. Call sites updated: `spaces-service.ts`,
+      `space-proxy.ts` (×2), `cli-util/space-format.ts`. `FunctionProtocol.spaceRootUrl` also means the
+      directory but is a separate hand-written contract consumed by deployed functions, so it is left
+      alone rather than widened into this change.
 - [x] `createAdmissionCredentials` is now 10 positional parameters — convert to an options bag.
-- [ ] **Invalidate the EDGE auth negative cache on credential apply**
-      (`automerge-replicator-auth.ts`, `AUTH_CACHE_TTL_MS`) — a joiner that dials before the
-      admission lands is denied for up to 60s. Pre-existing, more reachable after this change.
+- [x] **EDGE auth negative cache — already fixed, now covered.** `automerge-replicator-auth.ts`
+      caches only an allow; a denial re-queries, so a joiner that dialled before its admission
+      landed is no longer refused for the rest of the 60s TTL. Verified by
+      `automerge-replicator-auth.workerd.test.ts`, which denies a joiner, applies the admission,
+      and re-asks with the same authenticator instance.
 - [ ] Replication: credentials doc joins normal subduction; fresh-joiner test that reads
       credentials before being admitted to anything else.
 - [ ] Replay test: old feed vs new document produce identical membership/invitation/epoch

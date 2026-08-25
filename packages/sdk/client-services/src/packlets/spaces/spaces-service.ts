@@ -521,7 +521,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
         targetDataTimeframe: undefined,
         totalDataTimeframe: undefined,
 
-        spaceRootUrl: space.databaseRoot?.url,
+        directoryUrl: space.databaseRoot?.url,
       },
       members: await Promise.all(
         Array.from(space.inner.spaceState.members.values()).map(async (member) => {
