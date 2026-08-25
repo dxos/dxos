@@ -40,7 +40,9 @@ describe('config loaders', () => {
   test('a malformed json env entry is reported against its source', ({ expect }) => {
     process.env.DX_TEST_JSON = '{ not json';
     const basePath = withEnvsMap('DX_TEST_JSON:\n  path: runtime.app.env.DX_TEST_JSON\n  type: json\n');
+    // Naming the source is the point of the projection's own error boundary, so assert on it.
     expect(() => Envs(basePath)).toThrow(InvalidConfigError);
+    expect(() => Envs(basePath)).toThrow(FILE_ENVS);
   });
 });
 

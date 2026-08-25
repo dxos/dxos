@@ -76,7 +76,7 @@ const POSTHOG_DISABLED_CONFIG = {
  */
 const feedbackLogsEndpoint = (config: Config, isTauri: boolean): string | undefined =>
   isTauri
-    ? (config.values.runtime?.app?.env?.DX_FEEDBACK_LOGS_ENDPOINT ?? `https://${APP_DOMAIN}${FEEDBACK_LOGS_PATH}`)
+    ? (getEnvString(config, 'DX_FEEDBACK_LOGS_ENDPOINT') ?? `https://${APP_DOMAIN}${FEEDBACK_LOGS_PATH}`)
     : undefined;
 
 /** Initialize observability extensions and data providers for Composer. */
