@@ -123,7 +123,6 @@ describe('Project conversation', () => {
         Effect.provide(ScriptedTestLayer),
         TestHelpers.provideTestContext,
       ),
-      { timeout: 30_000 },
     );
   }
 

@@ -3,7 +3,6 @@
 //
 
 import { describe, it } from '@effect/vitest';
-import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
@@ -23,13 +22,12 @@ import { Outline, Task, TaskSet } from '@dxos/types';
 
 import { AssistantTestLayerWithTriggers } from './assistant-test-layer';
 
-// A project's routine is the headless half of the project loop: the chat drives work a person is
-// present for, the routine drives work that happens on a schedule. This asserts the whole path —
-// ownership, the trigger's own input binding, and the run's effect on the project's ledger.
+// A project's routine is the headless half of the project loop, so what needs asserting here is the
+// project-specific part: a routine the project owns writes the project's own ledger. Trigger
+// mechanics — schedules, enablement — belong to the dispatcher's own tests.
 //
-// It fires the trigger through `TriggerDispatcher` rather than plugin-routine's `RunRoutine`
-// operation: plugin-routine sits above this package, so importing it back would cycle. The
-// dispatcher is the path `RunRoutine` itself delegates to.
+// It fires through `TriggerDispatcher` rather than plugin-routine's `RunRoutine` operation:
+// plugin-routine sits above this package, so importing it back would cycle.
 
 /** Stands in for a project pipeline: appends a task to the project's ledger, like the mailbox verbs. */
 const AppendTask = Operation.make({
@@ -93,64 +91,6 @@ describe('running a project routine', () => {
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
-    { timeout: 30_000 },
-  );
-
-  it.effect(
-    'the scheduled path fires it too, once the cron comes due',
-    Effect.fnUntraced(
-      function* ({ expect }) {
-        const { project } = yield* seed();
-        const taskSet = yield* loadTaskSet(project);
-
-        const dispatcher = yield* TriggerDispatcher;
-        // Nothing is due yet, so a sweep before the interval must not run the action.
-        yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] });
-        expect(taskSet.tasks).toHaveLength(0);
-
-        yield* dispatcher.advanceTime(Duration.minutes(10));
-        yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] });
-
-        expect(taskSet.tasks.map((ref) => ref.target?.title)).toEqual(['Nightly sweep']);
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-    { timeout: 30_000 },
-  );
-
-  it.effect(
-    'a disabled trigger runs on neither path until it is enabled',
-    Effect.fnUntraced(
-      function* ({ expect }) {
-        const { project, trigger } = yield* seed({ enabled: false });
-        const taskSet = yield* loadTaskSet(project);
-
-        const dispatcher = yield* TriggerDispatcher;
-        yield* dispatcher.advanceTime(Duration.minutes(10));
-        yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] });
-        expect(taskSet.tasks).toHaveLength(0);
-
-        // Disabled gates the manual path too, so a template's opt-in starter routine cannot be run
-        // into a space by a caller that never enabled it. The refusal is a defect carried in the
-        // invocation's own result, not a failure of the dispatch call.
-        const { result: refused } = yield* dispatcher.invokeTrigger({ trigger, event: { tick: 0 } });
-        expect(Exit.isFailure(refused)).toBe(true);
-        expect(String(refused)).toContain('disabled trigger');
-        expect(taskSet.tasks).toHaveLength(0);
-
-        Obj.update(trigger, (trigger) => {
-          trigger.enabled = true;
-        });
-        yield* Database.flush();
-        yield* dispatcher.invokeTrigger({ trigger, event: { tick: 0 } });
-
-        expect(taskSet.tasks.map((ref) => ref.target?.title)).toEqual(['Nightly sweep']);
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-    { timeout: 30_000 },
   );
 });
 
@@ -158,7 +98,7 @@ describe('running a project routine', () => {
  * A project owning a routine whose action appends to the project's ledger, on a 5-minute timer.
  * Mirrors what a domain template scaffolds: the trigger carries the runnable's input binding.
  */
-const seed = ({ enabled = true }: { enabled?: boolean } = {}) =>
+const seed = () =>
   Effect.gen(function* () {
     const project = yield* Database.add(Project.make({ name: 'Voyage' }));
     yield* Database.flush();
@@ -170,7 +110,7 @@ const seed = ({ enabled = true }: { enabled?: boolean } = {}) =>
     const trigger = yield* Database.add(
       Trigger.make({
         runnable: Ref.make(record),
-        enabled,
+        enabled: true,
         spec: Trigger.specTimer('*/5 * * * *'),
         input: { project: Ref.make(project), title: 'Nightly sweep' },
       }),
