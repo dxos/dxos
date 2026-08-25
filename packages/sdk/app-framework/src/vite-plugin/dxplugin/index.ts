@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, posix, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { type Plugin as VitePlugin } from 'vite';
 
@@ -11,6 +11,9 @@ import { parseJsonc } from '../../core/jsonc.ts';
 
 /** Filename every plugin publishes next to its `package.json`. */
 export const DXPLUGIN_FILENAME = 'dxplugin.jsonc';
+
+/** The descriptor as a build emits it: plain JSON, `src` pointing at the chunks that shipped. */
+export const DXPLUGIN_BUILT_FILENAME = 'dxplugin.json';
 
 /** A descriptor module, as the loader needs it: anything else on the entry rides through untouched. */
 type RawModule = { src: string } & Record<string, unknown>;
@@ -57,8 +60,21 @@ const readDescriptor = (raw: unknown): { modules: RawModule[]; profile: Record<s
  * {@link Plugin.fromManifest}. A host loading a *published* plugin instead fetches the same file
  * over HTTP and parses the JSONC itself; `Plugin.fromManifest` accepts either.
  */
-export const dxPluginManifest = (): VitePlugin => {
+export type DxPluginManifestOptions = {
+  /**
+   * Descriptor to build as a first-class input, relative to the project root. Its modules become
+   * build entrypoints and a resolved `dxplugin.json` is emitted beside them, so a plugin's built
+   * output stands on its own instead of only materializing where some module happens to import it.
+   * Defaults to a `dxplugin.jsonc` at the project root, when one exists.
+   */
+  manifest?: string;
+};
+
+export const dxPluginManifest = (options: DxPluginManifestOptions = {}): VitePlugin => {
   let isBuild = false;
+  let manifestPath: string | undefined;
+  // `src` -> the emitted chunk's reference id; resolved to filenames only once the bundle is written.
+  let emitted: { profile: Record<string, unknown>; modules: { module: RawModule; ref: string }[] } | undefined;
 
   return {
     name: '@dxos/vite-plugin-dxplugin',
@@ -67,6 +83,53 @@ export const dxPluginManifest = (): VitePlugin => {
 
     configResolved(config) {
       isBuild = config.command === 'build';
+      const candidate = resolve(config.root ?? process.cwd(), options.manifest ?? DXPLUGIN_FILENAME);
+      manifestPath = isBuild && existsSync(candidate) ? candidate : undefined;
+    },
+
+    // Declared here rather than inferred from an import: a plugin whose descriptor nothing imports
+    // still has to ship its module chunks, since the descriptor is the entrypoint.
+    buildStart() {
+      if (!manifestPath) {
+        return;
+      }
+      const { modules, profile } = readDescriptor(parseJsonc(readFileSync(manifestPath, 'utf-8')));
+      const dir = dirname(manifestPath);
+      emitted = {
+        profile,
+        modules: modules.map((module) => ({
+          module,
+          ref: this.emitFile({
+            type: 'chunk',
+            id: resolve(dir, module.src),
+            preserveSignature: 'exports-only',
+          }),
+        })),
+      };
+    },
+
+    // JSON, not JSONC: the emitted copy is for hosts that fetch a published plugin and parse it with
+    // whatever their runtime offers, so it must not require a comment-tolerant parser.
+    generateBundle(_output, _bundle) {
+      if (!emitted) {
+        return;
+      }
+      // `$schema` is an authoring aid pointing into the workspace's `node_modules`; it means nothing
+      // to a host that fetched this file, so it does not travel with the artifact.
+      const { $schema: _schema, ...profile } = emitted.profile;
+      const descriptor = {
+        ...profile,
+        modules: emitted.modules.map(({ module, ref }) => {
+          const { src: _src, ...rest } = module;
+          // Relative to the emitted descriptor, which sits at the bundle root beside the chunks.
+          return { ...rest, src: `./${posix.normalize(this.getFileName(ref))}` };
+        }),
+      };
+      this.emitFile({
+        type: 'asset',
+        fileName: DXPLUGIN_BUILT_FILENAME,
+        source: `${JSON.stringify(descriptor, null, 2)}\n`,
+      });
     },
 
     // A library build externalizes every non-relative import, and an externalized id never reaches
