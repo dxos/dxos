@@ -26,17 +26,6 @@ describe('Project', () => {
     expect(project.routines).toEqual([]);
   });
 
-  test('the v0.4.0 migration carries a project forward with an empty routines array', async ({ expect }) => {
-    const [migration] = Project.migrations;
-    expect(migration.fromType).toContain('0.4.0');
-    expect(migration.toType).toContain('0.5.0');
-
-    const legacy = Obj.make(Project.Project_v0_4_0, { name: 'Legacy', artifacts: [] });
-    const migrated: any = await migration.transform(legacy, {} as any);
-    expect(migrated.name).toBe('Legacy');
-    expect(migrated.routines).toEqual([]);
-  });
-
   test('addRoutine links a routine by ref and parents it for cascade', ({ expect }) => {
     const project = Project.make({ name: 'test' });
     const routine = Routine.make({ name: 'Starter', triggers: [] });

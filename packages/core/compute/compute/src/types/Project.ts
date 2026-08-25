@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Migration, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInlineAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Outline, TaskSet } from '@dxos/types';
 
@@ -57,42 +57,6 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
     Skill.SkillsAnnotation.set(['org.dxos.skill.project']),
   ),
 ) {}
-
-/**
- * Project schema v0.4.0 — before the project owned its routines.
- * @deprecated Use {@link Project} (v0.5.0); {@link migrations} carries v0.4.0 objects forward.
- */
-export class Project_v0_4_0 extends Type.makeObject<Project_v0_4_0>(DXN.make('org.dxos.type.project', '0.4.0'))(
-  Schema.Struct({
-    name: Schema.optional(Schema.String),
-    description: Schema.optional(Schema.String),
-    status: Schema.optional(ProjectStatus),
-    instructions: Schema.optional(Ref.Ref(Instructions.Instructions)),
-    artifacts: Schema.Array(Ref.Ref(Obj.Unknown)),
-    outline: Schema.optional(Ref.Ref(Outline.Outline)),
-    taskSet: Schema.optional(Ref.Ref(TaskSet.TaskSet)),
-  }),
-) {}
-
-// `Filter.type` matches the versioned type exactly, so without this a v0.4.0 project stops being
-// returned by every project query.
-const _routinesMigration = Migration.define({
-  from: Project_v0_4_0,
-  to: Project,
-  transform: async ({ name, description, status, instructions, artifacts, outline, taskSet }) => ({
-    name,
-    description,
-    status,
-    instructions,
-    artifacts,
-    outline,
-    taskSet,
-    routines: [],
-  }),
-});
-
-/** Schema migrations for {@link Project}, for a plugin to contribute to `ClientCapabilities.Migration`. */
-export const migrations = [_routinesMigration];
 
 /**
  * Factory wrapper around `Obj.make` for {@link Project}.

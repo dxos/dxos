@@ -8,7 +8,6 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import {
   AppGraphBuilder,
   CreateObject,
-  Migrations,
   OperationHandler,
   ReactSurface,
   Schema,
@@ -20,7 +19,6 @@ import { translations } from '#translations';
 
 export const ProjectsPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(Schema),
-  Plugin.addModule(Migrations),
   Plugin.addModule(CreateObject),
   Plugin.addModule(Templates),
   Plugin.addModule(AppGraphBuilder),

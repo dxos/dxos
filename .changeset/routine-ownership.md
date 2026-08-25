@@ -12,4 +12,4 @@ Routine templates (`RoutineCapabilities.Template`) are all global. `appliesTo` i
 
 Two fixes fall out of the same area. A type section built without a `sectionUrlKey` used to put a placeholder string in its node's `data`, which made the navtree treat the section header as openable and put up an empty plank; it is now `null`, matching `AppNode.makeSection`. And `Form.Actions` accepts `submitLabel`/`submitIcon`, so a form that is a step rather than the commit can say what it does — the routine create panel's input step now reads "Continue".
 
-Existing `0.4.0` projects are carried forward by a registered migration (`Project.migrations`, contributed by plugin-projects): `Filter.type` matches the versioned type exactly, so without one a project written before this change would stop being returned by every project query.
+`Filter.type` matches the versioned type exactly and no migration is provided, so projects written at `0.4.0` are not carried forward.
