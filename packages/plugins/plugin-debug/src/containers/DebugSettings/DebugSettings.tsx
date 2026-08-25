@@ -17,8 +17,9 @@ import { TRACE_ALL_KEY } from '@dxos/tracing';
 import { setDeep } from '@dxos/util';
 
 import { meta } from '#meta';
+import { Settings } from '#types';
 
-import * as Settings from '../../types/Settings';
+import { DebugPortSettings } from '../DebugPortSettings';
 
 type Toast = {
   title: string;
@@ -67,12 +68,12 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
     download(file, fileName);
 
     if (onUpload) {
-      const personalSpace = AppSpace.getPersonalSpace(client);
-      if (!personalSpace) {
-        log.error('no personal space available for upload');
+      const defaultSpace = AppSpace.getDefaultSpace(client);
+      if (!defaultSpace) {
+        log.error('no default space available for upload');
         return;
       }
-      const info = await onUpload(personalSpace.db, new File([file], fileName));
+      const info = await onUpload(defaultSpace.db, new File([file], fileName));
       if (!info) {
         log.error('diagnostics failed to upload to IPFS');
         return;
@@ -246,6 +247,8 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
               </Select.Root>
             </Form.Row>
           </Form.Section>
+
+          <DebugPortSettings disabled={!onSettingsChange} />
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

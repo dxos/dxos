@@ -14,7 +14,7 @@ import * as Subscription from './Subscription';
 // effects on obviously-malformed input. Handle existence is verified implicitly by the publication lookup
 // (an unresolvable handle yields no publications, and a publication is required to submit).
 export const HandleSchema = Schema.String.pipe(
-  Schema.pattern(/^@?([\da-z-]+\.)+[a-z]{2,}$|^did:[a-z]+:[a-zA-Z0-9._%:-]+$/i),
+  Schema.check(Schema.isPattern(/^@?([\da-z-]+\.)+[a-z]{2,}$|^did:[a-z]+:[a-zA-Z0-9._%:-]+$/i)),
 );
 
 export const isHandle = Schema.is(HandleSchema);
@@ -27,17 +27,17 @@ export const isUrl = Schema.is(Format.URL);
 
 export const StandardSiteCreateBase = Schema.Struct({
   type: Schema.Literal('standard-site'),
-  handle: HandleSchema.annotations({ title: 'Handle', description: 'atproto handle, e.g. dxos.org.' }),
+  handle: HandleSchema.annotate({ title: 'Handle', description: 'atproto handle, e.g. dxos.org.' }),
   // No `name`: the feed name is taken from the selected publication (resolved by `fetchStandardSite`).
-  publication: Schema.String.annotations({ title: 'Publication', description: 'Choose a publication.' }),
+  publication: Schema.String.annotate({ title: 'Publication', description: 'Choose a publication.' }),
 });
 
 export type StandardSiteValues = Schema.Schema.Type<typeof StandardSiteCreateBase>;
 
 export const RssCreateBase = Schema.Struct({
   type: Schema.Literal('rss'),
-  url: Format.URL.annotations({ title: 'URL', description: 'RSS feed URL.' }),
-  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
+  url: Format.URL.annotate({ title: 'URL', description: 'RSS feed URL.' }),
+  name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
 });
 
 export type RssValues = Schema.Schema.Type<typeof RssCreateBase>;

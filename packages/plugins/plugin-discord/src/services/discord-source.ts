@@ -8,9 +8,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { CrawlError, Source, type SourceApi, type ThreadRef, type Type } from '@dxos/crawler';
-import { type Err, type Ref } from '@dxos/echo';
+import { type Error, type Ref } from '@dxos/echo';
+import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
-import type * as Connection from '@dxos/plugin-connector/Connection';
 
 import { DEFAULT_DAYS, snowflakeForTimestamp } from '../constants';
 import { makeDiscordLayer, makeDiscordLayerFromToken } from './discord';
@@ -145,7 +145,7 @@ const makeSource: Effect.Effect<SourceApi, never, DiscordREST> = Effect.gen(func
                 })),
             ),
             // A guild the bot was removed from mid-call should not fail discovery of the rest.
-            Effect.catchAll((error) => {
+            Effect.catch((error) => {
               log.catch(error);
               return Effect.succeed([]);
             }),
@@ -174,5 +174,5 @@ export const discordSourceLayer = (token: string): Layer.Layer<Source> =>
  */
 export const discordSourceLayerFromConnection = (
   connection: Ref.Ref<Connection.Connection>,
-): Layer.Layer<Source, Err.EntityNotFoundError> =>
+): Layer.Layer<Source, Error.EntityNotFoundError> =>
   Layer.effect(Source, makeSource).pipe(Layer.provide(makeDiscordLayer(connection)));

@@ -9,8 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { log } from '@dxos/log';
 import { ObservabilityProvider } from '@dxos/observability';
 
-import * as ObservabilityCapabilities from '../types/ObservabilityCapabilities';
-import * as ObservabilityOperation from '../types/ObservabilityOperation';
+import { ObservabilityCapabilities, ObservabilityOperation } from '#types';
 
 // The `observability` instance is read from `ObservabilityCapabilities.Observability` (contributed
 // once, at Startup, by the `observability` module) rather than re-created here — a capability is a
@@ -60,6 +59,11 @@ export default Capability.makeModule(
     log('client-ready: adding space metrics data provider');
     yield* observability.addDataProvider(ObservabilityProvider.Client.spacesMetricsProvider(client));
     log('client-ready: space metrics data provider added');
+
+    log('client-ready: adding document metrics data provider');
+    yield* observability.addDataProvider(ObservabilityProvider.Client.documentsMetricsProvider(client));
+    yield* observability.addDataProvider(ObservabilityProvider.Client.syncMetricsProvider(client));
+    log('client-ready: document metrics data provider added');
 
     return [];
   }),

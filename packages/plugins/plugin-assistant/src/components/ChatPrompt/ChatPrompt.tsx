@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
 import React, { useCallback, useEffect, useId, useMemo, useRef } from 'react';
 
@@ -25,9 +25,9 @@ import { type Merge } from '@dxos/util';
 
 import { useChatKeymapExtensions } from '#hooks';
 import { meta } from '#meta';
+import { AssistantPreset } from '#types';
 
 import { type AiChatProcessor } from '../../processor';
-import * as AssistantPreset from '../../types/AssistantPreset';
 import { type ChatEvent } from '../Chat';
 import { ChatActions, type ChatActionsProps } from './ChatActions';
 import { ChatMcpErrors } from './ChatMcpErrors';
@@ -127,6 +127,7 @@ export const ChatPrompt = ({
 
   return (
     <div
+      data-testid='assistant.prompt'
       role='group'
       className={mx(
         'flex flex-col w-full dx-density-md',

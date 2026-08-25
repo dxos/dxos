@@ -102,6 +102,9 @@ oclif.manifest.json
 dist
 out
 lib
+# Keep agent skill source trees named `lib/` (not TS emit).
+!.agents/**/lib/
+!.agents/**/lib/**
 build
 out
 tmp
@@ -145,6 +148,12 @@ packages/sdk/observability/src/cli-observability-secrets.json
 .benchmark
 *.cpuprofile
 
+# DX_PROFILE_TESTS / DX_DEBUG_LEAKS test-instrumentation output (see .agents/projects/test-profiling-leaks).
+# `*.cpuprofile` is already ignored above; these cover custom DX_DEBUG_LEAKS_DIR locations too.
+*.heapsnapshot
+heap-samples.ndjson
+profiles/
+
 # Debug logging for require hooks
 .trace-compiled
 
@@ -161,7 +170,13 @@ packages/sdk/observability/src/cli-observability-secrets.json
 # Bot temp files
 dxos-tmp
 build
+
+# Credentials the user hands to an agent for a task (see AGENTS.md "Handing an agent a
+# credential"). Ignored at every depth. An ignore rule is default exclusion, NOT enforcement:
+# `git add -f` still stages these, and a path already in the index stays tracked.
 .secrets
+.secrets/
+**/.secrets/
 
 # Custom git hooks
 .husky/post-applypatch
@@ -228,3 +243,11 @@ node_modules
 
 # Remote-cache benchmark output (tools/moon-cache/bench).
 .moon-bench/
+
+# Agentic-review: finalize keeps only REVIEW.md + RESOLUTION.md per run
+# (STAGING.md / groups.json / groups/ are deleted on finalize).
+
+# Icon-copy artifact: a misconfigured asset step writes phosphor SVGs to a literal
+# "dummy-non-existing-folder" rather than skipping. Generated output, never sources.
+dummy-non-existing-folder/
+tools/vscode/vscode-mdl/dist

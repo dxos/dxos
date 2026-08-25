@@ -8,13 +8,11 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { SpaceOperation } from '@dxos/plugin-space';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { CreateGamePanel } from '#components';
-
-import * as Game from '../types/Game';
-import * as GameCapabilities from '../types/GameCapabilities';
+import { Game, GameCapabilities } from '#types';
 
 type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObject']>[1];
 
@@ -39,11 +37,14 @@ export default Capability.makeModule(
 
           // Add variant state to the database. Stays hidden — it's referenced by Game and
           // shouldn't appear as a top-level item in the user's space.
-          yield* Operation.invoke(SpaceOperation.AddObject, {
-            object: stateObject,
-            target: options.target,
-            targetNodeId: options.targetNodeId,
-          });
+          yield* Operation.invoke(
+            SpaceOperation.AddObject,
+            {
+              object: stateObject,
+              target: options.target,
+            },
+            { spaceId: options.db.spaceId },
+          );
 
           const game = Game.make({
             name: typeof input?.name === 'string' ? input.name : undefined,
@@ -53,11 +54,14 @@ export default Capability.makeModule(
           // Add the user-facing Game wrapper. Not hidden — this is the object the user sees
           // and navigates to. If this second write fails, roll back the variant state so we
           // don't leak an orphaned object into the space.
-          return yield* Operation.invoke(SpaceOperation.AddObject, {
-            object: game,
-            target: options.target,
-            targetNodeId: options.targetNodeId,
-          }).pipe(
+          return yield* Operation.invoke(
+            SpaceOperation.AddObject,
+            {
+              object: game,
+              target: options.target,
+            },
+            { spaceId: options.db.spaceId },
+          ).pipe(
             Effect.tapError(() =>
               Operation.invoke(SpaceOperation.RemoveObjects, { objects: [stateObject] }).pipe(Effect.ignore),
             ),

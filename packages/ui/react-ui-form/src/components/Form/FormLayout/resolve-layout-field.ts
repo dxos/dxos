@@ -4,10 +4,9 @@
 
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
 import { Annotation } from '@dxos/echo';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 
 // Kept out of `FormLayout.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on every edit.
@@ -38,7 +37,7 @@ export type ResolvedLayoutField = {
 const resolvePropertySignature = (ast: SchemaAST.AST, segments: string[]): SchemaAST.PropertySignature | undefined => {
   let node: SchemaAST.AST = ast;
   for (let index = 0; index < segments.length; index++) {
-    const typeLiteral = SchemaEx.findNode(node, SchemaAST.isTypeLiteral);
+    const typeLiteral = SchemaEx.findNode(node, SchemaAST.isObjects);
     if (!typeLiteral) {
       return undefined;
     }
@@ -73,10 +72,12 @@ export const resolveLayoutField = (schema: Schema.Schema<any>, name: string): Re
 
   // Normalized leaf type (optional unwrapped, refinements stripped, signature-level
   // annotations merged) — matches how `getProperties` feeds `FormField`.
-  const { type: baseType } = SchemaEx.getBaseType(prop);
+  const { type: baseType } = SchemaEx.getBaseType(prop.type);
+  // Key annotations (v3's `PropertySignature.annotations`) hang off the type's context in v4.
+  const keyAnnotations = prop.type.context?.annotations;
   const type =
-    prop.annotations && Reflect.ownKeys(prop.annotations).length > 0
-      ? ({ ...baseType, annotations: { ...baseType.annotations, ...prop.annotations } } as SchemaAST.AST)
+    keyAnnotations && Reflect.ownKeys(keyAnnotations).length > 0
+      ? SchemaAST.annotate(baseType, keyAnnotations)
       : baseType;
 
   const title = SchemaEx.getAnnotation<string>(SchemaAST.TitleAnnotationId)(type);
@@ -84,7 +85,7 @@ export const resolveLayoutField = (schema: Schema.Schema<any>, name: string): Re
   // Label detection reads the *raw* property type: `SchemaEx.getBaseType`'s `encodedBoundAST`
   // strips annotations from non-keyword inner types (e.g. nested structs), which would
   // drop the `LabelAnnotation` we rely on here.
-  const labelType = SchemaEx.findNode(prop.type, SchemaAST.isTypeLiteral);
+  const labelType = SchemaEx.findNode(prop.type, SchemaAST.isObjects);
   const labelled = labelType != null && Option.isSome(Annotation.LabelAnnotation.getFromAst(labelType));
 
   return {
@@ -93,6 +94,6 @@ export const resolveLayoutField = (schema: Schema.Schema<any>, name: string): Re
     leafName: segments[segments.length - 1],
     title,
     labelType: labelled ? labelType : undefined,
-    required: !prop.isOptional,
+    required: !SchemaAST.isOptional(prop.type),
   };
 };

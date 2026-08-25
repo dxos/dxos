@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, {
   type PropsWithChildren,
   forwardRef,
@@ -25,7 +25,8 @@ import {
   getRawPgn,
 } from '@dxos/react-ui-gameboard';
 
-import type * as Chess from '../../types/Chess';
+import { Chess } from '#types';
+
 import { Info, type InfoProps } from './Info';
 import { ExtendedChessModel } from './types';
 

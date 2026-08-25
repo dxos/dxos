@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useMemo } from 'react';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -10,8 +10,7 @@ import { ElevationProvider } from '@dxos/react-ui';
 import { type ActionGraphProps, Menu, type MenuRootProps, createMenuAction, useMenuActions } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
-
-import type * as CodeCapabilities from '../../types/CodeCapabilities';
+import { CodeCapabilities } from '#types';
 
 export type CodeToolbarProps = Pick<MenuRootProps, 'attendableId'> & {
   state: CodeCapabilities.ProjectBuildState | undefined;

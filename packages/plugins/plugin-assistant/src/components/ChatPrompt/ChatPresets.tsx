@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Select } from '@dxos/react-ui';
 
-import * as AssistantPreset from '../../types/AssistantPreset';
+import { AssistantPreset } from '#types';
 
 export const ChatPresets = ({ presets, preset, onPresetChange }: AssistantPreset.ChatPresetProps) => {
   return (

@@ -6,7 +6,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import * as DeckOperation from '../types/DeckOperation';
+import { DeckOperation } from '#types';
 
 export const DeckOperationHandlerSet = OperationHandlerSet.lazy([
   LayoutOperation.AddToast.pipe(Operation.lazyHandler(() => import('./add-toast'))),
@@ -17,7 +17,7 @@ export const DeckOperationHandlerSet = OperationHandlerSet.lazy([
   LayoutOperation.ScrollIntoView.pipe(Operation.lazyHandler(() => import('./scroll-into-view'))),
   LayoutOperation.Set.pipe(Operation.lazyHandler(() => import('./set'))),
   LayoutOperation.SwitchWorkspace.pipe(Operation.lazyHandler(() => import('./switch-workspace'))),
-  DeckOperation.ToggleExpose.pipe(Operation.lazyHandler(() => import('./toggle-expose'))),
+  DeckOperation.SetExpose.pipe(Operation.lazyHandler(() => import('./set-expose'))),
   LayoutOperation.UpdateCompanion.pipe(Operation.lazyHandler(() => import('./update-companion'))),
   LayoutOperation.UpdateComplementary.pipe(Operation.lazyHandler(() => import('./update-complementary'))),
   LayoutOperation.UpdateDialog.pipe(Operation.lazyHandler(() => import('./update-dialog'))),

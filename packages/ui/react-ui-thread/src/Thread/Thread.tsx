@@ -36,10 +36,11 @@ import { type Message as MessageType } from '@dxos/types';
 import { type Extension, createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
+import { translationKey } from '#translations';
+
 import { command } from '../command';
 import { ThreadContextProvider, useThreadContext } from '../context';
 import { Message } from '../Message';
-import { translationKey } from '../translations';
 import { type MessageMetadata, type ThreadContextValue } from '../types';
 
 const getMessageId = (message: MessageType.Message) => Obj.getURI(message);

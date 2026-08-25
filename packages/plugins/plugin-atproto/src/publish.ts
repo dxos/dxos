@@ -6,8 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import { type Database, Obj, Relation, type Type } from '@dxos/echo';
 import { Panproto } from '@dxos/echo-panproto';
-import type * as Connection from '@dxos/plugin-connector/Connection';
+import { Connection } from '@dxos/link';
 import { type AtprotoPolicy, type PublishEligibility, type PublishInspection } from '@dxos/schema';
+
+import { AtprotoPublication } from '#types';
 
 import { getPolicyAnnotation, getRecordAnnotation } from './annotation';
 import { AtprotoRepoError, NotPublishableError } from './errors';
@@ -15,7 +17,6 @@ import { computePublishedValues } from './field-values';
 import { ATPROTO_SOURCE, atprotoForeignKey } from './foreign-key';
 import { hashRecord } from './hash';
 import * as AtprotoRepo from './services/AtprotoRepo';
-import * as AtprotoPublication from './types/AtprotoPublication';
 
 /** Whether an object is unpublished, published-and-in-sync, or published-but-stale. */
 export type PublishStatus = 'unpublished' | 'published' | 'outOfDate';

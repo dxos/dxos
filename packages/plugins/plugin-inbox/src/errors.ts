@@ -10,12 +10,6 @@ export class AccessTokenNotPopulatedError extends BaseError.extend(
   'Access token not yet populated.',
 ) {}
 
-/** Gmail send payload missing required fields (`to` or body text). */
-export class GmailSendMessageInvalidError extends BaseError.extend(
-  'GmailSendMessageInvalidError',
-  'Missing "to" or content in message.',
-) {}
-
 /** Foreign-key lookup returned an object that is not a Calendar (unexpected corruption / schema drift). */
 export class CalendarForeignKeyWrongTypeError extends BaseError.extend(
   'CalendarForeignKeyWrongTypeError',
@@ -47,49 +41,5 @@ export class MessageNotInFeedError extends BaseError.extend('MessageNotInFeedErr
 /** Assistant response did not contain summary text. */
 export class MailboxSummaryNotFoundError extends BaseError.extend('MailboxSummaryNotFoundError', 'No summary found.') {}
 
-/** Google API returned an error response (non-200 or error payload in body). */
-export class GoogleApiError extends BaseError.extend('GoogleApiError', 'Google API request failed.') {
-  constructor(
-    public readonly code: number | undefined,
-    public readonly apiMessage: string,
-    options?: BaseErrorOptions,
-  ) {
-    super({ ...options, context: { ...(options?.context ?? {}), code, apiMessage } });
-  }
-}
-
-/**
- * JMAP request failed: a non-2xx HTTP status, a JMAP problem-details body, or a method-level
- * `["error", { type, description }, id]` response. `status` carries the HTTP status (when the
- * failure is transport-level) and `type` the JMAP error type (when method-level) so callers can
- * recover with `Effect.catchTag` and distinguish auth (401) from other failures.
- */
-export class JmapApiError extends BaseError.extend('JmapApiError', 'JMAP API request failed.') {
-  constructor(
-    public readonly status: number | undefined,
-    public readonly detail: string,
-    public readonly type?: string,
-    options?: BaseErrorOptions,
-  ) {
-    super({ ...options, context: { ...(options?.context ?? {}), status, detail, type } });
-  }
-}
-
 /** A mail-sync run failed. The provider-agnostic harness wraps each provider's error into this one type (as `cause`). */
 export class MailSyncError extends BaseError.extend('MailSyncError', 'Mail sync failed.') {}
-
-/** JMAP send payload missing required fields (`to` or body text). */
-export class JmapSendMessageInvalidError extends BaseError.extend(
-  'JmapSendMessageInvalidError',
-  'Missing "to" or content in message.',
-) {}
-
-/** No JMAP identity permits the connection account as a `from` address, so the email cannot be sent. */
-export class JmapSendIdentityNotFoundError extends BaseError.extend(
-  'JmapSendIdentityNotFoundError',
-  'No JMAP identity matches the connection account.',
-) {
-  constructor(account: string | undefined, options?: Omit<BaseErrorOptions, 'context'>) {
-    super({ context: { account }, ...options });
-  }
-}

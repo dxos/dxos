@@ -4,13 +4,13 @@
 
 // @import-as-namespace
 
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
-import * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
+import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
+import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 
 import { OllamaError } from '../../errors';
 import { DEFAULT_OLLAMA_ENDPOINT } from './OllamaResolver';
@@ -77,7 +77,9 @@ export type Options = {
 // The HttpClient with trace propagation disabled: the headers it adds by default (`b3`,
 // `traceparent`) are rejected by Ollama's CORS allow-list, blocking every request at preflight.
 // Matches OllamaResolver, which disables it on the chat endpoint for the same reason.
-const ollamaHttpClient = HttpClient.HttpClient.pipe(Effect.map(HttpClient.withTracerPropagation(false)));
+const ollamaHttpClient = HttpClient.HttpClient.pipe(
+  Effect.map(HttpClient.transformResponse(Effect.provideService(HttpClient.TracerPropagationEnabled, false))),
+);
 
 /**
  * Client for the Ollama administrative REST API (model management). Distinct from
@@ -95,15 +97,13 @@ export const make = ({ endpoint = DEFAULT_OLLAMA_ENDPOINT }: Options = {}): Admi
           return yield* Effect.fail(new OllamaError(`HTTP ${response.status}`));
         }
         const data = yield* HttpClientResponse.schemaBodyJson(TagsResponse)(response);
-        return (data.models ?? []).map(
-          (model): Model => ({
-            name: model.name ?? '',
-            size: model.size,
-            modifiedAt: model.modified_at,
-            digest: model.digest,
-            details: model.details,
-          }),
-        );
+        return (data.models ?? []).map((model): Model => ({
+          name: model.name ?? '',
+          size: model.size,
+          modifiedAt: model.modified_at,
+          digest: model.digest,
+          details: model.details,
+        }));
       }),
     ),
   );
@@ -117,14 +117,12 @@ export const make = ({ endpoint = DEFAULT_OLLAMA_ENDPOINT }: Options = {}): Admi
           return yield* Effect.fail(new OllamaError(`HTTP ${response.status}`));
         }
         const data = yield* HttpClientResponse.schemaBodyJson(PsResponse)(response);
-        return (data.models ?? []).map(
-          (model): RunningModel => ({
-            name: model.name ?? '',
-            size: model.size,
-            sizeVram: model.size_vram,
-            expiresAt: model.expires_at,
-          }),
-        );
+        return (data.models ?? []).map((model): RunningModel => ({
+          name: model.name ?? '',
+          size: model.size,
+          sizeVram: model.size_vram,
+          expiresAt: model.expires_at,
+        }));
       }),
     ),
   );
@@ -151,7 +149,7 @@ export const make = ({ endpoint = DEFAULT_OLLAMA_ENDPOINT }: Options = {}): Admi
   const unload: Admin['unload'] = (name) => setKeepAlive(name, 0);
 
   const pull: Admin['pull'] = (name) =>
-    Stream.unwrapScoped(
+    Stream.unwrap(
       Effect.gen(function* () {
         const client = yield* ollamaHttpClient;
         const request = yield* HttpClientRequest.post(`${endpoint}/api/pull`).pipe(
@@ -172,7 +170,7 @@ export const make = ({ endpoint = DEFAULT_OLLAMA_ENDPOINT }: Options = {}): Admi
       Effect.scoped(
         Effect.gen(function* () {
           const client = yield* ollamaHttpClient;
-          const request = yield* HttpClientRequest.del(`${endpoint}/api/delete`).pipe(
+          const request = yield* HttpClientRequest.make('DELETE')(`${endpoint}/api/delete`).pipe(
             HttpClientRequest.bodyJson({ model: name }),
           );
           const response = yield* client.execute(request);
@@ -198,7 +196,7 @@ const TagsResponse = Schema.Struct({
         size: Schema.optional(Schema.Number),
         modified_at: Schema.optional(Schema.String),
         digest: Schema.optional(Schema.String),
-        details: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
+        details: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
       }),
     ),
   ),
@@ -226,11 +224,11 @@ const PullFrame = Schema.Struct({
   total: Schema.optional(Schema.Number),
   error: Schema.optional(Schema.String),
 });
-const decodePullFrame = Schema.decodeUnknownEither(Schema.parseJson(PullFrame));
+const decodePullFrame = Schema.decodeUnknownResult(Schema.fromJsonString(PullFrame));
 
 /** Error body returned by Ollama on a non-OK response. */
 const ErrorBody = Schema.Struct({ error: Schema.optional(Schema.String) });
-const decodeErrorBody = Schema.decodeUnknownEither(Schema.parseJson(ErrorBody));
+const decodeErrorBody = Schema.decodeUnknownResult(Schema.fromJsonString(ErrorBody));
 
 const isOk = (status: number): boolean => status >= 200 && status < 300;
 
@@ -251,11 +249,11 @@ const pullFrame = (frame: string): Stream.Stream<PullProgress, OllamaError> => {
     return Stream.empty;
   }
   const decoded = decodePullFrame(line);
-  if (Either.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     // Partial/garbage frame: skip rather than fail the whole pull.
     return Stream.empty;
   }
-  const { error, status, digest, completed, total } = decoded.right;
+  const { error, status, digest, completed, total } = decoded.success;
   if (error !== undefined) {
     return Stream.fail(new OllamaError(error));
   }
@@ -265,11 +263,11 @@ const pullFrame = (frame: string): Stream.Stream<PullProgress, OllamaError> => {
 /** Extract the most useful error message from a non-OK response (Ollama returns `{ error }`). */
 const readErrorBody = (response: HttpClientResponse.HttpClientResponse): Effect.Effect<string> =>
   response.text.pipe(
-    Effect.orElse(() => Effect.succeed('')),
+    Effect.catch(() => Effect.succeed('')),
     Effect.map((body) => {
       const decoded = decodeErrorBody(body);
-      if (Either.isRight(decoded) && decoded.right.error !== undefined && decoded.right.error.length > 0) {
-        return decoded.right.error;
+      if (Result.isSuccess(decoded) && decoded.success.error !== undefined && decoded.success.error.length > 0) {
+        return decoded.success.error;
       }
       return body.trim().length > 0 ? `HTTP ${response.status}: ${body.slice(0, 300)}` : `HTTP ${response.status}`;
     }),

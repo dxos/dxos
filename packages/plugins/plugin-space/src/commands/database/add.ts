@@ -2,13 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
-import * as Prompt from '@effect/cli/Prompt';
-import type * as Terminal from '@effect/platform/Terminal';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
+import * as Prompt from 'effect/unstable/cli/Prompt';
 
 import type * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
@@ -17,26 +16,27 @@ import { CommandConfig, Common, type SpaceNotFoundError, flushAndSync, print, sp
 import { type ClientService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
-import { Annotation, Collection, Database, type Err, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
+import { Annotation, Collection, Database, type Error as EchoError, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
 import { Kind as EntityKind } from '@dxos/echo/Entity';
 import { type SpaceId } from '@dxos/keys';
 
-import * as SpaceCapabilities from '../../types/SpaceCapabilities';
-import * as SpaceEvents from '../../types/SpaceEvents';
+import { SpaceCapabilities, SpaceEvents } from '#types';
+
 import { printObject } from './util';
 
 // NOTE: Explicit annotation required: d.ts emit cannot portably name the inferred @dxos/compute types (TS2883).
 export const add: Command.Command<
   'add',
-  ClientService | CommandConfig | Operation.Service | Plugin.Service | Capability.Service | Terminal.Terminal,
-  Err.EntityNotFoundError | Error | SpaceNotFoundError,
-  { readonly spaceId: Option.Option<SpaceId>; readonly typename: Option.Option<string> }
+  { readonly spaceId: Option.Option<SpaceId>; readonly typename: Option.Option<string> },
+  {},
+  EchoError.EntityNotFoundError | Error | SpaceNotFoundError,
+  ClientService | CommandConfig | Operation.Service | Plugin.Service | Capability.Service | Prompt.Environment
 > = Command.make(
   'add',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    typename: Options.text('typename').pipe(Options.withDescription('The typename to create.'), Options.optional),
+    typename: Options.string('typename').pipe(Options.withDescription('The typename to create.'), Options.optional),
   },
   ({ typename }) =>
     Effect.gen(function* () {
@@ -72,7 +72,7 @@ export const add: Command.Command<
         return yield* Effect.fail(new Error(`Unknown typename: ${selectedTypename}`));
       }
 
-      const result = yield* metadata.createObject({}, { db, target: collection ?? db });
+      const result = yield* metadata.createObject({}, { db, target: collection });
       const object = result.object;
       if (!Obj.isObject(object)) {
         return yield* Effect.fail(new Error(`Invalid object: ${object}`));

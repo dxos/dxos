@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -19,8 +19,8 @@ import { useIdentity, useMembers } from '@dxos/halo-react';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
 import { type Space, getSpace } from '@dxos/react-client/echo';
-import { Card, Icon, Message, Panel, ScrollArea, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
-import { useAttention, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
+import { Banner, Card, Icon, Panel, ScrollArea, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
+import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { type MessageMetadata, type ObjectTileComponent } from '@dxos/react-ui-thread';
 import { AnchoredTo, type Message as MessageType, Thread } from '@dxos/types';
@@ -28,14 +28,12 @@ import { hoverableControls, hoverableFocusedWithinControls, mx, toHue } from '@d
 import { hexToHue } from '@dxos/util';
 
 import { CommentThread, type CommentThreadProps, Suggestions } from '#components';
+import { type SuggestionGroup, useStatus } from '#hooks';
 import { meta } from '#meta';
+import { CommentCapabilities, CommentOperation, ReviewCapabilities } from '#types';
 
 import { commentsViewAspect } from '../../capabilities/comments-view-state';
-import { type SuggestionGroup, useStatus } from '../../hooks';
-import * as CommentCapabilities from '../../types/CommentCapabilities';
-import * as CommentOperation from '../../types/CommentOperation';
-import * as ReviewCapabilities from '../../types/ReviewCapabilities';
-import { getMessageMetadata } from '../../util';
+import { currentObjectId, getMessageMetadata } from '../../util';
 
 /**
  * Per-thread wrapper supplying the space-derived agent activity indicator, so `CommentThread` itself
@@ -224,9 +222,10 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     [setCommentsView],
   );
 
-  const { hasAttention, isAncestor, isRelated } = useAttention(attendableId);
-  const isAttended = hasAttention || isAncestor || isRelated;
-  const currentId = isAttended ? state.current : undefined;
+  // Membership, not attention: an attention gate closes in the window between a click recording
+  // `state.current` and attention settling on the editor, dropping the just-set marker. Recomputing
+  // from `anchors` + `state.current`, both reactive, involves no timing.
+  const currentThreadId = currentObjectId(state.current);
 
   // Passive attention (a thread taking focus): record it as current and bring the plank into view, but
   // leave the anchored content alone — focus lands on a thread for reasons the reader did not ask for
@@ -234,12 +233,20 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   // there would retarget the comment they create next.
   const handleAttend = useCallback(
     (anchor: AnchoredTo.AnchoredTo) => {
-      const threadId = Obj.getURI(Relation.getSource(anchor) as Thread.Thread);
-      if (state.current === threadId) {
+      const thread = Relation.getSource(anchor) as Thread.Thread;
+      const threadId = Obj.getURI(thread);
+      // Recorded unconditionally, revealed only on a change: skipping the write leaves the selection
+      // on a stale spelling, so a freshly persisted comment never shows the marker. A direct write,
+      // never an invocation: attention is passive (a re-render restoring focus, a draft
+      // autofocusing), and applied at event time it loses to any later intent — which is the point.
+      const sameThread = currentObjectId(state.current) === thread.id;
+      registry.set(stateAtom, { ...registry.get(stateAtom), current: threadId });
+      if (sameThread) {
+        // Re-revealing the plank pulls focus there ~170ms later, which lands mid-keystroke in an
+        // open message edit and loses the typed text.
         return;
       }
 
-      registry.set(stateAtom, { ...registry.get(stateAtom), current: threadId });
       // Scroll plank into view (deck handler).
       void invokePromise(LayoutOperation.ScrollIntoView, { subject: attendableId });
     },
@@ -256,11 +263,12 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         return;
       }
 
-      const threadId = Obj.getURI(Relation.getSource(anchor) as Thread.Thread);
+      // The object id, matching what the comment-sync extension registers comments under; a URI
+      // misses that lookup and `scrollCommentIntoView` then silently no-ops.
+      const threadId = (Relation.getSource(anchor) as Thread.Thread).id;
 
-      // Scroll within content to anchor (comment config per typename). Fall back to the object URI:
-      // this is what tells the editor which thread is current, so skipping it when the companion has
-      // no attendable id leaves the previous comment highlighted while the app selection moves on.
+      // This is what tells the editor which thread is current, so skipping it leaves the previous
+      // comment highlighted while the app selection moves on.
       const typename = Obj.getTypename(subject);
       const commentConfig = commentConfigs.find(({ id }) => id === typename);
       if (commentConfig?.scrollToAnchor) {
@@ -276,6 +284,10 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
 
   const handleComment = useCallback(
     async (anchor: AnchoredTo.AnchoredTo, text: string) => {
+      // Persisting spans an await, and the reader can click another thread while it runs. Re-assert
+      // the selection only if nothing moved it in the meantime, so a submit cannot drag the marker
+      // back off the thread they have since chosen.
+      const selectionBefore = registry.get(stateAtom).current;
       await invokePromise(CommentOperation.AddMessage, {
         anchor,
         subject,
@@ -283,17 +295,24 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         text,
       });
 
+      const latest = registry.get(stateAtom);
+      if (latest.current !== selectionBefore) {
+        return;
+      }
       const thread = Relation.getSource(anchor) as Thread.Thread;
-      registry.set(stateAtom, { ...registry.get(stateAtom), current: Obj.getURI(thread) });
+      // Direct write, not a queued Select: this is a compare-and-set, and its guard is only sound
+      // while the read and the write share one synchronous turn.
+      registry.set(stateAtom, { ...latest, current: Obj.getURI(thread) });
     },
     [invokePromise, identity, subject, registry, stateAtom],
   );
 
   const handleResolve = useCallback(
-    (anchor: AnchoredTo.AnchoredTo) =>
-      invokePromise(CommentOperation.ToggleResolved, {
-        thread: Relation.getSource(anchor) as Thread.Thread,
-      }),
+    (anchor: AnchoredTo.AnchoredTo) => {
+      // The control flips, so it reads the thread's status and states the one it wants.
+      const thread = Relation.getSource(anchor) as Thread.Thread;
+      return invokePromise(CommentOperation.SetResolved, { thread, resolved: thread.status !== 'resolved' });
+    },
     [invokePromise],
   );
 
@@ -327,7 +346,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         anchor: anchor.anchor,
         proposal,
       });
-      await invokePromise(CommentOperation.ToggleResolved, { thread });
+      await invokePromise(CommentOperation.SetResolved, { thread, resolved: true });
     },
     [invokePromise, subject],
   );
@@ -346,7 +365,10 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         anchor: anchor.anchor,
         branch,
       });
-      await invokePromise(CommentOperation.ToggleResolved, { thread: Relation.getSource(anchor) as Thread.Thread });
+      await invokePromise(CommentOperation.SetResolved, {
+        thread: Relation.getSource(anchor) as Thread.Thread,
+        resolved: true,
+      });
     },
     [invokePromise, subject, reviewBranch],
   );
@@ -415,10 +437,24 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
 
   // Scroll the current thread into view when it changes.
   useEffect(() => {
-    if (currentId) {
-      document.getElementById(currentId)?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    if (!currentThreadId) {
+      return;
     }
-  }, [currentId]);
+    // The rendered element is keyed by URI, so scroll by whichever spelling is in the DOM now rather
+    // than by a remembered one.
+    const target = anchors
+      .map((anchor) => {
+        try {
+          return Relation.getSource(anchor);
+        } catch {
+          return undefined;
+        }
+      })
+      .find((thread) => thread?.id === currentThreadId);
+    if (target && Obj.instanceOf(Thread.Thread, target)) {
+      document.getElementById(Obj.getURI(target))?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  }, [currentThreadId, anchors]);
 
   const filteredAnchors = showResolvedThreads
     ? anchors.filter((anchor) => !!Relation.getSource(anchor))
@@ -440,7 +476,11 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
           const threadId = Obj.getURI(thread);
           return (
             <CommentThreadItem
-              key={threadId}
+              // Keyed by the stable object id, NOT the URI: a draft thread's URI changes when its
+              // first message persists it (`echo:///<id>` → `echo://<spaceId>/<id>`), and keying by
+              // URI remounted the whole thread subtree at exactly that moment — a reply being typed
+              // in the composer was destroyed and Enter fired on the fresh empty instance.
+              key={thread.id}
               space={space}
               threadUri={threadId}
               anchor={anchor}
@@ -448,7 +488,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
               getMetadata={getMetadata}
               authorMetadata={authorMetadata}
               identityDid={identity?.did}
-              current={currentId === threadId}
+              current={currentThreadId === thread.id}
               onAttend={handleAttend}
               onActivate={handleActivate}
               onComment={handleComment}
@@ -462,9 +502,9 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         })}
       </div>
     ) : hasSuggestions ? null : (
-      <Message.Root>
-        <Message.Content classNames='m-trim-md'>
-          <Message.Body>
+      <Banner.Root>
+        <Banner.Content classNames='m-trim-md'>
+          <Banner.Body>
             <span>
               <Trans
                 {...{
@@ -477,9 +517,9 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
                 }}
               />
             </span>
-          </Message.Body>
-        </Message.Content>
-      </Message.Root>
+          </Banner.Body>
+        </Banner.Content>
+      </Banner.Root>
     );
 
   return (

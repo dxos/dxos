@@ -5,7 +5,8 @@
 import { describe, expect, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
-import { type Any, Stream, type TaggedType } from '@dxos/codec-protobuf';
+import { Stream } from '@dxos/async';
+import { type Any, type TaggedType } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
 import { type TYPES } from '@dxos/protocols/proto';
 
@@ -438,9 +439,8 @@ describe('RpcPeer', () => {
       const stream = bob.callStream('method', createPayload('request'));
       await stream.close();
 
-      await sleep(1);
-
-      expect(closeCalled).toEqual(true);
+      // Poll until the close notification round-trips to the remote peer.
+      await expect.poll(() => closeCalled).toEqual(true);
     });
 
     test('reports stream being ready', async () => {

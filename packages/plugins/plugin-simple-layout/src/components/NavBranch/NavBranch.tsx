@@ -5,9 +5,9 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import type * as Node from '@dxos/app-graph/Node';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { type Node } from '@dxos/plugin-graph';
 import { useConnections } from '@dxos/plugin-graph/hooks';
 import { Avatar, Icon, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
@@ -108,16 +108,24 @@ const NavBranchTile: MosaicStackTileComponent<Node.Node> = (props) => {
     >
       <Card.Header>
         <Avatar.Root>
-          <Avatar.Content
-            hue={data.properties.hue}
-            icon={data.properties.icon}
-            hueVariant='transparent'
-            variant='square'
-            size={8}
-            fallback={name}
-          />
-          <Avatar.Label>{name}</Avatar.Label>
-          <Icon icon='ph--caret-right--regular' />
+          {/* `Card.Header` is a 3-track subgrid: the gutter `Card.Block`s and the center
+              `Card.Title` are what keep the icon, label, and caret on one row. */}
+          <Card.Block>
+            <Avatar.Content
+              hue={data.properties.hue}
+              icon={data.properties.icon}
+              hueVariant='transparent'
+              variant='square'
+              size={8}
+              fallback={name}
+            />
+          </Card.Block>
+          <Avatar.Label asChild>
+            <Card.Title>{name}</Card.Title>
+          </Avatar.Label>
+          <Card.Block end>
+            <Icon icon='ph--caret-right--regular' />
+          </Card.Block>
         </Avatar.Root>
       </Card.Header>
     </Card.Root>

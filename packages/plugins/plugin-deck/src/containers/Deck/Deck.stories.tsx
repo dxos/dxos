@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
@@ -15,12 +15,14 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useAtomCapabilityState, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { invariant } from '@dxos/invariant';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { useConnections } from '@dxos/plugin-graph/hooks';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
@@ -40,10 +42,8 @@ import { OperationHandler } from '#capabilities';
 import { useDeckState } from '#hooks';
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
+import { DeckCapabilities, DeckSchema, Settings } from '#types';
 
-import * as DeckCapabilities from '../../types/DeckCapabilities';
-import * as DeckSchema from '../../types/DeckSchema';
-import * as Settings from '../../types/Settings';
 import { Deck } from './Deck';
 
 type StoryItem = { id: string; title: string; icon: string };
@@ -364,7 +364,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
   Plugin.make,
 );
 
-type DefaultStoryProps = {
+type StoryArgs = {
   /** Number of story planks to open on mount (0 renders the empty deck). */
   count?: number;
   /** Navigation sidebar state to seed. `closed` is only reachable below `lg`. */
@@ -381,7 +381,7 @@ type DefaultStoryProps = {
 };
 
 /** Stable identity, for the same reason as `NO_COMPANIONS`. */
-const NO_SETTINGS: DefaultStoryProps['settings'] = {};
+const NO_SETTINGS: StoryArgs['settings'] = {};
 
 // Stable identity, so the default does not re-fire the seeding effect it is a dependency of on every render.
 const NO_COMPANIONS: number[] = [];
@@ -392,7 +392,7 @@ const DefaultStory = ({
   companionPlanks = NO_COMPANIONS,
   launcher = false,
   settings: settingsOverrides = NO_SETTINGS,
-}: DefaultStoryProps) => {
+}: StoryArgs) => {
   const [settings, updateSettings] = useAtomCapabilityState(DeckCapabilities.Settings);
 
   // The deck reads its experiments from settings, not from props, so the story writes them there.

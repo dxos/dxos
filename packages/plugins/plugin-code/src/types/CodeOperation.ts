@@ -14,13 +14,13 @@ import * as Spec from './Spec';
 
 export const VerifySpec = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.code.verifySpec'),
+    key: DXN.make('org.dxos.operation.code.verifySpec'),
     name: 'Verify Spec',
     description: 'Lints and structurally validates a DEUS spec.',
     icon: 'ph--check-circle--regular',
   },
   input: Schema.Struct({
-    spec: Ref.Ref(Spec.Spec).annotations({ description: 'The Spec to verify.' }),
+    spec: Ref.Ref(Spec.Spec).annotate({ description: 'The Spec to verify.' }),
   }),
   output: Schema.Struct({
     ok: Schema.Boolean,
@@ -31,18 +31,18 @@ export const VerifySpec = Operation.make({
 
 export const RunBuildAgent = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.code.runBuildAgent'),
+    key: DXN.make('org.dxos.operation.code.runBuildAgent'),
     name: 'Run Build Agent',
     description: 'Dispatches a build of a CodeProject via the EDGE build service.',
     icon: 'ph--lightning--regular',
   },
   input: Schema.Struct({
-    project: Ref.Ref(CodeProject.CodeProject).annotations({
+    project: Ref.Ref(CodeProject.CodeProject).annotate({
       description: 'The CodeProject to build.',
     }),
   }),
   output: Schema.Struct({
-    status: Schema.Literal('queued', 'running', 'succeeded', 'failed'),
+    status: Schema.Literals(['queued', 'running', 'succeeded', 'failed']),
   }),
   services: [Database.Service],
 });
@@ -54,13 +54,13 @@ const FileEntry = Schema.Struct({
 
 export const ListFiles = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.code.listFiles'),
+    key: DXN.make('org.dxos.operation.code.listFiles'),
     name: 'List Files',
     description: 'List the source files in a CodeProject.',
     icon: 'ph--list--regular',
   },
   input: Schema.Struct({
-    project: Ref.Ref(CodeProject.CodeProject).annotations({
+    project: Ref.Ref(CodeProject.CodeProject).annotate({
       description: 'The CodeProject to list files in.',
     }),
   }),
@@ -72,16 +72,16 @@ export const ListFiles = Operation.make({
 
 export const ReadFile = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.code.readFile'),
+    key: DXN.make('org.dxos.operation.code.readFile'),
     name: 'Read File',
     description: 'Read the content of a single source file in a CodeProject.',
     icon: 'ph--file-text--regular',
   },
   input: Schema.Struct({
-    project: Ref.Ref(CodeProject.CodeProject).annotations({
+    project: Ref.Ref(CodeProject.CodeProject).annotate({
       description: 'The CodeProject containing the file.',
     }),
-    path: Schema.String.annotations({
+    path: Schema.String.annotate({
       description: 'POSIX-style path of the file to read (e.g. "src/plugin.ts").',
     }),
   }),
@@ -94,20 +94,20 @@ export const ReadFile = Operation.make({
 
 export const WriteFile = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.code.writeFile'),
+    key: DXN.make('org.dxos.operation.code.writeFile'),
     name: 'Write File',
     description:
       'Create or overwrite a source file in a CodeProject. Whole-file write; use for new files or full rewrites.',
     icon: 'ph--pencil--regular',
   },
   input: Schema.Struct({
-    project: Ref.Ref(CodeProject.CodeProject).annotations({
+    project: Ref.Ref(CodeProject.CodeProject).annotate({
       description: 'The CodeProject to write to.',
     }),
-    path: Schema.String.annotations({
+    path: Schema.String.annotate({
       description: 'POSIX-style path of the file to write.',
     }),
-    content: Schema.String.annotations({
+    content: Schema.String.annotate({
       description: 'New file content.',
     }),
   }),
@@ -120,16 +120,16 @@ export const WriteFile = Operation.make({
 
 export const DeleteFile = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.code.deleteFile'),
+    key: DXN.make('org.dxos.operation.code.deleteFile'),
     name: 'Delete File',
     description: 'Remove a source file from a CodeProject.',
     icon: 'ph--trash--regular',
   },
   input: Schema.Struct({
-    project: Ref.Ref(CodeProject.CodeProject).annotations({
+    project: Ref.Ref(CodeProject.CodeProject).annotate({
       description: 'The CodeProject to remove the file from.',
     }),
-    path: Schema.String.annotations({
+    path: Schema.String.annotate({
       description: 'POSIX-style path of the file to delete.',
     }),
   }),
@@ -142,17 +142,17 @@ export const DeleteFile = Operation.make({
 
 export const ScaffoldProject = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.code.scaffold'),
+    key: DXN.make('org.dxos.operation.code.scaffold'),
     name: 'Scaffold Project',
     description: 'Seed a CodeProject with a minimal Composer plugin scaffold (package.json, src/plugin.ts, README.md).',
     icon: 'ph--folder-plus--regular',
   },
   input: Schema.Struct({
-    project: Ref.Ref(CodeProject.CodeProject).annotations({
+    project: Ref.Ref(CodeProject.CodeProject).annotate({
       description: 'The CodeProject to scaffold into.',
     }),
     name: Schema.optional(
-      Schema.String.annotations({
+      Schema.String.annotate({
         description: 'Package name to use in the scaffolded files. Defaults to the project name.',
       }),
     ),
@@ -165,7 +165,7 @@ export const ScaffoldProject = Operation.make({
 
 export const HelloWorld = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.code.helloWorld'),
+    key: DXN.make('org.dxos.operation.code.writeHelloWorld'),
     name: 'Hello World',
     description:
       'Sanity-check operation: writes (or overwrites) a single `src/hello.ts` file containing a Hello World program. ' +
@@ -173,7 +173,7 @@ export const HelloWorld = Operation.make({
     icon: 'ph--hand-waving--regular',
   },
   input: Schema.Struct({
-    project: Ref.Ref(CodeProject.CodeProject).annotations({
+    project: Ref.Ref(CodeProject.CodeProject).annotate({
       description: 'The CodeProject to write the file into.',
     }),
   }),
@@ -186,13 +186,13 @@ export const HelloWorld = Operation.make({
 
 export const ResetProject = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.code.reset'),
+    key: DXN.make('org.dxos.operation.code.reset'),
     name: 'Reset Project',
     description: 'Delete every source file in a CodeProject. Destructive; intended for testing.',
     icon: 'ph--arrow-counter-clockwise--regular',
   },
   input: Schema.Struct({
-    project: Ref.Ref(CodeProject.CodeProject).annotations({
+    project: Ref.Ref(CodeProject.CodeProject).annotate({
       description: 'The CodeProject to clear.',
     }),
   }),
@@ -206,7 +206,7 @@ const Diagnostic = Schema.Struct({
   path: Schema.optional(Schema.String),
   line: Schema.optional(Schema.Number),
   column: Schema.optional(Schema.Number),
-  severity: Schema.Literal('error', 'warning'),
+  severity: Schema.Literals(['error', 'warning']),
   code: Schema.optional(Schema.Number),
   message: Schema.String,
 });
@@ -218,7 +218,7 @@ const BuildEntry = Schema.Struct({
 
 export const BuildProject = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.code.buildProject'),
+    key: DXN.make('org.dxos.operation.code.buildProject'),
     name: 'Build Project',
     description:
       "Compile the project's TypeScript sources in-browser. Returns language-service diagnostics plus the " +
@@ -226,7 +226,7 @@ export const BuildProject = Operation.make({
     icon: 'ph--lightning--regular',
   },
   input: Schema.Struct({
-    project: Ref.Ref(CodeProject.CodeProject).annotations({
+    project: Ref.Ref(CodeProject.CodeProject).annotate({
       description: 'The CodeProject to build.',
     }),
   }),
@@ -240,7 +240,7 @@ export const BuildProject = Operation.make({
 
 export const RunBuild = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.code.runBuild'),
+    key: DXN.make('org.dxos.operation.code.runBuild'),
     name: 'Run Build',
     description:
       'Build the project and, on a clean build, execute the emitted entry script inside a console-capturing ' +
@@ -248,7 +248,7 @@ export const RunBuild = Operation.make({
     icon: 'ph--play--regular',
   },
   input: Schema.Struct({
-    project: Ref.Ref(CodeProject.CodeProject).annotations({
+    project: Ref.Ref(CodeProject.CodeProject).annotate({
       description: 'The CodeProject to build and run.',
     }),
   }),

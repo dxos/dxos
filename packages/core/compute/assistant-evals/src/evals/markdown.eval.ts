@@ -8,7 +8,7 @@ import { evalite } from 'evalite';
 
 import { Database } from '@dxos/echo';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import { trim } from '@dxos/util';
 
 import { findObject, objectExists } from '../assertions';
@@ -24,7 +24,7 @@ const draftTask = createEvalRunner({
   `,
   input: Schema.Unknown,
   output: Schema.Unknown,
-  plugins: [MarkdownPlugin()],
+  plugins: [MarkdownPlugin.make()],
   dbQuery: () => objectExists(Markdown.Document, () => true),
 });
 
@@ -46,7 +46,7 @@ const appendTask = createEvalRunner({
     Create a new markdown document named "Empty Notes" with empty content (no body text).
     Open the document and confirm its content is empty.
 
-    Use the markdown Update operation (org.dxos.function.markdown.update) to append this exact line
+    Use the markdown Update operation (org.dxos.operation.markdown.update) to append this exact line
     without providing oldString (omit oldString entirely — do not pass an empty string):
     "Hello from an empty document."
 
@@ -54,7 +54,7 @@ const appendTask = createEvalRunner({
   `,
   input: Schema.Unknown,
   output: Schema.Unknown,
-  plugins: [MarkdownPlugin()],
+  plugins: [MarkdownPlugin.make()],
   dbQuery: () =>
     Effect.gen(function* () {
       const doc = yield* findObject(Markdown.Document, (d) => d.name === 'Empty Notes');

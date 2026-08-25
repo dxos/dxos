@@ -9,7 +9,8 @@ import { AssistantTestLayer, collectEphemeral, messageTextIncludes, waitForMessa
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
 import { getSession } from '@dxos/compute/AgentService';
-import { Database, Filter, Obj, Query } from '@dxos/echo';
+import * as Operation from '@dxos/compute/Operation';
+import { Database } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
@@ -18,6 +19,7 @@ import { Message, Outline, Task, TaskSet } from '@dxos/types';
 
 import { AgentHandlers } from '../operations';
 import { DelegationHandlers, DelegationSkill } from '../skills';
+import { DelegateTask } from '../skills/delegation/operations/definitions';
 import { Agent, Chat } from '../types';
 import { makeDelegationStrategy } from './delegation-strategy';
 
@@ -45,7 +47,7 @@ const TestLayer = AssistantTestLayer({
       turns: [
         // Immediate reply + delegation in one turn: the user sees the reply while the work runs.
         {
-          parts: [text('On it — delegating.'), toolCall('delegate-task', { title: TASK_TITLE })],
+          parts: [text('On it — delegating.'), toolCall(Operation.toolName(DelegateTask), { title: TASK_TITLE })],
         },
         {
           parts: [text('Delegated. I will report back when it completes.')],
@@ -61,7 +63,6 @@ const TestLayer = AssistantTestLayer({
     Task.Task,
     TaskSet.TaskSet,
     Chat.Chat,
-    Chat.CompanionTo,
     AiContext.Binding,
     Text.Text,
     Message.Message,
@@ -69,7 +70,7 @@ const TestLayer = AssistantTestLayer({
 });
 
 describe('makeDelegationStrategy', () => {
-  it.scoped(
+  it.effect(
     'replies immediately, delegates to a sub-agent, and folds the result back',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -105,8 +106,7 @@ describe('makeDelegationStrategy', () => {
         invariant(outlineAfterTurn, 'Outline not created.');
         const taskSet = outlineAfterTurn.taskSet ? yield* Database.load(outlineAfterTurn.taskSet) : undefined;
         invariant(taskSet, 'Task set not created.');
-        const children = yield* Database.query(Query.select(Filter.id(taskSet.id)).children()).run;
-        const tasks = children.filter((child): child is Task.Task => Obj.instanceOf(Task.Task, child));
+        const tasks = TaskSet.resolveTasks(taskSet);
         expect(tasks).toHaveLength(1);
         expect(tasks[0]).toMatchObject({ title: TASK_TITLE, assignee: { role: 'assistant' } });
 

@@ -214,101 +214,101 @@ describe('Query', () => {
     test('filter by meta key', async ({ expect }) => {
       const target = db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.foo', version: '1.2.3' },
+          [Obj.Meta]: { key: 'com.example.type.foo', version: '1.2.3' },
           value: 42,
         }),
       );
       db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.bar', version: '1.2.3' },
+          [Obj.Meta]: { key: 'com.example.type.bar', version: '1.2.3' },
           value: 43,
         }),
       );
       await db.flush();
 
-      const objects = await db.query(Filter.key('org.example.type.foo')).run();
+      const objects = await db.query(Filter.key('com.example.type.foo')).run();
       expect(objects).toEqual([target]);
     });
 
     test('filter by meta key matches any version when range omitted', async ({ expect }) => {
       const matchingA = db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.foo', version: '1.0.0' },
+          [Obj.Meta]: { key: 'com.example.type.foo', version: '1.0.0' },
           value: 1,
         }),
       );
       const matchingB = db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.foo' },
+          [Obj.Meta]: { key: 'com.example.type.foo' },
           value: 2,
         }),
       );
       db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.other', version: '1.0.0' },
+          [Obj.Meta]: { key: 'com.example.type.other', version: '1.0.0' },
           value: 3,
         }),
       );
       await db.flush();
 
-      const objects = await db.query(Filter.key('org.example.type.foo')).run();
+      const objects = await db.query(Filter.key('com.example.type.foo')).run();
       expect(new Set(objects.map((o) => o.id))).toEqual(new Set([matchingA.id, matchingB.id]));
     });
 
     test('filter by meta key with semver caret range', async ({ expect }) => {
       const match = db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.foo', version: '1.5.0' },
+          [Obj.Meta]: { key: 'com.example.type.foo', version: '1.5.0' },
           value: 1,
         }),
       );
       db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.foo', version: '2.0.0' },
+          [Obj.Meta]: { key: 'com.example.type.foo', version: '2.0.0' },
           value: 2,
         }),
       );
       db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.foo', version: '1.0.0' },
+          [Obj.Meta]: { key: 'com.example.type.foo', version: '1.0.0' },
           value: 3,
         }),
       );
       await db.flush();
 
-      const objects = await db.query(Filter.key('org.example.type.foo', { version: '^1.2.3' })).run();
+      const objects = await db.query(Filter.key('com.example.type.foo', { version: '^1.2.3' })).run();
       expect(objects).toEqual([match]);
     });
 
     test('filter by meta key with semver tilde range', async ({ expect }) => {
       const match = db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.foo', version: '1.2.7' },
+          [Obj.Meta]: { key: 'com.example.type.foo', version: '1.2.7' },
           value: 1,
         }),
       );
       db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.foo', version: '1.3.0' },
+          [Obj.Meta]: { key: 'com.example.type.foo', version: '1.3.0' },
           value: 2,
         }),
       );
       await db.flush();
 
-      const objects = await db.query(Filter.key('org.example.type.foo', { version: '~1.2.3' })).run();
+      const objects = await db.query(Filter.key('com.example.type.foo', { version: '~1.2.3' })).run();
       expect(objects).toEqual([match]);
     });
 
     test('filter by meta key excludes objects without version when range specified', async ({ expect }) => {
       db.add(
         Obj.make(TestSchema.Expando, {
-          [Obj.Meta]: { key: 'org.example.type.foo' },
+          [Obj.Meta]: { key: 'com.example.type.foo' },
           value: 1,
         }),
       );
       await db.flush();
 
-      const objects = await db.query(Filter.key('org.example.type.foo', { version: '^1.0.0' })).run();
+      const objects = await db.query(Filter.key('com.example.type.foo', { version: '^1.0.0' })).run();
       expect(objects).toEqual([]);
     });
 
@@ -444,6 +444,52 @@ describe('Query', () => {
       // A group smaller than the limit is returned whole.
       expect(byKey.get('b')?.count).to.equal(1);
       expect(byKey.get('b')?.items).to.have.length(1);
+    });
+
+    test('a coalesce group key gives each member without the leading property its own group', async () => {
+      const { db } = await builder.createDatabase();
+      // One thread of 3 messages, plus 5 messages carrying no threadId at all.
+      for (let rank = 0; rank < 3; rank++) {
+        db.add(Obj.make(TestSchema.Expando, { threadId: 'thread-a', rank }));
+      }
+      const loose = range(5).map((index) => db.add(Obj.make(TestSchema.Expando, { rank: 10 + index })));
+      await db.flush();
+
+      const grouped = Query.select(Filter.everything())
+        .orderBy(Order.property('rank', 'asc'))
+        .aggregate({
+          threadId: Aggregate.group({ coalesce: ['threadId', 'id'] }),
+          count: Aggregate.count(),
+          items: Aggregate.items({ limit: 2 }),
+        });
+      const groups = await db.query(grouped).run();
+
+      // The real thread stays one (capped) group; every threadless message becomes its own group,
+      // so the `items` limit never drops any of them.
+      expect(groups).to.have.length(6);
+      const thread = groups.find((group) => group.threadId === 'thread-a');
+      expect(thread?.count).to.equal(3);
+      expect(thread?.items).to.have.length(2);
+      const singletons = groups.filter((group) => group.threadId !== 'thread-a');
+      expect(singletons.map((group) => group.threadId).sort()).to.deep.equal(loose.map((obj) => obj.id).sort());
+      expect(singletons.every((group) => group.count === 1 && group.items.length === 1)).to.be.true;
+
+      // Without the fallback the same query collapses all five into the single `null` group, where
+      // the limit exposes only 2 of them — the truncation the coalesce chain avoids.
+      const collapsed = await db
+        .query(
+          Query.select(Filter.everything())
+            .orderBy(Order.property('rank', 'asc'))
+            .aggregate({
+              threadId: Aggregate.group('threadId'),
+              count: Aggregate.count(),
+              items: Aggregate.items({ limit: 2 }),
+            }),
+        )
+        .run();
+      const nullGroup = collapsed.find((group) => group.threadId === null);
+      expect(nullGroup?.count).to.equal(5);
+      expect(nullGroup?.items).to.have.length(2);
     });
 
     test('items order is its own per-group ordering, independent of a differently-ordered orderBy', async () => {
@@ -816,6 +862,11 @@ describe('Query', () => {
           boundary.category = 'b';
         });
         await db.flush({ updates: true });
+
+        // `orderBy` makes this host-routed (the working set does not serve windowed queries), and
+        // `db.flush({ updates: true })` does not await that round trip — poll, as the feed-scoped
+        // reactivity tests below do.
+        await waitForCondition({ condition: () => query.results.length === 1, timeout: 2000 });
         const lastResult = query.results;
 
         expect(lastResult).to.have.length(1);
@@ -2381,6 +2432,80 @@ describe('Query', () => {
       expect(names).toEqual(['Note about Alice']);
     });
 
+    describe('referencedBy a named entity', () => {
+      const FOO = DXN.make('org.example.operation.foo');
+      const BAR = DXN.make('org.example.operation.bar');
+
+      test('finds objects referencing a DXN that is not in the graph', async () => {
+        db.add(Obj.make(TestSchema.Expando, { name: 'Trigger 1', runnable: Ref.fromURI(FOO) }));
+        db.add(Obj.make(TestSchema.Expando, { name: 'Trigger 2', runnable: Ref.fromURI(FOO) }));
+        db.add(Obj.make(TestSchema.Expando, { name: 'Other', runnable: Ref.fromURI(BAR) }));
+        await db.flush();
+
+        const objects = await db.query(Query.select(Filter.key('org.example.operation.foo')).referencedBy()).run();
+        expect(objects.map((object) => object.name).sort()).toEqual(['Trigger 1', 'Trigger 2']);
+      });
+
+      test('accepts a full DXN as the key', async () => {
+        db.add(Obj.make(TestSchema.Expando, { name: 'Trigger', runnable: Ref.fromURI(FOO) }));
+        await db.flush();
+
+        const objects = await db.query(Query.select(Filter.key(FOO)).referencedBy()).run();
+        expect(objects.map((object) => object.name)).toEqual(['Trigger']);
+      });
+
+      test('matches a versioned reference from the unversioned name', async () => {
+        db.add(
+          Obj.make(TestSchema.Expando, {
+            name: 'Pinned',
+            runnable: Ref.fromURI(DXN.make('org.example.operation.foo', '1.2.3')),
+          }),
+        );
+        await db.flush();
+
+        const objects = await db.query(Query.select(Filter.key('org.example.operation.foo')).referencedBy()).run();
+        expect(objects.map((object) => object.name)).toEqual(['Pinned']);
+      });
+
+      test('narrows by referencing type and property', async () => {
+        db.add(Obj.make(TestSchema.Task, { title: 'Task N', assignee: Ref.fromURI(FOO) }));
+        db.add(Obj.make(TestSchema.Expando, { name: 'Expando N', assignee: Ref.fromURI(FOO) }));
+        db.add(Obj.make(TestSchema.Expando, { name: 'Other property', other: Ref.fromURI(FOO) }));
+        await db.flush();
+
+        const byType = await db
+          .query(Query.select(Filter.key('org.example.operation.foo')).referencedBy(TestSchema.Task))
+          .run();
+        expect(byType.map((object) => object.title)).toEqual(['Task N']);
+
+        const byProperty = await db
+          .query(Query.select(Filter.key('org.example.operation.foo')).referencedBy(TestSchema.Expando, 'assignee'))
+          .run();
+        expect(byProperty.map((object) => object.name)).toEqual(['Expando N']);
+      });
+
+      test('returns nothing when no object references the name', async () => {
+        const objects = await db.query(Query.select(Filter.key('org.example.operation.absent')).referencedBy()).run();
+        expect(objects).toEqual([]);
+      });
+
+      test('a version-constrained key keeps the composed meaning', async () => {
+        // The index keys a named entity without its version, so a range cannot be honoured there —
+        // the anchor is evaluated normally instead, and matches the meta key of a stored object.
+        const entry = db.add(
+          Obj.make(TestSchema.Expando, { [Obj.Meta]: { key: 'org.example.operation.foo', version: '1.2.3' } }),
+        );
+        db.add(Obj.make(TestSchema.Expando, { name: 'By entity', runnable: Ref.make(entry) }));
+        db.add(Obj.make(TestSchema.Expando, { name: 'By name', runnable: Ref.fromURI(FOO) }));
+        await db.flush();
+
+        const objects = await db
+          .query(Query.select(Filter.key('org.example.operation.foo', { version: '^1.0.0' })).referencedBy())
+          .run();
+        expect(objects.map((object) => object.name)).toEqual(['By entity']);
+      });
+    });
+
     test('traverse query started from id', async () => {
       const objects = await db
         .query(Query.select(Filter.id(person2.id)).sourceOf(TestSchema.HasManager).target())
@@ -2700,6 +2825,58 @@ describe('Query', () => {
         const objects = await db.query(Query.select(Filter.text('Guide Python', { type: 'full-text' }))).run();
         expect(objects).toHaveLength(1);
         expect(objects[0].title).toEqual('Python Programming Guide');
+      }
+    });
+
+    test('full-text search scoped by type', async () => {
+      const { db, graph } = await builder.createDatabase();
+      graph.registry.add([TestSchema.Task, TestSchema.Person]);
+
+      db.add(Obj.make(TestSchema.Task, { title: 'Quarterly planning' }));
+      db.add(Obj.make(TestSchema.Person, { name: 'Quarterly Reviewer' }));
+      db.add(Obj.make(TestSchema.Person, { name: 'Unrelated Name' }));
+      await db.flush();
+
+      // Unscoped matches both entities containing the term.
+      {
+        const objects = await db.query(Query.select(Filter.text('Quarterly', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(2);
+      }
+
+      // Scoped to one type.
+      {
+        const objects: TestSchema.Task[] = await db
+          .query(
+            Query.select(Filter.and(Filter.text('Quarterly', { type: 'full-text' }), Filter.type(TestSchema.Task))),
+          )
+          .run();
+        expect(objects).toHaveLength(1);
+        expect(objects[0].title).toEqual('Quarterly planning');
+      }
+
+      // Scoped to multiple types via OR.
+      {
+        const objects = await db
+          .query(
+            Query.select(
+              Filter.and(
+                Filter.text('Quarterly', { type: 'full-text' }),
+                Filter.or(Filter.type(TestSchema.Task), Filter.type(TestSchema.Person)),
+              ),
+            ),
+          )
+          .run();
+        expect(objects).toHaveLength(2);
+      }
+
+      // A type scope the term never occurs under matches nothing.
+      {
+        const objects = await db
+          .query(
+            Query.select(Filter.and(Filter.text('Unrelated', { type: 'full-text' }), Filter.type(TestSchema.Task))),
+          )
+          .run();
+        expect(objects).toHaveLength(0);
       }
     });
 
@@ -3679,6 +3856,87 @@ describe('Query', () => {
       expect(objects).toHaveLength(2);
       const names = objects.map((o: any) => o.name).sort();
       expect(names).toEqual(['Child1', 'Child2']);
+    });
+  });
+
+  describe('Filter.hasParent', () => {
+    test('selects parented vs unparented objects', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+      const parent = db.add(Obj.make(TestSchema.Expando, { name: 'Parent' }));
+      db.add(Obj.make(TestSchema.Expando, { [Obj.Parent]: parent, name: 'Child' }));
+      db.add(Obj.make(TestSchema.Expando, { name: 'Standalone' }));
+      await db.flush();
+
+      const roots = await db.query(Query.select(Filter.hasParent(false))).run();
+      expect(roots.map((obj: any) => obj.name).sort()).toEqual(['Parent', 'Standalone']);
+
+      const children = await db.query(Query.select(Filter.hasParent())).run();
+      expect(children.map((obj: any) => obj.name)).toEqual(['Child']);
+    });
+
+    test('combines with a type filter, keeping the type-indexed select', async ({ expect }) => {
+      const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
+      const person = db.add(Obj.make(TestSchema.Person, { name: 'Root' }));
+      db.add(Obj.make(TestSchema.Person, { [Obj.Parent]: person, name: 'Dependent' }));
+      db.add(Obj.make(TestSchema.Expando, { name: 'OtherType' }));
+      await db.flush();
+
+      const objects = await db
+        .query(Query.select(Filter.and(Filter.type(TestSchema.Person), Filter.hasParent(false))))
+        .run();
+      expect(objects).toHaveLength(1);
+      expect(objects[0]).toMatchObject({ name: 'Root' });
+    });
+
+    test('negation inverts the predicate', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+      const parent = db.add(Obj.make(TestSchema.Expando, { name: 'Parent' }));
+      db.add(Obj.make(TestSchema.Expando, { [Obj.Parent]: parent, name: 'Child' }));
+      await db.flush();
+
+      const objects = await db.query(Query.select(Filter.not(Filter.hasParent()))).run();
+      expect(objects.map((obj: any) => obj.name)).toEqual(['Parent']);
+    });
+
+    test('a negated type-and-parent conjunction negates the whole conjunction', async ({ expect }) => {
+      const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
+      const rootPerson = db.add(Obj.make(TestSchema.Person, { name: 'RootPerson' }));
+      db.add(Obj.make(TestSchema.Person, { [Obj.Parent]: rootPerson, name: 'ChildPerson' }));
+      db.add(Obj.make(TestSchema.Expando, { name: 'RootExpando' }));
+      await db.flush();
+
+      // not(and(type, hasParent(false))) must exclude ONLY the unparented person — a distributed
+      // negation (not(type) && hasParent(false)) would wrongly drop the parented person too.
+      const objects = await db
+        .query(Query.select(Filter.not(Filter.and(Filter.type(TestSchema.Person), Filter.hasParent(false)))))
+        .run();
+      const names = objects.map((obj: any) => obj.name);
+      expect(names).toContain('ChildPerson');
+      expect(names).toContain('RootExpando');
+      expect(names).not.toContain('RootPerson');
+    });
+
+    test('reacts to Obj.setParent after the fact', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+      const parent = db.add(Obj.make(TestSchema.Expando, { name: 'Parent' }));
+      const chat = db.add(Obj.make(TestSchema.Expando, { name: 'Chat' }));
+      await db.flush();
+
+      const query = db.query(Query.select(Filter.hasParent(false)));
+      const unsubscribe = query.subscribe(() => {});
+      onTestFinished(unsubscribe);
+      await waitForCondition({ condition: () => query.results.length === 2, timeout: 2000 });
+
+      // Adopting the chat must eject it from the unparented result set without a re-run.
+      Obj.setParent(chat, parent);
+      await db.flush({ updates: true });
+      await waitForCondition({ condition: () => query.results.length === 1, timeout: 2000 });
+      expect(query.results.map((obj: any) => obj.name)).toEqual(['Parent']);
+
+      // And orphaning it again must re-admit it.
+      Obj.setParent(chat, undefined);
+      await db.flush({ updates: true });
+      await waitForCondition({ condition: () => query.results.length === 2, timeout: 2000 });
     });
   });
 

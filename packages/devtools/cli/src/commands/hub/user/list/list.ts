@@ -2,17 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
 import * as Config from 'effect/Config';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import * as Command from 'effect/unstable/cli/Command';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
 import path from 'node:path';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { ConfigService } from '@dxos/client';
+import { DEFAULT_HUB_URL } from '@dxos/client-protocol';
 import { withRetry } from '@dxos/edge-client';
 
 export const list = Command.make(
@@ -20,7 +21,7 @@ export const list = Command.make(
   {},
   Effect.fn(function* () {
     const config = yield* ConfigService;
-    const baseUrl = config.values?.runtime?.services?.hub?.url ?? 'https://hub.dxos.network';
+    const baseUrl = config.values?.runtime?.services?.hub?.url ?? DEFAULT_HUB_URL;
     const url = path.join(baseUrl, '/api/waitlist');
     if (yield* CommandConfig.isVerbose) {
       yield* Effect.log(`Calling: ${url}`);

@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 export type Attention = {
   hasAttention: boolean;
@@ -19,7 +20,7 @@ export class AttentionManager {
   private readonly _currentAtom: Atom.Writable<string[]>;
 
   constructor(
-    private readonly _registry: Registry.Registry,
+    private readonly _registry: Registry.AtomRegistry,
     initial: string[] = [],
   ) {
     this._currentAtom = Atom.make<string[]>([]).pipe(Atom.keepAlive);

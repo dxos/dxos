@@ -13,8 +13,7 @@ import { getStyles } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 
 import { meta } from '#meta';
-
-import * as Segment from '../../types/Segment';
+import { Segment } from '#types';
 
 /**
  * Read-only layout for a flight `Segment.FlightDetails`. Rendered inside the tile

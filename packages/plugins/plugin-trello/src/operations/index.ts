@@ -5,7 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import * as TrelloOperation from '../types/TrelloOperation';
+import { TrelloOperation } from '#types';
 
 export const TrelloOperationHandlerSet = OperationHandlerSet.lazy([
   TrelloOperation.GetTrelloBoards.pipe(Operation.lazyHandler(() => import('./get-trello-boards'))),

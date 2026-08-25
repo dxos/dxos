@@ -8,7 +8,7 @@ import { Card, Icon, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 
-import type * as Subscription from '../../types/Subscription';
+import { Subscription } from '#types';
 
 export type SubscriptionStackAction =
   | { type: 'current'; feedId: string }
@@ -64,7 +64,6 @@ export const SubscriptionStack = composable<HTMLDivElement, SubscriptionStackPro
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={SubscriptionTile}
-                classNames='my-2'
                 gap={8}
                 items={items}
                 draggable={false}

@@ -4,7 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import * as DeckSchema from '../types/DeckSchema';
+import { DeckSchema } from '#types';
+
 import { computeActiveUpdates } from './set-active';
 
 const makeDeck = (overrides: Partial<DeckSchema.DeckState> = {}): DeckSchema.DeckState => ({
@@ -69,6 +70,20 @@ describe('computeActiveUpdates', () => {
       const deck = makeDeck({ active: ['a', 'b'], companionPlanks: ['b'] });
       const { deckUpdates } = computeActiveUpdates({ next: ['a', 'b'], deck });
       expect(deckUpdates.companionPlanks).toEqual(['b']);
+    });
+
+    // Under `flatten` the flag is deck-wide, so closing the plank that happens to carry it must not
+    // shut a companion the user never closed.
+    test('re-points the deck-wide flag at the current plank under flatten', ({ expect }) => {
+      const deck = makeDeck({ active: ['a', 'b'], companionPlanks: ['b'] });
+      const { deckUpdates } = computeActiveUpdates({ next: ['a'], deck, flatten: true });
+      expect(deckUpdates.companionPlanks).toEqual(['a']);
+    });
+
+    test('leaves the deck-wide flag closed under flatten', ({ expect }) => {
+      const deck = makeDeck({ active: ['a', 'b'], companionPlanks: [] });
+      const { deckUpdates } = computeActiveUpdates({ next: ['a'], deck, flatten: true });
+      expect(deckUpdates.companionPlanks).toEqual([]);
     });
   });
 

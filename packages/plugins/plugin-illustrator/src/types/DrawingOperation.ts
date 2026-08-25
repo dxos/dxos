@@ -11,18 +11,19 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import { meta } from '#meta';
 import { Scene } from '#model';
 
 import * as Drawing from './Drawing';
 
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
 export const Create = Operation.make({
-  meta: { key: makeKey('create'), name: 'Create Drawing', icon: 'ph--pencil-simple--regular' },
+  meta: {
+    key: DXN.make('org.dxos.operation.illustrator.create'),
+    name: 'Create Drawing',
+    icon: 'ph--pencil-simple--regular',
+  },
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
-    variant: Schema.optional(Schema.String).annotations({
+    variant: Schema.optional(Schema.String).annotate({
       description: 'Variant id (canvas typename); defaults to the first registered variant.',
     }),
   }),
@@ -34,22 +35,22 @@ export const Create = Operation.make({
 
 /** The scene as derived from the live canvas. */
 const SceneOutput = {
-  scene: Scene.Scene.annotations({ description: 'The diagram as world objects with object-local coordinates.' }),
-  unmanaged: Schema.Number.annotations({
+  scene: Scene.Scene.annotate({ description: 'The diagram as world objects with object-local coordinates.' }),
+  unmanaged: Schema.Number.annotate({
     description: 'Number of shapes on the canvas not managed by the DSL (drawn by users).',
   }),
 };
 
 export const Read = Operation.make({
   meta: {
-    key: makeKey('read'),
+    key: DXN.make('org.dxos.operation.illustrator.read'),
     name: 'Read Drawing',
     description:
       'Returns the current scene of a drawing: world objects (by id) with their elements in object-local units. Call before editing an existing drawing.',
     icon: 'ph--eye--regular',
   },
   input: Schema.Struct({
-    drawing: Ref.Ref(Drawing.Drawing).annotations({ description: 'The drawing to read.' }),
+    drawing: Ref.Ref(Drawing.Drawing).annotate({ description: 'The drawing to read.' }),
   }),
   output: Schema.Struct(SceneOutput),
   services: [Capability.Service, Database.Service],
@@ -57,39 +58,39 @@ export const Read = Operation.make({
 
 export const Edit = Operation.make({
   meta: {
-    key: makeKey('edit'),
+    key: DXN.make('org.dxos.operation.illustrator.edit'),
     name: 'Edit Drawing',
     description:
       'Applies scene commands to a drawing: upsert/move/remove world objects or individual elements by id. Returns the resulting scene.',
     icon: 'ph--pencil-simple-line--regular',
   },
   input: Schema.Struct({
-    drawing: Ref.Ref(Drawing.Drawing).annotations({ description: 'The drawing to edit.' }),
-    commands: Schema.Array(Scene.Command).annotations({ description: 'Commands applied in order, atomically.' }),
+    drawing: Ref.Ref(Drawing.Drawing).annotate({ description: 'The drawing to edit.' }),
+    commands: Schema.Array(Scene.Command).annotate({ description: 'Commands applied in order, atomically.' }),
   }),
   output: Schema.Struct({
     ...SceneOutput,
-    upserted: Schema.Array(Schema.String).annotations({ description: 'Object ids created or modified.' }),
-    removed: Schema.Number.annotations({ description: 'Number of shapes removed.' }),
+    upserted: Schema.Array(Schema.String).annotate({ description: 'Object ids created or modified.' }),
+    removed: Schema.Number.annotate({ description: 'Number of shapes removed.' }),
   }),
   services: [Capability.Service, Database.Service],
 });
 
 export const Generate = Operation.make({
   meta: {
-    key: makeKey('generate'),
+    key: DXN.make('org.dxos.operation.illustrator.generate'),
     name: 'Generate Drawing',
     description:
-      'Replaces a drawing with a diagram compiled from a mermaid flowchart description. The dialect owns layout, so no coordinates are supplied.',
+      'Replaces a drawing with a diagram compiled from a mermaid description (flowchart or classDiagram). The dialect owns layout, so no coordinates are supplied.',
     icon: 'ph--graph--regular',
   },
   input: Schema.Struct({
-    drawing: Ref.Ref(Drawing.Drawing).annotations({ description: 'The drawing to generate into.' }),
-    source: Schema.String.annotations({ description: 'Mermaid flowchart source.' }),
+    drawing: Ref.Ref(Drawing.Drawing).annotate({ description: 'The drawing to generate into.' }),
+    source: Schema.String.annotate({ description: 'Mermaid source: a flowchart or a classDiagram.' }),
   }),
   output: Schema.Struct({
     ...SceneOutput,
-    upserted: Schema.Array(Schema.String).annotations({ description: 'Object ids created or modified.' }),
+    upserted: Schema.Array(Schema.String).annotate({ description: 'Object ids created or modified.' }),
   }),
   services: [Capability.Service, Database.Service],
 });

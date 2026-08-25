@@ -7,8 +7,7 @@ import { type Resource } from '@dxos/react-ui';
 import { Outline } from '@dxos/types';
 
 import { meta } from '#meta';
-
-import * as Journal from './types/Journal';
+import { Journal } from '#types';
 
 export const translations = [
   {
@@ -39,7 +38,9 @@ export const translations = [
         'plugin.name': 'Tasks',
         'task-set.tasks.label': 'Tasks',
         'task-create.placeholder': 'Add task',
-        'task-status.todo.label': 'Todo',
+        'backlog.label': 'Backlog',
+        'milestone-progress.label': '{{done}}/{{total}}',
+        'task-status.todo.label': 'To Do',
         'task-status.in-progress.label': 'In progress',
         'task-status.done.label': 'Done',
         'task-status.failed.label': 'Failed',

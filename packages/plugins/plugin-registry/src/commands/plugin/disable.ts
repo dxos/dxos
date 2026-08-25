@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Args from '@effect/cli/Args';
-import * as Command from '@effect/cli/Command';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as Args from 'effect/unstable/cli/Argument';
+import * as Command from 'effect/unstable/cli/Command';
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { CommandConfig } from '@dxos/cli-util';
-import { invariant } from '@dxos/invariant';
 
 import { saveEnabledPlugins } from '../../storage';
+import { CorePluginError, PluginNotFoundError } from './errors';
 
 export const handler = Effect.fn(function* ({ id }: { id: string }) {
   const { json, profile } = yield* CommandConfig;
@@ -19,17 +19,23 @@ export const handler = Effect.fn(function* ({ id }: { id: string }) {
 
   const plugins = manager.getPlugins();
   const plugin = plugins.find((p: Plugin.Plugin) => p.meta.profile.key === id);
-  invariant(plugin, `Plugin not found: ${id}`);
+  if (!plugin) {
+    return yield* Effect.fail(new PluginNotFoundError(id));
+  }
+  if (manager.getCore().includes(id)) {
+    return yield* Effect.fail(new CorePluginError(id));
+  }
 
-  const core = manager.getCore();
-  invariant(!core.includes(id), `Cannot disable core plugin: ${id}`);
-
-  const disabled = yield* manager.disable(id);
-  invariant(disabled, `Failed to disable plugin: ${id}`);
-
-  // Save enabled plugins to storage
-  const enabledPlugins = manager.getEnabled();
-  yield* saveEnabledPlugins({ profile, enabled: [...enabledPlugins] });
+  // Idempotent for the same reason `enable` is.
+  if (manager.getEnabled().includes(id)) {
+    yield* manager.disable(id);
+    yield* saveEnabledPlugins({
+      profile,
+      enabled: [...manager.getEnabled()],
+      registered: plugins.map((plugin: Plugin.Plugin) => plugin.meta.profile.key),
+      core: manager.getCore(),
+    });
+  }
 
   if (json) {
     yield* Console.log(JSON.stringify({ id, enabled: false }, null, 2));
@@ -41,7 +47,7 @@ export const handler = Effect.fn(function* ({ id }: { id: string }) {
 export const disable = Command.make(
   'disable',
   {
-    id: Args.text({ name: 'id' }).pipe(Args.withDescription('The ID of the plugin to disable.')),
+    id: Args.string('id').pipe(Args.withDescription('The ID of the plugin to disable.')),
   },
   handler,
 ).pipe(Command.withDescription('Disable a plugin.'));

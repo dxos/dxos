@@ -9,7 +9,7 @@ import { OperationInvoker } from '@dxos/operation';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as Tldraw from '@dxos/plugin-tldraw/Tldraw';
 import { random } from '@dxos/random';
 import { type Client } from '@dxos/react-client';
@@ -44,7 +44,7 @@ export const createGenerator = <S extends Type.AnyObj>(
           .find((s) => Type.getTypename(s) === typename)
       : undefined;
     if (!view && !staticSchema) {
-      await invokePromise(SpaceOperation.AddType, { db: space.db, type: schema, show: false });
+      await invokePromise(SpaceOperation.AddType, { type: schema, show: false }, { spaceId: space.id });
     }
 
     // Create objects.

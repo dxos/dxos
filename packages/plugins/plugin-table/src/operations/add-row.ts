@@ -5,10 +5,10 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { getTypeURIFromQuery } from '@dxos/schema';
 
-import * as TableOperation from '../types/TableOperation';
+import { TableOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof TableOperation.AddRow> = TableOperation.AddRow.pipe(
   Operation.withHandler(
@@ -24,7 +24,7 @@ const handler: Operation.WithHandler<typeof TableOperation.AddRow> = TableOperat
       const schema = types.find((t) => Type.getURI(t) === typeUri);
       invariant(schema);
       const object = Obj.make(Type.assertObject(schema), data);
-      yield* Operation.invoke(SpaceOperation.AddObject, { target: db, object });
+      yield* Operation.invoke(SpaceOperation.AddObject, { object }, { spaceId: db.spaceId });
     }),
   ),
 );

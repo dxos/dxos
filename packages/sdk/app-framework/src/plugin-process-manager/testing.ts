@@ -20,31 +20,31 @@ import { OperationInvoker } from '@dxos/operation';
 export const Compute = Operation.make({
   input: Schema.Struct({ value: Schema.Number }),
   output: Schema.Struct({ value: Schema.Number }),
-  meta: { key: DXN.make('org.dxos.test.compute') },
+  meta: { key: DXN.make('com.example.operation.test.compute') },
 });
 
 export const HalveCompute = Operation.make({
   input: Schema.Struct({ value: Schema.Number }),
   output: Schema.Struct({ value: Schema.Number }),
-  meta: { key: DXN.make('org.dxos.test.halveCompute') },
+  meta: { key: DXN.make('com.example.operation.test.halveCompute') },
 });
 
 export const ToString = Operation.make({
   input: Schema.Struct({ value: Schema.Number }),
   output: Schema.Struct({ string: Schema.String }),
-  meta: { key: DXN.make('org.dxos.test.toString') },
+  meta: { key: DXN.make('com.example.operation.test.toString') },
 });
 
 export const Add = Operation.make({
-  input: Schema.Tuple(Schema.Number, Schema.Number),
+  input: Schema.Tuple([Schema.Number, Schema.Number]),
   output: Schema.Number,
-  meta: { key: DXN.make('org.dxos.test.add') },
+  meta: { key: DXN.make('com.example.operation.test.add') },
 });
 
 export const SideEffect = Operation.make({
   input: Schema.Void,
   output: Schema.Void,
-  meta: { key: DXN.make('org.dxos.test.sideEffect') },
+  meta: { key: DXN.make('com.example.operation.test.sideEffect') },
 });
 
 //
@@ -109,7 +109,7 @@ export const createEventCollector = (invoker: OperationInvoker.OperationInvoker)
     });
 
     // Fork a fiber to consume the invocation stream.
-    const fiber = yield* Effect.fork(
+    const fiber = yield* Effect.forkChild(
       Effect.gen(function* () {
         // Signal that subscription is about to start.
         yield* Deferred.succeed(subscriptionReady, undefined);
@@ -127,7 +127,7 @@ export const createEventCollector = (invoker: OperationInvoker.OperationInvoker)
     // Wait for the subscription to be established.
     yield* Deferred.await(subscriptionReady);
     // Additional yield to ensure PubSub subscription is fully registered.
-    yield* Effect.yieldNow();
+    yield* Effect.yieldNow;
 
     const waitForEvents = (count: number): Effect.Effect<void> =>
       Effect.gen(function* () {

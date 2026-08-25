@@ -89,6 +89,10 @@ const invalidIdMeta = Plugin.makeMeta({
 });
 
 // Contributes a single surface with a hyphenated (invalid) local id for role A.
+// Widened to `string` so it reaches the runtime check: `DXN.Path` rejects a malformed literal at the
+// authoring site, and this exercises the computed ids it deliberately lets through.
+const invalidId: string = 'gallery-article';
+
 const InvalidIdPlugin = Plugin.define(invalidIdMeta).pipe(
   Plugin.addModule({
     id: 'surfaces',
@@ -96,7 +100,7 @@ const InvalidIdPlugin = Plugin.define(invalidIdMeta).pipe(
     activate: () =>
       Effect.succeed([
         Capability.contributeAll(Capabilities.ReactSurface, [
-          create({ id: 'gallery-article', filter: makeFilter(RoleA), component: () => <span data-testid='invalid' /> }),
+          create({ id: invalidId, filter: makeFilter(RoleA), component: () => <span data-testid='invalid' /> }),
         ]),
       ]),
   }),
@@ -182,6 +186,134 @@ describe('SurfaceComponent demand activation', () => {
       act(() => bump());
       expect(view.getByTestId('gated-available').textContent).toBe('true');
     });
+  });
+});
+
+//
+// A role served by BOTH an eager catch-all (`Position.last`, matching anything) and a gated module
+// whose activation is held open by a latch — the shape behind #12717, where plugin-space's record
+// article claimed a feed plank for a second while plugin-magazine's chunk loaded.
+//
+
+const RoleHeld = Role.make<Record<string, unknown>>('org.dxos.test.role.held');
+
+const catchAllMeta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.test.surfaceCatchAll'),
+  name: 'SurfaceCatchAllTest',
+});
+
+const CatchAllPlugin = Plugin.define(catchAllMeta).pipe(
+  Plugin.addModule({
+    id: 'surfaces',
+    provides: [Capabilities.ReactSurface],
+    activate: () =>
+      Effect.succeed([
+        Capability.contributeAll(Capabilities.ReactSurface, [
+          create({
+            id: 'catchAll',
+            position: Position.last,
+            filter: makeFilter(RoleHeld),
+            component: () => <span data-testid='catch-all' />,
+          }),
+        ]),
+      ]),
+  }),
+  Plugin.make,
+);
+
+const specificMeta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.test.surfaceSpecific'),
+  name: 'SurfaceSpecificTest',
+});
+
+const SpecificPlugin = Plugin.define(specificMeta).pipe(
+  Plugin.addModule({
+    id: 'surfaces',
+    provides: [Capabilities.ReactSurface],
+    activate: () =>
+      Effect.succeed([
+        Capability.contributeAll(Capabilities.ReactSurface, [
+          create({ id: 'specific', filter: makeFilter(RoleHeld), component: () => <span data-testid='specific' /> }),
+        ]),
+      ]),
+  }),
+  Plugin.make,
+);
+
+const heldMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test.surfaceHeld'), name: 'SurfaceHeldTest' });
+
+/** A role-gated surface module whose activation completes only when the returned latch is released. */
+const makeHeldPlugin = () => {
+  let release: () => void = () => {};
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const plugin = Plugin.define(heldMeta).pipe(
+    Plugin.addModule({
+      id: 'surfaces',
+      provides: [Capabilities.ReactSurface],
+      activatesOn: ActivationEvents.SurfacesRequested(RoleHeld.role),
+      activate: () =>
+        Effect.promise(() => gate).pipe(
+          Effect.map(() => [
+            Capability.contributeAll(Capabilities.ReactSurface, [
+              create({ id: 'held', filter: makeFilter(RoleHeld), component: () => <span data-testid='held' /> }),
+            ]),
+          ]),
+        ),
+    }),
+    Plugin.make,
+  );
+  return { plugin, release: () => release() };
+};
+
+describe('SurfaceComponent fallback hold', () => {
+  test("withholds a catch-all while the role's own module is still activating", async ({ expect }) => {
+    const { plugin, release } = makeHeldPlugin();
+    await using harness = await createTestApp({ plugins: [CatchAllPlugin(), plugin()] });
+
+    const view = render(harness, <SurfaceComponent type={RoleHeld} />);
+    // The catch-all matches and is already loaded, but rendering it here is the flash: the role's
+    // own module has not settled, so nothing renders yet.
+    expect(view.queryByTestId('catch-all')).toBeNull();
+    expect(view.queryByTestId('held')).toBeNull();
+
+    release();
+    expect(await view.findByTestId('held')).toBeTruthy();
+  });
+
+  test('limit={0} renders nothing while the role is still activating', async ({ expect }) => {
+    // `limit={0}` means render nothing, and a held fallback must not reintroduce output through the
+    // placeholder — which is only visible with an explicit one, since the default is empty.
+    const { plugin, release } = makeHeldPlugin();
+    await using harness = await createTestApp({ plugins: [CatchAllPlugin(), plugin()] });
+
+    const view = render(
+      harness,
+      <SurfaceComponent type={RoleHeld} limit={0} placeholder={<span data-testid='placeholder' />} />,
+    );
+    expect(view.queryByTestId('placeholder')).toBeNull();
+    expect(view.queryByTestId('catch-all')).toBeNull();
+
+    release();
+  });
+
+  test('renders the catch-all once no gated module for the role is left activating', async ({ expect }) => {
+    // Guards the hazard in #12717: a hold that never lifts would strand every plank whose role has
+    // only a fallback.
+    await using harness = await createTestApp({ plugins: [CatchAllPlugin()] });
+    const view = render(harness, <SurfaceComponent type={RoleHeld} />);
+    expect(await view.findByTestId('catch-all')).toBeTruthy();
+  });
+
+  test('a specific match renders immediately, without waiting for the gated module', async ({ expect }) => {
+    const { plugin, release } = makeHeldPlugin();
+    await using harness = await createTestApp({ plugins: [SpecificPlugin(), plugin()] });
+
+    const view = render(harness, <SurfaceComponent type={RoleHeld} />);
+    // Only fallbacks are held; a surface that already has real content shows it.
+    expect(await view.findByTestId('specific')).toBeTruthy();
+    release();
   });
 });
 

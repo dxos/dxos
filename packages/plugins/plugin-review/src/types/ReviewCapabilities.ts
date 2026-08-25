@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { type Obj } from '@dxos/echo';
@@ -52,12 +53,12 @@ export type VersioningView = {
   hiddenAuthors?: string[];
 };
 
-const VersionSelectionSchema: Schema.Schema<VersionSelection> = Schema.Union(
+const VersionSelectionSchema: Schema.Codec<VersionSelection> = Schema.Union([
   Schema.Struct({ kind: Schema.Literal('current') }),
   Schema.Struct({ kind: Schema.Literal('branch'), branchId: Schema.String }),
   Schema.Struct({ kind: Schema.Literal('fork'), branchId: Schema.String }),
   Schema.Struct({ kind: Schema.Literal('checkpoint'), versionId: Schema.String }),
-);
+]);
 
 /** Version view state keyed by object id, read/written through the ViewState hooks. */
 export const viewAspect: ViewState.Aspect<VersioningView> = ViewState.define<VersioningView>({
@@ -65,11 +66,11 @@ export const viewAspect: ViewState.Aspect<VersioningView> = ViewState.define<Ver
   backend: 'memory',
   schema: Schema.Struct({
     selection: Schema.optional(VersionSelectionSchema),
-    view: Schema.optional(Schema.Literal('base', 'diff', 'branch')),
-    mode: Schema.optional(Schema.Literal('editing', 'suggesting', 'viewing')),
+    view: Schema.optional(Schema.Literals(['base', 'diff', 'branch'])),
+    mode: Schema.optional(Schema.Literals(['editing', 'suggesting', 'viewing'])),
     suggestion: Schema.optional(Schema.Struct({ author: Schema.String, from: Schema.Number, to: Schema.Number })),
     hiddenAuthors: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
-  }).pipe(Schema.mutable),
+  }).mapFields(Struct.map(Schema.mutableKey)),
   defaultValue: () => ({}),
 });
 
@@ -112,5 +113,10 @@ export type CommentState = {
   toolbar: Record<string, boolean>;
   /** In-memory draft threads. */
   drafts: Record<string, AnchoredTo.AnchoredTo[]>;
+  /**
+   * The current thread, as an object id or an EID — writers differ, and an EID's spelling changes
+   * when a draft persists (`echo:///<id>` → `echo://<spaceId>/<id>`), so readers MUST compare via
+   * `currentObjectId` (`util/comment-state.ts`), never by string equality.
+   */
   current?: string | undefined;
 };

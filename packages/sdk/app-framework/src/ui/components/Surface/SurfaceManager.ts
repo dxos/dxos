@@ -2,17 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
-import * as Data from 'effect/Data';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Position } from '@dxos/util';
 
-import { Capabilities } from '../../../common';
-import { type CapabilityManager } from '../../../core';
-import { type Definition, isValidLocalId } from './types';
+import { ActivationEvents, Capabilities } from '../../../common';
+import { ActivationEvent, type CapabilityManager, type PluginManager } from '../../../core';
+import { type Definition } from './types';
 
-const EMPTY_CANDIDATES: ReadonlyArray<Definition> = Data.array<Definition[]>([]);
+const EMPTY_CANDIDATES: ReadonlyArray<Definition> = [];
 
 /**
  * Groups definitions by role with each bucket pre-sorted by {@link Position}, so
@@ -38,6 +38,16 @@ export const indexByRole = (definitions: Definition[]): Map<string, Definition[]
   return index;
 };
 
+/** Whether an activation spec fires on `key` (directly, or as a member of a one-of/all-of). */
+const activatesOn = (events: ActivationEvent.Events, key: string): boolean => {
+  const list = ActivationEvent.isOneOf(events) || ActivationEvent.isAllOf(events) ? events.events : [events];
+  return list.some((event) => String(ActivationEvent.eventKey(event)) === key);
+};
+
+/** Definitions are stable objects, so a bucket is unchanged when it holds the same ones in order. */
+const sameCandidates = (left: ReadonlyArray<Definition>, right: ReadonlyArray<Definition>): boolean =>
+  left.length === right.length && left.every((definition, index) => definition === right[index]);
+
 /**
  * Owns the per-manager surface memoization: one derived index atom plus a per-role
  * family of candidate atoms. A single instance is provided via
@@ -47,6 +57,7 @@ export const indexByRole = (definitions: Definition[]): Map<string, Definition[]
  */
 export class SurfaceManager {
   readonly #capabilities: CapabilityManager.CapabilityManager;
+  readonly #plugins: PluginManager.PluginManager;
 
   // Role index (each bucket position-sorted); rebuilt once per contribution change.
   readonly #index = Atom.make((get) => {
@@ -54,13 +65,29 @@ export class SurfaceManager {
     return indexByRole(this.#dropInvalid(definitions));
   }).pipe(Atom.keepAlive);
 
-  // Per-role candidate atoms. `Data.array` gives the result structural equality, so a
-  // contribution to a different role recomputes to an equal value and is dropped —
-  // that role's subscribers never re-render.
+  // Per-role candidate atoms. The atom carries the equality, so a contribution to a different role
+  // recomputes this bucket to an equal value and is dropped — that role's subscribers never
+  // re-render. (v4 removed `Data.array`, which used to supply that equality structurally.)
   readonly #candidates = Atom.family<string, Atom.Atom<ReadonlyArray<Definition>>>((role) =>
     Atom.make((get) => {
       const bucket = get(this.#index).get(role);
-      return bucket ? Data.array(bucket) : EMPTY_CANDIDATES;
+      return bucket ? [...bucket] : EMPTY_CANDIDATES;
+    }).pipe(Atom.withEquality(sameCandidates), Atom.keepAlive),
+  );
+
+  // Per-role activation-in-flight atoms; see `pendingAtom`. `modules` carries only enabled,
+  // non-failed plugins' modules (a plugin that fails — including by exceeding the module timeout —
+  // is excluded and auto-disabled), so a role cannot stay pending forever.
+  readonly #pending = Atom.family<string, Atom.Atom<boolean>>((role) =>
+    Atom.make((get) => {
+      if (role === '') {
+        return false;
+      }
+      const key = String(ActivationEvent.eventKey(ActivationEvents.SurfacesRequested(role)));
+      const active = new Set(get(this.#plugins.active));
+      return get(this.#plugins.modules).some(
+        (module) => !active.has(module.id) && activatesOn(module.activation.activatesOn, key),
+      );
     }).pipe(Atom.keepAlive),
   );
 
@@ -72,13 +99,23 @@ export class SurfaceManager {
   // repeated availability checks do not re-activate the role's modules.
   #requestedRoles = new Set<string>();
 
-  constructor(capabilities: CapabilityManager.CapabilityManager) {
+  constructor(capabilities: CapabilityManager.CapabilityManager, plugins: PluginManager.PluginManager) {
     this.#capabilities = capabilities;
+    this.#plugins = plugins;
   }
 
   /** Derived atom yielding the (position-sorted) candidates for a single role. */
   candidatesAtom(role: string): Atom.Atom<ReadonlyArray<Definition>> {
     return this.#candidates(role);
+  }
+
+  /**
+   * Derived atom: true while a module gated on this role's demand event has yet to activate — i.e.
+   * a surface specific to the rendered data may still be coming. Boolean-valued, so subscribers
+   * re-render only when it flips, not on every activation.
+   */
+  pendingAtom(role: string): Atom.Atom<boolean> {
+    return this.#pending(role);
   }
 
   /**
@@ -107,14 +144,17 @@ export class SurfaceManager {
   /** Drops definitions with an invalid local id, warning once per id. */
   #dropInvalid(definitions: Definition[]): Definition[] {
     return definitions.filter((definition) => {
-      if (isValidLocalId(definition.id)) {
+      if (DXN.isValidPath(definition.id)) {
         return true;
       }
       if (!this.#warnedInvalidIds.has(definition.id)) {
         this.#warnedInvalidIds.add(definition.id);
-        log.warn('dropping surface with invalid id; the final segment must be camelCase (no hyphens or underscores)', {
-          id: definition.id,
-        });
+        log.warn(
+          'dropping surface with invalid id; the final segment must be camelCase — letters and digits, starting with a letter',
+          {
+            id: definition.id,
+          },
+        );
       }
       return false;
     });

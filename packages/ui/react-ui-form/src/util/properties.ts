@@ -3,23 +3,49 @@
 //
 
 import * as Option from 'effect/Option';
-import * as SchemaAST from 'effect/SchemaAST';
 
 import { Annotation } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 
 /** The property's type with an optional `T | undefined` union unwrapped to its inner `T`. */
 const unwrapOptional = (prop: SchemaAST.PropertySignature): SchemaAST.AST => {
-  if (!prop.isOptional || !SchemaAST.isUnion(prop.type)) {
+  if (!SchemaAST.isOptional(prop.type) || !SchemaAST.isUnion(prop.type)) {
     return prop.type;
   }
   // Drop the `undefined` member, preserving the remaining union (don't collapse `A | B | undefined` to `A`).
-  const defined = prop.type.types.filter((type) => type._tag !== 'UndefinedKeyword');
+  const defined = prop.type.types.filter((type) => type._tag !== 'Undefined');
   if (defined.length === 0) {
     return prop.type;
   }
-  return defined.length === 1 ? defined[0] : SchemaAST.Union.make(defined, prop.type.annotations);
+  return defined.length === 1
+    ? defined[0]
+    : new SchemaAST.Union(defined, prop.type.mode, prop.type.annotations, prop.type.checks);
+};
+
+/**
+ * Discriminator values that open a root discriminated union on its first member.
+ *
+ * A union root with no discriminator value renders as a lone select and nothing else — no member's
+ * fields, and no way to submit — so the form seeds the first member rather than presenting a dead
+ * form. Member order is therefore the declaration order of `Schema.Union`: put the common case first.
+ */
+export const getDiscriminatorDefaults = (ast: SchemaAST.AST | undefined): Record<string, unknown> => {
+  if (!ast || !SchemaEx.isDiscriminatedUnion(ast) || !SchemaAST.isUnion(ast)) {
+    return {};
+  }
+
+  const discriminators = new Set(SchemaEx.getDiscriminatingProps(ast) ?? []);
+  const [first] = ast.types;
+  if (!first || discriminators.size === 0) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    SchemaAST.getPropertySignatures(first)
+      .filter((prop) => discriminators.has(prop.name.toString()) && SchemaAST.isLiteral(prop.type))
+      .map((prop) => [prop.name.toString(), (prop.type as SchemaAST.Literal).literal]),
+  );
 };
 
 /**

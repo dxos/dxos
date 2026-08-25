@@ -1,0 +1,51 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+
+import {
+  AnchorSort,
+  CommentConfig,
+  ComputeGraphRegistry,
+  CreateObject,
+  Markdown,
+  OperationHandler,
+  ReactSurface,
+  Schema,
+  SheetState,
+  SkillDefinition,
+  UndoMappings,
+} from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
+
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
+export const SheetPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(CommentConfig),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(UndoMappings),
+  Plugin.addModule(Schema),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(SheetState),
+  Plugin.addModule(ComputeGraphRegistry),
+  Plugin.addModule(Markdown),
+  Plugin.addModule(AnchorSort),
+  Plugin.addModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
+  Plugin.make,
+);
+
+export default SheetPlugin;

@@ -5,17 +5,17 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Operation from '@dxos/compute/Operation';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { Attention } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
-
-import * as SearchOperation from '../types/SearchOperation';
+import { SearchOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -65,8 +65,8 @@ export default Capability.makeModule(
                 label: ['search-action.label', { ns: meta.profile.key }],
                 icon: 'ph--magnifying-glass--regular',
                 keyBinding: {
-                  macos: 'shift+meta+f',
-                  windows: 'shift+alt+f',
+                  macos: 'meta+k',
+                  windows: 'ctrl+k',
                 },
               },
             },

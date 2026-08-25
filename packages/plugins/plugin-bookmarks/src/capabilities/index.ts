@@ -8,7 +8,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as CrxCapabilities from '@dxos/plugin-crx/CrxCapabilities';
 import * as CrxEvents from '@dxos/plugin-crx/CrxEvents';
 
-import * as BookmarksEvents from '../types/BookmarksEvents';
+import { BookmarksEvents } from '#types';
 
 export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config'), {
   activatesOn: BookmarksEvents.Start,
@@ -27,3 +27,4 @@ export const PageActionProvider = Capability.lazyModule(
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent'],
 });
+export const Schema = AppCapability.schema(() => import('./schema'));

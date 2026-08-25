@@ -8,6 +8,7 @@
 // carries no coordinates, so the dialect owns placement — see `dialect.ts` for the contract.
 //
 
+import * as Layout from './layout';
 import type * as Scene from './scene';
 
 export type Direction = 'TB' | 'BT' | 'LR' | 'RL';
@@ -129,75 +130,22 @@ const GAP_MAIN = 60;
 const GAP_CROSS = 40;
 const GROUP_PAD = 24;
 
-/**
- * Edges that close a cycle, found by DFS: an edge into a node still on the stack points backwards.
- * Ranking ignores them, so `C --> Y --> C` ranks C by its forward predecessors alone instead of
- * chasing the loop.
- */
-const backEdges = (graph: MermaidGraph): Set<MermaidEdge> => {
-  const outgoing = new Map<string, MermaidEdge[]>();
-  for (const edge of graph.edges) {
-    outgoing.set(edge.from, [...(outgoing.get(edge.from) ?? []), edge]);
-  }
-
-  const back = new Set<MermaidEdge>();
-  const done = new Set<string>();
-  const onStack = new Set<string>();
-
-  const visit = (id: string) => {
-    onStack.add(id);
-    for (const edge of outgoing.get(id) ?? []) {
-      if (onStack.has(edge.to)) {
-        back.add(edge);
-      } else if (!done.has(edge.to)) {
-        visit(edge.to);
-      }
-    }
-    onStack.delete(id);
-    done.add(id);
-  };
-
-  // Roots first so the DFS classifies edges along the natural reading order of the diagram.
-  const targets = new Set(graph.edges.map((edge) => edge.to));
-  for (const node of graph.nodes) {
-    if (!targets.has(node.id) && !done.has(node.id)) {
-      visit(node.id);
-    }
-  }
-  for (const node of graph.nodes) {
-    if (!done.has(node.id)) {
-      visit(node.id);
-    }
-  }
-  return back;
-};
-
 /** Assign each node a rank one past its deepest forward predecessor. */
-const rank = (graph: MermaidGraph): Map<string, number> => {
-  const back = backEdges(graph);
-  const forward = graph.edges.filter((edge) => !back.has(edge));
-  const ranks = new Map(graph.nodes.map((node) => [node.id, 0]));
-  for (let pass = 0; pass < graph.nodes.length; pass++) {
-    let changed = false;
-    for (const edge of forward) {
-      const next = (ranks.get(edge.from) ?? 0) + 1;
-      if (next > (ranks.get(edge.to) ?? 0)) {
-        ranks.set(edge.to, next);
-        changed = true;
-      }
-    }
-    if (!changed) {
-      break;
-    }
-  }
-  return ranks;
-};
+const rank = (graph: MermaidGraph): Map<string, number> =>
+  Layout.rank(
+    graph.nodes.map((node) => node.id),
+    graph.edges,
+  );
 
 export type CompileOptions = {
   /** Canvas position of the diagram's top-left, in canvas px. */
   origin?: Scene.Point;
   /** Canvas px per scene unit. */
   scale?: number;
+  /** Gap between ranks along the flow direction, in scene units (default 60). */
+  gapMain?: number;
+  /** Gap between nodes within a rank, in scene units (default 40). */
+  gapCross?: number;
 };
 
 /**
@@ -206,7 +154,7 @@ export type CompileOptions = {
  */
 export const compile = (source: string, options: CompileOptions = {}): Scene.Command[] => {
   const graph = parse(source);
-  const { origin = { x: 0, y: 0 }, scale = 1 } = options;
+  const { origin = { x: 0, y: 0 }, scale = 1, gapMain = GAP_MAIN, gapCross = GAP_CROSS } = options;
   const ranks = rank(graph);
   const horizontal = graph.direction === 'LR' || graph.direction === 'RL';
 
@@ -218,13 +166,16 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
   }
   const widest = Math.max(...[...lanes.values()].map((lane) => lane.length), 1);
 
+  // Axis-specific node sizes: for LR/RL the main axis advances by width and lanes stack by height.
+  const mainSize = horizontal ? NODE_W : NODE_H;
+  const crossSize = horizontal ? NODE_H : NODE_W;
   const positions = new Map<string, Scene.Point>();
   for (const [lane, members] of lanes) {
-    const span = members.length * NODE_W + (members.length - 1) * GAP_CROSS;
-    const offset = (widest * NODE_W + (widest - 1) * GAP_CROSS - span) / 2;
+    const span = members.length * crossSize + (members.length - 1) * gapCross;
+    const offset = (widest * crossSize + (widest - 1) * gapCross - span) / 2;
     members.forEach((node, index) => {
-      const cross = offset + index * (NODE_W + GAP_CROSS);
-      const main = lane * (NODE_H + GAP_MAIN);
+      const cross = offset + index * (crossSize + gapCross);
+      const main = lane * (mainSize + gapMain);
       positions.set(node.id, horizontal ? { x: main, y: cross } : { x: cross, y: main });
     });
   }

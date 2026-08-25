@@ -9,10 +9,10 @@ import * as S from 'effect/Schema';
  * Accepts a raw video id or any common YouTube URL form.
  */
 export const TranscriptRequest = S.Struct({
-  url: S.String.pipe(S.nonEmptyString()),
-  lang: S.optional(S.String.pipe(S.nonEmptyString())),
+  url: S.String.check(S.isNonEmpty()),
+  lang: S.optional(S.String.check(S.isNonEmpty())),
   // Response format: `json` (default) returns the full payload; `markdown` returns a raw document.
-  format: S.optional(S.Literal('json', 'markdown', 'md', 'text')),
+  format: S.optional(S.Literals(['json', 'markdown', 'md', 'text'])),
 });
 
 export interface TranscriptRequest extends S.Schema.Type<typeof TranscriptRequest> {}

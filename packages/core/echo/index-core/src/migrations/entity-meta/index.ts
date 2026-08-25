@@ -2,13 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { SqlMigrations } from '@dxos/sql-sqlite';
 
 import init from './0001_init.sql?raw';
 import indexes from './0003_indexes.sql?raw';
+import queuePosition from './0004_queue_position.sql?raw';
 
 /**
  * Columns added to `objectMeta` after it first shipped, with the DDL that adds them. Databases in
@@ -46,6 +47,7 @@ export const MIGRATIONS = {
   '0001_init': SqlMigrations.apply(init),
   '0002_missing_columns': addMissingColumns,
   '0003_indexes': SqlMigrations.apply(indexes),
+  '0004_queue_position': SqlMigrations.apply(queuePosition),
 };
 
 /** Own history table per store, since many stores share the client database. */

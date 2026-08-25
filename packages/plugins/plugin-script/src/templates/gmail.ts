@@ -60,7 +60,7 @@ export default defineFunction({
           HttpClient.execute,
           Effect.flatMap((res: any) => res.json),
           Effect.timeout('1 second'),
-          Effect.retry(Schedule.exponential(1000).pipe(Schedule.compose(Schedule.recurs(3)))),
+          Effect.retry(Schedule.exponential(1000).pipe(Schedule.upTo({ times: 3 }))),
           Effect.scoped,
         );
 
@@ -155,18 +155,28 @@ const getUrl = (userId: string, messageId?: string, params?: Record<string, any>
 };
 
 /**
- * Parses an email string in the format "Name <email@example.com>" into separate name and email components.
+ * Parses a `From` header into its name and address.
+ *
+ * RFC 5322 allows the display name and the angle brackets to be omitted independently, so all of
+ * `Name <a@b>`, `<a@b>` and a bare `a@b` are valid and reach us in practice.
  */
+// Kept in step with `parseFromHeader` in @dxos/plugin-inbox; a template cannot import from it.
 const parseFromHeader = (value: string): { name?: string; email: string } | undefined => {
-  const EMAIL_REGEX = /^([^<]+?)\s*<([^>]+@[^>]+)>$/;
-  const removeOuterQuotes = (str: string) => str.replace(/^['"]|['"]$/g, '');
-  const match = value.match(EMAIL_REGEX);
-  if (match) {
-    const [, name, email] = match;
-    return {
-      name: removeOuterQuotes(name.trim()),
-      email: email.trim(),
-    };
+  const NAME_ADDR = /^(.*?)<\s*([^<>@\s]+@[^<>@\s]+)\s*>\s*(?:\([^)]*\)\s*)?$/;
+  const ADDR_SPEC = /^([^<>@\s]+@[^<>@\s]+?)\s*(?:\([^)]*\)\s*)?$/;
+  const unquote = (str: string) => str.replace(/^"(.*)"$/s, '$1').replace(/^'(.*)'$/s, '$1');
+
+  const trimmed = value.trim();
+  const nameAddr = trimmed.match(NAME_ADDR);
+  if (nameAddr) {
+    const [, name, email] = nameAddr;
+    const label = unquote(name.trim()).trim();
+    return { ...(label.length > 0 && { name: label }), email: email.trim() };
+  }
+
+  const addrSpec = trimmed.match(ADDR_SPEC);
+  if (addrSpec) {
+    return { email: addrSpec[1].trim() };
   }
 };
 
@@ -198,18 +208,18 @@ interface Text extends S.Schema.Type<typeof Text> {}
 
 const MessageType = S.Struct({
   id: EntityId,
-  created: S.String.annotations({
+  created: S.String.annotate({
     description: 'ISO date string when the message was sent.',
   }),
-  sender: ActorSchema.annotations({
+  sender: ActorSchema.annotate({
     description: 'Identity of the message sender.',
   }),
-  blocks: S.Array(Text).annotations({
+  blocks: S.Array(Text).annotate({
     description: 'Contents of the message.',
   }),
   properties: S.optional(
     S.mutable(
-      S.Record({ key: S.String, value: S.Any }).annotations({
+      S.Record({ key: S.String, value: S.Any }).annotate({
         description: 'Custom properties for specific message types (e.g. attention context, email subject, etc.).',
       }),
     ),

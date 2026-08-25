@@ -14,10 +14,10 @@ import { InvocationTraceContainer, SpaceInfoPanel, SpaceListPanel, TestingPanel 
 import { Feed } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as ScriptOperation from '@dxos/plugin-script/ScriptOperation';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { type Space } from '@dxos/react-client/echo';
 
-import * as Devtools from '../types/Devtools';
+import { Devtools } from '#types';
 
 export type ActiveSpacePanelProps = {
   /** Stable module-level panel component; the surface passes it through its `props` mapper. */
@@ -85,7 +85,11 @@ export const EdgeTestingSurface = () => {
       await space.waitUntilReady();
       const createResult = await invokePromise(ScriptOperation.CreateScript, { db: space.db });
       if (createResult.data?.object) {
-        await invokePromise(SpaceOperation.AddObject, { target: space.db, object: createResult.data.object });
+        await invokePromise(
+          SpaceOperation.AddObject,
+          { object: createResult.data.object },
+          { spaceId: space.db.spaceId },
+        );
       }
       log.info('script created', { result: createResult });
       if (createResult.data?.object) {

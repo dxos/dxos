@@ -27,7 +27,7 @@ export interface TraceWriter {
  * Service that writes events to the trace.
  * Exposed to processes and operations to record events to the trace.
  */
-export class TraceService extends Context.Tag('@dxos/functions/TraceService')<TraceService, TraceWriter>() {}
+export class TraceService extends Context.Service<TraceService, TraceWriter>()('@dxos/functions/TraceService') {}
 
 /**
  * Writes an event to the trace.
@@ -45,13 +45,13 @@ export function write<T>(eventType: EventType<T>, payload: NoInfer<T>): Effect.E
  */
 export interface EventType<T> {
   readonly key: string;
-  readonly schema: Schema.Schema<T, any>;
+  readonly schema: Schema.Codec<T, any>;
   readonly isEphemeral: boolean;
 }
 
 export const EventType = <T>(
   key: string,
-  opts: { schema: Schema.Schema<T, any>; isEphemeral: boolean },
+  opts: { schema: Schema.Codec<T, any>; isEphemeral: boolean },
 ): EventType<T> => {
   return {
     key,
@@ -371,7 +371,7 @@ export interface Sink {
  * The Process Manager forwards trace messages to it.
  */
 // TODO(dmaretskyi): Consider moving sink to the Process Manager.
-export class TraceSink extends Context.Tag('@dxos/functions/TraceSink')<TraceSink, Sink>() {}
+export class TraceSink extends Context.Service<TraceSink, Sink>()('@dxos/functions/TraceSink') {}
 
 export const noopWriter: TraceWriter = {
   write: () => {},
@@ -488,7 +488,7 @@ export const OperationEnd = EventType('operation.end', {
     /** Phosphor icon identifier in `ph--<name>--<variant>` format. */
     icon: Schema.optional(Schema.String),
     /** Outcome of the operation. */
-    outcome: Schema.Literal('success', 'failure'),
+    outcome: Schema.Literals(['success', 'failure']),
     /** Error message if the operation failed. */
     error: Schema.optional(Schema.String),
     /**
@@ -556,6 +556,14 @@ export const StatusUpdate = EventType('status.update', {
 
         /** Progress estimate of remaining time (ms). */
         estimate: Schema.optional(Schema.Number),
+
+        /**
+         * How many phases the run expects, and which is in flight. Independent of `current`/`total`,
+         * which describe the phase in flight: a run can be on phase 2 of 4 and know nothing about how
+         * long phase 2 is.
+         */
+        phases: Schema.optional(Schema.Number),
+        phase: Schema.optional(Schema.Number),
       }),
     ),
   }),

@@ -3,12 +3,14 @@
 // Copyright 2026 DXOS.org
 //
 
+// TODO(dmaretskyi): Replace this with a script from dxos/edge and config in secrets.jsonc
+
 // Populate Cloudflare Worker secrets (e.g. composer's SIGNOZ_INGESTION_KEY, docs' DX_POSTHOG_API_KEY) from
 // a 1Password item, for either local dev (`.dev.vars`, read by `wrangler dev`) or deployed Worker(s)
 // (`wrangler secret put`).
 //
 // The 1Password item's fields are matched by section label: a field in a section named "shared" applies to
-// every target; a field in a section matching the raw Cloudflare Worker name (e.g. "composer-main", from
+// every target; a field in a section matching the raw Cloudflare Worker name (e.g. "composer-preview", from
 // wrangler.jsonc's `env.<env>.name`) applies only there. Only CONCEALED fields are read.
 //
 // Requires `CLOUDFLARE_ACCOUNT_ID` in the environment (same variable CI uses) — the account associated
@@ -32,9 +34,9 @@
 // since the name can be renamed/retitled in 1Password but the UUID never changes.
 //
 // Examples:
-//   node scripts/secrets.mjs dev composer
+//   node scripts/secrets.mjs dev composer          # `dev` the MODE — writes .dev.vars for `wrangler dev`.
+//   node scripts/secrets.mjs remote dev composer   # `dev` the ENVIRONMENT — pushes to the composer-dev Worker.
 //   node scripts/secrets.mjs remote staging
-//   node scripts/secrets.mjs remote staging composer
 
 import JSON5 from 'json5';
 import { execFileSync, execSync } from 'node:child_process';
@@ -134,6 +136,44 @@ try {
   process.exit(1);
 }
 
+/**
+ * `wrangler secret put` creates a new version AND deploys it, so it refuses when the Worker's latest
+ * version is not the deployed one. That is the steady state for `composer-dev`, which per-PR deploys
+ * upload versions to — so the deploy-and-promote that `secret put` implies would promote whichever PR
+ * version happens to be latest. `versions secret put` writes the secret without deploying, which is the
+ * only correct move there. Returns 'deployed' | 'versioned' | 'failed'.
+ */
+const putSecret = (field, absConfigPath, environment) => {
+  const run = (argv) =>
+    execFileSync('pnpm', ['exec', 'wrangler', ...argv], {
+      input: field.value,
+      // stderr is captured rather than inherited so the undeployed-version case can be recognised;
+      // it is printed on any failure this does not handle.
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+  const base = [field.label, '--config', absConfigPath, '--env', environment];
+
+  try {
+    run(['secret', 'put', ...base]);
+    return 'deployed';
+  } catch (err) {
+    const stderr = err.stderr?.toString() ?? '';
+    if (!/latest version of your Worker isn't currently deployed|versions secret put/i.test(stderr)) {
+      console.error(`  failed: ${field.label}: ${stderr.trim() || err.message}`);
+      return 'failed';
+    }
+    console.log(`  ${field.label}: latest version is undeployed — writing it as a new version instead`);
+  }
+
+  try {
+    run(['versions', 'secret', 'put', ...base, '--message', 'pnpm secrets']);
+    return 'versioned';
+  } catch (err) {
+    console.error(`  failed: ${field.label}: ${err.stderr?.toString().trim() || err.message}`);
+    return 'failed';
+  }
+};
+
 let anyFailed = false;
 for (const target of targets) {
   const absConfigPath = join(root, target.wranglerConfig);
@@ -210,6 +250,7 @@ for (const target of targets) {
 
   console.log(`${dryRun ? '[dry-run] Would push' : 'Pushing'} secrets to "${workerName}" (env=${environment})`);
   const failed = [];
+  const versioned = [];
   for (const field of secrets) {
     if (skipLabels.has(field.label)) {
       console.log(`  skip ${field.label} (already a wrangler var for this env)`);
@@ -219,16 +260,22 @@ for (const target of targets) {
     if (dryRun) {
       continue;
     }
-    try {
-      execFileSync(
-        'pnpm',
-        ['exec', 'wrangler', 'secret', 'put', field.label, '--config', absConfigPath, '--env', environment],
-        { input: field.value, stdio: ['pipe', 'inherit', 'inherit'] },
-      );
-    } catch (err) {
-      console.error(`  failed: ${field.label}: ${err.message}`);
+    const result = putSecret(field, absConfigPath, environment);
+    if (result === 'versioned') {
+      versioned.push(field.label);
+    } else if (result !== 'deployed') {
       failed.push(field.label);
     }
+  }
+
+  if (versioned.length > 0) {
+    console.log(
+      `\n  ${versioned.length} secret(s) landed in a NEW UNDEPLOYED version of "${workerName}": ` +
+        `${versioned.join(', ')}\n` +
+        '  They take effect on the next deploy or `versions upload` — the currently deployed version does\n' +
+        '  not have them. Verify with `wrangler versions secret list --latest-version` — without that flag\n' +
+        '  the command reports the DEPLOYED version, which is exactly the one that lacks them.',
+    );
   }
 
   if (failed.length > 0) {

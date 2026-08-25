@@ -12,29 +12,29 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
 import { configPreset } from '@dxos/config';
 import { Feed, Tag } from '@dxos/echo';
-import { AccessToken, Cursor } from '@dxos/link';
-import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
+import { AccessToken, Connection, Cursor } from '@dxos/link';
+import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import * as Connection from '@dxos/plugin-connector/Connection';
-import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
+import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
-import { DebugPlugin } from '@dxos/plugin-debug/plugin';
+import * as DebugPlugin from '@dxos/plugin-debug/DebugPlugin';
+import * as GooglePlugin from '@dxos/plugin-google/GooglePlugin';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
+import * as ProgressPlugin from '@dxos/plugin-progress/ProgressPlugin';
 import { translations as progressTranslations } from '@dxos/plugin-progress/translations';
-import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { withLayout } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
-import { ModuleContainer } from '@dxos/storybook-testing';
+import { ModuleContainer, UpdateCompanionStubPlugin } from '@dxos/storybook-testing';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { StoryRole } from '../modules';
-import { StorySyncPlugin } from '../testing';
 import { StoryModulesPlugin } from '../testing/modules';
 
 const TYPES = [
@@ -62,7 +62,7 @@ const DECORATORS = [
   withPluginManager(() => ({
     plugins: [
       ...corePlugins(),
-      ClientPlugin({
+      ClientPlugin.make({
         types: TYPES,
         ...CLIENT_SERVICES,
         onClientInitialized: ({ client }) =>
@@ -71,22 +71,25 @@ const DECORATORS = [
               return;
             }
 
-            const { personalSpace } = yield* initializeIdentity(client);
-            personalSpace.db.add(Mailbox.make());
-            yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+            const { defaultSpace } = yield* initializeIdentity(client);
+            defaultSpace.db.add(Mailbox.make());
+            yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
           }),
       }),
       SpacePlugin({}),
       InboxPlugin(),
-      ConnectorPlugin(),
-      DebugPlugin({}),
-      AssistantPlugin(),
-      PreviewPlugin(),
-      ProgressPlugin(),
-      RoutinePlugin(),
-      StorySyncPlugin(),
+      ConnectorPlugin.make(),
+      DebugPlugin.make({}),
+      // `Mailbox` resolves its connector-auth providers from the registry, so without one registered
+      // the toolbar offers no Connect action.
+      GooglePlugin.make(),
+      AssistantPlugin.make(),
+      PreviewPlugin.make(),
+      ProgressPlugin.make(),
+      RoutinePlugin.make(),
+      UpdateCompanionStubPlugin(),
       StoryModulesPlugin(),
-      StorybookPlugin({}),
+      StorybookPlugin.make({}),
     ],
   })),
 ];
@@ -99,7 +102,6 @@ const DefaultStory = () => (
       [StoryRole.Connector, StoryRole.Triggers],
       [StoryRole.Trace, StoryRole.SwarmTrace],
     ]}
-    compact
   />
 );
 

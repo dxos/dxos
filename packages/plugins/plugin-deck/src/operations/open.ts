@@ -7,6 +7,7 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Graph from '@dxos/app-graph/Graph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -15,12 +16,12 @@ import * as Operation from '@dxos/compute/Operation';
 import { EID, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
-import { Graph } from '@dxos/plugin-graph';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
+import { DeckCapabilities } from '#types';
+
 import { addSubjectsToActiveDeck, resolveLevelOpen, resolveSeededPlanks, updatePlankNames } from '../layout';
-import * as DeckCapabilities from '../types/DeckCapabilities';
-import { computeActiveUpdates, openableChildren, resolveDeckSpec } from '../util';
+import { computeActiveUpdates, openableChildren, openCompanionPlank, resolveDeckSpec } from '../util';
 import { updateActiveDeck } from './helpers';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
@@ -34,7 +35,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       // to the NavigationTargetLoader capability (contributed by plugin-client) so this layout plugin
       // has no direct client dependency; loading the object also materializes its graph node.
       const loaders = yield* Capability.getAll(AppCapabilities.NavigationTargetLoader).pipe(
-        Effect.catchAll(() => Effect.succeed([])),
+        Effect.catch(() => Effect.succeed([])),
       );
       const checkExistence: NotFound.ExistenceChecker | undefined =
         loaders.length > 0
@@ -46,7 +47,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
                   return false;
                 }
                 for (const loader of loaders) {
-                  if (yield* loader.load({ spaceId, entityId })) {
+                  // Anything short of a store answering "no" counts as existing: a 404 here replaces
+                  // the plank outright, so an unreachable edge must not be able to trigger one.
+                  if ((yield* loader.load({ spaceId, entityId })) !== 'absent') {
                     return true;
                   }
                 }
@@ -181,7 +184,8 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           next = navigateSolo(deck.active);
         }
 
-        const { deckUpdates } = computeActiveUpdates({ next, deck, attention });
+        const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
+        const { deckUpdates } = computeActiveUpdates({ next, deck, attention, flatten });
         // Rebound after the fact so the name follows whichever plank actually ended up holding it, and
         // so names whose plank this open closed are dropped rather than left dangling.
         // A level open binds the name the level owns; an ordinary open binds whatever the caller passed.
@@ -196,7 +200,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         // one-frame snap measured at exactly the lost width.
         const companionPlanks =
           levelOpen?.replacedId && input.subject[0] && deck.companionPlanks.includes(levelOpen.replacedId)
-            ? [...deckUpdates.companionPlanks, input.subject[0]]
+            ? openCompanionPlank(deckUpdates.companionPlanks, flatten, input.subject[0])
             : deckUpdates.companionPlanks;
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
           updateActiveDeck(state, { ...deckUpdates, companionPlanks, plankNames }),

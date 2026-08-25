@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { ReducerInput, ReducerOutput } from '@dxos/conductor';
 import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
@@ -18,9 +19,8 @@ import { ComputeShape, type CreateShapeProps, createShape } from './defs';
 // Data
 //
 
-export const ReducerShape = Schema.extend(
-  ComputeShape,
-  Schema.Struct({
+export const ReducerShape = ComputeShape.mapFields(
+  Struct.assign({
     type: Schema.Literal('reducer'),
   }),
 );

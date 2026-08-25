@@ -24,10 +24,7 @@ const ArrangementColumnEntry = Schema.Struct({
 });
 
 /** Keyed by columnValue. */
-const ArrangementColumns = Schema.Record({
-  key: Schema.String,
-  value: ArrangementColumnEntry,
-}).pipe(FormInputAnnotation.set(false));
+const ArrangementColumns = Schema.Record(Schema.String, ArrangementColumnEntry).pipe(FormInputAnnotation.set(false));
 
 /** Column order and per-column card ids. */
 export const Arrangement = Schema.Struct({
@@ -63,7 +60,7 @@ export const KanbanItemsSpec = Schema.Struct({
 export type KanbanItemsSpec = Schema.Schema.Type<typeof KanbanItemsSpec>;
 
 /** Discriminated union of source specs. Distinguished by `kind`. */
-export const KanbanSpec = Schema.Union(KanbanViewSpec, KanbanItemsSpec);
+export const KanbanSpec = Schema.Union([KanbanViewSpec, KanbanItemsSpec]);
 export type KanbanSpec = Schema.Schema.Type<typeof KanbanSpec>;
 
 export class Kanban extends Type.makeObject<Kanban>(DXN.make('org.dxos.type.kanban', '0.2.0'))(

@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 import { type StateError, type StateStore, type Type, tapStage } from '@dxos/crawler';
@@ -16,7 +16,7 @@ import { trim } from '@dxos/util';
 
 import { DISCORD_SOURCE } from '../constants';
 import { StoreError } from '../errors';
-import { MessageStore, type StoredMessage } from '../stores';
+import { MessageStore } from '../stores';
 import { type DetectOptions, type TopicSegment, detectTopics, salientTokens } from '../topics/detect-topics';
 import { Topic } from '../types';
 
@@ -34,7 +34,7 @@ const TopicShape = Schema.Struct({
   summary: Schema.optional(Schema.String),
 });
 
-const topicPrompt = (segment: TopicSegment, messages: readonly StoredMessage[]): string => {
+const topicPrompt = (segment: TopicSegment, messages: readonly MessageStore.StoredMessage[]): string => {
   const lines = messages.map((message) => `- [${message.authorLabel ?? message.authorId}] ${message.text}`);
   return trim`
     Name and summarize the topic of this chat conversation. Respond with a short "name"
@@ -48,7 +48,7 @@ const topicPrompt = (segment: TopicSegment, messages: readonly StoredMessage[]):
 };
 
 /** Deterministic stand-in when the model yields nothing: the segment's dominant vocabulary. */
-const fallbackName = (messages: readonly StoredMessage[]): string => {
+const fallbackName = (messages: readonly MessageStore.StoredMessage[]): string => {
   const counts = new Map<string, number>();
   for (const message of messages) {
     for (const token of salientTokens(message.text)) {
@@ -68,12 +68,12 @@ const fallbackName = (messages: readonly StoredMessage[]): string => {
  */
 export const summarizeSegment = (
   segment: TopicSegment,
-  messages: readonly StoredMessage[],
+  messages: readonly MessageStore.StoredMessage[],
 ): Effect.Effect<{ name: string; summary: string }, never, AiService.AiService> =>
   LanguageModel.generateObject({ schema: TopicShape, prompt: topicPrompt(segment, messages) }).pipe(
     Effect.provide(AiService.model(DEFAULT_MODEL).pipe(Layer.orDie)),
     Effect.map(({ value }) => value),
-    Effect.catchAll(() => Effect.succeed({} as { name?: string; summary?: string })),
+    Effect.catch(() => Effect.succeed({} as { name?: string; summary?: string })),
     Effect.map(({ name, summary }) => ({
       name: name?.trim() || fallbackName(messages),
       summary:
@@ -130,10 +130,9 @@ const persistTopic = (
 export const buildTopicsForTarget = (
   target: { readonly id: string; readonly threadId?: string },
   options: TopicsOptions = {},
-): Effect.Effect<TopicSegment[], StoreError, MessageStore | AiService.AiService> =>
+): Effect.Effect<TopicSegment[], StoreError, MessageStore.MessageStore | AiService.AiService> =>
   Effect.gen(function* () {
-    const store = yield* MessageStore;
-    const messages = yield* store.listByTarget(target.id);
+    const messages = yield* MessageStore.listByTarget(target.id);
     const byId = new Map(messages.map((message) => [message.id, message]));
     const segments = detectTopics(target, messages, options.detect);
     for (const segment of segments) {
@@ -145,6 +144,7 @@ export const buildTopicsForTarget = (
       log.info('topic', {
         target: segment.targetId,
         name,
+        summary,
         participants: segment.participantLabels,
         start: segment.startMessageId,
         end: segment.endMessageId,
@@ -165,7 +165,12 @@ export const buildTopicsForTarget = (
  */
 export const topicsStage = (
   options: TopicsOptions = {},
-): Stage.Stage<Type.Event, Type.Event, StateError, MessageStore | AiService.AiService | StateStore> =>
+): Stage.Stage<
+  Type.Event,
+  Type.Event,
+  StateError,
+  MessageStore.MessageStore | AiService.AiService | StateStore.StateStore
+> =>
   tapStage('topics', ['ThreadEnd', 'ChannelEnd'], (event) =>
     buildTopicsForTarget(event.target, options).pipe(Effect.asVoid),
   );

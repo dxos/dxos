@@ -42,9 +42,6 @@
       "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/compute/link"
-    },
-    {
       "path": "../../core/echo/echo"
     },
     {
@@ -106,12 +103,6 @@
     },
     {
       "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-connector"
-    },
-    {
-      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-illustrator"

@@ -8,8 +8,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-
-import type * as CodeCapabilities from '../../types/CodeCapabilities';
+import { CodeCapabilities } from '#types';
 
 export type BuildOutputProps = {
   state: CodeCapabilities.ProjectBuildState | undefined;

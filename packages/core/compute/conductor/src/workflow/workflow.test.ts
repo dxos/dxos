@@ -48,7 +48,7 @@ const TestLayer = Layer.mergeAll(
 );
 
 describe('workflow', () => {
-  it.scoped(
+  it.effect(
     'run',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -63,7 +63,7 @@ describe('workflow', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'runFromInput',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -85,7 +85,7 @@ describe('workflow', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'workflow without outputs is allowed',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -109,7 +109,7 @@ describe('workflow', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'workflow as executable',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -126,7 +126,7 @@ describe('workflow', () => {
   );
 
   describe('subgraph', () => {
-    it.scoped(
+    it.effect(
       'subgraph compute',
       Effect.fnUntraced(
         function* ({ expect }) {
@@ -142,7 +142,7 @@ describe('workflow', () => {
       ),
     );
 
-    it.scoped(
+    it.effect(
       'failed subgraph resolution fails loading',
       Effect.fnUntraced(
         function* ({ expect }) {
@@ -158,7 +158,7 @@ describe('workflow', () => {
   });
 
   describe('function', () => {
-    it.scoped(
+    it.effect(
       'function node without function reference fails to load',
       Effect.fnUntraced(
         function* ({ expect }) {

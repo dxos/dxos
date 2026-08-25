@@ -6,24 +6,22 @@
 
 // @import-as-namespace
 
-import * as HttpBody from '@effect/platform/HttpBody';
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientError from '@effect/platform/HttpClientError';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import * as ParseResult from 'effect/ParseResult';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
+import * as HttpBody from 'effect/unstable/http/HttpBody';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientError from 'effect/unstable/http/HttpClientError';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { type Client } from '@dxos/client';
 import { Database, Obj, type Ref } from '@dxos/echo';
-import { type AccessToken } from '@dxos/link';
-import type * as Connection from '@dxos/plugin-connector/Connection';
+import { type AccessToken, Connection } from '@dxos/link';
 
 import { BSKY_PUBLIC_API, DEFAULT_FEED_LIMIT } from '../constants';
 import { MissingBlueskyHandleError, PdsResolutionFailedError } from '../errors';
@@ -107,7 +105,7 @@ const SavedFeedSchema = Schema.Struct({
   /** at-uri of the feed generator. */
   value: Schema.String,
   /** `feed` for custom feeds, `list` for list-backed feeds, `timeline` for the home timeline. */
-  type: Schema.Literal('feed', 'list', 'timeline'),
+  type: Schema.Literals(['feed', 'list', 'timeline']),
   pinned: Schema.optional(Schema.Boolean),
 });
 
@@ -171,7 +169,7 @@ export const toSubscriptionPostInput = (item: FeedViewPost) => {
 
 type RequestEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | HttpBody.HttpBodyError | ParseResult.ParseError | Cause.TimeoutException,
+  HttpClientError.HttpClientError | HttpBody.HttpBodyError | Schema.SchemaError | Cause.TimeoutError,
   HttpClient.HttpClient
 >;
 
@@ -186,44 +184,43 @@ type RequestEffect<T> = Effect.Effect<
  *  - Schema decode failures (`ParseError`): no — payload won't become valid on retry.
  */
 const shouldRetry = (
-  error: HttpClientError.HttpClientError | HttpBody.HttpBodyError | ParseResult.ParseError | Cause.TimeoutException,
+  error: HttpClientError.HttpClientError | HttpBody.HttpBodyError | Schema.SchemaError | Cause.TimeoutError,
 ): boolean => {
-  if (error instanceof ParseResult.ParseError) {
+  if (error instanceof Schema.SchemaError) {
     return false;
   }
-  if (Cause.isTimeoutException(error)) {
+  if (Cause.isTimeoutError(error)) {
     return true;
   }
-  if (error._tag === 'HttpBodyError') {
-    return false;
+  // Matched positively on the HTTP error: v4's tagged-error classes do not narrow a union from the
+  // negative side. The specific failure hangs off `reason` -- a transport-level failure is always
+  // worth retrying, and a response failure only on 429/5xx.
+  if (HttpClientError.isHttpClientError(error)) {
+    if (error.reason._tag !== 'StatusCodeError') {
+      return true;
+    }
+    const status = error.reason.response.status;
+    return status === 429 || (status >= 500 && status <= 599);
   }
-  if (error._tag === 'RequestError') {
-    return true;
-  }
-  // ResponseError: only retry transient response failures.
-  if (error.reason !== 'StatusCode') {
-    return true;
-  }
-  const status = error.response.status;
-  return status === 429 || (status >= 500 && status <= 599);
+  return false;
 };
 
 /**
  * Common pipeline for outbound requests:
  *  - execute via the injected HttpClient
- *  - decode JSON body with Effect Schema (invalid shapes fail as {@link ParseResult.ParseError})
+ *  - decode JSON body with Effect Schema (invalid shapes fail as {@link Schema.SchemaError})
  *  - 15s timeout
  *  - exponential retry with jitter, up to 3 attempts, only on transient failures
  *  - scope the response so its body stream is released even on failure
  */
-const runRequest = <T>(request: HttpClientRequest.HttpClientRequest, schema: Schema.Schema<T>): RequestEffect<T> =>
+const runRequest = <T>(request: HttpClientRequest.HttpClientRequest, schema: Schema.Codec<T>): RequestEffect<T> =>
   Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient;
     return yield* httpClient.execute(request).pipe(
-      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknown(schema))),
+      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknownEffect(schema))),
       Effect.timeout('15 seconds'),
       Effect.retry({
-        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),
+        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.upTo({ times: 3 })),
         while: shouldRetry,
       }),
       Effect.scoped,
@@ -338,7 +335,7 @@ type CredentialsValue = {
  * Construction resolves the PDS once (via the public XRPC `resolveHandle`
  * and a DID-document lookup) so subsequent calls reuse it.
  */
-export class Credentials extends Context.Tag('@dxos/plugin-bluesky/Credentials')<Credentials, CredentialsValue>() {
+export class Credentials extends Context.Service<Credentials, CredentialsValue>()('@dxos/plugin-bluesky/Credentials') {
   /** Loads the connection's access token, resolves its PDS, and packages credentials. */
   static fromConnection = (connectionRef: Ref.Ref<Connection.Connection>, client: Client) =>
     Layer.effect(
@@ -397,7 +394,7 @@ const packageCredentials = (accessToken: AccessToken.AccessToken, db: Database.D
 
 type AuthedEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | HttpBody.HttpBodyError | ParseResult.ParseError | Cause.TimeoutException,
+  HttpClientError.HttpClientError | HttpBody.HttpBodyError | Schema.SchemaError | Cause.TimeoutError,
   HttpClient.HttpClient | Credentials
 >;
 
@@ -407,7 +404,7 @@ type PublicEffect<T> = RequestEffect<T>;
 const publicGet = <T>(
   path: string,
   query: Record<string, string | number | undefined>,
-  schema: Schema.Schema<T>,
+  schema: Schema.Codec<T>,
 ): PublicEffect<T> =>
   runRequest(
     HttpClientRequest.get(`${BSKY_PUBLIC_API}/${path}`).pipe(HttpClientRequest.setUrlParams(queryParams(query))),
@@ -424,7 +421,7 @@ const publicGet = <T>(
 const authedGet = <T>(input: {
   path: string;
   query: Record<string, string | number | undefined>;
-  schema: Schema.Schema<T>;
+  schema: Schema.Codec<T>;
 }): AuthedEffect<T> =>
   Effect.gen(function* () {
     const creds = yield* Credentials;

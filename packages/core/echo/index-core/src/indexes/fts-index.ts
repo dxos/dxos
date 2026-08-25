@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Migrator from '@effect/sql/Migrator';
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
-import type * as Statement from '@effect/sql/Statement';
 import * as Effect from 'effect/Effect';
+import * as Migrator from 'effect/unstable/sql/Migrator';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
+import type * as Statement from 'effect/unstable/sql/Statement';
 
 import type { Obj } from '@dxos/echo';
 import { ATTR_TYPE } from '@dxos/echo/internal';
@@ -14,7 +14,8 @@ import type { EntityId, SpaceId } from '@dxos/keys';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/fts';
-import type { EntityMeta } from './entity-meta-index';
+import { chunkArray } from '../utils';
+import { type EntityMeta, buildTypeDxnCondition } from './entity-meta-index';
 import type { Index, IndexerObject } from './interface';
 
 // SQLite bound-variable limit (SQLITE_LIMIT_VARIABLE_NUMBER) is 999 in most builds.
@@ -44,6 +45,13 @@ export interface FtsQuery {
    * Queue IDs to search within.
    */
   queueIds: readonly EntityId[] | null;
+
+  /**
+   * Type identifiers to restrict matches to (any form accepted by the meta index — typename
+   * DXN or stored-schema EID). Null or undefined disables type scoping; an empty list matches
+   * nothing.
+   */
+  typeDxns?: readonly string[] | null;
 }
 
 /**
@@ -113,10 +121,16 @@ export class FtsIndex implements Index {
     spaceId,
     includeAllQueues,
     queueIds,
+    typeDxns,
   }: FtsQuery): Effect.Effect<readonly FtsQueryResult[], SqlError.SqlError, SqlClient.SqlClient> {
     return Effect.gen(function* () {
       const trimmed = query.trim();
       if (trimmed.length === 0) {
+        return [];
+      }
+
+      // An explicit empty type scope admits no type, so no row can match.
+      if (typeDxns && typeDxns.length === 0) {
         return [];
       }
 
@@ -159,6 +173,11 @@ export class FtsIndex implements Index {
 
       if (sourceConditions.length > 0) {
         conditions.push(sql`(${sql.or(sourceConditions)})`);
+      }
+
+      // `typeDXN` is unambiguous in the join: the FTS virtual table only exposes `snapshot`.
+      if (typeDxns && typeDxns.length > 0) {
+        conditions.push(sql`(${buildTypeDxnCondition(sql, typeDxns)})`);
       }
 
       if (useBm25) {
@@ -222,6 +241,17 @@ export class FtsIndex implements Index {
       return allResults;
     });
   }
+
+  /** Delete FTS rows by record id (rowid). Used by garbage collection. */
+  deleteByRecordIds = Effect.fn('FtsIndex.deleteByRecordIds')(
+    (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        for (const chunk of chunkArray(recordIds)) {
+          yield* sql`DELETE FROM ftsIndex WHERE rowid IN ${sql.in(chunk)}`;
+        }
+      }),
+  );
 
   update = Effect.fn('FtsIndex.update')(
     (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>

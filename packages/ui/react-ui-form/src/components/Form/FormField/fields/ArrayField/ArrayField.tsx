@@ -3,12 +3,11 @@
 //
 
 import * as Option from 'effect/Option';
-import * as SchemaAST from 'effect/SchemaAST';
 import React, { type ReactNode, useCallback, useRef } from 'react';
 
 import { Annotation, Ref } from '@dxos/echo';
 import { useType as defaultUseType } from '@dxos/echo-react';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
@@ -98,17 +97,15 @@ export const ArrayField = ({
     const baseNode = SchemaEx.findNode(typeNode, SchemaEx.isDiscriminatedUnion);
     const typeLiteral = baseNode
       ? SchemaEx.getDiscriminatedType(baseNode, {})
-      : SchemaEx.findNode(typeNode, SchemaAST.isTypeLiteral);
+      : SchemaEx.findNode(typeNode, SchemaAST.isObjects);
     if (!typeLiteral) {
       return {};
     }
 
     return Object.fromEntries(
       getFormProperties(typeLiteral).map((prop) => {
-        const defaultValue = SchemaAST.getDefaultAnnotation(prop.type).pipe((annotation) =>
-          Option.getOrUndefined(annotation),
-        );
-        return [prop.name, defaultValue];
+        // v4 annotations are a plain record: the getter returns the value or `undefined` directly.
+        return [prop.name, SchemaAST.getDefaultAnnotation(prop.type)];
       }),
     );
   };

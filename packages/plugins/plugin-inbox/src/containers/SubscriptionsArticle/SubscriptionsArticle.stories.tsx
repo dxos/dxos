@@ -11,13 +11,15 @@ import { Database, Feed, Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
 
-import { InboxPlugin } from '../../InboxPlugin';
-import * as Mailbox from '../../types/Mailbox';
+import { Mailbox } from '#types';
+
+import { InboxPlugin } from '../../plugin';
 import { SubscriptionsArticle } from './SubscriptionsArticle';
 
 /** Bulk-mail senders with a `List-Unsubscribe` affordance; counts drive the noisiest-first sort. */
@@ -29,8 +31,7 @@ const SENDERS: { email: string; name: string; count: number }[] = [
 ];
 
 const DefaultStory = () => {
-  const spaces = useSpaces();
-  const space = spaces[spaces.length - 1];
+  const [space] = useSpaces();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
   if (!mailbox) {
     return <Loading />;
@@ -47,14 +48,14 @@ const meta = {
     withPluginManager(() => ({
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
         InboxPlugin(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Mailbox.Mailbox, Message.Message],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
-              const mailbox = personalSpace.db.add(Mailbox.make());
+              const { defaultSpace } = yield* initializeIdentity(client);
+              const mailbox = defaultSpace.db.add(Mailbox.make());
               const feed = yield* Effect.promise(async () => mailbox.feed?.tryLoad());
               if (!feed) {
                 throw new Error('Mailbox missing backing feed');
@@ -72,8 +73,8 @@ const meta = {
                   }),
                 ),
               );
-              yield* Feed.append(feed, messages).pipe(Effect.provide(Database.layer(personalSpace.db)));
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              yield* Feed.append(feed, messages).pipe(Effect.provide(Database.layer(defaultSpace.db)));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
       ],

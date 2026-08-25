@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Prompt from '@effect/ai/Prompt';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
+import * as Result from 'effect/Result';
+import * as Prompt from 'effect/unstable/ai/Prompt';
 
 import { Obj } from '@dxos/echo';
 import { ContentBlock, Message } from '@dxos/types';
@@ -128,8 +128,10 @@ describe('AiPreprocessor.preprocessPrompt', () => {
           text: 'Let me think about this step by step...',
           options: {
             anthropic: {
-              type: 'thinking',
-              signature: 'reasoning_sig_1',
+              info: {
+                type: 'thinking',
+                signature: 'reasoning_sig_1',
+              },
             },
           },
         }),
@@ -154,8 +156,10 @@ describe('AiPreprocessor.preprocessPrompt', () => {
           text: '',
           options: {
             anthropic: {
-              type: 'redacted_thinking',
-              redactedData: '[Reasoning redacted]',
+              info: {
+                type: 'redacted_thinking',
+                redactedData: '[Reasoning redacted]',
+              },
             },
           },
         }),
@@ -339,10 +343,10 @@ describe('AiPreprocessor.preprocessPrompt', () => {
         },
       ]);
 
-      const result = yield* Effect.either(AiPreprocessor.preprocessPrompt([message]));
-      expect(Either.isLeft(result)).toBe(true);
-      if (Either.isLeft(result)) {
-        expect(result.left).toBeInstanceOf(PromptPreprocessingError);
+      const result = yield* Effect.result(AiPreprocessor.preprocessPrompt([message]));
+      expect(Result.isFailure(result)).toBe(true);
+      if (Result.isFailure(result)) {
+        expect(result.failure).toBeInstanceOf(PromptPreprocessingError);
       }
     }),
   );
@@ -435,10 +439,10 @@ describe('AiPreprocessor.preprocessPrompt', () => {
     Effect.fn(function* ({ expect }) {
       const messages = [makeMessage('user', [{ _tag: 'summary', content: 'Bad summary' }])];
 
-      const result = yield* Effect.either(AiPreprocessor.preprocessPrompt(messages));
-      expect(Either.isLeft(result)).toBe(true);
-      if (Either.isLeft(result)) {
-        expect(result.left).toBeInstanceOf(PromptPreprocessingError);
+      const result = yield* Effect.result(AiPreprocessor.preprocessPrompt(messages));
+      expect(Result.isFailure(result)).toBe(true);
+      if (Result.isFailure(result)) {
+        expect(result.failure).toBeInstanceOf(PromptPreprocessingError);
       }
     }),
   );
@@ -576,10 +580,10 @@ describe('AiPreprocessor.preprocessPrompt', () => {
         ]),
       ];
 
-      const result = yield* Effect.either(AiPreprocessor.preprocessPrompt(messages));
-      expect(Either.isLeft(result)).toBe(true);
-      if (Either.isLeft(result)) {
-        expect(result.left).toBeInstanceOf(PromptPreprocessingError);
+      const result = yield* Effect.result(AiPreprocessor.preprocessPrompt(messages));
+      expect(Result.isFailure(result)).toBe(true);
+      if (Result.isFailure(result)) {
+        expect(result.failure).toBeInstanceOf(PromptPreprocessingError);
       }
     }),
   );
@@ -591,10 +595,10 @@ describe('AiPreprocessor.preprocessPrompt', () => {
         { _tag: 'toolCall', toolCallId: 'call_1', name: 'calculator', input: '{not valid', providerExecuted: false },
       ]);
 
-      const result = yield* Effect.either(AiPreprocessor.preprocessPrompt([message]));
-      expect(Either.isLeft(result)).toBe(true);
-      if (Either.isLeft(result)) {
-        expect(result.left).toBeInstanceOf(PromptPreprocessingError);
+      const result = yield* Effect.result(AiPreprocessor.preprocessPrompt([message]));
+      expect(Result.isFailure(result)).toBe(true);
+      if (Result.isFailure(result)) {
+        expect(result.failure).toBeInstanceOf(PromptPreprocessingError);
       }
     }),
   );

@@ -23,13 +23,14 @@ import type * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Obj, Ref, Tag, type Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN, type SpaceId } from '@dxos/keys';
-import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
+import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
+import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
-import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
+import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -71,7 +72,7 @@ const createDefaultPlugins = async (options: {
   plugins?: Plugin.Plugin[];
   types?: Type.AnyEntity[];
 }): Promise<Plugin.Plugin[]> => [
-  ClientPlugin({
+  ClientPlugin.make({
     types: [
       Organization.Organization,
       Person.Person,
@@ -81,11 +82,12 @@ const createDefaultPlugins = async (options: {
       ...(options.types ?? []),
     ],
   }),
-  AssistantPlugin({
+  AssistantPlugin.make({
     aiServiceMiddleware: await makeAiServiceMiddleware(),
   }),
-  RoutinePlugin(),
-  InboxPlugin(),
+  RoutinePlugin.make(),
+  InboxPlugin.make(),
+  SpacePlugin.make({}),
   ...(options.plugins ?? []),
 ];
 
@@ -250,7 +252,7 @@ export function createEvalRunner<I, O, D>(
           (testHarness) => Effect.promise(() => testHarness.dispose()),
         );
 
-        const { personalSpace } = yield* Effect.promise(() =>
+        const { defaultSpace } = yield* Effect.promise(() =>
           EffectEx.runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
         );
 
@@ -259,8 +261,8 @@ export function createEvalRunner<I, O, D>(
         if (seedFn) {
           seeded = yield* Effect.promise(() =>
             harness.runPromise(
-              seedFn({ spaceId: personalSpace.id, instructions }).pipe(
-                Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service)),
+              seedFn({ spaceId: defaultSpace.id, instructions }).pipe(
+                Effect.provide(ServiceResolver.provide({ space: defaultSpace.id }, Database.Service)),
               ),
             ),
           );
@@ -274,7 +276,7 @@ export function createEvalRunner<I, O, D>(
 
         const agentOutput = yield* Effect.tryPromise({
           try: () =>
-            runInstructions(harness, instructions, model, personalSpace.id, input, options.sessionChat, seeded.chat),
+            runInstructions(harness, instructions, model, defaultSpace.id, input, options.sessionChat, seeded.chat),
           catch: (cause) => new AgentRunFailure({ cause }),
         });
 
@@ -285,9 +287,9 @@ export function createEvalRunner<I, O, D>(
 
         const dbQuery = yield* Effect.promise(() =>
           harness.runPromise(
-            dbQueryFn(input, personalSpace.id).pipe(
+            dbQueryFn(input, defaultSpace.id).pipe(
               Effect.provide(
-                ServiceResolver.provide({ space: personalSpace.id }, Database.Service, FeedTraceSink.FeedTraceSink),
+                ServiceResolver.provide({ space: defaultSpace.id }, Database.Service, FeedTraceSink.FeedTraceSink),
               ),
             ),
           ),
@@ -299,9 +301,9 @@ export function createEvalRunner<I, O, D>(
 
     const timeoutMillis = options.timeout ?? DEFAULT_EVAL_TIMEOUT_MILLIS;
     const timedRun = run.pipe(
-      Effect.timeoutFail({
+      Effect.timeoutOrElse({
         duration: timeoutMillis,
-        onTimeout: () => new EvalTimeoutError({ millis: timeoutMillis }),
+        orElse: () => new EvalTimeoutError({ millis: timeoutMillis }),
       }),
     );
 
@@ -318,7 +320,7 @@ export function createEvalRunner<I, O, D>(
     // instructed" — a timeout, harness setup/disposal problem, or other infrastructure failure
     // means the run never got far enough to demonstrate anything, so it must propagate as a real
     // error instead of being silently scored as a pass.
-    if (Option.exists(Cause.failureOption(exit.cause), (error) => error instanceof AgentRunFailure)) {
+    if (Option.exists(Cause.findErrorOption(exit.cause), (error) => error instanceof AgentRunFailure)) {
       return { failed: true };
     }
     return EffectEx.unwrapExit(exit);

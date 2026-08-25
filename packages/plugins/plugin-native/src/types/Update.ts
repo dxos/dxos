@@ -2,12 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 // @import-as-namespace
 
 export type Status =
+  // The platform has no OTA channel at all.
   | { kind: 'unsupported' }
+  // The platform supports OTA, but this build is served by the dev server.
+  | { kind: 'dev' }
   | { kind: 'idle' }
   | { kind: 'checking' }
   | { kind: 'up-to-date'; checkedAt: number }

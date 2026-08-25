@@ -15,8 +15,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
+import { Markdown } from '#types';
 
-import * as Markdown from '../../types/Markdown';
 import {
   MarkdownEditor,
   type MarkdownEditorEditorRootProps,

@@ -2,12 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as PubSub from 'effect/PubSub';
 import * as Ref from 'effect/Ref';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { log } from '@dxos/log';
 
@@ -63,6 +64,11 @@ export class ManagerState {
   readonly initialized = Effect.runSync(Deferred.make<void, PluginInitializationError>());
   /** Whether `start()` has run — gates incremental activation on later enables. */
   readonly started = Effect.runSync(Ref.make(false));
+  /**
+   * Completed when the Startup wave has finished; events dispatched mid-startup await it so their
+   * modules can rely on every startup capability. Reset by {@link clearEventsFired}.
+   */
+  startupComplete = Effect.runSync(Deferred.make<void>());
   /** Set for the duration of `shutdown()` — new starts/activations are skipped meanwhile. */
   readonly shuttingDown = Effect.runSync(Ref.make(false));
   /**
@@ -76,10 +82,10 @@ export class ManagerState {
    */
   readonly structurallyFailed = new Set<string>();
 
-  readonly #registry: Registry.Registry;
+  readonly #registry: Registry.AtomRegistry;
 
   constructor(
-    registry: Registry.Registry,
+    registry: Registry.AtomRegistry,
     initial: { plugins: readonly Plugin.Plugin[]; core: readonly string[]; enabled: readonly string[] },
   ) {
     this.#registry = registry;
@@ -237,6 +243,7 @@ export class ManagerState {
 
   clearEventsFired(): void {
     this.#update(this.eventsFired, () => []);
+    this.startupComplete = Effect.runSync(Deferred.make<void>());
   }
 
   isStarted(): Effect.Effect<boolean> {
@@ -295,7 +302,10 @@ export class ManagerState {
   recordFailure(id: string, phase: PluginFailurePhase, error: Error): void {
     const reason: PluginFailureReason = isTimeoutCause(error) ? 'timeout' : 'error';
     const failure: PluginFailure = { id, phase, reason, error, timestamp: Date.now() };
-    log.warn('plugin failed to activate', { id, phase, reason, error: error.message });
+    // `LazyPluginError`'s own message says only that resolution failed; the import's rejection is
+    // the cause, and without it a load failure is undiagnosable from the console alone.
+    const cause = error.cause instanceof Error ? error.cause.message : undefined;
+    log.warn('plugin failed to activate', { id, phase, reason, error: error.message, cause });
     this.#update(this.failed, (current) => [...current.filter((entry) => entry.id !== id), failure]);
   }
 
@@ -335,14 +345,14 @@ export class FiberTracker {
    * cannot supply.
    */
   trackForked(fiber: Fiber.Fiber<unknown, unknown>): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       yield* this.track(fiber);
-      yield* Effect.forkDaemon(Fiber.await(fiber).pipe(Effect.andThen(() => this.untrack(fiber))));
+      yield* Effect.forkDetach(Fiber.await(fiber).pipe(Effect.andThen(() => this.untrack(fiber))));
     });
   }
 
   interruptAll(): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const fibers = yield* Ref.get(this.#fibers);
       yield* Effect.forEach(fibers, (fiber) => Fiber.interrupt(fiber), { concurrency: 'unbounded', discard: true });
       yield* Ref.set(this.#fibers, []);

@@ -35,14 +35,19 @@
       "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
-      "source": "./src/SpacetimePlugin.tsx",
-      "types": "./dist/types/src/SpacetimePlugin.d.ts",
-      "default": "./dist/lib/SpacetimePlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -52,16 +57,12 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./package.json": "./package.json",
     "./Model": {
       "source": "./src/types/Model.ts",
       "types": "./dist/types/src/types/Model.d.ts",
@@ -87,7 +88,11 @@
       "types": "./dist/types/src/types/SpacetimeEvents.d.ts",
       "import": "./dist/lib/SpacetimeEvents.mjs"
     },
-    "./package.json": "./package.json"
+    "./SpacetimePlugin": {
+      "source": "./src/SpacetimePlugin.ts",
+      "types": "./dist/types/src/SpacetimePlugin.d.ts",
+      "import": "./dist/lib/SpacetimePlugin.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -130,8 +135,7 @@
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-pickers": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "babylonjs-gltf2interface": "catalog:",
     "effect": "catalog:",

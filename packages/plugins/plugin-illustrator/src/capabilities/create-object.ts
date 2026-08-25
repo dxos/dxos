@@ -8,13 +8,11 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { SpaceOperation } from '@dxos/plugin-space';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { CreateDrawingPanel } from '#components';
-
-import * as Drawing from '../types/Drawing';
-import * as IllustratorCapabilities from '../types/IllustratorCapabilities';
+import { Drawing, IllustratorCapabilities } from '#types';
 
 type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObject']>[1];
 
@@ -41,11 +39,14 @@ export default Capability.makeModule(
 
           // Add the canvas to the database. It carries HiddenAnnotation, so `CollectionModel.add`
           // persists it without filing it into the target collection.
-          yield* Operation.invoke(SpaceOperation.AddObject, {
-            object: canvas,
-            target: options.target,
-            targetNodeId: options.targetNodeId,
-          });
+          yield* Operation.invoke(
+            SpaceOperation.AddObject,
+            {
+              object: canvas,
+              target: options.target,
+            },
+            { spaceId: options.db.spaceId },
+          );
 
           const drawing = Drawing.make({
             name: typeof input?.name === 'string' ? input.name : undefined,
@@ -55,11 +56,14 @@ export default Capability.makeModule(
           // Add the user-facing Drawing wrapper. Not hidden — this is the object the user sees
           // and navigates to. If this second write fails, roll back the canvas so we don't
           // leak an orphaned object into the space.
-          return yield* Operation.invoke(SpaceOperation.AddObject, {
-            object: drawing,
-            target: options.target,
-            targetNodeId: options.targetNodeId,
-          }).pipe(
+          return yield* Operation.invoke(
+            SpaceOperation.AddObject,
+            {
+              object: drawing,
+              target: options.target,
+            },
+            { spaceId: options.db.spaceId },
+          ).pipe(
             Effect.tapError(() =>
               Operation.invoke(SpaceOperation.RemoveObjects, { objects: [canvas] }).pipe(Effect.ignore),
             ),

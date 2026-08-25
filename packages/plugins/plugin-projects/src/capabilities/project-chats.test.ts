@@ -6,13 +6,15 @@ import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { qualifyId } from '@dxos/app-graph';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import { setupGraphBuilder } from '@dxos/app-graph/testing';
 import { Chat } from '@dxos/assistant-toolkit';
 import * as Project from '@dxos/compute/Project';
 import { Feed, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { createProjectChatsExtension } from './app-graph-builder';
 
@@ -50,7 +52,7 @@ describe('project chats graph extension', () => {
     const addChat = async (name: string) => {
       const feed = db.add(Feed.make());
       const chat = db.add(Chat.make({ name, feed: Ref.make(feed) }));
-      Obj.setParent(chat, project);
+      Chat.linkCompanion({ chat, subject: project });
       await db.flush();
       await context.flush();
       return chat;
@@ -87,7 +89,7 @@ describe('project chats graph extension', () => {
     const { db, project, addChat, getChildIds, flush } = await setupTestContext();
     const chat = await addChat('Chat');
 
-    // Owned Instructions/Collections are parented to a project too; only chats are navtree children.
+    // Owned Instructions/task sets are parented to a project too; only chats are navtree children.
     const other = db.add(Feed.make());
     Obj.setParent(other, project);
     await db.flush();

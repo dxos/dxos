@@ -3,21 +3,16 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Effect from 'effect/Effect';
 import React, { useEffect, useState } from 'react';
 
-import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapability } from '@dxos/app-framework/ui';
 import { EffectEx } from '@dxos/effect';
 import { type RDF } from '@dxos/pipeline-rdf';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
-import { BrainPlugin } from '@dxos/plugin-brain/plugin';
-import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { ModuleContainer, type ModuleLayout } from '@dxos/storybook-testing';
+import { ModuleContainer, type ModuleLayout, createStoryDecorators } from '@dxos/storybook-testing';
 
 import { FactsStoryContext } from '../modules';
 import { StoryRole } from '../modules';
@@ -93,28 +88,9 @@ const InMemoryStory = () => <FactsStoryRoot layout={VIEWER_LAYOUT} seed={SAMPLE_
 const meta = {
   title: 'stories/stories-brain/Facts',
   render: DefaultStory,
-  decorators: [
-    withTheme(),
-    withLayout({ layout: 'fullscreen' }),
-    withPluginManager({
-      plugins: [
-        ...corePlugins(),
-        ClientPlugin({
-          onClientInitialized: ({ client }) =>
-            Effect.gen(function* () {
-              if (!client.halo.identity.get()) {
-                yield* initializeIdentity(client);
-              }
-            }),
-        }),
-        SpacePlugin({}),
-        BrainPlugin(),
-        CrawlerStoresPlugin(),
-        StoryModulesPlugin(),
-        StorybookPlugin({}),
-      ],
-    }),
-  ],
+  decorators: createStoryDecorators({
+    plugins: [SpacePlugin({}), BrainPlugin.make(), CrawlerStoresPlugin(), StoryModulesPlugin()],
+  }),
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },

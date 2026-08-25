@@ -2,15 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import type * as Note from '../../types/Note';
-import type * as Sequence from '../../types/Sequence';
-import type * as Track from '../../types/Track';
+import { Note, Sequence, Track } from '#types';
+
 import { SequenceGrid } from './SequenceGrid';
 
 const SEQUENCE_LENGTH = 16; // beats

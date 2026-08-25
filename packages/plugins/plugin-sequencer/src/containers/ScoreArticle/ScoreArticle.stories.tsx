@@ -10,11 +10,8 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
+import { Note, Score, Sequence, Track } from '#types';
 
-import * as Note from '../../types/Note';
-import * as Score from '../../types/Score';
-import * as Sequence from '../../types/Sequence';
-import * as Track from '../../types/Track';
 import { type MutableScore, applyLeadSheetToScore } from '../../util';
 import { parseLeadSheet } from '../../util/lead-sheet';
 import { ScoreArticle } from './ScoreArticle';
@@ -38,28 +35,24 @@ const SAMPLE_PATTERN: Pattern = {
       trackId: 't1',
       name: 'Lead — verse',
       length: 16,
-      notes: [60, 62, 64, 65, 67, 69, 71, 72].map(
-        (pitch, index): Note.Note => ({
-          pitch,
-          startTime: index * 0.5,
-          duration: 0.25,
-          velocity: 0.7,
-        }),
-      ),
+      notes: [60, 62, 64, 65, 67, 69, 71, 72].map((pitch, index): Note.Note => ({
+        pitch,
+        startTime: index * 0.5,
+        duration: 0.25,
+        velocity: 0.7,
+      })),
     },
     {
       id: 's2',
       trackId: 't2',
       name: 'Bass — verse',
       length: 16,
-      notes: [36, 36, 43, 43, 41, 41, 38, 38].map(
-        (pitch, index): Note.Note => ({
-          pitch,
-          startTime: index,
-          duration: 0.75,
-          velocity: 0.8,
-        }),
-      ),
+      notes: [36, 36, 43, 43, 41, 41, 38, 38].map((pitch, index): Note.Note => ({
+        pitch,
+        startTime: index,
+        duration: 0.75,
+        velocity: 0.8,
+      })),
     },
     {
       id: 's3',

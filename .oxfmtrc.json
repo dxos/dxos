@@ -20,6 +20,7 @@
   "ignorePatterns": [
     "*.tpl",
     "**/*.mdx",
+    ".agents/reviews/**",
     ".store/**",
     "**/README.md",
     "**/__swc_snapshots__/**",

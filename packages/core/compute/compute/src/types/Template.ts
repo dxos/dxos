@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Database, DXN, Filter, Ref, Registry } from '@dxos/echo';
-import type { EntityNotFoundError } from '@dxos/echo/Err';
+import type { EntityNotFoundError } from '@dxos/echo/Error';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Text } from '@dxos/schema';
@@ -20,7 +20,7 @@ import * as Operation from '../Operation';
 /**
  * Template input kind determines how template variables are resolved.
  */
-export const InputKind = Schema.Literal(
+export const InputKind = Schema.Literals([
   'value', // Literal value.
   'operation',
   // 'pass-through',
@@ -29,7 +29,7 @@ export const InputKind = Schema.Literal(
   // 'resolver',
   // 'context',
   // 'schema',
-);
+]);
 
 export type InputKind = Schema.Schema.Type<typeof InputKind>;
 
@@ -54,7 +54,7 @@ export type Input = Schema.Schema.Type<typeof Input>;
  * Template type.
  */
 export const Template = Schema.Struct({
-  source: Ref.Ref(Text.Text).annotations({ description: 'Markdown + Handlebars template.' }),
+  source: Ref.Ref(Text.Text).annotate({ description: 'Markdown + Handlebars template.' }),
 
   /**
    * NOTE: We use an array rather than map so that updating variable names in the template doesn't disconnect existing inputs.
@@ -113,7 +113,7 @@ export const processTemplate = (
           }
 
           default: {
-            return yield* Effect.dieMessage(`Unsupported input kind: ${input.kind}`);
+            return yield* Effect.die(new Error(`Unsupported input kind: ${input.kind}`));
           }
         }
       }),

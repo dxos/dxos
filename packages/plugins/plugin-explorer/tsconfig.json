@@ -39,13 +39,13 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-query"
-    },
-    {
       "path": "../../core/echo/echo-react"
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-graph"
     },
     {
       "path": "../../sdk/app-toolkit"
@@ -79,9 +79,6 @@
     },
     {
       "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-preview"

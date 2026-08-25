@@ -6,19 +6,20 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
-import { GraphBuilder, Node } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Position } from '@dxos/util';
 
-import { meta } from '../meta';
-import * as Provider from '../types/Provider';
-import * as Search from '../types/Search';
-import * as SearchOperation from '../types/SearchOperation';
+import { meta } from '#meta';
+import { Provider, Search, SearchOperation } from '#types';
+
+import { getProvidersSectionId } from '../paths';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -37,7 +38,8 @@ export default Capability.makeModule(
           return Effect.succeed([
             // TODO(wittjosiah): Should be AppNode.makeSection() but currently has selectable data.
             Node.make({
-              id: 'providers',
+              // The segment is shared with the navigation resolver, which spells provider paths.
+              id: getProvidersSectionId(),
               type: 'providers', // TODO(burdon): Const.
               data: 'providers-root', // TODO(burdon): Const.
               properties: {

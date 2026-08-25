@@ -26,6 +26,15 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/node-std"
+    },
+    {
+      "path": "../../common/test-utils"
+    },
+    {
+      "path": "../../common/tracing"
+    },
+    {
       "path": "../../common/util"
     },
     {

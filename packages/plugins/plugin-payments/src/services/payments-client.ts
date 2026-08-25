@@ -2,12 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ExactEvmScheme, toClientEvmSigner } from '@x402/evm';
-import { wrapFetchWithPaymentFromConfig } from '@x402/fetch';
-import { type WalletClient, createPublicClient, createWalletClient, custom, http } from 'viem';
-import { baseSepolia } from 'viem/chains';
+import type { WalletClient } from 'viem';
 
-import { type Client } from '@dxos/client';
+import { type Identity } from '@dxos/halo';
 import { log } from '@dxos/log';
 
 import { createEdgeAuthedFetch, getEdgeAuthHeader } from './edge-auth';
@@ -17,6 +14,16 @@ import { createEdgeAuthedFetch, getEdgeAuthHeader } from './edge-auth';
 //
 // Network is Base Sepolia testnet (CAIP-2 `eip155:84532`), testnet USDC, scheme `exact`.
 //
+
+/**
+ * viem plus its chain definitions is ~340 KB, and this module is reachable from the plugin's
+ * react-surface capability, so a static import made the EVM client resident for every user of the
+ * app rather than only those who open payments.
+ */
+const viem = () => Promise.all([import('viem'), import('viem/chains')]);
+
+/** The x402 client packages embed their own viem copy, so they load alongside it. */
+const x402 = () => Promise.all([import('@x402/evm'), import('@x402/fetch')]);
 
 /** CAIP-2 network id for the x402 v2 scheme registration. */
 export const PAYMENTS_NETWORK = 'eip155:84532' as const;
@@ -44,6 +51,7 @@ const UNRECOGNIZED_CHAIN_ERROR_CODE = 4902;
  * first if it isn't known. Idempotent when already on the right chain.
  */
 const ensureBaseSepolia = async (provider: Eip1193Provider): Promise<void> => {
+  const [, { baseSepolia }] = await viem();
   const chainId = `0x${baseSepolia.id.toString(16)}`;
   try {
     await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId }] });
@@ -84,6 +92,7 @@ const connectWallet = async (): Promise<{ walletClient: WalletClient; address: `
     throw new Error('No account exposed by the injected wallet.');
   }
   await ensureBaseSepolia(provider);
+  const [{ createWalletClient, custom }, { baseSepolia }] = await viem();
   const walletClient = createWalletClient({ account: address, chain: baseSepolia, transport: custom(provider) });
   return { walletClient, address };
 };
@@ -92,12 +101,14 @@ const connectWallet = async (): Promise<{ walletClient: WalletClient; address: `
  * Builds a `fetch` that (1) injects the edge VP `Authorization` header and (2) transparently completes
  * an x402 payment on a 402 response by signing an EIP-3009 USDC transfer with the connected wallet.
  */
-const createPaidFetch = async (client: Client, baseUrl: string): Promise<typeof globalThis.fetch> => {
+const createPaidFetch = async (identity: Identity.EdgeIdentity, baseUrl: string): Promise<typeof globalThis.fetch> => {
   const { walletClient, address } = await connectWallet();
+  const [{ createPublicClient, http }, { baseSepolia }] = await viem();
   const publicClient = createPublicClient({ chain: baseSepolia, transport: http() });
 
   // The x402 client signer needs `address` + `signTypedData`; `toClientEvmSigner` adds the public-client
   // read capability used for EIP-2612/allowance enrichment.
+  const [{ ExactEvmScheme, toClientEvmSigner }, { wrapFetchWithPaymentFromConfig }] = await x402();
   const signer = toClientEvmSigner(
     {
       address,
@@ -131,7 +142,7 @@ const createPaidFetch = async (client: Client, baseUrl: string): Promise<typeof 
   );
 
   // Base fetch already carries the edge Authorization header; x402 layers X-PAYMENT on the retry.
-  const baseFetch = createEdgeAuthedFetch(client, baseUrl);
+  const baseFetch = createEdgeAuthedFetch(identity, baseUrl);
   return wrapFetchWithPaymentFromConfig(baseFetch, {
     schemes: [{ network: PAYMENTS_NETWORK, client: new ExactEvmScheme(signer) }],
   });
@@ -142,8 +153,8 @@ const createPaidFetch = async (client: Client, baseUrl: string): Promise<typeof 
  * inline x402 payment. When payment is required the server returns 402 + requirements; the x402 wrapper
  * signs the USDC transfer and retries with an `X-PAYMENT` header.
  */
-export const buyPremium = async (client: Client, baseUrl: string): Promise<PremiumResponse> => {
-  const paidFetch = await createPaidFetch(client, baseUrl);
+export const buyPremium = async (identity: Identity.EdgeIdentity, baseUrl: string): Promise<PremiumResponse> => {
+  const paidFetch = await createPaidFetch(identity, baseUrl);
   const response = await paidFetch(new URL('/premium', baseUrl));
   if (!response.ok) {
     const text = await response.text().catch(() => '');
@@ -160,11 +171,11 @@ export const buyPremium = async (client: Client, baseUrl: string): Promise<Premi
  * caller redirects the browser there (`window.location.href = url`).
  */
 export const createStripeCheckout = async (
-  client: Client,
+  identity: Identity.EdgeIdentity,
   baseUrl: string,
   credits = 100,
 ): Promise<{ url: string }> => {
-  const authHeader = await getEdgeAuthHeader(client, baseUrl);
+  const authHeader = await getEdgeAuthHeader(identity, baseUrl);
   const response = await globalThis.fetch(new URL('/stripe/checkout', baseUrl), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': authHeader },

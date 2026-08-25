@@ -64,8 +64,12 @@ export const prettyFilter = (filter: QueryAST.Filter): string => {
         : `Filter.textSearch(${JSON.stringify(filter.text)})`;
     case 'timestamp':
       return `Filter.${filter.field}.${filter.operator}(${filter.value})`;
+    case 'feed-cursor':
+      return `Filter.feedCursor(${JSON.stringify({ begin: filter.begin, end: filter.end })})`;
     case 'child-of':
       return `Filter.childOf([${filter.parents.map((p) => JSON.stringify(p)).join(', ')}], { transitive: ${filter.transitive} })`;
+    case 'has-parent':
+      return `Filter.hasParent(${filter.value})`;
     case 'not':
       return `Filter.not(${prettyFilter(filter.filter)})`;
     case 'and':
@@ -164,17 +168,26 @@ export const prettyQuery = (query: QueryAST.Query): string => {
       return `${prettyQuery(query.query)}.skip(${query.skip})`;
     case 'aggregate': {
       const aggregates = query.aggregates.map((aggregate) => {
-        const arg =
-          aggregate.kind === 'items'
-            ? aggregate.limit !== undefined
-              ? `{ limit: ${aggregate.limit} }`
-              : ''
-            : aggregate.kind === 'count'
-              ? ''
-              : JSON.stringify(aggregate.property);
-        return `${JSON.stringify(aggregate.name)}: Aggregate.${aggregate.kind}(${arg})`;
+        return `${JSON.stringify(aggregate.name)}: Aggregate.${aggregate.kind}(${prettyAggregateArg(aggregate)})`;
       });
       return `${prettyQuery(query.query)}.aggregate({ ${aggregates.join(', ')} })`;
     }
+  }
+};
+
+/** Renders one aggregate's constructor argument, mirroring the `Aggregate.*` call that produced it. */
+const prettyAggregateArg = (aggregate: QueryAST.GroupAggregate): string => {
+  switch (aggregate.kind) {
+    case 'count':
+      return '';
+    case 'items':
+      return aggregate.limit !== undefined ? `{ limit: ${aggregate.limit} }` : '';
+    case 'group':
+      return aggregate.properties.length === 1
+        ? JSON.stringify(aggregate.properties[0])
+        : `{ coalesce: ${JSON.stringify(aggregate.properties)} }`;
+    case 'max':
+    case 'min':
+      return JSON.stringify(aggregate.property);
   }
 };

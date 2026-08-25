@@ -12,7 +12,7 @@ import { trim } from '@dxos/util';
 
 export const DelegateTask = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.delegation.delegateTask'),
+    key: DXN.make('org.dxos.operation.assistantToolkit.delegateTask'),
     name: 'Delegate task',
     description: trim`
       Delegate a unit of work to a sub-agent.
@@ -22,7 +22,7 @@ export const DelegateTask = Operation.make({
     icon: 'ph--share-network--regular',
   },
   input: Schema.Struct({
-    title: Schema.String.annotations({
+    title: Schema.String.annotate({
       description: 'Title of the work to delegate (matched against the checklist, created if new).',
     }),
   }),

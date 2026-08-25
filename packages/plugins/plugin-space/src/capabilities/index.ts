@@ -10,10 +10,9 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 
+import { SpaceCapabilities, SpaceCapability, SpaceSchema } from '#types';
+
 import { SpaceOperationConfig } from '../operations/helpers';
-import * as SpaceCapabilities from '../types/SpaceCapabilities';
-import * as SpaceCapability from '../types/SpaceCapability';
-import * as SpaceSchema from '../types/SpaceSchema';
 import { makeCreateInvitationUrl } from './helpers';
 
 export * from './app-graph-builder';
@@ -24,9 +23,11 @@ export const CreateObject = SpaceCapability.createObject(() => import('./create-
 export const IdentityCreated = Capability.lazyModule(
   'IdentityCreated',
   {
-    requires: [ClientCapabilities.Client],
-    provides: [SpaceCapabilities.PersonalSpace],
-    // Runtime event: the personal space is created when a local identity is created, not at startup.
+    // `SchemaRegistered` pulls the idle-gated schema registration into this wave; the root
+    // collection is a typed object.
+    requires: [ClientCapabilities.Client, ClientCapabilities.SchemaRegistered],
+    provides: [SpaceCapabilities.DefaultSpace],
+    // Runtime event: the default space is created when a local identity is created, not at startup.
     activatesOn: ClientEvents.IdentityCreated,
   },
   () => import('./identity-created'),
@@ -62,6 +63,7 @@ export const Repair = Capability.lazyModule(
   },
   () => import('./repair'),
 );
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const SpaceSettings = AppCapability.settings(() => import('./settings'), {
   provides: [SpaceCapabilities.SettingsAtom],
 });
@@ -85,6 +87,7 @@ export const SpacesReady = Capability.lazyModule(
   },
   () => import('./spaces-ready'),
 );
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const SpaceState = Capability.lazyModule(
   'SpaceState',
   {
@@ -93,10 +96,12 @@ export const SpaceState = Capability.lazyModule(
   },
   () => import('./state'),
 );
+export const ObservabilityMappings = AppCapability.observabilityMappings(() => import('./observability-mappings'), {
+  props: (options: SpaceSchema.SpacePluginOptions) => ({ observability: options.observability }),
+});
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'), {
   provides: [SpaceOperationConfig],
   props: (options: SpaceSchema.SpacePluginOptions) => ({
     createInvitationUrl: makeCreateInvitationUrl(options),
-    observability: options.observability,
   }),
 });

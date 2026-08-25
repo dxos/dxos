@@ -2,19 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import {
-  type LogConfig,
-  type LogEntry,
-  type LogProcessor,
-  log,
-  parseFilter,
-  shortLevelName,
-  shouldLog,
-} from '@dxos/log';
+import { type LogProcessor, inferEnvironmentName, log, parseFilter, serializeToJsonl, shouldLog } from '@dxos/log';
 
 import { VITE_PLUGIN_LOG_SINK_PATH } from './constants.ts';
-
-const MAX_CONTEXT_LENGTH = 500;
+import { MAX_LINE_LENGTH, truncateLine } from './truncate-line.ts';
 
 /** Coalesce sends to one macrotask; adjust if needed. */
 const FLUSH_DEBOUNCE_MS = 16;
@@ -30,44 +21,10 @@ const logFilterExpr =
 
 const vitePluginLogFilters = parseFilter(logFilterExpr);
 
-const entryToNdjsonLine = (_config: LogConfig, entry: LogEntry): string => {
-  const { filename, line, context: scopeName } = entry.computedMeta;
-
-  const record: Record<string, unknown> = {
-    t: new Date(entry.timestamp).toISOString(),
-    l: shortLevelName[entry.level] ?? '?',
-    m: entry.message ?? '',
-  };
-
-  if (filename !== undefined) {
-    record.f = filename;
-  }
-  if (line !== undefined) {
-    record.n = line;
-  }
-  if (scopeName !== undefined) {
-    record.o = scopeName;
-  }
-
-  if (entry.computedError !== undefined) {
-    record.e = entry.computedError;
-  }
-
-  const computedContext = entry.computedContext;
-  if (Object.keys(computedContext).length > 0) {
-    try {
-      let json = JSON.stringify(computedContext);
-      if (json.length > MAX_CONTEXT_LENGTH) {
-        json = json.slice(0, MAX_CONTEXT_LENGTH);
-      }
-      record.c = json;
-    } catch {
-      // Skip context that throws or is non-serializable.
-    }
-  }
-
-  return `${JSON.stringify(record)}\n`;
-};
+// Cached (not read per-line): `inferEnvironmentName` already memoizes its default-scope result at
+// module level, so every realm (tab / dedicated worker) stamps one stable `i` across its lifetime —
+// matching the id `@dxos/log-store-idb` embeds for the same realm.
+const environmentName = inferEnvironmentName();
 
 export type Transport = (chunk: string) => void;
 
@@ -122,11 +79,18 @@ export const installRuntime = (transport: Transport): RuntimeHandle => {
     flushTimeout = setTimeout(flush, FLUSH_DEBOUNCE_MS);
   };
 
-  const processor: LogProcessor = (config, entry) => {
+  const processor: LogProcessor = (_config, entry) => {
     if (!shouldLog(entry, vitePluginLogFilters)) {
       return;
     }
-    buffer += entryToNdjsonLine(config, entry);
+    let line = serializeToJsonl(entry, { env: environmentName });
+    if (line === undefined) {
+      return;
+    }
+    if (line.length > MAX_LINE_LENGTH) {
+      line = truncateLine(line);
+    }
+    buffer += `${line}\n`;
     scheduleFlush();
   };
 

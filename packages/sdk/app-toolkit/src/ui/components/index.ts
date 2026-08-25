@@ -3,8 +3,8 @@
 //
 
 export * from './AttentionSigil';
+export * from './CardIconSlot';
 export * from './NotFoundArticle';
 export * from './PluginRegistryButton';
-export * from './ProgressMeter';
 
 export * as AppSurface from './app-surface';

@@ -8,8 +8,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Column } from '@dxos/react-ui';
 
 import { ActionItems, DayAhead, Permissions, ProfileGrid, ProfileSummary } from '#components';
-
-import type * as Sidekick from '../../types/Sidekick';
+import { Sidekick } from '#types';
 
 export type SidekickArticleProps = AppSurface.ObjectArticleProps<Sidekick.Profile>;
 

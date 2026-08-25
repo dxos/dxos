@@ -13,7 +13,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Database, Feed, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
-import { CallsPlugin } from '@dxos/plugin-calls/plugin';
+import * as CallsPlugin from '@dxos/plugin-calls/CallsPlugin';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
@@ -26,7 +26,7 @@ import { Channel, Message, Thread } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { ThreadPlugin } from '../../ThreadPlugin';
+import { ThreadPlugin } from '../../plugin';
 import { ChannelArticle, type ChannelArticleProps } from './ChannelArticle';
 
 // TODO(wittjosiah): Channel doesn't render full height.
@@ -54,7 +54,7 @@ const meta = {
       ],
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Channel.Channel, Feed.Feed, Thread.Thread, Message.Message],
           config: new Config({
             runtime: {
@@ -72,8 +72,8 @@ const meta = {
           }),
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
-              const channel = personalSpace.db.add(Channel.make({ name: 'general' }));
+              const { defaultSpace } = yield* initializeIdentity(client);
+              const channel = defaultSpace.db.add(Channel.make({ name: 'general' }));
               yield* Effect.promise(() => channel.backend.config.load());
               const feed = Channel.getFeed(channel);
               invariant(feed, 'Channel is not feed-backed');
@@ -84,12 +84,12 @@ const meta = {
                   blocks: [{ _tag: 'text', text: 'Messages are stored in the feed.' }],
                 }),
               ];
-              yield* Feed.append(feed, seed).pipe(Effect.provide(Database.layer(personalSpace.db)));
+              yield* Feed.append(feed, seed).pipe(Effect.provide(Database.layer(defaultSpace.db)));
             }),
         }),
         SpacePlugin({}),
         ThreadPlugin(),
-        CallsPlugin(),
+        CallsPlugin.make(),
       ],
     }),
   ],

@@ -17,13 +17,13 @@ import INSTRUCTIONS from './update-tasks.md?raw';
  * `Outline.upsertChecklistItems`); `in-progress` renders unchecked, nuance lives in conversation.
  */
 const ChecklistTask = Schema.Struct({
-  title: Schema.String.annotations({ description: 'Task title; also the key for updates.' }),
-  status: Schema.Literal('todo', 'in-progress', 'done'),
+  title: Schema.String.annotate({ description: 'Task title; also the key for updates.' }),
+  status: Schema.Literals(['todo', 'in-progress', 'done']),
 });
 
 export const UpdateTasks = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.planning.updateTasks'),
+    key: DXN.make('org.dxos.operation.assistantToolkit.updateTasks'),
     name: 'Update tasks',
     description: INSTRUCTIONS,
     icon: 'ph--check-square-offset--regular',
@@ -37,7 +37,7 @@ export const UpdateTasks = Operation.make({
 
 export const PlanReminder = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.planning.planReminder'),
+    key: DXN.make('org.dxos.operation.assistantToolkit.planReminder'),
     name: 'Plan reminder',
     description: 'Reminds the agent to continue when its plan still has incomplete tasks.',
   },

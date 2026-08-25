@@ -3,11 +3,11 @@
 //
 
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Config from 'effect/Config';
-import type * as ConfigError from 'effect/ConfigError';
+import type * as ConfigError from 'effect/Config';
 import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as AiModelResolver from '../AiModelResolver';
 import type * as AiService from '../AiService';
@@ -59,7 +59,7 @@ export const LocalEdgeAiServiceLayer: AiServiceLayer = TestRouter.pipe(
 export const RemoteEdgeAiServiceLayer: AiServiceLayer = TestRouter.pipe(
   Layer.provide(
     AnthropicClient.layerConfig({
-      apiUrl: Config.succeed('https://ai-service.dxos.workers.dev/provider/anthropic'),
+      apiUrl: Config.succeed('https://main.dxos.network/ai/provider/anthropic'),
     }),
   ),
   Layer.provide(FetchHttpClient.layer),

@@ -7,7 +7,7 @@ import { userEvent, within } from 'storybook/test';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { AssistantSkill } from '@dxos/plugin-assistant';
+import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import { type Space } from '@dxos/react-client/echo';
 import { trim } from '@dxos/util';
 
@@ -44,16 +44,16 @@ let storySpace: Space | undefined;
 const decorators = createDecorators({
   skills: [AssistantSkill.key],
   lazyPlugins: async () => {
-    const [{ Instructions, Project, Routine }, { Collection, Text }, { ProjectsPlugin }] = await Promise.all([
+    const [{ Instructions, Project, Routine }, { Collection, Text }, ProjectsPlugin] = await Promise.all([
       import('@dxos/compute'),
       Promise.all([import('@dxos/echo'), import('@dxos/schema')]).then(([echo, schema]) => ({
         Collection: echo.Collection,
         Text: schema.Text,
       })),
-      import('@dxos/plugin-projects/plugin'),
+      import('@dxos/plugin-projects/ProjectsPlugin'),
     ]);
     return {
-      plugins: [ProjectsPlugin()],
+      plugins: [ProjectsPlugin.make()],
       types: [Project.Project, Instructions.Instructions, Routine.Routine, Collection.Collection, Text.Text],
     };
   },
@@ -66,10 +66,10 @@ const decorators = createDecorators({
       text: PROJECT_INSTRUCTIONS,
       commands: PROJECT_COMMANDS,
     });
-    Obj.setParent(instructions, project);
     Obj.update(project, (project) => {
       project.instructions = Ref.make(instructions);
     });
+    Obj.setParent(instructions, project);
     space.db.add(project);
     await space.db.flush({ indexes: true });
   },

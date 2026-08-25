@@ -31,9 +31,28 @@ const WORKSPACE_KEY = 'w';
 /** Builds the pair-chain base for a workspace: `/<anchor>/<workspace>`. */
 const workspaceUrl = (workspace: string) => `${INITIAL_URL.replace(/\/$/, '')}/${WORKSPACE_KEY}/${workspace}`;
 
-// Only the personal space is seeded on every new identity. The exemplar space is skipped on
+// Only the default space is seeded on every new identity. The exemplar space is skipped on
 // localhost (see OnboardingPlugin `generateExemplarSpace`), which is where e2e tests run.
 export const INITIAL_SPACE_COUNT = 1;
+
+/**
+ * Budget for `joinNewIdentity()`: spans a storage reset, page reload and app boot, so it is sized well
+ * above the 30s `actionTimeout` a single interaction gets.
+ */
+const JOIN_IDENTITY_BOOT_TIMEOUT = 60_000;
+
+/**
+ * Typenames behind the friendly names specs pass to `createObject()`, keyed by typename since the
+ * type-picker's testid uses it (its label is localized). A missing name fails on the locator instead
+ * of silently.
+ */
+const OBJECT_TYPENAMES: Record<string, string> = {
+  Chat: 'org.dxos.type.assistant.chat',
+  Collection: 'org.dxos.type.collection',
+  Document: 'org.dxos.type.document',
+  Mailbox: 'org.dxos.type.mailbox',
+  Table: 'org.dxos.type.table',
+};
 
 export class AppManager {
   page!: Page;
@@ -44,6 +63,9 @@ export class AppManager {
   private _initialized = false;
   private _invitationCode = new Trigger<string>();
   private _authCode = new Trigger<string>();
+  // Rolling tail of console errors: the app reports operation failures generically to the user, and
+  // the real cause only reaches `log.catch`.
+  private _consoleErrors: string[] = [];
 
   // prettier-ignore
   constructor(
@@ -128,16 +150,29 @@ export class AppManager {
     return await this._authCode.wait();
   }
 
-  async resetDevice(confirmInput = 'RESET'): Promise<void> {
-    await this.page.getByTestId('devicesContainer.reset').click();
+  async logout(confirmInput = 'RESET'): Promise<void> {
+    await this.page.getByTestId('devicesContainer.logout').click();
     await this.page.getByTestId('reset-storage.reset-identity-input').fill(confirmInput);
     await this.page.getByTestId('reset-storage.reset-identity-confirm').click();
   }
 
   async joinNewIdentity(confirmInput = 'RESET'): Promise<void> {
     await this.page.getByTestId('devicesContainer.joinExisting').click();
-    await this.page.getByTestId('join-new-identity.reset-identity-input').fill(confirmInput);
-    await this.page.getByTestId('join-new-identity.reset-identity-confirm').click();
+    // The confirm button's `disabled` gate reads `inputValue === confirmationValue`, but `fill()` sets
+    // the value in one event, so the enabled state can still be settling when Playwright's
+    // actionability check passes; asserting enabled first avoids racing that gate.
+    const confirmInputLocator = this.page.getByTestId('join-new-identity.reset-identity-input');
+    await confirmInputLocator.click();
+    await confirmInputLocator.pressSequentially(confirmInput);
+    const confirmButton = this.page.getByTestId('join-new-identity.reset-identity-confirm');
+    await expect(confirmButton).toBeEnabled();
+    await confirmButton.click();
+
+    // A polling assertion rather than `waitFor`, because confirming reloads the page and a single
+    // wait issued beforehand binds to the document being torn down.
+    await expect(this.shell.shell.getByTestId('halo-invitation-input')).toBeVisible({
+      timeout: JOIN_IDENTITY_BOOT_TIMEOUT,
+    });
   }
 
   async shareSpace(): Promise<void> {
@@ -192,11 +227,56 @@ export class AppManager {
   //
 
   async createSpace({ timeout = 10_000 }: { timeout?: number } = {}): Promise<void> {
-    await this.page.getByTestId('spacePlugin.addSpace').click();
-    await this.page.getByTestId('spacePlugin.createSpace').click();
-    await this.page.getByTestId('create-space-form').getByTestId('save-button').click({ delay: 100 });
+    // `init()` only waits for `treeView.userAccount`, so the space list is still empty for a moment
+    // after boot and a baseline taken there undercounts.
+    await this.getSpaceItems().first().waitFor({ state: 'attached', timeout });
+    const initialCount = await this.getSpaceItems().count();
+
+    await this.#submitCreateSpaceForm();
+
+    // The new rail item is the first condition pre-existing state cannot satisfy: a closed dialog
+    // does not prove a space was created, and `waitForSpaceReady()` is already satisfied by the
+    // space the app is in on entry.
+    await expect(this.getSpaceItems()).toHaveCount(initialCount + 1, { timeout });
 
     await this.waitForSpaceReady(timeout);
+  }
+
+  /** Opens the add-space dialog, submits it, and waits for it to close. */
+  async #submitCreateSpaceForm(): Promise<void> {
+    await this.page.getByTestId('spacePlugin.addSpace').click();
+    await this.page.getByTestId('spacePlugin.createSpace').click();
+
+    const form = this.page.getByTestId('create-space-form');
+    const save = form.getByTestId('save-button');
+    // Gate on ENABLED, not merely visible: fields arrive through a Surface lookup and can remount the
+    // control mid-click, so waiting for `disabled` to clear absorbs that remount.
+    await expect(save).toBeEnabled({ timeout: 15_000 });
+    await save.click();
+
+    // Closing the dialog waits on the space actually being created, so this is sized to the
+    // operation rather than to an interaction. It is not the test's assertion — the caller's count
+    // check is — so a generous bound only delays a genuine "dialog never closed" failure.
+    try {
+      await form.waitFor({ state: 'detached', timeout: 30_000 });
+    } catch (err) {
+      // The dialog stays open showing `create-space-dialog.error.message` on a failed create, which a
+      // bare detach timeout cannot distinguish from a slow one; report the error text when present.
+      const error = await form
+        .getByTestId('form.error')
+        .first()
+        .textContent()
+        .catch(() => null);
+      // The dialog's message is generic by design, so the console tail (where `log.catch` puts the
+      // squashed cause) is what attributes it.
+      throw new Error(
+        error
+          ? `create-space failed: ${error.trim()} — console: ${this.recentConsoleErrors()}`
+          : // No error rendered and the submit was clicked while enabled, so the operation is still pending.
+            'create-space never completed: dialog still open with no error — SpaceOperation.Create did not resolve',
+        { cause: err },
+      );
+    }
   }
 
   async joinSpace(): Promise<void> {
@@ -250,7 +330,7 @@ export class AppManager {
   }
 
   /**
-   * Deletes the space at the given index (default: the first non-personal space) via its
+   * Deletes the space at the given index (default: the first non-default space) via its
    * settings danger zone, including the confirmation step.
    */
   async deleteSpace(nth = 1): Promise<void> {
@@ -299,7 +379,8 @@ export class AppManager {
       await this.currentWorkspace.getByTestId('spacePlugin.createObject').first().click();
     }
 
-    await this.page.getByRole('listbox').getByText(type).first().click();
+    const option = this.page.getByTestId(`create-object-form.type.${OBJECT_TYPENAMES[type]}`);
+    await option.click({ timeout: 15_000 });
 
     const objectForm = this.page.getByTestId('create-object-form');
     if (!(await objectForm.isVisible())) {
@@ -443,7 +524,19 @@ export class AppManager {
     await this.page.getByTestId('resetDialog.confirmReset').click();
   }
 
+  /** The most recent browser console errors, newest last, for embedding in thrown diagnostics. */
+  recentConsoleErrors(count = 5): string {
+    const tail = this._consoleErrors.slice(-count);
+    return tail.length > 0 ? tail.join(' | ') : '(none captured)';
+  }
+
   private async _onConsoleMessage(message: ConsoleMessage): Promise<void> {
+    if (message.type() === 'error') {
+      this._consoleErrors.push(message.text());
+      if (this._consoleErrors.length > 20) {
+        this._consoleErrors.shift();
+      }
+    }
     try {
       const text = message.text();
       const json = JSON.parse(text.slice(text.indexOf('{')));

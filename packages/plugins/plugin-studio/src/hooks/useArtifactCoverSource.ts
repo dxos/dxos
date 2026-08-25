@@ -7,7 +7,8 @@ import { useEffect, useState } from 'react';
 import { type Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import type * as Variant from '../types/Variant';
+import { Variant } from '#types';
+
 import { useVariantSource } from './useVariantSource';
 
 /** The subset of an Artifact needed to resolve its cover thumbnail (live object or snapshot). */

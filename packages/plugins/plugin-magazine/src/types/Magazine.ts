@@ -6,7 +6,6 @@
 
 import * as Schema from 'effect/Schema';
 
-import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
@@ -25,17 +24,17 @@ export const SKILL_KEY = 'org.dxos.skill.magazine';
  * contract) lives in the Magazine skill, not here.
  */
 export const DEFAULT_INSTRUCTIONS = trim`
-  You curate articles for a Magazine around the Topic described below.
+  You curate articles for a Magazine.
+  The Topic is given below under "## Topic". If none is given, infer it from the Magazine's feeds.
 
   Select only candidates that clearly match the Topic — quality over quantity.
 
   Never select duplicate articles. Two candidates are duplicates if they share a link or guid, or if
-  their titles and content describe the same story (e.g. the same article syndicated by different
+  their titles and content describe the same story (e.g., the same article syndicated by different
   feeds). Keep only one of each — prefer the most complete or authoritative source — and skip the rest.
 
   For each candidate you select, also produce:
-  - A concise 1-2 sentence snippet (plain text, no markdown) capturing why the article is relevant to
-    the Topic. If you read the full article, use it to write a richer snippet.
+  - A concise 1-2 sentence snippet (plain text, no markdown) capturing why the article is relevant to the Topic. If you read the full article, use it to write a richer snippet.
   - The best hero image URL for the article, when one is available.
 `;
 
@@ -48,6 +47,7 @@ export const PostState = Schema.Struct({
   /** Agent-selected hero image URL for this post in this magazine. */
   imageUrl: Schema.optional(Schema.String),
 });
+
 export type PostState = Schema.Schema.Type<typeof PostState>;
 
 /**
@@ -60,10 +60,16 @@ export const CurationOutput = Schema.Struct({
   posts: Schema.Array(
     Schema.Struct({
       id: Obj.ID,
-      /** Concise 1-2 sentence snippet summarising why this article is relevant to the magazine topic. */
-      snippet: Schema.optional(Schema.String),
-      /** Best image URL found for this article (from the post or fetched content). */
-      imageUrl: Schema.optional(Schema.String),
+      /**
+       * Concise 1-2 sentence snippet summarising why this article is relevant to the magazine topic.
+       * Nullable, not merely optional: this schema is serialized to JSON Schema and rebuilt as
+       * `completeJob`'s parameters, so a decode-time transformation would not survive the round trip —
+       * and models emit `null` for a field they mean to omit, which `Schema.optional` alone rejects
+       * and which fails the whole curation run. {@link resolveSelected} normalizes null to absent.
+       */
+      snippet: Schema.optional(Schema.NullOr(Schema.String)),
+      /** Best image URL found for this article (from the post or fetched content); nullable, as {@link snippet}. */
+      imageUrl: Schema.optional(Schema.NullOr(Schema.String)),
     }),
   ),
 });
@@ -101,7 +107,7 @@ export class Magazine extends Type.makeObject<Magazine>(DXN.make('org.dxos.type.
      * Defaults to {@link Subscription.DEFAULT_KEEP} when unset.
      */
     keep: Schema.Number.pipe(
-      Schema.annotations({
+      Schema.annotate({
         title: 'Keep',
         description: 'Number of items to keep.',
       }),
@@ -110,7 +116,7 @@ export class Magazine extends Type.makeObject<Magazine>(DXN.make('org.dxos.type.
   }).pipe(
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--book-open-text--regular', hue: 'indigo' }),
-    AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
+    Skill.SkillsAnnotation.set([SKILL_KEY]),
   ),
 ) {}
 
@@ -171,15 +177,15 @@ export const composeInstructions = (topic?: string): string => {
 /** Schema for the create-magazine dialog form. */
 export const CreateMagazineSchema = Schema.Struct({
   name: Schema.optional(
-    Schema.String.annotations({
+    Schema.String.annotate({
       title: 'Name',
     }),
   ),
-  feeds: Schema.Array(Ref.Ref(Subscription.Subscription)).annotations({
+  feeds: Schema.Array(Ref.Ref(Subscription.Subscription)).annotate({
     title: 'Feeds',
   }),
   instructions: Schema.optional(
-    Schema.String.annotations({
+    Schema.String.annotate({
       title: 'Topic',
       description: 'Describe what content to curate.',
     }),

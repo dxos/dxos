@@ -12,13 +12,9 @@ import { Database, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { Outline, Task } from '@dxos/types';
 
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
 export const CreateOutline = Operation.make({
   meta: {
-    key: makeKey('createOutline'),
+    key: DXN.make('org.dxos.operation.tasks.createOutline'),
     name: 'Create Outline',
     icon: 'ph--list-bullets--regular',
   },
@@ -32,7 +28,7 @@ export const CreateOutline = Operation.make({
 
 export const ConvertToTask = Operation.make({
   meta: {
-    key: makeKey('convertToTask'),
+    key: DXN.make('org.dxos.operation.tasks.convert'),
     name: 'Convert to Task',
     icon: 'ph--check-circle--regular',
   },
@@ -47,7 +43,11 @@ export const ConvertToTask = Operation.make({
 });
 
 export const QuickJournalEntry = Operation.make({
-  meta: { key: makeKey('quickEntry'), name: 'Quick Journal Entry', icon: 'ph--pencil--regular' },
+  meta: {
+    key: DXN.make('org.dxos.operation.tasks.appendJournalEntry'),
+    name: 'Quick Journal Entry',
+    icon: 'ph--pencil--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     text: Schema.String,
@@ -61,7 +61,7 @@ export const QuickJournalEntry = Operation.make({
 
 export const GetOutline = Operation.make({
   meta: {
-    key: makeKey('outlineGet'),
+    key: DXN.make('org.dxos.operation.tasks.getOutline'),
     name: 'Get Outline',
     description: "Read an outline's checklist markdown and its parsed items.",
     icon: 'ph--list-checks--regular',
@@ -76,11 +76,11 @@ export const GetOutline = Operation.make({
     content: Schema.String,
     items: Schema.Array(Schema.Struct({ title: Schema.String, done: Schema.Boolean })),
   }),
-}).pipe(Operation.mcpTool({ name: 'outlineGet', safety: 'read', aspect: 'tasks' }));
+}).pipe(Operation.mutation('none'));
 
 export const UpdateOutline = Operation.make({
   meta: {
-    key: makeKey('outlineUpdate'),
+    key: DXN.make('org.dxos.operation.tasks.updateOutline'),
     name: 'Update Outline',
     description:
       'Update an outline: upsert checklist items by title (preserving position and surrounding prose), or replace the markdown wholesale.',
@@ -98,4 +98,4 @@ export const UpdateOutline = Operation.make({
     id: Schema.String,
     content: Schema.String,
   }),
-}).pipe(Operation.mcpTool({ name: 'outlineUpdate', safety: 'write', aspect: 'tasks' }));
+}).pipe(Operation.mutation('write'));

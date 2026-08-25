@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { DXN, Obj, Ref, Type, URI } from '@dxos/echo';
+import { Outline, TaskSet } from '@dxos/types';
 
 import * as Instructions from './Instructions';
 import * as Project from './Project';
@@ -17,10 +18,40 @@ const TestObject = Type.makeObject(DXN.make('org.dxos.type.testObject', '0.1.0')
 describe('Project', () => {
   test('typename, version, and defaults', ({ expect }) => {
     expect(Type.getTypename(Project.Project)).toBe('org.dxos.type.project');
-    expect(Type.getVersion(Project.Project)).toBe('0.3.0');
+    expect(Type.getVersion(Project.Project)).toBe('0.4.0');
     const project = Project.make({ name: 'test' });
     expect(Obj.instanceOf(Project.Project, project)).toBe(true);
-    expect(project.routines).toEqual([]);
+    expect(project.artifacts).toEqual([]);
+  });
+
+  test('a project owns a task set from the start, parented for cascade', ({ expect }) => {
+    const project = Project.make({ name: 'test' });
+    const taskSet = project.taskSet?.target;
+    expect(taskSet).toBeDefined();
+    expect(TaskSet.instanceOf(taskSet)).toBe(true);
+    expect(Obj.getParent(taskSet!)?.id).toBe(project.id);
+  });
+
+  test('a project owns an outline from the start, parented for cascade', ({ expect }) => {
+    const project = Project.make({ name: 'test' });
+    const outline = project.outline?.target;
+    expect(outline).toBeDefined();
+    expect(Obj.instanceOf(Outline.Outline, outline!)).toBe(true);
+    expect(Obj.getParent(outline!)?.id).toBe(project.id);
+    // The outline's text is its own object; it cascades through the outline, not the project.
+    expect(Obj.getParent(outline!.content.target!)?.id).toBe(outline!.id);
+  });
+
+  test('an explicitly supplied outline is kept', ({ expect }) => {
+    const existing = Outline.make({ name: 'Adopted' });
+    const project = Project.make({ name: 'test', outline: Ref.make(existing) });
+    expect(project.outline?.target?.id).toBe(existing.id);
+  });
+
+  test('an explicitly supplied task set is kept', ({ expect }) => {
+    const existing = TaskSet.make({ name: 'Mirrored' });
+    const project = Project.make({ name: 'test', taskSet: Ref.make(existing) });
+    expect(project.taskSet?.target?.id).toBe(existing.id);
   });
 
   test('contextBindings exposes skills and objects, not the instructions object itself', ({ expect }) => {
@@ -28,10 +59,10 @@ describe('Project', () => {
     const doc = Obj.make(TestObject, {});
     const instructions = Instructions.make({ text: 'Test', skills: [skillRef], objects: [Ref.make(doc)] });
     const project = Project.make({ name: 'test' });
-    Obj.setParent(instructions, project);
     Obj.update(project, (project) => {
       project.instructions = Ref.make(instructions);
     });
+    Obj.setParent(instructions, project);
 
     const bindings = Project.contextBindings(project);
     expect(bindings.skills.map((ref) => ref.uri)).toEqual([skillRef.uri]);

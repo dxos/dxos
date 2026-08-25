@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react';
 
 import {
@@ -26,7 +27,7 @@ import {
 import { useObject, useQuery } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { Input, Message, type ThemedClassName, ToggleIconButton, useTranslation } from '@dxos/react-ui';
+import { Banner, Input, type ThemedClassName, ToggleIconButton, useTranslation } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import { OrderedList } from '@dxos/react-ui-list';
 import {
@@ -114,7 +115,7 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
         }
 
         const feedScope = from.scopes.find((s) => s._tag === 'feed');
-        return Option.fromNullable(feedScope).pipe(
+        return Option.fromNullishOr(feedScope).pipe(
           Option.map((s) => s.feedUri),
           Option.getOrUndefined,
         );
@@ -140,8 +141,8 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
       const base = Schema.Struct({
         query:
           mode === 'schema'
-            ? Format.URL.annotations({ title: 'Record type' })
-            : QueryAST.Query.annotations({ title: 'Query' }),
+            ? Format.URL.annotate({ title: 'Record type' })
+            : QueryAST.Query.annotate({ title: 'Query' }),
       });
 
       if (mode === 'tag') {
@@ -149,14 +150,15 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
           ...base.fields,
           // TODO(wittjosiah): Replace Type.Feed with Dataset.Dataset when Ref.Ref supports unions.
           target: Ref.Ref(Feed.Feed).pipe(
-            Schema.annotations({ title: 'Target Feed' }),
+            Schema.annotate({ title: 'Target Feed' }),
             ParentLabelAnnotation.set(true),
             Schema.optional,
           ),
-        }).pipe(Schema.mutable);
+        }).mapFields(Struct.map(Schema.mutableKey));
       }
 
-      return base.pipe(Schema.mutable);
+      // `Schema.mutable` is arrays-only in v4; a struct's fields are made mutable key by key.
+      return base.mapFields(Struct.map(Schema.mutableKey));
     }, [mode]);
 
     // TODO(burdon): Need to warn user of possible consequences of editing.
@@ -218,11 +220,11 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
             <Form.Content>
               {/* If readonly is set, then the callout is not needed. */}
               {schemaReadonly && !readonly && (
-                <Message.Root valence='info'>
-                  <Message.Content classNames='my-form-padding'>
-                    <Message.Title>{t('system-schema.description')}</Message.Title>
-                  </Message.Content>
-                </Message.Root>
+                <Banner.Root valence='info'>
+                  <Banner.Content classNames='my-form-padding'>
+                    <Banner.Title>{t('system-schema.description')}</Banner.Title>
+                  </Banner.Content>
+                </Banner.Root>
               )}
               <Form.FieldSet />
               {type && (

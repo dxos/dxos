@@ -11,12 +11,14 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { EffectEx } from '@dxos/effect';
 import { type RDF } from '@dxos/pipeline-rdf';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
+import { BrainCapabilities } from '#types';
+
 import { makeFactStoreRegistry } from '../../capabilities/fact-store';
-import * as BrainCapabilities from '../../types/BrainCapabilities';
 import { FactsCompanion } from './FactsCompanion';
 
 // A shared registry contributed as the `FactStoreRegistry` capability and seeded (below) for the story's
@@ -51,14 +53,14 @@ const meta = {
       capabilities: [Capability.contribute(BrainCapabilities.FactStoreRegistry, registry)],
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(() => EffectEx.runPromise(registry.forSpace(personalSpace.id).putFacts(FACTS)));
+              const { defaultSpace } = yield* initializeIdentity(client);
+              yield* Effect.promise(() => EffectEx.runPromise(registry.forSpace(defaultSpace.id).putFacts(FACTS)));
             }),
         }),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
       ],
     }),
   ],

@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import type * as HttpClient from '@effect/platform/HttpClient';
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
 import * as Layer from 'effect/Layer';
+import * as Result from 'effect/Result';
 import * as Stream from 'effect/Stream';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import type * as HttpClient from 'effect/unstable/http/HttpClient';
 import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
@@ -64,10 +64,10 @@ describe('OllamaAdmin', () => {
           throw new TypeError('fetch failed: ECONNREFUSED');
         }),
       );
-      expect(Either.isLeft(result)).toBe(true);
-      if (Either.isLeft(result)) {
-        expect(result.left._tag).toBe('OllamaError');
-        expect(result.left.message).toContain('ECONNREFUSED');
+      expect(Result.isFailure(result)).toBe(true);
+      if (Result.isFailure(result)) {
+        expect(result.failure._tag).toBe('OllamaError');
+        expect(result.failure.message).toContain('ECONNREFUSED');
       }
     });
   });
@@ -142,9 +142,9 @@ describe('OllamaAdmin', () => {
           streamResponse(['{"status":"pulling manifest"}\n', '{"error":"pull model manifest: file does not exist"}\n']),
         ),
       );
-      expect(Either.isLeft(result)).toBe(true);
-      if (Either.isLeft(result)) {
-        expect(result.left.message).toBe('pull model manifest: file does not exist');
+      expect(Result.isFailure(result)).toBe(true);
+      if (Result.isFailure(result)) {
+        expect(result.failure.message).toBe('pull model manifest: file does not exist');
       }
     });
   });
@@ -178,7 +178,7 @@ describe('OllamaAdmin', () => {
         admin.remove('llama3.2:1b'),
         mockFetch(() => new Response('', { status: 200 })),
       );
-      expect(Either.isRight(result)).toBe(true);
+      expect(Result.isSuccess(result)).toBe(true);
     });
 
     test('fails on 404', async ({ expect }) => {
@@ -187,7 +187,7 @@ describe('OllamaAdmin', () => {
         admin.remove('missing-model'),
         mockFetch(() => new Response('model not found', { status: 404 })),
       );
-      expect(Either.isLeft(result)).toBe(true);
+      expect(Result.isFailure(result)).toBe(true);
     });
   });
 });
@@ -204,11 +204,11 @@ const layerFor = (fetch: typeof globalThis.fetch): Layer.Layer<HttpClient.HttpCl
 const run = <A, E>(effect: Effect.Effect<A, E, HttpClient.HttpClient>, fetch: typeof globalThis.fetch): Promise<A> =>
   EffectEx.runPromise(effect.pipe(Effect.provide(layerFor(fetch))));
 
-/** Run an admin effect to an `Either`, capturing the typed failure rather than throwing. */
+/** Run an admin effect to a `Result`, capturing the typed failure rather than throwing. */
 const runExit = <A, E>(
   effect: Effect.Effect<A, E, HttpClient.HttpClient>,
   fetch: typeof globalThis.fetch,
-): Promise<Either.Either<A, E>> => EffectEx.runPromise(effect.pipe(Effect.provide(layerFor(fetch)), Effect.either));
+): Promise<Result.Result<A, E>> => EffectEx.runPromise(effect.pipe(Effect.provide(layerFor(fetch)), Effect.result));
 
 /** Build a stub `fetch` that ignores its arguments and yields the response from `handler`. */
 const mockFetch =

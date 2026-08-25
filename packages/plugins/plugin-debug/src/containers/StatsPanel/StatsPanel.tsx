@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { Fragment } from 'react';
 
 import { useOptionalCapability } from '@dxos/app-framework/ui';
@@ -53,12 +54,12 @@ export const StatsPanel = () => {
       <ScrollArea.Viewport>
         {compartments.map(([pluginKey, value]) => (
           <section key={pluginKey} className='w-full'>
-            <h3 className='text-start font-mono text-xs text-description pbe-1'>{pluginKey}</h3>
+            <h3 className='text-start font-mono text-xs text-description pb-1'>{pluginKey}</h3>
             <dl className='grid grid-cols-[auto_minmax(0,1fr)] w-full'>
               {flatten(value).map(([key, cell]) => (
                 <Fragment key={key}>
-                  <dt className='border-be border-separator pbe-1 pbs-1 pie-2 text-description self-start'>{key}</dt>
-                  <dd className='border-be border-separator pbe-1 pbs-1 truncate font-mono text-end'>
+                  <dt className='border-be border-separator pb-1 pt-1 pe-2 text-description self-start'>{key}</dt>
+                  <dd className='border-be border-separator pb-1 pt-1 truncate font-mono text-end'>
                     {formatValue(cell)}
                   </dd>
                 </Fragment>

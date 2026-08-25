@@ -8,8 +8,7 @@ import { translations as componentsTranslations } from '@dxos/react-ui-component
 import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 
 import { meta } from '#meta';
-
-import * as Markdown from './types/Markdown';
+import { Markdown } from '#types';
 
 export const translations = [
   {

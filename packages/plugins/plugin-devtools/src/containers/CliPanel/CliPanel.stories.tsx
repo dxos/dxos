@@ -8,8 +8,9 @@ import { userEvent } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { SpacePlugin } from '@dxos/plugin-space/plugin';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { runCommand, waitForTerminal } from '@dxos/react-ui-terminal/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -28,11 +29,11 @@ const meta = {
       // plugins' command modules in — the same path the app takes.
       plugins: [
         ...corePlugins(),
-        // The identity brings a personal space, which is what the commands resolve against.
-        ClientPlugin({ onClientInitialized: ({ client }) => Effect.asVoid(initializeIdentity(client)) }),
-        StorybookPlugin({}),
+        // The identity brings a default space, which is what the commands resolve against.
+        ClientPlugin.make({ onClientInitialized: ({ client }) => Effect.asVoid(initializeIdentity(client)) }),
+        StorybookPlugin.make({}),
         // The real plugin, so the story covers it actually contributing its commands.
-        SpacePlugin({}),
+        SpacePlugin.make({}),
       ],
     }),
   ],

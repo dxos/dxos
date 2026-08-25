@@ -30,28 +30,28 @@ import { trim } from '@dxos/util';
 
 const Commentary = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.chess.commentary'),
+    key: DXN.make('com.example.operation.script.commentary'),
     name: 'Commentary',
     description: 'Adds commentary about the most recent move to a markdown document associated with the chess game.',
   },
   input: Schema.Struct({
-    game: Game.GameRef(Chess.State).annotations({
+    game: Game.GameRef(Chess.State).annotate({
       description: 'The chess game to comment on.',
     }),
   }),
-  output: Schema.Union(
+  output: Schema.Union([
     Schema.Struct({
-      documentId: URI.Schema.annotations({
+      documentId: URI.Schema.annotate({
         description: 'The ID of the markdown document that was updated or created.',
       }),
-      commentary: Schema.String.annotations({
+      commentary: Schema.String.annotate({
         description: 'The commentary that was added.',
       }),
     }),
-    Schema.Void.annotations({
+    Schema.Void.annotate({
       description: 'Function did not find anything to comment on.',
     }),
-  ),
+  ]),
   types: [Game.Game, Chess.State, Markdown.Document, Text.Text, HasSubject.HasSubject, Collection.Collection],
   services: [AiService.AiService, Database.Service],
 });

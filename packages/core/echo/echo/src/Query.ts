@@ -642,7 +642,7 @@ export const type: {
     schema: S,
     predicates?: Filter.Props<Schema.Schema.Type<S>>,
   ): Query<Schema.Schema.Type<S>>;
-  <S extends Schema.Union<readonly Schema.Schema.AnyNoContext[]>>(
+  <S extends Schema.Union<readonly Schema.Codec<any, any>[]>>(
     union: S,
     predicates?: Filter.Props<Schema.Schema.Type<S>>,
   ): Query<Schema.Schema.Type<S>>;
@@ -670,7 +670,11 @@ export const project = <T, K extends RefPropKey<T>>(query: Query<T>, property: K
  * @returns Query for the combined results.
  */
 // TODO(dmaretskyi): Rename to `combine` or `union`.
-export const all = (...queries: Any[]): Any => {
+export const all: {
+  /** Combining queries over one type preserves it, so a union stays assignable where its arms were. */
+  <T>(...queries: Query<T>[]): Query<T>;
+  (...queries: Any[]): Any;
+} = (...queries: Any[]): Any => {
   if (queries.length === 0) {
     throw new TypeError(
       'Query.all combines results of multiple queries, to query all objects use Query.select(Filter.everything())',

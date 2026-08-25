@@ -4,16 +4,15 @@
 
 import { act, renderHook } from '@testing-library/react';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import { describe, test } from 'vitest';
 
 import { useFormHandler } from './useFormHandler';
 
-const schema = Schema.mutable(
-  Schema.Struct({
-    name: Schema.NonEmptyString,
-    city: Schema.String,
-  }),
-);
+const schema = Schema.Struct({
+  name: Schema.NonEmptyString,
+  city: Schema.String,
+}).mapFields(Struct.map(Schema.mutableKey));
 type Values = Schema.Schema.Type<typeof schema>;
 
 // Only the AST `_tag` matters to `onValueChange` (it special-cases numbers), so a plain string AST is enough here.

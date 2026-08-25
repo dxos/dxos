@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as SchemaAST from 'effect/SchemaAST';
-
 import { Entity, Obj, Type } from '@dxos/echo';
+import { SchemaAST } from '@dxos/effect';
 import { type SearchResult } from '@dxos/react-ui-search';
 import { Text } from '@dxos/schema';
 
@@ -13,13 +12,17 @@ export const queryStringToMatch = (queryString?: string): RegExp | undefined => 
   return trimmed ? new RegExp(trimmed, 'i') : undefined;
 };
 
+/**
+ * Coarse type kind sniffed from an entity's properties, for `SearchResult.type`. Not an icon id —
+ * icons come from the type's `IconAnnotation` (see `toSearchResults`).
+ */
 // TODO(burdon): Type name registry linked to schema?
-export const getIcon = (type: Type.AnyEntity | undefined): string | undefined => {
+const getTypeKind = (type: Type.AnyEntity | undefined): string | undefined => {
   if (!type) {
     return undefined;
   }
   const schema = Type.getSchema(type);
-  if (!SchemaAST.isTypeLiteral(schema.ast)) {
+  if (!SchemaAST.isObjects(schema.ast)) {
     return undefined;
   }
   const keys = schema.ast.propertySignatures.map((p) => p.name);
@@ -59,7 +62,7 @@ export const filterObjectsSync = <T extends Entity.Unknown>(objects: T[], match?
 
       results.push({
         id: object.id,
-        type: getIcon(Entity.getType(object)),
+        type: getTypeKind(Entity.getType(object)),
         label,
         match,
         // TODO(burdon): Truncate.

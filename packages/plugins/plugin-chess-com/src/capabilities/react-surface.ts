@@ -10,8 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { ChessGameArticle } from '#containers';
-
-import * as ChessComAccount from '../types/ChessComAccount';
+import { ChessComAccount } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

@@ -3,19 +3,20 @@
 //
 
 import * as BunHttpServer from '@effect/platform-bun/BunHttpServer';
-import * as HttpRouter from '@effect/platform/HttpRouter';
-import * as HttpServer from '@effect/platform/HttpServer';
-import * as HttpServerRequest from '@effect/platform/HttpServerRequest';
-import * as HttpServerResponse from '@effect/platform/HttpServerResponse';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Ref from 'effect/Ref';
 import * as Scope from 'effect/Scope';
+import * as HttpRouter from 'effect/unstable/http/HttpRouter';
+import * as HttpServerRequest from 'effect/unstable/http/HttpServerRequest';
+import * as HttpServerResponse from 'effect/unstable/http/HttpServerResponse';
 import { getPort } from 'get-port-please';
 
 import { openBrowser } from '#platform';
+
+import { CommandConfig } from '../services';
 
 /** Default timeout for a full OAuth browser round-trip. */
 export const OAUTH_TIMEOUT_MS = 5 * 60 * 1000;
@@ -74,25 +75,29 @@ export const startOAuthCallbackServer = (callbackPath: `/${string}`): Effect.Eff
     // req.url is only the path + query, so reconstruct a full URL to parse the query string.
     const parseUrl = (rawUrl: string) => new URL(rawUrl.startsWith('http') ? rawUrl : `http://localhost${rawUrl}`);
 
-    const router = HttpRouter.empty.pipe(
-      HttpRouter.get(
+    // v4's router is a service: routes are declared as `Route` values and installed by a layer,
+    // rather than folded into an immutable router value.
+    const routes = HttpRouter.addAll([
+      HttpRouter.route(
+        'GET',
         '/oauth-relay',
         Effect.gen(function* () {
           const request = yield* HttpServerRequest.HttpServerRequest;
           const authUrl = parseUrl(request.url).searchParams.get('authUrl');
           if (!authUrl) {
-            return yield* HttpServerResponse.text('Missing authUrl parameter', { status: 400 });
+            return HttpServerResponse.text('Missing authUrl parameter', { status: 400 });
           }
-          return yield* HttpServerResponse.text(getRelayPageHtml(authUrl), {
+          return HttpServerResponse.text(getRelayPageHtml(authUrl), {
             headers: { 'Content-Type': 'text/html' },
           });
         }),
       ),
-      HttpRouter.get(
+      HttpRouter.route(
+        'GET',
         callbackPath,
         Effect.gen(function* () {
           if (Option.isSome(yield* Ref.get(outcome))) {
-            return yield* HttpServerResponse.text('Already received.', { status: 400 });
+            return HttpServerResponse.text('Already received.', { status: 400 });
           }
 
           const request = yield* HttpServerRequest.HttpServerRequest;
@@ -101,10 +106,10 @@ export const startOAuthCallbackServer = (callbackPath: `/${string}`): Effect.Eff
           if (error) {
             yield* Ref.set(outcome, Option.some({ success: false, reason: error }));
             yield* Ref.set(received, true);
-            return yield* HttpServerResponse.text(
-              `<html><body><h1>Authentication failed</h1><p>${error}</p></body></html>`,
-              { status: 400, headers: { 'Content-Type': 'text/html' } },
-            );
+            return HttpServerResponse.text(`<html><body><h1>Authentication failed</h1><p>${error}</p></body></html>`, {
+              status: 400,
+              headers: { 'Content-Type': 'text/html' },
+            });
           }
 
           const captured: Record<string, string> = {};
@@ -113,18 +118,25 @@ export const startOAuthCallbackServer = (callbackPath: `/${string}`): Effect.Eff
           }
           yield* Ref.set(outcome, Option.some({ success: true, params: captured }));
           yield* Ref.set(received, true);
-          return yield* HttpServerResponse.text(
+          return HttpServerResponse.text(
             '<html><body><h1>Authentication successful! You can close this window.</h1></body></html>',
             { headers: { 'Content-Type': 'text/html' } },
           );
         }),
       ),
-    );
+    ]);
 
-    const app = router.pipe(HttpServer.serve());
-    const serverLayer = app.pipe(Layer.provide(BunHttpServer.layer({ port })));
+    // The flow is interactive, so the router's per-request log lines (and the listen banner) are
+    // noise between the user's command and its result; keep them behind `--verbose`.
+    const verbose = yield* Effect.serviceOption(CommandConfig).pipe(
+      Effect.map(Option.match({ onNone: () => false, onSome: (config) => config.verbose })),
+    );
+    const serverLayer = HttpRouter.serve(routes, {
+      disableLogger: !verbose,
+      disableListenLog: !verbose,
+    }).pipe(Layer.provide(BunHttpServer.layer({ port })));
     const scope = yield* Scope.make();
-    yield* Layer.build(serverLayer).pipe(Scope.extend(scope));
+    yield* Layer.build(serverLayer).pipe(Scope.provide(scope));
 
     const waitForResult = (timeoutMs: number = OAUTH_TIMEOUT_MS) =>
       Effect.race(
@@ -152,6 +164,6 @@ export const startOAuthCallbackServer = (callbackPath: `/${string}`): Effect.Eff
       origin,
       open: (authUrl: string) => openBrowser(`${origin}/oauth-relay?authUrl=${encodeURIComponent(authUrl)}`),
       waitForResult,
-      stop: () => Scope.close(scope, Exit.void).pipe(Effect.catchAll(() => Effect.void)),
+      stop: () => Scope.close(scope, Exit.void).pipe(Effect.catch(() => Effect.void)),
     } satisfies OAuthCallbackServer;
   });

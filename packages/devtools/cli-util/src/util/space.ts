@@ -3,6 +3,7 @@
 //
 
 import * as Console from 'effect/Console';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
@@ -16,21 +17,28 @@ import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { isBun } from '@dxos/util';
 
+import { CommandConfig } from '../services';
+
+/** Matches the budget `Space.syncToEdge` gives its own wait, so neither half of a drain dominates. */
+const SPACE_READY_TIMEOUT = Duration.seconds(60);
+
 export const getSpace = (spaceId: Key.SpaceId): Effect.Effect<Space, SpaceNotFoundError, ClientService> =>
   Effect.gen(function* () {
     const client = yield* ClientService;
-    return yield* Option.fromNullable(client.spaces.get(spaceId));
-  }).pipe(Effect.catchTag('NoSuchElementException', () => Effect.fail(new SpaceNotFoundError(spaceId))));
+    // v4 no longer yields an `Option` as an `Effect`, so the miss fails directly.
+    const space = client.spaces.get(spaceId);
+    return space ?? (yield* Effect.fail(new SpaceNotFoundError(spaceId)));
+  });
 
 export const spaceIdWithDefault = (spaceId: Option.Option<Key.SpaceId>) =>
   Effect.gen(function* () {
     const client = yield* ClientService;
     return Option.getOrElse(spaceId, () => {
-      const personal = AppSpace.getPersonalSpace(client);
-      if (!personal) {
-        throw new Error('No space ID provided and no personal space found.');
+      const defaultSpace = AppSpace.getDefaultSpace(client);
+      if (!defaultSpace) {
+        throw new Error('No space ID provided and no default space found.');
       }
-      return personal.id;
+      return defaultSpace.id;
     });
   });
 
@@ -44,19 +52,20 @@ export const spaceLayer = (
 
     // Resolution order when fallbackToPersonalSpace is true:
     //   1. the explicit spaceId arg (if provided);
-    //   2. the space tagged `org.dxos.space.personal`;
-    //   3. the first available space.
-    // This keeps profiles created outside composer-app (which is what creates
-    // the personal-space tag on identity creation) usable — the alternative
+    //   2. the space designated as default by the settings space;
+    //   3. the first user-visible space.
+    // This keeps profiles created outside composer-app (which is what designates
+    // a default space on identity creation) usable — the alternative
     // is a "Space not found" throw deep inside CredentialsService.
     const resolveSpace = () => {
       if (!fallbackToPersonalSpace) {
-        return spaceId$.pipe(Option.flatMap((id) => Option.fromNullable(client.spaces.get(id))));
+        return spaceId$.pipe(Option.flatMap((id) => Option.fromNullishOr(client.spaces.get(id))));
       }
       return spaceId$.pipe(
-        Option.flatMap((id) => Option.fromNullable(client.spaces.get(id))),
-        Option.orElse(() => Option.fromNullable(AppSpace.getPersonalSpace(client))),
-        Option.orElse(() => Option.fromNullable(client.spaces.get()[0])),
+        Option.flatMap((id) => Option.fromNullishOr(client.spaces.get(id))),
+        Option.orElse(() => Option.fromNullishOr(AppSpace.getDefaultSpace(client))),
+        // Not the raw first space: the settings space is created first and holds app config only.
+        Option.orElse(() => Option.fromNullishOr(client.spaces.get().find(AppSpace.isVisibleSpace))),
       );
     };
 
@@ -78,7 +87,7 @@ export const spaceLayer = (
       throw new Error('Space not found');
     },
   };
-  const db = Layer.scoped(
+  const db = Layer.effect(
     Database.Service,
     Effect.acquireRelease(
       Effect.gen(function* () {
@@ -95,17 +104,21 @@ export const spaceLayer = (
   return db;
 };
 
+/**
+ * Block until `space` is fully replicated to EDGE, enabling replication first if the preference is
+ * off. Reports whether it ran: p2p networking is unavailable outside bun, which is how a test run
+ * is recognised.
+ */
 // TODO(dmaretskyi): There a race condition with edge connection not showing up.
-export const waitForSync = Effect.fn(function* (space: Space) {
+const syncSpaceToEdge = Effect.fn(function* (space: Space) {
   // TODO(wittjosiah): Find a better way to do this.
   if (!isBun()) {
-    // Skipping sync to edge when not in bun env as this indicates running a test.
-    return;
+    return false;
   }
 
   // TODO(wittjosiah): This should probably be prompted for.
   if (space.internal.data.edgeReplication !== EdgeReplicationSetting.ENABLED) {
-    yield* Console.log('Edge replication is disabled, enabling...');
+    log.info('enabling edge replication', { spaceId: space.id });
     yield* Effect.promise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
   }
 
@@ -114,7 +127,17 @@ export const waitForSync = Effect.fn(function* (space: Space) {
       onProgress: (state) => log.info('syncing', { state: state ?? 'no connection to edge' }),
     }),
   );
-  yield* Console.log('Sync complete');
+  return true;
+});
+
+/**
+ * Block until `space` is fully replicated to EDGE, reporting completion on stdout. A no-op outside
+ * bun, which prints nothing.
+ */
+export const waitForSync = Effect.fn(function* (space: Space) {
+  if (yield* syncSpaceToEdge(space)) {
+    yield* Console.log('Sync complete');
+  }
 });
 
 export const flushAndSync = Effect.fn(function* (opts?: Database.FlushOptions) {
@@ -122,6 +145,39 @@ export const flushAndSync = Effect.fn(function* (opts?: Database.FlushOptions) {
   const spaceId = yield* Database.spaceId;
   const space = yield* getSpace(spaceId);
   yield* waitForSync(space);
+});
+
+/**
+ * Flush and sync every space of the current identity to EDGE.
+ *
+ * `dx` force-exits the moment a command returns, so replication that is merely queued is lost with
+ * the process. A command that provisions spaces (`dx account signup`) must therefore drain all of
+ * them, not just the one it wrote to — the settings space carries the default-space designation,
+ * without which the next device resolves no default space at all.
+ */
+export const syncAllToEdge = Effect.fn(function* () {
+  const { json } = yield* CommandConfig;
+  const client = yield* ClientService;
+  const spaces = client.spaces.get();
+  // One line for the batch, never one per space: `waitForSync`'s per-space chatter would drown the
+  // command's own output, and any of it on stdout makes `--json` unparseable.
+  if (!json && spaces.length > 0) {
+    yield* Console.log(`Syncing ${spaces.length} space(s) to EDGE...`);
+  }
+
+  // Concurrent, because each space's sync is a wait on its own replication round: serially, a
+  // profile with N spaces pays N times the per-space timeout before the command can exit.
+  yield* Effect.forEach(
+    spaces,
+    Effect.fn(function* (space: Space) {
+      // Bounded, unlike the raw promise: a space whose initialization never lands would otherwise
+      // hold the command open forever, and `syncToEdge` below only budgets its own wait.
+      yield* Effect.promise(() => space.waitUntilReady()).pipe(Effect.timeout(SPACE_READY_TIMEOUT));
+      yield* Effect.promise(() => space.db.flush());
+      yield* syncSpaceToEdge(space);
+    }),
+    { concurrency: 'unbounded', discard: true },
+  );
 });
 
 // TODO(burdon): Reconcile with @dxos/protocols

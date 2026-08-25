@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
@@ -148,7 +149,7 @@ describe('GraphBuilder', () => {
       }
 
       // Now expand root to create parent via connector.
-      Graph.expand(graph, Node.RootId, 'child');
+      Graph.expandSync(graph, Node.RootId, 'child');
       await GraphBuilder.flush(builder);
 
       {
@@ -188,7 +189,7 @@ describe('GraphBuilder', () => {
       const graph = builder.graph;
 
       // Connector produces root/shared.
-      Graph.expand(graph, Node.RootId, 'child');
+      Graph.expandSync(graph, Node.RootId, 'child');
       await GraphBuilder.flush(builder);
 
       {
@@ -236,7 +237,7 @@ describe('GraphBuilder', () => {
       const graph = builder.graph;
 
       // Connector produces root/shared.
-      Graph.expand(graph, Node.RootId, 'child');
+      Graph.expandSync(graph, Node.RootId, 'child');
       await GraphBuilder.flush(builder);
 
       {
@@ -283,8 +284,8 @@ describe('GraphBuilder', () => {
       );
 
       const graph = builder.graph;
-      Graph.expand(graph, Node.RootId, 'child');
-      Graph.expand(graph, Node.RootId, Node.childRelation('inbound'));
+      Graph.expandSync(graph, Node.RootId, 'child');
+      Graph.expandSync(graph, Node.RootId, Node.childRelation('inbound'));
       await GraphBuilder.flush(builder);
 
       const outbound = registry.get(graph.connections(Node.RootId, 'child'));
@@ -310,7 +311,7 @@ describe('GraphBuilder', () => {
         }),
       );
       const graph = builder.graph;
-      Graph.expand(graph, Node.RootId, 'child');
+      Graph.expandSync(graph, Node.RootId, 'child');
       await GraphBuilder.flush(builder);
 
       {
@@ -349,7 +350,7 @@ describe('GraphBuilder', () => {
       expect(registry.get(graph.connections(Node.RootId, 'child'))).to.have.length(0);
       expect(count).to.equal(1);
 
-      Graph.expand(graph, Node.RootId, 'child');
+      Graph.expandSync(graph, Node.RootId, 'child');
       await GraphBuilder.flush(builder);
       expect(count).to.equal(2);
 
@@ -369,7 +370,7 @@ describe('GraphBuilder', () => {
         }),
       );
       const graph = builder.graph;
-      Graph.expand(graph, Node.RootId, 'child');
+      Graph.expandSync(graph, Node.RootId, 'child');
       await GraphBuilder.flush(builder);
 
       let nodes: Node.Node[] = [];
@@ -413,7 +414,7 @@ describe('GraphBuilder', () => {
         }),
       );
       const graph = builder.graph;
-      Graph.expand(graph, Node.RootId, 'child');
+      Graph.expandSync(graph, Node.RootId, 'child');
       await GraphBuilder.flush(builder);
 
       {
@@ -464,7 +465,7 @@ describe('GraphBuilder', () => {
       });
       onTestFinished(() => cancel());
 
-      Graph.expand(graph, Node.RootId, 'child');
+      Graph.expandSync(graph, Node.RootId, 'child');
       await GraphBuilder.flush(builder);
       expect(count).to.equal(0);
       expect(exists).to.be.false;
@@ -512,7 +513,7 @@ describe('GraphBuilder', () => {
           }),
         );
         const graph = builder.graph;
-        Graph.expand(graph, Node.RootId, 'child');
+        Graph.expandSync(graph, Node.RootId, 'child');
         return { registry, builder, graph, nodesAtom };
       };
 
@@ -744,7 +745,7 @@ describe('GraphBuilder', () => {
         }),
       );
       const graph = builder.graph;
-      Graph.expand(graph, Node.RootId, 'child');
+      Graph.expandSync(graph, Node.RootId, 'child');
       await GraphBuilder.flush(builder);
 
       {
@@ -842,14 +843,14 @@ describe('GraphBuilder', () => {
       onTestFinished(() => dependentCancel());
 
       // Counts should not increment until the node is expanded.
-      Graph.expand(graph, Node.RootId, 'child');
+      Graph.expandSync(graph, Node.RootId, 'child');
       await GraphBuilder.flush(builder);
       expect(parentCount).to.equal(1);
       expect(independentCount).to.equal(0);
       expect(dependentCount).to.equal(0);
 
       // Counts should increment when the node is expanded.
-      Graph.expand(graph, qualifyId('root', EXAMPLE_ID), 'child');
+      Graph.expandSync(graph, qualifyId('root', EXAMPLE_ID), 'child');
       await GraphBuilder.flush(builder);
       expect(parentCount).to.equal(1);
       expect(independentCount).to.equal(1);
@@ -887,7 +888,7 @@ describe('GraphBuilder', () => {
       expect(dependentCount).to.equal(3);
 
       // Counts should not increment when the node is expanded again.
-      Graph.expand(graph, qualifyId('root', EXAMPLE_ID), 'child');
+      Graph.expandSync(graph, qualifyId('root', EXAMPLE_ID), 'child');
       await GraphBuilder.flush(builder);
       expect(parentCount).to.equal(3);
       expect(independentCount).to.equal(3);
@@ -918,14 +919,14 @@ describe('GraphBuilder', () => {
       let count = 0;
       const trigger = new Trigger();
       builder.graph.onNodeChanged.on(({ id }) => {
-        Graph.expand(builder.graph, id, 'child');
+        Graph.expandSync(builder.graph, id, 'child');
         count++;
         if (count === 5) {
           trigger.wake();
         }
       });
 
-      Graph.expand(builder.graph, Node.RootId, 'child');
+      Graph.expandSync(builder.graph, Node.RootId, 'child');
       await trigger.wait();
       expect(count).to.equal(5);
     });
@@ -983,7 +984,7 @@ describe('GraphBuilder', () => {
           }),
         );
 
-        Graph.expand(graph, Node.RootId, 'child');
+        Graph.expandSync(graph, Node.RootId, 'child');
         await GraphBuilder.flush(builder);
 
         const connections = registry.get(graph.connections(Node.RootId, 'child'));
@@ -1010,7 +1011,7 @@ describe('GraphBuilder', () => {
 
         const writableGraph = graph as Graph.WritableGraph;
         Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
-        Graph.expand(graph, 'parent', 'child');
+        Graph.expandSync(graph, 'parent', 'child');
         await GraphBuilder.flush(builder);
 
         const connections = registry.get(graph.connections('parent', 'child'));
@@ -1043,7 +1044,7 @@ describe('GraphBuilder', () => {
 
         const writableGraph = graph as Graph.WritableGraph;
         Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
-        Graph.expand(graph, 'parent', 'child');
+        Graph.expandSync(graph, 'parent', 'child');
         await GraphBuilder.flush(builder);
 
         const edges = registry.get(graph.edges('parent'));
@@ -1074,7 +1075,7 @@ describe('GraphBuilder', () => {
 
         const writableGraph = graph as Graph.WritableGraph;
         Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
-        Graph.expand(graph, 'parent', 'child');
+        Graph.expandSync(graph, 'parent', 'child');
         await GraphBuilder.flush(builder);
 
         const edges = registry.get(graph.edges('parent'));
@@ -1095,7 +1096,7 @@ describe('GraphBuilder', () => {
         const writableGraph = graph as Graph.WritableGraph;
 
         Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
-        Graph.expand(graph, 'parent', 'child');
+        Graph.expandSync(graph, 'parent', 'child');
         await GraphBuilder.flush(builder);
 
         expect(registry.get(graph.actions('parent'))).to.have.length(0);
@@ -1126,7 +1127,7 @@ describe('GraphBuilder', () => {
         const writableGraph = graph as Graph.WritableGraph;
 
         Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
-        Graph.expand(graph, 'parent', 'child');
+        Graph.expandSync(graph, 'parent', 'child');
         await GraphBuilder.flush(builder);
 
         expect(registry.get(graph.connections('parent', 'child'))).to.have.length(0);
@@ -1153,11 +1154,11 @@ describe('GraphBuilder', () => {
         const builder = GraphBuilder.make({ registry });
         const graph = builder.graph;
 
-        // Define a test service using Context.GenericTag pattern.
+        // Define a test service using Context.Service pattern.
         interface TestServiceInterface {
           getValue(): number;
         }
-        const TestService = Context.GenericTag<TestServiceInterface>('TestService');
+        const TestService = Context.Service<TestServiceInterface>('TestService');
 
         // Track whether the action was executed with the correct context.
         let executionResult: number | null = null;
@@ -1192,7 +1193,7 @@ describe('GraphBuilder', () => {
 
         const writableGraph = graph as Graph.WritableGraph;
         Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
-        Graph.expand(graph, 'parent', 'child');
+        Graph.expandSync(graph, 'parent', 'child');
         await GraphBuilder.flush(builder);
 
         const actions = registry.get(graph.actions('parent'));
@@ -1261,7 +1262,7 @@ describe('GraphBuilder', () => {
 
         const writableGraph = graph as Graph.WritableGraph;
         Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
-        Graph.expand(graph, 'parent', 'child');
+        Graph.expandSync(graph, 'parent', 'child');
         await GraphBuilder.flush(builder);
 
         const connections = registry.get(graph.connections('parent', 'child'));
@@ -1295,7 +1296,7 @@ describe('GraphBuilder', () => {
 
         const writableGraph = graph as Graph.WritableGraph;
         Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
-        Graph.expand(graph, 'parent', 'child');
+        Graph.expandSync(graph, 'parent', 'child');
         await GraphBuilder.flush(builder);
 
         {
@@ -1335,7 +1336,7 @@ describe('GraphBuilder', () => {
         Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
 
         // Should not throw, error is caught internally.
-        Graph.expand(graph, 'parent', 'child');
+        Graph.expandSync(graph, 'parent', 'child');
         await GraphBuilder.flush(builder);
 
         // Should return empty connections since the connector failed.
@@ -1362,7 +1363,7 @@ describe('GraphBuilder', () => {
         Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
 
         // Should not throw, error is caught internally.
-        Graph.expand(graph, 'parent', 'child');
+        Graph.expandSync(graph, 'parent', 'child');
         await GraphBuilder.flush(builder);
 
         // Should return empty actions since the actions callback failed.
@@ -1422,7 +1423,7 @@ describe('GraphBuilder', () => {
 
         const writableGraph = graph as Graph.WritableGraph;
         Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
-        Graph.expand(graph, 'parent', 'child');
+        Graph.expandSync(graph, 'parent', 'child');
         await GraphBuilder.flush(builder);
 
         // The working extension should still produce its node.
@@ -1452,7 +1453,7 @@ describe('GraphBuilder', () => {
         const writableGraph = graph as Graph.WritableGraph;
         const testObject = Obj.make(TestSchema.Person, { name: 'Test' });
         Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: testObject });
-        Graph.expand(graph, 'parent', 'child');
+        Graph.expandSync(graph, 'parent', 'child');
         await GraphBuilder.flush(builder);
 
         const connections = registry.get(graph.connections('parent', 'child'));
@@ -1474,7 +1475,7 @@ describe('GraphBuilder', () => {
         }),
       );
 
-      expect(() => Graph.expand(builder.graph, Node.RootId, 'child')).toThrow(/must not contain/);
+      expect(() => Graph.expandSync(builder.graph, Node.RootId, 'child')).toThrow(/must not contain/);
     });
 
     test('multi-level path qualification', async () => {
@@ -1509,14 +1510,14 @@ describe('GraphBuilder', () => {
 
       const graph = builder.graph;
 
-      Graph.expand(graph, Node.RootId, 'child');
+      Graph.expandSync(graph, Node.RootId, 'child');
       await GraphBuilder.flush(builder);
 
       const level1 = registry.get(graph.connections(Node.RootId, 'child'));
       expect(level1).has.length(1);
       expect(level1[0].id).to.equal('root/A');
 
-      Graph.expand(graph, 'root/A', 'child');
+      Graph.expandSync(graph, 'root/A', 'child');
       await GraphBuilder.flush(builder);
 
       const level2 = registry.get(graph.connections('root/A', 'child'));
@@ -1551,7 +1552,7 @@ describe('GraphBuilder', () => {
       );
 
       const graph = builder.graph;
-      Graph.expand(graph, Node.RootId, 'child');
+      Graph.expandSync(graph, Node.RootId, 'child');
       await GraphBuilder.flush(builder);
 
       const connections = registry.get(graph.connections(Node.RootId, 'child'));
@@ -1595,11 +1596,11 @@ describe('GraphBuilder', () => {
 
       const graph = builder.graph;
 
-      Graph.expand(graph, Node.RootId, 'child');
+      Graph.expandSync(graph, Node.RootId, 'child');
       await GraphBuilder.flush(builder);
 
-      Graph.expand(graph, 'root/A', 'child');
-      Graph.expand(graph, 'root/B', 'child');
+      Graph.expandSync(graph, 'root/A', 'child');
+      Graph.expandSync(graph, 'root/B', 'child');
       await GraphBuilder.flush(builder);
 
       const childrenOfA = registry.get(graph.connections('root/A', 'child'));
@@ -1655,9 +1656,12 @@ describe('GraphBuilder', () => {
 
   describe('invalid local id', () => {
     test('drops an extension with an invalid id rather than throwing', ({ expect }) => {
+      // Widened to `string` so it reaches the runtime check: `DXN.Path` rejects a malformed literal
+      // outright, and this covers the computed ids it deliberately lets through.
+      const computedId: string = 'gallery-article';
       expect(
         GraphBuilder.createExtensionRaw({
-          id: 'gallery-article',
+          id: computedId,
           connector: () => Atom.make([{ id: 'foo', type: EXAMPLE_TYPE, data: null }]),
         }),
       ).toEqual([]);

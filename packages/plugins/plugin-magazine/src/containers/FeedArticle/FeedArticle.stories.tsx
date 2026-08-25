@@ -13,10 +13,9 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { PostStack, type PostStackAction } from '#components';
 import { generateFeed, generatePosts } from '#testing';
+import { Subscription } from '#types';
 
-import type * as Subscription from '../../types/Subscription';
-
-type FeedArticleStoryProps = {
+type FeedArticleStoryArgs = {
   feedUrl?: string;
 };
 
@@ -51,7 +50,7 @@ const useFeedData = (feedUrl?: string): { feed: Subscription.Subscription; posts
   return data;
 };
 
-const DefaultStory = ({ feedUrl }: FeedArticleStoryProps) => {
+const DefaultStory = ({ feedUrl }: FeedArticleStoryArgs) => {
   const data = useFeedData(feedUrl);
   const [currentPostId, setCurrentPostId] = useState<string>();
 

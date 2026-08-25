@@ -24,8 +24,8 @@ import { openAndClose } from '@dxos/test-utils';
 
 import { Doc } from '../automerge';
 import { EchoTestBuilder, createTmpPath } from '../testing';
-import { createObject, getObjectCore } from './echo-handler';
-import { isEchoObject } from './echo-object-utils';
+import { createObject } from './echo-handler';
+import { getObjectCore, isEchoObject } from './echo-object-utils';
 
 const TEST_OBJECT: TestSchema.ExampleSchema = {
   string: 'foo',
@@ -42,6 +42,17 @@ test('id property name is reserved', () => {
   const invalidSchema = Schema.Struct({ id: Schema.Number });
   // @ts-expect-error - Testing invalid schema (missing typename/version).
   expect(() => createObject(Obj.make(invalidSchema, { id: 42 } as any))).to.throw();
+});
+
+test('snapshot of an unpersisted object keeps a ref that names a registry entry', () => {
+  // `Ref.fromURI` addresses a registry entry by type DXN rather than an object by entity id (a routine
+  // draft binds its runnable operation that way). Off-database the link cache cannot resolve it, but
+  // reading the object must still work — the ref is simply unresolved until it has a database.
+  const uri = DXN.make('com.example.operation.sync');
+  const object = createObject(Obj.make(TestSchema.Example, { string: 'foo', reference: Ref.fromURI(uri) }));
+  const snapshot = Obj.getSnapshot(object);
+  expect(snapshot.reference?.uri).to.eq(uri);
+  expect(snapshot.reference?.isAvailable).to.be.false;
 });
 
 describe('ECHO specific proxy properties with schema', () => {
@@ -122,13 +133,15 @@ describe('without database', () => {
     };
   }
 
+  const NestedStruct = Schema.Struct({
+    name: Schema.optional(Schema.String),
+    arr: Schema.optional(Schema.Array(Schema.String)),
+    ref: Schema.optional(Schema.suspend((): RefSchema<TestSchema> => Ref.Ref(TestSchema))),
+  });
+
   const TestSchema: Type.Obj<TestSchema> = Schema.Struct({
     text: Schema.optional(Schema.String),
-    nested: Schema.Struct({
-      name: Schema.optional(Schema.String),
-      arr: Schema.optional(Schema.Array(Schema.String)),
-      ref: Schema.optional(Schema.suspend((): RefSchema<TestSchema> => Ref.Ref(TestSchema))),
-    }),
+    nested: NestedStruct,
   }).pipe(EchoObjectSchema(DXN.make('com.example.type.test', '0.1.0'))) as any;
 
   test('get schema on object', () => {
@@ -143,7 +156,8 @@ describe('without database', () => {
   // TODO(dmaretskyi): Fix -- right now we always return the root schema.
   test.skip('get schema on nested object', () => {
     const obj = createObject(Obj.make(TestSchema, { nested: { name: 'foo', arr: [] } }));
-    const NestedSchema = Type.getSchema(TestSchema).pipe(Schema.pluck('nested'), Schema.typeSchema);
+    // v4 dropped `Schema.pluck`; the standalone struct is the same projection.
+    const NestedSchema = Schema.toType(NestedStruct);
     expect(prepareAstForCompare(Type.getSchema(Obj.getType(obj.nested as Obj.Unknown)!).ast)).to.deep.eq(
       prepareAstForCompare(NestedSchema.ast),
     );
@@ -677,6 +691,22 @@ describe('Reactive Object with ECHO database', () => {
       const ref = Annotation.get(host, RootRefAnnotation).pipe(Option.getOrThrow);
       expect((await ref.load()).id).to.eq(root.id);
     });
+
+    // `useSpaceProperties`/`useObject` hand components a snapshot, so the snapshot read is what an
+    // app actually exercises; the meta dictionary holds the decoded `Ref` there too.
+    test('Annotation.get reads a Ref from a snapshot', async () => {
+      const { db, graph } = await builder.createDatabase();
+      graph.registry.add([RootCollection, TestSchema.Example]);
+
+      const root = db.add(Obj.make(RootCollection, { name: 'root' }));
+      const host = db.add(Obj.make(TestSchema.Example, { string: 'host' }));
+      Obj.update(host, (host) => {
+        Annotation.set(host, RootRefAnnotation, Ref.make(root));
+      });
+
+      const ref = Annotation.get(Obj.getSnapshot(host), RootRefAnnotation).pipe(Option.getOrThrow);
+      expect((await ref.load()).id).to.eq(root.id);
+    });
   });
 
   describe('isDeleted', () => {
@@ -1101,7 +1131,7 @@ describe('Reactive Object with ECHO database', () => {
     const Blob = Type.makeObject(DXN.make('com.example.type.blob', '0.1.0'))(
       Schema.Struct({
         name: Schema.String,
-        bytes: Schema.Uint8ArrayFromSelf,
+        bytes: Schema.Uint8Array,
       }),
     );
 

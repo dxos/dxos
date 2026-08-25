@@ -13,7 +13,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { getMessageMetadata } from '../../util';
 import { CommentThread } from './CommentThread';
 

@@ -2,15 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Config from 'effect/Config';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 import path from 'node:path';
 
 import { ConfigService } from '@dxos/client';
+import { DEFAULT_HUB_URL } from '@dxos/client-protocol';
 import { withRetry } from '@dxos/edge-client';
 import { BaseError } from '@dxos/errors';
 import { type EdgeEnvelope } from '@dxos/protocols';
@@ -19,7 +20,7 @@ export class HubApiError extends BaseError.extend('HubApiError', 'Hub API error'
 
 const hubBaseUrl = Effect.gen(function* () {
   const config = yield* ConfigService;
-  return config.values?.runtime?.services?.hub?.url ?? 'https://hub.dxos.network';
+  return config.values?.runtime?.services?.hub?.url ?? DEFAULT_HUB_URL;
 });
 
 /**

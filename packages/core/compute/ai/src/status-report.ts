@@ -18,7 +18,7 @@ export class AgentStatus extends Type.makeObject<AgentStatus>(DXN.make('org.dxos
     parentMessage: Schema.optional(EntityId),
     toolCallId: Schema.optional(Schema.String),
     created: Schema.String.pipe(
-      Schema.annotations({ description: 'ISO date string when the status was sent.' }),
+      Schema.annotate({ description: 'ISO date string when the status was sent.' }),
       Annotation.GeneratorAnnotation.set('date.iso8601'),
     ),
     message: Schema.String,

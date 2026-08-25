@@ -4,15 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
-import * as AppSpace from '@dxos/app-toolkit/AppSpace';
-import { GraphBuilder, Node } from '@dxos/plugin-graph';
+import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-
-import * as SpaceSchema from '../../../types/SpaceSchema';
+import { SpaceSchema } from '#types';
 
 //
 // Extension Factory
@@ -73,9 +73,10 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
     id: 'settingsMembers',
     url: { key: 'members', kind: 'singleton', path: [SpaceSchema.SETTINGS_SECTION_ID] },
     match: AppNodeMatcher.whenSpaceSettings,
+    // A private space is locked at genesis and can never admit members, so it has nothing to manage.
     connector: (space) =>
       Effect.succeed(
-        AppSpace.isPersonalSpace(space)
+        space.membershipPolicy === MembershipPolicy.LOCKED
           ? []
           : [
               Node.make({

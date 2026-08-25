@@ -5,14 +5,15 @@
 import React, { type FC, useMemo, useState } from 'react';
 
 import { MulticastObservable } from '@dxos/async';
-import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type Space } from '@dxos/react-client/echo';
 import { useMulticastObservable } from '@dxos/react-hooks';
 import { Panel, Toolbar } from '@dxos/react-ui';
 
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState, useSpacesInfo } from '../../../hooks';
+import { DatabaseStatsInfo } from './DatabaseStatsInfo';
 import { FeedTable, type FeedTableProps } from './FeedTable';
 import { PipelineTable, type PipelineTableProps } from './PipelineTable';
 import { SpaceProperties } from './SpaceProperties';
@@ -91,6 +92,9 @@ export const SpaceInfoPanel: FC<SpaceInfoPanelProps> = (props) => {
             </div>
             <div className='border-t border-separator'>
               <SyncStateInfo space={space} />
+            </div>
+            <div className='border-t border-separator'>
+              <DatabaseStatsInfo space={space} />
             </div>
           </div>
         )}

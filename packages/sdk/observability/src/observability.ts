@@ -68,7 +68,7 @@ class ObservabilityImpl implements Observability {
 
     const initializedExtensions: Extension[] = [];
 
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       for (const extension of this._extensions) {
         if (extension.initialize) {
           yield* extension.initialize();
@@ -80,13 +80,13 @@ class ObservabilityImpl implements Observability {
       this._subscriptions.add(...cleanups.filter((cleanup) => cleanup !== undefined));
       this._initialized = true;
     }).pipe(
-      Effect.catchAll((error) =>
-        Effect.gen(this, function* () {
+      Effect.catch((error) =>
+        Effect.gen({ self: this }, function* () {
           log.catch(error);
           // Roll back already-initialized extensions.
           for (const extension of initializedExtensions) {
             if (extension.close) {
-              yield* extension.close().pipe(Effect.catchAll(() => Effect.succeed(undefined)));
+              yield* extension.close().pipe(Effect.catch(() => Effect.succeed(undefined)));
             }
           }
           this._subscriptions.clear();
@@ -96,7 +96,7 @@ class ObservabilityImpl implements Observability {
   }
 
   close(): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       this._subscriptions.clear();
       this._dataProviders.length = 0;
       for (const extension of this._extensions) {
@@ -109,7 +109,7 @@ class ObservabilityImpl implements Observability {
   }
 
   enable(): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       for (const extension of this._extensions) {
         if (extension.enable) {
           yield* extension.enable();
@@ -119,7 +119,7 @@ class ObservabilityImpl implements Observability {
   }
 
   disable(): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       for (const extension of this._extensions) {
         if (extension.disable) {
           yield* extension.disable();
@@ -129,7 +129,7 @@ class ObservabilityImpl implements Observability {
   }
 
   flush(): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       for (const extension of this._extensions) {
         if (extension.flush) {
           yield* extension.flush();
@@ -152,7 +152,7 @@ class ObservabilityImpl implements Observability {
    * Adds a data provider and initializes it.
    */
   addDataProvider(dataProvider: DataProvider): Effect.Effect<void, Error> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       this._dataProviders.push(dataProvider);
       const cleanup = yield* dataProvider(this);
       if (cleanup) {
@@ -229,7 +229,7 @@ class ObservabilityImpl implements Observability {
     if (apis.length === 0) {
       return Effect.succeed(false);
     }
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       for (const api of apis) {
         const available = yield* api.isAvailable();
         if (available) {
@@ -242,20 +242,30 @@ class ObservabilityImpl implements Observability {
 
   get metrics(): Metrics {
     return {
-      gauge: (name, value, attributes) => {
+      gauge: (name, value, attributes, meta) => {
         for (const extension of this._getExtensions('metrics')) {
-          extension.gauge(name, value, attributes);
+          extension.gauge(name, value, attributes, meta);
         }
       },
-      increment: (name, value, attributes) => {
+      increment: (name, value, attributes, meta) => {
         for (const extension of this._getExtensions('metrics')) {
-          extension.increment(name, value, attributes);
+          extension.increment(name, value, attributes, meta);
         }
       },
-      distribution: (name, value, attributes) => {
+      distribution: (name, value, attributes, meta) => {
         for (const extension of this._getExtensions('metrics')) {
-          extension.distribution(name, value, attributes);
+          extension.distribution(name, value, attributes, meta);
         }
+      },
+      observe: (name, callback, attributes, meta) => {
+        const cleanups = this._getExtensions('metrics').map((extension) =>
+          extension.observe(name, callback, attributes, meta),
+        );
+        return () => {
+          for (const cleanup of cleanups) {
+            cleanup();
+          }
+        };
       },
     };
   }

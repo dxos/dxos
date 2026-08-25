@@ -7,19 +7,15 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { PluginRegistryButton } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
-import { Message, Select, Separator, useTranslation } from '@dxos/react-ui';
+import { Banner, Flex, Select, Separator, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Empty } from '@dxos/react-ui-list';
 import { trim } from '@dxos/util';
 
 import { OfferStack } from '#components';
 import { meta } from '#meta';
+import { Booking, BookingOperation, BookingSearch, Segment, TripCapabilities } from '#types';
 
-import * as Booking from '../../types/Booking';
-import * as BookingOperation from '../../types/BookingOperation';
-import * as BookingSearch from '../../types/BookingSearch';
-import * as Segment from '../../types/Segment';
-import * as TripCapabilities from '../../types/TripCapabilities';
 import { offerToBookingProps, offerToFlightDetails } from './offer-to-segment';
 
 /** 2-column form layout for the flight query (parallels SegmentCard's FLIGHT_LAYOUT). */
@@ -183,22 +179,22 @@ const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
 
   if (services.length === 0) {
     return (
-      <Message.Root valence='info'>
-        <Message.Content classNames='m-form-padding'>
-          <Message.Title>{t('booking.no-providers.message')}</Message.Title>
-          <Message.Body classNames='flex flex-col py-1 gap-2'>
+      <Banner.Root valence='info'>
+        <Banner.Content classNames='m-form-padding'>
+          <Banner.Title>{t('booking.no-providers.message')}</Banner.Title>
+          <Banner.Body classNames='flex flex-col py-1 gap-2'>
             <span>{t('booking.enable-providers.message')}</span>
             <PluginRegistryButton />
-          </Message.Body>
-        </Message.Content>
-      </Message.Root>
+          </Banner.Body>
+        </Banner.Content>
+      </Banner.Root>
     );
   }
 
   const flightOffers = offers?.filter((offer): offer is BookingSearch.FlightOffer => offer._tag === 'flight');
 
   return (
-    <div className='flex flex-col dx-container'>
+    <Flex column classNames='dx-container'>
       {/* Query form: content-height (Viewport without `scroll`) — does not expand; offers fill the rest. */}
       <Form.Root
         schema={BookingSearch.FlightSearchFields}
@@ -247,7 +243,7 @@ const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
           )}
         </>
       )}
-    </div>
+    </Flex>
   );
 };
 

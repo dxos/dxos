@@ -5,14 +5,15 @@
 // @import-as-namespace
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { Harness } from '@dxos/assistant';
+import type { Harness } from '@dxos/assistant';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Annotation, Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
-import { type EntityNotFoundError } from '@dxos/echo/Err';
+import { type EntityNotFoundError } from '@dxos/echo/Error';
 import { type Text } from '@dxos/schema';
 import { Outline } from '@dxos/types';
 
@@ -53,6 +54,33 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
 ) {}
 
 export const make = (props: Obj.MakeProps<typeof Chat>) => Obj.make(Chat, props);
+
+/**
+ * Refs to the chats accompanying an object, stored on the subject itself (replaces the former
+ * `CompanionTo` relation): the annotation is deleted with the subject, and its refs make the
+ * parented chats real children — referenced and cascaded — rather than ref-less parent-edge
+ * orphans reachable only by index query.
+ */
+export const CompanionChatAnnotation = Annotation.make({
+  id: 'org.dxos.assistant.companionChats',
+  schema: Schema.Array(Ref.Ref(Chat)),
+});
+
+/**
+ * Links a chat to the subject it accompanies (a Project, an Agent, a document, ...): a ref on the
+ * subject via {@link CompanionChatAnnotation} plus the ECHO parent edge. Idempotent per chat.
+ */
+export const linkCompanion = ({ chat, subject }: { chat: Chat; subject: Obj.Unknown }): void => {
+  Obj.update(subject, (subject) => {
+    const chats = Annotation.get(subject, CompanionChatAnnotation).pipe(
+      Option.getOrElse((): readonly Ref.Ref<Chat>[] => []),
+    );
+    if (!chats.some((ref) => ref.uri === Ref.make(chat).uri)) {
+      Annotation.set(subject, CompanionChatAnnotation, [...chats, Ref.make(chat)]);
+    }
+  });
+  Obj.setParent(chat, subject);
+};
 
 /**
  * Returns the conversation's working outline, creating one lazily: a project chat (parented to a
@@ -132,25 +160,14 @@ export const getFromContext: Effect.Effect<
   HarnessContextError | Harness.NotSupportedError,
   Harness.HarnessService
 > = Effect.gen(function* () {
-  const chats = yield* Harness.queryContext(Filter.type(Chat));
+  // Loaded here rather than imported: `@dxos/assistant` pulls the AI session runtime (MCP SDK,
+  // Anthropic client, ~280 KB), and this module carries the Chat *schema*, which core plugins
+  // reference for their operation definitions.
+  const { Harness: HarnessRuntime } = yield* Effect.promise(() => import('@dxos/assistant'));
+  const chats = yield* HarnessRuntime.queryContext(Filter.type(Chat));
   if (chats.length !== 1) {
     return yield* Effect.fail(new HarnessContextError({ type: 'chat', count: chats.length }));
   }
 
   return chats[0];
 });
-
-/**
- * Relation between a Chat and companion objects (e.g., artifacts, or the agent identity the
- * conversation runs as — see `Agent.loadForChat`).
- */
-export class CompanionTo extends Type.makeRelation<CompanionTo>(
-  DXN.make('org.dxos.relation.assistant.companionTo', '0.1.0'),
-)({
-  source: Chat,
-  target: Obj.Unknown,
-})(
-  Schema.Struct({
-    id: Obj.ID,
-  }),
-) {}

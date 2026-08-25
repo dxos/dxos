@@ -9,6 +9,13 @@ import { type Client, type ClientOptions } from '@dxos/client';
 
 export type ClientPluginOptions = ClientOptions & {
   /**
+   * A client to adopt instead of constructing one, so a host can start `initialize()` at entry
+   * rather than when activation reaches this lazily-imported module. `@synchronized`, so the
+   * plugin's own call joins it; lifecycle stays with the plugin, which destroys it on teardown.
+   */
+  client?: Client;
+
+  /**
    * Whether the navigation handler consumes invitation codes from URL query params.
    * Disable when another plugin (e.g. plugin-onboarding) owns the invitation URL flow.
    * @default true
@@ -19,6 +26,15 @@ export type ClientPluginOptions = ClientOptions & {
    * Base origin for the invitation link.
    */
   shareableLinkOrigin?: string;
+
+  /**
+   * Surface the identity-swapping actions kept for testing: join another identity by device
+   * invitation, or restore one from a recovery code. Both wipe local storage before they run, so
+   * an app whose onboarding gate offers the same flows on a clean profile should pass the inverse
+   * of that gate's condition rather than expose them to real users.
+   * @default false
+   */
+  identityTestActions?: boolean;
 
   /**
    * Path for the invitation link.
@@ -52,6 +68,19 @@ export type ClientPluginOptions = ClientOptions & {
    * @default INITIALIZE_TIMEOUT
    */
   initializeTimeout?: number;
+
+  /**
+   * Gate the contributed `ClientService` on initialization, so resolving it yields a client whose
+   * `halo`/`spaces`/`services` getters are safe to touch.
+   *
+   * For imperative hosts (the CLI): a command body runs straight through, so an ungated service
+   * hands it a client whose getters still throw `Client not initialized`. Leave it off in the app,
+   * where the forked initialization is the point — React consumers suspend on the client instead,
+   * and blocking the service would stall the boot waterfall.
+   *
+   * @default false
+   */
+  awaitInitialization?: boolean;
 
   /**
    * Called when spaces are ready.

@@ -5,22 +5,22 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { ConnectorsSkill, LinearSkill } from '@dxos/assistant-toolkit';
 import { Feed, Filter, Ref } from '@dxos/echo';
-import { AssistantSkill } from '@dxos/plugin-assistant';
+import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import { meta as connectorMeta } from '@dxos/plugin-connector';
-import { CalendarSkill, InboxSkill } from '@dxos/plugin-inbox';
+import * as ConnectorsSkill from '@dxos/plugin-connector/ConnectorsSkill';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';
+import * as CalendarSkill from '@dxos/plugin-inbox/CalendarSkill';
+import * as InboxSkill from '@dxos/plugin-inbox/InboxSkill';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { MarkdownSkill } from '@dxos/plugin-markdown';
-import { TranscriptionSkill } from '@dxos/plugin-transcription';
+import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
+import * as TranscriptionSkill from '@dxos/plugin-transcription/TranscriptionSkill';
 import { Cell } from '@dxos/storybook-testing';
-import { Event, Message, Person, Pipeline, Task, Transcript } from '@dxos/types';
+import { Event, Message, Transcript } from '@dxos/types';
 
 import { StoryRole } from '../modules';
 import {
   ModuleContainer,
-  accessTokensFromEnv,
   addToRootCollection,
   config,
   createDecorators,
@@ -42,13 +42,13 @@ type Story = StoryObj<typeof meta>;
 export const WithMail: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ InboxPlugin }, { MarkdownPlugin }, { ThreadPlugin }] = await Promise.all([
-        import('@dxos/plugin-inbox/plugin'),
-        import('@dxos/plugin-markdown/plugin'),
-        import('@dxos/plugin-thread/plugin'),
+      const [InboxPlugin, MarkdownPlugin, ThreadPlugin] = await Promise.all([
+        import('@dxos/plugin-inbox/InboxPlugin'),
+        import('@dxos/plugin-markdown/MarkdownPlugin'),
+        import('@dxos/plugin-thread/ThreadPlugin'),
       ]);
       return {
-        plugins: [InboxPlugin(), MarkdownPlugin(), ThreadPlugin()],
+        plugins: [InboxPlugin.make(), MarkdownPlugin.make(), ThreadPlugin.make()],
       };
     },
     onInit: async ({ space }) => {
@@ -79,12 +79,12 @@ export const WithMail: Story = {
 export const WithGmail: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ InboxPlugin }, { ConnectorPlugin }] = await Promise.all([
-        import('@dxos/plugin-inbox/plugin'),
-        import('@dxos/plugin-connector/plugin'),
+      const [InboxPlugin, ConnectorPlugin] = await Promise.all([
+        import('@dxos/plugin-inbox/InboxPlugin'),
+        import('@dxos/plugin-connector/ConnectorPlugin'),
       ]);
       return {
-        plugins: [InboxPlugin(), ConnectorPlugin()],
+        plugins: [InboxPlugin.make(), ConnectorPlugin.make()],
       };
     },
     config: config.persistent,
@@ -121,12 +121,12 @@ export const WithGmail: Story = {
 export const WithConnectorPrompt: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ InboxPlugin }, { ConnectorPlugin }] = await Promise.all([
-        import('@dxos/plugin-inbox/plugin'),
-        import('@dxos/plugin-connector/plugin'),
+      const [InboxPlugin, ConnectorPlugin] = await Promise.all([
+        import('@dxos/plugin-inbox/InboxPlugin'),
+        import('@dxos/plugin-connector/ConnectorPlugin'),
       ]);
       return {
-        plugins: [InboxPlugin(), ConnectorPlugin()],
+        plugins: [InboxPlugin.make(), ConnectorPlugin.make()],
       };
     },
     types: [Feed.Feed, Mailbox.Mailbox],
@@ -153,12 +153,12 @@ export const WithConnectorPrompt: Story = {
 export const WithCalendar: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ InboxPlugin }, { ConnectorPlugin }] = await Promise.all([
-        import('@dxos/plugin-inbox/plugin'),
-        import('@dxos/plugin-connector/plugin'),
+      const [InboxPlugin, ConnectorPlugin] = await Promise.all([
+        import('@dxos/plugin-inbox/InboxPlugin'),
+        import('@dxos/plugin-connector/ConnectorPlugin'),
       ]);
       return {
-        plugins: [InboxPlugin(), ConnectorPlugin()],
+        plugins: [InboxPlugin.make(), ConnectorPlugin.make()],
       };
     },
     types: [Feed.Feed, Calendar.Calendar, Event.Event],
@@ -183,32 +183,15 @@ export const WithCalendar: Story = {
   },
 };
 
-// TODO(burdon): Move to env.
-const VITE_LINEAR_API_KEY = process.env.VITE_LINEAR_API_KEY;
-
-export const WithLinearSync: Story = {
-  decorators: createDecorators({
-    plugins: [],
-    types: [Task.Task, Person.Person, Pipeline.Pipeline],
-    accessTokens: accessTokensFromEnv({
-      'linear.app': VITE_LINEAR_API_KEY,
-    }),
-    skills: [LinearSkill.key],
-  }),
-  args: {
-    layout: [[StoryRole.Chat], [StoryRole.Graph]],
-  },
-};
-
 export const WithTranscription: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ TranscriptionPlugin }, { PreviewPlugin }] = await Promise.all([
-        import('@dxos/plugin-transcription/plugin'),
-        import('@dxos/plugin-preview/plugin'),
+      const [TranscriptionPlugin, PreviewPlugin] = await Promise.all([
+        import('@dxos/plugin-transcription/TranscriptionPlugin'),
+        import('@dxos/plugin-preview/PreviewPlugin'),
       ]);
       return {
-        plugins: [TranscriptionPlugin(), PreviewPlugin()],
+        plugins: [TranscriptionPlugin.make(), PreviewPlugin.make()],
       };
     },
     types: [Transcript.Transcript],

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './skills';
-export * from './meta';
-export * as Profile from './types/Profile';
-export * as Sidekick from './types/Sidekick';
+export * as SidekickPlugin from './SidekickPlugin';
+export * from '#meta';
+export * from '#skills';
+export * from '#types';

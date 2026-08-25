@@ -4,8 +4,9 @@
 
 import { describe, test } from 'vitest';
 
+import { PageAction } from '#types';
+
 import { toNote, toOrganization, toPerson } from './mapping';
-import * as PageAction from './types/PageAction';
 
 const baseSource: PageAction.Source = {
   url: 'https://www.linkedin.com/in/ricburdon',

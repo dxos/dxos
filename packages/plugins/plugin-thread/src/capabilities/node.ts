@@ -6,8 +6,7 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import * as ThreadCapabilities from '../types/ThreadCapabilities';
-import * as ThreadEvents from '../types/ThreadEvents';
+import { ThreadCapabilities, ThreadEvents } from '#types';
 
 // The capabilities `ThreadPlugin.node` activates, and only those. A lazy module defers its import at
 // runtime but a bundler still walks it, so listing the React surfaces here would pull the plugin's
@@ -23,3 +22,4 @@ export const ChannelBackendFeed = Capability.lazyModule(
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
 });
+export const Schema = AppCapability.schema(() => import('./schema'));

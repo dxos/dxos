@@ -11,6 +11,11 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapability } from '@dxos/app-framework/ui';
+import { qualifyId } from '@dxos/app-graph';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
@@ -26,7 +31,6 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Graph, GraphBuilder, Node, NodeMatcher, qualifyId } from '@dxos/plugin-graph';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
@@ -38,12 +42,12 @@ import { Text } from '@dxos/schema';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 import { isNonNullable } from '@dxos/util';
 
-import { ReviewPlugin, type ReviewPluginOptions } from '../../ReviewPlugin';
+import { translations } from '#translations';
+import { AgentIdentity, CommentCapabilities } from '#types';
+
+import { ReviewPlugin, type ReviewPluginOptions } from '../../plugin';
 import { textOf } from '../../should-trigger-agent';
 import { ReviewStoryLayout, SAMPLE_CONTENT, STORY_AGENT_NAME, seedAgentSuggestions } from '../../testing';
-import { translations } from '../../translations';
-import * as AgentIdentity from '../../types/AgentIdentity';
-import * as CommentCapabilities from '../../types/CommentCapabilities';
 
 // Phrases in SAMPLE_CONTENT that the seeded comment threads are anchored to.
 const SEED_PHRASES = ['comment threads', 'Effect schema', 'virtual stack'];
@@ -112,7 +116,7 @@ const StubAgentRunner: CommentCapabilities.AgentRunner = {
 
 /**
  * Common story-only plugin:
- * 1. Exposes Markdown documents in the personal space as direct children of the
+ * 1. Exposes Markdown documents in the default space as direct children of the
  *    graph root, so ReviewPlugin's `comment-toolbar` extension can attach the
  *    `comment` action to the doc's node.
  * 2. Stubs out plugin-deck's layout operations (`UpdateCompanion`,
@@ -135,7 +139,7 @@ const StoryAppGraphBuilder = Capability.inlineModule(
           if (!client.initialized) {
             return [];
           }
-          const space = AppSpace.getPersonalSpace(client);
+          const space = AppSpace.getDefaultSpace(client);
           if (!space) {
             return [];
           }
@@ -193,7 +197,7 @@ const DefaultStory = ({ agentMode }: StoryArgs) => {
   // Story renders surfaces directly (no deck), so expand graph actions for the doc node.
   useEffect(() => {
     if (attendableId) {
-      void Graph.expand(graph, attendableId, 'action');
+      void Graph.expandSync(graph, attendableId, 'action');
     }
   }, [graph, attendableId]);
 
@@ -219,26 +223,26 @@ const meta = {
     withPluginManager<StoryArgs>(({ args }) => ({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Markdown.Document, Text.Text, Thread.Thread, Message.Message, AnchoredTo.AnchoredTo],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client, { displayName: 'Alice Mercer' });
+              const { defaultSpace } = yield* initializeIdentity(client, { displayName: 'Alice Mercer' });
               const doc = Markdown.make({ name: 'Sample', content: SAMPLE_CONTENT });
-              personalSpace.db.add(doc);
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              defaultSpace.db.add(doc);
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
 
               if (args.seedComments) {
                 const text = yield* Effect.promise(() => doc.content.load());
-                seedComments(personalSpace, doc, text);
-                yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+                seedComments(defaultSpace, doc, text);
+                yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
               }
 
               if (args.seedAgentSuggestions) {
                 const text = yield* Effect.promise(() => doc.content.load());
                 invariant(text, 'document content not loaded');
                 yield* Effect.promise(() => seedAgentSuggestions(doc, text));
-                yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+                yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
               }
             }),
         }),
@@ -247,7 +251,7 @@ const meta = {
           agentRunner: StubAgentRunner,
           agentIdentity: { name: STORY_AGENT_NAME },
         } satisfies ReviewPluginOptions),
-        MarkdownPlugin(),
+        MarkdownPlugin.make(),
         StoryGraphPlugin(),
       ],
     })),

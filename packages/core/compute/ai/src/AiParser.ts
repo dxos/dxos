@@ -4,14 +4,13 @@
 
 // @import-as-namespace
 
-import type * as Response from '@effect/ai/Response';
-import type * as Tool from '@effect/ai/Tool';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
-import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
 import * as Stream from 'effect/Stream';
 import type * as Types from 'effect/Types';
+import type * as Response from 'effect/unstable/ai/Response';
+import type * as Tool from 'effect/unstable/ai/Tool';
 
 import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -37,6 +36,13 @@ enum ModelTags {
    * Used by DeepSeek.
    */
   THINK = 'think',
+
+  /**
+   * Chain of thought.
+   * Not prescribed by the instructions, but models write it unprompted; without the alias it
+   * falls through to the unknown-tag fallback and surfaces as literal text.
+   */
+  REASONING = 'reasoning',
   STATUS = 'status',
   ARTIFACT = 'artifact',
 
@@ -159,6 +165,13 @@ export const parseResponse =
         });
 
         const emitPartialBlock = Effect.fnUntraced(function* (streamBlock: StreamBlock, out: ContentBlock.Any[]) {
+          // An unclosed unknown tag would be serialized as its literal text (the fallback below),
+          // which flashes raw markup at the reader mid-stream; the text still arrives, complete,
+          // when the tag closes or the stream flushes.
+          if (streamBlock.type === 'tag' && !streamBlock.closed && !isModelTag(streamBlock.tag)) {
+            return;
+          }
+
           const parsed = makeContentBlock(streamBlock, { parseReasoningTags });
           if (parsed) {
             parsed.pending = true;
@@ -335,11 +348,12 @@ export const parseResponse =
                 reasoningText: '',
                 pending: true,
               } satisfies ContentBlock.Reasoning;
-              if (part.metadata.anthropic?.type === 'thinking') {
-                block.signature = part.metadata.anthropic.signature;
+              const info = part.metadata.anthropic?.info;
+              if (info?.type === 'thinking') {
+                block.signature = info.signature;
               }
-              if (part.metadata.anthropic?.type === 'redacted_thinking') {
-                block.redactedText = part.metadata.anthropic.redactedData;
+              if (info?.type === 'redacted_thinking') {
+                block.redactedText = info.redactedData;
               }
               yield* emitPartialContentBlock(block, out);
               break;
@@ -366,22 +380,22 @@ export const parseResponse =
 
             case 'response-metadata': {
               yield* flushText(out);
-              stats.model = Option.getOrUndefined(part.modelId);
+              stats.model = part.modelId;
               log('metadata', { metadata: part });
               break;
             }
 
             case 'finish': {
               yield* flushText(out);
-              const { inputTokens, outputTokens, totalTokens } = part.usage;
+              const { inputTokens, outputTokens } = part.usage;
               stats.duration = Date.now() - start;
               stats.message = 'OK'; // part.reason;
               stats.finishReason = part.reason;
               stats.toolCalls = toolCalls;
               stats.usage = {
-                inputTokens,
-                outputTokens,
-                totalTokens,
+                inputTokens: inputTokens.total ?? 0,
+                outputTokens: outputTokens.total ?? 0,
+                totalTokens: (inputTokens.total ?? 0) + (outputTokens.total ?? 0),
               };
               yield* emitFullBlock(
                 {
@@ -407,13 +421,14 @@ export const parseResponse =
         yield* onBegin();
 
         const main = input.pipe(
-          Stream.mapConcatEffect((part) =>
+          Stream.mapEffect((part) =>
             Effect.gen(function* () {
               const out: ContentBlock.Any[] = [];
               yield* handlePart(part, out);
               return out;
             }),
           ),
+          Stream.flattenIterable,
         );
 
         const epilogue = Stream.fromIterableEffect(
@@ -429,6 +444,8 @@ export const parseResponse =
         return Stream.concat(main, epilogue);
       }),
     );
+
+const isModelTag = (tag: string): boolean => (Object.values(ModelTags) as string[]).includes(tag);
 
 /**
  * @returns Mutable content block made from stream block.
@@ -454,7 +471,8 @@ const makeContentBlock = (
     case 'tag': {
       switch (block.tag) {
         case ModelTags.COT:
-        case ModelTags.THINK: {
+        case ModelTags.THINK:
+        case ModelTags.REASONING: {
           const content = block.content
             .map((block) => {
               switch (block.type) {

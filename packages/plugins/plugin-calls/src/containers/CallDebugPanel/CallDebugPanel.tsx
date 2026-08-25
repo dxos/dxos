@@ -2,20 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import { WebRTCStats, type WebRTCStatsEvent } from '@peermetrics/webrtc-stats';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { truncateKey } from '@dxos/debug';
 import { JsonView, Panel } from '@dxos/devtools';
 import { log } from '@dxos/log';
-import { IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Flex, IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
+import { CallsCapabilities } from '#types';
 
 import { type EncodedTrackName, type GlobalState } from '../../calls';
-import * as CallsCapabilities from '../../types/CallsCapabilities';
 
 // Stand-in so `useAtomValue` is always called with a real atom when no manager is contributed.
 const noCallState = Atom.make<GlobalState | undefined>(undefined).pipe(Atom.keepAlive);
@@ -85,29 +86,34 @@ export const CallDebugPanel = ({ state: stateOverride }: CallDebugPanelProps) =>
       open={open}
       onToggle={handleToggle}
       title={t('meeting-status.title')}
-      info={<div className='flex items-center gap-2'> {state?.call.joined ? 'Active' : 'Inactive'}</div>}
+      info={
+        <Flex gap='sm' align='center'>
+          {' '}
+          {state?.call.joined ? 'Active' : 'Inactive'}
+        </Flex>
+      }
       maxHeight={0}
     >
-      <div className='flex flex-col w-full text-xs'>
-        <div className='flex items-center gap-2 items-center'>
+      <Flex column classNames='w-full text-xs'>
+        <Flex gap='sm' align='center'>
           <Input.Root>
             <Input.Switch checked={showDetailedWebRTCStats} onCheckedChange={handleShowDetailedWebRTCStats} />
             <Input.Label>{t('show-webrtc-stats.title')}</Input.Label>
           </Input.Root>
-        </div>
-        <div className='flex items-center gap-2 items-center'>
+        </Flex>
+        <Flex gap='sm' align='center'>
           <Input.Root>
             <Input.Switch checked={showServiceHistory} onCheckedChange={handleToggleServiceHistory} />
             <Input.Label>{t('show-calls-history.title')}</Input.Label>
           </Input.Root>
-        </div>
-        <div className='flex items-center gap-2 items-center'>
+        </Flex>
+        <Flex gap='sm' align='center'>
           <IconButton icon='ph--copy--regular' label={'copy raw'} onClick={handleCopyRaw} />
-        </div>
+        </Flex>
         <Table rows={rows} />
         {showDetailedWebRTCStats && <JsonView data={{ stats }} />}
         {showServiceHistory && <JsonView data={{ history: state?.media.peer?.history.get() }} />}
-      </div>
+      </Flex>
     </Panel>
   );
 };

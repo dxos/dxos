@@ -40,7 +40,7 @@ export type TestServiceOptions = {
     /**
      * Custom credentials service.
      */
-    service?: Context.Tag.Service<Credential.CredentialsService>;
+    service?: Context.Service.Shape<typeof Credential.CredentialsService>;
   }>;
 
   /**
@@ -59,7 +59,7 @@ export type TestServiceOptions = {
    */
   logging?: {
     enabled?: boolean;
-    trace?: Context.Tag.Service<Trace.TraceService>;
+    trace?: Context.Service.Shape<typeof Trace.TraceService>;
   };
 };
 
@@ -91,7 +91,7 @@ export const createTestServices = ({ credentials, db, logging, space }: TestServ
 
 const createCredentialsService = (
   credentials: TestServiceOptions['credentials'] | undefined,
-): Context.Tag.Service<Credential.CredentialsService> | undefined => {
+): Context.Service.Shape<typeof Credential.CredentialsService> | undefined => {
   if (credentials?.services) {
     return new ConfiguredCredentialsService(credentials.services);
   }

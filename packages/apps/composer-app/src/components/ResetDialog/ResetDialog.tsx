@@ -12,9 +12,9 @@ import type * as SupportOperation from '@dxos/plugin-support/SupportOperation';
 import {
   AlertDialog,
   type AlertDialogRootProps,
+  Banner,
   DropdownMenu,
   IconButton,
-  Message,
   Popover,
   useFileDownload,
   useMediaQuery,
@@ -66,7 +66,7 @@ export const ResetDialog = ({
   onRefresh,
   onReset,
 }: ResetDialogProps) => {
-  const { t } = useTranslation('composer'); // TODO(burdon): Const.
+  const { t } = useTranslation('composer');
   const [isNotMobile] = useMediaQuery('md');
   const error = errorProp && parseError(t, errorProp);
   const [showStack, setShowStack] = useState(false);
@@ -78,6 +78,7 @@ export const ResetDialog = ({
     if (!feedbackSent) {
       return;
     }
+
     const timeout = setTimeout(() => setFeedbackSent(false), 3_000);
     return () => clearTimeout(timeout);
   }, [feedbackSent]);
@@ -185,15 +186,15 @@ export const ResetDialog = ({
                   </div>
                 </div>
                 {showStack && (
-                  <Message.Root key={error.message}>
-                    <Message.Content classNames='overflow-auto'>
-                      <Message.Body asChild>
+                  <Banner.Root key={error.message}>
+                    <Banner.Content classNames='overflow-auto'>
+                      <Banner.Body asChild>
                         <pre className='text-xs max-h-[136px]' data-testid='resetDialog.stackTrace'>
                           {error.stack}
                         </pre>
-                      </Message.Body>
-                    </Message.Content>
-                  </Message.Root>
+                      </Banner.Body>
+                    </Banner.Content>
+                  </Banner.Root>
                 )}
               </>
             )}

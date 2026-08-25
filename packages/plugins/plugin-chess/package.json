@@ -13,17 +13,14 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#skills": {
-      "source": "./src/skills/index.ts",
-      "types": "./dist/types/src/skills/index.d.ts",
-      "default": "./dist/lib/skills.mjs"
-    },
     "#capabilities": {
       "source": {
+        "workerd": "./src/capabilities/workerd.ts",
         "node": "./src/capabilities/node.ts",
         "default": "./src/capabilities/index.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
       "node": "./dist/lib/capabilities/node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
@@ -49,19 +46,29 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/ChessPlugin.workerd.ts",
-        "node": "./src/ChessPlugin.node.ts",
-        "default": "./src/ChessPlugin.tsx"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/ChessPlugin.d.ts",
-      "workerd": "./dist/lib/ChessPlugin.workerd.mjs",
-      "node": "./dist/lib/ChessPlugin.node.mjs",
-      "default": "./dist/lib/ChessPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
+    },
+    "#skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "default": "./dist/lib/skills.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -71,21 +78,6 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./operations": {
-      "source": "./src/operations/index.ts",
-      "types": "./dist/types/src/operations/index.d.ts",
-      "import": "./dist/lib/operations.mjs"
-    },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
-    "./skills": {
-      "source": "./src/skills/index.ts",
-      "types": "./dist/types/src/skills/index.d.ts",
-      "import": "./dist/lib/skills.mjs"
-    },
     "./testing": {
       "source": "./src/testing.ts",
       "types": "./dist/types/src/testing.d.ts",
@@ -96,6 +88,7 @@
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./package.json": "./package.json",
     "./Chess": {
       "source": "./src/types/Chess.ts",
       "types": "./dist/types/src/types/Chess.d.ts",
@@ -111,6 +104,11 @@
       "types": "./dist/types/src/types/ChessOperation.d.ts",
       "import": "./dist/lib/ChessOperation.mjs"
     },
+    "./ChessPlugin": {
+      "source": "./src/ChessPlugin.ts",
+      "types": "./dist/types/src/ChessPlugin.d.ts",
+      "import": "./dist/lib/ChessPlugin.mjs"
+    },
     "./ChessPositionIndex": {
       "source": "./src/types/ChessPositionIndex.ts",
       "types": "./dist/types/src/types/ChessPositionIndex.d.ts",
@@ -121,7 +119,16 @@
       "types": "./dist/types/src/types/PlayerReview.d.ts",
       "import": "./dist/lib/PlayerReview.mjs"
     },
-    "./package.json": "./package.json"
+    "./ChessOperationHandlerSet": {
+      "source": "./src/operations/ChessOperationHandlerSet.ts",
+      "types": "./dist/types/src/operations/ChessOperationHandlerSet.d.ts",
+      "import": "./dist/lib/ChessOperationHandlerSet.mjs"
+    },
+    "./ChessSkill": {
+      "source": "./src/skills/ChessSkill.ts",
+      "types": "./dist/types/src/skills/ChessSkill.d.ts",
+      "import": "./dist/lib/ChessSkill.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -163,8 +170,7 @@
     "@dxos/react-ui-audio": "workspace:*",
     "@dxos/react-ui-gameboard": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "chess.js": "catalog:",
     "effect": "catalog:"
   },

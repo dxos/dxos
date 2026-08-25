@@ -15,16 +15,17 @@ import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Branch, History, Version } from '@dxos/versioning';
 
 import { translations } from '#translations';
+import { ReviewCapabilities } from '#types';
 
 import { ReviewPlugin } from '../../plugin';
-import * as ReviewCapabilities from '../../types/ReviewCapabilities';
 import { ObjectHistory } from './ObjectHistory';
 
 /**
@@ -80,15 +81,15 @@ const meta = {
     withPluginManager(() => ({
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({}),
-        ClientPlugin({
+        StorybookPlugin.make({}),
+        ClientPlugin.make({
           types: [TestDoc, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client, { displayName: 'Alice Mercer' });
+              const { defaultSpace } = yield* initializeIdentity(client, { displayName: 'Alice Mercer' });
               const text = Text.make({ content: 'alpha\n' });
-              const doc = personalSpace.db.add(Obj.make(TestDoc, { name: 'Story', content: Ref.make(text) }));
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              const doc = defaultSpace.db.add(Obj.make(TestDoc, { name: 'Story', content: Ref.make(text) }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
 
               // Real checkpoints (valid heads) between edits, so each lands on a distinct revision;
               // the branch is a static record — enough for the timeline graph, no live registry.
@@ -107,7 +108,7 @@ const meta = {
                 root.content = 'alpha\nbravo\ncharlie\n';
               });
               Version.create(doc, { name: 'Branch revision', target: root, branch: BRANCH_KEY });
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
         SpacePlugin({}),

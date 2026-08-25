@@ -3,9 +3,9 @@
 //
 
 import * as Generated from '@effect/ai-anthropic/Generated';
-import * as Tool from '@effect/ai/Tool';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
+import * as Tool from 'effect/unstable/ai/Tool';
 
 /**
  * Provider-defined Anthropic web search tool with per-call `parameters`.
@@ -14,12 +14,12 @@ import * as Struct from 'effect/Struct';
  */
 export const AnthropicWebSearchTool = Tool.providerDefined({
   id: 'anthropic.web_search_20250305',
-  toolkitName: 'AnthropicWebSearch',
+  customName: 'AnthropicWebSearch',
   providerName: 'web_search',
-  parameters: {
+  parameters: Schema.Struct({
     query: Schema.String,
-  },
-  args: Struct.omit(Generated.WebSearchTool20250305.fields, 'name', 'type'),
+  }),
+  args: Schema.Struct(Struct.omit(Generated.WebSearchTool_20250305.fields, ['name', 'type'])),
   success: Schema.Array(Generated.RequestWebSearchResultBlock),
   failure: Generated.ResponseWebSearchToolResultError,
 })({});

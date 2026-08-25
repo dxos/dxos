@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry as AtomRegistry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { OpaqueToolkit } from '@dxos/ai';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
@@ -58,7 +58,7 @@ const OperationHandlerProviderSpec = LayerSpec.make(
     provides: [OperationHandlerSet.OperationHandlerProvider],
   },
   () =>
-    Layer.unwrapEffect(
+    Layer.unwrap(
       Effect.gen(function* () {
         // Live view (not a one-shot snapshot): handlers contributed after materialization — e.g. by
         // a plugin enabled later — still reach subsequent reads. The manager memoizes one atom per
@@ -78,7 +78,7 @@ const RegistrySpec = LayerSpec.make(
     provides: [Registry.Service],
   },
   () =>
-    Layer.unwrapEffect(
+    Layer.unwrap(
       Effect.gen(function* () {
         const client = yield* ClientService;
         return Layer.succeed(Registry.Service, client.graph.registry);
@@ -93,7 +93,7 @@ const OpaqueToolkitSpec = LayerSpec.make(
     provides: [OpaqueToolkit.OpaqueToolkitProvider],
   },
   () =>
-    Layer.unwrapEffect(
+    Layer.unwrap(
       Effect.gen(function* () {
         const capabilities = yield* Capability.Service;
         const pluginManager = yield* Plugin.Service;
@@ -158,7 +158,18 @@ const OperationsToRegistrySpec = LayerSpec.make(
         const sources = yield* Effect.promise(() =>
           Promise.all(sets.map((set) => (set.definitions ? set.definitions() : set.getHandlers()))),
         );
-        registry.add(sources.flat().map(Operation.serialize));
+        const definitions = sources.flat();
+        // The only point every operation in the app is visible at once. Tool names derive from keys
+        // non-injectively (`Operation.toolName`), so two keys can claim one name — which the resolver
+        // would only surface once a model asked for it.
+        const collisions = Operation.findToolNameCollisions(definitions);
+        invariant(
+          collisions.size === 0,
+          `Operations collide on derived tool name: ${[...collisions]
+            .map(([name, keys]) => `${name} <- ${keys.join(', ')}`)
+            .join('; ')}`,
+        );
+        registry.add(definitions.map(Operation.serialize));
         return registry;
       }),
     ),
@@ -208,7 +219,7 @@ const RemoteOperationInvokerSpec = LayerSpec.make(
     provides: [RemoteOperationInvoker.Service],
   },
   (context) =>
-    Layer.unwrapEffect(
+    Layer.unwrap(
       Effect.gen(function* () {
         invariant(context.space, 'space context required for RemoteOperationInvoker');
         const client = yield* ClientService;
@@ -231,7 +242,7 @@ const RemoteTriggerManagerSpec = LayerSpec.make(
     provides: [RemoteTriggerManager.Service],
   },
   (context) =>
-    Layer.unwrapEffect(
+    Layer.unwrap(
       Effect.gen(function* () {
         invariant(context.space, 'space context required for RemoteTriggerManager');
         const client = yield* ClientService;
@@ -254,7 +265,7 @@ const RemoteProcessManagerSpec = LayerSpec.make(
     provides: [RemoteProcessManager.Service],
   },
   () =>
-    Layer.unwrapEffect(
+    Layer.unwrap(
       Effect.gen(function* () {
         const client = yield* ClientService;
         const edgeUrl = client.config.values.runtime?.services?.edge?.url;

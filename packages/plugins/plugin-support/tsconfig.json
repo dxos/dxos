@@ -43,9 +43,6 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-react"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -56,9 +53,6 @@
     },
     {
       "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/client-protocol"
     },
     {
       "path": "../../sdk/config"

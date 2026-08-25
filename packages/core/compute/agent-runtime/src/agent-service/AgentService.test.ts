@@ -15,7 +15,7 @@ import * as Stream from 'effect/Stream';
 import { expect } from 'vitest';
 
 import { LanguageModelFixture } from '@dxos/ai/testing';
-import { PartialBlock, SessionLink } from '@dxos/assistant';
+import { type HarnessControlRpcs, PartialBlock, SessionLink } from '@dxos/assistant';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { getSession, hydrate } from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
@@ -31,7 +31,7 @@ import { DXN, EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Message, Organization } from '@dxos/types';
 
-import { AssistantTestLayer } from '../testing';
+import { AssistantTestLayer, waitForMessage } from '../testing';
 import * as ResearchService from '../testing/ResearchService';
 import { AGENT_PROCESS_KEY } from './agent-process';
 import * as AgentService from './AgentService';
@@ -41,12 +41,12 @@ EntityId.dangerouslyDisableRandomness();
 
 const Research = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.research'),
+    key: DXN.make('com.example.operation.research'),
     name: 'Research',
     description: 'Research an organization',
   },
   input: Schema.Struct({
-    website: Schema.String.annotations({ description: 'The website of the organization to research' }),
+    website: Schema.String.annotate({ description: 'The website of the organization to research' }),
   }),
   output: Schema.String,
   services: [ResearchService.ResearchService],
@@ -58,7 +58,7 @@ const Research = Operation.make({
  */
 const DelegatedWork = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.delegatedWork'),
+    key: DXN.make('com.example.operation.delegatedWork'),
     name: 'Delegated work',
     description: 'Performs a delegated unit of work',
   },
@@ -66,7 +66,33 @@ const DelegatedWork = Operation.make({
   output: Schema.String,
 });
 
+/**
+ * A no-input operation, whose `Schema.Void` input is the case that survives in-process but not the
+ * registry round trip: `Operation.serialize` renders it as `{type: 'null'}` and `deserialize` reads
+ * it back as `Schema.Null`, so the tool projection sees a tag the authored operation never had.
+ */
+const Ping = Operation.make({
+  meta: {
+    key: DXN.make('com.example.operation.ping'),
+    name: 'Ping',
+    description: 'Pings the service and returns its status. Takes no arguments.',
+  },
+  input: Schema.Void,
+  output: Schema.String,
+});
+
+/** Set by {@link Ping}'s handler so a test can assert the model actually reached the tool. */
+let pingCount = 0;
+
 const handlers = OperationHandlerSet.make(
+  Ping.pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* () {
+        pingCount++;
+        return 'pong';
+      }),
+    ),
+  ),
   Research.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ website }) {
@@ -91,12 +117,18 @@ const ResearchSkill = Skill.make({
   tools: Skill.toolDefinitions({ operations: [Research] }),
 });
 
+const PingSkill = Skill.make({
+  key: 'org.dxos.skill.ping',
+  name: 'Ping',
+  tools: Skill.toolDefinitions({ operations: [Ping] }),
+});
+
 const assistantTestLayerOptions = {
   types: [Organization.Organization, Feed.Feed, Skill.Skill, Instructions.Instructions, Text.Text],
   tracing: 'pretty' as const,
   aiServicePreset: 'edge-remote' as const,
   operationHandlers: [handlers],
-  skills: [ResearchSkill],
+  skills: [ResearchSkill, PingSkill],
   extraServices: ResearchService.layer,
 };
 
@@ -170,7 +202,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
     { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
   );
 
-  it.scoped(
+  it.effect(
     'tool call',
     Effect.fnUntraced(
       function* (_) {
@@ -188,7 +220,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
     { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
   );
 
-  it.scoped(
+  it.effect(
     'can be stopped while waiting for a tool call',
     Effect.fnUntraced(
       function* (_) {
@@ -205,7 +237,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'restart during tool call',
     Effect.fnUntraced(
       function* (_) {
@@ -234,7 +266,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
     { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
   );
 
-  it.scoped(
+  it.effect(
     'recovers queued tool results after reload',
     Effect.fnUntraced(
       function* (_) {
@@ -250,24 +282,40 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         yield* processManager.startup();
         yield* hydrate();
 
-        // Redelivery may re-issue tools from the interrupted turn.
-        yield* researchService.waitForTaskToAppear();
-        yield* researchService.completeAllTasks();
-
         session = yield* getSession(session.feed);
         yield* session.waitForCompletion();
 
-        const messages = yield* Feed.query(session.feed, Filter.type(Message.Message)).run;
-        const text = messages.map(Message.extractText).join('\n');
-        expect(text.toLocaleLowerCase()).toContain('cyberdyne');
+        // Recovery replays an already-queued result as a synthetic `<result pid=N>` block rather than
+        // re-issuing the tool, so the research must not run a second time — a re-issue would duplicate
+        // the side effects of an operation that had already completed.
+        //
+        // NOTE: whether the result is still queued at shutdown is a race with the agent consuming it,
+        // so this asserts the invariant that holds either way. Covering redelivery deterministically
+        // needs a seam that holds the turn loop while a result sits queued — see the effect-smol
+        // ledger entry "Cover the agent redelivery path deterministically".
+        expect(researchService.getTasks().map((task) => task.state)).toEqual(['completed']);
+        session = yield* getSession(session.feed);
+
+        // The recovery turn begins when the rehydrated process fires its alarm, which is after
+        // `waitForCompletion` settles (that only covers the turn in flight), so poll the feed for the
+        // reply instead. Asserting on the ASSISTANT's text and on a fact only the tool result carries:
+        // the prompt itself says "Cyberdyne", so matching that over every message would pass even when
+        // the recovered result never reached the model.
+        const recovered = yield* waitForMessage(
+          session.feed,
+          (message) =>
+            message.sender.role === 'assistant' && Message.extractText(message).toLocaleLowerCase().includes('nasdaq'),
+          { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : 15_000 },
+        );
+        expect(Message.extractText(recovered).toLocaleLowerCase()).toContain('nasdaq');
       },
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
     ),
-    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 120_000 : 30_000 },
   );
 
-  it.scoped(
+  it.effect(
     'rehydrates an idle session and replays conversation history',
     Effect.fnUntraced(
       function* (_) {
@@ -298,7 +346,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
     { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
   );
 
-  it.scoped(
+  it.effect(
     'hydrate is a no-op when there are no persisted agents',
     Effect.fnUntraced(
       function* (_) {
@@ -314,7 +362,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'runs AI agent with background tools via process manager',
     Effect.fnUntraced(
       function* (_) {
@@ -324,7 +372,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         const taskDrainer = yield* Effect.gen(function* () {
           yield* researchService.waitForTaskToAppear();
           yield* researchService.completeOneTask();
-        }).pipe(Effect.forever, Effect.fork);
+        }).pipe(Effect.forever, Effect.forkChild);
 
         let ephemeralEventCount = 0;
         const ephemeralFiber = yield* session.subscribeEphemeral().pipe(
@@ -337,7 +385,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
               }
             }),
           ),
-          Effect.fork,
+          Effect.forkChild,
         );
 
         for (const org of ResearchService.getTestData().organizations) {
@@ -363,7 +411,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
   // in place until this file's memoized fixtures are next regenerated, since removing it would
   // shift the shared deterministic ID stream the later fixtures depend on.
   describe('delegation (stub)', () => {
-    it.scoped(
+    it.effect(
       'delegates work to a sub-agent and folds the result back on completion',
       Effect.fnUntraced(
         function* (_) {
@@ -399,7 +447,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
 
   // Placed last so it does not perturb the shared deterministic ID stream of the tests above
   // (memoized conversations are keyed per file and depend on prior execution order).
-  it.scoped(
+  it.effect(
     'forks a conversation into a new feed and replays source history via a SessionLink',
     Effect.fnUntraced(
       function* (_) {
@@ -414,7 +462,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         );
         const lastMessage = sourceMessages.sort((a, b) => a.created.localeCompare(b.created)).at(-1);
         if (!lastMessage) {
-          return yield* Effect.dieMessage('source conversation produced no messages');
+          return yield* Effect.die(new Error('source conversation produced no messages'));
         }
 
         // Fork: a fresh session whose feed links back to the source via a SessionLink (mirrors the
@@ -445,7 +493,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
 
   // Placed last (like the fork test) so it does not perturb the shared deterministic ID stream of
   // the memoized tests above.
-  it.scoped(
+  it.effect(
     'agent process succeeds when idle and respawns for a follow-up turn',
     Effect.fnUntraced(
       function* (_) {
@@ -487,7 +535,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
 
   // Drives the process control plane directly (no LLM turn), so it is placed after the memoized
   // tests above to avoid perturbing their shared deterministic ID stream.
-  it.scoped(
+  it.effect(
     'setAlarm over the process control surface reaches the live agent and arms a self-wake',
     Effect.fnUntraced(
       function* (_) {
@@ -496,7 +544,13 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         // Spawns the agent process (no LLM turn yet) bound to a stamped host marker.
         const session = yield* AgentService.createSession();
         const target = Obj.getURI(session.feed);
-        const [handle] = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
+        // `list` erases the RPC group to `any`, which Effect 4 resolves to an `unknown` requirement
+        // on every call; naming the group restores it.
+        const handles: readonly ProcessManager.Handle<any, any, HarnessControlRpcs>[] = yield* processManager.list({
+          target,
+          key: AGENT_PROCESS_KEY,
+        });
+        const [handle] = handles;
 
         // The spawn stamped the harness-host annotation so the process is discoverable as the owner.
         expect(
@@ -508,7 +562,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         // void result proves the control-plane wiring end-to-end (persistence semantics are covered
         // by the AlarmManager unit tests).
         const now = yield* Clock.currentTimeMillis;
-        const at = DateTime.unsafeMake(now + Duration.toMillis(Duration.hours(1)));
+        const at = DateTime.makeUnsafe(now + Duration.toMillis(Duration.hours(1)));
         yield* handle.rpc.setAlarm({ at, message: 'finish the report' });
 
         // The RPC did not fail the process; it remains live and ready for the conversation to resume.
@@ -521,13 +575,32 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
       TestHelpers.provideTestContext,
     ),
   );
+
+  it.effect(
+    'calls a tool whose operation takes no input',
+    Effect.fnUntraced(
+      function* (_) {
+        pingCount = 0;
+        const session = yield* AgentService.createSession({ skills: [PingSkill] });
+        yield* session.submitPrompt('Ping the service and tell me what it returned.');
+        yield* session.waitForCompletion();
+
+        expect(pingCount).toBe(1);
+        const messages = yield* Feed.query(session.feed, Filter.type(Message.Message)).run;
+        expect(messages.map(Message.extractText).join('\n').toLocaleLowerCase()).toContain('pong');
+      },
+      Effect.provide(TestLayer()),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
+  );
 });
 
 // Control-plane coverage (no LLM turn), so it runs ungated in CI unlike the replay suite above.
 describe('Agent Service (control plane)', () => {
   // Exercises the instruction-aware reuse identity on both paths — the session cache and the
   // remount (rediscovered process) path.
-  it.scoped(
+  it.effect(
     'session reuse tracks the steering-instructions ref',
     Effect.fnUntraced(
       function* (_) {

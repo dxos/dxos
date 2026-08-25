@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Atom from '@effect-atom/atom/Atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { Event, type ReadOnlyEvent } from '@dxos/async';
 import { type Database, Entity, type Filter, Query, type QueryResult, Registry, Type } from '@dxos/echo';
@@ -209,8 +209,8 @@ const getEntityKeyDXNs = (entity: Entity.Unknown): DXN.DXN[] => {
   }
   const version = meta?.version;
   const dxns: DXN.DXN[] = [];
-  // `key` may be either a raw nsid (`org.example.function`) or an already-canonical
-  // DXN (`dxn:org.example.function`); normalize to the bare nsid for construction.
+  // `key` may be either a raw nsid (`com.example.function`) or an already-canonical
+  // DXN (`dxn:com.example.function`); normalize to the bare nsid for construction.
   const nsid = DXN.isDXN(key) ? key.slice('dxn:'.length) : key;
   const unversioned = DXN.tryMake(`dxn:${nsid}`);
   if (unversioned != null) {
@@ -266,7 +266,8 @@ const normalizeURI = (uri: string): URI.URI => DXN.tryMake(uri) ?? EID.tryParse(
  * - `from` and `options` clauses — unwrapped; scope is ignored (a direct registry query always
  *   targets the registry's own entities).
  *
- * Server-side concerns such as traversal, ordering, and text/timestamp filters are not supported.
+ * Full-text filters evaluate in memory as case-insensitive all-terms containment, not ranked FTS.
+ * Vector search, traversal, ordering, and timestamp filters are not supported.
  */
 class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
   readonly #registry: Registry.Registry;
@@ -299,13 +300,11 @@ class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
 
   runSyncEntries(): QueryResult.Entry<T>[] {
     const matches = executeQuery(this.#registry, this.#query.ast);
-    return matches.map(
-      (entity): QueryResult.Entry<T> => ({
-        id: getEntityId(entity),
-        result: entity as unknown as T,
-        resolution: { source: 'local', time: 0 },
-      }),
-    );
+    return matches.map((entity): QueryResult.Entry<T> => ({
+      id: getEntityId(entity),
+      result: entity as unknown as T,
+      resolution: { source: 'local', time: 0 },
+    }));
   }
 
   async first(): Promise<T> {

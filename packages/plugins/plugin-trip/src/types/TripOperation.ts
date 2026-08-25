@@ -13,12 +13,8 @@ import { Database, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 
-import { meta } from '#meta';
-
 import * as Segment from './Segment';
 import * as Trip from './Trip';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /**
  * Trip-message extractor as a first-class operation. The handler at
@@ -30,7 +26,7 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
  */
 export const ExtractTrip = Operation.make({
   meta: {
-    key: makeKey('extractTrip'),
+    key: DXN.make('org.dxos.operation.trip.extract'),
     name: 'Extract Trip',
     description: 'Parse a flight confirmation email into Booking + Segment proposals.',
     icon: 'ph--airplane-takeoff--regular',
@@ -48,7 +44,7 @@ export const ExtractTrip = Operation.make({
  */
 export const MergeTrip = Operation.make({
   meta: {
-    key: makeKey('mergeTrip'),
+    key: DXN.make('org.dxos.operation.trip.merge'),
     name: 'Merge trip',
     description: 'Merge this trip into the nearest other trip by date and delete it.',
     icon: 'ph--arrows-merge--regular',
@@ -70,7 +66,7 @@ export const MergeTrip = Operation.make({
  */
 export const CreateTripFromEvents = Operation.make({
   meta: {
-    key: makeKey('createTripFromEvents'),
+    key: DXN.make('org.dxos.operation.trip.createFromEvents'),
     name: 'Create trip from events',
     description: 'Create a new trip and itinerary from a range of calendar events.',
     icon: 'ph--airplane-takeoff--regular',
@@ -90,33 +86,33 @@ export const CreateTripFromEvents = Operation.make({
  */
 export const AddSegment = Operation.make({
   meta: {
-    key: makeKey('addSegment'),
+    key: DXN.make('org.dxos.operation.trip.addSegment'),
     name: 'Add segment',
     description: 'Add a travel segment (flight, train, boat, road, accommodation, activity) to a trip.',
     icon: 'ph--plus--regular',
   },
   services: [Database.Service],
   input: Schema.Struct({
-    trip: Ref.Ref(Trip.Trip).annotations({ description: 'The trip to add the segment to.' }),
-    kind: Segment.Kind.annotations({
+    trip: Ref.Ref(Trip.Trip).annotate({ description: 'The trip to add the segment to.' }),
+    kind: Segment.Kind.annotate({
       description: 'Segment kind: flight, train, boat, road, accommodation, or activity.',
     }),
-    title: Schema.optional(Schema.String).annotations({
+    title: Schema.optional(Schema.String).annotate({
       description: 'Title or name (activity title, hotel name, etc.).',
     }),
-    origin: Schema.optional(Schema.String).annotations({
+    origin: Schema.optional(Schema.String).annotate({
       description: 'Origin place name for transport segments, or the location for accommodation/activity.',
     }),
-    destination: Schema.optional(Schema.String).annotations({
+    destination: Schema.optional(Schema.String).annotate({
       description: 'Destination place name for transport segments.',
     }),
-    departAt: Schema.optional(Schema.String).annotations({
+    departAt: Schema.optional(Schema.String).annotate({
       description: 'Start / departure / check-in time (ISO 8601).',
     }),
-    arriveAt: Schema.optional(Schema.String).annotations({
+    arriveAt: Schema.optional(Schema.String).annotate({
       description: 'End / arrival / check-out time (ISO 8601).',
     }),
-    notes: Schema.optional(Schema.String).annotations({ description: 'Freeform notes.' }),
+    notes: Schema.optional(Schema.String).annotate({ description: 'Freeform notes.' }),
   }),
   output: Schema.Struct({ segmentId: Schema.String }),
 });

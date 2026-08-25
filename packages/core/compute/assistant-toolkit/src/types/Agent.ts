@@ -7,11 +7,11 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { AiContext, Harness } from '@dxos/assistant';
+import type { Harness } from '@dxos/assistant';
 import * as Instructions from '@dxos/compute/Instructions';
 import type * as Skill from '@dxos/compute/Skill';
-import { Annotation, Database, DXN, Feed, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
-import { type EntityNotFoundError } from '@dxos/echo/Err';
+import { Annotation, Database, DXN, Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { type EntityNotFoundError } from '@dxos/echo/Error';
 import { EffectEx } from '@dxos/effect';
 import { IdentityDid } from '@dxos/keys';
 
@@ -21,9 +21,17 @@ import * as Chat from './Chat';
 /**
  * An agent identity: a personality (attribution DID) plus its preset payload (instructions with
  * text, skills, objects, and commands). Owns no conversation state — a chat is linked to the agent
- * it runs as by a `CompanionTo` relation, and durable work products live on a Project
+ * it runs as by the ECHO parent edge (the agent parents its chats), and durable work products live on a Project
  * (plugin-projects DESIGN.md, "Agent ↔ Project convergence").
  */
+
+/**
+ * `@dxos/assistant` carries the AI session runtime (MCP SDK, Anthropic client, ~280 KB). This
+ * module holds the Agent *schema*, which core plugins reference for operation definitions, so the
+ * runtime loads only when an agent operation actually runs.
+ */
+const assistantRuntime = () => import('@dxos/assistant');
+
 export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent', '0.2.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
@@ -35,7 +43,7 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
      * HALO identity DID takes once agents get first-class identities. Optional because nothing
      * populates it yet.
      */
-    did: Schema.optional(IdentityDid).annotations({
+    did: Schema.optional(IdentityDid).annotate({
       title: 'DID',
       description: "The agent's identity DID; attributes content the agent authors.",
     }),
@@ -43,7 +51,7 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
     /**
      * Master switch for the agent's automation (propagated onto its compiled routine triggers).
      */
-    enabled: Schema.optional(Schema.Boolean).annotations({
+    enabled: Schema.optional(Schema.Boolean).annotate({
       title: 'Enabled',
       description: 'Master switch for agent automation; propagated to all triggers on sync.',
     }),
@@ -52,10 +60,10 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
      * Instructions for the agent — the preset payload (text, skills, objects, commands) a chat
      * receives when the agent is applied to it.
      */
-    instructions: Ref.Ref(Instructions.Instructions).pipe(Schema.annotations({ title: 'Instructions' })),
+    instructions: Ref.Ref(Instructions.Instructions).pipe(Schema.annotate({ title: 'Instructions' })),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--drone--regular', hue: 'sky' }),
+    Annotation.IconAnnotation.set({ icon: 'ph--drone--regular', hue: 'amber' }),
   ),
 ) {}
 
@@ -75,24 +83,28 @@ export const loadInstructions = (
   });
 
 /**
- * Resolves the agent's primary chat (the agent holds no chat ref).
+ * Resolves the agent's primary chat (the agent holds no chat ref): the latest chat parented to the
+ * agent. Entity ids are ULIDs, so the id order is creation order — `resetChatHistory` makes the
+ * replacement chat primary simply by creating it later.
  */
 export const loadChat = (agent: Agent): Effect.Effect<Chat.Chat | undefined, never, Database.Service> =>
   Effect.gen(function* () {
-    const chats = yield* Database.query(Query.select(Filter.id(agent.id)).targetOf(Chat.CompanionTo).source()).run;
-    const [chat] = chats.filter(Obj.instanceOf(Chat.Chat));
-    return chat;
+    const children = yield* Database.query(Query.select(Filter.id(agent.id)).children()).run;
+    return children
+      .filter(Obj.instanceOf(Chat.Chat))
+      .sort((left, right) => left.id.localeCompare(right.id))
+      .at(-1);
   }).pipe(Effect.orDie);
 
 /**
  * Resolves the agent a chat runs as, if any. Plain (agentless) chats yield `undefined`.
- * Companion targets are untyped, so the agent is the one target of that type.
+ * The parent is loaded with the object, so this is synchronous — no query.
  */
-export const loadForChat = (chat: Chat.Chat): Effect.Effect<Agent | undefined, never, Database.Service> =>
-  Effect.gen(function* () {
-    const targets = yield* Database.query(Query.select(Filter.id(chat.id)).sourceOf(Chat.CompanionTo).target()).run;
-    return targets.find(Obj.instanceOf(Agent));
-  }).pipe(Effect.orDie);
+export const loadForChat = (chat: Chat.Chat): Effect.Effect<Agent | undefined> =>
+  Effect.sync(() => {
+    const parent = Obj.getParent(chat);
+    return parent && Obj.instanceOf(Agent, parent) ? parent : undefined;
+  });
 
 export type MakeProps = Omit<Obj.MakeProps<typeof Agent>, 'instructions'> & {
   instructions: string;
@@ -114,6 +126,10 @@ export const makeInitialized = (
 ): Effect.Effect<Agent, never, Database.Service> =>
   Effect.gen(function* () {
     const { skills: propsSkills, contextObjects, ...agentProps } = props;
+
+    // Loaded before anything is persisted: a rejected chunk after the first `Database.add` would
+    // leave a half-built agent graph behind with nothing to clean it up.
+    const { AiContext: AiContextRuntime } = yield* Effect.promise(assistantRuntime);
 
     // Persist any inline (transient) skills so their refs are resolvable from feed bindings later.
     // Refs created with Ref.make(obj) carry an inline target, but when stored in ECHO and read back
@@ -143,20 +159,20 @@ export const makeInitialized = (
     );
     Obj.setParent(instructions, agent);
     const feed = yield* Database.add(Feed.make());
-    const runtime = yield* Effect.runtime<Database.Service>();
-    const contextBinder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
+    const runtime = yield* Effect.context<Database.Service>();
+    const contextBinder = yield* EffectEx.acquireReleaseResource(() => new AiContextRuntime.Binder({ feed, runtime }));
     // TODO(dmaretskyi): Skill registry.
     const agentSkill = yield* Database.add(Obj.clone(skill, { deep: 'all' }));
 
     const chat = yield* Database.add(
       Chat.make({
-        [Obj.Parent]: agent,
         feed: Ref.make(feed),
         // Steered through the chat's own channel: instructions render into the system prompt.
-        // Identity/attribution comes from the CompanionTo relation below.
+        // Identity/attribution comes from the companion link (ref on the agent + parent edge).
         instructions: Ref.make(instructions),
       }),
     );
+    Chat.linkCompanion({ chat, subject: agent });
     Obj.setParent(feed, chat);
     yield* Effect.promise(() =>
       contextBinder.bind({
@@ -164,13 +180,6 @@ export const makeInitialized = (
         objects: [Ref.make(agent), Ref.make(chat), ...(contextObjects ?? [])],
       }),
     );
-    yield* Database.add(
-      Relation.make(Chat.CompanionTo, {
-        [Relation.Source]: chat,
-        [Relation.Target]: agent,
-      }),
-    );
-
     return agent;
   }).pipe(Effect.scoped);
 
@@ -185,14 +194,15 @@ export const resetChatHistory = (agent: Agent): Effect.Effect<void, EntityNotFou
   Effect.gen(function* () {
     const existingChat = yield* loadChat(agent);
     if (!existingChat) {
-      return yield* Effect.dieMessage('Agent must have an existing chat to reset.');
+      return yield* Effect.die(new Error('Agent must have an existing chat to reset.'));
     }
 
     const existingFeed = yield* Database.load(existingChat.feed);
-    const runtime = yield* Effect.runtime<Database.Service>();
+    const runtime = yield* Effect.context<Database.Service>();
+    const { AiContext: AiContextRuntime } = yield* Effect.promise(assistantRuntime);
     const existingContextBinder = yield* EffectEx.acquireReleaseResource(
       () =>
-        new AiContext.Binder({
+        new AiContextRuntime.Binder({
           feed: existingFeed,
           runtime,
         }),
@@ -204,15 +214,15 @@ export const resetChatHistory = (agent: Agent): Effect.Effect<void, EntityNotFou
       .map((object) => Ref.make(object));
 
     const feed = yield* Database.add(Feed.make());
-    const contextBinder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
+    const contextBinder = yield* EffectEx.acquireReleaseResource(() => new AiContextRuntime.Binder({ feed, runtime }));
 
     const chat = yield* Database.add(
       Chat.make({
-        [Obj.Parent]: agent,
         feed: Ref.make(feed),
         instructions: agent.instructions,
       }),
     );
+    Chat.linkCompanion({ chat, subject: agent });
     Obj.setParent(feed, chat);
     yield* Effect.promise(() =>
       contextBinder.bind({
@@ -221,22 +231,8 @@ export const resetChatHistory = (agent: Agent): Effect.Effect<void, EntityNotFou
       }),
     );
 
-    // Retire the old companion link; the new chat becomes the primary.
-    const relations = yield* Database.query(Query.select(Filter.id(agent.id)).targetOf(Chat.CompanionTo)).run.pipe(
-      Effect.orDie,
-    );
-    for (const relation of relations) {
-      // Compare by id: the two query paths may resolve distinct proxy instances for the same chat.
-      if (Relation.getSource(relation).id === existingChat.id) {
-        yield* Database.remove(relation);
-      }
-    }
-    yield* Database.add(
-      Relation.make(Chat.CompanionTo, {
-        [Relation.Source]: chat,
-        [Relation.Target]: agent,
-      }),
-    );
+    // The old chat stays parented (history is retired, not deleted); the new chat is primary
+    // because `loadChat` resolves the latest child by creation order.
   }).pipe(Effect.scoped);
 
 export const getFromChatContext: Effect.Effect<
@@ -244,7 +240,8 @@ export const getFromChatContext: Effect.Effect<
   HarnessContextError | Harness.NotSupportedError,
   Harness.HarnessService
 > = Effect.gen(function* () {
-  const agents = yield* Harness.queryContext(Filter.type(Agent));
+  const { Harness: HarnessRuntime } = yield* Effect.promise(assistantRuntime);
+  const agents = yield* HarnessRuntime.queryContext(Filter.type(Agent));
   if (agents.length !== 1) {
     return yield* Effect.fail(new HarnessContextError({ type: 'agent', count: agents.length }));
   }

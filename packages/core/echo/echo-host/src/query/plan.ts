@@ -68,13 +68,27 @@ export namespace QueryPlan {
      * When set, the index scan can be optimized to stop early.
      */
     limit?: number;
+
+    /**
+     * Cursor range from a `feed-cursor` filter, both bounds exclusive. The scan returns only blocks
+     * positioned inside it, in position order, so resuming a feed costs what is new rather than the
+     * whole feed. Present (possibly with no bounds set) whenever the filter was, since a cursor read
+     * covers positioned blocks only.
+     */
+    feedCursorRange?: { begin?: string; end?: string };
   };
 
   /**
    * Specifier to scan the database for objects.
    * Optimized to utilize database indexes.
    */
-  export type Selector = WildcardSelector | IdSelector | TypeSelector | TextSelector | TimestampSelector;
+  export type Selector =
+    | WildcardSelector
+    | IdSelector
+    | TypeSelector
+    | TextSelector
+    | TimestampSelector
+    | IncomingReferenceSelector;
 
   export type WildcardSelector = {
     _tag: 'WildcardSelector';
@@ -98,6 +112,23 @@ export namespace QueryPlan {
      * If true, select objects that do not match the typename.
      */
     inverted: boolean;
+  };
+
+  /**
+   * Select the objects holding a reference to `targetDXN`, straight off the reverse-reference index.
+   *
+   * Unlike an incoming {@link ReferenceTraversal} this needs no anchor in the working set, so it can
+   * name an entity that is absent from the graph — a named entity, or one a migration has renamed away.
+   */
+  export type IncomingReferenceSelector = {
+    _tag: 'IncomingReferenceSelector';
+
+    targetDXN: URI.URI;
+
+    /**
+     * Property path where the reference is located; null matches any property.
+     */
+    property: EscapedPropPath | null;
   };
 
   /**

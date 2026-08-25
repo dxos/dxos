@@ -3,8 +3,8 @@
 //
 
 import { type Extension } from '@codemirror/state';
-import { Atom } from '@effect-atom/atom';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -20,7 +20,13 @@ import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { Panel } from '@dxos/react-ui';
 import { ViewState } from '@dxos/react-ui-attention';
-import { Editor, type ViewModeItem, defaultViewModeItems, useEditorContext } from '@dxos/react-ui-editor';
+import {
+  Editor,
+  type EditorMenuGroup,
+  type ViewModeItem,
+  defaultViewModeItems,
+  useEditorContext,
+} from '@dxos/react-ui-editor';
 import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
 import { Text } from '@dxos/schema';
 import { Merge } from '@dxos/util';
@@ -32,10 +38,9 @@ import {
   type MarkdownEditorProviderProps,
 } from '#components';
 import { useLinkQuery } from '#hooks';
+import { Markdown, MarkdownCapabilities } from '#types';
 
 import { mergeConflicts } from '../../extensions';
-import * as Markdown from '../../types/Markdown';
-import * as MarkdownCapabilities from '../../types/MarkdownCapabilities';
 
 /**
  * Built-in binding when no {@link MarkdownCapabilities.EditorBindingHook} is contributed: bind the
@@ -219,6 +224,7 @@ const MarkdownArticleImpl = forwardRef<
     // is selected) the review mode has no effect, so only the built-in editor modes are shown.
     const { ambient, activeReviewMode, selectViewMode } = binding;
     const viewModeExtensions = useCapabilities(MarkdownCapabilities.ViewModeExtension);
+
     // Bumped on every dropdown selection: the menu returns focus to its trigger on close, so the
     // editor must be handed the focus back (the caret survives in editor state) — see RefocusEditor.
     const [focusRequest, setFocusRequest] = useState(0);
@@ -267,6 +273,28 @@ const MarkdownArticleImpl = forwardRef<
 
     // Open linked objects.
     const { invokePromise } = useOperationInvoker();
+    // Contributed slash-menu commands, one group per contributing plugin. Each entry names an
+    // operation; selecting it hands the operation the surface and the offset the trigger was
+    // consumed at, and the handler reaches the live view through `EditorViews`.
+    const menuExtensions = useCapabilities(MarkdownCapabilities.MenuExtension);
+    const slashCommandGroups = useMemo<EditorMenuGroup[]>(() => {
+      const groups = new Map<string, EditorMenuGroup>();
+      for (const extension of [...menuExtensions].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))) {
+        const group = groups.get(extension.group.id) ?? {
+          id: extension.group.id,
+          label: extension.group.label,
+          items: [],
+        };
+        group.items.push({
+          id: extension.id,
+          label: extension.label,
+          icon: extension.icon,
+          onSelect: ({ head }) => void invokePromise?.(extension.operation, { subject: attendableId ?? id, head }),
+        });
+        groups.set(extension.group.id, group);
+      }
+      return [...groups.values()];
+    }, [menuExtensions, attendableId, id, invokePromise]);
     const handleSelectObject = useCallback(
       (targetId: string, modifiers?: { shift: boolean }) => {
         if (onSelectObject) {
@@ -319,6 +347,7 @@ const MarkdownArticleImpl = forwardRef<
         onFileUpload={handleFileUpload}
         onLinkQuery={handleLinkQuery}
         onSelectLink={handleSelectLink}
+        slashCommandGroups={slashCommandGroups}
         onViewModeChange={onViewModeChange}
         {...props}
       >

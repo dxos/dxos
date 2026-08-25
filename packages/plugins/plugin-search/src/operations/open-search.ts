@@ -7,8 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 
+import { SearchOperation } from '#types';
+
 import { SEARCH_DIALOG } from '../constants';
-import * as SearchOperation from '../types/SearchOperation';
 
 const handler: Operation.WithHandler<typeof SearchOperation.OpenSearch> = SearchOperation.OpenSearch.pipe(
   Operation.withHandler(

@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as Tool from 'effect/unstable/ai/Tool';
+import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import {
@@ -33,9 +33,16 @@ import { RunInstructions } from './definitions';
 
 const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-4-8.default');
 
-const routineOutputSchema = (output: JsonSchema.JsonSchema): Schema.Schema.All => {
-  // Routines default to Void output; completeJob still needs to accept arbitrary success payloads.
-  if ('$id' in output && output.$id === '/schemas/unknown') {
+/** `Instructions.make` defaults `output` to `Schema.Void`; this is what that serializes to. */
+const UNDECLARED_OUTPUT = JsonSchema.toJsonSchema(Schema.Void);
+
+const routineOutputSchema = (output: JsonSchema.JsonSchema): Schema.Top => {
+  // A routine that declares no output still has to let `completeJob` carry an arbitrary success
+  // payload — decoding against the default would reject one with `Expected null | undefined`.
+  const undeclared =
+    ('$id' in output && output.$id === '/schemas/unknown') ||
+    ('type' in output && output.type === (UNDECLARED_OUTPUT as { type?: unknown }).type);
+  if (undeclared) {
     return Schema.Any;
   }
   return JsonSchema.toEffectSchema(output);
@@ -87,8 +94,11 @@ export default RunInstructions.pipe(
           You are an agent running in the non-interactive mode.
           The user is unable to see what you are doing, and cannot answer any questions.
           Do not ask questions.
-          Complete the task before you, and at the end call [completeJob] with the output.
-          If you are unable to complete the task, call [completeJob] with the failure reason.
+          Complete the task before you, and at the end call [completeJob] with {"success": <output>}.
+          The output goes inside "success" — never at the top level, and never wrapped in a second
+          "success" of its own.
+          If you are unable to complete the task, call [completeJob] with {"failure": {"message": "..."}}.
+          Pass one of the two, never both, and omit the field you do not use.
           If no output is required, call [completeJob] with an empty object: {}
           Do not stop until you call [completeJob].
         `;
@@ -113,7 +123,7 @@ export default RunInstructions.pipe(
           resultSink,
         });
 
-        const runtime = yield* Effect.runtime<Database.Service>();
+        const runtime = yield* Effect.context<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
 
         yield* Effect.promise(() =>
@@ -136,9 +146,9 @@ export default RunInstructions.pipe(
           );
 
         return yield* Deferred.poll(resultSink).pipe(
+          Effect.flatMap(Effect.fromOption),
           Effect.flatten,
-          Effect.flatten,
-          Effect.catchTag('NoSuchElementException', () =>
+          Effect.catchTag('NoSuchElementError', () =>
             Effect.gen(function* () {
               yield* session
                 .createRequest({
@@ -153,9 +163,9 @@ export default RunInstructions.pipe(
                 );
 
               return yield* Deferred.poll(resultSink).pipe(
+                Effect.flatMap(Effect.fromOption),
                 Effect.flatten,
-                Effect.flatten,
-                Effect.catchTag('NoSuchElementException', () =>
+                Effect.catchTag('NoSuchElementError', () =>
                   Effect.fail(new PromptError('Agent did not signal task completion.', {})),
                 ),
               );
@@ -163,10 +173,8 @@ export default RunInstructions.pipe(
           ),
         );
       },
-      Effect.tapBoth({
-        onSuccess: () => Database.flush(),
-        onFailure: () => Database.flush(),
-      }),
+      // v4 dropped `tapBoth`; `onExit` runs the finalizer on either outcome.
+      Effect.onExit(() => Database.flush()),
       Effect.scoped,
     ),
   ),
@@ -174,37 +182,42 @@ export default RunInstructions.pipe(
 );
 
 const makePromptAgentToolkit = (options: {
-  output: Schema.Schema.All;
+  output: Schema.Top;
   resultSink: Deferred.Deferred<unknown, PromptError>;
 }) => {
   class PromptAgentToolkit extends Toolkit.make(
     Tool.make('completeJob', {
-      parameters: {
-        success: Schema.optional(options.output),
+      // Both fields accept `null` because models emit it for a field they mean to omit.
+      parameters: Schema.Struct({
+        success: Schema.optional(Schema.NullOr(options.output)),
         failure: Schema.optional(
-          Schema.Struct({
-            message: Schema.String.annotations({
-              description: 'Short message describing the error.',
+          Schema.NullOr(
+            Schema.Struct({
+              message: Schema.String.annotate({
+                description: 'Short message describing the error.',
+              }),
+              description: Schema.optional(Schema.NullOr(Schema.String)).annotate({
+                description: 'Optional longer message describing in detail what went wrong',
+              }),
             }),
-            description: Schema.optional(Schema.String).annotations({
-              description: 'Optional longer message describing in detail what went wrong',
-            }),
-          }),
+          ),
         ),
-      },
+      }),
     }),
   ) {}
   const layer = PromptAgentToolkit.toLayer({
     completeJob: Effect.fnUntraced(function* (result) {
-      if (result.failure) {
+      // A success payload wins over a failure sent alongside it, so a placeholder cannot discard
+      // completed work.
+      if (result.success == null && result.failure) {
         yield* Deferred.fail(
           options.resultSink,
           new PromptError(result.failure.message, {
-            description: result.failure.description,
+            description: result.failure.description ?? undefined,
           }),
         );
       } else {
-        yield* Deferred.succeed(options.resultSink, result.success);
+        yield* Deferred.succeed(options.resultSink, result.success ?? undefined);
       }
     }),
   });
@@ -217,7 +230,7 @@ interface ToolExecutionServiceOptions {
 }
 
 const ToolExecutionService = ({ feed }: ToolExecutionServiceOptions) =>
-  Layer.unwrapEffect(
+  Layer.unwrap(
     Effect.gen(function* () {
       const operationInvoker = yield* Operation.Service;
       return makeToolExecutionService({

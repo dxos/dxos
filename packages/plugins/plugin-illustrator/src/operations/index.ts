@@ -5,7 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import * as DrawingOperation from '../types/DrawingOperation';
+import { DrawingOperation } from '#types';
 
 export const IllustratorOperationHandlerSet = OperationHandlerSet.lazy([
   DrawingOperation.Create.pipe(Operation.lazyHandler(() => import('./create'))),

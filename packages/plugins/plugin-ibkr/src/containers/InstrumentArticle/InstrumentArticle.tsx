@@ -8,14 +8,13 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Card, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Card, Flex, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 
 import { FundamentalsPanel, TradingViewChart } from '#components';
+import { Ibkr, IbkrOperation } from '#types';
 
 import { meta } from '../../meta';
 import { resolveTradingViewSymbol } from '../../services';
-import type * as Ibkr from '../../types/Ibkr';
-import * as IbkrOperation from '../../types/IbkrOperation';
 
 export type InstrumentArticleProps = AppSurface.ObjectArticleProps<Ibkr.Instrument>;
 
@@ -63,7 +62,7 @@ export const InstrumentArticle = ({ role, subject }: InstrumentArticleProps) => 
             <Card.Root fullWidth border={false}>
               <Card.Header>
                 <Card.Block />
-                <div className='flex min-w-0 flex-col gap-0.5'>
+                <Flex column gap='xs' classNames='min-w-0'>
                   <Card.Title>
                     {instrument.symbol}
                     {instrument.name ? ` · ${instrument.name}` : ''}
@@ -73,7 +72,7 @@ export const InstrumentArticle = ({ role, subject }: InstrumentArticleProps) => 
                       {[instrument.exchange, instrument.sector, instrument.industry].filter(Boolean).join(' · ')}
                     </Card.Text>
                   )}
-                </div>
+                </Flex>
                 <Card.Block />
               </Card.Header>
               <Card.Body>

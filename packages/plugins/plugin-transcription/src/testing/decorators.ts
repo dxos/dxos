@@ -8,13 +8,14 @@ import * as Effect from 'effect/Effect';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { IndexKind } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
 
-import { TranscriptionPlugin } from '../TranscriptionPlugin';
+import { TranscriptionPlugin } from '../plugin';
 import { TestItem } from './testing';
 
 // TODO(mykola): Make API easier to use.
@@ -54,19 +55,19 @@ export const createStoryDecorators = ({ enableVectorIndex = false }: StoryDecora
   withPluginManager({
     plugins: [
       ...corePlugins(),
-      StorybookPlugin({}),
-      ClientPlugin({
+      StorybookPlugin.make({}),
+      ClientPlugin.make({
         types: [TestItem, Person.Person, Organization.Organization],
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
-            const { personalSpace } = yield* initializeIdentity(client);
+            const { defaultSpace } = yield* initializeIdentity(client);
             if (enableVectorIndex) {
               yield* enableQueryIndexes(client.services.services);
             }
-            yield* Effect.promise(() => seedTestData(personalSpace));
+            yield* Effect.promise(() => seedTestData(defaultSpace));
           }),
       }),
-      PreviewPlugin(),
+      PreviewPlugin.make(),
       TranscriptionPlugin(),
     ],
     // setupEvents (not fireEvents) so capabilities activate during app setup, before the always-mounted

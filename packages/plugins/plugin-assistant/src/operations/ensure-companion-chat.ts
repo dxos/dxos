@@ -10,8 +10,7 @@ import { Chat } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Query } from '@dxos/echo';
 
-import * as AssistantCapabilities from '../types/AssistantCapabilities';
-import * as AssistantOperation from '../types/AssistantOperation';
+import { AssistantCapabilities, AssistantOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.EnsureCompanionChat> =
   AssistantOperation.EnsureCompanionChat.pipe(
@@ -20,11 +19,15 @@ const handler: Operation.WithHandler<typeof AssistantOperation.EnsureCompanionCh
         const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
         const companionUri = Obj.getURI(companionTo);
 
-        // 1. Look for an existing persisted companion chat in the space.
-        const existingChats = yield* Effect.promise(() =>
-          db.query(Query.select(Filter.id(companionTo.id)).targetOf(Chat.CompanionTo).source()).run(),
+        // 1. Look for an existing persisted companion chat in the space: the subject's latest
+        // chat child (entity ids are ULIDs, so id order is creation order).
+        const children = yield* Effect.promise(() =>
+          db.query(Query.select(Filter.id(companionTo.id)).children()).run(),
         );
-        const existingChat = existingChats.at(-1);
+        const existingChat = children
+          .filter(Obj.instanceOf(Chat.Chat))
+          .sort((left, right) => left.id.localeCompare(right.id))
+          .at(-1);
         if (existingChat) {
           // Cache the persisted chat so the graph connector can resolve it immediately
           // via the cache fallback, without waiting for AtomObj.make(ref) to hydrate.

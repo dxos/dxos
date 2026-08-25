@@ -8,9 +8,9 @@ import React, { useCallback, useRef, useState } from 'react';
 import { usePluginManager } from '@dxos/app-framework/ui';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
-import { Button, Dialog, Input, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, Flex, Input, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export const LOAD_PLUGIN_DIALOG = DXN.make(`${meta.profile.key}.loadPluginDialog`);
 
@@ -36,7 +36,7 @@ export const LoadPluginDialog = () => {
       yield* manager.enable(plugin.meta.profile.key);
       closeRef.current?.click();
     }).pipe(
-      Effect.catchAll((err) =>
+      Effect.catch((err) =>
         Effect.sync(() => {
           setError(String(err));
         }),
@@ -56,7 +56,7 @@ export const LoadPluginDialog = () => {
       </Dialog.Header>
       <Dialog.Body>
         {/* TODO(burdon): Form section. */}
-        <div className='flex flex-col gap-4'>
+        <Flex column gap='lg'>
           <Input.Root validationValence={error ? 'error' : undefined}>
             <Input.Label>{t('plugin-url.label')}</Input.Label>
             <Input.TextInput
@@ -76,12 +76,12 @@ export const LoadPluginDialog = () => {
             />
             {error && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
           </Input.Root>
-          <div className='flex justify-end'>
+          <Flex justify='end'>
             <Button variant='primary' disabled={!url.trim() || loading} onClick={handleLoad}>
               {loading ? t('loading.label') : t('load-plugin.label')}
             </Button>
-          </div>
-        </div>
+          </Flex>
+        </Flex>
       </Dialog.Body>
     </Dialog.Content>
   );

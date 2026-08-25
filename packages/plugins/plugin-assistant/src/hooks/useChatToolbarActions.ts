@@ -12,9 +12,9 @@ import { invariant } from '@dxos/invariant';
 import { MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
+import { AssistantOperation } from '#types';
 
 import { useChatContext } from '../components/Chat/context';
-import * as AssistantOperation from '../types/AssistantOperation';
 
 export type ChatToolbarActionsProps = {
   chat?: Chat.Chat;
@@ -30,7 +30,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
     (get) => {
       const chats =
         companionTo && db
-          ? get(db.query(Query.select(Filter.id(companionTo.id)).targetOf(Chat.CompanionTo).source()).atom)
+          ? get(db.query(Query.select(Filter.id(companionTo.id)).children()).atom).filter(Obj.instanceOf(Chat.Chat))
           : [];
 
       const builder = MenuBuilder.make().root({
@@ -86,7 +86,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
         );
 
       if (chats.length > 0) {
-        builder.group(
+        builder.separator().group(
           'chats',
           {
             label: ['chat-history.label', { ns: meta.profile.key }],

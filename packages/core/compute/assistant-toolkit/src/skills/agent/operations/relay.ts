@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
-import * as Prompt from '@effect/ai/Prompt';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
+import * as Prompt from 'effect/unstable/ai/Prompt';
 
 import { AiService } from '@dxos/ai';
 import { getSession } from '@dxos/compute/AgentService';
@@ -39,7 +39,7 @@ const handler: Operation.WithHandler<typeof Relay> = Relay.pipe(
           // forwards the event rather than silently dropping it.
           const relevant = yield* qualifyEvent(chat, event).pipe(
             Effect.retry({ times: 1 }),
-            Effect.catchAll((error) =>
+            Effect.catch((error) =>
               Effect.sync(() => {
                 log.warn('relay qualification failed; forwarding event', { error });
                 return true;

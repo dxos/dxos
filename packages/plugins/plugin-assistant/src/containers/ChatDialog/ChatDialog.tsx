@@ -11,14 +11,13 @@ import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useRegistry } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
+import { type ChatView } from '@dxos/react-ui-assistant';
 import { ChatDialog as NaturalChatDialog } from '@dxos/react-ui-chat';
 
 import { Chat, type ChatRootProps } from '#components';
 import { useChatProcessor, useChatServices, usePresets } from '#hooks';
 import { meta } from '#meta';
-
-import type * as Assistant from '../../types/Assistant';
-import * as AssistantCapabilities from '../../types/AssistantCapabilities';
+import { AssistantCapabilities } from '#types';
 
 export type ChatDialogProps = {
   chat?: ChatTypes.Chat;
@@ -62,7 +61,7 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
       <NaturalChatDialog.Root open={open} expanded={expanded} onOpenChange={setOpen}>
         <NaturalChatDialog.Header title={t('assistant-dialog.title')} />
         <NaturalChatDialog.Content>
-          <Chat.Thread viewType={(chatViewType as Assistant.ChatView | undefined) ?? settings.chatView} />
+          <Chat.Thread viewType={(chatViewType as ChatView | undefined) ?? settings.chatView} />
         </NaturalChatDialog.Content>
         <NaturalChatDialog.Footer classNames='p-1.5'>
           <Chat.Prompt {...chatProps} preset={preset?.id} online={online} expandable />

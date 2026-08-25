@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom';
 import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 import type { ComponentType } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -25,12 +26,10 @@ export const SettingsAtom = Capability.makeSingleton<Atom.Writable<Settings.Sett
 );
 
 /** Schema for persisted space plugin state. */
-export const StateSchema = Schema.mutable(
-  Schema.Struct({
-    spaceNames: Schema.Record({ key: Schema.String, value: Schema.String }),
-    enabledEdgeReplication: Schema.Boolean,
-  }),
-);
+export const StateSchema = Schema.Struct({
+  spaceNames: Schema.Record(Schema.String, Schema.String),
+  enabledEdgeReplication: Schema.Boolean,
+}).mapFields(Struct.map(Schema.mutableKey));
 
 export type SpaceState = Schema.Schema.Type<typeof StateSchema>;
 
@@ -66,8 +65,15 @@ export const EphemeralState = Capability.makeSingleton<Atom.Writable<SpaceEpheme
   `${meta.profile.key}.capability.ephemeralState`,
 );
 
-/** The personal space, contributed once the `IdentityCreated` module has created it. */
-export const PersonalSpace = Capability.makeSingleton<Space>()(`${meta.profile.key}.capability.personalSpace`);
+/**
+ * The default space as created by identity setup, so first-run seeding can order itself after it.
+ *
+ * Contributed only by `IdentityCreated`, so it is absent on every boot that does not create an
+ * identity, and it holds the space as created rather than the live designation. Anything asking
+ * "which space is the default right now" must use `AppSpace.getDefaultSpace`, which reads the
+ * designation the user can change in settings.
+ */
+export const DefaultSpace = Capability.makeSingleton<Space>()(`${meta.profile.key}.capability.defaultSpace`);
 
 export type SettingsSection = { id: string; label: Label; position?: Position.Position };
 export const SettingsSection = Capability.makeSingleton<SettingsSection>()(
@@ -101,7 +107,7 @@ export type CreateObjectEntry = Readonly<{
    * Effect Schema describing the create form inputs. To use a `Type.Type`
    * entity as the form schema, extract its schema first via `Type.getSchema(...)`.
    */
-  inputSchema?: Schema.Schema.AnyNoContext;
+  inputSchema?: Schema.Codec<any, any>;
   /**
    * Optional custom React panel rendered in place of the default `inputSchema` form.
    * Lets a plugin own the entire post-typename-selection flow (e.g. multi-stage forms).

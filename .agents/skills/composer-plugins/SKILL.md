@@ -40,6 +40,21 @@ A "plugin" is a package whose `src/meta.ts` exports a `Plugin.Meta`, so `ls pack
 
 Reach for these first when answering questions like "how many plugins", "which plugin contributes X surface", or "where is symbol Y defined".
 
+### Reading an operation's key and input shape
+
+`list_operations` does **not** enumerate operations — it returns one row per
+`Capabilities.OperationHandler` contribution, i.e. where each plugin's handler file lives. The
+definitions live under a `<Plugin>Operation` symbol — a `namespace` in `plugin-space`, a module of
+top-level exports in `plugin-markdown` — so go through the symbol tools:
+
+1. `list_plugins({ id: 'space' })` → the exact plugin id, when you only have a loose name.
+2. `find_symbol({ query: 'SpaceOperation' })` → `@dxos/plugin-space#SpaceOperation`.
+3. `get_symbol({ ref: '@dxos/plugin-space#SpaceOperation', include: ['source'] })` → every
+   definition with its `meta.key`, `input`, `output` and `services`.
+
+Read `services` while you are there: a definition listing `Database.Service` needs a `spaceId` at
+invoke time, which is invisible from the key alone.
+
 ### Search idioms before implementing
 
 **Required.** Before writing or refactoring any container, capability, operation, skill, or schema, call `mcp__dxos-introspect__list_idioms` and scan for a slug that matches what you're about to build. An idiom is a JSDoc-tagged pinning of the canonical way to do one thing — when one exists, it is the answer, and you should `get_symbol` on the host artifact and follow the pattern rather than reinventing it.
@@ -58,13 +73,30 @@ A plugin's design is captured in two artifacts across its lifecycle — a
 superpowers **design doc** during the initial build, then a durable
 **`PLUGIN.mdl`** that outlives the first session.
 
+### Package docs go in `docs/`, never the package root
+
+Every markdown file a plugin owns other than `README.md` lives under
+`packages/plugins/plugin-<name>/docs/` — `docs/DESIGN.md`, `docs/AUDIT.md`,
+`docs/TESTING.md`, and so on (see `plugin-assistant/docs/`, `plugin-inbox/docs/`).
+The package root holds only `README.md`, `PLUGIN.mdl`, and build config; a
+`DESIGN.md` sitting beside `package.json` is a mistake to move, not a variant to
+match. `README.md` links into `docs/` rather than restating it.
+
+This is about the package root staying scannable — a reader opening the plugin
+should see config and `src/`, with prose one directory away.
+
 ### Initial plugin creation (first session)
 
 When creating a brand-new plugin, do NOT start with `PLUGIN.mdl`. Instead:
 
-1. Run the `superpowers:brainstorming` flow and write the approved design to a
-   separate design doc under `agents/superpowers/specs/YYYY-MM-DD-<name>-design.md`
-   (the DXOS override of the superpowers default `docs/superpowers/…` path).
+1. Run the `superpowers:brainstorming` flow and write the approved design to
+   `packages/plugins/plugin-<name>/docs/DESIGN.md`, then add a short stub at
+   `agents/superpowers/specs/YYYY-MM-DD-<name>-design.md` that links to it. The
+   doc ships with the package it describes and the specs index still finds it;
+   the stub carries a link and nothing else, so there is one source of truth.
+   (`agents/superpowers/specs/` is the DXOS override of the superpowers default
+   `docs/superpowers/…` path; a design doc that belongs to no package is written
+   there directly.)
 2. The user approves that design doc before any code is written.
 3. Implement Phase 1 against the design doc.
 4. **At the end of Phase 1, before opening the PR**, author
@@ -86,8 +118,8 @@ The authoritative references live under [`packages/reflect/deus/`](../../../pack
 Use the template as the starting structure and `packages/plugins/plugin-chess/PLUGIN.mdl`
 as a reference. `PLUGIN.mdl` is a **record of what has been built — not a
 working document**. Design exploration for new features (in any session) happens
-in a design doc under `agents/superpowers/specs/`; `PLUGIN.mdl` is updated only
-after the design AND implementation have settled. It must be:
+in a design doc under the plugin's `docs/` (indexed from `agents/superpowers/specs/`);
+`PLUGIN.mdl` is updated only after the design AND implementation have settled. It must be:
 
 - **Present before a new plugin's first PR merges** — created at the close of
   Phase 1 as described above; never omitted.
@@ -109,7 +141,7 @@ Specification above), then start with a minimal skeleton before adding features.
 `PLUGIN.mdl` is NOT part of the initial skeleton — it is authored at the end of
 Phase 1, before the PR. The skeleton should include:
 
-1. `README.md` — brief description of the plugin's purpose.
+1. `README.md` — brief description of the plugin's purpose, linking to `docs/DESIGN.md`.
 2. `dx.config.ts` — `Config2.make({ plugin: { … } })` with key, name, author, description, icon, and a **quality tier tag** (see below).
 3. `package.json` — with `"private": true`, `#plugin` import alias, `./plugin` export subpath, and minimal dependencies.
 4. `moon.yml` — with `compile` entry points for both `src/index.ts` and `src/plugin.ts`.
@@ -165,6 +197,9 @@ plugin-foo/
   moon.yml
   dx.config.ts             # Plugin manifest; carries the quality tier in `plugin.tags`.
   PLUGIN.mdl
+  README.md                # The only markdown at the root; links into docs/.
+  docs/                    # Everything else the package documents.
+    DESIGN.md
   src/
     index.ts                # Root entrypoint; exports only meta and types/operations — never the plugin instance.
     plugin.ts               # Plugin.lazy() wrapper; consumed via @dxos/plugin-foo/plugin.
@@ -253,6 +288,13 @@ toolbar wiring (threading `attendableId`), schema-driven `Form` editing (no nati
 3-slot subgrid, icons, attention/density, reactivity (`useObject` for ECHO objects passed into
 components), translations, and storybook setup. For authoring brand-new `@dxos/react-ui` primitives, see
 the **composite-components** skill.
+
+**Before committing UI, grep the diff for dead classes.** The `tailwindcss-logical` dialect
+(`pis-*`, `pbs-*`, `pli-*`, `mis-*`, `is-*`, `bs-*`, `min-bs-*`, …) was dropped in the Tailwind v4
+migration and now compiles to nothing — silently, so nothing errors and nothing lints. It is the
+highest-frequency UI regression in this repo, and worst when the dead class was load-bearing (a
+`min-bs-*` height floor, a `min-is-0` letting a grid child shrink), because the failure surfaces far
+from its cause. Replacement table and the grep are in **composer-ui** § "Sizing vs logical utilities".
 
 ### Capability (`src/capabilities/`)
 

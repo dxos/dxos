@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as ConfigError from 'effect/ConfigError';
+import type * as ConfigError from 'effect/Config';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
@@ -31,7 +31,7 @@ export type AiChatServices =
   | Trace.TraceService;
 
 // TODO(wittjosiah): Factor out.
-export const Provider = Schema.Literal('edge', 'lmstudio', 'ollama');
+export const Provider = Schema.Literals(['edge', 'lmstudio', 'ollama']);
 export type Provider = Schema.Schema.Type<typeof Provider>;
 
 export type LayerOptions = {
@@ -87,7 +87,9 @@ export const chatLayer = ({
           const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
           const registry = yield* Registry.Service;
           const handlers = yield* handlerSet.handlers;
-          registry.add(handlers.map(Operation.serialize));
+          // One non-serializable definition (importSpace's `Uint8Array`) must not take the whole
+          // registry down.
+          registry.add(Operation.serializable(handlers));
           return registry;
         }),
       ),
@@ -98,7 +100,7 @@ export const chatLayer = ({
     Layer.provideMerge(credentialsLayerFromDatabase()),
     // Resolves server-custodied tokens through EDGE; the client is only touched when one is hit.
     Layer.provideMerge(
-      Layer.unwrapEffect(Effect.map(ClientService, (client) => accessTokenResolverFromEdge(() => client.edge.http))),
+      Layer.unwrap(Effect.map(ClientService, (client) => accessTokenResolverFromEdge(() => client.edge.http))),
     ),
     Layer.provideMerge(spaceLayer(spaceId, true)),
     Layer.provideMerge(Trace.writerLayerNoop),

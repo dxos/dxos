@@ -1,20 +1,15 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { OperationHandler, ReactSurface, SettingsAppGraphBuilder } from '#capabilities';
-import { meta } from '#meta';
-import { translations } from '#translations';
+import { meta as pluginMeta } from '#meta';
 
-export const SettingsPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(SettingsAppGraphBuilder),
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.make,
-);
+/** Plugin metadata, available without loading the plugin body. */
+export const meta = pluginMeta;
 
-export default SettingsPlugin;
+/** Constructs the plugin; the body loads on first enable. */
+export const make = Plugin.lazy(meta, () => import('#plugin'));

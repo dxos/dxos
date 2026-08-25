@@ -2,32 +2,31 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Event } from '@dxos/async';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { Button, type ThemedClassName, Toast, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import {
-  Button,
-  type ThemedClassName,
-  Toast,
-  composable,
-  composableProps,
-  useDynamicRef,
-  useTranslation,
-} from '@dxos/react-ui';
-import { Minimap, type MinimapMarker } from '@dxos/react-ui-components';
-import { type DocumentRange, type MarkdownStreamController } from '@dxos/react-ui-markdown';
+  type ChatThreadController,
+  type ChatThreadEvent,
+  type ChatView,
+  ChatThread as NaturalChatThread,
+} from '@dxos/react-ui-assistant';
+import { type MessageRange, type OutlineMarker, Outline as OutlineRail, useFeedModel } from '@dxos/react-ui-feed';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { Outline } from '@dxos/types';
 import { Message } from '@dxos/types';
+import { keyToFallback } from '@dxos/util';
 
-import { useChatKeymapExtensions, useChatToolbarActions, useDebug } from '#hooks';
+import { useChatToolbarActions, useDebug } from '#hooks';
 import { meta } from '#meta';
 
 import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor';
@@ -36,14 +35,10 @@ import {
   ChatPrompt as NaturalChatPrompt,
   type ChatPromptProps as NaturalChatPromptProps,
 } from '../ChatPrompt';
-import {
-  type MessageSpan,
-  ChatThread as NaturalChatThread,
-  type ChatThreadProps as NaturalChatThreadProps,
-} from '../ChatThread';
 import { TaskList } from '../TaskList';
 import { ChatContextProvider, type ChatContextValue, type ChatRequestTiming, useChatContext } from './context';
 import { type ChatEvent } from './events';
+import { SurfaceWidget } from './SurfaceWidget';
 import { projectThread, resolveRewind } from './thread';
 
 //
@@ -51,7 +46,7 @@ import { projectThread, resolveRewind } from './thread';
 //
 
 type ChatRootProps = PropsWithChildren<
-  Pick<ChatContextValue, 'chat' | 'processor'> & {
+  Pick<ChatContextValue, 'chat' | 'processor' | 'debug'> & {
     /** Fallback database when the chat is transient (not yet persisted). */
     db?: Database.Database;
     onEvent?: (event: ChatEvent) => void;
@@ -70,12 +65,13 @@ const ChatRoot = ({
   chat,
   processor,
   db: dbFallback,
+  debug: debugProp,
   onEvent,
   onSubmit,
   getContext,
   ...props
 }: ChatRootProps) => {
-  const [debug, setDebug] = useState(false);
+  const [debug, setDebug] = useState(debugProp ?? false);
   const streaming = useAtomValue(processor.streaming);
   const active = useAtomValue(processor.active);
   const requestTiming = useRequestTiming({ active });
@@ -91,10 +87,10 @@ const ChatRoot = ({
   // Event sink.
   const event = useMemo(() => new Event<ChatEvent>(), []);
 
-  // The editor controller and per-message ranges are produced by `Chat.Thread` and consumed by
-  // `Chat.Minimap`; lifted here so both sub-components share the same instance.
-  const [controller, setController] = useState<MarkdownStreamController | null>(null);
-  const [messageRanges, setMessageRanges] = useState<MessageSpan[]>([]);
+  // The thread controller and visible range are produced by `Chat.Thread` and consumed by
+  // `Chat.Outline`; lifted here so both sub-components share the same instance.
+  const [controller, setController] = useState<ChatThreadController | null>(null);
+  const [visibleRange, setVisibleRange] = useState<MessageRange | undefined>(undefined);
 
   const feedMessages = useQuery(
     db,
@@ -193,8 +189,8 @@ const ChatRoot = ({
       requestTiming={requestTiming}
       controller={controller}
       setController={setController}
-      messageRanges={messageRanges}
-      setMessageRanges={setMessageRanges}
+      visibleRange={visibleRange}
+      setVisibleRange={setVisibleRange}
       {...props}
     >
       {children}
@@ -295,38 +291,27 @@ const replySnippet = (message: Message.Message): string | undefined => {
 };
 
 /**
- * Build one minimap marker per user-prompt turn: title = the prompt text, description = a
- * snippet of the following assistant reply, range = the turn's document span (prompt start →
- * next prompt start). Positions come from the syncer's per-message range table.
+ * Build one outline marker per user-prompt turn: title = the prompt text, description = a snippet
+ * of the following assistant reply, range = the turn's index span (prompt → next prompt). Message
+ * indices, not document offsets: the feed navigates by index, so no range table exists any more.
  */
-const buildMarkers = (messages: Message.Message[], ranges: MessageSpan[]): MinimapMarker[] => {
-  const rangeById = new Map(ranges.map((range) => [range.id, range] as const));
-  const markers: MinimapMarker[] = [];
+const buildMarkers = (messages: Message.Message[]): OutlineMarker[] => {
+  const markers: OutlineMarker[] = [];
   for (let index = 0; index < messages.length; index++) {
     const message = messages[index];
     if (message.sender.role !== 'user') {
       continue;
     }
-    const range = rangeById.get(message.id);
-    if (!range) {
-      continue;
-    }
 
     // Extend the turn through the following non-user messages and grab the first assistant reply.
-    let turnTo = range.to;
+    let turnTo = index + 1;
     let description: string | undefined;
     for (let next = index + 1; next < messages.length; next++) {
       const nextMessage = messages[next];
-      const nextRange = rangeById.get(nextMessage.id);
       if (nextMessage.sender.role === 'user') {
-        if (nextRange) {
-          turnTo = nextRange.from;
-        }
         break;
       }
-      if (nextRange) {
-        turnTo = nextRange.to;
-      }
+      turnTo = next + 1;
       if (!description && nextMessage.sender.role === 'assistant') {
         description = replySnippet(nextMessage);
       }
@@ -336,7 +321,7 @@ const buildMarkers = (messages: Message.Message[], ranges: MessageSpan[]): Minim
       id: message.id,
       title: promptTitle(message) || 'Prompt',
       description,
-      range: { from: range.from, to: turnTo },
+      range: { from: index, to: turnTo },
     });
   }
   return markers;
@@ -348,79 +333,69 @@ const buildMarkers = (messages: Message.Message[], ranges: MessageSpan[]): Minim
 
 const CHAT_THREAD_NAME = 'Chat.Thread';
 
-type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'messages' | 'tools'> & {
+/** The plugin's `surface` widget layered over the package registry: it can dispatch a Surface. */
+const chatRegistry = {
+  surface: {
+    block: true,
+    Component: SurfaceWidget,
+  },
+} as const;
+
+type ChatThreadProps = ThemedClassName<{
+  viewType?: ChatView;
+  /** Blank lines kept below the tail at rest — breathing room above the composer. */
+  tailLines?: number;
   /** Invoked from the over-quota error toast to open the usage dashboard. */
   onViewUsage?: () => void;
-};
+}>;
 
-const ChatThread = ({ viewType, debug: debugProp, onViewUsage, ...props }: ChatThreadProps) => {
+const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThreadProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { debug, event, messages, processor, messageRanges, setController, setMessageRanges } =
-    useChatContext(CHAT_THREAD_NAME);
-  const extensions = useChatKeymapExtensions({ event });
+  const { debug, event, messages, processor, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
   const identity = useIdentity();
-  const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
   const [toastError, setToastError] = useState<Error | undefined>(undefined);
   // The toast renders whatever action the error declares (data-driven) rather than branching on type.
   const toastAction = toastError instanceof AiUsageQuotaError ? toastError.action : undefined;
-  const debugView = viewType === 'debug';
 
-  const controllerRef = useRef<MarkdownStreamController | null>(null);
-  // Share the controller with `Chat.Minimap` (and keep the local ref for event handling).
+  // The model is the adapter: the projected array is folded in with `replace`, streaming chunks
+  // arrive as updates on one identity, and the window is told — the old `MessageSyncer`'s cursor
+  // and range table have no equivalent left.
+  const model = useFeedModel(messages, { stops: 'prompt' });
+  const streaming = useAtomValue(processor.streaming);
+  useEffect(() => {
+    const last = messages[messages.length - 1];
+    model.setStreaming(streaming && last?.sender.role === 'assistant' ? last.id : undefined);
+  }, [model, streaming, messages]);
+
+  const userHue = useMemo(
+    () =>
+      identity?.data?.hue ||
+      keyToFallback(identity?.identityKey ? PublicKey.fromHex(identity.identityKey) : PublicKey.random()).hue,
+    [identity],
+  );
+
+  const controllerRef = useRef<ChatThreadController | null>(null);
+  // Share the controller with `Chat.Outline` (and keep the local ref for event handling).
   const handleControllerRef = useCallback(
-    (instance: MarkdownStreamController | null) => {
+    (instance: ChatThreadController | null) => {
       controllerRef.current = instance;
       setController(instance);
     },
     [setController],
   );
 
-  // Prompt-turn positions for navigation; a ref keeps the event handler stable without stale reads.
-  const promptPositions = useMemo(
-    () =>
-      buildMarkers(messages, messageRanges)
-        .map((marker) => marker.range.from)
-        .sort((a, b) => a - b),
-    [messages, messageRanges],
-  );
-  const promptPositionsRef = useDynamicRef(promptPositions);
-
-  // Navigate between prompt turns using the range table (not the xml-tag widget bookmarks).
-  const navigateToPrompt = useCallback(
-    (direction: 1 | -1) => {
-      const controller = controllerRef.current;
-      const positions = promptPositionsRef.current;
-      if (!controller || !positions.length) {
-        return;
-      }
-      const anchor = controller.getVisibleRange()?.from ?? 0;
-      const epsilon = 2;
-      const target =
-        direction > 0
-          ? positions.find((pos) => pos > anchor + epsilon)
-          : [...positions].reverse().find((pos) => pos < anchor - epsilon);
-      if (target != null) {
-        controller.scrollTo(target, { y: 'start' });
-      }
-    },
-    [promptPositionsRef],
-  );
-
   useEffect(() => {
     return event.on((event) => {
       switch (event.type) {
-        case 'rewind':
-          console.log('rewind', event);
-          break;
         case 'submit':
         case 'scroll-to-bottom':
           controllerRef.current?.scrollToBottom();
           break;
         case 'nav-previous':
-          navigateToPrompt(-1);
+          controllerRef.current?.navigation.step(-1);
           break;
         case 'nav-next':
-          navigateToPrompt(1);
+          controllerRef.current?.navigation.step(1);
           break;
         case 'error':
           setToastError(event.error);
@@ -429,14 +404,11 @@ const ChatThread = ({ viewType, debug: debugProp, onViewUsage, ...props }: ChatT
           log.info('no handled', event);
       }
     });
-  }, [event, navigateToPrompt]);
+  }, [event]);
 
-  const handleEvent = useCallback<NonNullable<NaturalChatThreadProps['onEvent']>>(
-    (ev) => {
-      event.emit(ev);
-    },
-    [event],
-  );
+  // Rewind (the prompt toolbar) and submit (suggestion/select widgets) land on the shared bus,
+  // where `Chat.Root` already resolves them.
+  const handleEvent = useCallback((ev: ChatThreadEvent) => event.emit(ev), [event]);
 
   if (!identity) {
     return <div className='dx-expander' />;
@@ -444,20 +416,23 @@ const ChatThread = ({ viewType, debug: debugProp, onViewUsage, ...props }: ChatT
 
   return (
     <>
-      <NaturalChatThread
-        {...props}
-        identity={identity}
-        messages={messages}
-        error={error}
-        debug={debugProp ?? (debug || debugView)}
+      <NaturalChatThread.Root
+        model={model}
         viewType={viewType}
-        extensions={extensions}
+        registry={chatRegistry}
+        userHue={userHue}
+        tailLines={tailLines}
+        debug={debug}
         onEvent={handleEvent}
-        onSpans={setMessageRanges}
-        ref={handleControllerRef}
-      />
+        onRangeChange={setVisibleRange}
+        controllerRef={handleControllerRef}
+      >
+        <NaturalChatThread.Viewport classNames={classNames} padding />
+      </NaturalChatThread.Root>
 
+      {/* TODO(burdon): Why is this required? */}
       <Toast.Root
+        data-testid='assistant.error'
         type='foreground'
         open={!!toastError}
         duration={20_000}
@@ -489,43 +464,47 @@ const ChatThread = ({ viewType, debug: debugProp, onViewUsage, ...props }: ChatT
 ChatThread.displayName = CHAT_THREAD_NAME;
 
 //
-// Minimap
+// Outline
 //
 
-const CHAT_MINIMAP_NAME = 'Chat.Minimap';
+const CHAT_OUTLINE_NAME = 'Chat.Outline';
 
-type ChatMinimapProps = ThemedClassName<{}>;
+type ChatOutlineProps = ThemedClassName<{}>;
 
 /**
  * Anchor-marker rail for the thread: one tick per user-prompt turn. Reads the shared controller
- * and the syncer's range table from context; clicking a tick scrolls the thread to that turn.
+ * and the visible index range from context; clicking a tick jumps the thread to that turn, on the
+ * same navigation seam as the toolbar and the arrow keys.
  */
-const ChatMinimap = ({ classNames }: ChatMinimapProps) => {
-  const { messages, messageRanges, controller } = useChatContext(CHAT_MINIMAP_NAME);
-  const [visibleRange, setVisibleRange] = useState<DocumentRange | undefined>(undefined);
-  useEffect(() => {
-    if (!controller) {
-      return;
-    }
-    return controller.onVisibleRangeChange(setVisibleRange);
-  }, [controller]);
+const ChatOutline = ({ classNames }: ChatOutlineProps) => {
+  const { messages, visibleRange, controller } = useChatContext(CHAT_OUTLINE_NAME);
 
-  const markers = useMemo(() => buildMarkers(messages, messageRanges), [messages, messageRanges]);
+  const markers = useMemo(() => buildMarkers(messages), [messages]);
   const handleSelect = useCallback(
-    (marker: MinimapMarker) => {
-      controller?.scrollTo(marker.range.from, { y: 'start' });
+    (marker: OutlineMarker) => {
+      controller?.navigation.jumpTo(marker.range.from, 'smooth');
     },
     [controller],
   );
+  const handleNavigate = useCallback((delta: number) => controller?.navigation.step(delta), [controller]);
 
-  if (!markers.length) {
+  if (markers.length < 2) {
     return null;
   }
 
-  return <Minimap classNames={classNames} markers={markers} visibleRange={visibleRange} onSelect={handleSelect} />;
+  return (
+    <OutlineRail
+      classNames={classNames}
+      markers={markers}
+      // `endIndex` is inclusive; the rail's `to` is exclusive.
+      visibleRange={visibleRange ? { from: visibleRange.startIndex, to: visibleRange.endIndex + 1 } : undefined}
+      onSelect={handleSelect}
+      onNavigate={handleNavigate}
+    />
+  );
 };
 
-ChatMinimap.displayName = CHAT_MINIMAP_NAME;
+ChatOutline.displayName = CHAT_OUTLINE_NAME;
 
 //
 // Prompt
@@ -564,9 +543,9 @@ const ChatTaskList = composable<HTMLDivElement, ChatTaskListProps>(
           Atom.make(
             (get) =>
               outlineProp ??
-              Option.fromNullable(chat).pipe(
+              Option.fromNullishOr(chat).pipe(
                 Option.map((_) => get(Obj.atom(_))),
-                Option.flatMapNullable((_) => _?.outline?.atom),
+                Option.flatMapNullishOr((_) => _?.outline?.atom),
                 Option.map(get),
                 Option.getOrUndefined,
               ),
@@ -578,7 +557,7 @@ const ChatTaskList = composable<HTMLDivElement, ChatTaskListProps>(
       return null;
     }
 
-    return <TaskList {...props} outline={outline} ref={forwardedRef} />;
+    return <TaskList {...composableProps(props)} outline={outline} ref={forwardedRef} />;
   },
 );
 
@@ -595,14 +574,14 @@ export const Chat = {
   Prompt: ChatPrompt,
   Status: ChatStatus,
   Thread: ChatThread,
-  Minimap: ChatMinimap,
+  Outline: ChatOutline,
   TaskList: ChatTaskList,
 };
 
 export type {
   ChatContentProps,
   ChatEvent,
-  ChatMinimapProps,
+  ChatOutlineProps,
   ChatPromptProps,
   ChatRootProps,
   ChatThreadProps,

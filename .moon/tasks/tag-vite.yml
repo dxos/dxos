@@ -8,22 +8,32 @@ tasks:
       - vite.config.ts
       - '*.html'
       - '@group(production)'
+      # Every var the build bakes into the bundle belongs here — `dx-env.yml`'s mappings plus anything
+      # `DX_`-prefixed, which the config plugin sweeps into `runtime.app.env`. A missing entry means moon
+      # can serve a cached bundle built against a different environment's value.
       - $CONFIG_DYNAMIC
+      - $DX_DEV
       - $DX_EDGE_BASE_URL
+      - $DX_EDGE_ECHO_REPLICATOR
+      - $DX_EDGE_FEED_REPLICATOR
+      - $DX_EDGE_SUBDUCTION_REPLICATOR
       - $DX_ENVIRONMENT
+      - $DX_FEEDBACK_LOGS_ENDPOINT
       - $DX_HOST
       - $DX_HUB_URL
       - $DX_IPDATA_API_KEY
-      - $DX_LABS
       - $DX_MINIFY
       - $DX_OTEL_ENDPOINT
       - $DX_OTEL_HEADERS
+      - $DX_PLUGIN_SET
       - $DX_PWA
       - $DX_POSTHOG_API_KEY
       - $DX_POSTHOG_API_HOST
       - $DX_POSTHOG_FEEDBACK_SURVEY_ID
       - $DX_POSTHOG_PROJECT_ID
+      - $DX_SANDBOX_SERVICE_URL
       - $DX_SHARED_WORKER
+      - $IPFS_API_SECRET
       - $LOG_FILTER
       - $LOG_PREFIX
       - $NODE_ENV

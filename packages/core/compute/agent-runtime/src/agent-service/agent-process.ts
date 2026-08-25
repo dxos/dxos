@@ -2,9 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
 import * as Cause from 'effect/Cause';
+import * as Clock from 'effect/Clock';
 import * as DateTime from 'effect/DateTime';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
@@ -13,12 +12,14 @@ import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
+import * as Tool from 'effect/unstable/ai/Tool';
+import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import {
   AgentRequestBegin,
   AgentRequestEnd,
-  AiSession,
   HarnessControl,
   SkillHooks,
   getOperationFromTool,
@@ -34,17 +35,24 @@ import * as Process from '@dxos/compute/Process';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ContentBlock } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { type DelegationStrategy } from './delegation-strategy';
+import { type MakeTurnProducer, makeAiSessionTurnProducer } from './turn-producer';
 
 interface AgentProcessOptions {
   // TODO(burdon): Instructions?
   systemPrompt?: string;
+
+  /**
+   * Produces each turn. Defaults to {@link makeAiSessionTurnProducer}; substituting it swaps the
+   * engine (e.g. a Claude Agent SDK host) while leaving the queue, alarms, redelivery, delegation
+   * and hydration around it untouched.
+   */
+  makeTurnProducer?: MakeTurnProducer;
 
   /** Model identifier. */
   model?: DXN.DXN;
@@ -88,7 +96,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
     {
       key: AGENT_PROCESS_KEY,
       // String member keeps queue entries persisted before the block-array widening decodable.
-      input: Schema.Union(Schema.String, Schema.Array(ContentBlock.Any)),
+      input: Schema.Union([Schema.String, Schema.Array(ContentBlock.Any)]),
       output: Schema.Void,
       services: [
         Database.Service,
@@ -122,10 +130,10 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               Effect.orElseSucceed(() => undefined),
             )
           : undefined;
-        const runtime = yield* Effect.runtime<Database.Service>();
-        const session = yield* EffectEx.acquireReleaseResource(
-          () => new AiSession.Session({ feed, runtime, instructions: instructions ? [instructions] : [] }),
-        );
+        const runtime = yield* Effect.context<Database.Service>();
+        const makeTurnProducer = options.makeTurnProducer ?? makeAiSessionTurnProducer;
+        // Scoped acquisition: the producer's teardown registers with this process's scope.
+        const session = yield* makeTurnProducer({ feed, runtime, instructions: instructions ? [instructions] : [] });
         let inputQueue: AgentEvent[] = [...(yield* AgentEventsCell.get)];
         const storageService = yield* StorageService.StorageService;
         const toolCallManager = new ToolCallManager(storageService);
@@ -133,11 +141,11 @@ export const AgentProcess = (options: AgentProcessOptions) =>
 
         // Read time from the ambient Effect Clock so alarm scheduling and the due-check stay
         // consistent (and both honor a TestClock under tests).
-        const clock = yield* Effect.clock;
+        const clock = yield* Clock.Clock;
         const alarmManager = new AlarmManager({
           storageService,
           setAlarm: (timeout) => ctx.setAlarm(timeout),
-          now: () => clock.unsafeCurrentTimeMillis(),
+          now: () => clock.currentTimeMillisUnsafe(),
         });
         yield* alarmManager.load();
         // Queued tool results were never consumed by onAlarm — reported flags from the synchronous
@@ -148,7 +156,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // outstanding work into linked child processes after each turn and folds their results back
         // into the conversation on completion. Absent (the default), the process behaves as a plain
         // conversational agent.
-        const strategy = Option.fromNullable(options.delegationStrategy);
+        const strategy = Option.fromNullishOr(options.delegationStrategy);
         let delegations: Delegation[] = [...(yield* DelegationsCell.get)];
 
         const requestModelLayer = AiService.model(
@@ -166,7 +174,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // keeps the process alive past this turn.
         const runEndRequestHooks = Effect.gen(function* () {
           yield* SkillHooks.runHooks({
-            skills: session.context.getSkills(),
+            skills: session.getSkills(),
             phase: 'end-request',
             invoke: (operation, input) =>
               Effect.gen(function* () {
@@ -206,7 +214,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         return {
           // Control plane (§4.3): handlers run on the host process's server fiber, closing over the
           // live `alarmManager`/`inputQueue` and persisting their durable effect inline.
-          rpcHandlers: yield* HarnessControl.toHandlersContext({
+          rpcHandlers: yield* HarnessControl.toHandlers({
             setAlarm: Effect.fn(function* ({ at, message }) {
               yield* alarmManager.setWakeAt(DateTime.toEpochMillis(at), message);
               alarmManager.reconcile(inputQueue.length > 0);
@@ -239,15 +247,8 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 yield* AgentEventsCell.set(inputQueue);
               }
 
-              // Skip reported tool results at head of queue (stale after reload).
-              while (inputQueue.length > 0) {
-                const head = inputQueue[0];
-                if (head._tag === 'tool_result' && toolCallManager.isReported(head.pid)) {
-                  inputQueue.shift();
-                  log.info('skip tool result that was reported synchronously', { pid: head.pid });
-                  continue;
-                }
-                break;
+              for (const pid of dropReportedToolResults(inputQueue, (pid) => toolCallManager.isReported(pid))) {
+                log.info('skip tool result that was reported synchronously', { pid });
               }
 
               const item = inputQueue.shift();
@@ -261,34 +262,13 @@ export const AgentProcess = (options: AgentProcessOptions) =>
 
               log('agent onAlarm handling', { tag: item._tag });
 
-              const prompt: ContentBlock.Any[] = Match.value(item).pipe(
-                Match.tag('prompt', (item) => [...item.content]),
-                Match.tag('tool_result', (item) =>
-                  item.isError
-                    ? [
-                        ContentBlock.Text.make({
-                          text: toolErrorResponse(item.pid, item.result as string),
-                          disposition: 'synthetic',
-                        }),
-                      ]
-                    : [
-                        ContentBlock.Text.make({
-                          text: toolResultResponse(item.pid, item.result),
-                          disposition: 'synthetic',
-                        }),
-                      ],
-                ),
-                Match.tag('alarm', (item) => [
-                  ContentBlock.Text.make({ text: wakeUpPrompt(item.firedAt, item.message), disposition: 'synthetic' }),
-                ]),
-                Match.exhaustive,
-              );
+              const prompt = agentEventToPrompt(item);
 
               log('begin request', { prompt });
               log('trace agent request begin');
               yield* Trace.write(AgentRequestBegin, {});
               yield* session
-                .createRequest({
+                .runTurn({
                   prompt,
                   // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
                   // toolkit: AsynchronousExectionToolkit,
@@ -300,7 +280,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 .pipe(
                   Effect.onExit((exit) =>
                     Trace.write(AgentRequestEnd, {
-                      status: Exit.isSuccess(exit) ? 'success' : Exit.isInterrupted(exit) ? 'interrupted' : 'error',
+                      status: Exit.isSuccess(exit) ? 'success' : Exit.hasInterrupts(exit) ? 'interrupted' : 'error',
                       error: Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined,
                     }),
                   ),
@@ -427,7 +407,7 @@ interface ToolExecutionServiceOptions {
   feed: Feed.Feed;
 }
 
-const AgentEvent = Schema.Union(
+const AgentEvent = Schema.Union([
   Schema.TaggedStruct('prompt', {
     content: Schema.Array(ContentBlock.Any),
   }),
@@ -441,11 +421,12 @@ const AgentEvent = Schema.Union(
     // Optional reminder carried from the self-wake; surfaced to the agent when the alarm fires.
     message: Schema.NullOr(Schema.String),
   }),
-);
-type AgentEvent = Schema.Schema.Type<typeof AgentEvent>;
+]);
+/** Exported so the pure queue/prompt helpers below can be exercised without spawning an agent. */
+export type AgentEvent = Schema.Schema.Type<typeof AgentEvent>;
 
 const AgentEventsCell = StorageService.cell(
-  Schema.parseJson(Schema.Array(AgentEvent).pipe(Schema.mutable)),
+  Schema.fromJsonString(Schema.Array(AgentEvent).pipe(Schema.mutable)),
   'inputQueue',
 ).pipe(StorageService.withDefault(() => []));
 
@@ -453,11 +434,11 @@ const AgentEventsCell = StorageService.cell(
  * Tracks delegated sub-agent child processes (pid -> correlation id) so that, after a hibernation,
  * a delegated child's exit can be matched back to the work it was fulfilling.
  */
-const Delegation = Schema.Struct({ pid: Process.ID, id: Schema.String }).pipe(Schema.mutable);
+const Delegation = Schema.Struct({ pid: Process.ID, id: Schema.String }).mapFields(Struct.map(Schema.mutableKey));
 type Delegation = Schema.Schema.Type<typeof Delegation>;
 
 const DelegationsCell = StorageService.cell(
-  Schema.parseJson(Schema.Array(Delegation).pipe(Schema.mutable)),
+  Schema.fromJsonString(Schema.Array(Delegation).pipe(Schema.mutable)),
   'delegations',
 ).pipe(StorageService.withDefault(() => []));
 
@@ -467,14 +448,14 @@ const ToolCallState = Schema.Struct({
       pid: Process.ID,
       // Whether the result was reported to the agent.
       reported: Schema.Boolean,
-    }).pipe(Schema.mutable),
+    }).mapFields(Struct.map(Schema.mutableKey)),
   ).pipe(Schema.mutable),
 });
 interface ToolCallState extends Schema.Schema.Type<typeof ToolCallState> {}
 
 // Id's of processes who's results were already submitted to the agent.
 const ToolCallStateCell = StorageService.cell(
-  Schema.parseJson(ToolCallState.pipe(Schema.mutable)),
+  Schema.fromJsonString(ToolCallState.mapFields(Struct.map(Schema.mutableKey))),
   'toolCallState',
 ).pipe(StorageService.withDefault(() => ({ activeCalls: [] })));
 
@@ -487,20 +468,20 @@ class ToolCallManager {
   }
 
   load() {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       this.#state = yield* ToolCallStateCell.get;
     }).pipe(Effect.provideService(StorageService.StorageService, this.#storageService));
   }
 
   beginCall(pid: Process.ID) {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       this.#state.activeCalls.push({ pid, reported: false });
       yield* ToolCallStateCell.set(this.#state);
     }).pipe(Effect.provideService(StorageService.StorageService, this.#storageService));
   }
 
   markAsReported(pid: Process.ID) {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const call = this.#state.activeCalls.find((call) => call.pid === pid);
       if (!call) {
         return;
@@ -528,7 +509,7 @@ class ToolCallManager {
    * After reload the in-flight createRequest is gone, so those results must be redelivered via onAlarm.
    */
   reconcileWithInputQueue(queue: readonly AgentEvent[]) {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       let changed = false;
       for (const item of queue) {
         if (item._tag !== 'tool_result') {
@@ -569,6 +550,55 @@ export const isAgentWorkPending = ({
   delegations.length > 0 ||
   toolCallManager.hasPendingToolResults();
 
+/**
+ * Discards tool results at the head of the queue whose values already reached the agent.
+ *
+ * A tool that returned inside its turn is reported synchronously AND left queued; after a reload the
+ * queue is replayed, so without this the model would be handed a result it has already seen. Only the
+ * head is examined: a result further back belongs to a turn that has not run yet.
+ *
+ * Mutates `queue` and returns the pids dropped, so the caller owns the logging.
+ */
+export const dropReportedToolResults = (
+  queue: AgentEvent[],
+  isReported: (pid: Process.ID) => boolean,
+): readonly Process.ID[] => {
+  const dropped: Process.ID[] = [];
+  while (queue.length > 0) {
+    const head = queue[0];
+    if (head._tag !== 'tool_result' || !isReported(head.pid)) {
+      break;
+    }
+    queue.shift();
+    dropped.push(head.pid);
+  }
+  return dropped;
+};
+
+/**
+ * Renders a queued event as the next turn's prompt.
+ *
+ * A tool result recovered across a reload is redelivered as a synthetic `<result pid=N>` TEXT block
+ * rather than a tool-result part, because the request it belonged to is gone and its tool-call id
+ * cannot be answered. `disposition: 'synthetic'` keeps it out of the user-visible transcript.
+ */
+export const agentEventToPrompt = (event: AgentEvent): ContentBlock.Any[] =>
+  Match.value(event).pipe(
+    Match.tag('prompt', (event) => [...event.content]),
+    Match.tag('tool_result', (event) => [
+      ContentBlock.Text.make({
+        text: event.isError
+          ? toolErrorResponse(event.pid, event.result as string)
+          : toolResultResponse(event.pid, event.result),
+        disposition: 'synthetic',
+      }),
+    ]),
+    Match.tag('alarm', (event) => [
+      ContentBlock.Text.make({ text: wakeUpPrompt(event.firedAt, event.message), disposition: 'synthetic' }),
+    ]),
+    Match.exhaustive,
+  );
+
 //
 // Alarms.
 //
@@ -578,7 +608,7 @@ export const isAgentWorkPending = ({
  * message delivered when it fires, or `null` when no self-wake is set.
  */
 const AgentAlarmCell = StorageService.cell(
-  Schema.parseJson(Schema.NullOr(Schema.Struct({ wakeAt: Schema.Number, message: Schema.NullOr(Schema.String) }))),
+  Schema.fromJsonString(Schema.NullOr(Schema.Struct({ wakeAt: Schema.Number, message: Schema.NullOr(Schema.String) }))),
   'agentAlarm',
 ).pipe(StorageService.withDefault(() => null));
 
@@ -650,7 +680,7 @@ export class AlarmManager {
 
   /** Restores the persisted alarm state. */
   load(): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const persisted = yield* AgentAlarmCell.get;
       this.#wakeAt = persisted?.wakeAt ?? null;
       this.#message = persisted?.message ?? null;
@@ -659,7 +689,7 @@ export class AlarmManager {
 
   /** Records a new self-wake target (with an optional reminder message) and persists it. */
   setWakeAt(wakeAt: number, message: string | null = null): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       this.#wakeAt = wakeAt;
       this.#message = message;
       yield* AgentAlarmCell.set({ wakeAt, message });
@@ -671,7 +701,7 @@ export class AlarmManager {
    * reminder message it carried (or `null` if no alarm was due).
    */
   takeFiredAlarm(): Effect.Effect<{ firedAt: number; message: string | null } | null> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       if (this.#wakeAt == null || this.#now() < this.#wakeAt) {
         return null;
       }
@@ -717,7 +747,7 @@ const ToolExecutionService = ({
   toolCallManager,
   feed,
 }: ToolExecutionServiceOptions) =>
-  Layer.unwrapEffect(
+  Layer.unwrap(
     Effect.gen(function* () {
       const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
       return makeToolExecutionService({
@@ -740,7 +770,7 @@ const ToolExecutionService = ({
             const result = enableBackgrounding
               ? yield* awaitWithReport.pipe(
                   Effect.timeout(backgroundThreshold),
-                  Effect.catchTag('TimeoutException', () =>
+                  Effect.catchTag('TimeoutError', () =>
                     Effect.succeed(Exit.succeed(toolIsRunningInBackgroundResponse(fiber.pid))),
                   ),
                 )
@@ -761,20 +791,20 @@ class AsynchronousExectionToolkit extends Toolkit.make(
       Set an appropriate timeout to avoid waiting forever.
       You will also be notified about the job completion separatelly, so you do not always need to inspect the job if you dont need the result right now.
     `,
-    parameters: {
-      ids: Schema.Array(Schema.String).annotations({
+    parameters: Schema.Struct({
+      ids: Schema.Array(Schema.String).annotate({
         description: 'The IDs of the jobs to inspect.',
       }),
-      wait: Schema.optional(Schema.Boolean).annotations({
+      wait: Schema.optional(Schema.Boolean).annotate({
         description: 'Whether to wait for the tool call to complete before returning.',
         default: false,
       }),
-      timeout: Schema.optional(Schema.Number).annotations({
+      timeout: Schema.optional(Schema.Number).annotate({
         description:
           'Maximum time to wait for the job to complete. If the job does not complete within the timeout, the current state is returned.',
         default: 10_000,
       }),
-    },
+    }),
   }),
 ) {}
 
@@ -796,7 +826,7 @@ const AsynchronousExectionToolkitLayer = AsynchronousExectionToolkit.toLayer(
                 }),
               ),
               Effect.catchTag('ProcessNotFoundError', () => Effect.succeed(`Process not found: ${pid}`)),
-              Effect.catchTag('TimeoutException', () => Effect.succeed(`Process still running: ${pid}`)),
+              Effect.catchTag('TimeoutError', () => Effect.succeed(`Process still running: ${pid}`)),
             ),
           );
         }),

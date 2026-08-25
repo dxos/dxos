@@ -5,7 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import * as CodeOperation from '../types/CodeOperation';
+import { CodeOperation } from '#types';
 
 export const CodeOperationHandlerSet = OperationHandlerSet.lazy([
   CodeOperation.VerifySpec.pipe(Operation.lazyHandler(() => import('./verify-spec'))),

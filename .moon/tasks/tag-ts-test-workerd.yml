@@ -16,11 +16,17 @@ tasks:
       - /vitest.base.config.ts
       - /vitest.tags.ts # Ensure cache is invalidated when tag definitions change.
       - /pnpm-lock.yaml # Ensure cache is invalidated when dependencies change.
+      - vite.config.ts # Combined build + test config; most packages use this rather than `vitest.config.ts`.
       - vitest.config.ts
       - $VITEST_COVERAGE
       - $VITEST_DEBUG
       - $VITEST_ENV
       - $VITEST_XML_REPORT
+      # Tag gating lives in `/vitest.tags.ts` and is read from the environment, so a cached result
+      # would otherwise replay a run in which the tagged suites were skipped.
+      - $DX_RUN_MANUAL_TESTS
+      - $DX_RUN_MODEL_FIXTURE_TESTS
+      - $DX_UPDATE_MODEL_FIXTURES
     outputs:
       - /coverage/$project/workerd/**
       - /test-results/$project/workerd/**

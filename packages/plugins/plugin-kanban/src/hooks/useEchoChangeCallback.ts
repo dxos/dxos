@@ -6,8 +6,7 @@ import { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 
-import type * as Kanban from '../types/Kanban';
-import * as KanbanLayout from '../types/KanbanLayout';
+import { Kanban, KanbanLayout } from '#types';
 
 /**
  * Creates a change callback for ECHO-backed kanban and items (plain function, no hooks).
@@ -19,7 +18,13 @@ export const createEchoChangeCallback = <T extends Obj.Unknown>(
   kanban: (mutate) => Obj.update(kanban, (kanban) => mutate(kanban)),
   setItemField: (item, field, value) => {
     Obj.update(item, (item: any) => {
-      item[field] = value;
+      if (value === undefined) {
+        // Deleted rather than assigned, because assigning asserts against the property schema, which
+        // rejects clearing an optional field of a stored schema.
+        delete item[field];
+      } else {
+        item[field] = value;
+      }
     });
   },
 });

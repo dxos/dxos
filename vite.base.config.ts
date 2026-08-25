@@ -14,7 +14,7 @@ import { defineConfig as viteDefineConfig, type Plugin, type UserConfig } from '
 import Inspect from 'vite-plugin-inspect';
 import solid from 'vite-plugin-solid';
 import WasmPlugin from 'vite-plugin-wasm';
-import { UserWorkspaceConfig, type ViteUserConfig, defineProject } from 'vitest/config';
+import { type UserWorkspaceConfig, type ViteUserConfig, defineProject } from 'vitest/config';
 import type { Reporter, TestModule, TestRunEndReason } from 'vitest/node';
 
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
@@ -25,7 +25,7 @@ import PluginImportSource from '@dxos/vite-plugin-import-source';
 // build the plugin first, which introduces a moon dep cycle through @dxos/log
 // (vite-plugin-log -> log -> ... -> log:test -> vite-plugin-log).
 import { DxosLogPlugin } from './tools/vite-plugin-log/src/plugin.ts';
-import { TEST_TAGS } from './vitest.tags';
+import { TEST_TAGS } from './vitest.tags.ts';
 
 export { TEST_TAGS };
 
@@ -45,9 +45,36 @@ const NODE_STD_MODULES = [
   'util',
 ];
 
+// This file sits at the workspace root. `import.meta.dirname` rather than `__dirname` so the file
+// loads unchanged under vite's native config loader, where it is a real ESM module in node.
+const workspaceRoot = import.meta.dirname;
+
 const isDebug = !!process.env.VITEST_DEBUG;
 const xmlReport = Boolean(process.env.VITEST_XML_REPORT);
 const DEBUG_TIMEOUT_MS = 3_600_000;
+
+// Env-gated node-test instrumentation (opt-in; unset → config byte-identical to today).
+// DESIGN: .agents/projects/test-profiling-leaks/DESIGN.md.
+//   DX_PROFILE_TESTS[=dir] — emit a V8 `.cpuprofile` via Node `--cpu-prof` (dir default ./profiles).
+//   DX_DEBUG_LEAKS         — before/after heap snapshots + per-test heapUsed samples of a single suite.
+// Both need the tests to run on a fork's main thread, so instrumentation forces `pool: 'forks'` with
+// a single non-isolated process: `--cpu-prof`/`--expose-gc` (passed via `execArgv`) apply to the
+// process main thread, which under the default worker-per-file isolation is not where tests run.
+const CPU_PROFILE_DIR = process.env.DX_PROFILE_TESTS
+  ? process.env.DX_PROFILE_TESTS === '1'
+    ? './profiles'
+    : process.env.DX_PROFILE_TESTS
+  : undefined;
+const DEBUG_LEAKS = !!process.env.DX_DEBUG_LEAKS;
+const TEST_INSTRUMENTED = Boolean(CPU_PROFILE_DIR) || DEBUG_LEAKS;
+// `execArgv` / `isolate` / `fileParallelism` / `maxWorkers` are top-level test options in vitest 4
+// (the v3 `poolOptions.forks.{singleFork,execArgv}` nesting was removed). A single, non-isolated,
+// non-parallel fork runs the whole suite in one persistent process — one coherent profile / snapshot pair.
+const TEST_INSTRUMENT_EXEC_ARGV = [
+  ...(CPU_PROFILE_DIR ? ['--cpu-prof', `--cpu-prof-dir=${CPU_PROFILE_DIR}`] : []),
+  ...(DEBUG_LEAKS ? ['--expose-gc'] : []),
+];
+const VITEST_LEAK_SETUP = new URL('./tools/vitest/leak-setup.ts', import.meta.url).pathname;
 
 // Node-only Vitest NDJSON file sink (@dxos/vite-plugin-log/vitest). Relative paths avoid a moon dep cycle.
 const VITEST_LOG_GLOBAL_SETUP = new URL('./tools/vite-plugin-log/src/vitest/global-setup.ts', import.meta.url).pathname;
@@ -163,7 +190,7 @@ const runDxBuild = async (): Promise<void> => {
     }
   } catch (error) {
     // execFileAsync captures the subprocess stdio on the rejected value; without this,
-    // rolldown swallows tsgo's actual diagnostic output and the plugin error carries only
+    // rolldown swallows the compiler's actual diagnostic output and the plugin error carries only
     // a generic exit-code message.
     const err = error as { stdout?: string | Buffer; stderr?: string | Buffer };
     if (err.stdout && err.stdout.length > 0) {
@@ -173,7 +200,7 @@ const runDxBuild = async (): Promise<void> => {
       process.stderr.write(err.stderr);
     }
     const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`dx-build (tsgo) failed: ${message} cwd=${process.cwd()}`);
+    throw new Error(`dx-build failed: ${message} cwd=${process.cwd()}`);
   }
 };
 
@@ -274,14 +301,14 @@ export const DxWorkerResolvePlugin = (): Plugin => {
 };
 
 /**
- * Kicks off `dx-build` (tsgo wrapper) at build start so declaration emit runs in
+ * Kicks off `dx-build` (tsc wrapper) at build start so declaration emit runs in
  * parallel with the JS bundle. Generates per-file `.d.ts` files in `dist/types/src/`.
  */
-export const DxTsgoPlugin = (): Plugin => {
+export const DxDeclarationsPlugin = (): Plugin => {
   let dxBuildTask: Promise<void> | undefined;
 
   return {
-    name: 'DxTsgo',
+    name: 'DxDeclarations',
     apply: 'build',
     buildStart() {
       dxBuildTask = runDxBuild();
@@ -374,6 +401,23 @@ export const createConfig = (options: ConfigOptions): ViteUserConfig => {
 const VITEST_SUBCOMMAND = process.argv.slice(2).find((arg) => !arg.startsWith('-'));
 const IS_VITEST_RUN = process.env.VITEST === 'true' && (VITEST_SUBCOMMAND === 'run' || process.argv.includes('--run'));
 
+// The Claude Code cloud sandbox ships a Chromium older than Playwright's pin and proxies egress
+// through a gateway that resets Chromium's TLS 1.3 handshake, so browser mode cannot launch without
+// these; empty elsewhere, leaving dev and CI untouched.
+const SANDBOX_LAUNCH_OPTIONS = process.env.CLAUDE_CODE_REMOTE
+  ? {
+      launchOptions: {
+        executablePath: '/opt/pw-browsers/chromium',
+        args: [
+          '--no-sandbox',
+          `--proxy-server=${process.env.HTTPS_PROXY}`,
+          '--proxy-bypass-list=127.0.0.1;localhost',
+          '--ssl-version-max=tls1.2',
+        ],
+      },
+    }
+  : {};
+
 const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
   defineProject({
     test: {
@@ -393,7 +437,7 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
         // Pin the browser timezone so `Intl.DateTimeFormat().resolvedOptions().timeZone`
         // does not resolve to `Etc/Unknown` in headless CI containers — react-aria's
         // calendar feeds that value back into `Intl.DateTimeFormat`, which throws.
-        provider: playwright({ contextOptions: { timezoneId: 'America/Los_Angeles' } }),
+        provider: playwright({ contextOptions: { timezoneId: 'America/Los_Angeles' }, ...SANDBOX_LAUNCH_OPTIONS }),
         instances: [{ browser: 'chromium' }],
       },
       setupFiles: [new URL('./tools/storybook-react/.storybook/vitest.setup.ts', import.meta.url).pathname],
@@ -418,7 +462,13 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
         storybookScript: 'storybook dev --ci',
         tags: {
           include: ['test'],
-          exclude: ['experimental'],
+          // `manual` mirrors the vitest tag of the same name (vitest.tags.ts) — storybook tags are
+          // not vitest tags, so the opt-in gate has to be repeated here. Stories needing local
+          // services or spending real tokens carry it and stay out of a default run.
+          exclude: [
+            'experimental',
+            ...(['1', 'true'].includes(process.env.DX_RUN_MANUAL_TESTS ?? '') ? [] : ['manual']),
+          ],
         },
       }),
     ],
@@ -505,7 +555,7 @@ const createBrowserProject = ({
         enabled: true,
         screenshotFailures: false,
         headless: !isDebug,
-        provider: playwright(),
+        provider: playwright({ ...SANDBOX_LAUNCH_OPTIONS }),
         instances: [{ browser: browserName }],
         isolate: false,
       },
@@ -585,7 +635,24 @@ const createNodeProject = ({
         '!**/test/**/*.workerd.test.{ts,tsx}',
       ],
       globalSetup: [VITEST_LOG_GLOBAL_SETUP],
-      setupFiles: [...setupFiles, new URL('./tools/vitest/setup.ts', import.meta.url).pathname, VITEST_LOG_SETUP],
+      setupFiles: [
+        ...setupFiles,
+        new URL('./tools/vitest/setup.ts', import.meta.url).pathname,
+        VITEST_LOG_SETUP,
+        // Wraps the suite with before/after heap snapshots; only loaded when leak-detecting.
+        ...(DEBUG_LEAKS ? [VITEST_LEAK_SETUP] : []),
+      ],
+      // Env-gated CPU-profile / leak-detect instrumentation. Unset → this block is absent and the
+      // node project is unchanged. See DX_PROFILE_TESTS / DX_DEBUG_LEAKS above.
+      ...(TEST_INSTRUMENTED
+        ? {
+            pool: 'forks',
+            isolate: false,
+            fileParallelism: false,
+            maxWorkers: 1,
+            execArgv: TEST_INSTRUMENT_EXEC_ARGV,
+          }
+        : {}),
     },
     // Shows build trace
     // VITE_INSPECT=1 pnpm vitest --ui
@@ -685,8 +752,8 @@ const resolveReporterConfig = (cwd: string): ViteUserConfig['test'] => {
 
   const projectType = resolveProjectType();
   const moonRerunReporter = createMoonRerunReporter({ moonProject: packageDirName, projectType });
-  const resultsDirectory = join(__dirname, 'test-results', packageDirName, ...(projectType ? [projectType] : []));
-  const reportsDirectory = join(__dirname, 'coverage', packageDirName, ...(projectType ? [projectType] : []));
+  const resultsDirectory = join(workspaceRoot, 'test-results', packageDirName, ...(projectType ? [projectType] : []));
+  const reportsDirectory = join(workspaceRoot, 'coverage', packageDirName, ...(projectType ? [projectType] : []));
   // The v8 coverage provider imports `node:inspector/promises`, which the workerd runtime does not
   // provide — coverage is unsupported for the workers pool, so never enable it for the workerd project.
   const coverageEnabled = Boolean(process.env.VITEST_COVERAGE) && projectType !== 'workerd';
@@ -828,7 +895,7 @@ const buildTestConfig = (
  * Single entry point for a DXOS library package's `vite.config.ts`.
  *
  * - Library JS → `dist/lib/<entry>.mjs` (rolldown, all non-relative imports external).
- * - Types → `dist/types/src/**\/*.d.ts` (tsgo, started in `buildStart`).
+ * - Types → `dist/types/src/**\/*.d.ts` (tsc, started in `buildStart`).
  * - Tests → vitest projects (`node` / `browser` / `storybook`) wired in when `test` is set.
  */
 export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
@@ -912,7 +979,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
       ...(assetsAsFiles ? [DxRawAssetsPlugin()] : []),
       ...jsxPlugin,
       DxosLogPlugin({ logToFile: false, transform: { enabled: true } }),
-      DxTsgoPlugin(),
+      DxDeclarationsPlugin(),
     ],
     ...(test ? { test: buildTestConfig(process.cwd(), test, jsx) } : {}),
   });

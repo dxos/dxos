@@ -2,26 +2,31 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
-import { getSpace, useQuery } from '@dxos/react-client/echo';
+import { Ref } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
+import { getSpace } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { TaskList, type TaskPatch, type TaskStatus } from '@dxos/react-ui-task';
-import { Task, type TaskSet } from '@dxos/types';
+import { type Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
-
-import * as TaskOperation from '../../types/TaskOperation';
+import { TaskOperation } from '#types';
 
 export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>;
 
 /**
- * Status-grouped list of a task set's root tasks (children by the ECHO parent edge). CRUD flows
- * through the {@link TaskOperation} verbs so the article and external agents share one write path.
+ * Status-grouped list of every task in a set, in the `tasks` array's canonical order. Milestone
+ * grouping and the sub-task tree are deliberately not rendered yet (see TASKS.md) — the flat array
+ * holds both, so this is a complete list rather than a partial view. CRUD flows through the
+ * {@link TaskOperation} verbs so the article and external agents share one write path: the verbs
+ * are what keep the array, the refs and the lifecycle parent edges consistent.
  */
 export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSetArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -30,11 +35,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
   const spaceId = space?.id;
   const { invokePromise } = useOperationInvoker();
 
-  const children = useQuery(space?.db, Query.select(Filter.id(taskSet.id)).children());
-  const tasks = useMemo(
-    () => children.filter((child): child is Task.Task => Obj.instanceOf(Task.Task, child)),
-    [children],
-  );
+  const tasks = useSetTasks(taskSet);
 
   const statusLabel = useCallback((status: TaskStatus) => t(`task-status.${status}.label`), [t]);
   const handleCreate = useCallback(
@@ -46,11 +47,11 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
       void invokePromise(TaskOperation.UpdateTask, { task: Ref.make(task), ...patch }, { spaceId }),
     [invokePromise, spaceId],
   );
+  // Deleting through the verb (not `db.remove`) is what sweeps the task and its sub-tasks out of
+  // the set's `tasks` array; the cascade alone would leave the refs behind.
   const handleDelete = useCallback(
-    (task: Task.Task) => {
-      space?.db.remove(task);
-    },
-    [space],
+    (task: Task.Task) => void invokePromise(TaskOperation.DeleteTask, { task: Ref.make(task) }, { spaceId }),
+    [invokePromise, spaceId],
   );
 
   const content = (
@@ -85,3 +86,18 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
 };
 
 TaskSetArticle.displayName = 'TaskSetArticle';
+
+/**
+ * The set's tasks, subscribed to membership and order only. Refs resolve through `ref.atom`, which
+ * tracks loading without tracking mutations, so a title or status edit re-renders just the row that
+ * owns it — `TaskList` rows subscribe themselves.
+ */
+const useSetTasks = (taskSet: TaskSet.TaskSet): Task.Task[] => {
+  const [taskSetSnapshot] = useObject(taskSet);
+  const taskRefs = taskSetSnapshot?.tasks;
+  const atom = useMemo(
+    () => Atom.make((get) => TaskSet.dedupeById((taskRefs ?? []).map((ref) => get(ref.atom)))),
+    [taskRefs],
+  );
+  return useAtomValue(atom);
+};

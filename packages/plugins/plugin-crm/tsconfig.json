@@ -55,16 +55,25 @@
       "path": "../../core/compute/link"
     },
     {
+      "path": "../../core/compute/pipeline"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/echo/echo-client"
     },
     {
+      "path": "../../core/echo/echo-react"
+    },
+    {
       "path": "../../core/mesh/edge-client"
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-graph"
     },
     {
       "path": "../../sdk/app-toolkit"
@@ -88,7 +97,7 @@
       "path": "../../ui/ui-theme"
     },
     {
-      "path": "../plugin-graph"
+      "path": "../plugin-client"
     },
     {
       "path": "../plugin-inbox"
@@ -101,6 +110,9 @@
     },
     {
       "path": "../plugin-routine"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

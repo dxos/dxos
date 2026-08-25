@@ -4,20 +4,18 @@
 
 // TODO(wittjosiah): Refactor to use a dfx-style Effect-native client.
 
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientError from '@effect/platform/HttpClientError';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as ParseResult from 'effect/ParseResult';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientError from 'effect/unstable/http/HttpClientError';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { Database, type Ref } from '@dxos/echo';
-import { type AccessToken } from '@dxos/link';
-import * as Connection from '@dxos/plugin-connector/Connection';
+import { type AccessToken, Connection } from '@dxos/link';
 
 import { TRELLO_API_BASE } from '../constants';
 import { InvalidTrelloAccessTokenError } from '../errors';
@@ -131,10 +129,9 @@ export const credentialsFromToken = (
  * (with `{ TrelloApi }` from `../services`) at the operation boundary instead
  * of plumbing creds through every call site.
  */
-export class TrelloCredentials extends Context.Tag('@dxos/plugin-trello/TrelloCredentials')<
-  TrelloCredentials,
-  TrelloCredentialsValue
->() {
+export class TrelloCredentials extends Context.Service<TrelloCredentials, TrelloCredentialsValue>()(
+  '@dxos/plugin-trello/TrelloCredentials',
+) {
   /** Loads the connection's access token and parses it into `TrelloCredentials`. */
   static fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
     Layer.effect(
@@ -179,7 +176,7 @@ const authParams = (
 
 type TrelloEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutException,
+  HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError,
   HttpClient.HttpClient | TrelloCredentials
 >;
 
@@ -192,23 +189,19 @@ type TrelloEffect<T> = Effect.Effect<
  *  - TimeoutException (the request didn't complete in the allotted window): yes.
  *  - Schema decode failures (`ParseError`): no — payload won't become valid on retry.
  */
-const shouldRetry = (
-  error: HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutException,
-): boolean => {
-  if (error instanceof ParseResult.ParseError) {
+const shouldRetry = (error: HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError): boolean => {
+  if (error instanceof Schema.SchemaError) {
     return false;
   }
-  if (Cause.isTimeoutException(error)) {
+  if (Cause.isTimeoutError(error)) {
     return true;
   }
-  if (error._tag === 'RequestError') {
+  // v4 hangs the specific failure off `HttpClientError.reason`: a transport-level failure is always
+  // worth retrying, and a response failure only on 429/5xx.
+  if (error.reason._tag !== 'StatusCodeError') {
     return true;
   }
-  // ResponseError: only retry transient response failures.
-  if (error.reason !== 'StatusCode') {
-    return true;
-  }
-  const status = error.response.status;
+  const status = error.reason.response.status;
   return status === 429 || (status >= 500 && status <= 599);
 };
 
@@ -219,21 +212,23 @@ const shouldRetry = (
  *    api.trello.com — Trello answers the GET fine but doesn't handle the
  *    preflight OPTIONS, so the browser blocks the response. Same workaround
  *    we use for Google's userinfo endpoint).
- *  - parse JSON body with Effect Schema (invalid shapes fail as {@link ParseResult.ParseError})
+ *  - parse JSON body with Effect Schema (invalid shapes fail as {@link Schema.SchemaError})
  *  - 15s timeout
  *  - exponential retry with jitter, up to 3 attempts, only on transient failures
  *    (transport errors, 429, 5xx) — never on 4xx auth/validation errors.
  *  - scope the response so its body stream is released even on failure
  */
-const runRequest = <T>(request: HttpClientRequest.HttpClientRequest, schema: Schema.Schema<T>): TrelloEffect<T> =>
+const runRequest = <T>(request: HttpClientRequest.HttpClientRequest, schema: Schema.Codec<T>): TrelloEffect<T> =>
   Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient;
-    const clientNoTracer = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+    const clientNoTracer = httpClient.pipe(
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
+    );
     return yield* clientNoTracer.execute(request).pipe(
-      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknown(schema))),
+      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknownEffect(schema))),
       Effect.timeout('15 seconds'),
       Effect.retry({
-        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),
+        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.upTo({ times: 3 })),
         while: shouldRetry,
       }),
       Effect.scoped,
@@ -248,7 +243,7 @@ const runRequest = <T>(request: HttpClientRequest.HttpClientRequest, schema: Sch
  */
 const trelloRequest = <T>(
   build: (creds: TrelloCredentialsValue) => HttpClientRequest.HttpClientRequest,
-  schema: Schema.Schema<T>,
+  schema: Schema.Codec<T>,
 ): TrelloEffect<T> =>
   Effect.gen(function* () {
     const creds = yield* TrelloCredentials;

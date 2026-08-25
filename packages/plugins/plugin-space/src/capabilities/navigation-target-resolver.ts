@@ -15,8 +15,7 @@ import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 
-import { resolveCollectionObjectPath } from '../collection-path';
-import { resolveTypeSectionPath } from '../type-section-path';
+import { resolveCollectionObjectPath, resolveTypeSectionPath } from '../util';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -40,7 +39,7 @@ export default Capability.makeModule(
 
         const { db } = yield* Database.Service;
         const ref = db.makeRef(eid);
-        const object = yield* Database.load(ref).pipe(Effect.catchAll(() => Effect.succeed(null)));
+        const object = yield* Database.load(ref).pipe(Effect.catch(() => Effect.succeed(null)));
         if (!object) {
           return [];
         }

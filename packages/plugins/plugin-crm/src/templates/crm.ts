@@ -11,7 +11,7 @@ import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { makeRoutine } from '@dxos/plugin-routine';
 import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 
-import * as CrmOperation from '../types/CrmOperation';
+import { CrmOperation } from '#types';
 
 /**
  * CRM automation template: the routine-only counterpart of the `crmPipeline` project template. The
@@ -39,7 +39,7 @@ export const crm: RoutineCapabilities.Template = {
         name: name ?? `CRM — ${mailbox.name ?? 'Mailbox'}`,
         spec: { kind: 'runnable', runnable: Ref.fromURI(CrmOperation.ProcessMailbox.meta.key) },
         trigger: Trigger.make({
-          enabled: false,
+          enabled: true,
           spec: Trigger.specFeed(feed),
           // The operation reads the mailbox itself, so the trigger passes the subject rather than the
           // event item; `research` scaffolds a Profile per new contact.

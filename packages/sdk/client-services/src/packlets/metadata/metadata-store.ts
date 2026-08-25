@@ -20,7 +20,6 @@ import {
   type EdgeReplicationSetting,
   type IdentityRecord,
   type LargeSpaceMetadata,
-  type SpaceCache,
   type SpaceMetadata,
 } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type Directory, type File } from '@dxos/random-access-storage';
@@ -54,7 +53,6 @@ export interface IMetadataStore {
   addSpace(record: SpaceMetadata): Promise<void>;
   setSpaceDataLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe): Promise<void>;
   setSpaceControlLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe): Promise<void>;
-  setCache(spaceKey: PublicKey, cache: SpaceCache): Promise<void>;
   setWritableFeedKeys(spaceKey: PublicKey, controlFeedKey: PublicKey, dataFeedKey: PublicKey): Promise<void>;
   setSpaceState(spaceKey: PublicKey, state: SpaceState): Promise<void>;
 
@@ -71,10 +69,9 @@ export interface IMetadataStore {
 /**
  * Effect service tag for {@link IMetadataStore}.
  */
-export class IMetadataStoreService extends EffectContext.Tag('@dxos/client-services/IMetadataStore')<
-  IMetadataStoreService,
-  IMetadataStore
->() {}
+export class IMetadataStoreService extends EffectContext.Service<IMetadataStoreService, IMetadataStore>()(
+  '@dxos/client-services/IMetadataStore',
+) {}
 
 export interface AddSpaceOptions {
   key: PublicKey;
@@ -387,11 +384,6 @@ export class MetadataStore implements IMetadataStore {
     this._getSpace(spaceKey).controlTimeframe = timeframe;
     await this._save();
     await this.flush();
-  }
-
-  async setCache(spaceKey: PublicKey, cache: SpaceCache): Promise<void> {
-    this._getSpace(spaceKey).cache = cache;
-    await this._save();
   }
 
   async setWritableFeedKeys(spaceKey: PublicKey, controlFeedKey: PublicKey, dataFeedKey: PublicKey): Promise<void> {

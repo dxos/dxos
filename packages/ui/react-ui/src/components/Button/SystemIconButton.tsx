@@ -5,6 +5,8 @@
 import React, { InputHTMLAttributes, forwardRef, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { AI_ACTION_ICON } from '@dxos/ui-types';
+
 import { translationKey } from '#translations';
 
 import { IconButton, type IconButtonProps } from './IconButton';
@@ -29,6 +31,7 @@ const StarIconButton = forwardRef<HTMLButtonElement, TogglePresetProps>(({ label
       icon='ph--star--regular'
       activeIcon='ph--star--fill'
       label={label ?? t(active ? 'system-button.unstar.label' : 'system-button.star.label')}
+      classNames={active && 'text-yellow-500'}
       ref={forwardedRef}
     />
   );
@@ -91,6 +94,20 @@ const AddIconButton = forwardRef<HTMLButtonElement, StaticPresetProps>(({ label,
 });
 
 AddIconButton.displayName = 'SystemIconButton.Add';
+
+//
+// AI
+//
+
+/** The button form of {@link AI_ACTION_ICON}, which metadata call sites take as a string instead. */
+const AiIconButton = forwardRef<HTMLButtonElement, StaticPresetProps>(({ label, ...props }, forwardedRef) => {
+  const { t } = useTranslation(translationKey);
+  return (
+    <IconButton {...props} icon={AI_ACTION_ICON} label={label ?? t('system-button.ai.label')} ref={forwardedRef} />
+  );
+});
+
+AiIconButton.displayName = 'SystemIconButton.Ai';
 
 //
 // Delete
@@ -254,6 +271,7 @@ export const SystemIconButton = {
   Bookmark: BookmarkIconButton,
   Expander: ExpanderIconButton,
   Add: AddIconButton,
+  Ai: AiIconButton,
   Delete: DeleteIconButton,
   Edit: EditIconButton,
   Close: CloseIconButton,

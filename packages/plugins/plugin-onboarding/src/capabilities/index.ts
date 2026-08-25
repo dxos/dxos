@@ -20,13 +20,14 @@ export const DefaultContent = Capability.lazyModule(
       Capabilities.OperationInvoker,
       AppCapabilities.AppGraph,
       ClientCapabilities.Client,
+      ClientCapabilities.SchemaRegistered,
       SpaceCapabilities.OnCreateSpace,
-      SpaceCapabilities.PersonalSpace,
+      SpaceCapabilities.DefaultSpace,
     ],
     provides: [],
-    // Runtime event: the personal space exists once identity is created, not at startup.
-    // `requires: [SpaceCapabilities.PersonalSpace]` orders this after plugin-space's
-    // `IdentityCreated` module within the same event wave.
+    // Runtime event: the default space exists once identity is created, not at startup.
+    // `DefaultSpace` orders this after plugin-space's `IdentityCreated` in the same wave;
+    // `SchemaRegistered` pulls the idle-gated schema registration into it, for the seeded README.
     activatesOn: ClientEvents.IdentityCreated,
   },
   () => import('./default-content'),

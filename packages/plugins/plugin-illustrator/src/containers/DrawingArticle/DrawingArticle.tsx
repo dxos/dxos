@@ -10,10 +10,8 @@ import { useObject } from '@dxos/echo-react';
 import { useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
+import { Drawing, IllustratorCapabilities } from '#types';
 import { findVariant } from '#util';
-
-import type * as Drawing from '../../types/Drawing';
-import * as IllustratorCapabilities from '../../types/IllustratorCapabilities';
 
 export type DrawingArticleProps = AppSurface.ObjectArticleProps<Drawing.Drawing> & {
   extrinsic?: boolean;

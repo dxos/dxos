@@ -5,9 +5,9 @@
 import React, { memo, useMemo } from 'react';
 
 import { HomeSection, usePluginManager } from '@dxos/app-framework/ui';
-import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import { useDefaultSpace } from '@dxos/app-toolkit/ui';
 import { type Space } from '@dxos/react-client/echo';
-import { Carousel, useTranslation } from '@dxos/react-ui';
+import { Carousel, Flex, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -23,14 +23,15 @@ type SpaceScopedProps = {
 };
 
 /**
- * Home content contributor: the Welcome carousel on the personal space. Kept mounted (toggled
+ * Home content contributor: the Welcome carousel on the default space. Kept mounted (toggled
  * `hidden` when dismissed) so the cross-origin Stream iframe is not torn down and re-created on
- * every show/hide — that remount froze the UI. Renders nothing on non-personal spaces.
+ * every show/hide — that remount froze the UI. Renders nothing on other spaces.
  */
 export const SpaceHomeWelcome = ({ space }: SpaceScopedProps) => {
-  const isPersonal = !!space && AppSpace.isPersonalSpace(space);
-  const [dismissed] = useWelcomeDismissed(space);
-  if (!isPersonal) {
+  const defaultSpace = useDefaultSpace();
+  const isDefault = !!space && space.id === defaultSpace?.id;
+  const [dismissed] = useWelcomeDismissed();
+  if (!isDefault) {
     return null;
   }
 
@@ -42,7 +43,7 @@ export const SpaceHomeWelcome = ({ space }: SpaceScopedProps) => {
 };
 
 /**
- * Welcome content (personal space): plugin showcase carousel. The guided-tour and dismiss actions
+ * Welcome content (default space): plugin showcase carousel. The guided-tour and dismiss actions
  * live in the article toolbar (contributed as graph actions; see plugin-support app-graph-builder).
  *
  * Memoized (no props) so the home article's ongoing reactive re-renders (recent-objects query,
@@ -74,27 +75,27 @@ const WelcomePanel = memo(() => {
   }, [manager]);
 
   return (
-    <div className='flex flex-col items-center gap-4 py-8'>
+    <Flex column gap='lg' align='center' classNames='py-8'>
       <h1 className='text-2xl font-semibold'>{t('welcome.title')}</h1>
       <p className='pb-4 text-center text-balance text-description'>{t('welcome.description')}</p>
       {slides.length > 0 && (
         <Carousel.Root count={slides.length} transition='slide' continuous autoAdvance={10_000}>
           <Carousel.Content>
             <Carousel.Previous />
-            <div className='flex justify-center w-full'>
+            <Flex justify='center' classNames='w-full'>
               <Carousel.Viewport classNames='max-w-[40rem]'>
                 {slides.map((slide, index) => (
                   <Carousel.Slide key={slide.key} index={index} src={slide.src} alt={slide.description} />
                 ))}
               </Carousel.Viewport>
-            </div>
+            </Flex>
             <Carousel.Next />
             <Carousel.Indicators />
             <Carousel.Caption>{(index) => slides[index]?.description}</Carousel.Caption>
           </Carousel.Content>
         </Carousel.Root>
       )}
-    </div>
+    </Flex>
   );
 });
 

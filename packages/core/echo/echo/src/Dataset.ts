@@ -21,11 +21,11 @@ import * as View from './View';
  * as `Filter.type(...)` on a union.
  */
 export type Dataset = Feed.Feed | Collection.Collection | View.View;
-export const Dataset = Schema.Union(
+export const Dataset = Schema.Union([
   Type.getSchema(Feed.Feed),
   Type.getSchema(Collection.Collection),
   Type.getSchema(View.View),
-);
+]);
 
 export const isDataset: (value: unknown) => value is Dataset = pipe(
   Obj.instanceOf(Feed.Feed),

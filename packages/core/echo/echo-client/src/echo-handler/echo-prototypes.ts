@@ -143,7 +143,7 @@ export const getReified = (target: ProxyTarget): any => {
   return target[symbolInternals].getDecoded(fullPath);
 };
 
-export const getSchema = (target: ProxyTarget): Schema.Schema.AnyNoContext | undefined => {
+export const getSchema = (target: ProxyTarget): Schema.Codec<any, any> | undefined => {
   if (target[symbolNamespace] === META_NAMESPACE) {
     return EntityMetaSchema;
   }
@@ -316,7 +316,7 @@ const getSchemaKind = (target: ProxyTarget, receiver: any): EntityKind | undefin
  * Lazily rebuilds the Effect Schema from the entity's `jsonSchema` and caches it on internals.
  * Lets persisted Type entities structurally satisfy `Type<A>` via the proxy `get` trap.
  */
-const getStaticTypeSchemaSlot = (target: ProxyTarget, receiver: any): Schema.Schema.AnyNoContext | undefined => {
+const getStaticTypeSchemaSlot = (target: ProxyTarget, receiver: any): Schema.Codec<any, any> | undefined => {
   if (target[symbolInternals].getKind() !== EntityKind.Type) {
     return undefined;
   }
@@ -328,7 +328,7 @@ const getStaticTypeSchemaSlot = (target: ProxyTarget, receiver: any): Schema.Sch
   if (jsonSchema == null) {
     return undefined;
   }
-  const rebuilt = toEffectSchema(jsonSchema).annotations({
+  const rebuilt = toEffectSchema(jsonSchema).annotate({
     [TypeIdentifierAnnotationId]: EID.make({ entityId: target[symbolInternals].id }),
   });
   target[symbolInternals].cachedStaticSlot = rebuilt;
@@ -385,7 +385,12 @@ export const lookupRef = (target: ProxyTarget, encodedRef: EncodedReference): Re
     invariant(target[symbolInternals].linkCache);
     const parsedEchoUri = EID.tryParse(dxn);
     const objectId = parsedEchoUri ? EID.getEntityId(parsedEchoUri) : undefined;
-    invariant(objectId, 'Invalid DXN');
+    // Not every ref addresses an object: `Ref.fromURI` also names a registry entry by type DXN (an
+    // unpersisted routine draft binds its runnable that way). The link cache is keyed by entity id,
+    // so such a ref simply has no local target — resolving it needs a database.
+    if (!objectId) {
+      return new RefImpl(dxn);
+    }
     return new RefImpl(dxn, handleStoredSchema(target, target[symbolInternals].linkCache.get(objectId)));
   }
 };
@@ -510,7 +515,7 @@ export class EchoRecord {
     throw new Error('EchoRecord is a behaviour prototype and must not be instantiated.');
   }
 
-  get [SchemaId](): Schema.Schema.AnyNoContext | undefined {
+  get [SchemaId](): Schema.Codec<any, any> | undefined {
     return getSchema(this);
   }
 
@@ -616,7 +621,7 @@ export class EchoRoot extends EchoRecord {
     return getSchemaKind(this, this);
   }
 
-  get [StaticTypeSchemaSlot](): Schema.Schema.AnyNoContext | undefined {
+  get [StaticTypeSchemaSlot](): Schema.Codec<any, any> | undefined {
     return getStaticTypeSchemaSlot(this, this);
   }
 

@@ -4,13 +4,13 @@
 
 import * as Schema from 'effect/Schema';
 
-import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
 export const SKILL_KEY = 'org.dxos.skill.support';
 
-export const TicketStatus = Schema.Literal('open', 'in_progress', 'resolved');
+export const TicketStatus = Schema.Literals(['open', 'in_progress', 'resolved']);
 export type TicketStatus = Schema.Schema.Type<typeof TicketStatus>;
 
 /**
@@ -20,17 +20,17 @@ export type TicketStatus = Schema.Schema.Type<typeof TicketStatus>;
  */
 export class Ticket extends Type.makeObject<Ticket>(DXN.make('org.dxos.type.support.ticket', '0.1.0'))(
   Schema.Struct({
-    title: Schema.String.annotations({
+    title: Schema.String.annotate({
       description: 'Short summary of the issue.',
     }),
     body: Schema.optional(
-      Schema.String.annotations({
+      Schema.String.annotate({
         description: 'Initial description of the problem.',
       }),
     ),
     status: TicketStatus.pipe(FormInputAnnotation.set(false)),
     resolution: Schema.optional(
-      Schema.String.annotations({
+      Schema.String.annotate({
         description: 'Resolution notes recorded when the ticket is resolved.',
       }),
     ),
@@ -38,7 +38,7 @@ export class Ticket extends Type.makeObject<Ticket>(DXN.make('org.dxos.type.supp
   }).pipe(
     LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--lifebuoy--regular', hue: 'rose' }),
-    AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
+    Skill.SkillsAnnotation.set([SKILL_KEY]),
   ),
 ) {}
 

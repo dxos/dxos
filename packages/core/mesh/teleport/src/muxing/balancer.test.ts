@@ -98,9 +98,8 @@ describe('Balancer', () => {
     const channels = 3;
     const { balancer, stream } = setupBalancer(channels, true);
 
-    await sleep(20);
-
-    expect(stream.writeCalls).to.equal(1);
+    // Poll until the first (stuck) write lands and the remaining chunks are buffered behind backpressure.
+    await expect.poll(() => stream.writeCalls).toEqual(1);
     expect(balancer.buffersCount).to.toBeGreaterThan(0);
 
     stream.unstuck?.();

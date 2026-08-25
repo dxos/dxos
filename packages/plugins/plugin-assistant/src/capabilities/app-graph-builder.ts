@@ -6,53 +6,44 @@ import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
 
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import { Chat, RunInstructions } from '@dxos/assistant-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
-import * as Project from '@dxos/compute/Project';
 import { Sequence } from '@dxos/conductor';
 import { Database, DXN, Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
 import { ASSISTANT_COMPANION_VARIANT, meta } from '#meta';
-
-import { getChatsPath } from '../paths';
-import * as AssistantCapabilities from '../types/AssistantCapabilities';
-import * as AssistantOperation from '../types/AssistantOperation';
+import { AssistantCapabilities, AssistantOperation } from '#types';
 
 /** Operation definitions to seed as `PersistentOperation` records for automation / triggers. */
 const computeOperationsToImport = [RunInstructions] as const;
 
 /**
- * Chats belonging to the top-level Chats section: every chat minus the two kinds that already appear
- * elsewhere in the tree. A chat sourcing a `CompanionTo` relation belongs to its primary object's
- * companion panel; a chat parented to a `Project` is that project's navtree child (plugin-projects
- * `projectChats`). Without the second exclusion a project chat appears twice.
- *
- * The project exclusion subtracts every project child rather than just chats — `children()` takes no
- * type filter, and subtracting a non-chat from a chat-typed source is a no-op.
+ * Chats belonging to the top-level Chats section: unparented chats. Ownership is the ECHO parent
+ * edge — a companion chat is parented to its subject (and surfaces in that subject's companion
+ * panel), a project chat to its project (and is that project's navtree child, plugin-projects
+ * `projectChats`) — so "standalone" is simply "no parent".
  */
-export const standaloneChatsQuery = Query.without(
-  Query.without(
-    Query.select(Filter.type(Chat.Chat)),
-    Query.select(Filter.type(Chat.Chat)).sourceOf(Chat.CompanionTo).source(),
-  ),
-  Query.select(Filter.type(Project.Project)).children(),
-);
+export const standaloneChatsQuery = Query.select(Filter.and(Filter.type(Chat.Chat), Filter.hasParent(false)));
 
 /** Match ECHO objects that are NOT chats. */
 const whenNonChatObject = NodeMatcher.whenAll(
@@ -119,7 +110,7 @@ export default Capability.makeModule(
               data: Effect.fnUntraced(function* () {
                 const capabilities = yield* Capability.Service;
                 const client = yield* Capability.get(ClientCapabilities.Client);
-                const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getPersonalSpace(client);
+                const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getDefaultSpace(client);
                 if (!space) {
                   return;
                 }
@@ -128,9 +119,8 @@ export default Capability.makeModule(
                   if (!key) {
                     continue;
                   }
-                  const existing = yield* Effect.promise(
-                    (): Promise<Operation.PersistentOperation[]> =>
-                      space.db.query(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(key))).run(),
+                  const existing = yield* Effect.promise((): Promise<Operation.PersistentOperation[]> =>
+                    space.db.query(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(key))).run(),
                   );
                   if (existing.length === 0) {
                     space.db.add(Operation.serialize(definition));
@@ -144,10 +134,17 @@ export default Capability.makeModule(
               },
             }),
             Node.makeAction({
-              id: AssistantOperation.ToggleTracePanelDebug.meta.key,
-              data: () => Operation.invoke(AssistantOperation.ToggleTracePanelDebug, {}),
+              id: AssistantOperation.SetTracePanelDebug.meta.key,
+              // The menu item flips, so it reads the current value and states the one it wants.
+              data: () =>
+                Effect.gen(function* () {
+                  const settings = yield* Capabilities.getAtomValue(AssistantCapabilities.Settings);
+                  yield* Operation.invoke(AssistantOperation.SetTracePanelDebug, {
+                    state: !settings.tracePanelDebug,
+                  });
+                }),
               properties: {
-                label: ['toggle-trace-panel-debug.label', { ns: meta.profile.key }],
+                label: ['set-trace-panel-debug.label', { ns: meta.profile.key }],
                 icon: 'ph--brackets-curly--regular',
               },
             }),
@@ -171,12 +168,12 @@ export default Capability.makeModule(
 
             // Resolve chat from persisted state or transient cache.
             const chat = pipe(
-              Option.fromNullable(state.currentChat[objectUri]),
-              Option.flatMap((dxnStr) => Option.fromNullable(DXN.tryMake(dxnStr))),
-              Option.flatMap((dxn) => Option.fromNullable(Obj.getDatabase(object)?.makeRef(dxn))),
+              Option.fromNullishOr(state.currentChat[objectUri]),
+              Option.flatMap((dxnStr) => Option.fromNullishOr(DXN.tryMake(dxnStr))),
+              Option.flatMap((dxn) => Option.fromNullishOr(Obj.getDatabase(object)?.makeRef(dxn))),
               Option.map((ref) => get(Obj.atom(ref as Ref.Ref<Obj.Unknown>))),
               Option.filter(Obj.isObject),
-              Option.orElse(() => pipe(Option.fromNullable(cache[objectUri]), Option.filter(Obj.isObject))),
+              Option.orElse(() => pipe(Option.fromNullishOr(cache[objectUri]), Option.filter(Obj.isObject))),
               Option.getOrNull,
             );
 
@@ -250,16 +247,20 @@ export default Capability.makeModule(
                     { db: space.db },
                     { spaceId: space.db.spaceId },
                   );
-                  const { subject } = yield* Operation.invoke(
-                    SpaceOperation.AddObject,
-                    { object: chat, target: space.db, targetNodeId: getChatsPath(space.db.spaceId) },
+                  yield* Operation.invoke(SpaceOperation.AddObject, { object: chat }, { spaceId: space.db.spaceId });
+                  const { targets } = yield* Operation.invoke(
+                    NavigationOperation.ResolveNavigationTargets,
+                    { query: { uri: Obj.getURI(chat) } },
                     { spaceId: space.db.spaceId },
                   );
-                  yield* Operation.invoke(
-                    LayoutOperation.Open,
-                    { subject: [...subject] },
-                    { spaceId: space.db.spaceId },
-                  );
+                  const navigationTarget = targets[0];
+                  if (navigationTarget) {
+                    yield* Operation.invoke(
+                      LayoutOperation.Open,
+                      { subject: [navigationTarget.path] },
+                      { spaceId: space.db.spaceId },
+                    );
+                  }
                 }),
               properties: {
                 label: ['create-chat.label', { ns: meta.profile.key }],

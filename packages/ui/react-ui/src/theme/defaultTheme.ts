@@ -5,6 +5,7 @@
 import { type Theme } from '@dxos/ui-types';
 
 import { avatarTheme } from '../components/Avatars/Avatar.theme';
+import { bannerTheme } from '../components/Banner/Banner.theme';
 import { breadcrumbTheme } from '../components/Breadcrumb/Breadcrumb.theme';
 import { buttonTheme } from '../components/Button/Button.theme';
 import { iconButtonTheme } from '../components/Button/IconButton.theme';
@@ -19,16 +20,16 @@ import { inputTheme } from '../components/Input/Input.theme';
 import { linkTheme } from '../components/Link/Link.theme';
 import { mainTheme } from '../components/Main/Main.theme';
 import { menuTheme } from '../components/Menu/Menu.theme';
-import { messageTheme } from '../components/Message/Message.theme';
 import { panelTheme } from '../components/Panel/Panel.theme';
 import { popoverTheme } from '../components/Popover/Popover.theme';
+import { progressTheme } from '../components/Progress/Progress.theme';
 import { scrollAreaTheme } from '../components/ScrollArea/ScrollArea.theme';
 import { selectTheme } from '../components/Select/Select.theme';
 import { separatorTheme } from '../components/Separator/Separator.theme';
 import { skeletonTheme } from '../components/Skeleton/Skeleton.theme';
 import { sliderTheme } from '../components/Slider/Slider.theme';
 import { splitterTheme } from '../components/Splitter/Splitter.theme';
-import { statusTheme } from '../components/Status/Status.theme';
+import { stepperTheme } from '../components/Stepper/Stepper.theme';
 import { tagTheme } from '../components/Tag/Tag.theme';
 import { toastTheme } from '../components/Toast/Toast.theme';
 import { toolbarTheme } from '../components/Toolbar/Toolbar.theme';
@@ -62,16 +63,17 @@ export const defaultTheme: Theme<Record<string, any>> = {
   input: inputTheme,
   link: linkTheme,
   main: mainTheme,
-  message: messageTheme,
+  banner: bannerTheme,
   menu: menuTheme,
   popover: popoverTheme,
+  progress: progressTheme,
   scrollArea: scrollAreaTheme,
   select: selectTheme,
   separator: separatorTheme,
   skeleton: skeletonTheme,
   slider: sliderTheme,
   splitter: splitterTheme,
-  status: statusTheme,
+  stepper: stepperTheme,
   tag: tagTheme,
   toast: toastTheme,
   toolbar: toolbarTheme,

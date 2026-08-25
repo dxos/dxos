@@ -2,21 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as HttpClient from '@effect/platform/HttpClient';
 import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import type * as HttpClient from 'effect/unstable/http/HttpClient';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import type { Client } from '@dxos/client';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
 import { type Database, Obj, Ref } from '@dxos/echo';
-import { AccessToken, Cursor } from '@dxos/link';
+import { AccessToken, Connection } from '@dxos/link';
 import type { OAuthProvider } from '@dxos/protocols';
 
 import { type ConnectionTestError } from '../errors';
-import * as Connection from './Connection';
 
 /** Descriptor for one remote target returned by discovery operations. */
 export const RemoteTarget = Schema.Struct({
@@ -27,7 +27,7 @@ export const RemoteTarget = Schema.Struct({
   /** Optional secondary line. */
   description: Schema.String.pipe(Schema.optional),
   /** Service-specific extras for display. */
-  metadata: Schema.Record({ key: Schema.String, value: Schema.Unknown }).pipe(Schema.optional),
+  metadata: Schema.Record(Schema.String, Schema.Unknown).pipe(Schema.optional),
 });
 export interface RemoteTarget extends Schema.Schema.Type<typeof RemoteTarget> {}
 
@@ -63,10 +63,24 @@ export const MaterializeTargetOutput = Schema.Struct({
 });
 export interface MaterializeTargetOutput extends Schema.Schema.Type<typeof MaterializeTargetOutput> {}
 
-/** Minimum input for provider {@link ConnectorSync.operation} operations: one cursor to reconcile. */
-export type SyncInput = {
-  binding: Ref.Ref<Cursor.Cursor>;
-};
+/**
+ * Minimum input for provider {@link ConnectorSync.operation} operations: the account to reconcile.
+ * Every connection is potentially multi-target, so a sync operation is account-level — it covers all
+ * of the connection's bindings (see `Binding.syncAll` for the shared fan-out). A connector uses this
+ * schema as its sync operation's `input` directly, or spreads `SyncInput.fields` to extend it — so a
+ * change to the contract lands in every connector at once.
+ */
+export const SyncInput = Schema.Struct({
+  connection: Ref.Ref(Connection.Connection).annotate({
+    description: 'Connection whose credentials sync every bound target.',
+  }),
+  /** Cursor id of the binding to sync first (pressed-first ordering); unset on scheduled fires. */
+  priority: Schema.String.pipe(
+    Schema.annotate({ description: 'Cursor id of the binding to sync first.' }),
+    Schema.optional,
+  ),
+});
+export interface SyncInput extends Schema.Schema.Type<typeof SyncInput> {}
 
 /**
  * Result shape for provider sync operations (not consumed by connector UI yet).
@@ -88,19 +102,28 @@ export type OnTokenCreated = (input: {
 }) => Effect.Effect<void, never, HttpClient.HttpClient | Credential.CredentialsService>;
 
 /**
- * Everything a connector needs to sync: the per-binding sync operation, how targets are discovered
+ * Everything a connector needs to sync: the account-level sync operation, how targets are discovered
  * and materialized, the per-binding options schema, and — when the connector wants its bindings kept
  * up to date in the background — the trigger spec to schedule that on.
  */
 export type ConnectorSync = {
-  /** Reconcile one binding's target object with its remote. */
+  /** Reconcile every binding of a connection with its remote (see `Binding.syncAll`). */
   operation: Operation.Definition<SyncInput, SyncOutput>;
+  /**
+   * Typename of the local object this connector binds as a sync target (e.g. a Mailbox for a mail
+   * connector). Declaring it here is what lets a target *type* ask which connectors can bind it —
+   * `connectorIdsForTarget` — instead of the type naming its providers, so a schema never has to know
+   * that Gmail or JMAP exist and a third-party provider can bind it without touching the domain plugin.
+   * Omit for a targetless connector, which writes objects straight into the space rather than binding a
+   * root (e.g. Google Contacts).
+   */
+  targetTypename?: string;
   /** Discover remote targets reachable from a connection (multi-target connectors). */
   getTargets?: Operation.Definition<GetSyncTargetsInput, GetSyncTargetsOutput>;
   /** Create an empty local root object so a binding can be created eagerly. */
   materializeTarget?: Operation.Definition<MaterializeTargetInput, MaterializeTargetOutput>;
   /** Schema describing per-binding `.options`. */
-  optionsSchema?: Schema.Schema<any, any>;
+  optionsSchema?: Schema.Codec<any, any>;
   /**
    * Sync a binding as soon as it is created, instead of waiting for the user to ask. Defaults to
    * false: the first sync of a freshly authorized account is unbounded (full history, every bound
@@ -109,10 +132,10 @@ export type ConnectorSync = {
   auto?: boolean;
   /**
    * Schedule to keep bindings in sync on — a timer cron, a subscription, whatever the connector
-   * wants. Each new binding gets a Routine wrapping a trigger with this spec, and that trigger is
-   * also what a manual sync force-runs — creating the Routine first if the binding has none — so
-   * scheduled and on-demand syncs share the dispatcher's durable execution. Omit for a connector that
-   * should only sync on demand: {@link operation} is then invoked directly.
+   * wants. The connection gets one account-level Routine wrapping a trigger with this spec — created
+   * through the create-routine form, never silently — and that trigger is also what a manual sync
+   * force-runs, so scheduled and on-demand syncs share the dispatcher's durable execution. Omit for a
+   * connector that should only sync on demand: {@link operation} is then invoked directly.
    */
   trigger?: Trigger.Spec;
   /**
@@ -180,7 +203,7 @@ export type CredentialFormResult =
  */
 export type CredentialForm<Values = any> = {
   /** Schema rendered by the generic connector-form dialog. */
-  schema: Schema.Schema<Values, any>;
+  schema: Schema.Codec<Values, any>;
   /** Optional defaults pre-filled into the form. */
   defaultValues?: Partial<Values>;
   /**
@@ -193,7 +216,7 @@ export type CredentialForm<Values = any> = {
    * Build the next step of the connection flow from form values.
    *
    * Failures (`Effect.fail`) propagate to the coordinator and surface in the dialog's
-   * `Effect.catchAll` — use these for user-visible validation messages. Do NOT `Effect.orDie`
+   * `Effect.catch` — use these for user-visible validation messages. Do NOT `Effect.orDie`
    * validation errors; defects bypass the dialog's failure handler and crash the request.
    */
   onSubmit: (input: {
@@ -240,3 +263,36 @@ export type ConnectorEntry = {
  * own entry array alongside plugin-connector's built-ins.
  */
 export const Connector = Capability.make<ConnectorEntry[]>()('org.dxos.plugin.connector.capability.connector');
+
+/**
+ * The ids of the registered connectors that bind objects of this type, matched by their
+ * `sync.targetTypename`.
+ *
+ * Pass this as a bindable type's `ConnectorAnnotations.ConnectorAuthAnnotation.connectorIds` so the
+ * annotation resolves its providers from the registry instead of listing them:
+ *
+ * ```ts
+ * ConnectorAuthAnnotation.set({ connectorIds: ConnectorSpec.idsForTarget, bindTarget: true })
+ * ```
+ *
+ * That inverts the dependency. A domain type keeps no provider names, so adding a provider means
+ * registering a {@link Connector} — no edit to the type it binds — and a third-party provider can bind
+ * a built-in type without the domain plugin knowing it exists. It also removes the duplicate-constant
+ * problem the literal form creates: the id lived in both the provider and the domain plugin, kept in
+ * step by hand.
+ */
+export const idsForTarget = (
+  object: Obj.Unknown,
+  capabilities: CapabilityManager.CapabilityManager,
+): readonly string[] => {
+  const typename = Obj.getTypename(object);
+  if (!typename) {
+    return [];
+  }
+
+  return capabilities
+    .getAll(Connector)
+    .flat()
+    .filter((connector) => connector.sync?.targetTypename === typename)
+    .map((connector) => connector.id);
+};

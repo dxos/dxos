@@ -19,8 +19,7 @@ import { type Database, type Obj } from '@dxos/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { type CreateEntryOverride, ObjectProperties } from '@dxos/react-ui-form';
 
-import * as SpaceCapabilities from '../../types/SpaceCapabilities';
-import * as SpaceEvents from '../../types/SpaceEvents';
+import { SpaceCapabilities, SpaceEvents } from '#types';
 
 export type DefaultPropertiesProps = AppSurface.ObjectPropertiesProps<Obj.Unknown>;
 
@@ -48,7 +47,7 @@ export const DefaultProperties = forwardRef<HTMLDivElement, DefaultPropertiesPro
           inputSchema: entry.inputSchema,
           createObject: async (values: any, db: Database.Database): Promise<Obj.Unknown> => {
             const result = await entry
-              .createObject(values, { db, target: db })
+              .createObject(values, { db })
               .pipe(
                 Effect.provideService(Capability.Service, manager.capabilities),
                 Effect.provideService(Operation.Service, operationInvoker),

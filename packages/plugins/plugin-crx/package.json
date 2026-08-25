@@ -35,14 +35,19 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/CrxPlugin.tsx",
-      "types": "./dist/types/src/CrxPlugin.d.ts",
-      "default": "./dist/lib/CrxPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -52,16 +57,12 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./package.json": "./package.json",
     "./CrxCapabilities": {
       "source": "./src/types/CrxCapabilities.ts",
       "types": "./dist/types/src/types/CrxCapabilities.d.ts",
@@ -77,6 +78,11 @@
       "types": "./dist/types/src/types/CrxOperation.d.ts",
       "import": "./dist/lib/CrxOperation.mjs"
     },
+    "./CrxPlugin": {
+      "source": "./src/CrxPlugin.ts",
+      "types": "./dist/types/src/CrxPlugin.d.ts",
+      "import": "./dist/lib/CrxPlugin.mjs"
+    },
     "./PageAction": {
       "source": "./src/types/PageAction.ts",
       "types": "./dist/types/src/types/PageAction.d.ts",
@@ -86,8 +92,7 @@
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -131,12 +136,11 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "react": "catalog:",

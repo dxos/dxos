@@ -14,9 +14,8 @@ import { mockAiService } from '@dxos/extractor/testing';
 import * as ExtractedFrom from '@dxos/plugin-inbox/ExtractedFrom';
 import { ContentBlock, Message } from '@dxos/types';
 
-import * as Booking from '../../types/Booking';
-import * as Segment from '../../types/Segment';
-import * as Trip from '../../types/Trip';
+import { Booking, Segment, Trip } from '#types';
+
 import { TripMessageExtractor } from './trip-extractor';
 
 // Empty resolver — the trip extractor dedupes/groups via direct db queries, not the Resolver.
@@ -130,7 +129,7 @@ describe('trip extraction over a message feed', () => {
     await db.appendToFeed(feed, messages);
 
     // Iterate the feed, invoking the extract dispatcher per message. Non-matching messages fail
-    // with NoMatchingExtractorError, which we tolerate via Effect.either.
+    // with NoMatchingExtractorError, which we tolerate via Effect.result.
     for (let index = 0; index < messages.length; index++) {
       const message = messages[index];
       const payload = payloads[index];
@@ -144,7 +143,7 @@ describe('trip extraction over a message feed', () => {
             ),
           ),
         )
-        .pipe(Effect.either)
+        .pipe(Effect.result)
         .pipe(EffectEx.runAndForwardErrors);
       await db.flush();
     }

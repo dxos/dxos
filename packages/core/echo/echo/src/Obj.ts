@@ -10,17 +10,17 @@ import * as Exit from 'effect/Exit';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import * as Utils from 'effect/Utils';
 
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { SchemaEx } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { EntityId, type URI } from '@dxos/keys';
+import { EID, EntityId, type URI } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { assumeType, deepMapValues } from '@dxos/util';
 
 import type * as Database from './Database';
 import * as Entity from './Entity';
-import * as Err from './Err';
+import * as Error from './Error';
 import * as internal from './internal';
 import { getProxyTarget, isProxy } from './internal/common/proxy/proxy-utils';
 import * as objInternal from './internal/Obj';
@@ -72,11 +72,11 @@ export interface Unknown extends BaseObj {}
 // TODO(wittjosiah): Investigate if Schema.filter can validate KindId on ECHO instances.
 //   Effect Schema normalizes proxy objects to plain objects before calling filter predicates.
 //   Possible approaches: custom Schema.declare, AST manipulation, or upstream contribution.
-export const Unknown: internal.UnknownTypeSchema<Unknown, typeof Entity.Kind.Object> = Schema.Struct({
-  id: Schema.String,
-}).pipe(
-  Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
-  Schema.annotations({
+export const Unknown: internal.UnknownTypeSchema<Unknown, typeof Entity.Kind.Object> = Schema.StructWithRest(
+  Schema.Struct({ id: Schema.String }),
+  [Schema.Record(Schema.String, Schema.Unknown)],
+).pipe(
+  Schema.annotate({
     [internal.TypeAnnotationId]: {
       kind: Entity.Kind.Object,
       typename: internal.ANY_OBJECT_TYPENAME,
@@ -263,15 +263,15 @@ export const getSnapshot: <T extends Unknown>(obj: T) => Snapshot<T> = objIntern
  * );
  * ```
  */
-export const getReactive = <T extends Unknown>(snapshot: Snapshot<T>): Effect.Effect<T, Err.GetReactiveError> =>
+export const getReactive = <T extends Unknown>(snapshot: Snapshot<T>): Effect.Effect<T, Error.GetReactiveError> =>
   Effect.gen(function* () {
     const db = internal.getDatabase(snapshot);
     if (!db) {
-      return yield* Effect.fail(new Err.GetReactiveError({ reason: 'no-database', snapshotId: snapshot.id }));
+      return yield* Effect.fail(new Error.GetReactiveError({ reason: 'no-database', snapshotId: snapshot.id }));
     }
     const obj = db.getObjectById(snapshot.id);
     if (!obj) {
-      return yield* Effect.fail(new Err.GetReactiveError({ reason: 'object-not-found', snapshotId: snapshot.id }));
+      return yield* Effect.fail(new Error.GetReactiveError({ reason: 'object-not-found', snapshotId: snapshot.id }));
     }
     return obj as T;
   });
@@ -286,7 +286,7 @@ export const getReactive = <T extends Unknown>(snapshot: Snapshot<T>): Effect.Ef
 export const getReactiveOption = <T extends Unknown>(snapshot: Snapshot<T>): Effect.Effect<Option.Option<T>, never> =>
   getReactive(snapshot).pipe(
     Effect.map(Option.some),
-    Effect.catchAll(() => Effect.succeed(Option.none())),
+    Effect.catch(() => Effect.succeed(Option.none())),
   );
 
 /**
@@ -295,7 +295,7 @@ export const getReactiveOption = <T extends Unknown>(snapshot: Snapshot<T>): Eff
  *
  * @param snapshot - A snapshot of the object (from `Obj.getSnapshot`).
  * @returns The reactive object.
- * @throws {Err.GetReactiveError} When the object cannot be resolved.
+ * @throws {Error.GetReactiveError} When the object cannot be resolved.
  */
 export const getReactiveOrThrow = <T extends Unknown>(snapshot: Snapshot<T>): T =>
   Effect.runSync(getReactive(snapshot));
@@ -761,13 +761,50 @@ export const getParent = (entity: Unknown | Snapshot): Unknown | undefined => {
 };
 
 /**
+ * Whether the parent's own data or meta annotations hold a ref to the child. A parent edge without
+ * one leaves the child reachable only by index query (no graph path reaches it), and the child
+ * would not read as owned content of the parent.
+ */
+const parentRefsChild = (parent: Any, childId: EntityId): boolean => {
+  let found = false;
+  const visit = (value: unknown, recurse: (value: unknown) => unknown): unknown => {
+    if (found) {
+      return value;
+    }
+    if (Ref.isRef(value)) {
+      const eid = EID.tryParse(value.uri);
+      if (eid && EID.getEntityId(eid) === childId) {
+        found = true;
+      }
+      return value;
+    }
+    return recurse(value);
+  };
+  deepMapValues(parent, visit);
+  if (!found) {
+    deepMapValues(getMeta(parent).annotations, visit);
+  }
+  return found;
+};
+
+/**
  * Sets the parent of an object.
  * If a parent (or any transitive parent) is deleted, the object will be deleted.
  * Only objects are allowed to have a parent.
+ *
+ * The parent must hold a ref to the child (in its data, or in an object annotation — e.g.
+ * `Chat.CompanionChatAnnotation`); a ref-less edge currently only warns while call sites are swept.
  */
+// TODO(burdon): Promote the ref-less-edge warning to an invariant once call sites are swept.
 export const setParent = (entity: Unknown, parent: Any | undefined) => {
   assertArgument(isObject(entity), 'Expected an object');
   assertArgument(parent === undefined || isObject(parent), 'Expected an object');
+  if (parent !== undefined && !parentRefsChild(parent, entity.id)) {
+    log.warn('parent edge without a ref from parent to child', {
+      child: internal.getTypename(entity),
+      parent: internal.getTypename(parent),
+    });
+  }
   assumeType<internal.InternalObjectProps>(entity);
   assumeType<internal.InternalObjectProps | undefined>(parent);
   entity[internal.ParentId] = parent;
@@ -787,7 +824,7 @@ const valuesEqual = (left: unknown, right: unknown): boolean => {
     return left === right;
   }
   if (typeof left !== 'object' || typeof right !== 'object') {
-    return Utils.structuralRegion(() => Equal.equals(left, right));
+    return Equal.equals(left, right);
   }
   if (Ref.isRef(left) && Ref.isRef(right)) {
     return left.uri === right.uri;

@@ -16,14 +16,14 @@ import * as Bookmark from './Bookmark';
 
 export const AddFromSnapshot = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.plugin.bookmarks.operation.addFromSnapshot'),
+    key: DXN.make('org.dxos.operation.bookmarks.addFromSnapshot'),
     name: 'Add bookmark',
     description: 'Save a web page snapshot as a bookmark.',
     icon: 'ph--bookmark-simple--regular',
   },
   input: Schema.Struct({
     snapshot: PageAction.Snapshot,
-    target: Database.Database.annotations({ description: 'The database to add the bookmark to.' }),
+    target: Database.Database.annotate({ description: 'The database to add the bookmark to.' }),
   }),
   output: Schema.Struct({
     id: Schema.String,
@@ -36,16 +36,16 @@ export const AddFromSnapshot = Operation.make({
  */
 export const Summarize = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.plugin.bookmarks.operation.summarize'),
+    key: DXN.make('org.dxos.operation.bookmarks.summarize'),
     name: 'Summarize Bookmark',
     description: 'Summarizes the bookmarked page and links the summary.',
     icon: 'ph--text-align-left--regular',
   },
   input: Schema.Struct({
-    bookmark: Ref.Ref(Bookmark.Bookmark).annotations({ description: 'The bookmark to summarize.' }),
+    bookmark: Ref.Ref(Bookmark.Bookmark).annotate({ description: 'The bookmark to summarize.' }),
   }),
   output: Schema.Struct({
-    summary: Ref.Ref(Text.Text).annotations({ description: 'The generated summary text object.' }),
+    summary: Ref.Ref(Text.Text).annotate({ description: 'The generated summary text object.' }),
   }),
   services: [Database.Service, AiService.AiService],
 });

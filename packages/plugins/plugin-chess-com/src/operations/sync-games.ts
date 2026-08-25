@@ -12,9 +12,9 @@ import { invariant } from '@dxos/invariant';
 import * as Chess from '@dxos/plugin-chess/Chess';
 import * as Game from '@dxos/plugin-game/Game';
 
+import { ChessComAccount, ChessComOperation } from '#types';
+
 import { ChessComHttpClientLayer, type RemoteGame, fetchAllGames, fetchPlayer } from '../services';
-import * as ChessComAccount from '../types/ChessComAccount';
-import * as ChessComOperation from '../types/ChessComOperation';
 
 const gameForeignId = (uuid: string): string => `game/${uuid}`;
 

@@ -11,6 +11,7 @@ import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as PubSub from 'effect/PubSub';
 import * as Scope from 'effect/Scope';
+import * as Semaphore from 'effect/Semaphore';
 
 import { Performance } from '@dxos/effect';
 import { log } from '@dxos/log';
@@ -30,7 +31,7 @@ import { type PluginFailurePhase, PluginTimeoutError } from './manager-types';
  * multi-second long task that blocks paint and input (measured: 2 s max task, ~4.7 s TBT at boot).
  *
  * Prefers `scheduler.yield()` (input-priority aware); falls back to a MessageChannel hop, which is
- * a real macrotask boundary without `setTimeout`'s clamp. The fallback is `Effect.async` rather
+ * a real macrotask boundary without `setTimeout`'s clamp. The fallback is `Effect.callback` rather
  * than a hand-built promise so an interrupt closes the ports instead of leaking a channel per
  * yield — this runs between every module activation, so a few hundred times at boot.
  */
@@ -43,7 +44,7 @@ export const yieldToHost: Effect.Effect<void> = Effect.suspend(() => {
   if (typeof MessageChannel === 'undefined') {
     return Effect.void;
   }
-  return Effect.async<void>((resume) => {
+  return Effect.callback<void>((resume) => {
     const { port1, port2 } = new MessageChannel();
     const close = () => {
       port1.close();
@@ -70,18 +71,18 @@ export const yieldToHost: Effect.Effect<void> = Effect.suspend(() => {
  */
 export class ModuleLoader {
   readonly #memo = new Map<Plugin.PluginModule['id'], Deferred.Deferred<Capability.Any[], Error>>();
-  readonly #semaphores = new Map<Plugin.PluginModule['id'], Effect.Semaphore>();
-  readonly #scopes = new Map<string, Scope.CloseableScope>();
+  readonly #semaphores = new Map<Plugin.PluginModule['id'], Semaphore.Semaphore>();
+  readonly #scopes = new Map<string, Scope.Closeable>();
   readonly #contributed = new Map<string, Capability.Any[]>();
   readonly #state: ManagerState;
   readonly #capabilities: CapabilityManager.CapabilityManager;
-  readonly #activationTimeout: Duration.DurationInput;
+  readonly #activationTimeout: Duration.Input;
   readonly #yieldToHost: Effect.Effect<void>;
 
   constructor(
     state: ManagerState,
     capabilities: CapabilityManager.CapabilityManager,
-    activationTimeout: Duration.DurationInput,
+    activationTimeout: Duration.Input,
     /** Injected so the host yield is explicit at the composition root, and swappable in tests. */
     yieldToHostEffect: Effect.Effect<void> = yieldToHost,
   ) {
@@ -108,11 +109,11 @@ export class ModuleLoader {
    * await the cached deferred without re-publishing.
    */
   load = (module: Plugin.PluginModule, parentEvent: string): Effect.Effect<Capability.Any[], Error, Plugin.Service> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const semaphore = this.#semaphore(module.id);
 
       // Atomically check-and-set under per-module semaphore to prevent race conditions.
-      const deferredToAwait = yield* Effect.gen(this, function* () {
+      const deferredToAwait = yield* Effect.gen({ self: this }, function* () {
         const existing = this.#memo.get(module.id);
         if (existing) {
           return existing;
@@ -125,10 +126,10 @@ export class ModuleLoader {
         const scope = yield* Scope.make();
 
         // Fork the load to run in background, completing the deferred when done.
-        const fiber = yield* Effect.forkDaemon(
+        const fiber = yield* Effect.forkDetach(
           this.#runActivation(module, parentEvent, scope).pipe(
             Effect.tap((result) => Deferred.succeed(deferred, result)),
-            Effect.catchAllCause((cause) =>
+            Effect.catchCause((cause) =>
               this.#recordActivationFailure(module, parentEvent, cause).pipe(
                 Effect.flatMap((error) => Deferred.fail(deferred, error)),
               ),
@@ -162,7 +163,7 @@ export class ModuleLoader {
    * must not publish while any of them are mid-load.
    */
   awaitAllSettled(): Effect.Effect<boolean> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       let waited = false;
       for (;;) {
         const pending: Deferred.Deferred<any, Error>[] = [];
@@ -189,7 +190,7 @@ export class ModuleLoader {
    * memoized too.
    */
   contribute(module: Plugin.PluginModule, capabilities: Capability.Any[]): Effect.Effect<void, Error> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       if (this.#contributed.has(module.id)) {
         return;
       }
@@ -203,7 +204,7 @@ export class ModuleLoader {
 
   /** Removes the module's contributions and closes its scope (running its finalizers). */
   deactivate(module: Plugin.PluginModule): Effect.Effect<boolean, Error> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const id = module.id;
       log('deactivating', { id });
       this.#memo.delete(id);
@@ -231,7 +232,7 @@ export class ModuleLoader {
 
   /** Shutdown: drop all memoized loads and close every activation scope. */
   clear(): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       this.#memo.clear();
       for (const scope of this.#scopes.values()) {
         yield* Scope.close(scope, Exit.void);
@@ -246,7 +247,7 @@ export class ModuleLoader {
    * concurrent providers), multi capabilities to their live contributions view.
    */
   #resolveRequires(module: Plugin.PluginModule): Effect.Effect<Context.Context<never>, Error> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const spec = module.activation;
       if (spec.requires.length === 0) {
         return Context.empty();
@@ -263,25 +264,27 @@ export class ModuleLoader {
           existing !== undefined
             ? existing
             : yield* this.#capabilities.waitFor(capability).pipe(
-                Effect.timeoutFail({
+                Effect.timeoutOrElse({
                   duration: this.#activationTimeout,
-                  onTimeout: () =>
-                    new CapabilityNotFoundError({
-                      identifier: capability.identifier,
-                      registered: this.#capabilities.listRegisteredIdentifiers(),
-                    }),
+                  orElse: () =>
+                    Effect.fail(
+                      new CapabilityNotFoundError({
+                        identifier: capability.identifier,
+                        registered: this.#capabilities.listRegisteredIdentifiers(),
+                      }),
+                    ),
                 }),
               );
         services.set(capability.key, implementation);
       }
-      return Context.unsafeMake(services);
+      return Context.makeUnsafe(services);
     });
   }
 
-  #semaphore(moduleId: Plugin.PluginModule['id']): Effect.Semaphore {
+  #semaphore(moduleId: Plugin.PluginModule['id']): Semaphore.Semaphore {
     let semaphore = this.#semaphores.get(moduleId);
     if (!semaphore) {
-      semaphore = Effect.runSync(Effect.makeSemaphore(1));
+      semaphore = Semaphore.makeUnsafe(1);
       this.#semaphores.set(moduleId, semaphore);
     }
     return semaphore;
@@ -314,10 +317,10 @@ export class ModuleLoader {
     return Effect.gen(function* () {
       const manager = yield* Plugin.Service;
       yield* manager.activate(ActivationEvent.pluginStart(pluginId)).pipe(
-        Effect.catchAll((error) =>
+        Effect.catch((error) =>
           Effect.sync(() => log.warn('plugin start event failed', { pluginId, error: String(error) })),
         ),
-        Effect.forkDaemon,
+        Effect.forkDetach,
       );
     });
   }
@@ -325,11 +328,13 @@ export class ModuleLoader {
   #runActivation(
     module: Plugin.PluginModule,
     parentEvent: string,
-    scope: Scope.CloseableScope,
+    scope: Scope.Closeable,
   ): Effect.Effect<Capability.Any[], Error, Plugin.Service> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       log('loading module', { module: module.id, parentEvent });
       performance.mark(`module:${module.id}:start`);
+      // Separate mark: the profiler reads `module:` as a measure, and a measure drops mark detail.
+      performance.mark(`module-cause:${module.id}`, { detail: { event: parentEvent } });
       yield* PubSub.publish(this.#state.activation, { event: parentEvent, state: 'activating', module: module.id });
       const pluginId = this.#state.pluginIdOfModule(module.id);
       yield* this.#awaitProvidersInFlight(module);
@@ -344,19 +349,21 @@ export class ModuleLoader {
       const [duration, capabilities] = yield* module.activate().pipe(
         Effect.provide(requiresContext),
         Effect.provideService(Capability.Service, this.#capabilities),
-        Effect.locally(Capability.CurrentModuleId, module.id),
-        Effect.locallyWith(Capability.ActivatingModuleIds, (ids) => new Set([...ids, module.id])),
+        Effect.provideService(Capability.CurrentModuleId, module.id),
+        Effect.updateService(Capability.ActivatingModuleIds, (ids) => new Set([...ids, module.id])),
 
-        Scope.extend(scope),
+        Scope.provide(scope),
         // Cap activation so a single misbehaving module can't hold the
         // event chain open. On timeout the failure is recorded against
         // the plugin and surfaced as `PluginTimeoutError`.
-        Effect.timeoutFail({
+        Effect.timeoutOrElse({
           duration: this.#activationTimeout,
-          onTimeout: () =>
-            new PluginTimeoutError({
-              context: { id: pluginId ?? module.id, module: module.id, phase: 'activation' as PluginFailurePhase },
-            }),
+          orElse: () =>
+            Effect.fail(
+              new PluginTimeoutError({
+                context: { id: pluginId ?? module.id, module: module.id, phase: 'activation' as PluginFailurePhase },
+              }),
+            ),
         }),
         Effect.timed,
       );
@@ -380,7 +387,7 @@ export class ModuleLoader {
       yield* this.#fireOwnStartForSurface(expanded, pluginId);
       return expanded;
     }).pipe(
-      Effect.tapErrorCause(() => Scope.close(scope, Exit.void)),
+      Effect.tapCause(() => Scope.close(scope, Exit.void)),
       Effect.withSpan('ModuleLoader.load'),
       together(
         Effect.sleep(Duration.seconds(10)).pipe(
@@ -413,7 +420,7 @@ export class ModuleLoader {
    * behaviour instead of deadlocking.
    */
   #awaitProvidersInFlight(module: Plugin.PluginModule): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const multiIdentifiers = new Set(
         module.activation.requires
           .filter((capability) => capability.arity === 'multi')
@@ -438,7 +445,7 @@ export class ModuleLoader {
       yield* Effect.forEach(
         inflight,
         (provider) =>
-          Effect.gen(this, function* () {
+          Effect.gen({ self: this }, function* () {
             const deferred = this.#memo.get(provider.id);
             if (deferred === undefined) {
               return;
@@ -455,7 +462,7 @@ export class ModuleLoader {
         { concurrency: 'unbounded', discard: true },
       ).pipe(
         Effect.timeout(this.#activationTimeout),
-        Effect.catchAll(() =>
+        Effect.catch(() =>
           Effect.sync(() =>
             log.warn('proceeding without in-flight multi providers', {
               module: module.id,
@@ -507,7 +514,7 @@ export class ModuleLoader {
     parentEvent: string,
     cause: Cause.Cause<Error>,
   ): Effect.Effect<Error> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const error = Cause.squash(cause);
       const errorMessage = error instanceof Error ? error.message : String(error);
       const missingCapability = error instanceof CapabilityNotFoundError ? error.context.identifier : undefined;
@@ -518,7 +525,7 @@ export class ModuleLoader {
         registeredCapabilities: this.#capabilities.listRegisteredIdentifiers(),
         error: errorMessage,
         stack: error instanceof Error ? error.stack : undefined,
-        isDefect: !Cause.isFailure(cause),
+        isDefect: !Cause.hasFails(cause),
       });
       const normalizedError = error instanceof Error ? error : new Error(String(error));
       const pluginId = this.#state.pluginIdOfModule(module.id);
@@ -545,7 +552,7 @@ export const together =
   <R1>(togetherEffect: Effect.Effect<void, never, R1>) =>
   <A, E, R2>(effect: Effect.Effect<A, E, R2>): Effect.Effect<A, E, R1 | R2> =>
     Effect.gen(function* () {
-      const togetherFiber = yield* Effect.fork(togetherEffect);
+      const togetherFiber = yield* Effect.forkChild(togetherEffect);
       const result = yield* effect;
       yield* Fiber.interrupt(togetherFiber);
       return result;

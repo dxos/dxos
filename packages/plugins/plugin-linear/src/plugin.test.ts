@@ -1,0 +1,27 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { describe, test } from 'vitest';
+
+import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
+import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
+import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+
+import { meta } from '#meta';
+import { LinearPlugin } from '#plugin';
+
+const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+
+describe('LinearPlugin', () => {
+  test('modules activate on the expected events', async ({ expect }) => {
+    await using harness = await createComposerTestApp({
+      plugins: [ClientPlugin.make({}), ConnectorPlugin.make(), LinearPlugin()],
+    });
+
+    // The harness fires every plugin's start event after startup, so both start-gated modules are active.
+    expect(harness.manager.getActive()).toEqual(
+      expect.arrayContaining([moduleId('LinearConnector'), moduleId('OperationHandler')]),
+    );
+  }, 30_000);
+});

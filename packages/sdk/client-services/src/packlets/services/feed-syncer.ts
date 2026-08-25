@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
 import { Encoder, decode as cborXdecode } from 'cbor-x';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { AsyncTask, Mutex, scheduleTask } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
@@ -22,7 +22,7 @@ import { FeedProtocol } from '@dxos/protocols';
 import { EdgeService } from '@dxos/protocols';
 import { createBuf } from '@dxos/protocols/buf';
 import { type Message as RouterMessage } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import type { GetSyncStateRequest, GetSyncStateResponse } from '@dxos/protocols/proto/dxos/client/services';
+import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
 import { bufferToArray } from '@dxos/util';
 
@@ -91,10 +91,9 @@ export type FeedSyncerOptions = {
  *
  * undefined if not initialized.
  */
-export class FeedSyncerService extends EffectContext.Tag('@dxos/client-services/FeedSyncer')<
-  FeedSyncerService,
-  FeedSyncer | undefined
->() {}
+export class FeedSyncerService extends EffectContext.Service<FeedSyncerService, FeedSyncer | undefined>()(
+  '@dxos/client-services/FeedSyncer',
+) {}
 
 export class FeedSyncer extends Resource {
   readonly #syncNamespaces: string[];
@@ -152,12 +151,13 @@ export class FeedSyncer extends Resource {
           serviceId: msg.serviceId,
           payloadByteLength: msg.payload?.value?.byteLength,
         });
-        const handleMessageEffect = Effect.gen(this, function* () {
+        const handleMessageEffect = Effect.gen({ self: this }, function* () {
           const decoded = yield* Effect.try({
             try: () => cborXdecode(msg.payload!.value),
             catch: (error) => new Error(`Failed to decode feed sync message: ${error}`),
           });
-          const payload = yield* Schema.validate(FeedProtocol.ProtocolMessage)(decoded);
+          // v4 dropped `Schema.validate`; decoding through the type side is the equivalent.
+          const payload = yield* Schema.decodeEffect(Schema.toType(FeedProtocol.ProtocolMessage))(decoded);
           yield* this.#syncClient.handleMessage(payload);
         }).pipe(
           Effect.tapError((cause) =>
@@ -205,7 +205,10 @@ export class FeedSyncer extends Resource {
       }),
     );
 
-    if (this.#backgroundSync) {
+    // Only kick the initial round when the socket is already up. While it is not, each send parks on
+    // the ready trigger; the `onReconnected` handler above schedules exactly this same work the
+    // moment it connects, so a host that gates its dial until after boot loses nothing here.
+    if (this.#backgroundSync && this.#edgeClient.status.state === EdgeStatus.ConnectionState.CONNECTED) {
       this.#resetSpacesToPoll();
       this.#pollTask.schedule();
       // Flush blocks written before the syncer opened: `onNewBlocks` only fires on append,
@@ -254,7 +257,10 @@ export class FeedSyncer extends Resource {
    * Returns per-namespace queue sync backlog for a space.
    * `blocksToPull` and `blocksToPush` of 0 mean caught up for that namespace.
    */
-  async getSyncState(ctx: Context, request: GetSyncStateRequest): Promise<GetSyncStateResponse> {
+  async getSyncState(
+    ctx: Context,
+    request: FeedProtocol.GetSyncStateRequest,
+  ): Promise<FeedProtocol.GetSyncStateResponse> {
     const spaceId = request.spaceId as SpaceId;
     invariant(SpaceId.isValid(spaceId));
     const namespaces =
@@ -265,11 +271,11 @@ export class FeedSyncer extends Resource {
 
     return this.#runSerialized(() =>
       RuntimeProvider.runPromise(this.#runtime)(
-        Effect.gen(this, function* () {
+        Effect.gen({ self: this }, function* () {
           const namespaceStates = yield* Effect.forEach(
             namespaces,
             (feedNamespace) =>
-              Effect.gen(this, function* () {
+              Effect.gen({ self: this }, function* () {
                 const blocksToPush = yield* this.#feedStore.countUnpositionedBlocks({
                   spaceId,
                   feedNamespace,
@@ -285,8 +291,8 @@ export class FeedSyncer extends Resource {
                     limit: this.#messageBlocksLimit,
                   })
                   .pipe(
-                    Effect.catchAll((cause) =>
-                      Effect.gen(this, function* () {
+                    Effect.catch((cause) =>
+                      Effect.gen({ self: this }, function* () {
                         this.#logSyncFailure('peekPull', { spaceId, feedNamespace, cause });
                         return { blocksToPull: 0 };
                       }),
@@ -332,7 +338,7 @@ export class FeedSyncer extends Resource {
 
     await this.#runSerialized(() =>
       RuntimeProvider.runPromise(this.#runtime)(
-        Effect.gen(this, function* () {
+        Effect.gen({ self: this }, function* () {
           let done = false;
           let iterations = 0;
           while (!done) {
@@ -397,7 +403,7 @@ export class FeedSyncer extends Resource {
     ctx: Context,
     message: FeedProtocol.QueryRequest | FeedProtocol.AppendRequest,
   ): Effect.Effect<void, unknown, never> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const encoded = encoder.encode(message);
       const serviceId = this.#getTargetServiceId(message);
       const rpcTag = 'blocks' in message ? 'AppendRequest' : 'QueryRequest';
@@ -456,11 +462,11 @@ export class FeedSyncer extends Resource {
   }
 
   readonly #pollTask = new AsyncTask(async () =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       yield* Effect.forEach(
         this.#spacesToPoll,
         (spaceId) =>
-          Effect.gen(this, function* () {
+          Effect.gen({ self: this }, function* () {
             let doneForAllNamespaces = true;
             for (const feedNamespace of this.#syncNamespaces) {
               const { done } = yield* this.#syncClient
@@ -470,8 +476,8 @@ export class FeedSyncer extends Resource {
                   limit: this.#messageBlocksLimit,
                 })
                 .pipe(
-                  Effect.catchAll((cause) =>
-                    Effect.gen(this, function* () {
+                  Effect.catch((cause) =>
+                    Effect.gen({ self: this }, function* () {
                       this.#logSyncFailure('pull', { spaceId, feedNamespace, cause });
                       return { done: false };
                     }),
@@ -508,11 +514,11 @@ export class FeedSyncer extends Resource {
   );
 
   readonly #pushTask = new AsyncTask(async () =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       yield* Effect.forEach(
         this.#getSpaceIds(),
         (spaceId) =>
-          Effect.gen(this, function* () {
+          Effect.gen({ self: this }, function* () {
             let needsMorePush = false;
             let hadPushFailure = false;
             for (const feedNamespace of this.#syncNamespaces) {
@@ -528,8 +534,8 @@ export class FeedSyncer extends Resource {
                       this.#pushFailureBackoffMs = DEFAULT_PUSH_FAILURE_BACKOFF_MS;
                     }),
                   ),
-                  Effect.catchAll((cause) =>
-                    Effect.gen(this, function* () {
+                  Effect.catch((cause) =>
+                    Effect.gen({ self: this }, function* () {
                       this.#logSyncFailure('push', { spaceId, feedNamespace, cause });
                       hadPushFailure = true;
                       return { done: false };

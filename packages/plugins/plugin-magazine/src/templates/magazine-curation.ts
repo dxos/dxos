@@ -10,8 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { makeRoutine } from '@dxos/plugin-routine';
 import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 
-import * as FeedOperation from '../types/FeedOperation';
-import * as Magazine from '../types/Magazine';
+import { FeedOperation, Magazine } from '#types';
 
 /** Default cron for a magazine curation routine: daily at 9 AM. The user edits the schedule from the trigger. */
 const DEFAULT_CRON = '0 9 * * *';
@@ -40,7 +39,7 @@ export const magazineCuration: RoutineCapabilities.Template = {
         // Bind the CurateMagazine operation directly as the action (an operation action, not instructions-based).
         spec: { kind: 'runnable', runnable: Ref.fromURI(FeedOperation.CurateMagazine.meta.key) },
         trigger: Trigger.make({
-          enabled: false,
+          enabled: true,
           spec: Trigger.specTimer(DEFAULT_CRON),
           input: { magazine: Ref.make(magazine) },
         }),

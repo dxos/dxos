@@ -8,16 +8,16 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
-import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
+import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
+import * as RoutineEvents from '@dxos/plugin-routine/RoutineEvents';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import { ContactMessageExtractor, SummarizeMessageExtractor } from '#operations';
-
-import * as InboxCapabilities from '../types/InboxCapabilities';
+import { MessageExtractor } from '#operations';
+import { InboxCapabilities } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const IdentitySpecs = Capability.lazyModule(
@@ -25,26 +25,34 @@ export const IdentitySpecs = Capability.lazyModule(
   { provides: [SpaceCapabilities.IdentitySpec] },
   () => import('./identity-specs'),
 );
-export const Connector = Capability.lazyModule(
-  'Connector',
-  { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
-  () => import('./connector'),
-);
 export const ContactExtractor = Capability.inlineModule(
   'contact-extractor',
   { provides: [InboxCapabilities.ObjectExtractor] },
-  () => Effect.succeed([Capability.contribute(InboxCapabilities.ObjectExtractor, ContactMessageExtractor)]),
+  () =>
+    Effect.succeed([
+      Capability.contribute(InboxCapabilities.ObjectExtractor, MessageExtractor.ContactMessageExtractor),
+    ]),
 );
 export const SummarizeExtractor = Capability.inlineModule(
   'summarize-extractor',
   { provides: [InboxCapabilities.ObjectExtractor] },
-  () => Effect.succeed([Capability.contribute(InboxCapabilities.ObjectExtractor, SummarizeMessageExtractor)]),
+  () =>
+    Effect.succeed([
+      Capability.contribute(InboxCapabilities.ObjectExtractor, MessageExtractor.SummarizeMessageExtractor),
+    ]),
+);
+export const MailboxProcessors = Capability.lazyModule(
+  'MailboxProcessors',
+  { provides: [InboxCapabilities.MailboxProcessor] },
+  () => import('./mailbox-processors'),
+);
+export const AutomationTemplates = Capability.lazyModule(
+  'AutomationTemplates',
+  { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
+  () => import('./automation-templates'),
 );
 export const NavigationTargetResolver = AppCapability.navigationResolver(() => import('./navigation-target-resolver'), {
   requires: [ClientCapabilities.Client],
-  // Graph start, not the inbox's own: a deep link is resolved before any inbox surface exists,
-  // so gating this on the surface that the resolution leads to would never resolve.
-  activatesOn: ActivationEvents.Idle,
 });
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,

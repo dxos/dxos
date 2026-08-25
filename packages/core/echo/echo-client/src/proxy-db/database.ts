@@ -3,9 +3,9 @@
 //
 
 import { type Heads } from '@automerge/automerge';
-import * as Runtime from 'effect/Runtime';
+import * as EffectContext from 'effect/Context';
+import * as Equal from 'effect/Equal';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import { inspect } from 'node:util';
 
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
@@ -18,6 +18,7 @@ import {
   Feed,
   Filter,
   JsonSchema,
+  Migration,
   Obj,
   Query,
   QueryAST,
@@ -25,7 +26,7 @@ import {
   type Registry,
   Type,
 } from '@dxos/echo';
-import { type DatabaseDirectory, isEdgePeerId } from '@dxos/echo-protocol';
+import { DATA_NAMESPACE, type DatabaseDirectory, EncodedReference, isEdgePeerId } from '@dxos/echo-protocol';
 import {
   type AnyProperties,
   EntityKind,
@@ -43,10 +44,9 @@ import {
 } from '@dxos/echo/internal';
 import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
-import { EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
+import { DXN, EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { runServiceCall } from '@dxos/protocols';
-import { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
+import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 import { defaultMap } from '@dxos/util';
 
@@ -64,7 +64,6 @@ import {
 } from '../echo-handler';
 import { FeedHandle } from '../feed/feed-handle';
 import { type HypergraphImpl } from '../hypergraph';
-import { type ObjectMigration } from './object-migration';
 
 export interface EchoDatabase extends Database.Database {
   /**
@@ -90,17 +89,17 @@ export interface EchoDatabase extends Database.Database {
   /**
    * Run migrations.
    */
-  runMigrations(migrations: ObjectMigration[]): Promise<void>;
+  runMigrations(migrations: Migration.Migration[]): Promise<void>;
 
   /**
    * Get the current per-peer automerge document sync state.
    */
-  getAutomergeSyncState(): Promise<SpaceSyncState>;
+  getAutomergeSyncState(): Promise<DataService.SpaceSyncState>;
 
   /**
    * Get notification about the per-peer automerge document sync progress.
    */
-  subscribeToAutomergeSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn;
+  subscribeToAutomergeSyncState(ctx: Context, callback: (state: DataService.SpaceSyncState) => void): CleanupFn;
 
   /**
    * Returns ids for all objects in the space (both loaded and unloaded).
@@ -179,7 +178,7 @@ export type EchoDatabaseProps = {
   dataService: DataService.Client;
   queryService: QueryService.Client;
   feedService?: FeedService.Client;
-  runtime: Runtime.Runtime<never>;
+  runtime: EffectContext.Context<never>;
   spaceId: SpaceId;
 
   /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
@@ -209,19 +208,35 @@ type SpaceFeedSyncState = Pick<Database.SyncState, 'blocksToPull' | 'blocksToPus
 const EMPTY_FEED_SYNC_STATE: SpaceFeedSyncState = { blocksToPull: '0', blocksToPush: '0', totalBlocks: '0' };
 
 /**
- * Poll interval for feed block backlog, which has no change stream.
+ * Sums per-namespace feed block backlog counts into the space-wide totals tracked by
+ * {@link SpaceFeedSyncState}. Shared by the one-shot {@link DatabaseImpl.getSyncState} and the
+ * streaming {@link DatabaseImpl.subscribeToSyncState}.
  */
-const FEED_SYNC_POLL_INTERVAL = 2_000;
+const aggregateFeedSyncState = (response: FeedService.GetSyncStateResponse): SpaceFeedSyncState => {
+  let blocksToPull = 0n;
+  let blocksToPush = 0n;
+  let totalBlocks = 0n;
+  for (const namespace of response.namespaces ?? []) {
+    blocksToPull += BigInt(namespace.blocksToPull);
+    blocksToPush += BigInt(namespace.blocksToPush);
+    totalBlocks += BigInt(namespace.totalBlocks);
+  }
+  return {
+    blocksToPull: String(blocksToPull),
+    blocksToPush: String(blocksToPush),
+    totalBlocks: String(totalBlocks),
+  };
+};
 
 /**
  * Selects the peer to report the automerge backlog against: the explicit `peerId` when given,
  * otherwise the EDGE peer.
  */
 const selectPeer = (
-  peers: readonly SpaceSyncState.PeerState[],
+  peers: readonly DataService.SpaceSyncState.PeerState[],
   spaceId: SpaceId,
   peerId?: string,
-): SpaceSyncState.PeerState | undefined =>
+): DataService.SpaceSyncState.PeerState | undefined =>
   peerId !== undefined
     ? peers.find((peer) => peer.peerId === peerId)
     : peers.find((peer) => isEdgePeerId(peer.peerId, spaceId));
@@ -230,7 +245,7 @@ const selectPeer = (
  * Flattens per-peer automerge state (for the selected peer) with aggregated feed state.
  */
 const combineSyncState = (
-  automerge: SpaceSyncState,
+  automerge: DataService.SpaceSyncState,
   feeds: SpaceFeedSyncState,
   spaceId: SpaceId,
   peerId?: string,
@@ -271,7 +286,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   #feedService: FeedService.Client | undefined;
 
   /** Runtime used to run effect-rpc feed calls at Promise boundaries. */
-  readonly #runtime: Runtime.Runtime<never>;
+  readonly #runtime: EffectContext.Context<never>;
 
   /**
    * Feed handles keyed by feed URI. A feed is a regular ECHO object whose items live in an
@@ -299,6 +314,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     });
 
     this.saveStateChanged = this._entityManager.saveStateChanged;
+
+    // Effect hashes an unmarked object structurally, walking its prototype chain — on a database
+    // that recurses through the whole entity graph and throws on the first strict-mode function it
+    // reaches. Identity is the only sensible equality here, and it is what `Atom.family(db)` wants.
+    Equal.byReferenceUnsafe(this);
   }
 
   [inspect.custom]() {
@@ -402,12 +422,12 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return schema;
   }
 
-  private _addPersistentSchema(schemaInput: Schema.Schema.AnyNoContext | Type.AnyEntity): Type.AnyEntity {
-    let schema: Schema.Schema.AnyNoContext;
+  private _addPersistentSchema(schemaInput: Schema.Codec<any, any> | Type.AnyEntity): Type.AnyEntity {
+    let schema: Schema.Codec<any, any>;
     let meta: TypeAnnotation | undefined;
     if (Type.isType(schemaInput)) {
       const entity = schemaInput;
-      schema = Type.getSchema(entity).annotations({ [TypeIdentifierAnnotationId]: undefined });
+      schema = Type.getSchema(entity).annotate({ [TypeIdentifierAnnotationId]: undefined });
       meta =
         getTypeAnnotation(schema) ??
         ({
@@ -428,10 +448,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     // Update jsonSchema with the full annotated schema.
     // TypeSchema.jsonSchema is readonly in the type but writable via change context.
     schemaToStore.jsonSchema = JsonSchema.toJsonSchema(
-      schema.annotations({
+      schema.annotate({
         [TypeAnnotationId]: meta,
         [TypeIdentifierAnnotationId]: typeId,
-        [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({
+        ...makeTypeJsonSchemaAnnotation({
           identifier: typeId,
           kind: meta.kind,
           typename: meta.typename,
@@ -707,46 +727,113 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     await Promise.all([...this.#feeds.values()].map((handle) => handle.waitForPendingWrites()));
   }
 
-  async runMigrations(migrations: ObjectMigration[]): Promise<void> {
+  async runMigrations(migrations: Migration.Migration[]): Promise<void> {
+    // Validated up front so a batch containing an unrecognized migration cannot leave the
+    // preceding ones half-applied.
     for (const migration of migrations) {
-      const objects = await this._hypergraph.query(Query.select(Filter.type(migration.fromType)).from(this)).run();
-      log.verbose('migrate', {
-        from: migration.fromType,
-        to: migration.toType,
-        objects: objects.length,
-      });
-      for (const object of objects) {
-        const before = JSON.parse(JSON.stringify(object));
+      // Read before the guard, which narrows the failing branch to `never`.
+      const kind: string = migration.kind;
+      if (!Migration.isMigration(migration)) {
+        throw new TypeError(`Unknown migration kind: ${kind}`);
+      }
+    }
 
-        const output = (await migration.transform(object, { db: this })) as any;
-        const metaPatch = output?.[MetaId] as Partial<EntityMeta> | undefined;
-        if (metaPatch !== undefined && output != null) {
-          delete output[MetaId];
-        }
-
-        delete (output as any).id;
-
-        await this._entityManager.atomicReplaceObject(object.id, {
-          data: output,
-          type: migration.toType,
-          meta: metaPatch as any,
-        });
-        const postMigrationType = Obj.getTypeURI(object);
-        invariant(postMigrationType != null && postMigrationType.toString() === migration.toType.toString());
-
-        if (migration.onMigration) {
-          await migration.onMigration({ before, object, db: this });
-        }
+    for (const migration of migrations) {
+      if (Migration.isObjectMigration(migration)) {
+        await this.#runObjectMigration(migration);
+      } else if (Migration.isRenameMigration(migration)) {
+        await this.#runRenameMigration(migration);
       }
     }
     await this._entityManager.flush();
   }
 
-  getAutomergeSyncState(): Promise<SpaceSyncState> {
+  async #runObjectMigration(migration: Migration.ObjectMigration): Promise<void> {
+    const objects = await this._hypergraph.query(Query.select(Filter.type(migration.fromType)).from(this)).run();
+    log.verbose('migrate', {
+      from: migration.fromType,
+      to: migration.toType,
+      objects: objects.length,
+    });
+    for (const object of objects) {
+      const before = JSON.parse(JSON.stringify(object));
+
+      const output = (await migration.transform(object, { db: this })) as any;
+      const metaPatch = output?.[MetaId] as Partial<EntityMeta> | undefined;
+      if (metaPatch !== undefined && output != null) {
+        delete output[MetaId];
+      }
+
+      delete (output as any).id;
+
+      await this._entityManager.atomicReplaceObject(object.id, {
+        data: output,
+        type: migration.toType,
+        meta: metaPatch as any,
+      });
+      const postMigrationType = Obj.getTypeURI(object);
+      invariant(postMigrationType != null && postMigrationType.toString() === migration.toType.toString());
+
+      if (migration.onMigration) {
+        await migration.onMigration({ before, object, db: this });
+      }
+    }
+  }
+
+  /**
+   * Repoints every reference to the renamed entity at its new name.
+   */
+  async #runRenameMigration(migration: Migration.RenameMigration): Promise<void> {
+    const fromName = DXN.getName(migration.from);
+    const toName = DXN.getName(migration.to);
+
+    // Undefined when the URI already reads correctly, so a re-run writes nothing.
+    const rewrite = (uri: URI.URI): URI.URI | undefined => {
+      if (!DXN.isDXN(uri) || DXN.getName(uri) !== fromName) {
+        return undefined;
+      }
+      const rewritten = DXN.make<string>(toName, DXN.getVersion(uri));
+      return rewritten === uri ? undefined : rewritten;
+    };
+
+    // The planner collapses this to one reverse-reference index lookup: the renamed entity is not in
+    // the graph, so its anchor cannot be selected.
+    const objects = await this._hypergraph.query(Query.select(Filter.key(fromName)).referencedBy().from(this)).run();
+
+    let updated = 0;
+    for (const object of objects) {
+      const core = getObjectCore(object);
+      const updates: { path: string[]; uri: URI.URI }[] = [];
+      const visit = (path: string[], value: unknown): void => {
+        if (EncodedReference.isEncodedReference(value)) {
+          const uri = rewrite(EncodedReference.toURI(value));
+          if (uri !== undefined) {
+            updates.push({ path, uri });
+          }
+        } else if (Array.isArray(value)) {
+          value.forEach((entry, index) => visit([...path, String(index)], entry));
+        } else if (typeof value === 'object' && value !== null) {
+          for (const [key, entry] of Object.entries(value)) {
+            visit([...path, key], entry);
+          }
+        }
+      };
+      visit([], core.getDecoded([DATA_NAMESPACE]));
+
+      for (const { path, uri } of updates) {
+        core.setDecoded([DATA_NAMESPACE, ...path], EncodedReference.fromURI(uri));
+      }
+      updated += updates.length;
+    }
+
+    log.verbose('rename', { from: migration.from, to: migration.to, objects: objects.length, references: updated });
+  }
+
+  getAutomergeSyncState(): Promise<DataService.SpaceSyncState> {
     return this._entityManager.getSyncState();
   }
 
-  subscribeToAutomergeSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn {
+  subscribeToAutomergeSyncState(ctx: Context, callback: (state: DataService.SpaceSyncState) => void): CleanupFn {
     return this._entityManager.subscribeToSyncState(ctx, callback);
   }
 
@@ -757,8 +844,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   subscribeToSyncState(cb: (state: Database.SyncState) => void, options?: Database.GetSyncStateOptions): CleanupFn {
     const ctx = Context.default();
-    let cancelled = false;
-    let automerge: SpaceSyncState = { peers: [] };
+    let automerge: DataService.SpaceSyncState = { peers: [] };
     let feeds: SpaceFeedSyncState = EMPTY_FEED_SYNC_STATE;
     const emit = () => cb(combineSyncState(automerge, feeds, this.spaceId, options?.peerId));
 
@@ -770,35 +856,39 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       }),
     );
 
-    // Feed blocks have no change stream, so poll the backend.
-    let pollInFlight = false;
-    const pollFeeds = async () => {
-      // Skip overlapping ticks so a slow RPC can't emit stale state after a newer poll.
-      if (pollInFlight) {
+    // Feed blocks arrive on a separate stream, which dies on reconnect (leader change) — re-established
+    // from the refreshed service, and cleared meanwhile so a consumer never keeps reporting a backlog
+    // measured against a connection that no longer exists.
+    let cleanupFeedStream: (() => void) | undefined;
+    const subscribeFeedSyncState = () => {
+      cleanupFeedStream?.();
+      cleanupFeedStream = undefined;
+      if (!this.#feedService) {
         return;
       }
-      pollInFlight = true;
-      try {
-        const next = await this.#getSpaceFeedSyncState();
-        if (!cancelled) {
-          feeds = next;
-          emit();
-        }
-      } catch (error) {
-        // Keep the previous feeds state on failure rather than leaving an unhandled rejection.
-        if (!cancelled) {
-          log.warn('failed to poll feed sync state', { error });
-        }
-      } finally {
-        pollInFlight = false;
-      }
+      cleanupFeedStream = subscribeStream(
+        this.#runtime,
+        this.#feedService['FeedService.subscribeSyncState']({ spaceId: this.spaceId, namespaces: [] }),
+        {
+          onData: (response) => {
+            feeds = aggregateFeedSyncState(response);
+            emit();
+          },
+          onError: (error) => {
+            feeds = EMPTY_FEED_SYNC_STATE;
+            emit();
+            if (error instanceof RpcClosedError) {
+              ctx.onDispose(this._entityManager.reconnected.once(() => subscribeFeedSyncState()));
+            } else if (error) {
+              log.warn('feed sync state stream failed', { error });
+            }
+          },
+        },
+      );
     };
-    void pollFeeds();
-    const timer = setInterval(() => void pollFeeds(), FEED_SYNC_POLL_INTERVAL);
-    ctx.onDispose(() => {
-      cancelled = true;
-      clearInterval(timer);
-    });
+
+    subscribeFeedSyncState();
+    ctx.onDispose(() => cleanupFeedStream?.());
 
     return () => {
       void ctx.dispose();
@@ -814,21 +904,9 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     }
     const response = await runServiceCall(
       this.#runtime,
-      this.#feedService.FeedService.getSyncState({ spaceId: this.spaceId, namespaces: [] }),
+      this.#feedService['FeedService.getSyncState']({ spaceId: this.spaceId, namespaces: [] }),
     );
-    let blocksToPull = 0n;
-    let blocksToPush = 0n;
-    let totalBlocks = 0n;
-    for (const namespace of response.namespaces ?? []) {
-      blocksToPull += BigInt(namespace.blocksToPull);
-      blocksToPush += BigInt(namespace.blocksToPush);
-      totalBlocks += BigInt(namespace.totalBlocks);
-    }
-    return {
-      blocksToPull: String(blocksToPull),
-      blocksToPush: String(blocksToPush),
-      totalBlocks: String(totalBlocks),
-    };
+    return aggregateFeedSyncState(response);
   }
 
   getAllObjectIds(): string[] {
@@ -965,6 +1043,18 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   /** @deprecated Use `flush()`. */
   async updateIndexes(): Promise<void> {
     await this._entityManager.updateIndexes();
+  }
+
+  async stats(): Promise<Database.DatabaseStats> {
+    return this._entityManager.stats();
+  }
+
+  async runGarbageCollection(options?: Database.GarbageCollectionOptions): Promise<Database.GarbageCollectionReport> {
+    return this._entityManager.runGarbageCollection(options);
+  }
+
+  retainObjects(keep: Iterable<string>): string[] {
+    return this._entityManager.retainObjects(keep);
   }
 
   /**

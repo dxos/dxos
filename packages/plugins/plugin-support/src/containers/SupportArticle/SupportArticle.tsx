@@ -6,11 +6,10 @@ import React, { useCallback } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Button, Column, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, Column, Flex, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-
-import type * as Support from '../../types/Support';
+import { Support } from '#types';
 
 export type SupportArticleProps = AppSurface.ObjectArticleProps<Support.Ticket>;
 
@@ -90,7 +89,7 @@ export const SupportArticle = ({ role, subject: ticket }: SupportArticleProps) =
                 </Input.Root>
               )}
 
-              <div className='flex items-center gap-2'>
+              <Flex gap='sm' align='center'>
                 {status === 'open' && (
                   <Button variant='outline' onClick={() => handleStatus('in_progress')}>
                     {t('mark-in-progress.button')}
@@ -106,7 +105,7 @@ export const SupportArticle = ({ role, subject: ticket }: SupportArticleProps) =
                     {t('reopen.button')}
                   </Button>
                 )}
-              </div>
+              </Flex>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Column.Root>

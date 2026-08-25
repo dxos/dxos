@@ -75,7 +75,6 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "catalog:",
     "effect": "catalog:",
     "localforage": "catalog:",
     "lodash.defaultsdeep": "catalog:",
@@ -84,6 +83,8 @@
     "yaml": "catalog:"
   },
   "devDependencies": {
+    "@dxos/effect": "workspace:*",
+    "@effect/platform-node": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
     "@types/lodash.ismatch": "catalog:"
   },

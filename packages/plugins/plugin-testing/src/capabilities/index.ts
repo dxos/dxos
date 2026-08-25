@@ -7,7 +7,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import * as StorybookCapabilities from '../types/StorybookCapabilities';
+import { StorybookCapabilities } from '#types';
 
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactContext = AppCapability.reactContext(() => import('./react-context'));

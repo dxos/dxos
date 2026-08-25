@@ -31,14 +31,14 @@ import { parseLayout } from './parser';
  * arranges the same fields in a 2-column grid with selective spans.
  */
 const Flight = Schema.Struct({
-  airline: Schema.optional(Schema.String.annotations({ title: 'Airline' })),
-  flightNumber: Schema.optional(Schema.String.annotations({ title: 'Flight #' })),
-  origin: Schema.optional(Schema.String.annotations({ title: 'From' })),
-  destination: Schema.optional(Schema.String.annotations({ title: 'To' })),
-  departAt: Schema.optional(Format.DateTime.annotations({ title: 'Depart' })),
-  arriveAt: Schema.optional(Format.DateTime.annotations({ title: 'Arrive' })),
-  cabin: Schema.optional(Schema.Literal('economy', 'premium', 'business', 'first').annotations({ title: 'Cabin' })),
-  notes: Schema.optional(Format.Text.annotations({ title: 'Notes' })),
+  airline: Schema.optional(Schema.String.annotate({ title: 'Airline' })),
+  flightNumber: Schema.optional(Schema.String.annotate({ title: 'Flight #' })),
+  origin: Schema.optional(Schema.String.annotate({ title: 'From' })),
+  destination: Schema.optional(Schema.String.annotate({ title: 'To' })),
+  departAt: Schema.optional(Format.DateTime.annotate({ title: 'Depart' })),
+  arriveAt: Schema.optional(Format.DateTime.annotate({ title: 'Arrive' })),
+  cabin: Schema.optional(Schema.Literals(['economy', 'premium', 'business', 'first']).annotate({ title: 'Cabin' })),
+  notes: Schema.optional(Format.Text.annotate({ title: 'Notes' })),
 }).pipe(Type.makeObject(DXN.make('com.example.type.flight', '0.1.0')));
 
 export type Flight = Type.InstanceType<typeof Flight>;
@@ -83,7 +83,7 @@ const FLIGHT_LAYOUT_COMPACT = trim`
  * the `'default'` entry is used.
  */
 const AnnotatedFlight = Type.getSchema(Flight)
-  .annotations({})
+  .annotate({})
   .pipe(Annotation.FormLayoutAnnotation.set({ default: FLIGHT_LAYOUT, compact: FLIGHT_LAYOUT_COMPACT }));
 
 /**
@@ -93,14 +93,14 @@ const AnnotatedFlight = Type.getSchema(Flight)
  * drills into a leaf sub-field.
  */
 const Place = Schema.Struct({
-  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
-  code: Schema.optional(Schema.String.annotations({ title: 'Code' })),
-  city: Schema.optional(Schema.String.annotations({ title: 'City' })),
+  name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
+  code: Schema.optional(Schema.String.annotate({ title: 'Code' })),
+  city: Schema.optional(Schema.String.annotate({ title: 'City' })),
 }).pipe(Annotation.LabelAnnotation.set(['name']));
 
 const Journey = Schema.Struct({
-  flightNumber: Schema.optional(Schema.String.annotations({ title: 'Flight #' })),
-  departAt: Schema.optional(Format.DateTime.annotations({ title: 'Depart' })),
+  flightNumber: Schema.optional(Schema.String.annotate({ title: 'Flight #' })),
+  departAt: Schema.optional(Format.DateTime.annotate({ title: 'Depart' })),
   origin: Schema.optional(Place),
   destination: Schema.optional(Place),
 }).pipe(Type.makeObject(DXN.make('com.example.type.journey', '0.1.0')));
@@ -126,7 +126,7 @@ const JOURNEY_LAYOUT = trim`
 `;
 
 type StoryArgs = {
-  schema: Schema.Schema<any>;
+  schema: Schema.Codec<any, any>;
   template?: string;
 };
 
@@ -197,7 +197,7 @@ export const SchemaAnnotation: Story = {
  * layouts (`default` and `compact`) via a radio above the form.
  */
 const NamedAnnotationStory = () => {
-  const schema = useMemo(() => omitId(AnnotatedFlight) as unknown as Schema.Schema<any>, []);
+  const schema = useMemo(() => omitId(AnnotatedFlight), []);
   const [layoutName, setLayoutName] = useState<'default' | 'compact'>('default');
   const [values, setValues] = useState<Partial<FlightValues>>(flight);
 
@@ -240,7 +240,7 @@ export const NamedAnnotation: Story = {
  * `origin.code`/`destination.code` drill into the leaf sub-field.
  */
 const NestedLabelStory = ({ readonly = false }: { readonly?: boolean }) => {
-  const schema = useMemo(() => omitId(Type.getSchema(Journey)) as unknown as Schema.Schema<any>, []);
+  const schema = useMemo(() => omitId(Type.getSchema(Journey)), []);
   const [values, setValues] = useState<Partial<JourneyValues>>(journey);
 
   const handleSave = useCallback<NonNullable<FormRootProps<any>['onSave']>>((next) => {
@@ -284,13 +284,13 @@ export const NestedLabelStatic: Story = {
  * parse, the previous valid layout stays on screen and an error banner
  * surfaces under the editor.
  */
-type PlaygroundStoryProps = {
+type PlaygroundStoryArgs = {
   /** Wrap the rendered form in `Card.Root` / `Card.Body` chrome. */
   card?: boolean;
 };
 
-const PlaygroundStory = ({ card = false }: PlaygroundStoryProps) => {
-  const schema = useMemo(() => omitId(Type.getSchema(Flight)) as unknown as Schema.Schema<any>, []);
+const PlaygroundStory = ({ card = false }: PlaygroundStoryArgs) => {
+  const schema = useMemo(() => omitId(Type.getSchema(Flight)), []);
   const [template, setTemplate] = useState(FLIGHT_LAYOUT);
   const [lastValid, setLastValid] = useState(FLIGHT_LAYOUT);
   const [error, setError] = useState<string | undefined>();

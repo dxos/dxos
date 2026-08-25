@@ -10,22 +10,21 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { Panproto } from '@dxos/echo-panproto';
 import { EffectEx } from '@dxos/effect';
-import { AccessToken } from '@dxos/link';
-import * as Connection from '@dxos/plugin-connector/Connection';
+import { AccessToken, Connection } from '@dxos/link';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Button, Card, Icon, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, Card, Flex, Icon, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { MasterDetail, type MasterDetailAdornment, type MasterDetailIcon } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
+import { AtprotoCapabilities } from '#types';
 
 import { ATPROTO_SOURCES, isAtprotoConnection } from '../../connection';
 import { getAtprotoUris } from '../../foreign-key';
 import { importRecord } from '../../publish';
 import { getMappedCollections } from '../../schema-map';
 import * as AtprotoRepo from '../../services/AtprotoRepo';
-import * as AtprotoCapabilities from '../../types/AtprotoCapabilities';
 
 export type PdsBrowserProps = {
   role?: string;
@@ -199,12 +198,12 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
     : undefined;
 
   const recordDetail = record ? (
-    <ScrollArea.Root orientation='vertical' classNames='flex-1 min-bs-0 overflow-hidden'>
+    <ScrollArea.Root orientation='vertical' classNames='flex-1 min-h-0 overflow-hidden'>
       <ScrollArea.Viewport classNames='p-2'>
-        <div role='none' className='flex flex-col gap-2'>
+        <Flex column gap='sm'>
           <span className='font-mono text-xs text-description truncate'>{record.uri}</span>
           {mappedForCollection ? (
-            <div role='none' className='flex flex-col gap-2'>
+            <Flex column gap='sm'>
               {preview && previewIcon && (
                 <Card.Root>
                   <Card.Header>
@@ -226,11 +225,11 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
                   {t('import.label')}
                 </Button>
               )}
-            </div>
+            </Flex>
           ) : (
             <JsonHighlighter data={record.value} />
           )}
-        </div>
+        </Flex>
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   ) : null;
@@ -256,15 +255,15 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
           <Button onClick={() => setActiveHandle(handleInput.trim() || undefined)}>{t('browse.label')}</Button>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='flex flex-col min-bs-0 plb-2'>
+      <Panel.Content classNames='flex flex-col min-h-0 py-2'>
         {error && (
-          <div role='none' className='px-2 pbe-2 text-sm text-error-text'>
+          <div role='none' className='px-2 pb-2 text-sm text-error-text'>
             {error}
           </div>
         )}
         <MasterDetail<CollectionItem>
           orientation='horizontal'
-          classNames='flex-1 min-bs-0'
+          classNames='flex-1 min-h-0'
           items={collectionItems}
           selectedId={collection}
           onSelect={setCollection}
@@ -276,7 +275,7 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
             collection ? (
               <MasterDetail<RecordItem>
                 orientation='horizontal'
-                classNames='flex-1 min-bs-0'
+                classNames='flex-1 min-h-0'
                 items={recordItems}
                 selectedId={recordUri}
                 onSelect={setRecordUri}

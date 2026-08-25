@@ -8,14 +8,13 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Card, Image, Panel } from '@dxos/react-ui';
+import { Card, Flex, Image, Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { Summary } from '#components';
 import { meta } from '#meta';
+import { Bookmark, BookmarkOperation } from '#types';
 
-import type * as Bookmark from '../../types/Bookmark';
-import * as BookmarkOperation from '../../types/BookmarkOperation';
 import { useImageLoads } from '../useImageLoads';
 
 export type BookmarkArticleProps = AppSurface.ObjectArticleProps<Bookmark.Bookmark>;
@@ -89,7 +88,7 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
           </Menu.Toolbar>
         </Panel.Toolbar>
         <Panel.Content classNames='dx-container flex flex-col'>
-          <div className='flex justify-center'>
+          <Flex justify='center'>
             <div className='dx-document py-3'>
               <Card.Root fullWidth border={false}>
                 <Card.Header>
@@ -111,7 +110,7 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
                 </Card.Body>
               </Card.Root>
             </div>
-          </div>
+          </Flex>
           {summary && <Summary id={`${Obj.getURI(subject)}/summary`} source={subject.summary} />}
         </Panel.Content>
       </Panel.Root>

@@ -7,12 +7,13 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useCapabilities, usePluginManager } from '@dxos/app-framework/ui';
 import { useClient } from '@dxos/react-client';
 import {
+  Banner,
   Button,
+  Flex,
   Icon,
-  Message,
   Panel,
+  Progress,
   ScrollArea,
-  Status,
   Tag,
   type TFunction,
   Toolbar,
@@ -28,8 +29,7 @@ import {
   runDiagnostics,
 } from '#diagnostics';
 import { meta } from '#meta';
-
-import * as DoctorCapabilities from '../../types/DoctorCapabilities';
+import { DoctorCapabilities } from '#types';
 
 type RunState =
   | { readonly status: 'idle' }
@@ -115,7 +115,7 @@ export const DiagnosticsPanel = () => {
         <Toolbar.Root>
           <Button variant='primary' onClick={handleRun} disabled={isRunning || sortedProviders.length === 0}>
             <Icon icon='ph--play--regular' size={4} />
-            <span className='pis-1'>{t('run-diagnostics.label')}</span>
+            <span className='ps-1'>{t('run-diagnostics.label')}</span>
           </Button>
           {isRunning && (
             <Button variant='ghost' onClick={handleCancel}>
@@ -150,8 +150,8 @@ const RunProgress = ({
 }) => {
   const progress = state.total === 0 ? 0 : state.current / state.total;
   return (
-    <div className='flex flex-col gap-2 p-2'>
-      <Status progress={progress} classNames='block' />
+    <Flex column gap='sm' classNames='p-2'>
+      <Progress progress={progress} classNames='block' />
       <span className='text-xs text-description'>
         {t('progress.label', {
           current: state.current,
@@ -159,7 +159,7 @@ const RunProgress = ({
           label: state.providerLabel ?? '',
         })}
       </span>
-    </div>
+    </Flex>
   );
 };
 
@@ -167,7 +167,7 @@ const RunSummary = ({ results, t }: { results: readonly DiagnosticRunResult[]; t
   const totalIssues = results.reduce((sum, result) => sum + result.issues.length, 0);
   const failedProviders = results.filter((result) => result.error != null).length;
   return (
-    <div className='flex flex-col gap-2 p-2'>
+    <Flex column gap='sm' classNames='p-2'>
       <p className='text-sm font-medium'>{t('summary.label', { count: totalIssues })}</p>
       {failedProviders > 0 && (
         <p className='text-xs text-rose-600'>{t('summary.failed.label', { count: failedProviders })}</p>
@@ -175,7 +175,7 @@ const RunSummary = ({ results, t }: { results: readonly DiagnosticRunResult[]; t
       {results.map((result) => (
         <ProviderResult key={result.providerId} result={result} t={t} />
       ))}
-    </div>
+    </Flex>
   );
 };
 
@@ -195,11 +195,11 @@ const ProviderResult = ({ result, t }: { result: DiagnosticRunResult; t: TFuncti
         {status === 'error' && <Tag hue='rose'>{t('result.error.label')}</Tag>}
       </header>
       {result.error && (
-        <Message.Root valence='error'>
-          <Message.Content classNames='m-2'>
-            <Message.Body>{result.error}</Message.Body>
-          </Message.Content>
-        </Message.Root>
+        <Banner.Root valence='error'>
+          <Banner.Content classNames='m-2'>
+            <Banner.Body>{result.error}</Banner.Body>
+          </Banner.Content>
+        </Banner.Root>
       )}
       {result.issues.length > 0 && (
         <ul className='border-t border-separator divide-y divide-subdued-separator'>
@@ -219,7 +219,7 @@ const IssueRow = ({ issue }: { issue: DiagnosticIssue }) => (
       size={4}
       classNames={`${paletteToText(issue.severity)} shrink-0 mt-0.5`}
     />
-    <div className='flex flex-col gap-0.5 text-xs min-w-0 flex-1'>
+    <Flex column gap='xs' classNames='text-xs min-w-0 flex-1'>
       <span className='break-words break-all'>{issue.message}</span>
       {(issue.subjectLabel || issue.spaceId) && (
         <span className='text-description font-mono break-all'>
@@ -228,7 +228,7 @@ const IssueRow = ({ issue }: { issue: DiagnosticIssue }) => (
           {issue.spaceId ?? ''}
         </span>
       )}
-    </div>
+    </Flex>
   </li>
 );
 

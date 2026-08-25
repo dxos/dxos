@@ -38,8 +38,9 @@ export {
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import * as Types from 'effect/Types';
+
+import { SchemaAST } from '@dxos/effect';
 
 import * as Entity from './Entity';
 import * as internalAnnotations from './internal/Annotation';
@@ -70,17 +71,17 @@ export interface Annotation<T> {
   /**
    * Schema of the annotation value.
    */
-  readonly schema: Schema.Schema<T, unknown, never>;
+  readonly schema: Schema.Codec<T, unknown, never>;
 
   /**
    * Get the annotation value from an Effect schema.
    *
-   * Only accepts `Schema.Schema.Any` — to read an annotation off a `Type.Type`
+   * Only accepts `Schema.Top` — to read an annotation off a `Type.Type`
    * entity, unwrap it first with `Type.getSchema(entity)`. This keeps the
    * annotation pipeline single-shaped and forces annotations to live on the
    * source schema, not on the post-construction Type entity.
    */
-  get: (schema: Schema.Schema.Any) => Option.Option<T>;
+  get: (schema: Schema.Top) => Option.Option<T>;
   /**
    * Get the annotation value from the AST.
    */
@@ -88,11 +89,11 @@ export interface Annotation<T> {
   /**
    * Set the annotation on an Effect schema.
    *
-   * Only accepts `Schema.Schema.Any` — annotations must be applied to the
+   * Only accepts `Schema.Top` — annotations must be applied to the
    * source schema BEFORE wrapping it with `Type.makeObject` / `Type.makeRelation`.
    * In a pipe, place every `Annotation.X.set(...)` before the `Type.make...` step.
    */
-  set: (value: T) => <S extends Schema.Schema.Any>(schema: S) => S;
+  set: (value: T) => <S extends Schema.Top>(schema: S) => S;
 }
 
 export const Key = internalAnnotations.Key;
@@ -100,7 +101,9 @@ export type Key = Schema.Schema.Type<typeof Key>;
 
 interface MakeProps<T> {
   id: string;
-  schema: Schema.Schema<T, any, never>;
+  schema: Schema.Codec<T, any, never>;
+  /** Skips the FQN id-format check, for a pre-existing id that may already be embedded in persisted schemas. */
+  legacyId?: boolean;
 }
 
 /**
@@ -115,7 +118,7 @@ interface MakeProps<T> {
  *   schema: Schema.String,
  * });
  *
- * const schema = Schema.String.annotations(ColorAnnotation.set('red'));
+ * const schema = Schema.String.annotate(ColorAnnotation.set('red'));
  * ```
  */
 export const make: <T>(props: MakeProps<T>) => Annotation<T> = internalAnnotations.makeUserAnnotation;

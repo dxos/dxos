@@ -14,7 +14,7 @@ import * as AppAnnotation from '../echo/AppAnnotation';
  * the effect, so operations that resolve the space root (e.g. `CollectionModel.add`) work in tests.
  */
 export const WithProperties = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | Database.Service> =>
-  Effect.zipRight(
+  Effect.andThen(
     Effect.gen(function* () {
       const collection = Collection.make({ objects: [] });
       const properties = Obj.make(SpaceProperties, {});

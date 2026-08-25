@@ -2,12 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Response from '@effect/ai/Response';
 import { describe, it, vi } from '@effect/vitest';
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Stream from 'effect/Stream';
+import * as Response from 'effect/unstable/ai/Response';
 
 import { type ContentBlock } from '@dxos/types';
 
@@ -20,8 +19,7 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(['Hello, world!'])])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {
@@ -37,8 +35,7 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(['Hello,', ' world!'])])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {
@@ -54,8 +51,7 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(['<status>I am thinking...</status>'])])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {
@@ -71,8 +67,7 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(['Hello, world!']), ...toolCall('123', 'foo', { bar: 'baz' })])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {
@@ -98,8 +93,7 @@ describe('parser', () => {
           ...toolCall('123', 'foo', { bar: 'baz' }),
         ])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {
@@ -122,8 +116,7 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...reasoning('My thoughts are...'), ...text(['Hello, world!'])])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {
@@ -143,8 +136,7 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(['<cot>My thoughts are...</cot>'])])
           .pipe(AiParser.parseResponse({ parseReasoningTags: true }))
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {
@@ -156,12 +148,44 @@ describe('parser', () => {
     );
 
     it.effect(
+      'reasoning tags get parsed to reasoning blocks',
+      Effect.fn(function* ({ expect }) {
+        const result = yield* makeInputStream([...text(['<reasoning>My thoughts are...</reasoning>'])])
+          .pipe(AiParser.parseResponse({ parseReasoningTags: true }))
+          .pipe(Stream.runCollect);
+
+        expect(result).toEqual([
+          {
+            _tag: 'reasoning',
+            reasoningText: 'My thoughts are...',
+          },
+        ] satisfies ContentBlock.Any[]);
+      }),
+    );
+
+    it.effect(
+      'an unclosed unknown tag is not emitted as a raw partial',
+      Effect.fn(function* ({ expect }) {
+        const result = yield* makeInputStream([...text(['<custom>partial content'])])
+          .pipe(AiParser.parseResponse({ emitPartial: true }))
+          .pipe(Stream.runCollect);
+
+        // No partial carries the raw markup; the literal text arrives once, on the final flush.
+        const partials = result.filter((block) => block.pending);
+        expect(partials).toEqual([]);
+        expect(result.at(-1)).toEqual({
+          _tag: 'text',
+          text: '<custom>partial content',
+        });
+      }),
+    );
+
+    it.effect(
       'think tags get parsed to reasoning blocks',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(['<think>My thoughts are...</think>'])])
           .pipe(AiParser.parseResponse({ parseReasoningTags: true }))
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {
@@ -177,8 +201,7 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(splitByWord('<toolkit/>'))])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {
@@ -195,8 +218,7 @@ describe('parser', () => {
           ...text([`<surface role='integration-prompt' data='{"service":"gmail.com"}' />`]),
         ])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {
@@ -215,8 +237,7 @@ describe('parser', () => {
           ...text([`<surface role="integration-prompt">{"service":"gmail.com"}</surface>`]),
         ])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {
@@ -233,8 +254,7 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text([`<surface role="integration-prompt" />`])])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {
@@ -252,8 +272,7 @@ describe('parser', () => {
           ...text(splitByWord('<select><option>Yes</option><option>No</option></select>')),
         ])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {
@@ -273,8 +292,7 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(['<name>Claude</name>'])])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {
@@ -293,8 +311,7 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(['You sent `<foo>`, which looks like a tag'])])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           { _tag: 'text', text: 'You sent `' },
@@ -311,8 +328,7 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(['My name is <name>Claude</name>.'])])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           { _tag: 'text', text: 'My name is ' },
@@ -323,31 +339,38 @@ describe('parser', () => {
     );
 
     // Repro: third <reasoning> block in a chat doc — multi-line content with newlines,
-    // list items, single + double quotes, mixed with `<status>` and `<toolCall/>` tags
-    // around it. Verify all three reasoning blocks are preserved verbatim.
+    // list items, single + double quotes, mixed with `<status>` and `<toolCall/>` tags around it.
+    // `<reasoning>` parses like `<cot>` now (models write it unprompted); the content must still
+    // arrive verbatim, one block per tag.
     it.effect(
       'multi-line reasoning content with quotes and list items is preserved',
       Effect.fn(function* ({ expect }) {
-        const r1 = '<reasoning>The user wants me to summarize.</reasoning>';
-        const r2 = '<reasoning>The magazine has 10 posts already curated.</reasoning>';
+        const r1 = 'The user wants me to summarize.';
+        const r2 = 'The magazine has 10 posts already curated.';
         const r3 = [
-          '<reasoning>The magazine has 10 posts, but several are duplicates. Unique articles:',
+          'The magazine has 10 posts, but several are duplicates. Unique articles:',
           '1. "FBI affidavit quotes White House press dinner shooting suspect expressing rage at \'a pedophile, rapist and traitor\' – US politics live" - About Cole Allen.',
           '2. "Australia news live: UK inquiry says \'cracks already beginning to show\' on Aukus" - Live blog.',
-          '5. "\'Shortcomings and failures\' could sink Aukus nuclear submarines plan" - UK inquiry warns.</reasoning>',
+          '5. "\'Shortcomings and failures\' could sink Aukus nuclear submarines plan" - UK inquiry warns.',
         ].join('\n');
-        const input = [r1, '<status>Loading…</status>', r2, '<status>OK</status>', r3, 'Done.'].join('\n');
+        const input = [
+          `<reasoning>${r1}</reasoning>`,
+          '<status>Loading…</status>',
+          `<reasoning>${r2}</reasoning>`,
+          '<status>OK</status>',
+          `<reasoning>${r3}</reasoning>`,
+          'Done.',
+        ].join('\n');
 
         const result = yield* makeInputStream([...text(splitByCharacter(input))])
-          .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(AiParser.parseResponse({ parseReasoningTags: true }))
+          .pipe(Stream.runCollect);
 
-        const reasonings = result.filter((b) => b._tag === 'text' && b.text.startsWith('<reasoning>'));
+        const reasonings = result.filter((b) => b._tag === 'reasoning');
         expect(reasonings).toHaveLength(3);
-        expect(reasonings[0]).toEqual({ _tag: 'text', text: r1 });
-        expect(reasonings[1]).toEqual({ _tag: 'text', text: r2 });
-        expect(reasonings[2]).toEqual({ _tag: 'text', text: r3 });
+        expect(reasonings[0]).toEqual({ _tag: 'reasoning', reasoningText: r1 });
+        expect(reasonings[1]).toEqual({ _tag: 'reasoning', reasoningText: r2 });
+        expect(reasonings[2]).toEqual({ _tag: 'reasoning', reasoningText: r3 });
       }),
     );
 
@@ -368,8 +391,7 @@ describe('parser', () => {
           ),
         ])
           .pipe(AiParser.parseResponse())
-          .pipe(Stream.runCollect)
-          .pipe(Effect.map(Chunk.toArray));
+          .pipe(Stream.runCollect);
 
         expect(result).toEqual([
           {

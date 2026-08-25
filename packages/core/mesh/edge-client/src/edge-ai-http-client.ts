@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Headers from '@effect/platform/Headers';
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientError from '@effect/platform/HttpClientError';
-import * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Effect from 'effect/Effect';
-import * as FiberRef from 'effect/FiberRef';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as Headers from 'effect/unstable/http/Headers';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientError from 'effect/unstable/http/HttpClientError';
+import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 import { log } from '@dxos/log';
@@ -37,11 +37,6 @@ export class ByokError extends BaseError.extend('ByokError', 'BYOK authenticatio
  * {@link HttpClientError.ResponseError} so it survives `@effect/ai`'s error mapping.
  */
 export class UsageQuotaExceededError extends BaseError.extend('UsageQuotaExceededError', 'Usage quota exceeded') {}
-
-/**
- * Copy pasted from https://github.com/Effect-TS/effect/blob/main/packages/platform/src/internal/fetchHttpClient.ts
- */
-export const requestInitTagKey = '@effect/platform/FetchHttpClient/FetchOptions';
 
 type AnthropicMessagesPayload = {
   tools?: ReadonlyArray<Record<string, unknown>>;
@@ -112,8 +107,7 @@ export class EdgeAiHttpClient {
   static make = (getClient: GetEdgeHttpClient) =>
     HttpClient.make((request, url, signal, fiber) => {
       const edgeClient = getClient();
-      const context = fiber.getFiberRef(FiberRef.currentContext);
-      const options: RequestInit = context.unsafeMap.get(requestInitTagKey) ?? {};
+      const options: RequestInit = fiber.context.mapUnsafe.get(FetchHttpClient.RequestInit.key) ?? {};
       const headers = options.headers
         ? Headers.merge(Headers.fromInput(options.headers), request.headers)
         : request.headers;
@@ -134,10 +128,8 @@ export class EdgeAiHttpClient {
             ),
           catch: (cause) => {
             log.error('Failed to fetch', { cause });
-            return new HttpClientError.RequestError({
-              request,
-              reason: 'Transport',
-              cause,
+            return new HttpClientError.HttpClientError({
+              reason: new HttpClientError.TransportError({ request, cause }),
             });
           },
         }).pipe(
@@ -154,14 +146,15 @@ export class EdgeAiHttpClient {
                 Effect.orElseSucceed(() => undefined),
                 Effect.flatMap((body) =>
                   Effect.fail(
-                    new HttpClientError.ResponseError({
-                      request,
-                      response: httpResponse,
-                      reason: 'StatusCode',
-                      cause: new ByokError({
-                        status: response.status,
-                        provider: 'anthropic.com',
-                        message: body?.error?.message ?? 'Authentication failed',
+                    new HttpClientError.HttpClientError({
+                      reason: new HttpClientError.StatusCodeError({
+                        request,
+                        response: httpResponse,
+                        cause: new ByokError({
+                          status: response.status,
+                          provider: 'anthropic.com',
+                          message: body?.error?.message ?? 'Authentication failed',
+                        }),
                       }),
                     }),
                   ),
@@ -177,12 +170,13 @@ export class EdgeAiHttpClient {
                 Effect.orElseSucceed(() => undefined),
                 Effect.flatMap((body) =>
                   Effect.fail(
-                    new HttpClientError.ResponseError({
-                      request,
-                      response: httpResponse,
-                      reason: 'StatusCode',
-                      cause: new UsageQuotaExceededError({
-                        message: body?.error?.message,
+                    new HttpClientError.HttpClientError({
+                      reason: new HttpClientError.StatusCodeError({
+                        request,
+                        response: httpResponse,
+                        cause: new UsageQuotaExceededError({
+                          message: body?.error?.message,
+                        }),
                       }),
                     }),
                   ),

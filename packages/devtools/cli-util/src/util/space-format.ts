@@ -37,11 +37,11 @@ const READ_TIMEOUT_SECONDS = 2;
 
 const tryWithFallback = <T>(label: string, run: () => Promise<T>, fallback: T) =>
   Effect.tryPromise(run).pipe(
-    Effect.timeoutFail({
+    Effect.timeoutOrElse({
       duration: Duration.seconds(READ_TIMEOUT_SECONDS),
-      onTimeout: () => new Error(`${label} timed out`),
+      orElse: () => Effect.fail(new Error(`${label} timed out`)),
     }),
-    Effect.catchAll(() => Effect.succeed(fallback)),
+    Effect.catch(() => Effect.succeed(fallback)),
   );
 
 const tryWithFallbackSync = <T>(read: () => T, fallback: T): T => {
@@ -60,11 +60,11 @@ export const formatSpace = Effect.fn(function* (space: Space, options: FormatSpa
   // an enumeration command (e.g. `dx space list`).
   if (waitSeconds > 0) {
     yield* Effect.tryPromise(() => space.waitUntilReady()).pipe(
-      Effect.timeoutFail({
+      Effect.timeoutOrElse({
         duration: Duration.seconds(waitSeconds),
-        onTimeout: () => new Error('waitUntilReady timed out'),
+        orElse: () => Effect.fail(new Error('waitUntilReady timed out')),
       }),
-      Effect.catchAll(() => Effect.void),
+      Effect.catch(() => Effect.void),
     );
   }
 

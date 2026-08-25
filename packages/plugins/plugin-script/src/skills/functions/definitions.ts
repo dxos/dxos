@@ -9,11 +9,11 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-const FunctionRef = Ref.Ref(Operation.PersistentOperation).annotations({
+const FunctionRef = Ref.Ref(Operation.PersistentOperation).annotate({
   description: 'The ID of the function.',
 });
 
-const FunctionId = Schema.String.annotations({
+const FunctionId = Schema.String.annotate({
   description: 'The ID of the function. Can be passed as the function parameter to other operations.',
 });
 
@@ -28,11 +28,11 @@ const FUNCTION_FORMAT = trim`
 
   const MyFunction = Operation.make({
     meta: {
-      key: DXN.make('org.dxos.script.myFunction'),
+      key: DXN.make('com.example.operation.example.myFunction'),
       name: 'My Function',
     },
     input: Schema.Struct({
-      city: Schema.String.annotations({ description: 'City name' }),
+      city: Schema.String.annotate({ description: 'City name' }),
     }),
     output: Schema.Any,
   });
@@ -96,19 +96,19 @@ const AVAILABLE_PACKAGES = trim`
 
 export const Create = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.script.create'),
+    key: DXN.make('org.dxos.operation.script.createFunction'),
     name: 'Create',
     description: `Creates a new function with TypeScript source code and adds it to the space. ${FUNCTION_FORMAT} ${AVAILABLE_PACKAGES}`,
     icon: 'ph--code--regular',
   },
   input: Schema.Struct({
-    name: Schema.String.annotations({
+    name: Schema.String.annotate({
       description: 'Name of the function.',
     }),
-    source: Schema.optional(Schema.String).annotations({
+    source: Schema.optional(Schema.String).annotate({
       description: 'TypeScript source code for the function.',
     }),
-    templateId: Schema.optional(Schema.String).annotations({
+    templateId: Schema.optional(Schema.String).annotate({
       description: 'ID of a template to use as the initial source.',
     }),
   }),
@@ -120,7 +120,7 @@ export const Create = Operation.make({
 
 export const Read = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.script.read'),
+    key: DXN.make('org.dxos.operation.script.read'),
     name: 'Read',
     description: 'Reads the source code and metadata of a function.',
     icon: 'ph--file-text--regular',
@@ -139,33 +139,33 @@ export const Read = Operation.make({
 // The edit descriptions feed the script skill's LLM tool definition (and its memoized
 // fixtures), so the schema stays local and context-tuned; the apply logic is shared via `Doc.applyEdits`.
 const Edit = Schema.Struct({
-  oldString: Schema.String.annotations({
+  oldString: Schema.String.annotate({
     description: 'The text to find in the source.',
   }),
-  newString: Schema.String.annotations({
+  newString: Schema.String.annotate({
     description: 'The text to replace it with.',
   }),
-  replaceAll: Schema.optional(Schema.Boolean).annotations({
+  replaceAll: Schema.optional(Schema.Boolean).annotate({
     description: 'If true, replaces all occurrences. Defaults to false (first occurrence only).',
   }),
 });
 
 export const Update = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.script.update'),
+    key: DXN.make('org.dxos.operation.script.update'),
     name: 'Update',
     description: `Updates the source code or metadata of a function. ${FUNCTION_FORMAT}`,
     icon: 'ph--pencil--regular',
   },
   input: Schema.Struct({
     function: FunctionRef,
-    name: Schema.optional(Schema.String).annotations({
+    name: Schema.optional(Schema.String).annotate({
       description: 'New name for the function.',
     }),
-    description: Schema.optional(Schema.String).annotations({
+    description: Schema.optional(Schema.String).annotate({
       description: 'New description for the function.',
     }),
-    edits: Schema.optional(Schema.Array(Edit)).annotations({
+    edits: Schema.optional(Schema.Array(Edit)).annotate({
       description: 'Edits to apply to the source. Each edit finds oldString and replaces it with newString.',
     }),
   }),
@@ -177,7 +177,7 @@ export const Update = Operation.make({
 
 export const Delete = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.script.delete'),
+    key: DXN.make('org.dxos.operation.script.delete'),
     name: 'Delete',
     description: 'Deletes a function and its source from the space.',
     icon: 'ph--trash--regular',
@@ -191,7 +191,7 @@ export const Delete = Operation.make({
 
 export const Deploy = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.script.deploy'),
+    key: DXN.make('org.dxos.operation.script.deploy'),
     name: 'Deploy',
     description: `Deploys a function to the Edge runtime. The function source must follow the required format: a single export default of Operation.pipe(Operation.withHandler(Effect.fn(function* (...) { ... }))). See the Create operation description for a full example.`,
     icon: 'ph--rocket-launch--regular',
@@ -201,7 +201,7 @@ export const Deploy = Operation.make({
   }),
   output: Schema.Struct({
     function: FunctionId,
-    functionUrl: Schema.optional(Schema.String).annotations({
+    functionUrl: Schema.optional(Schema.String).annotate({
       description: 'The URL of the deployed function.',
     }),
   }),
@@ -210,19 +210,19 @@ export const Deploy = Operation.make({
 
 export const Invoke = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.script.invoke'),
+    key: DXN.make('org.dxos.operation.script.invoke'),
     name: 'Invoke',
     description: 'Invokes a deployed Edge function with the given payload.',
     icon: 'ph--play--regular',
   },
   input: Schema.Struct({
     function: FunctionRef,
-    payload: Schema.optional(Schema.Unknown).annotations({
+    payload: Schema.optional(Schema.Unknown).annotate({
       description: 'The input payload to pass to the function.',
     }),
   }),
   output: Schema.Struct({
-    response: Schema.Unknown.annotations({
+    response: Schema.Unknown.annotate({
       description: 'The response from the function.',
     }),
   }),
@@ -230,44 +230,44 @@ export const Invoke = Operation.make({
 });
 
 const InvocationSpanSchema = Schema.Struct({
-  id: Schema.String.annotations({
+  id: Schema.String.annotate({
     description: 'The invocation ID.',
   }),
-  timestamp: Schema.Number.annotations({
+  timestamp: Schema.Number.annotate({
     description: 'Start time of the invocation (epoch ms).',
   }),
-  duration: Schema.Number.annotations({
+  duration: Schema.Number.annotate({
     description: 'Duration in milliseconds.',
   }),
-  outcome: Schema.String.annotations({
+  outcome: Schema.String.annotate({
     description: 'Invocation outcome: success, failure, or pending.',
   }),
-  input: Schema.Object.annotations({
+  input: Schema.ObjectKeyword.annotate({
     description: 'The input payload passed to the function.',
   }),
-  error: Schema.optional(Schema.Object).annotations({
+  error: Schema.optional(Schema.ObjectKeyword).annotate({
     description: 'Error details if the invocation failed.',
   }),
 });
 
 export const InspectInvocations = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.script.inspectInvocations'),
+    key: DXN.make('org.dxos.operation.script.inspectInvocations'),
     name: 'InspectInvocations',
     description: 'Queries the invocation trace feed for a function, returning its invocation history.',
     icon: 'ph--magnifying-glass--regular',
   },
   input: Schema.Struct({
     function: FunctionRef,
-    limit: Schema.optional(Schema.Number).annotations({
+    limit: Schema.optional(Schema.Number).annotate({
       description: 'Maximum number of invocations to return. Defaults to 20.',
     }),
   }),
   output: Schema.Struct({
-    invocations: Schema.Array(InvocationSpanSchema).annotations({
+    invocations: Schema.Array(InvocationSpanSchema).annotate({
       description: 'List of invocation spans, most recent first.',
     }),
-    total: Schema.Number.annotations({
+    total: Schema.Number.annotate({
       description: 'Total number of invocations found.',
     }),
   }),
@@ -275,33 +275,33 @@ export const InspectInvocations = Operation.make({
 });
 
 const DeployedFunctionSchema = Schema.Struct({
-  key: Schema.optional(Schema.String).annotations({
+  key: Schema.optional(Schema.String).annotate({
     description: 'Unique key identifying the function. Pass to InstallFunction to install it.',
   }),
-  name: Schema.String.annotations({
+  name: Schema.String.annotate({
     description: 'Display name of the function.',
   }),
-  version: Schema.String.annotations({
+  version: Schema.String.annotate({
     description: 'Semantic version of the deployed function.',
   }),
-  description: Schema.optional(Schema.String).annotations({
+  description: Schema.optional(Schema.String).annotate({
     description: 'Description of what the function does.',
   }),
-  updated: Schema.optional(Schema.String).annotations({
+  updated: Schema.optional(Schema.String).annotate({
     description: 'ISO timestamp of the last deployment.',
   }),
 });
 
 export const QueryDeployedFunctions = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.script.queryDeployed'),
+    key: DXN.make('org.dxos.operation.script.queryDeployed'),
     name: 'QueryDeployedFunctions',
     description: 'Lists all functions deployed to the EDGE runtime. Use InstallFunction to add one to the space.',
     icon: 'ph--list--regular',
   },
   input: Schema.Void,
   output: Schema.Struct({
-    functions: Schema.Array(DeployedFunctionSchema).annotations({
+    functions: Schema.Array(DeployedFunctionSchema).annotate({
       description: 'List of deployed functions.',
     }),
   }),
@@ -310,23 +310,23 @@ export const QueryDeployedFunctions = Operation.make({
 
 export const InstallFunction = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.script.install'),
+    key: DXN.make('org.dxos.operation.script.install'),
     name: 'InstallFunction',
     description:
       'Installs a deployed EDGE function into the current space by key. The returned function ID can be passed directly to Invoke.',
     icon: 'ph--download--regular',
   },
   input: Schema.Struct({
-    key: Schema.String.annotations({
+    key: Schema.String.annotate({
       description: 'The unique key of the deployed function to install (from QueryDeployedFunctions).',
     }),
   }),
   output: Schema.Struct({
     function: FunctionId,
-    name: Schema.String.annotations({
+    name: Schema.String.annotate({
       description: 'Name of the installed function.',
     }),
-    version: Schema.String.annotations({
+    version: Schema.String.annotate({
       description: 'Version of the installed function.',
     }),
   }),

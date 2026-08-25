@@ -77,8 +77,14 @@ jobs:
       - name: Version (snapshot)
         if: github.event_name == 'workflow_dispatch'
         run: |
-          pnpm exec changeset version --snapshot next
-          node scripts/sync-versions.mjs
+          # Changesets v3 makes `changeset version` exit 1 when nothing is pending, so gate on the
+          # presence of a changeset file to keep an empty @next dispatch a no-op rather than a failure.
+          if ls .changeset/*.md 2>/dev/null | grep -qv '^\.changeset/README\.md$'; then
+            pnpm exec changeset version --snapshot next
+            node scripts/sync-versions.mjs
+          else
+            echo 'No pending changesets — skipping snapshot version.'
+          fi
 
       - name: Build
         run: moon run :build
@@ -116,6 +122,23 @@ jobs:
           title: 'Version packages'
         env:
           NPM_CONFIG_PROVENANCE: 'true' # provenance via OIDC; trusted publisher means no NPM_TOKEN.
+
+      # `changeset publish` cannot ship the CLI: `@dxos/cli` is `private`, and what it actually ships is one
+      # prebuilt binary per platform generated into `dist/`, so neither is a workspace member Changesets can
+      # see. Runs before the tag step so a failed CLI publish is not tagged as a complete release.
+      - name: Publish the CLI (@latest)
+        if: github.event_name == 'push' && startsWith(github.event.head_commit.message, 'Version packages')
+        run: moon run cli:publish
+        env:
+          NODE_ENV: production
+          NPM_CONFIG_PROVENANCE: 'true' # provenance via OIDC; trusted publisher means no NPM_TOKEN.
+
+      - name: Publish the CLI (@next snapshot)
+        if: github.event_name == 'workflow_dispatch'
+        run: moon run cli:publish -- --tag next
+        env:
+          NODE_ENV: production
+          NPM_CONFIG_PROVENANCE: 'true'
 
       # One tag + one GitHub Release per lockstep group (`v<version>` for core/SDK, `plugins-v<version>` for
       # plugins + CLI), both refs in a single push.

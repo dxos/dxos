@@ -4,19 +4,19 @@
 
 import * as Equal from 'effect/Equal';
 import type * as Schema from 'effect/Schema';
-import type * as SchemaAST from 'effect/SchemaAST';
-import * as Utils from 'effect/Utils';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Ref } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useDefaultValue } from '@dxos/react-ui';
 import { type ValidationError, validateSchema } from '@dxos/schema';
 import { type MaybePromise } from '@dxos/util';
 
 import { type FormFieldStatus } from '#types';
+
+import { getDiscriminatorDefaults } from '../util';
 
 /**
  * Form properties.
@@ -25,7 +25,7 @@ export interface FormHandlerProps<T extends AnyProperties> {
   /**
    * Effect schema (Type literal).
    */
-  schema?: Schema.Schema<T, any>;
+  schema?: Schema.Codec<T, any>;
 
   /**
    * Source values. Fields the user is not editing reflect this value; in-progress edits (including intermediate
@@ -132,7 +132,13 @@ export const useFormHandler = <T extends AnyProperties>({
   const [touched, setTouched] = useState<Record<SchemaEx.JsonPath, boolean>>({});
   const [errors, setErrors] = useState<Record<SchemaEx.JsonPath, string>>({});
   const [saving, setSaving] = useState(false);
-  const defaultValues = useDefaultValue<Partial<T>>(defaultValuesProp, () => ({}));
+  const seed = useDefaultValue<Partial<T>>(defaultValuesProp, () => ({}));
+  // A root discriminated union renders nothing but its select until the discriminator has a value, so
+  // the form opens on the first member unless the caller seeded one of its own.
+  const defaultValues = useMemo(
+    () => ({ ...getDiscriminatorDefaults(schema?.ast), ...seed }) as Partial<T>,
+    [schema, seed],
+  );
 
   // The source the form reads from for every field the user is not actively editing. The form is a pure function of
   // this value and re-renders when the parent passes a new one; to reflect external/remote mutations the parent must
@@ -283,7 +289,7 @@ export const useFormHandler = <T extends AnyProperties>({
       const pathArray = path;
       let parsedValue = value as any;
       try {
-        if (type._tag === 'NumberKeyword') {
+        if (type._tag === 'Number') {
           parsedValue = parseFloat(value as string) || 0;
         }
       } catch (err) {
@@ -402,8 +408,8 @@ const applyOverrides = <T>(base: Partial<T>, overrides: Record<SchemaEx.JsonPath
 };
 
 // Copied from `@dxos/echo` (internal `Obj.valuesEqual`): references compare by target URI, arrays and plain
-// object-shaped property bags (excluding `id`) compare recursively, and leaves fall back to Effect `Equal.equals`
-// inside a structural region. Effect's `Schema.equivalence` is not a safe substitute — it returns false-positive
+// object-shaped property bags (excluding `id`) compare recursively, and leaves fall back to Effect `Equal.equals`,
+// which is structural by default in Effect 4. Effect's `Schema.toEquivalence` is not a safe substitute — it returns false-positive
 // equality for dynamic/union/ref-array schemas, which would silently prune edits.
 // TODO(wittjosiah): Factor out into a shared util rather than duplicating echo's internal implementation.
 const valuesEqual = (left: unknown, right: unknown): boolean => {
@@ -414,7 +420,7 @@ const valuesEqual = (left: unknown, right: unknown): boolean => {
     return left === right;
   }
   if (typeof left !== 'object' || typeof right !== 'object') {
-    return Utils.structuralRegion(() => Equal.equals(left, right));
+    return Equal.equals(left, right);
   }
   if (Ref.isRef(left) && Ref.isRef(right)) {
     return left.uri === right.uri;

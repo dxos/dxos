@@ -10,8 +10,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
-
-import { RegistryCapabilities, RegistrySettingsSchema } from '../types';
+import { RegistryCapabilities, RegistrySettingsSchema } from '#types';
 
 const DEFAULT_DEV_PLUGIN_URL = `http://localhost:${PLUGIN_DEV_SERVER_PORT}/manifest.json`;
 

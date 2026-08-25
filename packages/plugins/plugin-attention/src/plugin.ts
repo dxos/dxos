@@ -1,9 +1,18 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 
-import { meta } from './meta';
+import { Attention, Keyboard, OperationHandler, ReactContext } from '#capabilities';
+import { meta } from '#meta';
 
-export const AttentionPlugin = Plugin.lazy(meta, () => import('#plugin'));
+export const AttentionPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(Attention),
+  Plugin.addModule(ReactContext),
+  Plugin.addModule(Keyboard),
+  Plugin.make,
+);
+
+export default AttentionPlugin;

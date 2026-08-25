@@ -12,7 +12,7 @@ import { trim } from '@dxos/util';
 
 export const ArtifactAdd = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.project.artifactAdd'),
+    key: DXN.make('org.dxos.operation.assistantToolkit.addArtifact'),
     name: 'Add project artifact',
     icon: 'ph--stack-plus--regular',
     description: trim`
@@ -23,10 +23,10 @@ export const ArtifactAdd = Operation.make({
     `,
   },
   input: Schema.Struct({
-    project: Ref.Ref(Project.Project).annotations({
+    project: Ref.Ref(Project.Project).annotate({
       description: 'The project to file into (its reference is in the chat context).',
     }),
-    object: Ref.Ref(Obj.Unknown).annotations({
+    object: Ref.Ref(Obj.Unknown).annotate({
       description: 'The object to file as an artifact.',
     }),
   }),
@@ -43,17 +43,17 @@ export const ArtifactInfo = Schema.Struct({
 
 export const ArtifactList = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.project.artifactList'),
+    key: DXN.make('org.dxos.operation.assistantToolkit.listArtifact'),
     name: 'List project artifacts',
     icon: 'ph--stack--regular',
     description: trim`
       Lists the objects in a project's artifacts collection (DXN, type, and label per artifact).
       Use this to find what the project already holds before searching the whole space; load an
-      artifact's content with the load tool when needed.
+      artifact's content with the database-load tool when needed.
     `,
   },
   input: Schema.Struct({
-    project: Ref.Ref(Project.Project).annotations({
+    project: Ref.Ref(Project.Project).annotate({
       description: 'The project whose artifacts to list (its reference is in the chat context).',
     }),
   }),

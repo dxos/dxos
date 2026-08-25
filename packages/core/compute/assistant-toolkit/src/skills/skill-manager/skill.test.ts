@@ -16,7 +16,7 @@ import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId, type URI } from '@dxos/keys';
 
-import { DatabaseSkill, DiscordSkill, MemorySkill } from '../index';
+import { AutomationSkill, ChatContextSkill, MemorySkill } from '../index';
 import { SkillManagerHandlers } from './operations';
 import { EnableSkills, QuerySkills } from './operations/definitions';
 
@@ -26,21 +26,20 @@ const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
   operationHandlers: SkillManagerHandlers,
   types: [Skill.Skill],
-  skills: [DatabaseSkill.make(), MemorySkill.make(), DiscordSkill.make()],
+  skills: [ChatContextSkill.make(), MemorySkill.make(), AutomationSkill.make()],
   tracing: 'pretty',
 });
 
 /** Conversation DXN for the scoped test harness feed. */
-class TestConversation extends Context.Tag('@dxos/assistant-toolkit/TestConversation')<
-  TestConversation,
-  { conversation: URI.URI }
->() {}
+class TestConversation extends Context.Service<TestConversation, { conversation: URI.URI }>()(
+  '@dxos/assistant-toolkit/TestConversation',
+) {}
 
-const ConversationHarnessLayer = Layer.unwrapScoped(
+const ConversationHarnessLayer = Layer.unwrap(
   Effect.gen(function* () {
     const feed = yield* Database.add(Feed.make());
     const conversation = Obj.getURI(feed);
-    const runtime = yield* Effect.runtime<Database.Service>();
+    const runtime = yield* Effect.context<Database.Service>();
     const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
     return Layer.mergeAll(
       Layer.succeed(TestConversation, { conversation }),
@@ -71,9 +70,9 @@ describe('Skill Manager', () => {
         const result = yield* Operation.invoke(QuerySkills, {}, { conversation });
         expect(result).toHaveLength(3);
         const keys = result.map((skill: Skill.Skill) => Obj.getMeta(skill).key);
-        expect(keys).toContain('org.dxos.skill.database');
+        expect(keys).toContain('org.dxos.skill.chatContext');
         expect(keys).toContain('org.dxos.skill.memory');
-        expect(keys).toContain('org.dxos.skill.discord');
+        expect(keys).toContain('org.dxos.skill.automation');
       },
       provideTestLayers,
       TestHelpers.provideTestContext,
@@ -88,15 +87,15 @@ describe('Skill Manager', () => {
         const conversation = yield* getConversationDXN;
         const { enabled, rejected } = yield* Operation.invoke(
           EnableSkills,
-          { keys: ['org.dxos.skill.database'] },
+          { keys: ['org.dxos.skill.chatContext'] },
           { conversation },
         );
         expect(enabled).toHaveLength(1);
-        expect(Obj.getMeta(enabled[0]).key).toBe('org.dxos.skill.database');
+        expect(Obj.getMeta(enabled[0]).key).toBe('org.dxos.skill.chatContext');
         expect(rejected).toHaveLength(0);
 
         const bound = yield* getBoundSkills;
-        expect(bound.some((bp: Skill.Skill) => Obj.getMeta(bp).key === 'org.dxos.skill.database')).toBe(true);
+        expect(bound.some((bp: Skill.Skill) => Obj.getMeta(bp).key === 'org.dxos.skill.chatContext')).toBe(true);
       },
       provideTestLayers,
       TestHelpers.provideTestContext,
@@ -111,15 +110,15 @@ describe('Skill Manager', () => {
         const conversation = yield* getConversationDXN;
         const { enabled, rejected } = yield* Operation.invoke(
           EnableSkills,
-          { keys: ['org.dxos.skill.discord'] },
+          { keys: ['org.dxos.skill.automation'] },
           { conversation },
         );
         expect(enabled).toHaveLength(0);
         expect(rejected).toHaveLength(1);
-        expect(rejected[0].key).toBe('org.dxos.skill.discord');
+        expect(rejected[0].key).toBe('org.dxos.skill.automation');
 
         const bound = yield* getBoundSkills;
-        expect(bound.some((bp: Skill.Skill) => Obj.getMeta(bp).key === 'org.dxos.skill.discord')).toBe(false);
+        expect(bound.some((bp: Skill.Skill) => Obj.getMeta(bp).key === 'org.dxos.skill.automation')).toBe(false);
       },
       provideTestLayers,
       TestHelpers.provideTestContext,
@@ -135,16 +134,16 @@ describe('Skill Manager', () => {
         const { enabled, rejected } = yield* Operation.invoke(
           EnableSkills,
           {
-            keys: ['org.dxos.skill.database', 'org.dxos.skill.memory', 'org.dxos.skill.discord'],
+            keys: ['org.dxos.skill.chatContext', 'org.dxos.skill.memory', 'org.dxos.skill.automation'],
           },
           { conversation },
         );
         expect(enabled).toHaveLength(2);
         const enabledKeys = enabled.map((bp: Skill.Skill) => Obj.getMeta(bp).key);
-        expect(enabledKeys).toContain('org.dxos.skill.database');
+        expect(enabledKeys).toContain('org.dxos.skill.chatContext');
         expect(enabledKeys).toContain('org.dxos.skill.memory');
         expect(rejected).toHaveLength(1);
-        expect(rejected[0].key).toBe('org.dxos.skill.discord');
+        expect(rejected[0].key).toBe('org.dxos.skill.automation');
       },
       provideTestLayers,
       TestHelpers.provideTestContext,

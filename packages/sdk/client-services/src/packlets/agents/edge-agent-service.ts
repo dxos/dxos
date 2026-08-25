@@ -7,6 +7,7 @@ import * as EffectStream from 'effect/Stream';
 
 import { Context } from '@dxos/context';
 import { type EdgeConnection } from '@dxos/edge-client';
+import { EffectEx } from '@dxos/effect';
 import { EdgeAgentStatus } from '@dxos/protocols';
 import {
   EdgeStatus,
@@ -26,7 +27,7 @@ export class EdgeAgentServiceImpl implements EdgeAgentService.Handlers {
 
   // TODO(mykola): Reconcile with NetworkService.queryStatus.
   ['EdgeAgentService.queryEdgeStatus'](): EffectStream.Stream<QueryEdgeStatusResponse, Error> {
-    return EffectStream.async<QueryEdgeStatusResponse, Error>((emit) => {
+    return EffectEx.streamFromEmitter<QueryEdgeStatusResponse, Error>((emit) => {
       const ctx = Context.default();
       const update = () => {
         void emit.single({
@@ -57,7 +58,7 @@ export class EdgeAgentServiceImpl implements EdgeAgentService.Handlers {
   }
 
   ['EdgeAgentService.queryAgentStatus'](): EffectStream.Stream<QueryAgentStatusResponse, Error> {
-    return EffectStream.async<QueryAgentStatusResponse, Error>((emit) => {
+    return EffectEx.streamFromEmitter<QueryAgentStatusResponse, Error>((emit) => {
       const ctx = Context.default();
       void emit.single({ status: QueryAgentStatusResponse.AgentStatus.UNKNOWN });
       void this._agentManagerProvider().then((agentManager) => {

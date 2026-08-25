@@ -3,7 +3,8 @@
 //
 
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { Atom, type Registry } from '@effect-atom/atom';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { useEffect } from 'react';
 
 import { invariant } from '@dxos/invariant';
@@ -112,7 +113,7 @@ export class DragMonitor {
   private readonly _state = Atom.make<DraggingState>({ type: 'inactive' });
   private _offset?: Point;
 
-  constructor(private readonly _registry: Registry.Registry) {}
+  constructor(private readonly _registry: Registry.AtomRegistry) {}
 
   get dragging() {
     return this._registry.get(this._state).type !== 'inactive';

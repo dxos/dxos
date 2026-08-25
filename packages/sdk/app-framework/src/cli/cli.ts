@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Command from 'effect/unstable/cli/Command';
 
 import { invariant } from '@dxos/invariant';
 
@@ -20,15 +20,16 @@ const defaultPluginLoader =
       return { plugin };
     });
 
-type SubCommands = [Command.Command<any, any, any, any>, ...Array<Command.Command<any, any, any, any>>];
+type SubCommands = [Command.Command<any, any, any, any, any>, ...Array<Command.Command<any, any, any, any, any>>];
 
 export type CreateCliAppOptions = {
-  rootCommand: Command.Command<any, any, any, any>;
+  rootCommand: Command.Command<any, any, any, any, any>;
   subCommands?: SubCommands;
   pluginManager?: PluginManager.PluginManager;
   pluginLoader?: PluginManager.ManagerOptions['pluginLoader'];
   plugins?: Plugin.Plugin[];
   enabled?: string[];
+  core?: string[];
   safeMode?: boolean;
 };
 
@@ -43,8 +44,9 @@ export type CreateCliAppOptions = {
  *
  * @param options.pluginManager Optional existing PluginManager instance.
  * @param options.pluginLoader Function to load plugins by ID.
- * @param options.plugins All plugins available to the application. Plugins whose `meta.profile.tags` includes `'system'` are treated as core.
+ * @param options.plugins All plugins available to the application.
  * @param options.enabled Enabled plugins.
+ * @param options.core Plugins the CLI pins on (always enabled, never disableable). Defaults to those whose `meta.profile.tags` includes `'system'`.
  * @param options.safeMode Whether to enable safe mode, which disables optional plugins.
  */
 export const createCliApp = Effect.fn(function* ({
@@ -54,6 +56,7 @@ export const createCliApp = Effect.fn(function* ({
   pluginLoader: pluginLoaderProp,
   plugins: pluginsProp = [],
   enabled: enabledProp = [],
+  core,
   safeMode = false,
 }: CreateCliAppOptions) {
   const plugins = pluginsProp;
@@ -65,6 +68,7 @@ export const createCliApp = Effect.fn(function* ({
       pluginLoader,
       plugins,
       enabled,
+      core,
     });
 
   manager.capabilities.contribute({

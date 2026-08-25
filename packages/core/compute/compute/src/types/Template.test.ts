@@ -85,7 +85,7 @@ describe('Template', () => {
   });
 
   describe('processTemplate', () => {
-    const GREET_KEY = DXN.make('org.example.test.greet');
+    const GREET_KEY = DXN.make('com.example.test.greet');
 
     const greet = Operation.withHandler(
       Operation.make({
@@ -151,13 +151,13 @@ describe('Template', () => {
       const result = await Template.processTemplate(template).pipe(
         Effect.provide(registryLayer()),
         stubInvoker,
-        Effect.either,
+        Effect.result,
         Effect.runPromise,
       );
 
-      expect(result._tag).toBe('Left');
-      if (result._tag === 'Left') {
-        expect(result.left).toBeInstanceOf(FunctionNotFoundError);
+      expect(result._tag).toBe('Failure');
+      if (result._tag === 'Failure') {
+        expect(result.failure).toBeInstanceOf(FunctionNotFoundError);
       }
     });
   });

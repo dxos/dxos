@@ -5,8 +5,8 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import * as PresenterOperation from '../types/PresenterOperation';
+import { PresenterOperation } from '#types';
 
 export const PresenterOperationHandlerSet = OperationHandlerSet.lazy([
-  PresenterOperation.TogglePresentation.pipe(Operation.lazyHandler(() => import('./toggle-presentation'))),
+  PresenterOperation.SetPresenting.pipe(Operation.lazyHandler(() => import('./set-presenting'))),
 ]);

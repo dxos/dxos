@@ -7,13 +7,14 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
-import { Collection, Database, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Text } from '@dxos/schema';
 import { TaskSet } from '@dxos/types';
 
-import * as ProjectCapabilities from '../types/ProjectCapabilities';
+import { ProjectCapabilities } from '#types';
+
 import { blank, defaultTemplates, scaffoldProject } from './index';
 
 describe('project templates', () => {
@@ -29,7 +30,7 @@ describe('project templates', () => {
 
   const createDatabase = async () => {
     const { db } = await builder.createDatabase({
-      types: [Project.Project, Instructions.Instructions, Collection.Collection, Text.Text],
+      types: [Project.Project, Instructions.Instructions, Text.Text, TaskSet.TaskSet],
     });
     return db;
   };
@@ -46,20 +47,18 @@ describe('project templates', () => {
     await db.flush();
 
     const instructions = await project.instructions?.tryLoad();
-    const artifacts = await project.artifacts?.tryLoad();
     const taskSet = await project.taskSet?.tryLoad();
     expect(instructions).toBeDefined();
-    expect(artifacts).toBeDefined();
     expect(taskSet).toBeDefined();
     expect(Obj.getParent(instructions!)?.id).toBe(project.id);
-    expect(Obj.getParent(artifacts!)?.id).toBe(project.id);
     expect(Obj.getParent(taskSet!)?.id).toBe(project.id);
+    // Artifacts start empty and are appended as the project produces them.
+    expect(project.artifacts).toEqual([]);
 
     // Deletion cascades back through the same parent edges.
     db.remove(project);
     await db.flush();
     expect((await db.query(Filter.type(Instructions.Instructions)).run()).length).toBe(0);
-    expect((await db.query(Filter.type(Collection.Collection)).run()).length).toBe(0);
     expect((await db.query(Filter.type(TaskSet.TaskSet)).run()).length).toBe(0);
   });
 

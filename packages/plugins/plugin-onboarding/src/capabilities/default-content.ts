@@ -8,10 +8,13 @@ import * as Option from 'effect/Option';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as Node from '@dxos/app-graph/Node';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
-import { Graph, Node } from '@dxos/plugin-graph';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceEvents from '@dxos/plugin-space/SpaceEvents';
 
@@ -20,8 +23,8 @@ import README_CONTENT from '../content/readme.md?raw';
 import { OnboardingOperation } from '../operations';
 import { type OnboardingOptions } from './capabilities';
 
-const PERSONAL_SPACE_ICON = 'house-line';
-const PERSONAL_SPACE_ICON_HUE = 'violet';
+const DEFAULT_SPACE_ICON = 'house-line';
+const DEFAULT_SPACE_ICON_HUE = 'violet';
 
 export const README_DOCUMENT_NAME = 'README';
 
@@ -37,35 +40,32 @@ export default Capability.makeModule(
     const operationInvoker = yield* Capabilities.OperationInvoker;
     const { graph } = yield* AppCapabilities.AppGraph;
     const client = yield* ClientCapabilities.Client;
-    const personalSpace = yield* SpaceCapabilities.PersonalSpace;
+    const defaultSpace = yield* SpaceCapabilities.DefaultSpace;
 
-    Obj.update(personalSpace.properties, (obj) => {
-      obj.icon = PERSONAL_SPACE_ICON;
-      obj.iconHue = PERSONAL_SPACE_ICON_HUE;
+    Obj.update(defaultSpace.properties, (obj) => {
+      obj.icon = DEFAULT_SPACE_ICON;
+      obj.hue = DEFAULT_SPACE_ICON_HUE;
     });
 
-    // Run plugin OnCreateSpace callbacks against the personal space so capabilities that
+    // Run plugin OnCreateSpace callbacks against the default space so capabilities that
     // depend on a fresh space (e.g. skills) wire themselves up. The exemplar space
     // gets the same callbacks via the regular SpaceCreated event on import.
     yield* Plugin.activate(SpaceEvents.SpaceCreated);
-    const personalRootCollection = Option.getOrUndefined(
-      Annotation.get(personalSpace.properties, RootCollectionAnnotation),
+    const rootCollection = Option.getOrUndefined(
+      Annotation.get(defaultSpace.properties, RootCollectionAnnotation),
     )?.target;
-    if (personalRootCollection) {
+    if (rootCollection) {
       const onCreateSpaceCallbacks = yield* Capability.getAll(SpaceCapabilities.OnCreateSpace);
       yield* Effect.all(
         onCreateSpaceCallbacks.map((onCreateSpace) =>
-          onCreateSpace({ space: personalSpace, isDefault: true, rootCollection: personalRootCollection }).pipe(
-            Effect.provideService(Operation.Service, operationInvoker),
-          ),
+          onCreateSpace({ space: defaultSpace, isDefault: true, rootCollection: rootCollection }),
         ),
-      );
+      ).pipe(Effect.provideService(Operation.Service, operationInvoker));
 
-      // Add a welcome document to the personal space root collection.
       const welcomeDoc = Markdown.make({ name: README_DOCUMENT_NAME, content: README_CONTENT });
-      personalSpace.db.add(welcomeDoc);
-      Obj.update(personalRootCollection, (personalRootCollection) => {
-        personalRootCollection.objects.push(Ref.make(welcomeDoc));
+      defaultSpace.db.add(welcomeDoc);
+      Obj.update(rootCollection, (rootCollection) => {
+        rootCollection.objects.push(Ref.make(welcomeDoc));
       });
     }
 
@@ -75,13 +75,28 @@ export default Capability.makeModule(
       // Eagerly expand the graph so the exemplar space's content is visible in the navtree
       // as soon as the user opens it, without waiting for a lazy expansion pass.
       const exemplarSpace = client.spaces.get().find((space) => space.tags.includes(AppSpace.EXEMPLAR_SPACE_TAG));
-      graph.pipe(Graph.expand(Node.RootId, 'child'), Graph.expand(personalSpace.id, 'child'));
+      graph.pipe(Graph.expandSync(Node.RootId, 'child'), Graph.expandSync(defaultSpace.id, 'child'));
       if (exemplarSpace) {
-        graph.pipe(Graph.expand(exemplarSpace.id, 'child'));
+        graph.pipe(Graph.expandSync(exemplarSpace.id, 'child'));
       }
     } else {
-      graph.pipe(Graph.expand(Node.RootId, 'child'), Graph.expand(personalSpace.id, 'child'));
+      graph.pipe(Graph.expandSync(Node.RootId, 'child'), Graph.expandSync(defaultSpace.id, 'child'));
     }
+
+    const homePath = GraphPath.getSpaceHomePath(defaultSpace.id);
+    yield* Effect.gen(function* () {
+      // Claim the workspace before setting the plank: `plugin-space` switches to the default space
+      // from a forked fiber, and a switch restores the target workspace's (empty) persisted deck, so
+      // a plank set first is wiped. Switching here also satisfies that fiber's `workspace === default`
+      // guard, leaving it a no-op.
+      yield* Operation.invoke(LayoutOperation.SwitchWorkspace, {
+        subject: GraphPath.getSpacePath(defaultSpace.id),
+      });
+      // Land on the default space's Home, which surfaces the seeded README among its recent objects.
+      yield* Operation.invoke(LayoutOperation.Set, { subject: [homePath] });
+      // Expose is scheduled because the navtree may not have rendered yet at this point.
+      yield* Operation.schedule(LayoutOperation.Expose, { subject: homePath });
+    }).pipe(Effect.provideService(Operation.Service, operationInvoker));
 
     return [];
   }),

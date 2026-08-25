@@ -2,18 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as Registry from '@effect-atom/atom/Registry';
 import * as Cause from 'effect/Cause';
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
-import * as Runtime from 'effect/Runtime';
+import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { asyncTimeout, sleep } from '@dxos/async';
-import { Err, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Error as EchoError, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
@@ -523,11 +521,11 @@ describe('Database', () => {
       if (!Exit.isFailure(exit)) {
         throw new Error('Expected failure');
       }
-      const failures = Chunk.toArray(Cause.failures(exit.cause));
+      const failures = exit.cause.reasons.filter(Cause.isFailReason).map((reason) => reason.error);
       expect(failures.length).toBeGreaterThan(0);
       const error = failures[0];
-      expect(Err.GetReactiveError.is(error)).toBe(true);
-      expect((error as Err.GetReactiveError).context?.reason).toBe('no-database');
+      expect(EchoError.GetReactiveError.is(error)).toBe(true);
+      expect((error as EchoError.GetReactiveError).context?.reason).toBe('no-database');
     });
 
     test('fails with object-not-found when object was removed from database', async ({ expect }) => {
@@ -541,12 +539,12 @@ describe('Database', () => {
       if (!Exit.isFailure(exit)) {
         throw new Error('Expected failure');
       }
-      const failures = Chunk.toArray(Cause.failures(exit.cause));
+      const failures = exit.cause.reasons.filter(Cause.isFailReason).map((reason) => reason.error);
       expect(failures.length).toBeGreaterThan(0);
       const error = failures[0];
-      expect(Err.GetReactiveError.is(error)).toBe(true);
-      expect((error as Err.GetReactiveError).context?.reason).toBe('object-not-found');
-      expect((error as Err.GetReactiveError).context?.snapshotId).toBe(obj.id);
+      expect(EchoError.GetReactiveError.is(error)).toBe(true);
+      expect((error as EchoError.GetReactiveError).context?.reason).toBe('object-not-found');
+      expect((error as EchoError.GetReactiveError).context?.snapshotId).toBe(obj.id);
     });
   });
 
@@ -588,7 +586,7 @@ describe('Database', () => {
   describe('ref atom deletion reactivity', () => {
     test('ref.atom fires and resolves to undefined when target is removed', async ({ expect }) => {
       const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
 
       const obj = db.add(Obj.make(TestSchema.Person, { name: 'Test' }));
       const ref = Ref.make(obj);
@@ -608,7 +606,7 @@ describe('Database', () => {
 
     test('Obj.atom(ref) fires and resolves to undefined when target is removed', async ({ expect }) => {
       const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
 
       const obj = db.add(Obj.make(TestSchema.Person, { name: 'Test' }));
       const ref = Ref.make(obj);
@@ -629,7 +627,7 @@ describe('Database', () => {
 
     test('Obj.atomReactive(ref) fires and resolves to undefined when target is removed', async ({ expect }) => {
       const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
 
       const obj = db.add(Obj.make(TestSchema.Person, { name: 'Test' }));
       const ref = Ref.make(obj);
@@ -669,13 +667,8 @@ describe('Database', () => {
         Obj.getReactiveOrThrow(snapshot);
         expect.fail('Expected throw');
       } catch (error) {
-        expect(Runtime.isFiberFailure(error)).toBe(true);
-        const cause = (error as Runtime.FiberFailure)[Runtime.FiberFailureCauseId];
-        const failures = Chunk.toArray(Cause.failures(cause));
-        expect(failures.length).toBeGreaterThan(0);
-        const getReactiveError = failures[0];
-        expect(Err.GetReactiveError.is(getReactiveError)).toBe(true);
-        expect((getReactiveError as Err.GetReactiveError).context?.reason).toBe('no-database');
+        expect(EchoError.GetReactiveError.is(error)).toBe(true);
+        expect((error as EchoError.GetReactiveError).context?.reason).toBe('no-database');
       }
     });
 
@@ -690,14 +683,9 @@ describe('Database', () => {
         Obj.getReactiveOrThrow(snapshot);
         expect.fail('Expected throw');
       } catch (error) {
-        expect(Runtime.isFiberFailure(error)).toBe(true);
-        const cause = (error as Runtime.FiberFailure)[Runtime.FiberFailureCauseId];
-        const failures = Chunk.toArray(Cause.failures(cause));
-        expect(failures.length).toBeGreaterThan(0);
-        const getReactiveError = failures[0];
-        expect(Err.GetReactiveError.is(getReactiveError)).toBe(true);
-        expect((getReactiveError as Err.GetReactiveError).context?.reason).toBe('object-not-found');
-        expect((getReactiveError as Err.GetReactiveError).context?.snapshotId).toBe(obj.id);
+        expect(EchoError.GetReactiveError.is(error)).toBe(true);
+        expect((error as EchoError.GetReactiveError).context?.reason).toBe('object-not-found');
+        expect((error as EchoError.GetReactiveError).context?.snapshotId).toBe(obj.id);
       }
     });
   });

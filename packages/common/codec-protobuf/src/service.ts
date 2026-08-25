@@ -4,13 +4,13 @@
 
 import type pb from 'protobufjs';
 
+import { Stream } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { getAsyncProviderValue } from '@dxos/util';
 
 import { type Any, type EncodingOptions } from './common';
 import { type RequestOptions } from './request-options';
 import type { Schema } from './schema';
-import { Stream } from './stream';
 
 /**
  * Service endpoint.
@@ -148,13 +148,10 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
     const responseStream = Stream.unwrapPromise(
       handlerPromise.then((handler) => handler(requestDecoded, options) as Stream<unknown>),
     );
-    return Stream.map(
-      responseStream,
-      (data): Any => ({
-        value: responseCodec.encode(data, this._encodingOptions),
-        type_url: method.resolvedResponseType!.fullName,
-      }),
-    );
+    return Stream.map(responseStream, (data): Any => ({
+      value: responseCodec.encode(data, this._encodingOptions),
+      type_url: method.resolvedResponseType!.fullName,
+    }));
   }
 
   private async _getHandler(method: string): Promise<(request: unknown, options?: RequestOptions) => unknown> {

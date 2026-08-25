@@ -15,8 +15,9 @@ import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 import { Event } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import { TripOperation } from '#types';
+
 import { TRIP_SKILL_KEY } from '../skills';
-import * as TripOperation from '../types/TripOperation';
 import { buildTripFromEvents } from './events-to-segments';
 
 export default TripOperation.CreateTripFromEvents.pipe(
@@ -38,7 +39,7 @@ export default TripOperation.CreateTripFromEvents.pipe(
       // side-effects that depend on app capabilities absent in headless/test runs, so failures are
       // logged rather than fatal — the trip is already created and returned.
       yield* Operation.invoke(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(trip)] }).pipe(
-        Effect.catchAll((error) => {
+        Effect.catch((error) => {
           log.catch(error);
           return Effect.void;
         }),
@@ -57,7 +58,7 @@ export default TripOperation.CreateTripFromEvents.pipe(
           plan-route tool to compute driving routes. Do not invent booking confirmations.
         `,
       }).pipe(
-        Effect.catchAll((error) => {
+        Effect.catch((error) => {
           log.catch(error);
           return Effect.void;
         }),

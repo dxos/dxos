@@ -15,6 +15,7 @@ import {
   appendBenchmarkRow,
   appendRunSample,
   collectStartupReport,
+  throttleProfile,
   trackNetwork,
   waitForReady,
   writeReport,
@@ -52,11 +53,10 @@ const observeLongTasks = (page: Page): Promise<void> =>
 test.describe.serial('Startup timing harness', () => {
   // First-paint and module-graph evaluation each take real wall clock; webkit can be much slower.
   test.setTimeout(120_000);
-  // The warm-reload scenario hits an intermittent composer-app race that opens
-  // the ResetDialog ("System Error") instead of mounting the user account. The
-  // race is independent of plugin-manager changes and not yet root-caused;
-  // until then the benchmark scenarios get up to two retries so a flake
-  // doesn't lose us a row.
+  // Retries are allowed HERE, unlike the gated suites: this harness never runs in CI (its tasks are
+  // manual, outside the `:e2e-ci*` pool) and records benchmark rows rather than gating a merge, so a
+  // retry costs a rerun, not a masked defect — and the un-root-caused warm-reload ResetDialog race
+  // otherwise throws away a whole sample row.
   test.describe.configure({ retries: 2 });
 
   test('cold start (cleared storage)', async ({ browser, browserName }, testInfo) => {
@@ -135,6 +135,8 @@ test.describe.serial('Startup timing harness', () => {
     await context.close();
   });
 
+  // TODO(wittjosiah): Root-cause the warm-reload ResetDialog race ("System Error" opens instead of
+  //   the user account mounting); until then the suite's retries contain it.
   test('warm-cold start (persisted identity, fresh tab)', async ({ playwright, browserName }, testInfo) => {
     test.skip(browserName !== 'chromium', 'persistent context flow currently exercised only on chromium');
 
@@ -225,14 +227,12 @@ test.describe.serial('Startup timing harness', () => {
       test.skip(true, 'CDP session unavailable');
       return;
     }
+    // Overridable, since the default Fast 3G profile can outrun `waitForReady`'s 300 s budget.
+    const { cpuRate, ...conditions } = throttleProfile();
     await cdp.send('Network.enable');
-    await cdp.send('Network.emulateNetworkConditions', {
-      offline: false,
-      latency: 150,
-      downloadThroughput: (1.5 * 1024 * 1024) / 8,
-      uploadThroughput: (750 * 1024) / 8,
-    });
-    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 2 });
+    await cdp.send('Network.emulateNetworkConditions', { offline: false, ...conditions });
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: cpuRate });
+    log.info('throttle profile', { ...conditions, cpuRate });
 
     const network = trackNetwork(page);
     await observeLongTasks(page);

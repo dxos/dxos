@@ -79,6 +79,9 @@
       "path": "../../common/web-context-solid"
     },
     {
+      "path": "../../core/compute/agent-claude"
+    },
+    {
       "path": "../../core/echo/echo-solid"
     },
     {
@@ -133,6 +136,9 @@
       "path": "../../plugins/plugin-commerce"
     },
     {
+      "path": "../../plugins/plugin-computer"
+    },
+    {
       "path": "../../plugins/plugin-conductor"
     },
     {
@@ -172,6 +178,9 @@
       "path": "../../plugins/plugin-file"
     },
     {
+      "path": "../../plugins/plugin-file-system"
+    },
+    {
       "path": "../../plugins/plugin-freeq"
     },
     {
@@ -179,6 +188,9 @@
     },
     {
       "path": "../../plugins/plugin-github"
+    },
+    {
+      "path": "../../plugins/plugin-google"
     },
     {
       "path": "../../plugins/plugin-graph"
@@ -202,6 +214,9 @@
       "path": "../../plugins/plugin-iroh-beacon"
     },
     {
+      "path": "../../plugins/plugin-jmap"
+    },
+    {
       "path": "../../plugins/plugin-kanban"
     },
     {
@@ -209,6 +224,9 @@
     },
     {
       "path": "../../plugins/plugin-linear"
+    },
+    {
+      "path": "../../plugins/plugin-lingo"
     },
     {
       "path": "../../plugins/plugin-magazine"
@@ -230,9 +248,6 @@
     },
     {
       "path": "../../plugins/plugin-native"
-    },
-    {
-      "path": "../../plugins/plugin-native-filesystem"
     },
     {
       "path": "../../plugins/plugin-navtree"
@@ -394,9 +409,6 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/schema"
-    },
-    {
       "path": "../../sdk/shell"
     },
     {
@@ -419,6 +431,9 @@
     },
     {
       "path": "../../ui/solid-ui-geo"
+    },
+    {
+      "path": "../../ui/ui"
     },
     {
       "path": "../../ui/ui-theme"

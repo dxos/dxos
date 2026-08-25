@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useCapabilities, useCapability, useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/ui';
@@ -10,9 +10,9 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Order, Query, Ref, Scope } from '@dxos/echo';
-import { useQuery, useResolveRef } from '@dxos/echo-react';
+import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Panel } from '@dxos/react-ui';
 import { Attention, useManager } from '@dxos/react-ui-attention';
 import { DraftMessage, Message as MessageType } from '@dxos/types';
@@ -25,12 +25,9 @@ import {
   keyOf,
   messageViewModeAspect,
 } from '#components';
+import { InboxCapabilities, InboxOperation, Mailbox, Settings } from '#types';
 
-import { getMailboxMessagePath } from '../../paths';
-import * as InboxCapabilities from '../../types/InboxCapabilities';
-import * as InboxOperation from '../../types/InboxOperation';
-import * as Mailbox from '../../types/Mailbox';
-import type * as Settings from '../../types/Settings';
+import { getMailboxAttachmentPath, getMailboxMessagePath } from '../../paths';
 import { dedupeSupersededDrafts, orderThreadItems } from '../../util';
 
 /** Used when the inbox Settings capability isn't installed, so the image toggle is still readable. */
@@ -48,6 +45,8 @@ export type MessageArticleProps = AppSurface.ArticleProps<
   {
     mailbox?: Mailbox.Mailbox;
     testId?: string;
+    /** Opens one of the message's attachments in its own plank; the deck supplies this in the app. */
+    onOpenAttachment?: (message: Mailbox.MessageLike, index: number) => void;
   }
 >;
 
@@ -65,6 +64,7 @@ export const MessageArticle = ({
   companionTo,
   mailbox: mailboxProp,
   testId,
+  onOpenAttachment,
 }: MessageArticleProps) => {
   const toolbarAttendableId =
     attendableId && Attention.isLinkedSegment(attendableId) ? Attention.getParentId(attendableId) : attendableId;
@@ -94,6 +94,27 @@ export const MessageArticle = ({
 
   // Contact extraction targets the conversation's space; any message resolves the same db.
   const db = Obj.getDatabase(messages[0]);
+
+  // Derived summaries live in the mailbox's annotation feed (immutable Messages naming their subject
+  // via `parentMessage`), merged in here rather than stored on the messages, which are immutable.
+  // Subscribed to as a property, because the feed is provisioned lazily on the first annotation and a
+  // bare read establishes no subscription — the component would never re-render to see it. The ref is
+  // then taken from the live object, since the subscription yields a snapshot that cannot be resolved.
+  // TODO(wittjosiah): This additional hook call shouldn't be necessary, useResolveRef should handle this case.
+  useObject(mailbox, 'annotations');
+  const annotationsFeed = useResolveRef(mailbox?.annotations);
+  const annotationsUri = annotationsFeed ? Obj.getURI(annotationsFeed, { prefer: 'absolute' }) : undefined;
+  const annotations = useQuery(
+    mailboxDb,
+    annotationsUri
+      ? Query.select(Filter.type(MessageType.Message)).from([Scope.feed(annotationsUri)])
+      : Query.select(Filter.nothing()),
+  ) as MessageType.Message[];
+  const summaries = useMemo(() => Mailbox.summaryIndex(annotations), [annotations]);
+  const conversationSummary = useMemo(
+    () => Mailbox.conversationSummary(messages, annotations),
+    [messages, annotations],
+  );
 
   // Reorder for display so a reply draft sits directly after the message it answers, rather than at the
   // bottom (the connector delivers everything in chronological order).
@@ -142,18 +163,83 @@ export const MessageArticle = ({
   const runtime = useProcessManagerRuntime();
   const graph = useCapabilities(AppCapabilities.AppGraph)[0]?.graph;
   const extractors = useCapabilities(InboxCapabilities.ObjectExtractor);
+  // No contributed generator means nothing to invoke, so the AI-reply affordance is omitted rather
+  // than shown and failing.
+  const replyGenerator = useCapabilities(InboxCapabilities.ReplyGenerator)[0];
+  const sendOperations = useCapabilities(InboxCapabilities.MailSendOperation);
   const getExtractActions = useCallback(
     (message: Mailbox.MessageLike) => buildExtractActions(message, extractors, invoker),
     [extractors, invoker],
   );
 
+  // Sender-scoped actions contributed by other plugins (plugin-crm's research). Resolved here and
+  // bound per message so the component never touches a capability or an invoker.
+  const senderActionDefs = useCapabilities(InboxCapabilities.SenderAction);
+  const getSenderActions = useCallback(
+    (message: Mailbox.MessageLike) => {
+      const actor = message.sender;
+      if (!actor || !db) {
+        return [];
+      }
+      return senderActionDefs.flatMap((action) => {
+        const invocations = action.createInvocations(actor);
+        // An empty list means the action does not apply to this sender, so it earns no menu item.
+        if (invocations.length === 0) {
+          return [];
+        }
+        return [
+          {
+            id: action.id,
+            label: action.label,
+            icon: action.icon,
+            onSelect: () => {
+              // Sequential: a composite's later steps (the image pass) depend on what the earlier ones
+              // wrote, so they must not race. A plain loop rather than a `reduce` over promises — the
+              // ordering is the point, and the reduce spelled it obscurely.
+              void (async () => {
+                for (const { operation, input } of invocations) {
+                  await invoker.invokePromise(operation, input, { spaceId: db.spaceId });
+                }
+              })().catch((err) => log.warn('sender action failed', { id: action.id, err }));
+            },
+          },
+        ];
+      });
+    },
+    [senderActionDefs, invoker, db],
+  );
+
   const handleContactCreate = useCallback<NonNullable<MessageHeaderProps['onContactCreate']>>(
     (actor) => {
       if (db && actor) {
-        void invoker.invokePromise(InboxOperation.ExtractContact, { db, actor });
+        // The mailbox is what carries the tag index, so passing it is what lets the operation label
+        // this sender's existing messages rather than only creating the Person.
+        void invoker.invokePromise(InboxOperation.ExtractContact, {
+          db,
+          actor,
+          ...(mailbox ? { mailbox: Ref.make(mailbox) } : {}),
+        });
       }
     },
-    [db, invoker],
+    [db, invoker, mailbox],
+  );
+
+  // Derives a tracking Project from the message and opens it. Failures surface rather than being
+  // swallowed: the operation runs an AI step, so a timeout is a plausible outcome the user must see.
+  const handleCreateProject = useCallback(
+    (message: MessageType.Message) => {
+      if (!db || !mailbox) {
+        return;
+      }
+      void invoker
+        .invokePromise(
+          InboxOperation.CreateProjectFromMessage,
+          { mailbox: Ref.make(mailbox), message },
+          { spaceId: db.spaceId },
+        )
+        .catch((err) => log.catch(err));
+    },
+    [db, invoker, mailbox],
   );
 
   // Per-message delete action, backed by the space operation for removing objects.
@@ -169,12 +255,12 @@ export const MessageArticle = ({
   // leaves the user without one.
   const handleAiReply = useCallback(
     async (message: MessageType.Message) => {
-      if (!db || !mailbox) {
+      if (!db || !mailbox || !replyGenerator) {
         return;
       }
       try {
         const result = await invoker.invokePromise(
-          InboxOperation.GenerateReply,
+          replyGenerator.getOperation(),
           { mailbox: Ref.make(mailbox), message },
           { spaceId: db.spaceId },
         );
@@ -190,7 +276,7 @@ export const MessageArticle = ({
         void invoker.invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode: 'reply', message, mailbox });
       }
     },
-    [db, invoker, mailbox],
+    [db, invoker, mailbox, replyGenerator],
   );
 
   const handleOpen = useCallback(
@@ -204,28 +290,65 @@ export const MessageArticle = ({
     [invoker, mailbox, db],
   );
 
+  // This view exists to read one message; once archived it is no longer in the flow the user is
+  // working through, so close the plank rather than leaving a stale reading pane behind.
+  // Defaults to opening the plank itself: requiring a prop meant the chips were clickable but inert
+  // everywhere except the story that passed one.
+  const handleOpenAttachment = useCallback(
+    (message: Mailbox.MessageLike, index: number) => {
+      if (onOpenAttachment) {
+        onOpenAttachment(message, index);
+        return;
+      }
+      if (mailbox && db) {
+        void invoker.invokePromise(LayoutOperation.Open, {
+          subject: [getMailboxAttachmentPath(db.spaceId, mailbox.id, message.id, index)],
+        });
+      }
+    },
+    [onOpenAttachment, invoker, mailbox, db],
+  );
+
+  const handleArchived = useCallback(
+    (message: MessageType.Message) => {
+      if (mailbox && db) {
+        void invoker.invokePromise(LayoutOperation.Close, {
+          subject: [getMailboxMessagePath(db.spaceId, mailbox.id, message.id)],
+        });
+      }
+    },
+    [invoker, mailbox, db],
+  );
+
   return (
     <ConversationStack.Root
       attendableId={toolbarAttendableId}
       items={orderedMessages}
+      summaries={summaries}
+      conversationSummary={conversationSummary}
       mailbox={mailbox}
       companion={!!companionTo}
       options={optionsAtom}
       expanded={expanded}
       graph={graph}
       runtime={runtime}
+      sendOperations={sendOperations}
       getExtractActions={getExtractActions}
+      getSenderActions={getSenderActions}
       onExpandedChange={onExpandedChange}
       onCollapseAll={onCollapseAll}
       onExpandAll={onExpandAll}
       onContactCreate={handleContactCreate}
-      onAiReply={mailbox ? handleAiReply : undefined}
+      onAiReply={mailbox && replyGenerator ? handleAiReply : undefined}
       onDelete={mailbox ? handleDelete : undefined}
       onOpen={mailbox ? handleOpen : undefined}
+      onArchived={mailbox ? handleArchived : undefined}
+      onCreateProject={mailbox ? handleCreateProject : undefined}
+      onOpenAttachment={mailbox ? handleOpenAttachment : onOpenAttachment}
     >
       <Panel.Root role={role} data-testid={testId}>
-        <Panel.Toolbar asChild>
-          <ConversationStack.Toolbar />
+        <Panel.Toolbar>
+          <ConversationStack.Toolbar classNames='dx-document' />
         </Panel.Toolbar>
         <Panel.Content asChild>
           <ConversationStack.Content />

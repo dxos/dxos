@@ -19,6 +19,7 @@ const BLOCK_TYPE_COLORS: Record<(typeof BLOCK_TYPES)[number], string> = {
   service: 'var(--color-yellow-400)',
   db: 'var(--color-red-400)',
   module: 'var(--color-indigo-400)',
+  flow: 'var(--color-teal-400)',
 };
 
 const theme = EditorView.baseTheme({
@@ -47,7 +48,7 @@ const decorateLine = (builder: RangeSetBuilder<Decoration>, lineText: string, li
 
   // Field name line: "<fieldName> [id][?]: value"
   // e.g. "req F-1.1: prose", "kind: PieceKind", "piece?: Piece"
-  const lineMatch = trimmed.match(/^([\w][\w-]*)(?:\s+([\w][\w.\-]*))?(\??)(\s*:)(.*)/s);
+  const lineMatch = trimmed.match(/^([\w][\w-]*)(?:\s+([\w][\w.-]*))?(\??)(\s*:)(.*)/s);
   if (!lineMatch) {
     // No field pattern — still color any trailing " #" comment.
     const commentIdx = lineText.indexOf(' #', indent);
@@ -195,7 +196,7 @@ const buildDecorations = (view: EditorView): DecorationSet => {
         if (i === 0) {
           // First body line: "<blockType> [id][: label]"
           // e.g. "type Color", "feat F-1: Start Game", "test T-1: description"
-          const headerMatch = line.match(/^(\s*)(\w+)(?:\s+([\w][\w.\-]*))?(\s*:\s*)?(.*)?$/);
+          const headerMatch = line.match(/^(\s*)(\w+)(?:\s+([\w][\w.-]*))?(\s*:\s*)?(.*)?$/);
           if (headerMatch) {
             const [, leadingSpace, blockType, id, colon, label] = headerMatch;
             const color = BLOCK_TYPE_COLORS[blockType as (typeof BLOCK_TYPES)[number]];

@@ -2,14 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as RpcClient from '@effect/rpc/RpcClient';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
-import * as Runtime from 'effect/Runtime';
 import * as Scope from 'effect/Scope';
+import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 
-import { type Stream as PbStream } from '@dxos/codec-protobuf/stream';
+import { type Stream as PbStream } from '@dxos/async';
 import { EffectEx } from '@dxos/effect';
 import { type BridgeService as BridgeServiceRpc } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { BridgeService } from '@dxos/protocols/rpc';
@@ -72,7 +72,7 @@ export const serveBridgeService = (port: MessagePort, service: BridgeServiceRpc)
 export const makeBridgeServiceClient = async (
   port: MessagePort,
 ): Promise<{ bridgeService: BridgeServiceRpc; close: () => Promise<void> }> =>
-  bridgeServiceClientFromEffect((scope) => Rpc.makeClient(port, BridgeService.Rpcs).pipe(Scope.extend(scope)));
+  bridgeServiceClientFromEffect((scope) => Rpc.makeClient(port, BridgeService.Rpcs).pipe(Scope.provide(scope)));
 
 /**
  * Builds a proto-shaped {@link BridgeServiceRpc} over a pre-built {@link RpcClient.Protocol} (the
@@ -80,11 +80,11 @@ export const makeBridgeServiceClient = async (
  * via effect context) rather than a raw {@link MessagePort}.
  */
 export const makeBridgeServiceClientOverProtocol = async (
-  protocol: RpcClient.Protocol['Type'],
+  protocol: RpcClient.Protocol['Service'],
 ): Promise<{ bridgeService: BridgeServiceRpc; close: () => Promise<void> }> =>
   bridgeServiceClientFromEffect((scope) =>
     Rpc.makeClientOverProtocol(Layer.succeed(RpcClient.Protocol, protocol), BridgeService.Rpcs).pipe(
-      Scope.extend(scope),
+      Scope.provide(scope),
     ),
   );
 
@@ -95,14 +95,13 @@ const bridgeServiceClientFromEffect = async (
   const scope = Effect.runSync(Scope.make());
   const client = (await EffectEx.runPromise(makeClient(scope))) as BridgeService.Client;
 
-  const bridge = client.BridgeService;
   const bridgeService: BridgeServiceRpc = {
-    open: (request) => streamToPbStream(Runtime.defaultRuntime, bridge.open(request)),
-    sendSignal: (request) => EffectEx.runPromise(bridge.sendSignal(request)),
-    sendData: (request) => EffectEx.runPromise(bridge.sendData(request)),
-    close: (request) => EffectEx.runPromise(bridge.close(request)),
-    getDetails: (request) => EffectEx.runPromise(bridge.getDetails(request)),
-    getStats: (request) => EffectEx.runPromise(bridge.getStats(request)),
+    open: (request) => streamToPbStream(Context.empty(), client['BridgeService.open'](request)),
+    sendSignal: (request) => EffectEx.runPromise(client['BridgeService.sendSignal'](request)),
+    sendData: (request) => EffectEx.runPromise(client['BridgeService.sendData'](request)),
+    close: (request) => EffectEx.runPromise(client['BridgeService.close'](request)),
+    getDetails: (request) => EffectEx.runPromise(client['BridgeService.getDetails'](request)),
+    getStats: (request) => EffectEx.runPromise(client['BridgeService.getStats'](request)),
   };
 
   return {

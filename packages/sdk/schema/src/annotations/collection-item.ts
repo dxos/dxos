@@ -2,7 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createAnnotationHelper } from '@dxos/echo/internal';
+import * as Schema from 'effect/Schema';
+
+import { Annotation } from '@dxos/echo';
 
 /**
  * Marks a schema type as eligible to live inside a collection (e.g. Documents, Sketches, Files).
@@ -13,5 +15,9 @@ import { createAnnotationHelper } from '@dxos/echo/internal';
  *   instead-of: Leaving the type unannotated, which files new objects under `types/<slug>` in the database section where they are harder to discover and cannot be organized into collections
  *   uses: {@link CollectionItemAnnotation}
  */
-export const CollectionItemAnnotationId = Symbol.for('@dxos/schema/annotation/CollectionItem');
-export const CollectionItemAnnotation = createAnnotationHelper<boolean>(CollectionItemAnnotationId);
+export const CollectionItemAnnotationId = '@dxos/schema/annotation/CollectionItem';
+export const CollectionItemAnnotation = Annotation.make({
+  id: CollectionItemAnnotationId,
+  schema: Schema.Boolean,
+  legacyId: true,
+});

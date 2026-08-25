@@ -14,7 +14,7 @@ import { Blob, Database, Filter, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { EID } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
-import { Status, ThemeProvider } from '@dxos/react-ui';
+import { Progress, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
 import { File } from '@dxos/types';
 import { focusField } from '@dxos/ui-editor';
@@ -153,7 +153,7 @@ const buildDecorations = ({
               return URL.createObjectURL(new globalThis.Blob([bytes as BlobPart], { type: blob.type }));
             }).pipe(
               Effect.provide(Database.layer(space.db)),
-              Effect.catchAll(() => Effect.succeed(undefined)),
+              Effect.catch(() => Effect.succeed(undefined)),
             ),
           );
           if (!url) {
@@ -223,7 +223,7 @@ class DxnImageWidget extends WidgetType {
       const root = createRoot(loader);
       root.render(
         <ThemeProvider tx={defaultTx}>
-          <Status indeterminate />
+          <Progress indeterminate />
         </ThemeProvider>,
       );
       widget.appendChild(loader);

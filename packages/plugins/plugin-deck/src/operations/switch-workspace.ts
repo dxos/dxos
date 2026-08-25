@@ -12,8 +12,8 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { invariant } from '@dxos/invariant';
 
-import * as DeckCapabilities from '../types/DeckCapabilities';
-import * as DeckSchema from '../types/DeckSchema';
+import { DeckCapabilities, DeckSchema } from '#types';
+
 import { openableChildren } from '../util';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = LayoutOperation.SwitchWorkspace.pipe(

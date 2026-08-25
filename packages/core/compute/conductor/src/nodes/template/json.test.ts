@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as SchemaAST from 'effect/SchemaAST';
 import { describe, expect, it } from 'vitest';
+
+import { SchemaAST } from '@dxos/effect';
 
 import { applyObjectTemplate, getObjectTemplateInputSchema } from './json';
 

@@ -6,29 +6,30 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Format, Obj, Type } from '@dxos/echo';
+import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { FormatAnnotation } from '@dxos/echo/Format';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 
 import * as Actor from './Actor';
+import * as Milestone from './Milestone';
 
-export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '0.2.0'))(
+export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '0.3.0'))(
   Schema.Struct({
     title: Schema.String.pipe(
-      Schema.annotations({ title: 'Title' }),
+      Schema.annotate({ title: 'Title' }),
       GeneratorAnnotation.set({
         generator: 'lorem.words',
         args: [{ min: 3, max: 10 }],
       }),
     ),
-    priority: Schema.Literal('none', 'low', 'medium', 'high', 'urgent').pipe(
+    priority: Schema.Literals(['none', 'low', 'medium', 'high', 'urgent']).pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
       GeneratorAnnotation.set({
         generator: 'helpers.arrayElement',
         args: [['none', 'low', 'medium', 'high', 'urgent']],
       }),
-      Schema.annotations({
+      Schema.annotate({
         title: 'Priority',
         [PropertyMetaAnnotationId]: {
           singleSelect: {
@@ -45,13 +46,13 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
       Schema.optional,
     ),
     // `failed`/`cancelled` exist so delegated agent tasks and human tasks share one status vocabulary.
-    status: Schema.Literal('todo', 'in-progress', 'done', 'failed', 'cancelled').pipe(
+    status: Schema.Literals(['todo', 'in-progress', 'done', 'failed', 'cancelled']).pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
       GeneratorAnnotation.set({
         generator: 'helpers.arrayElement',
         args: [['todo', 'in-progress', 'done']],
       }),
-      Schema.annotations({
+      Schema.annotate({
         title: 'Status',
         [PropertyMetaAnnotationId]: {
           singleSelect: {
@@ -68,18 +69,35 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
       Schema.optional,
     ),
     /** Human or agent assignment: a HALO identity (DID), a Person ref, a bare email, or a display name. */
-    assignee: Schema.optional(Actor.Actor.annotations({ title: 'Assignee' })),
-    estimate: Schema.optional(Schema.Number.annotations({ title: 'Estimate' })),
+    assignee: Schema.optional(Actor.Actor.annotate({ title: 'Assignee' })),
+    estimate: Schema.optional(Schema.Number.annotate({ title: 'Estimate' })),
     description: Schema.optional(
-      Schema.String.annotations({ title: 'Description' }).pipe(
+      Schema.String.annotate({ title: 'Description' }).pipe(
         GeneratorAnnotation.set({
           generator: 'lorem.paragraphs',
           args: [{ min: 1, max: 3 }],
         }),
       ),
     ),
-    // Containment is the ECHO parent edge, not a field: a TaskSet parents its root tasks and a
-    // task parents its sub-tasks (one tree; a sub-task's set membership is transitive).
+    /**
+     * The milestone this task belongs to; unset means backlog. A sub-task inherits its nearest
+     * ancestor's milestone at read time unless it sets its own (matching Linear).
+     */
+    milestone: Schema.optional(Ref.Ref(Milestone.Milestone).annotate({ title: 'Milestone' })),
+
+    /**
+     * Parent in the sub-task hierarchy (unbounded depth); unset means a root task. Named
+     * `parentTask` because the ECHO parent edge is a different, lifecycle-only concept — it is
+     * set alongside for deletion cascade and is not the queryable hierarchy.
+     */
+    // `Schema.suspend` because the type refers to itself; clear the field with `delete` rather
+    // than an `undefined` assignment, which the suspended schema rejects on validation.
+    parentTask: Schema.optional(
+      Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task).annotate({ title: 'Parent Task' })),
+    ),
+
+    // Set membership is the `TaskSet.tasks` array (flat, ordered, sub-tasks included), not a
+    // backref here: enumeration stays one array read and a move stays one field write.
   }).pipe(
     LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--check-circle--regular', hue: 'neutral' }),

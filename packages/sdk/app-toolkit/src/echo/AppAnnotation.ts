@@ -17,10 +17,13 @@ export const RootCollectionAnnotation = Annotation.make({
   schema: Ref.Ref(Collection.Collection),
 });
 
-/** Skill keys associated with a schema type. Used by AI companion to auto-load skills. */
-export const SkillsAnnotation = Annotation.make<string[]>({
-  id: 'org.dxos.annotation.skills',
-  schema: Schema.mutable(Schema.Array(Schema.String)),
+/**
+ * Id of the space the user has designated as their default space. Stored on the settings space's
+ * `properties` so the choice replicates across devices and can be repointed at any space.
+ */
+export const DefaultSpaceAnnotation = Annotation.make({
+  id: 'org.dxos.space.defaultSpace',
+  schema: Schema.String,
 });
 
 /** Graph node properties derived from schema (e.g. autofocus behavior). */
@@ -42,7 +45,7 @@ export const DeckAnnotation = Annotation.make<DeckSpec.DeckSpec>({
 /** Per-type object ordering stored on space.properties, keyed by typename. */
 export const SectionOrderAnnotation = Annotation.make({
   id: 'org.dxos.space.sectionOrder',
-  schema: Schema.Record({ key: Schema.String, value: Schema.Array(Ref.Ref(Obj.Unknown)) }),
+  schema: Schema.Record(Schema.String, Schema.Array(Ref.Ref(Obj.Unknown))),
 });
 
 /**
@@ -52,5 +55,5 @@ export const SectionOrderAnnotation = Annotation.make({
  */
 export const HomeVisibilityAnnotation = Annotation.make({
   id: 'org.dxos.space.homeVisibility',
-  schema: Schema.Record({ key: Schema.String, value: Schema.Boolean }),
+  schema: Schema.Record(Schema.String, Schema.Boolean),
 });

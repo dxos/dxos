@@ -30,12 +30,6 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilityManager = yield* Capability.Service;
 
-    // Optional: without a progress registry there is nowhere to project into, so subscribe to
-    // nothing rather than run a sink that resolves undefined on every message.
-    if (capabilityManager.getAll(AppCapabilities.ProgressRegistry).length === 0) {
-      return [];
-    }
-
     const monitor = yield* Capabilities.ProcessMonitor;
     const processManagerRuntime = yield* Capabilities.ProcessManagerRuntime;
     const resolver = yield* Capabilities.ServiceResolver;
@@ -47,12 +41,14 @@ export default Capability.makeModule(
         resolver.resolve(RemoteProcessManager.Service, {}).pipe(
           Effect.flatMap((manager) => manager.cancel?.({ space, trigger, pid }) ?? Effect.void),
           Effect.scoped,
-          Effect.catchAllCause((cause) =>
+          Effect.catchCause((cause) =>
             Effect.sync(() => log.warn('edge progress cancel failed', { space, trigger, pid, cause })),
           ),
         ),
       );
 
+    // Resolved per message, never up front: an activation-time existence check races the registry's
+    // own activation, and losing it would leave the subscription permanently unstarted.
     const progressSink = createProgressTraceSink(() => capabilityManager.getAll(AppCapabilities.ProgressRegistry)[0], {
       // An edge run is a chain of bounded invocations, each with a fresh pid, so a pid tombstone
       // would only mask one chain link and the next would resurrect the meter — suppress the key
@@ -74,7 +70,7 @@ export default Capability.makeModule(
       },
     });
 
-    // TODO(mykola): Possible bug source. Use `Effect.forkDaemon`.
+    // TODO(mykola): Possible bug source. Use `Effect.forkDetach`.
     const fiber = processManagerRuntime.runFork(
       monitor.subscribeToTraceMessages({ type: Trace.StatusUpdate.key }).pipe(
         Stream.runForEach((message) =>

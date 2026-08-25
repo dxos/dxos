@@ -15,8 +15,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { Chessboard, type ChessboardController, type ChessboardInfoProps } from '#components';
 import { meta } from '#meta';
-
-import * as Chess from '../../types/Chess';
+import { Chess } from '#types';
 
 export type ChessArticleProps = GameCapabilities.GameVariantSurfaceProps;
 

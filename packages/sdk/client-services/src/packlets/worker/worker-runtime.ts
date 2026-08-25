@@ -2,18 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as Reactivity from '@effect/experimental/Reactivity';
-import type * as RpcClient from '@effect/rpc/RpcClient';
-import type * as RpcServer from '@effect/rpc/RpcServer';
-import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Context_ from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Scope from 'effect/Scope';
+import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
+import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import type * as RpcServer from 'effect/unstable/rpc/RpcServer';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
-import { Trigger } from '@dxos/async';
+import { Trigger, scheduleTask } from '@dxos/async';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
@@ -35,11 +35,21 @@ import { WorkerSession } from './worker-session';
 // serves the client services (+ WorkerService); systemProtocol carries the reverse-direction
 // BridgeService (worker→tab).
 export type CreateSessionProps = {
-  appProtocol: RpcServer.Protocol['Type'];
-  systemProtocol: RpcClient.Protocol['Type'];
+  appProtocol: RpcServer.Protocol['Service'];
+  systemProtocol: RpcClient.Protocol['Service'];
   shellPort?: MessagePort;
   onClose?: () => Promise<void>;
 };
+
+/**
+ * Grace period between "worker booted" and the first edge dial. wa-sqlite runs in-process on this
+ * thread, so the dial, its auth-header request, and the replication behind it contend with the boot
+ * RPCs the tab is waiting on — on a document-heavy profile the session handshake loses that race and
+ * the client reports a connect timeout. Yielding lets the queued handshake drain first; replication
+ * then proceeds behind a live session. Owned here rather than in the host: the host exposes the
+ * capability, the embedder decides the timing.
+ */
+const EDGE_NETWORKING_START_DELAY = 300;
 
 export type WorkerRuntimeOptions = {
   configProvider: () => MaybePromise<Config>;
@@ -82,10 +92,9 @@ export interface WorkerRuntimeService {
 /**
  * Context tag for the dedicated-worker runtime service. Provided by {@link layerWorkerRuntime}.
  */
-export class WorkerRuntime extends Context_.Tag('@dxos/client-services/WorkerRuntime')<
-  WorkerRuntime,
-  WorkerRuntimeService
->() {}
+export class WorkerRuntime extends Context_.Service<WorkerRuntime, WorkerRuntimeService>()(
+  '@dxos/client-services/WorkerRuntime',
+) {}
 
 /**
  * Constructs the {@link WorkerRuntimeService}. The SQLite {@link ManagedRuntime} and
@@ -105,9 +114,11 @@ export const makeWorkerRuntime = ({
   const signalMetadataTags: any = { runtime: 'worker-runtime' };
 
   let stopped = false;
+  /** Scopes the deferred networking start so a worker torn down mid-grace-period does not dial. */
+  const networkingCtx = new Context();
   let sessionForNetworking: WorkerSession | undefined;
   let config: Config;
-  let serviceScope: Scope.CloseableScope | undefined;
+  let serviceScope: Scope.Closeable | undefined;
 
   if (sqliteLayer) {
     log.warn('Using testing SQLite layer');
@@ -125,6 +136,7 @@ export const makeWorkerRuntime = ({
         return;
       }
       stopped = true;
+      void networkingCtx.dispose();
       // Release the lock to notify remote clients that the worker is terminating.
       releaseLock();
       // Always dispose the SQLite runtime and run onStop, even if host / scope teardown rejects —
@@ -142,12 +154,14 @@ export const makeWorkerRuntime = ({
     });
 
   const clientServices = new ClientServicesHost({
+    // The dial is driven from `start()` below once boot has drained, not on stack open.
+    autoConnect: false,
     callbacks: {
       onReset: async () => {
         await EffectEx.runPromise(stop());
       },
     },
-    runtime: runtime.runtimeEffect,
+    runtime: runtime.contextEffect,
     runtimeProps: {
       // Auto-activate spaces that were previously active after leader changeover.
       autoActivateSpaces: true,
@@ -218,6 +232,23 @@ export const makeWorkerRuntime = ({
             signalMetadataTags[key] = value;
           },
         });
+
+        // Boot is done: outbound traffic can no longer starve the session handshake the tab is
+        // waiting on. Anchored here rather than inside the host so the gate opens only after the
+        // whole worker start sequence has drained, not just the stack open. The extra grace period
+        // yields the thread so any RPC already queued behind this turn is served before the dial and
+        // its auth-header request start competing for it.
+        log.info('worker-runtime: boot complete, scheduling networking start', {
+          delay: EDGE_NETWORKING_START_DELAY,
+        });
+        scheduleTask(
+          networkingCtx,
+          () => {
+            log('worker-runtime: starting networking');
+            clientServices.startNetworking();
+          },
+          EDGE_NETWORKING_START_DELAY,
+        );
       } catch (err: any) {
         ready.wake(err);
         log.error('starting', err);

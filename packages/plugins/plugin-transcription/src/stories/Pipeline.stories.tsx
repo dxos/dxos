@@ -26,6 +26,11 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useAtomCapability, useCapabilities } from '@dxos/app-framework/ui';
+import { qualifyId } from '@dxos/app-graph';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
@@ -48,7 +53,6 @@ import {
 } from '@dxos/pipeline-transcription';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Graph, GraphBuilder, Node, NodeMatcher, qualifyId } from '@dxos/plugin-graph';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
@@ -64,11 +68,11 @@ import { seedTestData } from '@dxos/types/testing';
 import { appendPendingText, cancelPendingText, setPendingAnchor, setPendingInterim } from '@dxos/ui-editor';
 import { isNonNullable, trim } from '@dxos/util';
 
+import { enableQueryIndexes } from '#testing';
 import { translations } from '#translations';
+import { TranscriptionCapabilities } from '#types';
 
-import { enableQueryIndexes } from '../testing';
-import { TranscriptionPlugin } from '../TranscriptionPlugin';
-import * as TranscriptionCapabilities from '../types/TranscriptionCapabilities';
+import { TranscriptionPlugin } from '../plugin';
 
 const SAMPLE_CONTENT = trim`
   # Test
@@ -85,7 +89,7 @@ const TRANSCRIPT = trim`
   I should follow up with Michael Chen next week
 `.split('\n');
 
-// Story-only plugin exposing Markdown documents in the personal space as direct children of the graph
+// Story-only plugin exposing Markdown documents in the default space as direct children of the graph
 // root, so TranscriptionPlugin's toolbar extension can attach the record action to the doc's node.
 const StoryGraphPlugin = () =>
   Plugin.define(
@@ -109,7 +113,7 @@ const StoryGraphPlugin = () =>
                 // removed while this reactive connector recomputes once more (use `getAll`, not the
                 // throwing `get`).
                 const [client] = capabilities.getAll(ClientCapabilities.Client);
-                const space = client && AppSpace.getPersonalSpace(client);
+                const space = client && AppSpace.getDefaultSpace(client);
                 if (!space) {
                   return [];
                 }
@@ -165,7 +169,7 @@ const DefaultStory = ({ stages, seed }: StoryArgs) => {
   // Story renders the surface directly (no deck), so expand the doc node's actions.
   useEffect(() => {
     if (attendableId) {
-      void Graph.expand(graph, attendableId, 'action');
+      void Graph.expandSync(graph, attendableId, 'action');
     }
   }, [graph, attendableId]);
 
@@ -314,20 +318,20 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { defaultSpace } = yield* initializeIdentity(client);
               // Vector indexes so extraction can link recognized Person/Organization names.
               yield* enableQueryIndexes(client.services.services);
-              yield* Effect.promise(() => seedTestData(personalSpace));
-              personalSpace.db.add(Markdown.make({ name: 'Transcript', content: SAMPLE_CONTENT }));
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              yield* Effect.promise(() => seedTestData(defaultSpace));
+              defaultSpace.db.add(Markdown.make({ name: 'Transcript', content: SAMPLE_CONTENT }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
         SpacePlugin({}),
-        MarkdownPlugin(),
+        MarkdownPlugin.make(),
         StoryGraphPlugin(),
         TranscriptionPlugin(),
       ],

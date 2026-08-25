@@ -29,10 +29,10 @@
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/log"
+      "path": "../../common/util"
     },
     {
-      "path": "../../common/util"
+      "path": "../../core/compute/agent-claude"
     },
     {
       "path": "../../core/compute/ai"
@@ -120,9 +120,6 @@
     },
     {
       "path": "../../plugins/plugin-table"
-    },
-    {
-      "path": "../../plugins/plugin-testing"
     },
     {
       "path": "../../plugins/plugin-thread"

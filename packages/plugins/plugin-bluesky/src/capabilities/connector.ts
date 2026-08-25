@@ -11,10 +11,11 @@ import { ConnectionTestError } from '@dxos/plugin-connector';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
+import { BlueskyOperation } from '#operations';
+import { BlueskyTargetOptions } from '#types';
+
 import { BLUESKY_PROVIDER_ID, BLUESKY_SOURCE } from '../constants';
-import { BlueskyOperation } from '../operations';
 import { BlueskyApi } from '../services';
-import { BlueskyTargetOptions } from '../types';
 
 /**
  * OAuth scopes for Bluesky.
@@ -45,7 +46,7 @@ const BSKY_OAUTH_SCOPES = ['transition:generic'] as const;
 
 /** Schema for the atproto pre-flight form (handle / DID). */
 const AtprotoPreflightForm = Schema.Struct({
-  handle: Schema.String.annotations({
+  handle: Schema.String.annotate({
     title: 'Handle',
     description: 'Your atproto handle or DID (e.g. user.bsky.social).',
     examples: ['user.bsky.social'],
@@ -80,8 +81,8 @@ const testConnection: ConnectorSpec.TestConnection = ({ connection, client }) =>
 
 /**
  * Contributes the Bluesky connector entry. plugin-connector looks up by
- * `id`; sync runs through `BlueskyOperation.SyncBlueskyTargets` (one binding
- * per call), target discovery runs through `BlueskyOperation.GetBlueskyTargets`,
+ * `id`; sync runs through `BlueskyOperation.SyncBlueskyTargets` (account-level,
+ * all bindings), target discovery runs through `BlueskyOperation.GetBlueskyTargets`,
  * and `materializeTarget` creates the empty local Subscription.Feed bound to
  * each selected target.
  */

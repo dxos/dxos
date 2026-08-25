@@ -2,34 +2,39 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { createEdgeIdentity } from '@dxos/client/edge';
 import * as Credential from '@dxos/compute/Credential';
 import type * as Operation from '@dxos/compute/Operation';
+import * as Routine from '@dxos/compute/Routine';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
-import { Database, DXN, type Key, Obj, Ref } from '@dxos/echo';
+import { Database, EID, type Key, Obj, Ref, Type } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { AccessToken } from '@dxos/link';
+import { AccessToken, Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
+import { meta } from '#meta';
+import { ConnectorCoordination, ConnectorSpec } from '#types';
+
+import * as Binding from '../../Binding';
 import { PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG, connectionDeckSubject } from '../../constants';
 import { ConnectionNotReauthenticatableError, ConnectorNotFoundError, SpaceUnavailableError } from '../../errors';
-import * as Connection from '../../types/Connection';
-import * as ConnectorCoordination from '../../types/ConnectorCoordination';
-import * as ConnectorSpec from '../../types/ConnectorSpec';
+import * as SyncTemplate from '../../SyncTemplate';
 import { autoSyncConnection } from './auto-sync';
 import { createSingleCursor } from './create-single-cursor';
-import { decodeOAuthMessageData, initiateOAuthFlow, openOAuthPopupWindow, openOAuthRedirectWindow } from './oauth';
+import { beginOAuthFlow, decodeOAuthMessageData, isOAuthShapedMessage } from './oauth';
 import { deletePendingSnapshot, readPendingSnapshot, writePendingSnapshot } from './pending-snapshot';
 import { reconcileCursors } from './reconcile-cursors';
 
@@ -108,14 +113,42 @@ const runOnTokenCreated = (
         Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)),
       ),
     ),
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       Effect.sync(() => log.warn('onTokenCreated failed', { source: input.accessToken.source, error })),
     ),
-    Effect.catchAllDefect((defect) =>
+    Effect.catchDefect((defect) =>
       Effect.sync(() => log.warn('onTokenCreated defect', { source: input.accessToken.source, defect })),
     ),
   );
 };
+
+/**
+ * Tell the user a sign-in was discarded.
+ *
+ * The provider's reply arrives on a channel the user cannot see, so a rejected one leaves the flow
+ * looking merely unfinished — they completed the popup and the app shows the same Connect button as
+ * before. The log records the reason; this is the part they can act on.
+ */
+const reportOAuthRejected = (invoker: Operation.OperationService, descriptionKey: string): Effect.Effect<void, never> =>
+  Effect.ignore(
+    invoker.invoke(LayoutOperation.AddToast, {
+      id: `${meta.profile.key}.oauth-rejected`,
+      icon: 'ph--warning--regular',
+      title: ['oauth-rejected.title', { ns: meta.profile.key }],
+      description: [descriptionKey, { ns: meta.profile.key }],
+    }),
+  );
+
+/** Report a sign-in the provider itself rejected, carrying its reason verbatim. */
+const reportOAuthFailed = (invoker: Operation.OperationService, reason: string): Effect.Effect<void, never> =>
+  Effect.ignore(
+    invoker.invoke(LayoutOperation.AddToast, {
+      id: `${meta.profile.key}.oauth-failed`,
+      icon: 'ph--warning--regular',
+      title: ['oauth-failed.title', { ns: meta.profile.key }],
+      description: reason,
+    }),
+  );
 
 const navigateToNewConnection = (
   invoker: Operation.OperationService,
@@ -127,7 +160,46 @@ const navigateToNewConnection = (
       subject: [connectionDeckSubject(GraphPath.getSpacePath(db.spaceId), connectionId)],
       navigation: 'immediate',
     })
-    .pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('navigate to new connection failed', { error }))));
+    .pipe(Effect.catch((error) => Effect.sync(() => log.warn('navigate to new connection failed', { error }))));
+
+/**
+ * Offer the recurring sync routine through the seeded create-routine form, so nothing is persisted
+ * without the user seeing it; saving runs the first sync through the saved trigger (the dispatcher
+ * drives `Operation.runAgain()` continuation for a capped first sync), cancelling runs nothing.
+ */
+const openCreateSyncRoutineDialog = (
+  invoker: Operation.OperationService,
+  capabilities: CapabilityManager.CapabilityManager,
+  db: Database.Database,
+  connector: ConnectorSpec.ConnectorEntry,
+  connection: Connection.Connection,
+  subject: Obj.Unknown,
+): Effect.Effect<void, never> =>
+  Effect.gen(function* () {
+    const result = yield* invoker.invoke(SpaceOperation.OpenObjectForm, {
+      target: db,
+      typename: Type.getTypename(Routine.Routine),
+      // `subject` may be the connection or a bound target — the template resolves either to the account.
+      defaults: { templateId: SyncTemplate.ID, subject },
+      navigable: false,
+    });
+    // The trigger is read off the saved routine — a `findTrigger` lookup here would race the
+    // reverse-ref index — and the user's save is the ask, so `sync.auto` does not gate it.
+    const created = result?.target;
+    if (created) {
+      Effect.runFork(
+        Binding.syncCreatedRoutine({ created, connector, spaceId: db.spaceId }).pipe(
+          Effect.provideService(Capability.Service, capabilities),
+          Effect.catch((error) => Effect.sync(() => log.warn('first sync after routine created failed', { error }))),
+          // An EDGE force-run that outlives its replication backoff arrives as a defect
+          // (`Effect.orDie`), which the typed catch above would let escape unreported.
+          Effect.catchDefect((defect) =>
+            Effect.sync(() => log.warn('first sync after routine created died', { defect })),
+          ),
+        ),
+      );
+    }
+  }).pipe(Effect.catch((error) => Effect.sync(() => log.warn('open create sync routine dialog failed', { error }))));
 
 const openSyncTargetsDialogAfterConnectionCreated = (
   invoker: Operation.OperationService,
@@ -149,11 +221,12 @@ const openSyncTargetsDialogAfterConnectionCreated = (
       },
     });
   }).pipe(
-    Effect.catchAll((error) => Effect.sync(() => log.warn('open sync-targets dialog after create failed', { error }))),
+    Effect.catch((error) => Effect.sync(() => log.warn('open sync-targets dialog after create failed', { error }))),
   );
 
 const finalizePendingEntry = (
   invoker: Operation.OperationService,
+  capabilities: CapabilityManager.CapabilityManager,
   serviceResolver: ServiceResolver.ServiceResolver,
   entry: Pending,
 ): Effect.Effect<void, never> =>
@@ -187,18 +260,24 @@ const finalizePendingEntry = (
       );
     } else {
       // Single-target (e.g. Gmail): materialize/bind one target immediately.
-      yield* createSingleCursor(invoker, db, connector, persistedConnection, existingTarget);
+      const bound = yield* createSingleCursor(invoker, db, connector, persistedConnection, existingTarget);
       if (!existingTarget) {
         yield* navigateToNewConnection(invoker, db, persistedConnection.id);
       }
-      // Ordered after navigation so the user lands on the target while the first sync fills it in.
-      yield* autoSyncConnection(invoker, db, connector, persistedConnection);
+      if (bound?.needsSyncRoutine) {
+        // Ordered after navigation so the dialog opens over the surface the user lands on.
+        yield* openCreateSyncRoutineDialog(invoker, capabilities, db, connector, persistedConnection, bound.target);
+      } else {
+        // Ordered after navigation so the user lands on the target while the first sync fills it in.
+        yield* autoSyncConnection(invoker, capabilities, db, connector, persistedConnection);
+      }
     }
   });
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
+    const identityService = yield* ClientCapabilities.IdentityService;
     const invoker = yield* Capabilities.OperationInvoker;
     const serviceResolver = yield* Capabilities.ServiceResolver;
     const pluginContext = yield* Capability.Service;
@@ -209,7 +288,9 @@ export default Capability.makeModule(
         const edgeUrl = client.config.values.runtime?.services?.edge?.url;
         invariant(edgeUrl, 'EDGE services not configured.');
         const next = new EdgeHttpClient(edgeUrl);
-        next.setIdentity(createEdgeIdentity(client));
+        const edgeIdentity = identityService.getEdgeIdentity();
+        invariant(Option.isSome(edgeIdentity), 'Identity not available.');
+        next.setIdentity(edgeIdentity.value);
         cachedEdgeClient = next;
       }
       return cachedEdgeClient;
@@ -233,24 +314,49 @@ export default Capability.makeModule(
 
     const handleOAuthPostMessage = (event: MessageEvent): Effect.Effect<void, never> =>
       Effect.gen(function* () {
+        // The window receives unrelated `postMessage` traffic (HMR, embeds), so these rejections are
+        // reported only for payloads shaped like an OAuth reply — enough to tell "the relay answered
+        // and we discarded it" from "the relay never answered", which silence cannot.
         if (!edgeOrigin) {
+          if (isOAuthShapedMessage(event.data)) {
+            log.warn('oauth message before any flow started', { origin: event.origin });
+          }
           return;
         }
         if (event.origin !== edgeOrigin) {
+          if (isOAuthShapedMessage(event.data)) {
+            log.warn('oauth message from an unexpected origin', { origin: event.origin, expected: edgeOrigin });
+            yield* reportOAuthRejected(invoker, 'oauth-rejected.description');
+          }
           return;
         }
         const decoded = decodeOAuthMessageData(event.data);
         if (decoded.tag === 'invalid') {
+          log.warn('oauth message could not be decoded', {
+            origin: event.origin,
+            keys: event.data && typeof event.data === 'object' ? Object.keys(event.data) : typeof event.data,
+          });
+          yield* reportOAuthRejected(invoker, 'oauth-undecodable.description');
           return;
         }
         if (decoded.tag === 'failure') {
           log.warn('oauth flow failed', { reason: decoded.reason });
+          // The provider's own reason, not one of ours: it is the only account of what went wrong.
+          yield* reportOAuthFailed(invoker, decoded.reason);
           return;
         }
         const entry = takePendingEntry(decoded.accessTokenId);
         if (!entry) {
+          // The in-memory map is per page load, so a reload mid-flow empties it. The persisted
+          // snapshot is the recovery path (`finalizeRedirectFlow`); leave it in place for that and
+          // say so, because returning silently here is indistinguishable from a completed flow.
+          log.warn('oauth message has no pending entry — leaving snapshot for redirect recovery', {
+            accessTokenId: decoded.accessTokenId,
+            hasSnapshot: !!readPendingSnapshot(decoded.accessTokenId),
+          });
           return;
         }
+        log.info('oauth message accepted', { accessTokenId: decoded.accessTokenId, mode: entry.mode });
         deletePendingSnapshot(decoded.accessTokenId);
         Obj.update(entry.token, (token) => {
           token.token = decoded.accessToken;
@@ -260,7 +366,7 @@ export default Capability.makeModule(
         if (entry.mode === 'reauth') {
           return;
         }
-        yield* finalizePendingEntry(invoker, serviceResolver, entry);
+        yield* finalizePendingEntry(invoker, pluginContext, serviceResolver, entry);
       });
 
     const handleMessage = (event: MessageEvent): void => {
@@ -329,13 +435,13 @@ export default Capability.makeModule(
           connectorId: connector.id,
           tokenSnapshot: { source: connector.source, account, scopes: oauth.scopes },
           connectionSnapshot: { name: label, connectorId: connector.id },
-          ...(existingTarget ? { existingTargetDxn: existingTarget.uri } : {}),
+          ...(existingTarget ? { existingTargetUri: existingTarget.uri } : {}),
         });
 
         const edge = getEdgeClient();
         edgeOrigin = new URL(edge.baseUrl).origin;
 
-        const { authUrl } = yield* initiateOAuthFlow(edge, spaceId, oauth, token.id, loginHint).pipe(
+        yield* beginOAuthFlow(edge, spaceId, oauth, token.id, loginHint).pipe(
           Effect.tapError(() =>
             Effect.sync(() => {
               pending.delete(token.id);
@@ -343,12 +449,6 @@ export default Capability.makeModule(
             }),
           ),
         );
-
-        if (oauth.useRedirectFlow) {
-          yield* openOAuthRedirectWindow(authUrl);
-        } else {
-          yield* openOAuthPopupWindow(authUrl);
-        }
 
         return { kind: 'oauth-started', draftConnectionId: connection.id } as const;
       }).pipe(Effect.mapError(mapCoordinatorError));
@@ -384,13 +484,13 @@ export default Capability.makeModule(
             name: connection.name ?? connector.label ?? connector.id,
             connectorId: connector.id,
           },
-          reauthAccessTokenDxn: connection.accessToken.uri,
+          reauthAccessTokenUri: connection.accessToken.uri,
         });
 
         const edge = getEdgeClient();
         edgeOrigin = new URL(edge.baseUrl).origin;
 
-        const { authUrl } = yield* initiateOAuthFlow(edge, spaceId, oauth, accessToken.id, loginHint).pipe(
+        yield* beginOAuthFlow(edge, spaceId, oauth, accessToken.id, loginHint).pipe(
           Effect.tapError(() =>
             Effect.sync(() => {
               pending.delete(accessToken.id);
@@ -398,12 +498,6 @@ export default Capability.makeModule(
             }),
           ),
         );
-
-        if (oauth.useRedirectFlow) {
-          yield* openOAuthRedirectWindow(authUrl);
-        } else {
-          yield* openOAuthPopupWindow(authUrl);
-        }
       }).pipe(Effect.provide(Database.layer(db)), Effect.mapError(mapCoordinatorError));
 
     const finalizeRedirectFlow: ConnectorCoordination.ConnectorCoordinator['finalizeRedirectFlow'] = ({
@@ -411,6 +505,7 @@ export default Capability.makeModule(
       accessToken: accessTokenValue,
     }) =>
       Effect.gen(function* () {
+        log.info('finalizeRedirectFlow', { accessTokenId });
         // Prefer the in-memory pending entry (same-tab redirect, rare).
         const inMemory = takePendingEntry(accessTokenId);
         if (inMemory) {
@@ -422,7 +517,7 @@ export default Capability.makeModule(
           if (inMemory.mode === 'reauth') {
             return;
           }
-          yield* finalizePendingEntry(invoker, serviceResolver, inMemory);
+          yield* finalizePendingEntry(invoker, pluginContext, serviceResolver, inMemory);
           return;
         }
 
@@ -446,12 +541,15 @@ export default Capability.makeModule(
         // Reauth: refresh the existing AccessToken value in place rather than
         // minting a new token + Connection.
         if (snapshot.mode === 'reauth') {
-          const dxn = snapshot.reauthAccessTokenDxn ? DXN.tryMake(snapshot.reauthAccessTokenDxn) : undefined;
-          if (!dxn) {
-            log.warn('finalizeRedirectFlow: reauth snapshot missing access token dxn', { accessTokenId });
+          const tokenUri = snapshot.reauthAccessTokenUri ? EID.tryParse(snapshot.reauthAccessTokenUri) : undefined;
+          if (!tokenUri) {
+            log.warn('finalizeRedirectFlow: reauth snapshot missing access token uri', {
+              accessTokenId,
+              uri: snapshot.reauthAccessTokenUri,
+            });
             return;
           }
-          const tokenRef = space.db.makeRef<AccessToken.AccessToken>(dxn);
+          const tokenRef = space.db.makeRef<AccessToken.AccessToken>(tokenUri);
           const token = yield* Database.load(tokenRef).pipe(Effect.provide(Database.layer(space.db)));
           Obj.update(token, (token) => {
             token.token = accessTokenValue;
@@ -479,11 +577,20 @@ export default Capability.makeModule(
           accessToken: Ref.make(token),
         });
 
-        const existingTarget = snapshot.existingTargetDxn
-          ? space.db.makeRef<Obj.Any>(DXN.tryMake(snapshot.existingTargetDxn)!)
-          : undefined;
+        // A snapshot that names a target but cannot be parsed must not fall through as "no target":
+        // `createSingleCursor` would then materialize a second root and bind that instead, leaving the
+        // object the user started from unbound with its Connect action still showing.
+        const existingTargetUri = snapshot.existingTargetUri ? EID.tryParse(snapshot.existingTargetUri) : undefined;
+        if (snapshot.existingTargetUri && !existingTargetUri) {
+          log.warn('finalizeRedirectFlow: unparseable existing target uri', {
+            accessTokenId,
+            uri: snapshot.existingTargetUri,
+          });
+          return;
+        }
+        const existingTarget = existingTargetUri ? space.db.makeRef<Obj.Any>(existingTargetUri) : undefined;
 
-        yield* finalizePendingEntry(invoker, serviceResolver, {
+        yield* finalizePendingEntry(invoker, pluginContext, serviceResolver, {
           mode: 'create',
           token,
           connection,
@@ -515,7 +622,7 @@ export default Capability.makeModule(
           accessToken: Ref.make(accessToken),
         });
 
-        yield* finalizePendingEntry(invoker, serviceResolver, {
+        yield* finalizePendingEntry(invoker, pluginContext, serviceResolver, {
           mode: 'create',
           token: accessToken,
           connection,
@@ -542,7 +649,7 @@ export default Capability.makeModule(
         const result = yield* connector.credentialForm.onSubmit({ values, connector, db });
 
         if (result.kind === 'complete') {
-          yield* finalizePendingEntry(invoker, serviceResolver, {
+          yield* finalizePendingEntry(invoker, pluginContext, serviceResolver, {
             mode: 'create',
             token: result.accessToken,
             connection: result.connection,
@@ -583,9 +690,17 @@ export default Capability.makeModule(
           existingTarget,
         });
         // Initial setup of a multi-target connector: the connection had no bindings until this
-        // submit, so this is the first-sync moment. A later change of targets is left to the user.
+        // submit, so this is the routine-offer / first-sync moment. A later change of targets is
+        // left to the user — new bindings are covered by the account routine's fan-out.
         if (existing === 0 && added > 0) {
-          yield* autoSyncConnection(invoker, db, connector, connection);
+          const trigger = connector.sync?.trigger ? yield* Binding.findTrigger(connection) : undefined;
+          if (connector.sync?.trigger && !trigger) {
+            // One form for the whole account, regardless of how many targets were picked; saving
+            // runs the first sync.
+            yield* openCreateSyncRoutineDialog(invoker, pluginContext, db, connector, connection, connection);
+          } else {
+            yield* autoSyncConnection(invoker, pluginContext, db, connector, connection);
+          }
         }
         return { added, removed };
       }).pipe(Effect.provide(Database.layer(db)), Effect.mapError(mapCoordinatorError));

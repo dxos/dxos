@@ -4,24 +4,24 @@
 
 /// <reference lib="webworker" />
 
-import * as Reactivity from '@effect/experimental/Reactivity';
 import * as WasmSqliteClient from '@effect/sql-sqlite-wasm/SqliteClient';
-import * as Client from '@effect/sql/SqlClient';
-import * as SqlConnection from '@effect/sql/SqlConnection';
-import * as SqlError from '@effect/sql/SqlError';
-import * as Statement from '@effect/sql/Statement';
 import * as WaSqlite from '@effect/wa-sqlite';
 // oxlint-disable-next-line @dxos/rules/effect-subpath-imports
 import SQLiteESMFactory from '@effect/wa-sqlite/dist/wa-sqlite.mjs';
-import * as Chunk from 'effect/Chunk';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import { identity } from 'effect/Function';
-import * as GlobalValue from 'effect/GlobalValue';
 import * as Layer from 'effect/Layer';
 import * as Scope from 'effect/Scope';
+import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
+import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
+import * as Client from 'effect/unstable/sql/SqlClient';
+import * as SqlConnection from 'effect/unstable/sql/SqlConnection';
+import * as SqlError from 'effect/unstable/sql/SqlError';
+import * as Statement from 'effect/unstable/sql/Statement';
 
+import { GlobalValue } from '@dxos/effect';
 import { log } from '@dxos/log';
 // @ts-ignore - wa-sqlite example VFS without typed exports.
 import { AccessHandlePoolVFS } from '@dxos/wa-sqlite/src/examples/AccessHandlePoolVFS.js';
@@ -97,6 +97,28 @@ const importDatabase = (
   });
 };
 
+/** Log context is truncated at a fixed length; oversized params (blobs, long strings) must not push `time` out of it. */
+const MAX_LOGGED_PARAM_STRING_LENGTH = 64;
+
+const summarizeLoggedParam = (value: unknown): unknown => {
+  if (typeof value === 'string' && value.length > MAX_LOGGED_PARAM_STRING_LENGTH) {
+    return `${value.slice(0, MAX_LOGGED_PARAM_STRING_LENGTH)}…(${value.length} chars)`;
+  }
+  if (value instanceof Uint8Array) {
+    return `<Uint8Array ${value.length} bytes>`;
+  }
+  if (value instanceof ArrayBuffer) {
+    return `<ArrayBuffer ${value.byteLength} bytes>`;
+  }
+  if (Array.isArray(value) && value.length > MAX_LOGGED_PARAM_STRING_LENGTH) {
+    return `<Array ${value.length} items>`;
+  }
+  return value;
+};
+
+const summarizeLoggedParams = (params: ReadonlyArray<unknown>): ReadonlyArray<unknown> =>
+  params.map(summarizeLoggedParam);
+
 const recordSqliteQueryMetrics = (
   sql: string,
   params: ReadonlyArray<unknown>,
@@ -104,7 +126,12 @@ const recordSqliteQueryMetrics = (
   begin: number,
 ): void => {
   const end = performance.now();
-  log('sqlite query', { sql, params, results: resultCount, time: end - begin });
+  log('sqlite query', {
+    sql: sql.replace(/\s+/g, ' ').trim(),
+    params: summarizeLoggedParams(params),
+    results: resultCount,
+    time: end - begin,
+  });
   performance.measure(sql.slice(0, 128), {
     start: begin,
     end: end,
@@ -151,14 +178,20 @@ export const makeOpfs = (
       const db = yield* Effect.acquireRelease(
         Effect.try({
           try: () => sqlite3.open_v2(options.dbName, undefined, vfsDirectory),
-          catch: (cause) => new SqlError.SqlError({ cause, message: 'Failed to open database' }),
+          catch: (cause) =>
+            new SqlError.SqlError({
+              reason: SqlError.classifySqliteError(cause, { message: 'Failed to open database' }),
+            }),
         }),
         (handle) => Effect.sync(() => sqlite3.close(handle)),
       );
 
       yield* Effect.try({
         try: () => applyOpfsPragmas(sqlite3, db, { journalMode, synchronous }),
-        catch: (cause) => new SqlError.SqlError({ cause, message: 'Failed to configure database PRAGMAs' }),
+        catch: (cause) =>
+          new SqlError.SqlError({
+            reason: SqlError.classifySqliteError(cause, { message: 'Failed to configure database PRAGMAs' }),
+          }),
       });
 
       if (options.installReactivityHooks) {
@@ -166,7 +199,7 @@ export const makeOpfs = (
           if (!table) {
             return;
           }
-          reactivity.unsafeInvalidate({ [table]: [String(Number(rowid))] });
+          reactivity.invalidateUnsafe({ [table]: [String(Number(rowid))] });
         });
       }
 
@@ -197,8 +230,14 @@ export const makeOpfs = (
             return results;
           },
           catch: (cause) => {
-            log('sqlite error', { error: cause, sql, params });
-            return new SqlError.SqlError({ cause, message: 'Failed to execute statement' });
+            log('sqlite error', {
+              error: cause,
+              sql: sql.replace(/\s+/g, ' ').trim(),
+              params: summarizeLoggedParams(params),
+            });
+            return new SqlError.SqlError({
+              reason: SqlError.classifySqliteError(cause, { message: 'Failed to execute statement' }),
+            });
           },
         });
 
@@ -209,6 +248,10 @@ export const makeOpfs = (
         executeValues: (sql, params) => run(sql, params, 'array'),
         executeUnprepared(sql, params, rowTransform) {
           return this.execute(sql, params, rowTransform);
+        },
+        // wa-sqlite prepares every statement, so the unprepared variants are the prepared ones.
+        executeValuesUnprepared(sql, params) {
+          return this.executeValues(sql, params);
         },
         executeStream: (sql, params, rowTransform) => {
           const stream = function* () {
@@ -232,12 +275,21 @@ export const makeOpfs = (
           };
 
           return Stream.suspend(() => Stream.fromIteratorSucceed(stream()[Symbol.iterator]())).pipe(
+            // Effect 4 chunks are plain arrays and `mapChunks` is gone; the row transform can drop
+            // rows, so re-flatten rather than asserting the mapped chunk is still non-empty.
             rowTransform
-              ? Stream.mapChunks((chunk) => Chunk.unsafeFromArray(rowTransform(Chunk.toReadonlyArray(chunk))))
+              ? (self: Stream.Stream<Record<string, unknown>>) =>
+                  Stream.flattenIterable(Stream.map(Stream.chunks(self), rowTransform))
               : identity,
             Stream.mapError((cause) => {
-              log('sqlite error', { error: cause, sql, params });
-              return new SqlError.SqlError({ cause, message: 'Failed to execute statement' });
+              log('sqlite error', {
+                error: cause,
+                sql: sql.replace(/\s+/g, ' ').trim(),
+                params: summarizeLoggedParams(params),
+              });
+              return new SqlError.SqlError({
+                reason: SqlError.classifySqliteError(cause, { message: 'Failed to execute statement' }),
+              });
             }),
           );
         },
@@ -248,7 +300,10 @@ export const makeOpfs = (
             checkpointWal(sqlite3, db);
             return sqlite3.serialize(db, 'main');
           },
-          catch: (cause) => new SqlError.SqlError({ cause, message: 'Failed to export database' }),
+          catch: (cause) =>
+            new SqlError.SqlError({
+              reason: SqlError.classifySqliteError(cause, { message: 'Failed to export database' }),
+            }),
         }),
         import: (data: Uint8Array) =>
           Effect.try({
@@ -256,18 +311,21 @@ export const makeOpfs = (
               log('opfs import', { bytes: data.byteLength });
               importDatabase(sqlite3, db, data, options);
             },
-            catch: (cause) => new SqlError.SqlError({ cause, message: 'Failed to import database' }),
+            catch: (cause) =>
+              new SqlError.SqlError({
+                reason: SqlError.classifySqliteError(cause, { message: 'Failed to import database' }),
+              }),
           }),
       });
     });
 
-    const semaphore = yield* Effect.makeSemaphore(1);
+    const semaphore = yield* Semaphore.make(1);
     const connection = yield* makeConnection;
 
     const acquirer = semaphore.withPermits(1)(Effect.succeed(connection));
     const transactionAcquirer = Effect.uninterruptibleMask((restore) =>
       Effect.as(
-        Effect.zipRight(
+        Effect.andThen(
           restore(semaphore.take(1)),
           Effect.tap(Effect.scope, (scope) => Scope.addFinalizer(scope, semaphore.release(1))),
         ),
@@ -301,7 +359,7 @@ export const makeOpfs = (
 export const layerOpfs = (
   config: OpfsConfig,
 ): Layer.Layer<WasmSqliteClient.SqliteClient | Client.SqlClient, SqlError.SqlError> =>
-  Layer.scopedContext(
+  Layer.effectContext(
     Effect.map(makeOpfs(config), (client) =>
       Context.make(WasmSqliteClient.SqliteClient, client).pipe(Context.add(Client.SqlClient, client)),
     ),

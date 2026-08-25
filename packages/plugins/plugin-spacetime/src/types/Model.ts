@@ -10,11 +10,11 @@ import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
 
 /** Supported primitive geometry types. */
-export const PrimitiveType = Schema.Literal('cube', 'sphere', 'cylinder', 'cone', 'pyramid');
+export const PrimitiveType = Schema.Literals(['cube', 'sphere', 'cylinder', 'cone', 'pyramid']);
 export type PrimitiveType = Schema.Schema.Type<typeof PrimitiveType>;
 
 /** Bundled preset model names. */
-export const PresetType = Schema.Literal('firetruck', 'race', 'taxi');
+export const PresetType = Schema.Literals(['firetruck', 'race', 'taxi']);
 export type PresetType = Schema.Schema.Type<typeof PresetType>;
 
 /** Union of all object template types (primitives + presets). */

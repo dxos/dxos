@@ -4,20 +4,18 @@
 
 // TODO(wittjosiah): Refactor to use a dfx-style Effect-native client.
 
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientError from '@effect/platform/HttpClientError';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as ParseResult from 'effect/ParseResult';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientError from 'effect/unstable/http/HttpClientError';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { Database, type Ref } from '@dxos/echo';
-import { type AccessToken } from '@dxos/link';
-import * as Connection from '@dxos/plugin-connector/Connection';
+import { type AccessToken, Connection } from '@dxos/link';
 
 import { GITHUB_API_BASE } from '../constants';
 
@@ -83,6 +81,17 @@ const GitHubPullRefSchema = Schema.Struct({
   merged_at: Schema.NullOr(Schema.String).pipe(Schema.optional),
 });
 
+const GitHubMilestoneSchema = Schema.Struct({
+  id: Schema.Number,
+  number: Schema.Number,
+  title: Schema.String,
+  description: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  state: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  /** ISO datetime, unlike the date-only shape the local model stores. */
+  due_on: Schema.NullOr(Schema.String).pipe(Schema.optional),
+});
+export type GitHubMilestone = Schema.Schema.Type<typeof GitHubMilestoneSchema>;
+
 const GitHubIssueSchema = Schema.Struct({
   id: Schema.Number,
   number: Schema.Number,
@@ -99,6 +108,7 @@ const GitHubIssueSchema = Schema.Struct({
   user: Schema.NullOr(GitHubUserSchema).pipe(Schema.optional),
   assignees: Schema.Array(GitHubUserSchema).pipe(Schema.optional),
   labels: Schema.Array(GitHubLabelSchema).pipe(Schema.optional),
+  milestone: Schema.NullOr(GitHubMilestoneSchema).pipe(Schema.optional),
   pull_request: Schema.NullOr(GitHubPullRefSchema).pipe(Schema.optional),
 });
 export type GitHubIssue = Schema.Schema.Type<typeof GitHubIssueSchema>;
@@ -129,10 +139,9 @@ export type GitHubComment = Schema.Schema.Type<typeof GitHubCommentSchema>;
  * `fromAccessToken(cursor.spec.source)` directly (the cursor no longer relates
  * to `Connection`).
  */
-export class GitHubCredentials extends Context.Tag('@dxos/plugin-github/GitHubCredentials')<
-  GitHubCredentials,
-  GitHubCredentialsValue
->() {
+export class GitHubCredentials extends Context.Service<GitHubCredentials, GitHubCredentialsValue>()(
+  '@dxos/plugin-github/GitHubCredentials',
+) {
   /** Creates a credentials layer from an AccessToken ref. Loads it and returns its `token`. */
   static fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
     Layer.effect(
@@ -161,7 +170,7 @@ export class GitHubCredentials extends Context.Tag('@dxos/plugin-github/GitHubCr
 
 type GitHubEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutException,
+  HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError,
   HttpClient.HttpClient | GitHubCredentials
 >;
 
@@ -174,22 +183,19 @@ type GitHubEffect<T> = Effect.Effect<
  *  - TimeoutException: yes.
  *  - Schema decode failures (`ParseError`): no — payload won't become valid on retry.
  */
-const shouldRetry = (
-  error: HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutException,
-): boolean => {
-  if (error instanceof ParseResult.ParseError) {
+const shouldRetry = (error: HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError): boolean => {
+  if (error instanceof Schema.SchemaError) {
     return false;
   }
-  if (Cause.isTimeoutException(error)) {
+  if (Cause.isTimeoutError(error)) {
     return true;
   }
-  if (error._tag === 'RequestError') {
+  // v4 hangs the specific failure off `HttpClientError.reason`: a transport-level failure is always
+  // worth retrying, and a response failure only on 429/5xx.
+  if (error.reason._tag !== 'StatusCodeError') {
     return true;
   }
-  if (error.reason !== 'StatusCode') {
-    return true;
-  }
-  const status = error.response.status;
+  const status = error.reason.response.status;
   return status === 429 || (status >= 500 && status <= 599);
 };
 
@@ -212,22 +218,19 @@ const withAuth = (req: HttpClientRequest.HttpClientRequest, creds: GitHubCredent
  * blow up against the success schema with a `ParseError`, masking the real
  * cause (e.g. a 403 from an integration token that lacks issue write).
  */
-const githubRequest = <T>(
-  build: () => HttpClientRequest.HttpClientRequest,
-  schema: Schema.Schema<T>,
-): GitHubEffect<T> =>
+const githubRequest = <T>(build: () => HttpClientRequest.HttpClientRequest, schema: Schema.Codec<T>): GitHubEffect<T> =>
   Effect.gen(function* () {
     const creds = yield* GitHubCredentials;
     const httpClient = yield* HttpClient.HttpClient;
     const clientNoTracer = httpClient.pipe(
-      HttpClient.withTracerDisabledWhen(() => true),
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
       HttpClient.filterStatusOk,
     );
     return yield* clientNoTracer.execute(withAuth(build(), creds)).pipe(
-      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknown(schema))),
+      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknownEffect(schema))),
       Effect.timeout('15 seconds'),
       Effect.retry({
-        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),
+        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.upTo({ times: 3 })),
         while: shouldRetry,
       }),
       Effect.scoped,
@@ -265,13 +268,13 @@ const getNextLink = (header: string | undefined): string | undefined => {
 
 const githubPaginated = <T>(
   buildInitial: () => HttpClientRequest.HttpClientRequest,
-  itemSchema: Schema.Schema<T>,
+  itemSchema: Schema.Codec<T>,
 ): GitHubEffect<readonly T[]> =>
   Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient;
     const creds = yield* GitHubCredentials;
     const clientNoTracer = httpClient.pipe(
-      HttpClient.withTracerDisabledWhen(() => true),
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
       HttpClient.filterStatusOk,
     );
     const arraySchema = Schema.Array(itemSchema);
@@ -285,13 +288,13 @@ const githubPaginated = <T>(
         Effect.flatMap((res) =>
           Effect.gen(function* () {
             const body = yield* res.json;
-            const decoded = yield* Schema.decodeUnknown(arraySchema)(body);
+            const decoded = yield* Schema.decodeUnknownEffect(arraySchema)(body);
             return { decoded, link: res.headers['link'] };
           }),
         ),
         Effect.timeout('15 seconds'),
         Effect.retry({
-          schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),
+          schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.upTo({ times: 3 })),
           while: shouldRetry,
         }),
         Effect.scoped,
@@ -376,6 +379,19 @@ export const fetchRepoIssues = (
     return req;
   }, GitHubIssueSchema);
 
+/**
+ * GET /repos/{owner}/{repo}/milestones — `state=all` so closed milestones stay mirrored (the
+ * issues still assigned to them have to resolve to something).
+ */
+export const fetchRepoMilestones = (owner: string, repo: string): GitHubEffect<readonly GitHubMilestone[]> =>
+  githubPaginated(
+    () =>
+      HttpClientRequest.get(
+        `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/milestones`,
+      ).pipe(HttpClientRequest.appendUrlParam('state', 'all')),
+    GitHubMilestoneSchema,
+  );
+
 /** GET /repos/{owner}/{repo}/issues/{number}/comments. */
 export const fetchIssueComments = (
   owner: string,
@@ -403,21 +419,21 @@ export const fetchIssueComments = (
 const githubPatch = <T>(
   build: () => HttpClientRequest.HttpClientRequest,
   body: Record<string, unknown>,
-  schema: Schema.Schema<T>,
+  schema: Schema.Codec<T>,
 ): GitHubEffect<T> =>
   Effect.gen(function* () {
     const creds = yield* GitHubCredentials;
     const httpClient = yield* HttpClient.HttpClient;
     const clientNoTracer = httpClient.pipe(
-      HttpClient.withTracerDisabledWhen(() => true),
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
       HttpClient.filterStatusOk,
     );
-    const request = withAuth(build(), creds).pipe(HttpClientRequest.bodyUnsafeJson(body));
+    const request = withAuth(build(), creds).pipe(HttpClientRequest.bodyJsonUnsafe(body));
     return yield* clientNoTracer.execute(request).pipe(
-      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknown(schema))),
+      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknownEffect(schema))),
       Effect.timeout('15 seconds'),
       Effect.retry({
-        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),
+        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.upTo({ times: 3 })),
         while: shouldRetry,
       }),
       Effect.scoped,

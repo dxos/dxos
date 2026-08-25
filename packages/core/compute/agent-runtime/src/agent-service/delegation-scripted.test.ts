@@ -29,7 +29,7 @@ EntityId.dangerouslyDisableRandomness();
  */
 const DelegatedWork = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.delegatedWork'),
+    key: DXN.make('com.example.operation.delegatedWork'),
     name: 'Delegated work',
     description: 'Performs a delegated unit of work',
   },
@@ -92,7 +92,7 @@ const TestLayer = AssistantTestLayer({
 });
 
 describe('AgentProcess delegation lifecycle (scripted)', () => {
-  it.scoped(
+  it.effect(
     'delegates work to a sub-agent and folds the result back on completion',
     Effect.fnUntraced(
       function* (_) {

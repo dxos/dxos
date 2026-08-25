@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback } from 'react';
 
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -18,10 +19,7 @@ import { type Channel } from '@dxos/types';
 import { MessageThread } from '#components';
 import { useMessages, useStatus } from '#hooks';
 import { meta } from '#meta';
-
-import * as ChannelBackend from '../../types/ChannelBackend';
-import * as ThreadCapabilities from '../../types/ThreadCapabilities';
-import * as ThreadOperation from '../../types/ThreadOperation';
+import { ChannelBackend, ThreadCapabilities, ThreadOperation } from '#types';
 
 // Stable fallbacks so `useAtomValue` always receives an atom when plugin-calls isn't present.
 const NOT_JOINED = Atom.make(false);

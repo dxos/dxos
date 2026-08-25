@@ -14,20 +14,19 @@ import { type Client } from '@dxos/client';
 import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Panproto } from '@dxos/echo-panproto';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
-import { AccessToken } from '@dxos/link';
+import { AccessToken, Connection } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import * as Connection from '@dxos/plugin-connector/Connection';
-import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import * as PreviewPlugin from '@dxos/plugin-preview/PreviewPlugin';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Loading, withLayout } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { AtprotoRecordAnnotation, AtprotoVisibilityAnnotation } from '@dxos/schema';
 
 import { translations } from '#translations';
+import { AtprotoCapabilities, AtprotoPublication } from '#types';
 
 import * as AtprotoRepo from '../../services/AtprotoRepo';
-import * as AtprotoCapabilities from '../../types/AtprotoCapabilities';
-import * as AtprotoPublication from '../../types/AtprotoPublication';
 import { PdsBrowser } from './PdsBrowser';
 
 // Default the input to a real handle so the story opens on a live repo; `alice.test` still resolves to the
@@ -83,6 +82,7 @@ const meta = {
   title: 'plugins/plugin-atproto/PdsBrowser',
   render: Story,
   decorators: [
+    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       capabilities: [
@@ -96,9 +96,9 @@ const meta = {
       ],
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({}),
-        PreviewPlugin(),
-        ClientPlugin({
+        StorybookPlugin.make({}),
+        PreviewPlugin.make(),
+        ClientPlugin.make({
           types: [Connection.Connection, AccessToken.AccessToken, AtprotoPublication.AtprotoPublication, DemoNote],
           onClientInitialized: seed,
         }),

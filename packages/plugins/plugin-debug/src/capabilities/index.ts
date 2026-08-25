@@ -7,9 +7,9 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 
-import * as Debug from '../types/Debug';
-import * as DebugEvents from '../types/DebugEvents';
+import { Debug, DebugEvents } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
@@ -37,6 +37,12 @@ export const StatsPanel = Capability.lazyModule(
     activatesOn: DebugEvents.Start,
   },
   () => import('./stats-panel'),
+);
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const MarkdownMenu = Capability.lazyModule(
+  'MarkdownMenu',
+  { provides: [MarkdownCapabilities.MenuExtension], activatesOn: DebugEvents.Start },
+  () => import('./markdown-menu'),
 );
 export const LogRecording = Capability.lazyModule(
   'LogRecording',

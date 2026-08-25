@@ -2,13 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import { XMLParser } from 'fast-xml-parser';
 
 import { normalizeText } from '@dxos/markdown';
 
-import * as Subscription from '../../types/Subscription';
+import { Subscription } from '#types';
+
 import { decodeEntities } from '../../util/text';
 import { type FeedFetcher, FeedFetchError, type FetchResult } from './feed-fetcher';
 import { getText } from './http';
@@ -96,6 +97,9 @@ const parseFeed = (url: string, xml: string): FetchResult => {
   const isAtom = !parsed.rss;
   const feedName = text(channel.title) ?? '';
   const feedDescription = markdown(text(isAtom ? channel.subtitle : channel.description)) ?? '';
+  // The channel's own `<link>` is the feed's website, not the feed document — Atom spells it as the
+  // `alternate` link, and both live alongside the per-item links parsed below.
+  const feedLink = channelLink(channel, isAtom);
 
   const items: any[] = (isAtom ? channel.entry : channel.item) ?? [];
   const itemList = Array.isArray(items) ? items : [items];
@@ -131,7 +135,19 @@ const parseFeed = (url: string, xml: string): FetchResult => {
     name: feedName,
     url,
     description: feedDescription,
+    link: feedLink,
   });
 
   return { feed, posts };
+};
+
+/** The channel-level link: RSS carries it as text, Atom as the `rel="alternate"` href. */
+const channelLink = (channel: any, isAtom: boolean): string | undefined => {
+  if (!isAtom) {
+    return text(channel.link) || undefined;
+  }
+
+  const links = Array.isArray(channel.link) ? channel.link : [channel.link];
+  const alternate = links.find((link: any) => link?.['@_rel'] === 'alternate') ?? links[0];
+  return (alternate?.['@_href'] ?? text(alternate)) || undefined;
 };

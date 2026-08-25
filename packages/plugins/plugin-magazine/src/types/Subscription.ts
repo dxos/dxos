@@ -18,7 +18,7 @@ import { FactoryAnnotation, type FactoryFn, FeedAnnotation, StateMap, TagIndex }
 // Consider making it extensible (e.g. a string schema with a well-known-values registry) so plugins can
 // register feed types without modifying core.
 /** Subscription protocol type. */
-export const FeedType = Schema.Literal('standard-site', 'rss', 'bluesky');
+export const FeedType = Schema.Literals(['standard-site', 'rss', 'bluesky']);
 export type FeedType = Schema.Schema.Type<typeof FeedType>;
 
 /**
@@ -61,8 +61,11 @@ export class Subscription extends Type.makeObject<Subscription>(DXN.make('org.dx
     type: FeedType.pipe(Schema.optional),
     /** Description of the feed. */
     description: Schema.String.pipe(Schema.optional),
-    /** URL of the feed's associated website. */
-    link: Schema.String.pipe(Schema.optional),
+    /**
+     * URL of the feed's own website — the RSS channel-level `<link>` / Atom `rel="alternate"`.
+     * Written by sync from the parsed channel, so it is not a form input.
+     */
+    link: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
     /** URL of the feed's icon/image. */
     iconUrl: Schema.String.pipe(Schema.optional),
     /**
@@ -71,7 +74,7 @@ export class Subscription extends Type.makeObject<Subscription>(DXN.make('org.dx
      * Defaults to {@link DEFAULT_KEEP} when unset.
      */
     keep: Schema.Number.pipe(
-      Schema.annotations({
+      Schema.annotate({
         title: 'Keep',
         description: 'Number of synced items.',
       }),
@@ -111,7 +114,7 @@ export class Subscription extends Type.makeObject<Subscription>(DXN.make('org.dx
   }).pipe(
     LabelAnnotation.set(['name', 'url']),
     Annotation.IconAnnotation.set({ icon: 'ph--rss--regular', hue: 'indigo' }),
-    FeedAnnotation.set(true),
+    FeedAnnotation.set({ property: 'feed' }),
     FactoryAnnotation.set(((values) => makeSubscription(values)) as FactoryFn),
   ),
 ) {}

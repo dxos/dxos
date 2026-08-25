@@ -5,14 +5,12 @@
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import * as String from 'effect/String';
 import React, { useMemo } from 'react';
 
 import { Annotation, Format } from '@dxos/echo';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 import { type FieldContext, type FormFieldRenderer, type FormFieldRendererProps } from '#types';
@@ -120,7 +118,10 @@ export const FormField = (props: FormFieldProps) => {
 
   // Build the schema for `fieldProvider` only when one is registered, memoized by `type` (the AST) so
   // we don't reconstruct it on every render.
-  const providerSchema = useMemo(() => (fieldProvider ? Schema.make(type) : undefined), [fieldProvider, type]);
+  const providerSchema = useMemo(
+    () => (fieldProvider ? Schema.make<Schema.Codec<any, any>>(type) : undefined),
+    [fieldProvider, type],
+  );
 
   const fieldState = useFormFieldState(FormField.displayName, path);
   const jsonPath = SchemaEx.createJsonPath(path ?? []);
@@ -133,7 +134,9 @@ export const FormField = (props: FormFieldProps) => {
     jsonPath,
     placeholder,
     presentation: layout,
-    required,
+    // The asterisk marks what is still outstanding, so it clears once the field holds a value —
+    // otherwise a fully-filled form reads as though every required field were still unanswered.
+    required: required && isEmptyValue(fieldState.getValue()),
     db,
     ...fieldState,
   };
@@ -275,10 +278,10 @@ export const FormField = (props: FormFieldProps) => {
     const baseNode = SchemaEx.findNode(type, SchemaEx.isDiscriminatedUnion);
     const typeLiteral = baseNode
       ? SchemaEx.getDiscriminatedType(baseNode, fieldState.getValue() as any)
-      : SchemaEx.findNode(type, SchemaAST.isTypeLiteral);
+      : SchemaEx.findNode(type, SchemaAST.isObjects);
 
     if (typeLiteral) {
-      const schema = Schema.make(typeLiteral);
+      const schema = Schema.make<Schema.Codec<any, any>>(typeLiteral);
       return (
         <FormFieldSet
           schema={schema}
@@ -314,13 +317,17 @@ FormField.displayName = 'Form.FormField';
 
 // End-of-row form buttons occupy a consistent 32px block (matching the standard `h-8` label row) with
 // the button inset so its hover fill never touches the row's top/bottom/right edges.
-export const CompactIconButton = ({ classNames, ...props }: IconButtonProps) => {
+export const CompactIconButton = (props: IconButtonProps) => {
   return (
     <span className='grid size-8 shrink-0 place-items-center'>
-      <IconButton variant='ghost' iconOnly {...props} classNames={mx('min-h-0 h-7 w-7 p-0', classNames)} />
+      <IconButton variant='ghost' iconOnly density='sm' {...props} />
     </span>
   );
 };
+
+/** Whether a field's value counts as unfilled for the required-marker. `false` and `0` are values. */
+const isEmptyValue = (value: unknown): boolean =>
+  value == null || value === '' || (Array.isArray(value) && value.length === 0);
 
 /**
  * Get property input component.
@@ -329,10 +336,8 @@ const getFormField = ({
   type,
   format,
 }: Pick<FormFieldRendererProps, 'type' | 'format'>): FormFieldRenderer | undefined => {
-  // Unwrap refinements (e.g. Schema.Number.pipe(Schema.between(...))) to their base type.
-  if (SchemaAST.isRefinement(type)) {
-    return getFormField({ type: type.from, format });
-  }
+  // v4 has no `Refinement` node: `Schema.Number.pipe(Schema.check(...))` IS a `Number` node
+  // carrying checks, so the base-type cases below already match it.
 
   //
   // Standard formats.
@@ -359,12 +364,12 @@ const getFormField = ({
 
   switch (type._tag) {
     // TODO(wittjosiah): Schema.Any is currently used to represent template inputs.
-    case 'AnyKeyword':
-    case 'StringKeyword':
+    case 'Any':
+    case 'String':
       return TextField;
-    case 'NumberKeyword':
+    case 'Number':
       return NumberField;
-    case 'BooleanKeyword':
+    case 'Boolean':
       return BooleanField;
   }
 

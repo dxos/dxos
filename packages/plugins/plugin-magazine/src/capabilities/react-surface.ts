@@ -11,9 +11,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Position } from '@dxos/util';
 
 import { FeedArticle, FeedProperties, MagazineArticle, PostArticle, PostCard } from '#containers';
-
-import * as Magazine from '../types/Magazine';
-import * as Subscription from '../types/Subscription';
+import { Magazine, Subscription } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

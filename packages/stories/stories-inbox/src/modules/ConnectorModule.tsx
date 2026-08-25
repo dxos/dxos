@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
-import { isCursorForTarget } from '@dxos/plugin-connector';
+import * as Binding from '@dxos/plugin-connector/Binding';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -29,7 +29,7 @@ const ConnectorModuleContainer = ({ space, attendableId }: { space: Space; atten
   const binding = mailbox
     ? cursors.find(
         (candidate): candidate is Cursor.ExternalCursor =>
-          Cursor.isExternal(candidate) && isCursorForTarget(candidate, mailbox),
+          Cursor.isExternal(candidate) && Binding.targets(candidate, mailbox),
       )
     : undefined;
   return binding ? (

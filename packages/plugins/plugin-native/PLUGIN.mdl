@@ -142,7 +142,7 @@ feat F-2: Over-the-Air Updates
     then: the status atom transitions to failed with a human-readable error string
 
   req F-2.4:
-    when: the app is running in a dev-server build (port ≠ TAURI_LOCALHOST_PORT)
+    when: the app is running in a dev-server build (port not in TAURI_LOCALHOST_PORTS)
     then: the updater is disabled and status remains unsupported
 
   req F-2.5:
@@ -207,7 +207,7 @@ test T-4: Failed update check transitions to failed status
 
 ```mdl
 test T-5: Dev-server build disables updater
-  given: the app is served on a port other than TAURI_LOCALHOST_PORT
+  given: the app is served on a port outside TAURI_LOCALHOST_PORTS
   when: the Updater module activates
   then:
     - status is set to unsupported immediately

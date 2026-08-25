@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React from 'react';
 
 import { Panel } from '@dxos/react-ui';
@@ -10,8 +10,7 @@ import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { postReadAtom, postTagsAtom } from '#atoms';
 import { meta } from '#meta';
-
-import type * as Subscription from '../../types/Subscription';
+import { Subscription } from '#types';
 
 export type PostToolbarProps = {
   post: Subscription.Post;
@@ -21,8 +20,8 @@ export type PostToolbarProps = {
   onSetStarred: (value: boolean) => void;
   onSetArchived: (value: boolean) => void;
   onMarkUnread: () => void;
-  onRefresh: () => void;
   onOpenOriginal: () => void;
+  onRefresh: () => void;
 };
 
 /**
@@ -38,8 +37,8 @@ export const PostToolbar = ({
   onSetStarred,
   onSetArchived,
   onMarkUnread,
-  onRefresh,
   onOpenOriginal,
+  onRefresh,
 }: PostToolbarProps) => {
   const menuActions = useMenuBuilder(
     (get) => {

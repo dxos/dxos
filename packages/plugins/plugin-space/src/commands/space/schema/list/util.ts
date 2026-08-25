@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { FormBuilder } from '@dxos/cli-util';
+import { Doc, FormBuilder } from '@dxos/cli-util';
 
 type SchemaEntry = {
   id?: string;
@@ -18,7 +18,7 @@ export const mapSchemas = (schemas: SchemaEntry[]) => {
   }));
 };
 
-export const printSchema = (schema: SchemaEntry) =>
+export const printSchema = (schema: SchemaEntry): Doc.Doc<any> =>
   FormBuilder.make({ title: schema.typename }).pipe(
     FormBuilder.set('id', schema.id ?? '<none>'),
     FormBuilder.set('typename', schema.typename),

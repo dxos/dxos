@@ -9,9 +9,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
-
-import * as CrxCapabilities from '../types/CrxCapabilities';
-import * as Settings from '../types/Settings';
+import { CrxCapabilities, Settings } from '#types';
 
 /**
  * Contributes the Settings atom both under the plugin-scoped capability (so

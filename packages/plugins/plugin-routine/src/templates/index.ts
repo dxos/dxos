@@ -5,13 +5,13 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Skill from '@dxos/compute/Skill';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Obj, Ref, Type } from '@dxos/echo';
 
-import * as RoutineCapabilities from '../types/RoutineCapabilities';
+import { RoutineCapabilities } from '#types';
+
 import { makeRoutine } from '../util';
 
 /**
@@ -40,12 +40,12 @@ export const blank: RoutineCapabilities.Template = {
 /** Templates contributed by plugin-routine itself. */
 export const defaultTemplates: RoutineCapabilities.Template[] = [blank];
 
-/** Registry skill refs declared by the object type's {@link AppAnnotation.SkillsAnnotation}. */
+/** Registry skill refs declared by the object type's {@link Skill.SkillsAnnotation}. */
 const skillRefsForObject = (object: Obj.Unknown): Ref.Ref<Skill.Skill>[] => {
   const type = Obj.getType(object);
   if (!type) {
     return [];
   }
-  const keys = Option.getOrElse(() => [] as string[])(AppAnnotation.SkillsAnnotation.get(Type.getSchema(type)));
+  const keys = Option.getOrElse(() => [] as string[])(Skill.SkillsAnnotation.get(Type.getSchema(type)));
   return keys.map((key) => Ref.fromURI(Skill.registryURI(key)));
 };

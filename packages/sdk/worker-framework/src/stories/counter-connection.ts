@@ -31,6 +31,12 @@ export type CounterSessionInfo = {
   clientId: string;
   leaderId: string;
   isOwner: boolean;
+  /**
+   * Identity of the worker INSTANCE serving this session. The framework derives the liveness lock
+   * key from a per-worker UUID, so two clients reporting the same value are provably talking to the
+   * same worker rather than to two workers that merely agree on their state.
+   */
+  workerId: string;
 };
 
 export type PingMeasurement = {
@@ -45,7 +51,7 @@ export type PingMeasurement = {
  */
 export class CounterConnection extends Resource {
   readonly #connection: Client.Connection;
-  #scope: Scope.CloseableScope | undefined;
+  #scope: Scope.Closeable | undefined;
   #rpc: CounterRpc | undefined;
   readonly #subscribeCleanups = new Set<() => Promise<void>>();
   #sessionInfo: CounterSessionInfo | undefined;
@@ -66,9 +72,9 @@ export class CounterConnection extends Resource {
             }),
         }),
       leaderLockKey: COUNTER_LEADER_LOCK_KEY,
-      onConnect: async ({ clientToWorker, workerToClient, leaderId, isOwner }) => {
+      onConnect: async ({ clientToWorker, workerToClient, leaderId, livenessLockKey, isOwner }) => {
         invariant(this.#scope, 'counter rpc scope not initialized');
-        this.#sessionInfo = { clientId: this.#connection.clientId, leaderId, isOwner };
+        this.#sessionInfo = { clientId: this.#connection.clientId, leaderId, isOwner, workerId: livenessLockKey };
         this.sessionChanged.emit(this.#sessionInfo);
 
         // The framework provisions both directions per session. Serve the (empty) worker→client
@@ -82,7 +88,7 @@ export class CounterConnection extends Resource {
         await clientServer.open();
 
         this.#rpc = (await EffectEx.runPromise(
-          Rpc.makeClient(clientToWorker, CounterRpcs, { timing: { minLogMs: 20 } }).pipe(Scope.extend(this.#scope)),
+          Rpc.makeClient(clientToWorker, CounterRpcs, { timing: { minLogMs: 20 } }).pipe(Scope.provide(this.#scope)),
         )) as CounterRpc;
         return {
           close: async () => {

@@ -30,11 +30,11 @@ export class Variant extends Type.makeObject<Variant>(DXN.make('org.dxos.type.va
     url: Schema.optional(
       Schema.String.pipe(
         Format.FormatAnnotation.set(Format.TypeFormat.URL),
-        Schema.annotations({ title: 'URL', description: 'Ephemeral provider URL.' }),
+        Schema.annotate({ title: 'URL', description: 'Ephemeral provider URL.' }),
       ),
     ),
     /** The request config that produced this variant (validated against the provider's requestSchema). */
-    config: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
+    config: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
     /** Generation provenance (absent ⇒ uploaded/external). */
     generation: Schema.optional(Generation.Generation),
     /**

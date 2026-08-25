@@ -12,21 +12,27 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as Project from '@dxos/compute/Project';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
+import { SchemaAST } from '@dxos/effect';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
-import { SpaceOperation } from '@dxos/plugin-space';
-import { Icon, Panel, useTranslation } from '@dxos/react-ui';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import { Flex, Icon, Panel, useTranslation } from '@dxos/react-ui';
+import { Attention } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { type Milestone } from '@dxos/types';
 
 import { ObjectCard } from '#components';
 import { meta } from '#meta';
+import { ProjectOperation } from '#types';
 
-import * as ProjectOperation from '../../types/ProjectOperation';
-
-// Pick the editable header fields from the Project schema rather than redeclaring them.
-const HeaderValues = Type.getSchema(Project.Project).pipe(Schema.pick('name', 'description'));
-type HeaderValues = Schema.Schema.Type<typeof HeaderValues>;
+// Pick the editable header fields from the Project schema rather than redeclaring them. v4 exposes
+// `mapFields` only on a `Struct`, and `Type.getSchema` erases to `Codec`, so the pick runs on the AST
+// and the field types are re-attached here.
+type HeaderValues = Pick<Project.Project, 'name' | 'description'>;
+const HeaderValues = Schema.make<Schema.Codec<HeaderValues, any>>(
+  SchemaAST.pick(Type.getSchema(Project.Project).ast, ['name', 'description']),
+);
 
 // The Context section edits only the instructions' standing context objects.
 const CONTEXT_FIELDS: readonly string[] = ['objects'];
@@ -35,12 +41,12 @@ export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>
 
 /**
  * Article surface for a {@link Project}: one form-styled body (header fields, the owned instructions
- * sub-form, and card galleries of the linked routines and artifacts). `Form.Viewport` owns the scroll
- * and gutter so fields stay inset from the panel edges.
+ * sub-form, the task-set section, and a card gallery of the project's artifacts). `Form.Viewport`
+ * owns the scroll and gutter so fields stay inset from the panel edges.
  */
 export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const actions = useToolbarActions(subject);
+  const actions = useToolbarActions(subject, () => void handleAddArtifact());
   const [project, updateProject] = useObject(subject);
   const db = Obj.getDatabase(subject);
   // Resolve reactively: on a cold load (deep link) the owned ref's target is not yet in memory,
@@ -48,11 +54,14 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   // The sub-editor mutates the instructions in place, so unwrap the snapshot back to the live entity.
   const [instructionsSnapshot] = useObject(project.instructions);
   const instructions = Obj.getReactiveOrUndefined(instructionsSnapshot);
-  const [artifacts] = useObject(project.artifacts);
   // The Tasks section embeds plugin-tasks' section surface for the linked TaskSet (never its
   // components — the boundary is surfaces/operations only).
   const [taskSetSnapshot] = useObject(project.taskSet);
   const taskSet = Obj.getReactiveOrUndefined(taskSetSnapshot);
+  // The project's scratch outline (created lazily by its chats). Resolved reactively, as above.
+  const [outlineSnapshot] = useObject(project.outline);
+  const outline = Obj.getReactiveOrUndefined(outlineSnapshot);
+  const milestoneRefs = taskSetSnapshot?.milestones ?? [];
 
   // Read once per project identity; the uncontrolled form owns edits after mount.
   const defaultValues = useMemo<Partial<HeaderValues>>(
@@ -72,27 +81,38 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     [invokePromise, attendableId],
   );
 
-  // Deletes the object and splices it out of the artifacts collection, closing any open plank —
-  // `RemoveObjects` does all three, given the collection as its target.
-  const artifactsCollection = Obj.getReactiveOrUndefined(artifacts);
+  // Artifacts are listed on the project itself, not filed in a collection, so `RemoveObjects` gets
+  // no target (it only accepts a `Collection`) and the ref is spliced out here.
   const handleDeleteArtifact = useCallback(
     (object: Obj.Unknown) => {
-      void invokePromise(SpaceOperation.RemoveObjects, { objects: [object], target: artifactsCollection });
-    },
-    [invokePromise, artifactsCollection],
-  );
-
-  // Routines are owned by the project but filed in no collection, so `RemoveObjects` needs no target;
-  // the `routines` ref is spliced here since the cascade only follows parent edges.
-  const handleDeleteRoutine = useCallback(
-    (object: Obj.Unknown) => {
       updateProject((project) => {
-        project.routines = project.routines.filter((routineRef) => routineRef.target?.id !== object.id);
+        project.artifacts = project.artifacts.filter((artifactRef) => artifactRef.target?.id !== object.id);
       });
       void invokePromise(SpaceOperation.RemoveObjects, { objects: [object] });
     },
     [invokePromise, updateProject],
   );
+
+  // The create dialog places the object in the space; the ref array is what makes it this project's,
+  // so the link is written here. A dismissed dialog returns nothing and leaves the project untouched.
+  const handleAddArtifact = useCallback(async () => {
+    if (!db) {
+      return;
+    }
+
+    const { data: ref } = await invokePromise(SpaceOperation.OpenObjectForm, {
+      target: db,
+      targetNodeId: attendableId,
+      navigable: false,
+    });
+    if (!ref) {
+      return;
+    }
+
+    updateProject((project) => {
+      project.artifacts = [...project.artifacts, ref];
+    });
+  }, [db, attendableId, invokePromise, updateProject]);
 
   const handleValuesChanged = useCallback(
     (values: Partial<HeaderValues>) => {
@@ -109,9 +129,6 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   }
 
   return (
-    // `Menu.Root` wraps the panel rather than sitting inside the toolbar: `ToolbarMenu` disables itself
-    // unless the menu scope's `attendableId` has attention, so the scope has to span the surface that
-    // receives attention, not just the toolbar row.
     <Menu.Root {...actions} attendableId={attendableId}>
       <Panel.Root role={role}>
         <Panel.Toolbar>
@@ -135,9 +152,16 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                   </Form.Section>
                 )}
 
-                {(project.goals?.length ?? 0) > 0 && (
-                  <Form.Section title={t('goals.label')}>
-                    <GoalList goals={project.goals ?? []} />
+                {/* Above Tasks: the outline is where work is drafted, the task set where it lands.
+                    `taskSet` rides along so promoting an item files it into THIS project's ledger
+                    rather than into a set owned by the outline. */}
+                {outline && (
+                  <Form.Section title={t('outline.label')}>
+                    <Surface.Surface
+                      type={AppSurface.Section}
+                      data={{ subject: outline, attendableId, taskSet }}
+                      limit={1}
+                    />
                   </Form.Section>
                 )}
 
@@ -147,12 +171,14 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                   </Form.Section>
                 )}
 
-                <Form.Section title={t('routines.label')}>
-                  <ObjectGallery refs={project.routines} onOpen={handleOpen} onDelete={handleDeleteRoutine} />
-                </Form.Section>
+                {milestoneRefs.length > 0 && (
+                  <Form.Section title={t('milestones.label')}>
+                    <MilestoneList refs={milestoneRefs} />
+                  </Form.Section>
+                )}
 
                 <Form.Section title={t('artifacts.label')}>
-                  <ObjectGallery refs={artifacts?.objects ?? []} onOpen={handleOpen} onDelete={handleDeleteArtifact} />
+                  <ObjectGallery refs={project.artifacts} onOpen={handleOpen} onDelete={handleDeleteArtifact} />
                 </Form.Section>
               </Form.Content>
             </Form.Viewport>
@@ -165,34 +191,28 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
 
 ProjectArticle.displayName = 'ProjectArticle';
 
-/**
- * Read-only view of the project's goals (what done means). Goals are authored by agents and MCP
- * verbs; in-article authoring is a follow-up.
- */
-const GoalList = ({ goals }: { goals: ReadonlyArray<Project.Goal> }) => {
+/** Read-only: milestones are authored through the agent/MCP verbs, and store no status to render. */
+const MilestoneList = ({ refs }: { refs: ReadonlyArray<Ref.Ref<Milestone.Milestone>> }) => (
+  <Flex role='list' column gap='xs'>
+    {refs.map((milestoneRef) => (
+      <MilestoneRow key={milestoneRef.uri.toString()} milestoneRef={milestoneRef} />
+    ))}
+  </Flex>
+);
+
+/** One row, holding its own subscription so a rename re-renders just that row. */
+const MilestoneRow = ({ milestoneRef }: { milestoneRef: Ref.Ref<Milestone.Milestone> }) => {
+  const [milestone] = useObject(milestoneRef);
+  if (!milestone) {
+    return null;
+  }
+
   return (
-    <div role='list' className='flex flex-col gap-1'>
-      {goals.map((goal) => (
-        <div key={goal.id} role='listitem' className='flex items-center gap-2 min-w-0'>
-          <Icon
-            icon={
-              goal.status === 'met'
-                ? 'ph--check--regular'
-                : goal.status === 'dropped'
-                  ? 'ph--minus--regular'
-                  : 'ph--circle--regular'
-            }
-            classNames={
-              goal.status === 'met' ? 'text-success-text' : goal.status === 'dropped' ? 'text-subdued' : undefined
-            }
-            size={4}
-          />
-          <span className={goal.status === 'dropped' ? 'line-through text-subdued truncate' : 'truncate'}>
-            {goal.text}
-          </span>
-        </div>
-      ))}
-    </div>
+    <Flex role='listitem' gap='sm' align='center' classNames='min-w-0'>
+      <Icon icon='ph--flag--regular' size={4} />
+      <span className='truncate'>{milestone.name}</span>
+      {milestone.targetDate && <span className='text-subdued shrink-0'>{milestone.targetDate}</span>}
+    </Flex>
   );
 };
 
@@ -201,7 +221,7 @@ const GoalList = ({ goals }: { goals: ReadonlyArray<Project.Goal> }) => {
  * actions are expected to diverge as the toolbar grows, and the graph's create-chat action serves
  * the navtree row.
  */
-const useToolbarActions = (project: Project.Project) => {
+const useToolbarActions = (project: Project.Project, onAddArtifact: () => void) => {
   const { invokePromise } = useOperationInvoker();
   // The handler resolves `Database.Service`, which only the space context supplies — without this
   // the invocation fails with ServiceNotAvailable.
@@ -221,17 +241,30 @@ const useToolbarActions = (project: Project.Project) => {
           () => void invokePromise(ProjectOperation.CreateChat, { project }, { spaceId }),
         )
         .action(
-          'create-routine',
+          'add-artifact',
           {
-            label: ['create-routine.label', { ns: meta.profile.key }],
+            label: ['add-artifact.label', { ns: meta.profile.key }],
+            icon: 'ph--plus--regular',
+            disposition: 'toolbar',
+            testId: 'projectsPlugin.addArtifact',
+          },
+          onAddArtifact,
+        )
+        // The growing gap pushes the routines button to the trailing edge: it opens a companion rather
+        // than creating anything, so it reads as navigation, not a peer of the create actions.
+        .separator()
+        .action(
+          'routines',
+          {
+            label: ['routines.label', { ns: meta.profile.key }],
             icon: 'ph--lightning--regular',
             disposition: 'toolbar',
-            testId: 'projectsPlugin.createRoutine',
+            testId: 'projectsPlugin.routines',
           },
-          () => void invokePromise(ProjectOperation.CreateRoutine, { project }, { spaceId }),
+          () => void invokePromise(LayoutOperation.UpdateCompanion, { subject: Attention.linkedSegment('automation') }),
         )
         .build(),
-    [project, invokePromise, spaceId],
+    [project, invokePromise, spaceId, onAddArtifact],
   );
 };
 
@@ -244,8 +277,8 @@ type ObjectGalleryProps = {
 };
 
 /**
- * A project's linked objects (routines or artifacts) as clickable cards. Unresolved refs are omitted
- * until their target loads.
+ * A project's linked objects (its artifacts) as clickable cards. Unresolved refs are omitted until
+ * their target loads.
  */
 const ObjectGallery = ({ refs, onOpen, onDelete }: ObjectGalleryProps) => {
   // Resolve reactively: on a cold load the targets are not yet in memory, and reading `.target`

@@ -10,13 +10,13 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Database, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+
+import { ProjectCapabilities, ProjectOperation } from '#types';
 
 // Leaf import: the templates barrel pulls `inbox-research` (plugin-inbox/plugin-routine) into the
 // bundle, which a worker registering this handler cannot load.
 import { blank } from '../templates/blank';
-import * as ProjectCapabilities from '../types/ProjectCapabilities';
-import * as ProjectOperation from '../types/ProjectOperation';
 
 const handler: Operation.WithHandler<typeof ProjectOperation.Create> = ProjectOperation.Create.pipe(
   Operation.withHandler(
@@ -38,13 +38,18 @@ const handler: Operation.WithHandler<typeof ProjectOperation.Create> = ProjectOp
         .scaffold({ name, subject })
         .pipe(Effect.provideService(Database.Service, Database.makeService(db)));
 
-      const result = yield* Operation.invoke(SpaceOperation.AddObject, {
-        object: draft,
-        target: db,
-        targetNodeId: GraphPath.getSpacePath(db.spaceId, GraphPath.GroupSegments.ai, Type.getTypename(Project.Project)),
-      });
+      const result = yield* Operation.invoke(SpaceOperation.AddObject, { object: draft }, { spaceId: db.spaceId });
       invariant(Obj.instanceOf(Project.Project, result.object), 'Expected a Project.');
-      return { id: result.id, subject: result.subject, project: result.object };
+      const nodePath = GraphPath.getSpacePath(
+        db.spaceId,
+        GraphPath.GroupSegments.ai,
+        Type.getTypename(Project.Project),
+      );
+      return {
+        id: result.id,
+        subject: [GraphPath.getCollectionObjectPath(nodePath, result.object.id)],
+        project: result.object,
+      };
     }),
   ),
 );

@@ -106,7 +106,6 @@
     "@dxos/async": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/client-services": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",
@@ -131,16 +130,13 @@
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
     "@dxos/worker-framework": "workspace:*",
-    "@effect/experimental": "catalog:",
     "@effect/platform-browser": "catalog:",
-    "@effect/rpc": "catalog:",
     "effect": "catalog:",
     "jwt-decode": "catalog:",
     "lodash.isequalwith": "catalog:"
   },
   "devDependencies": {
     "@automerge/automerge": "catalog:",
-    "@effect/sql": "catalog:",
     "@types/lodash.isequalwith": "catalog:",
     "typedoc": "catalog:"
   },

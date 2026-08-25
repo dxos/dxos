@@ -12,10 +12,13 @@ import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 import * as Schema from 'effect/Schema';
 import * as Schema$ from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import type * as Types from 'effect/Types';
 
 import { Annotation, DXN, JsonSchema, type Key, Migration, Obj, Ref, Type } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import type { URI } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import { type NoHandlerError, RunAgainError } from './errors';
 import type { Operation } from './index';
@@ -24,7 +27,7 @@ import type { Operation } from './index';
  * Schema type that accepts any Encoded form but requires no Context.
  * This allows ECHO object schemas where Type !== Encoded due to [KindId] symbol.
  */
-type Schema<T> = Schema$.Schema<T, any, never>;
+type Schema<T> = Schema$.Codec<T, any, never, never>;
 
 export const DefinitionTypeId = '~@dxos/operation/OperationDefinition' as const;
 export type DefinitionTypeId = typeof DefinitionTypeId;
@@ -88,7 +91,7 @@ export interface Definition<I, O, S = any> extends Pipeable.Pipeable, Definition
    * Effect services required by this operation.
    * These services will be automatically provided to the handler at invocation time.
    */
-  readonly services: readonly Context.Tag<any, any>[];
+  readonly services: readonly Context.Key<any, any>[];
 }
 
 /**
@@ -215,7 +218,7 @@ export const make = <const P extends Types.NoExcessProperties<Props<any, any>, P
 ): Definition<
   Schema$.Schema.Type<P['input']>,
   Schema$.Schema.Type<P['output']>,
-  Context.Tag.Identifier<NonNullable<P['services']>[number]>
+  Context.Service.Identifier<NonNullable<P['services']>[number]>
 > => {
   return {
     [DefinitionTypeId]: {},
@@ -323,6 +326,79 @@ export const opaqueHandler = <T extends Operation.Definition.Any>(
 ): Operation.WithHandler<Operation.Definition.Any> => handler;
 
 //
+// Tool projection
+//
+
+/**
+ * Constant namespace prefix elided from tool names; keys outside it (examples, third-party) keep every segment.
+ */
+const TOOL_NAME_KEY_PREFIX = 'org.dxos.operation.';
+
+/**
+ * Derives the model-facing tool name for an operation from its DXN key — never from `meta.name`,
+ * which is display copy and must stay freely editable without renaming the tool the model calls.
+ * The key's namespace segment prefixes the name, which is what removes the cross-skill collisions
+ * that a bare verb produced (three skills each claimed `create`).
+ *
+ * The mapping is not injective: kebab-casing makes a camelCase segment and an already-hyphenated one
+ * converge, so `webSearch` and `web-search` both yield `web-search`, and hyphenated segments are in
+ * live keys (`plugin-crm`, `web-search`). Registry-key uniqueness therefore does not by itself
+ * guarantee tool-name uniqueness. Two such keys are an authoring error, caught in the two places both
+ * keys are visible at once: {@link findToolNameCollisions} over a whole set, and the tool resolver.
+ *
+ * @example `org.dxos.operation.markdown.create` → `markdown-create`
+ * @example `org.dxos.operation.assistantToolkit.addArtifact` → `assistant-toolkit-add-artifact`
+ */
+export const toolName = (op: Definition.Any): string => toolNameFromKey(op.meta.key);
+
+/**
+ * {@link toolName} for a raw registry key (a DXN or bare NSID), e.g. a persisted record's meta key.
+ */
+export const toolNameFromKey = (key: string): string => {
+  const name = deriveToolName(key);
+  invariant(TOOL_NAME_REGEXP.test(name), `Invalid tool name: ${name}`);
+  return name;
+};
+
+/** Shape every derived tool name must have — the model-facing identifier contract. */
+const TOOL_NAME_REGEXP = /^[a-z][a-z0-9-_]*$/;
+
+const deriveToolName = (key: string): string => {
+  const nsid = DXN.isDXN(key) ? DXN.getName(key) : key;
+  const stripped = nsid.startsWith(TOOL_NAME_KEY_PREFIX) ? nsid.slice(TOOL_NAME_KEY_PREFIX.length) : nsid;
+  return stripped.split('.').map(kebabCase).join('-');
+};
+
+const kebabCase = (segment: string): string => segment.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+
+/**
+ * {@link toolNameFromKey} for a key that is not known to be well-formed — a record off the wire, whose
+ * `@meta.key` is untrusted JSON. Returns undefined instead of failing, so one malformed entry costs its
+ * own tool rather than every tool in the projection.
+ */
+export const tryToolNameFromKey = (key: string): string | undefined => {
+  const name = deriveToolName(key);
+  return TOOL_NAME_REGEXP.test(name) ? name : undefined;
+};
+
+/**
+ * Groups a set of operations by derived tool name, returning only the names claimed more than once.
+ *
+ * {@link toolName} is not injective (see its note), so a set of registry-unique keys can still
+ * collide. Call this wherever a complete operation set is assembled — the resolver sees keys one at a
+ * time and can only catch a collision once a colliding name is actually requested.
+ */
+export const findToolNameCollisions = (operations: readonly Definition.Any[]): Map<string, readonly DXN.DXN[]> => {
+  // Keyed by key, not by occurrence: one operation bound by two skills is the same tool, not a clash.
+  const byName = new Map<string, Set<DXN.DXN>>();
+  for (const op of operations) {
+    const name = toolName(op);
+    byName.set(name, (byName.get(name) ?? new Set()).add(op.meta.key));
+  }
+  return new Map([...byName].filter(([, keys]) => keys.size > 1).map(([name, keys]) => [name, [...keys]]));
+};
+
+//
 // Invocation Interfaces
 //
 
@@ -423,6 +499,24 @@ export const serialize = (operation: Definition.Any): PersistentOperation => {
 };
 
 /**
+ * Serializes each definition, dropping any whose schema cannot render as JSON Schema, so one
+ * unserializable operation (e.g. `space.importSpace`) does not fail registry population for every
+ * other.
+ */
+export const serializable = (operations: readonly Definition.Any[]): PersistentOperation[] =>
+  operations.flatMap((operation) => {
+    try {
+      return [serialize(operation)];
+    } catch (error) {
+      log.verbose('operation is not serializable; excluded from the registry', {
+        key: String(operation.meta.key),
+        error: String(error),
+      });
+      return [];
+    }
+  });
+
+/**
  * Deserialize a persistent operation record to an operation definition.
  */
 export const deserialize = (record: PersistentOperation): Definition.Any => {
@@ -432,7 +526,7 @@ export const deserialize = (record: PersistentOperation): Definition.Any => {
   return make({
     input: record.inputSchema ? JsonSchema.toEffectSchema(record.inputSchema) : Schema$.Unknown,
     output: record.outputSchema ? JsonSchema.toEffectSchema(record.outputSchema) : Schema$.Unknown,
-    services: record.services?.map((service) => Context.GenericTag(service)) ?? [],
+    services: record.services?.map((service) => Context.Service(service)) ?? [],
     executionMode: 'async',
     types: [],
     meta: {
@@ -477,23 +571,21 @@ export const setFrom = (target: PersistentOperation, source: PersistentOperation
  * Defined locally to avoid a core dependency on UI translation packages; structurally compatible with
  * the app-level `Label` type so values flow into UI toasts unchanged.
  */
-export const Label = Schema.Union(
+export const Label = Schema.Union([
   Schema.String,
   // `Schema.mutable` mirrors the app-level `Label` (whose tuple is mutable), so decoded values are
   // assignable to UI toast `title`/`label` slots without a readonly-vs-mutable tuple mismatch.
   Schema.mutable(
-    Schema.Tuple(
+    Schema.Tuple([
       Schema.String,
-      Schema.mutable(
-        Schema.Struct({
-          ns: Schema.String,
-          count: Schema.optional(Schema.Number),
-          defaultValue: Schema.optional(Schema.String),
-        }),
-      ),
-    ),
+      Schema.Struct({
+        ns: Schema.String,
+        count: Schema.optional(Schema.Number),
+        defaultValue: Schema.optional(Schema.String),
+      }).mapFields(Struct.map(Schema.mutableKey)),
+    ]),
   ),
-);
+]);
 export type Label = Schema.Schema.Type<typeof Label>;
 
 /**
@@ -623,6 +715,28 @@ export const VisibleAnnotation = Annotation.make({
 });
 
 /**
+ * The operation's effect on state: `none` is side-effect free, `write` mutates but is not
+ * irreversible, `destructive` deletes or otherwise cannot be undone. Absent ⇒ unclassified, which
+ * consumers treat conservatively (an MCP client badges the tool as possibly destructive).
+ */
+export const MutationAnnotation = Annotation.make({
+  id: 'org.dxos.operation.mutation',
+  schema: Schema$.Literals(['none', 'write', 'destructive']),
+});
+
+export type Mutation = Schema$.Schema.Type<typeof MutationAnnotation.schema>;
+
+/**
+ * Pipeable combinator classifying the operation's effect on state — see {@link MutationAnnotation}.
+ * Apply at the definition site: `Operation.make({ ... }).pipe(Operation.mutation('none'))`.
+ */
+export const mutation = (value: Mutation) => annotate(MutationAnnotation, value);
+
+/** The operation's mutation class, or undefined when unclassified. Reads from the persisted record. */
+export const getMutation = (op: PersistentOperation): Mutation | undefined =>
+  Option.getOrUndefined(Annotation.get(op, MutationAnnotation));
+
+/**
  * Pipeable combinator that marks an operation visible. Apply at the definition site:
  * `Operation.make({ ... }).pipe(Operation.visible)`.
  */
@@ -634,51 +748,6 @@ export const visible = annotate(VisibleAnnotation, true);
  */
 export const isVisible = (op: PersistentOperation): boolean =>
   Option.getOrElse(Annotation.get(op, VisibleAnnotation), () => false);
-
-/**
- * Projection marker for an operation exposed as an MCP tool to external agents.
- * See plugin-projects `MILESTONE-5.md` §7.4 for the full contract.
- */
-export const McpTool = Schema$.Struct({
-  /** Tool name as exposed to MCP clients; camelCase, domain-prefixed (e.g. `taskCreate`). */
-  name: Schema$.String,
-  /** Model-facing description; falls back to the operation's own description when absent. */
-  description: Schema$.optional(Schema$.String),
-  /**
-   * Safety class the server maps to MCP tool hints: `read` is side-effect free (readOnlyHint),
-   * `write` mutates space data, `destructive` deletes or is otherwise irreversible.
-   */
-  safety: Schema$.Literal('read', 'write', 'destructive'),
-  /** Aspect/toolset, for server-side filtering (e.g. `/mcp?toolsets=tasks`). */
-  aspect: Schema$.optional(Schema$.String),
-});
-export type McpTool = Schema$.Schema.Type<typeof McpTool>;
-
-/**
- * Annotation that opts an operation into MCP projection. The annotation rides through
- * {@link serialize} into the persisted record, so a remote projector (edge mcp-space-service)
- * discovers tools from the operation registry rather than a hand-maintained table.
- *
- * Projected operations must be remotely invocable: refs (not live objects) in, JSON snapshots
- * out, schemas that survive serialization, and worker-safe handlers — MILESTONE-5.md §7.4.
- */
-export const McpToolAnnotation = Annotation.make({
-  id: 'org.dxos.operation.mcp-tool',
-  schema: McpTool,
-});
-
-/**
- * Pipeable combinator that opts an operation into MCP projection. Apply at the definition site:
- * `Operation.make({ ... }).pipe(Operation.mcpTool({ name: 'taskComplete', safety: 'write' }))`.
- */
-export const mcpTool = (props: McpTool) => annotate(McpToolAnnotation, props);
-
-/**
- * Returns the MCP projection descriptor when the operation is annotated for it, else undefined.
- * Reads from the persisted operation — the form the projector holds.
- */
-export const getMcpTool = (op: PersistentOperation): McpTool | undefined =>
-  Option.getOrUndefined(Annotation.get(op, McpToolAnnotation));
 
 /**
  * Pipeable combinator that marks an operation idempotent — see {@link IdempotentAnnotation}. Apply at
@@ -736,7 +805,7 @@ export interface OperationService {
  * ```
  */
 // TODO(dmaretskyi): Rename Operation.Invoker
-export class Service extends Context.Tag('@dxos/operation/Service')<Service, OperationService>() {}
+export class Service extends Context.Service<Service, OperationService>()('@dxos/operation/Service') {}
 
 //
 // Namespace functions - ergonomic access to Operation.Service methods.

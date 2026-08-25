@@ -27,8 +27,8 @@ import { DataTypes } from '@dxos/schema';
 
 import { createNotebook } from '#testing';
 import { translations } from '#translations';
+import { Notebook } from '#types';
 
-import * as Notebook from '../../types/Notebook';
 import { NotebookArticle } from './NotebookArticle';
 
 const meta: Meta<typeof NotebookArticle> = {
@@ -45,7 +45,7 @@ const meta: Meta<typeof NotebookArticle> = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           // TODO(wittjosiah): ComputeRuntime requires edge to be configured or it will throw.
           config: new Config({
             runtime: {
@@ -55,17 +55,17 @@ const meta: Meta<typeof NotebookArticle> = {
           types: [...DataTypes, Notebook.Notebook, Operation.PersistentOperation, Markdown.Document],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { defaultSpace } = yield* initializeIdentity(client);
 
-              personalSpace.db.add(createNotebook());
-              personalSpace.db.add(Markdown.make({ content: '# Hello World' }));
-              personalSpace.db.add(Operation.serialize(RunInstructions));
+              defaultSpace.db.add(createNotebook());
+              defaultSpace.db.add(Markdown.make({ content: '# Hello World' }));
+              defaultSpace.db.add(Operation.serialize(RunInstructions));
             }),
         }),
         AssistantPlugin(),
         RoutinePlugin(),
-        ExplorerPlugin(),
-        MarkdownPlugin(),
+        ExplorerPlugin.make(),
+        MarkdownPlugin.make(),
       ],
     }),
   ],

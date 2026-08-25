@@ -12,8 +12,8 @@ import { Obj } from '@dxos/echo';
 import { Channel } from '@dxos/types';
 
 import { MeetingArticle } from '#containers';
+import { Meeting } from '#types';
 
-import * as Meeting from '../types/Meeting';
 import { MeetingCompanion } from './MeetingCompanion';
 
 export default Capability.makeModule(() =>

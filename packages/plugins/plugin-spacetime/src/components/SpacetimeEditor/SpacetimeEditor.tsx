@@ -2,8 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { createContext } from '@radix-ui/react-context';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, {
   type PropsWithChildren,
   type RefObject,
@@ -20,8 +22,9 @@ import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { composable, composableProps } from '@dxos/react-ui';
 
+import { Scene } from '#types';
+
 import { DEFAULT_EDITOR_STATE, type EditorState, getSelectedObjectIds } from '../../tools';
-import type * as Scene from '../../types/Scene';
 import { SpacetimeCanvas, type SpacetimeCanvasProps } from '../SpacetimeCanvas';
 import { type EditorActions, SpacetimeToolbar, type SpacetimeToolbarProps } from '../SpacetimeToolbar';
 import { handleExport as doExport, handleImport as doImport } from './import-export';

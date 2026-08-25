@@ -15,19 +15,22 @@ import { useObject } from '@dxos/echo-react';
 import { ClientOperation } from '@dxos/plugin-client';
 import { useRegistry } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
+import { type ChatView } from '@dxos/react-ui-assistant';
+import { Merge } from '@dxos/util';
 
 import { Chat as ChatComponent, type ChatRootProps } from '#components';
 import { useChatProcessor, useChatServices, usePresets, useSelectionContext } from '#hooks';
+import { AssistantCapabilities } from '#types';
 
-import type * as Assistant from '../../types/Assistant';
-import * as AssistantCapabilities from '../../types/AssistantCapabilities';
-
-export type ChatArticleProps = AppSurface.ObjectSectionProps<ChatType.Chat> & {
-  companionTo?: Obj.Unknown;
-} & Pick<ChatRootProps, 'onEvent' | 'onSubmit'>;
+export type ChatArticleProps = Merge<
+  AppSurface.ObjectSectionProps<ChatType.Chat> & {
+    companionTo?: Obj.Unknown;
+  },
+  Pick<ChatRootProps, 'debug' | 'onEvent' | 'onSubmit'>
+>;
 
 export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
-  ({ role, attendableId, subject: chat, companionTo, onEvent, onSubmit }, forwardedRef) => {
+  ({ role, attendableId, subject: chat, companionTo, debug, onEvent, onSubmit }, forwardedRef) => {
     const registry = useRegistry();
     const settings = useAtomCapability(AssistantCapabilities.Settings);
     const atomRegistry = useCapability(Capabilities.AtomRegistry);
@@ -45,7 +48,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     // Subscribe to the view type via `useObject` so the thread re-renders when ChatOptions changes it;
     // a direct `chat.viewType` read in render does not establish a reactive dependency.
     const [chatViewType] = useObject(chat, 'viewType');
-    const viewType = (chatViewType as Assistant.ChatView | undefined) ?? settings.chatView;
+    const viewType = (chatViewType as ChatView | undefined) ?? settings.chatView;
 
     const { invokePromise } = useOperationInvoker();
     const handleViewUsage = useCallback(() => {
@@ -86,6 +89,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
         chat={chat}
         db={space?.db}
         processor={processor}
+        debug={debug}
         getContext={getContext}
         onEvent={onEvent}
         onSubmit={onSubmit}
@@ -97,10 +101,11 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
           <Panel.Content asChild>
             <ChatComponent.Content>
               <div className='dx-container relative'>
-                {viewType !== 'summary' && (
-                  <ChatComponent.Minimap classNames='absolute left-0 top-1/2 -translate-y-1/2 z-10' />
-                )}
-                <ChatComponent.Thread viewType={viewType} onViewUsage={handleViewUsage} />
+                {/* Thread outline. */}
+                <ChatComponent.Outline classNames='absolute left-0 top-1/2 -translate-y-1/2 z-10' />
+                {/* Main thread. */}
+                <ChatComponent.Thread viewType={viewType} tailLines={4} onViewUsage={handleViewUsage} />
+                {/* Floating thread status. */}
                 {viewType !== 'summary' && (
                   <div className='absolute bottom-2 left-0 right-0'>
                     <div className='dx-document px-4'>
@@ -109,15 +114,15 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                   </div>
                 )}
               </div>
-              <div className='dx-document px-4 pb-4'>
-                <div className='flex flex-col items-center py-2 overflow-hidden'>
-                  <ChatComponent.TaskList classNames='max-h-[120px] border border-separator rounded-sm text-description' />
+              <div className='dx-document flex flex-col px-4 pb-4'>
+                <div className='px-4'>
+                  <ChatComponent.TaskList classNames='border border-separator border-b-0 rounded-sm rounded-b-none text-description' />
                 </div>
                 <ChatComponent.Prompt
                   {...chatProps}
                   outline
-                  preset={preset?.id}
                   online={online}
+                  preset={preset?.id}
                   companionTo={companionTo}
                 />
               </div>

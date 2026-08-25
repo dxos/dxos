@@ -2,24 +2,24 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Function from 'effect/Function';
-import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
 import { decamelize } from '@dxos/util';
 
-const ParamKeyAnnotationId = Symbol.for('@dxos/schema/annotation/ParamKey');
+import * as SchemaAST from './schema-ast';
+
+// Annotation keys are strings in v4, so the id is a namespaced string rather than a symbol.
+const ParamKeyAnnotationId = '@dxos/schema/annotation/ParamKey';
 
 type ParamKeyAnnotationValue = { key: string };
 
-export const getParamKeyAnnotation: (annotated: SchemaAST.Annotated) => Option.Option<ParamKeyAnnotationValue> =
-  SchemaAST.getAnnotation<ParamKeyAnnotationValue>(ParamKeyAnnotationId);
+export const getParamKeyAnnotation = (ast: SchemaAST.AST): ParamKeyAnnotationValue | undefined =>
+  SchemaAST.getAnnotation<ParamKeyAnnotationValue>(ParamKeyAnnotationId)(ast);
 
 export const ParamKeyAnnotation =
   (value: ParamKeyAnnotationValue) =>
-  <S extends Schema.Annotable.All>(self: S): Schema.Annotable.Self<S> =>
-    self.annotations({ [ParamKeyAnnotationId]: value });
+  <S extends Schema.Top>(self: S): S['Rebuild'] =>
+    self.annotate({ [ParamKeyAnnotationId]: value });
 
 /**
  * HTTP params parser.
@@ -62,13 +62,9 @@ export class UrlParser<T extends Record<string, any>> {
       if (value !== undefined) {
         const field = this._schema.fields[key];
         if (field) {
-          const { key: serializedKey } = Function.pipe(
-            getParamKeyAnnotation(field.ast),
-            Option.getOrElse(() => ({
-              key: decamelize(key),
-            })),
-          );
-
+          // v4 annotations are a plain record, so the lookup returns the value or undefined
+          // rather than an Option.
+          const serializedKey = getParamKeyAnnotation(field.ast)?.key ?? decamelize(key);
           url.searchParams.set(serializedKey, String(value));
         }
       }

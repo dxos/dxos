@@ -12,7 +12,13 @@ import { createRequire } from 'node:module';
 // TODO(wittjosiah): Expand across all @dxos packages, enforcing a consistent namespaced API
 //  surface repo-wide rather than an opt-in list. Each addition needs its exports map split per
 //  namespace first, which for the remainder means the export-namespace -> module-file refactor.
-const DXOS_SUBPATH_PACKAGES = new Set(['@dxos/app-framework', '@dxos/app-toolkit', '@dxos/compute']);
+const DXOS_SUBPATH_PACKAGES = new Set([
+  '@dxos/app-framework',
+  '@dxos/app-graph',
+  '@dxos/app-toolkit',
+  '@dxos/assistant-toolkit',
+  '@dxos/compute',
+]);
 
 /**
  * Every plugin package participates: consumers import the namespace they need

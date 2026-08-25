@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type RenderOptions, type RenderResult, render as rtlRender } from '@testing-library/react';
 import React, { type FC, Fragment, type PropsWithChildren, type ReactNode, useMemo } from 'react';
 
@@ -71,7 +71,7 @@ const HarnessProviders = ({ harness, extra, children }: HarnessProvidersProps) =
   const ContributedContext = composeContexts(contributed);
   const ExtraContext = composeExtra(extra);
   // Mirror useApp's provider stack (see SurfaceManager) so the unit-test render path matches the app.
-  const surfaces = useMemo(() => new SurfaceManager(harness.manager.capabilities), [harness]);
+  const surfaces = useMemo(() => new SurfaceManager(harness.manager.capabilities, harness.manager), [harness]);
   return (
     <PluginManagerProvider value={harness.manager}>
       <ContextProtocolProvider value={harness.manager} context={PluginManagerContext}>

@@ -37,6 +37,11 @@
       "source": "./src/WorkerProtocol.ts",
       "types": "./dist/types/src/WorkerProtocol.d.ts",
       "import": "./dist/lib/WorkerProtocol.mjs"
+    },
+    "./RpcTiming": {
+      "source": "./src/RpcTiming.ts",
+      "types": "./dist/types/src/RpcTiming.d.ts",
+      "import": "./dist/lib/RpcTiming.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -50,16 +55,18 @@
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "catalog:",
     "@effect/platform-browser": "catalog:",
-    "@effect/rpc": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/effect": "workspace:*",
+    "@dxos/node-std": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@playwright/test": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

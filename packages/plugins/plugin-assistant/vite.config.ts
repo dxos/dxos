@@ -6,10 +6,11 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'AssistantSkill': 'src/skills/assistant/AssistantSkill.ts',
     'index': 'src/index.ts',
     'AssistantPlugin': 'src/AssistantPlugin.ts',
-    'AssistantPlugin.node': 'src/AssistantPlugin.node.ts',
-    'AssistantPlugin.workerd': 'src/AssistantPlugin.workerd.ts',
+    'plugin.node': 'src/plugin.node.ts',
+    'plugin.workerd': 'src/plugin.workerd.ts',
     'skills': 'src/skills/index.ts',
     'capabilities': 'src/capabilities/index.ts',
     'capabilities.workerd': 'src/capabilities/workerd.ts',
@@ -21,7 +22,6 @@ export default defineConfig({
     'meta': 'src/meta.ts',
     'operations': 'src/operations/index.ts',
     'plugin': 'src/plugin.ts',
-    'plugin.workerd': 'src/plugin.workerd.ts',
     'testing': 'src/testing.ts',
     'translations': 'src/translations.ts',
     'AssistantEvents': 'src/types/AssistantEvents.ts',
@@ -34,6 +34,7 @@ export default defineConfig({
     'AssistantOperation': 'src/types/AssistantOperation.ts',
     'AssistantCapabilities': 'src/types/AssistantCapabilities.ts',
     'Ollama': 'src/types/Ollama.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

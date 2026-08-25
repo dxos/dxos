@@ -2,35 +2,35 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { type CapabilityManager } from '@dxos/app-framework';
 import * as Capability from '@dxos/app-framework/Capability';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
+import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { type Space, isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
-import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { EffectEx } from '@dxos/effect';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { ViewAnnotation } from '@dxos/schema';
 import { isLabel, toLocalizedString } from '@dxos/ui-types/translations';
-import { createFilename, isNonNullable } from '@dxos/util';
+import { createFilename, downloadBlob, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
-import { SpaceOperation } from '#operations';
+import { SpaceCapabilities, SpaceEvents, SpaceOperation } from '#types';
 
-import * as SpaceCapabilities from '../../../types/SpaceCapabilities';
-import * as SpaceEvents from '../../../types/SpaceEvents';
 import { makeCreateObjectEntryForDatabaseType } from '../../../util';
 import {
   ADD_VIEW_TO_SCHEMA_LABEL,
@@ -38,7 +38,6 @@ import {
   SCHEMA_NODE_TYPE,
   SNAPSHOT_BY_SCHEMA_LABEL,
   buildViewIndex,
-  downloadBlob,
 } from './shared';
 
 //
@@ -110,14 +109,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         );
 
         const userSchemas = allSchemas.filter((type) => {
-          if (Type.isRelation(type)) {
-            return false;
-          }
-          if (Type.isTypeKind(type)) {
-            return false;
-          }
-          const schema = Type.getSchema(type);
-          if (!showHidden && HiddenAnnotation.get(schema).pipe(Option.getOrElse(() => false))) {
+          if (!TypeOptions.isUserType(type, { includeHidden: showHidden })) {
             return false;
           }
           if (Type.getTypename(type) === Type.getTypename(Collection.Collection)) {
@@ -296,7 +288,7 @@ const createSchemaNode = ({
 }: {
   schema: Type.AnyEntity;
   space: Space;
-  get: Atom.Context;
+  get: Atom.AtomContext;
 }): Node.NodeArg<Type.AnyEntity> => {
   const typename = Type.getTypename(schema);
   // The node id doubles as the `types/<slug>` path segment, so it must be slash- and colon-free:
@@ -378,20 +370,24 @@ const createSchemaActions = ({
     ...(createObjectFn
       ? [
           Node.makeAction({
-            id: SpaceOperation.OpenCreateObject.meta.key,
+            id: SpaceOperation.OpenObjectForm.meta.key,
             data: Effect.fnUntraced(function* () {
               if (inputSchema) {
-                yield* Operation.invoke(SpaceOperation.OpenCreateObject, {
+                yield* Operation.invoke(SpaceOperation.OpenObjectForm, {
                   target: space.db,
                   typename,
                 });
               } else {
-                const result = yield* createObjectFn({}, { db: space.db, target: space.db }).pipe(
+                const result = yield* createObjectFn({}, { db: space.db }).pipe(
                   Effect.provideService(Capability.Service, capabilities),
                 );
-                if (result.subject.length > 0) {
+                const { targets } = yield* Operation.invoke(NavigationOperation.ResolveNavigationTargets, {
+                  query: { uri: Obj.getURI(result.object) },
+                });
+                const navigationTarget = targets[0];
+                if (navigationTarget) {
                   yield* Operation.invoke(LayoutOperation.Open, {
-                    subject: [...result.subject],
+                    subject: [navigationTarget.path],
                     navigation: 'immediate',
                   });
                 }
@@ -414,12 +410,12 @@ const createSchemaActions = ({
     Node.makeAction({
       id: `${SpaceOperation.AddObject.meta.key}-view`,
       data: () =>
-        Operation.invoke(SpaceOperation.OpenCreateObject, {
+        Operation.invoke(SpaceOperation.OpenObjectForm, {
           target: space.db,
           views: true,
           // The type-picker field value is the type URI (see TypeOptions), so seed the default with
           // the URI — not the bare typename — for the option to be pre-selected.
-          initialFormValues: { typename: Type.getURI(type) },
+          defaults: { typename: Type.getURI(type) },
         }),
       properties: {
         label: ADD_VIEW_TO_SCHEMA_LABEL,

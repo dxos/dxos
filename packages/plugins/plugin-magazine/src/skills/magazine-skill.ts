@@ -6,8 +6,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import * as FeedOperation from '../types/FeedOperation';
-import * as Magazine from '../types/Magazine';
+import { FeedOperation, Magazine } from '#types';
 
 const operations = [FeedOperation.FetchArticleContent];
 
@@ -29,8 +28,9 @@ const make = () =>
         fetchArticleContent with the candidate's id to read the full article text (and find an image)
         before deciding.
 
-        When you are done, call completeJob with the structured output:
-        { "posts": [{ "id": "<candidate id>", "snippet": "...", "imageUrl": "..." }, ...] }
+        When you are done, call completeJob with the selection under "success" — the tool takes
+        { "success": <output> } or { "failure": {...} }, never the output on its own:
+        { "success": { "posts": [{ "id": "<candidate id>", "snippet": "...", "imageUrl": "..." }, ...] } }
         listing the selected candidates in the order you want them shown. Only use ids that appear
         in the input — never invent ids. Omit "imageUrl" when no image is available. Do not attempt to
         add Posts yourself; the Magazine is updated mechanically from your output.

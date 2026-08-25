@@ -10,9 +10,9 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Blob, Database } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
-import * as FileOperation from '../types/FileOperation';
+import { FileOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -21,7 +21,7 @@ export default Capability.makeModule(
     return Capability.contribute(AppCapabilities.FileUploader, (db, file) => {
       const program = Effect.gen(function* () {
         const { object } = yield* invoke(FileOperation.Create, { db, file });
-        yield* invoke(SpaceOperation.AddObject, { target: db, object });
+        yield* invoke(SpaceOperation.AddObject, { object }, { spaceId: db.spaceId });
         const blob = yield* Database.load(object.data);
         const urlOption = yield* Blob.url(blob).pipe(Effect.provide(Database.layer(db)));
         return {

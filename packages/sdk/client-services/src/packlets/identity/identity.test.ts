@@ -19,7 +19,6 @@ import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
-import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
 import { MetadataStore } from '../metadata';
 import { valueEncoding } from '../pipeline';
@@ -29,12 +28,10 @@ import { Identity } from './identity';
 const createStores = () => {
   const storage = createStorage({ type: StorageType.RAM });
   const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
-  const blobStore = new BlobStore(storage.createDirectory('blobs'));
 
   return {
     storage,
     metadataStore,
-    blobStore,
   };
 };
 
@@ -145,7 +142,7 @@ describe('identity/identity', () => {
     genesisFeedKey?: PublicKey;
     edgeConnection?: EdgeConnection;
   }): Promise<TestIdentitySetup> => {
-    const { storage, metadataStore, blobStore } = createStores();
+    const { storage, metadataStore } = createStores();
 
     const keyring = new Keyring();
     const deviceKey = await keyring.createKey();
@@ -178,7 +175,6 @@ describe('identity/identity', () => {
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER,
       },
-      blobStore,
       networkManager: new SwarmNetworkManager({
         signalManager: new MemorySignalManager(args?.signalContext ?? new MemorySignalManagerContext()),
         transportFactory: MemoryTransportFactory,

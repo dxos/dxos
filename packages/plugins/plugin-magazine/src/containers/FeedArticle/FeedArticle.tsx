@@ -5,16 +5,16 @@
 import React, { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useProgressMonitor } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Panel } from '@dxos/react-ui';
+import { ProgressMeter } from '@dxos/react-ui-components';
 
 import { PostStack, type PostStackAction } from '#components';
 import { meta } from '#meta';
+import { FeedOperation, Subscription } from '#types';
 
-import * as FeedOperation from '../../types/FeedOperation';
-import * as Subscription from '../../types/Subscription';
 import { FeedToolbar } from './FeedToolbar';
 
 export type FeedArticleProps = AppSurface.ObjectArticleProps<Subscription.Subscription>;
@@ -23,6 +23,7 @@ export const FeedArticle = ({ role, subject, attendableId }: FeedArticleProps) =
   const { invokePromise } = useOperationInvoker();
   const [currentPostId, setCurrentPostId] = useState<string>();
   const [subscription] = useObject(subject);
+  const syncProgress = useProgressMonitor(FeedOperation.createSyncProgressKey(subject));
   // Subscribe to the backing queue via its Ref — `.target` alone does not re-render when the
   // feed loads after navigation (same pitfall as plugin-inbox MailboxArticle).
   const [postFeed] = useObject(subscription?.feed);
@@ -53,8 +54,10 @@ export const FeedArticle = ({ role, subject, attendableId }: FeedArticleProps) =
   }, [subject, invokePromise]);
 
   return (
-    <Panel.Root role={role} classNames='dx-document'>
-      <FeedToolbar attendableId={attendableId} onSync={handleSync} />
+    <Panel.Root role={role}>
+      <Panel.Toolbar>
+        <FeedToolbar attendableId={attendableId} onSync={handleSync} />
+      </Panel.Toolbar>
       <Panel.Content asChild>
         <PostStack
           id={subscription?.id ?? subject.id}
@@ -63,6 +66,9 @@ export const FeedArticle = ({ role, subject, attendableId }: FeedArticleProps) =
           onAction={handleAction}
         />
       </Panel.Content>
+      <Panel.Statusbar classNames='border-t border-subdued-separator' asChild>
+        <ProgressMeter state={syncProgress} />
+      </Panel.Statusbar>
     </Panel.Root>
   );
 };

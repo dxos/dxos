@@ -15,9 +15,9 @@ tasks:
   check-module-structure:
     command: >-
       pnpm exec dx-trace-imports
-      --export ./plugin
+      --export ./KanbanPlugin
       --to "{react,react-dom}"
-      --conditions workerd,worker,node
+      --conditions workerd,worker
       --fail-on present
     deps:
       - dx-trace-imports:build
@@ -32,6 +32,11 @@ tasks:
     deps:
       - ~:build
   e2e:
+    # `storybook dev` resolves packages from source, but Vite's dep-scan aborts without vendor dist,
+    # taking the web server down with it.
+    deps:
+      - '#vendor:build'
+      - '#storybook:#prebuild'
     inputs:
       - .storybook/*
       - /tools/storybook-react/.storybook/main.ts

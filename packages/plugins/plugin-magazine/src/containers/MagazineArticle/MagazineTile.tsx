@@ -9,9 +9,8 @@ import { Card, Focus, SystemIconButton } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useMagazinePostData } from '#atoms';
+import { Magazine, Subscription } from '#types';
 
-import type * as Magazine from '../../types/Magazine';
-import type * as Subscription from '../../types/Subscription';
 import { formatDate } from '../../util/date';
 
 export type MagazineTileProps = {
@@ -73,7 +72,7 @@ export const MagazineTile = ({ post, magazine, current, onToggleStar, onOpen }: 
             </Card.Row>
           )}
           <Card.Row>
-            <div className='grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 py-1.5 text-sm text-description overflow-hidden'>
+            <div className='grid grid-cols-[minmax(0,1fr)_auto] items-center gap-trim-sm py-trim-xs text-sm text-description overflow-hidden'>
               <span className='truncate'>{feedName ?? ''}</span>
               <span className='text-end shrink-0'>{formatPublished(snapshot) ?? ''}</span>
             </div>

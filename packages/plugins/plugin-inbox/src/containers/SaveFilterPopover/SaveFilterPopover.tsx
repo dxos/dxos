@@ -7,11 +7,10 @@ import React, { useCallback, useRef, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
-import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
+import { Button, Flex, Input, Popover, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-
-import type * as Mailbox from '../../types/Mailbox';
+import { Mailbox } from '#types';
 
 export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbox; filter: string }) => {
   const { t } = useTranslation(meta.profile.key);
@@ -27,7 +26,7 @@ export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbo
   }, [mailbox, name, filter, invokePromise]);
 
   return (
-    <div className='p-2 flex gap-2'>
+    <Flex gap='sm' classNames='p-2'>
       <div className='flex-1'>
         <Input.Root>
           <Input.Label srOnly>{t('saved-filter-name.label')}</Input.Label>
@@ -46,7 +45,7 @@ export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbo
           {t('save-filter.button')}
         </Button>
       </Popover.Close>
-    </div>
+    </Flex>
   );
 };
 

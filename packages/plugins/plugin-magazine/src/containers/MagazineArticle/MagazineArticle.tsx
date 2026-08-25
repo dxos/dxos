@@ -2,27 +2,25 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useProgressMonitor, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Panel, useTranslation } from '@dxos/react-ui';
+import { Flex, Panel, useTranslation } from '@dxos/react-ui';
 import { Attention, useSelection } from '@dxos/react-ui-attention';
+import { ProgressMeter } from '@dxos/react-ui-components';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
 
 import { useVisibleMagazinePosts } from '#atoms';
 import { meta } from '#meta';
+import { FeedOperation, Magazine, Subscription } from '#types';
 
-import * as FeedOperation from '../../types/FeedOperation';
-import * as Magazine from '../../types/Magazine';
-import * as Subscription from '../../types/Subscription';
 import { MagazineTile } from './MagazineTile';
 import { useToolbar } from './useToolbar';
 
@@ -32,6 +30,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   const { t } = useTranslation(meta.profile.key);
   const invoker = useOperationInvoker();
   const [magazine] = useObject(subject);
+  const curateProgress = useProgressMonitor(FeedOperation.createCurateProgressKey(subject));
 
   // The toolbar owns the view-filter atom and the curate/clear handlers; the article reads `view` to
   // filter the visible posts.
@@ -76,13 +75,6 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   );
 
   const noPosts = posts.length === 0;
-  useEffect(() => {
-    if (noPosts) {
-      void invoker.invokePromise(LayoutOperation.UpdateCompanion, {
-        subject: Attention.linkedSegment('settings'),
-      });
-    }
-  }, [noPosts, invoker]);
 
   const tileItems = useMemo<TileData[]>(
     () =>
@@ -109,9 +101,9 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       <Panel.Content>
         {noPosts ? (
           // TODO(burdon): Factor out common EmptyState component; of push into Masonry, List, etc.
-          <div className='h-full flex items-center justify-center text-subdued text-sm'>
+          <Flex center classNames='h-full text-subdued text-sm'>
             {t('empty-magazine.message')}
-          </div>
+          </Flex>
         ) : (
           <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
             <Masonry.Content thin centered padding>
@@ -121,6 +113,9 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
           </Masonry.Root>
         )}
       </Panel.Content>
+      <Panel.Statusbar classNames='border-t border-subdued-separator' asChild>
+        <ProgressMeter state={curateProgress} />
+      </Panel.Statusbar>
     </Panel.Root>
   );
 };

@@ -11,11 +11,7 @@ import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilitie
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 
 import type { ReviewPluginOptions } from '#plugin';
-
-import * as AgentIdentity from '../types/AgentIdentity';
-import * as CommentCapabilities from '../types/CommentCapabilities';
-import * as ReviewCapabilities from '../types/ReviewCapabilities';
-import * as ReviewEvents from '../types/ReviewEvents';
+import { AgentIdentity, CommentCapabilities, ReviewCapabilities, ReviewEvents } from '#types';
 
 export const AgentIdentityModule = Capability.inlineModule(
   'agent-identity',
@@ -34,6 +30,7 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
 export const HistoryGraph = AppCapability.appGraphBuilder(() => import('./history-graph'), {
   name: 'HistoryGraph',
 });
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const Markdown = Capability.lazyModule(
   'MarkdownExtension',

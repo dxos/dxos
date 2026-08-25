@@ -11,7 +11,7 @@ import { SchemaEx } from '@dxos/effect';
 import { Card } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
-const schemaForValue = (value: unknown): Schema.Schema.AnyNoContext | undefined => {
+const schemaForValue = (value: unknown): Schema.Codec<any, any> | undefined => {
   switch (typeof value) {
     case 'string':
       return Schema.String;
@@ -35,7 +35,7 @@ const isInternalKey = (key: string) => key === 'id' || key.startsWith('~');
 export const ExpandoCard = ({ subject, ignorePaths }: AppSurface.ObjectCardProps) => {
   const schema = useMemo(() => {
     const ignored = new Set(ignorePaths ?? []);
-    const fields: Record<string, Schema.Schema.AnyNoContext> = {};
+    const fields: Record<string, Schema.Codec<any, any>> = {};
     for (const key of Object.keys(subject)) {
       if (isInternalKey(key) || ignored.has(key)) {
         continue;

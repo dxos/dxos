@@ -10,8 +10,7 @@ import { Input, useTranslation } from '@dxos/react-ui';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 
 import { meta } from '#meta';
-
-import * as ProjectCapabilities from '../../types/ProjectCapabilities';
+import { ProjectCapabilities } from '#types';
 
 export type CreateProjectPanelProps = SpaceCapabilities.CreateObjectCustomPanelProps & {
   /** Optional override (primarily for stories/tests). Defaults to ProjectCapabilities.Template. */

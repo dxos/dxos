@@ -2,9 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { assert, describe, expect, onTestFinished, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
@@ -183,7 +185,7 @@ describe('Graph', () => {
     const settled = await EffectEx.runPromise(
       Graph.waitFor(graph, EXAMPLE_ID).pipe(
         Effect.map(() => 'settled' as const),
-        Effect.timeoutTo({ duration: '50 millis', onTimeout: () => 'pending' as const, onSuccess: (value) => value }),
+        Effect.timeoutOrElse({ duration: '50 millis', orElse: () => Effect.succeed('pending' as const) }),
       ),
     );
     expect(settled).toEqual('pending');
@@ -783,7 +785,60 @@ describe('Graph', () => {
         },
       }),
     );
-    await graph.pipe(Graph.expand(Node.RootId, 'child'));
+    await graph.pipe(Graph.expandSync(Node.RootId, 'child'));
+    expect(expandCalled).to.be.true;
+  });
+
+  test('expand runs the expansion off the caller frame', async () => {
+    const registry = Registry.make();
+    const builder = GraphBuilder.make({ registry });
+    const graph = builder.graph;
+    let expandCalled = false;
+    GraphBuilder.addExtension(
+      builder,
+      GraphBuilder.createExtensionRaw({
+        id: 'test',
+        connector: () => {
+          expandCalled = true;
+          return Atom.make([]);
+        },
+      }),
+    );
+
+    const effect = Graph.expand(graph, Node.RootId, 'child');
+    // Nothing runs while the effect is only described.
+    expect(expandCalled).to.be.false;
+
+    await EffectEx.runPromise(effect);
+    expect(expandCalled).to.be.true;
+  });
+
+  test('interrupting a delayed expand cancels it', async () => {
+    const registry = Registry.make();
+    const builder = GraphBuilder.make({ registry });
+    const graph = builder.graph;
+    let expandCalled = false;
+    GraphBuilder.addExtension(
+      builder,
+      GraphBuilder.createExtensionRaw({
+        id: 'test',
+        connector: () => {
+          expandCalled = true;
+          return Atom.make([]);
+        },
+      }),
+    );
+
+    // Mirrors the nav-tree's hover prefetch: a settle delay in front of the expansion, superseded by
+    // interrupting the fiber.
+    const fiber = Effect.runFork(
+      Effect.sleep('1 second').pipe(Effect.andThen(Graph.expand(graph, Node.RootId, 'child'))),
+    );
+    await EffectEx.runPromise(Fiber.interrupt(fiber));
+    expect(expandCalled).to.be.false;
+
+    // The graph is untouched, so a later expansion still runs.
+    await EffectEx.runPromise(Graph.expand(graph, Node.RootId, 'child'));
     expect(expandCalled).to.be.true;
   });
 
@@ -797,7 +852,7 @@ describe('Graph', () => {
     const childId = 'child';
     expect(Option.isNone(registry.get(graph.node(childId)))).to.be.true;
 
-    Graph.expand(graph, childId, 'child');
+    Graph.expandSync(graph, childId, 'child');
     expect(expandCalls).to.deep.equal([]);
 
     Graph.addNode(graph, { id: childId, type: EXAMPLE_TYPE });

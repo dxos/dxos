@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
+import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { type Collection, type Database, Obj } from '@dxos/echo';
+import { type Collection, type Database, Obj, type Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { type SpaceId } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
-import { Form, omitId } from '@dxos/react-ui-form';
+import { Form, ObjectForm, omitId } from '@dxos/react-ui-form';
 import { Picker } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { getStyles } from '@dxos/ui-theme';
@@ -17,8 +17,8 @@ import { type MaybePromise } from '@dxos/util';
 
 import { useInputSurfaceLookup } from '#hooks';
 import { meta } from '#meta';
+import { SpaceCapabilities } from '#types';
 
-import type * as SpaceCapabilities from '../../types/SpaceCapabilities';
 import { getSpaceDisplayName } from '../../util';
 
 /** Display-ready option for the create object search list. */
@@ -40,8 +40,21 @@ export type CreateObjectPanelProps = {
   spaces: Space[];
   typename?: string;
   target?: Database.Database | Collection.Collection;
+  /** Whether the object is built from the form's values on submit (`draft`) or already exists (`live`). */
+  mode?: 'draft' | 'live';
   initialFormValues?: Partial<AnyProperties>;
-  defaultSpaceId?: SpaceId;
+  /**
+   * Form schema, overriding the create entry's `inputSchema` (draft) or the object's own schema
+   * (live). Typically a projection of the type, e.g. `Type.getSchema(T).pipe(Schema.pick(...))`.
+   */
+  schema?: Schema.Codec<any, any>;
+  /**
+   * The live object being edited, once the dialog has added it to the database. Its presence is what
+   * switches the panel from building a draft on submit to writing through to a real object.
+   */
+  object?: Obj.Unknown;
+  /** The live object's type; required alongside `object`. */
+  type?: Type.AnyEntity;
   resolve?: (typename: string) => Metadata | undefined;
   onTargetChange?: (target: Database.Database) => void;
   onTypenameChange?: (typename: string) => void;
@@ -53,8 +66,11 @@ export const CreateObjectPanel = ({
   spaces,
   typename,
   target,
+  mode = 'draft',
   initialFormValues: initialFormValuesProp,
-  defaultSpaceId,
+  schema,
+  object,
+  type,
   resolve,
   onTargetChange,
   onTypenameChange,
@@ -78,29 +94,44 @@ export const CreateObjectPanel = ({
   const handleSelectOption = useCallback(
     async (id: string) => {
       const metadata = resolve?.(id);
-      if (metadata && !metadata.inputSchema && !metadata.customPanel) {
+      // A live create always has a form to show — the object's own — so only a draft can skip
+      // straight to creating from an entry that declares no inputs.
+      if (mode !== 'live' && metadata && !metadata.inputSchema && !metadata.customPanel && !schema) {
         await onCreateObject?.({ metadata });
       } else {
         onTypenameChange?.(id);
       }
     },
-    [resolve, onCreateObject],
+    [mode, schema, resolve, onCreateObject, onTypenameChange],
   );
 
-  const inputSchema = useMemo(
-    () => (metadata && typeof metadata === 'object' && metadata.inputSchema ? omitId(metadata.inputSchema) : undefined),
-    [metadata],
-  );
+  const inputSchema = useMemo(() => {
+    const base = schema ?? (metadata && typeof metadata === 'object' ? metadata.inputSchema : undefined);
+    return base ? omitId(base) : undefined;
+  }, [schema, metadata]);
   const inputSurfaceLookup = useInputSurfaceLookup({ target });
 
   // TODO(wittjosiah): Extends and use react-ui-form to handle variants.
 
-  if (!metadata) {
+  // The live object edits in place, so the type is settled and the submit lives in the dialog's
+  // action bar rather than in the form.
+  if (object && type) {
+    return <ObjectForm object={object} type={type} schema={schema} showTags={false} />;
+  }
+
+  // A live create is driven by the type entity, not by a registered create entry, so the pickers
+  // are gated on the typename rather than on an entry resolving from it.
+  if (mode === 'live' ? !typename : !metadata) {
     return <SelectType options={sortedOptions} onChange={handleSelectOption} />;
   }
 
   if (!target) {
-    return <SelectSpace spaces={spaces} defaultSpaceId={defaultSpaceId} onChange={onTargetChange} />;
+    return <SelectSpace spaces={spaces} onChange={onTargetChange} />;
+  }
+
+  // Live: both pickers are answered and the dialog is adding the object; it arrives next render.
+  if (!metadata) {
+    return null;
   }
 
   if (metadata.customPanel) {
@@ -114,7 +145,7 @@ export const CreateObjectPanel = ({
     );
   }
 
-  if (metadata.inputSchema) {
+  if (inputSchema) {
     return (
       <Form.Root
         autoFocus
@@ -169,6 +200,8 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
             value={option.id}
             onSelect={() => onChange(option.id)}
             classNames='flex gap-3 items-center px-2 py-2 rounded-xs'
+            // Keyed by typename, since the label is localized and, for database types, user-authored.
+            data-testid={`create-object-form.type.${option.id}`}
           >
             <Icon
               icon={option.icon ?? 'ph--circle-dashed--regular'}
@@ -190,42 +223,26 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
   );
 };
 
-type SelectSpaceProps = Pick<CreateObjectPanelProps, 'spaces' | 'defaultSpaceId'> & {
+type SelectSpaceProps = Pick<CreateObjectPanelProps, 'spaces'> & {
   onChange?: (db: Database.Database) => void;
 };
 
-const SelectSpace = ({ spaces, defaultSpaceId, onChange }: SelectSpaceProps) => {
+const SelectSpace = ({ spaces, onChange }: SelectSpaceProps) => {
   const { t } = useTranslation(meta.profile.key);
 
   const sortedSpaces = useMemo(
     () =>
       [...spaces].sort((a, b) => {
-        const labelA = toLocalizedString(
-          getSpaceDisplayName(a, {
-            personal: a.id === defaultSpaceId,
-          }),
-          t,
-        );
-        const labelB = toLocalizedString(
-          getSpaceDisplayName(b, {
-            personal: b.id === defaultSpaceId,
-          }),
-          t,
-        );
+        const labelA = toLocalizedString(getSpaceDisplayName(a), t);
+        const labelB = toLocalizedString(getSpaceDisplayName(b), t);
         return labelA.localeCompare(labelB);
       }),
-    [spaces, defaultSpaceId, t],
+    [spaces, t],
   );
 
   const { results, handleSearch } = useSearchListResults({
     items: sortedSpaces,
-    extract: (space) =>
-      toLocalizedString(
-        getSpaceDisplayName(space, {
-          personal: space.id === defaultSpaceId,
-        }),
-        t,
-      ),
+    extract: (space) => toLocalizedString(getSpaceDisplayName(space), t),
   });
 
   return (
@@ -242,7 +259,7 @@ const SelectSpace = ({ spaces, defaultSpaceId, onChange }: SelectSpaceProps) => 
             <SearchList.Item
               key={space.id}
               value={space.id}
-              label={toLocalizedString(getSpaceDisplayName(space, { personal: space.id === defaultSpaceId }), t)}
+              label={toLocalizedString(getSpaceDisplayName(space), t)}
               onSelect={() => onChange?.(space.db)}
             />
           );

@@ -9,9 +9,9 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
+import { Map } from '#types';
 
 import { viewMarkerProvider } from '../../capabilities/marker-provider';
-import * as Map from '../../types/Map';
 import { MapArticle } from './MapArticle';
 
 type StoryArgs = {};

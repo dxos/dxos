@@ -26,9 +26,9 @@ import { Form } from './Form';
  */
 
 const Contact = Schema.Struct({
-  name: Schema.String.annotations({ title: 'Full name' }),
-  email: Schema.String.annotations({ title: 'Email' }),
-  role: Schema.optional(Schema.String.annotations({ title: 'Role' })),
+  name: Schema.String.annotate({ title: 'Full name' }),
+  email: Schema.String.annotate({ title: 'Email' }),
+  role: Schema.optional(Schema.String.annotate({ title: 'Role' })),
 });
 
 const values = { name: 'Ada Lovelace', email: 'ada@example.com', role: 'Engineer' };

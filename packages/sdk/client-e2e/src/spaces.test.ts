@@ -9,7 +9,7 @@ import { Client } from '@dxos/client';
 import { type Space, SpaceProperties } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { SpaceState, getSpace, importSpace } from '@dxos/client/echo';
-import { CreateEpochRequest } from '@dxos/client/halo';
+import { SpacesService } from '@dxos/client/halo';
 import {
   type CreateInitializedClientsOptions,
   TestBuilder,
@@ -573,7 +573,7 @@ describe('Spaces', () => {
 
     const space = await client.spaces.create();
     await space.internal.createEpoch({
-      migration: CreateEpochRequest.Migration.PRUNE_AUTOMERGE_ROOT_HISTORY,
+      migration: SpacesService.Migration.enums.PRUNE_AUTOMERGE_ROOT_HISTORY,
     });
     const epochs = await space.internal.getEpochs();
     expect(epochs.length).to.eq(2);
@@ -636,16 +636,15 @@ describe('Spaces', () => {
   });
 
   test('export space archive (JSON)', { timeout: 3_000 }, async () => {
-    const { SpaceArchive } = await import('@dxos/protocols/proto/dxos/client/services');
     const [client] = await createInitializedClients(1, { storage: true });
     await registerTypes(client);
 
     const space = await client.spaces.create();
     space.db.add(createDocument());
     await space.db.flush();
-    const archive = await space.internal.export({ format: SpaceArchive.Format.JSON });
+    const archive = await space.internal.export({ format: SpacesService.SpaceArchiveFormat.enums.JSON });
     expect(archive.contents.length).to.be.greaterThan(0);
-    expect(archive.format).toBe(SpaceArchive.Format.JSON);
+    expect(archive.format).toBe(SpacesService.SpaceArchiveFormat.enums.JSON);
     expect(archive.filename.endsWith('.dx.json')).toBe(true);
 
     // JSON must be parseable.
@@ -655,7 +654,6 @@ describe('Spaces', () => {
   });
 
   test('export space archive with feeds (JSON)', { timeout: 5_000 }, async () => {
-    const { SpaceArchive } = await import('@dxos/protocols/proto/dxos/client/services');
     const [client] = await createInitializedClients(1, { storage: true });
     await registerTypes(client);
 
@@ -671,7 +669,7 @@ describe('Spaces', () => {
       createObject({ name: 'queue-item-2' }),
     ]);
 
-    const archive = await space.internal.export({ format: SpaceArchive.Format.JSON });
+    const archive = await space.internal.export({ format: SpacesService.SpaceArchiveFormat.enums.JSON });
     const parsed = JSON.parse(new TextDecoder().decode(archive.contents));
     expect(parsed.feeds).toBeDefined();
     expect(parsed.feeds.length).toBeGreaterThan(0);
@@ -681,14 +679,13 @@ describe('Spaces', () => {
   });
 
   test('import space archive (JSON)', { timeout: 5_000, retry: 1 }, async () => {
-    const { SpaceArchive } = await import('@dxos/protocols/proto/dxos/client/services');
     const [client1, client2] = await createInitializedClients(2, { storage: true });
     [client1, client2].forEach(registerTypes);
 
     const space = await client1.spaces.create();
     const doc1 = space.db.add(createDocument());
     await space.db.flush();
-    const archive = await space.internal.export({ format: SpaceArchive.Format.JSON });
+    const archive = await space.internal.export({ format: SpacesService.SpaceArchiveFormat.enums.JSON });
     expect(archive.contents.length).to.be.greaterThan(0);
 
     const importedSpace = await client2.spaces.import(archive);
@@ -697,7 +694,6 @@ describe('Spaces', () => {
   });
 
   test('import space archive (JSON) with feed messages', { timeout: 5_000, retry: 1 }, async () => {
-    const { SpaceArchive } = await import('@dxos/protocols/proto/dxos/client/services');
     const [client1, client2] = await createInitializedClients(2, { storage: true });
     [client1, client2].forEach(registerTypes);
 
@@ -710,7 +706,7 @@ describe('Spaces', () => {
     await space.db.appendToFeed(feedObj, [createObject({ name: 'msg-1' }), createObject({ name: 'msg-2' })]);
 
     // Export as JSON, import on client 2.
-    const archive = await space.internal.export({ format: SpaceArchive.Format.JSON });
+    const archive = await space.internal.export({ format: SpacesService.SpaceArchiveFormat.enums.JSON });
     expect(archive.contents.length).to.be.greaterThan(0);
     const importedSpace = await client2.spaces.import(archive);
     expect(importedSpace.id).not.toEqual(space.id);
@@ -726,14 +722,13 @@ describe('Spaces', () => {
   });
 
   test('import archive applies tags to the new space', { timeout: 5_000, retry: 1 }, async () => {
-    const { SpaceArchive } = await import('@dxos/protocols/proto/dxos/client/services');
     const [client1, client2] = await createInitializedClients(2, { storage: true });
     [client1, client2].forEach(registerTypes);
 
     const space = await client1.spaces.create();
     space.db.add(createDocument());
     await space.db.flush();
-    const archive = await space.internal.export({ format: SpaceArchive.Format.JSON });
+    const archive = await space.internal.export({ format: SpacesService.SpaceArchiveFormat.enums.JSON });
 
     const importedSpace = await client2.spaces.import(archive, { tags: ['org.dxos.test.exemplar'] });
     expect(importedSpace.tags).toContain('org.dxos.test.exemplar');

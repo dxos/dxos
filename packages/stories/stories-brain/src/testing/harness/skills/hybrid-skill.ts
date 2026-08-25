@@ -19,7 +19,7 @@ export const HYBRID_SKILL_KEY = 'org.dxos.stories-brain.skill.hybrid';
 /** Fact-indexed retrieval: find a subject's facts, then return the source messages they came from. */
 export const RetrieveSubject = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.stories-brain.operation.retrieveSubject'),
+    key: DXN.make('com.example.operation.storiesBrain.retrieveSubject'),
     name: 'Retrieve Subject',
     description: trim`
       Uses the fact store as an index: finds facts about a person/organization, 
@@ -29,9 +29,9 @@ export const RetrieveSubject = Operation.make({
   },
   services: [SubjectIndex],
   input: Schema.Struct({
-    subject: Schema.String.annotations({ description: 'Person or organization name, e.g. "Nicole Gudmand".' }),
+    subject: Schema.String.annotate({ description: 'Person or organization name, e.g. "Nicole Gudmand".' }),
     limit: Schema.optional(
-      Schema.Number.pipe(Schema.positive(), Schema.int()).annotations({
+      Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.check(Schema.isInt())).annotate({
         description: 'Maximum source messages to return (default 10).',
       }),
     ),

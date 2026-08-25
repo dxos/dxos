@@ -20,9 +20,14 @@
       "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
-      "source": "./src/CommercePlugin.tsx",
-      "types": "./dist/types/src/CommercePlugin.d.ts",
-      "default": "./dist/lib/CommercePlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -32,15 +37,16 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
+    "./package.json": "./package.json",
     "./CommerceEvents": {
       "source": "./src/types/CommerceEvents.ts",
       "types": "./dist/types/src/types/CommerceEvents.d.ts",
       "import": "./dist/lib/CommerceEvents.mjs"
+    },
+    "./CommercePlugin": {
+      "source": "./src/CommercePlugin.ts",
+      "types": "./dist/types/src/CommercePlugin.d.ts",
+      "import": "./dist/lib/CommercePlugin.mjs"
     },
     "./Provider": {
       "source": "./src/types/Provider.ts",
@@ -61,8 +67,7 @@
       "source": "./src/types/SearchOperation.ts",
       "types": "./dist/types/src/types/SearchOperation.d.ts",
       "import": "./dist/lib/SearchOperation.mjs"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -92,6 +97,7 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/client": "workspace:*",

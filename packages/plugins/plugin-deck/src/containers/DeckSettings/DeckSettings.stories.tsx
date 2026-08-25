@@ -2,24 +2,24 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useMemo } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
+import { Settings } from '#types';
 
-import * as Settings from '../../types/Settings';
 import { DeckSettings } from './DeckSettings';
 
-type StoryProps = {
+type StoryArgs = {
   settings: Settings.Settings;
 };
 
 // The container reads and writes the contributed settings entry, so the story owns one per render.
-const DefaultStory = ({ settings }: StoryProps) => {
+const DefaultStory = ({ settings }: StoryArgs) => {
   const subject = useMemo(
     () => ({
       prefix: pluginMeta.profile.key,

@@ -5,17 +5,22 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+
+import { CrxOperation } from '#types';
 
 import { toOrganization } from '../mapping';
-import * as CrxOperation from '../types/CrxOperation';
 
 const handler: Operation.WithHandler<typeof CrxOperation.AddOrganizationFromSnapshot> =
   CrxOperation.AddOrganizationFromSnapshot.pipe(
     Operation.withHandler(
       Effect.fn(function* ({ snapshot, target }) {
         const organization = toOrganization(snapshot);
-        const { id } = yield* Operation.invoke(SpaceOperation.AddObject, { object: organization, target });
+        const { id } = yield* Operation.invoke(
+          SpaceOperation.AddObject,
+          { object: organization },
+          { spaceId: target.spaceId },
+        );
         return { id };
       }),
     ),

@@ -91,7 +91,7 @@ const setupChatWithChecklist = Effect.fnUntraced(function* (states: readonly boo
   });
   yield* Database.flush();
 
-  const runtime = yield* Effect.runtime<Database.Service>();
+  const runtime = yield* Effect.context<Database.Service>();
   const binder = new AiContext.Binder({ feed, runtime });
   yield* Effect.promise(() => binder.bind({ objects: [Ref.make(chat)] }));
 
@@ -103,7 +103,6 @@ const types = [
   Outline.Outline,
   Text.Text,
   Chat.Chat,
-  Chat.CompanionTo,
   Skill.Skill,
   Feed.Feed,
   Message.Message,

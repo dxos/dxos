@@ -2,20 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Rpc from '@effect/rpc/Rpc';
-import type * as RpcClient from '@effect/rpc/RpcClient';
-import * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as Context from 'effect/Context';
 import * as Schema from 'effect/Schema';
+import * as Rpc from 'effect/unstable/rpc/Rpc';
+import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
 import { protoMessage, serviceError } from './service-rpc.ts';
-import { publicKey } from './service-schemas.ts';
+import { mutableArray, publicKey } from './service-schemas.ts';
 
 //
 // RPC message schemas.
 //
 
-export const ConnectionState = Schema.Enums({
+export const ConnectionState = Schema.Enum({
   OFFLINE: 0,
   ONLINE: 1,
 });
@@ -30,6 +30,14 @@ export const SubscribeSwarmStateRequest = Schema.Struct({
   topic: publicKey,
 });
 export interface SubscribeSwarmStateRequest extends Schema.Schema.Type<typeof SubscribeSwarmStateRequest> {}
+
+export const SubscribeMessagesRequest = Schema.Struct({
+  /** The subscribing peer; point-to-point messages addressed to this peerKey are always delivered. */
+  peer: protoMessage('dxos.edge.messenger.Peer'),
+  /** OR-subscription: deliver any broadcast message whose tags intersect this set. */
+  tags: Schema.optional(mutableArray(Schema.String)),
+});
+export interface SubscribeMessagesRequest extends Schema.Schema.Type<typeof SubscribeMessagesRequest> {}
 
 /**
  * Effect RPC definitions for `dxos.client.services.NetworkService`.
@@ -72,7 +80,7 @@ export class Rpcs extends RpcGroup.make(
     error: serviceError,
   }),
   Rpc.make('subscribeMessages', {
-    payload: protoMessage('dxos.edge.signal.SubscribeMessagesRequest'),
+    payload: SubscribeMessagesRequest,
     success: protoMessage('dxos.edge.signal.Message'),
     error: serviceError,
     stream: true,
@@ -86,4 +94,4 @@ export interface Handlers extends RpcGroup.HandlersFrom<RpcGroup.Rpcs<typeof Rpc
 /**
  * Effect service tag for the `NetworkService` RPC handlers.
  */
-export class Tag extends Context.Tag('@dxos/protocols/rpc/NetworkService')<Tag, Handlers>() {}
+export class Tag extends Context.Service<Tag, Handlers>()('@dxos/protocols/rpc/NetworkService') {}

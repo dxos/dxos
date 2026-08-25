@@ -2,13 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useId, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Obj } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
@@ -114,22 +115,26 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
   );
 
   const handleAdd = useCallback(
-    (id: string) =>
-      invokePromise(SpaceOperation.OpenCreateObject, {
+    async (id: string) => {
+      const { data } = await invokePromise(SpaceOperation.OpenObjectForm, {
         target: collection,
         navigable: false,
-        // The created object is appended; move it to immediately after the originating section.
-        onCreateObject: (object: Obj.Unknown) => {
-          const from = findIndex(Obj.getURI(object));
-          const anchor = findIndex(id);
-          if (from >= 0 && anchor >= 0) {
-            Obj.update(collection, (collection) => {
-              const [ref] = collection.objects.splice(from, 1);
-              collection.objects.splice(anchor < from ? anchor + 1 : anchor, 0, ref);
-            });
-          }
-        },
-      }),
+      });
+      const object = data?.target;
+      if (!object) {
+        return;
+      }
+
+      // The created object is appended; move it to immediately after the originating section.
+      const from = findIndex(Obj.getURI(object));
+      const anchor = findIndex(id);
+      if (from >= 0 && anchor >= 0) {
+        Obj.update(collection, (collection) => {
+          const [ref] = collection.objects.splice(from, 1);
+          collection.objects.splice(anchor < from ? anchor + 1 : anchor, 0, ref);
+        });
+      }
+    },
     [collection, invokePromise, findIndex],
   );
 
@@ -163,7 +168,7 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
 
   const handleAddSection = useCallback(
     () =>
-      invokePromise(SpaceOperation.OpenCreateObject, {
+      invokePromise(SpaceOperation.OpenObjectForm, {
         target: collection,
         navigable: false,
       }),

@@ -10,13 +10,12 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
-import { Button, ButtonGroup, IconButton, Input, useTranslation } from '@dxos/react-ui';
+import { Button, ButtonGroup, Flex, IconButton, Input, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { useSyncTrigger } from '#hooks';
 import { meta } from '#meta';
-
-import * as Calendar from '../../types/Calendar';
+import { Calendar } from '#types';
 
 export type CalendarPropertiesProps = AppSurface.ObjectPropertiesProps<Calendar.Calendar>;
 
@@ -43,7 +42,7 @@ export const CalendarProperties = ({ subject }: CalendarPropertiesProps) => {
       <Input.Root>
         <Input.Label>{t('calendar-sync.label')}</Input.Label>
         {/* TODO(burdon): Replace custom components with Input.Switch. */}
-        <div className='flex gap-1'>
+        <Flex gap='xs'>
           <ButtonGroup>
             <Button onClick={handleToggleSync} disabled={pending}>
               {pending
@@ -61,7 +60,7 @@ export const CalendarProperties = ({ subject }: CalendarPropertiesProps) => {
               />
             )}
           </ButtonGroup>
-        </div>
+        </Flex>
       </Input.Root>
     </Form.Section>
   );

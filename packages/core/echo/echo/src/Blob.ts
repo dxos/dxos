@@ -12,7 +12,7 @@ import { DXN } from '@dxos/keys';
 
 import * as Annotation from './Annotation';
 import * as Database from './Database';
-import * as Err from './Err';
+import * as Error from './Error';
 import * as internal from './internal';
 import * as Obj from './Obj';
 import * as Type from './Type';
@@ -21,7 +21,7 @@ import * as Type from './Type';
  * Inline blob data: bytes stored directly on the ECHO object.
  */
 export const InlineData = Schema.TaggedStruct('inline', {
-  bytes: Schema.Uint8ArrayFromSelf.annotations({ jsonSchema: { type: 'string', contentEncoding: 'base64' } }),
+  bytes: Schema.Uint8Array.annotate({ jsonSchema: { type: 'string', contentEncoding: 'base64' } }),
 });
 
 /**
@@ -39,7 +39,7 @@ export const ExternalData = Schema.TaggedStruct('external', {
   uri: Schema.String,
 });
 
-export const BlobData = Schema.Union(InlineData, ExternalData);
+export const BlobData = Schema.Union([InlineData, ExternalData]);
 export type BlobData = Schema.Schema.Type<typeof BlobData>;
 
 /**
@@ -148,15 +148,15 @@ export interface FromBytesOptions {
 export const fromBytes = (
   bytes: Uint8Array,
   options?: FromBytesOptions,
-): Effect.Effect<Blob, Err.BlobTooLargeError | Err.BlobWriteError, Database.Service> =>
+): Effect.Effect<Blob, Error.BlobTooLargeError | Error.BlobWriteError, Database.Service> =>
   Database.Service.pipe(
     Effect.flatMap(({ db }) =>
       Effect.tryPromise({
         try: () => db.createBlob(bytes, options),
         catch: (error) =>
-          error instanceof Err.BlobTooLargeError || error instanceof Err.BlobWriteError
+          error instanceof Error.BlobTooLargeError || error instanceof Error.BlobWriteError
             ? error
-            : new Err.BlobWriteError({ backend: options?.storage ?? 'unknown' }, { cause: error }),
+            : new Error.BlobWriteError({ backend: options?.storage ?? 'unknown' }, { cause: error }),
       }),
     ),
   ).pipe(Effect.withSpan('Blob.fromBytes'));
@@ -170,15 +170,15 @@ export const fromBytes = (
  * const bytes = yield* Blob.read(blob);
  * ```
  */
-export const read = (blob: Blob): Effect.Effect<Uint8Array, Err.BlobNotAvailableError, Database.Service> =>
+export const read = (blob: Blob): Effect.Effect<Uint8Array, Error.BlobNotAvailableError, Database.Service> =>
   Database.Service.pipe(
     Effect.flatMap(({ db }) =>
       Effect.tryPromise({
         try: () => db.readBlob(blob),
         catch: (error) =>
-          error instanceof Err.BlobNotAvailableError
+          error instanceof Error.BlobNotAvailableError
             ? error
-            : new Err.BlobNotAvailableError(
+            : new Error.BlobNotAvailableError(
                 { backend: 'unknown', key: blob.id, reason: 'not-found' },
                 { cause: error },
               ),
@@ -201,5 +201,5 @@ export const exists = (blob: Blob): Effect.Effect<boolean, never, Database.Servi
 export const url = (blob: Blob): Effect.Effect<Option.Option<string>, never, Database.Service> =>
   Database.Service.pipe(
     Effect.flatMap(({ db }) => Effect.promise(() => db.getBlobUrl(blob))),
-    Effect.map(Option.fromNullable),
+    Effect.map(Option.fromNullishOr),
   ).pipe(Effect.withSpan('Blob.url'));

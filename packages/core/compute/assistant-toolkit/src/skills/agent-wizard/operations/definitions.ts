@@ -12,7 +12,7 @@ import { Agent } from '../../../types';
 
 export const AgentRules = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.agentWizard.agentRules'),
+    key: DXN.make('org.dxos.operation.assistantToolkit.getAgentRules'),
     name: 'Agent rules',
     description: 'Gets the rules for creating an agent.',
     icon: 'ph--book-open--regular',
@@ -23,24 +23,24 @@ export const AgentRules = Operation.make({
 
 export const CreateAgent = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.agentWizard.createAgent'),
+    key: DXN.make('org.dxos.operation.assistantToolkit.createAgent'),
     name: 'Create agent',
     description: 'Creates a new agent.',
     icon: 'ph--brain--regular',
   },
   input: Schema.Struct({
-    name: Schema.String.annotations({
+    name: Schema.String.annotate({
       description: 'The name of the agent to create.',
     }),
-    instructions: Schema.String.annotations({
+    instructions: Schema.String.annotate({
       description:
         'The goal of the agent. Be specific but not too verbose. The agent will use this as a core objective and set of rules to follow.',
     }),
-    skills: Schema.Array(Schema.String).annotations({
+    skills: Schema.Array(Schema.String).annotate({
       description: 'The skill keys to use for the agent.',
       examples: [['org.dxos.skill.markdown', 'org.dxos.skill.database']],
     }),
-    subscriptions: Schema.Array(Ref.Ref(Obj.Unknown)).annotations({
+    subscriptions: Schema.Array(Ref.Ref(Obj.Unknown)).annotate({
       description: 'The objects to subscribe to for the agent. Can be references to mailboxes.',
     }),
   }),
@@ -50,28 +50,28 @@ export const CreateAgent = Operation.make({
 
 export const SyncAutomation = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.agent.syncTriggers'),
+    key: DXN.make('org.dxos.operation.assistantToolkit.syncTriggers'),
     name: 'Sync automation',
     description:
       'Compiles the agent automation config (subscriptions, optional cron) into Routines that relay events onto the agent session. Recreates everything, so call with the FULL desired config after any change; enabled is copied from the agent onto every trigger.',
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    agent: Ref.Ref(Agent.Agent).annotations({
+    agent: Ref.Ref(Agent.Agent).annotate({
       description: 'The agent whose automation should be synced.',
     }),
     subscriptions: Schema.optional(
-      Schema.Array(Ref.Ref(Obj.Unknown)).annotations({
+      Schema.Array(Ref.Ref(Obj.Unknown)).annotate({
         description: 'The objects to subscribe to (e.g. mailboxes); each compiles to a feed-triggered routine.',
       }),
     ),
     cron: Schema.optional(
-      Schema.String.annotations({
+      Schema.String.annotate({
         description: 'Cron expression for a scheduled wake routine.',
       }),
     ),
     qualify: Schema.optional(
-      Schema.Boolean.annotations({
+      Schema.Boolean.annotate({
         description: 'Run the cheap-model relevance filter on subscription events (default true).',
       }),
     ),

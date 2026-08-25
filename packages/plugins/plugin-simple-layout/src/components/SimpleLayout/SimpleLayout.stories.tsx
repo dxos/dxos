@@ -15,18 +15,18 @@ import { corePlugins } from '@dxos/plugin-testing';
 import { translations as searchTranslation } from '@dxos/react-ui-search/translations';
 import { withLayout } from '@dxos/react-ui/testing';
 
-import { ReactRoot, ReactSurface, State } from '#capabilities';
+import { AppGraphBuilder, OperationHandler, ReactRoot, ReactSurface, SpotlightDismiss, State } from '#capabilities';
 import { meta as pluginMeta } from '#meta';
+import { type SimpleLayoutPluginOptions } from '#plugin';
 import { translations } from '#translations';
 
-import { type SimpleLayoutPluginOptions } from '../../SimpleLayoutPlugin';
 import { SimpleLayout } from './SimpleLayout';
 
 const createPluginManager = ({ isPopover }: { isPopover?: boolean }) => {
   return withPluginManager({
     plugins: [
       ...corePlugins(),
-      ClientPlugin({
+      ClientPlugin.make({
         types: [Collection.Collection],
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
@@ -34,12 +34,17 @@ const createPluginManager = ({ isPopover }: { isPopover?: boolean }) => {
           }),
       }),
 
-      SearchPlugin(),
+      SearchPlugin.make(),
       SpacePlugin({}),
 
+      // The full plugin minus `UrlHandler`, which rewrites `window.location` and would navigate
+      // the storybook iframe away from the story.
       // TODO(burdon): This should be factored ouf from SimpleLayoutPlugin.
       Plugin.define<SimpleLayoutPluginOptions>(pluginMeta).pipe(
+        Plugin.addModule(AppGraphBuilder),
+        Plugin.addModule(OperationHandler),
         Plugin.addModule(State),
+        Plugin.addModule(SpotlightDismiss),
         Plugin.addModule(ReactRoot),
         Plugin.addModule(ReactSurface),
         Plugin.make,

@@ -18,6 +18,13 @@ export const RoutineTemplates = Capability.lazyModule(
   { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
   () => import('./routine-templates'),
 );
+export const Schema = AppCapability.schema(() => import('./schema'));
+// Startup rather than the default dependency-mode gate: the consumers read the capability set
+// (`capabilities.getAll`) instead of declaring it as a requirement, so nothing would ever demand it
+// and a Post would stay unreadable — no reading companion, no extraction.
+export const TextContent = AppCapability.textContent(() => import('./text-content'), {
+  activatesOn: ActivationEvents.Startup,
+});
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {

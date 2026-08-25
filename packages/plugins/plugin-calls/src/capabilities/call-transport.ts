@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import * as CallsCapabilities from '../types/CallsCapabilities';
+import { CallsCapabilities } from '#types';
 
 const CLOUDFLARE_TRANSPORT_KIND = 'org.dxos.call.transport.cloudflare';
 

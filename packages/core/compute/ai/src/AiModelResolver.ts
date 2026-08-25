@@ -4,18 +4,25 @@
 
 // @import-as-namespace
 
-import type * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import type * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { DXN } from '@dxos/keys';
 
 import * as AiService from './AiService';
 import { AiModelNotAvailableError } from './errors';
 
-export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<AiModelResolver, AiService.Service>() {
+/**
+ * v4 removed `Layer.fail`; a failing layer is the failure effect lifted with `Layer.unwrap`.
+ */
+const failedLayer = (
+  error: AiModelNotAvailableError,
+): Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError> => Layer.unwrap(Effect.fail(error));
+
+export class AiModelResolver extends Context.Service<AiModelResolver, AiService.Service>()('@dxos/ai/AiModelResolver') {
   static buildAiService: Layer.Layer<AiService.AiService, never, AiModelResolver> = Layer.effect(
     AiService.AiService,
     Effect.gen(function* () {
@@ -23,7 +30,7 @@ export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<AiM
       return {
         metadata: resolver.metadata,
         model: (name, options) => resolver.model(name, options),
-      } satisfies Context.Tag.Service<AiService.AiService>;
+      } satisfies Context.Service.Shape<typeof AiService.AiService>;
     }),
   );
 
@@ -47,13 +54,11 @@ export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<AiM
           metadata,
           model: (modelName, options) =>
             getModel(modelName, options).pipe(
-              Layer.catchAll(() => {
-                if (Option.isSome(upstream)) {
-                  return upstream.value.model(modelName, options);
-                } else {
-                  return Layer.fail(new AiModelNotAvailableError(modelName));
-                }
-              }),
+              Layer.catchCause(() =>
+                Option.isSome(upstream)
+                  ? upstream.value.model(modelName, options)
+                  : failedLayer(new AiModelNotAvailableError(modelName)),
+              ),
             ),
         };
       }),
@@ -74,8 +79,8 @@ export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<AiM
         Effect.map(
           (models) => (modelName: DXN.DXN, options?: AiService.ResolveOptions) =>
             options?.provider === provider
-              ? (models[modelName] ?? Layer.fail(new AiModelNotAvailableError(modelName)))
-              : Layer.fail(new AiModelNotAvailableError(modelName)),
+              ? (models[modelName] ?? failedLayer(new AiModelNotAvailableError(modelName)))
+              : failedLayer(new AiModelNotAvailableError(modelName)),
         ),
       ),
     );

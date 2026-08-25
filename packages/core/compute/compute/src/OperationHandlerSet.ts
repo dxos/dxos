@@ -4,11 +4,12 @@
 
 // @import-as-namespace
 
-import { type Atom, type Registry } from '@effect-atom/atom';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { EffectEx } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
@@ -84,7 +85,7 @@ export const make = (...handlers: Operation.WithHandler<Operation.Definition.Any
  * cheap but newly registered handlers are picked up.
  */
 export const reactive = (
-  registry: Registry.Registry,
+  registry: Registry.AtomRegistry,
   atom: Atom.Atom<readonly OperationHandlerSet[]>,
 ): OperationHandlerSet => {
   let cached: Promise<Operation.WithHandler<Operation.Definition.Any>[]> | null = null;
@@ -100,7 +101,7 @@ export const reactive = (
       Effect.map((groups) => groups.flat()),
       // Reset cached on failure so a transient error doesn't permanently
       // poison subsequent calls.
-      Effect.tapErrorCause(() =>
+      Effect.tapCause(() =>
         Effect.sync(() => {
           cached = null;
         }),
@@ -175,7 +176,15 @@ export const lazy = (entries: readonly Operation.LazyHandler[]): OperationHandle
     const key = normalizeKey(definition.meta.key);
     let promise = loaded.get(key);
     if (!promise) {
-      promise = load().then(({ default: handler }) => handler);
+      // Evict on failure: a transient import failure (a stale chunk hash after a redeploy) would
+      // otherwise be memoized, so every later invocation rejects instantly without re-fetching.
+      promise = load().then(
+        ({ default: handler }) => handler,
+        (err) => {
+          loaded.delete(key);
+          throw err;
+        },
+      );
       loaded.set(key, promise);
     }
     return promise;
@@ -235,18 +244,17 @@ export const getHandler = <const Op extends Operation.Definition.Any>(
 
 /**
  * Gets a handler for an operation by key.
- * Accepts either a plain NSID (`org.dxos.function.database.contextAdd`) or a
- * full DXN string (`dxn:org.dxos.function.database.contextAdd`).
+ * Accepts either a plain NSID (`org.dxos.operation.assistantToolkit.addContext`) or a
+ * full DXN string (`dxn:org.dxos.operation.assistantToolkit.addContext`).
  */
 export const getHandlerByKey = (
   set: OperationHandlerSet,
   key: string,
 ): Effect.Effect<Operation.WithHandler<Operation.Definition.Any>, NoHandlerError> => lookup(set, key);
 
-export class OperationHandlerProvider extends Context.Tag('@dxos/operation/OperationHandlerProvider')<
-  OperationHandlerProvider,
-  OperationHandlerSet
->() {}
+export class OperationHandlerProvider extends Context.Service<OperationHandlerProvider, OperationHandlerSet>()(
+  '@dxos/operation/OperationHandlerProvider',
+) {}
 
 export const provide = (handlers: OperationHandlerSet): Layer.Layer<OperationHandlerProvider, never, never> =>
   Layer.succeed(OperationHandlerProvider, handlers);

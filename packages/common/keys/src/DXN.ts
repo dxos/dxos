@@ -30,20 +30,73 @@ const DXN_SPEC_REGEXP =
  */
 export type DXN = URI.URI & { readonly __DXN: unique symbol };
 
+type Digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';
+
+// prettier-ignore
+/** Every character the final group of {@link DXN_SPEC_REGEXP} excludes and a caller might plausibly type. */
+type Invalid =
+  | '-' | '_' | '/' | '\\' | ' ' | '\t' | '\n' | ':' | ';' | ',' | '.' | '#' | '?' | '@' | '!'
+  | '$' | '%' | '&' | '*' | '+' | '=' | '~' | '^' | '`' | "'" | '"' | '(' | ')' | '[' | ']'
+  | '{' | '}' | '<' | '>' | '|';
+
+/**
+ * Compile-time validation of a single NSID segment in final position: alphanumeric with a leading
+ * letter, per the final group of {@link DXN_SPEC_REGEXP}. Resolves to `T` when valid and `never`
+ * otherwise.
+ *
+ * Matches on excluded characters rather than walking the string character by character, so an
+ * interpolated segment (`` `item${number}` ``) is accepted rather than rejected for a placeholder
+ * the type cannot evaluate — a walk cannot tell a placeholder from a bad character. A widened
+ * `string` passes through for the same reason, leaving both to the runtime check.
+ */
+export type Segment<T extends string> = [string] extends [T]
+  ? T
+  : T extends ''
+    ? never
+    : T extends `${string}${Invalid}${string}`
+      ? never
+      : T extends `${Digit}${string}`
+        ? never
+        : T;
+
+/**
+ * The substring after the last `.`, or the whole string when there is none.
+ *
+ * TypeScript template literal inference is non-greedy: `${string}.${infer Rest}` always splits at
+ * the first dot, so the type recurses until `Rest` has no more dots.
+ */
+type LastSegment<T extends string> = T extends `${string}.${infer Rest}` ? LastSegment<Rest> : T;
+
+/**
+ * Compile-time validation of a dotted name whose final segment must be a valid {@link Segment}.
+ * Every preceding segment is unconstrained, so a prefix carrying a hyphenated typename
+ * (`org.dxos.type.task-set.article`) is fine.
+ *
+ * This is the shape of a plugin-local id — a surface or graph-extension id, appended to a plugin's
+ * NSID to form a full DXN path. Unlike {@link Name} it has no segment-count minimum, since a local
+ * id is a suffix rather than a whole NSID.
+ */
+export type Path<T extends string> = [string] extends [T] ? T : [Segment<LastSegment<T>>] extends [never] ? never : T;
+
+/**
+ * Whether a dotted name's final segment is a valid {@link Segment}. The runtime counterpart of
+ * {@link Path}, and stricter: it requires every character of the final segment to be alphanumeric.
+ *
+ * @example Valid:   'about', 'integrationArticle', 'article.journal', 'org.dxos.type.task-set.article'.
+ * @example Invalid: 'integration-article', 'plugin-spec', 'article.task-set'.
+ */
+export const isValidPath = (name: string): boolean => /^[a-zA-Z][a-zA-Z0-9]*$/.test(name.split('.').pop() ?? '');
+
 /**
  * Recursive segment-chain check used by {@link Name}: hyphens are permitted in
- * every segment except the truly final one.
- *
- * TypeScript template literal inference is non-greedy: `${string}.${infer Rest}`
- * always splits at the first dot. The type recurses until `Rest` has no more dots,
- * at which point it is the true final segment and is checked for hyphens.
+ * every segment except the truly final one, which must be a valid {@link Segment}.
  */
 type ValidSegmentChain<T extends string> = T extends `${string}.${infer Rest}`
   ? Rest extends `${string}.${string}`
     ? [ValidSegmentChain<Rest>] extends [never]
       ? never
       : T
-    : Rest extends `${string}-${string}`
+    : [Segment<Rest>] extends [never]
       ? never
       : T
   : never;
@@ -55,7 +108,7 @@ type ValidSegmentChain<T extends string> = T extends `${string}.${infer Rest}`
  * - Three-segment minimum (at least two dots) for names that are fully known at
  *   compile time — matches the runtime grammar in {@link DXN_SPEC_REGEXP} and
  *   `parse`.
- * - Final segment (after the last dot) must not contain a hyphen.
+ * - Final segment (after the last dot) is a valid {@link Segment}.
  *
  * The three-segment minimum only applies once `Head` (the portion before the
  * first dot) resolves to a concrete literal, so a fully literal two-segment
@@ -73,7 +126,7 @@ export type Name<T extends string> = [string] extends [T]
         ? never
         : T
       : [string] extends [Head]
-        ? Rest extends `${string}-${string}`
+        ? [Segment<Rest>] extends [never]
           ? never
           : T
         : never
@@ -85,9 +138,9 @@ export type Name<T extends string> = [string] extends [T]
  * the {@link Name} type for schema fields that hold a bare NSID (e.g. a model id passed to a creator
  * helper). Named `NameSchema` because a value cannot share the generic `Name` type's name.
  */
-export const NameSchema: Schema.Schema<string, string> = Schema.String.pipe(
-  Schema.filter((value) => DXN_SPEC_REGEXP.test(`dxn:${value}`), { message: () => 'Invalid NSID name' }),
-  Schema.annotations({ title: 'DXN.Name', description: 'NSID name (the dxn: prefix omitted)' }),
+export const NameSchema: Schema.Codec<string, string> = Schema.String.pipe(
+  Schema.refine((value): value is string => DXN_SPEC_REGEXP.test(`dxn:${value}`), { message: 'Invalid NSID name' }),
+  Schema.annotate({ title: 'DXN.Name', description: 'NSID name (the dxn: prefix omitted)' }),
 );
 
 /**
@@ -158,15 +211,13 @@ export const getVersion = (dxn: DXN): string | undefined => {
 /**
  * Effect Schema for DXN validation.
  */
-// Identity-encoded schema (`Schema<DXN, DXN>`) so consumers can refine generic schemas
-// without the encode/decode types diverging. `Schema.filter` produces a refinement with
-// `Encoded = string`; we narrow the encoded form too with `as unknown as` since the runtime
-// representation is identical (a branded string).
-const Schema_: Schema.Schema<DXN, DXN> = Schema.String.pipe(
-  Schema.filter((value): value is DXN => isDXN(value), { message: () => 'Invalid DXN' }),
-  Schema.annotations({
+// Identity-encoded (`Schema<DXN, DXN>`) so consumers can refine without the encode/decode types
+// diverging; `refine` leaves `Encoded = string`, and the runtime form is the same branded string.
+const Schema_: Schema.Codec<DXN, DXN> = Schema.String.pipe(
+  Schema.refine((value): value is DXN => isDXN(value), { message: 'Invalid DXN' }),
+  Schema.annotate({
     title: 'DXN',
     description: 'DXN URI: dxn:<nsid>[:<version>]',
   }),
-) as unknown as Schema.Schema<DXN, DXN>;
+) as unknown as Schema.Codec<DXN, DXN>;
 export { Schema_ as Schema };

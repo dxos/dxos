@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type CapabilityManager } from '@dxos/app-framework';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { sleep } from '@dxos/async';
 import type * as Tour from '@dxos/plugin-support/Tour';

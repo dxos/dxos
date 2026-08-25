@@ -26,7 +26,7 @@ describe('query api', () => {
       const getAllPeople = Query.type(TestSchema.Person);
 
       log('query', { ast: getAllPeople.ast });
-      Schema.validateSync(QueryAST.Query)(getAllPeople.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(getAllPeople.ast);
       log('getAllPeople', { ast: getAllPeople.ast });
     });
 
@@ -34,21 +34,21 @@ describe('query api', () => {
       const getAllPeopleOrderedByName = Query.type(TestSchema.Person).orderBy(Order.property('name', 'asc'));
 
       log('query', { ast: getAllPeopleOrderedByName.ast });
-      Schema.validateSync(QueryAST.Query)(getAllPeopleOrderedByName.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(getAllPeopleOrderedByName.ast);
       log('getAllPeopleOrderedByName', { ast: getAllPeopleOrderedByName.ast });
     });
 
     test('order by updated timestamp', () => {
       const recentlyUpdated = Query.type(TestSchema.Person).orderBy(Order.updated('desc')).limit(3);
 
-      Schema.validateSync(QueryAST.Query)(recentlyUpdated.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(recentlyUpdated.ast);
     });
 
     test('get all people named Fred', () => {
       const PeopleNamedFred = Query.select(Filter.type(TestSchema.Person, { name: 'Fred' }));
 
       log('query', { ast: PeopleNamedFred.ast });
-      Schema.validateSync(QueryAST.Query)(PeopleNamedFred.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(PeopleNamedFred.ast);
       log('PeopleNamedFred', { ast: PeopleNamedFred.ast });
     });
 
@@ -58,7 +58,7 @@ describe('query api', () => {
       );
 
       log('query', { ast: PeopleWithFieldLabelSetToResearch.ast });
-      Schema.validateSync(QueryAST.Query)(PeopleWithFieldLabelSetToResearch.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(PeopleWithFieldLabelSetToResearch.ast);
       log('PeopleWithFieldLabelSetToResearch', { ast: PeopleWithFieldLabelSetToResearch.ast });
     });
 
@@ -68,7 +68,7 @@ describe('query api', () => {
       );
 
       log('query', { ast: OrgsWithPropertyLabelSetToResearch.ast });
-      Schema.validateSync(QueryAST.Query)(OrgsWithPropertyLabelSetToResearch.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(OrgsWithPropertyLabelSetToResearch.ast);
       log('OrgsWithPropertyLabelSetToResearch', { ast: OrgsWithPropertyLabelSetToResearch.ast });
     });
 
@@ -79,7 +79,7 @@ describe('query api', () => {
         .target();
 
       log('query', { ast: OrganizationsFredWorkedForSince2020.ast });
-      Schema.validateSync(QueryAST.Query)(OrganizationsFredWorkedForSince2020.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(OrganizationsFredWorkedForSince2020.ast);
       log('OrganizationsFredWorkedForSince2020', { ast: OrganizationsFredWorkedForSince2020.ast });
     });
 
@@ -91,7 +91,7 @@ describe('query api', () => {
       );
 
       log('query', { ast: TasksForFred.ast });
-      Schema.validateSync(QueryAST.Query)(TasksForFred.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(TasksForFred.ast);
       log('TasksForFred', { ast: TasksForFred.ast });
     });
 
@@ -102,7 +102,7 @@ describe('query api', () => {
       );
 
       log('query', { ast: ObjectsReferencingFred.ast });
-      Schema.validateSync(QueryAST.Query)(ObjectsReferencingFred.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(ObjectsReferencingFred.ast);
       expect(ObjectsReferencingFred.ast).toMatchObject({
         type: 'incoming-references',
         property: null,
@@ -115,7 +115,7 @@ describe('query api', () => {
       const AllBacklinks = Query.select(Filter.type(TestSchema.Person, { id: fred.id })).referencedBy();
 
       log('query', { ast: AllBacklinks.ast });
-      Schema.validateSync(QueryAST.Query)(AllBacklinks.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(AllBacklinks.ast);
       expect(AllBacklinks.ast).toMatchObject({
         type: 'incoming-references',
         property: null,
@@ -140,7 +140,7 @@ describe('query api', () => {
         .referencedBy(TestSchema.Task, 'assignee');
 
       log('query', { ast: TasksForEmployeesOfCyberdyne.ast });
-      Schema.validateSync(QueryAST.Query)(TasksForEmployeesOfCyberdyne.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(TasksForEmployeesOfCyberdyne.ast);
       log('TasksForEmployeesOfCyberdyne', { ast: TasksForEmployeesOfCyberdyne.ast });
     });
 
@@ -151,7 +151,7 @@ describe('query api', () => {
       );
 
       log('query', { ast: PeopleOrOrganizations.ast });
-      Schema.validateSync(QueryAST.Query)(PeopleOrOrganizations.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(PeopleOrOrganizations.ast);
       log('PeopleOrOrganizations', { ast: PeopleOrOrganizations.ast });
     });
 
@@ -159,7 +159,7 @@ describe('query api', () => {
       const AllDatasets = Query.select(Filter.type(Dataset.Dataset));
 
       log('query', { ast: AllDatasets.ast });
-      Schema.validateSync(QueryAST.Query)(AllDatasets.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(AllDatasets.ast);
       log('AllDatasets', { ast: AllDatasets.ast });
       expect(AllDatasets.ast).toMatchInlineSnapshot(`
         {
@@ -192,7 +192,7 @@ describe('query api', () => {
       const AllDatasets = Query.type(Dataset.Dataset);
 
       log('query', { ast: AllDatasets.ast });
-      Schema.validateSync(QueryAST.Query)(AllDatasets.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(AllDatasets.ast);
       log('AllDatasets', { ast: AllDatasets.ast });
       expect(AllDatasets.ast).toMatchInlineSnapshot(`
               {
@@ -228,7 +228,7 @@ describe('query api', () => {
       );
 
       log('query', { ast: PeopleNotInOrganizations.ast });
-      Schema.validateSync(QueryAST.Query)(PeopleNotInOrganizations.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(PeopleNotInOrganizations.ast);
       log('PeopleNotInOrganizations', { ast: PeopleNotInOrganizations.ast });
     });
 
@@ -238,7 +238,7 @@ describe('query api', () => {
       ).reference('assignee');
 
       log('query', { ast: AssigneesOfAllTasksCreatedAfter2020.ast });
-      Schema.validateSync(QueryAST.Query)(AssigneesOfAllTasksCreatedAfter2020.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(AssigneesOfAllTasksCreatedAfter2020.ast);
       log('AssigneesOfAllTasksCreatedAfter2020', { ast: AssigneesOfAllTasksCreatedAfter2020.ast });
     });
 
@@ -246,7 +246,7 @@ describe('query api', () => {
       const contactFullTextSearch = Query.select(Filter.text('Bill'));
 
       log('query', { ast: contactFullTextSearch.ast });
-      Schema.validateSync(QueryAST.Query)(contactFullTextSearch.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(contactFullTextSearch.ast);
       expect(contactFullTextSearch.ast).toMatchInlineSnapshot(`
         {
           "filter": {
@@ -263,7 +263,7 @@ describe('query api', () => {
       const contactFullTextSearch = Query.select(Filter.type(TestSchema.Person)).select(Filter.text('Bill'));
 
       log('query', { ast: contactFullTextSearch.ast });
-      Schema.validateSync(QueryAST.Query)(contactFullTextSearch.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(contactFullTextSearch.ast);
       expect(contactFullTextSearch.ast).toMatchInlineSnapshot(`
         {
           "filter": {
@@ -309,7 +309,7 @@ describe('query api', () => {
         Filter.or(Filter.type(TestSchema.Organization), Filter.type(TestSchema.Person)),
       );
 
-      Schema.validateSync(QueryAST.Query)(orgsAndPeople.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(orgsAndPeople.ast);
       expect(orgsAndPeople.ast).toMatchInlineSnapshot(`
         {
           "filter": {
@@ -339,7 +339,7 @@ describe('query api', () => {
         Filter.not(Filter.or(Filter.type(TestSchema.Organization), Filter.type(TestSchema.Person))),
       );
 
-      Schema.validateSync(QueryAST.Query)(everythingButOrgsAndPeople.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(everythingButOrgsAndPeople.ast);
       expect(everythingButOrgsAndPeople.ast).toMatchInlineSnapshot(`
         {
           "filter": {
@@ -372,7 +372,7 @@ describe('query api', () => {
         deleted: 'only',
       });
 
-      Schema.validateSync(QueryAST.Query)(deletedTasks.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(deletedTasks.ast);
       expect(deletedTasks.ast).toMatchInlineSnapshot(`
         {
           "options": {
@@ -394,7 +394,7 @@ describe('query api', () => {
 
     test('filter by tags', () => {
       const query = Query.select(Filter.type(TestSchema.Task)).select(Filter.tag('important'));
-      Schema.validateSync(QueryAST.Query)(query.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(query.ast);
       expect(query.ast).toMatchInlineSnapshot(`
         {
           "filter": {
@@ -417,7 +417,7 @@ describe('query api', () => {
 
     test('limit results', () => {
       const query = Query.select(Filter.type(TestSchema.Task)).limit(10);
-      Schema.validateSync(QueryAST.Query)(query.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(query.ast);
       expect(query.ast).toMatchInlineSnapshot(`
         {
           "limit": 10,
@@ -437,7 +437,7 @@ describe('query api', () => {
 
     test('ordered and limited results', () => {
       const query = Query.select(Filter.type(TestSchema.Task)).orderBy(Order.property('title', 'asc')).limit(10);
-      Schema.validateSync(QueryAST.Query)(query.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(query.ast);
       expect(query.ast).toMatchInlineSnapshot(`
         {
           "limit": 10,
@@ -470,7 +470,7 @@ describe('query api', () => {
         Query.select(Filter.type(TestSchema.Person)).limit(5),
         Query.select(Filter.type(TestSchema.Organization)).limit(5),
       );
-      Schema.validateSync(QueryAST.Query)(query.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(query.ast);
       expect(query.ast).toMatchInlineSnapshot(`
         {
           "queries": [
@@ -509,7 +509,7 @@ describe('query api', () => {
     test('from all accessible spaces', () => {
       const query = Query.select(Filter.type(TestSchema.Person)).from('all-accessible-spaces');
 
-      Schema.validateSync(QueryAST.Query)(query.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(query.ast);
       expect(query.ast).toMatchInlineSnapshot(`
         {
           "from": {
@@ -535,7 +535,7 @@ describe('query api', () => {
         includeFeeds: true,
       });
 
-      Schema.validateSync(QueryAST.Query)(query.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(query.ast);
       expect(query.ast).toMatchInlineSnapshot(`
         {
           "from": {
@@ -562,7 +562,7 @@ describe('query api', () => {
         .limit(10)
         .from('all-accessible-spaces');
 
-      Schema.validateSync(QueryAST.Query)(query.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(query.ast);
       expect(query.ast).toMatchObject({
         type: 'from',
         from: { _tag: 'scope', scopes: [] },
@@ -592,7 +592,7 @@ describe('query api', () => {
       const expectedFeedUri = Feed.getFeedUri(feed);
 
       const query = Query.type(TestSchema.Person).from(feed);
-      Schema.validateSync(QueryAST.Query)(query.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(query.ast);
       expect(query.ast).toMatchObject({
         type: 'from',
         from: {
@@ -721,20 +721,20 @@ describe('query api', () => {
         subquery: subquery.ast,
         property: 'title',
       });
-      Schema.validateSync(QueryAST.Filter)(filter.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Filter))(filter.ast);
     });
 
     test('Filter.in(...) with literal values still builds a plain in node', () => {
       const filter = Filter.in('1', '2', '3');
       expect(filter.ast).toEqual({ type: 'in', values: ['1', '2', '3'] });
-      Schema.validateSync(QueryAST.Filter)(filter.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Filter))(filter.ast);
     });
 
     test('nested Filter.in(projection) composes inside Filter.type', () => {
       const subquery = Query.select(Filter.type(TestSchema.Task, { completed: true }));
       const query = Query.select(Filter.type(TestSchema.Task, { title: Filter.in(subquery.project('title')) }));
 
-      Schema.validateSync(QueryAST.Query)(query.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(query.ast);
       expect(query.ast).toMatchObject({
         type: 'select',
         filter: {
@@ -785,7 +785,7 @@ describe('query api', () => {
         parents: [parentDxn],
         transitive: true,
       });
-      Schema.validateSync(QueryAST.Filter)(filter.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Filter))(filter.ast);
     });
 
     test('childOf with object', () => {
@@ -797,7 +797,7 @@ describe('query api', () => {
         transitive: true,
       });
       expect(filter.ast.type === 'child-of' && filter.ast.parents.length).toBe(1);
-      Schema.validateSync(QueryAST.Filter)(filter.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Filter))(filter.ast);
     });
 
     test('childOf with array of Refs', () => {
@@ -810,7 +810,7 @@ describe('query api', () => {
         parents: [dxn1, dxn2],
         transitive: true,
       });
-      Schema.validateSync(QueryAST.Filter)(filter.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Filter))(filter.ast);
     });
 
     test('childOf with transitive=false', () => {
@@ -822,7 +822,7 @@ describe('query api', () => {
         parents: [parentRef.uri],
         transitive: false,
       });
-      Schema.validateSync(QueryAST.Filter)(filter.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Filter))(filter.ast);
     });
 
     test('childOf in select query', () => {
@@ -838,7 +838,7 @@ describe('query api', () => {
           transitive: true,
         },
       });
-      Schema.validateSync(QueryAST.Query)(query.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(query.ast);
     });
 
     test('childOf combined with type filter', () => {
@@ -846,7 +846,7 @@ describe('query api', () => {
       const parentRef = Ref.fromURI(parentDxn);
       const query = Query.select(Filter.and(Filter.type(TestSchema.Person), Filter.childOf(parentRef)));
 
-      Schema.validateSync(QueryAST.Query)(query.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Query))(query.ast);
       expect(query.ast).toMatchObject({
         type: 'select',
         filter: {
@@ -857,6 +857,24 @@ describe('query api', () => {
           ],
         },
       });
+    });
+
+    test('hasParent AST, decode, and pretty-print', ({ expect }) => {
+      const filter = Filter.hasParent(false);
+      expect(filter.ast).toMatchObject({ type: 'has-parent', value: false });
+      Schema.decodeSync(Schema.toType(QueryAST.Filter))(filter.ast);
+      expect(Filter.pretty(filter)).toBe('Filter.hasParent(false)');
+      expect(Filter.hasParent().ast).toMatchObject({ type: 'has-parent', value: true });
+    });
+
+    test('hasParent matches via toPredicate', ({ expect }) => {
+      const parent = Obj.make(TestSchema.Person, { name: 'Parent' });
+      const child = Obj.make(TestSchema.Person, { name: 'Child' });
+      Obj.setParent(child, parent);
+      expect(Filter.toPredicate(child, Filter.hasParent())).toBe(true);
+      expect(Filter.toPredicate(child, Filter.hasParent(false))).toBe(false);
+      expect(Filter.toPredicate(parent, Filter.hasParent(false))).toBe(true);
+      expect(Filter.toPredicate(parent, Filter.hasParent())).toBe(false);
     });
 
     test('childOf pretty-prints correctly', () => {
@@ -878,7 +896,7 @@ describe('query api', () => {
         transitive: true,
       });
       expect(filter.ast.type === 'child-of' && filter.ast.parents.length).toBe(2);
-      Schema.validateSync(QueryAST.Filter)(filter.ast);
+      Schema.decodeSync(Schema.toType(QueryAST.Filter))(filter.ast);
     });
 
     describe('.aggregate', () => {
@@ -889,9 +907,26 @@ describe('query api', () => {
 
         expect(query.ast).toMatchObject({
           type: 'aggregate',
-          aggregates: [{ name: 'email', kind: 'group', property: 'email' }],
+          aggregates: [{ name: 'email', kind: 'group', properties: ['email'] }],
         });
-        Schema.validateSync(QueryAST.Query)(query.ast);
+        Schema.decodeSync(Schema.toType(QueryAST.Query))(query.ast);
+      });
+
+      test('group by a coalesce chain carries the whole chain in one entry', () => {
+        const query = Query.select(Filter.type(TestSchema.Person)).aggregate({
+          email: Aggregate.group({ coalesce: ['email', 'name'] }),
+        });
+
+        expect(query.ast).toMatchObject({
+          type: 'aggregate',
+          aggregates: [{ name: 'email', kind: 'group', properties: ['email', 'name'] }],
+        });
+        Schema.decodeSync(Schema.toType(QueryAST.Query))(query.ast);
+
+        // An empty chain has no key to read, so it is rejected at the type level (and by the AST
+        // schema, which declares `properties` non-empty) rather than degrading to one `null` group.
+        // @ts-expect-error - `coalesce` requires at least one property.
+        Aggregate.group({ coalesce: [] });
       });
 
       test('group by multiple properties forms a composite key', () => {
@@ -903,11 +938,11 @@ describe('query api', () => {
         expect(query.ast).toMatchObject({
           type: 'aggregate',
           aggregates: [
-            { name: 'name', kind: 'group', property: 'name' },
-            { name: 'email', kind: 'group', property: 'email' },
+            { name: 'name', kind: 'group', properties: ['name'] },
+            { name: 'email', kind: 'group', properties: ['email'] },
           ],
         });
-        Schema.validateSync(QueryAST.Query)(query.ast);
+        Schema.decodeSync(Schema.toType(QueryAST.Query))(query.ast);
       });
 
       test('aggregate-everything (no group entries) is valid', () => {
@@ -917,7 +952,7 @@ describe('query api', () => {
           type: 'aggregate',
           aggregates: [{ name: 'latest', kind: 'max', property: 'name' }],
         });
-        Schema.validateSync(QueryAST.Query)(query.ast);
+        Schema.decodeSync(Schema.toType(QueryAST.Query))(query.ast);
       });
 
       test("aggregate wraps the preceding query as the aggregate node's inner query", () => {
@@ -932,11 +967,11 @@ describe('query api', () => {
 
         const withOptions = grouped.options({ debugLabel: 'grouped' });
         expect(withOptions.ast).toMatchObject({ type: 'options', query: grouped.ast });
-        Schema.validateSync(QueryAST.Query)(withOptions.ast);
+        Schema.decodeSync(Schema.toType(QueryAST.Query))(withOptions.ast);
 
         const withDebugLabel = grouped.debugLabel('grouped-2');
         expect(withDebugLabel.ast).toMatchObject({ type: 'options', options: { debugLabel: 'grouped-2' } });
-        Schema.validateSync(QueryAST.Query)(withDebugLabel.ast);
+        Schema.decodeSync(Schema.toType(QueryAST.Query))(withDebugLabel.ast);
       });
 
       test('items carries its limit', () => {
@@ -948,11 +983,11 @@ describe('query api', () => {
         expect(query.ast).toMatchObject({
           type: 'aggregate',
           aggregates: [
-            { name: 'email', kind: 'group', property: 'email' },
+            { name: 'email', kind: 'group', properties: ['email'] },
             { name: 'items', kind: 'items', limit: 20 },
           ],
         });
-        Schema.validateSync(QueryAST.Query)(query.ast);
+        Schema.decodeSync(Schema.toType(QueryAST.Query))(query.ast);
       });
 
       test('items carries its own per-group order, independent of the query-level orderBy', () => {
@@ -964,7 +999,7 @@ describe('query api', () => {
         expect(query.ast).toMatchObject({
           type: 'aggregate',
           aggregates: [
-            { name: 'email', kind: 'group', property: 'email' },
+            { name: 'email', kind: 'group', properties: ['email'] },
             {
               name: 'items',
               kind: 'items',
@@ -973,7 +1008,7 @@ describe('query api', () => {
             },
           ],
         });
-        Schema.validateSync(QueryAST.Query)(query.ast);
+        Schema.decodeSync(Schema.toType(QueryAST.Query))(query.ast);
       });
 
       test('aggregate declares named aggregates on the aggregate node', () => {
@@ -988,14 +1023,14 @@ describe('query api', () => {
         expect(query.ast).toMatchObject({
           type: 'aggregate',
           aggregates: [
-            { name: 'email', kind: 'group', property: 'email' },
+            { name: 'email', kind: 'group', properties: ['email'] },
             { name: 'latest', kind: 'max', property: 'name' },
             { name: 'earliest', kind: 'min', property: 'name' },
             { name: 'total', kind: 'count' },
             { name: 'items', kind: 'items' },
           ],
         });
-        Schema.validateSync(QueryAST.Query)(query.ast);
+        Schema.decodeSync(Schema.toType(QueryAST.Query))(query.ast);
       });
 
       test('orderBy(Order.property) after aggregate orders by the aggregate field', () => {
@@ -1010,7 +1045,7 @@ describe('query api', () => {
           query: grouped.ast,
           order: [{ kind: 'property', property: 'latest', direction: 'desc' }],
         });
-        Schema.validateSync(QueryAST.Query)(ordered.ast);
+        Schema.decodeSync(Schema.toType(QueryAST.Query))(ordered.ast);
       });
 
       test('Query.pretty renders aggregates (incl. group + items limit) and aggregate ordering', () => {

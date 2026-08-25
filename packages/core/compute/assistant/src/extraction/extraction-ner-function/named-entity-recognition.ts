@@ -2,11 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import {
-  type TokenClassificationOutput,
-  type TokenClassificationPipelineType,
-  type TokenClassificationSingle,
-  pipeline,
+import type {
+  TokenClassificationOutput,
+  TokenClassificationPipelineType,
+  TokenClassificationSingle,
 } from '@xenova/transformers';
 
 import { log } from '@dxos/log';
@@ -16,14 +15,21 @@ let _ner: Promise<TokenClassificationPipelineType>;
 /**
  * Named Entity Recognition pipeline.
  * Initializes the pipeline on first call.
+ *
+ * The transformers runtime pulls onnxruntime-web with it (~740 KB combined), so it is imported
+ * here rather than at module scope: this module is reachable from the `extraction` barrel, and a
+ * static import put the whole ML stack in the app's resident set.
+ *
  * @returns The singleton promise that resolves to a token classification pipeline.
  */
 export const getNer = () => {
   if (!_ner) {
-    _ner = pipeline('ner', 'Xenova/bert-base-NER').then((ner) => {
-      log.info('NER model is ready');
-      return ner;
-    });
+    _ner = import('@xenova/transformers')
+      .then(({ pipeline }) => pipeline('ner', 'Xenova/bert-base-NER'))
+      .then((ner) => {
+        log.info('NER model is ready');
+        return ner;
+      });
   }
 
   return _ner;

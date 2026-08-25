@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import React, { useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -15,8 +16,8 @@ import { Form } from '../../../Form';
 
 // A literal union auto-dispatches to SelectField.
 const schema = Schema.Struct({
-  status: Schema.Literal('active', 'inactive', 'archived').annotations({ title: 'Status' }),
-}).pipe(Schema.mutable);
+  status: Schema.Literals(['active', 'inactive', 'archived']).annotate({ title: 'Status' }),
+}).mapFields(Struct.map(Schema.mutableKey));
 
 type Values = Schema.Schema.Type<typeof schema>;
 

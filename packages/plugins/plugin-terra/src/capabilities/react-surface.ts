@@ -10,8 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { TerraArticle } from '#containers';
-
-import * as Terra from '../types/Terra';
+import { Terra } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

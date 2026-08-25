@@ -15,10 +15,10 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Transcript } from '@dxos/types';
 
+import { TestItem } from '#testing';
 import { translations } from '#translations';
 
-import { TestItem } from '../../testing';
-import { TranscriptionPlugin } from '../../TranscriptionPlugin';
+import { TranscriptionPlugin } from '../../plugin';
 import { TranscriptionArticle } from './TranscriptionArticle';
 
 const DefaultStory = () => {
@@ -41,13 +41,13 @@ const meta = {
       // capabilities, which activate on SetupSettings — fire it so the driver does not throw.
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Transcript.Transcript, Feed.Feed, Message.Message, TestItem],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
-              const feed = personalSpace.db.add(Feed.make({ name: 'transcription' }));
-              personalSpace.db.add(Transcript.make(Ref.make(feed)));
+              const { defaultSpace } = yield* initializeIdentity(client);
+              const feed = defaultSpace.db.add(Feed.make({ name: 'transcription' }));
+              defaultSpace.db.add(Transcript.make(Ref.make(feed)));
             }),
         }),
         TranscriptionPlugin(),

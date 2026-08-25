@@ -8,8 +8,7 @@ import { addressFromA1Notation, isFormula } from '@dxos/compute-hyperformula';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
-import * as SheetOperation from '../types/SheetOperation';
-import * as SheetUtil from '../types/SheetUtil';
+import { SheetOperation, SheetUtil } from '#types';
 
 const handler: Operation.WithHandler<typeof SheetOperation.SetValues> = SheetOperation.SetValues.pipe(
   Operation.withHandler(

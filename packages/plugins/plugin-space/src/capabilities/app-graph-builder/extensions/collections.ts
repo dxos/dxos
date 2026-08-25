@@ -6,29 +6,31 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { DeckSpec } from '@dxos/app-toolkit';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as DeckSpec from '@dxos/app-toolkit/DeckSpec';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import * as UrlResolution from '@dxos/app-toolkit/UrlResolution';
 import { isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
-import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
+import { Annotation, Collection, Database, type Entity, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { Graph, GraphBuilder, Node } from '@dxos/plugin-graph';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
-import { SpaceOperation } from '#operations';
+import { SpaceCapabilities, SpaceOperation } from '#types';
 
-import { resolveCollectionObjectPath } from '../../../collection-path';
-import * as SpaceCapabilities from '../../../types/SpaceCapabilities';
+import { resolveCollectionObjectPath } from '../../../util';
 import {
   COLLECTIONS_SECTION_TYPE,
   COPY_LINK_LABEL,
@@ -49,6 +51,27 @@ import {
  */
 const collectionDeck = (object: Obj.Unknown, hasCollectionArticle: boolean): DeckSpec.DeckSpec | undefined =>
   !hasCollectionArticle && Obj.instanceOf(Collection.Collection, object) ? { initial: 'children' } : undefined;
+
+/**
+ * Typenames available in this build — schemas registered by enabled plugins, plus those stored in the
+ * space — so the tree can omit an object whose type has no article rather than offer a row that opens
+ * nothing.
+ *
+ * TODO(wittjosiah): Name the plugin that would render the object instead of hiding it.
+ */
+const getAvailableTypenames = (types: readonly Entity.Unknown[]): ReadonlySet<string> =>
+  new Set(
+    types
+      .filter(Type.isType)
+      .map((type) => Type.getTypename(type))
+      .filter(isNonNullable),
+  );
+
+const isTypeAvailable = (typenames: ReadonlySet<string>, object: Obj.Unknown): boolean => {
+  const typename = Obj.getTypename(object);
+  // No typename at all is not an unavailable type — leave those to the renderers.
+  return !typename || typenames.has(typename);
+};
 
 export const createCollectionExtensions = Effect.fnUntraced(function* ({
   shareableLinkOrigin,
@@ -144,13 +167,15 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         }
 
         const rawRefs = collection.objects ?? [];
+        const available = getAvailableTypenames(get(space.db.query(TypeOptions.allTypesQuery).atom));
 
         const objects = rawRefs
           .map((ref: any) => {
             get(Obj.atom(ref));
             return ref.target;
           })
-          .filter(isNonNullable);
+          .filter(isNonNullable)
+          .filter((object: Obj.Unknown) => isTypeAvailable(available, object));
 
         return Effect.succeed(
           objects
@@ -211,13 +236,15 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
 
         const collectionSnapshot = get(Obj.atom(collection));
         const refs = collectionSnapshot.objects ?? [];
+        const available = db ? getAvailableTypenames(get(db.query(TypeOptions.allTypesQuery).atom)) : undefined;
 
         const objects = refs
           .map((ref: any) => {
             get(Obj.atom(ref));
             return ref.target;
           })
-          .filter(isNonNullable);
+          .filter(isNonNullable)
+          .filter((object: Obj.Unknown) => !available || isTypeAvailable(available, object));
 
         return Effect.succeed(
           objects
@@ -289,7 +316,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
       actions: (space) =>
         Effect.succeed([
           Node.makeAction({
-            id: SpaceOperation.OpenCreateObject.meta.key,
+            id: SpaceOperation.OpenObjectForm.meta.key,
             data: () =>
               Effect.gen(function* () {
                 // Target the root collection so the create dialog offers collection-eligible types, like
@@ -297,7 +324,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
                 const rootCollection = Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(
                   Option.getOrUndefined,
                 )?.target;
-                yield* Operation.invoke(SpaceOperation.OpenCreateObject, {
+                yield* Operation.invoke(SpaceOperation.OpenObjectForm, {
                   // Qualified id of the collections section node (root/<spaceId>/collections), so the new
                   // object's navigation path resolves under the section — the bare segment would not.
                   target: rootCollection ?? space.db,
@@ -341,8 +368,8 @@ const constructObjectActions = ({
     ...(Obj.instanceOf(Collection.Collection, object)
       ? [
           Node.makeAction({
-            id: SpaceOperation.OpenCreateObject.meta.key,
-            data: () => Operation.invoke(SpaceOperation.OpenCreateObject, { target: object, targetNodeId: nodeId }),
+            id: SpaceOperation.OpenObjectForm.meta.key,
+            data: () => Operation.invoke(SpaceOperation.OpenObjectForm, { target: object, targetNodeId: nodeId }),
             properties: {
               label: CREATE_OBJECT_IN_COLLECTION_LABEL,
               icon: 'ph--plus--regular',

@@ -111,6 +111,13 @@ export type XmlWidgetDef = {
    * Only meaningful for block widgets.
    */
   estimatedHeight?: (props: XmlWidgetProps) => number | undefined;
+
+  /**
+   * How `estimatedHeight` is applied: `fixed` (default) pins the block, `min` treats it as a floor.
+   * Use `min` for a widget whose height changes after it mounts — a disclosure, a growing log —
+   * since a pinned box cannot open and clips what it holds.
+   */
+  heightMode?: 'fixed' | 'min';
 };
 
 export type XmlWidgetRegistry = Record<string, XmlWidgetDef>;
@@ -632,7 +639,17 @@ const buildDecorations = (
                 const widget: WidgetType | undefined = factory
                   ? (factory(props) ?? undefined)
                   : Component
-                    ? new StubWidget(widgetId, Component, props, notifier, false, !!block, blockHeight, def.debug)
+                    ? new StubWidget(
+                        widgetId,
+                        Component,
+                        props,
+                        notifier,
+                        false,
+                        !!block,
+                        blockHeight,
+                        def.heightMode,
+                        def.debug,
+                      )
                     : undefined;
 
                 // Add decoration.
@@ -704,7 +721,17 @@ const buildDecorations = (
           const widget: WidgetType | undefined = def.factory
             ? (def.factory(props) ?? undefined)
             : def.Component
-              ? new StubWidget(widgetId, def.Component, props, notifier, false, isBlock, blockHeight, def.debug)
+              ? new StubWidget(
+                  widgetId,
+                  def.Component,
+                  props,
+                  notifier,
+                  false,
+                  isBlock,
+                  blockHeight,
+                  def.heightMode,
+                  def.debug,
+                )
               : undefined;
           if (widget) {
             builder.add(
@@ -766,28 +793,40 @@ const buildDecorations = (
         const widget: WidgetType | undefined = def.factory
           ? (def.factory(mergedProps) ?? undefined)
           : def.Component
-            ? new StubWidget(widgetId, def.Component, mergedProps, notifier, true, undefined, undefined, def.debug)
+            ? new StubWidget(
+                widgetId,
+                def.Component,
+                mergedProps,
+                notifier,
+                true,
+                undefined,
+                undefined,
+                def.heightMode,
+                def.debug,
+              )
             : undefined;
 
-        if (widget) {
-          builder.add(
-            absoluteFrom,
-            range.to,
-            Decoration.replace({
-              widget,
-              block: def.block,
-              atomic: true,
-              inclusive: true,
-              tag: tagName,
-              streaming: true,
-              contentFrom,
-            }),
-          );
+        // Decorated even when the factory declined: a factory may return null while the tag is still
+        // empty (`<reasoning>` with no text yet), and leaving the range undecorated renders the raw
+        // markup to the reader for exactly as long as that lasts — the flash this scan exists to
+        // prevent. Without a widget it is an inline replace that simply hides the text; `block` needs
+        // a widget to size the line, so it is only claimed when there is one.
+        builder.add(
+          absoluteFrom,
+          range.to,
+          Decoration.replace({
+            ...(widget ? { widget, block: def.block } : {}),
+            atomic: true,
+            inclusive: true,
+            tag: tagName,
+            streaming: true,
+            contentFrom,
+          }),
+        );
 
-          // Set from to just before the streaming tag so next rebuild covers it.
-          streamingFrom = absoluteFrom;
-          last = absoluteFrom;
-        }
+        // Set from to just before the streaming tag so next rebuild covers it.
+        streamingFrom = absoluteFrom;
+        last = absoluteFrom;
 
         // Only one streaming tag at a time.
         break;

@@ -15,6 +15,7 @@ export default defineConfig({
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
     SpotlightCapabilities: 'src/types/SpotlightCapabilities.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true },

@@ -3,11 +3,11 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import type * as SchemaAST from 'effect/SchemaAST';
 
-import { Role } from '@dxos/app-framework';
+import * as Role from '@dxos/app-framework/Role';
 import { Surface } from '@dxos/app-framework/ui';
 import { Entity, Obj, Type } from '@dxos/echo';
+import type { SchemaAST } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { type ProjectionModel } from '@dxos/schema';
@@ -429,6 +429,20 @@ export type ObjectPropertiesProps<
 // Card
 //
 
+/**
+ * Role token for the card header's leading depiction — a person's avatar, an organization's logo,
+ * a type's glyph.
+ *
+ * Scoped to the card deliberately, rather than declared once per type: how an object is depicted
+ * depends on the space it gets. A 6-unit card block affords initials or a photograph; a 16px navtree
+ * row does not, and those surfaces keep resolving `IconAnnotation` through `Obj.getIcon`. A type
+ * contributing here says how it looks IN A CARD, and says nothing about anywhere else.
+ *
+ * Unlike {@link CardContent}, a miss is not "render nothing" — every object needs some depiction —
+ * so hosts check {@link Surface.useIsAvailable} and fall back. `CardIconSlot` packages that pair.
+ */
+export const CardIcon: Role.Role<CardData<any>> = Role.make('org.dxos.role.cardIcon');
+
 /** Role token for the card slot. */
 export const CardContent: Role.Role<CardData<any>> = Role.make('org.dxos.role.cardContent');
 
@@ -551,7 +565,7 @@ export const DevtoolsOverview: Role.Role<Record<string, unknown>> = Role.make('o
  */
 export type FormInputData = {
   prop: string;
-  schema: Schema.Schema.AnyNoContext;
+  schema: Schema.Codec<any, any>;
   fieldPropertyAst?: SchemaAST.AST;
   [key: string]: unknown;
 };

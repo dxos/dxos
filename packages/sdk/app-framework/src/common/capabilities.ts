@@ -2,14 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom, type Registry } from '@effect-atom/atom';
-import type * as Command$ from '@effect/cli/Command';
 import * as Effect from 'effect/Effect';
 import type * as Exit$ from 'effect/Exit';
 import type * as Fiber$ from 'effect/Fiber';
 import type * as Layer$ from 'effect/Layer';
 import type * as ManagedRuntime$ from 'effect/ManagedRuntime';
-import type * as Runtime$ from 'effect/Runtime';
+import * as Option from 'effect/Option';
+import type * as Command$ from 'effect/unstable/cli/Command';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import type { FC, PropsWithChildren } from 'react';
 
 import type {
@@ -42,7 +43,7 @@ export const PluginManager = Capability$.makeSingleton<PluginManager$.PluginMana
 /**
  * @category Capability
  */
-export const AtomRegistry = Capability$.makeSingleton<Registry.Registry>()(
+export const AtomRegistry = Capability$.makeSingleton<Registry.AtomRegistry>()(
   'org.dxos.app-framework.capability.atomRegistry',
 );
 
@@ -75,10 +76,10 @@ export type ReactSurface = Surface.Definition | readonly Surface.Definition[];
 export const ReactSurface = Capability$.make<ReactSurface>()('org.dxos.app-framework.capability.reactSurface');
 
 // The requirement channel stays open: a command's services are supplied partly by the contributing
-// plugin and partly by the host — `CommandConfig` carries the host's global flags and is provided by
-// its root command — so no single side can discharge them all. `CommandServices` in @dxos/cli-util
-// names what a host owes; hosts should type their layer with it.
-export type AnyCommand = Command$.Command<any, any, any, any>;
+// plugin and partly by the host — `CommandConfig` carries the host's global flags and is provided as
+// an ambient layer by the host binary — so no single side can discharge them all. `CommandServices`
+// in @dxos/cli-util names what a host owes; hosts should type their layer with it.
+export type AnyCommand = Command$.Command<any, any, any, any, any>;
 
 /**
  * @category Capability
@@ -215,8 +216,8 @@ export interface ProcessManagerRuntime {
   ): Promise<Exit$.Exit<A, E>>;
   runFork<A, E>(
     effect: Effect.Effect<A, E, ProcessManagerRuntimeServices>,
-    options?: Runtime$.RunForkOptions,
-  ): Fiber$.RuntimeFiber<A, E>;
+    options?: Effect.RunOptions,
+  ): Fiber$.Fiber<A, E>;
   runSync<A, E>(effect: Effect.Effect<A, E, ProcessManagerRuntimeServices>): A;
 }
 
@@ -299,6 +300,25 @@ export const getAtomValue = <T>(
     const registry = yield* Capability$.get(AtomRegistry);
     const atom = yield* Capability$.get(atomCapability);
     return registry.get(atom);
+  });
+
+/**
+ * Get the current value of an atom capability, or `Option.none()` when either the registry or the
+ * atom itself is uncontributed.
+ *
+ * For operations that run on both the app and a headless host (the edge operation-service, `dx mcp
+ * serve`): those hosts have a capability manager but activate no UI plugins, so {@link getAtomValue}
+ * fails on capabilities like `Layout` that only the app contributes.
+ *
+ * @example const layout = yield* Capabilities.getAtomValueOption(AppCapabilities.Layout);
+ */
+export const getAtomValueOption = <T>(
+  atomCapability: Capability$.InterfaceDef<Atom.Atom<T>>,
+): Effect.Effect<Option.Option<T>, never, Capability$.Service> =>
+  Effect.gen(function* () {
+    const registry = yield* Capability$.getOption(AtomRegistry);
+    const atom = yield* Capability$.getOption(atomCapability);
+    return Option.map(Option.all([registry, atom]), ([registry, atom]) => registry.get(atom));
   });
 
 /**

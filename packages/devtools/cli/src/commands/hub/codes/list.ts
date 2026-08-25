@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as Command from 'effect/unstable/cli/Command';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { type AdminListInvitationCodesResponse } from '@dxos/protocols';
@@ -26,7 +26,7 @@ export const list = Command.make(
   {},
   Effect.fn(function* () {
     const result = yield* hubApiRequest<AdminListInvitationCodesResponse>('GET', '/api/code').pipe(
-      Effect.catchAll((error) => Effect.fail(new Error(formatHubError(error)))),
+      Effect.catch((error) => Effect.fail(new Error(formatHubError(error)))),
     );
 
     if (yield* CommandConfig.isJson) {

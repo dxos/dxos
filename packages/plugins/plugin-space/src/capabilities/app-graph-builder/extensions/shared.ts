@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom';
 import * as Option from 'effect/Option';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
+import type * as Node from '@dxos/app-graph/Node';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import type * as Operation from '@dxos/compute/Operation';
 import { Annotation, Filter, Obj, Type } from '@dxos/echo';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
-import { type Node } from '@dxos/plugin-graph';
 import { type TreeData } from '@dxos/react-ui-list';
 import type { EchoViewRefPath } from '@dxos/schema';
 import { ViewAnnotation, getTypeURIFromQuery } from '@dxos/schema';
@@ -83,19 +83,6 @@ export const checkPendingMigration = (space: Space) => {
   );
 };
 
-export const downloadBlob = async (blob: Blob, filename: string) => {
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = filename;
-
-  document.body.appendChild(anchor);
-  anchor.click();
-
-  document.body.removeChild(anchor);
-  URL.revokeObjectURL(url);
-};
-
 //
 // View Index
 //
@@ -118,7 +105,7 @@ export type ViewIndex = {
  * type URI via getTypeURIFromQuery are included.
  */
 // TODO(wittjosiah): Make reactive to schema registry changes (currently only object/view mutations trigger updates).
-export const buildViewIndex = (get: Atom.Context, space: Space, schemas: Type.AnyEntity[]): ViewIndex => {
+export const buildViewIndex = (get: Atom.AtomContext, space: Space, schemas: Type.AnyEntity[]): ViewIndex => {
   const viewSchemas = schemas.filter((schema) => ViewAnnotation.has(schema));
 
   const viewsByTypeUri = new Map<string, Obj.Any[]>();

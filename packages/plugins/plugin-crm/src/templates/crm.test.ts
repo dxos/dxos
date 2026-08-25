@@ -14,7 +14,8 @@ import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 
-import * as CrmOperation from '../types/CrmOperation';
+import { CrmOperation } from '#types';
+
 import { crm } from './crm';
 
 const dbLayer = TestDatabaseLayer({
@@ -49,10 +50,11 @@ describe('crm routine template', () => {
       // No model between trigger and operation: an operation action owns no instructions.
       expect(Routine.instructionsRef(draft)).toBeUndefined();
 
-      // Feed trigger pointing at the mailbox's feed, owned by the routine.
+      // Feed trigger pointing at the mailbox's feed, enabled (the create dialog is the review step),
+      // owned by the routine.
       const trigger = draft.triggers[0]?.target;
       expect(trigger != null && Obj.instanceOf(Trigger.Trigger, trigger)).toBe(true);
-      expect(trigger?.enabled).toBe(false);
+      expect(trigger?.enabled).toBe(true);
       expect(trigger?.spec?.kind).toBe('feed');
       const triggerFeedUri = trigger?.spec?.kind === 'feed' ? trigger.spec.feed?.uri : undefined;
       expect(triggerFeedUri).toBe(mailbox.feed.uri);

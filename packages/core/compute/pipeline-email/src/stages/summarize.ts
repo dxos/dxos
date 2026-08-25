@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 import { Stage } from '@dxos/pipeline';
@@ -57,7 +57,7 @@ export const summarizeStage: Stage.Stage<
       Effect.provide(AiService.model(SUMMARIZE_MODEL).pipe(Layer.orDie)),
       Effect.timeout('30 seconds'),
       Effect.map((response) => response.text),
-      Effect.orElse(() => Effect.succeed('')),
+      Effect.catch(() => Effect.succeed('')),
     );
     const summary = parseSummary(raw);
     const messageId = String(message.properties?.messageId ?? message.id);

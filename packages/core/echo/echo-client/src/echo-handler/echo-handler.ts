@@ -3,6 +3,7 @@
 //
 
 import * as A from '@automerge/automerge';
+import * as Equal from 'effect/Equal';
 import * as Schema from 'effect/Schema';
 import { type InspectOptionsStylized } from 'node:util';
 
@@ -369,7 +370,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return target[symbolInternals].getDecoded([getNamespace(target), ...path]);
     });
 
-    const _ = Schema.asserts(propertySchema)(value);
+    Schema.asserts(propertySchema, value);
     SchemaValidator.assertExactProperties(propertySchema, value, (path) => getDeep(value, path));
     return value;
   }
@@ -742,9 +743,6 @@ export const throwIfCustomClass = (prop: Doc.KeyPath[number], value: any) => {
   }
 };
 
-// Re-export from echo-object-utils for backward compatibility.
-export { getObjectCore };
-
 /**
  * @returns Automerge document (or a part of it) that backs the object.
  * Mostly used for debugging.
@@ -753,9 +751,6 @@ export const getObjectDocument = (obj: Obj.Any): A.Doc<EntityStructure> => {
   const core = getObjectCore(obj);
   return getDeep(core.getDoc(), core.mountPath)!;
 };
-
-// Re-export from echo-object-utils for backward compatibility.
-export { isRootDataObject };
 
 /**
  * @returns True if `value` is part of another EchoObjectSchema but not the root data object.
@@ -1001,11 +996,19 @@ export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: Ech
 
   const obj = createProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
   assertObjectModel(obj);
+
+  // Identity, not structure, is this proxy's equality. Effect compares and hashes an unmarked object
+  // by walking its properties, so two proxies over the same entity — a branch binding and the live
+  // object, or two bindings of one branch — collapse into a single `Atom.family` entry keyed on
+  // whichever came first. The survivor's `subscribe` targets a proxy the caller may already have
+  // disposed, so the other binding's updates are never delivered.
+  Equal.byReferenceUnsafe(obj);
+
   core.rootProxy = obj;
   return obj;
 };
 
-const validateSchema = (schema: Schema.Schema.AnyNoContext) => {
+const validateSchema = (schema: Schema.Codec<any, any>) => {
   const dxn = getSchemaURI(schema);
   invariant(dxn, 'Schema must be defined via TypedObject.');
   const entityKind = getEntityKind(schema);
@@ -1013,7 +1016,7 @@ const validateSchema = (schema: Schema.Schema.AnyNoContext) => {
   SchemaValidator.validateSchema(schema);
 };
 
-const setSchemaPropertiesOnObjectCore = (core: ObjectCore, schema: Schema.Schema.AnyNoContext | undefined) => {
+const setSchemaPropertiesOnObjectCore = (core: ObjectCore, schema: Schema.Codec<any, any> | undefined) => {
   if (schema != null) {
     const uri = getSchemaURI(schema);
     invariant(uri, 'Schema must be defined via TypedObject.');
@@ -1025,11 +1028,7 @@ const setSchemaPropertiesOnObjectCore = (core: ObjectCore, schema: Schema.Schema
   }
 };
 
-const setRelationSourceAndTarget = (
-  target: ProxyTarget,
-  core: ObjectCore,
-  schema: Schema.Schema.AnyNoContext | undefined,
-) => {
+const setRelationSourceAndTarget = (target: ProxyTarget, core: ObjectCore, schema: Schema.Top | undefined) => {
   const kind = schema && getEntityKind(schema);
   if (kind === EntityKind.Relation) {
     // `getSource` and `getTarget` don't work here since they assert entity kind.

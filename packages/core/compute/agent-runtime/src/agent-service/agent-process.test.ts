@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 
 import { storageServiceLayer } from '@dxos/compute-runtime';
 import * as Process from '@dxos/compute/Process';

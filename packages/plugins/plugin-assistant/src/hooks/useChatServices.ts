@@ -8,7 +8,7 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Key } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 
-import * as AssistantEvents from '../types/AssistantEvents';
+import { AssistantEvents } from '#types';
 
 export type UseChatServicesProps = {
   id?: Key.SpaceId;
@@ -23,7 +23,7 @@ export type UseChatServicesProps = {
  */
 export const useChatServices = ({ id }: UseChatServicesProps) => {
   const client = useClient();
-  id ??= AppSpace.getPersonalSpace(client)?.id;
+  id ??= AppSpace.getDefaultSpace(client)?.id;
 
   // Every chat entry point resolves its services here, so this is the assistant-in-use demand
   // signal: start-gated assistant modules (skills included) load now and register via the

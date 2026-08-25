@@ -45,14 +45,14 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/IllustratorPlugin.workerd.tsx",
-        "node": "./src/IllustratorPlugin.node.tsx",
-        "default": "./src/IllustratorPlugin.tsx"
+        "workerd": "./src/plugin.workerd.tsx",
+        "node": "./src/plugin.node.tsx",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/IllustratorPlugin.d.ts",
-      "workerd": "./dist/lib/IllustratorPlugin.workerd.mjs",
-      "node": "./dist/lib/IllustratorPlugin.node.mjs",
-      "default": "./dist/lib/IllustratorPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#skills": {
       "source": "./src/skills/index.ts",
@@ -63,6 +63,11 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     },
     "#util": "./src/util/index.ts"
   },
@@ -78,25 +83,16 @@
       "types": "./dist/types/src/model/index.d.ts",
       "import": "./dist/lib/model.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./package.json": "./package.json",
     "./Drawing": {
       "source": "./src/types/Drawing.ts",
       "types": "./dist/types/src/types/Drawing.d.ts",
       "import": "./dist/lib/Drawing.mjs"
-    },
-    "./LegacySketch": {
-      "source": "./src/types/LegacySketch.ts",
-      "types": "./dist/types/src/types/LegacySketch.d.ts",
-      "import": "./dist/lib/LegacySketch.mjs"
     },
     "./DrawingOperation": {
       "source": "./src/types/DrawingOperation.ts",
@@ -113,7 +109,21 @@
       "types": "./dist/types/src/types/IllustratorEvents.d.ts",
       "import": "./dist/lib/IllustratorEvents.mjs"
     },
-    "./package.json": "./package.json"
+    "./IllustratorModel": {
+      "source": "./src/model/index.ts",
+      "types": "./dist/types/src/model/index.d.ts",
+      "import": "./dist/lib/model.mjs"
+    },
+    "./IllustratorPlugin": {
+      "source": "./src/IllustratorPlugin.ts",
+      "types": "./dist/types/src/IllustratorPlugin.d.ts",
+      "import": "./dist/lib/IllustratorPlugin.mjs"
+    },
+    "./LegacySketch": {
+      "source": "./src/types/LegacySketch.ts",
+      "types": "./dist/types/src/types/LegacySketch.d.ts",
+      "import": "./dist/lib/LegacySketch.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -142,6 +152,7 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
+    "@dagrejs/dagre": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
@@ -155,12 +166,14 @@
     "@dxos/react-ui-search": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "elkjs": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",

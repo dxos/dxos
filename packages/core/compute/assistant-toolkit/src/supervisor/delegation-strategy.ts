@@ -14,7 +14,7 @@ import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Message, Outline, Task } from '@dxos/types';
+import { Message, Outline, Task, TaskSet } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { RunInstructions } from '../operations';
@@ -89,9 +89,9 @@ const extractArtifactIds = (value: unknown): string[] => {
 };
 
 /**
- * The durable agent tasks awaiting a sub-agent for this conversation: in-progress children of the
+ * The durable agent tasks awaiting a sub-agent for this conversation: in-progress tasks of the
  * working outline's task set whose assignee is an agent. Ordinary checklist items (markdown) are
- * never spawned — delegation happens only through the promotion the delegate-task tool performs.
+ * never spawned — delegation happens only through the promotion the delegation-delegate-task tool performs.
  */
 const findPendingTasks = (
   chat: Chat.Chat,
@@ -108,15 +108,9 @@ const findPendingTasks = (
     if (!taskSet) {
       return [];
     }
-    const children = yield* Database.query(Query.select(Filter.id(taskSet.id)).children()).run.pipe(
-      Effect.orElseSucceed(() => []),
-    );
-    return children.filter(
-      (child): child is Task.Task =>
-        Obj.instanceOf(Task.Task, child) &&
-        child.assignee?.role === 'assistant' &&
-        child.status === 'in-progress' &&
-        !activeIds.has(child.id),
+    // The set's `tasks` array is flat, so a delegated sub-task is found without descending.
+    return TaskSet.resolveTasks(taskSet).filter(
+      (task) => task.assignee?.role === 'assistant' && task.status === 'in-progress' && !activeIds.has(task.id),
     );
   });
 
@@ -143,7 +137,7 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
       // capabilities), minus the delegation skill itself — otherwise a sub-agent could
       // recursively delegate. Resolved from the conversation's AiContext bindings.
       const inheritedSkills = yield* Effect.gen(function* () {
-        const runtime = yield* Effect.runtime<Database.Service>();
+        const runtime = yield* Effect.context<Database.Service>();
         const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
         return binder.getSkills().filter((skill) => Obj.getMeta(skill).key !== DelegationSkill.key);
       }).pipe(Effect.scoped);

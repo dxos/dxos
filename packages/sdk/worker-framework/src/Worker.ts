@@ -4,11 +4,11 @@
 
 import * as BrowserWorker from '@effect/platform-browser/BrowserWorker';
 import * as BrowserWorkerRunner from '@effect/platform-browser/BrowserWorkerRunner';
-import * as RpcClient from '@effect/rpc/RpcClient';
-import * as RpcServer from '@effect/rpc/RpcServer';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import type * as Scope from 'effect/Scope';
+import * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 
 import { Trigger } from '@dxos/async';
 import { EffectEx } from '@dxos/effect';
@@ -25,7 +25,7 @@ const sessionProtocols = (clientToWorker: MessagePort, workerToClient: MessagePo
   Layer.merge(
     RpcServer.layerProtocolWorkerRunner.pipe(Layer.provide(BrowserWorkerRunner.layerMessagePort(clientToWorker))),
     RpcClient.layerProtocolWorker({ size: 1, concurrency: WORKER_CLIENT_CONCURRENCY }).pipe(
-      Layer.provide(BrowserWorker.layerPlatform(() => workerToClient)),
+      Layer.provide(BrowserWorker.layer(() => workerToClient)),
     ),
   );
 
@@ -89,7 +89,9 @@ export const run = ({
 
     let runtime: RuntimeHandle | undefined;
     let owningClientId: string;
-    const tabsProcessed = new Set<string>();
+    // Live session per client, keyed by the connect attempt that claimed it. `supersede` tears the
+    // session down from this side — the only way to reclaim a slot whose tab abandoned it.
+    const sessionsByClient = new Map<string, { attempt: number; supersede: () => void }>();
 
     let releaseStorageLock: () => void;
     const storageLockHeld = new Promise<void>((resolve) => {
@@ -158,19 +160,32 @@ export const run = ({
           break;
         }
         case 'start-session': {
-          if (tabsProcessed.has(message.clientId)) {
-            log('ignoring duplicate client', { clientId: message.clientId });
+          // Absent on a client that predates the field; 0 then reproduces the old first-wins de-dupe.
+          const attempt = message.attempt ?? 0;
+          const current = sessionsByClient.get(message.clientId);
+          // Same (or older) attempt: a raced re-request for a session that already exists, e.g. the
+          // heartbeat-driven re-request a follower sends until its ports arrive.
+          if (current && attempt <= current.attempt) {
+            log('ignoring duplicate client', { clientId: message.clientId, attempt });
             break;
           }
           // Validate the runtime before mutating any session state: a `start-session` can race an
-          // in-flight `init` (whose handler awaits `createRuntime` before setting `runtime`). Marking
-          // the client processed or posting ports here would hand out a session nobody serves and
-          // permanently wedge the client (future retries hit "ignoring duplicate client").
+          // in-flight `init` (whose handler awaits `createRuntime` before setting `runtime`). Claiming
+          // the slot or posting ports here would hand out a session nobody serves and permanently
+          // wedge the client (future retries hit "ignoring duplicate client").
           if (!runtime) {
             log.error('start-session before init; runtime not initialized', { clientId: message.clientId });
             break;
           }
-          tabsProcessed.add(message.clientId);
+          // A newer attempt means the tab gave up on the session it already holds — its connect failed
+          // after we handed out ports, so nothing on that side will ever close it. Tear it down here
+          // or the clientId stays claimed for the worker's lifetime and every retry is discarded.
+          if (current) {
+            log.warn('superseding abandoned session', { clientId: message.clientId, attempt });
+            current.supersede();
+          }
+          const superseded = new Trigger();
+          sessionsByClient.set(message.clientId, { attempt, supersede: () => superseded.wake() });
 
           const clientToWorkerChannel = new MessageChannel();
           const workerToClientChannel = new MessageChannel();
@@ -195,10 +210,17 @@ export const run = ({
             })
             .pipe(
               Effect.provide(sessionProtocols(clientToWorkerChannel.port2, workerToClientChannel.port2)),
+              // `createSession` blocks for the session's lifetime, so this race is what ends it early
+              // when a newer attempt supersedes this one; `Effect.scoped` below then runs teardown.
+              Effect.raceFirst(Effect.promise(() => superseded.wait())),
               Effect.ensuring(
                 Effect.sync(() => {
-                  log('dedicated-worker: session closed', { clientId: message.clientId });
-                  tabsProcessed.delete(message.clientId);
+                  log('dedicated-worker: session closed', { clientId: message.clientId, attempt });
+                  // Guarded: a superseded session finishes after the newer attempt claimed the slot,
+                  // and must not evict it.
+                  if (sessionsByClient.get(message.clientId)?.attempt === attempt) {
+                    sessionsByClient.delete(message.clientId);
+                  }
                 }),
               ),
             );

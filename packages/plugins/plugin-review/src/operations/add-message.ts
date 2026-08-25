@@ -11,13 +11,12 @@ import { Obj, Ref, Relation } from '@dxos/echo';
 import { batchEvents } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
+import { AgentIdentity, CommentCapabilities, CommentOperation } from '#types';
+
 import { shouldTriggerAgent } from '../should-trigger-agent';
-import * as AgentIdentity from '../types/AgentIdentity';
-import * as CommentCapabilities from '../types/CommentCapabilities';
-import * as CommentOperation from '../types/CommentOperation';
 
 const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = CommentOperation.AddMessage.pipe(
   Operation.withHandler(
@@ -40,7 +39,10 @@ const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = Comme
 
       const state = registry.get(stateAtom);
       const draft = state.drafts[subjectId]?.find((a: { id: string }) => a.id === anchor.id);
-      if (draft) {
+      // The database association, not the draft entry, is the signal: a reply sent while the thread's
+      // own persist is in flight reads the same not-yet-cleared draft.
+      const alreadyPersisted = Obj.getDatabase(thread) !== undefined;
+      if (draft && !alreadyPersisted) {
         Obj.update(thread, (thread) => {
           thread.status = 'active';
         });
@@ -48,14 +50,17 @@ const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = Comme
         // of the two rendered lists (query results or drafts). Removing the draft first left a frame in
         // which the persisted relation was not yet queryable and the draft was gone — the comment
         // flashed out of the companion. (The render dedupes the brief draft/persisted overlap.)
-        yield* Operation.invoke(SpaceOperation.AddObject, { object: thread, target: db });
-        const { relation } = yield* Operation.invoke(SpaceOperation.AddRelation, {
-          db,
-          schema: AnchoredTo.AnchoredTo,
-          source: thread,
-          target: subject,
-          fields: { anchor: draft.anchor, branch: draft.branch },
-        });
+        yield* Operation.invoke(SpaceOperation.AddObject, { object: thread }, { spaceId: db.spaceId });
+        const { relation } = yield* Operation.invoke(
+          SpaceOperation.AddRelation,
+          {
+            schema: AnchoredTo.AnchoredTo,
+            source: thread,
+            target: subject,
+            fields: { anchor: draft.anchor, branch: draft.branch },
+          },
+          { spaceId: db.spaceId },
+        );
 
         // Persisting spans two awaits, during which a `Delete` for this comment can run. It sees the
         // anchor still listed as a draft, drops that entry, and returns — so without this the thread
