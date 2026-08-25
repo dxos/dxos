@@ -13,6 +13,8 @@ import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
+import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
+import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { trim } from '@dxos/util';
 
 import { findObject } from '../assertions';
@@ -42,7 +44,9 @@ const task = createEvalRunner({
   input: Schema.Unknown,
   output: Schema.Unknown,
   skills: [...getDefaultSkills(), Ref.make(ProjectSkill.make())],
-  plugins: [MarkdownPlugin.make()],
+  // A real project chat runs with these registered; without them the skill's `projects-*`/
+  // `tasks-*` ToolIds resolve to nothing and are silently dropped from the toolkit.
+  plugins: [MarkdownPlugin.make(), ProjectsPlugin.make(), TasksPlugin.make()],
   types: [Project.Project],
   // Multi-tool scenario (create + context-add + artifact-add), so allow more round-trips.
   timeout: 150_000,
