@@ -6,14 +6,14 @@
  * Builds the Bramble Coffee Roasters exemplar space and writes its JSON snapshot to disk.
  *
  * The snapshot is committed at:
- *   packages/plugins/plugin-onboarding/src/content/exemplar-space.dx.json
+ *   packages/plugins/plugin-onboarding/src/content/exemplar/space.dx.json
  *
  * The onboarding plugin imports it on first launch so every new identity gets a
  * fully populated themed sample space without the script ever running in the browser.
  *
  * Run via the moon task: `moon run plugin-onboarding:build-exemplar`.
  *
- * Content is grounded in `about-bramble.md` in the same content/ directory — that document is
+ * Content is grounded in `exemplar/ABOUT.md` in the content/ directory — that document is
  * the canonical reference for all Bramble world-facts (company history, team, suppliers, customers,
  * active initiatives, email conventions, map coordinates). When extending or regenerating the
  * fixture, read it first and update it if the world changes. All generated content must agree
@@ -76,9 +76,8 @@ import { Actor, ContentBlock, Event, Message, Milestone, Organization, Person, T
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const OUTPUT_PATH = resolve(__dirname, '../src/content/exemplar-space.dx.json');
-const ABOUT_MD_PATH = resolve(__dirname, '../src/content/about-bramble.md');
-const WELCOME_MD_PATH = resolve(__dirname, '../src/content/space-tour.md');
+const OUTPUT_PATH = resolve(__dirname, '../src/content/exemplar/space.dx.json');
+const ABOUT_MD_PATH = resolve(__dirname, '../src/content/exemplar/ABOUT.md');
 
 //
 // RoastLog — exemplar-specific schema defined entirely in this build script.
@@ -194,7 +193,7 @@ const threadIdFor = (subject: string): string => `thread-${threadSlug(normalizeS
 // Space population
 //
 
-const populateSpace = async (space: Space, content: { aboutMd: string; welcomeMd: string }) => {
+const populateSpace = async (space: Space, content: { aboutMd: string }) => {
   // Initialize the root collection on space.properties (normally done by plugin-space's
   // identity-created capability — we replicate it here for the headless builder).
   if (Option.isNone(Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation))) {
@@ -211,8 +210,6 @@ const populateSpace = async (space: Space, content: { aboutMd: string; welcomeMd
   }
 
   // Welcome docs -------------------------------------------------------------
-  const welcomeDoc = Markdown.make({ name: 'Space Tour', content: content.welcomeMd });
-  space.db.add(welcomeDoc);
   const aboutDoc = Markdown.make({ name: 'About Bramble Coffee Roasters', content: content.aboutMd });
   space.db.add(aboutDoc);
 
@@ -267,7 +264,7 @@ const populateSpace = async (space: Space, content: { aboutMd: string; welcomeMd
 
   // Root only ever holds collections — group every collection-item object (docs,
   // sketches, sheets) into a themed collection rather than leaving loose items on root.
-  const welcomeCollection = makeCollection(space, 'Welcome', [Ref.make(welcomeDoc), Ref.make(aboutDoc)]);
+  const welcomeCollection = makeCollection(space, 'Welcome', [Ref.make(aboutDoc)]);
 
   const springBlendCollection = makeCollection(space, 'Spring Blend Launch', [
     Ref.make(notes.tastingProtocol),
@@ -1779,7 +1776,6 @@ const makeSheets = (): { greenInventory: Sheet.Sheet; priceList: Sheet.Sheet } =
 //
 
 const aboutMd = await readFile(ABOUT_MD_PATH, 'utf8');
-const welcomeMd = await readFile(WELCOME_MD_PATH, 'utf8');
 
 console.log('booting client…');
 const testBuilder = new TestBuilder();
@@ -1793,7 +1789,7 @@ try {
   const space = await client.spaces.create({ name: 'Bramble Coffee Roasters', icon: 'potted-plant', hue: 'amber' });
   await space.waitUntilReady();
 
-  await populateSpace(space, { aboutMd, welcomeMd });
+  await populateSpace(space, { aboutMd });
 
   console.log('flushing…');
   await space.db.flush();

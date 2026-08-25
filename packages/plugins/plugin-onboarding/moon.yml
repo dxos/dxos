@@ -10,7 +10,6 @@ tasks:
       - ^:build
     inputs:
       - scripts/build-exemplar-space.ts
-      - src/content/space-tour.md
-      - src/content/about-bramble.md
+      - src/content/exemplar/ABOUT.md
     outputs:
-      - src/content/exemplar-space.dx.json
+      - src/content/exemplar/space.dx.json
