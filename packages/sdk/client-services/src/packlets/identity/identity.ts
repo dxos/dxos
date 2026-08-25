@@ -57,6 +57,7 @@ export class Identity {
   private readonly _deviceStateMachine: DeviceStateMachine;
   private readonly _profileStateMachine: ProfileStateMachine;
   private readonly _edgeFeedReplicator?: EdgeFeedReplicator = undefined;
+  private _haloSpaceRootUrl?: string = undefined;
 
   public readonly authVerifier: TrustedKeySetAuthVerifier;
 
@@ -154,6 +155,18 @@ export class Identity {
 
   get haloSpaceId() {
     return this.space.id;
+  }
+
+  /**
+   * Automerge URL of the halo space root, once anchored. Handed to a joining device so it replicates
+   * the credential chain as a document; undefined while the space is still feed-only.
+   */
+  get haloSpaceRootUrl(): string | undefined {
+    return this._haloSpaceRootUrl;
+  }
+
+  setHaloSpaceRootUrl(url: string): void {
+    this._haloSpaceRootUrl = url;
   }
 
   get haloSpaceKey() {

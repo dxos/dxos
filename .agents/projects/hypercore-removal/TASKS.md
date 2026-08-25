@@ -185,9 +185,15 @@ migration; crash mid-migration and resume.
       security-critical one, since it decides membership — goes through the same scan, covered end
       to end by `space-credentials-source.workerd.test.ts` deleting a credential from the replicated
       document and still being served it.
-- [ ] `device-invitation-protocol.ts` equivalent for the HALO space: thread the halo space root URL
-      through `DeviceAdmissionCredentials` so a joining device replicates the root, not just the feed.
-- [ ] **NAME COLLISION to resolve**: `spaces-service.ts` already reports a `spaceRootUrl` in
+- [x] `DeviceAdmissionCredentials` carries `halo_space_root_url`, and the joining device adopts it
+      (`EchoHost.adoptSpaceRoot`) rather than minting a second root over the same space. The probe is
+      local-only (`fetchFromNetwork: false`): blocking on the network cost every device join 5s.
+- [ ] **BLOCKER for the halo document path: halo documents have no replication between devices.**
+      `identity.ts` wires only `EdgeFeedReplicator`; there is no automerge replicator for the halo
+      space, so the root and credentials documents written there are local to each device and reach
+      neither the other device nor EDGE. The credential chain therefore still travels only as a feed
+      for HALO, and a joining device can never actually adopt the root it is told about — it
+      correctly mints nothing instead. Until this is solved the halo conversion is write-side only.- [ ] **NAME COLLISION to resolve**: `spaces-service.ts` already reports a `spaceRootUrl` in
       pipeline diagnostics meaning the DIRECTORY (`space.databaseRoot?.url`). Two different
       documents under one name will bite; rename the diagnostics field.
 - [ ] `createAdmissionCredentials` is now 10 positional parameters — convert to an options bag.

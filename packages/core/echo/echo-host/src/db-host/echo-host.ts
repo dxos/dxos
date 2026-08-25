@@ -22,6 +22,7 @@ import {
   DatabaseDirectory,
   EntityStructure,
   SPACE_ROOT_TYPE,
+  isSpaceRoot,
   SpaceDocVersion,
   type SpaceRoot,
   createIdFromRootDocumentId,
@@ -544,6 +545,39 @@ export class EchoHost extends Resource {
    * what the per-space source flip keys off, so a second document would fork the chain. The document
    * itself is built a layer up, where credential encoding lives.
    */
+  /**
+   * Adopts a space root minted elsewhere, so a joining peer records the root the space already has
+   * rather than minting a second one over it. Idempotent; the root must name this space.
+   */
+  async adoptSpaceRoot(ctx: Context, spaceId: SpaceId, spaceRootUrl: AutomergeUrl): Promise<SpaceRootRefs> {
+    invariant(this._lifecycleState === LifecycleState.OPEN);
+
+    const existing = this._spaceStateManager.getSpaceRootRefs(spaceId);
+    if (existing) {
+      invariant(existing.spaceRootDocUrl === spaceRootUrl, `Space already anchored on another root: ${spaceId}`);
+      return existing;
+    }
+
+    // Local-only: a caller adopting a root it was merely told about must not block on the network.
+    const rootHandle = await this._automergeHost.loadDoc<SpaceRoot>(ctx, spaceRootUrl, { fetchFromNetwork: false });
+    const root = rootHandle?.doc();
+    invariant(root && isSpaceRoot(root), 'Space root document must load.');
+    invariant(root.spaceId === spaceId, `Space root names another space: ${root.spaceId}`);
+
+    // The directory travels with the root, so a peer that has never opened the space gets one here.
+    if (!this._spaceStateManager.getRootBySpaceId(spaceId)) {
+      await this.updateSpaceRoot(ctx, spaceId, root.directory);
+    }
+
+    const refs: SpaceRootRefs = {
+      spaceRootDocUrl: spaceRootUrl,
+      credentialsDocUrl: root.credentials,
+      idDerivation: root.idDerivation,
+    };
+    await this._spaceStateManager.setSpaceRootRefs(spaceId, refs);
+    return refs;
+  }
+
   async setCredentialsDocument(ctx: Context, spaceId: SpaceId, credentialsDocUrl: AutomergeUrl): Promise<AutomergeUrl> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
 

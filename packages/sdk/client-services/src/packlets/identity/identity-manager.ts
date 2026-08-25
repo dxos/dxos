@@ -1,10 +1,11 @@
+//
+// Copyright 2022 DXOS.org
+//
+import { isValidAutomergeUrl } from '@automerge/automerge-repo';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-//
-// Copyright 2022 DXOS.org
-//
 import platform from 'platform';
 
 import { Event } from '@dxos/async';
@@ -58,6 +59,11 @@ export type JoinIdentityProps = {
   controlFeedKey: PublicKey;
   dataFeedKey: PublicKey;
   authorizedDeviceCredential: Credential;
+  /**
+   * Automerge URL of the host's halo space root, when it has one. The joining device adopts it rather
+   * than minting a second root over the same space.
+   */
+  haloSpaceRootUrl?: string;
 
   /**
    * Latest known timeframe for the control pipeline.
@@ -126,6 +132,8 @@ export class IdentityManager {
    * driven by whichever of the two arrives last.
    */
   private _echoHost: EchoHost | undefined;
+  /** Root the inviting device named, adopted once the identity is accepted. */
+  private _pendingHaloSpaceRootUrl: string | undefined;
   private readonly _devicePresenceAnnounceInterval: number;
   private readonly _devicePresenceOfflineTimeout: number;
   private readonly _edgeConnection: EdgeConnection | undefined;
@@ -298,6 +306,7 @@ export class IdentityManager {
    * Prepare an identity object as the first step of acceptIdentity flow.
    */
   async prepareIdentity(params: JoinIdentityProps, ctx?: Context) {
+    this._pendingHaloSpaceRootUrl = params.haloSpaceRootUrl;
     log('accepting identity', { params });
     invariant(!this._identity, 'Identity already exists.');
 
@@ -340,6 +349,7 @@ export class IdentityManager {
       ...this.createDefaultDeviceProfile(),
       ...profile,
     });
+    await this._anchorHaloOnRootDocument(this._ctx, this._identity);
     this.stateUpdate.emit();
 
     log('accepted identity', { identityKey: identity.identityKey, deviceKey: identity.deviceKey });
@@ -470,18 +480,35 @@ export class IdentityManager {
     const spaceId = identity.haloSpaceId;
     try {
       if (!echoHost.getSpaceRootRefs(spaceId)) {
-        // HALO has never had a directory — its data has always lived in the control feed — so one is
-        // created here to give the root something to point at.
-        if (!echoHost.spaceIds.includes(spaceId)) {
-          await echoHost.createSpaceRoot(ctx, identity.haloSpaceKey);
-        }
-
-        const refs = await echoHost.migrateSpaceToRootDocument(ctx, spaceId);
-        if (!refs) {
+        const adopted = this._pendingHaloSpaceRootUrl;
+        if (adopted !== undefined && isValidAutomergeUrl(adopted)) {
+          // A second root over the same space would leave the two devices disagreeing about which
+          // document carries the chain, so the joining device takes the one the inviter named — and
+          // mints nothing when it cannot, since halo documents have no replication path between
+          // devices yet and the root may simply never arrive.
+          await echoHost.adoptSpaceRoot(ctx, spaceId, adopted).catch((err) => {
+            log.warn('halo space root named by the inviting device is not available', { spaceId, adopted, err });
+          });
           return;
-        }
+        } else {
+          // HALO has never had a directory — its data has always lived in the control feed — so one
+          // is created here to give the root something to point at.
+          if (!echoHost.spaceIds.includes(spaceId)) {
+            await echoHost.createSpaceRoot(ctx, identity.haloSpaceKey);
+          }
 
-        log('anchored halo space on a root document', { spaceId, refs });
+          const refs = await echoHost.migrateSpaceToRootDocument(ctx, spaceId);
+          if (!refs) {
+            return;
+          }
+
+          log('anchored halo space on a root document', { spaceId, refs });
+        }
+      }
+
+      const refs = echoHost.getSpaceRootRefs(spaceId);
+      if (refs) {
+        identity.setHaloSpaceRootUrl(refs.spaceRootDocUrl);
       }
 
       const store = await openCredentialsDocument(ctx, echoHost, spaceId);
