@@ -84,45 +84,6 @@ export const UpdateTask = Operation.make({
   }),
 }).pipe(Operation.mutation('write'));
 
-export const CompleteTask = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.operation.tasks.complete'),
-    name: 'Complete Task',
-    description: 'Mark a task done — the 90% action as one verb.',
-    icon: 'ph--check--regular',
-  },
-  services: [Database.Service],
-  input: Schema.Struct({
-    task: Ref.Ref(Task.Task),
-  }),
-  // JSON snapshot, not a live object: the handler may run on a remote host (edge
-  // operation-service) where only serializable values cross the wire — same contract as
-  // `database.objectCreate`.
-  output: Schema.Struct({
-    task: Type.getSchema(Task.Task),
-  }),
-}).pipe(Operation.mutation('write'));
-
-export const AssignTask = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.operation.tasks.assign'),
-    name: 'Assign Task',
-    description: 'Assign a task to a person (contact/email/name) or an agent (role assistant + DID).',
-    icon: 'ph--user-circle--regular',
-  },
-  services: [Database.Service],
-  input: Schema.Struct({
-    task: Ref.Ref(Task.Task),
-    assignee: Actor.Actor,
-  }),
-  // JSON snapshot, not a live object: the handler may run on a remote host (edge
-  // operation-service) where only serializable values cross the wire — same contract as
-  // `database.objectCreate`.
-  output: Schema.Struct({
-    task: Type.getSchema(Task.Task),
-  }),
-}).pipe(Operation.mutation('write'));
-
 export const DeleteTask = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.delete'),
@@ -213,27 +174,6 @@ export const CreateMilestone = Operation.make({
     /** What done means for this milestone. */
     description: Schema.optional(Schema.String),
     targetDate: Schema.optional(Format.DateOnly).annotate({ description: 'Target date as YYYY-MM-DD.' }),
-  }),
-  output: Schema.Struct({
-    milestone: Type.getSchema(Milestone.Milestone),
-  }),
-}).pipe(Operation.mutation('write'));
-
-export const UpdateMilestone = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.operation.tasks.updateMilestone'),
-    name: 'Update Milestone',
-    description: 'Patch milestone fields: name, description, target date.',
-    icon: 'ph--pencil-simple--regular',
-  },
-  services: [Database.Service],
-  input: Schema.Struct({
-    milestone: Ref.Ref(Milestone.Milestone),
-    name: Schema.optional(Schema.String),
-    description: Schema.optional(Schema.String),
-    targetDate: Schema.optional(Schema.NullOr(Format.DateOnly)).annotate({
-      description: 'Target date as YYYY-MM-DD; null clears it.',
-    }),
   }),
   output: Schema.Struct({
     milestone: Type.getSchema(Milestone.Milestone),

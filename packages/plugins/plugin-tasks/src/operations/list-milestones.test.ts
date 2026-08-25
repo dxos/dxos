@@ -9,10 +9,10 @@ import { Database, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
-import completeTask from './complete-task';
 import createMilestone from './create-milestone';
 import createTask from './create-task';
 import listMilestones from './list-milestones';
+import updateTask from './update-task';
 
 const testLayer = () => TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] });
 
@@ -32,7 +32,7 @@ describe('list-milestones', () => {
         title: 'Done',
         milestone: Ref.make(milestone),
       });
-      yield* completeTask.handler({ task: Ref.make(done) });
+      yield* updateTask.handler({ task: Ref.make(done), status: 'done' });
       yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Open', milestone: Ref.make(milestone) });
       yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Unfiled' });
 

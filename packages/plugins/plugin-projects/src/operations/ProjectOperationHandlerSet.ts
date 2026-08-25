@@ -14,6 +14,5 @@ export const handlers = OperationHandlerSet.lazy([
   ProjectOperation.UpdateProjectTasks.pipe(Operation.lazyHandler(() => import('./mailbox/update-project-tasks'))),
   ProjectOperation.UpdateTravelLog.pipe(Operation.lazyHandler(() => import('./mailbox/update-travel-log'))),
   ProjectMcpOperation.GetProject.pipe(Operation.lazyHandler(() => import('./get-project'))),
-  ProjectMcpOperation.ListProjects.pipe(Operation.lazyHandler(() => import('./list-projects'))),
   ProjectMcpOperation.UpdateProject.pipe(Operation.lazyHandler(() => import('./update-project'))),
 ]);

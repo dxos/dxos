@@ -23,32 +23,6 @@ import { DXN } from '@dxos/keys';
  * lint rule forbids re-exporting an `@import-as-namespace` module's members individually.
  */
 
-export const ListProjects = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.operation.projects.list'),
-    name: 'List Projects',
-    description: 'List the projects in the space: id, name, status, description, and whether a task set is linked.',
-    icon: 'ph--list-bullets--regular',
-  },
-  services: [Database.Service],
-  input: Schema.Struct({
-    /** Substring match on name (case-insensitive). */
-    match: Schema.optional(Schema.String),
-    limit: Schema.optional(Schema.Number).annotate({ description: 'Page size (default 50, max 200).' }),
-  }),
-  output: Schema.Struct({
-    projects: Schema.Array(
-      Schema.Struct({
-        id: Schema.String,
-        name: Schema.optional(Schema.String),
-        status: Schema.optional(Project.ProjectStatus),
-        description: Schema.optional(Schema.String),
-        hasTaskSet: Schema.Boolean,
-      }),
-    ),
-  }),
-}).pipe(Operation.mutation('none'));
-
 export const GetProject = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.projects.get'),

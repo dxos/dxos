@@ -105,7 +105,8 @@ you hold is a bare object id, and then write the full URI: `{"/": "echo:///" + i
 - **Project object** — `name`; `status` (`active`|`paused`|`blocked`|`ended`); `description`
   (the one-line summary).
 - **Milestones** — what done means, one ordered span of work per phase of the effort, in the task set
-  (`tasks-create-milestone` / `tasks-update-milestone` / `milestoneMove` / `tasks-delete-milestone` / `tasks-list-milestone`).
+  (`tasks-create-milestone` / `milestoneMove` / `tasks-delete-milestone` / `tasks-list-milestone`;
+  patch a milestone's fields with `space-update-object`).
   A milestone carries `name`, `description` (what done means for it), and an optional `targetDate`;
   it stores **no status** — `tasks-list-milestone` derives `done`/`total` from the tasks filed under it, so
   progress can never disagree with the work.
@@ -156,7 +157,7 @@ verbs work without the space binding the slash verbs below require.
 
 - **`/project setup [space]`** — bind this repo to a space; see "`/project setup`" above. The one
   verb that works without a binding — every other verb requires one.
-- **`/project` (bare)** — `projects-list` (spaceId from the binding). Summarize: name, status,
+- **`/project` (bare)** — `space-query-objects { typename: 'org.dxos.type.project' }` (spaceId from the binding). Summarize: name, status,
   open/total task counts. If more than one project is `active`, list them numbered and ask
   which, rather than guessing.
 - **`/project new <name>`** — `projects-create { name, spaceId }`, then
@@ -170,11 +171,11 @@ spaceId }`. Report the new project id.
   names a milestone, pass that milestone's ref; otherwise ask which milestone if the project has
   several — never guess silently.
 - **`/project hydrate`** — checkpoint before stopping or handing off:
-  1. Reconcile task statuses: `tasks-update`/`tasks-complete` every task whose real state has
+  1. Reconcile task statuses: `tasks-update { status }` every task whose real state has
      moved; leave a short `description` note on anything left `in-progress` (what's blocked,
      what's next).
   2. Refresh the resume pointer: `tasks-update-outline` the `Resume:` line to the single next action.
-  3. Reconcile the milestone sequence: `tasks-create-milestone` anything newly scoped, `tasks-update-milestone`
+  3. Reconcile the milestone sequence: `tasks-create-milestone` anything newly scoped, `space-update-object`
      a description or target date that moved, `tasks-delete-milestone` what was dropped (its tasks fall
      back to the backlog). A milestone has no status to set — completing its tasks is what closes
      it. Update `projects-update.status` if the work-stream's state changed.
@@ -185,7 +186,7 @@ spaceId }`. Report the new project id.
   `projects-update { project: {"/": "echo:///<id>"}, status: 'ended', spaceId }`. Ended projects stay
   queryable; nothing is deleted.
 - **`/project resume`** — reload at the start of a session:
-  1. `projects-list { spaceId }` to discover projects. If one was named, match it; otherwise pick
+  1. `space-query-objects { typename: 'org.dxos.type.project' }` to discover projects. If one was named, match it; otherwise pick
      the single `active` project, or ask which when several are `active` — never guess.
   2. `projects-get { project: {"/": "echo:///<id>"}, spaceId }`, then `tasks-list-milestone` and
      `tasks-list { project: {"/": "echo:///<id>"}, includeSubtasks: true, spaceId }`; read the outline's
@@ -219,7 +220,7 @@ spaceId }`. Report the new project id.
 
 ## Workflow discipline
 
-1. **At task start** — `projects-list { spaceId }`, then `projects-get` + `tasks-list` (project ref
+1. **At task start** — `space-query-objects { typename: 'org.dxos.type.project' }`, then `projects-get` + `tasks-list` (project ref
    and `spaceId` on both) to reload state; create the project if none exists for this stream.
 2. **As you work** — update task status in the **same turn** the work completes. Never leave
    statuses stale, and never batch-update everything at the end.
@@ -241,11 +242,11 @@ spaceId }`. Report the new project id.
 | Passing a bare id, or `echo://<id>`, where a ref is expected       | Refs wrap an `echo:` URI: `{"/": "echo:///<id>"}`. Two slashes means a space, not an object. |
 | Recording project state in local files                             | The space is the only store; files don't survive across repos, sessions, or collaborators.   |
 | Flat task list with no milestone grouping                          | Create one milestone per phase; file each task under it with `tasks-create`'s `milestone`.   |
-| Leaving task status stale after work lands                         | `tasks-update`/`tasks-complete` in the same turn the work completes, not batched at the end. |
+| Leaving task status stale after work lands                         | `tasks-update { status }` in the same turn the work completes, not batched at the end.       |
 | Losing the resume pointer                                          | `tasks-update-outline` the `Resume:` line at every checkpoint, not just at the very end.     |
 | Writing design decisions to the outline instead of the document    | Outline = scratch/checklist; the document object is the durable design record.               |
 | Duplicating a session todo list and the task set                   | Task set = durable/cross-session; session todos = in-turn scratch. Don't mirror both.        |
-| Creating a new project when one for this work already exists       | `projects-list` first; resume/extend the existing one instead of forking state.              |
+| Creating a new project when one for this work already exists       | Query for projects first; resume/extend the existing one instead of forking state.           |
 | Spawning a task chip for a follow-up you just discovered           | Record it with `tasks-create`; `spawn` only hands off a task already in the ledger.          |
 | A `spawn` prompt that assumes this conversation                    | The receiving session has none of it — restate project, task, ids and paths verbatim.        |
 | Renumbering between `tasks` and `spawn`                            | Same order, same numbers; the user is quoting a row they just saw.                           |

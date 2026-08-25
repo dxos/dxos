@@ -43,8 +43,6 @@ describe('operation serialization', () => {
     );
 
     expect(annotated).toEqual({
-      assign: 'write',
-      complete: 'write',
       create: 'write',
       createMilestone: 'write',
       delete: 'destructive',
@@ -55,7 +53,6 @@ describe('operation serialization', () => {
       move: 'write',
       moveMilestone: 'write',
       update: 'write',
-      updateMilestone: 'write',
       updateOutline: 'write',
     });
   });

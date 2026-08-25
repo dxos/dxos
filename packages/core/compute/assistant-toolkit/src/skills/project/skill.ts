@@ -19,18 +19,18 @@ const SKILL_KEY = 'org.dxos.skill.project';
  * against the real definitions to catch that.
  */
 const PLUGIN_TOOLS = [
-  'projects-list',
+  // Generic object verbs, for the reads and writes that carry no invariant of their own: finding a
+  // project by typename, and patching a milestone's fields.
+  'space-query-objects',
+  'space-update-object',
   'projects-get',
   'projects-create',
   'projects-update',
   'tasks-list',
   'tasks-create',
   'tasks-update',
-  'tasks-complete',
-  'tasks-assign',
   'tasks-list-milestone',
   'tasks-create-milestone',
-  'tasks-update-milestone',
   'tasks-delete-milestone',
   'tasks-get-outline',
   'tasks-update-outline',

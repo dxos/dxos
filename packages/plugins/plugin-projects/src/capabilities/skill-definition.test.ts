@@ -13,6 +13,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Registry } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
 import { EffectEx } from '@dxos/effect';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as OutlineOperation from '@dxos/plugin-tasks/OutlineOperation';
 import * as TaskOperation from '@dxos/plugin-tasks/TaskOperation';
 
@@ -21,17 +22,15 @@ import { ProjectMcpOperation, ProjectOperation } from '#types';
 // The skill sits below these packages and names their verbs as strings, so a re-key there would rot
 // the list silently; this is the only place both the skill and the real definitions are visible.
 const DEFINITIONS: readonly Operation.Definition.Any[] = [
+  SpaceOperation.QueryObjects,
+  SpaceOperation.UpdateObject,
   ProjectOperation.Create,
-  ProjectMcpOperation.ListProjects,
   ProjectMcpOperation.GetProject,
   ProjectMcpOperation.UpdateProject,
   TaskOperation.CreateTask,
   TaskOperation.UpdateTask,
-  TaskOperation.CompleteTask,
-  TaskOperation.AssignTask,
   TaskOperation.ListTasks,
   TaskOperation.CreateMilestone,
-  TaskOperation.UpdateMilestone,
   TaskOperation.DeleteMilestone,
   TaskOperation.ListMilestones,
   OutlineOperation.GetOutline,

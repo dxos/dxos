@@ -9,11 +9,10 @@ import { Database, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
-import assignTask from './assign-task';
-import completeTask from './complete-task';
 import createMilestone from './create-milestone';
 import createTask from './create-task';
 import listTasks from './list-tasks';
+import updateTask from './update-task';
 
 const testLayer = () => TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] });
 
@@ -24,9 +23,9 @@ describe('list-tasks', () => {
       yield* Database.flush();
 
       const { task: done } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Done thing' });
-      yield* completeTask.handler({ task: Ref.make(done) });
+      yield* updateTask.handler({ task: Ref.make(done), status: 'done' });
       const { task: open } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Open thing' });
-      yield* assignTask.handler({ task: Ref.make(open), assignee: { email: 'kai@example.com' } });
+      yield* updateTask.handler({ task: Ref.make(open), assignee: { email: 'kai@example.com' } });
       yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Sub thing', parentTask: Ref.make(open) });
 
       // Root tasks only.

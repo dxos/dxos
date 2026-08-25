@@ -44,7 +44,6 @@ describe('operation serialization', () => {
     expect(annotated).toEqual({
       create: 'write',
       get: 'none',
-      list: 'none',
       update: 'write',
     });
   });
