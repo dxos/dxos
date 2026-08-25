@@ -5,7 +5,8 @@
 import React, { type FC } from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { schema } from '@dxos/protocols/proto';
+import { bufRegistry } from '@dxos/protocols/buf-registry';
+import { decodeCompat } from '@dxos/protocols/buf-shape-compat';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { arrayToBuffer } from '@dxos/util';
 
@@ -47,11 +48,15 @@ const replacer =
 
       if (value?.['@type'] === 'google.protobuf.Any') {
         try {
-          const codec = schema.getCodecForType(value.type_url);
-          return {
-            '@type': value.type_url,
-            ...codec.decode(value.value),
-          };
+          const desc = bufRegistry.getMessage(value.type_url);
+          if (desc) {
+            // Decoded through the compat layer rather than buf directly, so a substituted field
+            // renders as the shape the rest of this viewer formats (`PublicKey`, `Timeframe`).
+            return {
+              '@type': value.type_url,
+              ...decodeCompat(desc, value.value),
+            };
+          }
         } catch {}
       }
     }
