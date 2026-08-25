@@ -53,7 +53,7 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
       return;
     }
     let cancelled = false;
-    void invokePromise(AssistantOperation.CreateChat, { db: space.db, addToSpace: false }).then((result) => {
+    void invokePromise(AssistantOperation.CreateChat, {}, { spaceId: space.db.spaceId }).then((result) => {
       if (!cancelled) {
         setChat(result.data?.object);
       }

@@ -37,11 +37,7 @@ export const useHomeSuggestions = (space?: Space): readonly string[] | undefined
       if (!space) {
         return;
       }
-      const result = await invokePromise(
-        AssistantOperation.GenerateHomeSuggestions,
-        { db: space.db },
-        { spaceId: space.db.spaceId },
-      );
+      const result = await invokePromise(AssistantOperation.GenerateHomeSuggestions, {}, { spaceId: space.db.spaceId });
       if (controller.signal.aborted) {
         return;
       }

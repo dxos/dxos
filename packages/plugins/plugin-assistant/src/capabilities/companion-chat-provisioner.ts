@@ -103,7 +103,7 @@ export default Capability.makeModule(
       }
 
       void operationInvoker
-        .invokePromise(AssistantOperation.EnsureCompanionChat, { db, companionTo: object })
+        .invokePromise(AssistantOperation.EnsureCompanionChat, { companionTo: object }, { spaceId: db.spaceId })
         .catch((error) => log.warn('Failed to provision companion chat', { plankId, error }));
 
       return false;

@@ -826,7 +826,7 @@ export class FeedStore {
         `;
         const current = existing[0];
         if (current?.position != null && current.position !== block.position) {
-          yield* Effect.fail(
+          return yield* Effect.fail(
             new PositionConflictError({
               feedId: block.feedId,
               actorId: block.actorId,

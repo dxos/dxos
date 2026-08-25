@@ -8,7 +8,6 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { ProjectMcpOperation, ProjectOperation } from '#types';
 
 export const handlers = OperationHandlerSet.lazy([
-  ProjectOperation.CreateChat.pipe(Operation.lazyHandler(() => import('./create-chat'))),
   ProjectOperation.Create.pipe(Operation.lazyHandler(() => import('./create-project'))),
   ProjectOperation.CreateTrackingProject.pipe(Operation.lazyHandler(() => import('./mailbox/create-tracking-project'))),
   ProjectOperation.UpdateInvestorLog.pipe(Operation.lazyHandler(() => import('./mailbox/update-investor-log'))),

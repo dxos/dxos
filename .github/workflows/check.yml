@@ -147,11 +147,11 @@ jobs:
       # ~15 s warm, minutes cold, and the floor under everything below it.
       - name: Check Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: moon run :lint :build --affected remote
+        run: moon run :lint :build :test-types --affected remote
 
       - name: Check All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: moon run :lint :build
+        run: moon run :lint :build :test-types
 
       # `check-module-structure` traces the built artifacts (`deps: [build]`), so it cannot move ahead
       # of the gate however cheap it looks — its 5 s is a post-build number.
