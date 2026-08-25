@@ -267,12 +267,12 @@ describe('DataSpaceManager', () => {
     // Admit peer2 to space1.
     await writeMessages(
       space1.inner.controlPipeline.writer,
-      await createAdmissionCredentials(
-        peer1.identity.credentialSigner,
-        peer2.identity.identityKey,
-        space1.key,
-        space1.inner.genesisFeedKey,
-      ),
+      await createAdmissionCredentials({
+        signer: peer1.identity.credentialSigner,
+        identityKey: peer2.identity.identityKey,
+        spaceKey: space1.key,
+        genesisFeedKey: space1.inner.genesisFeedKey,
+      }),
     );
 
     // Accept must be called after admission so that the peer can authenticate for notarization.
@@ -337,12 +337,12 @@ describe('DataSpaceManager', () => {
     // Admit peer2 to space1.
     await writeMessages(
       space1.inner.controlPipeline.writer,
-      await createAdmissionCredentials(
-        peer1.identity.credentialSigner,
-        peer2.identity.identityKey,
-        space1.key,
-        space1.inner.genesisFeedKey,
-      ),
+      await createAdmissionCredentials({
+        signer: peer1.identity.credentialSigner,
+        identityKey: peer2.identity.identityKey,
+        spaceKey: space1.key,
+        genesisFeedKey: space1.inner.genesisFeedKey,
+      }),
     );
 
     // Accept must be called after admission so that the peer can authenticate for notarization.
@@ -406,17 +406,13 @@ describe('DataSpaceManager', () => {
     // Admit peer2 to space1.
     await writeMessages(
       space1.inner.controlPipeline.writer,
-      await createAdmissionCredentials(
-        peer1.identity.credentialSigner,
-        peer2.identity.identityKey,
-        space1.key,
-        space1.inner.genesisFeedKey,
-        undefined, // role (default ADMIN)
-        undefined, // membershipChainHeads
-        undefined, // profile
-        undefined, // invitationCredentialId
-        space1.inner.spaceState.tags, // tags
-      ),
+      await createAdmissionCredentials({
+        signer: peer1.identity.credentialSigner,
+        identityKey: peer2.identity.identityKey,
+        spaceKey: space1.key,
+        genesisFeedKey: space1.inner.genesisFeedKey,
+        tags: space1.inner.spaceState.tags,
+      }),
     );
 
     const space2 = await peer2.dataSpaceManager.acceptSpace(new Context(), {

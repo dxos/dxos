@@ -641,18 +641,18 @@ export class DataSpaceManager extends Resource {
     const spaceRootUrl = options.spaceRootUrl ?? this._echoHost.getSpaceRootRefs(space.id)?.spaceRootDocUrl;
 
     // TODO(burdon): Check if already admitted.
-    const credentials: FeedMessage.Payload[] = await createAdmissionCredentials(
-      this.signingContext.credentialSigner,
-      options.identityKey,
-      space.key,
-      space.genesisFeedKey,
-      options.role,
-      space.spaceState.membershipChainHeads,
-      options.profile,
-      options.delegationCredentialId,
-      space.spaceState.tags,
+    const credentials: FeedMessage.Payload[] = await createAdmissionCredentials({
+      signer: this.signingContext.credentialSigner,
+      identityKey: options.identityKey,
+      spaceKey: space.key,
+      genesisFeedKey: space.genesisFeedKey,
+      role: options.role,
+      membershipChainHeads: space.spaceState.membershipChainHeads,
+      profile: options.profile,
+      invitationCredentialId: options.delegationCredentialId,
+      tags: space.spaceState.tags,
       spaceRootUrl,
-    );
+    });
 
     // TODO(dmaretskyi): Refactor.
     invariant(credentials[0].credential);

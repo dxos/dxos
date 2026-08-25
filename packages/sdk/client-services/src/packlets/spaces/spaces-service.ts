@@ -139,14 +139,14 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
             },
           });
         }
-        const credentials = await createAdmissionCredentials(
-          identity.getIdentityCredentialSigner(),
-          request.memberKey,
-          space.key,
-          space.genesisFeedKey,
-          request.newRole,
-          space.spaceState.membershipChainHeads,
-        );
+        const credentials = await createAdmissionCredentials({
+          signer: identity.getIdentityCredentialSigner(),
+          identityKey: request.memberKey,
+          spaceKey: space.key,
+          genesisFeedKey: space.genesisFeedKey,
+          role: request.newRole,
+          membershipChainHeads: space.spaceState.membershipChainHeads,
+        });
         invariant(credentials[0].credential);
         const spaceMemberCredential = credentials[0].credential.credential;
         invariant(getCredentialAssertion(spaceMemberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
