@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export { default } from './project/skill';
-export { operations } from './project/skill';
+export { default, operations } from './project/skill';
+export { ProjectHandlers } from './project/operations';
