@@ -10,7 +10,6 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Filter, Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -46,6 +45,10 @@ type StoryArgs = {
 const DefaultStory = ({ content, name }: StoryArgs) => {
   const [space] = useSpaces();
   const outline = useMemo(() => space && space.db.add(Outline.make({ name, content })), [space, name, content]);
+  // An outline owns no task set — promotion files into the ledger of whatever embeds it — so the
+  // story plays the embedder and supplies one. Passing `undefined` instead is the degraded case:
+  // the outline renders with no convert affordance at all.
+  const taskSet = useMemo(() => space && space.db.add(TaskSet.make({ name: 'Story tasks' })), [space]);
   if (!outline?.content.target) {
     return null;
   }
@@ -53,13 +56,13 @@ const DefaultStory = ({ content, name }: StoryArgs) => {
   return (
     <div className='dx-container grid grid-cols-3 gap-3 p-3'>
       <Column>
-        <OutlineArticle role='article' subject={outline} attendableId='story' />
+        <OutlineArticle role='article' subject={outline} taskSet={taskSet} attendableId='story' />
       </Column>
       <Column>
         <SourceView text={outline.content.target} />
       </Column>
       <Column>
-        <TaskSetView outline={outline} />
+        <TaskSetView outline={outline} taskSet={taskSet} />
       </Column>
     </div>
   );
@@ -70,14 +73,11 @@ const Column = ({ children }: PropsWithChildren) => (
 );
 
 /**
- * The durable side of the outline: the tasks promoted out of it, which the outliner files into a
- * lazily created `TaskSet`. Nothing renders until the first conversion creates that set.
+ * The durable side of the outline: the tasks promoted out of it, which the outliner files into the
+ * task set the embedder supplied.
  */
-const TaskSetView = ({ outline }: { outline: Outline.Outline }) => {
+const TaskSetView = ({ outline, taskSet }: { outline: Outline.Outline; taskSet?: TaskSet.TaskSet }) => {
   const db = Obj.getDatabase(outline);
-  // The set is created on the first conversion, so resolve the ref reactively rather than reading
-  // `.target` once.
-  const [taskSet] = useObject(outline.taskSet);
   // Queried by type and filtered to the set's members: `useQuery` re-emits on membership changes
   // but not on a member's property change, and the form edits titles in place.
   const tasks = useQuery(db, Filter.type(Task.Task));
@@ -88,11 +88,11 @@ const TaskSetView = ({ outline }: { outline: Outline.Outline }) => {
 
   const handleCreate = useCallback(
     (title: string) => {
-      if (db) {
-        void Outline.createTask(outline, db, title);
+      if (db && taskSet) {
+        Outline.addTask(taskSet, db, title);
       }
     },
-    [outline, db],
+    [db, taskSet],
   );
 
   const handleUpdate = useCallback((task: Task.Task, patch: TaskPatch) => {
@@ -118,9 +118,7 @@ const TaskSetView = ({ outline }: { outline: Outline.Outline }) => {
           onTaskUpdate={handleUpdate}
           onTaskDelete={handleDelete}
         >
-          {/* <TaskList.Viewport> */}
           <TaskList.Content />
-          {/* </TaskList.Viewport> */}
           <TaskList.Create />
         </TaskList.Root>
       </Panel.Content>

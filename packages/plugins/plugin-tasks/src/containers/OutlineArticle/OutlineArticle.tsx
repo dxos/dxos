@@ -49,18 +49,21 @@ export const OutlineArticle = ({
   const target = useResolveRef(ref);
   const task = target && Obj.instanceOf(Task.Task, target) ? target : undefined;
 
+  // Promotion needs somewhere to file: an outline owns no task set, so it is the embedder that
+  // supplies one. Without it the affordance is withheld rather than offered and then failing.
   const handleConvertToTask = useCallback(
     async (text: string) => {
-      if (!db) {
+      if (!db || !destination) {
         return undefined;
       }
 
-      const task = destination
-        ? OutlineType.addTask(destination, db, text)
-        : await OutlineType.createTask(outline, db, text);
-      return { label: task.title, url: Obj.getURI(task).toString() };
+      const task = OutlineType.addTask(destination, db, text);
+      return {
+        label: task.title,
+        url: Obj.getURI(task).toString(),
+      };
     },
-    [outline, db, destination],
+    [db, destination],
   );
 
   const handleSelectLink = useCallback((url: string) => setSelected(URI.make(url)), []);
@@ -74,8 +77,7 @@ export const OutlineArticle = ({
   // Task titles are edited independently of the document, so the link text is reconciled from the
   // live objects rather than trusted as written. Membership is the set's `tasks` array, so
   // unrelated tasks in the space are dropped before the map is built.
-  // The set the links point into: the embedder's when one was supplied, else the outline's own.
-  const taskSet = destination ?? outline.taskSet?.target;
+  const taskSet = destination;
   const tasks = useQuery(db, taskSet ? Filter.type(Task.Task) : Filter.nothing());
   // `useQuery` re-emits only when result membership changes, never on a member's property change,
   // so renames are observed by subscribing to each task; the bump rebuilds the resolver, whose new
@@ -109,22 +111,23 @@ export const OutlineArticle = ({
     [t, handleBack],
   );
 
-  const outlineActions = useMenuBuilder(
-    (): ActionGraphProps =>
-      MenuBuilder.make()
-        .action(
-          'convert-to-task',
-          {
-            label: t('convert-to-task.menu'),
-            icon: 'ph--check-circle--regular',
-            disposition: 'toolbar',
-            disabled: !convertible,
-          },
-          handleConvertCurrent,
-        )
-        .build(),
-    [t, handleConvertCurrent, convertible],
-  );
+  const outlineActions = useMenuBuilder((): ActionGraphProps => {
+    const builder = MenuBuilder.make();
+    // No destination set means no promotion at all, so the button is absent rather than dead.
+    if (destination) {
+      builder.action(
+        'convert-to-task',
+        {
+          label: t('convert-to-task.menu'),
+          icon: 'ph--check-circle--regular',
+          disposition: 'toolbar',
+          disabled: !convertible,
+        },
+        handleConvertCurrent,
+      );
+    }
+    return builder.build();
+  }, [t, handleConvertCurrent, convertible, destination]);
 
   if (task) {
     return (
@@ -152,7 +155,7 @@ export const OutlineArticle = ({
       ref={outlineRef}
       id={outline.content.target.id}
       text={outline.content.target}
-      onConvertToTask={db ? handleConvertToTask : undefined}
+      onConvertToTask={destination ? handleConvertToTask : undefined}
       onConvertibleChange={setConvertible}
       onSelectLink={handleSelectLink}
       resolveLinkLabel={resolveLinkLabel}

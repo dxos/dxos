@@ -14,7 +14,7 @@ import { DelegateTask } from './definitions';
 
 /**
  * Delegation is the promotion moment: the scratch checklist item becomes a durable `Task`
- * (parented to the outline's task set) assigned to an agent (`role: 'assistant'`), which the
+ * (parented to the project's task set) assigned to an agent (`role: 'assistant'`), which the
  * supervisor's reconcile loop picks up. The markdown line is checked off only when the sub-agent
  * completes (see the delegation strategy).
  */
@@ -26,15 +26,21 @@ const handler: Operation.WithHandler<typeof DelegateTask> = DelegateTask.pipe(
       }
 
       const chat = yield* Chat.getFromContext;
-      const { outline, text } = yield* Chat.ensureOutlineText(chat);
-      const { db } = yield* Database.Service;
+      const taskSetRef = Chat.peekTaskSetRef(chat);
+      if (!taskSetRef) {
+        // Degrade rather than invent a ledger: an outline owns no task set, so a conversation outside
+        // a project has nowhere durable to file a delegated task.
+        return yield* Effect.fail(new Error('Delegation is only available in a project conversation.'));
+      }
 
-      const task = yield* Effect.promise(() =>
-        Outline.createTask(outline, db, title, {
-          status: 'in-progress',
-          assignee: { role: 'assistant' },
-        }),
-      );
+      const { text } = yield* Chat.ensureOutlineText(chat);
+      const { db } = yield* Database.Service;
+      const taskSet = yield* Database.load(taskSetRef);
+
+      const task = Outline.addTask(taskSet, db, title, {
+        status: 'in-progress',
+        assignee: { role: 'assistant' },
+      });
 
       // Ensure the checklist carries the item (unchecked until the sub-agent completes).
       Obj.update(text, (text) => {
