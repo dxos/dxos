@@ -22,26 +22,26 @@ const WORKSPACE_BASE = 'root/SPACE1';
 /** The section node's qualified id, as the graph nests it under the content group. */
 const SECTION_NODE_ID = `${WORKSPACE_BASE}/${GraphPath.GroupSegments.content}/${TYPENAME}`;
 
-const build = (addressing?: TypeSection.Addressing) =>
+const build = (sectionUrlKey?: string) =>
   Effect.runSync(
     TypeSection.createTypeSectionExtension(Book, {
       urlKey: 'book',
       groupSegment: GraphPath.GroupSegments.content,
-      ...(addressing ? { addressing } : {}),
+      ...(sectionUrlKey ? { sectionUrlKey } : {}),
     }),
   );
 
 /** Bindings keyed by the URL key they register, so assertions read by key rather than by array index. */
-const bindingsByKey = (addressing?: TypeSection.Addressing) =>
+const bindingsByKey = (sectionUrlKey?: string) =>
   Object.fromEntries(
-    build(addressing)
+    build(sectionUrlKey)
       .map((extension) => extension.url)
       .filter((url): url is NonNullable<typeof url> => url !== undefined)
       .map((url) => [url.key, url]),
   );
 
 describe('createTypeSectionExtension', () => {
-  describe('as a container', () => {
+  describe('without sectionUrlKey', () => {
     test('registers only the object key, with the section as its container path', ({ expect }) => {
       const bindings = bindingsByKey();
       expect(Object.keys(bindings)).toEqual(['book']);
@@ -57,9 +57,9 @@ describe('createTypeSectionExtension', () => {
     });
   });
 
-  describe('as an addressable section', () => {
+  describe('with sectionUrlKey', () => {
     test('registers the section as a singleton alongside the object key', ({ expect }) => {
-      const bindings = bindingsByKey(TypeSection.addressable('library'));
+      const bindings = bindingsByKey('library');
       expect(Object.keys(bindings).sort()).toEqual(['book', 'library']);
       expect(bindings.library.kind).toBe('singleton');
       expect(bindings.book).toMatchObject({
@@ -69,19 +69,19 @@ describe('createTypeSectionExtension', () => {
     });
 
     test('resolves /library forward to the section node via static segments', ({ expect }) => {
-      const { path } = bindingsByKey(TypeSection.addressable('library')).library;
+      const { path } = bindingsByKey('library').library;
       expect(path).toEqual([GraphPath.GroupSegments.content, TYPENAME]);
     });
 
     test('stamps /library on the section node and /book/<id> on its objects', ({ expect }) => {
-      const bindings = bindingsByKey(TypeSection.addressable('library'));
+      const bindings = bindingsByKey('library');
       expect(GraphBuilder.nodeUrlSegment(SECTION_NODE_ID, bindings.library)).toBe('/library');
       expect(GraphBuilder.nodeUrlSegment(`${SECTION_NODE_ID}/book1`, bindings.book)).toBe('/book/book1');
     });
 
     test('keeps object paths identical to the unsplit form', ({ expect }) => {
       // Objects stay at root/<space>/content/<typename>/<id>, so existing links keep resolving.
-      expect(bindingsByKey(TypeSection.addressable('library')).book).toEqual(bindingsByKey().book);
+      expect(bindingsByKey('library').book).toEqual(bindingsByKey().book);
     });
   });
 });
