@@ -54,7 +54,7 @@ describe('convert-to-task', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
-  it.effect('a title matching no checklist item is still promoted', () =>
+  it.effect('a title the caller invents is promoted like any other', () =>
     Effect.gen(function* () {
       const taskSet = yield* seed();
 

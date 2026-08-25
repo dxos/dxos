@@ -32,7 +32,7 @@ export const ConvertToTask = Operation.make({
   output: Schema.Struct({
     task: Type.getSchema(Task.Task),
   }),
-});
+}).pipe(Operation.mutation('write'));
 
 /**
  * Appends a bullet to today's journal entry, creating the journal and the entry when either is
@@ -49,7 +49,7 @@ export const QuickJournalEntry = Operation.make({
     text: Schema.String,
   }),
   output: Schema.Void,
-}).pipe(Operation.visible);
+}).pipe(Operation.visible, Operation.mutation('write'));
 
 //
 // MCP-projected verbs (MILESTONE-5.md §7.2/§7.4): refs in, plain values out, Database-only.

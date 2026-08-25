@@ -126,7 +126,7 @@ export const ArtifactAdd = Operation.make({
   }),
   output: Schema.Void,
   services: [Database.Service],
-});
+}).pipe(Operation.mutation('write'));
 
 /** One artifact row: enough to identify and load the object, without inlining its content. */
 export const ArtifactInfo = Schema.Struct({
@@ -159,4 +159,4 @@ export const ArtifactList = Operation.make({
     artifacts: Schema.Array(ArtifactInfo),
   }),
   services: [Database.Service],
-});
+}).pipe(Operation.mutation('none'));

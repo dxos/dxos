@@ -64,7 +64,7 @@ describe('task set membership', () => {
         const task = yield* Database.add(Task.make({ title: 'a', status: 'todo' }));
         yield* Database.flush();
 
-        expect(refEntityId(Ref.make(task))).toBe(task.id);
+        expect(refEntityId(Ref.make(task).noInline())).toBe(task.id);
       }).pipe(Effect.provide(testLayer())),
     );
   });

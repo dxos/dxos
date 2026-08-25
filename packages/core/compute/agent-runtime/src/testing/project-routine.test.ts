@@ -22,12 +22,8 @@ import { Outline, Task, TaskSet } from '@dxos/types';
 
 import { AssistantTestLayerWithTriggers } from './assistant-test-layer';
 
-// A project's routine is the headless half of the project loop, so what needs asserting here is the
-// project-specific part: a routine the project owns writes the project's own ledger. Trigger
-// mechanics — schedules, enablement — belong to the dispatcher's own tests.
-//
-// It fires through `TriggerDispatcher` rather than plugin-routine's `RunRoutine` operation:
-// plugin-routine sits above this package, so importing it back would cycle.
+// Fires through `TriggerDispatcher` rather than plugin-routine's `RunRoutine`, which sits above this
+// package and would cycle. Trigger mechanics belong to the dispatcher's own tests.
 
 /** Stands in for a project pipeline: appends a task to the project's ledger, like the mailbox verbs. */
 const AppendTask = Operation.make({
@@ -84,7 +80,6 @@ describe('running a project routine', () => {
         const dispatcher = yield* TriggerDispatcher;
         const { result } = yield* dispatcher.invokeTrigger({ trigger, event: { tick: 0 } });
 
-        // The observable output: the run's own return value, and the ledger it wrote through.
         expect(result).toEqual(Exit.succeed({ title: 'Nightly sweep' }));
         expect(taskSet.tasks.map((ref) => ref.target?.title)).toEqual(['Nightly sweep']);
       },
@@ -94,10 +89,7 @@ describe('running a project routine', () => {
   );
 });
 
-/**
- * A project owning a routine whose action appends to the project's ledger, on a 5-minute timer.
- * Mirrors what a domain template scaffolds: the trigger carries the runnable's input binding.
- */
+/** Mirrors what a domain template scaffolds: the trigger carries the runnable's input binding. */
 const seed = () =>
   Effect.gen(function* () {
     const project = yield* Database.add(Project.make({ name: 'Voyage' }));

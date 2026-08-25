@@ -57,7 +57,7 @@ export const UpdateProjectTasks = Operation.make({
     /** Tasks created this run (existing tasks are never duplicated). */
     created: Schema.Number,
   }),
-}).pipe(Operation.idempotent);
+}).pipe(Operation.idempotent, Operation.mutation('write'));
 
 /**
  * Scans a mailbox feed for itinerary mail and maintains the project's travel-log artifact — a
@@ -81,7 +81,7 @@ export const UpdateTravelLog = Operation.make({
     /** Travel messages found (rows in the regenerated document). */
     matched: Schema.Number,
   }),
-}).pipe(Operation.idempotent);
+}).pipe(Operation.idempotent, Operation.mutation('write'));
 
 /**
  * Scans a mailbox feed and asks the model to maintain the project's investor log. The only project
@@ -118,7 +118,7 @@ export const UpdateInvestorLog = Operation.make({
     /** Person objects created for investor senders (never duplicated). */
     contacts: Schema.Number,
   }),
-}).pipe(Operation.idempotent);
+}).pipe(Operation.idempotent, Operation.mutation('write'));
 
 /**
  * Who the project follows, derived from the seed message:
@@ -174,4 +174,4 @@ export const CreateTrackingProject = Operation.make({
     /** Tasks created by the initial backfill (task pipeline only). */
     tasks: Schema.Number,
   }),
-});
+}).pipe(Operation.mutation('write'));
