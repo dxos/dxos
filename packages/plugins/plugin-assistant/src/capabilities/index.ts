@@ -57,9 +57,6 @@ export const AutomationTemplates = Capability.lazyModule(
   () => import('./automation-templates'),
 );
 export const Schema = AppCapability.schema(() => import('./schema-defs'));
-// Workerd loads a reduced declaration via ./overrides.workerd.ts: the workerd entry has no
-// ReactSurface to fire `AssistantEvents.Start` (see the maker's own doc comment), so the skill
-// must register on the framework's idle-default there instead.
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
   provides: [RoutineCapabilities.AgentDelegationStrategy],
 });
@@ -135,9 +132,6 @@ export const AssistantState = Capability.lazyModule(
   },
   () => import('./state'),
 );
-// Workerd loads a reduced declaration via ./overrides.workerd.ts: the workerd entry has no
-// ReactSurface to fire `AssistantEvents.Start`, so the toolkit must register on the framework's
-// idle-default there instead.
 export const Toolkit = Capability.lazyModule(
   'Toolkit',
   {
