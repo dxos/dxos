@@ -75,7 +75,7 @@ export class Project_v0_4_0 extends Type.makeObject<Project_v0_4_0>(DXN.make('or
 ) {}
 
 // `Filter.type` matches the versioned type exactly, so without this a v0.4.0 project stops being
-// returned by every project query. Purely additive: `routines` starts empty.
+// returned by every project query.
 const _routinesMigration = Migration.define({
   from: Project_v0_4_0,
   to: Project,
