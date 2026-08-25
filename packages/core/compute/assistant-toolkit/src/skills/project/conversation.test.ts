@@ -51,7 +51,7 @@ const TYPES = [
   Text.Text,
 ];
 
-/** Seeds the pair the way `ProjectOperation.CreateChat` wires it: parent edge, shared instructions ref, feed bindings. */
+/** Seeds the pair the way a project companion chat is wired: parent edge, shared instructions ref, feed bindings. */
 const seedProjectChat = Effect.fnUntraced(function* () {
   const instructions = yield* Database.add(
     Instructions.make({ name: `${PROJECT_NAME} instructions`, text: `You manage the "${PROJECT_NAME}" project.` }),

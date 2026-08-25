@@ -64,7 +64,7 @@ export const hubApiRequest = <T>(
 
     const envelope = result as unknown as EdgeEnvelope<T>;
     if (!envelope.success) {
-      yield* Effect.fail(new HubApiError({ message: envelope.message }));
+      return yield* Effect.fail(new HubApiError({ message: envelope.message }));
     }
     return envelope.data as T;
   });

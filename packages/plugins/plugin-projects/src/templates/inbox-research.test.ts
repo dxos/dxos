@@ -71,10 +71,8 @@ describe('inbox research project template', () => {
     expect(projectSkills).toContain(Skill.registryURI('org.dxos.skill.inbox').toString());
     expect(projectSkills).toContain(Skill.registryURI('org.dxos.skill.table').toString());
 
-    // Starter routine: a standalone object, connected to the project only through its instructions.
-    const routines = await db.query(Filter.type(Routine.Routine)).run();
-    expect(routines).toHaveLength(1);
-    const routine = routines[0];
+    expect(project.routines).toHaveLength(1);
+    const routine = await project.routines[0].tryLoad();
 
     // The routine's headless scope: project ref as context, table + project skills.
     const routineInstructionsRef = Routine.instructionsRef(routine!);
@@ -98,9 +96,7 @@ describe('inbox research project template', () => {
     expect(trigger?.runnable).toBeDefined();
   });
 
-  // Deliberate: the routine is no longer owned by the project, so it outlives it. Cleaning up
-  // routines left dangling by a deletion is the separate deletion-guard/staleness work.
-  test('deleting the project leaves the starter routine standing', async ({ expect }) => {
+  test('deleting the project removes the starter routine with it', async ({ expect }) => {
     const { db, mailbox } = await setup();
     const project = await EffectEx.runPromise(
       inboxResearch
@@ -113,6 +109,6 @@ describe('inbox research project template', () => {
 
     db.remove(project);
     await db.flush();
-    expect((await db.query(Filter.type(Routine.Routine)).run()).length).toBe(1);
+    expect((await db.query(Filter.type(Routine.Routine)).run()).length).toBe(0);
   });
 });

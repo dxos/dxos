@@ -61,8 +61,6 @@
   },
   "devDependencies": {
     "@codemirror/lang-xml": "catalog:",
-    "@dxos/effect-proto": "workspace:*",
-    "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",

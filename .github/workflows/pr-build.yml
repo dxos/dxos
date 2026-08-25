@@ -52,9 +52,9 @@ jobs:
         env:
           NODE_ENV: production
           LOG_FILTER: error
-          # EDGE preview — the instance Composer `dev` targets, so a PR preview and a dev deploy see the
-          # same data. TODO(wittjosiah): `https://preview.dxos.network` after the EDGE rename (DX-1150).
-          DX_EDGE_BASE_URL: https://main.dxos.network/
+          # EDGE preview — the instance Composer `dev` targets, so a PR preview and a dev deploy
+          # see the same data.
+          DX_EDGE_BASE_URL: https://preview.dxos.network/
 
       - name: Write deploy metadata
         run: |

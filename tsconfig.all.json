@@ -187,9 +187,6 @@
       "path": "packages/common/effect-atom-solid/tsconfig.json"
     },
     {
-      "path": "packages/common/effect-proto/tsconfig.json"
-    },
-    {
       "path": "packages/common/effect-zod/tsconfig.json"
     },
     {
@@ -380,6 +377,9 @@
     },
     {
       "path": "packages/plugins/plugin-chess-com/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-claude-agents/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-client/tsconfig.json"

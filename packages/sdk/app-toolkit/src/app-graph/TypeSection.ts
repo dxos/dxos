@@ -43,6 +43,10 @@ export const makeSectionRearrangeCallback = AppNode.createFactory(
   (space, typename) => `${typename}:${space.id}`,
 );
 
+/** The objects a type section lists: those without a parent, an owned object being reached through its owner. */
+export const sectionQuery = (type: Type.AnyEntity): Query.Any =>
+  Query.select(Filter.and(Filter.type(type), Filter.hasParent(false)));
+
 /**
  * Creates a graph extension that surfaces all objects of an ECHO type under
  * each space as a dedicated sidebar section.
@@ -64,11 +68,6 @@ export const createTypeSectionExtension = (
   options: {
     /** Position hint for the section in the sidebar. */
     position?: Position.Position;
-    /**
-     * Override the default `Filter.type(type)` query.
-     * Use to narrow or exclude objects (e.g. `Query.without` to hide companion-linked chats).
-     */
-    query?: Query.Any;
     /**
      * Override the default {@link AppNodeMatcher.whenSpace} match function.
      * Use when the section should live under a group node rather than directly under a space.
@@ -111,8 +110,7 @@ export const createTypeSectionExtension = (
 
   // Filter.type's overload constraint (UnknownTypeSchema) is not publicly exported;
   // the runtime accepts any schema with a typename annotation.
-  const filter = Filter.type(type as any) as Filter.Any;
-  const defaultQuery = Query.select(filter);
+  const query = sectionQuery(type);
   const testId = `${typename}.section`;
 
   const label = AppNode.getDynamicLabel('typename.label', typename, { count: 2 });
@@ -126,7 +124,7 @@ export const createTypeSectionExtension = (
 
   /** The section's objects in their persisted order; empty means the section is suppressed. */
   const queryOrderedObjects = (space: Space, get: Atom.AtomContext): Obj.Unknown[] => {
-    const objects = get(space.db.query(options.query ?? defaultQuery).atom) as Obj.Unknown[];
+    const objects = get(space.db.query(query).atom) as Obj.Unknown[];
     if (objects.length === 0) {
       return [];
     }
@@ -190,9 +188,7 @@ export const createTypeSectionExtension = (
         Node.make({
           id: typename,
           type: typename,
-          // An addressable section carries the registered type entity so plugin-space's generic
-          // type-collection surface can render it. A bare container carries an opaque marker.
-          data: options.sectionUrlKey ? (typeEntity ?? `${typename}-root`) : `${typename}-root`,
+          data: options.sectionUrlKey ? (typeEntity ?? null) : null,
           properties: {
             label,
             icon,
