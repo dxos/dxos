@@ -11,7 +11,6 @@ import {
   parseFile,
   rebaseSpecifier,
   rewriteRelativeSpecifiers,
-  topLevelExportConsts,
   topLevelImportDeclarations,
   topLevelLocalDeclarations,
 } from './ts-util';
@@ -19,38 +18,16 @@ import {
 export type GenerateResult = {
   pluginDir: string;
   environments: string[];
-  files: Array<{ path: string; included: number; stubbed: number; overridden: number }>;
+  files: Array<{ path: string; included: number; stubbed: number }>;
 };
 
 const findFirst = (dir: string, names: string[]): string | null =>
   names.map((name) => path.join(dir, name)).find((candidate) => fs.existsSync(candidate)) ?? null;
 
-const OVERRIDES_FILE_PATTERN = /^overrides\.([a-z0-9]+)\.tsx?$/;
-
-/**
- * Conditions named by an `overrides.<env>.ts(x)` file that actually exports something: an override
- * declares that environment's implementation of a module, so it opts the plugin into the condition
- * exactly as an `environments` annotation does. An override file exporting nothing names no
- * condition — a plugin that contributes nothing to a runtime simply generates no variant for it,
- * and headless hosts leave such a plugin out of their plugin list.
- */
-const overrideEnvironments = (capabilitiesDir: string): string[] => {
-  const entries = fs.existsSync(capabilitiesDir) ? fs.readdirSync(capabilitiesDir) : [];
-  return entries.flatMap((entry) => {
-    const env = OVERRIDES_FILE_PATTERN.exec(entry)?.[1];
-    if (!env) {
-      return [];
-    }
-    const source = parseFile(path.join(capabilitiesDir, entry));
-    return source && topLevelExportConsts(source).length > 0 ? [env] : [];
-  });
-};
-
 /**
  * Generates the per-condition capability barrels for one plugin package:
  * `src/capabilities/gen/<env>.ts` for every condition named by an `environments` annotation in
- * the canonical barrel (or by an `overrides.<env>.ts`), plus the matching `#capabilities`
- * condition map in package.json.
+ * the canonical barrel, plus the matching `#capabilities` condition map in package.json.
  *
  * A plugin whose modules name no conditions generates nothing and keeps an unconditioned
  * `#capabilities`: the canonical barrel IS the `default` condition, so there is no variant to
@@ -65,12 +42,7 @@ export const generate = (pluginDir: string): GenerateResult => {
 
   const members = parseBarrel(indexPath);
   const moduleMembers = [...members.values()].filter((member) => member.kind === 'maker-call');
-  const environments = [
-    ...new Set([
-      ...moduleMembers.flatMap((member) => member.environments ?? []),
-      ...overrideEnvironments(capabilitiesDir),
-    ]),
-  ].sort();
+  const environments = [...new Set(moduleMembers.flatMap((member) => member.environments ?? []))].sort();
 
   const genDir = path.join(capabilitiesDir, 'gen');
   const result: GenerateResult = { pluginDir, environments, files: [] };
@@ -84,32 +56,18 @@ export const generate = (pluginDir: string): GenerateResult => {
   fs.mkdirSync(genDir, { recursive: true });
 
   for (const env of environments) {
-    const overridesPath = findFirst(capabilitiesDir, [`overrides.${env}.ts`, `overrides.${env}.tsx`]);
-    const overrideNames = new Set<string>();
-    if (overridesPath) {
-      const overridesSource = parseFile(overridesPath);
-      for (const entry of topLevelExportConsts(overridesSource!)) {
-        overrideNames.add(entry.name);
-      }
-    }
-
     // A module with neither its own annotation nor a family default is isomorphic until something
     // proves otherwise: it goes in every condition, and the structure guards fail if that turns out
     // to be false. Excluding it instead would silently narrow a plugin — dropping React-free state
     // from headless hosts — and the omission would look identical to a deliberate choice.
     const carries = (member: BarrelMember) => member.environments === null || member.environments.includes(env);
-    const included = moduleMembers.filter((member) => !overrideNames.has(member.name) && carries(member));
-    const stubbed = moduleMembers.filter((member) => !overrideNames.has(member.name) && !carries(member));
+    const included = moduleMembers.filter(carries);
+    const stubbed = moduleMembers.filter((member) => !carries(member));
 
-    const text = renderBarrel({ env, genDir, included, stubbed, overridesPath, overrideNames });
+    const text = renderBarrel({ env, genDir, included, stubbed });
     const outPath = path.join(genDir, `${env}.ts`);
     fs.writeFileSync(outPath, text);
-    result.files.push({
-      path: outPath,
-      included: included.length,
-      stubbed: stubbed.length,
-      overridden: overrideNames.size,
-    });
+    result.files.push({ path: outPath, included: included.length, stubbed: stubbed.length });
   }
 
   syncPackageImports(pluginDir, environments);
@@ -121,11 +79,9 @@ type RenderOptions = {
   genDir: string;
   included: BarrelMember[];
   stubbed: BarrelMember[];
-  overridesPath: string | null;
-  overrideNames: Set<string>;
 };
 
-const renderBarrel = ({ env, genDir, included, stubbed, overridesPath, overrideNames }: RenderOptions): string => {
+const renderBarrel = ({ env, genDir, included, stubbed }: RenderOptions): string => {
   // Imports selected per included statement against the file the statement was sliced from, so
   // cross-file re-exports resolve their own imports; specifiers re-based into gen/. Merged per
   // specifier rather than collected as text: a re-exported module and the barrel itself often
@@ -237,10 +193,6 @@ const renderBarrel = ({ env, genDir, included, stubbed, overridesPath, overrideN
   ];
   if (importTexts.size > 0) {
     lines.push(...sortImports([...importTexts]), '');
-  }
-  if (overridesPath && overrideNames.size > 0) {
-    const overridesSpec = `../${path.basename(overridesPath).replace(/\.tsx?$/, '')}`;
-    lines.push(`export { ${[...overrideNames].sort().join(', ')} } from '${overridesSpec}';`, '');
   }
   for (const local of locals) {
     lines.push(rewriteRelativeSpecifiers(local.text, path.dirname(local.sourceFile), genDir), '');
