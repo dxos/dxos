@@ -415,7 +415,7 @@ Migration is mechanical per plugin (the two spike commits are the template) and 
    `build`/`test` depend on `~:#prebuild`, which resolves to nothing for a task tagged in the same
    inherited file (`moon task <plugin>:build` listed 22 deps, none of them the generator). The
    dependents' form, `^:#prebuild`, does resolve, which is what hid it. Both now name
-   `~:gen-capability-barrels` directly. The task's `inputs` also omitted the modules that declare
+   `~:gen-modules` directly. The task's `inputs` also omitted the modules that declare
    the per-family defaults, so a default change left every plugin's barrel stale in cache;
    `AppCapability.ts` and `SpaceCapability.ts` are now inputs.
 

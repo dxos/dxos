@@ -1,14 +1,14 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 # Composer plugins on the single-entry pattern: one canonical plugin.ts + capabilities/index.ts
-# with per-module `environments` annotations. The generation task emits the headless
-# `#capabilities` barrels (src/capabilities/gen/, gitignored) and syncs the package.json condition
+# with per-module `environments` annotations. `gen-modules` emits the headless `#capabilities`
+# barrels (src/capabilities/gen/, gitignored) and syncs the package.json condition
 # map. `build` and `test` name it directly rather than through the `~:#prebuild` tag: a
 # same-project tag dep declared in this file resolves to nothing (moon applies the tag after the
 # dep is resolved), so the generator silently never ran for its own package. The `prebuild` tag
 # stays for `^:#prebuild`, which dependents do resolve. `lint` needs neither — oxlint ignores
 # `**/gen/*`.
 tasks:
-  gen-capability-barrels:
+  gen-modules:
     command: pnpm exec dx-plugin gen
     deps:
       - app-framework:compile-plugin-cli
@@ -36,10 +36,10 @@ tasks:
       - prebuild
   build:
     deps:
-      - ~:gen-capability-barrels
+      - ~:gen-modules
   test:
     deps:
-      - ~:gen-capability-barrels
+      - ~:gen-modules
 
 inheritedBy:
   tags: composer-plugin
