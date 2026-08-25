@@ -3,10 +3,10 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
 import * as Trigger from '@dxos/compute/Trigger';
-import { Obj, Ref } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
+import { Database, Ref } from '@dxos/echo';
 import { makeRoutine } from '@dxos/plugin-routine';
 import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import { AI_ACTION_ICON } from '@dxos/ui-types';
@@ -16,6 +16,10 @@ import * as Mailbox from '../types/Mailbox';
 
 /** Default cron for the cascade (daily, early); the user edits the schedule on the trigger. */
 const DEFAULT_CRON = '0 6 * * *';
+
+const Input = Schema.Struct({
+  mailbox: Ref.Ref(Mailbox.Mailbox).annotate({ title: 'Mailbox' }),
+});
 
 /**
  * "Analyze Mailbox" automation template: a routine binding {@link InboxOperation.AnalyzeMailbox}
@@ -29,14 +33,13 @@ export const analyzeMailbox: RoutineCapabilities.Template = {
   id: 'org.dxos.routine.analyzeMailbox',
   label: 'Analyze Mailbox',
   icon: AI_ACTION_ICON,
-  appliesTo: (subject) => subject != null && Obj.instanceOf(Mailbox.Mailbox, subject),
-  scaffold: ({ name, subject }) =>
+  inputSchema: Input,
+  scaffold: ({ name, input }) =>
     Effect.gen(function* () {
-      invariant(
-        subject != null && Obj.instanceOf(Mailbox.Mailbox, subject),
-        'Analyze Mailbox template requires a Mailbox subject.',
-      );
-      const mailbox = subject;
+      if (!Ref.isRef(input?.mailbox)) {
+        return yield* Effect.fail(new Error('Analyze Mailbox template requires a mailbox.'));
+      }
+      const mailbox = yield* Database.resolve(input.mailbox, Mailbox.Mailbox);
 
       return makeRoutine({
         name: name ?? `Analyze — ${mailbox.name ?? 'Mailbox'}`,

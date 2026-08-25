@@ -50,7 +50,7 @@ const task = createEvalRunner({
     Effect.gen(function* () {
       const project = yield* Database.add(Project.make({ name: PROJECT_NAME, instructions: Ref.make(instructions) }));
 
-      // The chat mirrors ProjectOperation.CreateChat: parented to the project, steering
+      // The chat mirrors a project companion chat: parented to the project, steering
       // instructions passed by reference (the project's own Instructions object).
       const feed = yield* Database.add(Feed.make());
       const chat = yield* Database.add(
