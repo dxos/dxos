@@ -13,6 +13,10 @@ import { TaskOperation } from '#types';
 import { InvalidOperationInput } from '../errors';
 import { collectSubtree, findTaskSet, refEntityId } from './task-set-membership';
 
+/**
+ * The only writer that may re-parent a task: a generic object update cannot reject a cycle or a
+ * cross-set parent, nor move the lifecycle edge that decides what the task cascades with.
+ */
 const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOperation.UpdateTask.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({

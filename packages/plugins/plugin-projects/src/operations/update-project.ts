@@ -9,6 +9,10 @@ import { Database, Obj } from '@dxos/echo';
 
 import { ProjectMcpOperation } from '#types';
 
+/**
+ * A plain field write apart from the no-op guard below, which a generic object update would not
+ * make.
+ */
 const handler: Operation.WithHandler<typeof ProjectMcpOperation.UpdateProject> = ProjectMcpOperation.UpdateProject.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ project: projectRef, name, status, description }) {

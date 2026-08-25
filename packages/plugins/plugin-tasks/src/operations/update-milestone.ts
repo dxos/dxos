@@ -9,6 +9,10 @@ import { Database, Obj } from '@dxos/echo';
 
 import { TaskOperation } from '#types';
 
+/**
+ * A plain field write: nothing here needs more than a generic object update, and it exists because
+ * `Milestone` has no other writer.
+ */
 const handler: Operation.WithHandler<typeof TaskOperation.UpdateMilestone> = TaskOperation.UpdateMilestone.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ milestone: milestoneRef, name, description, targetDate }) {

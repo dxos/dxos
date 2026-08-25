@@ -15,7 +15,8 @@ import { findMilestoneTaskSet, refEntityId } from './task-set-membership';
 /**
  * Deletes a milestone without touching its tasks — they fall back to the backlog, matching what
  * Linear and GitHub do when a milestone is removed. Readers already treat a dangling milestone ref
- * as backlog, but the refs are cleared anyway so the tasks say what they mean.
+ * as backlog, but the refs are cleared anyway so the tasks say what they mean. A generic object
+ * delete would leave both those refs and the set's `milestones` entry behind.
  */
 const handler: Operation.WithHandler<typeof TaskOperation.DeleteMilestone> = TaskOperation.DeleteMilestone.pipe(
   Operation.withHandler(

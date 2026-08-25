@@ -10,6 +10,10 @@ import { Outline } from '@dxos/types';
 
 import { OutlineOperation } from '#types';
 
+/**
+ * Reads an outline with its checklist parsed out of the markdown: `items` is derived rather than
+ * stored, so a generic object read yields only the raw text.
+ */
 const handler: Operation.WithHandler<typeof OutlineOperation.GetOutline> = OutlineOperation.GetOutline.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ outline: outlineRef }) {

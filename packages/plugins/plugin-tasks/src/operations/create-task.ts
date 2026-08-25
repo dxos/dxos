@@ -13,6 +13,10 @@ import { TaskOperation } from '#types';
 import { InvalidOperationInput } from '../errors';
 import { addTaskToSet, refEntityId } from './task-set-membership';
 
+/**
+ * Files a new task into the set's `tasks` array — the membership-and-order record a generic object
+ * create leaves untouched — and rejects a milestone or parent belonging to another set.
+ */
 const handler: Operation.WithHandler<typeof TaskOperation.CreateTask> = TaskOperation.CreateTask.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({

@@ -13,7 +13,10 @@ import { ProjectMcpOperation } from '#types';
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;
 
-/** Summary rows only — `projectGet` is the detail read, so a list stays cheap for a model to scan. */
+/**
+ * Summary rows only — `projectGet` is the detail read, so a list stays cheap for a model to scan.
+ * The thinnest operation here: a type query plus a projection, and little a generic query lacks.
+ */
 const handler: Operation.WithHandler<typeof ProjectMcpOperation.ListProjects> = ProjectMcpOperation.ListProjects.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ match, limit }) {

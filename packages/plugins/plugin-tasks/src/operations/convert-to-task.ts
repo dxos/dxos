@@ -10,6 +10,10 @@ import { Outline } from '@dxos/types';
 
 import { OutlineOperation } from '#types';
 
+/**
+ * Promotes an outline bullet to a task, creating the outline's own task set on first use and
+ * appending to its membership array — a three-object write no generic create expresses.
+ */
 const handler: Operation.WithHandler<typeof OutlineOperation.ConvertToTask> = OutlineOperation.ConvertToTask.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ outline, title }) {

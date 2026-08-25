@@ -12,6 +12,10 @@ import { TaskOperation } from '#types';
 
 import { addMilestoneToSet } from './task-set-membership';
 
+/**
+ * Appends to the set's `milestones` array, which is both the membership record and the sequence
+ * `milestoneMove` reorders — neither reachable from a generic object create.
+ */
 const handler: Operation.WithHandler<typeof TaskOperation.CreateMilestone> = TaskOperation.CreateMilestone.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ taskSet: taskSetRef, name, description, targetDate }) {

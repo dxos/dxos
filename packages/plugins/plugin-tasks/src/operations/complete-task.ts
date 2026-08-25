@@ -9,6 +9,10 @@ import { Database, Obj } from '@dxos/echo';
 
 import { TaskOperation } from '#types';
 
+/**
+ * Sugar for `taskUpdate` with `status: 'done'` — it guards no invariant of its own, and earns its
+ * place only by making the verb discoverable as a tool.
+ */
 const handler: Operation.WithHandler<typeof TaskOperation.CompleteTask> = TaskOperation.CompleteTask.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ task: taskRef }) {
