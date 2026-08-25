@@ -9,7 +9,7 @@ import { evalite } from 'evalite';
 import { Chat } from '@dxos/assistant-toolkit';
 import * as Project from '@dxos/compute/Project';
 import { Database, Feed, Ref } from '@dxos/echo';
-import ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
+import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { Milestone, Outline, Task, TaskSet } from '@dxos/types';

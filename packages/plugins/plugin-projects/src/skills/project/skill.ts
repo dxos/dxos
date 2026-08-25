@@ -16,7 +16,7 @@ import { ArtifactAdd, ArtifactList } from './operations/definitions';
 // The workflow content lives beside this module as markdown so it can be edited as prose.
 import instructions from './project-skill.md?raw';
 
-const SKILL_KEY = 'org.dxos.skill.project';
+export const key = 'org.dxos.skill.project';
 
 /**
  * Every verb the skill drives. Imported rather than named as strings: an unresolvable ToolId is
@@ -53,12 +53,18 @@ export const operations: readonly Operation.Definition.Any[] = [
  * It lives in this plugin because the plugin owns the verbs it drives — `Project` is a compute
  * type, but a skill that cannot import its own operations can only name them and hope.
  *
+ * TODO(burdon): Factor back out to a lower layer so a headless host can serve it without the
+ * plugins. Blocked on where the operations live: every verb below is defined by a plugin
+ * (`plugin-space`, `plugin-tasks`, this one), so a lower home could only name them as strings
+ * again — which is the failure mode that put the skill here. Moving the operation definitions
+ * down is the prerequisite, not moving the skill.
+ *
  * The final key segment doubles as the projected MCP prompt name, so this skill answers to
  * `/project`.
  */
-const make = () =>
+export const make = (): Skill.Skill =>
   Skill.make({
-    key: SKILL_KEY,
+    key,
     name: 'Project',
     description:
       'Track multi-step work as projects, tasks and design docs in a DXOS space, and file the work ' +
@@ -72,11 +78,3 @@ const make = () =>
     },
     tools: Skill.toolDefinitions({ operations }),
   });
-
-const skill: Skill.Definition = {
-  key: SKILL_KEY,
-  make,
-  operations,
-};
-
-export default skill;

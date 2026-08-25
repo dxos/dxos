@@ -19,8 +19,9 @@ import { EID, EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Message, Outline, TaskSet } from '@dxos/types';
 
-import { ProjectHandlers } from './operations';
-import ProjectSkill from './skill';
+import { ProjectOperationHandlerSet } from '#operations';
+
+import * as ProjectSkill from './skill';
 
 const { text, toolCall } = ScriptedLanguageModel;
 
@@ -88,7 +89,7 @@ describe('Project conversation', () => {
     const scriptedTurns: ScriptedLanguageModel.ScriptedTurn[] = [];
 
     const ScriptedTestLayer = AssistantTestLayer({
-      operationHandlers: ProjectHandlers,
+      operationHandlers: ProjectOperationHandlerSet.handlers,
       types: TYPES,
       skills: [ProjectSkill.make()],
       aiService: ScriptedLanguageModel.scriptedAiService(scriptedTurns),
@@ -128,7 +129,7 @@ describe('Project conversation', () => {
 
   {
     const LiveTestLayer = AssistantTestLayer({
-      operationHandlers: ProjectHandlers,
+      operationHandlers: ProjectOperationHandlerSet.handlers,
       types: TYPES,
       skills: [ProjectSkill.make()],
       aiServicePreset: 'direct',

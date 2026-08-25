@@ -12,7 +12,7 @@ import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
-import ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
+import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { Milestone, Outline, Task, TaskSet } from '@dxos/types';

@@ -9,7 +9,7 @@ import { evalite } from 'evalite';
 import * as Project from '@dxos/compute/Project';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
-import ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
+import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
 import * as TablePlugin from '@dxos/plugin-table/TablePlugin';
 import { Table } from '@dxos/react-ui-table/types';
 import { trim } from '@dxos/util';

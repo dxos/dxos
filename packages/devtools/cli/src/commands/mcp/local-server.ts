@@ -21,7 +21,7 @@ import { McpServer } from '@dxos/mcp-server';
 // Narrow subpath imports: these plugins declare React surfaces, and a bundler follows the dynamic
 // import behind a lazy capability, so activating them would pull React into the CLI binary.
 import * as ProjectOperationHandlerSet from '@dxos/plugin-projects/ProjectOperationHandlerSet';
-import ProjectSkill, { ProjectHandlers } from '@dxos/plugin-projects/ProjectSkill';
+import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
 import * as TasksOperationHandlerSet from '@dxos/plugin-tasks/TasksOperationHandlerSet';
 
 import { chatLayer, operationHandlers } from '../../util';
@@ -62,9 +62,6 @@ export const makeLocalServer = Effect.fn(function* () {
     ...capabilities.getAll(Capabilities.OperationHandler),
     operationHandlers,
     ProjectOperationHandlerSet.handlers,
-    // The project skill's own artifact verbs: it declares them, and nothing else here registers
-    // them, so without this they project as tools with no handler behind them.
-    ProjectHandlers,
     TasksOperationHandlerSet.handlers,
   );
   const handlers = dedupeOperations(yield* handlerSet.handlers);
