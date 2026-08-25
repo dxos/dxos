@@ -60,7 +60,7 @@ export const defaultConfig = new Config({
 
 /** Aligns a fresh monorepo CLI profile with the backend Composer's local dev server talks to. */
 export const localDevConfig = new Config(
-  { runtime: { services: { edge: { url: 'https://main.dxos.network' } } } },
+  { runtime: { services: { edge: { url: 'https://preview.dxos.network' } } } },
   defaultConfig.values,
 );
 
