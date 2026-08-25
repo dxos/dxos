@@ -282,6 +282,22 @@ describe('SurfaceComponent fallback hold', () => {
     expect(await view.findByTestId('held')).toBeTruthy();
   });
 
+  test('limit={0} renders nothing while the role is still activating', async ({ expect }) => {
+    // `limit={0}` means render nothing, and a held fallback must not reintroduce output through the
+    // placeholder — which is only visible with an explicit one, since the default is empty.
+    const { plugin, release } = makeHeldPlugin();
+    await using harness = await createTestApp({ plugins: [CatchAllPlugin(), plugin()] });
+
+    const view = render(
+      harness,
+      <SurfaceComponent type={RoleHeld} limit={0} placeholder={<span data-testid='placeholder' />} />,
+    );
+    expect(view.queryByTestId('placeholder')).toBeNull();
+    expect(view.queryByTestId('catch-all')).toBeNull();
+
+    release();
+  });
+
   test('renders the catch-all once no gated module for the role is left activating', async ({ expect }) => {
     // Guards the hazard in #12717: a hold that never lifts would strand every plank whose role has
     // only a fallback.
