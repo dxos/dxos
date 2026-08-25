@@ -78,7 +78,19 @@ for i in $(seq 1 "$REPS"); do
   # inherited from whatever shell runs this, and either can suppress the "cached from remote" line
   # while the hydration still happens. The report is the same source `analyze.mjs` reads, and the
   # same query the README gives for checking a cache by hand.
-  hits=$(node -e 'const r=require(process.argv[1]);console.log(r.actions.flatMap(a=>a.operations??[]).filter(o=>o.meta?.type==="output-hydration"&&o.status==="cached-from-remote").length)' "$OUT/report-$ARM$i.json")
+  # `if ! hits=$(...)` rather than a bare assignment: without errexit a failed command
+  # substitution leaves `hits` empty, and `[ "" -eq 0 ]` errors and is skipped, so an unreadable
+  # report would sail past the zero-hit gate below.
+  if ! hits=$(node -e 'const r=require(process.argv[1]);console.log(r.actions.flatMap(a=>a.operations??[]).filter(o=>o.meta?.type==="output-hydration"&&o.status==="cached-from-remote").length)' "$OUT/report-$ARM$i.json"); then
+    echo "== $ARM$i could not read $OUT/report-$ARM$i.json — no hit count, so no measurement."
+    exit 1
+  fi
+  case "$hits" in
+    ''|*[!0-9]*)
+      echo "== $ARM$i hit count is not a number: '$hits'"
+      exit 1
+      ;;
+  esac
   echo "== $ARM$i exit=$code hits=$hits"
   if [ "$hits" -eq 0 ]; then
     # Zero does not separate "the remote was never asked" from "the remote had nothing", and
