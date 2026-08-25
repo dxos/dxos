@@ -6,9 +6,11 @@
 
 One project skill. The repo carried two: `@dxos/assistant-toolkit`'s `org.dxos.skill.project`, a small skill for filing artifacts into a project chat, and `@dxos/plugin-projects`' `org.dxos.plugin.projects.skill.codeProject`, which held the whole work-stream workflow. They are now one.
 
-The survivor is the toolkit's `org.dxos.skill.project`, which sits below every consumer. It keeps its `artifactAdd`/`artifactList` operations and gains the full workflow instructions, and it now projects as an MCP prompt — `/project`, the name `codeProject` only ever existed to avoid a collision with.
+The survivor is `org.dxos.skill.project`, which keeps its `artifactAdd`/`artifactList` operations, gains the full workflow instructions, and now projects as an MCP prompt — `/project`, the name `codeProject` only ever existed to avoid a collision with.
 
-`@dxos/plugin-projects` owns the verbs the skill drives, so it is what contributes the skill to an app, via a `SkillDefinition` capability.
+It lives in `@dxos/plugin-projects`, which owns the verbs it drives. A skill that cannot import its own operations can only name them as strings, and an unresolvable ToolId is dropped from the session toolkit with nothing but a log line — so the tool list is now checked by the compiler. `@dxos/plugin-assistant` no longer contributes the skill or its handlers (it cannot depend on `@dxos/plugin-projects` without a cycle); the plugin that owns the verbs contributes both.
+
+Breaking: `@dxos/assistant-toolkit` no longer exports `ProjectSkill`, `ProjectHandlers` or `ProjectOperations` — import them from `@dxos/plugin-projects/ProjectSkill` and `#skills`. The two artifact operations move to the `projects` domain to match their defining package: `org.dxos.operation.assistantToolkit.{addArtifact,listArtifact}` become `org.dxos.operation.projects.{addArtifact,listArtifact}`, so the tools rename from `assistant-toolkit-{add,list}-artifact` to `projects-{add,list}-artifact`. The Agent skill drops its instruction to file work products, which named a tool it did not declare.
 
 Breaking for out-of-repo consumers: `@dxos/plugin-projects` no longer exports the `./CodeProjectSkill` subpath, and the skill key `org.dxos.plugin.projects.skill.codeProject` is gone. A `Project` object's `SkillsAnnotation` already named `org.dxos.skill.project`, so a project-scoped chat now loads the consolidated skill rather than the artifact-filing subset.
 

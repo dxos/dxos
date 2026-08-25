@@ -105,7 +105,7 @@ you hold is a bare object id, and then write the full URI: `{"/": "echo:///" + i
 - **Project object** — `name`; `status` (`active`|`paused`|`blocked`|`ended`); `description`
   (the one-line summary).
 - **Milestones** — what done means, one ordered span of work per phase of the effort, in the task set
-  (`tasks-create-milestone` / `milestoneMove` / `tasks-delete-milestone` / `tasks-list-milestone`;
+  (`tasks-create-milestone` / `tasks-move-milestone` / `tasks-delete-milestone` / `tasks-list-milestone`;
   patch a milestone's fields with `space-update-object`).
   A milestone carries `name`, `description` (what done means for it), and an optional `targetDate`;
   it stores **no status** — `tasks-list-milestone` derives `done`/`total` from the tasks filed under it, so
@@ -119,7 +119,7 @@ you hold is a bare object id, and then write the full URI: `{"/": "echo:///" + i
   starting `Resume:` holding the single next action, and a `Design: {"/": "echo:///<doc-id>"}` line
   pointing at the design document.
 - **Design document** — the durable _why_: decisions, findings, spec. Create the text object,
-  then a document whose `content` references it (`createObject` typenames `org.dxos.type.text`
+  then a document whose `content` references it (`space-add-object` typenames `org.dxos.type.text`
   and `org.dxos.type.document`).
 
 ## Artifacts — the project's work products
@@ -128,10 +128,10 @@ A project owns a collection of **artifacts**: the durable objects the work produ
 outlines, sheets, contacts, …), distinct from its tasks and its outline.
 
 - After creating an object the user asked for while working in a project's context, file it with
-  `assistant-toolkit-add-artifact { project, object }` so the project owns it and it appears in the project's list.
+  `projects-add-artifact { project, object }` so the project owns it and it appears in the project's list.
   Filing the same object twice is a no-op.
 - Before searching the whole space for something the project should already hold, call
-  `assistant-toolkit-list-artifact { project }` — it returns a DXN, type and label per artifact, and you load the
+  `projects-list-artifact { project }` — it returns a DXN, type and label per artifact, and you load the
   content of the one you want.
 - Design decisions and findings belong in a design **document** filed as an artifact, not in the
   outline; the outline is scratch.

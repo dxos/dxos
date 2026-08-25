@@ -6,10 +6,13 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
-import { Chat, ProjectSkill } from '@dxos/assistant-toolkit';
+import { Chat } from '@dxos/assistant-toolkit';
 import * as Project from '@dxos/compute/Project';
-import { Database, Feed, Ref } from '@dxos/echo';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
+import ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { Milestone, Outline, Task, TaskSet } from '@dxos/types';
@@ -38,13 +41,17 @@ const PLAN = [
 
 const MILESTONE_NAME = 'Alpha';
 const DONE_KEYWORD = 'schema';
+const DESIGN_DOC_NAME = 'Harbor design';
+/** The finding the design doc has to carry, so an empty document does not pass. */
+const DESIGN_KEYWORD = 'columnar';
 
 /** The verbs the scenario cannot be completed without, named as the model sees them. */
 const REQUIRED_TOOLS = [
   'tasks-get-outline',
   'tasks-create',
   'tasks-create-milestone',
-  'assistant-toolkit-add-artifact',
+  'space-add-object',
+  'projects-add-artifact',
 ];
 
 /** Entity id underlying a ref or object URI, so space-qualified and local URIs compare equal. */
@@ -62,16 +69,18 @@ const task = createEvalRunner({
     2. Create a milestone called "${MILESTONE_NAME}" on the project, and file every one of those
        tasks under it.
     3. Mark the task for the schema item done.
-    4. File the outline itself into the project's artifacts.
+    4. Write a design document named "${DESIGN_DOC_NAME}" recording the one finding that matters:
+       the importer should use a columnar layout. File it into the project's artifacts.
+    5. File the outline itself into the project's artifacts.
     Then reply with the number of tasks still open.
   `,
   input: Schema.Unknown,
   output: Schema.Unknown,
   skills: [...getDefaultSkills(), Ref.make(ProjectSkill.make())],
-  plugins: [ProjectsPlugin.make(), TasksPlugin.make()],
-  types: [Project.Project, Milestone.Milestone, Outline.Outline, Task.Task, TaskSet.TaskSet],
-  // Reading the outline, four creates, a milestone, four files, a completion and an artifact.
-  timeout: 240_000,
+  plugins: [ProjectsPlugin.make(), TasksPlugin.make(), MarkdownPlugin.make()],
+  types: [Project.Project, Markdown.Document, Milestone.Milestone, Outline.Outline, Task.Task, TaskSet.TaskSet],
+  // Reading the outline, four creates, a milestone, four files, a completion, a document and two artifacts.
+  timeout: 300_000,
   seed: ({ instructions }) =>
     Effect.gen(function* () {
       const outline = yield* Database.add(
@@ -106,6 +115,7 @@ const task = createEvalRunner({
         expected: PLAN.length,
         closedTheRightOne: false,
         outlineFiled: false,
+        designDocFiled: false,
       };
 
       const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
@@ -133,6 +143,20 @@ const task = createEvalRunner({
       const outlineId = project.outline ? entityId(project.outline.uri) : undefined;
       const outlineFiled = !!outlineId && project.artifacts.some((ref) => entityId(ref.uri) === outlineId);
 
+      // Filed AND non-empty: the document has to carry the finding, not just exist under the name.
+      const artifacts = yield* Effect.forEach(project.artifacts, (ref) =>
+        Database.load(ref).pipe(Effect.orElseSucceed(() => undefined)),
+      );
+      const designDoc = artifacts.find(
+        (candidate) =>
+          Obj.instanceOf(Markdown.Document, candidate) && !!candidate.name?.toLowerCase().includes('design'),
+      );
+      const designText =
+        designDoc && Obj.instanceOf(Markdown.Document, designDoc)
+          ? yield* Database.load(designDoc.content).pipe(Effect.orElseSucceed(() => undefined))
+          : undefined;
+      const designDocFiled = !!designText?.content.toLowerCase().includes(DESIGN_KEYWORD);
+
       return {
         ...trace,
         matchedTasks: matched.filter(Boolean).length,
@@ -140,6 +164,7 @@ const task = createEvalRunner({
         expected: PLAN.length,
         closedTheRightOne,
         outlineFiled,
+        designDocFiled,
       };
     }),
 });
@@ -165,8 +190,13 @@ evalite('Projects — a project chat turns its outline into a task ledger', {
     },
     {
       name: 'outline-filed-as-artifact',
-      description: "The outline is in the project's artifacts (assistant-toolkit-add-artifact).",
+      description: "The outline is in the project's artifacts (projects-add-artifact).",
       scorer: ({ output }) => (output.dbQuery.outlineFiled ? 1 : 0),
+    },
+    {
+      name: 'design-doc-filed',
+      description: "A design document carrying the finding is in the project's artifacts.",
+      scorer: ({ output }) => (output.dbQuery.designDocFiled ? 1 : 0),
     },
     {
       name: 'project-verbs-reached',
