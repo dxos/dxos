@@ -56,6 +56,11 @@ const SCALE = { objectCount: OBJECT_COUNT, payloadBytes: PAYLOAD_BYTES };
 const queryAll = async (db: EchoDatabase, expected: number): Promise<Obj.Unknown[]> => {
   let objects: Obj.Unknown[] = [];
   for (let attempt = 0; attempt < 5 && objects.length < expected; attempt++) {
+    if (attempt > 0) {
+      // An immediate retry would re-read the same not-yet-loaded state; a pass takes seconds, so the
+      // documents that expired are landing while this waits.
+      await new Promise((resolve) => setTimeout(resolve, 1_000));
+    }
     objects = await db.query(Query.select(Filter.type(TestSchema.Task))).run();
   }
   return objects;
