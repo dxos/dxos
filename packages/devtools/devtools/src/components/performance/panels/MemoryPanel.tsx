@@ -13,7 +13,6 @@ import { type CustomPanelProps, Panel } from '../Panel';
 
 const MEM_WARNING = 40 / 100;
 
-/** One realm's heap: used of allocated, and used as a fraction of the realm's limit. */
 const HeapRow = ({ label, heap }: { label: string; heap?: HeapInfo }) => {
   const used = heap && heap.used / heap.limit;
   return (

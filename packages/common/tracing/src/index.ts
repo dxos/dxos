@@ -26,8 +26,7 @@ trace.diagnostic({
   },
 });
 
-// Registered here so every realm (tab, worker) answers the same request over the diagnostics
-// channel; `performance.memory` reports only the realm that reads it.
+// Registered per realm because `performance.memory` reports only the realm that reads it.
 trace.diagnostic<HeapInfo | undefined>({
   id: 'heap',
   name: 'Heap',

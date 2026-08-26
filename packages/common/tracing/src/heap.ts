@@ -2,10 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-/**
- * JS heap usage of the calling realm.
- * https://developer.mozilla.org/en-US/docs/Web/API/Performance/memory
- */
+/** JS heap usage of the calling realm (https://developer.mozilla.org/en-US/docs/Web/API/Performance/memory). */
 export type HeapInfo = {
   used: number;
   total: number;

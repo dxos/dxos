@@ -21,16 +21,7 @@ import {
 
 // TODO(burdon): Factor out.
 
-/**
- * Per-realm heap usage. The tab reads its own; the worker answers over the diagnostics channel,
- * because `performance.memory` reports only the realm that reads it.
- *
- * https://developer.mozilla.org/en-US/docs/Web/API/Performance/memory
- * https://github.com/WICG/performance-measure-memory
- * https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts
- * https://caniuse.com/mdn-api_performance_measureuseragentspecificmemory
- * https://web.dev/articles/coop-coep
- */
+/** Split per realm because `performance.memory` reports only the realm that reads it. */
 export type MemoryInfo = {
   tab?: HeapInfo;
   worker?: HeapInfo;
