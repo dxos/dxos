@@ -140,12 +140,14 @@ Each is independent of the others; none is started.
       truncated), off by default so the chat strip stays one row per task.
 - [ ] **ProjectArticle tabs** — tabbed surface for the project article
       (plugin-projects) instead of the current stacked sections.
-- [ ] **`#` references in the prompt** — a `#` completion in the chat editor for
-      referencing objects/tasks inline, alongside the existing `$` sentinels and
-      `/` commands (same `commands()` extension shape, different token and
-      resolver). NOTE: recorded from a one-line prompt ("# in") — confirm the
-      intent before starting.
-- [ ] **Links** — links on tasks: an `echo://` reference from a task to the
-      object it concerns (and back), rendered as an affordance in the row.
-      NOTE: recorded from a one-line prompt ("links") — confirm the intent
-      before starting.
+- [ ] **`#foo` renders as a heading in chat markdown** — a `#` inside a message
+      is parsed as an ATX heading, so `#foo` comes out as a title. Reproduce and
+      fix in whichever renderer the thread uses (`MarkdownView` wraps
+      react-markdown + remark-gfm; editor-backed surfaces go through
+      `decorateMarkdown`), then linkify issue references intelligently: `#123`
+      becomes a link to the PR/issue in the relevant repo, with the repo
+      resolved from context rather than hard-coded.
+- [ ] **Autolink bare URLs in chat markdown** — a naked `https://…` in a message
+      should render as an anchor, not plain text. remark-gfm's autolink literal
+      covers the common case, so first establish whether the thread renders
+      through that path at all.
