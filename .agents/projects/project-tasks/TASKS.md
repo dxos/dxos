@@ -65,11 +65,14 @@ be visible in the UI, closing the gaps the storybook audit surfaced.
       ensureTaskSetSync), `/` completion (non-cycling, mono command column,
       grid popover) + atomic dx-tag decoration in the prompt editor; /task:run
       wakes the conversation with a scoped follow-up. Live-verified.
-- [ ] **Bind slash commands to operation invocations** — needs a client-side
-      harness bridge: harness-scoped operations (HarnessService) resolve their
-      services only inside the agent session, so the UI invoker's
-      DynamicRuntime cannot invoke them; also record command + result as feed
-      messages so the transcript reflects command activity.
+- [x] **Bind slash commands to operation invocations** — no harness bridge was
+      needed: the task verbs declare only `Database.Service`, so the UI invoker
+      can call them (as `TaskSetArticle` already did). The commands moved to
+      plugin-assistant (a core package cannot reference a plugin's operations)
+      and now invoke `CreateTask`/`DeleteTask`/`UpdateTask`; `/task:run` queues
+      through `UpdateTask` and the supervisor's reconcile still spawns. Both the
+      command and its result are appended to the feed, so the transcript records
+      what ran. `assistant-toolkit` keeps the contract and the parse only.
 - [ ] **Cancel/delete tasks** — cancel a started (possibly delegated) task from
       the UI and the agent surface, and delete via the TaskOperation verb so
       the set's refs and lifecycle parent edges stay consistent; a cancelled

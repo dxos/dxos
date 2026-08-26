@@ -7,6 +7,7 @@ import * as Option from 'effect/Option';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { resolveSlashCommand } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
@@ -30,6 +31,7 @@ import { keyToFallback } from '@dxos/util';
 import { useChatToolbarActions, useDebug } from '#hooks';
 import { meta } from '#meta';
 
+import { TaskSlashCommands } from '../../commands';
 import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor';
 import {
   ChatStatus,
@@ -72,6 +74,8 @@ const ChatRoot = ({
   ...props
 }: ChatRootProps) => {
   const [debug, setDebug] = useState(debugProp ?? false);
+  // Slash commands run their operations through the same invoker the rest of the UI uses.
+  const { invokePromise } = useOperationInvoker();
   const streaming = useAtomValue(processor.streaming);
   const active = useAtomValue(processor.active);
   const requestTiming = useRequestTiming({ active });
@@ -132,17 +136,33 @@ const ChatRoot = ({
           if (!streaming && text.length) {
             // A leading /command is a deterministic shortcut — executed directly, no model in
             // the loop; an unknown command falls through to the model as plain text.
-            const resolved = resolveSlashCommand(text);
+            const resolved = resolveSlashCommand(text, TaskSlashCommands);
             if (resolved) {
-              void Promise.resolve(onSubmit?.(text)).then(() => {
+              void Promise.resolve(onSubmit?.(text)).then(async () => {
                 if (!chat || !db) {
                   event.emit({ type: 'error', error: new Error('Command requires a persisted chat.') });
                   return;
                 }
-                const result = resolved.command.execute(resolved.args, { db, chat });
+                // The command runs its operation; a rejected invocation is reported like a usage
+                // error rather than escaping as an unhandled rejection.
+                const result = await resolved.command
+                  .execute(resolved.args, { db, chat, invoke: invokePromise })
+                  .catch((error) => (error instanceof Error ? error : new Error(String(error))));
                 if (result instanceof Error) {
                   event.emit({ type: 'error', error: result });
-                } else if (result.followUp) {
+                  return;
+                }
+
+                // The command's effect is otherwise invisible in the conversation: the prompt was
+                // never sent, so nothing records that the user ran it.
+                if (feed && result.summary) {
+                  await db.appendToFeed(feed, [
+                    Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text }] }),
+                    Message.make({ sender: { role: 'assistant' }, blocks: [{ _tag: 'text', text: result.summary }] }),
+                  ]);
+                }
+
+                if (result.followUp) {
                   // Some effects run on the supervisor loop (delegation spawns post-turn), so the
                   // command wakes the conversation with a short synthetic prompt.
                   void processor.request({ message: result.followUp });

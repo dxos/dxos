@@ -205,6 +205,9 @@
       "path": "../plugin-table"
     },
     {
+      "path": "../plugin-tasks"
+    },
+    {
       "path": "../plugin-testing"
     },
     {
