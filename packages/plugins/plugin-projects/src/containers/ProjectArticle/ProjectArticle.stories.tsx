@@ -34,8 +34,7 @@ import { ProjectArticle } from './ProjectArticle';
 
 const PROJECT_NAME = 'Project 1';
 const TASK_TITLE = 'Ship the tasks section';
-// A task whose text carries the two reference forms the markdown surfaces are expected to linkify:
-// a bare URL (GFM autolink) and a GitHub issue reference (plugin-github's decoration, not built).
+// Carries both reference forms the markdown surfaces linkify: a bare URL and a `#nnn` issue.
 const LINK_TASK_TITLE = 'Follow up on #12752 before the release';
 const LINK_TASK_DESCRIPTION =
   'Spec at https://github.com/dxos/dxos/pull/12752 — the preview build is at https://pr-12752-composer-dev.dxos.workers.dev, and it supersedes #12431.';
