@@ -15,16 +15,15 @@ import { type Checkpoint, aliveCount, capture, makePayload, report } from './tes
  * The automerge-backed counterpart to `feed-retention.test.ts`: does a space release its objects
  * when the caller lets go of them? Harness and rationale: `./testing/retention.ts`.
  *
- * BOTH TESTS ARE RED — they assert the behavior we want, not the behavior we have. The sibling feed
- * suite is what validates the harness: it runs the same helpers in the same package and does reach
- * `alive 0`, so a non-zero count here is retention rather than a measurement artifact.
- *
  * Unlike a feed object, an ECHO object is a thin proxy over an automerge document, so the payload is
- * not in the entity — it is in the document, and in the JS patch objects hanging off it. Heap-
- * snapshot retainer chains at checkpoint E put ~500 of the payload strings behind
- * `mostRecentPatch.patches[].value` (a second copy of every changed value) and behind
- * `DocHandle.#document` via `DocSynchronizer` and `HandleRegistry`. So `docs.c` / `docs.h` matter as
- * much as `objs` here, and releasing entities alone would not return the memory.
+ * not in the entity — it is in the document. So `docs.c` / `docs.h` matter as much as `objs` here,
+ * and releasing entities alone would not return the memory: an entity is released with its core, and
+ * an unlinked object's document is released with the last object mounted in it.
+ *
+ * Residency (`objs`, `docs.c`) is asserted rather than a heap delta, for the reason the harness gives
+ * for preferring `WeakRef` liveness to bytes: the absolute footprint of an automerge-backed suite is
+ * dominated by WASM and by allocator state that no release returns, so a byte threshold measures the
+ * host it runs on. Heap is still printed at every checkpoint.
  *
  *   DX_DEBUG_LEAKS=1 moon run echo-client-e2e:test -- src/automerge-retention.test.ts
  */
@@ -34,8 +33,8 @@ const HALF = OBJECT_COUNT / 2;
 
 /**
  * Far smaller than the feed suite's, and deliberately so: every object here is its own automerge
- * document, documents are never evicted, and both tests' documents accumulate in the one WASM
- * instance this file's process shares. The amplification is severe — a few MB of payload costs an
+ * document, and both tests' documents accumulate in the one WASM instance this file's process
+ * shares — releasing a handle returns JS memory, never WASM memory. The amplification is severe — a few MB of payload costs an
  * order of magnitude more heap and two orders more WASM — and past roughly 12MB of total payload
  * the WASM allocator aborts mid-`loadIncremental` (`__rg_oom` into a `RuntimeError: unreachable`),
  * after which every automerge call in the process, on any document, fails with "recursive use of an
@@ -45,6 +44,29 @@ const HALF = OBJECT_COUNT / 2;
 const PAYLOAD_BYTES = 1 * 1024;
 
 const SCALE = { objectCount: OBJECT_COUNT, payloadBytes: PAYLOAD_BYTES };
+
+/**
+ * Reads the whole set, retrying a short result: a cold read starts every hit's two-second
+ * `INDEX_OBJECT_LOAD_TIMEOUT` at once while the documents arrive over the following minute.
+ */
+const queryAll = async (db: EchoDatabase, expected: number): Promise<Obj.Unknown[]> => {
+  let objects: Obj.Unknown[] = [];
+  for (let attempt = 0; attempt < 5 && objects.length < expected; attempt++) {
+    if (attempt > 0) {
+      // An immediate retry would re-read the same not-yet-loaded state.
+      await new Promise((resolve) => setTimeout(resolve, 1_000));
+    }
+    objects = await db.query(Query.select(Filter.type(TestSchema.Task))).run();
+  }
+  return objects;
+};
+
+/** @see the call site: a nested frame, so no stack slot outlives the removal. */
+const removeAll = (db: EchoDatabase, objects: Obj.Unknown[]): void => {
+  for (const object of objects) {
+    db.remove(object);
+  }
+};
 
 const addObjects = async (db: EchoDatabase): Promise<void> => {
   const batchSize = 20;
@@ -90,12 +112,10 @@ describe('automerge object retention', { tags: ['memory'] }, () => {
     await builder.close();
   });
 
-  // FAILS TODAY. Collection is the strongest release the client has — it unlinks the objects from
-  // the space directory, which drives `EntityManager._evictRemovedObjects` (`objs` 200 -> 0) and
-  // drops the host's handles (`docs.h` 201 -> 1). The objects are still reachable afterwards, and
-  // the client's own repo proxy still holds a handle per document, so eviction from the caches that
-  // do evict is not the same as release. `peer.close()` is weaker still: it leaves `_objects`
-  // populated entirely.
+  // Collection is the strongest release the client has: it unlinks the objects from the space
+  // directory, which drives `EntityManager._evictRemovedObjects` — and that now takes each object's
+  // document with it, on both sides (`docs.c` and `docs.h` back to the space root alone) rather than
+  // leaving the client's repo proxy holding a handle per document.
   test('collecting removed objects releases them', { timeout: 300_000 }, async ({ expect }) => {
     expect(typeof global.gc).toBe('function');
 
@@ -104,14 +124,14 @@ describe('automerge object retention', { tags: ['memory'] }, () => {
     await using _peer = peer;
     const baseline = await capture('A: cold client, data on disk', checkpoints, db);
 
-    let queried: Obj.Unknown[] | undefined = await db.query(Query.select(Filter.type(TestSchema.Task))).run();
+    let queried: Obj.Unknown[] | undefined = await queryAll(db, OBJECT_COUNT);
     expect(queried.length).toBe(OBJECT_COUNT);
     const refs = queried.map((object) => new WeakRef(object));
     const held = await capture('B: all held by the caller', checkpoints, db, refs);
 
-    for (const object of queried) {
-      db.remove(object);
-    }
+    // Removed from inside a helper so its frame — and the loop variable holding the last object —
+    // is gone before the reading: a live stack slot keeps one object alive and reads as retention.
+    removeAll(db, queried);
     await db.flush();
     // Removal alone is a soft delete — the object stays in the space directory, so nothing evicts.
     // Collection is what unlinks it, which is what `_evictRemovedObjects` watches for.
@@ -122,14 +142,18 @@ describe('automerge object retention', { tags: ['memory'] }, () => {
 
     report('after collection', checkpoints, SCALE);
     expect(removed.alive).toBe(0);
-    // Relative to what holding the objects cost, not to the raw payload — see the feed suite's twin.
-    expect(removed.heapUsed - baseline.heapUsed).toBeLessThan(0.35 * (held.heapUsed - baseline.heapUsed));
+    // The client holds nothing for the space beyond its root document.
+    expect(removed.stats?.loaded.client.objects).toBe(0);
+    expect(removed.stats?.loaded.client.documents).toBe(1);
+    // A sanity ceiling on the heap, not the measurement: the objects cost something to hold, and
+    // most of it comes back. See the file comment on why this is not a tight budget.
+    expect(removed.heapUsed - baseline.heapUsed).toBeLessThan(held.heapUsed - baseline.heapUsed);
   });
 
-  // FAILS TODAY. `EntityManager._objects` holds an `ObjectCore` per object and only ever shrinks
-  // when an object leaves the space directory (see above) — never because the caller dropped it —
-  // so a space's client-side footprint tracks everything it has ever loaded rather than what is
-  // open. This is the automerge-side twin of the feed bug fixed in `FeedCoreRegistry`.
+  // `EntityManager._objects` used to hold an `ObjectCore` per object and shrink only when an object
+  // left the space directory — never because the caller dropped it — so a space's client-side
+  // footprint tracked everything it had ever loaded rather than what is open. This is the
+  // automerge-side twin of the feed bug fixed in `FeedCoreRegistry`.
   test('dropping the caller reference releases objects', { timeout: 300_000 }, async ({ expect }) => {
     expect(typeof global.gc).toBe('function');
 
@@ -138,7 +162,7 @@ describe('automerge object retention', { tags: ['memory'] }, () => {
     await using _peer = peer;
     await capture('A: cold client, data on disk', checkpoints, db);
 
-    let queried: Obj.Unknown[] = await db.query(Query.select(Filter.type(TestSchema.Task))).run();
+    let queried: Obj.Unknown[] = await queryAll(db, OBJECT_COUNT);
     expect(queried.length).toBe(OBJECT_COUNT);
     const refs = queried.map((object) => new WeakRef(object));
     await capture('B: all held by the caller', checkpoints, db, refs);

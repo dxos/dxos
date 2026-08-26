@@ -258,6 +258,20 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   }
 
   /**
+   * Whether every local change has been acknowledged by the host — the condition for dropping this
+   * handle from memory. `_getPendingChanges` clears the repo's pending-id set before the mutation is
+   * actually sent, so that set alone cannot answer this: a handle dropped in the window between
+   * would take an unsent write with it.
+   * @internal
+   */
+  _isAcknowledged(): boolean {
+    // `_lastSentHeads` advances only on a confirmed send or on integrating a host update, and a send
+    // in flight leaves it behind the doc's heads — so heads equality alone means the host holds
+    // everything this handle does, with nothing outstanding.
+    return this._doc !== undefined && A.equals(A.getHeads(this._doc), this._lastSentHeads);
+  }
+
+  /**
    * Confirm that the last write was successful.
    * @internal
    */

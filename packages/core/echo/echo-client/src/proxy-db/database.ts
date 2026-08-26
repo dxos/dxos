@@ -48,7 +48,6 @@ import { DXN, EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxo
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
-import { defaultMap } from '@dxos/util';
 
 import type { SaveStateChangedEvent } from '../automerge';
 import { type DocHandleProxy, type RepoProxy } from '../automerge';
@@ -311,6 +310,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       spaceId: params.spaceId,
       spaceKey: params.spaceKey,
       branchStore: params.branchStore,
+      createEntity: (core) => initEchoReactiveObjectRootProxy(core, this),
     });
 
     this.saveStateChanged = this._entityManager.saveStateChanged;
@@ -468,12 +468,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   // TODO(burdon): Type check.
   /** @deprecated Use `db.query(Filter.id(id)).runSync()[0]` for a working-set lookup, or resolve via a {@link Ref}. */
   getObjectById<T extends Entity.Unknown = Entity.Any>(id: string, { deleted = false } = {}): T | undefined {
-    const core = this._entityManager.getObjectCoreById(id);
-    if (!core || (core.isDeleted() && !deleted)) {
-      return undefined;
-    }
-
-    return (core.rootProxy ?? initEchoReactiveObjectRootProxy(core, this)) as T;
+    return this._entityManager.getEntityById(id, { deleted }) as T | undefined;
   }
 
   makeRef<T extends AnyProperties = any>(uri: URI.URI): Ref.Ref<T> {
@@ -1101,27 +1096,13 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    * @internal
    */
   async _loadObjectById(objectId: string, options: any = {}): Promise<Entity.Unknown | undefined> {
-    const core = await this._entityManager.loadObjectCoreById(objectId, options);
-    if (!core || (core?.isDeleted() && !options.allowDeleted)) {
-      return undefined;
-    }
-
-    const obj = defaultMap(
-      this._rootProxies,
-      core,
-      () => core.rootProxy ?? initEchoReactiveObjectRootProxy(core, this),
-    );
-    invariant(isProxy(obj));
-    return obj;
+    return this._entityManager.loadEntityById(objectId, options);
   }
 
   // ── Deprecated API ───────────────────────────────────────────────────────
 
   /** @deprecated */
   readonly pendingBatch = new Event<unknown>();
-
-  /** @internal */
-  private readonly _rootProxies = new Map<any, Entity.Unknown>();
 }
 
 // TODO(burdon): Create APIError class.
