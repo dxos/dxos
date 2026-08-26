@@ -15,13 +15,14 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useAtomCapabilityState, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import * as GraphNode from '@dxos/graph/GraphNode';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
 import { useConnections } from '@dxos/plugin-graph/hooks';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -292,13 +293,13 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
       { provides: [AppCapabilities.AppGraphBuilder] },
       Effect.fnUntraced(function* () {
         const extensions = yield* Effect.all([
-          GraphBuilder.createExtension({
+          AppGraphBuilder.createExtension({
             id: 'storyItems',
-            match: NodeMatcher.whenRoot,
+            match: GraphNodeMatcher.whenRoot,
             connector: () =>
               Effect.succeed([
                 ...STORY_ITEMS.map((item) =>
-                  Node.make({
+                  AppGraphNode.make({
                     id: item.id,
                     type: 'story-item',
                     data: item,
@@ -306,7 +307,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
                   }),
                 ),
                 // The launcher declares its chain on the node, the way the app resolves it off the type.
-                Node.make({
+                AppGraphNode.make({
                   id: LAUNCHER_ID,
                   type: 'story-launcher',
                   data: { id: LAUNCHER_ID, title: 'Inbox', launcher: true },
@@ -318,13 +319,13 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
                 }),
               ]),
           }),
-          GraphBuilder.createExtension({
+          AppGraphBuilder.createExtension({
             id: 'storyLauncherMessages',
-            match: NodeMatcher.whenNodeType('story-launcher'),
+            match: GraphNodeMatcher.whenNodeType('story-launcher'),
             connector: () =>
               Effect.succeed(
                 LAUNCHER_MESSAGES.map((message) =>
-                  Node.make({
+                  AppGraphNode.make({
                     id: message.id,
                     type: 'story-message',
                     data: message,
@@ -335,7 +336,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
           }),
           // Every story plank carries the same two companions, so the companion can be watched moving from
           // plank to plank as attention changes.
-          GraphBuilder.createExtension({
+          AppGraphBuilder.createExtension({
             id: 'storyItemCompanions',
             match: (node) =>
               node.type === 'story-item' || node.type === 'story-message' ? Option.some(node) : Option.none(),
@@ -407,7 +408,7 @@ const DefaultStory = ({
   // nodes; without this each plank's `useNode` never resolves and the deck stays in the loading state.
   // The graph qualifies connector node ids with their parent path (e.g. `root/story-item-1`), so the
   // seeded `active` list holds the materialized ids rather than the bare `STORY_ITEMS` ids.
-  const rootChildren = useConnections(graph, Node.RootId, 'child');
+  const rootChildren = useConnections(graph, GraphNode.RootId, 'child');
   const items = useMemo(() => rootChildren.filter((node) => node.type === 'story-item'), [rootChildren]);
   const launcherNode = useMemo(() => rootChildren.find((node) => node.type === 'story-launcher'), [rootChildren]);
 

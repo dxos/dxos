@@ -6,38 +6,38 @@ import { createContext } from '@radix-ui/react-context';
 import React, { Fragment, type KeyboardEvent, type PropsWithChildren, useCallback, useMemo, useState } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { Icon, IconButton, IconButtonProps, Input, Tag, composable, composableProps } from '@dxos/react-ui';
+import {
+  Icon,
+  IconButton,
+  IconButtonProps,
+  Input,
+  Tag,
+  composable,
+  composableProps,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
-import { type Actor, type Task } from '@dxos/types';
+import { type Actor, type Task, TaskSet } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
+import { translationKey } from '#translations';
+
 const TASK_LIST_NAME = 'TaskList.Root';
 
-export type TaskStatus = NonNullable<Task.Task['status']>;
-
 /** Linear-style status groups, most active first. */
-export const STATUS_ORDER: TaskStatus[] = ['in-progress', 'todo', 'done', 'failed', 'cancelled'];
+export const STATUS_ORDER: Task.Status[] = ['started', 'todo', 'done', 'failed', 'cancelled'];
 
 /** Fallback status labels. */
-const DEFAULT_STATUS_LABELS: Record<TaskStatus, string> = {
-  'in-progress': 'In progress',
-  'todo': 'To Do',
-  'done': 'Done',
-  'failed': 'Failed',
-  'cancelled': 'Cancelled',
+const DEFAULT_STATUS_LABELS: Record<Task.Status, string> = {
+  started: 'Started',
+  todo: 'To Do',
+  done: 'Done',
+  failed: 'Failed',
+  cancelled: 'Cancelled',
 };
 
 export type TaskPatch = Partial<Pick<Task.Task, 'title' | 'status' | 'priority' | 'estimate' | 'assignee'>>;
-
-/**
- * One row geometry shared by `Item` and `Create` so their affordances land in the same columns:
- * a fixed icon gutter (the status toggle above the add `+`), the flexible label, then trailing
- * chips/actions pinned to the far edge. `w-full` is load-bearing — the listbox item is a flex
- * container, so without it the grid shrinks to its content and the trailing actions float
- * mid-row.
- */
-const ROW_GRID = 'grid grid-cols-[2rem_1fr_2rem] items-center gap-2 w-full min-w-0 h-8';
 
 //
 // Context — plain Radix context (un-scoped); nesting task lists has no meaning today.
@@ -46,7 +46,9 @@ const ROW_GRID = 'grid grid-cols-[2rem_1fr_2rem] items-center gap-2 w-full min-w
 type TaskListContextValue = {
   tasks: readonly Task.Task[];
   groupByStatus: boolean;
-  statusLabel: (status: TaskStatus) => string;
+  showGroupLabels: boolean;
+  showOrdinals: boolean;
+  statusLabel: (status: Task.Status) => string;
   onTaskCreate?: (title: string) => void;
   onTaskUpdate?: (task: Task.Task, patch: TaskPatch) => void;
   onTaskDelete?: (task: Task.Task) => void;
@@ -63,8 +65,12 @@ type TaskListRootProps = PropsWithChildren<{
   tasks: readonly Task.Task[];
   /** Group rows into status sections (Linear order); flat list otherwise. */
   groupByStatus?: boolean;
+  /** Render the status heading above each group; grouping order is kept either way. */
+  showGroupLabels?: boolean;
+  /** Number rows by their position in `tasks` (set order), so tasks can be referenced by ordinal. */
+  showOrdinals?: boolean;
   /** i18n hook for group headings; defaults to English labels. */
-  statusLabel?: (status: TaskStatus) => string;
+  statusLabel?: (status: Task.Status) => string;
   /** Enables `Create`; called with the trimmed title. */
   onTaskCreate?: (title: string) => void;
   /** Enables the done toggle. Every mutation is delegated — the list never writes. */
@@ -79,6 +85,8 @@ const TaskListRoot = ({
   children,
   tasks,
   groupByStatus = true,
+  showGroupLabels = true,
+  showOrdinals = false,
   statusLabel = (status) => DEFAULT_STATUS_LABELS[status],
   onTaskCreate,
   onTaskUpdate,
@@ -88,6 +96,8 @@ const TaskListRoot = ({
   <TaskListProvider
     tasks={tasks}
     groupByStatus={groupByStatus}
+    showGroupLabels={showGroupLabels}
+    showOrdinals={showOrdinals}
     statusLabel={statusLabel}
     onTaskCreate={onTaskCreate}
     onTaskUpdate={onTaskUpdate}
@@ -123,11 +133,28 @@ TaskListViewport.displayName = 'TaskList.Viewport';
 // Content — the rows, grouped by status when the root says so.
 //
 
+/**
+ * The rows and the create row are separate grids (the create row sits outside the scrolling
+ * viewport), so their leading gutters — ordinal, then status — are declared once here: only
+ * matching templates keep the `+` under the status control and the input under the titles.
+ * Tailwind scans for whole class names, hence four literals rather than a composed prefix. The
+ * status gutter is `1.5rem` because that is the width of the `density='sm'` icon button it holds;
+ * a narrower track makes the button overflow it and align left instead of centring.
+ */
+const GRID_COLS = {
+  content: 'grid-cols-[1.5rem_1fr_min-content_min-content_2rem]',
+  contentWithOrdinals: 'grid-cols-[2rem_1.5rem_1fr_min-content_min-content_2rem]',
+  create: 'grid-cols-[1.5rem_1fr]',
+  createWithOrdinals: 'grid-cols-[2rem_1.5rem_1fr]',
+};
+
 type TaskListContentProps = ComposableProps;
 
 const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
-  const { tasks, groupByStatus, statusLabel } = useTaskListContext('TaskList.Content');
-  const { className, ...rest } = composableProps(props);
+  const { tasks, groupByStatus, showGroupLabels, showOrdinals, statusLabel } = useTaskListContext('TaskList.Content');
+  // Ordinals follow the set's canonical order, not the grouped display order, so a task keeps its
+  // number as it moves between status groups.
+  const ordinals = useMemo(() => new Map(tasks.map((task, index) => [task.id, index + 1])), [tasks]);
   const groups = useMemo(() => {
     if (!groupByStatus) {
       return tasks.length > 0 ? [{ status: undefined, tasks }] : [];
@@ -140,12 +167,23 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
   }, [tasks, groupByStatus]);
 
   return (
-    <Listbox.Content {...rest} aria-label='Tasks' classNames={className} ref={forwardedRef}>
+    <Listbox.Content
+      {...composableProps(props, {
+        // Row height lives on the auto rows — an `h-8` on the grid itself would size the whole
+        // list to one row and let the rest overflow invisibly.
+        classNames: mx(
+          'group grid auto-rows-[2rem] gap-x-2 items-center w-full min-w-0',
+          showOrdinals ? GRID_COLS.contentWithOrdinals : GRID_COLS.content,
+        ),
+      })}
+      aria-label='Tasks'
+      ref={forwardedRef}
+    >
       {groups.map(({ status, tasks }) => (
         <Fragment key={status ?? 'all'}>
-          {status && <TaskListGroupLabel>{statusLabel(status)}</TaskListGroupLabel>}
+          {status && showGroupLabels && <TaskListGroupLabel>{statusLabel(status)}</TaskListGroupLabel>}
           {tasks.map((task) => (
-            <TaskListItem key={task.id} task={task} />
+            <TaskListItem key={task.id} task={task} ordinal={showOrdinals ? ordinals.get(task.id) : undefined} />
           ))}
         </Fragment>
       ))}
@@ -164,7 +202,11 @@ type TaskListGroupLabelProps = ComposableProps;
 const TaskListGroupLabel = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps(props);
   return (
-    <div {...rest} className={mx('pt-3 pb-1 text-xs text-subdued uppercase', className)} ref={forwardedRef}>
+    <div
+      {...rest}
+      className={mx('col-span-full pt-3 pb-1 text-xs text-subdued uppercase', className)}
+      ref={forwardedRef}
+    >
       {children}
     </div>
   );
@@ -176,66 +218,102 @@ TaskListGroupLabel.displayName = 'TaskList.GroupLabel';
 // Item — one row. Exported so a host can render its own selection of tasks.
 //
 
-type TaskListItemProps = ComposableProps<{ task: Task.Task }>;
+const STATUS_ICONS: Record<Task.Status, { icon: string; classNames?: string }> = {
+  todo: { icon: 'ph--square--regular', classNames: 'text-subdued' },
+  started: { icon: 'ph--hourglass--regular', classNames: 'text-info-text' },
+  done: { icon: 'ph--check--regular', classNames: 'text-success-text' },
+  failed: { icon: 'ph--x--regular', classNames: 'text-error-text' },
+  cancelled: { icon: 'ph--x--regular', classNames: 'text-error-text' },
+};
 
-const TaskListItem = composable<HTMLLIElement, { task: Task.Task }>(({ task, ...props }, forwardedRef) => {
-  const { onTaskUpdate, onTaskDelete, onTaskSelect } = useTaskListContext('TaskList.Item');
-  const { className, ...rest } = composableProps(props);
-  // Subscribe per row: a query re-emits when membership changes, not when a task's own fields do,
-  // so a rename elsewhere (task form, agent, sync) would otherwise leave the row stale.
-  const [snapshot] = useObject(task);
-  const current = snapshot ?? task;
-  const done = current.status === 'done';
-  const handleToggle = useCallback(
-    () => onTaskUpdate?.(task, { status: done ? 'todo' : 'done' }),
-    [onTaskUpdate, task, done],
-  );
+type TaskListItemProps = ComposableProps<{ task: Task.Task; ordinal?: number }>;
 
-  return (
-    // `px-0` hands the horizontal inset to `ROW_GRID`, so the row shares the create row's columns.
-    <Listbox.Item {...rest} id={task.id} classNames={mx('px-0 py-0 group', className)} ref={forwardedRef}>
-      <div role='none' data-testid='taskList.item' className={ROW_GRID}>
+const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: number }>(
+  ({ task, ordinal, ...props }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
+    const { tasks, onTaskUpdate, onTaskDelete, onTaskSelect } = useTaskListContext('TaskList.Item');
+    const { className, ...rest } = composableProps(props);
+
+    // Subscribe per row: a query re-emits when membership changes, not when a task's own fields do,
+    // so a rename elsewhere (task form, agent, sync) would otherwise leave the row stale.
+    const [snapshot] = useObject(task);
+    const current = snapshot ?? task;
+
+    const done = current.status === 'done';
+    const error = current.status === 'failed';
+
+    // Virtual: an open task whose dependencies (resolved within the set) are not all done.
+    const blocked = (current.status ?? 'todo') === 'todo' && !TaskSet.isTaskReady(tasks, task);
+    // A started agent task is actively being worked by a sub-agent (started is stamped at spawn),
+    // so it spins; a human-started task keeps the static glyph.
+    const active = current.status === 'started' && current.assignee?.role === 'assistant';
+    const { icon, classNames: iconClassNames } = active
+      ? { icon: 'ph--spinner--regular', classNames: 'text-info-text animate-spin' }
+      : STATUS_ICONS[current.status ?? 'todo'];
+
+    const handleToggle = useCallback(
+      () => onTaskUpdate?.(task, { status: done ? 'todo' : 'done' }),
+      [onTaskUpdate, task, done],
+    );
+
+    return (
+      <Listbox.Item
+        {...rest}
+        id={task.id}
+        data-testid='taskList.item'
+        // `px-0`: a subgrid's own inline padding shrinks its first and last tracks, so the listbox
+        // item's default inset would push the status control off the column the create row's `+`
+        // sits in. The list's inset belongs to the host, not the row.
+        classNames={mx('group col-span-full grid grid-cols-subgrid px-0', className)}
+        ref={forwardedRef}
+      >
+        {ordinal !== undefined && (
+          <div className='flex items-center justify-center'>
+            <Tag hue={done ? 'green' : error ? 'rose' : 'neutral'} classNames='tabular-nums'>
+              {ordinal}
+            </Tag>
+          </div>
+        )}
         {onTaskUpdate ? (
           <IconButton
+            classNames={mx('justify-self-center', iconClassNames)}
             variant='ghost'
             density='sm'
-            icon={done ? 'ph--check--regular' : 'ph--circle--regular'}
+            icon={icon}
             iconOnly
-            label={done ? 'Mark todo' : 'Mark done'}
-            classNames={mx('justify-self-center text-subdued', done && 'text-success-text')}
+            label={done ? t('mark-todo.label') : t('mark-done.label')}
             onClick={handleToggle}
           />
         ) : (
-          <Icon
-            icon={done ? 'ph--check--regular' : 'ph--circle--regular'}
-            classNames={mx('justify-self-center', done && 'text-success-text')}
-            size={4}
-          />
+          <span className='grid place-items-center justify-self-center'>
+            <Icon icon={icon} classNames={iconClassNames} size={4} />
+            <span className='sr-only'>{t(`status-${current.status ?? 'todo'}.label`)}</span>
+          </span>
         )}
         <span
-          className={onTaskSelect ? 'truncate cursor-pointer' : 'truncate'}
+          className={mx('flex items-center gap-1 min-w-0', onTaskSelect && 'cursor-pointer')}
           onClick={onTaskSelect ? () => onTaskSelect(task) : undefined}
         >
-          {current.title}
+          <span className='truncate'>{current.title}</span>
         </span>
+        {current.assignee ? <TaskListAssignee assignee={current.assignee} /> : <div />}
         <div className='flex items-center gap-1'>
+          {blocked && <Tag hue='indigo'>{t('task-blocked.label')}</Tag>}
           {current.priority && current.priority !== 'none' && <Tag hue='neutral'>{current.priority}</Tag>}
-          {current.assignee && <TaskListAssignee assignee={current.assignee} />}
-          {onTaskDelete && (
-            <CompactIconButton
-              variant='ghost'
-              icon='ph--x--regular'
-              // TODO(burdon): Translate.
-              label='Delete task'
-              classNames='invisible group-hover:visible'
-              onClick={() => onTaskDelete(task)}
-            />
-          )}
         </div>
-      </div>
-    </Listbox.Item>
-  );
-});
+        {onTaskDelete && (
+          <CompactIconButton
+            variant='ghost'
+            icon='ph--x--regular'
+            label={t('delete-task.label')}
+            classNames='invisible group-hover:visible'
+            onClick={() => onTaskDelete(task)}
+          />
+        )}
+      </Listbox.Item>
+    );
+  },
+);
 
 TaskListItem.displayName = 'TaskList.Item';
 
@@ -256,7 +334,7 @@ type TaskListCreateProps = ComposableProps<{ placeholder?: string }>;
 
 const TaskListCreate = composable<HTMLDivElement, { placeholder?: string }>(
   ({ placeholder = 'Add task', ...props }, forwardedRef) => {
-    const { onTaskCreate } = useTaskListContext('TaskList.Create');
+    const { onTaskCreate, showOrdinals } = useTaskListContext('TaskList.Create');
     const { className, ...rest } = composableProps(props);
     const [title, setTitle] = useState('');
     const handleKeyDown = useCallback(
@@ -275,7 +353,17 @@ const TaskListCreate = composable<HTMLDivElement, { placeholder?: string }>(
     }
 
     return (
-      <div {...rest} data-testid='taskList.create' className={mx(ROW_GRID, className)} ref={forwardedRef}>
+      <div
+        {...rest}
+        data-testid='taskList.create'
+        className={mx(
+          'grid gap-x-2 items-center w-full min-w-0 h-8',
+          showOrdinals ? GRID_COLS.createWithOrdinals : GRID_COLS.create,
+          className,
+        )}
+        ref={forwardedRef}
+      >
+        {showOrdinals && <span />}
         <Icon icon='ph--plus--regular' size={4} classNames='justify-self-center text-subdued' />
         <Input.Root>
           <Input.TextInput

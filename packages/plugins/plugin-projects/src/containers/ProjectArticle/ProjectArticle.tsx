@@ -46,6 +46,7 @@ export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>
  */
 export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = useOperationInvoker();
   const actions = useToolbarActions(subject, () => void handleAddArtifact());
   const [project, updateProject] = useObject(subject);
   const db = Obj.getDatabase(subject);
@@ -69,7 +70,6 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     [subject],
   );
 
-  const { invokePromise } = useOperationInvoker();
   const handleOpen = useCallback(
     (object: Obj.Unknown) => {
       void invokePromise(LayoutOperation.Open, {

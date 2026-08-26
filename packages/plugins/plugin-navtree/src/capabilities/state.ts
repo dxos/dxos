@@ -7,11 +7,11 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as Graph from '@dxos/app-graph/Graph';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
-import { Path } from '@dxos/react-ui-list';
+import { Path } from '@dxos/react-ui-list/util';
 
 import { NavTreeCapabilities } from '#types';
 
@@ -21,7 +21,7 @@ import { navTreeOpenAspect } from './nav-tree-view-state';
 const defaultOpen = false;
 
 /** L0 (top-level workspace) paths are direct children of root — not part of the expandable tree model. */
-const isTopLevelPath = (path: string[]): boolean => path.length === 2 && path[0] === Node.RootId;
+const isTopLevelPath = (path: string[]): boolean => path.length === 2 && path[0] === GraphNode.RootId;
 
 /** Default state entries for initial tree structure. */
 // TODO(thure): Initialize these dynamically.
@@ -134,7 +134,7 @@ export default Capability.makeModule(
       // Always expand the active workspace so its subtree is initialized.
       const layout = registry.get(layoutAtom);
       if (layout.workspace) {
-        Graph.expandSync(graph, layout.workspace, 'child');
+        AppGraph.expandSync(graph, layout.workspace, 'child');
       }
 
       // Expand persisted open nodes, skipping inactive workspace tabs.
@@ -147,7 +147,7 @@ export default Capability.makeModule(
         if (!nodeId) {
           continue;
         }
-        Graph.expandSync(graph, nodeId, 'child');
+        AppGraph.expandSync(graph, nodeId, 'child');
       }
     }).pipe(Effect.forkDetach);
 

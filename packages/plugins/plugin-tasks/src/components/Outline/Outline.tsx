@@ -226,12 +226,9 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, f
         createThemeExtensions({
           themeMode,
           slots: {
-            scroller: { className: scrollable ? '' : '!overflow-hidden' },
+            scroller: { className: scrollable ? '' : 'overflow-hidden!' },
           },
         }),
-        // `showSelected` is NOT forwarded: `outliner` has never had such an option (its props were
-        // typed `{}`, which accepted the argument and dropped it), and the selection highlight is drawn
-        // unconditionally by its dnd extension. Threading it here would only re-hide that.
         outliner({ readonly }),
         EditorView.updateListener.of((update) => {
           if (update.selectionSet || update.docChanged) {

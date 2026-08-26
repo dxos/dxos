@@ -33,10 +33,10 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, TestGrid, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
+import { InboxPlugin } from '#plugin';
 import { initializeMailbox, seedSummaries } from '#testing';
 import { InboxCapabilities, Mailbox } from '#types';
 
-import { InboxPlugin } from '../../plugin';
 import * as InboxOperation from '../../types/InboxOperation';
 import AttachmentArticle from '../AttachmentArticle';
 import MessageArticle from '../MessageArticle';

@@ -9,9 +9,16 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
+import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
+import { translations as shellTranslations } from '@dxos/shell/translations';
 
+import { meta } from '#meta';
+import { translations } from '#translations';
 import { SpaceCapabilities, SpaceCapability, SpaceSchema } from '#types';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
 import { SpaceOperationConfig } from '../operations/helpers';
 import { makeCreateInvitationUrl } from './helpers';
 
@@ -19,7 +26,24 @@ export * from './app-graph-builder';
 export { makeCreateObjectEntryForDatabaseType } from '../util';
 
 export const Commands = AppCapability.commands(() => import('./commands'));
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
+  environments: ['node'],
+});
+export const Dashboard = Capability.lazyModule(
+  'Dashboard',
+  {
+    environments: [],
+    requires: [
+      Capabilities.AtomRegistry,
+      Capabilities.PluginManager,
+      ClientCapabilities.Client,
+      AppCapabilities.Layout,
+    ],
+    provides: [SpaceCapabilities.Dashboard],
+    activatesOn: ClientEvents.SpacesReady,
+  },
+  () => import('./dashboard'),
+);
 export const IdentityCreated = Capability.lazyModule(
   'IdentityCreated',
   {
@@ -29,6 +53,7 @@ export const IdentityCreated = Capability.lazyModule(
     provides: [SpaceCapabilities.DefaultSpace],
     // Runtime event: the default space is created when a local identity is created, not at startup.
     activatesOn: ClientEvents.IdentityCreated,
+    environments: ['node'],
   },
   () => import('./identity-created'),
 );
@@ -67,9 +92,12 @@ export const Schema = AppCapability.schema(() => import('./schema'));
 export const SpaceSettings = AppCapability.settings(() => import('./settings'), {
   provides: [SpaceCapabilities.SettingsAtom],
 });
+// Browser-only: it requires the app graph, layout and attention — app-shell capabilities no
+// headless host registers.
 export const SpacesReady = Capability.lazyModule(
   'SpacesReady',
   {
+    environments: [],
     requires: [
       Capabilities.OperationInvoker,
       AppCapabilities.AppGraph,
@@ -88,11 +116,14 @@ export const SpacesReady = Capability.lazyModule(
   () => import('./spaces-ready'),
 );
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+// Holds view state (space names, viewers, merge preview); every consumer — the React surfaces,
+// the app-graph builder, `SpacesReady` — is itself browser-only.
 export const SpaceState = Capability.lazyModule(
   'SpaceState',
   {
     requires: [Capabilities.AtomRegistry, Capabilities.PluginManager],
     provides: [SpaceCapabilities.State, SpaceCapabilities.EphemeralState],
+    environments: [],
   },
   () => import('./state'),
 );
@@ -100,8 +131,21 @@ export const ObservabilityMappings = AppCapability.observabilityMappings(() => i
   props: (options: SpaceSchema.SpacePluginOptions) => ({ observability: options.observability }),
 });
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'), {
+  environments: ['node'],
   provides: [SpaceOperationConfig],
   props: (options: SpaceSchema.SpacePluginOptions) => ({
     createInvitationUrl: makeCreateInvitationUrl(options),
   }),
+});
+export const Translations = AppCapability.translations([
+  ...translations,
+  ...componentsTranslations,
+  ...formTranslations,
+  ...shellTranslations,
+]);
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
 });

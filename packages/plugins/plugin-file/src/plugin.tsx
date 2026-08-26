@@ -3,7 +3,6 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import {
   CreateObject,
@@ -12,37 +11,28 @@ import {
   InlineBackend,
   Markdown,
   OperationHandler,
+  PluginAsset,
   ReactSurface,
   Schema,
   Settings,
   SkillDefinition,
+  Translations,
 } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
-
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const FilePlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(SkillDefinition),
   Plugin.addModule(CreateObject),
+  Plugin.addModule(EdgeBackend),
+  Plugin.addModule(FileUploader),
+  Plugin.addModule(InlineBackend),
+  Plugin.addModule(Markdown),
   Plugin.addModule(OperationHandler),
+  Plugin.addModule(PluginAsset),
+  Plugin.addModule(ReactSurface),
   Plugin.addModule(Schema),
   Plugin.addModule(Settings),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(InlineBackend),
-  Plugin.addModule(FileUploader),
-  Plugin.addModule(EdgeBackend),
-  Plugin.addModule(Markdown),
-  Plugin.addModule(
-    AppCapability.pluginAsset({
-      pluginId: meta.profile.key,
-      path: 'PLUGIN.mdl',
-      content: pluginSpec,
-      mimeType: 'application/x-mdl',
-    }),
-  ),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 
