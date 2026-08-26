@@ -20,6 +20,7 @@
  */
 
 import { chromium } from '@playwright/test';
+import { randomUUID } from 'node:crypto';
 import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import path from 'node:path';
@@ -37,6 +38,15 @@ const parseArgs = () => {
 
 const options = parseArgs();
 mkdirSync(options.out, { recursive: true });
+
+/**
+ * Binding to loopback is not access control: any page the browser has open can POST here cross-origin
+ * in `no-cors` mode, and while the response is opaque to it the command still runs — `eval` and `goto`
+ * included. A token in a non-safelisted header cannot be set by such a request (it would force a
+ * preflight, which this server never approves), so requiring one closes that path.
+ */
+const TOKEN_HEADER = 'x-demo-token';
+const token = randomUUID();
 
 // The cloud sandbox needs a pinned executable, the egress proxy passed as an arg, and a TLS 1.2 cap;
 // gated so a real desktop run is never silently downgraded (see the `cloud-sandbox` skill).
@@ -195,7 +205,8 @@ const handlers = {
     return {};
   },
   screenshot: async (command) => {
-    const file = path.join(options.out, command.name ?? `shot-${Date.now()}.png`);
+    // `basename` because a caller-supplied name is not a path: `../` would escape the output directory.
+    const file = path.join(options.out, path.basename(command.name ?? `shot-${Date.now()}.png`));
     await page.screenshot({ path: file, fullPage: !!command.fullPage });
     return { file };
   },
@@ -221,6 +232,11 @@ const server = createServer((request, response) => {
       return response.end(JSON.stringify({ ok: false, error: `bad json: ${error.message}` }));
     }
 
+    if (request.headers[TOKEN_HEADER] !== token) {
+      response.writeHead(403, { 'content-type': 'application/json' });
+      return response.end(JSON.stringify({ ok: false, error: `missing or bad ${TOKEN_HEADER}` }));
+    }
+
     const handler = handlers[command.op];
     if (!handler) {
       response.writeHead(400, { 'content-type': 'application/json' });
@@ -232,11 +248,17 @@ const server = createServer((request, response) => {
     try {
       const result = await handler(command);
       response.writeHead(200, { 'content-type': 'application/json' });
-      response.end(JSON.stringify({ ok: true, ...result }));
-      if (command.op === 'stop') {
-        server.close();
-        process.exit(0);
-      }
+      // Shutdown runs from the write callback: exiting as soon as `end` returns can cut the response
+      // off before it flushes, and that response carries the video path.
+      response.end(JSON.stringify({ ok: true, ...result }), () => {
+        if (command.op === 'stop') {
+          // Exit from inside `close`, and drop keep-alive sockets so it can actually complete: dropping
+          // the exit entirely leaves the process alive on an idle client socket, and exiting before the
+          // write callback truncates the response that carries the video path.
+          server.close(() => process.exit(0));
+          server.closeAllConnections();
+        }
+      });
     } catch (error) {
       // Errors are reported, never fatal: a failed gesture is a finding the agent acts on, and killing
       // the driver would lose the recording of the failure.
@@ -246,7 +268,10 @@ const server = createServer((request, response) => {
   });
 });
 
-// Loopback only — this server drives a real browser and takes arbitrary `eval`.
+// Loopback only, and token-gated — this server drives a real browser and takes arbitrary `eval`.
 server.listen(options.port, '127.0.0.1', () => {
+  // Also written to the output directory so a caller can read it without scraping stdout.
+  writeFileSync(path.join(options.out, 'token'), token);
   console.log(`driver ready on http://127.0.0.1:${options.port} out=${options.out}`);
+  console.log(`token ${token}`);
 });
