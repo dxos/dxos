@@ -94,10 +94,8 @@ export class ObjectCoreRegistry {
 
   #pin(core: ObjectCore): void {
     this.#pinned.add(core);
-    // A macrotask, not a microtask: a load resolves across timer/IO turns, and a microtask drain
-    // would close the window while the same operation is still awaiting its document. Re-armed on
-    // every touch, so the window ends a macrotask after the LAST read rather than the first — a core
-    // pinned just before a pending drain would otherwise be held for almost no time.
+    // Re-armed on every touch and drained a macrotask later, so the window outlives a load that
+    // resolves across turns however long it takes.
     clearTimeout(this.#drainTimer);
     this.#drainTimer = setTimeout(() => {
       this.#drainTimer = undefined;

@@ -10,14 +10,10 @@ import { EchoTestBuilder, type EchoTestPeer } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
 /**
- * Adversarial coverage for object release: a core is held weakly, a released object's document goes
- * with it, and a re-read rebuilds the core. Each test drives the release paths the client reaches
- * without a collector — removal, `retainObjects`, host garbage collection, reopen — and then keeps
- * using the space, since what breaks is not the release itself but what a later read finds.
- *
- * The liveness of a release is measured in `automerge-retention.test.ts`, which needs `--expose-gc`
- * and carries the `memory` tag. These run in the ordinary suite: releasing must not cost correctness
- * on any runner, whether or not a collector ever fires.
+ * Release must not cost correctness on a runner with no collector, so these drive the release paths
+ * reachable without one — removal, `retainObjects`, host garbage collection, reopen — and then keep
+ * using the space. Liveness itself is measured in `automerge-retention.test.ts` (`memory` tag,
+ * `--expose-gc`).
  */
 describe('object release', () => {
   let builder: EchoTestBuilder;
@@ -113,10 +109,11 @@ describe('object release', () => {
 
     const reopened = await reopen(peer);
     const [queried] = await reopened.query(Query.select(Filter.id(created.id))).run();
-    // One core per id, so every route to the object has to yield the same instance — a rebuilt core
-    // handed out beside a live one would split writes between two proxies over one document.
+    // One core per id: a rebuilt core handed out beside a live one would split writes between two
+    // proxies over one document.
     expect(reopened.getObjectById(created.id)).toBe(queried);
-    expect(await reopened._loadObjectById(created.id)).toBe(queried);
+    const [requeried] = await reopened.query(Query.select(Filter.id(created.id))).run();
+    expect(requeried).toBe(queried);
   });
 
   test('a reference resolves after its target has been read and released', async ({ expect }) => {

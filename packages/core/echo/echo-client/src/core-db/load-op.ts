@@ -34,12 +34,8 @@ export interface LoadOp {
   maxCeiling: RefSource;
   state: LoadOpState;
   /**
-   * The materialized entity, held weakly — `null` once nothing else refers to it.
-   *
-   * Strongly would make this table the reason every entity a query ever touched stays resident: the
-   * op outlives the read (its request is kept for the entity's lifetime), and the entity's core
-   * cannot be collected while the op names it. A collected result reads as "not loaded", which is
-   * what it is, and `state` still records that the body was reachable at that ceiling.
+   * The materialized entity, held weakly — held strongly, this table would be the reason every
+   * entity a query ever touched stays resident, since an op outlives the read that created it.
    */
   get result(): AnyProperties | null;
   set result(value: AnyProperties | null);
@@ -88,9 +84,8 @@ export class LoadOpTable {
     const existing = this.#ops.get(uri);
     if (existing) {
       existing.refcount++;
-      // `ready` with no result means the entity was collected since. The op still describes a body
-      // that exists, so re-probe the working set and fall back to a load: leaving it would answer
-      // every future resolution of this URI with `undefined` for as long as the op is cached.
+      // `ready` with no result means the entity was collected since; without a re-probe this op
+      // would answer every future resolution of the URI with `undefined`.
       if (existing.state === 'ready' && existing.result == null) {
         const probed = this._routeBackend(uri)?.probe(uri);
         if (probed) {

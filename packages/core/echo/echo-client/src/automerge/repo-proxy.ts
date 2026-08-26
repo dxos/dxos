@@ -290,8 +290,7 @@ export class RepoProxy extends Resource {
     // If we have the handle cached, return it
     const cached = this._handles[documentId];
     if (cached) {
-      // Someone wants this document again, so a release refused earlier must not go through when the
-      // send settles: it would strip the listeners and drop the handle under a live holder.
+      // A release refused earlier must not go through now that something holds this document again.
       this._deferredReleaseIds.delete(documentId);
       return cached;
     }

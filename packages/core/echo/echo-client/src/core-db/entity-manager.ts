@@ -61,6 +61,10 @@ const THROTTLED_UPDATE_FREQUENCY = 10;
 
 const TRACE_LOADING = false;
 
+/** A satisfaction request that will not change again without a new load. */
+const isSettled = (request: RefResolverRequest): boolean =>
+  request.state === 'ready' || request.state === 'unavailable';
+
 /**
  * Payload for the internal object-document-loaded notification.
  */
@@ -90,9 +94,8 @@ export type EntityManagerProps = {
   branchStore?: BranchStore;
 
   /**
-   * Mints the caller-facing proxy for a core that has none yet. Injected because the proxy layer
-   * (`echo-handler`) is built on this one, so calling into it directly would be a cycle; entity
-   * surfacing itself belongs here, beside the working set it reads.
+   * Mints the caller-facing proxy for a core that has none yet — injected because the proxy layer is
+   * built on this one, so importing it here would invert the dependency.
    */
   createEntity: (core: ObjectCore) => Entity.Unknown;
 };
@@ -413,10 +416,8 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   /**
-   * The entity for an id already in the working set, or undefined.
-   *
-   * `core.rootProxy` is the identity map — a second one keyed by core (as `DatabaseImpl` used to
-   * keep) held every proxy the database had ever handed out, so nothing it loaded could be released.
+   * The entity for an id already in the working set, or undefined. `core.rootProxy` is the identity
+   * map, so that a second one cannot hold every proxy the database has ever handed out.
    */
   getEntityById(id: string, { deleted = false }: { deleted?: boolean } = {}): Entity.Unknown | undefined {
     const core = this.getObjectCoreById(id);
@@ -1757,8 +1758,13 @@ export class EntityManager implements IDatabaseBinding {
    * momentarily absent from the directory; those are skipped rather than evicted mid-flight.
    */
   private _evictRemovedObjects(event: ChangeEvent<DatabaseDirectory>): void {
+    // Bound documents count, not just live cores: a core collected before its entry was removed
+    // leaves the document behind, and `_rehydrateCore` would resurrect an object the directory no
+    // longer lists from it.
     const removed = getRemovedObjectIds(event).filter(
-      (objectId) => this._objects.has(objectId) && !this._pendingDocumentCreations.has(objectId),
+      (objectId) =>
+        (this._objects.has(objectId) || this._objectDocumentHandles.has(objectId)) &&
+        !this._pendingDocumentCreations.has(objectId),
     );
     if (removed.length === 0) {
       return;
@@ -1781,16 +1787,16 @@ export class EntityManager implements IDatabaseBinding {
    * A merely collected core leaves its document alone — see the comment inline.
    */
   private _releaseObject(objectId: string, { releaseDocument = false }: ReleaseObjectOptions = {}): void {
-    // Only a settled request is dropped: aborting one still resolving releases its load ops, and the
-    // last release cancels their IO — cancelling a load a reader is waiting on. An unsettled request
-    // is left to finish and is dropped when the object is next released, or on close. It pins
-    // nothing: its result is weak (see {@link LoadOp.result}).
+    // Never dropped while still resolving: aborting one releases its load ops, and the last release
+    // cancels their IO — a load a reader is waiting on. It is dropped when it settles instead, since
+    // the finalizer that brought us here fires once and nothing else would come back for it.
     const request = this._satisfactionRequests.get(objectId as EntityId);
-    if (request != null && (request.state === 'ready' || request.state === 'unavailable')) {
-      request.abort();
-      this._satisfactionRequests.delete(objectId as EntityId);
-      this._satisfactionSubscriptions.get(objectId as EntityId)?.();
-      this._satisfactionSubscriptions.delete(objectId as EntityId);
+    if (request != null) {
+      if (isSettled(request)) {
+        this._dropSatisfactionRequest(objectId);
+      } else {
+        this._dropSatisfactionRequestWhenSettled(objectId, request);
+      }
     }
 
     if (!releaseDocument) {
@@ -1814,6 +1820,36 @@ export class EntityManager implements IDatabaseBinding {
       return;
     }
     this._repoProxy.release(handle.documentId);
+  }
+
+  /** Aborts an entity's satisfaction request and forgets it, releasing its load ops. */
+  private _dropSatisfactionRequest(objectId: string): void {
+    this._satisfactionRequests.get(objectId as EntityId)?.abort();
+    this._satisfactionRequests.delete(objectId as EntityId);
+    this._satisfactionSubscriptions.get(objectId as EntityId)?.();
+    this._satisfactionSubscriptions.delete(objectId as EntityId);
+  }
+
+  /**
+   * Drops a released object's request once it settles — deferred by a turn, because the abort runs
+   * from inside the request's own state change, where releasing its ops would cancel IO mid-flight.
+   * Skipped if the object came back in the meantime.
+   */
+  private _dropSatisfactionRequestWhenSettled(objectId: string, request: RefResolverRequest): void {
+    if (this._ctx == null) {
+      return;
+    }
+    const unsubscribe = request.stateChanged.on(this._ctx, () => {
+      if (!isSettled(request)) {
+        return;
+      }
+      unsubscribe();
+      setTimeout(() => {
+        if (!this._objects.has(objectId) && this._satisfactionRequests.get(objectId as EntityId) === request) {
+          this._dropSatisfactionRequest(objectId);
+        }
+      });
+    });
   }
 
   private _processDocumentUpdate(event: ChangeEvent<DatabaseDirectory>): DocumentChanges {
