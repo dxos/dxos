@@ -24,7 +24,11 @@ import { Message, Outline } from '@dxos/types';
 
 import * as Chat from '../types/Chat';
 import { RunInstructions } from './definitions';
-import defaultAgentPrompt, { makeCompleteJobTool, routineOutputSchema } from './run-instructions';
+import defaultAgentPrompt, {
+  makeCompleteJobParameters,
+  makeCompleteJobTool,
+  routineOutputSchema,
+} from './run-instructions';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -159,19 +163,36 @@ describe('RunInstructions', () => {
   );
 
   it('serializes completeJob without empty subschemas for an undeclared output', ({ expect }) => {
-    // The Anthropic API rejects any `{}` subschema ("Empty schema that accepts any JSON value"),
-    // so the undeclared-output stand-in must serialize to concrete types — including through the
-    // provider's structured-output transformer, which rewrites records into tuples of `Any`.
+    // The Anthropic API rejects `{}` and typeless subschemas ("Empty schema that accepts any JSON
+    // value" / "Schema type is missing"), so every node must state a concrete type — and the
+    // provider's structured-output transformer must not rewrite the schema (a dynamic tool's JSON
+    // schema reaches the provider verbatim).
     const output = routineOutputSchema(JsonSchema.toJsonSchema(Schema.Void));
     const tool = makeCompleteJobTool(output);
-    for (const options of [undefined, { transformer: toCodecAnthropic }]) {
-      expect(JSON.stringify(Tool.getJsonSchema(tool, options))).not.toContain('{}');
-    }
+    const json = Tool.getJsonSchema(tool);
+    expect(Tool.getJsonSchema(tool, { transformer: toCodecAnthropic })).toEqual(json);
+
+    const typeless: string[] = [];
+    const walk = (node: unknown, path: string, inKeyMap: boolean): void => {
+      if (Array.isArray(node)) {
+        node.forEach((entry, index) => walk(entry, `${path}.${index}`, false));
+      } else if (node && typeof node === 'object') {
+        const schema = node as Record<string, unknown>;
+        if (!inKeyMap && !['type', 'anyOf', 'oneOf', 'enum', 'const', '$ref'].some((key) => key in schema)) {
+          typeless.push(path);
+        }
+        for (const [key, value] of Object.entries(schema)) {
+          walk(value, `${path}.${key}`, key === 'properties' || key === '$defs');
+        }
+      }
+    };
+    walk(json, 'root', false);
+    expect(typeless).toEqual([]);
 
     // The stand-in still accepts an arbitrary JSON success payload.
-    const parameters = Schema.Struct({ success: Schema.optional(Schema.NullOr(output)) });
+    const decode = Schema.decodeUnknownSync(makeCompleteJobParameters(output));
     for (const success of ['summary', 42, true, { summary: 'done', artifactIds: ['1'] }, ['a', 'b']]) {
-      expect(Schema.decodeUnknownSync(parameters)({ success })).toEqual({ success });
+      expect(decode({ success })).toEqual({ success });
     }
   });
 });

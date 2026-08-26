@@ -37,7 +37,7 @@ export type TaskPatch = Partial<Pick<Task.Task, 'title' | 'status' | 'priority' 
  * container, so without it the grid shrinks to its content and the trailing actions float
  * mid-row.
  */
-const ROW_GRID = 'grid grid-cols-[2rem_1fr_auto_2rem] items-center gap-2 w-full min-w-0 h-8';
+const ROW_GRID = 'grid grid-cols-[2rem_1fr_auto_auto_1fr] items-center gap-2 w-full min-w-0 h-8';
 
 //
 // Context — plain Radix context (un-scoped); nesting task lists has no meaning today.
@@ -218,20 +218,18 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task }>(({ task, ...
         >
           {current.title}
         </span>
-        <div className='flex items-center gap-1'>
-          {current.priority && current.priority !== 'none' && <Tag hue='neutral'>{current.priority}</Tag>}
-          {current.assignee && <TaskListAssignee assignee={current.assignee} />}
-          {onTaskDelete && (
-            <CompactIconButton
-              variant='ghost'
-              icon='ph--x--regular'
-              // TODO(burdon): Translate.
-              label='Delete task'
-              classNames='invisible group-hover:visible'
-              onClick={() => onTaskDelete(task)}
-            />
-          )}
-        </div>
+        {current.priority && current.priority !== 'none' ? <Tag hue='neutral'>{current.priority}</Tag> : null}
+        {current.assignee ? <TaskListAssignee assignee={current.assignee} /> : null}
+        {onTaskDelete && (
+          <CompactIconButton
+            variant='ghost'
+            icon='ph--x--regular'
+            // TODO(burdon): Translate.
+            label='Delete task'
+            classNames='invisible group-hover:visible'
+            onClick={() => onTaskDelete(task)}
+          />
+        )}
       </div>
     </Listbox.Item>
   );

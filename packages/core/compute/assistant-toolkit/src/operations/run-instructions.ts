@@ -193,34 +193,51 @@ export default RunInstructions.pipe(
   Operation.opaqueHandler,
 );
 
-/** Exported for tests asserting the serialized tool schema. */
-export const makeCompleteJobTool = (output: Schema.Top) =>
-  Tool.make('completeJob', {
+/** Exported for tests asserting decode behaviour. */
+export const makeCompleteJobParameters = (output: Schema.Codec<any, any>) =>
+  Schema.Struct({
     // Both fields accept `null` because models emit it for a field they mean to omit.
-    parameters: Schema.Struct({
-      success: Schema.optional(Schema.NullOr(output)),
-      failure: Schema.optional(
-        Schema.NullOr(
-          Schema.Struct({
-            message: Schema.String.annotate({
-              description: 'Short message describing the error.',
-            }),
-            description: Schema.optional(Schema.NullOr(Schema.String)).annotate({
-              description: 'Optional longer message describing in detail what went wrong',
-            }),
+    success: Schema.optional(Schema.NullOr(output)),
+    failure: Schema.optional(
+      Schema.NullOr(
+        Schema.Struct({
+          message: Schema.String.annotate({
+            description: 'Short message describing the error.',
           }),
-        ),
+          description: Schema.optional(Schema.NullOr(Schema.String)).annotate({
+            description: 'Optional longer message describing in detail what went wrong',
+          }),
+        }),
       ),
-    }),
+    ),
   });
 
+/**
+ * Dynamic rather than static: a dynamic tool's JSON schema reaches the provider verbatim, while a
+ * static tool is serialized through the provider's structured-output transformer, which rewrites
+ * records/objects into typeless subschemas the Anthropic API rejects. The handler decodes against
+ * the same untransformed schema, so what the model is told and what is validated agree (the same
+ * contract `projectFunctionToTool` keeps for operation tools). Exported for tests.
+ */
+export const makeCompleteJobTool = (output: Schema.Codec<any, any>) =>
+  Tool.dynamic('completeJob', {
+    parameters: JsonSchema.toJsonSchema(makeCompleteJobParameters(output)),
+    failure: Schema.String,
+  }).annotate(Tool.Strict, false);
+
 const makePromptAgentToolkit = (options: {
-  output: Schema.Top;
+  output: Schema.Codec<any, any>;
   resultSink: Deferred.Deferred<unknown, PromptError>;
 }) => {
+  const parameters = makeCompleteJobParameters(options.output);
   class PromptAgentToolkit extends Toolkit.make(makeCompleteJobTool(options.output)) {}
   const layer = PromptAgentToolkit.toLayer({
-    completeJob: Effect.fnUntraced(function* (result) {
+    completeJob: Effect.fnUntraced(function* (input) {
+      // A dynamic tool's input is unvalidated; a decode failure is reported to the model as a
+      // tool failure so it can correct the call.
+      const result = yield* Schema.decodeUnknownEffect(parameters)(input).pipe(
+        Effect.mapError((error) => String(error)),
+      );
       // A success payload wins over a failure sent alongside it, so a placeholder cannot discard
       // completed work.
       if (result.success == null && result.failure) {
