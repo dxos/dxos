@@ -3,9 +3,12 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Credential from '@dxos/compute/Credential';
+import { Obj, Ref } from '@dxos/echo';
+import { AccessToken, Connection } from '@dxos/link';
 import { ConnectionTestError } from '@dxos/plugin-connector';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
@@ -36,9 +39,47 @@ const testConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
   );
 
 /**
+ * Pre-flight form offering both credential kinds. A Console API key stays reachable — the OAuth
+ * client is workspace-scoped and an org may not want to grant it at all — so an entered key
+ * completes the connection directly and an empty field falls through to the OAuth flow.
+ */
+const credentialForm: ConnectorSpec.CredentialForm<{ token?: string; account?: string }> = {
+  schema: Schema.Struct({
+    token: Schema.String.annotate({
+      title: 'API key',
+      description: 'Anthropic Console API key (sk-ant-api…). Leave empty to connect a Claude account instead.',
+    }).pipe(Schema.optional),
+    account: Schema.String.annotate({
+      title: 'Account',
+      description: 'Optional label for the connection.',
+    }).pipe(Schema.optional),
+  }),
+  defaultValues: { token: '' },
+  onSubmit: ({ values, connector }) =>
+    Effect.sync(() => {
+      const token = values.token?.trim();
+      if (!token) {
+        return { kind: 'oauth' } as const;
+      }
+
+      const accessToken = Obj.make(AccessToken.AccessToken, {
+        source: ANTHROPIC_SOURCE,
+        account: values.account,
+        token,
+      });
+      const connection = Obj.make(Connection.Connection, {
+        name: values.account ?? connector.label ?? ANTHROPIC_SOURCE,
+        connectorId: connector.id,
+        accessToken: Ref.make(accessToken),
+      });
+      return { kind: 'complete', accessToken, connection } as const;
+    }),
+};
+
+/**
  * Contributes the Anthropic connector, which is authentication-only: it has no sync targets, it
- * exists so a user can connect their Claude account and have the managed-agent operations run
- * against the resulting OAuth token instead of a hand-pasted Console API key.
+ * exists so the managed-agent operations can run against a connected Claude account or a Console
+ * API key, whichever the user supplies in the form.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -51,6 +92,7 @@ export default Capability.makeModule(
           provider: OAuthProvider.ANTHROPIC,
           scopes: ANTHROPIC_SCOPES,
         },
+        credentialForm,
         testConnection,
       },
     ]);

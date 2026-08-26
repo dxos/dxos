@@ -169,11 +169,17 @@ feat F-6: Credentials
       `oauth-2025-04-20` beta, a Console API key on `x-api-key`
 
   req F-6.4:
-    when: the user connects the "anthropic" connector
+    when: the user connects the "anthropic" connector and leaves the API key empty
     then: |
       EDGE runs the Anthropic authorization-code flow (PKCE) and the resulting
       access token is stored as the space's "anthropic.com" credential, so no key
       is ever pasted into the conversation
+
+  req F-6.5:
+    when: the user enters an API key in the "anthropic" connector form
+    then: |
+      the key is stored directly as the "anthropic.com" credential and no OAuth
+      flow runs — an org that will not grant the OAuth client keeps working
 
   req F-6.3:
     when: no "anthropic.com" credential exists in the space

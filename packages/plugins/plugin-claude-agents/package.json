@@ -135,6 +135,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/link": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
