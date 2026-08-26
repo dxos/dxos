@@ -68,7 +68,10 @@ export class EdgeFeedReplicator extends Resource {
 
         const [spaceId] = rest;
         if (spaceId !== this._spaceId) {
-          log('spaceID mismatch', { spaceId, _spaceId: this._spaceId });
+          // Every space's replicator sees every peer's feed messages on the shared edge
+          // connection, so each message is dropped by all but one replicator — O(spaces^2) lines
+          // per sync round at anything above verbose.
+          log.verbose('spaceID mismatch', { spaceId, _spaceId: this._spaceId });
           return;
         }
 

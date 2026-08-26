@@ -163,10 +163,10 @@ jobs:
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
         run: moon run :check-module-structure
 
-      # ─── Stage 3: the two slow checks ───────────────────────────────────────────────────────────
-      # ~2m30s and ~1m against ~30 s for all of stage 1, so these run last. Both are
+      # ─── Stage 3: the three slow checks ─────────────────────────────────────────────────────────
+      # ~2m30s, ~1m and ~1m against ~30 s for all of stage 1, so these run last. All three are
       # `continue-on-error` with a gate step below: fail-fast is free when steps are cheap, but here
-      # it would hide one failure behind the other at the cost of a whole further run of the job.
+      # it would hide one failure behind the others at the cost of a whole further run of the job.
       #
       # Unused/undeclared dependencies and unreferenced files. Analyses the source tree — the knip
       # config resolves workspace packages through their `source` export condition — so it needs no
@@ -191,14 +191,24 @@ jobs:
         continue-on-error: true
         run: moon run composer-app:check-plugin-set
 
+      # `starlight-links-validator` runs as the last phase of `astro build`, so bundling the site IS
+      # the link check.
+      - name: Check docs links
+        id: docs
+        continue-on-error: true
+        run: moon run docs:bundle
+
       - name: Report slow-check failures
-        if: ${{ steps.knip.outcome == 'failure' || steps.plugin_set.outcome == 'failure' }}
+        if: ${{ steps.knip.outcome == 'failure' || steps.plugin_set.outcome == 'failure' || steps.docs.outcome == 'failure' }}
         run: |
           if [ "${{ steps.knip.outcome }}" = failure ]; then
             echo '::error::knip failed — see the "Check dependencies" step.'
           fi
           if [ "${{ steps.plugin_set.outcome }}" = failure ]; then
             echo '::error::production plugin set check failed — see the "Check production plugin set" step.'
+          fi
+          if [ "${{ steps.docs.outcome }}" = failure ]; then
+            echo '::error::docs link validation failed — see the "Check docs links" step.'
           fi
           exit 1
 
@@ -241,12 +251,10 @@ jobs:
   # and force a single non-isolated fork, neither of which the sharded matrix can provide. Gated on
   # DX_DEBUG_LEAKS, the one variable that both un-skips the tag and supplies the flag.
   #
-  # Split in two on purpose. The feed suite is green and guards the fix that made feed objects
-  # collectable, so it gates. The automerge suite is known-red — dropping every reference to a
-  # queried object frees nothing — and runs `continue-on-error` so its checkpoint tables land in the
-  # log on every PR without blocking merges. Fold it into the gating step once it passes; do NOT
-  # silence it with `test.fails`, which would also swallow an unrelated crash (the WASM allocator
-  # abort this suite can provoke looks identical to an assertion failure from the outside).
+  # Both suites gate: the feed one guards the fix that made feed objects collectable, the automerge
+  # one the fix that made ECHO objects and their documents collectable. Do NOT silence a failure here
+  # with `test.fails`, which would also swallow an unrelated crash (the WASM allocator abort these
+  # suites can provoke looks identical to an assertion failure from the outside).
   memory:
     permissions:
       contents: read
@@ -282,11 +290,18 @@ jobs:
           DX_DEBUG_LEAKS_DIR: ${{ runner.temp }}/profiles
         run: moon run echo-client-e2e:test -- src/feed-retention.test.ts
 
-      - name: Automerge retention (known red, reporting only)
-        continue-on-error: true
+      # One invocation per test, because vitest isolation is per FILE and both tests live in one:
+      # a single run leaves the second test measuring the first test's WASM, which is never returned
+      # to the OS. A fresh process per test is the only clean floor.
+      - name: Automerge retention (collection)
         env:
           DX_DEBUG_LEAKS_DIR: ${{ runner.temp }}/profiles
-        run: moon run echo-client-e2e:test -- src/automerge-retention.test.ts
+        run: moon run echo-client-e2e:test -- src/automerge-retention.test.ts -t 'collecting removed objects releases them'
+
+      - name: Automerge retention (caller reference)
+        env:
+          DX_DEBUG_LEAKS_DIR: ${{ runner.temp }}/profiles
+        run: moon run echo-client-e2e:test -- src/automerge-retention.test.ts -t 'dropping the caller reference releases objects'
 
   # Every vitest flavour in one sharded job: unit (`:test`), browser (`:test-browser`), storybook
   # (`:test-storybook`) and the Cloudflare Workers runtime (`:test-workerd`). They used to be three
@@ -435,7 +450,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           persist-credentials: false
 
       - name: Extract branch

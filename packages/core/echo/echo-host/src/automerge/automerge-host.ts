@@ -139,6 +139,18 @@ const BUNDLE_SYNC_THRESHOLD = 50;
 const OPTIMIZED_SHARE_POLICY = true;
 
 /**
+ * Consecutive non-converging collection-sync passes before warning, at a ~10s poll — ~1min, so
+ * in-flight replication of a large document does not trip it.
+ */
+const NON_CONVERGENCE_WARN_THRESHOLD = 6;
+
+/**
+ * Passes between repeat non-convergence warnings, so a permanently stuck pair stays visible in a
+ * short log-buffer window without emitting the diagnostic on every poll.
+ */
+const NON_CONVERGENCE_WARN_INTERVAL = 30;
+
+/**
  * Wall-clock cap for `_repo.shutdown()` during host teardown. Healthy
  * shutdowns finish in single-digit ms; see the comment in
  * {@link AutomergeHost._close} for why the cap is still here.
@@ -205,6 +217,12 @@ export class AutomergeHost extends Resource {
    * Documents that are not available locally that should be requested.
    */
   private _documentsToRequest = new Set<DocumentId>();
+
+  /**
+   * Consecutive non-converging collection-sync passes, keyed by `<collectionId>:<peerId>` — a pair
+   * making no progress is otherwise indistinguishable from idle polling in the logs.
+   */
+  private _nonConvergingSyncPasses = new Map<string, number>();
 
   /**
    * Documents requested by remote peers.
@@ -321,6 +339,12 @@ export class AutomergeHost extends Resource {
       if (!subductionDebugRequested) {
         setSubductionLogLevel('error');
       }
+      // Recorded so a log bundle states whether sedimentree-level warnings were being dropped.
+      log('subduction log level', {
+        level: subductionDebugRequested ? 'warn' : 'error',
+        suppressed: !subductionDebugRequested,
+        enableWith: "localStorage.debug='subduction'",
+      });
     } else {
       // Classical automerge-repo wiring: the EchoNetworkAdapter is registered as a
       // network adapter and document bytes flow through the standard sync protocol.
@@ -791,20 +815,39 @@ export class AutomergeHost extends Resource {
     },
     authorizeFetch: async (subductionPeerId, sedimentreeId) => {
       const allow = await this._shouldShareDocumentWithSubductionPeer(subductionPeerId, sedimentreeId);
+      // The throw below is the only record of a denial, and the peer's matching WASM warning is
+      // suppressed (see `_open`), so a refused document is otherwise invisible on both sides.
+      log.verbose('subduction authorizeFetch', {
+        documentId: sedimentreeIdToDocumentId(sedimentreeId),
+        subductionPeerId: subductionPeerId.toString(),
+        allow,
+      });
       if (!allow) {
         throw new Error('authorizeFetch denied by client share policy');
       }
     },
-    authorizePut: async (_requestor, _author, _sedimentreeId) => {
-      // Intentionally permissive — see class-level comment above.
+    authorizePut: async (_requestor, _author, sedimentreeId) => {
+      // Intentionally permissive — see class-level comment above. Logged because this is the
+      // only signal that a peer actually delivered changes for a document.
+      log.verbose('subduction authorizePut', { documentId: sedimentreeIdToDocumentId(sedimentreeId) });
     },
     filterAuthorizedFetch: async (subductionPeerId, sedimentreeIds) => {
       const allowed: SedimentreeId[] = [];
+      const denied: string[] = [];
       for (const sid of sedimentreeIds) {
         if (await this._shouldShareDocumentWithSubductionPeer(subductionPeerId, sid)) {
           allowed.push(sid);
+        } else {
+          denied.push(sedimentreeIdToDocumentId(sid));
         }
       }
+      // Silently dropping ids from the response would otherwise leave no trace of the omission.
+      log.verbose('subduction filterAuthorizedFetch', {
+        subductionPeerId: subductionPeerId.toString(),
+        requested: sedimentreeIds.length,
+        allowed: allowed.length,
+        denied,
+      });
       return allowed;
     },
   };
@@ -820,11 +863,15 @@ export class AutomergeHost extends Resource {
   ): Promise<boolean> {
     const subductionPeerIdHex = subductionPeerId.toString();
     const repoPeerId = this._subductionPeerIdHexToRepoPeerId.get(subductionPeerIdHex);
+    const documentId = sedimentreeIdToDocumentId(sedimentreeId);
     if (!repoPeerId) {
+      // Default-allow on the unbound-peer race; logged because it bypasses the share policy.
+      log.verbose('subduction share probe: peer not bound, allowing', { documentId, subductionPeerIdHex });
       return true;
     }
-    const documentId = sedimentreeIdToDocumentId(sedimentreeId);
-    return this._echoNetworkAdapter.shouldAdvertise(repoPeerId, { documentId });
+    const allow = await this._echoNetworkAdapter.shouldAdvertise(repoPeerId, { documentId });
+    log.verbose('subduction share probe', { documentId, peerId: repoPeerId, allow });
+    return allow;
   }
 
   private _shouldSyncCollection(collectionId: string, peerId: PeerId): boolean {
@@ -841,6 +888,20 @@ export class AutomergeHost extends Resource {
   private async _afterSave(path: StorageKey): Promise<void> {
     if (!this.isOpen) {
       return undefined;
+    }
+
+    if (path[0] === SUBDUCTION_PREFIX) {
+      // Subduction keys are `[prefix, family, sedimentreeId, ...]`, so they carry no documentId and
+      // fall through the handle lookup below unnoticed. A `remote-heads` write is the only
+      // persisted evidence that a head exchange with a peer completed for a document.
+      const [, family, sedimentreeId] = path;
+      if (family === 'remote-heads' && sedimentreeId) {
+        log.verbose('subduction remote-heads persisted', {
+          documentId: sedimentreeHexToDocumentId(sedimentreeId),
+          sedimentreeId,
+        });
+      }
+      return;
     }
 
     const documentId = path[0] as DocumentId;
@@ -1112,6 +1173,12 @@ export class AutomergeHost extends Resource {
   }
 
   private _onPeerDisconnected(peerId: PeerId): void {
+    // Passes are only consecutive within one connection.
+    for (const syncKey of this._nonConvergingSyncPasses.keys()) {
+      if (syncKey.endsWith(`:${peerId}`)) {
+        this._nonConvergingSyncPasses.delete(syncKey);
+      }
+    }
     this._collectionSynchronizer.onConnectionClosed(peerId);
   }
 
@@ -1132,8 +1199,35 @@ export class AutomergeHost extends Resource {
       isEdgePeer: isEdgePeerId(peerId),
     });
 
+    const syncKey = `${collectionId}:${peerId}`;
     if (different.length === 0 && missingOnLocal.length === 0 && missingOnRemote.length === 0) {
+      this._nonConvergingSyncPasses.delete(syncKey);
       return;
+    }
+
+    // Both sides' heads, so a stuck document is diagnosable from a log bundle alone.
+    const passes = (this._nonConvergingSyncPasses.get(syncKey) ?? 0) + 1;
+    this._nonConvergingSyncPasses.set(syncKey, passes);
+    const overThreshold = passes - NON_CONVERGENCE_WARN_THRESHOLD;
+    if (overThreshold >= 0 && overThreshold % NON_CONVERGENCE_WARN_INTERVAL === 0) {
+      log.warn('collection sync not converging', {
+        collectionId,
+        peerId,
+        passes,
+        missingOnLocal,
+        missingOnRemote,
+        different,
+        localHeads: Object.fromEntries(different.map((documentId) => [documentId, localState.documents[documentId]])),
+        remoteHeads: Object.fromEntries(different.map((documentId) => [documentId, remoteState.documents[documentId]])),
+        // Subduction addresses documents by sedimentree id, so without this a log bundle cannot be
+        // searched for the diverged document's storage or policy activity.
+        sedimentreeIds: Object.fromEntries(
+          different.map((documentId) => [documentId, documentIdToSedimentreeIdHex(documentId)]),
+        ),
+        handleStates: Object.fromEntries(
+          different.map((documentId) => [documentId, getHandleState(this._repo, documentId)]),
+        ),
+      });
     }
 
     const toReplicateWithoutBatching = [...different];
@@ -1143,10 +1237,12 @@ export class AutomergeHost extends Resource {
       const { syncInteractively } = await this._pushInBundles(ctx, peerId, missingOnRemote);
       toReplicateWithoutBatching.push(...syncInteractively);
     } else {
-      log.verbose('failed to push bundle, replicating interactively', {
+      // Not a failure: bundling is skipped below `BUNDLE_SYNC_THRESHOLD` or without peer support.
+      log.verbose('pushing without bundle', {
         collectionId,
         peerId,
         amount: missingOnRemote.length,
+        reason: bundleSyncEnabled ? 'below-threshold' : 'bundle-sync-unavailable',
       });
       toReplicateWithoutBatching.push(...missingOnRemote);
     }
@@ -1155,10 +1251,12 @@ export class AutomergeHost extends Resource {
       const { syncInteractively } = await this._pullInBundles(ctx, peerId, missingOnLocal);
       toReplicateWithoutBatching.push(...syncInteractively);
     } else {
-      log.verbose('failed to pull bundle, replicating interactively', {
+      // Not a failure: bundling is skipped below `BUNDLE_SYNC_THRESHOLD` or without peer support.
+      log.verbose('pulling without bundle', {
         collectionId,
         peerId,
         amount: missingOnLocal.length,
+        reason: bundleSyncEnabled ? 'below-threshold' : 'bundle-sync-unavailable',
       });
       toReplicateWithoutBatching.push(...missingOnLocal);
     }
@@ -1185,6 +1283,17 @@ export class AutomergeHost extends Resource {
     // query for the sedimentreeId. Either way, once bytes arrive `_afterSave` populates
     // `SqliteHeadsStore` so collection sync sees the updated heads on the next diff.
     for (const documentId of toReplicateWithoutBatching) {
+      // `findWithProgress` resolves from the existing query for an already-`ready` document and
+      // `_documentsToSync` feeds a share policy Subduction does not consult, so a diverged
+      // document reaching here gets no retry from either — the diff simply repeats next pass.
+      if (this._useSubduction && getHandleState(this._repo, documentId) === 'ready' && different.includes(documentId)) {
+        log.warn('diverged document has no subduction retry path', {
+          collectionId,
+          peerId,
+          documentId,
+          sedimentreeId: documentIdToSedimentreeIdHex(documentId),
+        });
+      }
       this._documentsToSync.add(documentId);
       this._repo.findWithProgress(documentId as DocumentId);
     }
@@ -1395,6 +1504,18 @@ const sedimentreeIdToDocumentId = (sedimentreeId: SedimentreeId): DocumentId =>
  * subduction WASM module to be initialized; `sqlite-storage-adapter.test.ts` pins the two against
  * each other.
  */
+/**
+ * Inverse of {@link documentIdToSedimentreeIdHex}, for naming the document behind a storage key.
+ * Decodes the leading 16 bytes by hand — `Buffer` is not available in the browser worker.
+ */
+const sedimentreeHexToDocumentId = (sedimentreeIdHex: string): DocumentId => {
+  const bytes = new Uint8Array(16);
+  for (let index = 0; index < 16; index++) {
+    bytes[index] = Number.parseInt(sedimentreeIdHex.slice(index * 2, index * 2 + 2), 16);
+  }
+  return bs58check.encode(bytes) as DocumentId;
+};
+
 export const documentIdToSedimentreeIdHex = (documentId: DocumentId): string => {
   const bytes = new Uint8Array(32);
   bytes.set(bs58check.decode(documentId).subarray(0, 16));

@@ -235,6 +235,12 @@ export type RecoverIdentityResponseBody = {
   haloSpaceKey: string;
   genesisFeedKey: string;
   deviceAuthCredential: string;
+  /**
+   * Automerge URL of the halo space root, when EDGE knows one. A recovering device has only
+   * `haloSpaceKey` to rebuild the space from, so without this it cannot find the document the
+   * credential chain lives in. Optional while EDGE has not been taught to record it.
+   */
+  haloSpaceRootUrl?: string;
 };
 
 export type CreateAgentRequestBody = {

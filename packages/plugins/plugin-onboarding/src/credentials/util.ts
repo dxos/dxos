@@ -2,6 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+/** Slash-terminated: a relative path would otherwise replace hub's `/hub` prefix. */
+const hubBase = (hubUrl: string): string => `${hubUrl.replace(/\/+$/, '')}/`;
+
 /**
  * POST `/account/request-access` on hub-service. Adds an email to the waitlist
  * and (if configured server-side) pings Discord + Kit. Always reports success
@@ -18,7 +21,7 @@ export const joinWaitlist = async ({
   identityDid?: string;
   message?: string;
 }): Promise<void> => {
-  await fetch(new URL('/account/request-access', hubUrl), {
+  await fetch(new URL('account/request-access', hubBase(hubUrl)), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, identityDid, message }),
@@ -51,7 +54,7 @@ export const login = async ({
   identityKey?: string;
   redirectUrl?: string;
 }): Promise<{ needsIdentity?: boolean; admitted?: boolean }> => {
-  const response = await fetch(new URL('/account/login', hubUrl), {
+  const response = await fetch(new URL('account/login', hubBase(hubUrl)), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, identityDid, identityKey, redirectUrl }),
