@@ -82,7 +82,9 @@ export default defineConfig({
           collapsed: false,
         },
       ],
-      plugins: [starlightLinksValidator({ exclude: ['/typedoc/**', '/blog/**'] })],
+      // `/privacy` is a standalone `src/pages/*.astro` route, not a Starlight content entry, so the
+      // validator cannot resolve it and reports the link from `content/legal/terms.md` as broken.
+      plugins: [starlightLinksValidator({ exclude: ['/typedoc/**', '/blog/**', '/privacy'] })],
       // PostHog snippet: https://posthog.com/docs/getting-started/install
       head:
         DX_POSTHOG_API_KEY && DX_POSTHOG_API_HOST
