@@ -39,18 +39,23 @@ import path from 'node:path';
 const MAX_PRELOAD_ENTRIES = 25;
 
 /**
- * Total on-disk size of those chunks. 4.05 MB today.
+ * Total on-disk size of those chunks. 4.25 MB today.
  *
  * Re-baselined 2026-08-13 (was 6.00 MB) after two independent cuts: the Effect 3 -> 4 migration
  * (5.73 -> 4.97 MB) and the `./plugin` -> `XPlugin` namespace split, which evicted the operation
  * handler sets five plugins re-exported from their boot-loaded registration entrypoint
- * (4.97 -> 4.05 MB).
+ * (4.97 -> 4.05 MB). That put the ceiling at 4.25 MB against a 4.05 MB graph.
+ *
+ * Re-baselined 2026-08-26 (was 4.25 MB). `main` had spent the whole 200 KB margin and crossed the
+ * line unaided: measured at 4,457,401 bytes against the 4,456,448-byte ceiling — 953 bytes over —
+ * while the branch that raised this contributed 124 of the 1,077 it was over by. What is being
+ * accepted is ~400 KB accumulated across many changes, not one leak.
  *
  * The ~200 KB margin is deliberately at the low end of the 200-550 KB leak classes above, which
- * restores the property the 6.00 MB ceiling had given up: a single leak of any known class trips
+ * preserves the property the 6.00 MB ceiling had given up: a single leak of any known class trips
  * this. Expect it to catch accepted growth too — that is the review point, not a false positive.
  */
-const MAX_PRELOAD_BYTES = 4.25 * 1024 * 1024;
+const MAX_PRELOAD_BYTES = 4.45 * 1024 * 1024;
 
 const outDir = path.join(process.cwd(), 'out/composer');
 const html = readFileSync(path.join(outDir, 'index.html'), 'utf8');

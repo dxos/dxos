@@ -98,7 +98,7 @@ export const WithEdgeEnvironment: Story = {
           commitHash: 'b78990fdd5',
         },
         env: { DX_ENVIRONMENT: 'development' },
-        edgeUrl: 'https://edge.dxos.workers.dev',
+        edgeUrl: 'https://dev.dxos.network',
       }),
     }),
   ],
