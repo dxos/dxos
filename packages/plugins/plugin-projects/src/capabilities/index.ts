@@ -12,9 +12,10 @@ import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { translations } from '#translations';
 import { ProjectCapabilities, ProjectsEvents } from '#types';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
-  environments: ['workerd'],
+// Narrower than the `appGraphBuilder` family default: the nodes it contributes carry
+// `LayoutOperation` actions, which mean nothing without an app shell.
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+  environments: [],
 });
 // Browser-only: the entry supplies `CreateProjectPanel`, the React form that picks the project
 // template and collects its name.
@@ -23,14 +24,12 @@ export const CreateObject = SpaceCapability.createObject(() => import('./create-
 });
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
-  environments: ['workerd'],
 });
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article'],
 });
-export const Schema = AppCapability.schema(() => import('./schema'), {
-  environments: ['workerd'],
-});
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const SubjectContext = Capability.lazyModule(
   'SubjectContext',
   { provides: [AssistantCapabilities.SubjectContext], activatesOn: AssistantEvents.Start },
@@ -40,8 +39,8 @@ export const Templates = Capability.lazyModule(
   'Templates',
   {
     provides: [ProjectCapabilities.Template],
+    // The host fires this: the React surfaces do so in the browser, `dx mcp serve` explicitly.
     activatesOn: ProjectsEvents.Start,
-    environments: ['workerd'],
   },
   () => import('./templates'),
 );

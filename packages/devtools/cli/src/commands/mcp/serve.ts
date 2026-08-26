@@ -17,6 +17,7 @@ import { DXOS_VERSION } from '@dxos/client';
 import { Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { McpServer } from '@dxos/mcp-server';
+import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';
 import { isRecordEnabled, loadPlugins } from '@dxos/plugin-registry';
 
 import { makeLocalServer } from './local-server';
@@ -86,6 +87,10 @@ export const serve = Command.make(
     // skill definitions to `AssistantStart`, so without both the projected surface is empty.
     yield* manager.activate(ActivationEvents.Idle);
     yield* manager.activate(AppActivationEvents.AssistantStart);
+    // Project templates gate on the projects plugin's own start event, which the browser fires
+    // from its React surfaces. A headless host has none, so it says so itself rather than each
+    // template dropping the gate to suit it.
+    yield* manager.activate(ProjectsEvents.Start);
 
     const server = yield* makeLocalServer();
     // stdout carries the protocol, so progress goes to the log (stderr).

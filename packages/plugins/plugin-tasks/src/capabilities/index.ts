@@ -12,7 +12,11 @@ import { translations } from '#translations';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+// Narrower than the `appGraphBuilder` family default: its nodes invoke
+// `LayoutOperation.UpdateDialog`, which means nothing without an app shell.
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+  environments: [],
+});
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,

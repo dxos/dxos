@@ -6,8 +6,8 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
-    CodeProjectSkill: 'src/skills/CodeProjectSkill.ts',
     ProjectOperationHandlerSet: 'src/operations/ProjectOperationHandlerSet.ts',
+    ProjectSkill: 'src/skills/project/ProjectSkill.ts',
     index: 'src/index.ts',
     ProjectsPlugin: 'src/ProjectsPlugin.ts',
     plugin: 'src/plugin.tsx',
@@ -19,7 +19,7 @@ export default defineConfig({
     operations: 'src/operations/index.ts',
     translations: 'src/translations.ts',
     ProjectCapabilities: 'src/types/ProjectCapabilities.ts',
-    ProjectMcpOperation: 'src/types/ProjectMcpOperation.ts',
+    ProjectMailboxOperation: 'src/types/ProjectMailboxOperation.ts',
     ProjectOperation: 'src/types/ProjectOperation.ts',
     ProjectsEvents: 'src/types/ProjectsEvents.ts',
     types: 'src/types/index.ts',

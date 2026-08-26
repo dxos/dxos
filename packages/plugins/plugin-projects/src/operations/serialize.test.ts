@@ -29,23 +29,17 @@ describe('operation serialization', () => {
     expect(failures).toEqual([]);
   });
 
-  // A remote host derives the MCP readOnly/destructive hints from the serialized record.
-  test('mutation annotations survive serialize', async ({ expect }) => {
+  // An unclassified operation reaches an MCP client badged as possibly destructive.
+  test('every handler declares a mutation class, and it survives serialize', async ({ expect }) => {
     const handlers = await ProjectOperationHandlerSet.handlers.getHandlers();
-    const annotated = Object.fromEntries(
-      handlers
-        .map((handler): [string | undefined, Operation.Mutation | undefined] => [
-          String(handler.meta.key).split('.').at(-1),
-          Operation.getMutation(Operation.serialize(handler)),
-        ])
-        .filter(([, mutation]) => mutation !== undefined),
+    const classified = Object.fromEntries(
+      handlers.map((handler) => [String(handler.meta.key), Operation.getMutation(Operation.serialize(handler))]),
     );
 
-    expect(annotated).toEqual({
-      create: 'write',
-      get: 'none',
-      list: 'none',
-      update: 'write',
-    });
+    expect(Object.entries(classified).filter(([, mutation]) => mutation === undefined)).toEqual([]);
+    expect(classified['dxn:org.dxos.operation.projects.create']).toBe('write');
+    expect(classified['dxn:org.dxos.operation.projects.get']).toBe('none');
+    expect(classified['dxn:org.dxos.operation.projects.addArtifact']).toBe('write');
+    expect(classified['dxn:org.dxos.operation.projects.listArtifact']).toBe('none');
   });
 });

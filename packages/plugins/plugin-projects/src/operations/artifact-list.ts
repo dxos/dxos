@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
-import { ArtifactList } from './definitions';
+import { ProjectOperation } from '#types';
 
-const handler: Operation.WithHandler<typeof ArtifactList> = ArtifactList.pipe(
+const handler: Operation.WithHandler<typeof ProjectOperation.ArtifactList> = ProjectOperation.ArtifactList.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ project: projectRef }) {
       const project = yield* Database.load(projectRef);

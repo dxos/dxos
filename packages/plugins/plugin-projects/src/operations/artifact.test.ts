@@ -11,8 +11,8 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
 
-import artifactAdd from './operations/artifact-add';
-import artifactList from './operations/artifact-list';
+import artifactAdd from './artifact-add';
+import artifactList from './artifact-list';
 
 const testLayer = () =>
   TestDatabaseLayer({
