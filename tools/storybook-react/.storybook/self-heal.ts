@@ -32,6 +32,9 @@ const MAX_RELOADS = 2;
 const WINDOW_MS = 30_000;
 const STORAGE_KEY = 'dx.storybook.selfHeal';
 
+/** Marks the listeners as attached, so an HMR re-evaluation does not stack a second set. */
+const INSTALLED_KEY = '__dxStorybookSelfHealInstalled';
+
 /**
  * Reload budget, kept in `sessionStorage` so it survives the reload it is counting. A story broken
  * for its own reasons therefore reloads twice and then stays put with its error on screen, rather
@@ -83,7 +86,9 @@ const healIfRecoverable = (message: string): void => {
 const onStoryMissing = async (storyId: string): Promise<void> => {
   try {
     const index = await (await fetch('./index.json')).json();
-    if (!index?.entries?.[storyId]) {
+    // An own-property check, since a hand-typed `?id=toString` would otherwise find
+    // `Object.prototype`'s member and spend the reload budget on a URL that was never a story.
+    if (!index?.entries || !Object.hasOwn(index.entries, storyId)) {
       return;
     }
   } catch {
@@ -99,6 +104,14 @@ export const installSelfHeal = (): void => {
   if (typeof window === 'undefined' || '__vitest_browser_runner__' in window) {
     return;
   }
+
+  // Storybook re-evaluates the preview annotations on HMR, which would stack a second set of
+  // listeners; each one spends its own slot, so a single failure would drain the budget below. The
+  // flag lives on `window` because the module itself is re-instantiated by that same HMR pass.
+  if (INSTALLED_KEY in window) {
+    return;
+  }
+  Object.defineProperty(window, INSTALLED_KEY, { value: true, configurable: true });
 
   // The channel does not exist yet while preview annotations are evaluating.
   void addons.ready().then(
