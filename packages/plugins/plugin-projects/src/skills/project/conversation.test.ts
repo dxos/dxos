@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { LanguageModelFixture, ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
+import { Chat } from '@dxos/assistant-toolkit';
 import { getSession } from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
@@ -18,9 +19,9 @@ import { EID, EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Message, Outline, TaskSet } from '@dxos/types';
 
-import * as Chat from '../../types/Chat';
-import { ProjectHandlers } from './operations';
-import ProjectSkill from './skill';
+import { ProjectOperationHandlerSet } from '#operations';
+
+import * as ProjectSkill from './ProjectSkill';
 
 const { text, toolCall } = ScriptedLanguageModel;
 
@@ -88,14 +89,14 @@ describe('Project conversation', () => {
     const scriptedTurns: ScriptedLanguageModel.ScriptedTurn[] = [];
 
     const ScriptedTestLayer = AssistantTestLayer({
-      operationHandlers: ProjectHandlers,
+      operationHandlers: ProjectOperationHandlerSet.handlers,
       types: TYPES,
       skills: [ProjectSkill.make()],
       aiService: ScriptedLanguageModel.scriptedAiService(scriptedTurns),
     });
 
     it.effect(
-      'scripted: the assistant files a document into the project via assistant-toolkit-add-artifact',
+      'scripted: the assistant files a document into the project via projects-add-artifact',
       Effect.fnUntraced(
         function* ({ expect }) {
           const { project, chat, feed, doc } = yield* seedProjectChat();
@@ -106,9 +107,7 @@ describe('Project conversation', () => {
 
           scriptedTurns.push(
             {
-              parts: [
-                toolCall('assistant-toolkit-add-artifact', { project: Obj.getURI(project), object: Obj.getURI(doc) }),
-              ],
+              parts: [toolCall('projects-add-artifact', { project: Obj.getURI(project), object: Obj.getURI(doc) })],
             },
             { parts: [text('Filed the document into the project.')] },
           );
@@ -124,13 +123,12 @@ describe('Project conversation', () => {
         Effect.provide(ScriptedTestLayer),
         TestHelpers.provideTestContext,
       ),
-      { timeout: 30_000 },
     );
   }
 
   {
     const LiveTestLayer = AssistantTestLayer({
-      operationHandlers: ProjectHandlers,
+      operationHandlers: ProjectOperationHandlerSet.handlers,
       types: TYPES,
       skills: [ProjectSkill.make()],
       aiServicePreset: 'direct',

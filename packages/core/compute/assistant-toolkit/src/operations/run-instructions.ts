@@ -6,8 +6,6 @@ import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import * as Schema from 'effect/Schema';
-import * as Tool from 'effect/unstable/ai/Tool';
 import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
@@ -20,7 +18,7 @@ import {
 import * as Operation from '@dxos/compute/Operation';
 import * as Template from '@dxos/compute/Template';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Feed, JsonSchema, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -29,36 +27,10 @@ import { trim } from '@dxos/util';
 
 import { PromptError } from '../errors';
 import * as Chat from '../types/Chat';
+import { makeCompleteJobTool } from './complete-job-tool';
 import { RunInstructions } from './definitions';
 
 const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-4-8.default');
-
-/** `Instructions.make` defaults `output` to `Schema.Void`; this is what that serializes to. */
-const UNDECLARED_OUTPUT = JsonSchema.toJsonSchema(Schema.Void);
-
-// Accepts any JSON value, unlike `Schema.Any`, without serializing to the empty `{}` subschema
-// the Anthropic API rejects ("Empty schema that accepts any JSON value is not supported").
-// `ObjectKeyword` rather than `Record(String, Any)`: the provider's structured-output codec
-// rewrites records into [key, value] tuples whose value member is again the empty schema.
-const JsonPayload = Schema.Union([
-  Schema.String,
-  Schema.Number,
-  Schema.Boolean,
-  Schema.ObjectKeyword,
-  Schema.Array(Schema.Any),
-]);
-
-export const routineOutputSchema = (output: JsonSchema.JsonSchema): Schema.Codec<any, any> => {
-  // A routine that declares no output still has to let `completeJob` carry an arbitrary success
-  // payload — decoding against the default would reject one with `Expected null | undefined`.
-  const undeclared =
-    ('$id' in output && output.$id === '/schemas/unknown') ||
-    ('type' in output && output.type === (UNDECLARED_OUTPUT as { type?: unknown }).type);
-  if (undeclared) {
-    return JsonPayload;
-  }
-  return JsonSchema.toEffectSchema(output);
-};
 
 export default RunInstructions.pipe(
   Operation.withHandler(
@@ -131,7 +103,7 @@ export default RunInstructions.pipe(
 
         const resultSink = yield* Deferred.make<unknown, PromptError>();
         const promptToolkit = makePromptAgentToolkit({
-          output: routineOutputSchema(instructions.output),
+          completeJobTool: makeCompleteJobTool(instructions.output),
           resultSink,
         });
 
@@ -193,51 +165,13 @@ export default RunInstructions.pipe(
   Operation.opaqueHandler,
 );
 
-/** Exported for tests asserting decode behaviour. */
-export const makeCompleteJobParameters = (output: Schema.Codec<any, any>) =>
-  Schema.Struct({
-    // Both fields accept `null` because models emit it for a field they mean to omit.
-    success: Schema.optional(Schema.NullOr(output)),
-    failure: Schema.optional(
-      Schema.NullOr(
-        Schema.Struct({
-          message: Schema.String.annotate({
-            description: 'Short message describing the error.',
-          }),
-          description: Schema.optional(Schema.NullOr(Schema.String)).annotate({
-            description: 'Optional longer message describing in detail what went wrong',
-          }),
-        }),
-      ),
-    ),
-  });
-
-/**
- * Dynamic rather than static: a dynamic tool's JSON schema reaches the provider verbatim, while a
- * static tool is serialized through the provider's structured-output transformer, which rewrites
- * records/objects into typeless subschemas the Anthropic API rejects. The handler decodes against
- * the same untransformed schema, so what the model is told and what is validated agree (the same
- * contract `projectFunctionToTool` keeps for operation tools). Exported for tests.
- */
-export const makeCompleteJobTool = (output: Schema.Codec<any, any>) =>
-  Tool.dynamic('completeJob', {
-    parameters: JsonSchema.toJsonSchema(makeCompleteJobParameters(output)),
-    failure: Schema.String,
-  }).annotate(Tool.Strict, false);
-
 const makePromptAgentToolkit = (options: {
-  output: Schema.Codec<any, any>;
+  completeJobTool: ReturnType<typeof makeCompleteJobTool>;
   resultSink: Deferred.Deferred<unknown, PromptError>;
 }) => {
-  const parameters = makeCompleteJobParameters(options.output);
-  class PromptAgentToolkit extends Toolkit.make(makeCompleteJobTool(options.output)) {}
+  class PromptAgentToolkit extends Toolkit.make(options.completeJobTool) {}
   const layer = PromptAgentToolkit.toLayer({
-    completeJob: Effect.fnUntraced(function* (input) {
-      // A dynamic tool's input is unvalidated; a decode failure is reported to the model as a
-      // tool failure so it can correct the call.
-      const result = yield* Schema.decodeUnknownEffect(parameters)(input).pipe(
-        Effect.mapError((error) => String(error)),
-      );
+    completeJob: Effect.fnUntraced(function* (result) {
       // A success payload wins over a failure sent alongside it, so a placeholder cannot discard
       // completed work.
       if (result.success == null && result.failure) {

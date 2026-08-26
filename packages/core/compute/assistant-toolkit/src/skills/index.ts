@@ -12,5 +12,4 @@ export * from './chat-context';
 export * from './delegation';
 export * from './memory';
 export * from './planning';
-export * from './project';
 export * from './websearch';

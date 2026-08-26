@@ -301,7 +301,7 @@ export const WithPlanningScripted: Story = {
  * Live AI and timing-sensitive, so it is excluded from CI `test` runs (`tags: ['!test']`);
  * run it manually in storybook (it needs a reachable EDGE AI service via `config.remote`).
  */
-export const WithSubAgentsTest1: Story = {
+export const withDelegation: Story = {
   ...WithSubAgents,
   tags: ['!test'],
   play: async ({ canvasElement }) => {
@@ -330,7 +330,7 @@ export const WithSubAgentsTest1: Story = {
  * script: the sub-agent route keys on the `RunInstructions` "non-interactive mode" system prompt,
  * the chat-naming turn has its own route, and the supervisor is the fallback. Runs in CI.
  */
-export const WithSubAgentsTest2: Story = {
+export const WithDelegationScripted: Story = {
   decorators: createDecorators({
     createAgent: {
       name: 'Supervisor',

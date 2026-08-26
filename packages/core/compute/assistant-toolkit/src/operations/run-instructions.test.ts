@@ -7,8 +7,6 @@ import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
-import * as AnthropicStructuredOutput from 'effect/unstable/ai/AnthropicStructuredOutput';
-import * as Tool from 'effect/unstable/ai/Tool';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
@@ -24,11 +22,7 @@ import { Message, Outline } from '@dxos/types';
 
 import * as Chat from '../types/Chat';
 import { RunInstructions } from './definitions';
-import defaultAgentPrompt, {
-  makeCompleteJobParameters,
-  makeCompleteJobTool,
-  routineOutputSchema,
-} from './run-instructions';
+import defaultAgentPrompt from './run-instructions';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -161,40 +155,6 @@ describe('RunInstructions', () => {
       TestHelpers.provideTestContext,
     ),
   );
-
-  it('serializes completeJob without empty subschemas for an undeclared output', ({ expect }) => {
-    // The Anthropic API rejects `{}` and typeless subschemas ("Empty schema that accepts any JSON
-    // value" / "Schema type is missing"), so every node must state a concrete type — and the
-    // provider's structured-output transformer must not rewrite the schema (a dynamic tool's JSON
-    // schema reaches the provider verbatim).
-    const output = routineOutputSchema(JsonSchema.toJsonSchema(Schema.Void));
-    const tool = makeCompleteJobTool(output);
-    const json = Tool.getJsonSchema(tool);
-    expect(Tool.getJsonSchema(tool, { transformer: AnthropicStructuredOutput.toCodecAnthropic })).toEqual(json);
-
-    const typeless: string[] = [];
-    const walk = (node: unknown, path: string, inKeyMap: boolean): void => {
-      if (Array.isArray(node)) {
-        node.forEach((entry, index) => walk(entry, `${path}.${index}`, false));
-      } else if (node && typeof node === 'object') {
-        const schema = node as Record<string, unknown>;
-        if (!inKeyMap && !['type', 'anyOf', 'oneOf', 'enum', 'const', '$ref'].some((key) => key in schema)) {
-          typeless.push(path);
-        }
-        for (const [key, value] of Object.entries(schema)) {
-          walk(value, `${path}.${key}`, key === 'properties' || key === '$defs');
-        }
-      }
-    };
-    walk(json, 'root', false);
-    expect(typeless).toEqual([]);
-
-    // The stand-in still accepts an arbitrary JSON success payload.
-    const decode = Schema.decodeUnknownSync(makeCompleteJobParameters(output));
-    for (const success of ['summary', 42, true, { summary: 'done', artifactIds: ['1'] }, ['a', 'b']]) {
-      expect(decode({ success })).toEqual({ success });
-    }
-  });
 });
 
 // Scripting the `completeJob` call drives the whole operation without a live model, so what is

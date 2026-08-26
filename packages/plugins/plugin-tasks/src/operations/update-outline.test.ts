@@ -11,28 +11,12 @@ import { URI } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Outline } from '@dxos/types';
 
-import getOutline from './get-outline';
 import updateOutline from './update-outline';
 
 const testLayer = () => TestDatabaseLayer({ types: [Outline.Outline, Text.Text] });
 
-describe('outline operations', () => {
-  it.effect('get-outline returns the markdown and its parsed items', () =>
-    Effect.gen(function* () {
-      const outline = yield* seed('intro\n- [ ] first\n- [x] second');
-
-      const result = yield* getOutline.handler({ outline: Ref.make(outline) });
-
-      expect(result.name).toBe('Launch plan');
-      expect(result.content).toContain('intro');
-      expect(result.items).toEqual([
-        { title: 'first', done: false },
-        { title: 'second', done: true },
-      ]);
-    }).pipe(Effect.provide(testLayer())),
-  );
-
-  it.effect('update-outline upserts items in place and preserves prose', () =>
+describe('update-outline', () => {
+  it.effect('upserts items in place and preserves prose', () =>
     Effect.gen(function* () {
       const outline = yield* seed('intro\n- [ ] first\n- [ ] second');
 
@@ -48,7 +32,7 @@ describe('outline operations', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
-  it.effect('update-outline replaces wholesale with content, and rejects both/neither', () =>
+  it.effect('replaces wholesale with content, and rejects both/neither', () =>
     Effect.gen(function* () {
       const outline = yield* seed('- [ ] first');
 
@@ -65,7 +49,7 @@ describe('outline operations', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
-  it.effect('update-outline validates arguments before touching the database', () =>
+  it.effect('validates arguments before touching the database', () =>
     Effect.gen(function* () {
       // A bad argument must report as an argument error even when the ref cannot be loaded —
       // i.e. validation runs before the read, so the caller never sees a storage error instead.
