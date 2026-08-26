@@ -73,9 +73,9 @@ const setup = async () => {
       objects: { [objectId]: { system: {}, meta: { keys: [] }, data: { title: objectId } } },
     });
     const rootHandle = await host.loadDoc<DatabaseDirectory>(Context.default(), rootId);
-    rootHandle!.change((draft: DatabaseDirectory) => {
+    rootHandle!.handle.change((draft: DatabaseDirectory) => {
       draft.links ??= {};
-      draft.links[objectId] = new A.RawString(doc.url);
+      draft.links[objectId] = new A.RawString(doc.handle.url);
     });
     await host.flush(Context.default());
     // The directory listing is debounced (50ms). Settling past it models the real sequence, where
@@ -87,7 +87,7 @@ const setup = async () => {
 
   const unlink = async (rootId: DocumentId, objectId: string) => {
     const rootHandle = await host.loadDoc<DatabaseDirectory>(Context.default(), rootId);
-    rootHandle!.change((draft: DatabaseDirectory) => {
+    rootHandle!.handle.change((draft: DatabaseDirectory) => {
       delete draft.links![objectId];
     });
     await host.flush(Context.default());
@@ -96,7 +96,7 @@ const setup = async () => {
   /** Links an existing document into an arbitrary parent, building a path deeper than the root. */
   const linkExisting = async (parentId: DocumentId, objectId: string, url: string) => {
     const parentHandle = await host.loadDoc<DatabaseDirectory>(Context.default(), parentId);
-    parentHandle!.change((draft: DatabaseDirectory) => {
+    parentHandle!.handle.change((draft: DatabaseDirectory) => {
       draft.links ??= {};
       draft.links[objectId] = new A.RawString(url);
     });
@@ -114,7 +114,7 @@ describe('automatic reclamation', () => {
     const { host, spaceId, countChunks, createRoot, linkObject, unlink } = await setup();
 
     const root = await createRoot();
-    await host.updateSpaceRoot(Context.default(), spaceId, root.url);
+    await host.updateSpaceRoot(Context.default(), spaceId, root.handle.url);
     const dropped = await linkObject(root.documentId, 'obj-dropped');
     const kept = await linkObject(root.documentId, 'obj-kept');
     expect(await countChunks(dropped)).toBeGreaterThan(0);
@@ -136,14 +136,14 @@ describe('automatic reclamation', () => {
     const { host, spaceId, countChunks, createRoot, linkObject, linkExisting, unlink } = await setup();
 
     const root = await createRoot();
-    await host.updateSpaceRoot(Context.default(), spaceId, root.url);
+    await host.updateSpaceRoot(Context.default(), spaceId, root.handle.url);
     const holder = await linkObject(root.documentId, 'obj-holder');
     const shared = await linkObject(root.documentId, 'obj-shared');
     expect(await countChunks(shared)).toBeGreaterThan(0);
 
     // `shared` is now reachable both directly from the root and via `holder`.
     const sharedHandle = await host.loadDoc<DatabaseDirectory>(Context.default(), shared);
-    await linkExisting(holder, 'obj-shared', sharedHandle!.url);
+    await linkExisting(holder, 'obj-shared', sharedHandle!.handle.url);
 
     // Dropping the direct link makes it a reclamation candidate; the path through `holder` remains.
     await unlink(root.documentId, 'obj-shared');
@@ -159,11 +159,11 @@ describe('automatic reclamation', () => {
     const { host, spaceId, countChunks, createRoot, linkObject } = await setup();
 
     const oldRoot = await createRoot();
-    await host.updateSpaceRoot(Context.default(), spaceId, oldRoot.url);
+    await host.updateSpaceRoot(Context.default(), spaceId, oldRoot.handle.url);
     const dropped = await linkObject(oldRoot.documentId, 'obj-dropped');
 
     const newRoot = await createRoot();
-    await host.updateSpaceRoot(Context.default(), spaceId, newRoot.url);
+    await host.updateSpaceRoot(Context.default(), spaceId, newRoot.handle.url);
 
     await expect.poll(() => countChunks(dropped), { timeout: 5_000 }).to.equal(0);
     await expect.poll(() => countChunks(oldRoot.documentId), { timeout: 5_000 }).to.equal(0);
@@ -177,7 +177,7 @@ describe('automatic reclamation', () => {
     const { host, spaceId, countChunks, countHeads, createRoot, linkObject } = await setup();
 
     const root = await createRoot();
-    await host.updateSpaceRoot(Context.default(), spaceId, root.url);
+    await host.updateSpaceRoot(Context.default(), spaceId, root.handle.url);
     const target = await linkObject(root.documentId, 'obj-target');
     const chunksBefore = await countChunks(target);
     expect(chunksBefore).toBeGreaterThan(0);

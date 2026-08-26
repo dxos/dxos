@@ -48,7 +48,7 @@ const createDatabaseDirectory = async (
     links: {},
   });
 
-  handle.change((doc) => {
+  handle.handle.change((doc) => {
     doc.objects = objects;
   });
 
@@ -99,7 +99,7 @@ describe('AutomergeDataSource', () => {
 
     expect(result.cursors).toHaveLength(1);
     expect(result.cursors[0].resourceId).toBe(handle.documentId);
-    expect(result.cursors[0].cursor).toBe(headsCodec.encode(getHeads(handle.doc()!)));
+    expect(result.cursors[0].cursor).toBe(headsCodec.encode(getHeads(handle.handle.doc()!)));
   });
 
   test('returns documents with changed heads', async () => {
@@ -115,11 +115,11 @@ describe('AutomergeDataSource', () => {
     await host.flush(Context.default());
 
     // Capture heads before mutation.
-    const doc1HeadsBefore = headsCodec.encode(getHeads(handle1.doc()!));
-    const doc2Heads = headsCodec.encode(getHeads(handle2.doc()!));
+    const doc1HeadsBefore = headsCodec.encode(getHeads(handle1.handle.doc()!));
+    const doc2Heads = headsCodec.encode(getHeads(handle2.handle.doc()!));
 
     // Modify doc1 to have new heads.
-    handle1.change((doc) => {
+    handle1.handle.change((doc: DatabaseDirectory) => {
       doc.objects!['obj-1'].data.title = 'Doc 1 Updated';
     });
     await host.flush(Context.default());
@@ -152,7 +152,7 @@ describe('AutomergeDataSource', () => {
     });
     await host.flush(Context.default());
 
-    const currentHeads = headsCodec.encode(getHeads(handle.doc()!));
+    const currentHeads = headsCodec.encode(getHeads(handle.handle.doc()!));
 
     const dataSource = new AutomergeDataSource(host);
     const cursors: IndexCursor[] = [
@@ -221,7 +221,7 @@ describe('AutomergeDataSource', () => {
       objects: {},
       links: {},
     });
-    handle.change((doc) => {
+    handle.handle.change((doc) => {
       doc.objects = {
         'obj-1': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'Test' } }),
       };
@@ -266,7 +266,7 @@ describe('AutomergeDataSource', () => {
       objects: {},
       links: {},
     });
-    handle.change((doc) => {
+    handle.handle.change((doc) => {
       doc.objects = {
         'obj-1': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'No Space' } }),
       };
@@ -289,7 +289,7 @@ describe('AutomergeDataSource', () => {
       objects: {},
       links: {},
     });
-    handle.change((doc) => {
+    handle.handle.change((doc) => {
       doc.objects = {
         'obj-1': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'Legacy Doc' } }),
       };
@@ -314,7 +314,7 @@ describe('AutomergeDataSource', () => {
       objects: {},
       links: {},
     });
-    handle.change((doc) => {
+    handle.handle.change((doc) => {
       doc.objects = {
         'obj-1': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'New Doc' } }),
       };

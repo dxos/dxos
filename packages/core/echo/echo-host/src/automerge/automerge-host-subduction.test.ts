@@ -34,11 +34,11 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     onTestFinished(() => dispose());
     const host = await setupAutomergeHost({ runtime });
     const handle = await host.createDoc<any>();
-    handle.change((doc: any) => {
+    handle.handle.change((doc: any) => {
       doc.text = 'Hello world';
     });
     await host.flush(Context.default());
-    expect(handle.doc()!.text).toEqual('Hello world');
+    expect(handle.handle.doc()!.text).toEqual('Hello world');
   });
 
   test('changes are preserved in storage', async ({ expect }) => {
@@ -46,10 +46,10 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     onTestFinished(() => dispose());
     const host = await setupAutomergeHost({ runtime });
     const handle = await host.createDoc<any>();
-    handle.change((doc: any) => {
+    handle.handle.change((doc: any) => {
       doc.text = 'Hello world';
     });
-    const url = handle.url;
+    const url = handle.handle.url;
 
     await host.flush(Context.default());
     await host.close();
@@ -57,8 +57,8 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     const host2 = await setupAutomergeHost({ runtime });
     const handle2 = await host2.loadDoc<any>(Context.default(), url);
     invariant(handle2);
-    await handle2.whenReady();
-    expect(handle2.doc()!.text).toEqual('Hello world');
+    await handle2.handle.whenReady();
+    expect(handle2.handle.doc()!.text).toEqual('Hello world');
     await host2.flush(Context.default());
   });
 
@@ -77,7 +77,7 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
 
     const loadedHandle = await loadPromise;
     invariant(loadedHandle);
-    expect(loadedHandle.doc()).toEqual(createdHandle.doc());
+    expect(loadedHandle.handle.doc()).toEqual(createdHandle.handle.doc());
   });
 
   test('query single document heads', async ({ expect }) => {
@@ -86,7 +86,7 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     const { runtime, dispose } = createRuntime(tmpPath);
     const host = await setupAutomergeHost({ runtime });
     const handle = await host.createDoc({ text: 'Hello world' });
-    const expectedHeads = getHeads(handle.doc()!);
+    const expectedHeads = getHeads(handle.handle.doc()!);
     await host.flush(Context.default());
 
     expect(await host.getHeads([handle.documentId])).toEqual([expectedHeads]);
@@ -107,7 +107,7 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     const { runtime, dispose } = createRuntime(tmpPath);
     const host = await setupAutomergeHost({ runtime });
     const handles = await Promise.all(range(2, () => host.createDoc({ text: 'Hello world' })));
-    const expectedHeads: (Heads | undefined)[] = handles.map((handle) => getHeads(handle.doc()!));
+    const expectedHeads: (Heads | undefined)[] = handles.map((handle) => getHeads(handle.handle.doc()!));
     await host.flush(Context.default());
 
     const ids = handles.map((handle) => handle.documentId);
@@ -145,7 +145,7 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
 
       const loaded = await host1.loadDoc<{ text: string }>(Context.default(), handle.documentId, { timeout: 1_000 });
       invariant(loaded);
-      expect(loaded.doc()!.text).toEqual('Hello from Subduction');
+      expect(loaded.handle.doc()!.text).toEqual('Hello from Subduction');
     } finally {
       await host1.close();
       await host2.close();
@@ -175,7 +175,7 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
 
     const loaded = await host1.loadDoc<{ text: string }>(Context.default(), handle.documentId, { timeout: 1_000 });
     invariant(loaded);
-    expect(loaded.doc()!.text).toEqual('Hello from Subduction');
+    expect(loaded.handle.doc()!.text).toEqual('Hello from Subduction');
 
     await host1.close();
     await host2.close();
@@ -207,7 +207,7 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
 
     const loaded = await host1.loadDoc<{ text: string }>(Context.default(), handle.documentId, { timeout: 1_000 });
     invariant(loaded);
-    expect(loaded.doc()!.text).toEqual('Hello from Subduction');
+    expect(loaded.handle.doc()!.text).toEqual('Hello from Subduction');
 
     await Promise.all([host1.close(), host2.close()]);
     await network.close();
@@ -286,7 +286,7 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
 
         const loaded = await host1.loadDoc<{ text: string }>(Context.default(), handle.documentId, { timeout: 1_000 });
         invariant(loaded);
-        expect(loaded.doc()!.text).toEqual('authorized');
+        expect(loaded.handle.doc()!.text).toEqual('authorized');
       } finally {
         await host1.close();
         await host2.close();
@@ -315,9 +315,9 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
         await host2.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => false }));
 
         // Don't await `loadDoc` (it would hang). Probe via findWithProgress and assert no transition to 'ready'.
-        const progress = host1.findWithProgress<{ text: string }>(handle.documentId);
+        const progress = host1.acquireDoc<{ text: string }>(handle.documentId);
         await sleep(POLICY_NEGATIVE_DELAY_MS);
-        expect(progress.peek().state).to.not.equal('ready');
+        expect(progress.query.peek().state).to.not.equal('ready');
         expect(progress.handle.doc()?.text).to.be.undefined;
       } finally {
         await host1.close();
@@ -351,9 +351,9 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
           await host1.addReplicator(Context.default(), host1Replicator);
           await host2.addReplicator(Context.default(), host2Replicator);
 
-          const progress = host1.findWithProgress<{ text: string }>(handle.documentId);
+          const progress = host1.acquireDoc<{ text: string }>(handle.documentId);
           await sleep(POLICY_NEGATIVE_DELAY_MS);
-          expect(progress.peek().state).to.not.equal('ready');
+          expect(progress.query.peek().state).to.not.equal('ready');
 
           // Flip the holder to allow, then drive a no-op commit on the holder.
           // Creating a fresh doc on host2 schedules `_sharePolicyChangedTask`, which
@@ -362,7 +362,7 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
           host2Replicator.shouldAdvertise = () => true;
           await host2.createDoc({ kick: true });
 
-          await expect.poll(() => progress.peek().state, { timeout: 5_000 }).toEqual('ready');
+          await expect.poll(() => progress.query.peek().state, { timeout: 5_000 }).toEqual('ready');
           expect(progress.handle.doc()?.text).toEqual('recover-me');
         } finally {
           await host1.close();
@@ -461,10 +461,10 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
         const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
         const h1 = await host1.createDoc(binary, { documentId, preserveHistory: true });
         const h2 = await host2.createDoc(binary, { documentId, preserveHistory: true });
-        h1.change((doc: any) => {
+        h1.handle.change((doc: any) => {
           doc.fromHost1 = true;
         });
-        h2.change((doc: any) => {
+        h2.handle.change((doc: any) => {
           doc.fromHost2 = true;
         });
         documentIds.push(documentId);
@@ -627,7 +627,7 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
           async () =>
             (
               await host1.host.loadDoc<{ text: string }>(Context.default(), handle.documentId, { timeout: 1_000 })
-            )?.doc()?.text,
+            )?.handle.doc()?.text,
           { timeout: 3_000 },
         )
         .toEqual('mesh-authorized');
@@ -655,9 +655,9 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
 
       await connectMeshPeers(teleportBuilder, host1, host2, spaceKey, /* authorized */ false);
 
-      const progress = host1.host.findWithProgress<{ text: string }>(handle.documentId);
+      const progress = host1.host.acquireDoc<{ text: string }>(handle.documentId);
       await sleep(POLICY_NEGATIVE_DELAY_MS);
-      expect(progress.peek().state).to.not.equal('ready');
+      expect(progress.query.peek().state).to.not.equal('ready');
       expect(progress.handle.doc()?.text).to.be.undefined;
     });
 
@@ -687,7 +687,7 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       // Probe but don't wait on `findWithProgress` (the subduction fork transitions
       // to `'unavailable'` when no peer serves the doc, which is sticky).
       await sleep(POLICY_NEGATIVE_DELAY_MS);
-      const initial = host1.host.findWithProgress<{ text: string }>(handle.documentId).peek();
+      const initial = host1.host.acquireDoc<{ text: string }>(handle.documentId).query.peek();
       expect(initial.state).to.not.equal('ready');
 
       // `authorizeDevice` re-emits `peer-disconnected` + `peer-candidate` through the
@@ -704,8 +704,9 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       await expect
         .poll(
           async () =>
-            (await host1.host.loadDoc<{ text: string }>(Context.default(), handle.documentId, { timeout: 500 }))?.doc()
-              ?.text,
+            (
+              await host1.host.loadDoc<{ text: string }>(Context.default(), handle.documentId, { timeout: 500 })
+            )?.handle.doc()?.text,
           { timeout: 5_000 },
         )
         .toEqual('mesh-recover');
@@ -768,17 +769,18 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       await expect
         .poll(
           async () =>
-            (await host1.host.loadDoc<{ text: string }>(Context.default(), spaceADocId, { timeout: 1_000 }))?.doc()
-              ?.text,
+            (
+              await host1.host.loadDoc<{ text: string }>(Context.default(), spaceADocId, { timeout: 1_000 })
+            )?.handle.doc()?.text,
           { timeout: 3_000 },
         )
         .toEqual('space-A-doc');
 
       // Space B doc does NOT — host2's `_subductionPolicy.authorizeFetch` resolves
       // its space → spaceB, finds no authorized devices for spaceB, rejects.
-      const progress = host1.host.findWithProgress<{ text: string }>(spaceBDocId);
+      const progress = host1.host.acquireDoc<{ text: string }>(spaceBDocId);
       await sleep(POLICY_NEGATIVE_DELAY_MS);
-      expect(progress.peek().state).to.not.equal('ready');
+      expect(progress.query.peek().state).to.not.equal('ready');
       expect(progress.handle.doc()?.text).to.be.undefined;
     });
   });

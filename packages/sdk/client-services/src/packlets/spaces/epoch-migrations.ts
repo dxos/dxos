@@ -36,22 +36,22 @@ const LOAD_DOC_TIMEOUT = 10_000;
 export const runEpochMigration = async (ctx: Context, context: MigrationContext): Promise<MigrationResult> => {
   switch (context.migration) {
     case SpacesService.Migration.enums.INIT_AUTOMERGE: {
-      const document = await context.echoHost.createDoc();
+      using document = await context.echoHost.createDoc();
       await context.echoHost.flush(ctx);
-      return { newRoot: document.url };
+      return { newRoot: document.handle.url };
     }
     case SpacesService.Migration.enums.PRUNE_AUTOMERGE_ROOT_HISTORY: {
       if (!context.currentRoot) {
         throw new Error('Space does not have an automerge root');
       }
-      const rootHandle = await context.echoHost.loadDoc(ctx, context.currentRoot as AutomergeUrl, {
+      using rootLease = await context.echoHost.loadDoc(ctx, context.currentRoot as AutomergeUrl, {
         timeout: LOAD_DOC_TIMEOUT,
       });
-      invariant(rootHandle, 'Automerge root document must load for history prune migration.');
+      invariant(rootLease, 'Automerge root document must load for history prune migration.');
 
-      const newRoot = await context.echoHost.createDoc(rootHandle.doc());
+      using newRoot = await context.echoHost.createDoc(rootLease.handle.doc());
       await context.echoHost.flush(ctx);
-      return { newRoot: newRoot.url };
+      return { newRoot: newRoot.handle.url };
     }
     case SpacesService.Migration.enums.FRAGMENT_AUTOMERGE_ROOT: {
       throw new Error('Migration not available');

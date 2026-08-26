@@ -267,10 +267,10 @@ export class DataSpaceManager extends Resource {
         return Promise.all(
           Array.from(this._spaces.values()).map(async (space) => {
             const rootUrl = space.automergeSpaceState.rootUrl;
-            const rootHandle = rootUrl
+            using rootLease = rootUrl
               ? await this._echoHost.loadDoc<Doc<DatabaseDirectory>>(this._ctx, rootUrl as AutomergeUrl)
               : undefined;
-            const rootDoc = rootHandle?.doc();
+            const rootDoc = rootLease?.handle.doc();
 
             const properties = rootDoc && findInlineObjectOfType(rootDoc, Type.getTypename(SpaceProperties));
 
@@ -402,13 +402,13 @@ export class DataSpaceManager extends Resource {
         Object.entries(options.documents).map(async ([documentId, data]) => {
           log('creating document...', { documentId });
           // TODO(dmaretskyi): Broken types -- the bytes get interpreted as CRDT data.
-          const newDoc = await this._echoHost.createDoc(data as any as DatabaseDirectory, {
+          using newDoc = await this._echoHost.createDoc(data as any as DatabaseDirectory, {
             preserveHistory: true,
           });
 
           // The archived documents might have the spaceKey from the space they were expored from, we need to update it to the new spaceKey.
-          if (newDoc.doc().access !== undefined && newDoc.doc().access!.spaceKey !== spaceKey.toHex()) {
-            newDoc.change((doc) => {
+          if (newDoc.handle.doc().access !== undefined && newDoc.handle.doc().access!.spaceKey !== spaceKey.toHex()) {
+            newDoc.handle.change((doc) => {
               doc.access!.spaceKey = spaceKey.toHex();
             });
           }
@@ -425,9 +425,9 @@ export class DataSpaceManager extends Resource {
       root = createdSpace.directory;
     } else if (options.rootUrl) {
       const newRootDocId = documentIdMapping[interpretAsDocumentId(options.rootUrl)] ?? failedInvariant();
-      const rootDocHandle = await this._echoHost.loadDoc<DatabaseDirectory>(ctx, newRootDocId);
-      invariant(rootDocHandle, 'Root document must be available after import.');
-      DatabaseRoot.mapLinks(rootDocHandle, documentIdMapping);
+      using rootDocLease = await this._echoHost.loadDoc<DatabaseDirectory>(ctx, newRootDocId);
+      invariant(rootDocLease, 'Root document must be available after import.');
+      DatabaseRoot.mapLinks(rootDocLease.handle, documentIdMapping);
 
       root = await this._echoHost.updateSpaceRoot(ctx, spaceId, `automerge:${newRootDocId}` as AutomergeUrl);
     } else {

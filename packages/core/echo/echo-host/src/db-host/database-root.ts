@@ -7,7 +7,6 @@ import {
   type AutomergeUrl,
   type DocHandle,
   type DocumentId,
-  type DocumentQuery,
   interpretAsDocumentId,
   isValidAutomergeUrl,
 } from '@automerge/automerge-repo';
@@ -15,9 +14,10 @@ import {
 import { DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 
+import { type DocumentLease } from '../automerge/document-lease';
 import { type DocMetrics, measureDocMetrics } from './automerge-metrics';
 
-export class DatabaseRoot {
+export class DatabaseRoot implements Disposable {
   static mapLinks(doc: DocHandle<DatabaseDirectory>, mapping: Record<DocumentId, DocumentId>): void {
     const remap = (url: string): string | undefined => {
       if (!isValidAutomergeUrl(url)) {
@@ -49,31 +49,36 @@ export class DatabaseRoot {
   }
 
   /**
-   * @param _query - Live `DocumentQuery` for the root doc. Carries both the
-   * `DocHandle` (synchronously created with the query) and the actual
-   * readiness state. See `getHandleState` in `@dxos/echo-host` for why
+   * @param _lease - Lease on the root doc, held for as long as the space is open. Carries both the
+   * `DocHandle` and the actual readiness state — see `getHandleState` in `@dxos/echo-host` for why
    * we read liveness off the query rather than `DocHandle.*` predicates.
    */
-  constructor(private readonly _query: DocumentQuery<DatabaseDirectory>) {}
+  constructor(private readonly _lease: DocumentLease<DatabaseDirectory>) {}
 
   get documentId(): DocumentId {
-    return this._query.documentId;
+    return this._lease.documentId;
   }
 
-  get url() {
-    return this._query.handle.url;
+  /** Derived from the id, so a root whose lease was released still reports which document it was. */
+  get url(): AutomergeUrl {
+    return `automerge:${this._lease.documentId}` as AutomergeUrl;
   }
 
   get isLoaded(): boolean {
-    return this._query.peek().state === 'ready';
+    return !this._lease.disposed && this._lease.state === 'ready';
   }
 
   get handle(): DocHandle<DatabaseDirectory> {
-    return this._query.handle;
+    return this._lease.handle;
+  }
+
+  /** Releases the root document, which is the last thing keeping the space's directory resident. */
+  [Symbol.dispose](): void {
+    this._lease[Symbol.dispose]();
   }
 
   doc(): A.Doc<DatabaseDirectory> | null {
-    return this.isLoaded ? this._query.handle.doc() : null;
+    return this.isLoaded ? this._lease.handle.doc() : null;
   }
 
   getVersion(): SpaceDocVersion | null {

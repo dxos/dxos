@@ -2,12 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  type AutomergeUrl,
-  type DocumentId,
-  type DocumentQuery,
-  interpretAsDocumentId,
-} from '@automerge/automerge-repo';
+import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
 import * as Migrator from 'effect/unstable/sql/Migrator';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
@@ -23,6 +18,7 @@ import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
+import { type DocumentLease } from '../automerge/document-lease';
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/space-state';
 import { DatabaseRoot } from './database-root';
 
@@ -73,6 +69,9 @@ export class SpaceStateManager extends Resource {
   protected override async _close(ctx: Context): Promise<void> {
     for (const [_, rootCtx] of this._perRootContext) {
       await rootCtx.dispose();
+    }
+    for (const root of this._roots.values()) {
+      root[Symbol.dispose]();
     }
     this._roots.clear();
     this._rootBySpace.clear();
@@ -158,16 +157,21 @@ export class SpaceStateManager extends Resource {
       await rootCtx.dispose();
       this._perRootContext.delete(documentId);
     }
+    this._roots.get(documentId)?.[Symbol.dispose]();
     this._roots.delete(documentId);
   }
 
-  async assignRootToSpace(spaceId: SpaceId, query: DocumentQuery<DatabaseDirectory>): Promise<DatabaseRoot> {
+  /** Takes ownership of `lease`: the root holds it until the space is removed or the manager closes. */
+  async assignRootToSpace(spaceId: SpaceId, lease: DocumentLease<DatabaseDirectory>): Promise<DatabaseRoot> {
     let root: DatabaseRoot;
-    if (this._roots.has(query.documentId)) {
-      root = this._roots.get(query.documentId)!;
+    const existing = this._roots.get(lease.documentId);
+    if (existing) {
+      root = existing;
+      // The root already holds a lease on this document, so the caller's is surplus.
+      lease[Symbol.dispose]();
     } else {
-      root = new DatabaseRoot(query);
-      this._roots.set(query.documentId, root);
+      root = new DatabaseRoot(lease);
+      this._roots.set(lease.documentId, root);
     }
 
     if (this._rootBySpace.get(spaceId) === root.handle.documentId && this._perRootContext.has(root.handle.documentId)) {

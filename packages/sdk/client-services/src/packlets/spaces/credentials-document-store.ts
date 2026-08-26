@@ -13,7 +13,7 @@ import {
   orderCredentials,
 } from '@dxos/credentials';
 import { AddOnlySet } from '@dxos/echo-doc';
-import { type EchoHost } from '@dxos/echo-host';
+import { type DocumentLease, type EchoHost } from '@dxos/echo-host';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { schema } from '@dxos/protocols/proto';
@@ -26,11 +26,20 @@ const CREDENTIALS_PATH = ['credentials'];
 /**
  * Read/write access to a space's credentials document, the successor to its control feed.
  */
-export class CredentialsDocumentStore {
-  constructor(private readonly _handle: DocHandle<CredentialsDocument>) {}
+export class CredentialsDocumentStore implements Disposable {
+  constructor(private readonly _lease: DocumentLease<CredentialsDocument>) {}
 
   get url(): AutomergeUrl {
-    return this._handle.url;
+    return this.#handle.url;
+  }
+
+  /** Releases the credentials document; the store cannot be read or written after this. */
+  [Symbol.dispose](): void {
+    this._lease[Symbol.dispose]();
+  }
+
+  get #handle(): DocHandle<CredentialsDocument> {
+    return this._lease.handle;
   }
 
   /**
@@ -40,7 +49,7 @@ export class CredentialsDocumentStore {
    * document must not be able to revoke another by deleting their credential.
    */
   read(): OrderedCredential[] {
-    const doc = this._handle.doc();
+    const doc = this.#handle.doc();
     return doc ? orderCredentials(AddOnlySet.read(doc, CREDENTIALS_PATH)) : [];
   }
 
@@ -57,8 +66,8 @@ export class CredentialsDocumentStore {
       });
     };
 
-    this._handle.addListener('change', replay);
-    ctx.onDispose(() => this._handle.removeListener('change', replay));
+    this.#handle.addListener('change', replay);
+    ctx.onDispose(() => this.#handle.removeListener('change', replay));
     replay();
   }
 
@@ -69,11 +78,11 @@ export class CredentialsDocumentStore {
   append(credential: Credential): void {
     const id = credential.id?.toHex();
     invariant(id, 'Credential has no id.');
-    if (this._handle.doc()?.credentials?.[id]) {
+    if (this.#handle.doc()?.credentials?.[id]) {
       return;
     }
 
-    this._handle.change((doc: CredentialsDocument) => {
+    this.#handle.change((doc: CredentialsDocument) => {
       doc.credentials ??= {};
       AddOnlySet.add(doc.credentials, id, credentialCodec.encode(credential));
     });
@@ -89,21 +98,20 @@ export const openCredentialsDocument = async (
   spaceId: SpaceId,
 ): Promise<CredentialsDocumentStore> => {
   const existing = echoHost.getSpaceRootRefs(spaceId)?.credentialsDocUrl;
-  const url =
-    existing ??
-    (await echoHost.setCredentialsDocument(
-      ctx,
-      spaceId,
-      (
-        await echoHost.createDoc<CredentialsDocument>({
-          type: CREDENTIALS_DOCUMENT_TYPE,
-          spaceId,
-          credentials: {},
-        })
-      ).url,
-    ));
+  if (existing) {
+    // The lease is held by the store: it writes credentials for as long as the space is open.
+    const lease = await echoHost.loadDoc<CredentialsDocument>(ctx, existing);
+    invariant(lease, 'Credentials document must load.');
+    return new CredentialsDocumentStore(lease);
+  }
 
-  const handle = await echoHost.loadDoc<CredentialsDocument>(ctx, url);
-  invariant(handle, 'Credentials document must load.');
-  return new CredentialsDocumentStore(handle);
+  // The creating lease becomes the store's, so the document is never released between being created
+  // and being read back — a fresh document exists only in memory until it is saved.
+  const created = await echoHost.createDoc<CredentialsDocument>({
+    type: CREDENTIALS_DOCUMENT_TYPE,
+    spaceId,
+    credentials: {},
+  });
+  await echoHost.setCredentialsDocument(ctx, spaceId, created.handle.url);
+  return new CredentialsDocumentStore(created);
 };

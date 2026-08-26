@@ -52,7 +52,7 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
         links: {},
       });
       docId = handle.documentId;
-      const query = automergeHost.findWithProgress<DatabaseDirectory>(handle.documentId);
+      const query = automergeHost.acquireDoc<DatabaseDirectory>(handle.documentId);
 
       const manager = new SpaceStateManager({ runtime });
       await manager.open(Context.default());
@@ -69,7 +69,7 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
       const persisted = manager.getPersistedSpaces();
       expect(persisted).to.have.length(1);
       expect(persisted[0].spaceId).to.equal(spaceId);
-      expect(persisted[0].rootDocUrl).to.equal(handle.url);
+      expect(persisted[0].rootDocUrl).to.equal(handle.handle.url);
 
       await manager.close();
       await automergeHost.close();
@@ -134,12 +134,12 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
           objects: {},
           links: {},
         });
-        return automergeHost.findWithProgress<DatabaseDirectory>(handle.documentId);
+        return automergeHost.acquireDoc<DatabaseDirectory>(handle.documentId);
       };
 
       // The refs are opaque URLs to the store, so real documents stand in for the root and credentials.
-      spaceRootDocUrl = (await automergeHost.createDoc({})).url;
-      credentialsDocUrl = (await automergeHost.createDoc({})).url;
+      spaceRootDocUrl = (await automergeHost.createDoc({})).handle.url;
+      credentialsDocUrl = (await automergeHost.createDoc({})).handle.url;
 
       await manager.assignRootToSpace(spaceId, await directory());
       expect(manager.getSpaceRootRefs(spaceId)).to.be.undefined;
@@ -204,7 +204,7 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
     // No directory assigned, so there is no row to hold the columns.
     await expect(
       manager.setSpaceRootRefs(SpaceId.random(), {
-        spaceRootDocUrl: (await automergeHost.createDoc({})).url,
+        spaceRootDocUrl: (await automergeHost.createDoc({})).handle.url,
       }),
     ).rejects.toThrow();
   });
@@ -240,9 +240,9 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
     expect(directory.doc()?.access?.spaceKey).to.equal(spaceKey.toHex());
 
     const root = await host.loadDoc<SpaceRoot>(Context.default(), spaceRootUrl);
-    expect(isSpaceRoot(root?.doc())).to.be.true;
-    expect(root!.doc()!.directory).to.equal(directory.url);
-    expect(root!.doc()!.spaceId).to.equal(spaceId);
+    expect(isSpaceRoot(root?.handle.doc())).to.be.true;
+    expect(root!.handle.doc()!.directory).to.equal(directory.handle.url);
+    expect(root!.handle.doc()!.spaceId).to.equal(spaceId);
 
     expect(host.getSpaceRootRefs(spaceId)).to.deep.equal({
       spaceRootDocUrl: spaceRootUrl,
@@ -357,10 +357,10 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
         objects: {},
         links: {},
       });
-      const updatedRoot = await host.updateSpaceRoot(Context.default(), spaceId, anotherHandle.url);
+      const updatedRoot = await host.updateSpaceRoot(Context.default(), spaceId, anotherHandle.handle.url);
       expect(updatedRoot).to.exist;
-      expect(updatedRoot.url).to.equal(anotherHandle.url);
-      expect(host.spaces[0].rootDocUrl).to.equal(anotherHandle.url);
+      expect(updatedRoot.url).to.equal(anotherHandle.handle.url);
+      expect(host.spaces[0].rootDocUrl).to.equal(anotherHandle.handle.url);
 
       // Test removeSpace
       await host.removeSpace(spaceId);

@@ -77,7 +77,7 @@ describe('DocumentsSynchronizer', () => {
     ]);
 
     // Apply the actual change to the handle (simulates what happens when client sends mutation).
-    handle.change((doc: any) => {
+    handle.handle.change((doc: any) => {
       doc.text = 'modified by client 1';
     });
 
@@ -155,12 +155,38 @@ describe('DocumentsSynchronizer', () => {
 
         const handle = await host.loadDoc<{ text: string }>(Context.default(), documentId);
         invariant(handle);
-        await handle.whenReady();
+        await handle.handle.whenReady();
 
-        expect(handle.doc().text).to.equal(text);
+        expect(handle.handle.doc().text).to.equal(text);
 
         await host.close();
       }
     });
+  });
+
+  // The host used to keep every document a client had ever subscribed to: unsubscribing detached the
+  // change listener and left the document in the repo cache, so the client releasing an object
+  // bought nothing on the host side.
+  test('unsubscribing releases the document on the host', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime });
+    await openAndClose(host);
+
+    const created = await host.createDoc<{ text: string }>({ text: 'subscribed' });
+    const documentId = created.documentId;
+    await host.flush(Context.default());
+    created[Symbol.dispose]();
+
+    const synchronizer = new DocumentsSynchronizer({ automergeHost: host, sendUpdates: () => {} });
+    await openAndClose(synchronizer);
+    await synchronizer.addDocuments([documentId]);
+    await host.drainEvictions();
+    expect(host.loadedDocumentIds).to.contain(documentId);
+
+    synchronizer.removeDocuments([documentId]);
+    await host.drainEvictions();
+    expect(host.loadedDocumentIds).to.not.contain(documentId);
+    expect(host.leasedDocsCount).to.equal(0);
   });
 });

@@ -17,7 +17,6 @@ import {
   type DocHandleChangePayload,
   type DocumentId,
   type DocumentProgress,
-  type DocumentQuery,
   type PeerCandidatePayload,
   type PeerDisconnectedPayload,
   type PeerId,
@@ -56,6 +55,7 @@ import {
   diffCollectionStateForPeer,
   subsetRemoteToLocal,
 } from './collection-synchronizer';
+import { type DocumentLease, DocumentLeaseRegistry } from './document-lease';
 import { type EchoDataMonitor } from './echo-data-monitor';
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
 import { type AutomergeReplicator, type RemoteDocumentExistenceCheckProps } from './echo-replicator';
@@ -158,6 +158,13 @@ const NON_CONVERGENCE_WARN_INTERVAL = 30;
 const CLOSE_TIMEOUT = 2_000;
 
 /**
+ * How long an eviction waits for a document that is still loading. A document only reaches disk once
+ * it settles, so dropping one mid-load would discard memory-only data; one that never arrives costs
+ * an empty handle and is left resident.
+ */
+const EVICT_SETTLE_TIMEOUT = 2_000;
+
+/**
  * Abstracts over the AutomergeRepo.
  *
  * Runs Subduction as the document byte transport ({@link Repo.subductionAdapters}), while
@@ -228,6 +235,27 @@ export class AutomergeHost extends Resource {
    * Documents requested by remote peers.
    */
   private _documentsRequested = new Map<PeerId, Set<DocumentId>>();
+
+  /**
+   * Reference counts the documents held loaded. The repo caches a document forever once anything
+   * faults it in, so residency is decided here instead — see {@link DocumentLeaseRegistry}.
+   */
+  private readonly _leases = new DocumentLeaseRegistry({
+    open: (documentId) => {
+      const query = this._repo.findWithProgress(documentId);
+      const handle = this._repo.getHandle(documentId);
+      invariant(handle, 'Document query has no attached handle.');
+      return { query, handle };
+    },
+    evict: (documentId, isCancelled) => this._evictDocument(documentId, isCancelled),
+  });
+
+  /**
+   * Leases held for documents being replicated after a collection-sync diff, released when the
+   * document settles: the trigger is fire-and-forget, so nothing else holds the document while its
+   * bytes are in flight.
+   */
+  private readonly _replicationLeases = new Map<DocumentId, DocumentLease>();
 
   private _sharePolicyChangedTask?: DeferredTask;
 
@@ -413,6 +441,14 @@ export class AutomergeHost extends Resource {
   }
 
   protected override async _close(ctx: Context): Promise<void> {
+    // Closed before the repo shuts down: unloading one document at a time on the way out is wasted
+    // work, and an eviction racing the shutdown would flush into a closed storage adapter.
+    for (const lease of this._replicationLeases.values()) {
+      lease[Symbol.dispose]();
+    }
+    this._replicationLeases.clear();
+    this._leases.close();
+
     // Drain any in-flight `_onHeadsChangedTask` before the `Resource` base
     // disposes `this._ctx`.
     await this._onHeadsChangedTask?.join();
@@ -465,6 +501,11 @@ export class AutomergeHost extends Resource {
     return Object.keys(this._repo.handles).length;
   }
 
+  /** Ids of the documents resident in the repo cache — ids only, so no caller can bypass a lease. */
+  get loadedDocumentIds(): DocumentId[] {
+    return Object.keys(this._repo.handles) as DocumentId[];
+  }
+
   /**
    * Cached handles owned by one space — residency, not the space's document count.
    *
@@ -493,10 +534,6 @@ export class AutomergeHost extends Resource {
     return counted.size;
   }
 
-  get handles(): Readonly<Record<DocumentId, DocHandle<any>>> {
-    return this._repo.handles;
-  }
-
   get storage(): SqliteStorageAdapter {
     return this._storage;
   }
@@ -511,14 +548,88 @@ export class AutomergeHost extends Resource {
     await this._echoNetworkAdapter.removeReplicator(replicator);
   }
 
-  async loadDoc<T>(ctx: Context, documentId: AnyDocumentId, opts?: LoadDocOptions): Promise<DocHandle<T> | null> {
+  /**
+   * Leases a document, waiting until it is loaded. The lease is the only route to a `DocHandle`;
+   * dispose it (`using`, or in the holder's teardown) so the document can be evicted.
+   *
+   * Returns null when `fetchFromNetwork: false` and the document is not on disk.
+   */
+  async loadDoc<T>(ctx: Context, documentId: AnyDocumentId, opts?: LoadDocOptions): Promise<DocumentLease<T> | null> {
     invariant(this.isOpen, 'AutomergeHost is not open');
+    // Leased before the wait, so the document cannot be evicted between becoming ready and the
+    // caller receiving it.
+    const lease = this.acquireDoc<T>(documentId);
+    let settled = false;
+    try {
+      const result = await this._loadLeasedDoc(ctx, lease, opts);
+      settled = result !== null;
+      return result;
+    } finally {
+      if (!settled) {
+        lease[Symbol.dispose]();
+      }
+    }
+  }
+
+  /**
+   * Leases a document without waiting for it to load — the lease's query carries the readiness
+   * state. Faults the document in, so a caller that only wants to know whether it is already
+   * resident must not use this.
+   */
+  acquireDoc<T>(documentId: AnyDocumentId): DocumentLease<T> {
+    invariant(this.isOpen, 'AutomergeHost is not open');
+    return this._leases.acquire<T>(interpretAsDocumentId(documentId));
+  }
+
+  /** Documents currently leased — what the host holds because something is using it. */
+  get leasedDocsCount(): number {
+    return this._leases.size;
+  }
+
+  /** Settles pending evictions, for a caller measuring residency. */
+  async drainEvictions(): Promise<void> {
+    await this._leases.drain();
+  }
+
+  /** Drops a document from the repo cache, draining its pending save so it cannot re-persist. */
+  private async _evictDocument(documentId: DocumentId, isCancelled: () => boolean): Promise<void> {
+    if (!this.isOpen) {
+      return;
+    }
+    // Only a loaded document is evicted: `_repo.flush` persists ready handles, so dropping one that
+    // is still loading would discard data that is only in memory.
+    if (getHandleState(this._repo, documentId) !== 'ready') {
+      await asyncTimeout(this._waitForReady(this._repo.findWithProgress(documentId)), EVICT_SETTLE_TIMEOUT).catch(
+        (err) => log('document did not settle before eviction', { documentId, err }),
+      );
+      if (getHandleState(this._repo, documentId) !== 'ready') {
+        log('skipped eviction of a document that is not loaded', { documentId });
+        return;
+      }
+    }
+    await this._repo.flush([documentId]);
+    // Re-leased while this was draining: dropping the handle now would hand its holder an empty
+    // document to read.
+    if (isCancelled()) {
+      log('cancelled eviction of a re-leased document', { documentId });
+      return;
+    }
+    if (this._repo.handles[documentId]) {
+      await this._repo.removeFromCache(documentId);
+    }
+    log('evicted document', { documentId });
+  }
+
+  private async _loadLeasedDoc<T>(
+    ctx: Context,
+    lease: DocumentLease<T>,
+    opts?: LoadDocOptions,
+  ): Promise<DocumentLease<T> | null> {
     // Readiness lives on the `DocumentQuery`, not the `DocHandle` — see
     // {@link getHandleState}.
-    const progress = this._repo.findWithProgress<T>(documentId as DocumentId);
-    const initial = progress.peek();
-    if (initial.state === 'ready') {
-      return initial.handle;
+    const progress = lease.query;
+    if (progress.peek().state === 'ready') {
+      return lease;
     }
 
     // Default: when `fetchFromNetwork` is unset, behave as if it were
@@ -552,9 +663,17 @@ export class AutomergeHost extends Resource {
     }
 
     // `_waitForReady` (vs `progress.whenReady()`) treats `'unavailable'` as transient — the query routinely transits through it when classical sync sees `peers.size === 0` before the next peer arrives.
-    return opts?.timeout
-      ? await cancelWithContext(ctx, asyncTimeout(this._waitForReady(progress), opts.timeout))
-      : await cancelWithContext(ctx, this._waitForReady(progress));
+    if (opts?.timeout) {
+      await cancelWithContext(ctx, asyncTimeout(this._waitForReady(progress), opts.timeout));
+    } else {
+      await cancelWithContext(ctx, this._waitForReady(progress));
+    }
+    // Re-read through the lease: an eviction of the same document may have completed during the wait,
+    // in which case the query that just reported ready is not the one the lease now resolves.
+    if (lease.state !== 'ready') {
+      return await this._loadLeasedDoc(ctx, lease, opts);
+    }
+    return lease;
   }
 
   /** Resolve on `'ready'`, reject on `'failed'`, treat `'unavailable'` as transient; caller bounds via `opts.timeout` / `ctx`. */
@@ -578,19 +697,6 @@ export class AutomergeHost extends Resource {
         // `'unavailable'` and `'loading'` are non-terminal — keep waiting.
       });
     });
-  }
-
-  /**
-   * Returns the live {@link DocumentQuery} for a document — exposes the
-   * always-attached `DocHandle` and the actual readiness state
-   * (`'loading' | 'ready' | 'unavailable' | 'failed'`) via `peek()` /
-   * `subscribe()` / `whenReady()`. Use this to observe sync state without
-   * forcing a wait. See {@link getHandleState} for why callers must read
-   * liveness off the query rather than the `DocHandle` itself.
-   */
-  findWithProgress<T>(documentId: AnyDocumentId): DocumentQuery<T> {
-    invariant(this.isOpen, 'AutomergeHost is not open');
-    return this._repo.findWithProgress<T>(documentId as DocumentId) as DocumentQuery<T>;
   }
 
   async exportDoc(id: AnyDocumentId): Promise<Uint8Array> {
@@ -664,14 +770,12 @@ export class AutomergeHost extends Resource {
   /**
    * Create new persisted document.
    */
-  async createDoc<T>(initialValue?: T | Doc<T> | Uint8Array, opts?: CreateDocOptions): Promise<DocHandle<T>> {
+  async createDoc<T>(initialValue?: T | Doc<T> | Uint8Array, opts?: CreateDocOptions): Promise<DocumentLease<T>> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     if (opts?.preserveHistory) {
       if (initialValue instanceof Uint8Array) {
         const handle = this._repo.import<T>(initialValue, { docId: opts?.documentId });
-        this._createdDocuments.add(handle.documentId);
-        this._sharePolicyChangedTask!.schedule();
-        return handle;
+        return this._afterCreate<T>(handle.documentId);
       }
 
       if (!isAutomerge(initialValue)) {
@@ -680,9 +784,7 @@ export class AutomergeHost extends Resource {
 
       // TODO(dmaretskyi): There's a more efficient way.
       const handle = this._repo.import<T>(save(initialValue as Doc<T>), { docId: opts?.documentId });
-      this._createdDocuments.add(handle.documentId);
-      this._sharePolicyChangedTask!.schedule();
-      return handle;
+      return this._afterCreate<T>(handle.documentId);
     } else {
       if (initialValue instanceof Uint8Array) {
         throw new Error('Cannot create document from Uint8Array without preserving history');
@@ -692,10 +794,15 @@ export class AutomergeHost extends Resource {
         throw new Error('Cannot prefil document id when not importing an existing doc');
       }
       const handle = await this._repo.create2<T>(initialValue);
-      this._createdDocuments.add(handle.documentId);
-      this._sharePolicyChangedTask!.schedule();
-      return handle;
+      return this._afterCreate<T>(handle.documentId);
     }
+  }
+
+  /** Leases a freshly created document and announces it, so the creator holds it until it lets go. */
+  private _afterCreate<T>(documentId: DocumentId): DocumentLease<T> {
+    this._createdDocuments.add(documentId);
+    this._sharePolicyChangedTask!.schedule();
+    return this._leases.acquire<T>(documentId);
   }
 
   async waitUntilHeadsReplicated(ctx: Context, heads: DataService.DocHeadsList): Promise<void> {
@@ -717,9 +824,9 @@ export class AutomergeHost extends Resource {
     if (headsToWait.length > 0) {
       await Promise.all(
         headsToWait.map(async (entry) => {
-          const handle = await this.loadDoc<DatabaseDirectory>(ctx, entry.documentId as DocumentId);
-          invariant(handle, 'Document handle must be available when waiting for heads replication.');
-          await waitForHeads(handle, entry.heads!);
+          using lease = await this.loadDoc<DatabaseDirectory>(ctx, entry.documentId as DocumentId);
+          invariant(lease, 'Document handle must be available when waiting for heads replication.');
+          await waitForHeads(lease.handle, entry.heads!);
         }),
       );
     }
@@ -734,15 +841,19 @@ export class AutomergeHost extends Resource {
       log('re-indexing heads for document', { documentId });
       // `Repo.find()` resolves on `'ready'` and rejects on `'unavailable'`,
       // so the handle is guaranteed to hold data here.
-      let handle: DocHandle<any>;
+      let lease: DocumentLease<any> | null;
       try {
-        handle = await this._repo.find(documentId);
+        lease = await this.loadDoc(Context.default(), documentId);
       } catch (err) {
         log.error('failed to find document', { documentId, err });
         continue;
       }
+      if (!lease) {
+        continue;
+      }
+      using _lease = lease;
 
-      const heads = handle.heads();
+      const heads = lease.handle.heads();
       if (!heads) {
         continue;
       }
@@ -1295,9 +1406,39 @@ export class AutomergeHost extends Resource {
         });
       }
       this._documentsToSync.add(documentId);
-      this._repo.findWithProgress(documentId as DocumentId);
+      this._leaseUntilSettled(documentId as DocumentId);
     }
     this._sharePolicyChangedTask!.schedule();
+  }
+
+  /**
+   * Leases a document until its query settles, which both triggers replication and keeps the
+   * document resident while its bytes are in flight — nothing else holds it until they land.
+   *
+   * A document that never settles stays leased: an unarrived document costs an empty handle, and
+   * evicting it would cancel the very replication this call started.
+   */
+  private _leaseUntilSettled(documentId: DocumentId): void {
+    if (this._replicationLeases.has(documentId)) {
+      return;
+    }
+    const lease = this.acquireDoc(documentId);
+    this._replicationLeases.set(documentId, lease);
+    const release = () => {
+      if (this._replicationLeases.delete(documentId)) {
+        lease[Symbol.dispose]();
+      }
+    };
+    if (lease.state === 'ready' || lease.state === 'failed') {
+      release();
+      return;
+    }
+    const unsubscribe = lease.query.subscribe((state) => {
+      if (state.state === 'ready' || state.state === 'failed') {
+        unsubscribe();
+        release();
+      }
+    });
   }
 
   // TODO(mykola): Add retries of batches https://gist.github.com/mykola-vrmchk/fde270259e9209fcbf1331e5abbf12cf
