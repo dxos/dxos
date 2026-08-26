@@ -214,10 +214,10 @@ const TaskListGroupLabel = composable<HTMLDivElement>(({ children, ...props }, f
   return (
     <div
       {...rest}
-      className={mx('col-span-full min-h-(--dx-control) items-center text-sm text-description', className)}
+      className={mx('col-span-full min-h-(--dx-control) flex items-center text-sm text-description', className)}
       ref={forwardedRef}
     >
-      {children}
+      <span>{children}</span>
     </div>
   );
 });
