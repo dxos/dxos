@@ -8,6 +8,7 @@ import {
   AppGraphBuilder,
   Commands,
   CreateObject,
+  Dashboard,
   IdentityCreated,
   NavigationHandler,
   NavigationTargetResolver,
@@ -28,28 +29,30 @@ import {
 import { meta } from '#meta';
 import { SpaceSchema } from '#types';
 
-export const SpacePlugin = Plugin.define<SpaceSchema.SpacePluginOptions>(meta).pipe(
-  Plugin.addModule(AppGraphBuilder),
-  // TODO(wittjosiah): Could some of these commands make use of operations?
-  Plugin.addModule(Commands),
-  Plugin.addModule(CreateObject),
-  Plugin.addModule(IdentityCreated),
-  Plugin.addModule(NavigationHandler),
-  Plugin.addModule(NavigationTargetResolver),
-  Plugin.addModule(ObservabilityMappings),
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(PluginAsset),
-  Plugin.addModule(ReactRoot),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(Repair),
-  Plugin.addModule(Schema),
-  Plugin.addModule(SkillDefinition),
-  Plugin.addModule(SpaceSettings),
-  Plugin.addModule(SpacesReady),
-  Plugin.addModule(SpaceState),
-  Plugin.addModule(Translations),
-  Plugin.addModule(UndoMappings),
-  Plugin.make,
-);
+export const SpacePlugin = Plugin.define<SpaceSchema.SpacePluginOptions>(meta)
+  .pipe(
+    Plugin.addModule(AppGraphBuilder),
+    // TODO(wittjosiah): Could some of these commands make use of operations?
+    Plugin.addModule(Commands),
+    Plugin.addModule(CreateObject),
+    Plugin.addModule(Dashboard),
+    Plugin.addModule(IdentityCreated),
+    Plugin.addModule(NavigationHandler),
+    Plugin.addModule(NavigationTargetResolver),
+    Plugin.addModule(ObservabilityMappings),
+    Plugin.addModule(OperationHandler),
+    Plugin.addModule(PluginAsset),
+    Plugin.addModule(ReactRoot),
+    Plugin.addModule(ReactSurface),
+    Plugin.addModule(Repair),
+    Plugin.addModule(Schema),
+    Plugin.addModule(SkillDefinition),
+    Plugin.addModule(SpaceSettings),
+    Plugin.addModule(SpacesReady),
+    Plugin.addModule(SpaceState),
+    Plugin.addModule(Translations),
+  )
+  // `pipe` has overloads only up to 20 arguments, and this plugin has more modules than that.
+  .pipe(Plugin.addModule(UndoMappings), Plugin.make);
 
 export default SpacePlugin;

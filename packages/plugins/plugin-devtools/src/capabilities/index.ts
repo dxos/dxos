@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import { Runtime_Client_StorageSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { type Client } from '@dxos/react-client';
 
 import { meta } from '#meta';
@@ -44,7 +46,9 @@ const setupDevtools = () => {
     const client: Client = (window as any).dxos.client;
     const config = client.config;
     await client.destroy();
-    const { storage } = createStorageObjects(config.values?.runtime?.client?.storage ?? {});
+    const { storage } = createStorageObjects(
+      config.values?.runtime?.client?.storage ?? create(Runtime_Client_StorageSchema, {}),
+    );
     await changeStorageVersionInMetadata(storage, version);
     location.pathname = '/';
   };

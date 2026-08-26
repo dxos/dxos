@@ -29,6 +29,23 @@ export const Commands = AppCapability.commands(() => import('./commands'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
   environments: ['node'],
 });
+// Browser-only: requires the app-shell `Layout`, which no headless host registers.
+export const Dashboard = Capability.lazyModule(
+  'Dashboard',
+  {
+    environments: [],
+    requires: [
+      Capabilities.AtomRegistry,
+      Capabilities.PluginManager,
+      ClientCapabilities.Client,
+      AppCapabilities.Layout,
+    ],
+    provides: [SpaceCapabilities.Dashboard],
+    // Runtime event: there is no space to project until the client observes them.
+    activatesOn: ClientEvents.SpacesReady,
+  },
+  () => import('./dashboard'),
+);
 export const IdentityCreated = Capability.lazyModule(
   'IdentityCreated',
   {

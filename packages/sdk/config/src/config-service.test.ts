@@ -73,7 +73,7 @@ describe('ConfigService.load', () => {
   }) => {
     restoreEnv = withEnv({ DX_LOCAL_DEV: '1' });
     const { config } = await createMissing('local-dev');
-    expect(config.get(EDGE_URL)).toEqual('https://main.dxos.network');
+    expect(config.get(EDGE_URL)).toEqual('https://preview.dxos.network');
   });
 
   test('DX_LOCAL_DEV=0 opts back out to production', async ({ expect }) => {

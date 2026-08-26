@@ -1,0 +1,15 @@
+layer: library
+language: typescript
+tags:
+  - composer-plugin
+  - ts-vite-build
+  - ts-test
+  - ts-test-storybook
+  - pack
+  - storybook
+
+tasks:
+  # No `check-module-structure`: every module in this plugin's barrel is a UI family, so it
+  # declares no `environments`, generates no headless barrel, and its `#capabilities` is the
+  # unconditioned default. Tracing it under node/workerd would assert a property of a bundle no
+  # headless host loads — those hosts leave a browser-only plugin out of their plugin list.

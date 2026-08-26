@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import './spotlight.css';
+
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';

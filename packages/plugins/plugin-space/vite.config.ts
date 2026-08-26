@@ -12,6 +12,7 @@ export default defineConfig({
     'components': 'src/components/index.ts',
     'constants': 'src/constants.ts',
     'containers': 'src/containers/index.ts',
+    'dashboard': 'src/dashboard/index.ts',
     'hooks': 'src/hooks/index.ts',
     'meta': 'src/meta.ts',
     'operations': 'src/operations/index.ts',

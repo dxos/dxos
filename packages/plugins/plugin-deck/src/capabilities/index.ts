@@ -63,7 +63,12 @@ export const DeckState = Capability.lazyModule(
     // demotes the reader into this module's wave rather than promoting this module.
     activatesOn: ActivationEvents.Startup,
     requires: [Capabilities.AtomRegistry],
-    provides: [DeckCapabilities.State, DeckCapabilities.EphemeralState, AppCapabilities.Layout],
+    provides: [
+      DeckCapabilities.State,
+      DeckCapabilities.EphemeralState,
+      AppCapabilities.Layout,
+      DeckCapabilities.Platform,
+    ],
   },
   () => import('./state'),
 );

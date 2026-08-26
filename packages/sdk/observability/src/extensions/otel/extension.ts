@@ -9,7 +9,7 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Ref from 'effect/Ref';
 
-import { type Config, resolveTelemetryTag } from '@dxos/config';
+import { type Config, getEnvString, resolveTelemetryTag } from '@dxos/config';
 import { LogLevel, log } from '@dxos/log';
 import { isNode, isNonNullable } from '@dxos/util';
 
@@ -66,7 +66,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
 
   const rawEndpoint = isNode()
     ? (process.env.DX_OTEL_ENDPOINT ?? _endpoint ?? buildSecrets.OTEL_ENDPOINT)
-    : (config.values.runtime?.app?.env?.DX_OTEL_ENDPOINT ?? _endpoint);
+    : (getEnvString(config, 'DX_OTEL_ENDPOINT') ?? _endpoint);
   // The OTLP exporter (>= 0.203) validates URLs and rejects relative paths.
   // In the browser/worker, resolve relative endpoints against the current origin
   // so callers can keep using paths like `/api/otel` for proxied deployments.
@@ -75,7 +75,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     _headers ??
     Match.value(isNode()).pipe(
       Match.when(true, () => Option.fromNullishOr(process.env.DX_OTEL_HEADERS ?? buildSecrets.OTEL_HEADERS)),
-      Match.when(false, () => Option.fromNullishOr(config.values.runtime?.app?.env?.DX_OTEL_HEADERS)),
+      Match.when(false, () => Option.fromNullishOr(getEnvString(config, 'DX_OTEL_HEADERS'))),
       Match.exhaustive,
       Option.map((raw) => parseHeaders(raw)),
       Option.getOrElse(() => undefined),

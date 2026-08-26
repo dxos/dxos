@@ -39,6 +39,11 @@
       "types": "./dist/types/src/hooks/index.d.ts",
       "default": "./dist/lib/hooks.mjs"
     },
+    "#dashboard": {
+      "source": "./src/dashboard/index.ts",
+      "types": "./dist/types/src/dashboard/index.d.ts",
+      "default": "./dist/lib/dashboard.mjs"
+    },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
@@ -162,6 +167,11 @@
       "source": "./src/types/SpaceSurface.ts",
       "types": "./dist/types/src/types/SpaceSurface.d.ts",
       "import": "./dist/lib/SpaceSurface.mjs"
+    },
+    "./dashboard": {
+      "source": "./src/dashboard/index.ts",
+      "types": "./dist/types/src/dashboard/index.d.ts",
+      "import": "./dist/lib/dashboard.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -223,6 +233,7 @@
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/plugin-settings": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",
+    "@dxos/progress": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",

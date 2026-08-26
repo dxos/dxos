@@ -20,13 +20,14 @@ import {
   UrlHandler,
 } from '#capabilities';
 import { meta } from '#meta';
+import type { DeckCapabilities } from '#types';
 
 // NOTE(Zan): When producing values with immer, we shouldn't auto-freeze them because
 //   our signal implementation needs to add some hidden properties to the produced values.
 // TODO(Zan): Move this to a more global location if we use immer more broadly.
 setAutoFreeze(false);
 
-export const DeckPlugin = Plugin.define(meta).pipe(
+export const DeckPlugin = Plugin.define<DeckCapabilities.DeckPluginOptions>(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(CheckAppScheme),
   Plugin.addModule(DeckSettings),

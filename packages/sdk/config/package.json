@@ -69,6 +69,7 @@
     "test-build": "node ./src/testing/build.js"
   },
   "dependencies": {
+    "@bufbuild/protobuf": "catalog:",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
