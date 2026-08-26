@@ -24,14 +24,14 @@ export type EdgeServiceName = (typeof EdgeServiceName)[keyof typeof EdgeServiceN
  * prefix beneath it — so a client holds one base URL and a prefix table rather than a URL per
  * service. `local` is `moon run edge:dev`.
  *
- * `dxos.network` and `main.dxos.network` stay attached as aliases for clients already in the field;
- * they are not addresses to write into new code.
+ * `main.dxos.network` stays attached as an alias of `preview` for clients already in the field; it is
+ * not an address to write into new code.
  */
 export const EDGE_URLS = Object.freeze({
   local: 'http://localhost:8787',
   dev: 'https://dev.dxos.network',
   preview: 'https://preview.dxos.network',
-  production: 'https://edge.network',
+  production: 'https://dxos.network',
 } as const);
 
 /**

@@ -4,7 +4,7 @@
 ---
 
 EDGE services are now addressed at one host per environment with the service selected by a path
-prefix -- `https://edge.network` (production), `https://preview.dxos.network` and
+prefix -- `https://dxos.network` (production), `https://preview.dxos.network` and
 `https://dev.dxos.network` -- rather than at a hostname each. `EDGE_URLS` and `EDGE_SERVICE_PATHS`
 in `@dxos/config` are the source of truth, and the legacy `*.dxos.network` service hostnames stay
 attached, so nothing has to be migrated for this release.

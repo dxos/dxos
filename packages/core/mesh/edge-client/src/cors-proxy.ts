@@ -6,7 +6,7 @@
 // dependencies so they can be bundled into workerd / browser environments
 // without pulling in protobufjs or similar node-only packages.
 
-const LEGACY_CORS_PROXY_URL = 'https://edge.network/cors';
+const LEGACY_CORS_PROXY_URL = 'https://dxos.network/cors';
 
 // Matches EDGE_CLIENT_TAG_HEADER from @dxos/protocols.
 // Duplicated here to avoid importing the heavy protocols bundle in edge environments.

@@ -30,7 +30,7 @@ export const defaultConfig = { version: 1 };
  * Reached through EDGE under `/hub`, not at hub-service's own `hub.dxos.network` hostname —
  * one host per environment, service by path prefix.
  */
-export const DEFAULT_HUB_URL = 'https://edge.network/hub/';
+export const DEFAULT_HUB_URL = 'https://dxos.network/hub/';
 
 // TODO(burdon): Allow override via env? Generalize since currently NodeJS only.
 const HOME = typeof process !== 'undefined' ? (process?.env?.HOME ?? '') : '';

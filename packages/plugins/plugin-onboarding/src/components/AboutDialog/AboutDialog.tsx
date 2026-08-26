@@ -15,7 +15,7 @@ import { meta } from '../../meta';
 const ENV_LABELS: Record<string, string> = {
   'dev.dxos.network': 'Dev',
   'preview.dxos.network': 'Preview',
-  'edge.network': 'Production',
+  'dxos.network': 'Production',
 
   'edge.dxos.workers.dev': 'Dev',
   'edge-preview.dxos.workers.dev': 'Preview',
@@ -26,7 +26,6 @@ const ENV_LABELS: Record<string, string> = {
   'main.dxos.network': 'Preview',
   'labs.dxos.network': 'Labs (retired)',
   'staging.dxos.network': 'Staging',
-  'dxos.network': 'Production',
 };
 
 const REPO = 'https://github.com/dxos/dxos';

@@ -16,7 +16,7 @@ import { VideoOperation } from '#types';
 const DEFAULT_LANG = 'en';
 
 // TODO(burdon): Configure from config.
-const TRANSCRIPTION_ENDPOINT = 'https://edge.network/transcription/video';
+const TRANSCRIPTION_ENDPOINT = 'https://dxos.network/transcription/video';
 
 const handler: Operation.WithHandler<typeof VideoOperation.Transcribe> = VideoOperation.Transcribe.pipe(
   Operation.withHandler(

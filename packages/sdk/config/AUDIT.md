@@ -21,7 +21,7 @@ Goals:
 > migration (removing the hard-coded strings) follows.
 >
 > **Host update.** Every EDGE service now resolves against one host per environment —
-> `edge.network`, `preview.dxos.network`, `dev.dxos.network` — with the service selected by a path
+> `dxos.network`, `preview.dxos.network`, `dev.dxos.network` — with the service selected by a path
 > prefix beneath it. `EDGE_URLS` in [`edge-services.ts`](src/edge-services.ts) is the source of
 > truth for those hosts, and `EDGE_SERVICE_PATHS` for the prefixes of the six services a client
 > holds an endpoint for (`/calls`, `/image`, `/discord`, `/cors`, `/introspect/mcp`, and

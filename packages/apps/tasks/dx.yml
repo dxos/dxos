@@ -9,6 +9,6 @@ runtime:
 
   services:
     edge:
-      url: https://edge.network/
+      url: https://dxos.network/
     iceProviders:
-      - urls: https://edge.network/ice
+      - urls: https://dxos.network/ice

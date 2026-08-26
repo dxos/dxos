@@ -35,7 +35,7 @@ const operations = [
  * TODO(burdon): Make configurable via plugin Settings once EDGE deployment
  * URL is finalized.
  */
-const INTROSPECT_MCP_URL = 'https://edge.network/introspect/mcp';
+const INTROSPECT_MCP_URL = 'https://dxos.network/introspect/mcp';
 
 const make = () =>
   Skill.make({
