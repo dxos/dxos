@@ -215,17 +215,32 @@ export const createDeviceAuthorization = async (
  * @param profile - profile of the newly added member.
  * @param invitationCredentialId - id of the delegated invitation credential in case one was used to add the member.
  */
-export const createAdmissionCredentials = async (
-  signer: CredentialSigner,
-  identityKey: PublicKey,
-  spaceKey: PublicKey,
-  genesisFeedKey: PublicKey,
-  role: SpaceMember.Role = SpaceMember.Role.ADMIN,
-  membershipChainHeads: PublicKey[] = [],
-  profile?: ProfileDocument,
-  invitationCredentialId?: PublicKey,
-  tags?: string[],
-): Promise<FeedMessage.Payload[]> => {
+export type CreateAdmissionCredentialsOptions = {
+  signer: CredentialSigner;
+  identityKey: PublicKey;
+  spaceKey: PublicKey;
+  genesisFeedKey: PublicKey;
+  role?: SpaceMember.Role;
+  membershipChainHeads?: PublicKey[];
+  profile?: ProfileDocument;
+  invitationCredentialId?: PublicKey;
+  tags?: string[];
+  /** Automerge URL of the space root document, for a space that has one. */
+  spaceRootUrl?: string;
+};
+
+export const createAdmissionCredentials = async ({
+  signer,
+  identityKey,
+  spaceKey,
+  genesisFeedKey,
+  role = SpaceMember.Role.ADMIN,
+  membershipChainHeads = [],
+  profile,
+  invitationCredentialId,
+  tags,
+  spaceRootUrl,
+}: CreateAdmissionCredentialsOptions): Promise<FeedMessage.Payload[]> => {
   const credentials = await Promise.all([
     await signer.createCredential({
       subject: identityKey,
@@ -236,6 +251,7 @@ export const createAdmissionCredentials = async (
         role,
         profile,
         genesisFeedKey,
+        spaceRootUrl,
         invitationCredentialId,
         'tags': tags ?? [],
       },

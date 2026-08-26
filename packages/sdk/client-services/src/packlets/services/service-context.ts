@@ -146,6 +146,7 @@ export const ServiceContextLayer = (
         devicePresenceOfflineTimeout: options.devicePresenceOfflineTimeout,
         devicePresenceAnnounceInterval: options.devicePresenceAnnounceInterval,
         edgeFeatures: options.edgeFeatures,
+        automergeCredentials: options.automergeCredentials,
       }),
     ),
     Layer.provideMerge(SpaceManagerLayer({ disableP2pReplication: options.disableP2pReplication })),
@@ -241,6 +242,11 @@ const echoHostLayer = (options: { useSubduction?: boolean }) =>
         Effect.promise(() => echoHost.open()),
         () => Effect.promise(() => echoHost.close()),
       );
+
+      // Points back down the stack, like the feed sync handlers above: the identity manager anchors
+      // the HALO space on a root document and needs the open host to do it.
+      const identityManager = yield* IdentityManagerService;
+      yield* Effect.promise(() => identityManager.setEchoHost(echoHost));
     }),
   ).pipe(
     Layer.provideMerge(

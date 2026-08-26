@@ -15,7 +15,7 @@ import { describe, onTestFinished, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
-import type { CollectionId } from '@dxos/echo-protocol';
+import { type CollectionId, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/teleport/testing';
@@ -601,7 +601,7 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
   // End-to-end policy gating using the real DXOS replication stack:
   // `MeshEchoReplicator` over `TeleportBuilder`. The mesh replicator is the
   // production wiring for peer-to-peer DXOS connections; it gates per-space
-  // via `authorizeDevice(spaceKey, deviceKey)`.
+  // via `authorizeDevice(await createIdFromSpaceKey(spaceKey), deviceKey)`.
   describe('subductionPolicy + MeshEchoReplicator', () => {
     // Two hosts in the same space, both authorized → doc replicates.
     test('authorized peers in same space replicate', { timeout: 5_000 }, async ({ expect }) => {
@@ -695,8 +695,8 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       // clears the stuck "all-failed" fetch entry and rebinds the subduction PeerId.
       // Driving a no-op commit on the holder kicks `_sharePolicyChangedTask` →
       // `shareConfigChanged()` for belt-and-suspenders recovery on the fetcher.
-      await host1.meshReplicator.authorizeDevice(spaceKey, host2.teleport.peerId);
-      await host2.meshReplicator.authorizeDevice(spaceKey, host1.teleport.peerId);
+      await host1.meshReplicator.authorizeDevice(await createIdFromSpaceKey(spaceKey), host2.teleport.peerId);
+      await host2.meshReplicator.authorizeDevice(await createIdFromSpaceKey(spaceKey), host1.teleport.peerId);
       await host2.host.createDoc({ kick: true });
 
       // Re-probe via a fresh load: the previous `DocumentQuery` may already have
@@ -757,8 +757,8 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       await waitForSubductionSave();
 
       // Authorize the device pair only for space A on both sides.
-      await host1.meshReplicator.authorizeDevice(spaceA, host2.teleport.peerId);
-      await host2.meshReplicator.authorizeDevice(spaceA, host1.teleport.peerId);
+      await host1.meshReplicator.authorizeDevice(await createIdFromSpaceKey(spaceA), host2.teleport.peerId);
+      await host2.meshReplicator.authorizeDevice(await createIdFromSpaceKey(spaceA), host1.teleport.peerId);
 
       const [connection1, connection2] = await teleportBuilder.connect(host1.teleport, host2.teleport);
       connection1.teleport.addExtension('automerge', host1.meshReplicator.createExtension());
@@ -879,8 +879,8 @@ const connectMeshPeers = async (
   authorized: boolean,
 ) => {
   if (authorized) {
-    await peer1.meshReplicator.authorizeDevice(spaceKey, peer2.teleport.peerId);
-    await peer2.meshReplicator.authorizeDevice(spaceKey, peer1.teleport.peerId);
+    await peer1.meshReplicator.authorizeDevice(await createIdFromSpaceKey(spaceKey), peer2.teleport.peerId);
+    await peer2.meshReplicator.authorizeDevice(await createIdFromSpaceKey(spaceKey), peer1.teleport.peerId);
   }
 
   const [connection1, connection2] = await builder.connect(peer1.teleport, peer2.teleport);
