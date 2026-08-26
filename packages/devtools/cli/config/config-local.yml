@@ -15,11 +15,11 @@ runtime:
     # Deployed rather than localhost: hub-service is a separate worker that is not part of the
     # local edge dev setup, so account flows against a local edge still talk to a deployed hub.
     hub:
-      url: https://dev.edge.network/hub/
+      url: https://dev.dxos.network/hub/
     edge:
       url: http://localhost:8787/
     iceProviders:
-      - urls: https://dev.edge.network/ice
+      - urls: https://dev.dxos.network/ice
     sandbox:
       url: http://localhost:8792
     ipfs:

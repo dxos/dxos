@@ -14,7 +14,7 @@
 
 Every EDGE service is now addressed at one host per environment, with the service selected by a path
 prefix rather than by its own hostname: `https://edge.network` (production),
-`https://preview.edge.network` (preview) and `https://dev.edge.network` (dev), plus `/ai`, `/hub`,
+`https://preview.dxos.network` (preview) and `https://dev.dxos.network` (dev), plus `/ai`, `/hub`,
 `/image`, `/calls`, `/cors`, `/discord`, `/transcription`, `/introspect` and `/api/sandbox`.
 
 `@dxos/config` exports `EDGE_URLS` and `EDGE_SERVICE_PATHS` as the source of truth, and

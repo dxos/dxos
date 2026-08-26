@@ -25,10 +25,10 @@ export const SERVICES_CONFIG: Record<string, MessageInitShape<typeof Runtime_Ser
     // ai-service is reached through the single edge entrypoint under the `/ai` prefix; its own
     // hostname is an implementation detail of not having a domain.
     ai: {
-      server: 'https://preview.edge.network/ai',
+      server: 'https://preview.dxos.network/ai',
     },
     edge: {
-      url: 'https://preview.edge.network',
+      url: 'https://preview.dxos.network',
     },
   },
 };

@@ -20,6 +20,6 @@ runtime:
         username: dxos
         credential: dxos
     edge:
-      url: https://preview.edge.network/
+      url: https://preview.dxos.network/
     iceProviders:
-      - urls: https://preview.edge.network/ice
+      - urls: https://preview.dxos.network/ice

@@ -63,7 +63,7 @@ const HOST_STORY_CLIENT_SERVICES = persistentClientServices(
         edgeFeatures: { signaling: true, echoReplicator: true, feedReplicator: true, agents: true },
       },
       services: {
-        edge: { url: 'https://dev.edge.network' },
+        edge: { url: 'https://dev.dxos.network' },
       },
     },
   }),

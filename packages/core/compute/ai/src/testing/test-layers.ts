@@ -59,7 +59,7 @@ export const LocalEdgeAiServiceLayer: AiServiceLayer = TestRouter.pipe(
 export const RemoteEdgeAiServiceLayer: AiServiceLayer = TestRouter.pipe(
   Layer.provide(
     AnthropicClient.layerConfig({
-      apiUrl: Config.succeed('https://preview.edge.network/ai/provider/anthropic'),
+      apiUrl: Config.succeed('https://preview.dxos.network/ai/provider/anthropic'),
     }),
   ),
   Layer.provide(FetchHttpClient.layer),

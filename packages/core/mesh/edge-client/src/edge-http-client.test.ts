@@ -12,7 +12,7 @@ import { EdgeHttpClient } from './edge-http-client';
 import { type EdgeIdentity } from './edge-identity';
 
 // TODO(burdon): Factor out config.
-const DEV_SERVER = 'https://dev.edge.network';
+const DEV_SERVER = 'https://dev.dxos.network';
 
 describe.skipIf(process.env.CI)('EdgeHttpClient', () => {
   it.skip('should get status', async ({ expect }) => {

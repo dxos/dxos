@@ -10,17 +10,15 @@ import { Button, Dialog, Link, Trans, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 
-// Keyed by the full edge host: `<env>.edge.network` (apex = production), plus every legacy
-// hostname still present in stored configs and installed builds.
+// Keyed by the full edge host: the canonical one per environment, plus every legacy hostname still
+// present in stored configs and installed builds.
 const ENV_LABELS: Record<string, string> = {
-  'dev.edge.network': 'Dev',
-  'preview.edge.network': 'Preview',
+  'dev.dxos.network': 'Dev',
+  'preview.dxos.network': 'Preview',
   'edge.network': 'Production',
 
   'edge.dxos.workers.dev': 'Dev',
-  'dev.dxos.network': 'Dev',
   'edge-preview.dxos.workers.dev': 'Preview',
-  'preview.dxos.network': 'Preview',
   'edge-main.dxos.workers.dev': 'Main (retired)',
   'edge-labs.dxos.workers.dev': 'Labs (retired)',
   'edge-staging.dxos.workers.dev': 'Staging',

@@ -134,7 +134,7 @@ const config = new Config({
     },
     services: {
       edge: {
-        url: 'https://preview.edge.network/',
+        url: 'https://preview.dxos.network/',
         // url: 'ws://localhost:8787',
       },
       iceProviders: [{ urls: 'https://edge.network/ice' }],

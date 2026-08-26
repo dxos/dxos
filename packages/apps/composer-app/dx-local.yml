@@ -21,6 +21,6 @@ runtime:
       type: LOCAL_TESTING
     # EDGE preview by default. Point at EDGE dev or a local EDGE with DX_EDGE_BASE_URL.
     edge:
-      url: https://preview.edge.network/
+      url: https://preview.dxos.network/
     sandbox:
-      url: https://preview.edge.network
+      url: https://preview.dxos.network
