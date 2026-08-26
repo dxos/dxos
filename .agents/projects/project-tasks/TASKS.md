@@ -34,8 +34,8 @@ be visible in the UI, closing the gaps the storybook audit surfaced.
       conversation's set (standalone chats now delegate into their own);
       the delegation strategy no longer mirrors to markdown; ChatTaskList and
       the ChatArticle story read/seed the task set.
-- [ ] **Open PR** — delegation fix + shared TaskList consolidation +
-      Chat.taskSet pivot; add an assistant-toolkit changeset.
+- [x] **Open PR** — #12752 (delegation fix, shared TaskList, Chat.taskSet pivot)
+      merged 2026-08-26; the follow-on work is #12784.
 - [ ] **Joined story: delegation beside a TaskSet surface** — chat delegating
       while a `TaskSetArticle` (or ChatTaskList over the durable TaskSet) shows
       the agent task appear, run, and complete.
@@ -47,7 +47,10 @@ be visible in the UI, closing the gaps the storybook audit surfaced.
       of resolving through the parent walk at read time (`peekProject`), so the
       ref is durable and the UI needs no reactive parent lookup (closes the
       TODO on `ChatTaskList`).
-- [ ] **Show task status, dependencies, and trigger sub-agents from task list**
+- [ ] **Trigger sub-agents from the task row** — status, dependencies and the
+      spinner all render; what is left is starting a delegation from the row
+      itself rather than through `/task:run`. (Was: "show status, dependencies,
+      and trigger sub-agents".)
       — surface per-task run state (started/failed, active sub-agent) and
       inter-task dependencies in the TaskList UI, and let a task row launch a
       sub-agent directly (the delegation loop without going through chat).
@@ -113,8 +116,8 @@ the drain loop; this PR (#12752).
       checklist notes moved off the title line (models pasted them back into
       title-keyed upserts, duplicating tasks). Live drain verified: 3/3 done,
       3 fold-backs, no duplicates, no failures.
-- [ ] **Finish** — fixtures regen, suites, lint/format, live verify, changeset,
-      push, PR comments (at end), DESIGN.md in assistant-toolkit/docs.
+- [x] **Finish** — fixtures regen, suites, lint/format, live verify, changeset,
+      PR comments, DESIGN.md in assistant-toolkit/docs; shipped in #12752.
 
 ## Phase 3: Task UX backlog
 
@@ -198,9 +201,7 @@ Each is independent of the others; none is started.
       GFM parser already emitted `URL` (bare) and `Autolink` (`<…>`) nodes, but
       `decorateMarkdown` only decorated the bracketed `Link` form, so neither
       rendered as an anchor. Both cases added, sharing one anchor decoration.
-- [ ] **Task descriptions in the list are plain text** — `TaskList` renders
-      `Task.description` into a `<span>`, so the URLs and `#nnn` references now
-      seeded in the stories stay inert there. Decide between rendering the
-      description as markdown (a read-only `MarkdownBlock`, which brings the
-      autolink and any `#nnn` decoration with it) and a lightweight linkify for
-      a single truncated line.
+- [x] **Task descriptions in the list are plain text** — rendered through
+      `MarkdownView` now, so a URL in a description is a link. `#nnn` there is
+      still inert: that decoration is a CodeMirror extension and this path is
+      react-markdown (tracked with the `#nnn` item above).
