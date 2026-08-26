@@ -166,14 +166,15 @@ Each is independent of the others; none is started.
       is parsed as an ATX heading, so `#foo` comes out as a title. The thread
       renders through CodeMirror (`MarkdownBlock` → `decorateMarkdown`), so the
       fix belongs there rather than in `MarkdownView`.
-- [ ] **plugin-github contributes a `#nnn` decoration** — a CodeMirror extension
-      contributed by plugin-github that decorates `#nnn` as a link to the PR or
-      issue, so the reference resolves through the plugin that owns the GitHub
-      integration rather than being hard-coded in the editor. Needs the repo
-      resolved from context (the space's connected repo), and the extension
-      contributed to the editor surfaces the way other plugins contribute theirs.
-      Story data already seeds `#nnn` references in `ProjectArticle` and
-      `TaskList` (`--with-descriptions`).
+- [x] **plugin-github contributes a `#nnn` decoration** — `githubReferences()`
+      decorates `#nnn` as a link to `…/issues/<n>` (GitHub redirects to the PR
+      when the number is one), contributed through
+      `MarkdownCapabilities.ExtensionProvider`. The repo comes from the space:
+      the TaskSet `sync` mirrors a repository into, matched by its `github.com`
+      foreign key and `owner/repo` name; a space mirroring none or several
+      declines rather than guessing. Code, code fences, and link targets are
+      skipped. NOT covered: the task list renders descriptions through
+      react-markdown, so `#nnn` there is inert (see the plain-text item).
 - [x] **Outliner menu popover has no arrow** — not the outliner's: `Popover`'s
       content carried `overflow-hidden`, and Radix positions the arrow as a
       child of the content straddling its edge, so EVERY `Popover.Arrow` in the

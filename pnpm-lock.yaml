@@ -10718,6 +10718,15 @@ importers:
 
   packages/plugins/plugin-github:
     dependencies:
+      '@codemirror/language':
+        specifier: 'catalog:'
+        version: 6.12.4
+      '@codemirror/state':
+        specifier: 'catalog:'
+        version: 6.7.1
+      '@codemirror/view':
+        specifier: 'catalog:'
+        version: 6.43.9
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -10745,6 +10754,9 @@ importers:
       '@dxos/plugin-connector':
         specifier: workspace:*
         version: link:../plugin-connector
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../plugin-markdown
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
@@ -10758,6 +10770,9 @@ importers:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
     devDependencies:
+      '@dxos/ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/ui-editor
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
