@@ -33,27 +33,25 @@ export type UploadWorkerArgs = {
   assets: Record<string, Uint8Array>;
 };
 
-/** @deprecated Migrate to `client.edge`. */
-export const createEdgeClient = (client: Client): EdgeHttpClient => {
+/** Resolves the configured EDGE url and binds the client to the current identity. */
+const configureEdgeClient = <T extends EdgeHttpClient>(client: Client, make: (edgeUrl: string) => T): T => {
   const edgeUrl = client.config.values.runtime?.services?.edge?.url;
   invariant(edgeUrl, 'Edge is not configured.');
-  const edgeClient = new EdgeHttpClient(edgeUrl);
-  const edgeIdentity = createEdgeIdentity(client);
-  edgeClient.setIdentity(edgeIdentity);
+  const edgeClient = make(edgeUrl);
+  edgeClient.setIdentity(createEdgeIdentity(client));
   return edgeClient;
 };
+
+/** @deprecated Migrate to `client.edge`. */
+export const createEdgeClient = (client: Client): EdgeHttpClient =>
+  configureEdgeClient(client, (edgeUrl) => new EdgeHttpClient(edgeUrl));
 
 /**
  * Like {@link createEdgeClient}, but for the process-control routes, which live on a subclass so they
  * stay out of Composer's eager boot graph (see `EdgeProcessHttpClient`).
  */
-export const createEdgeProcessClient = (client: Client): EdgeProcessHttpClient => {
-  const edgeUrl = client.config.values.runtime?.services?.edge?.url;
-  invariant(edgeUrl, 'Edge is not configured.');
-  const edgeClient = new EdgeProcessHttpClient(edgeUrl);
-  edgeClient.setIdentity(createEdgeIdentity(client));
-  return edgeClient;
-};
+export const createEdgeProcessClient = (client: Client): EdgeProcessHttpClient =>
+  configureEdgeClient(client, (edgeUrl) => new EdgeProcessHttpClient(edgeUrl));
 
 /**
  * @deprecated Use {@link FunctionsServiceClient} instead.

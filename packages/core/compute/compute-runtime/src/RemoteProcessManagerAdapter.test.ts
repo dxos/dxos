@@ -78,8 +78,10 @@ describe('RemoteProcessManagerAdapter', () => {
     expect(state).toEqual(Process.State.TERMINATED);
   });
 
-  test('runUntilSettled returns once the host reports a settled state', async ({ expect }) => {
-    const host = makeFakeHost();
+  test('runUntilSettled polls until the host reports a settled state', async ({ expect }) => {
+    // RUNNING is neither idle nor terminal, so the handle has to poll; the host settles on the third
+    // read.
+    const host = makeFakeHost({ initialState: 'RUNNING', settleAfterStatusCalls: 3 });
     await run(
       Effect.gen(function* () {
         const manager = yield* ProcessManager.Service;
@@ -90,6 +92,7 @@ describe('RemoteProcessManagerAdapter', () => {
       host,
     );
     expect(host.inputs).toEqual(['hello']);
+    expect(host.statusCalls()).toEqual(3);
   });
 });
 
@@ -110,10 +113,13 @@ const EchoProcess = Process.make(
  * In-memory stand-in for a remote host: echoes each input back as an output and tracks state, so the
  * client half (adapter + handle + cursor reads) can be exercised without EDGE.
  */
-const makeFakeHost = (): RemoteProcessManager.Control & { readonly inputs: unknown[] } => {
+const makeFakeHost = (
+  options: { readonly initialState?: ProcessProtocol.ProcessState; readonly settleAfterStatusCalls?: number } = {},
+): RemoteProcessManager.Control & { readonly inputs: unknown[]; statusCalls: () => number } => {
   const inputs: unknown[] = [];
   const events: ProcessProtocol.ProcessEvent[] = [];
-  let state: ProcessProtocol.ProcessState = 'IDLE';
+  let state: ProcessProtocol.ProcessState = options.initialState ?? 'IDLE';
+  let statusCalls = 0;
   let seq = 0;
 
   const info = (): ProcessProtocol.ProcessInfo => ({
@@ -131,9 +137,18 @@ const makeFakeHost = (): RemoteProcessManager.Control & { readonly inputs: unkno
 
   return {
     inputs,
+    statusCalls: () => statusCalls,
     spawn: () => Effect.sync(info),
     list: () => Effect.sync(() => [info()]),
-    status: () => Effect.sync(info),
+    status: () =>
+      Effect.sync(() => {
+        // Settles on the Nth read, so a predicate that returns too early — or a poll loop that never
+        // runs — shows up as a wrong call count rather than passing anyway.
+        if (options.settleAfterStatusCalls !== undefined && ++statusCalls >= options.settleAfterStatusCalls) {
+          state = 'IDLE';
+        }
+        return info();
+      }),
     submitInput: (_pid, input) =>
       Effect.sync(() => {
         inputs.push(input);
