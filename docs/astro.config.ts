@@ -82,7 +82,9 @@ export default defineConfig({
           collapsed: false,
         },
       ],
-      plugins: [starlightLinksValidator({ exclude: ['/typedoc/**', '/blog/**'] })],
+      // `/typedoc/**` is generated output and `/blog/**`, `/privacy` and `/terms` are custom pages under
+      // `src/pages`, which the validator cannot resolve because they are not content-collection routes.
+      plugins: [starlightLinksValidator({ exclude: ['/typedoc/**', '/blog/**', '/privacy', '/terms'] })],
       // PostHog snippet: https://posthog.com/docs/getting-started/install
       head:
         DX_POSTHOG_API_KEY && DX_POSTHOG_API_HOST

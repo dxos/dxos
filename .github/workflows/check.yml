@@ -237,6 +237,43 @@ jobs:
       - name: Check boot budget
         run: moon run composer-app:check-boot-budget
 
+  # The docs site's internal links, validated by starlight-links-validator as the last phase of
+  # `astro build`. That build ran nowhere but the nightly `Deploy Apps` job, so a broken cross-reference
+  # merged clean and surfaced hours later as a failed preview deploy of every app (run 32942291591) —
+  # far from the PR that wrote the link. `docs:bundle` rather than a link-only task, so what gates the
+  # PR and what the deploy runs cannot drift apart.
+  #
+  # Its own runner, like `boot-budget`: nothing else in this workflow builds the docs closure (`^:build`
+  # plus the three typedoc packages), and the graph hydrates from the remote cache, so a PR that leaves
+  # the docs and their dependencies alone replays a cache hit rather than rebuilding. Unscoped by
+  # `--affected` for that reason — the cache already scopes it, and moon's affected set would not catch
+  # a link broken by a dependency's generated output.
+  docs:
+    permissions:
+      contents: read
+      packages: read
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Build docs (validates links)
+        run: moon run docs:bundle
+
   # Retention suites (the `memory` tag), which the normal `test` job skips: they need `--expose-gc`
   # and force a single non-isolated fork, neither of which the sharded matrix can provide. Gated on
   # DX_DEBUG_LEAKS, the one variable that both un-skips the tag and supplies the flag.
