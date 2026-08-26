@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Context, TRACE_SPAN_ATTRIBUTE, type TraceContextData } from '@dxos/context';
 
 import { trace } from './api';
+import { BufferingTracingBackend, MAX_BUFFERED_SPANS } from './buffering-backend';
 import { TRACE_PROCESSOR } from './trace-processor';
 import type { RemoteSpan, StartSpanOptions, TracingBackend } from './tracing-types';
 
@@ -292,5 +293,90 @@ describe('buffering backend', () => {
     expect(workSpan!.endTime).toBeTypeOf('number');
     expect(workSpan!.endTime).toBeGreaterThanOrEqual(workSpan!.options.startTime!);
     expect(workSpan!.endTime).toBeLessThanOrEqual(afterEnd);
+  });
+});
+
+//
+// Ring buffer bound
+//
+
+describe('buffering backend bound', () => {
+  test('buffers up to the cap without dropping', ({ expect }) => {
+    const buffering = new BufferingTracingBackend();
+    for (let i = 0; i < MAX_BUFFERED_SPANS; i++) {
+      buffering.startSpan({ name: `span-${i}` });
+    }
+
+    expect(buffering.size).to.eq(MAX_BUFFERED_SPANS);
+    expect(buffering.dropped).to.eq(0);
+  });
+
+  test('drops the oldest spans past the cap instead of growing without bound', ({ expect }) => {
+    const buffering = new BufferingTracingBackend();
+    const overflow = 5;
+    for (let i = 0; i < MAX_BUFFERED_SPANS + overflow; i++) {
+      buffering.startSpan({ name: `span-${i}` });
+    }
+
+    expect(buffering.size).to.eq(MAX_BUFFERED_SPANS);
+    expect(buffering.dropped).to.eq(overflow);
+
+    // The surviving window is the newest `MAX_BUFFERED_SPANS`, still in FIFO order.
+    const { backend, spans } = createMockBackend();
+    buffering.drain(backend);
+
+    expect(spans).to.have.length(MAX_BUFFERED_SPANS);
+    expect(spans[0].options.name).to.eq(`span-${overflow}`);
+    expect(spans[spans.length - 1].options.name).to.eq(`span-${MAX_BUFFERED_SPANS + overflow - 1}`);
+  });
+
+  test('drain resets the buffer so a second drain replays nothing', ({ expect }) => {
+    const buffering = new BufferingTracingBackend();
+    buffering.startSpan({ name: 'first' });
+
+    const first = createMockBackend();
+    buffering.drain(first.backend);
+    expect(first.spans).to.have.length(1);
+    expect(buffering.size).to.eq(0);
+
+    const second = createMockBackend();
+    buffering.drain(second.backend);
+    expect(second.spans).to.have.length(0);
+  });
+
+  test('a span whose buffered parent was dropped is replayed as a root span', ({ expect }) => {
+    const buffering = new BufferingTracingBackend();
+    const parent = buffering.startSpan({ name: 'parent' });
+    // Overflow by exactly one so the parent — the oldest — is the span evicted.
+    for (let i = 0; i < MAX_BUFFERED_SPANS; i++) {
+      buffering.startSpan({ name: `child-${i}`, parentContext: parent.spanContext });
+    }
+
+    expect(buffering.dropped).to.eq(1);
+
+    const { backend, spans } = createMockBackend();
+    buffering.drain(backend);
+
+    expect(spans).to.have.length(MAX_BUFFERED_SPANS);
+    expect(spans.every((span) => span.options.name !== 'parent')).to.be.true;
+    // No replayed span carries the evicted parent's unparseable synthetic traceparent.
+    expect(spans[0].options.parentContext).to.be.undefined;
+  });
+
+  test('clear discards buffered spans and the dropped count', ({ expect }) => {
+    const buffering = new BufferingTracingBackend();
+    for (let i = 0; i < MAX_BUFFERED_SPANS + 1; i++) {
+      buffering.startSpan({ name: `span-${i}` });
+    }
+    expect(buffering.dropped).to.eq(1);
+
+    buffering.clear();
+
+    expect(buffering.size).to.eq(0);
+    expect(buffering.dropped).to.eq(0);
+
+    const { backend, spans } = createMockBackend();
+    buffering.drain(backend);
+    expect(spans).to.have.length(0);
   });
 });
