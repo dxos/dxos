@@ -540,7 +540,7 @@ export class DataSpaceManager extends Resource {
       }
 
       await this._mirrorCredentialsToDocument(ctx, space);
-      this._reportSpaceRootToEdge(ctx, space);
+      this._reportSpaceRootToEdge(space);
       return true;
     } catch (err) {
       log.warn('failed to anchor space on a root document', { spaceId: space.id, err });
@@ -553,7 +553,7 @@ export class DataSpaceManager extends Resource {
    * its space key, which no document id reproduces — so without this the credentials document is
    * never found and the space stays on its control feed.
    */
-  private _reportSpaceRootToEdge(ctx: Context, space: DataSpace): void {
+  private _reportSpaceRootToEdge(space: DataSpace): void {
     const refs = this._echoHost.getSpaceRootRefs(space.id);
     if (!this._edgeHttpClient || !refs) {
       return;
@@ -562,10 +562,16 @@ export class DataSpaceManager extends Resource {
     // Edge validates the root against the documents themselves, which reach it by replication some
     // time after the anchor, so the first attempt is normally too early. Retrying in the background
     // rather than inline keeps a space open from waiting on a round trip it does not depend on.
+    //
+    // Scheduled on the DSM lifecycle context, never the caller's: the invitation accept flow
+    // disposes its ctx as soon as `acceptSpace` returns (see `acceptSpace`), which would cancel
+    // every pending retry and strand an accepted space on its control feed.
     let delay = SPACE_ROOT_REPORT_RETRY_INITIAL;
     const report = async (): Promise<void> => {
       try {
-        await this._edgeHttpClient!.recordSpaceRoot(ctx, space.id, { rootDocumentUrl: refs.spaceRootDocUrl });
+        await this._edgeHttpClient!.recordSpaceRoot(this._ctx, space.id, {
+          rootDocumentUrl: refs.spaceRootDocUrl,
+        });
         log('reported the space root to edge', { spaceId: space.id });
       } catch (err) {
         if (delay > SPACE_ROOT_REPORT_RETRY_MAX) {
@@ -574,12 +580,12 @@ export class DataSpaceManager extends Resource {
         }
 
         log('space root not accepted by edge yet, retrying', { spaceId: space.id, delay, err });
-        scheduleTask(ctx, report, delay);
+        scheduleTask(this._ctx, report, delay);
         delay *= 2;
       }
     };
 
-    scheduleTask(ctx, report);
+    scheduleTask(this._ctx, report);
   }
 
   /**
