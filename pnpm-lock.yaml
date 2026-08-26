@@ -5881,6 +5881,9 @@ importers:
 
   packages/core/echo/echo-protocol:
     dependencies:
+      '@automerge/automerge-repo':
+        specifier: 'catalog:'
+        version: 2.6.0-subduction.40(patch_hash=c4764ed525f0bdb6137709c93b74398e61f657f155144a8401c9d3004177ebc7)
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../../../common/crypto
@@ -18182,6 +18185,9 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
+      '@dxos/echo-doc':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-doc
       '@dxos/echo-host':
         specifier: workspace:*
         version: link:../../core/echo/echo-host
