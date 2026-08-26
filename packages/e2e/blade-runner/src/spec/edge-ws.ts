@@ -25,7 +25,7 @@ export class EdgeWs implements TestPlan<EdgeWsTestSpec, EdgeWsResult> {
     return {
       platform: 'nodejs',
       messageAmount: 1,
-      endpoint: 'wss://edge.dxos.workers.dev',
+      endpoint: 'wss://dev.dxos.network',
       waitForResponses: false,
     };
   }
