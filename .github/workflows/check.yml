@@ -163,10 +163,10 @@ jobs:
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
         run: moon run :check-module-structure
 
-      # ─── Stage 3: the two slow checks ───────────────────────────────────────────────────────────
-      # ~2m30s and ~1m against ~30 s for all of stage 1, so these run last. Both are
+      # ─── Stage 3: the three slow checks ─────────────────────────────────────────────────────────
+      # ~2m30s, ~1m and ~1m against ~30 s for all of stage 1, so these run last. All three are
       # `continue-on-error` with a gate step below: fail-fast is free when steps are cheap, but here
-      # it would hide one failure behind the other at the cost of a whole further run of the job.
+      # it would hide one failure behind the others at the cost of a whole further run of the job.
       #
       # Unused/undeclared dependencies and unreferenced files. Analyses the source tree — the knip
       # config resolves workspace packages through their `source` export condition — so it needs no
@@ -191,14 +191,30 @@ jobs:
         continue-on-error: true
         run: moon run composer-app:check-plugin-set
 
+      # The docs site's internal links: `starlight-links-validator` runs as the last phase of
+      # `astro build`, so bundling the site IS the link check — there is no narrower task to call.
+      # That build used to happen only in the nightly `Deploy Apps` run, which let a broken
+      # cross-reference merge clean and resurface hours later as a failed preview deploy of every app
+      # (run 32942291591). `docs:bundle` rather than a link-only task of our own, so what gates the PR
+      # and what the deploy runs cannot drift apart. Rides stage 2's warm `^:build` graph for the same
+      # reason the plugin-set check does; a PR that touches neither the docs nor their dependencies
+      # replays the moon cache instead of rebuilding.
+      - name: Check docs links
+        id: docs
+        continue-on-error: true
+        run: moon run docs:bundle
+
       - name: Report slow-check failures
-        if: ${{ steps.knip.outcome == 'failure' || steps.plugin_set.outcome == 'failure' }}
+        if: ${{ steps.knip.outcome == 'failure' || steps.plugin_set.outcome == 'failure' || steps.docs.outcome == 'failure' }}
         run: |
           if [ "${{ steps.knip.outcome }}" = failure ]; then
             echo '::error::knip failed — see the "Check dependencies" step.'
           fi
           if [ "${{ steps.plugin_set.outcome }}" = failure ]; then
             echo '::error::production plugin set check failed — see the "Check production plugin set" step.'
+          fi
+          if [ "${{ steps.docs.outcome }}" = failure ]; then
+            echo '::error::docs link validation failed — see the "Check docs links" step.'
           fi
           exit 1
 
@@ -236,43 +252,6 @@ jobs:
 
       - name: Check boot budget
         run: moon run composer-app:check-boot-budget
-
-  # The docs site's internal links, validated by starlight-links-validator as the last phase of
-  # `astro build`. That build ran nowhere but the nightly `Deploy Apps` job, so a broken cross-reference
-  # merged clean and surfaced hours later as a failed preview deploy of every app (run 32942291591) —
-  # far from the PR that wrote the link. `docs:bundle` rather than a link-only task, so what gates the
-  # PR and what the deploy runs cannot drift apart.
-  #
-  # Its own runner, like `boot-budget`: nothing else in this workflow builds the docs closure (`^:build`
-  # plus the three typedoc packages), and the graph hydrates from the remote cache, so a PR that leaves
-  # the docs and their dependencies alone replays a cache hit rather than rebuilding. Unscoped by
-  # `--affected` for that reason — the cache already scopes it, and moon's affected set would not catch
-  # a link broken by a dependency's generated output.
-  docs:
-    permissions:
-      contents: read
-      packages: read
-    runs-on: depot-ubuntu-24.04-8
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
-    timeout-minutes: 30
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-          filter: blob:none
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-          persist-credentials: false
-
-      - name: Setup
-        uses: ./.github/actions/setup
-
-      - name: Build docs (validates links)
-        run: moon run docs:bundle
 
   # Retention suites (the `memory` tag), which the normal `test` job skips: they need `--expose-gc`
   # and force a single non-isolated fork, neither of which the sharded matrix can provide. Gated on
