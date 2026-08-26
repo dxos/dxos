@@ -336,9 +336,10 @@ Investigated 2026-08-13 (spike-verified) — full findings in DESIGN.md §app-gr
 - [ ] **Upstream ask** — propose a single-clone `Graph.snapshot(mutable)` (today: `endMutation`
       kills the handle, so snapshot+continue costs two clones).
 - [x] **`@dxos/graph` in the boot graph is BY DESIGN** — traced 2026-08-26:
-      `main.tsx → app-framework → plugin-manager → activation-scheduler → activation-graph.ts →
-    GraphModel → effect/Graph`. The plugin activation scheduler builds its ordering graph on
-      `GraphModel`, so the model (and Effect's `Graph` under it) is boot-critical and not a leak.
+      `main.tsx` → `app-framework` → `plugin-manager` → `activation-scheduler` →
+      `activation-graph.ts` → `GraphModel` → `effect/Graph`. The plugin activation scheduler builds
+      its ordering graph on `GraphModel`, so the model (and Effect's `Graph` under it) is
+      boot-critical and not a leak.
       Only the untree-shaken remainder is waste — see the upstream ask below.
 - [ ] **Upstream ask: split `effect/Graph` by subpath** — `Graph.js` is one 131 KB module holding
       the algorithms (`dijkstra`, `astar`, `bellmanFord`, `floydWarshall`, `stronglyConnectedComponents`)
@@ -352,9 +353,9 @@ Investigated 2026-08-13 (spike-verified) — full findings in DESIGN.md §app-gr
 - [ ] **Cut the app-graph boot edge** — ~26 KB of `@dxos/app-graph` (18.5 KB) plus the
       `@dxos/graph/GraphBuilder` (7.6 KB) it drags behind it ships eagerly for ONE pure string
       helper. Traced 2026-08-26 with `DX_TRACE_BOOT_LEAK=1`:
-      `main.tsx → plugin-defs.core.tsx → plugin-registry/RegistryPlugin.ts → plugin-registry/meta.ts
-    → app-toolkit/GraphPath.ts → app-graph/AppGraph.ts`, then
-      `AppGraph → path-resolution → AppGraphBuilder → GraphBuilder`. `meta.ts` wants only
+      `main.tsx` → `plugin-defs.core.tsx` → `plugin-registry/RegistryPlugin.ts` →
+      `plugin-registry/meta.ts` → `app-toolkit/GraphPath.ts` → `app-graph/AppGraph.ts`, then
+      `AppGraph` → `path-resolution` → `AppGraphBuilder` → `GraphBuilder`. `meta.ts` wants only
       `GraphPath.pinnedWorkspaceId`, but `GraphPath.ts` has a module-scope value import of
       `AppGraph` that only `tryGetEid`/`tryGetEidCandidates` use (the other two refs are types), and
       a plugin's meta is exactly the file that must stay light — every meta loads eagerly to build
