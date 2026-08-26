@@ -115,3 +115,37 @@ the drain loop; this PR (#12752).
       3 fold-backs, no duplicates, no failures.
 - [ ] **Finish** — fixtures regen, suites, lint/format, live verify, changeset,
       push, PR comments (at end), DESIGN.md in assistant-toolkit/docs.
+
+## Phase 3: Task UX backlog
+
+Follow-ups raised while reviewing the TaskList and chat surfaces (2026-08-26).
+Each is independent of the others; none is started.
+
+### Tasks
+
+- [ ] **Hierarchical tasks in the list** — render sub-tasks under their parent.
+      The model already carries it (`Task.parentTask`, `TaskSet.rootTasks` /
+      `subTasks` derive the tree from the flat `tasks` array), so this is a
+      `TaskList` concern: indentation, collapse/expand, and what an ordinal
+      means for a child. Decide whether the agent may nest (an `UpdateTasks`
+      field) or only the UI can.
+- [ ] **Assign a TaskSet to a chat** — a user-facing action that points
+      `Chat.taskSet` at an existing set (picker/command), rather than the chat
+      lazily creating its own. Distinct from the automatic stamping item in
+      Phase 1 (project chats adopting the project's ledger): this is the manual
+      override, and it needs to say what happens to tasks already in the chat's
+      own set.
+- [ ] **Option to show the task description in the list** — a `TaskList.Root`
+      prop rendering `Task.description` beneath the title (secondary line,
+      truncated), off by default so the chat strip stays one row per task.
+- [ ] **ProjectArticle tabs** — tabbed surface for the project article
+      (plugin-projects) instead of the current stacked sections.
+- [ ] **`#` references in the prompt** — a `#` completion in the chat editor for
+      referencing objects/tasks inline, alongside the existing `$` sentinels and
+      `/` commands (same `commands()` extension shape, different token and
+      resolver). NOTE: recorded from a one-line prompt ("# in") — confirm the
+      intent before starting.
+- [ ] **Links** — links on tasks: an `echo://` reference from a task to the
+      object it concerns (and back), rendered as an affordance in the row.
+      NOTE: recorded from a one-line prompt ("links") — confirm the intent
+      before starting.
