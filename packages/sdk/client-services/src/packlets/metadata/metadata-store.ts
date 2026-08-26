@@ -6,13 +6,13 @@ import CRC32 from 'crc-32';
 import * as EffectContext from 'effect/Context';
 
 import { Event, scheduleTaskInterval, synchronized } from '@dxos/async';
-import { type Codec } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataCorruptionError, STORAGE_VERSION } from '@dxos/protocols';
-import { schema } from '@dxos/protocols/proto';
+import { type CompatCodec, compatCodec } from '@dxos/protocols/buf-shape-compat';
+import { EchoMetadataSchema, LargeSpaceMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import {
   type ControlPipelineSnapshot,
@@ -87,8 +87,10 @@ const emptyEchoMetadata = (): EchoMetadata => ({
 
 const emptyLargeSpaceMetadata = (): LargeSpaceMetadata => ({});
 
-const EchoMetadata = schema.getCodecForType('dxos.echo.metadata.EchoMetadata');
-const LargeSpaceMetadata = schema.getCodecForType('dxos.echo.metadata.LargeSpaceMetadata');
+// Both records are written with `created` and `updated` always set, so buf's omission of proto3
+// defaults leaves the bytes readable by a client rolled back to the protobuf.js codec.
+const EchoMetadata = compatCodec<EchoMetadata>(EchoMetadataSchema);
+const LargeSpaceMetadata = compatCodec<LargeSpaceMetadata>(LargeSpaceMetadataSchema);
 
 export class MetadataStore implements IMetadataStore {
   private _metadata: EchoMetadata = emptyEchoMetadata();
@@ -131,7 +133,7 @@ export class MetadataStore implements IMetadataStore {
     return this._metadata.deletedSpaces ?? [];
   }
 
-  private async _readFile<T>(file: File, codec: Codec<T>): Promise<T | undefined> {
+  private async _readFile<T>(file: File, codec: CompatCodec<T>): Promise<T | undefined> {
     try {
       const { size: fileLength } = await file.stat();
       if (fileLength < 8) {
@@ -165,7 +167,7 @@ export class MetadataStore implements IMetadataStore {
   /**
    * @internal
    */
-  async _writeFile<T>(file: File, codec: Codec<T>, data: T): Promise<void> {
+  async _writeFile<T>(file: File, codec: CompatCodec<T>, data: T): Promise<void> {
     const encoded = arrayToBuffer(codec.encode(data));
     const checksum = CRC32.buf(encoded);
 

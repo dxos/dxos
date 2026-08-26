@@ -163,10 +163,10 @@ jobs:
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
         run: moon run :check-module-structure
 
-      # ─── Stage 3: the two slow checks ───────────────────────────────────────────────────────────
-      # ~2m30s and ~1m against ~30 s for all of stage 1, so these run last. Both are
+      # ─── Stage 3: the three slow checks ─────────────────────────────────────────────────────────
+      # ~2m30s, ~1m and ~1m against ~30 s for all of stage 1, so these run last. All three are
       # `continue-on-error` with a gate step below: fail-fast is free when steps are cheap, but here
-      # it would hide one failure behind the other at the cost of a whole further run of the job.
+      # it would hide one failure behind the others at the cost of a whole further run of the job.
       #
       # Unused/undeclared dependencies and unreferenced files. Analyses the source tree — the knip
       # config resolves workspace packages through their `source` export condition — so it needs no
@@ -191,14 +191,24 @@ jobs:
         continue-on-error: true
         run: moon run composer-app:check-plugin-set
 
+      # `starlight-links-validator` runs as the last phase of `astro build`, so bundling the site IS
+      # the link check.
+      - name: Check docs links
+        id: docs
+        continue-on-error: true
+        run: moon run docs:bundle
+
       - name: Report slow-check failures
-        if: ${{ steps.knip.outcome == 'failure' || steps.plugin_set.outcome == 'failure' }}
+        if: ${{ steps.knip.outcome == 'failure' || steps.plugin_set.outcome == 'failure' || steps.docs.outcome == 'failure' }}
         run: |
           if [ "${{ steps.knip.outcome }}" = failure ]; then
             echo '::error::knip failed — see the "Check dependencies" step.'
           fi
           if [ "${{ steps.plugin_set.outcome }}" = failure ]; then
             echo '::error::production plugin set check failed — see the "Check production plugin set" step.'
+          fi
+          if [ "${{ steps.docs.outcome }}" = failure ]; then
+            echo '::error::docs link validation failed — see the "Check docs links" step.'
           fi
           exit 1
 
@@ -440,7 +450,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           persist-credentials: false
 
       - name: Extract branch
