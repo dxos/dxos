@@ -6,12 +6,14 @@
 # - Changed GitHub runs-on labels to their Depot equivalents
 # - Swapped docker/build-push-action for depot/build-push-action (Depot's own container-build
 #   product - up to 40x faster, native multi-platform, per wittjosiah's request), needing a new
-#   DEPOT_TOKEN secret (project token for project mld2ddpgxv, created via the Depot dashboard -
-#   there's no CLI path to create one)
-# - Swapped the GHCR login password from secrets.GITHUB_TOKEN to secrets.GHCR_PAT: GHCR only
+#   DEPOT_BUILD_TOKEN secret (project token for project mld2ddpgxv, created via the Depot
+#   dashboard - there's no CLI path to create one). Named DEPOT_BUILD_TOKEN rather than
+#   DEPOT_TOKEN: that name is reserved by Depot CI itself.
+# - Swapped the GHCR login password from secrets.GITHUB_TOKEN to secrets.GH_DXOS_BOT_PAT: GHCR only
 #   accepts PATs, not the GitHub App tokens Depot CI's jobs get (flagged by CodeRabbit on #12779,
-#   same root cause that kept publish-all.yml on GitHub Actions). Needs a classic PAT with
-#   write:packages, stored as a Depot secret.
+#   same root cause that kept publish-all.yml on GitHub Actions). Reuses dxos-bot's existing PAT
+#   (already a Depot secret) rather than minting a new single-purpose one - same username: dxos-bot
+#   pairing used for it elsewhere in deploy-apps.yml/publish-all.yml.
 
 name: Build and Push Docker Image
 permissions:
@@ -45,11 +47,12 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
-          # TODO(wittjosiah): needs a classic PAT with write:packages, stored as the GHCR_PAT Depot
-          # secret - GHCR doesn't authenticate GitHub App tokens like the one Depot CI's jobs get,
-          # so secrets.GITHUB_TOKEN (which worked on GitHub Actions) can't be swapped in as-is.
-          password: ${{ secrets.GHCR_PAT }}
+          username: dxos-bot
+          # TODO(wittjosiah): confirm dxos-bot's PAT actually has write:packages - it's used
+          # elsewhere for git/npm operations, not yet confirmed for GHCR. GHCR doesn't authenticate
+          # GitHub App tokens like the one Depot CI's jobs get, so secrets.GITHUB_TOKEN (which
+          # worked on GitHub Actions) can't be swapped in as-is.
+          password: ${{ secrets.GH_DXOS_BOT_PAT }}
       - name: Set suffix if on branch
         run: |
           if [[ "${GITHUB_REF}" != "refs/heads/main" ]]; then
@@ -60,7 +63,7 @@ jobs:
         uses: depot/build-push-action@v1
         with:
           project: mld2ddpgxv
-          token: ${{ secrets.DEPOT_TOKEN }}
+          token: ${{ secrets.DEPOT_BUILD_TOKEN }}
           context: .github
           file: .github/Dockerfile
           push: true
