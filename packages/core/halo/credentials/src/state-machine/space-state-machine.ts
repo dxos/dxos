@@ -38,13 +38,14 @@ export interface SpaceState {
 }
 
 export type ProcessOptions = {
-  sourceFeed: PublicKey;
+  /** Absent when the credential came from the space's credentials document rather than a feed. */
+  sourceFeed?: PublicKey;
   skipVerification?: boolean;
 };
 
 export type CredentialEntry = {
   credential: Credential;
-  sourceFeed: PublicKey;
+  sourceFeed?: PublicKey;
   revoked: boolean;
 };
 
@@ -229,6 +230,13 @@ export class SpaceStateMachine implements SpaceState {
         if (!this._genesisCredential) {
           log.warn('Space must have a genesis credential before admitting feeds.');
           return false;
+        }
+
+        if (!sourceFeed) {
+          // A document-sourced space admits no feeds, so the assertion is inert rather than invalid —
+          // migrated spaces carry the ones their control feed already wrote.
+          log('ignoring feed admission from a document source', { credential: credential.id });
+          break;
         }
 
         // We don't do any validation on feed admission since we would perform the same validation on the credentials inside .

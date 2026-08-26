@@ -206,6 +206,12 @@ message Runtime {
     /// in-process (HOST), SharedWorker, and dedicated Worker runtimes. Required when no
     /// `remote_source` is configured.
     optional ServicesMode services_mode = 16;
+
+    /// Anchor spaces on an automerge space root document and carry credentials in a credentials
+    /// document, instead of deriving the space id from the space key and reading credentials from
+    /// the hypercore control feed. Off by default: the automerge scheme is opt-in until it has
+    /// soaked. Set via DX_AUTOMERGE_CREDENTIALS.
+    optional bool automerge_credentials = 17;
   }
 
   message App {

@@ -33,3 +33,7 @@ DX_EDGE_SUBDUCTION_REPLICATOR:
 DX_EDGE_FEED_REPLICATOR:
   path: runtime.client.edgeFeatures.feedReplicator
   type: boolean
+
+DX_AUTOMERGE_CREDENTIALS:
+  path: runtime.client.automergeCredentials
+  type: boolean
