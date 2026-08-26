@@ -56,6 +56,7 @@ import * as PipelinePlugin from '@dxos/plugin-pipeline/PipelinePlugin';
 import * as PresenterPlugin from '@dxos/plugin-presenter/PresenterPlugin';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as ReviewPlugin from '@dxos/plugin-review/ReviewPlugin';
+import * as S3Plugin from '@dxos/plugin-s3/S3Plugin';
 import * as SamplePlugin from '@dxos/plugin-sample/SamplePlugin';
 import * as SandboxPlugin from '@dxos/plugin-sandbox/SandboxPlugin';
 import * as ScriptPlugin from '@dxos/plugin-script/ScriptPlugin';
@@ -142,6 +143,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       OsrmPlugin.meta.profile.key,
       PaymentsPlugin.meta.profile.key,
       PipelinePlugin.meta.profile.key,
+      S3Plugin.meta.profile.key,
       SandboxPlugin.meta.profile.key,
       SequencerPlugin.meta.profile.key,
       SidekickPlugin.meta.profile.key,
@@ -252,6 +254,7 @@ const experimental: Plugin.Plugin[] = [
   IrohBeaconPlugin.make(),
   LinearPlugin.make(),
   LingoPlugin.make(),
+  S3Plugin.make(),
   SequencerPlugin.make(),
   SlackPlugin.make(),
   SpacetimePlugin.make(),

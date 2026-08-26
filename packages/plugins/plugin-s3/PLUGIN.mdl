@@ -1,0 +1,141 @@
+---
+id: org.dxos.plugin.s3
+name: S3Plugin
+version: 0.1.0
+---
+
+A **headless** Composer plugin that stores file blobs in an S3-compatible
+bucket — Cloudflare R2, AWS S3 or MinIO. It has no React/UI surfaces. It
+contributes two things:
+
+1. A **Connector** entry with a credential form capturing the bucket
+   endpoint and an access key pair. On submit the pair is stored as an
+   `AccessToken` (`source` = the bucket host, `account` = the access key
+   id, `token` = the secret) plus a `Connection` in ECHO.
+2. A **`BlobBackend`** registered on the Hypergraph under the storage name
+   `s3`, plus the matching `FileCapabilities.Backend` descriptor so it is
+   selectable in the file plugin's settings.
+
+The seam is the same one `plugin-wnfs` uses: `plugin-file` owns the
+storage-selection UI and `@dxos/echo-client` owns the backend registry, so
+neither has to know S3 exists. The credential seam is `CredentialsService`,
+so a server-custodied token resolves through EDGE unchanged.
+
+## Extensions
+
+| Term   | URI                     |
+| ------ | ----------------------- |
+| `type` | `org.dxos.mdl.type@1.0` |
+| `feat` | `org.dxos.mdl.feat@1.0` |
+| `test` | `org.dxos.mdl.test@1.0` |
+
+## Addressing
+
+```mdl
+type S3Uri
+  desc: >
+    A stored blob is addressed `s3://<host>/<key>`, where host is the
+    virtual-hosted bucket endpoint and key is `<spaceId>/<contentHash>`.
+    The host is also the AccessToken.source the credential is filed under,
+    so a read resolves its own credential from the URI with no side table
+    mapping blobs to configuration. One Connection therefore addresses
+    exactly one bucket, which is the granularity the Connection type
+    already models.
+  host: string    # media.<account>.r2.cloudflarestorage.com
+  key: string     # <spaceId>/<contentHash>
+```
+
+## Connector
+
+```mdl
+feat S3Connector
+  desc: >
+    Contributes a ConnectorEntry on the ConnectorEvents.Start activation
+    event. Non-OAuth, credentialForm only — mirrors plugin-ideogram.
+  id: org.dxos.plugin.s3.connector
+  source: s3
+  label: S3 Storage
+  credentialForm:
+    schema: S3CredentialForm { endpoint, accessKeyId, secretAccessKey }
+    onSubmit: >
+      Normalize the endpoint to a bare lowercase host (the dashboard hands
+      out a full URL). Fail the Effect — never throw — if any field is
+      empty. Build AccessToken { source: host, account: accessKeyId,
+      token: secretAccessKey } and Connection { connectorId, accessToken }.
+  testConnection: >
+    Signed HEAD on a key that should not exist: 404 proves the signature
+    is accepted, 403 proves it is not. Needs no write permission and
+    leaves nothing behind.
+```
+
+## Storage backend
+
+```mdl
+feat S3BlobBackend
+  desc: >
+    Contributes FileCapabilities.Backend and registers a BlobBackend under
+    the storage name `s3` on FileEvents.Start (the file plugin's start —
+    this plugin has no surface of its own to gate on).
+  schemes: [s3]
+  put: >
+    Resolves the space's single S3 Connection for the destination bucket —
+    BlobPutRequest carries no endpoint — then PUTs to
+    `<spaceId>/<contentHash>` with a SigV4 Authorization header. The
+    content hash the blob manager already computed is reused as the
+    payload hash, so nothing is digested twice.
+  get/has: >
+    Parse the endpoint out of the URI and sign if the space holds a
+    credential for that host; otherwise issue the request unsigned. 404
+    and 403 both resolve to a miss; anything else rejects, since a
+    transport failure is not a missing object.
+  getUrl: >
+    A presigned GET URL when a credential is available, the plain public
+    URL when it is not — so an <img> can load the object without an
+    Authorization header it cannot send.
+```
+
+## Signing
+
+```mdl
+feat SigV4
+  desc: >
+    AWS Signature Version 4 over WebCrypto, hand-rolled rather than taken
+    from @aws-sdk: the SDK signer pulls a credential-provider chain, a
+    region resolver and a Node crypto shim that a browser holding one
+    static key pair does not need, at two orders of magnitude the size.
+  region: >
+    Parsed from an AWS hostname; `auto` for R2 and anything else that does
+    not encode one. R2 ignores the region but SigV4 still requires a value
+    in the credential scope.
+  content-length: >
+    Deliberately unsigned. It is a forbidden header name, so the browser
+    sets it and strips ours; signing it would guarantee a mismatch the
+    server reports as a bad signature rather than a missing header.
+```
+
+```mdl
+test SigV4AwsVectors
+  desc: >
+    The signer is checked against AWS's own published example signatures
+    for both the header-auth and presigned-URL forms, so the tests are
+    evidence of correctness rather than of self-consistency.
+  vectors:
+    - GET Object header auth -> f0e8bdb87c964420e857bd35b5d6ed310bd44f0170aba48dd91039c6036bdb41
+    - presigned URL          -> aeeed9bbccd4d02ee5c0109b86d86835f995330da4c265957d157751f604d404
+```
+
+## Operator requirements
+
+```mdl
+feat BucketConfiguration
+  desc: Two things must be true of the bucket or nothing works.
+  cors: >
+    The bucket's CORS policy must allow the app origin for GET, HEAD and
+    PUT. Without it the browser blocks the request before it is sent and
+    the failure surfaces as an opaque network error, not a 403.
+  trust: >
+    The secret access key is replicated into the space, so every member of
+    that space can read and write the bucket. Scope the key pair to one
+    bucket and treat the space as its trust boundary. A tighter model
+    needs EDGE to mint presigned URLs so the key never reaches the client.
+```

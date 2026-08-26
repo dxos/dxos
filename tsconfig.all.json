@@ -556,6 +556,9 @@
       "path": "packages/plugins/plugin-routine/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-s3/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-sample/tsconfig.json"
     },
     {

@@ -300,6 +300,7 @@
       "@dxos/plugin-registry",
       "@dxos/plugin-review",
       "@dxos/plugin-routine",
+      "@dxos/plugin-s3",
       "@dxos/plugin-sample",
       "@dxos/plugin-sandbox",
       "@dxos/plugin-script",
