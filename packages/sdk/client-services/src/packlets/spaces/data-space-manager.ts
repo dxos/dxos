@@ -506,33 +506,40 @@ export class DataSpaceManager extends Resource {
    * Mints a space root over a legacy space, transparently and idempotently, keeping its space id. Never
    * blocks opening the space: a space without an anchor still works, it just has not migrated yet.
    */
-  private async _anchorSpaceOnRootDocument(ctx: Context, space: DataSpace, force = false): Promise<void> {
+  /**
+   * @returns Whether the space needs no further anchoring attempt — either because it is now anchored
+   * or because it never will be. False means the attempt no-oped and the caller should retry, which a
+   * space whose directory is not assigned yet depends on.
+   */
+  private async _anchorSpaceOnRootDocument(ctx: Context, space: DataSpace, force = false): Promise<boolean> {
     // Migrating a space is the opt-in behaviour, so without the flag a space keeps its control feed
     // and never grows a root. An explicit `migrateSpaceToRootDocument` call still forces it.
     if (!force && !this._automergeCredentials) {
-      return;
+      return true;
     }
 
     // A space created legacy stays unanchored for this session, or there would be no way to produce
     // the pre-migration state the migration path starts from. It anchors on the next load, which is
     // exactly the migration this project is for.
     if (!force && this._legacyCreatedSpaces.has(space.id)) {
-      return;
+      return true;
     }
 
     try {
       if (!this._echoHost.getSpaceRootRefs(space.id)) {
         const refs = await this._echoHost.migrateSpaceToRootDocument(ctx, space.id);
         if (!refs) {
-          return;
+          return false;
         }
 
         log('migrated space to root document', { spaceId: space.id, refs });
       }
 
       await this._mirrorCredentialsToDocument(ctx, space);
+      return true;
     } catch (err) {
       log.warn('failed to anchor space on a root document', { spaceId: space.id, err });
+      return false;
     }
   }
 
@@ -850,15 +857,24 @@ export class DataSpaceManager extends Resource {
     // Anchoring materializes credential state, so it waits for the space to be open: a closed space
     // must stay unmaterialized or lazy loading is defeated. Every path that opens a space — load and
     // activate, create, accept — arrives here.
+    // Latch only once the anchor has actually settled: migration no-ops while the space's directory is
+    // unassigned, and latching on the attempt would strand the space unanchored for the whole session.
     let anchored = false;
+    let anchoring = false;
     ctx.onDispose(
       dataSpace.stateUpdate.on(() => {
-        if (anchored || !dataSpace.isOpen) {
+        if (anchored || anchoring || !dataSpace.isOpen) {
           return;
         }
 
-        anchored = true;
-        void this._anchorSpaceOnRootDocument(ctx, dataSpace);
+        anchoring = true;
+        void this._anchorSpaceOnRootDocument(ctx, dataSpace)
+          .then((settled) => {
+            anchored = settled;
+          })
+          .finally(() => {
+            anchoring = false;
+          });
       }),
     );
 
