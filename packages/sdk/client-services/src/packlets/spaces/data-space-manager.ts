@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
-import { Event, synchronized, trackLeaks } from '@dxos/async';
+import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Context, LifecycleState, Resource, cancelWithContext } from '@dxos/context';
 import {
@@ -214,6 +214,10 @@ export type CreateSpaceOptions = {
   tags?: string[];
   membershipPolicy?: MembershipPolicy;
 };
+
+/** Backoff bounds for reporting a space root to edge; replication normally lands well inside this. */
+const SPACE_ROOT_REPORT_RETRY_INITIAL = 500;
+const SPACE_ROOT_REPORT_RETRY_MAX = 30_000;
 
 @trackLeaks('open', 'close')
 export class DataSpaceManager extends Resource {
@@ -536,7 +540,7 @@ export class DataSpaceManager extends Resource {
       }
 
       await this._mirrorCredentialsToDocument(ctx, space);
-      await this._reportSpaceRootToEdge(ctx, space);
+      this._reportSpaceRootToEdge(ctx, space);
       return true;
     } catch (err) {
       log.warn('failed to anchor space on a root document', { spaceId: space.id, err });
@@ -549,18 +553,33 @@ export class DataSpaceManager extends Resource {
    * its space key, which no document id reproduces — so without this the credentials document is
    * never found and the space stays on its control feed.
    */
-  private async _reportSpaceRootToEdge(ctx: Context, space: DataSpace): Promise<void> {
+  private _reportSpaceRootToEdge(ctx: Context, space: DataSpace): void {
     const refs = this._echoHost.getSpaceRootRefs(space.id);
     if (!this._edgeHttpClient || !refs) {
       return;
     }
 
-    try {
-      await this._edgeHttpClient.recordSpaceRoot(ctx, space.id, { rootDocumentUrl: refs.spaceRootDocUrl });
-    } catch (err) {
-      // Anchoring is local and already done; edge picks the root up on a later attempt.
-      log.warn('failed to report the space root to edge', { spaceId: space.id, err });
-    }
+    // Edge validates the root against the documents themselves, which reach it by replication some
+    // time after the anchor, so the first attempt is normally too early. Retrying in the background
+    // rather than inline keeps a space open from waiting on a round trip it does not depend on.
+    let delay = SPACE_ROOT_REPORT_RETRY_INITIAL;
+    const report = async (): Promise<void> => {
+      try {
+        await this._edgeHttpClient!.recordSpaceRoot(ctx, space.id, { rootDocumentUrl: refs.spaceRootDocUrl });
+        log('reported the space root to edge', { spaceId: space.id });
+      } catch (err) {
+        if (delay > SPACE_ROOT_REPORT_RETRY_MAX) {
+          log.warn('gave up reporting the space root to edge', { spaceId: space.id, err });
+          return;
+        }
+
+        log('space root not accepted by edge yet, retrying', { spaceId: space.id, delay, err });
+        scheduleTask(ctx, report, delay);
+        delay *= 2;
+      }
+    };
+
+    scheduleTask(ctx, report);
   }
 
   /**
