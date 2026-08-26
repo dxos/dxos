@@ -11,14 +11,15 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { TimeoutError } from '@dxos/protocols';
-import { schema } from '@dxos/protocols/proto';
+import { compatCodec } from '@dxos/protocols/buf-shape-compat';
+import { CommandSchema } from '@dxos/protocols/buf/dxos/mesh/muxer_pb';
 import { type ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { type Command } from '@dxos/protocols/proto/dxos/mesh/muxer';
 
 import { Balancer } from './balancer';
 import { type RpcPort } from './rpc-port';
 
-const Command = schema.getCodecForType('dxos.mesh.muxer.Command');
+const Command = compatCodec<Command>(CommandSchema);
 
 const DEFAULT_SEND_COMMAND_TIMEOUT = 60_000;
 const DESTROY_COMMAND_SEND_TIMEOUT = 5_000;
@@ -227,8 +228,6 @@ export class Muxer {
     const port: RpcPort = {
       send: async (data: Uint8Array, timeout?: number) => {
         await this._sendData(channel, data, timeout);
-        // TODO(dmaretskyi): Debugging.
-        // appendFileSync('log.json', JSON.stringify(schema.getCodecForType('dxos.rpc.RpcMessage').decode(data), null, 2) + '\n')
       },
       subscribe: (cb: (data: Uint8Array) => void) => {
         invariant(!callback, 'Only one subscriber is allowed');
