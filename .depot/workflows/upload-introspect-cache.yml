@@ -9,22 +9,27 @@
 #   CLOUDFLARE_ACCOUNT_ID    — 950816f3f59b079880a1ae33fb0ec320
 
 name: Upload Introspect Cache to R2
+
 on:
   schedule:
     # Daily; content tracks the trunk. 05:17 UTC avoids the top-of-hour crunch.
     - cron: '17 5 * * *'
   workflow_dispatch:
+
 permissions:
   contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
 env:
   # Bound once here rather than at every setup call site: a composite action cannot read the
   # `secrets` context, but it does inherit the process environment.
   MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
   MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
   MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
+
 jobs:
   upload:
     # `dxos/main/` is the canonical trunk cache: only schedule runs (default branch) and manual
@@ -44,12 +49,16 @@ jobs:
           # Full history so the cache's tree-SHA computation has the commit's
           # tree object available (`git ls-tree -r -d HEAD`).
           fetch-depth: 0
+
       - name: Setup
         uses: ./.depot/actions/setup
+
       - name: Build introspect
         run: moon run introspect:build
+
       - name: Build symbol cache
         run: moon run introspect:index
+
       # Use the workspace-pinned wrangler from the pnpm catalog (root devDep) —
       # global `npm install -g` fails with EACCES inside the gh-actions container.
       - name: Upload to R2

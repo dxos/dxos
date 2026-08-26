@@ -1,4 +1,5 @@
 name: TODO Tracker
+
 on:
   workflow_dispatch:
     inputs:
@@ -6,16 +7,19 @@ on:
         description: 'PR number to check (optional - will auto-detect if not provided)'
         required: false
         type: string
+
 # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
 env:
   # Bound once here rather than at every setup call site: a composite action cannot read the
   # `secrets` context, but it does inherit the process environment.
   MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
   MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
   MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
+
 jobs:
   track-todos:
     # Skip for fork PRs (head.repo != base repo) — TODO linking requires GITHUB_TOKEN write access.
@@ -38,11 +42,14 @@ jobs:
         with:
           fetch-depth: 0
           filter: blob:none
+
       - name: Extract branch
         id: extract_branch
         uses: ./.depot/actions/branch
+
       - name: Setup
         uses: ./.depot/actions/setup
+
       - name: Track TODOs
         run: node scripts/find-todos.mjs --github
         env:
@@ -50,6 +57,7 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_EVENT_PATH: ${{ github.event_path }}
           GITHUB_REF: ${{ github.ref }}
+
       - name: Console Output (for debugging)
         if: ${{ github.event_name == 'workflow_dispatch' }}
         run: |

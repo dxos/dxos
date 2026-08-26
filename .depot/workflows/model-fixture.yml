@@ -1,26 +1,33 @@
 name: Model Fixture
+
 # Replays the committed model fixtures (recorded LLM turns) on PRs so a deterministic change that
 # shifts a prompt is caught before it silently rots the cache. Deliberately a SEPARATE, non-required
 # workflow (not a job in check.yml): it reports on the PR but is not in the required-checks set, so a
 # fixture drift never blocks merge. Fixtures are committed, so replay needs no API key or build step.
 on:
   pull_request:
+
   push:
     branches:
       - main
+
   workflow_dispatch:
+
 permissions:
   contents: read
   packages: read
+
 env:
   # Bound once here rather than at the setup call site: a composite action cannot read the
   # `secrets` context, but it does inherit the process environment.
   MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
   MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
   MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
+
 jobs:
   model-fixture:
     runs-on: depot-ubuntu-24.04-8
@@ -48,14 +55,18 @@ jobs:
           fetch-depth: 0
           filter: blob:none
           persist-credentials: false
+
       - name: Setup
         uses: ./.depot/actions/setup
+
       - name: Clean stale test results
         run: rm -rf test-results
+
       # `#model-fixture:test` selects every project carrying the `model-fixture` moon tag; the vitest
       # tag filter above then narrows each run to the tagged suites within those projects.
       - name: Replay model fixtures
         run: moon run '#model-fixture:test' -- --no-file-parallelism
+
       - name: Upload Test Results
         if: always()
         uses: actions/upload-artifact@v7
