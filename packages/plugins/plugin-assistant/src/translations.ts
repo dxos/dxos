@@ -8,7 +8,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
-import { translations as assistantTranslations } from '@dxos/react-ui-assistant';
+import { translations as assistantTranslations } from '@dxos/react-ui-assistant/translations';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 
@@ -157,6 +157,7 @@ export const translations: Resource[] = [
         'audio-device.label': 'Microphone',
         'audio-device.default.label': 'System default',
         'settings.entity-extraction.label': 'Entity extraction',
+        'send.label': 'Send',
         'cancel-processing.button': 'Stop processing',
 
         'options.skills.title': 'Skills',

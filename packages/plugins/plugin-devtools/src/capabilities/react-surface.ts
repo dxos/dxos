@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
-import type * as Graph from '@dxos/app-graph/Graph';
+import type * as AppGraph from '@dxos/app-graph/AppGraph';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import {
   AutomergePanel,
@@ -45,7 +45,7 @@ import {
 } from './DevtoolsSurfaces';
 
 type GraphDebug = {
-  graph: Graph.Graph;
+  graph: AppGraph.Graph;
   root: string;
 };
 

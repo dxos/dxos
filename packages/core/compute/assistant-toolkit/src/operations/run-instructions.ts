@@ -6,8 +6,6 @@ import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import * as Schema from 'effect/Schema';
-import * as Tool from 'effect/unstable/ai/Tool';
 import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
@@ -20,7 +18,7 @@ import {
 import * as Operation from '@dxos/compute/Operation';
 import * as Template from '@dxos/compute/Template';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Feed, JsonSchema, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -29,24 +27,10 @@ import { trim } from '@dxos/util';
 
 import { PromptError } from '../errors';
 import * as Chat from '../types/Chat';
+import { makeCompleteJobTool } from './complete-job-tool';
 import { RunInstructions } from './definitions';
 
 const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-4-8.default');
-
-/** `Instructions.make` defaults `output` to `Schema.Void`; this is what that serializes to. */
-const UNDECLARED_OUTPUT = JsonSchema.toJsonSchema(Schema.Void);
-
-const routineOutputSchema = (output: JsonSchema.JsonSchema): Schema.Top => {
-  // A routine that declares no output still has to let `completeJob` carry an arbitrary success
-  // payload — decoding against the default would reject one with `Expected null | undefined`.
-  const undeclared =
-    ('$id' in output && output.$id === '/schemas/unknown') ||
-    ('type' in output && output.type === (UNDECLARED_OUTPUT as { type?: unknown }).type);
-  if (undeclared) {
-    return Schema.Any;
-  }
-  return JsonSchema.toEffectSchema(output);
-};
 
 export default RunInstructions.pipe(
   Operation.withHandler(
@@ -119,7 +103,7 @@ export default RunInstructions.pipe(
 
         const resultSink = yield* Deferred.make<unknown, PromptError>();
         const promptToolkit = makePromptAgentToolkit({
-          output: routineOutputSchema(instructions.output),
+          completeJobTool: makeCompleteJobTool(instructions.output),
           resultSink,
         });
 
@@ -182,29 +166,10 @@ export default RunInstructions.pipe(
 );
 
 const makePromptAgentToolkit = (options: {
-  output: Schema.Top;
+  completeJobTool: ReturnType<typeof makeCompleteJobTool>;
   resultSink: Deferred.Deferred<unknown, PromptError>;
 }) => {
-  class PromptAgentToolkit extends Toolkit.make(
-    Tool.make('completeJob', {
-      // Both fields accept `null` because models emit it for a field they mean to omit.
-      parameters: Schema.Struct({
-        success: Schema.optional(Schema.NullOr(options.output)),
-        failure: Schema.optional(
-          Schema.NullOr(
-            Schema.Struct({
-              message: Schema.String.annotate({
-                description: 'Short message describing the error.',
-              }),
-              description: Schema.optional(Schema.NullOr(Schema.String)).annotate({
-                description: 'Optional longer message describing in detail what went wrong',
-              }),
-            }),
-          ),
-        ),
-      }),
-    }),
-  ) {}
+  class PromptAgentToolkit extends Toolkit.make(options.completeJobTool) {}
   const layer = PromptAgentToolkit.toLayer({
     completeJob: Effect.fnUntraced(function* (result) {
       // A success payload wins over a failure sent alongside it, so a placeholder cannot discard

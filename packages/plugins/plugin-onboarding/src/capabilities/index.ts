@@ -10,6 +10,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
+import { translations } from '../translations';
 import { OnboardingCapabilities } from './capabilities';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
@@ -60,3 +61,4 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
 });
 
 export * from './capabilities';
+export const Translations = AppCapability.translations(translations);

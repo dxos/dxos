@@ -15,11 +15,13 @@
   "imports": {
     "#capabilities": {
       "source": {
-        "workerd": "./src/capabilities/workerd.ts",
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
         "default": "./src/capabilities/index.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
       "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
     "#components": {
@@ -53,14 +55,8 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": {
-        "workerd": "./src/plugin.workerd.ts",
-        "node": "./src/plugin.node.ts",
-        "default": "./src/plugin.ts"
-      },
+      "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
-      "workerd": "./dist/lib/plugin.workerd.mjs",
-      "node": "./dist/lib/plugin.node.mjs",
       "default": "./dist/lib/plugin.mjs"
     },
     "#skills": {
@@ -239,6 +235,7 @@
     "@dxos/echo-react": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/halo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -272,6 +269,7 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai-anthropic": "catalog:",
     "@effect/ai-openai": "catalog:",

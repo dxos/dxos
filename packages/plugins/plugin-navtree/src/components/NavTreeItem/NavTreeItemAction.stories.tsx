@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import type * as Node from '@dxos/app-graph/Node';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 
@@ -21,7 +21,7 @@ const parent = {
     label: random.lorem.words(2),
     icon: 'ph--circle--regular',
   },
-} satisfies Node.NodeArg<any>;
+} satisfies AppGraphNode.NodeArg<any>;
 
 // TODO(burdon): Factor out across tests.
 const menuActions = random.helpers.multiple(
@@ -37,7 +37,7 @@ const menuActions = random.helpers.multiple(
         label: random.lorem.words(2),
         icon: 'ph--circle--regular',
       },
-    }) satisfies Node.NodeArg<any>,
+    }) satisfies AppGraphNode.NodeArg<any>,
   { count: 20 },
 );
 

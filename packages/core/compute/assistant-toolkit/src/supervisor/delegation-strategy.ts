@@ -98,12 +98,11 @@ const findPendingTasks = (
   activeIds: ReadonlySet<string>,
 ): Effect.Effect<Task.Task[], never, Database.Service> =>
   Effect.gen(function* () {
-    const outlineRef = Chat.peekOutlineRef(chat);
-    const outline = outlineRef
-      ? yield* Database.load(outlineRef).pipe(Effect.orElseSucceed(() => undefined))
-      : undefined;
-    const taskSet = outline?.taskSet
-      ? yield* Database.load(outline.taskSet).pipe(Effect.orElseSucceed(() => undefined))
+    // The ledger is the project's: an outline owns no task set, so a chat outside a project has no
+    // delegated tasks to reconcile.
+    const taskSetRef = Chat.peekTaskSetRef(chat);
+    const taskSet = taskSetRef
+      ? yield* Database.load(taskSetRef).pipe(Effect.orElseSucceed(() => undefined))
       : undefined;
     if (!taskSet) {
       return [];

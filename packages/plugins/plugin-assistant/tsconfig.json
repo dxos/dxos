@@ -25,6 +25,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/graph"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -158,6 +161,9 @@
     },
     {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../../ui/ui-types"
     },
     {
       "path": "../plugin-attention"

@@ -6,6 +6,7 @@ import React, { type PropsWithChildren } from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
+import { useLayout } from '@dxos/app-toolkit/ui';
 import {
   Button,
   Carousel,
@@ -133,6 +134,10 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
   ) => {
     const { t } = useTranslation(meta.profile.key);
     const { themeMode } = useThemeContext();
+    const layout = useLayout();
+    // The gutters exist to hold the icon (col 1) and carousel nav (col 3); on a phone the fixed
+    // 4rem floor on both left it with less width for the center content than the gutters themselves.
+    const isMobile = layout.mode === 'mobile';
     const { key: slug, name, author, description, homePage, source, screenshots, icon: rawIcon } = plugin.meta.profile;
     const iconKey = rawIcon?.key ?? 'ph--circle--regular';
     const iconHue = rawIcon?.hue ?? 'neutral';
@@ -154,8 +159,17 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
            * with the rest of the content in col 2, and `Carousel.Next` sits
            * in col 3.
            */}
-          <div className='dx-document grid grid-cols-[4rem_minmax(0,1fr)_4rem] gap-x-4 p-4 items-start'>
-            <Icon classNames={mx('row-start-1 p-1 rounded-md', styles.bg, styles.fg)} icon={iconKey} size={14} />
+          <div
+            className={mx(
+              'dx-document grid gap-x-4 p-4 items-start',
+              isMobile ? 'grid-cols-[2.5rem_minmax(0,1fr)_2.5rem]' : 'grid-cols-[4rem_minmax(0,1fr)_4rem]',
+            )}
+          >
+            <Icon
+              classNames={mx('row-start-1 p-1 rounded-md', styles.bg, styles.fg)}
+              icon={iconKey}
+              size={isMobile ? 8 : 14}
+            />
 
             <div className='row-start-1 col-start-2 col-span-2 grid grid-cols-[1fr_min-content] gap-x-3 w-full pt-1'>
               <div className='flex items-center gap-2'>

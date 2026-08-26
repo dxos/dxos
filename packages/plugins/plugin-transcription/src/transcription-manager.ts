@@ -13,7 +13,7 @@ import { Resource } from '@dxos/context';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Transcriber } from '@dxos/pipeline-transcription';
-import { MediaStreamRecorder } from '@dxos/react-ui-transcription';
+import { MediaStreamRecorder } from '@dxos/react-ui-transcription/capture';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { TranscriptionCapabilities } from '#types';

@@ -384,7 +384,7 @@ export const define = <T = void>(meta: Meta): PluginBuilder<T> => new PluginBuil
  *   requires and its return must cover the declared provides.
  */
 export function addModule<T = void>(
-  module: Capability.Module<void>,
+  module: Capability.Module<void> | undefined,
   options?: { id?: string },
 ): (builder: PluginBuilder<T>) => PluginBuilder<T>;
 /** Spec-carrying module whose props are mapped from the plugin options. */
@@ -403,9 +403,19 @@ export function addModule<T>(
   moduleOptions: TypedModuleOptions | ((options: T) => TypedModuleOptions),
 ): PluginBuilder<T>;
 export function addModule<T>(
-  moduleOrOptionsOrBuilder: Capability.Module<any> | ModuleEntry | ((options: T) => ModuleEntry) | PluginBuilder<T>,
+  moduleOrOptionsOrBuilder:
+    | Capability.Module<any>
+    | ModuleEntry
+    | ((options: T) => ModuleEntry)
+    | PluginBuilder<T>
+    | undefined,
   moduleOptions?: ModuleEntry | ((options: T) => ModuleEntry) | { id?: string },
 ): ((builder: PluginBuilder<T>) => PluginBuilder<T>) | PluginBuilder<T> {
+  // Headless capability barrels stub excluded modules as `undefined`, letting one canonical
+  // plugin entry serve every environment.
+  if (moduleOrOptionsOrBuilder === undefined) {
+    return (builder: PluginBuilder<T>) => builder;
+  }
   // Spec-carrying module: a tagged function whose requires/provides/activatesOn come from its
   // own spec; only an optional id override is supplied at the call site.
   if (typeof moduleOrOptionsOrBuilder === 'function' && Capability.ModuleTag in moduleOrOptionsOrBuilder) {
