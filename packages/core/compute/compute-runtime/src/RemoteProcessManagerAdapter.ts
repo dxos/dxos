@@ -21,7 +21,7 @@ import type { ProcessProtocol } from '@dxos/protocols';
 import { ProcessManagerService } from './process-manager-service';
 import type * as ProcessManager from './ProcessManager';
 import { toInfo } from './remote-process-info';
-import { RemoteProcessHandle } from './RemoteProcessHandle';
+import * as RemoteProcessHandle from './RemoteProcessHandle';
 import type * as RemoteProcessManager from './RemoteProcessManager';
 
 /**
@@ -138,7 +138,7 @@ export class RemoteProcessManagerAdapter implements ProcessManager.Manager {
     info: ProcessProtocol.ProcessInfo,
     definition?: Process.Process<I, O, any, Rpcs>,
   ): ProcessManager.Handle<I, O, Rpcs> {
-    return new RemoteProcessHandle<I, O, Rpcs>({
+    return new RemoteProcessHandle.RemoteProcessHandle<I, O, Rpcs>({
       info,
       control: this.#control,
       ...(definition !== undefined ? { definition } : {}),
