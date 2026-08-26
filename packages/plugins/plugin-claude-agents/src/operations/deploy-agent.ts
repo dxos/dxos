@@ -10,19 +10,19 @@ import { Database, Obj } from '@dxos/echo';
 import { createAgent, toAgentConfig, updateAgent } from '#api';
 import { ClaudeAgentOperation, ClaudeManagedAgent } from '#types';
 
-import { getApiKey } from '../credentials';
+import { getCredential } from '../credentials';
 
 const handler: Operation.WithHandler<typeof ClaudeAgentOperation.DeployAgent> = ClaudeAgentOperation.DeployAgent.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ agent }) {
       const agentObj = yield* Database.load(agent);
-      const apiKey = yield* getApiKey;
+      const credential = yield* getCredential;
       const config = toAgentConfig(agentObj);
 
       const agentId = ClaudeManagedAgent.getAgentId(agentObj);
       const response = agentId
-        ? yield* updateAgent(apiKey, agentId, config, agentObj.agentVersion)
-        : yield* createAgent(apiKey, config);
+        ? yield* updateAgent(credential, agentId, config, agentObj.agentVersion)
+        : yield* createAgent(credential, config);
 
       Obj.update(agentObj, (agentObj) => {
         ClaudeManagedAgent.setAgentId(agentObj, response.id);

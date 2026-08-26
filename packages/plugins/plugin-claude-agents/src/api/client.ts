@@ -7,20 +7,42 @@ import * as Schema from 'effect/Schema';
 
 import { proxyFetchLegacy } from '@dxos/edge-client';
 
-import { ANTHROPIC_API_URL, ANTHROPIC_VERSION, MANAGED_AGENTS_BETA, REQUEST_TIMEOUT_MS } from '../constants';
+import {
+  ANTHROPIC_API_URL,
+  ANTHROPIC_OAUTH_BETA,
+  ANTHROPIC_VERSION,
+  MANAGED_AGENTS_BETA,
+  REQUEST_TIMEOUT_MS,
+} from '../constants';
+import { type AnthropicCredential } from '../credentials';
 import { ClaudeAgentApiError } from '../errors';
 import { type AgentConfig, AgentResponse, EnvironmentResponse, EventPage, Ignored, SessionResponse } from './types';
 
 type Request<A> = {
-  apiKey: string;
+  credential: AnthropicCredential;
   method: 'GET' | 'POST';
   path: string;
   schema: Schema.Codec<A>;
   body?: unknown;
 };
 
+/**
+ * An OAuth access token authenticates as a bearer and must announce the OAuth beta, while a Console
+ * key goes on `x-api-key`; sending the wrong pair is rejected as an authentication error.
+ */
+const authHeaders = ({ token, scheme }: AnthropicCredential): Record<string, string> =>
+  scheme === 'oauth'
+    ? { 'authorization': `Bearer ${token}`, 'anthropic-beta': `${MANAGED_AGENTS_BETA},${ANTHROPIC_OAUTH_BETA}` }
+    : { 'x-api-key': token, 'anthropic-beta': MANAGED_AGENTS_BETA };
+
 /** Calls the Managed Agents control plane through the edge CORS proxy, which api.anthropic.com requires. */
-export const request = <A>({ apiKey, method, path, schema, body }: Request<A>): Effect.Effect<A, ClaudeAgentApiError> =>
+export const request = <A>({
+  credential,
+  method,
+  path,
+  schema,
+  body,
+}: Request<A>): Effect.Effect<A, ClaudeAgentApiError> =>
   Effect.tryPromise({
     try: async (): Promise<unknown> => {
       const controller = new AbortController();
@@ -30,10 +52,9 @@ export const request = <A>({ apiKey, method, path, schema, body }: Request<A>): 
         const response = await proxyFetchLegacy(new URL(`${ANTHROPIC_API_URL}${path}`), {
           method,
           headers: {
-            'x-api-key': apiKey,
             'anthropic-version': ANTHROPIC_VERSION,
-            'anthropic-beta': MANAGED_AGENTS_BETA,
             'content-type': 'application/json',
+            ...authHeaders(credential),
           },
           ...(body === undefined ? {} : { body: JSON.stringify(body) }),
           signal: controller.signal,
@@ -59,21 +80,24 @@ export const request = <A>({ apiKey, method, path, schema, body }: Request<A>): 
   );
 
 /** Creates a saved agent configuration. */
-export const createAgent = (apiKey: string, config: AgentConfig): Effect.Effect<AgentResponse, ClaudeAgentApiError> =>
-  request({ apiKey, method: 'POST', path: '/v1/agents', schema: AgentResponse, body: config });
+export const createAgent = (
+  credential: AnthropicCredential,
+  config: AgentConfig,
+): Effect.Effect<AgentResponse, ClaudeAgentApiError> =>
+  request({ credential, method: 'POST', path: '/v1/agents', schema: AgentResponse, body: config });
 
 /**
  * Updates an existing agent, bumping its version. `version` is sent for optimistic concurrency: a
  * mismatch is rejected with 409 rather than silently overwriting a config changed elsewhere.
  */
 export const updateAgent = (
-  apiKey: string,
+  credential: AnthropicCredential,
   agentId: string,
   config: AgentConfig,
   version?: number,
 ): Effect.Effect<AgentResponse, ClaudeAgentApiError> =>
   request({
-    apiKey,
+    credential,
     method: 'POST',
     path: `/v1/agents/${agentId}`,
     schema: AgentResponse,
@@ -82,11 +106,11 @@ export const updateAgent = (
 
 /** Creates the cloud environment sessions run in, with unrestricted egress for the agent's tools. */
 export const createEnvironment = (
-  apiKey: string,
+  credential: AnthropicCredential,
   name: string,
 ): Effect.Effect<EnvironmentResponse, ClaudeAgentApiError> =>
   request({
-    apiKey,
+    credential,
     method: 'POST',
     path: '/v1/environments',
     schema: EnvironmentResponse,
@@ -95,11 +119,11 @@ export const createEnvironment = (
 
 /** Starts a session against a deployed agent, optionally seeding it with the first user message. */
 export const createSession = (
-  apiKey: string,
+  credential: AnthropicCredential,
   params: { agentId: string; environmentId: string; title?: string; message?: string },
 ): Effect.Effect<SessionResponse, ClaudeAgentApiError> =>
   request({
-    apiKey,
+    credential,
     method: 'POST',
     path: '/v1/sessions',
     schema: SessionResponse,
@@ -114,17 +138,20 @@ export const createSession = (
   });
 
 /** Reads a session's current state, including its status and stop reason. */
-export const getSession = (apiKey: string, sessionId: string): Effect.Effect<SessionResponse, ClaudeAgentApiError> =>
-  request({ apiKey, method: 'GET', path: `/v1/sessions/${sessionId}`, schema: SessionResponse });
+export const getSession = (
+  credential: AnthropicCredential,
+  sessionId: string,
+): Effect.Effect<SessionResponse, ClaudeAgentApiError> =>
+  request({ credential, method: 'GET', path: `/v1/sessions/${sessionId}`, schema: SessionResponse });
 
 /** Sends a user message into a running session. */
 export const sendUserMessage = (
-  apiKey: string,
+  credential: AnthropicCredential,
   sessionId: string,
   message: string,
 ): Effect.Effect<unknown, ClaudeAgentApiError> =>
   request({
-    apiKey,
+    credential,
     method: 'POST',
     path: `/v1/sessions/${sessionId}/events`,
     schema: Ignored,
@@ -133,8 +160,12 @@ export const sendUserMessage = (
 
 /** Reads one page of session events, newest last. */
 export const listEvents = (
-  apiKey: string,
+  credential: AnthropicCredential,
   sessionId: string,
   limit: number,
 ): Effect.Effect<EventPage, ClaudeAgentApiError> =>
-  request({ apiKey, method: 'GET', path: `/v1/sessions/${sessionId}/events?limit=${limit}`, schema: EventPage });
+  request({ credential, method: 'GET', path: `/v1/sessions/${sessionId}/events?limit=${limit}`, schema: EventPage });
+
+/** Cheapest authenticated call, used to probe whether a stored credential still works. */
+export const verifyCredential = (credential: AnthropicCredential): Effect.Effect<unknown, ClaudeAgentApiError> =>
+  request({ credential, method: 'GET', path: '/v1/models?limit=1', schema: Ignored });

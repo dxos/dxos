@@ -2,8 +2,23 @@
 // Copyright 2026 DXOS.org
 //
 
-/** Credential service key under which the Anthropic API key is stored. */
+/** Credential service key under which the Anthropic credential is stored. */
 export const ANTHROPIC_SOURCE = 'anthropic.com';
+
+/** Connector id for the Anthropic OAuth connection; stored as `Connection.connectorId`. */
+export const ANTHROPIC_PROVIDER_ID = 'anthropic';
+
+/**
+ * OAuth scopes requested when connecting a Claude account: inference to run the agent, and the
+ * profile scope so the connection can be labelled with the authorizing account.
+ */
+export const ANTHROPIC_SCOPES = ['user:inference', 'user:profile'] as const;
+
+/** Prefix of an Anthropic OAuth access token, as opposed to an `sk-ant-api…` Console key. */
+export const ANTHROPIC_OAUTH_TOKEN_PREFIX = 'sk-ant-oat';
+
+/** OAuth-authenticated requests must carry this flag; `/v1/messages` rejects a bearer token without it. */
+export const ANTHROPIC_OAUTH_BETA = 'oauth-2025-04-20';
 
 export const ANTHROPIC_API_URL = 'https://api.anthropic.com';
 

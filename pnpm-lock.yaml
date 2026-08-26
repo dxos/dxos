@@ -8738,6 +8738,12 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
+      '@dxos/plugin-connector':
+        specifier: workspace:*
+        version: link:../plugin-connector
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util

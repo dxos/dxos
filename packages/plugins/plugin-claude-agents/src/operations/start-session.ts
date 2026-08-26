@@ -11,7 +11,7 @@ import { createEnvironment, createSession } from '#api';
 import { ClaudeAgentOperation, ClaudeAgentSession, ClaudeManagedAgent } from '#types';
 
 import { DEFAULT_ENVIRONMENT_NAME } from '../constants';
-import { getApiKey } from '../credentials';
+import { getCredential } from '../credentials';
 import { AgentNotDeployedError } from '../errors';
 
 const handler: Operation.WithHandler<typeof ClaudeAgentOperation.StartSession> = ClaudeAgentOperation.StartSession.pipe(
@@ -23,11 +23,11 @@ const handler: Operation.WithHandler<typeof ClaudeAgentOperation.StartSession> =
         return yield* Effect.fail(new AgentNotDeployedError());
       }
 
-      const apiKey = yield* getApiKey;
+      const credential = yield* getCredential;
 
       // Provisioned on demand so the first run does not require a Console visit.
       const configured = environmentId ?? agentObj.environmentId;
-      const environment = configured ?? (yield* createEnvironment(apiKey, DEFAULT_ENVIRONMENT_NAME)).id;
+      const environment = configured ?? (yield* createEnvironment(credential, DEFAULT_ENVIRONMENT_NAME)).id;
       const provisioned = configured === undefined;
       if (provisioned) {
         Obj.update(agentObj, (agentObj) => {
@@ -36,7 +36,7 @@ const handler: Operation.WithHandler<typeof ClaudeAgentOperation.StartSession> =
       }
 
       const sessionTitle = title ?? `${agentObj.name} session`;
-      const response = yield* createSession(apiKey, {
+      const response = yield* createSession(credential, {
         agentId,
         environmentId: environment,
         title: sessionTitle,

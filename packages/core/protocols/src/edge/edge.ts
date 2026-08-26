@@ -334,6 +334,7 @@ export type EdgeAuthChallenge = {
 };
 
 export enum OAuthProvider {
+  ANTHROPIC = 'anthropic',
   ATLASSIAN = 'atlassian',
   ATPROTO = 'atproto',
   /** @deprecated Use ATPROTO instead. */

@@ -46,7 +46,7 @@ export const make = (): Skill.Skill =>
 
         ## Credentials
         Every step past Create Claude Agent calls Anthropic and needs the space's "anthropic.com"
-        credential. When an operation fails with MissingCredentialError the credential is not connected
+        credential — either a Claude account connected over OAuth or a Console API key. When an operation fails with MissingCredentialError the credential is not connected
         yet — that is a setup gap, not an error to report and stop on:
         1. Enable the \`org.dxos.skill.connectors\` skill with Enable skills.
         2. Emit its connector prompt so the user can connect inline:

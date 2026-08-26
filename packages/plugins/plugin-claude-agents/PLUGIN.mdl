@@ -162,8 +162,18 @@ feat F-6: Credentials
 
   req F-6.1:
     when: any operation calls the Anthropic API
-    then: the API key is resolved from the credential stored under the
-          "anthropic.com" service and sent as the `x-api-key` header
+    then: |
+      the credential is resolved from the "anthropic.com" service and sent as
+      the header its kind requires — an OAuth access token (`sk-ant-oat…`, minted
+      by connecting a Claude account) on `Authorization: Bearer` alongside the
+      `oauth-2025-04-20` beta, a Console API key on `x-api-key`
+
+  req F-6.4:
+    when: the user connects the "anthropic" connector
+    then: |
+      EDGE runs the Anthropic authorization-code flow (PKCE) and the resulting
+      access token is stored as the space's "anthropic.com" credential, so no key
+      is ever pasted into the conversation
 
   req F-6.3:
     when: no "anthropic.com" credential exists in the space

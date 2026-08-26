@@ -11,7 +11,7 @@ import { getSession, listEvents, toTranscript } from '#api';
 import { ClaudeAgentOperation, ClaudeAgentSession } from '#types';
 
 import { DEFAULT_TRANSCRIPT_LIMIT } from '../constants';
-import { getApiKey } from '../credentials';
+import { getCredential } from '../credentials';
 import { SessionNotLinkedError } from '../errors';
 
 const handler: Operation.WithHandler<typeof ClaudeAgentOperation.GetTranscript> =
@@ -24,10 +24,10 @@ const handler: Operation.WithHandler<typeof ClaudeAgentOperation.GetTranscript> 
           return yield* Effect.fail(new SessionNotLinkedError());
         }
 
-        const apiKey = yield* getApiKey;
+        const credential = yield* getCredential;
 
         const [state, events] = yield* Effect.all(
-          [getSession(apiKey, sessionId), listEvents(apiKey, sessionId, limit ?? DEFAULT_TRANSCRIPT_LIMIT)],
+          [getSession(credential, sessionId), listEvents(credential, sessionId, limit ?? DEFAULT_TRANSCRIPT_LIMIT)],
           { concurrency: 2 },
         );
 

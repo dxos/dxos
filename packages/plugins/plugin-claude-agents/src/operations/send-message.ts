@@ -10,7 +10,7 @@ import { Database } from '@dxos/echo';
 import { sendUserMessage } from '#api';
 import { ClaudeAgentOperation, ClaudeAgentSession } from '#types';
 
-import { getApiKey } from '../credentials';
+import { getCredential } from '../credentials';
 import { SessionNotLinkedError } from '../errors';
 
 const handler: Operation.WithHandler<typeof ClaudeAgentOperation.SendMessage> = ClaudeAgentOperation.SendMessage.pipe(
@@ -22,8 +22,8 @@ const handler: Operation.WithHandler<typeof ClaudeAgentOperation.SendMessage> = 
         return yield* Effect.fail(new SessionNotLinkedError());
       }
 
-      const apiKey = yield* getApiKey;
-      yield* sendUserMessage(apiKey, sessionId, message);
+      const credential = yield* getCredential;
+      yield* sendUserMessage(credential, sessionId, message);
 
       return { sessionId };
     }),

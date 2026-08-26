@@ -34,6 +34,9 @@
       "path": "../../core/mesh/edge-client"
     },
     {
+      "path": "../../core/protocols"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -41,6 +44,9 @@
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../plugin-connector"
     }
   ]
 }
