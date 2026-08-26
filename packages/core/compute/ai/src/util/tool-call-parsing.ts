@@ -42,7 +42,9 @@ export const withoutToolCallParsing = <Tools extends Record<string, Tool.Any>, E
  * any other failure must propagate.
  */
 const isToolCallParseFailure = (cause: Cause.Cause<unknown>): boolean =>
-  cause.reasons.some((reason) =>
+  cause.reasons.length > 0 &&
+  // `reasons` is flat, so a cause combining an unrelated failure must still propagate in full.
+  cause.reasons.every((reason) =>
     reason._tag === 'Fail'
       ? isInvalidOutputError(reason.error)
       : reason._tag === 'Die' && reason.defect instanceof SyntaxError,

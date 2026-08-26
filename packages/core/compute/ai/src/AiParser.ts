@@ -193,6 +193,24 @@ export const parseResponse =
           }
         });
 
+        /**
+         * Finalizes a block left open when the stream ends mid-block (e.g. malformed tool call
+         * parameters truncate the provider stream before `tool-params-end`), which would otherwise
+         * leave it pending forever in the UI and invisible to the tool runner.
+         */
+        const flushBlock = Effect.fnUntraced(function* (out: ContentBlock.Any[]) {
+          if (!block) {
+            return;
+          }
+          log.warn('stream ended with an unterminated block', { type: block._tag });
+          block.pending = false;
+          yield* emitFullBlock(block, out);
+          if (block._tag === 'toolCall') {
+            toolCalls++;
+          }
+          block = undefined;
+        });
+
         const handlePart = Effect.fnUntraced(function* (part: Response.StreamPart<Tools>, out: ContentBlock.Any[]) {
           log('part', { type: part.type });
           yield* onPart(part);
@@ -387,6 +405,7 @@ export const parseResponse =
 
             case 'finish': {
               yield* flushText(out);
+              yield* flushBlock(out);
               const { inputTokens, outputTokens } = part.usage;
               stats.duration = Date.now() - start;
               stats.message = 'OK'; // part.reason;
@@ -435,18 +454,7 @@ export const parseResponse =
           Effect.gen(function* () {
             const out: ContentBlock.Any[] = [];
             yield* flushText(out);
-            // A stream that ends mid-block (e.g. malformed tool call parameters truncate the
-            // provider stream before `tool-params-end`) would otherwise leave the block pending
-            // forever in the UI and invisible to the tool runner.
-            if (block) {
-              log.warn('stream ended with an unterminated block', { type: block._tag });
-              block.pending = false;
-              yield* emitFullBlock(block, out);
-              if (block._tag === 'toolCall') {
-                toolCalls++;
-              }
-              block = undefined;
-            }
+            yield* flushBlock(out);
             log('end', { blocks, parts, summary: stats });
             yield* onEnd(stats);
             return out;
