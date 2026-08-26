@@ -18981,9 +18981,6 @@ importers:
       '@dxos/echo-query':
         specifier: workspace:*
         version: link:../../core/echo/echo-query
-      '@dxos/errors':
-        specifier: workspace:*
-        version: link:../../common/errors
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -19060,6 +19057,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
