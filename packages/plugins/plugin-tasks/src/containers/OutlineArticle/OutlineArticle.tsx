@@ -88,6 +88,10 @@ export const OutlineArticle = ({
   }, [task, onSelectTask]);
   const handleBack = useCallback(() => setSelected(undefined), []);
 
+  // Reactive: on a cold load (or a story that seeds during client init) the content ref's target
+  // is not yet in memory, and a `.target` read would leave the editor permanently unmounted.
+  const text = useResolveRef(outline.content);
+
   const outlineRef = useRef<OutlineController>(null);
   const handleConvertCurrent = useCallback(() => outlineRef.current?.convertToTask(), []);
 
@@ -165,15 +169,15 @@ export const OutlineArticle = ({
     );
   }
 
-  if (!outline.content.target) {
+  if (!text) {
     return null;
   }
 
   return (
     <Outline.Root
       ref={outlineRef}
-      id={outline.content.target.id}
-      text={outline.content.target}
+      id={text.id}
+      text={text}
       onConvertToTask={taskSet ? handleConvertToTask : undefined}
       onConvertibleChange={setConvertible}
       onSelectLink={handleSelectLink}
