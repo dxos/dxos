@@ -107,14 +107,6 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
     ),
 
     /**
-     * Execution-ordering dependencies: this task is ready to start only when every referenced
-     * task is `done`. Orthogonal to `parentTask` (hierarchy) and `milestone` (grouping).
-     */
-    dependsOn: Schema.optional(
-      Schema.Array(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task))).annotate({ title: 'Depends On' }),
-    ),
-
-    /**
      * The milestone this task belongs to; unset means backlog. A sub-task inherits its nearest
      * ancestor's milestone at read time unless it sets its own (matching Linear).
      */
