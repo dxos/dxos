@@ -23,7 +23,7 @@ import {
 import { type MessageRange, type OutlineMarker, Outline as OutlineRail, useFeedModel } from '@dxos/react-ui-feed';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { TaskList } from '@dxos/react-ui-task';
-import { TaskSet } from '@dxos/types';
+import { Outline, TaskSet } from '@dxos/types';
 import { Message } from '@dxos/types';
 import { keyToFallback } from '@dxos/util';
 
@@ -561,15 +561,29 @@ const ChatTaskList = composable<HTMLDivElement, ChatTaskListProps>(
     const tasks = useAtomValue(
       useMemo(() => Atom.make((get) => TaskSet.dedupeById((taskRefs ?? []).map((ref) => get(ref.atom)))), [taskRefs]),
     );
-    if (tasks.length === 0) {
+
+    // `Outline.addTask` is the shared primitive the task verbs use, so the parent edge and the
+    // set's refs stay consistent without a cross-plugin operation dependency.
+    const handleCreate = useCallback(
+      (title: string) => {
+        const db = taskSet && Obj.getDatabase(taskSet);
+        if (taskSet && db) {
+          Outline.addTask(db, taskSet, title);
+        }
+      },
+      [taskSet],
+    );
+    if (!taskSet || tasks.length === 0) {
       return null;
     }
 
     return (
-      <TaskList.Root tasks={tasks} showGroupLabels={false} showOrdinals>
+      <TaskList.Root tasks={tasks} showGroupLabels={false} showOrdinals onTaskCreate={handleCreate}>
         <TaskList.Viewport {...composableProps(props, { classNames: 'dx-container' })} ref={forwardedRef}>
           <TaskList.Content />
+          <TaskList.Create />
         </TaskList.Viewport>
+        <TaskList.Create />
       </TaskList.Root>
     );
   },
