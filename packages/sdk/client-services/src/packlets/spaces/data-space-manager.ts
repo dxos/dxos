@@ -549,9 +549,8 @@ export class DataSpaceManager extends Resource {
   }
 
   /**
-   * Tells edge which document is the space root. Edge cannot derive it — a space id is the hash of
-   * its space key, which no document id reproduces — so without this the credentials document is
-   * never found and the space stays on its control feed.
+   * Names the space root to edge, which cannot derive it from a space id that is the hash of the
+   * space key, leaving the space on its control feed.
    */
   private _reportSpaceRootToEdge(space: DataSpace): void {
     const refs = this._echoHost.getSpaceRootRefs(space.id);
@@ -559,13 +558,9 @@ export class DataSpaceManager extends Resource {
       return;
     }
 
-    // Edge validates the root against the documents themselves, which reach it by replication some
-    // time after the anchor, so the first attempt is normally too early. Retrying in the background
-    // rather than inline keeps a space open from waiting on a round trip it does not depend on.
-    //
-    // Scheduled on the DSM lifecycle context, never the caller's: the invitation accept flow
-    // disposes its ctx as soon as `acceptSpace` returns (see `acceptSpace`), which would cancel
-    // every pending retry and strand an accepted space on its control feed.
+    // Retried in the background because edge rejects a root whose documents have not replicated to
+    // it yet, and bound to the manager's own context because the invitation accept flow disposes
+    // its ctx the moment `acceptSpace` returns, which would cancel every pending retry.
     let delay = SPACE_ROOT_REPORT_RETRY_INITIAL;
     const report = async (): Promise<void> => {
       try {

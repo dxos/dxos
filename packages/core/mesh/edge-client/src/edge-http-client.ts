@@ -221,9 +221,8 @@ export class EdgeHttpClient extends BaseHttpClient {
   }
 
   /**
-   * Tells edge which document is the space's root, so it can find the space's credentials without
-   * opening every document it stores. Returns the root in force, which differs from `rootDocumentUrl`
-   * when the space was already anchored — the record is write-once.
+   * Names the space's root document, which edge cannot derive, and returns the root in force —
+   * not necessarily the one offered, since the record is write-once.
    */
   public async recordSpaceRoot(
     ctx: Context,
