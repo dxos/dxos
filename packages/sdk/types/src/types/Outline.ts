@@ -6,11 +6,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, type Database, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { CollectionItemAnnotation, Text } from '@dxos/schema';
 
 import * as Task from './Task';
-import * as TaskSet from './TaskSet';
 
 /**
  * Markdown checklist document: the cheap, fluid form of work. Items promoted to durable

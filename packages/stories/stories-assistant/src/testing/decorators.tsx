@@ -29,13 +29,12 @@ import {
   AgentHandlers,
   AgentSkill,
   Chat,
-  DelegationSkillHandlers,
   DelegationSkill,
+  DelegationSkillHandlers,
   PlanningHandlers,
   PlanningSkill,
   makeDelegationStrategy,
 } from '@dxos/assistant-toolkit';
-import { type Space } from '@dxos/client/echo';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
