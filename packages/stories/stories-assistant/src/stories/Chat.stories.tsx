@@ -15,10 +15,10 @@ import {
   WebSearchSkill,
 } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
-import { Filter } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import { type Space } from '@dxos/react-client/echo';
-import { type Outline, TaskSet } from '@dxos/types';
+import { Outline, type Task, TaskSet } from '@dxos/types';
 
 import { StoryRole } from '../modules';
 import { ModuleContainer, config, createDecorators, storyParameters } from '../testing';
@@ -35,7 +35,7 @@ const { text, toolCall, promptIncludes } = ScriptedLanguageModel;
 const TASK_TITLE = 'Compute 10 factorial';
 
 // Captured by `onInit` so play functions can assert on the real objects the skills write, rather
-// than on rendered text (no surface in these layouts renders the task list).
+// than on rendered text, which would race the agent's writes.
 let storySpace: Space | undefined;
 
 const captureSpace = async ({ space }: { space: Space }) => {
@@ -102,6 +102,33 @@ export const Default: Story = {
   }),
   args: {
     layout: [[StoryRole.Chat], [StoryRole.Logging, StoryRole.Config]],
+  },
+};
+
+/**
+ * Chat over a pre-seeded working task set: `Chat.TaskList` renders the durable tasks between the
+ * thread and the prompt from the first frame, status-grouped without headings.
+ */
+export const WithTasks: Story = {
+  decorators: createDecorators({
+    onChatCreated: async ({ space, chat }) => {
+      const taskSet = space.db.add(TaskSet.make({ name: 'Launch plan' }));
+      Obj.update(chat, (chat) => {
+        chat.taskSet = Ref.make(taskSet);
+      });
+      const seed: { title: string; status: NonNullable<Task.Task['status']> }[] = [
+        { title: 'Source the beans', status: 'done' },
+        { title: 'Dial in the roast', status: 'in-progress' },
+        { title: 'Print the labels', status: 'todo' },
+      ];
+      for (const { title, status } of seed) {
+        Outline.addTask(space.db, taskSet, title, { status });
+      }
+      await space.db.flush();
+    },
+  }),
+  args: {
+    layout: [[StoryRole.Chat]],
   },
 };
 

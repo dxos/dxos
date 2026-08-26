@@ -209,7 +209,7 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task }>(({ task, ...
         variant='ghost'
         density='sm'
         icon={done ? 'ph--check--regular' : 'ph--square--regular'}
-        iconOnly={!!onTaskUpdate}
+        iconOnly
         // TODO(burdon): Translations.
         label={onTaskUpdate ? (done ? 'Mark todo' : 'Mark done') : done ? 'Done' : 'Pending'}
         onClick={handleToggle}
