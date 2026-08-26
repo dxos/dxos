@@ -2,14 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  type Browser,
-  type BrowserContext,
-  type ConsoleMessage,
-  type Locator,
-  type Page,
-  expect,
-} from '@playwright/test';
+import { type Browser, type ConsoleMessage, type Locator, type Page, expect } from '@playwright/test';
 import os from 'node:os';
 
 import { Trigger } from '@dxos/async';
@@ -76,9 +69,7 @@ export class AppManager {
 
   // prettier-ignore
   constructor(
-    // A context, not just a browser, so a spec can own the context options `use` cannot reach through
-    // `setupPage` — recording a video, for one.
-    private readonly _browser: Browser | BrowserContext,
+    private readonly _browser: Browser,
     inIframe?: boolean,
   ) {
     this._inIframe = inIframe;

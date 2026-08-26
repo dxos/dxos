@@ -246,14 +246,6 @@ tasks:
     deps:
       - ~:#prebuild
       - ^:build
-  # Records `assistant-video.spec.ts` as a `.webm` for a human to watch — evidence of a real assistant
-  # round trip, not a second assertion of it (`chat.spec.ts` is the assertion). Manual: it spends a live
-  # AI-service call, so it is not wired into `check`.
-  e2e-video:
-    command: pnpm exec playwright test --config=src/playwright/playwright-video.config.ts
-    deps:
-      - ~:#prebuild
-      - ^:build
   # Welcome-screen focus regression — drives Storybook on :9009 rather than the app, so it cannot
   # run under `e2e`'s `vite preview` web server.
   e2e-welcome-focus:
