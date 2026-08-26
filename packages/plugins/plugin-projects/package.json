@@ -180,6 +180,7 @@
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-github": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",

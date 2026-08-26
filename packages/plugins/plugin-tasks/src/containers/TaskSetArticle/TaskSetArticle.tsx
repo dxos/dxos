@@ -4,7 +4,7 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -55,6 +55,9 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
     [invokePromise, spaceId],
   );
 
+  const [selected, setSelected] = useState<string>();
+  const handleSelect = useCallback((task: Task.Task) => setSelected(task.id), []);
+
   const content = (
     <TaskList.Root
       tasks={tasks}
@@ -63,6 +66,10 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
       onTaskCreate={handleCreate}
       onTaskUpdate={handleUpdate}
       onTaskDelete={handleDelete}
+      // Selection is local to the list today (it styles the row); opening the task is a separate
+      // affordance, so this only makes the row report which task the reader is looking at.
+      onTaskSelect={handleSelect}
+      selected={selected}
     >
       <TaskList.Viewport classNames='dx-document'>
         <TaskList.Content />

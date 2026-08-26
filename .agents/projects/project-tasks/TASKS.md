@@ -162,13 +162,12 @@ Each is independent of the others; none is started.
       `GitHubPlugin`: adding it lengthened the mount enough to turn the client
       teardown flake below from intermittent into consistent. Demonstrated
       meanwhile by `plugins/plugin-tasks/components/Outline` → `WithReferences`.
-- [ ] **ProjectArticle `Sections` story is flaky (~1 run in 4)** — the article
-      renders with EVERY ref-gated section missing (no instructions, outline,
-      or artifact card), which is the previous story's client being torn down
-      asynchronously and stripping this story's resolver, not a layout or paint
-      problem: the failure text is the bare shell, and the same assertions pass
-      on the next attempt. `retry` masks it in CI. Fix belongs in the story
-      harness (await the outgoing client's teardown before mounting the next).
+- [x] **ProjectArticle `Sections` story was flaky (~1 run in 4)** — the seeding
+      ran from `play`, racing the previous story's client teardown, and the
+      article rendered with every ref-gated section missing. Seeding moved into
+      `onClientInitialized`, so the graph exists before any story mounts: 7
+      consecutive `--retry=0` runs green. The play functions now only wait for
+      the seeded context.
 - [ ] **`#foo` renders as a heading in chat markdown** — a `#` inside a message
       is parsed as an ATX heading, so `#foo` comes out as a title. The thread
       renders through CodeMirror (`MarkdownBlock` → `decorateMarkdown`), so the

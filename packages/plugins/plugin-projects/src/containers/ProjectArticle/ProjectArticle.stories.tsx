@@ -14,6 +14,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import * as GitHubPlugin from '@dxos/plugin-github/GitHubPlugin';
 import { translations as routineTranslations } from '@dxos/plugin-routine/translations';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { translations as tasksTranslations } from '@dxos/plugin-tasks/translations';
@@ -180,6 +181,8 @@ const meta = {
       plugins: [
         ...corePlugins(),
         TasksPlugin.make(),
+        // Contributes the `#123` decoration; `project.repo` is what it resolves against.
+        GitHubPlugin.make(),
         ClientPlugin.make({
           types: [
             Project.Project,
@@ -274,7 +277,11 @@ export const TaskLink: Story = {
     await seedContent();
 
     // Overview owns the outline, so the link is followed from a tab that is not the Tasks one.
-    await expect(canvas.getByTestId('projectsPlugin.tab.tasks')).toHaveAttribute('data-state', 'inactive');
+    // `find`, not `get`: seeding completes at client init, which can be before the article mounts.
+    await expect(await canvas.findByTestId('projectsPlugin.tab.tasks', undefined, { timeout: 10_000 })).toHaveAttribute(
+      'data-state',
+      'inactive',
+    );
 
     const link = await canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 });
     await userEvent.click(link);
