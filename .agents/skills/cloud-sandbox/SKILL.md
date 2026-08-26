@@ -256,6 +256,12 @@ tests — so those still need the flags passed by hand in the sandbox. Gate any 
 
 ### What works and what does not
 
+The hostnames below are what was observed against the egress allowlist. EDGE has since moved to
+`edge.network` / `preview.edge.network` / `dev.edge.network` (`dxos.network` still aliases it): if a
+request to an `edge.network` host is refused with a 502 on the CONNECT, the new zone is not in the
+allowlist yet — test against the `dxos.network` alias and report it, rather than concluding EDGE is
+down.
+
 Working through the proxy: HTTPS to `dxos.network` and `*.dxos.workers.dev`; CORS from a
 `http://localhost:5173` origin (edge returns `access-control-allow-origin` for it); WebSocket
 upgrades — `101 Switching Protocols` relays, and a Chromium `WebSocket` round-trips a message.

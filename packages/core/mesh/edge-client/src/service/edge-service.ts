@@ -21,8 +21,20 @@ const DEFAULT_TIMEOUT = Duration.seconds(15);
 /** Number of body characters retained for the error message on a non-2xx response. */
 const ERROR_BODY_LIMIT = 512;
 
+/**
+ * Appends `path` to `base`, keeping any path the base already carries.
+ *
+ * `new URL('/thumbnail', 'https://edge.network/image')` resolves to
+ * `https://edge.network/thumbnail` — an absolute path replaces the base's path — which drops the
+ * service prefix now that every service is addressed as one.
+ */
+const joinUrl = (base: string, path: string): string => `${base.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
+
 export type EdgeServiceClientOptions = {
-  /** Base URL the service is hosted at; request paths resolve against it. */
+  /**
+   * Base URL the service is hosted at, path prefix included (e.g. `https://edge.network/image`).
+   * Request paths are APPENDED to it, so the prefix survives.
+   */
   baseUrl: string;
   /** Tag included in the {@link EDGE_CLIENT_TAG_HEADER} header for metering. */
   clientTag?: string;
@@ -89,7 +101,7 @@ export class EdgeServiceClient {
 
   #request<A>(path: string, schema: Schema.Codec<A, any>, init: RequestInit): Effect.Effect<A, EdgeServiceError> {
     return Effect.gen({ self: this }, function* () {
-      const url = new URL(path, this.#baseUrl);
+      const url = new URL(joinUrl(this.#baseUrl, path));
       const headers = new Headers(init.headers ?? undefined);
       if (this.#clientTag) {
         headers.set(EDGE_CLIENT_TAG_HEADER, this.#clientTag);

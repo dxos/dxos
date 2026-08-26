@@ -5,6 +5,7 @@
 import * as Match from 'effect/Match';
 
 import { Config } from './config';
+import { EDGE_URLS } from './edge-services';
 
 export type ConfigPresetOptions = {
   /**
@@ -22,21 +23,22 @@ export type ConfigPresetOptions = {
 const edgeUrl = (edge: NonNullable<ConfigPresetOptions['edge']>) =>
   Match.value(edge).pipe(
     Match.when('local', () => 'http://localhost:8787'),
-    Match.when('dev', () => 'https://edge.dxos.workers.dev'),
+    Match.when('dev', () => EDGE_URLS.dev),
     // Preserve `main` as a deprecated alias for existing profiles.
-    Match.when('preview', () => 'https://preview.dxos.network'),
-    Match.when('main', () => 'https://preview.dxos.network'),
-    Match.when('production', () => 'https://dxos.network'),
+    Match.when('preview', () => EDGE_URLS.preview),
+    Match.when('main', () => EDGE_URLS.preview),
+    Match.when('production', () => EDGE_URLS.production),
     Match.exhaustive,
   );
 
-// TODO(burdon): Hosted environments share a single worker until per-env deployments exist.
+// Sandbox is reached through EDGE like every other service; its REST API is mounted at
+// `/api/sandbox`, so the origin is the plain edge base URL (see `SandboxClient`).
 const sandboxUrl = (sandbox: NonNullable<ConfigPresetOptions['sandbox']>) =>
   Match.value(sandbox).pipe(
     Match.when('local', () => 'http://localhost:8792'),
-    Match.when('dev', () => 'https://sandbox-service.dxos.workers.dev'),
-    Match.when('main', () => 'https://sandbox-service.dxos.workers.dev'),
-    Match.when('production', () => 'https://sandbox-service.dxos.workers.dev'),
+    Match.when('dev', () => EDGE_URLS.dev),
+    Match.when('main', () => EDGE_URLS.preview),
+    Match.when('production', () => EDGE_URLS.production),
     Match.exhaustive,
   );
 

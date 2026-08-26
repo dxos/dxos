@@ -54,7 +54,7 @@ jobs:
           LOG_FILTER: error
           # EDGE preview — the instance Composer `dev` targets, so a PR preview and a dev deploy
           # see the same data.
-          DX_EDGE_BASE_URL: https://preview.dxos.network/
+          DX_EDGE_BASE_URL: https://preview.edge.network/
 
       - name: Write deploy metadata
         run: |

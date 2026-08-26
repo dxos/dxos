@@ -38,6 +38,14 @@ export class HubHttpClient extends BaseHttpClient {
     super(hubUrl, options);
   }
 
+  /**
+   * Appends `path` to the base URL, keeping any path the base carries — hub is addressed under
+   * EDGE's `/hub` prefix, and `new URL('/account/me', base)` would discard it.
+   */
+  #url(path: string): URL {
+    return new URL(`${this.baseUrl.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`);
+  }
+
   //
   // Public (unauthenticated) endpoints
   //
@@ -47,7 +55,7 @@ export class HubHttpClient extends BaseHttpClient {
     body: { email: string },
     args?: EdgeHttpCallArgs,
   ): Promise<CheckEmailExistsResponse> {
-    return this._call(ctx, new URL('/account/email/exists', this.baseUrl), { ...args, body, method: 'POST' });
+    return this._call(ctx, this.#url('/account/email/exists'), { ...args, body, method: 'POST' });
   }
 
   public async validateInvitationCode(
@@ -55,7 +63,7 @@ export class HubHttpClient extends BaseHttpClient {
     body: { code: string },
     args?: EdgeHttpCallArgs,
   ): Promise<ValidateInvitationCodeResponse> {
-    return this._call(ctx, new URL('/account/invitation-code/validate', this.baseUrl), {
+    return this._call(ctx, this.#url('/account/invitation-code/validate'), {
       ...args,
       body,
       method: 'POST',
@@ -67,7 +75,7 @@ export class HubHttpClient extends BaseHttpClient {
     body: RedeemInvitationCodeRequest,
     args?: EdgeHttpCallArgs,
   ): Promise<RedeemInvitationCodeResponse> {
-    return this._call(ctx, new URL('/account/invitation-code/redeem', this.baseUrl), {
+    return this._call(ctx, this.#url('/account/invitation-code/redeem'), {
       ...args,
       body,
       method: 'POST',
@@ -81,7 +89,7 @@ export class HubHttpClient extends BaseHttpClient {
    * emails. Account creation goes through {@link redeemInvitationCode}.
    */
   public async login(ctx: Context, body: LoginRequest, args?: EdgeHttpCallArgs): Promise<LoginResponse> {
-    return this._call(ctx, new URL('/account/login', this.baseUrl), { ...args, body, method: 'POST' });
+    return this._call(ctx, this.#url('/account/login'), { ...args, body, method: 'POST' });
   }
 
   public async requestAccess(
@@ -89,7 +97,7 @@ export class HubHttpClient extends BaseHttpClient {
     body: RequestAccessRequest,
     args?: EdgeHttpCallArgs,
   ): Promise<RequestAccessResponse> {
-    return this._call(ctx, new URL('/account/request-access', this.baseUrl), { ...args, body, method: 'POST' });
+    return this._call(ctx, this.#url('/account/request-access'), { ...args, body, method: 'POST' });
   }
 
   //
@@ -97,26 +105,26 @@ export class HubHttpClient extends BaseHttpClient {
   //
 
   public async getAccount(ctx: Context, args?: EdgeHttpCallArgs): Promise<GetAccountResponse> {
-    return this._call(ctx, new URL('/account/me', this.baseUrl), { ...args, method: 'GET' });
+    return this._call(ctx, this.#url('/account/me'), { ...args, method: 'GET' });
   }
 
   public async deleteAccount(ctx: Context, args?: EdgeHttpCallArgs): Promise<{ deleted: boolean }> {
-    return this._call(ctx, new URL('/account/me', this.baseUrl), { ...args, method: 'DELETE' });
+    return this._call(ctx, this.#url('/account/me'), { ...args, method: 'DELETE' });
   }
 
   public async listAccountInvitations(ctx: Context, args?: EdgeHttpCallArgs): Promise<ListAccountInvitationsResponse> {
-    return this._call(ctx, new URL('/account/invitation', this.baseUrl), { ...args, method: 'GET' });
+    return this._call(ctx, this.#url('/account/invitation'), { ...args, method: 'GET' });
   }
 
   public async issueAccountInvitation(ctx: Context, args?: EdgeHttpCallArgs): Promise<IssueInvitationResponse> {
-    return this._call(ctx, new URL('/account/invitation/issue', this.baseUrl), { ...args, method: 'POST' });
+    return this._call(ctx, this.#url('/account/invitation/issue'), { ...args, method: 'POST' });
   }
 
   public async resendVerificationEmail(
     ctx: Context,
     args?: EdgeHttpCallArgs,
   ): Promise<ResendVerificationEmailResponse> {
-    return this._call(ctx, new URL('/account/email/resend-verification', this.baseUrl), { ...args, method: 'POST' });
+    return this._call(ctx, this.#url('/account/email/resend-verification'), { ...args, method: 'POST' });
   }
 
   /**
@@ -130,7 +138,7 @@ export class HubHttpClient extends BaseHttpClient {
   ): Promise<GetProfileUsageResponse> {
     return this._call(
       ctx,
-      createUrl(new URL('/api/metering/profile/usage', this.baseUrl), {
+      createUrl(this.#url('/api/metering/profile/usage'), {
         windowSeconds: query?.windowSeconds,
       }),
       { ...args, method: 'GET' },

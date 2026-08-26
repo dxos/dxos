@@ -60,11 +60,11 @@ const meta = {
             runtime: {
               services: {
                 edge: {
-                  url: 'https://edge.dxos.workers.dev/',
+                  url: 'https://dev.edge.network/',
                 },
                 iceProviders: [
                   {
-                    urls: 'https://edge.dxos.workers.dev/ice',
+                    urls: 'https://dev.edge.network/ice',
                   },
                 ],
               },

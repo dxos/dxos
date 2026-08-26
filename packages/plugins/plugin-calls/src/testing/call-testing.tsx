@@ -21,8 +21,8 @@ import { type CallManager, type GlobalState, type MediaState, type UserState } f
 const storyConfig = new Config({
   runtime: {
     services: {
-      edge: { url: 'https://edge.dxos.workers.dev/' },
-      iceProviders: [{ urls: 'https://edge.dxos.workers.dev/ice' }],
+      edge: { url: 'https://dev.edge.network/' },
+      iceProviders: [{ urls: 'https://dev.edge.network/ice' }],
     },
   },
 });

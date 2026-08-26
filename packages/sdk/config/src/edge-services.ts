@@ -20,17 +20,46 @@ export const EdgeServiceName = Object.freeze({
 export type EdgeServiceName = (typeof EdgeServiceName)[keyof typeof EdgeServiceName];
 
 /**
- * Canonical dev/test default endpoints for EDGE services.
+ * The EDGE entrypoint per environment. One host per environment, every service selected by path
+ * prefix beneath it — so a client holds one base URL and a prefix table rather than a URL per
+ * service. `local` is `moon run edge:dev`.
+ *
+ * The `*.dxos.network` hostnames these replaced are still attached as aliases for clients already
+ * in the field; they are not addresses to write into new code.
+ */
+export const EDGE_URLS = Object.freeze({
+  local: 'http://localhost:8787',
+  dev: 'https://dev.edge.network',
+  preview: 'https://preview.edge.network',
+  production: 'https://edge.network',
+} as const);
+
+/**
+ * The path prefix each EDGE service is served under, relative to an {@link EDGE_URLS} base.
+ * Transcription shares calls-service's prefix — the whisper endpoint lives there; the standalone
+ * video transcriber is a different worker under `/transcription`.
+ */
+export const EDGE_SERVICE_PATHS: Readonly<Record<EdgeServiceName, string>> = Object.freeze({
+  [EdgeServiceName.Calls]: '/calls',
+  [EdgeServiceName.Image]: '/image',
+  [EdgeServiceName.Transcription]: '/calls',
+  [EdgeServiceName.Discord]: '/discord',
+  [EdgeServiceName.CorsProxy]: '/cors',
+  [EdgeServiceName.Introspect]: '/introspect/mcp',
+});
+
+/**
+ * Canonical default endpoints for EDGE services, resolved against production EDGE.
  * Single source of truth for the URLs previously hard-coded across plugins.
- * Production values are supplied per-app via `dx.yml` (`runtime.services.edgeServices`).
+ * Per-app overrides go in `dx.yml` (`runtime.services.edgeServices`).
  */
 export const EDGE_SERVICE_DEFAULTS: Readonly<Record<EdgeServiceName, string>> = Object.freeze({
-  [EdgeServiceName.Calls]: 'https://calls.dxos.network',
-  [EdgeServiceName.Image]: 'https://image.dxos.network',
-  [EdgeServiceName.Transcription]: 'https://calls.dxos.network',
-  [EdgeServiceName.Discord]: 'https://discord.dxos.network',
-  [EdgeServiceName.CorsProxy]: 'https://cors.dxos.network',
-  [EdgeServiceName.Introspect]: 'https://introspect.dxos.network/mcp',
+  [EdgeServiceName.Calls]: `${EDGE_URLS.production}${EDGE_SERVICE_PATHS[EdgeServiceName.Calls]}`,
+  [EdgeServiceName.Image]: `${EDGE_URLS.production}${EDGE_SERVICE_PATHS[EdgeServiceName.Image]}`,
+  [EdgeServiceName.Transcription]: `${EDGE_URLS.production}${EDGE_SERVICE_PATHS[EdgeServiceName.Transcription]}`,
+  [EdgeServiceName.Discord]: `${EDGE_URLS.production}${EDGE_SERVICE_PATHS[EdgeServiceName.Discord]}`,
+  [EdgeServiceName.CorsProxy]: `${EDGE_URLS.production}${EDGE_SERVICE_PATHS[EdgeServiceName.CorsProxy]}`,
+  [EdgeServiceName.Introspect]: `${EDGE_URLS.production}${EDGE_SERVICE_PATHS[EdgeServiceName.Introspect]}`,
 });
 
 /**

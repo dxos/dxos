@@ -235,7 +235,7 @@ const handleConnect = async (interaction: DiscordInteraction, env: Env): Promise
   console.log('[worker] /connect', { spaceKey, guildId, guildName, channelId });
 
   // TODO(burdon): Forward to EDGE once the endpoint is available.
-  if (!env.EDGE_ENDPOINT || env.EDGE_ENDPOINT === 'https://edge.dxos.network') {
+  if (!env.EDGE_ENDPOINT || env.EDGE_ENDPOINT === 'https://edge.network') {
     await sendFollowup(
       interaction.application_id,
       interaction.token,
@@ -296,7 +296,7 @@ const handleTrack = async (interaction: DiscordInteraction, env: Env): Promise<v
     console.log('[worker] Captured', messages.length, 'messages from', threadName);
 
     // TODO(burdon): Forward to EDGE once the endpoint is available.
-    if (!env.EDGE_ENDPOINT || env.EDGE_ENDPOINT === 'https://edge.dxos.network') {
+    if (!env.EDGE_ENDPOINT || env.EDGE_ENDPOINT === 'https://edge.network') {
       await sendFollowup(
         interaction.application_id,
         interaction.token,

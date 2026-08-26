@@ -3,6 +3,13 @@
 //
 
 /**
+ * Appends `path` to `hubUrl`, keeping any path it carries — hub is addressed under EDGE's `/hub`
+ * prefix, and `new URL('/account/login', base)` would discard it.
+ */
+const hubEndpoint = (hubUrl: string, path: string): string =>
+  `${hubUrl.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
+
+/**
  * POST `/account/request-access` on hub-service. Adds an email to the waitlist
  * and (if configured server-side) pings Discord + Kit. Always reports success
  * back to the client to avoid leaking whether the email was already on the list.
@@ -18,7 +25,7 @@ export const joinWaitlist = async ({
   identityDid?: string;
   message?: string;
 }): Promise<void> => {
-  await fetch(new URL('/account/request-access', hubUrl), {
+  await fetch(hubEndpoint(hubUrl, '/account/request-access'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, identityDid, message }),
@@ -51,7 +58,7 @@ export const login = async ({
   identityKey?: string;
   redirectUrl?: string;
 }): Promise<{ needsIdentity?: boolean; admitted?: boolean }> => {
-  const response = await fetch(new URL('/account/login', hubUrl), {
+  const response = await fetch(hubEndpoint(hubUrl, '/account/login'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, identityDid, identityKey, redirectUrl }),

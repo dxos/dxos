@@ -12,20 +12,23 @@ runtime:
 
   services:
     edge:
-      url: https://dxos.network/
+      url: https://edge.network/
     iceProviders:
-      - urls: https://dxos.network/ice
+      - urls: https://edge.network/ice
+    # Sandbox is reached through EDGE; its REST API is mounted at /api/sandbox.
     sandbox:
-      url: https://sandbox-service.dxos.workers.dev
+      url: https://edge.network
     ipfs:
       server: https://api.ipfs.dxos.network/api/v0
       gateway: https://gateway.ipfs.dxos.network/ipfs
+    # Every EDGE service is a path prefix on the edge host above; these mirror
+    # EDGE_SERVICE_DEFAULTS so the deployed manifest stays explicit.
     edgeServices:
       - name: calls
-        endpoint: https://calls.dxos.network
+        endpoint: https://edge.network/calls
       - name: transcription
-        endpoint: https://calls.dxos.network
+        endpoint: https://edge.network/calls
       - name: image
-        endpoint: https://image.dxos.network
+        endpoint: https://edge.network/image
       - name: discord
-        endpoint: https://discord.dxos.network
+        endpoint: https://edge.network/discord

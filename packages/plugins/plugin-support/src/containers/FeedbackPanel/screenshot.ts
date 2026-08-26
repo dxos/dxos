@@ -160,7 +160,8 @@ export const uploadScreenshot = async (
   form.append('file', blob, `composer-${Date.now()}.${ext}`);
 
   try {
-    const res = await fetch(new URL('/upload', serviceUrl).toString(), {
+    // Appended, not resolved: `new URL('/upload', base)` would drop the base's `/image` prefix.
+    const res = await fetch(`${serviceUrl.replace(/\/+$/, '')}/upload`, {
       method: 'POST',
       body: form,
       // 15s aligns with plugin-crm's external-fetch timeout.

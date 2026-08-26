@@ -8,7 +8,7 @@ tasks:
     # a job that sets them hashes `bundle-e2e` differently and cannot hydrate another job's entry.
     env:
       # Production edge — e2e must exercise what users hit, not a dev-tier worker.
-      DX_EDGE_BASE_URL: 'https://dxos.network'
+      DX_EDGE_BASE_URL: 'https://edge.network'
       DX_TELEMETRY_TAG: e2e
       # The service worker breaks `page.route` interception.
       DX_PWA: 'false'

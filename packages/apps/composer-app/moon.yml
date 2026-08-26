@@ -28,7 +28,7 @@ tasks:
   bundle-e2e:
     extends: bundle
     env:
-      DX_EDGE_BASE_URL: 'https://dxos.network'
+      DX_EDGE_BASE_URL: 'https://edge.network'
       DX_TELEMETRY_TAG: e2e
       DX_PWA: 'false'
   # Structural budget on the eager boot graph (entry + modulepreload closure). Its own task rather

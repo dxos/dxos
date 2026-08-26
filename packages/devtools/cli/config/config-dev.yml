@@ -13,12 +13,15 @@ runtime:
 
   services:
     # The account commands resolve the hub from here on node, where nothing sets `DX_HUB_URL`.
+    # Reached through the same EDGE host as `edge` below, so it is by construction the hub that
+    # EDGE's `HUB_SERVICE` binding resolves to — a hub from another environment mints magic links
+    # no redemption can resolve.
     hub:
-      url: https://hub-staging.dxos.workers.dev/
+      url: https://dev.edge.network/hub/
     edge:
-      url: https://edge.dxos.workers.dev/
+      url: https://dev.edge.network/
     iceProviders:
-      - urls: https://dxos.network/ice
+      - urls: https://dev.edge.network/ice
     ipfs:
       server: https://api.ipfs.dxos.network/api/v0
       gateway: https://gateway.ipfs.dxos.network/ipfs
