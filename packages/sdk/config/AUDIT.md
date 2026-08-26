@@ -83,7 +83,7 @@ constant to migrate.
 | **discord**        | `discord-service.dxos.workers.dev`                                                                       | **HARDCODED** `DISCORD_SERVICE_URL` [`plugin-support/src/constants.ts:11`](../../plugins/plugin-support/src/constants.ts)                                                                                                          | Discord feedback bridge                                           |
 | **cors-proxy**     | `cors-proxy.dxos.workers.dev`                                                                            | **HARDCODED** `LEGACY_CORS_PROXY_URL` [`edge-client/src/cors-proxy.ts:9`](../../core/mesh/edge-client/src/cors-proxy.ts)                                                                                                           | Legacy open CORS proxy                                            |
 | **api-proxy**      | `api-proxy.dxos.workers.dev`                                                                             | **HARDCODED** [`assistant-toolkit/.../discord/operations/fetch-messages.ts:32`](../../core/compute/assistant-toolkit/src/blueprints/discord/operations/fetch-messages.ts)                                                          | Generic 3rd-party API proxy                                       |
-| **introspect**     | `mcp-introspect-service-labs.dxos.workers.dev/mcp`                                                       | **config** `runtime.services.edgeServices: introspect` — read at [`plugin-devtools/.../react-surface.tsx:51`](../../plugins/plugin-devtools/src/capabilities/react-surface.tsx)                                                            | MCP introspection server                                          |
+| **introspect**     | `mcp-introspect-service-labs.dxos.workers.dev/mcp`                                                       | **config** `runtime.services.edgeServices: introspect` — read at [`plugin-devtools/.../react-surface.tsx:51`](../../plugins/plugin-devtools/src/capabilities/react-surface.tsx)                                                    | MCP introspection server                                          |
 | **chat-agent**     | `chat-agent-labs.dxos.workers.dev`, `localhost:8791`                                                     | **HARDCODED** `MAIN_CHAT_AGENT_URL` [`composer-crx/src/config.ts:15`](../../apps/composer-crx/src/config.ts)                                                                                                                       | Conversational agent (CRX)                                        |
 | **playwright-mcp** | `playwright-mcp-example.dxos.workers.dev/sse`                                                            | **HARDCODED** (test/blueprint fixture) [`assistant-toolkit/.../browser/blueprint.ts:29`](../../core/compute/assistant-toolkit/src/blueprints/browser/blueprint.ts)                                                                 | Browser-automation MCP (example)                                  |
 
@@ -257,13 +257,13 @@ lookup returns `undefined`. Values are set in
 
 Migrated (literal removed; resolves from config / canonical default):
 
-| Service       | Site                                                                                | How                                 |
-| ------------- | ----------------------------------------------------------------------------------- | ----------------------------------- |
-| calls         | `plugin-calls` `call-manager.ts`                                                    | `getEdgeServiceEndpoint(config, …)` |
-| transcription | `plugin-transcription` `transcriber.ts`                                             | config read (required)              |
-| image         | `plugin-crm` `attach-image.ts`, `plugin-support` `useScreenshotAttachment.ts`       | config read                         |
-| discord       | `plugin-support` `DiscordAction.tsx`/`constants.ts`                                 | `getEdgeServiceEndpoint(config, …)` |
-| introspect    | `plugin-debug` `react-surface.tsx`                                                  | config read                         |
+| Service       | Site                                                                          | How                                 |
+| ------------- | ----------------------------------------------------------------------------- | ----------------------------------- |
+| calls         | `plugin-calls` `call-manager.ts`                                              | `getEdgeServiceEndpoint(config, …)` |
+| transcription | `plugin-transcription` `transcriber.ts`                                       | config read (required)              |
+| image         | `plugin-crm` `attach-image.ts`, `plugin-support` `useScreenshotAttachment.ts` | config read                         |
+| discord       | `plugin-support` `DiscordAction.tsx`/`constants.ts`                           | `getEdgeServiceEndpoint(config, …)` |
+| introspect    | `plugin-debug` `react-surface.tsx`                                            | config read                         |
 
 Deferred (literal retained; rationale):
 
