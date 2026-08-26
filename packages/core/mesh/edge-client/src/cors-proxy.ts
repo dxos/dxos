@@ -26,8 +26,6 @@ const remapAuthorizationForProxy = (headers: Headers): Headers => {
  * TEMPORARY — delete when the authenticated `/proxy/*` route on edge ships.
  */
 export const proxyFetchLegacy = (target: URL, init: RequestInit = {}, clientTag?: string): Promise<Response> => {
-  // Relative to the slash-terminated base so the `/cors` prefix survives; an absolute path would
-  // replace it and address edge's root instead.
   const proxyUrl = new URL(`${target.host}${target.pathname}${target.search}`, LEGACY_CORS_PROXY_URL);
   if (target.protocol === 'http:') {
     proxyUrl.searchParams.set('scheme', 'http');

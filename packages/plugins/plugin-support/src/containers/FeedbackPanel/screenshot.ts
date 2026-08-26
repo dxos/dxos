@@ -160,7 +160,6 @@ export const uploadScreenshot = async (
   form.append('file', blob, `composer-${Date.now()}.${ext}`);
 
   try {
-    // Relative to a slash-terminated base so the `/image` prefix survives.
     const res = await fetch(new URL('upload', `${serviceUrl.replace(/\/+$/, '')}/`), {
       method: 'POST',
       body: form,

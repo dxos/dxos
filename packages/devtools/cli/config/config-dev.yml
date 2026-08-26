@@ -12,16 +12,12 @@ runtime:
       dataRoot: /tmp/dx/run
 
   services:
-    # The account commands resolve the hub from here on node, where nothing sets `DX_HUB_URL`.
-    # Reached through the same EDGE host as `edge` below, so it is by construction the hub that
-    # EDGE's `HUB_SERVICE` binding resolves to — a hub from another environment mints magic links
-    # no redemption can resolve.
+    # Same EDGE host as `edge` below, so this is the hub that EDGE's `HUB_SERVICE` binding resolves
+    # to -- a hub from another environment mints magic links no redemption can resolve.
     hub:
       url: https://dev.dxos.network/hub/
     edge:
       url: https://dev.dxos.network/
-    # ICE/TURN is a single shared production deployment; there is no per-environment TURN tier,
-    # so every profile resolves credentials from production regardless of which EDGE it talks to.
     iceProviders:
       - urls: https://dxos.network/ice
     ipfs:

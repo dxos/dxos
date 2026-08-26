@@ -10,8 +10,7 @@ import { Button, Dialog, Link, Trans, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 
-// Keyed by the full edge host: the canonical one per environment, plus every legacy hostname still
-// present in stored configs and installed builds.
+// Keyed by edge host, including legacy names still present in stored configs and installed builds.
 const ENV_LABELS: Record<string, string> = {
   'dev.dxos.network': 'Dev',
   'preview.dxos.network': 'Preview',

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-/** Slash-terminated so a relative path resolves beneath hub's `/hub` prefix rather than replacing it. */
+/** Slash-terminated: a relative path would otherwise replace hub's `/hub` prefix. */
 const hubBase = (hubUrl: string): string => `${hubUrl.replace(/\/+$/, '')}/`;
 
 /**

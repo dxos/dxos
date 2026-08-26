@@ -22,10 +22,7 @@ const DEFAULT_TIMEOUT = Duration.seconds(15);
 const ERROR_BODY_LIMIT = 512;
 
 export type EdgeServiceClientOptions = {
-  /**
-   * Base URL the service is hosted at, path prefix included (e.g. `https://dxos.network/image`).
-   * Normalized to a directory on the way in, so request paths resolve beneath the prefix.
-   */
+  /** Base URL the service is hosted at, path prefix included (e.g. `https://dxos.network/image`). */
   baseUrl: string;
   /** Tag included in the {@link EDGE_CLIENT_TAG_HEADER} header for metering. */
   clientTag?: string;
@@ -52,8 +49,7 @@ export class EdgeServiceClient {
   readonly #authHeaders: (() => Effect.Effect<Record<string, string>>) | undefined;
 
   constructor(options: EdgeServiceClientOptions) {
-    // Slash-terminated so `new URL(path, base)` resolves beneath the service prefix rather than
-    // replacing its last segment — `new URL('thumbnail', '…/image')` would yield `…/thumbnail`.
+    // Slash-terminated: `new URL('thumbnail', '…/image')` would otherwise drop the `/image` prefix.
     this.#baseUrl = options.baseUrl.endsWith('/') ? options.baseUrl : `${options.baseUrl}/`;
     this.#clientTag = options.clientTag;
     this.#timeout = Duration.fromInputUnsafe(options.timeout ?? DEFAULT_TIMEOUT);

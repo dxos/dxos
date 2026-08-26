@@ -31,8 +31,7 @@ const edgeUrl = (edge: NonNullable<ConfigPresetOptions['edge']>) =>
     Match.exhaustive,
   );
 
-// Sandbox is reached through EDGE like every other service; its REST API is mounted at
-// `/api/sandbox`, so the origin is the plain edge base URL (see `SandboxClient`).
+// A bare edge origin: `SandboxClient` appends `/api/sandbox` itself.
 const sandboxUrl = (sandbox: NonNullable<ConfigPresetOptions['sandbox']>) =>
   Match.value(sandbox).pipe(
     Match.when('local', () => 'http://localhost:8792'),

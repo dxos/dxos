@@ -12,14 +12,12 @@ runtime:
       dataRoot: /tmp/dx/run
 
   services:
-    # Deployed rather than localhost: hub-service is a separate worker that is not part of the
-    # local edge dev setup, so account flows against a local edge still talk to a deployed hub.
+    # Deployed: hub-service is not part of the local edge dev setup.
     hub:
       url: https://dev.dxos.network/hub/
     edge:
       url: http://localhost:8787/
-    # ICE/TURN is a single shared production deployment, and a local edge cannot mint TURN
-    # credentials, so this stays on production even though `edge` above is localhost.
+    # Production even though `edge` is localhost: a local edge has no TURN token to mint with.
     iceProviders:
       - urls: https://dxos.network/ice
     sandbox:

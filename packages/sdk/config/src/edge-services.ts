@@ -20,12 +20,9 @@ export const EdgeServiceName = Object.freeze({
 export type EdgeServiceName = (typeof EdgeServiceName)[keyof typeof EdgeServiceName];
 
 /**
- * The EDGE entrypoint per environment. One host per environment, every service selected by path
- * prefix beneath it — so a client holds one base URL and a prefix table rather than a URL per
- * service. `local` is `moon run edge:dev`.
- *
- * `main.dxos.network` stays attached as an alias of `preview` for clients already in the field; it is
- * not an address to write into new code.
+ * The EDGE entrypoint per environment; every service is a path prefix beneath it. `local` is
+ * `moon run edge:dev`, and `main.dxos.network` remains an alias of `preview` for clients in the
+ * field.
  */
 export const EDGE_URLS = Object.freeze({
   local: 'http://localhost:8787',
