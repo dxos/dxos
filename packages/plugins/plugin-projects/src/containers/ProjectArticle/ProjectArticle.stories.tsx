@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as Instructions from '@dxos/compute/Instructions';
@@ -20,6 +20,7 @@ import { translations as tasksTranslations } from '@dxos/plugin-tasks/translatio
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
+import { AttendableContainer } from '@dxos/react-ui-attention';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
@@ -106,6 +107,30 @@ const addTask = (space: Space, taskSet: TaskSet.TaskSet, title: string, mileston
   return task;
 };
 
+/**
+ * Waits for content that only appears once the story's own client has resolved the project's refs.
+ * Each poll yields a frame and a resize the measured surfaces can act on, since testing-library's
+ * polling alone produces neither. NOTE: this story still fails roughly one run in four because the
+ * previous story's client is torn down asynchronously and can strip this story's resolver — the
+ * article renders with every ref-gated section missing. Tracked in TASKS.md; `retry` covers it in
+ * CI meanwhile.
+ */
+const findPainted = async (canvas: ReturnType<typeof within>, text: string) => {
+  await waitFor(
+    async () => {
+      window.dispatchEvent(new Event('resize'));
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      await expect(canvas.queryByText(text)).toBeTruthy();
+    },
+    { timeout: 10_000 },
+  );
+};
+
+/** Radix unmounts an inactive tab panel, so a story asserts a tab's content only while it is shown. */
+const showTab = async (canvas: ReturnType<typeof within>, tab: 'overview' | 'tasks') => {
+  await userEvent.click(await canvas.findByTestId(`projectsPlugin.tab.${tab}`, undefined, { timeout: 10_000 }));
+};
+
 type StoryArgs = {
   role: string;
   attendableId: string;
@@ -119,7 +144,17 @@ const DefaultStory = ({ role, attendableId }: StoryArgs) => {
     return <Loading data={{ db: !!space?.db, project: !!project }} />;
   }
 
-  return <ProjectArticle role={role} subject={project} attendableId={attendableId} />;
+  // `AttendableContainer` marks the subtree with `data-attendable-id`, which is what the deck's
+  // plank does in the app: without it nothing ever attends `attendableId`, so the article's toolbar
+  // renders permanently unattended.
+  // `AttendableContainer` marks the subtree with `data-attendable-id`, which is what the deck's
+  // plank does in the app: without it nothing ever attends `attendableId`, so the article's toolbar
+  // renders permanently unattended.
+  return (
+    <AttendableContainer id={attendableId} classNames='contents'>
+      <ProjectArticle role={role} subject={project} attendableId={attendableId} />
+    </AttendableContainer>
+  );
 };
 
 const meta = {
@@ -204,12 +239,11 @@ export const Sections: Story = {
 
     // Artifacts: the section heading renders, and the seeded artifact's label resolves.
     await expect(canvas.findByText('Artifacts', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    await expect(canvas.findByText(ARTIFACT_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await findPainted(canvas, ARTIFACT_TITLE);
 
-    // Tasks: the section heading renders AND plugin-tasks' TaskSet section surface resolves into it.
-    // The task title is the load-bearing assertion — an invalid surface id is dropped silently, so
-    // the heading alone renders over an empty section.
-    await expect(canvas.findByText('Tasks', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    // Tasks: behind its own toolbar tab, so switch to it. The task title is the load-bearing
+    // assertion — an invalid surface id is dropped silently, leaving an empty panel.
+    await showTab(canvas, 'tasks');
     await expect(canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
   },
 };
@@ -225,6 +259,7 @@ export const Updates: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const { space, project, taskSet } = await seedContent();
+    await showTab(canvas, 'tasks');
     await expect(canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
 
     // 1. A member's own property change: renaming a task must reach its row.
@@ -250,11 +285,13 @@ export const Updates: Story = {
     });
     const MILESTONE_TASK = 'Filed under the milestone';
     addTask(space, taskSet, MILESTONE_TASK, milestone);
-    // The milestone renders in its own section.
-    await expect(canvas.findByText(MILESTONE_NAME, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     // Its task is only a row: the task list does not group by milestone, so no backlog split appears.
     await expect(canvas.findByText(MILESTONE_TASK, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await waitFor(() => expect(canvas.queryByText('Backlog')).toBeNull(), { timeout: 10_000 });
+
+    // The milestone renders in its own Overview section.
+    await showTab(canvas, 'overview');
+    await expect(canvas.findByText(MILESTONE_NAME, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
 
     // A rename reaches the row, which holds its own subscription.
     Obj.update(milestone, (milestone) => {
@@ -268,7 +305,7 @@ export const Updates: Story = {
     Obj.update(project, (project) => {
       project.artifacts = [...project.artifacts, Ref.make(artifact)];
     });
-    await expect(canvas.findByText(ADDED_ARTIFACT, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await findPainted(canvas, ADDED_ARTIFACT);
 
     // 6. And removing the ref must drop the card — the delete path splices this array rather than
     //    going through a collection.
@@ -276,6 +313,6 @@ export const Updates: Story = {
       project.artifacts = project.artifacts.filter((ref) => ref.target?.id !== artifact.id);
     });
     await waitFor(() => expect(canvas.queryByText(ADDED_ARTIFACT)).toBeNull(), { timeout: 10_000 });
-    await expect(canvas.findByText(ARTIFACT_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await findPainted(canvas, ARTIFACT_TITLE);
   },
 };

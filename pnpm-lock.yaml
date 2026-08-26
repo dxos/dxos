@@ -13652,6 +13652,9 @@ importers:
       '@dxos/react-ui-search':
         specifier: workspace:*
         version: link:../../ui/react-ui-search
+      '@dxos/react-ui-tabs':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-tabs
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -13683,6 +13686,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-attention
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema

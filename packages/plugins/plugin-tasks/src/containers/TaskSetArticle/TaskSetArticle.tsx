@@ -36,15 +36,18 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
   const tasks = useSetTasks(taskSet);
 
   const statusLabel = useCallback((status: Task.Status) => t(`task-status.${status}.label`), [t]);
+
   const handleCreate = useCallback(
     (title: string) => void invokePromise(TaskOperation.CreateTask, { taskSet: Ref.make(taskSet), title }, { spaceId }),
     [invokePromise, taskSet, spaceId],
   );
+
   const handleUpdate = useCallback(
     (task: Task.Task, patch: TaskPatch) =>
       void invokePromise(TaskOperation.UpdateTask, { task: Ref.make(task), ...patch }, { spaceId }),
     [invokePromise, spaceId],
   );
+
   // Deleting through the verb (not `db.remove`) is what sweeps the task and its sub-tasks out of
   // the set's `tasks` array; the cascade alone would leave the refs behind.
   const handleDelete = useCallback(
@@ -55,15 +58,16 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
   const content = (
     <TaskList.Root
       tasks={tasks}
+      showDescriptions
       statusLabel={statusLabel}
       onTaskCreate={handleCreate}
       onTaskUpdate={handleUpdate}
       onTaskDelete={handleDelete}
     >
-      <TaskList.Viewport>
+      <TaskList.Viewport classNames='dx-document'>
         <TaskList.Content />
       </TaskList.Viewport>
-      <TaskList.Create placeholder={t('task-create.placeholder')} />
+      <TaskList.Create classNames='dx-document' placeholder={t('task-create.placeholder')} />
     </TaskList.Root>
   );
 

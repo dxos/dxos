@@ -140,8 +140,17 @@ Each is independent of the others; none is started.
       other cell is pinned to the title's line, since a row is its own subgrid
       and the listbox item centres its cells by default. Off by default, so the
       chat strip stays one row per task. `WithDescriptions` story added.
-- [ ] **ProjectArticle tabs** — tabbed surface for the project article
-      (plugin-projects) instead of the current stacked sections.
+- [x] **ProjectArticle tabs** — Overview (the form body) and Tasks (the ledger
+      at full height) in the toolbar; the story also wraps the article in an
+      `AttendableContainer`, without which nothing ever attends the article and
+      the toolbar renders permanently unattended.
+- [ ] **ProjectArticle `Sections` story is flaky (~1 run in 4)** — the article
+      renders with EVERY ref-gated section missing (no instructions, outline,
+      or artifact card), which is the previous story's client being torn down
+      asynchronously and stripping this story's resolver, not a layout or paint
+      problem: the failure text is the bare shell, and the same assertions pass
+      on the next attempt. `retry` masks it in CI. Fix belongs in the story
+      harness (await the outgoing client's teardown before mounting the next).
 - [ ] **`#foo` renders as a heading in chat markdown** — a `#` inside a message
       is parsed as an ATX heading, so `#foo` comes out as a title. Reproduce and
       fix in whichever renderer the thread uses (`MarkdownView` wraps
