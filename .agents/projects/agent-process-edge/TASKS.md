@@ -8,39 +8,59 @@ Design: [DESIGN.md](./DESIGN.md). Branch (both repos): `claude/agent-process-edg
       `compute-service` + `TriggersDispatcher`, and decide how remote process control fits the
       existing interfaces (D1–D8).
 
-## Phase 1 — protocol (dxos)
+## Phase 1 — protocol (dxos) — DONE, PR #12765
 
-- [ ] `RemoteProcessManager.RemoteManager`: extend the read-only manager with the control verbs
-      (`spawn`, `list`, `status`, `submitInput`, `rpc`, `terminate`, cursor `events`), keeping the
-      existing monitor `Manager` intact for `ProcessMonitor.layer`.
-- [ ] Wire schemas for the routes in §3 (spawn request/response, info, event page) — placed where
-      both client and edge can import them.
-- [ ] `EdgeHttpClient` methods for the seven routes.
+- [x] `RemoteProcessManager.Control`: the control verbs (`spawn`, `list`, `status`, `submitInput`,
+      `makeRpcClient`, `terminate`, cursor `readEvents`) alongside the untouched monitor `Manager`.
+- [x] `ProcessProtocol` in `@dxos/protocols` — wire types shared by client and edge.
+- [x] `EdgeHttpClient` methods for the routes (RPC is a URL helper: the route is
+      effect-rpc-over-HTTP, D9).
+- [x] `Process.Process` exposes its `input`/`output` codecs; `Handle.alarmDueAt` added (a DO must
+      mirror the alarm onto the platform scheduler, and it is the wire signal that separates
+      `runToCompletion` from `runUntilSettled`).
 
-## Phase 2 — process host (edge)
+## Phase 2 — process host (edge) — IN PROGRESS
 
-- [ ] `DurableObjectKeyValueStore`: `effect` `KeyValueStore` over `ctx.storage`.
-- [ ] `TestProcess` in the edge source tree — inputs→outputs, one RPC, one alarm, explicit
-      succeed/fail. No AI, no db, no network.
+**Blocked on publication:** the edge repo consumes `@dxos/*` from pinned `pkg.pr.new` builds, so
+nothing here compiles until PR #12765's packages publish and `pnpm-workspace.yaml`'s `dxos` catalog
+is bumped to that commit. Write-ahead is fine; verification is not.
+
+- [x] `DurableObjectKeyValueStore`: `effect` `KeyValueStore` over `ctx.storage` — this is what lets
+      `ProcessManagerImpl` run inside a DO unchanged (D5).
+- [x] `TestProcess` in the edge source tree — inputs→outputs, one RPC that reads state accumulated
+      from previous inputs (so a pass proves the call reached *that* instance), one alarm, explicit
+      succeed/fail. Declares no services, so a test on it can only fail on the protocol or the host.
+- [ ] Bump the `dxos` catalog to PR #12765's published commit.
 - [ ] Built-in process registry keyed by `Process.key` (`TestProcess` + `AgentProcess`).
 - [ ] `ProcessObject` DO: memoized `_init`, hosts one process via `ProcessManagerImpl`, DO alarm
-      mirrors persisted `alarmDueAt`, bounded output/trace ring with a monotonic cursor.
-      Register every public method in `durable-objects.ts` `rpcMethods`.
+      mirrors `Handle.alarmDueAt`, bounded output/trace ring with a monotonic cursor (outputs
+      captured by wrapping the definition's `create` to intercept `submitOutput`; trace via the
+      manager's `traceSink`). Register every public method in `durable-objects.ts` `rpcMethods`.
+- [ ] Service assembly for `AgentProcess` inside the DO — database/AI/credentials/operation services
+      from the EDGE bindings. `FunctionContext` in `@dxos/compute-runtime`'s `protocol.ts` already
+      assembles exactly this set for invoked functions but does not export it; either export it or
+      lift the layer builder. This is the largest remaining unknown.
+- [ ] `ProcessObject` class in `compute-service/wrangler.jsonc`: the `exports` map (`storage:
+      "sqlite"`) and a binding in the top-level plus all four env blocks, per
+      `scripts/check-wrangler-bindings.mjs`.
 - [ ] `TriggersDispatcher`: own the per-space process index (spawn/list/terminate/reap) and expose
       it over RPC; add the new methods to `rpcMethods`.
 - [ ] compute-service HTTP routes per §3, with the same `edgeAuth` posture as the trigger routes.
 - [ ] `@dxos/agent-runtime` dependency on compute-service (catalog entry already exists).
 
-## Phase 3 — client implementation (dxos)
+## Phase 3 — client implementation (dxos) — DONE, PR #12765
 
-- [ ] `EdgeProcessManager`: implement the control verbs over `EdgeHttpClient`; keep the existing
-      monitor/`cancel` behaviour, and populate `processTree` from the new list endpoint (closes the
-      D3 TODO that left it empty).
-- [ ] Remote `ProcessManager.Handle`: outputs/ephemeral as cursor-polled streams,
-      `runToCompletion`/`runUntilSettled` derived client-side (D8), `rpc` as an `RpcClient` over the
-      rpc route.
-- [ ] `EdgeProcessManager.processManagerLayer` providing `ProcessManager.Service`, so
-      `AgentService.layer` runs unchanged against edge.
+- [x] `RemoteProcessManagerAdapter` — presents a `Control` as a `ProcessManager.Manager`
+      (transport-agnostic, so it lives in compute-runtime, not edge-compute).
+- [x] `RemoteProcessHandle` — cursor-polled output/ephemeral streams, client-derived settle
+      predicates (D8), lazily-built `RpcClient`. A handle without a local definition is a metadata
+      view: inputs/outputs/RPC throw rather than guessing at encoding.
+- [x] `EdgeProcessControl` + `EdgeProcessManager.processManagerFrom{Client,EdgeClient}` — the EDGE
+      transport and the layer that swaps an agent stack onto it.
+- [x] `RemoteProcessManagerAdapter.test.ts` — spawn/list/status, input encoding + output streaming,
+      terminate, `runUntilSettled` against an in-memory stand-in host.
+- [ ] Populate the space-agnostic monitor `processTree` from the list endpoint (still the pre-existing
+      D3 TODO; the control path does not need it).
 
 ## Phase 4 — verification (edge)
 
