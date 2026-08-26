@@ -49,7 +49,10 @@ const OUTLINE_ITEM = 'Draft the launch checklist';
  * *referenced* object (a task's title, a new member of `taskSet.tasks`, a new artifact ref) reaches
  * the DOM is the only way to catch a section that resolved once and then went inert.
  */
-let seeded: { space: Space; project: Project.Project; taskSet: TaskSet.TaskSet; task: Task.Task } | undefined;
+let generation = 0;
+let seeded:
+  | { generation: number; space: Space; project: Project.Project; taskSet: TaskSet.TaskSet; task: Task.Task }
+  | undefined;
 
 /**
  * The project as the create-object capability leaves it, then filled with the graph a used project
@@ -57,7 +60,7 @@ let seeded: { space: Space; project: Project.Project; taskSet: TaskSet.TaskSet; 
  * tasks in the owned set, and the repository the project's work lands in. Seeded at client init so
  * EVERY story shows a populated project, including the one with no play function.
  */
-const createProject = (space: Space) => {
+const createProject = (space: Space, storyGeneration: number) => {
   const project = space.db.add(Project.make({ name: PROJECT_NAME }));
   const taskSet = project.taskSet?.target;
   if (!taskSet) {
@@ -95,14 +98,14 @@ const createProject = (space: Space) => {
     text.content = `- [ ] ${OUTLINE_ITEM}\n- [ ] Review #12752 before the release\n- [ ] [${TASK_TITLE}](${Obj.getURI(task)})\n`;
   });
 
-  seeded = { space, project, taskSet, task };
+  seeded = { generation: storyGeneration, space, project, taskSet, task };
 };
 
 /** Waits for the seeded graph a play function asserts against; the writes happen at client init. */
 const seedContent = async () => {
   // `play` runs once the story has mounted but not necessarily once the client has finished
   // initializing — the project is created by the plugin's `onClientInitialized`.
-  await waitFor(() => expect(seeded).toBeTruthy(), { timeout: 10_000 });
+  await waitFor(() => expect(seeded?.generation).toBe(generation), { timeout: 10_000 });
   const context = seeded;
   if (!context) {
     throw new Error('The story did not create a project.');
@@ -197,9 +200,12 @@ const meta = {
           ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
+              // Read before the first yield: this client belongs to the story whose `beforeEach`
+              // most recently ran, and a slower predecessor keeps the generation it started under.
+              const storyGeneration = generation;
               const { defaultSpace } = yield* initializeIdentity(client);
               yield* Effect.promise(async () => {
-                createProject(defaultSpace);
+                createProject(defaultSpace, storyGeneration);
                 await defaultSpace.db.flush({ indexes: true });
               });
             }),
@@ -219,10 +225,11 @@ const meta = {
       ...tasksTranslations,
     ],
   },
-  // Each story mounts its own client: drop the previous story's context so `seedContent` cannot
-  // seed into a space that has already been torn down.
+  // Each story mounts its own client: drop the previous story's context, and move the generation
+  // on so a predecessor that finishes initializing late cannot publish its graph as this story's.
   beforeEach: () => {
     seeded = undefined;
+    generation += 1;
   },
 } satisfies Meta<typeof DefaultStory>;
 
