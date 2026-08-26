@@ -17,10 +17,11 @@ import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
 
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
+import { log } from '@dxos/log';
 import type { ProcessProtocol } from '@dxos/protocols';
 
 import type * as ProcessManager from './ProcessManager';
-import { toEnvironment, toError, toParams, toProcessId, toState, toStatus } from './remote-process-info';
+import { type DecodedInfo, decodeInfo, toError, toState, toStatus } from './remote-process-info';
 import type * as RemoteProcessManager from './RemoteProcessManager';
 
 /** How long to wait before re-reading a process's event log after an empty page. */
@@ -75,24 +76,34 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
   readonly #pollInterval: Duration.Duration;
   readonly #statusAtom: Atom.Writable<ProcessManager.Status>;
   #info: ProcessProtocol.ProcessInfo;
+  #decoded: DecodedInfo;
   #rpc: RpcClient.RpcClient<_Rpcs> | undefined;
 
-  constructor(options: Options<_Input, _Output, _Rpcs>) {
+  /**
+   * Decoding the wire info can fail (it comes from another runtime), so construction is effectful
+   * and every getter below reads the already-decoded projection.
+   */
+  static make<I, O, R extends Rpc.Any>(options: Options<I, O, R>): Effect.Effect<RemoteProcessHandle<I, O, R>> {
+    return decodeInfo(options.info).pipe(Effect.map((decoded) => new RemoteProcessHandle(options, decoded)));
+  }
+
+  private constructor(options: Options<_Input, _Output, _Rpcs>, decoded: DecodedInfo) {
     this.#control = options.control;
     this.#definition = options.definition;
     this.#registry = options.registry;
     this.#pollInterval = options.pollInterval ?? DEFAULT_POLL_INTERVAL;
     this.#info = options.info;
+    this.#decoded = decoded;
     this.#statusAtom = Atom.make(toStatus(options.info));
     this.#registry.mount(this.#statusAtom);
   }
 
   get pid(): Process.ID {
-    return toProcessId(this.#info.pid);
+    return this.#decoded.pid;
   }
 
   get parentId(): Process.ID | null {
-    return this.#info.parentPid === null ? null : toProcessId(this.#info.parentPid);
+    return this.#decoded.parentId;
   }
 
   get key(): string {
@@ -100,11 +111,11 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
   }
 
   get params(): Process.Params {
-    return toParams(this.#info.params);
+    return this.#decoded.params;
   }
 
   get environment(): Process.Environment {
-    return toEnvironment(this.#info.environment);
+    return this.#decoded.environment;
   }
 
   get alarmDueAt(): number | null {
@@ -147,14 +158,18 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
     // Decoding an output needs the definition's output codec, so a handle from `list` (which has no
     // definition) cannot serve this — the same limitation as {@link rpc}.
     const decode = Schema.decodeUnknownSync(this.#requireDefinition().output);
-    return this.#readEvents().pipe(
+    // From the live end, not the start of the log: the local handle streams outputs as they are
+    // produced, so replaying earlier turns' outputs into a new subscriber would not match it.
+    return this.#readEventsFromEnd().pipe(
       Stream.filter((event) => event._tag === 'output'),
       Stream.map((event) => decode(event.data)),
     );
   }
 
   subscribeEphemeral(): Stream.Stream<Trace.Message> {
-    return this.#readEvents().pipe(
+    // From the start of the log, matching the local handle: it replays buffered ephemeral events
+    // before streaming new ones, which is what lets a UI attach mid-turn and still render it.
+    return this.#readEvents(0).pipe(
       Stream.filter((event) => event._tag === 'trace'),
       Stream.map((event) => decodeTraceMessage(event.message)),
     );
@@ -184,11 +199,19 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
   }
 
   runAndExit(options: { readonly inputs: readonly _Input[] }): Stream.Stream<_Output> {
+    const decode = Schema.decodeUnknownSync(this.#requireDefinition().output);
     return Stream.unwrap(
       Effect.gen({ self: this }, function* () {
-        const outputs = this.subscribeOutputs();
+        // The cursor is taken before the inputs are submitted, so the stream carries this call's
+        // outputs and not the history of earlier turns.
+        const start = yield* this.#endCursor;
         yield* Effect.forEach(options.inputs, (input) => this.submitInput(input), { discard: true });
-        return outputs;
+        // Ends on IDLE or SUCCEEDED as the local `runAndExit` does — a remote process that goes idle
+        // has finished this call's work, and waiting for a terminal state would never return.
+        return this.#readEvents(start, (state) => state === Process.State.IDLE || isTerminal(state)).pipe(
+          Stream.filter((event) => event._tag === 'output'),
+          Stream.map((event) => decode(event.data)),
+        );
       }),
     );
   }
@@ -208,14 +231,36 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
     return this.#definition;
   }
 
-  /** Reads the process's event log from the beginning, ending once the process is terminal and drained. */
-  #readEvents(): Stream.Stream<ProcessProtocol.ProcessEvent> {
-    return Stream.paginate(0, (cursor: number) =>
+  /** Cursor just past the last event the host holds, for a subscription that wants only new events. */
+  get #endCursor(): Effect.Effect<number> {
+    // A read at or beyond the end returns an empty page carrying the current end cursor.
+    return this.#control.readEvents(this.pid, Number.MAX_SAFE_INTEGER).pipe(Effect.map((page) => page.cursor));
+  }
+
+  #readEventsFromEnd(): Stream.Stream<ProcessProtocol.ProcessEvent> {
+    return Stream.unwrap(this.#endCursor.pipe(Effect.map((cursor) => this.#readEvents(cursor))));
+  }
+
+  /**
+   * Reads the process's event log from `start`, ending once `isDone` holds for the process's state
+   * and the log is drained. Defaults to ending only on a terminal state, so a live IDLE process keeps
+   * its subscription open.
+   */
+  #readEvents(
+    start: number,
+    isDone: (state: Process.State) => boolean = isTerminal,
+  ): Stream.Stream<ProcessProtocol.ProcessEvent> {
+    return Stream.paginate(start, (cursor: number) =>
       Effect.gen({ self: this }, function* () {
         const page = yield* this.#control.readEvents(this.pid, cursor);
-        this.#setInfo(page.info);
+        yield* this.#setInfo(page.info);
+        if (page.truncated) {
+          // The host dropped events before `cursor` from its bounded ring, so this page does not
+          // continue the previous one — the consumer's history has a hole in it.
+          log.warn('remote process event history truncated', { pid: page.info.pid, cursor });
+        }
         if (page.events.length === 0) {
-          if (isTerminal(toState(page.info.state))) {
+          if (isDone(toState(page.info.state))) {
             return [[], Option.none<number>()] as const;
           }
           yield* Effect.sleep(this.#pollInterval);
@@ -229,7 +274,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
     return Effect.gen({ self: this }, function* () {
       while (true) {
         const info = yield* this.#control.status(this.pid);
-        this.#setInfo(info);
+        yield* this.#setInfo(info);
         const state = toState(info.state);
         if (state === Process.State.FAILED) {
           return yield* Effect.die(toError(info.error));
@@ -243,12 +288,17 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
   }
 
   get #refresh(): Effect.Effect<void> {
-    return this.#control.status(this.pid).pipe(Effect.tap((info) => Effect.sync(() => this.#setInfo(info))));
+    return this.#control.status(this.pid).pipe(Effect.flatMap((info) => this.#setInfo(info)));
   }
 
-  #setInfo(info: ProcessProtocol.ProcessInfo): void {
-    this.#info = info;
-    this.#registry.update(this.#statusAtom, () => toStatus(info));
+  #setInfo(info: ProcessProtocol.ProcessInfo): Effect.Effect<void> {
+    return decodeInfo(info).pipe(
+      Effect.map((decoded) => {
+        this.#info = info;
+        this.#decoded = decoded;
+        this.#registry.update(this.#statusAtom, () => toStatus(info));
+      }),
+    );
   }
 }
 

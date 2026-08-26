@@ -754,6 +754,10 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     return Effect.gen({ self: this }, function* () {
       log('lifecycle: cleanup');
       this.#clearAlarm();
+      // Terminal: no further turn can run, so the due-time must not be mirrored onto a host
+      // scheduler. `#clearAlarm` deliberately keeps it — `suspend` needs it to survive so `hydrate`
+      // can re-arm — which is why this is cleared here rather than there.
+      this.#alarmDueAt = null;
       Queue.offerUnsafe(this.#outputQueue, Option.none());
       for (const queue of this.#ephemeralSubscribers) {
         Queue.offerUnsafe(queue, Option.none());

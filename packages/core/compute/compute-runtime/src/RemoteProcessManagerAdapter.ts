@@ -81,6 +81,10 @@ export class RemoteProcessManagerAdapter implements ProcessManager.Manager {
         }
         Object.assign(dictionary, options?.annotations ?? {});
       });
+      // The dictionary's values are `unknown`, but they cross the wire through `JSON.stringify`, so a
+      // value that is not JSON-representable would be dropped or mangled silently. Reject it here,
+      // where the caller's stack still says which annotation it was.
+      assertJsonSafe(annotations);
 
       const info = yield* this.#control.spawn({
         key: definition.key,
@@ -90,14 +94,14 @@ export class RemoteProcessManagerAdapter implements ProcessManager.Manager {
         annotations,
       });
       log('remote process spawned', { pid: info.pid, key: info.key });
-      return this.#makeHandle<I, O, Rpcs>(info, definition);
+      return yield* this.#makeHandle<I, O, Rpcs>(info, definition);
     });
   }
 
   attach<I, O, Rpcs extends Rpc.Any = never>(id: Process.ID): Effect.Effect<ProcessManager.Handle<I, O, Rpcs>> {
     // No definition is available by id alone, so the returned handle is a metadata view until the
     // caller re-attaches it to one via `Handle.hydrate`'s local counterpart (`spawn`'s definition).
-    return this.#control.status(id).pipe(Effect.map((info) => this.#makeHandle<I, O, Rpcs>(info)));
+    return this.#control.status(id).pipe(Effect.flatMap((info) => this.#makeHandle<I, O, Rpcs>(info)));
   }
 
   list(options?: ProcessManager.ListOptions): Effect.Effect<readonly ProcessManager.Handle.Any[]> {
@@ -108,12 +112,15 @@ export class RemoteProcessManagerAdapter implements ProcessManager.Manager {
         ...(options?.state !== undefined ? { state: options.state } : {}),
       })
       .pipe(
-        Effect.map((processes) =>
-          processes
-            // `parentProcessId` has no server-side filter (the host indexes by key/target/state), so
-            // it is applied here rather than silently ignored.
-            .filter((info) => options?.parentProcessId === undefined || info.parentPid === options.parentProcessId)
-            .map((info) => this.#makeHandle(info)),
+        Effect.flatMap((processes) =>
+          Effect.forEach(
+            processes.filter(
+              // `parentProcessId` has no server-side filter (the host indexes by key/target/state),
+              // so it is applied here rather than silently ignored.
+              (info) => options?.parentProcessId === undefined || info.parentPid === options.parentProcessId,
+            ),
+            (info) => this.#makeHandle(info),
+          ),
         ),
       );
   }
@@ -137,8 +144,8 @@ export class RemoteProcessManagerAdapter implements ProcessManager.Manager {
   #makeHandle<I, O, Rpcs extends Rpc.Any>(
     info: ProcessProtocol.ProcessInfo,
     definition?: Process.Process<I, O, any, Rpcs>,
-  ): ProcessManager.Handle<I, O, Rpcs> {
-    return new RemoteProcessHandle.RemoteProcessHandle<I, O, Rpcs>({
+  ): Effect.Effect<ProcessManager.Handle<I, O, Rpcs>> {
+    return RemoteProcessHandle.RemoteProcessHandle.make<I, O, Rpcs>({
       info,
       control: this.#control,
       ...(definition !== undefined ? { definition } : {}),
@@ -168,3 +175,29 @@ export const layer = (
       return new RemoteProcessManagerAdapter(control, registry);
     }),
   );
+
+/**
+ * Fails when a value cannot survive `JSON.stringify` unchanged. Annotation values are typed
+ * `unknown`, and the wire protocol requires JSON — a `Date`, a `Map`, a function or a cycle would
+ * otherwise reach the host as something else, or not at all.
+ */
+const assertJsonSafe = (annotations: Annotation.Dictionary): void => {
+  for (const [key, value] of Object.entries(annotations)) {
+    let encoded: string;
+    try {
+      encoded = JSON.stringify(value);
+    } catch (cause) {
+      throw new TypeError(`Process annotation '${key}' is not JSON-serializable`, { cause });
+    }
+    if (encoded === undefined) {
+      throw new TypeError(`Process annotation '${key}' has no JSON representation`);
+    }
+    if (JSON.stringify(JSON.parse(encoded)) !== encoded || !isJsonEquivalent(value, JSON.parse(encoded))) {
+      throw new TypeError(`Process annotation '${key}' does not survive JSON encoding unchanged`);
+    }
+  }
+};
+
+/** Structural equality against a value's own JSON round trip, so a lossy encoding is caught. */
+const isJsonEquivalent = (value: unknown, roundTripped: unknown): boolean =>
+  JSON.stringify(value) === JSON.stringify(roundTripped);

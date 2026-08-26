@@ -17,6 +17,82 @@ import * as ProcessManager from './ProcessManager';
 import type * as RemoteProcessManager from './RemoteProcessManager';
 import * as RemoteProcessManagerAdapter from './RemoteProcessManagerAdapter';
 
+describe('RemoteProcessManagerAdapter', () => {
+  test('spawns by key and reports the host state', async ({ expect }) => {
+    const host = makeFakeHost();
+    const result = await run(
+      Effect.gen(function* () {
+        const manager = yield* ProcessManager.Service;
+        const handle = yield* manager.spawn(EchoProcess, { name: 'test' });
+        const listed = yield* manager.list({ key: TEST_KEY });
+        return { pid: handle.pid, state: handle.status.state, listed: listed.length };
+      }),
+      host,
+    );
+    expect(result).toEqual({ pid: 'pid-1', state: Process.State.IDLE, listed: 1 });
+  });
+
+  test('encodes inputs with the definition schema and streams outputs back', async ({ expect }) => {
+    const host = makeFakeHost();
+    const outputs = await run(
+      Effect.gen(function* () {
+        const manager = yield* ProcessManager.Service;
+        const handle = yield* manager.spawn(EchoProcess);
+        // `runAndExit` takes the cursor before submitting, so it carries this call's outputs only,
+        // and ends on IDLE — the local contract. Collecting it therefore terminates on its own.
+        return yield* Stream.runCollect(handle.runAndExit({ inputs: ['hello'] }));
+      }),
+      host,
+    );
+    expect(host.inputs).toEqual(['hello']);
+    expect(outputs).toEqual(['echo:hello']);
+  });
+
+  test('a subscription started after earlier turns does not replay them', async ({ expect }) => {
+    const host = makeFakeHost();
+    const outputs = await run(
+      Effect.gen(function* () {
+        const manager = yield* ProcessManager.Service;
+        const handle = yield* manager.spawn(EchoProcess);
+        // An earlier turn, whose output must not reach the subscription below.
+        yield* handle.submitInput('old');
+        return yield* Stream.runCollect(handle.runAndExit({ inputs: ['new'] }));
+      }),
+      host,
+    );
+    expect(host.inputs).toEqual(['old', 'new']);
+    expect(outputs).toEqual(['echo:new']);
+  });
+
+  test('terminate is reflected in the handle status', async ({ expect }) => {
+    const host = makeFakeHost();
+    const state = await run(
+      Effect.gen(function* () {
+        const manager = yield* ProcessManager.Service;
+        const handle = yield* manager.spawn(EchoProcess);
+        yield* handle.terminate();
+        return handle.status.state;
+      }),
+      host,
+    );
+    expect(state).toEqual(Process.State.TERMINATED);
+  });
+
+  test('runUntilSettled returns once the host reports a settled state', async ({ expect }) => {
+    const host = makeFakeHost();
+    await run(
+      Effect.gen(function* () {
+        const manager = yield* ProcessManager.Service;
+        const handle = yield* manager.spawn(EchoProcess);
+        yield* handle.submitInput('hello');
+        yield* handle.runUntilSettled();
+      }),
+      host,
+    );
+    expect(host.inputs).toEqual(['hello']);
+  });
+});
+
 const TEST_KEY = 'dxos.org/process/echo-test';
 
 /** Input/output codecs are the only part of the definition the remote path uses. */
@@ -80,64 +156,3 @@ const run = <A>(effect: Effect.Effect<A, never, ProcessManager.Service>, control
       Effect.provide(Layer.succeed(Registry.AtomRegistry, Registry.make())),
     ),
   );
-
-describe('RemoteProcessManagerAdapter', () => {
-  test('spawns by key and reports the host state', async ({ expect }) => {
-    const host = makeFakeHost();
-    const result = await run(
-      Effect.gen(function* () {
-        const manager = yield* ProcessManager.Service;
-        const handle = yield* manager.spawn(EchoProcess, { name: 'test' });
-        const listed = yield* manager.list({ key: TEST_KEY });
-        return { pid: handle.pid, state: handle.status.state, listed: listed.length };
-      }),
-      host,
-    );
-    expect(result).toEqual({ pid: 'pid-1', state: Process.State.IDLE, listed: 1 });
-  });
-
-  test('encodes inputs with the definition schema and streams outputs back', async ({ expect }) => {
-    const host = makeFakeHost();
-    const outputs = await run(
-      Effect.gen(function* () {
-        const manager = yield* ProcessManager.Service;
-        const handle = yield* manager.spawn(EchoProcess);
-        yield* handle.submitInput('hello');
-        // An IDLE process may still receive more inputs, so its output stream stays open (same as
-        // the local handle's) — take the one output rather than waiting for the stream to end.
-        return yield* Stream.runCollect(handle.subscribeOutputs().pipe(Stream.take(1)));
-      }),
-      host,
-    );
-    expect(host.inputs).toEqual(['hello']);
-    expect(outputs).toEqual(['echo:hello']);
-  });
-
-  test('terminate is reflected in the handle status', async ({ expect }) => {
-    const host = makeFakeHost();
-    const state = await run(
-      Effect.gen(function* () {
-        const manager = yield* ProcessManager.Service;
-        const handle = yield* manager.spawn(EchoProcess);
-        yield* handle.terminate();
-        return handle.status.state;
-      }),
-      host,
-    );
-    expect(state).toEqual(Process.State.TERMINATED);
-  });
-
-  test('runUntilSettled returns once the host reports a settled state', async ({ expect }) => {
-    const host = makeFakeHost();
-    await run(
-      Effect.gen(function* () {
-        const manager = yield* ProcessManager.Service;
-        const handle = yield* manager.spawn(EchoProcess);
-        yield* handle.submitInput('hello');
-        yield* handle.runUntilSettled();
-      }),
-      host,
-    );
-    expect(host.inputs).toEqual(['hello']);
-  });
-});

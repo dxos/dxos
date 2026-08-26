@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
@@ -57,6 +58,34 @@ export const toStatus = (info: ProcessProtocol.ProcessInfo): ProcessManager.Stat
     completedAt: info.completedAt === undefined ? Option.none() : Option.some(new Date(info.completedAt)),
   };
 };
+
+/**
+ * Decoded projection of a wire {@link ProcessProtocol.ProcessInfo}, computed once per response.
+ *
+ * Every branded field is decoded here rather than in a property getter: the values come from another
+ * runtime, so a mismatch is an anticipated case, and `Schema.decodeUnknownSync` raises a
+ * `ParseError` synchronously — from a getter that surfaces at an arbitrary property read instead of
+ * as a failure of the effect that fetched the value.
+ */
+export interface DecodedInfo {
+  readonly pid: Process.ID;
+  readonly parentId: Process.ID | null;
+  readonly state: Process.State;
+  readonly params: Process.Params;
+  readonly environment: Process.Environment;
+}
+
+export const decodeInfo = (info: ProcessProtocol.ProcessInfo): Effect.Effect<DecodedInfo> =>
+  Effect.try({
+    try: (): DecodedInfo => ({
+      pid: toProcessId(info.pid),
+      parentId: info.parentPid === null ? null : toProcessId(info.parentPid),
+      state: toState(info.state),
+      params: toParams(info.params),
+      environment: toEnvironment(info.environment),
+    }),
+    catch: (cause) => cause,
+  }).pipe(Effect.orDie);
 
 export const toInfo = (info: ProcessProtocol.ProcessInfo): Process.Info => ({
   pid: toProcessId(info.pid),

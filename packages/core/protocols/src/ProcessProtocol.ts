@@ -115,7 +115,14 @@ export type ProcessEvent =
  */
 export interface ProcessEventsResponse {
   events: ProcessEvent[];
-  /** Cursor to pass to the next read. */
+  /**
+   * Cursor to pass to the next read: the `seq` of the next unread event. A read at `cursor` returns
+   * the events with `seq >= cursor`, so a read at or beyond the end returns an empty page whose
+   * `cursor` is the current end — which is how a caller subscribes to new events only.
+   *
+   * Stated explicitly because client and host must agree on it, and the two readings (next `seq`
+   * versus an opaque position) diverge as soon as `truncated` is true.
+   */
   cursor: number;
   /**
    * True when events before `cursor` were dropped from the host's bounded ring before the caller

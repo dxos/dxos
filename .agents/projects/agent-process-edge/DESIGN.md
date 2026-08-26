@@ -49,7 +49,7 @@ client. What changes is the server: the DO that dispatches triggers _is also_ th
 
 ## 2. Server topology (edge repo, `compute-service`)
 
-```
+```text
                     HTTP /compute/processes/:spaceId/...
                                   |
                     TriggersDispatcher  (renamed role: ProcessManager)
@@ -136,8 +136,8 @@ request into the process's DO, which serves the app.
 **Decision D8 — `runToCompletion` / `runUntilSettled` are derived client-side** from polled state
 (`IDLE`/`SUCCEEDED` etc. per the local semantics), not new endpoints, so the two settle predicates
 cannot drift from `ProcessHandle`'s definitions. Telling them apart remotely needs one extra wire
-field — `ProcessInfo.alarmPending` — since hybernation with a pending alarm means more queued turn
-work while hybernation without one means only background children remain.
+field — `ProcessInfo.alarmPending` — since hibernation with a pending alarm means more queued turn
+work while hibernation without one means only background children remain.
 
 ## 4. Verification (edge test harness, e2e)
 

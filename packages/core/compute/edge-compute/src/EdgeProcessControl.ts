@@ -17,6 +17,7 @@ import type * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 import * as RpcSerialization from 'effect/unstable/rpc/RpcSerialization';
 
 import { type Client } from '@dxos/client';
+import { createEdgeIdentity } from '@dxos/client/edge';
 import { type ProcessManager, type RemoteProcessManager } from '@dxos/compute-runtime';
 import { RemoteProcessManagerAdapter } from '@dxos/compute-runtime/remote-process';
 import type * as Process from '@dxos/compute/Process';
@@ -114,5 +115,14 @@ export const processManagerFromClient = (
   spaceId: SpaceId,
 ): Layer.Layer<ProcessManager.Service, never, Registry.AtomRegistry> => {
   let cached: EdgeProcessHttpClient | undefined;
-  return RemoteProcessManagerAdapter.layer(make(() => (cached ??= createEdgeProcessClient(client)), spaceId));
+  return RemoteProcessManagerAdapter.layer(
+    make(() => {
+      cached ??= createEdgeProcessClient(client);
+      // Re-applied on every access, not just at construction: the cached client would otherwise keep
+      // presenting a header minted for a previous identity until it expired or a 401 replaced it.
+      // `setIdentity` compares the did/peerKey and only drops the cached header when they differ.
+      cached.setIdentity(createEdgeIdentity(client));
+      return cached;
+    }, spaceId),
+  );
 };
