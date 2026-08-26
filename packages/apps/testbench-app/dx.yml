@@ -22,4 +22,4 @@ runtime:
     edge:
       url: https://preview.dxos.network/
     iceProviders:
-      - urls: https://preview.dxos.network/ice
+      - urls: https://dxos.network/ice

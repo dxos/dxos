@@ -162,7 +162,7 @@ const meta = {
             runtime: {
               services: {
                 edge: { url: 'https://dev.dxos.network/' },
-                iceProviders: [{ urls: 'https://dev.dxos.network/ice' }],
+                iceProviders: [{ urls: 'https://dxos.network/ice' }],
               },
             },
           }),

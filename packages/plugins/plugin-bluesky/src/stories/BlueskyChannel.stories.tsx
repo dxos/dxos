@@ -64,7 +64,7 @@ const meta = {
                 },
                 iceProviders: [
                   {
-                    urls: 'https://dev.dxos.network/ice',
+                    urls: 'https://dxos.network/ice',
                   },
                 ],
               },

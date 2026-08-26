@@ -18,8 +18,10 @@ runtime:
       url: https://dev.dxos.network/hub/
     edge:
       url: http://localhost:8787/
+    # ICE/TURN is a single shared production deployment, and a local edge cannot mint TURN
+    # credentials, so this stays on production even though `edge` above is localhost.
     iceProviders:
-      - urls: https://dev.dxos.network/ice
+      - urls: https://dxos.network/ice
     sandbox:
       url: http://localhost:8792
     ipfs:

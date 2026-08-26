@@ -20,8 +20,10 @@ runtime:
       url: https://dev.dxos.network/hub/
     edge:
       url: https://dev.dxos.network/
+    # ICE/TURN is a single shared production deployment; there is no per-environment TURN tier,
+    # so every profile resolves credentials from production regardless of which EDGE it talks to.
     iceProviders:
-      - urls: https://dev.dxos.network/ice
+      - urls: https://dxos.network/ice
     ipfs:
       server: https://api.ipfs.dxos.network/api/v0
       gateway: https://gateway.ipfs.dxos.network/ipfs
