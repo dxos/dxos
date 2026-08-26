@@ -38,8 +38,8 @@ describe('Toolbar.Root', () => {
     expect(screen.queryByRole('toolbar')).toBeNull();
   });
 
-  test('forwards  rather than falling back to the default', async ({ expect }) => {
-    render(<Toolbar.Root />, { wrapper: Wrapper });
+  test("forwards role='' rather than falling back to the default", async ({ expect }) => {
+    render(<Toolbar.Root role='' />, { wrapper: Wrapper });
 
     expect(screen.queryByRole('toolbar')).toBeNull();
   });

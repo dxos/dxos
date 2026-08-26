@@ -48,7 +48,7 @@ const ToolbarRoot = composable<HTMLDivElement, ToolbarRootProps>(
         {...rest}
         // Radix sets role="toolbar" before spreading props, so an undefined `role` erases it —
         // omit the key entirely in that case. Every role the caller does set is forwarded,
-        // `` included: dropping it would leave the default in place and silently
+        // `role=''` included: dropping it would leave the default in place and silently
         // invert the caller's intent.
         {...(role !== undefined && { role })}
         orientation={orientation}

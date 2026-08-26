@@ -1,10 +1,11 @@
 # Project Tasks — Design
 
-Agent delegation and task management over the two-forms task model: markdown
-checklists are the fluid form, `Task`/`TaskSet` the durable form, and promotion
-links them — delegation IS promotion (a delegated unit of work becomes a durable
-agent `Task` parented to the project's `TaskSet`; the supervisor reconciles
-children and checks off the checklist line on completion).
+Agent delegation and task management over durable tasks: the conversation's
+working surface is a `TaskSet` — the owning project's ledger for a project
+chat, the chat's own lazily created set otherwise. Delegation assigns a
+durable `Task` to an agent; the supervisor's reconcile loop spawns a sub-agent
+per ready task (dependencies done), marks it started at spawn, and records
+done/failed on exit — there is no separate markdown mirror to reconcile.
 
 ## Findings
 

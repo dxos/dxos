@@ -12,8 +12,11 @@ export const translations = [
       [translationKey]: {
         'mark-done.label': 'Mark done',
         'mark-todo.label': 'Mark todo',
+        'status-todo.label': 'To Do',
+        'status-started.label': 'Started',
         'status-done.label': 'Done',
-        'status-pending.label': 'Pending',
+        'status-failed.label': 'Failed',
+        'status-cancelled.label': 'Cancelled',
         'delete-task.label': 'Delete task',
       },
     },

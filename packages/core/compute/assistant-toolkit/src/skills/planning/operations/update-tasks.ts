@@ -23,7 +23,8 @@ export default UpdateTasks.pipe(
       const taskSet = yield* Chat.ensureTaskSet(chat);
       const { db } = yield* Database.Service;
 
-      const existing = yield* Chat.loadTasks(chat);
+      // Mutable copy: a payload naming the same new title twice must upsert its own creation.
+      const existing = [...(yield* Chat.loadTasks(chat))];
       for (const { title, status } of tasks) {
         const task = existing.find((candidate) => candidate.title === title.trim());
         if (task) {
@@ -31,7 +32,7 @@ export default UpdateTasks.pipe(
             task.status = status;
           });
         } else {
-          Outline.addTask(db, taskSet, title, { status });
+          existing.push(Outline.addTask(db, taskSet, title, { status }));
         }
       }
       yield* Database.flush();

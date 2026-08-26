@@ -103,7 +103,7 @@ Column/Form nesting → composition/enforcement.
    surfaces it in docs/stories.
 
 **Verdict:** keep the mechanism — it's the right shape — but fix the warning wrapper, gate the
-check to dev, remove the universal ``, add a part factory, and finish adoption in
+check to dev, remove the universal `role`, add a part factory, and finish adoption in
 `react-ui-form`/`react-ui-list` (three concrete `className`-drop bugs are open today).
 
 ---
@@ -783,7 +783,7 @@ Phases 2–4 are independent of each other after Phase 1.
 ### Phase 5 — Composition & enforcement
 
 1. `slots.ts`: dev-gate the COMPOSABLE check; replace the wrapper-div warning with a non-layout
-   signal; drop the universal ``; add a `definePart()` factory.
+   signal; drop the universal `role`; add a `definePart()` factory.
 2. Finish `composable()` adoption in `react-ui-form`/`react-ui-list`; fix the three
    `className`-drop sites; make the ~5 non-composable card tiles `forwardRef`.
 3. Enforcement (keeps all of the above from regressing):

@@ -51,6 +51,10 @@ be visible in the UI, closing the gaps the storybook audit surfaced.
       — surface per-task run state (started/failed, active sub-agent) and
       inter-task dependencies in the TaskList UI, and let a task row launch a
       sub-agent directly (the delegation loop without going through chat).
+- [ ] **Atomic task-set initialization** — `ensureTaskSet` creates the set and
+      writes the owner ref in separate operations, so concurrent peers can race
+      and orphan a set (CodeRabbit on #12752); needs a create-if-absent
+      primitive or a reconcile that adopts the losing set's tasks.
 - [ ] **Cancel/delete tasks** — cancel a started (possibly delegated) task from
       the UI and the agent surface, and delete via the TaskOperation verb so
       the set's refs and lifecycle parent edges stay consistent; a cancelled
