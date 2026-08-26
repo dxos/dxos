@@ -10,14 +10,10 @@ const preset = e2ePreset(import.meta.dirname);
 
 export default defineConfig({
   ...preset,
-  testMatch: '**/chat.spec.ts',
+  testMatch: '**/assistant-video.spec.ts',
   workers: 1,
   timeout: 300_000,
-  use: {
-    ...preset.use,
-    video: { mode: 'on', size: { width: 1280, height: 800 } },
-    viewport: { width: 1280, height: 800 },
-  },
+  expect: { timeout: 30_000 },
   webServer: {
     command: 'pnpm vite --port 4173 --configLoader native',
     port: 4173,
