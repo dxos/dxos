@@ -6,7 +6,6 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useCallback, useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
-import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { invariant } from '@dxos/invariant';
