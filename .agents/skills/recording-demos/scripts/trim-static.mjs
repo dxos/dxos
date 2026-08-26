@@ -65,6 +65,15 @@ const parseArgs = () => {
   return options;
 };
 
+/** The viewer is a local file, but caption text is arbitrary and lands in markup. */
+const escapeHtml = (value) =>
+  String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+
 const options = parseArgs();
 if (!options.in || !existsSync(options.in)) {
   console.error('usage: node trim-static.mjs --in <video> [--out <video>] [--max-static 1.5] [--fps 15]');
@@ -90,7 +99,10 @@ const probe = async (file) => {
   };
 };
 
-const { width, height, seconds } = await probe(options.in);
+const { width, height, seconds } = await probe(options.in).catch((error) => {
+  console.error(`cannot read ${options.in}: ${error.message.split('\n')[0]}`);
+  process.exit(1);
+});
 
 /**
  * Caption times as the driver recorded them, in source frames. `timeline.json` is written by
@@ -153,7 +165,11 @@ if (options.report) {
   let run = 0;
   let frames = 0;
   let motion = 0;
+  // Each run carries where it began, because a run that starts inside a caption's reading window is
+  // priced at `--caption-hold`, not at the cap being swept. Ignoring that made the estimate read ~10s
+  // under the truth on a 9-caption demo.
   const runs = [];
+  let runStart = 0;
   for await (const chunk of decoder.stdout) {
     pending = pending.length ? Buffer.concat([pending, chunk]) : chunk;
     while (pending.length >= frameBytes) {
@@ -162,9 +178,10 @@ if (options.report) {
       frames++;
       if (!previous || moved(frame, previous)) {
         if (run) {
-          runs.push(run);
+          runs.push({ length: run, start: runStart });
         }
         run = 0;
+        runStart = frames;
         motion++;
       } else {
         run++;
@@ -173,12 +190,28 @@ if (options.report) {
     }
   }
   if (run) {
-    runs.push(run);
+    runs.push({ length: run, start: runStart });
   }
-  await once(decoder, 'close');
+  const [decoderStatus] = await once(decoder, 'close');
+  if (decoderStatus !== 0) {
+    console.error(`ffmpeg decode failed (exit ${decoderStatus}) — statistics would be partial`);
+    process.exit(1);
+  }
 
   const seconds = (count) => +(count / options.fps).toFixed(1);
-  const capped = (cap) => runs.reduce((total, length) => total + Math.min(length, cap * options.fps), 0);
+  const captionHold = Math.max(1, Math.round(options['caption-hold'] * options.fps));
+  const captionFrames = new Set();
+  for (const caption of captions) {
+    for (let offset = 0; offset <= captionHold; offset++) {
+      captionFrames.add(caption.frame + offset);
+    }
+  }
+  const capped = (cap) =>
+    runs.reduce(
+      (total, { length, start }) =>
+        total + Math.min(length, captionFrames.has(start) ? captionHold : cap * options.fps),
+      0,
+    );
   console.log(
     JSON.stringify(
       {
@@ -187,9 +220,11 @@ if (options.report) {
         motionSeconds: seconds(motion),
         stillRuns: runs.length,
         stillSeconds: seconds(frames - motion),
-        longestStillRun: seconds(Math.max(0, ...runs)),
-        // What each candidate cap would leave, motion included: the still runs are the only part a cap
-        // can shrink, and there are enough of them that the cap dominates the result.
+        longestStillRun: seconds(Math.max(0, ...runs.map((entry) => entry.length))),
+        captions: captions.length,
+        captionHold: `${options['caption-hold']}s`,
+        // What each candidate `--max-static` would leave, motion and caption holds included: the still
+        // runs are the only part a cap can shrink, and there are enough of them that it dominates.
         atCap: Object.fromEntries(
           [0.3, 0.5, 0.8, 1.0, 1.5, 2.0].map((cap) => [`${cap}s`, seconds(motion + capped(cap))]),
         ),
@@ -258,7 +293,9 @@ for await (const chunk of decoder.stdout) {
     longestRun = Math.max(longestRun, staticRun);
 
     const cap = readingWindow.has(index) ? captionHoldFrames : holdFrames;
-    if (staticRun < cap) {
+    // Inclusive: `--report` prices a run at `min(length, cap)`, and an exclusive test would keep one
+    // frame fewer than it promised, so the estimate could never be trusted for tuning.
+    if (staticRun <= cap) {
       if (!encoder.stdin.write(frame)) {
         await once(encoder.stdin, 'drain');
       }
@@ -271,7 +308,12 @@ for await (const chunk of decoder.stdout) {
 }
 
 encoder.stdin.end();
-await once(encoder, 'close');
+const [encoderStatus] = await once(encoder, 'close');
+const [decodeStatus] = decoder.exitCode === null ? await once(decoder, 'close') : [decoder.exitCode];
+if (decodeStatus !== 0 || encoderStatus !== 0) {
+  console.error(`ffmpeg failed (decode ${decodeStatus}, encode ${encoderStatus}) — output is unusable`);
+  process.exit(1);
+}
 
 /**
  * Time-range annotations, so the steps survive outside the burned-in banner: Matroska chapters (which
@@ -346,7 +388,7 @@ const annotate = async () => {
     viewer,
     `<!doctype html>
 <meta charset="utf-8">
-<title>${path.basename(base)}</title>
+<title>${escapeHtml(path.basename(base))}</title>
 <style>
   body { margin: 0; background: #111; color: #eee; font: 14px/1.5 ui-sans-serif, system-ui, sans-serif; display: flex; gap: 16px; padding: 16px; align-items: flex-start; flex-wrap: wrap; }
   video { flex: 3 1 480px; min-width: 0; max-width: 100%; background: #000; }
@@ -357,15 +399,15 @@ const annotate = async () => {
   small { display: block; opacity: .6; }
   code { opacity: .5; font-size: 12px; }
 </style>
-<video id="v" controls src="${path.basename(annotated)}">
-  <track kind="chapters" srclang="en" src="${path.basename(vttFile)}" default>
+<video id="v" controls src="${escapeHtml(path.basename(annotated))}">
+  <track kind="chapters" srclang="en" src="${escapeHtml(path.basename(vttFile))}" default>
 </video>
 <ol id="steps">${marks
       .map(
         (mark, index) =>
-          `<li data-at="${mark.start.toFixed(3)}"><code>${clock(mark.start).slice(3, 8)}</code> ${
-            mark.text
-          }${mark.subtitle ? `<small>${mark.subtitle}</small>` : ''}</li>`,
+          `<li data-at="${mark.start.toFixed(3)}"><code>${clock(mark.start).slice(3, 8)}</code> ${escapeHtml(
+            mark.text,
+          )}${mark.subtitle ? `<small>${escapeHtml(mark.subtitle)}</small>` : ''}</li>`,
       )
       .join('\n')}</ol>
 <script>

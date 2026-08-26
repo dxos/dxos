@@ -57,11 +57,14 @@ node .agents/skills/recording-demos/scripts/driver.mjs \
   --port 7333 --url http://localhost:4173 --out /tmp/demo &
 ```
 
-It launches Chromium, opens one recording context, and listens on loopback. Every gesture is one HTTP
-call, so each is a separate agent turn:
+It launches Chromium, opens one recording context, and listens on loopback behind a per-process token
+(printed at startup and written to `<out>/token`). Loopback alone is not access control — any page the
+browser has open can POST here cross-origin in `no-cors` mode, and the command would run even though the
+response is opaque to it; a token in a non-safelisted header cannot be set by such a request. Every
+gesture is one HTTP call, so each is a separate agent turn:
 
 ```bash
-C() { curl -sS localhost:7333/cmd -d "$1"; echo; }
+C() { curl -sS -H "x-demo-token: $(cat /tmp/demo/token)" localhost:7333/cmd -d "$1"; echo; }
 C '{"op":"goto"}'
 C '{"op":"click","selector":"[data-testid=\"treeView.pluginRegistry\"]"}'
 C '{"op":"screenshot","name":"01-registry.png"}'
