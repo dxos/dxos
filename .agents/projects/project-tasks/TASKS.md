@@ -129,12 +129,6 @@ Each is independent of the others; none is started.
       `TaskList` concern: indentation, collapse/expand, and what an ordinal
       means for a child. Decide whether the agent may nest (an `UpdateTasks`
       field) or only the UI can.
-- [ ] **Assign a TaskSet to a chat** — a user-facing action that points
-      `Chat.taskSet` at an existing set (picker/command), rather than the chat
-      lazily creating its own. Distinct from the automatic stamping item in
-      Phase 1 (project chats adopting the project's ledger): this is the manual
-      override, and it needs to say what happens to tasks already in the chat's
-      own set.
 - [x] **Option to show the task description in the list** — `TaskList.Root`
       gains `showDescriptions`; a described row grows (`auto-rows-min`) and every
       other cell is pinned to the title's line, since a row is its own subgrid
