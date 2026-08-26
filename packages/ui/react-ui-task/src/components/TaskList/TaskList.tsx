@@ -264,7 +264,7 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
         // `px-0`: a subgrid's own inline padding shrinks its first and last tracks, so the listbox
         // item's default inset would push the status control off the column the create row's `+`
         // sits in. The list's inset belongs to the host, not the row.
-        classNames={mx('group col-span-full grid grid-cols-subgrid px-0', className)}
+        classNames={mx('group/row col-span-full grid grid-cols-subgrid px-0', className)}
         ref={forwardedRef}
       >
         {ordinal !== undefined && (
@@ -306,7 +306,7 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
             variant='ghost'
             icon='ph--x--regular'
             label={t('delete-task.label')}
-            classNames='invisible group-hover:visible'
+            classNames='invisible group-hover/row:visible group-focus-within/row:visible'
             onClick={() => onTaskDelete(task)}
           />
         )}
