@@ -288,10 +288,17 @@ jobs:
           git checkout --detach "$BASE_SHA"
           # The base lockfile can differ from the head one, so the tree has to be re-installed against it.
           pnpm install --prefer-offline
+          # Hydrates the library builds the bundle needs; it may or may not run the bundle itself.
           moon run composer-app:bundle
-          # The measurement resolves `out/composer` from the cwd, which is the app, not the workspace.
-          (cd packages/apps/composer-app && node "$RUNNER_TEMP/measure.mjs" \
-            --report "$RUNNER_TEMP/boot-budget.base.json" --no-fail)
+          # `bundle` declares no `outputs`, so a moon cache hit restores NOTHING to disk and leaves the
+          # head's bundle sitting in `out/composer` — the base would then measure as the head and every
+          # comparison would read "no change" on exactly the PRs that move the graph. So clear the
+          # directory and run the task's own script, which cannot be short-circuited.
+          rm -rf packages/apps/composer-app/out/composer
+          cd packages/apps/composer-app
+          pnpm exec vite build --configLoader native
+          pnpm run --silent build:functions
+          node "$RUNNER_TEMP/measure.mjs" --report "$RUNNER_TEMP/boot-budget.base.json" --no-fail
 
       - name: Compare with the base
         id: compare

@@ -15,6 +15,9 @@ tasks:
   # The production web bundle (`out/composer`), consumed by `vite preview`, the Tauri builds, and
   # the Cloudflare worker. `build:functions` emits `_worker.js` after `vite build` so it survives
   # Vite's `emptyOutDir`.
+  #
+  # No `outputs`: a cache hit therefore restores nothing to disk. The `boot-budget` CI job's base
+  # measurement runs this script directly for that reason — keep the two in step.
   bundle:
     script: pnpm exec vite build --configLoader native && pnpm run --silent build:functions
     options:
