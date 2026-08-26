@@ -124,7 +124,6 @@ describe('LanguageModel', () => {
   it.effect(
     'should process an agentic loop using OpenAI',
     Effect.fn(function* ({ expect }) {
-      // @effect-diagnostics-next-line multipleEffectProvide:off
       const createProgram = (prompt: string) =>
         createChat(prompt).pipe(
           Effect.provide(OpenAiLanguageModel.model('gpt-4o')),
@@ -141,7 +140,6 @@ describe('LanguageModel', () => {
   it.effect(
     'should process an agentic loop using Claude',
     Effect.fn(function* ({ expect }) {
-      // @effect-diagnostics-next-line multipleEffectProvide:off
       const createProgram = (prompt: string) =>
         createChat(prompt).pipe(
           Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import * as Node from './node';
+import * as Node from './AppGraphNode';
 import { nodeArgsUnchanged, shallowEqual } from './util';
 
 const node = (overrides: Partial<Node.NodeArg<unknown>> = {}): Node.NodeArg<unknown> => ({

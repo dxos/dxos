@@ -6,7 +6,7 @@ import { jwtDecode } from 'jwt-decode';
 
 import { synchronized } from '@dxos/async';
 import { type Halo } from '@dxos/client-protocol';
-import { type Config } from '@dxos/config';
+import { type Config, getEnvString } from '@dxos/config';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -71,13 +71,14 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     private readonly _clientConfig: Config,
     private readonly _halo: Halo,
   ) {
+    const password = getEnvString(this._clientConfig, 'DX_AGENTHOSTING_PASSWORD');
     const runtimeAgentHostingConfig = this._clientConfig.get('runtime.services.agentHosting');
     invariant(runtimeAgentHostingConfig, 'agentHosting config not found');
     invariant(runtimeAgentHostingConfig.server, 'agentHosting server not found');
     this._config = {
       ...defaultConfig,
       baseUrl: runtimeAgentHostingConfig.server,
-      password: this._clientConfig.get('runtime.app.env.DX_AGENTHOSTING_PASSWORD'),
+      password,
     };
 
     // Ensure trailing slash to ensure proper path joining with URL() constructor.

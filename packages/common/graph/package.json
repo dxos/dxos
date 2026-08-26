@@ -17,7 +17,33 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
-    }
+    },
+    "./GraphBuilder": {
+      "source": "./src/GraphBuilder.ts",
+      "types": "./dist/types/src/GraphBuilder.d.ts",
+      "import": "./dist/lib/GraphBuilder.mjs"
+    },
+    "./GraphEdge": {
+      "source": "./src/GraphEdge.ts",
+      "types": "./dist/types/src/GraphEdge.d.ts",
+      "import": "./dist/lib/GraphEdge.mjs"
+    },
+    "./GraphModel": {
+      "source": "./src/GraphModel.ts",
+      "types": "./dist/types/src/GraphModel.d.ts",
+      "import": "./dist/lib/GraphModel.mjs"
+    },
+    "./GraphNode": {
+      "source": "./src/GraphNode.ts",
+      "types": "./dist/types/src/GraphNode.d.ts",
+      "import": "./dist/lib/GraphNode.mjs"
+    },
+    "./GraphNodeMatcher": {
+      "source": "./src/GraphNodeMatcher.ts",
+      "types": "./dist/types/src/GraphNodeMatcher.d.ts",
+      "import": "./dist/lib/GraphNodeMatcher.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -28,6 +54,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {

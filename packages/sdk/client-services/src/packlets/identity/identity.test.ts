@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event } from '@dxos/async';
@@ -15,6 +16,7 @@ import { Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
+import { Runtime_Client_EdgeFeaturesSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -204,7 +206,7 @@ describe('identity/identity', () => {
       identityKey,
       deviceKey,
       space,
-      edgeFeatures: args?.edgeConnection && { feedReplicator: true },
+      edgeFeatures: args?.edgeConnection && create(Runtime_Client_EdgeFeaturesSchema, { feedReplicator: true }),
       edgeConnection: args?.edgeConnection,
     });
 

@@ -18,6 +18,7 @@ import {
   Feed,
   Filter,
   JsonSchema,
+  Migration,
   Obj,
   Query,
   QueryAST,
@@ -25,7 +26,7 @@ import {
   type Registry,
   Type,
 } from '@dxos/echo';
-import { type DatabaseDirectory, isEdgePeerId } from '@dxos/echo-protocol';
+import { DATA_NAMESPACE, type DatabaseDirectory, EncodedReference, isEdgePeerId } from '@dxos/echo-protocol';
 import {
   type AnyProperties,
   EntityKind,
@@ -43,11 +44,10 @@ import {
 } from '@dxos/echo/internal';
 import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
-import { EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
+import { DXN, EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
-import { defaultMap } from '@dxos/util';
 
 import type { SaveStateChangedEvent } from '../automerge';
 import { type DocHandleProxy, type RepoProxy } from '../automerge';
@@ -63,7 +63,6 @@ import {
 } from '../echo-handler';
 import { FeedHandle } from '../feed/feed-handle';
 import { type HypergraphImpl } from '../hypergraph';
-import { type ObjectMigration } from './object-migration';
 
 export interface EchoDatabase extends Database.Database {
   /**
@@ -89,7 +88,7 @@ export interface EchoDatabase extends Database.Database {
   /**
    * Run migrations.
    */
-  runMigrations(migrations: ObjectMigration[]): Promise<void>;
+  runMigrations(migrations: Migration.Migration[]): Promise<void>;
 
   /**
    * Get the current per-peer automerge document sync state.
@@ -311,6 +310,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       spaceId: params.spaceId,
       spaceKey: params.spaceKey,
       branchStore: params.branchStore,
+      createEntity: (core) => initEchoReactiveObjectRootProxy(core, this),
     });
 
     this.saveStateChanged = this._entityManager.saveStateChanged;
@@ -468,12 +468,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   // TODO(burdon): Type check.
   /** @deprecated Use `db.query(Filter.id(id)).runSync()[0]` for a working-set lookup, or resolve via a {@link Ref}. */
   getObjectById<T extends Entity.Unknown = Entity.Any>(id: string, { deleted = false } = {}): T | undefined {
-    const core = this._entityManager.getObjectCoreById(id);
-    if (!core || (core.isDeleted() && !deleted)) {
-      return undefined;
-    }
-
-    return (core.rootProxy ?? initEchoReactiveObjectRootProxy(core, this)) as T;
+    return this._entityManager.getEntityById(id, { deleted }) as T | undefined;
   }
 
   makeRef<T extends AnyProperties = any>(uri: URI.URI): Ref.Ref<T> {
@@ -727,39 +722,106 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     await Promise.all([...this.#feeds.values()].map((handle) => handle.waitForPendingWrites()));
   }
 
-  async runMigrations(migrations: ObjectMigration[]): Promise<void> {
+  async runMigrations(migrations: Migration.Migration[]): Promise<void> {
+    // Validated up front so a batch containing an unrecognized migration cannot leave the
+    // preceding ones half-applied.
     for (const migration of migrations) {
-      const objects = await this._hypergraph.query(Query.select(Filter.type(migration.fromType)).from(this)).run();
-      log.verbose('migrate', {
-        from: migration.fromType,
-        to: migration.toType,
-        objects: objects.length,
-      });
-      for (const object of objects) {
-        const before = JSON.parse(JSON.stringify(object));
+      // Read before the guard, which narrows the failing branch to `never`.
+      const kind: string = migration.kind;
+      if (!Migration.isMigration(migration)) {
+        throw new TypeError(`Unknown migration kind: ${kind}`);
+      }
+    }
 
-        const output = (await migration.transform(object, { db: this })) as any;
-        const metaPatch = output?.[MetaId] as Partial<EntityMeta> | undefined;
-        if (metaPatch !== undefined && output != null) {
-          delete output[MetaId];
-        }
-
-        delete (output as any).id;
-
-        await this._entityManager.atomicReplaceObject(object.id, {
-          data: output,
-          type: migration.toType,
-          meta: metaPatch as any,
-        });
-        const postMigrationType = Obj.getTypeURI(object);
-        invariant(postMigrationType != null && postMigrationType.toString() === migration.toType.toString());
-
-        if (migration.onMigration) {
-          await migration.onMigration({ before, object, db: this });
-        }
+    for (const migration of migrations) {
+      if (Migration.isObjectMigration(migration)) {
+        await this.#runObjectMigration(migration);
+      } else if (Migration.isRenameMigration(migration)) {
+        await this.#runRenameMigration(migration);
       }
     }
     await this._entityManager.flush();
+  }
+
+  async #runObjectMigration(migration: Migration.ObjectMigration): Promise<void> {
+    const objects = await this._hypergraph.query(Query.select(Filter.type(migration.fromType)).from(this)).run();
+    log.verbose('migrate', {
+      from: migration.fromType,
+      to: migration.toType,
+      objects: objects.length,
+    });
+    for (const object of objects) {
+      const before = JSON.parse(JSON.stringify(object));
+
+      const output = (await migration.transform(object, { db: this })) as any;
+      const metaPatch = output?.[MetaId] as Partial<EntityMeta> | undefined;
+      if (metaPatch !== undefined && output != null) {
+        delete output[MetaId];
+      }
+
+      delete (output as any).id;
+
+      await this._entityManager.atomicReplaceObject(object.id, {
+        data: output,
+        type: migration.toType,
+        meta: metaPatch as any,
+      });
+      const postMigrationType = Obj.getTypeURI(object);
+      invariant(postMigrationType != null && postMigrationType.toString() === migration.toType.toString());
+
+      if (migration.onMigration) {
+        await migration.onMigration({ before, object, db: this });
+      }
+    }
+  }
+
+  /**
+   * Repoints every reference to the renamed entity at its new name.
+   */
+  async #runRenameMigration(migration: Migration.RenameMigration): Promise<void> {
+    const fromName = DXN.getName(migration.from);
+    const toName = DXN.getName(migration.to);
+
+    // Undefined when the URI already reads correctly, so a re-run writes nothing.
+    const rewrite = (uri: URI.URI): URI.URI | undefined => {
+      if (!DXN.isDXN(uri) || DXN.getName(uri) !== fromName) {
+        return undefined;
+      }
+      const rewritten = DXN.make<string>(toName, DXN.getVersion(uri));
+      return rewritten === uri ? undefined : rewritten;
+    };
+
+    // The planner collapses this to one reverse-reference index lookup: the renamed entity is not in
+    // the graph, so its anchor cannot be selected.
+    const objects = await this._hypergraph.query(Query.select(Filter.key(fromName)).referencedBy().from(this)).run();
+
+    let updated = 0;
+    for (const object of objects) {
+      const core = getObjectCore(object);
+      const updates: { path: string[]; uri: URI.URI }[] = [];
+      const visit = (path: string[], value: unknown): void => {
+        if (EncodedReference.isEncodedReference(value)) {
+          const uri = rewrite(EncodedReference.toURI(value));
+          if (uri !== undefined) {
+            updates.push({ path, uri });
+          }
+        } else if (Array.isArray(value)) {
+          value.forEach((entry, index) => visit([...path, String(index)], entry));
+        } else if (typeof value === 'object' && value !== null) {
+          for (const [key, entry] of Object.entries(value)) {
+            visit([...path, key], entry);
+          }
+        }
+      };
+      visit([], core.getDecoded([DATA_NAMESPACE]));
+
+      for (const { path, uri } of updates) {
+        core.setDecoded([DATA_NAMESPACE, ...path], EncodedReference.fromURI(uri));
+      }
+      updated += updates.length;
+    }
+
+    log.verbose('rename', { from: migration.from, to: migration.to, objects: objects.length, references: updated });
   }
 
   getAutomergeSyncState(): Promise<DataService.SpaceSyncState> {
@@ -979,7 +1041,25 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   async stats(): Promise<Database.DatabaseStats> {
-    return this._entityManager.stats();
+    const { loaded: host, ...stored } = await this._entityManager.stats();
+    return { ...stored, loaded: { client: this.#clientLoadedStats(), host } };
+  }
+
+  /** Residency of this database's own caches — synchronous, so it samples one moment. */
+  #clientLoadedStats(): Database.ClientLoadedStats {
+    let feedObjects = 0;
+    for (const handle of this.#feeds.values()) {
+      feedObjects += handle.residentObjectCount;
+    }
+
+    const { documents, objects } = this._entityManager.loadedStats();
+    return {
+      documents,
+      objects,
+      feeds: this.#feeds.size,
+      feedObjects,
+      registryTotal: this.registry.local.length,
+    };
   }
 
   async runGarbageCollection(options?: Database.GarbageCollectionOptions): Promise<Database.GarbageCollectionReport> {
@@ -1016,27 +1096,13 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    * @internal
    */
   async _loadObjectById(objectId: string, options: any = {}): Promise<Entity.Unknown | undefined> {
-    const core = await this._entityManager.loadObjectCoreById(objectId, options);
-    if (!core || (core?.isDeleted() && !options.allowDeleted)) {
-      return undefined;
-    }
-
-    const obj = defaultMap(
-      this._rootProxies,
-      core,
-      () => core.rootProxy ?? initEchoReactiveObjectRootProxy(core, this),
-    );
-    invariant(isProxy(obj));
-    return obj;
+    return this._entityManager.loadEntityById(objectId, options);
   }
 
   // ── Deprecated API ───────────────────────────────────────────────────────
 
   /** @deprecated */
   readonly pendingBatch = new Event<unknown>();
-
-  /** @internal */
-  private readonly _rootProxies = new Map<any, Entity.Unknown>();
 }
 
 // TODO(burdon): Create APIError class.

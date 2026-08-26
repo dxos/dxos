@@ -10,7 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
-import type * as Node from '@dxos/app-graph/Node';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -28,13 +28,14 @@ import { Organization, Person } from '@dxos/types';
 import { DeckState, OperationHandler } from '#capabilities';
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
+import type { DeckCapabilities } from '#types';
 
 import { Plank } from '../Plank';
 import { Matrix, type MatrixController, type MatrixRootProps } from './Matrix';
 
 random.seed(123);
 
-const TestPlugin = Plugin.define(pluginMeta).pipe(
+const TestPlugin = Plugin.define<DeckCapabilities.DeckPluginOptions>(pluginMeta).pipe(
   Plugin.addModule(DeckState),
   Plugin.addModule(OperationHandler),
   Plugin.make,
@@ -73,7 +74,7 @@ const StoryTile = (props: MosaicTileProps<Obj.Any>) => {
  * Tile that renders a node-bound Plank (sigil/title + content Surface).
  */
 const PlankTile = (props: MosaicTileProps<Obj.Any>) => {
-  const node = useMemo<Node.Node>(
+  const node = useMemo<AppGraphNode.Node>(
     () => ({ id: props.data.id, type: 'test', data: props.data, properties: { label: Obj.getLabel(props.data) } }),
     [props.data],
   );

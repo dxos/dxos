@@ -35,6 +35,9 @@
       "path": "../../common/errors"
     },
     {
+      "path": "../../common/graph"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -60,6 +63,9 @@
     },
     {
       "path": "../../core/compute/extractor-lib"
+    },
+    {
+      "path": "../../core/compute/progress"
     },
     {
       "path": "../../core/echo/echo"

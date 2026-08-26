@@ -14,6 +14,7 @@ import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 import * as RpcMiddleware from 'effect/unstable/rpc/RpcMiddleware';
 
 import { log } from '@dxos/log';
+import { trace } from '@dxos/tracing';
 
 /** Cross-thread comparable send timestamp stamped by the client middleware. */
 export const SENT_AT_HEADER = 'x-dxos-rpc-sent-at';
@@ -58,8 +59,29 @@ export type StatsSnapshot = {
 const MAX_TIMING_SAMPLES = 100;
 const timingSamples: Sample[] = [];
 
+const QUEUE_WAIT_METRIC = 'dxos.rpc.queueWait.duration';
+const SERVICE_METRIC = 'dxos.rpc.service.duration';
+// Deliberately untagged. `rpc._tag` would be the interesting breakdown, but a histogram costs a
+// series per bucket boundary, so one per method is an order of magnitude more series than the rest
+// of the fleet's metrics combined. Per-method detail stays in the log line and getStatsSnapshot.
+const DURATION_META = { unit: 's' } as const;
+
+/**
+ * Publishes one completed RPC's timings.
+ * Goes through `trace.metrics`, which fans out to nothing until a collector registers, so a realm
+ * without observability pays nothing. Queue wait is the realm's responsiveness signal: it is time
+ * the message spent waiting for this thread rather than time spent working.
+ */
+const publishMetrics = (sample: Sample): void => {
+  if (sample.queueWaitMs !== undefined) {
+    trace.metrics.distribution(QUEUE_WAIT_METRIC, sample.queueWaitMs / 1_000, DURATION_META);
+  }
+  trace.metrics.distribution(SERVICE_METRIC, sample.serviceMs / 1_000, DURATION_META);
+};
+
 /** Records one completed RPC for {@link getStatsSnapshot}. */
 export const recordSample = (sample: Sample): void => {
+  publishMetrics(sample);
   timingSamples.push(sample);
   if (timingSamples.length > MAX_TIMING_SAMPLES) {
     timingSamples.splice(0, timingSamples.length - MAX_TIMING_SAMPLES);

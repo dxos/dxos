@@ -103,7 +103,7 @@ export const MasterDetail = <T extends MasterDetailRecord>({
     // inner scroll areas engage) when its overflow is not `visible`. The caller makes this row fill its
     // parent (`flex-1 min-h-0`).
     return (
-      <div role='none' className={mx('flex gap-2 min-h-0 overflow-hidden', classNames)}>
+      <div className={mx('flex gap-2 min-h-0 overflow-hidden', classNames)}>
         <Panel.Root classNames='shrink-0 w-max max-w-xs'>
           <Panel.Content asChild>
             <ScrollArea.Root orientation='vertical'>

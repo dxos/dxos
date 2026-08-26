@@ -28,41 +28,36 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./testing": {
-      "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
-      "import": "./dist/lib/testing.mjs"
+    "./AppGraph": {
+      "source": "./src/AppGraph.ts",
+      "types": "./dist/types/src/AppGraph.d.ts",
+      "import": "./dist/lib/AppGraph.mjs"
     },
-    "./package.json": "./package.json",
+    "./AppGraphBuilder": {
+      "source": "./src/AppGraphBuilder.ts",
+      "types": "./dist/types/src/AppGraphBuilder.d.ts",
+      "import": "./dist/lib/AppGraphBuilder.mjs"
+    },
+    "./AppGraphNode": {
+      "source": "./src/AppGraphNode.ts",
+      "types": "./dist/types/src/AppGraphNode.d.ts",
+      "import": "./dist/lib/AppGraphNode.mjs"
+    },
     "./CreateAtom": {
       "source": "./src/atoms.ts",
       "types": "./dist/types/src/atoms.d.ts",
       "import": "./dist/lib/atoms.mjs"
     },
-    "./Graph": {
-      "source": "./src/graph.ts",
-      "types": "./dist/types/src/graph.d.ts",
-      "import": "./dist/lib/graph.mjs"
-    },
-    "./GraphBuilder": {
-      "source": "./src/graph-builder.ts",
-      "types": "./dist/types/src/graph-builder.d.ts",
-      "import": "./dist/lib/graph-builder.mjs"
-    },
-    "./Node": {
-      "source": "./src/node.ts",
-      "types": "./dist/types/src/node.d.ts",
-      "import": "./dist/lib/node.mjs"
-    },
-    "./NodeMatcher": {
-      "source": "./src/node-matcher.ts",
-      "types": "./dist/types/src/node-matcher.d.ts",
-      "import": "./dist/lib/node-matcher.mjs"
-    },
     "./PathResolution": {
       "source": "./src/path-resolution.ts",
       "types": "./dist/types/src/path-resolution.d.ts",
       "import": "./dist/lib/path-resolution.mjs"
+    },
+    "./package.json": "./package.json",
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -75,6 +70,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",

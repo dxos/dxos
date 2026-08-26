@@ -4,8 +4,9 @@
 
 import React, { forwardRef, useMemo } from 'react';
 
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { useConnections, useActions as useGraphActions } from '@dxos/plugin-graph/hooks';
 import { type MenuItem } from '@dxos/react-ui-menu';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -18,7 +19,7 @@ import { L0Menu, L1Tabs, type L1TabsProps } from '../Sidebar';
 
 export const NAV_TREE_ITEM = 'NavTreeItem';
 
-export type NavTreeProps = { id: string; root?: Node.Node; tab: string } & Pick<L1TabsProps, 'open'>;
+export type NavTreeProps = { id: string; root?: AppGraphNode.Node; tab: string } & Pick<L1TabsProps, 'open'>;
 
 // TODO(wittjosiah): Refactor to Radix-style.
 export const NavTree = forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, tab, ...props }, forwardedRef) => {
@@ -51,32 +52,32 @@ export const NavTree = forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, tab
 /**
  * Partitions root children into workspaces, pinned items, user-account, and top-level actions.
  */
-const useTopLevelNavItems = (root?: Node.Node) => {
+const useTopLevelNavItems = (root?: AppGraphNode.Node) => {
   const { graph } = useAppGraph();
-  const rootId = root?.id ?? Node.RootId;
+  const rootId = root?.id ?? GraphNode.RootId;
   const rootOutboundItems = useConnections(graph, rootId, 'child');
   const rootActions = useGraphActions(graph, rootId);
 
   const { topLevelActions, l0Items, pinnedItems, userAccountItem } = useMemo(() => {
-    const topLevelWorkspaces: Node.Node[] = [];
-    const outboundPinnedItems: Node.Node[] = [];
-    let userAccountItem: Node.Node | undefined;
+    const topLevelWorkspaces: AppGraphNode.Node[] = [];
+    const outboundPinnedItems: AppGraphNode.Node[] = [];
+    let userAccountItem: AppGraphNode.Node | undefined;
     for (const node of rootOutboundItems) {
-      if (Node.hasDisposition(node, 'workspace')) {
+      if (AppGraphNode.hasDisposition(node, 'workspace')) {
         topLevelWorkspaces.push(node);
-      } else if (Node.hasDisposition(node, 'pin-end')) {
+      } else if (AppGraphNode.hasDisposition(node, 'pin-end')) {
         outboundPinnedItems.push(node);
-      } else if (Node.hasDisposition(node, 'user-account')) {
+      } else if (AppGraphNode.hasDisposition(node, 'user-account')) {
         userAccountItem ??= node;
       }
     }
 
     const topLevelActions = rootActions
-      .filter((action) => Node.hasDisposition(action, 'menu'))
+      .filter((action) => AppGraphNode.hasDisposition(action, 'menu'))
       .toSorted((a, b) => Position.compare(a.properties, b.properties));
     const pinnedItems = [
       ...outboundPinnedItems,
-      ...rootActions.filter((action) => Node.hasDisposition(action, 'pin-end')),
+      ...rootActions.filter((action) => AppGraphNode.hasDisposition(action, 'pin-end')),
     ].toSorted((a, b) => Position.compare(a.properties, b.properties));
 
     return {

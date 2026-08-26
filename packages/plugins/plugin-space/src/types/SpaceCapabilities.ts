@@ -16,6 +16,7 @@ import { type PublicKey } from '@dxos/keys';
 import { type Label } from '@dxos/ui-types/translations';
 import { type ComplexMap, type Position } from '@dxos/util';
 
+import { type SpaceDashboard } from '#dashboard';
 import { meta } from '#meta';
 
 import * as Settings from './Settings';
@@ -63,6 +64,17 @@ export type SpaceEphemeralState = {
 /** Transient/ephemeral state (not persisted). */
 export const EphemeralState = Capability.makeSingleton<Atom.Writable<SpaceEphemeralState>>()(
   `${meta.profile.key}.capability.ephemeralState`,
+);
+
+/**
+ * The active space projected for peripheral displays (Stream Deck, LaMetric).
+ *
+ * Contributed here rather than by each device plugin so that one set of queries serves every
+ * attached device, and so that `plugin-space` needs no knowledge of what is attached: it publishes
+ * facts, and slot counts, truncation and icon resolution stay with the hardware that has them.
+ */
+export const Dashboard = Capability.makeSingleton<Atom.Atom<SpaceDashboard>>()(
+  `${meta.profile.key}.capability.dashboard`,
 );
 
 /**

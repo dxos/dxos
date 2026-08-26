@@ -1,0 +1,1086 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import { describe, expect, onTestFinished, test } from 'vitest';
+
+import { Trigger } from '@dxos/async';
+import { Obj } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
+import * as GraphNode from '@dxos/graph/GraphNode';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
+
+import * as Graph from './AppGraph';
+import * as GraphBuilder from './AppGraphBuilder';
+import * as Node from './AppGraphNode';
+
+const exampleId = (id: number) => `dx:test:${id}`;
+const EXAMPLE_ID = exampleId(1);
+const EXAMPLE_TYPE = 'org.dxos.type.example';
+
+describe('GraphBuilder', () => {
+  describe('connector', () => {
+    test('works', async () => {
+      const registry = Registry.make();
+      const builder = GraphBuilder.make({ registry });
+      GraphBuilder.addExtension(
+        builder,
+        GraphBuilder.createExtensionRaw({
+          id: 'outboundConnector',
+          connector: () => Atom.make([{ id: 'child', type: EXAMPLE_TYPE, data: 2 }]),
+        }),
+      );
+      GraphBuilder.addExtension(
+        builder,
+        GraphBuilder.createExtensionRaw({
+          id: 'inboundConnector',
+          relation: Node.childRelation('inbound'),
+          connector: () => Atom.make([{ id: 'parent', type: EXAMPLE_TYPE, data: 0 }]),
+        }),
+      );
+
+      const graph = builder.graph;
+      Graph.expandSync(graph, GraphNode.RootId, 'child');
+      Graph.expandSync(graph, GraphNode.RootId, Node.childRelation('inbound'));
+      await GraphBuilder.flush(builder);
+
+      const outbound = registry.get(graph.connections(GraphNode.RootId, 'child'));
+      const inbound = registry.get(graph.connections(GraphNode.RootId, Node.childRelation('inbound')));
+
+      expect(outbound).has.length(1);
+      expect(outbound[0].id).to.equal('root/child');
+      expect(outbound[0].data).to.equal(2);
+      expect(inbound).has.length(1);
+      expect(inbound[0].id).to.equal('root/parent');
+      expect(inbound[0].data).to.equal(0);
+    });
+
+    test('subscribes to updates', async () => {
+      const registry = Registry.make();
+      const builder = GraphBuilder.make({ registry });
+      const state = Atom.make(0);
+      GraphBuilder.addExtension(
+        builder,
+        GraphBuilder.createExtensionRaw({
+          id: 'connector',
+          connector: () => Atom.make((get) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: get(state) }]),
+        }),
+      );
+      const graph = builder.graph;
+
+      let count = 0;
+      const cancel = registry.subscribe(graph.connections(GraphNode.RootId, 'child'), (_) => {
+        count++;
+      });
+      onTestFinished(() => cancel());
+
+      expect(count).to.equal(0);
+      expect(registry.get(graph.connections(GraphNode.RootId, 'child'))).to.have.length(0);
+      expect(count).to.equal(1);
+
+      Graph.expandSync(graph, GraphNode.RootId, 'child');
+      await GraphBuilder.flush(builder);
+      expect(count).to.equal(2);
+
+      registry.set(state, 1);
+      await GraphBuilder.flush(builder);
+      expect(count).to.equal(3);
+    });
+
+    test('updates with new extensions', async () => {
+      const registry = Registry.make();
+      const builder = GraphBuilder.make({ registry });
+      GraphBuilder.addExtension(
+        builder,
+        GraphBuilder.createExtensionRaw({
+          id: 'connector',
+          connector: () => Atom.make([{ id: EXAMPLE_ID, type: EXAMPLE_TYPE }]),
+        }),
+      );
+      const graph = builder.graph;
+      Graph.expandSync(graph, GraphNode.RootId, 'child');
+      await GraphBuilder.flush(builder);
+
+      let nodes: Node.Node[] = [];
+      let count = 0;
+      const cancel = registry.subscribe(graph.connections(GraphNode.RootId, 'child'), (_nodes) => {
+        count++;
+        nodes = _nodes;
+      });
+      onTestFinished(() => cancel());
+
+      expect(nodes).has.length(0);
+      expect(count).to.equal(0);
+      registry.get(graph.connections(GraphNode.RootId, 'child'));
+      expect(nodes).has.length(1);
+      expect(count).to.equal(1);
+
+      GraphBuilder.addExtension(
+        builder,
+        GraphBuilder.createExtensionRaw({
+          id: 'connector2',
+          connector: () => Atom.make([{ id: exampleId(2), type: EXAMPLE_TYPE }]),
+        }),
+      );
+      await GraphBuilder.flush(builder);
+      expect(nodes).has.length(2);
+      expect(count).to.equal(2);
+    });
+
+    test('nodes are updated when removed', async () => {
+      const registry = Registry.make();
+      const builder = GraphBuilder.make({ registry });
+      const name = Atom.make('removed');
+
+      GraphBuilder.addExtension(builder, [
+        GraphBuilder.createExtensionRaw({
+          id: 'root',
+          connector: (node) =>
+            Atom.make((get) =>
+              Function.pipe(
+                get(node),
+                Option.flatMap((node) => (node.id === 'root' ? Option.some(get(name)) : Option.none())),
+                Option.filter((name) => name !== 'removed'),
+                Option.map((name) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: name }]),
+                Option.getOrElse(() => []),
+              ),
+            ),
+        }),
+      ]);
+
+      const graph = builder.graph;
+
+      let count = 0;
+      let exists = false;
+      const cancel = registry.subscribe(graph.node(GraphNode.qualifyId('root', EXAMPLE_ID)), (node) => {
+        count++;
+        exists = Option.isSome(node);
+      });
+      onTestFinished(() => cancel());
+
+      Graph.expandSync(graph, GraphNode.RootId, 'child');
+      await GraphBuilder.flush(builder);
+      expect(count).to.equal(0);
+      expect(exists).to.be.false;
+
+      registry.set(name, 'default');
+      await GraphBuilder.flush(builder);
+      expect(count).to.equal(1);
+      expect(exists).to.be.true;
+
+      registry.set(name, 'removed');
+      await GraphBuilder.flush(builder);
+      expect(count).to.equal(2);
+      expect(exists).to.be.false;
+
+      registry.set(name, 'added');
+      await GraphBuilder.flush(builder);
+      expect(count).to.equal(3);
+      expect(exists).to.be.true;
+    });
+
+    describe('inline nodes', () => {
+      const parent = (child?: Node.NodeArg<any>): Node.NodeArg<any> => ({
+        id: 'parent-node',
+        type: EXAMPLE_TYPE,
+        data: null,
+        nodes: child ? [child] : [],
+      });
+
+      const inlineChild = (overrides?: Partial<Node.NodeArg<any>>): Node.NodeArg<any> => ({
+        id: 'inline-child',
+        type: EXAMPLE_TYPE,
+        data: null,
+        ...overrides,
+      });
+
+      const makeGraph = () => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const nodesAtom = Atom.make<Node.NodeArg<any>[]>([]);
+        GraphBuilder.addExtension(
+          builder,
+          GraphBuilder.createExtensionRaw({
+            id: 'inlineConnector',
+            connector: () => Atom.make((get) => get(nodesAtom)),
+          }),
+        );
+        const graph = builder.graph;
+        Graph.expandSync(graph, GraphNode.RootId, 'child');
+        return { registry, builder, graph, nodesAtom };
+      };
+
+      const getInlineChild = (graph: Graph.ExpandableGraph) =>
+        Graph.getNode(graph, 'root/parent-node/inline-child').pipe(Option.getOrNull);
+
+      test('are removed when connector re-runs with data change', async () => {
+        const { registry, builder, graph, nodesAtom } = makeGraph();
+        registry.set(nodesAtom, [parent(inlineChild())]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)).to.not.be.null;
+
+        // Remove inline child while also changing parent data to trigger the update.
+        registry.set(nodesAtom, [{ ...parent(), data: 'v2' }]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)).to.be.null;
+      });
+
+      test('are removed when only inline children change', async () => {
+        const { registry, builder, graph, nodesAtom } = makeGraph();
+        registry.set(nodesAtom, [parent(inlineChild())]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)).to.not.be.null;
+
+        // Remove inline child without touching parent — tests change detection covers inline children.
+        registry.set(nodesAtom, [parent()]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)).to.be.null;
+      });
+
+      test('are added when connector re-runs', async () => {
+        const { registry, builder, graph, nodesAtom } = makeGraph();
+        registry.set(nodesAtom, [parent()]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)).to.be.null;
+
+        registry.set(nodesAtom, [parent(inlineChild())]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)).to.not.be.null;
+      });
+
+      test('reactively update data', async ({ expect }) => {
+        const { registry, builder, graph, nodesAtom } = makeGraph();
+        registry.set(nodesAtom, [parent(inlineChild({ data: 'v1' }))]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)?.data).to.equal('v1');
+
+        // Change only the inline child's data — parent is unchanged.
+        registry.set(nodesAtom, [parent(inlineChild({ data: 'v2' }))]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)?.data).to.equal('v2');
+      });
+
+      test('reactively update properties', async ({ expect }) => {
+        const { registry, builder, graph, nodesAtom } = makeGraph();
+        registry.set(nodesAtom, [parent(inlineChild({ properties: { label: 'before' } }))]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)?.properties.label).to.equal('before');
+
+        registry.set(nodesAtom, [parent(inlineChild({ properties: { label: 'after' } }))]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)?.properties.label).to.equal('after');
+      });
+
+      test('deeply nested inline nodes reactively update', async ({ expect }) => {
+        const { registry, builder, graph, nodesAtom } = makeGraph();
+
+        const withGrandchild = (data: string) =>
+          parent({
+            id: 'child',
+            type: EXAMPLE_TYPE,
+            data: null,
+            nodes: [{ id: 'grandchild', type: EXAMPLE_TYPE, data }],
+          });
+
+        registry.set(nodesAtom, [withGrandchild('v1')]);
+        await GraphBuilder.flush(builder);
+
+        expect(Graph.getNode(graph, 'root/parent-node/child/grandchild').pipe(Option.getOrNull)?.data).to.equal('v1');
+
+        // Change only the grandchild's data — all ancestors unchanged.
+        registry.set(nodesAtom, [withGrandchild('v2')]);
+        await GraphBuilder.flush(builder);
+
+        expect(Graph.getNode(graph, 'root/parent-node/child/grandchild').pipe(Option.getOrNull)?.data).to.equal('v2');
+      });
+
+      describe('NodeArg.actions', () => {
+        const withInlineAction = (actionId = 'delete'): Node.NodeArg<any> => ({
+          id: 'parent-node',
+          type: EXAMPLE_TYPE,
+          data: null,
+          actions: [Node.makeAction({ id: actionId, data: () => Effect.void, properties: { label: 'Delete' } })],
+        });
+
+        test('inline actions appear on connector-produced nodes', async ({ expect }) => {
+          const { registry, builder, graph, nodesAtom } = makeGraph();
+          registry.set(nodesAtom, [withInlineAction()]);
+          await GraphBuilder.flush(builder);
+
+          const actions = registry.get(graph.actions('root/parent-node'));
+          expect(actions).to.have.length(1);
+          expect(actions[0].id).to.equal('root/parent-node/delete');
+        });
+
+        test('inline actions reactively update when connector re-runs', async ({ expect }) => {
+          const { registry, builder, graph, nodesAtom } = makeGraph();
+          registry.set(nodesAtom, [withInlineAction('delete')]);
+          await GraphBuilder.flush(builder);
+
+          expect(registry.get(graph.actions('root/parent-node'))).to.have.length(1);
+
+          registry.set(nodesAtom, [{ ...withInlineAction('delete'), actions: [] }]);
+          await GraphBuilder.flush(builder);
+
+          expect(registry.get(graph.actions('root/parent-node'))).to.have.length(0);
+        });
+
+        test('inline actions appear on inline child nodes (filter pattern)', async ({ expect }) => {
+          const { registry, builder, graph, nodesAtom } = makeGraph();
+
+          const withFilterChild = (): Node.NodeArg<any> => ({
+            id: 'parent-node',
+            type: EXAMPLE_TYPE,
+            data: null,
+            nodes: [
+              {
+                id: 'filter',
+                type: EXAMPLE_TYPE,
+                data: null,
+                actions: [Node.makeAction({ id: 'delete', data: () => Effect.void, properties: { label: 'Delete' } })],
+              },
+            ],
+          });
+
+          registry.set(nodesAtom, [withFilterChild()]);
+          await GraphBuilder.flush(builder);
+
+          const filterNodeId = 'root/parent-node/filter';
+          expect(Graph.getNode(graph, filterNodeId).pipe(Option.getOrNull)).to.not.be.null;
+
+          const actions = registry.get(graph.actions(filterNodeId));
+          expect(actions).to.have.length(1);
+          expect(actions[0].id).to.equal(`${filterNodeId}/delete`);
+        });
+
+        test('inline actions on child nodes are removed when child is removed', async ({ expect }) => {
+          const { registry, builder, graph, nodesAtom } = makeGraph();
+
+          const filterChild: Node.NodeArg<any> = {
+            id: 'filter',
+            type: EXAMPLE_TYPE,
+            data: null,
+            actions: [Node.makeAction({ id: 'delete', data: () => Effect.void, properties: { label: 'Delete' } })],
+          };
+
+          registry.set(nodesAtom, [{ id: 'parent-node', type: EXAMPLE_TYPE, data: null, nodes: [filterChild] }]);
+          await GraphBuilder.flush(builder);
+
+          expect(Graph.getNode(graph, 'root/parent-node/filter/delete').pipe(Option.getOrNull)).to.not.be.null;
+
+          // Remove the filter child entirely.
+          registry.set(nodesAtom, [{ id: 'parent-node', type: EXAMPLE_TYPE, data: null, nodes: [] }]);
+          await GraphBuilder.flush(builder);
+
+          expect(Graph.getNode(graph, 'root/parent-node/filter').pipe(Option.getOrNull)).to.be.null;
+          expect(Graph.getNode(graph, 'root/parent-node/filter/delete').pipe(Option.getOrNull)).to.be.null;
+        });
+      });
+
+      test('are reordered when connector re-runs with different child order', async ({ expect }) => {
+        const makeMultiParent = (childIds: string[]): Node.NodeArg<any> => ({
+          id: 'parent-node',
+          type: EXAMPLE_TYPE,
+          data: null,
+          nodes: childIds.map((cid) => ({ id: cid, type: EXAMPLE_TYPE, data: cid })),
+        });
+
+        const { registry, builder, graph, nodesAtom } = makeGraph();
+        registry.set(nodesAtom, [makeMultiParent(['c1', 'c2', 'c3'])]);
+        await GraphBuilder.flush(builder);
+
+        {
+          const children = registry.get(graph.connections('root/parent-node', 'child'));
+          expect(children.map((n) => n.id)).to.deep.equal([
+            'root/parent-node/c1',
+            'root/parent-node/c2',
+            'root/parent-node/c3',
+          ]);
+        }
+
+        registry.set(nodesAtom, [makeMultiParent(['c3', 'c1', 'c2'])]);
+        await GraphBuilder.flush(builder);
+
+        {
+          const children = registry.get(graph.connections('root/parent-node', 'child'));
+          expect(children.map((n) => n.id)).to.deep.equal([
+            'root/parent-node/c3',
+            'root/parent-node/c1',
+            'root/parent-node/c2',
+          ]);
+        }
+      });
+    });
+
+    test('sort edges', async () => {
+      const registry = Registry.make();
+      const builder = GraphBuilder.make({ registry });
+      const nodes = Atom.make([
+        { id: exampleId(1), type: EXAMPLE_TYPE, data: 1 },
+        { id: exampleId(2), type: EXAMPLE_TYPE, data: 2 },
+        { id: exampleId(3), type: EXAMPLE_TYPE, data: 3 },
+      ]);
+      GraphBuilder.addExtension(
+        builder,
+        GraphBuilder.createExtensionRaw({
+          id: 'connector',
+          connector: () => Atom.make((get) => get(nodes)),
+        }),
+      );
+      const graph = builder.graph;
+      Graph.expandSync(graph, GraphNode.RootId, 'child');
+      await GraphBuilder.flush(builder);
+
+      {
+        const nodes = registry.get(graph.connections(GraphNode.RootId, 'child'));
+        expect(nodes).has.length(3);
+        expect(nodes[0].id).to.equal(GraphNode.qualifyId('root', exampleId(1)));
+        expect(nodes[1].id).to.equal(GraphNode.qualifyId('root', exampleId(2)));
+        expect(nodes[2].id).to.equal(GraphNode.qualifyId('root', exampleId(3)));
+      }
+
+      registry.set(nodes, [
+        { id: exampleId(3), type: EXAMPLE_TYPE, data: 3 },
+        { id: exampleId(1), type: EXAMPLE_TYPE, data: 1 },
+        { id: exampleId(2), type: EXAMPLE_TYPE, data: 2 },
+      ]);
+      await GraphBuilder.flush(builder);
+
+      {
+        const nodes = registry.get(graph.connections(GraphNode.RootId, 'child'));
+        expect(nodes).has.length(3);
+        expect(nodes[0].id).to.equal(GraphNode.qualifyId('root', exampleId(3)));
+        expect(nodes[1].id).to.equal(GraphNode.qualifyId('root', exampleId(1)));
+        expect(nodes[2].id).to.equal(GraphNode.qualifyId('root', exampleId(2)));
+      }
+    });
+
+    test('updates are constrained', async () => {
+      const registry = Registry.make();
+      const builder = GraphBuilder.make({ registry });
+      const name = Atom.make('default');
+      const sub = Atom.make('default');
+
+      GraphBuilder.addExtension(builder, [
+        GraphBuilder.createExtensionRaw({
+          id: 'root',
+          connector: (node) =>
+            Atom.make((get) =>
+              Function.pipe(
+                get(node),
+                Option.flatMap((node) => (node.id === 'root' ? Option.some(get(name)) : Option.none())),
+                Option.filter((name) => name !== 'removed'),
+                Option.map((name) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: name }]),
+                Option.getOrElse(() => []),
+              ),
+            ),
+        }),
+        GraphBuilder.createExtensionRaw({
+          id: 'connector1',
+          connector: (node) =>
+            Atom.make((get) =>
+              Function.pipe(
+                get(node),
+                Option.flatMap((node) =>
+                  node.id === GraphNode.qualifyId('root', EXAMPLE_ID) ? Option.some(get(sub)) : Option.none(),
+                ),
+                Option.map((sub) => [{ id: exampleId(2), type: EXAMPLE_TYPE, data: sub }]),
+                Option.getOrElse(() => []),
+              ),
+            ),
+        }),
+        GraphBuilder.createExtensionRaw({
+          id: 'connector2',
+          connector: (node) =>
+            Atom.make((get) =>
+              Function.pipe(
+                get(node),
+                Option.flatMap((node) =>
+                  node.id === GraphNode.qualifyId('root', EXAMPLE_ID) ? Option.some(node.data) : Option.none(),
+                ),
+                Option.map((data) => [{ id: exampleId(3), type: EXAMPLE_TYPE, data }]),
+                Option.getOrElse(() => []),
+              ),
+            ),
+        }),
+      ]);
+
+      const graph = builder.graph;
+
+      let parentCount = 0;
+      const parentCancel = registry.subscribe(graph.node(GraphNode.qualifyId('root', EXAMPLE_ID)), (_) => {
+        parentCount++;
+      });
+      onTestFinished(() => parentCancel());
+
+      let independentCount = 0;
+      const independentCancel = registry.subscribe(
+        graph.node(GraphNode.qualifyId('root', EXAMPLE_ID, exampleId(2))),
+        (_) => {
+          independentCount++;
+        },
+      );
+      onTestFinished(() => independentCancel());
+
+      let dependentCount = 0;
+      const dependentCancel = registry.subscribe(
+        graph.node(GraphNode.qualifyId('root', EXAMPLE_ID, exampleId(3))),
+        (_) => {
+          dependentCount++;
+        },
+      );
+      onTestFinished(() => dependentCancel());
+
+      // Counts should not increment until the node is expanded.
+      Graph.expandSync(graph, GraphNode.RootId, 'child');
+      await GraphBuilder.flush(builder);
+      expect(parentCount).to.equal(1);
+      expect(independentCount).to.equal(0);
+      expect(dependentCount).to.equal(0);
+
+      // Counts should increment when the node is expanded.
+      Graph.expandSync(graph, GraphNode.qualifyId('root', EXAMPLE_ID), 'child');
+      await GraphBuilder.flush(builder);
+      expect(parentCount).to.equal(1);
+      expect(independentCount).to.equal(1);
+      expect(dependentCount).to.equal(1);
+
+      // Only dependent count should increment when the parent changes.
+      registry.set(name, 'updated');
+      await GraphBuilder.flush(builder);
+      expect(parentCount).to.equal(2);
+      expect(independentCount).to.equal(1);
+      expect(dependentCount).to.equal(2);
+
+      // Only independent count should increment when its state changes.
+      registry.set(sub, 'updated');
+      await GraphBuilder.flush(builder);
+      expect(parentCount).to.equal(2);
+      expect(independentCount).to.equal(2);
+      expect(dependentCount).to.equal(2);
+
+      // Independent count should update if its state changes even if the parent is removed.
+      Atom.batch(() => {
+        registry.set(name, 'removed');
+        registry.set(sub, 'batch');
+      });
+      await GraphBuilder.flush(builder);
+      expect(parentCount).to.equal(2);
+      expect(independentCount).to.equal(3);
+      expect(dependentCount).to.equal(2);
+
+      // Dependent count should increment when the node is added back.
+      registry.set(name, 'added');
+      await GraphBuilder.flush(builder);
+      expect(parentCount).to.equal(3);
+      expect(independentCount).to.equal(3);
+      expect(dependentCount).to.equal(3);
+
+      // Counts should not increment when the node is expanded again.
+      Graph.expandSync(graph, GraphNode.qualifyId('root', EXAMPLE_ID), 'child');
+      await GraphBuilder.flush(builder);
+      expect(parentCount).to.equal(3);
+      expect(independentCount).to.equal(3);
+      expect(dependentCount).to.equal(3);
+    });
+
+    test('eager graph expansion', async () => {
+      const registry = Registry.make();
+      const builder = GraphBuilder.make({ registry });
+      GraphBuilder.addExtension(
+        builder,
+        GraphBuilder.createExtensionRaw({
+          id: 'connector',
+          connector: (node) => {
+            return Atom.make((get) =>
+              Function.pipe(
+                get(node),
+                Option.map((node) => (node.data ? node.data + 1 : 1)),
+                Option.filter((data) => data <= 5),
+                Option.map((data) => [{ id: `node-${data}`, type: EXAMPLE_TYPE, data }]),
+                Option.getOrElse(() => []),
+              ),
+            );
+          },
+        }),
+      );
+
+      let count = 0;
+      const trigger = new Trigger();
+      builder.graph.onNodeChanged.on(({ id }) => {
+        Graph.expandSync(builder.graph, id, 'child');
+        count++;
+        if (count === 5) {
+          trigger.wake();
+        }
+      });
+
+      Graph.expandSync(builder.graph, GraphNode.RootId, 'child');
+      await trigger.wait();
+      expect(count).to.equal(5);
+    });
+  });
+
+  describe('helpers', () => {
+    describe('createExtension', () => {
+      test('works with Effect connector', async () => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+
+        const extensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'testExtension',
+            match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            connector: (node, get) => Effect.succeed([{ id: 'child', type: EXAMPLE_TYPE, data: node.data }]),
+          }),
+        );
+
+        GraphBuilder.addExtension(builder, extensions);
+
+        const writableGraph = graph as Graph.WritableGraph;
+        Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
+        Graph.expandSync(graph, 'parent', 'child');
+        await GraphBuilder.flush(builder);
+
+        const connections = registry.get(graph.connections('parent', 'child'));
+        expect(connections).has.length(1);
+        expect(connections[0].id).to.equal('parent/child');
+        expect(connections[0].data).to.equal('test');
+      });
+
+      test('works with Effect actions', async () => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+
+        const extensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'testExtension',
+            match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            actions: (node, get) =>
+              Effect.succeed([
+                {
+                  id: 'test-action',
+                  data: () => Effect.void,
+                  properties: { label: 'Test' },
+                },
+              ]),
+          }),
+        );
+
+        GraphBuilder.addExtension(builder, extensions);
+
+        const writableGraph = graph as Graph.WritableGraph;
+        Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
+        Graph.expandSync(graph, 'parent', 'child');
+        await GraphBuilder.flush(builder);
+
+        const edges = registry.get(graph.edges('parent'));
+        expect(edges[Graph.relationKey('action')] ?? []).to.have.length(1);
+        expect(edges[Graph.relationKey('action')] ?? []).to.include('parent/test-action');
+        expect(edges[Graph.relationKey('child')] ?? []).to.have.length(0);
+        const actions = registry.get(graph.actions('parent'));
+        expect(actions).has.length(1);
+        expect(actions[0].id).to.equal('parent/test-action');
+      });
+
+      test('actions expand automatically with child relation', async ({ expect }) => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+
+        const extensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'testExtension',
+            match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            connector: (node, get) => Effect.succeed([{ id: 'child', type: EXAMPLE_TYPE, data: 'c' }]),
+            actions: (node, get) =>
+              Effect.succeed([{ id: 'act1', data: () => Effect.void, properties: { label: 'A' } }]),
+          }),
+        );
+
+        GraphBuilder.addExtension(builder, extensions);
+
+        const writableGraph = graph as Graph.WritableGraph;
+        Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
+        Graph.expandSync(graph, 'parent', 'child');
+        await GraphBuilder.flush(builder);
+
+        const edges = registry.get(graph.edges('parent'));
+        expect(edges[Graph.relationKey('child')] ?? []).to.include('parent/child');
+        expect(edges[Graph.relationKey('action')] ?? []).to.include('parent/act1');
+        const actions = registry.get(graph.actions('parent'));
+        expect(actions).has.length(1);
+        expect(actions[0].id).to.equal('parent/act1');
+        const connections = registry.get(graph.connections('parent', 'child'));
+        expect(connections).has.length(1);
+        expect(connections[0].id).to.equal('parent/child');
+      });
+
+      test('actions appear when extension registered after expand', async ({ expect }) => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+        const writableGraph = graph as Graph.WritableGraph;
+
+        Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
+        Graph.expandSync(graph, 'parent', 'child');
+        await GraphBuilder.flush(builder);
+
+        expect(registry.get(graph.actions('parent'))).to.have.length(0);
+
+        const extensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'lateExtension',
+            match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            actions: (node, get) =>
+              Effect.succeed([{ id: 'late-act', data: () => Effect.void, properties: { label: 'Late' } }]),
+          }),
+        );
+
+        GraphBuilder.addExtension(builder, extensions);
+        await GraphBuilder.flush(builder);
+
+        const edges = registry.get(graph.edges('parent'));
+        expect(edges[Graph.relationKey('action')] ?? []).to.include('parent/late-act');
+        const actions = registry.get(graph.actions('parent'));
+        expect(actions).has.length(1);
+        expect(actions[0].id).to.equal('parent/late-act');
+      });
+
+      test('connectors appear when extension registered after expand', async ({ expect }) => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+        const writableGraph = graph as Graph.WritableGraph;
+
+        Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
+        Graph.expandSync(graph, 'parent', 'child');
+        await GraphBuilder.flush(builder);
+
+        expect(registry.get(graph.connections('parent', 'child'))).to.have.length(0);
+
+        const extensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'lateConnector',
+            match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            connector: () =>
+              Effect.succeed([{ id: 'late-child', type: EXAMPLE_TYPE, data: 'late', properties: { label: 'Late' } }]),
+          }),
+        );
+
+        GraphBuilder.addExtension(builder, extensions);
+        await GraphBuilder.flush(builder);
+
+        const connections = registry.get(graph.connections('parent', 'child'));
+        expect(connections).has.length(1);
+        expect(connections[0].id).to.equal('parent/late-child');
+      });
+
+      test('_actionContext captures and provides services to action execution', async () => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+
+        // Define a test service using Context.Service pattern.
+        interface TestServiceInterface {
+          getValue(): number;
+        }
+        const TestService = Context.Service<TestServiceInterface>('TestService');
+
+        // Track whether the action was executed with the correct context.
+        let executionResult: number | null = null;
+
+        // Create extension with service requirement.
+        // Note: The actions callback must USE the service for R to be inferred correctly.
+        const extensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'testExtension',
+            match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            actions: (node, get) =>
+              // Use TestService in the callback to include it in R.
+              Effect.gen(function* () {
+                const service = yield* TestService;
+                return [
+                  {
+                    id: 'test-action',
+                    data: () =>
+                      Effect.gen(function* () {
+                        // Action can use the same service from captured context.
+                        const svc = yield* TestService;
+                        executionResult = svc.getValue();
+                      }).pipe(Effect.asVoid),
+                    properties: { label: `Test ${service.getValue()}` },
+                  },
+                ];
+              }),
+          }).pipe(Effect.provideService(TestService, { getValue: () => 42 })),
+        );
+
+        GraphBuilder.addExtension(builder, extensions);
+
+        const writableGraph = graph as Graph.WritableGraph;
+        Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
+        Graph.expandSync(graph, 'parent', 'child');
+        await GraphBuilder.flush(builder);
+
+        const actions = registry.get(graph.actions('parent'));
+        expect(actions).has.length(1);
+
+        // Verify _actionContext is captured.
+        const action = actions[0] as Node.Action;
+        expect(action._actionContext).to.not.be.undefined;
+
+        // Execute the action with the captured context.
+        const actionEffect = action.data();
+        const effectWithContext = action._actionContext
+          ? actionEffect.pipe(Effect.provide(action._actionContext))
+          : actionEffect;
+
+        Effect.runSync(effectWithContext);
+
+        // Verify the service was accessible during execution.
+        expect(executionResult).to.equal(42);
+      });
+      test('works with connector and actions together', async () => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+
+        const extensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'testExtension',
+            match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            connector: (node, get) => Effect.succeed([{ id: 'child', type: EXAMPLE_TYPE, data: node.data }]),
+            actions: (node, get) =>
+              Effect.succeed([
+                {
+                  id: 'test-action',
+                  data: () => Effect.void,
+                  properties: { label: 'Test' },
+                },
+              ]),
+          }),
+        );
+
+        GraphBuilder.addExtension(builder, extensions);
+
+        const writableGraph = graph as Graph.WritableGraph;
+        Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
+        Graph.expandSync(graph, 'parent', 'child');
+        await GraphBuilder.flush(builder);
+
+        const connections = registry.get(graph.connections('parent', 'child'));
+        // Should have both the child node and the action node.
+        expect(connections.length).to.be.greaterThanOrEqual(1);
+        const childNode = connections.find((n) => n.id === 'parent/child');
+        expect(childNode).to.not.be.undefined;
+        expect(childNode?.data).to.equal('test');
+
+        const actions = registry.get(graph.actions('parent'));
+        expect(actions).has.length(1);
+        expect(actions[0].id).to.equal('parent/test-action');
+      });
+
+      test('works with reactive connector using get context', async () => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+
+        const state = Atom.make('initial');
+
+        const extensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'testExtension',
+            match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            connector: (node, get) => Effect.succeed([{ id: 'child', type: EXAMPLE_TYPE, data: get(state) }]),
+          }),
+        );
+
+        GraphBuilder.addExtension(builder, extensions);
+
+        const writableGraph = graph as Graph.WritableGraph;
+        Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
+        Graph.expandSync(graph, 'parent', 'child');
+        await GraphBuilder.flush(builder);
+
+        {
+          const connections = registry.get(graph.connections('parent', 'child'));
+          expect(connections).has.length(1);
+          expect(connections[0].data).to.equal('initial');
+        }
+
+        registry.set(state, 'updated');
+        await GraphBuilder.flush(builder);
+
+        {
+          const connections = registry.get(graph.connections('parent', 'child'));
+          expect(connections).has.length(1);
+          expect(connections[0].data).to.equal('updated');
+        }
+      });
+    });
+
+    describe('extension error handling', () => {
+      test('connector failure is caught and logged, returns empty array', async () => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+
+        const extensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'failingExtension',
+            match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            connector: (node, get) => Effect.die('Connector failed intentionally'),
+          }),
+        );
+
+        GraphBuilder.addExtension(builder, extensions);
+
+        const writableGraph = graph as Graph.WritableGraph;
+        Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
+
+        // Should not throw, error is caught internally.
+        Graph.expandSync(graph, 'parent', 'child');
+        await GraphBuilder.flush(builder);
+
+        // Should return empty connections since the connector failed.
+        const connections = registry.get(graph.connections('parent', 'child'));
+        expect(connections).has.length(0);
+      });
+
+      test('actions failure is caught and logged, returns empty array', async () => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+
+        const extensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'failingActionsExtension',
+            match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            actions: (node, get) => Effect.die('Actions failed intentionally'),
+          }),
+        );
+
+        GraphBuilder.addExtension(builder, extensions);
+
+        const writableGraph = graph as Graph.WritableGraph;
+        Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
+
+        // Should not throw, error is caught internally.
+        Graph.expandSync(graph, 'parent', 'child');
+        await GraphBuilder.flush(builder);
+
+        // Should return empty actions since the actions callback failed.
+        const actions = registry.get(graph.actions('parent'));
+        expect(actions).has.length(0);
+      });
+      test('failing extension does not affect other extensions', async () => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+
+        // Add a failing extension.
+        const failingExtensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'failingExtension',
+            match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            connector: (node, get) => Effect.die('This one fails'),
+          }),
+        );
+
+        // Add a working extension.
+        const workingExtensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'workingExtension',
+            match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            connector: (node, get) =>
+              Effect.succeed([{ id: 'child-from-working', type: EXAMPLE_TYPE, data: 'success' }]),
+          }),
+        );
+
+        GraphBuilder.addExtension(builder, failingExtensions);
+        GraphBuilder.addExtension(builder, workingExtensions);
+
+        const writableGraph = graph as Graph.WritableGraph;
+        Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
+        Graph.expandSync(graph, 'parent', 'child');
+        await GraphBuilder.flush(builder);
+
+        // The working extension should still produce its node.
+        const connections = registry.get(graph.connections('parent', 'child'));
+        expect(connections).has.length(1);
+        expect(connections[0].id).to.equal('parent/child-from-working');
+        expect(connections[0].data).to.equal('success');
+      });
+    });
+
+    describe('createTypeExtension', () => {
+      test('creates extension matching by schema type with inferred object type', async () => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+
+        const extensions = Effect.runSync(
+          GraphBuilder.createTypeExtension({
+            id: 'typeExtension',
+            type: TestSchema.Person,
+            connector: (object) => Effect.succeed([{ id: 'child', type: EXAMPLE_TYPE, data: object }]),
+          }),
+        );
+
+        GraphBuilder.addExtension(builder, extensions);
+
+        const writableGraph = graph as Graph.WritableGraph;
+        const testObject = Obj.make(TestSchema.Person, { name: 'Test' });
+        Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: testObject });
+        Graph.expandSync(graph, 'parent', 'child');
+        await GraphBuilder.flush(builder);
+
+        const connections = registry.get(graph.connections('parent', 'child'));
+        expect(connections).has.length(1);
+        expect(connections[0].id).to.equal('parent/child');
+        expect(connections[0].data).to.equal(testObject);
+      });
+    });
+  });
+  describe('invalid local id', () => {
+    test('drops an extension with an invalid id rather than throwing', ({ expect }) => {
+      // Widened to `string` so it reaches the runtime check: `DXN.Path` rejects a malformed literal
+      // outright, and this covers the computed ids it deliberately lets through.
+      const computedId: string = 'gallery-article';
+      expect(
+        GraphBuilder.createExtensionRaw({
+          id: computedId,
+          connector: () => Atom.make([{ id: 'foo', type: EXAMPLE_TYPE, data: null }]),
+        }),
+      ).toEqual([]);
+    });
+
+    test('keeps an extension with a valid id', ({ expect }) => {
+      expect(
+        GraphBuilder.createExtensionRaw({
+          id: 'galleryArticle',
+          connector: () => Atom.make([{ id: 'foo', type: EXAMPLE_TYPE, data: null }]),
+        }).length,
+      ).toBeGreaterThan(0);
+    });
+  });
+});

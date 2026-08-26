@@ -4,7 +4,7 @@
 
 import { type EditorView } from '@codemirror/view';
 
-import { insertAtLineStart } from '@dxos/ui-editor';
+import { insertAtLineStart, insertTable } from '@dxos/ui-editor';
 
 import { type EditorMenuGroup } from './menu';
 import { popoverRangeEffect } from './popover';
@@ -104,9 +104,11 @@ export const formattingCommands: EditorMenuGroup = {
     },
     {
       id: 'table',
+      // Shares the toolbar's snippet rather than a literal of its own: two spellings of "insert a
+      // table" drifted into different shapes (3 empty columns here, 2 placeholder-filled ones there).
       label: 'Table',
       icon: 'ph--table--regular',
-      onSelect: ({ view, head }) => insertAtLineStart(view, head, '| | | |\n|---|---|---|\n| | | |'),
+      onSelect: ({ view, head }) => insertTable(view, head),
     },
   ],
 };

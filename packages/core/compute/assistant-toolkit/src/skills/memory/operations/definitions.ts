@@ -12,7 +12,7 @@ import { Memory } from '../../../types/Memory';
 
 export const QueryMemories = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.memory.query'),
+    key: DXN.make('org.dxos.operation.assistantToolkit.query'),
     name: 'Query memories',
     description:
       'Search for stored memories using full-text search. Returns memories matching the query terms. Use this to recall previously saved knowledge, facts, or preferences.',
@@ -38,7 +38,7 @@ export const QueryMemories = Operation.make({
 
 export const SaveMemory = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.memory.save'),
+    key: DXN.make('org.dxos.operation.assistantToolkit.save'),
     name: 'Save memory',
     description:
       'Saves a new memory to the database. Use this to persist knowledge, facts, preferences, or any information that should be remembered across conversations.',
@@ -59,7 +59,7 @@ export const SaveMemory = Operation.make({
 
 export const DeleteMemory = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.memory.delete'),
+    key: DXN.make('org.dxos.operation.assistantToolkit.delete'),
     name: 'Delete memory',
     description: 'Deletes a memory from the database. Use this to remove outdated or incorrect memories.',
     icon: 'ph--trash--regular',

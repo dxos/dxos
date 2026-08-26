@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { type ConfigProto, SaveConfig, Storage, defs } from '@dxos/config';
+import { type ConfigInit, SaveConfig, Storage, defs } from '@dxos/config';
 import { log } from '@dxos/log';
 import { type IdbLogStore, MANUAL_LOG_EXPORT_MAX_BYTES } from '@dxos/log-store-idb';
 import { useClient } from '@dxos/react-client';
@@ -27,8 +27,8 @@ type Toast = {
 };
 
 const StorageAdapters = {
-  opfs: defs.Runtime.Client.Storage.StorageDriver.WEBFS,
-  idb: defs.Runtime.Client.Storage.StorageDriver.IDB,
+  opfs: defs.Runtime_Client_Storage_StorageDriver.WEBFS,
+  idb: defs.Runtime_Client_Storage_StorageDriver.IDB,
 } as const;
 
 export type DebugSettingsProps = AppSurface.SettingsProps<
@@ -43,7 +43,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
   const { t } = useTranslation(meta.profile.key);
   const [toast, setToast] = useState<Toast>();
   const download = useFileDownload();
-  const [storageConfig, setStorageConfig] = useState<ConfigProto>({});
+  const [storageConfig, setStorageConfig] = useState<ConfigInit>({});
   const client = useClient();
 
   useEffect(() => {
@@ -255,7 +255,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
   );
 };
 
-const updateConfig = (config: ConfigProto, setConfig: (newConfig: ConfigProto) => void, path: string[], value: any) => {
+const updateConfig = (config: ConfigInit, setConfig: (newConfig: ConfigInit) => void, path: string[], value: any) => {
   const storageConfigCopy = JSON.parse(JSON.stringify(config ?? {}));
   setDeep(storageConfigCopy, path, value);
   setConfig(storageConfigCopy);

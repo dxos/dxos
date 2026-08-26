@@ -43,8 +43,8 @@ import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError } from '@dxos/protocols';
+import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { EdgeReplicationSetting, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import {
@@ -172,7 +172,7 @@ export type DataSpaceManagerProps = {
   meshReplicator?: MeshEchoReplicator;
   echoEdgeReplicator?: EdgeAutomergeReplicator;
   runtimeProps?: DataSpaceManagerRuntimeProps;
-  edgeFeatures?: Runtime.Client.EdgeFeatures;
+  edgeFeatures?: Runtime_Client_EdgeFeatures;
 };
 
 export type DataSpaceManagerRuntimeProps = {
@@ -209,7 +209,7 @@ export class DataSpaceManager extends Resource {
   private readonly _invitationsManager: InvitationsManager;
   private readonly _edgeConnection?: EdgeConnection = undefined;
   private readonly _edgeHttpClient?: EdgeHttpClient = undefined;
-  private readonly _edgeFeatures?: Runtime.Client.EdgeFeatures = undefined;
+  private readonly _edgeFeatures?: Runtime_Client_EdgeFeatures = undefined;
   private readonly _meshReplicator?: MeshEchoReplicator = undefined;
   private readonly _echoEdgeReplicator?: EdgeAutomergeReplicator = undefined;
   private readonly _runtimeProps?: DataSpaceManagerRuntimeProps = undefined;

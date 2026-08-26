@@ -83,7 +83,7 @@ type ProjectSnapshot = {
 type TaskSnapshot = {
   title: string;
   description: string;
-  status: 'todo' | 'in-progress' | 'done';
+  status: 'todo' | 'started' | 'done';
   priority: 'low' | 'medium' | 'high' | 'urgent' | undefined;
   estimate: number | undefined;
 };

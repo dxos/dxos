@@ -6,12 +6,36 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { type URI } from '@dxos/keys';
+import { DXN, type URI } from '@dxos/keys';
 
 import type * as Database from './Database';
 import type * as Entity from './Entity';
 import { type EntityMeta, MetaId, getSchemaURI } from './internal';
 import * as Type from './Type';
+
+export const TypeId = '~@dxos/echo/Migration' as const;
+export type TypeId = typeof TypeId;
+
+/**
+ * Base of every migration definition.
+ */
+export interface Migration {
+  readonly [TypeId]: TypeId;
+  readonly kind: 'object' | 'rename';
+}
+
+/**
+ * Type guard for values produced by {@link define} / {@link defineRename}.
+ */
+export const isMigration = (value: unknown): value is Migration => {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  const candidate = value as { [TypeId]?: unknown; kind?: unknown };
+  // `kind` is checked too: a branded value carrying an unknown kind is not a migration any
+  // consumer can dispatch on.
+  return candidate[TypeId] === TypeId && (candidate.kind === 'object' || candidate.kind === 'rename');
+};
 
 /**
  * Result returned by a migration's `transform` callback.
@@ -63,14 +87,20 @@ type OnMigrateProps<From extends MigrationSchemaInput, To extends MigrationSchem
 /**
  * Definition of a migration from one object schema version to another.
  */
-export type ObjectMigration = {
+export interface ObjectMigration extends Migration {
+  readonly kind: 'object';
   fromType: URI.URI;
   toType: URI.URI;
   fromSchema: Schema.Codec<any, any>;
   toSchema: Schema.Codec<any, any>;
   transform: (from: unknown, context: ObjectMigrationContext) => Promise<unknown>;
   onMigration?: (params: OnMigrateProps<any, any>) => Promise<void>;
-};
+}
+
+/**
+ * Narrows a migration to an {@link ObjectMigration}.
+ */
+export const isObjectMigration = (migration: Migration): migration is ObjectMigration => migration.kind === 'object';
 
 /**
  * Define a migration between two object schemas.
@@ -100,6 +130,8 @@ export const define = <From extends MigrationSchemaInput, To extends MigrationSc
   }
 
   return {
+    [TypeId]: TypeId,
+    kind: 'object',
     fromType,
     toType,
     fromSchema,
@@ -108,3 +140,52 @@ export const define = <From extends MigrationSchemaInput, To extends MigrationSc
     onMigration: options.onMigration as any,
   };
 };
+
+/**
+ * Compile-time validation of an NSID passed to {@link defineRename}, mirroring `DXN.make`.
+ */
+type ValidName<T extends string> = [DXN.Name<T>] extends [never]
+  ? `Invalid NSID "${T}": final segment must be camelCase (no hyphens)`
+  : T;
+
+/**
+ * Definition of a rename of a named entity, repointing every `dxn:` reference to the old name.
+ */
+export interface RenameMigration extends Migration {
+  readonly kind: 'rename';
+
+  /** DXN of the old name (unversioned). */
+  from: DXN.DXN;
+
+  /** DXN of the new name (unversioned). */
+  to: DXN.DXN;
+}
+
+/**
+ * Narrows a migration to a {@link RenameMigration}.
+ */
+export const isRenameMigration = (migration: Migration): migration is RenameMigration => migration.kind === 'rename';
+
+/**
+ * Define a migration that renames a named entity.
+ *
+ * Applying it rewrites every reference pointing at `from` to point at `to`, preserving the
+ * reference's version suffix. Idempotent: a reference that already reads correctly is not written.
+ *
+ * @example
+ * ```ts
+ * const migration = Migration.defineRename({
+ *   from: 'org.example.operation.foo',
+ *   to: 'org.example.operation.bar',
+ * });
+ * ```
+ */
+export const defineRename = <const From extends string, const To extends string>(options: {
+  from: ValidName<From>;
+  to: ValidName<To>;
+}): RenameMigration => ({
+  [TypeId]: TypeId,
+  kind: 'rename',
+  from: DXN.make<string>(options.from),
+  to: DXN.make<string>(options.to),
+});

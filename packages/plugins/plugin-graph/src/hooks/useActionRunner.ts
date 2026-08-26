@@ -5,7 +5,7 @@
 import { useCallback } from 'react';
 
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import type * as Node from '@dxos/app-graph/Node';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 
 import { runAction } from '../action';
 
@@ -18,7 +18,7 @@ export const useActionRunner = () => {
   const pluginManager = usePluginManager();
 
   return useCallback(
-    (action: Node.Action, params: Node.InvokeProps = {}) =>
+    (action: AppGraphNode.Action, params: AppGraphNode.InvokeProps = {}) =>
       runAction(invoker, pluginManager.capabilities, action, params),
     [invoker, pluginManager.capabilities],
   );

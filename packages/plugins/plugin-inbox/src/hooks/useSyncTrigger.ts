@@ -95,30 +95,29 @@ export const useSyncTrigger = ({
       if (!cursor) {
         return;
       }
-      await invokePromise(SpaceOperation.OpenCreateObject, {
+      const { data } = await invokePromise(SpaceOperation.OpenObjectForm, {
         target: db,
         typename: Type.getTypename(Routine.Routine),
-        initialFormValues: { templateId: SyncTemplate.ID, subject },
+        defaults: { templateId: SyncTemplate.ID, subject },
         navigable: false,
-        // Turning sync on is the ask, so the save runs the first sync rather than leaving the
-        // mailbox empty until the schedule comes round. The trigger is read off the saved routine —
-        // a lookup here would race the reverse-ref index.
-        onCreateObject: (created: Obj.Unknown) => {
-          Effect.runFork(
-            Binding.syncCreatedRoutine({ created, connector, spaceId: db.spaceId }).pipe(
-              Effect.provideService(Capability.Service, manager.capabilities),
-              Effect.catch((error) =>
-                Effect.sync(() => log.warn('first sync after routine created failed', { error })),
-              ),
-              // An EDGE force-run that outlives its replication backoff arrives as a defect
-              // (`Effect.orDie`), which the typed catch above would let escape unreported.
-              Effect.catchDefect((defect) =>
-                Effect.sync(() => log.warn('first sync after routine created died', { defect })),
-              ),
-            ),
-          );
-        },
       });
+      // Turning sync on is the ask, so the save runs the first sync rather than leaving the
+      // mailbox empty until the schedule comes round. The trigger is read off the saved routine —
+      // a lookup here would race the reverse-ref index.
+      const created = data?.target;
+      if (created) {
+        Effect.runFork(
+          Binding.syncCreatedRoutine({ created, connector, spaceId: db.spaceId }).pipe(
+            Effect.provideService(Capability.Service, manager.capabilities),
+            Effect.catch((error) => Effect.sync(() => log.warn('first sync after routine created failed', { error }))),
+            // An EDGE force-run that outlives its replication backoff arrives as a defect
+            // (`Effect.orDie`), which the typed catch above would let escape unreported.
+            Effect.catchDefect((defect) =>
+              Effect.sync(() => log.warn('first sync after routine created died', { defect })),
+            ),
+          ),
+        );
+      }
     } finally {
       setPending(false);
     }

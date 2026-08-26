@@ -642,7 +642,7 @@ generalize now with mailbox as instance #1.
       the gate absorbs, so the test exercises the mechanism instead of a real accident.
 - [x] **Ownership move, part 2 (D5b)** — the `AnalyzeMailbox` DEFINITION moved to `BrainOperation`,
       changing its DXN. That key was RELEASED (landed 2026-07-10 in #12153), so a routine bound to
-      `org.dxos.plugin.inbox.operation.analyzeMailbox` is orphaned — accepted deliberately, pre-1.0.
+      `org.dxos.operation.inbox.analyzeMailbox` is orphaned — accepted deliberately, pre-1.0.
       The handler, its test, and the page-size constant moved with it; brain gained `@dxos/pipeline-email`
       and `@dxos/link`. `createAnalyzeProgressKey` STAYED in inbox: every monitor key on a mailbox must
       be minted the same way or producer and article compute different names and no meter appears. The
@@ -852,6 +852,88 @@ mutation log, and a state diff has no self-echo failure mode — sync writes tag
   and a `$junk` keyword in JMAP, which is exactly the shape the descriptor has to survive.
 
 ---
+
+## Edge sync emits ONE status per run and no terminal (measured 2026-08-23)
+
+The mailbox meter is permanently indeterminate and never clears. Instrumenting the client-side
+progress trace sink over a ~40-minute window settled where the fault is NOT: the same log carries a
+local feed sync and an edge mailbox sync, and only one of them reports.
+
+`plugin-magazine` feed sync, `runtimeName: 'local'`, one pid, four updates:
+
+```text
+Syncing nippon.com / ja   current 0
+Syncing nippon.com / ja   current 0    total 20
+Syncing nippon.com / ja   current 20   total 20
+progress.complete         current 20   total 20
+```
+
+Mailbox sync, `runtimeName: 'edge-intrinsic'`, five separate runs 5–10 min apart (the trigger's
+schedule), each a fresh pid, each exactly ONE update:
+
+```text
+Syncing rich@braneframe.com   current 0     (no total, no increments, no terminal)
+```
+
+That single update is `reportStatus({ current: 0 })` at `mail-sync.ts:509` — the run's opening
+report, which by design carries no total (the total is only known once `onEnumerated` has counted a
+page). Nothing after it arrives: not `addToTotal`'s total, not `onRetrieved`'s increments, not the
+`progress.complete` at `mail-sync.ts:755`, not the `PROGRESS_STATUS_FAILED` its error finalizer
+would emit.
+
+So the meter is indeterminate because "started" is the only fact it is ever given, and it never
+clears because no terminal ever arrives. The renderer, the sink reducer and the producer are all
+exonerated: the producer is covered by `plugin-google/…/sync.test.ts` ("emits progress status
+updates"), which asserts a `total > 0` and a rising `current`, and the local run above proves the
+whole sink → registry → meter chain end to end in the very same session.
+
+What remains is edge-side and not observable from the client: the run reaches `provider.prepare`
+(the opening status is written after it), emits that status, and then produces nothing further —
+consistent with the invocation being killed before it enumerates a page, since a normal failure
+would still emit `PROGRESS_STATUS_FAILED` from the finalizer. A hard kill skips finalizers; so does
+a defect that escapes the run's error channel.
+
+- [x] **Staleness bound in the sink** — BUILT 2026-08-23. A monitor that goes 90s without an update
+      is failed as `Stopped reporting`, which claims only what is known: the run may have finished or
+      still be going, and only its reporting is certainly over. The entry stays registered so the
+      meter keeps its dismiss control, and a later run recovers the key from its own numbers rather
+      than inheriting the abandoned run's. Bonus: `app-graph-builder` disables the Sync button on
+      `status === 'running'`, so a wedged meter used to disable syncing indefinitely — the bound
+      un-sticks that too. Eight tests, four of which fail without the bound.
+- [x] **Which of the two it is — ANSWERED 2026-08-23 against the live session, and it is neither of
+      the guesses.** The swarm is not dropping anything: the run genuinely stops. Read from the
+      space's `Execution Trace` feed over a ~24h window: **146 edge runs, 146 `operation.start`, zero
+      `operation.end`.** Local runs of the identical operation in the same feed carry
+      `start` + `end outcome: success`. Corroborated independently of trace: the sync `Cursor`'s
+      `lastTick` was 23 HOURS stale across those 146 runs (`Cursor.recordSuccess` is its only writer),
+      and advanced the moment the operation was invoked in-process — 41s, 99 new messages, no error.
+      So the operation, the token, the connection and the cursor are all fine, and mail sync is broken
+      only on EDGE. Filed as #12719 with the pid table. The remaining unknown (hard kill vs escaping
+      defect) needs workerd-side logs, which the client cannot see.
+- [ ] **Mail does not sync in the background at all** until #12719 is fixed — `MAIL_REMOTE_SYNC = true`
+      routes the Routine to EDGE precisely so mail arrives while Composer is closed, and that is the
+      path that never completes. The Sync button is NOT a workaround: `Binding.runSync` fires the
+      trigger whenever the connector declares one, so it takes the same broken edge path. Flipping
+      `MAIL_REMOTE_SYNC` to `false` is a one-line local-sync fallback that demonstrably works, at the
+      cost of the feature the flag exists for — a product call, not a bug fix.
+- [ ] **Emit the terminal from an exit handler, not the happy path.**
+      `reportStatus({ message: PROGRESS_STATUS_COMPLETE })` at `mail-sync.ts:755` is a plain statement
+      after the pipeline, and the `Effect.tapError` above it catches typed failures only — a DEFECT
+      bypasses both and reports nothing. Wrapping the run in `Effect.onExit` and reporting
+      complete/failed/interrupted off the `Exit` closes every path except a hard kill of the
+      invocation. Deferred deliberately: it only pays off if the invocation survives to run a
+      finalizer, which is exactly what the open question above is about.
+- [ ] **A total at the start of the run** — costed 2026-08-23, NOT worth building as specified.
+      On the incremental path it is already effectively done: both providers call
+      `onEnumerated(forwardIds.length)` eagerly inside `buildSource`
+      (`plugin-google/…/sync-provider.ts:197`, `plugin-jmap/…:222`), so a total lands milliseconds
+      after the opening status. Moving `reportStatus({ current: 0 })` below `buildSource` would close
+      a window that narrow, and would cost the opening status entirely when `buildSource` throws.
+      The path where it WOULD matter is backfill / full-scan, where enumeration genuinely streams
+      (`fetch.ts:192` reports each page as `Stream.paginate` walks it) — and a total there needs
+      either Gmail's `resultSizeEstimate` (an estimate, so the bar would not end where it says) or a
+      full enumeration pass before fetching, plus a new `MailSyncSource` field and both providers.
+      Revisit only if backfill meters become a complaint in their own right.
 
 ## Manual test plan
 

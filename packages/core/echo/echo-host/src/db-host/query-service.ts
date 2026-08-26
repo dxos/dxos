@@ -78,6 +78,11 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
 
   private '_updateQueries'!: DeferredTask;
 
+  /** Reactive queries currently registered, across every space. */
+  get 'activeQueryCount'(): number {
+    return this._queries.size;
+  }
+
   // 'all' = catch-all; null = no pending hint.
   #pendingHint: InvalidationHint | 'all' | null = null;
 

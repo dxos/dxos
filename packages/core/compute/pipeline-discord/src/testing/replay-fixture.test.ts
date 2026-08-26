@@ -50,17 +50,17 @@ describe('replay over the crawled SQLite fixture', () => {
       const result = await EffectEx.runPromise(
         Effect.gen(function* () {
           // The fixture is a completed crawl: messages + terminal targets + agents are all present.
-          const stored = yield* (yield* MessageStore).count();
-          const targets = yield* (yield* StateStore).listTargets();
-          const agents = yield* (yield* AgentRegistry).list();
+          const stored = yield* MessageStore.count();
+          const targets = yield* StateStore.listTargets();
+          const agents = yield* AgentRegistry.list();
 
           const replay = replayStream().pipe(extractQuestionsStage(), Pipeline.run({ sink: () => Effect.void }));
           yield* replay;
-          const questions = yield* (yield* ExtractedQuestionStore).list();
+          const questions = yield* ExtractedQuestionStore.list();
 
           // Idempotency: a second full replay adds nothing.
           yield* replay;
-          const again = yield* (yield* ExtractedQuestionStore).list();
+          const again = yield* ExtractedQuestionStore.list();
 
           return { stored, targets, agents, questions, again };
         }).pipe(Effect.provide(layer)),

@@ -21,7 +21,7 @@ describe('UndoRegistry', () => {
 
     const result = registry.lookup(Compute);
     expect(result).not.toBe(undefined);
-    expect(result?.inverse.meta.key).toBe(DXN.make('org.dxos.test.halveCompute'));
+    expect(result?.inverse.meta.key).toBe(DXN.make('com.example.operation.test.halveCompute'));
   });
 
   test('returns undefined for unmapped operations', ({ expect }) => {

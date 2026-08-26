@@ -19,16 +19,7 @@ import { Agent, Chat } from '../types';
 EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  types: [
-    Agent.Agent,
-    Outline.Outline,
-    Chat.Chat,
-    Chat.CompanionTo,
-    Skill.Skill,
-    Feed.Feed,
-    Text.Text,
-    Instructions.Instructions,
-  ],
+  types: [Agent.Agent, Outline.Outline, Chat.Chat, Skill.Skill, Feed.Feed, Text.Text, Instructions.Instructions],
   disableLlmMemoization: true,
 });
 
@@ -48,7 +39,7 @@ describe('Agent (0.2.0)', () => {
         expect(text).toBe('Do the thing.');
         expect(Obj.getParent(instructions)).toBe(agent);
 
-        // The relation carries the linkage in both directions; the agent owns no conversation state.
+        // The parent edge carries the linkage in both directions; the agent owns no conversation state.
         const chat = yield* Agent.loadChat(agent);
         expect(chat).toBeDefined();
         expect(chat?.instructions?.uri).toBe(agent.instructions.uri);

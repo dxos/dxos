@@ -66,7 +66,7 @@ export const completedBlocks = (): Effect.Effect<
 
 export interface ToolInvocation {
   readonly name: string;
-  /** Key of the Operation backing this call (e.g. `dxn:org.dxos.function.planning.updateTasks`) — a
+  /** Key of the Operation backing this call (e.g. `dxn:org.dxos.operation.assistantToolkit.updateTasks`) — a
    * stable match target, unlike `name` (a display/toolkit name that varies by provider/toolkit). Absent
    * for tool calls not backed by an Operation (provider-defined tools, MCP tools). */
   readonly operationKey?: string;

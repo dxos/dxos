@@ -4,7 +4,7 @@
 
 import { type EditorView } from '@codemirror/view';
 
-import type * as Node from '@dxos/app-graph/Node';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type MenuActionProperties } from '@dxos/ui-types';
 
 import { createComment } from '../../review/comments';
@@ -52,7 +52,7 @@ export type EditorActionPayload = {
   data?: any;
 };
 
-export type EditorAction = Node.Action<MenuActionProperties & EditorActionPayload>;
+export type EditorAction = AppGraphNode.Action<MenuActionProperties & EditorActionPayload>;
 
 export type EditorPayloadHandler = (view: EditorView, payload: EditorActionPayload) => void;
 

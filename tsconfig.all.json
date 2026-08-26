@@ -79,6 +79,9 @@
       "path": "packages/apps/composer-crx/tsconfig.json"
     },
     {
+      "path": "packages/apps/composer-stream-deck/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/compute/tsconfig.json"
     },
     {
@@ -185,9 +188,6 @@
     },
     {
       "path": "packages/common/effect-atom-solid/tsconfig.json"
-    },
-    {
-      "path": "packages/common/effect-proto/tsconfig.json"
     },
     {
       "path": "packages/common/effect-zod/tsconfig.json"
@@ -382,6 +382,9 @@
       "path": "packages/plugins/plugin-chess-com/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-claude-agents/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-client/tsconfig.json"
     },
     {
@@ -433,6 +436,9 @@
       "path": "packages/plugins/plugin-file/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-file-system/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-freeq/tsconfig.json"
     },
     {
@@ -472,10 +478,16 @@
       "path": "packages/plugins/plugin-kanban/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-lametric/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-library/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-linear/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-lingo/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-magazine/tsconfig.json"
@@ -496,10 +508,10 @@
       "path": "packages/plugins/plugin-mermaid/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-native/tsconfig.json"
+      "path": "packages/plugins/plugin-mobile/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-native-filesystem/tsconfig.json"
+      "path": "packages/plugins/plugin-native/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-navtree/tsconfig.json"
@@ -568,9 +580,6 @@
       "path": "packages/plugins/plugin-sidekick/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-simple-layout/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-slack/tsconfig.json"
     },
     {
@@ -587,6 +596,9 @@
     },
     {
       "path": "packages/plugins/plugin-status-bar/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-stream-deck/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-studio/tsconfig.json"

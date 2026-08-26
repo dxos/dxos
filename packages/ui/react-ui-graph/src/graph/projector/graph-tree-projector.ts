@@ -4,7 +4,7 @@
 
 import { type HierarchyPointNode, tree as d3Tree, hierarchy, linkHorizontal } from 'd3';
 
-import { type Graph } from '@dxos/graph';
+import * as GraphModel from '@dxos/graph/GraphModel';
 import { log } from '@dxos/log';
 
 import { type GraphLayoutEdge, type GraphLayoutNode } from '../types';
@@ -79,7 +79,7 @@ export class GraphTreeProjector<
     await super.onStop();
   }
 
-  protected override onUpdate(graph?: Graph.Any) {
+  protected override onUpdate(graph?: GraphModel.AnyData) {
     log('onUpdate', { graph: { nodes: graph?.nodes.length, edges: graph?.edges.length } });
     this.mergeData(graph);
     this.#dataNodes = [...this.layout.graph.nodes];

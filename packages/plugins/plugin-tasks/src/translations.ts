@@ -4,12 +4,14 @@
 
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
+import { translations as taskTranslations } from '@dxos/react-ui-task/translations';
 import { Outline } from '@dxos/types';
 
 import { meta } from '#meta';
 import { Journal } from '#types';
 
 export const translations = [
+  ...taskTranslations,
   {
     'en-US': {
       [Type.getTypename(Journal.Journal)]: {
@@ -40,8 +42,8 @@ export const translations = [
         'task-create.placeholder': 'Add task',
         'backlog.label': 'Backlog',
         'milestone-progress.label': '{{done}}/{{total}}',
-        'task-status.todo.label': 'Todo',
-        'task-status.in-progress.label': 'In progress',
+        'task-status.todo.label': 'To Do',
+        'task-status.started.label': 'Started',
         'task-status.done.label': 'Done',
         'task-status.failed.label': 'Failed',
         'task-status.cancelled.label': 'Cancelled',

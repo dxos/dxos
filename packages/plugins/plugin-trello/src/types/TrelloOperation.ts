@@ -14,10 +14,6 @@ import { DXN } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
 /**
  * Discovery only — list Trello boards reachable from a connection's token.
  *
@@ -27,7 +23,7 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
  */
 export const GetTrelloBoards = Operation.make({
   meta: {
-    key: makeKey('getTrelloBoards'),
+    key: DXN.make('org.dxos.operation.trello.getBoards'),
     name: 'Get Trello Boards',
     description: 'List Trello boards reachable from a connection without materializing local Kanbans.',
     icon: 'ph--kanban--regular',
@@ -48,7 +44,7 @@ export const GetTrelloBoards = Operation.make({
  */
 export const MaterializeTrelloTarget = Operation.make({
   meta: {
-    key: makeKey('materializeTrelloTarget'),
+    key: DXN.make('org.dxos.operation.trello.materializeTarget'),
     name: 'Materialize Trello Target',
     description: 'Create the empty local Kanban bound to a selected Trello board.',
     icon: 'ph--kanban--regular',
@@ -67,7 +63,7 @@ export const MaterializeTrelloTarget = Operation.make({
  */
 export const SyncTrelloBoard = Operation.make({
   meta: {
-    key: makeKey('syncTrelloBoard'),
+    key: DXN.make('org.dxos.operation.trello.syncBoard'),
     name: 'Sync Trello Board',
     description: 'Reconcile cards for every Trello board bound to a connection.',
     icon: 'ph--arrows-clockwise--regular',

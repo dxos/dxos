@@ -5,7 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { logBuffer } from '@dxos/react-ui-debug';
+// UI-free subpath: the root barrel reaches the panel components, which would pull React into the
+// headless barrels this module is carried into.
+import { logBuffer } from '@dxos/react-ui-debug/log-buffer';
 
 /**
  * Start recording into the process-wide log buffer at startup, so the log companion shows what

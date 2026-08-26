@@ -151,10 +151,34 @@ const rateLimitError = (code: string, message: string | undefined): Error =>
     `IBKR rate limit (code ${code}): ${message ?? ''} Wait a few minutes before trying again — repeated attempts extend the lockout.`.trim(),
   );
 
+/** Enough of a non-Flex body (proxy error page, interstitial HTML) to identify it without flooding the log. */
+const BODY_SNIPPET_LENGTH = 200;
+
+const bodySnippet = (body: string): string => {
+  const collapsed = body.replace(/\s+/g, ' ').trim();
+  if (collapsed === '') {
+    return '<empty body>';
+  }
+  return collapsed.length > BODY_SNIPPET_LENGTH ? `${collapsed.slice(0, BODY_SNIPPET_LENGTH)}…` : collapsed;
+};
+
+/**
+ * Reads a Flex response body, failing loudly on a non-2xx. The request goes through the CORS proxy,
+ * which can answer with its own error page — parsing that as Flex XML yields `ErrorCode: undefined`
+ * and hides the real cause, so the status and a body snippet are surfaced instead.
+ */
+const readFlexBody = async (response: Response, step: string): Promise<string> => {
+  const body = await response.text();
+  if (!response.ok) {
+    throw new Error(`IBKR ${step} HTTP ${response.status} ${response.statusText}`.trim() + `: ${bodySnippet(body)}`);
+  }
+  return body;
+};
+
 /**
  * Two-step Flex Web Service flow returning the raw report XML: SendRequest yields a reference code,
- * then GetStatement is polled until the report is generated (RETRYABLE_CODES keep polling;
- * RATE_LIMIT_CODES stop immediately; anything else fails fast).
+ * then GetStatement is polled until the report is generated (RETRYABLE_CODES and bodies that are not
+ * Flex XML at all keep polling; RATE_LIMIT_CODES stop immediately; any other code fails fast).
  *
  * Polling stays under IBKR's per-token cap (1 request/sec, 10/min): one SendRequest, a brief wait
  * to space the first poll, then a poll every `delayMs`. The default 8 polls spaced 7s span ~50s —
@@ -168,16 +192,22 @@ export const fetchFlexReportXml = async ({
   delayMs = 7000,
   maxAttempts = 8,
 }: FetchFlexReportOptions): Promise<string> => {
-  const sendXml = await (
-    await fetchImpl(`${FLEX_BASE_URL}.SendRequest?t=${encodeURIComponent(token)}&q=${encodeURIComponent(queryId)}&v=3`)
-  ).text();
+  const sendXml = await readFlexBody(
+    await fetchImpl(`${FLEX_BASE_URL}.SendRequest?t=${encodeURIComponent(token)}&q=${encodeURIComponent(queryId)}&v=3`),
+    'SendRequest',
+  );
   if (tagText(sendXml, 'Status') !== 'Success') {
     const code = tagText(sendXml, 'ErrorCode');
     const message = tagText(sendXml, 'ErrorMessage');
     if (code && RATE_LIMIT_CODES.has(code)) {
       throw rateLimitError(code, message);
     }
-    throw new Error(`IBKR SendRequest failed: ${code} ${message ?? ''}`.trim());
+    // Without a code the body was never Flex XML; the snippet is the only clue to what answered.
+    throw new Error(
+      code
+        ? `IBKR SendRequest failed: ${code} ${message ?? ''}`.trim()
+        : `IBKR SendRequest returned an unrecognized response: ${bodySnippet(sendXml)}`,
+    );
   }
   const referenceCode = tagText(sendXml, 'ReferenceCode');
   if (!referenceCode) {
@@ -186,12 +216,14 @@ export const fetchFlexReportXml = async ({
 
   // Space the first poll from SendRequest to respect IBKR's shared 1 req/sec pacing.
   await sleep(Math.min(INITIAL_POLL_DELAY_MS, delayMs));
+  let lastUnrecognized: string | undefined;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const xml = await (
+    const xml = await readFlexBody(
       await fetchImpl(
         `${FLEX_BASE_URL}.GetStatement?t=${encodeURIComponent(token)}&q=${encodeURIComponent(referenceCode)}&v=3`,
-      )
-    ).text();
+      ),
+      'GetStatement',
+    );
     if (xml.includes('<FlexQueryResponse')) {
       return xml;
     }
@@ -199,15 +231,25 @@ export const fetchFlexReportXml = async ({
     if (code && RATE_LIMIT_CODES.has(code)) {
       throw rateLimitError(code, tagText(xml, 'ErrorMessage'));
     }
-    if (!code || !RETRYABLE_CODES.has(code)) {
+    if (code && !RETRYABLE_CODES.has(code)) {
       throw new Error(`IBKR GetStatement failed: ${code} ${tagText(xml, 'ErrorMessage') ?? ''}`.trim());
+    }
+    // A body with no code is not Flex XML at all (proxy error page, interstitial). One such blip
+    // mid-generation should not kill a sync that is otherwise on track, so keep polling and report
+    // the last one only if every attempt is exhausted.
+    if (!code) {
+      lastUnrecognized = bodySnippet(xml);
     }
     // Statement is still generating; wait before the next poll (no wait after the final attempt).
     if (delayMs > 0 && attempt < maxAttempts - 1) {
       await sleep(delayMs);
     }
   }
-  throw new Error('IBKR Flex report timed out while still generating; try again in about a minute.');
+  throw new Error(
+    lastUnrecognized
+      ? `IBKR Flex report never returned a statement; last response was unrecognized: ${lastUnrecognized}`
+      : 'IBKR Flex report timed out while still generating; try again in about a minute.',
+  );
 };
 
 /** Fetches and parses a Flex report into structured positions, trades, and cash balances. */

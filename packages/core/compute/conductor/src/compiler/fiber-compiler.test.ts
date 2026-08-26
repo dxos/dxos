@@ -178,73 +178,68 @@ const view = defineComputeNode({
 
 const g1 = () => {
   const model = ComputeGraphModel.create({ id: URI.make('dxn:test:g1') });
-  model.builder
-    .createNode({ id: 'I', type: NODE_INPUT })
-    .createNode({ id: 'X', type: URI.make('dxn:test:sum') })
-    .createNode({ id: 'O', type: NODE_OUTPUT })
-    .createEdge({ node: 'I', property: 'number1' }, { node: 'X', property: 'a' })
-    .createEdge({ node: 'I', property: 'number2' }, { node: 'X', property: 'b' })
-    .createEdge({ node: 'X', property: 'result' }, { node: 'O', property: 'sum' });
+  model.createNode({ id: 'I', type: NODE_INPUT });
+  model.createNode({ id: 'X', type: URI.make('dxn:test:sum') });
+  model.createNode({ id: 'O', type: NODE_OUTPUT });
+  model.createEdge({ node: 'I', property: 'number1' }, { node: 'X', property: 'a' });
+  model.createEdge({ node: 'I', property: 'number2' }, { node: 'X', property: 'b' });
+  model.createEdge({ node: 'X', property: 'result' }, { node: 'O', property: 'sum' });
 
   return model;
 };
 
 const g2a = (g1: URI.URI) => {
   const model = ComputeGraphModel.create({ id: URI.make('dxn:test:g2') });
-  model.builder
-    .createNode({ id: 'I', type: NODE_INPUT })
-    .createNode({ id: 'X', type: g1, subgraph: Ref.fromURI(g1) })
-    .createNode({ id: 'Y', type: g1, subgraph: Ref.fromURI(g1) })
-    .createNode({ id: 'O', type: NODE_OUTPUT })
-    .createEdge({ node: 'I', property: 'a' }, { node: 'X', property: 'number1' })
-    .createEdge({ node: 'I', property: 'b' }, { node: 'X', property: 'number2' })
-    .createEdge({ node: 'I', property: 'c' }, { node: 'Y', property: 'number1' })
-    .createEdge({ node: 'X', property: 'sum' }, { node: 'Y', property: 'number2' })
-    .createEdge({ node: 'Y', property: 'sum' }, { node: 'O', property: 'result' });
+  model.createNode({ id: 'I', type: NODE_INPUT });
+  model.createNode({ id: 'X', type: g1, subgraph: Ref.fromURI(g1) });
+  model.createNode({ id: 'Y', type: g1, subgraph: Ref.fromURI(g1) });
+  model.createNode({ id: 'O', type: NODE_OUTPUT });
+  model.createEdge({ node: 'I', property: 'a' }, { node: 'X', property: 'number1' });
+  model.createEdge({ node: 'I', property: 'b' }, { node: 'X', property: 'number2' });
+  model.createEdge({ node: 'I', property: 'c' }, { node: 'Y', property: 'number1' });
+  model.createEdge({ node: 'X', property: 'sum' }, { node: 'Y', property: 'number2' });
+  model.createEdge({ node: 'Y', property: 'sum' }, { node: 'O', property: 'result' });
 
   return model;
 };
 
 const g2b = (g1: ComputeGraph) => {
   const model = ComputeGraphModel.create({ id: URI.make('dxn:test:g2') });
-  model.builder
-    .createNode({ id: 'I', type: NODE_INPUT })
-    .createNode({ id: 'O', type: NODE_OUTPUT })
-    .createEdge({ node: 'I', property: 'a' }, { node: g1, property: 'number1' })
-    .createEdge({ node: 'I', property: 'b' }, { node: g1, property: 'number2' })
-    .createEdge({ node: 'I', property: 'c' }, { node: g1, property: 'number1' })
-    .createEdge({ node: 'X', property: 'sum' }, { node: g1, property: 'number2' })
-    .createEdge({ node: 'Y', property: 'sum' }, { node: 'O', property: 'result' });
+  model.createNode({ id: 'I', type: NODE_INPUT });
+  model.createNode({ id: 'O', type: NODE_OUTPUT });
+  model.createEdge({ node: 'I', property: 'a' }, { node: g1, property: 'number1' });
+  model.createEdge({ node: 'I', property: 'b' }, { node: g1, property: 'number2' });
+  model.createEdge({ node: 'I', property: 'c' }, { node: g1, property: 'number1' });
+  model.createEdge({ node: 'X', property: 'sum' }, { node: g1, property: 'number2' });
+  model.createEdge({ node: 'Y', property: 'sum' }, { node: 'O', property: 'result' });
 
   return model;
 };
 
 const g3 = () => {
   const model = ComputeGraphModel.create();
-  model.builder
-    .createNode({ id: 'I', type: NODE_INPUT })
-    .createNode({ id: 'X', type: URI.make('dxn:test:sum') })
-    .createNode({ id: 'V1', type: URI.make('dxn:test:viewer') })
-    .createNode({ id: 'V2', type: URI.make('dxn:test:viewer') })
-    .createNode({ id: 'O', type: NODE_OUTPUT })
-    .createEdge({ node: 'I', property: 'a' }, { node: 'X', property: 'a' })
-    .createEdge({ node: 'I', property: 'b' }, { node: 'X', property: 'b' })
-    .createEdge({ node: 'X', property: 'result' }, { node: 'V1', property: 'result' })
-    .createEdge({ node: 'X', property: 'result' }, { node: 'V2', property: 'result' });
+  model.createNode({ id: 'I', type: NODE_INPUT });
+  model.createNode({ id: 'X', type: URI.make('dxn:test:sum') });
+  model.createNode({ id: 'V1', type: URI.make('dxn:test:viewer') });
+  model.createNode({ id: 'V2', type: URI.make('dxn:test:viewer') });
+  model.createNode({ id: 'O', type: NODE_OUTPUT });
+  model.createEdge({ node: 'I', property: 'a' }, { node: 'X', property: 'a' });
+  model.createEdge({ node: 'I', property: 'b' }, { node: 'X', property: 'b' });
+  model.createEdge({ node: 'X', property: 'result' }, { node: 'V1', property: 'result' });
+  model.createEdge({ node: 'X', property: 'result' }, { node: 'V2', property: 'result' });
 
   return model;
 };
 
 const g4 = () => {
   const model = ComputeGraphModel.create();
-  model.builder
-    .createNode({ id: 'I', type: NODE_INPUT })
-    .createNode({ id: 'X', type: 'if' })
-    .createNode({ id: 'O', type: NODE_OUTPUT })
-    .createEdge({ node: 'I', property: 'condition' }, { node: 'X', property: 'condition' })
-    .createEdge({ node: 'I', property: 'value' }, { node: 'X', property: 'value' })
-    .createEdge({ node: 'X', property: 'true' }, { node: 'O', property: 'true' })
-    .createEdge({ node: 'X', property: 'false' }, { node: 'O', property: 'false' });
+  model.createNode({ id: 'I', type: NODE_INPUT });
+  model.createNode({ id: 'X', type: 'if' });
+  model.createNode({ id: 'O', type: NODE_OUTPUT });
+  model.createEdge({ node: 'I', property: 'condition' }, { node: 'X', property: 'condition' });
+  model.createEdge({ node: 'I', property: 'value' }, { node: 'X', property: 'value' });
+  model.createEdge({ node: 'X', property: 'true' }, { node: 'O', property: 'true' });
+  model.createEdge({ node: 'X', property: 'false' }, { node: 'O', property: 'false' });
 
   return model;
 };

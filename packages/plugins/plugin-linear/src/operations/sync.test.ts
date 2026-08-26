@@ -22,7 +22,7 @@ const issue = (overrides: Partial<LinearApi.Issue> = {}): LinearApi.Issue => ({
   description: 'desc',
   priority: 3,
   estimate: 2,
-  state: { id: 'st-1', name: 'In Progress', type: 'started' },
+  state: { id: 'st-1', name: 'Started', type: 'started' },
   assignee: undefined,
   project: undefined,
   createdAt: '2026-04-01T00:00:00Z',
@@ -96,7 +96,7 @@ describe('plugin-linear sync', () => {
     expect(result.created).toBe(true);
     const snapshots = (binding.spec.snapshots ?? {}) as Record<string, any>;
     expect(snapshots['issue-1']?.title).toBe('Investigate flake');
-    expect(snapshots['issue-1']?.status).toBe('in-progress');
+    expect(snapshots['issue-1']?.status).toBe('started');
     expect(snapshots['issue-1']?.priority).toBe('medium');
     expect(result.task.title).toBe('Investigate flake');
   });

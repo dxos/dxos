@@ -16,7 +16,7 @@ import {
 } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface, ProgressMeter, useAppGraph, useProgressMonitor, useShowItem } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useAppGraph, useProgressMonitor, useShowItem } from '@dxos/app-toolkit/ui';
 import { Aggregate, Database, Ref as EchoRef, Filter, Obj, Order, Query, Scope, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
@@ -27,6 +27,7 @@ import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
 import { Deferred, ElevationProvider, Panel } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
+import { ProgressMeter } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
 import {
   Menu,
@@ -54,7 +55,13 @@ import { InboxCapabilities, InboxOperation, Mailbox, SystemTags } from '#types';
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { messageMatchesQuery } from '../../util';
 import { InitializeMailbox } from './InitializeMailbox';
-import { buildMailboxSelection, buildSystemTagSelection, buildThreadSemiJoin, getSearchText } from './mailbox-search';
+import {
+  buildMailboxSelection,
+  buildSystemTagSelection,
+  buildThreadSemiJoin,
+  getFilterTagUris,
+  getSearchText,
+} from './mailbox-search';
 import { MailboxFilter } from './MailboxFilter';
 
 /** Messages per page for the lazily-loaded message window. */
@@ -150,6 +157,27 @@ export const MailboxArticle = ({
   // the virtualizer bound only what's rendered, not what's fetched. Bounded-memory windowing isn't
   // possible here — ordering threads by a `max(created)` aggregate needs the full set to rank them.
 
+  // Read reactively so a text search scoped to a tag's members (see `buildMailboxSelection`)
+  // re-runs when that tag's membership changes.
+  const filterTagUris = useMemo(() => getFilterTagUris(debouncedFilter), [debouncedFilter]);
+  const filterTagUrisKey = filterTagUris.join(',');
+  const filterTagIdsAtom = useMemo(
+    () =>
+      tagIndex && filterTagUris.length > 0
+        ? Atom.make((get) =>
+            filterTagUris.map((tagUri) => [tagUri, get(TagIndex.taggedIdsAtom(tagIndex, tagUri))] as const),
+          )
+        : EMPTY_TAG_IDS_ATOM,
+    // filterTagUris is a fresh array each render; key on its membership (filterTagUrisKey) instead.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [tagIndex, filterTagUrisKey],
+  );
+  const filterTagIds = useAtomValue(filterTagIdsAtom);
+  const resolveTagIds = useCallback(
+    (tagUri: string) => filterTagIds.find(([uri]) => uri === tagUri)?.[1],
+    [filterTagIds],
+  );
+
   // True while the filter box still shows its seeded text (`'#inbox'` etc.) unedited, so the tag-id
   // selection applies; editing away falls back to normal text/tag parsing (Drafts hides the box).
   const isUnmodifiedSystemTagView = systemTag !== undefined && debouncedFilterText === (filterProp ?? '');
@@ -158,10 +186,10 @@ export const MailboxArticle = ({
     () =>
       isUnmodifiedSystemTagView
         ? buildSystemTagSelection(systemTagIds)
-        : buildMailboxSelection(debouncedFilterText, debouncedFilter),
+        : buildMailboxSelection(debouncedFilterText, debouncedFilter, { resolveTagIds }),
     // systemTagIds is a fresh array each render; key on its membership (systemTagIdsKey) instead.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [isUnmodifiedSystemTagView, systemTagIdsKey, debouncedFilterText, debouncedFilter],
+    [isUnmodifiedSystemTagView, systemTagIdsKey, debouncedFilterText, debouncedFilter, resolveTagIds],
   );
   const searchQuery = useMemo(() => getSearchText(debouncedFilter), [debouncedFilter]);
 
@@ -422,7 +450,7 @@ export const MailboxArticle = ({
           </Panel.Toolbar>
         </Menu.Root>
       </ElevationProvider>
-      <Panel.Content asChild>
+      <Panel.Content>
         <Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
           <InboxStack
             id={id}
@@ -441,15 +469,13 @@ export const MailboxArticle = ({
           />
         </Deferred>
       </Panel.Content>
-      {progress && (progress.status === 'running' || progress.status === 'error') && (
-        <Panel.Statusbar asChild>
-          <ProgressMeter
-            state={progress}
-            classNames='border-t border-separator'
-            onCancel={progressRegistry ? () => progressRegistry.cancel(progress.name) : undefined}
-          />
-        </Panel.Statusbar>
-      )}
+      <Panel.Statusbar asChild>
+        <ProgressMeter
+          classNames='border-t border-subdued-separator'
+          state={progress?.status === 'running' || progress?.status === 'error' ? progress : undefined}
+          onCancel={progressRegistry ? () => progress && progressRegistry.cancel(progress.name) : undefined}
+        />
+      </Panel.Statusbar>
     </Panel.Root>
   );
 };
@@ -553,6 +579,7 @@ const useSystemTagUri = (
 };
 
 const EMPTY_IDS_ATOM = Atom.make((): readonly EntityId[] => []);
+const EMPTY_TAG_IDS_ATOM = Atom.make((): readonly (readonly [string, readonly EntityId[]])[] => []);
 
 /**
  * Reactive ids carrying `tagUri` in `tagIndex`. Feed/space messages have no `meta.tags` of their own —

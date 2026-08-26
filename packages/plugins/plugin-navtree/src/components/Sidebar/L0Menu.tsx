@@ -24,7 +24,7 @@ import React, {
   useState,
 } from 'react';
 
-import type * as Node from '@dxos/app-graph/Node';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import {
@@ -68,19 +68,19 @@ type StackItemRearrangeHandler<Data extends { id: string } = { id: string }> = (
 ) => void;
 
 type L0ItemRootProps = {
-  item: Node.Node;
-  parent?: Node.Node;
+  item: AppGraphNode.Node;
+  parent?: AppGraphNode.Node;
   path: string[];
   onMouseEnter?: () => void;
 };
 
 type L0ItemProps = L0ItemRootProps & {
-  item: Node.Node;
-  parent?: Node.Node;
+  item: AppGraphNode.Node;
+  parent?: AppGraphNode.Node;
   path: string[];
   pinned?: boolean;
   onRearrange?: StackItemRearrangeHandler<L0ItemData>;
-  onItemHover?: (params: { item: Node.Node }) => void;
+  onItemHover?: (params: { item: AppGraphNode.Node }) => void;
 };
 
 const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
@@ -94,7 +94,7 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
       switch (type) {
         case 'action': {
           const { properties: { caller } = {} } = item;
-          return void runAction(item as Node.Action, caller ? { parent, path, caller } : { parent, path });
+          return void runAction(item as AppGraphNode.Action, caller ? { parent, path, caller } : { parent, path });
         }
         case 'tab':
           return onTabChange?.(item);
@@ -276,12 +276,12 @@ const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
 
 export type L0MenuProps = {
   menuActions: MenuItem[];
-  topLevelItems: Node.Node[];
-  pinnedItems: Node.Node[];
-  userAccountItem?: Node.Node;
-  parent?: Node.Node;
+  topLevelItems: AppGraphNode.Node[];
+  pinnedItems: AppGraphNode.Node[];
+  userAccountItem?: AppGraphNode.Node;
+  parent?: AppGraphNode.Node;
   path: string[];
-  onItemHover?: (params: { item: Node.Node }) => void;
+  onItemHover?: (params: { item: AppGraphNode.Node }) => void;
 };
 
 export const L0Menu = ({
@@ -296,7 +296,7 @@ export const L0Menu = ({
   const { t } = useTranslation(meta.profile.key);
   const runAction = useActionRunner();
   const handleAction = useCallback(
-    (action: Node.Action, params: Node.InvokeProps) => {
+    (action: AppGraphNode.Action, params: AppGraphNode.InvokeProps) => {
       void runAction(action, params);
     },
     [runAction],

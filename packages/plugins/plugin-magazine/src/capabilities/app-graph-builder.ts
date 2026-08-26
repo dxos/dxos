@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
@@ -17,7 +17,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref, Type } from '@dxos/echo';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Selection } from '@dxos/react-ui-attention';
+import { Selection } from '@dxos/react-ui-attention/types';
 
 import { meta } from '#meta';
 import { FeedOperation, Magazine, Subscription } from '#types';
@@ -41,7 +41,7 @@ export default Capability.makeModule(
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.content),
         groupSegment: GraphPath.GroupSegments.content,
         createObject: (space) =>
-          Operation.invoke(SpaceOperation.OpenCreateObject, {
+          Operation.invoke(SpaceOperation.OpenObjectForm, {
             target: space.db,
             typename: Type.getTypename(Magazine.Magazine),
             targetNodeId: getMagazinesPath(space.db.spaceId),
@@ -49,7 +49,7 @@ export default Capability.makeModule(
       }),
 
       // Feeds as children under each Magazine node.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'magazineFeeds',
         match: (node) => (Magazine.instanceOf(node.data) ? Option.some(node.data as Magazine.Magazine) : Option.none()),
         connector: (magazine, get) => {
@@ -70,7 +70,7 @@ export default Capability.makeModule(
       }),
 
       // Companion panel: resolve the selected Post under a Magazine node.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'magazinePost',
         match: (node) =>
           Magazine.instanceOf(node.data)
@@ -101,7 +101,7 @@ export default Capability.makeModule(
       }),
 
       // Actions on each Subscription.Subscription node.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'feedActions',
         match: (node) =>
           Subscription.instanceOf(node.data) ? Option.some(node.data as Subscription.Subscription) : Option.none(),

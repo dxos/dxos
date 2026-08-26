@@ -8,7 +8,6 @@ import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 import * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
-import * as Semaphore from 'effect/Semaphore';
 import type * as Types from 'effect/Types';
 
 import { BaseError } from '@dxos/errors';
@@ -385,7 +384,7 @@ export const define = <T = void>(meta: Meta): PluginBuilder<T> => new PluginBuil
  *   requires and its return must cover the declared provides.
  */
 export function addModule<T = void>(
-  module: Capability.Module<void>,
+  module: Capability.Module<void> | undefined,
   options?: { id?: string },
 ): (builder: PluginBuilder<T>) => PluginBuilder<T>;
 /** Spec-carrying module whose props are mapped from the plugin options. */
@@ -404,9 +403,19 @@ export function addModule<T>(
   moduleOptions: TypedModuleOptions | ((options: T) => TypedModuleOptions),
 ): PluginBuilder<T>;
 export function addModule<T>(
-  moduleOrOptionsOrBuilder: Capability.Module<any> | ModuleEntry | ((options: T) => ModuleEntry) | PluginBuilder<T>,
+  moduleOrOptionsOrBuilder:
+    | Capability.Module<any>
+    | ModuleEntry
+    | ((options: T) => ModuleEntry)
+    | PluginBuilder<T>
+    | undefined,
   moduleOptions?: ModuleEntry | ((options: T) => ModuleEntry) | { id?: string },
 ): ((builder: PluginBuilder<T>) => PluginBuilder<T>) | PluginBuilder<T> {
+  // Headless capability barrels stub excluded modules as `undefined`, letting one canonical
+  // plugin entry serve every environment.
+  if (moduleOrOptionsOrBuilder === undefined) {
+    return (builder: PluginBuilder<T>) => builder;
+  }
   // Spec-carrying module: a tagged function whose requires/provides/activatesOn come from its
   // own spec; only an optional id override is supplied at the call site.
   if (typeof moduleOrOptionsOrBuilder === 'function' && Capability.ModuleTag in moduleOrOptionsOrBuilder) {
@@ -609,18 +618,6 @@ export class PluginDependencyError extends BaseError.extend(
 ) {}
 
 /**
- * Serializes lazy plugin chunk loads.
- *
- * Plugin chunks share dependency chunks, and those shared chunks are asynchronous (the wasm
- * modules in the client graph compile to top-level `await`). WebKit resolves a second
- * `import()` of such a chunk while the first is still evaluating it, so the later plugin reads
- * the shared chunk's exports before they are assigned — `SpacePlugin` sees the shell's
- * translations as `undefined` and fails to load. Serializing costs no measurable startup time
- * because the chunks are preloaded in parallel regardless.
- */
-const lazyLoadLock = Semaphore.makeUnsafe(1);
-
-/**
  * Resolves a lazy plugin stub to its real plugin.
  * Returns the plugin unchanged if it is not lazy. Failures surface as
  * {@link LazyPluginError} with `context.reason` indicating the failure mode
@@ -636,7 +633,7 @@ export const resolveLazy = (plugin: Plugin): Effect.Effect<Plugin, LazyPluginErr
     const mod = yield* Effect.tryPromise({
       try: loader,
       catch: (error) => new LazyPluginError({ context: { id, reason: 'load-failed' }, cause: error }),
-    }).pipe(lazyLoadLock.withPermits(1));
+    });
     if (!mod || typeof mod.default !== 'function') {
       return yield* Effect.fail(new LazyPluginError({ context: { id, reason: 'missing-default' } }));
     }

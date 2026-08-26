@@ -4,7 +4,7 @@
 
 import type { FC } from 'react';
 
-import type * as Node from '@dxos/app-graph/Node';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import type { Density } from '@dxos/react-ui';
 import type { TreeModel, TreeProps } from '@dxos/react-ui-list';
 
@@ -15,7 +15,7 @@ import type { L1PanelProps } from './Sidebar';
 export type NavTreeContextValue = {
   model: TreeModel<NavTreeNode.NavTreeItemGraphNode>;
   popoverAnchorId?: string;
-  renderItemEnd?: FC<{ node: Node.Node; open: boolean }>;
+  renderItemEnd?: FC<{ node: AppGraphNode.Node; open: boolean }>;
   onTabChange?: (node: NavTreeNode.NavTreeItemGraphNode) => void;
 } & Pick<
   TreeProps<NavTreeNode.NavTreeItemGraphNode>,
@@ -25,7 +25,7 @@ export type NavTreeContextValue = {
 
 export type NavTreeItemColumnsProps = {
   path: string[];
-  item: Node.Node;
+  item: AppGraphNode.Node;
   open: boolean;
   density?: Density;
 };

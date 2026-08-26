@@ -127,7 +127,7 @@ component FileArticle
 
 ```mdl
 op Create
-  key: org.dxos.plugin.file.operation.create
+  key: org.dxos.operation.file.create
   desc: |
     Validates a browser File object's MIME type, resolves the active
     BackendDescriptor, and composes File.fromBytes (which hashes/uploads the

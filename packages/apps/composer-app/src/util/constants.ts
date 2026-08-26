@@ -22,3 +22,17 @@ export const LOG_STORE_MAX_BYTES = 50 * 1024 * 1024;
 
 /** Recovery mode entry point (minimal client, export, debug port). */
 export const RECOVERY_PATH = '/recovery.html';
+
+/** Domain the production web deployment is served from, distinct from the passkey relying-party id it coincides with. */
+export const APP_DOMAIN = 'composer.space';
+
+/** Worker route (`src/functions/_worker.ts`) that stores an uploaded feedback log bundle in R2. */
+export const FEEDBACK_LOGS_PATH = '/api/feedback-logs';
+
+/** Origins the bundled desktop app serves its webview from — one permanent port per channel, per `src-tauri/src/channel.rs`. */
+export const DESKTOP_ORIGINS: ReadonlySet<string> = new Set(
+  [26777, 26778, 26779, 26780].map((port) => `http://localhost:${port}`),
+);
+
+/** Origin `tauri dev` serves the app from; any local page can claim it, so production must not trust it. */
+export const DEV_SERVER_ORIGIN = 'http://localhost:5173';

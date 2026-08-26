@@ -14,6 +14,13 @@ import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import * as Actor from './Actor';
 import * as Milestone from './Milestone';
 
+export const Priority = Schema.Literals(['none', 'low', 'medium', 'high', 'urgent']);
+export type Priority = Schema.Schema.Type<typeof Priority>;
+
+// `failed`/`cancelled` exist so delegated agent tasks and human tasks share one status vocabulary.
+export const Status = Schema.Literals(['todo', 'started', 'done', 'cancelled', 'failed']);
+export type Status = Schema.Schema.Type<typeof Status>;
+
 export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '0.3.0'))(
   Schema.Struct({
     title: Schema.String.pipe(
@@ -23,11 +30,11 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
         args: [{ min: 3, max: 10 }],
       }),
     ),
-    priority: Schema.Literals(['none', 'low', 'medium', 'high', 'urgent']).pipe(
+    priority: Priority.pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
       GeneratorAnnotation.set({
         generator: 'helpers.arrayElement',
-        args: [['none', 'low', 'medium', 'high', 'urgent']],
+        args: [Priority.literals],
       }),
       Schema.annotate({
         title: 'Priority',
@@ -45,12 +52,11 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
       }),
       Schema.optional,
     ),
-    // `failed`/`cancelled` exist so delegated agent tasks and human tasks share one status vocabulary.
-    status: Schema.Literals(['todo', 'in-progress', 'done', 'failed', 'cancelled']).pipe(
+    status: Status.pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
       GeneratorAnnotation.set({
         generator: 'helpers.arrayElement',
-        args: [['todo', 'in-progress', 'done']],
+        args: [['todo', 'started', 'done']],
       }),
       Schema.annotate({
         title: 'Status',
@@ -58,10 +64,10 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
           singleSelect: {
             options: [
               { id: 'todo', title: 'Todo', color: 'indigo' },
-              { id: 'in-progress', title: 'In Progress', color: 'purple' },
+              { id: 'started', title: 'Started', color: 'purple' },
               { id: 'done', title: 'Done', color: 'amber' },
-              { id: 'failed', title: 'Failed', color: 'red' },
               { id: 'cancelled', title: 'Cancelled', color: 'gray' },
+              { id: 'failed', title: 'Failed', color: 'red' },
             ],
           },
         },
@@ -94,6 +100,14 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
     // than an `undefined` assignment, which the suspended schema rejects on validation.
     parentTask: Schema.optional(
       Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task).annotate({ title: 'Parent Task' })),
+    ),
+
+    /**
+     * Execution-ordering dependencies: this task is ready to start only when every referenced
+     * task is `done`. Orthogonal to `parentTask` (hierarchy) and `milestone` (grouping).
+     */
+    dependsOn: Schema.optional(
+      Schema.Array(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task))).annotate({ title: 'Depends On' }),
     ),
 
     // Set membership is the `TaskSet.tasks` array (flat, ordered, sub-tasks included), not a

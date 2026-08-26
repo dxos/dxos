@@ -13,6 +13,7 @@ import { invariant } from '@dxos/invariant';
 
 import { meta } from '#meta';
 
+import type * as DeckSchema from './DeckSchema';
 import { type DeckState, type EphemeralDeckState, type StoredDeckState } from './DeckSchema';
 
 export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings').Settings>>()(
@@ -35,3 +36,14 @@ export const getDeck = (): Effect.Effect<DeckState, Error, Capability.Service> =
     invariant(deck, `Deck not found: ${state.activeDeck}`);
     return deck;
   });
+
+/** Re-exported alongside the capability so hosts keep reading the platform from one place. */
+export type Platform = DeckSchema.Platform;
+
+/** Options for {@link DeckPlugin}. */
+export type DeckPluginOptions = {
+  /** Which root layout the plugin renders; state and operations are shared. */
+  platform?: Platform;
+};
+
+export const Platform = Capability.makeSingleton<Platform>()(`${meta.profile.key}.capability.platform`);

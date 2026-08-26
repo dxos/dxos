@@ -7,7 +7,12 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
+import { meta } from '#meta';
+import { translations } from '#translations';
 import { CrxCapabilities, CrxEvents } from '#types';
+
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export const CrxSettings = AppCapability.settings(() => import('./settings'), {
   activatesOn: ActivationEvents.Idle,
@@ -30,6 +35,13 @@ export const PageActionProvider = Capability.lazyModule(
   { provides: [CrxCapabilities.PageAction], activatesOn: CrxEvents.Start },
   () => import('./page-action-provider'),
 );
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
+});
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article'],
 });
+export const Translations = AppCapability.translations(translations);

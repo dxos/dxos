@@ -2,7 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import { type Graph } from '@dxos/graph';
+import * as GraphEdge from '@dxos/graph/GraphEdge';
+import * as GraphModel from '@dxos/graph/GraphModel';
 import { random } from '@dxos/random';
 
 import { type TestNode } from './model';
@@ -23,7 +24,7 @@ export const createNode = (type: string = undefined): TestNode => ({
 export const createNodes = (n = 0, types?: string[]): TestNode[] =>
   Array.from({ length: n }, () => createNode(types ? random.helpers.arrayElement(types) : undefined));
 
-export const createEdge = (source: TestNode, target: TestNode): Graph.Edge.Any => ({
+export const createEdge = (source: TestNode, target: TestNode): GraphEdge.Any => ({
   id: `${source.id}-${target.id}`,
   source: source.id,
   target: target.id,
@@ -54,8 +55,8 @@ export const createTree = ({ depth = 2, children = 3 } = {}): TestNode => {
  * Converts a tree into a graph.
  * @param root
  */
-export const convertTreeToGraph = (root: TestNode): Graph.Any => {
-  const traverse = (node: TestNode, graph: Graph.Any) => {
+export const convertTreeToGraph = (root: TestNode): GraphModel.AnyData => {
+  const traverse = (node: TestNode, graph: GraphModel.AnyData) => {
     graph.nodes.push(node);
     node.children?.forEach((child) => {
       graph.edges.push(createEdge(node, child));
@@ -76,7 +77,7 @@ export const convertTreeToGraph = (root: TestNode): Graph.Any => {
  * @param numNodes
  * @param numEdges
  */
-export const createGraph = (numNodes = 0, numEdges = 0, types?: string[]): Graph.Any => {
+export const createGraph = (numNodes = 0, numEdges = 0, types?: string[]): GraphModel.AnyData => {
   const nodes = createNodes(numNodes, types);
 
   const edges = new Map();

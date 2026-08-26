@@ -170,7 +170,7 @@ feat F-2: Section Management
 
   req F-2.1:
     when: user clicks the Add Section button in the toolbar
-    then: SpaceOperation.OpenCreateObject dialog is invoked with the collection as target
+    then: SpaceOperation.OpenObjectForm dialog is invoked with the collection as target
   req F-2.2:
     when: user selects "Add Before" or "Add After" from a section dropdown
     then: LayoutOperation.UpdateDialog is invoked with the AddSectionDialog, position, and collection context
@@ -224,7 +224,7 @@ test T-1: Collection renders as stack
 test T-2: Add section via toolbar
   given: StackArticle is open
   when: user clicks the Add Section toolbar button
-  then: SpaceOperation.OpenCreateObject is invoked with the collection as target
+  then: SpaceOperation.OpenObjectForm is invoked with the collection as target
 ```
 
 ```mdl

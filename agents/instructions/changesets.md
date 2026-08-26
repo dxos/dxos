@@ -32,7 +32,7 @@ Standard semver, the same rules pre- and post-1.0:
 
 A `minor` does **not** cascade the group to `1.0.0` (the tooling keeps standard semver at every version — mechanics live in the spec). Note breaking changes in the **body** so they reach the changelog.
 
-**`major` is rejected by CI while we are pre-1.0** (`pnpm check-changeset-bumps`, a gate in **Check**). The groups are `fixed`, so one stray `major` versions all ~300 packages to `1.0.0` in a single release — and nothing surfaces the mistake until `changeset version` runs on `main`. Write `minor` and describe the break in the body.
+**`major` is rejected by CI while we are pre-1.0** (`pnpm check-changesets`, a gate in **Check**). The groups are `fixed`, so one stray `major` versions all ~300 packages to `1.0.0` in a single release — and nothing surfaces the mistake until `changeset version` runs on `main`. Write `minor` and describe the break in the body.
 
 ## Body + format
 
@@ -62,7 +62,7 @@ Add streaming query API and surface it in the markdown plugin.
 ## How many files
 
 **One per PR** — and unlike the missing-changeset reminder, this one is a gate: `pnpm
-check-changeset-count` in **Check** fails a PR that adds more than one `.changeset/*.md`, counted against
+check-changesets` in **Check** fails a PR that adds more than one `.changeset/*.md`, counted against
 the merge base. A changeset is a changelog entry, so the question is how many entries a reader wants —
 not how many packages, groups, or commits you touched. Work spanning two groups is still one story and
 belongs in one file with a line per group, as above; so does a fix that took five commits. When a PR

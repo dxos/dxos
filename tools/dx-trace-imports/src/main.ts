@@ -301,7 +301,16 @@ export const traceImports = (options: TraceImportsOptions): TraceImportsResult =
   const resolveWorkspacePackage = createWorkspacePackageResolver(absWorkingDir);
 
   const entryKey = normalizeFsPath(entryAbsolute);
-  const graph = buildImportGraph(entryKey, conditions, matcher, resolveWorkspacePackage);
+  const { graph, unresolvedSubpaths } = buildImportGraph(entryKey, conditions, matcher, resolveWorkspacePackage);
+  if (unresolvedSubpaths.length > 0) {
+    throw new Error(
+      [
+        `unresolved subpath imports under conditions [${conditions.join(',')}] — the crawl stopped there, so this trace proves nothing:`,
+        ...unresolvedSubpaths.map((entry) => `  ${entry}`),
+        'A `#` import always has a target in its own package.json; a failure means the condition resolves to a file that was never built.',
+      ].join('\n'),
+    );
+  }
 
   const metafilePath = path.join(os.tmpdir(), `trace-imports-graph-${process.pid}-${Date.now()}.json`);
   fs.writeFileSync(metafilePath, JSON.stringify(Object.fromEntries(graph.entries()), null, 2), 'utf8');

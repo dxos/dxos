@@ -25,6 +25,11 @@
       "browser": "./dist/lib/browser/react.mjs",
       "node": "./dist/lib/node-esm/react.mjs"
     },
+    "./translations": {
+      "types": "./dist/types/src/translations.d.ts",
+      "browser": "./dist/lib/browser/translations.mjs",
+      "node": "./dist/lib/node-esm/translations.mjs"
+    },
     "./testing": {
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",

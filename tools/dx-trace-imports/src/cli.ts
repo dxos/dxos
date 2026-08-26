@@ -19,7 +19,12 @@ interface ParsedArgs {
   exportSubpaths: string[];
   to: string;
   maxChains: number;
-  conditions: string[];
+  /**
+   * Independent condition sets, one per `--conditions` occurrence. A plugin resolves
+   * `#capabilities` to a different barrel per runtime, so asserting the property under only one
+   * runtime leaves the others unchecked — repeating the flag traces each in the same run.
+   */
+  conditionSets: string[][];
   packagesOnly: boolean;
   failOn: FailMode | null;
 }
@@ -76,8 +81,11 @@ const parseArgs = async (): Promise<ParsedArgs> => {
     .option('max-chains', { type: 'number', default: 10, describe: 'Stop after this many chains' })
     .option('conditions', {
       type: 'string',
-      default: DEFAULT_CONDITIONS.join(','),
-      describe: 'Comma-separated package.json export conditions',
+      array: true,
+      default: [DEFAULT_CONDITIONS.join(',')],
+      describe:
+        'Comma-separated package.json export conditions. Repeatable: each occurrence is an ' +
+        'independent set traced separately (e.g. --conditions workerd,worker --conditions node).',
     })
     .option('packages-only', {
       type: 'boolean',
@@ -112,29 +120,39 @@ const parseArgs = async (): Promise<ParsedArgs> => {
     throw new Error('Provide at least one --to <package-or-pattern-or-path>.');
   }
 
+  const conditionSets = stringList(argv.conditions)
+    .map(parseConditions)
+    .filter((set) => set.length > 0);
+  if (conditionSets.length === 0) {
+    throw new Error('Provide at least one non-empty --conditions set.');
+  }
+
   return {
     from: argv.from ? String(argv.from) : null,
     exportSubpaths: stringList(argv.export),
     to: foldTargets(targets),
     maxChains,
-    conditions: parseConditions(String(argv.conditions ?? '')),
+    conditionSets,
     packagesOnly: Boolean(argv.packagesOnly),
     failOn: parseFailOn(argv.failOn),
   };
 };
 
-/** Traces one entry; returns whether it violated `--fail-on`. */
-const traceEntry = (args: ParsedArgs, exportSubpath: string | undefined): boolean => {
+/** Traces one entry under one condition set; returns whether it violated `--fail-on`. */
+const traceEntry = (args: ParsedArgs, exportSubpath: string | undefined, conditions: string[]): boolean => {
   const result = traceImports({
     from: args.from ?? undefined,
     exportSubpath,
     to: args.to,
     maxChains: args.maxChains,
-    conditions: args.conditions,
+    conditions,
     packagesOnly: args.packagesOnly,
   });
 
-  const label = exportSubpath ? `${exportSubpath} (${result.entryPath})` : (args.from ?? result.entryPath);
+  const entryLabel = exportSubpath ? `${exportSubpath} (${result.entryPath})` : (args.from ?? result.entryPath);
+  // The condition set is named in the label because an entry resolves to a different module per
+  // set, so a bare entry name cannot say which resolution the verdict belongs to.
+  const label = args.conditionSets.length > 1 ? `${entryLabel} [${conditions.join(',')}]` : entryLabel;
   console.error(`graph: ${result.metafilePath}`);
 
   if (result.labelChains.length === 0) {
@@ -162,12 +180,15 @@ const traceEntry = (args: ParsedArgs, exportSubpath: string | undefined): boolea
 const main = async () => {
   const args = await parseArgs();
 
-  // Every entry is traced even after one fails, so a single run reports every offending export
-  // rather than only the first — the guard is usually asserting a property of all of them.
+  // Every entry is traced under every condition set even after one fails, so a single run reports
+  // every offending combination rather than only the first — the guard is usually asserting a
+  // property of all of them.
   const entries: (string | undefined)[] = args.exportSubpaths.length > 0 ? args.exportSubpaths : [undefined];
   let failed = false;
-  for (const entry of entries) {
-    failed = traceEntry(args, entry) || failed;
+  for (const conditions of args.conditionSets) {
+    for (const entry of entries) {
+      failed = traceEntry(args, entry, conditions) || failed;
+    }
   }
   process.exit(failed ? 1 : 0);
 };

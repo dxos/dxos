@@ -5,6 +5,10 @@
 import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
+  entry: {
+    index: 'src/index.ts',
+    capture: 'src/capture/index.ts',
+  },
   jsx: 'react',
   test: { node: true },
 });

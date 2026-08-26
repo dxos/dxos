@@ -10,8 +10,6 @@ import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-const makeKey = (name: string) => DXN.make(`org.dxos.function.computer.${name}`);
-
 /**
  * A single find/replace against a file. Deliberately the same vocabulary as `Text.Edit`, which the
  * markdown skill already uses for document edits, so one habit covers both — but with file-editor
@@ -37,7 +35,7 @@ const Edit = Schema.Struct({
 
 export const Bash = Operation.make({
   meta: {
-    key: makeKey('bash'),
+    key: DXN.make('org.dxos.operation.computer.runBash'),
     name: 'Bash',
     icon: 'ph--terminal-window--regular',
     description: trim`
@@ -85,7 +83,7 @@ export const Bash = Operation.make({
 
 export const Edits = Operation.make({
   meta: {
-    key: makeKey('edits'),
+    key: DXN.make('org.dxos.operation.computer.applyEdits'),
     name: 'Edits',
     icon: 'ph--pencil-simple--regular',
     description: trim`

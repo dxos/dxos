@@ -6,13 +6,18 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as Graph from '@dxos/app-graph/Graph';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 
+import { meta } from '#meta';
+import { translations } from '#translations';
 import { NavTreeCapabilities } from '#types';
+
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const Expose = Capability.inlineModule(
@@ -25,7 +30,7 @@ export const Expose = Capability.inlineModule(
     if (invokePromise && layout.active.length === 1) {
       // TODO(wittjosiah): This should really be fired once the navtree renders for the first time.
       //   That is the point at which the graph is expanded and the path should be available.
-      void Graph.waitForPath(graph, { target: layout.active[0] }, { timeout: 30_000 })
+      void AppGraph.waitForPath(graph, { target: layout.active[0] }, { timeout: 30_000 })
         .then(() => invokePromise(LayoutOperation.Expose, { subject: layout.active[0] }))
         .catch(() => {});
     }
@@ -39,6 +44,12 @@ export const Keyboard = Capability.lazyModule(
   () => import('./keyboard'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
+});
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: [
     'org.dxos.role.dialog',
@@ -56,3 +67,4 @@ export const State = Capability.lazyModule(
   },
   () => import('./state'),
 );
+export const Translations = AppCapability.translations(translations);

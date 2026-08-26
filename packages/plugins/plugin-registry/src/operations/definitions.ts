@@ -8,10 +8,6 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
 const PluginSummary = Schema.Struct({
   id: Schema.String.annotate({ description: 'Plugin id, as passed to plugin enable/disable.' }),
   name: Schema.optional(Schema.String),
@@ -27,7 +23,7 @@ const PluginSummary = Schema.Struct({
 
 export const QueryPlugins = Operation.make({
   meta: {
-    key: makeKey('queryPlugins'),
+    key: DXN.make('org.dxos.operation.registry.queryPlugins'),
     name: 'Query Plugins',
     description:
       'List the plugins installed on this host, each with whether it is enabled and whether it has ' +

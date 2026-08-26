@@ -3,17 +3,17 @@
 //
 
 import { DX_DATA } from '@dxos/client-protocol';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type Runtime_Client_Storage, Runtime_Client_Storage_StorageDriver } from '@dxos/protocols/buf/dxos/config_pb';
 import { isNode } from '@dxos/util';
 
-export const getRootPath = (config: Runtime.Client.Storage) => {
+export const getRootPath = (config: Runtime_Client_Storage) => {
   const { dataRoot = isNode() ? DX_DATA : 'dxos/storage' } = config ?? {};
   return `${dataRoot}/`;
 };
 
-export const isPersistent = (config: Runtime.Client.Storage) => {
+export const isPersistent = (config: Runtime_Client_Storage) => {
   const { persistent = false } = config ?? {};
   return (
-    (config.dataStore !== undefined && config.dataStore !== Runtime.Client.Storage.StorageDriver.RAM) || persistent
+    (config.dataStore !== undefined && config.dataStore !== Runtime_Client_Storage_StorageDriver.RAM) || persistent
   );
 };

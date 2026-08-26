@@ -4,6 +4,7 @@
 
 import { useEffect } from 'react';
 
+import * as GraphModel from '@dxos/graph/GraphModel';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { DATA_TEST_ID, ProjectionMapper, useCanvasContext, zoomInPlace, zoomTo } from '@dxos/react-ui-canvas';
@@ -161,7 +162,7 @@ export const useActionHandler = () => {
           const { ids = selection.getSelectedIds() } = action;
           const nodes = ids.map((id: string) => graph.getNode(id)).filter(isTruthy);
           const edges = ids.map((id: string) => graph.getEdge(id)).filter(isTruthy);
-          clipboard.clear().builder.addNodes(nodes).addEdges(edges);
+          clipboard.clear().pipe(GraphModel.addNodes(nodes), GraphModel.addEdges(edges));
           return true;
         }
         case 'paste': {

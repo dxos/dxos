@@ -116,10 +116,10 @@ const decorators = createDecorators<StoryArgs>(({ args }) => ({
     addToRootCollection(space, [document, drawing]);
     return [[StoryRole.Chat], [Cell.article(document)], [Cell.article(drawing)]];
   },
-  onChatCreated: async ({ space, binder }) => {
+  onChatCreated: async ({ db, binder }) => {
     const [{ Drawing }] = await Promise.all([import('@dxos/plugin-illustrator')]);
-    const documents = await space.db.query(Filter.type(Markdown.Document)).run();
-    const drawings = await space.db.query(Filter.type(Drawing.Drawing)).run();
+    const documents = await db.query(Filter.type(Markdown.Document)).run();
+    const drawings = await db.query(Filter.type(Drawing.Drawing)).run();
     await binder.bind({ objects: [...documents, ...drawings].map((object) => Ref.make(object)) });
   },
 }));

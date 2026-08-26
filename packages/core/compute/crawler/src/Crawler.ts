@@ -12,7 +12,7 @@ import * as Stream from 'effect/Stream';
 
 import { type StateError } from './errors';
 import { Source } from './Source';
-import { StateStore } from './StateStore';
+import * as StateStore from './StateStore';
 import type * as Type from './types';
 
 /** Durable outcome of a drained (or paused) crawl, read back from the {@link StateStore}. */
@@ -55,14 +55,13 @@ const pickTarget = (targets: readonly Type.Target[], volatile: Volatile): Type.T
 };
 
 /** Seed the frontier with the configured top-level channels (idempotent — only when empty). */
-const seedFrontier = (config: Type.Config): Effect.Effect<void, StateError, StateStore> =>
+const seedFrontier = (config: Type.Config): Effect.Effect<void, StateError, StateStore.StateStore> =>
   Effect.gen(function* () {
-    const store = yield* StateStore;
-    const existing = yield* store.listTargets();
+    const existing = yield* StateStore.listTargets();
     if (existing.length > 0) {
       return;
     }
-    yield* store.pushTargets(
+    yield* StateStore.pushTargets(
       config.channels.map((channelId) => ({ id: channelId, channelId, depth: 0, status: 'pending' as const })),
     );
   });
@@ -76,12 +75,11 @@ const seedFrontier = (config: Type.Config): Effect.Effect<void, StateError, Stat
 const advance = (
   config: Type.Config,
   volatile: Volatile,
-): Effect.Effect<Option.Option<Chunk.Chunk<Type.Event>>, StateError, Source | StateStore> =>
+): Effect.Effect<Option.Option<Chunk.Chunk<Type.Event>>, StateError, Source | StateStore.StateStore> =>
   Effect.gen(function* () {
-    const store = yield* StateStore;
     const source = yield* Source;
 
-    const target = pickTarget(yield* store.listTargets(), volatile);
+    const target = pickTarget(yield* StateStore.listTargets(), volatile);
     if (!target) {
       return Option.none();
     }
@@ -91,7 +89,7 @@ const advance = (
 
     // First touch: open the channel/thread before reading its messages.
     if (target.status === 'pending') {
-      yield* store.setStatus(target.id, 'active');
+      yield* StateStore.setStatus(target.id, 'active');
       events.push(
         target.threadId
           ? { _tag: 'ThreadStart', target: current, parentMessageId: target.parentMessageId }
@@ -114,7 +112,7 @@ const advance = (
       const error = Cause.squash(fetched.cause);
       const reason = error instanceof Error ? error.message : String(error);
       yield* Effect.logWarning(`crawl: skipping ${target.id} — ${reason}`);
-      yield* store.setStatus(target.id, 'error', reason);
+      yield* StateStore.setStatus(target.id, 'error', reason);
       volatile.done.add(target.id);
       return Option.some(Chunk.fromIterable(events));
     }
@@ -127,7 +125,7 @@ const advance = (
     // Push discovered threads on top of the frontier ⇒ they are drained before this target resumes.
     // Idempotent (existing ids are ignored), so safe at fetch time.
     if (config.descendThreads && target.depth < (config.maxDepth ?? Number.POSITIVE_INFINITY)) {
-      yield* store.pushTargets(
+      yield* StateStore.pushTargets(
         page.threads.map((thread) => ({
           id: thread.threadId,
           channelId: thread.threadId,
@@ -160,7 +158,7 @@ const advance = (
 export const stream = (
   config: Type.Config,
   options: StreamOptions = {},
-): Stream.Stream<Type.Event, StateError, Source | StateStore> =>
+): Stream.Stream<Type.Event, StateError, Source | StateStore.StateStore> =>
   Stream.unwrap(
     Effect.gen(function* () {
       yield* seedFrontier(config);
@@ -193,24 +191,22 @@ export const stream = (
  * `ChannelEnd` writes the terminal `done` status. An interrupt between fetch and sink therefore
  * re-fetches rather than skips.
  */
-export const commit = (event: Type.Event): Effect.Effect<void, StateError, StateStore> =>
-  Effect.flatMap(StateStore, (store) => {
-    switch (event._tag) {
-      case 'Message':
-        return store.setCursor(event.target.id, event.message.id);
-      case 'ThreadEnd':
-      case 'ChannelEnd':
-        return store.setStatus(event.target.id, 'done');
-      default:
-        return Effect.void;
-    }
-  });
+export const commit = (event: Type.Event): Effect.Effect<void, StateError, StateStore.StateStore> => {
+  switch (event._tag) {
+    case 'Message':
+      return StateStore.setCursor(event.target.id, event.message.id);
+    case 'ThreadEnd':
+    case 'ChannelEnd':
+      return StateStore.setStatus(event.target.id, 'done');
+    default:
+      return Effect.void;
+  }
+};
 
 /** Read the durable outcome back from the {@link StateStore} after a drain (or pause). */
-export const summarize = (): Effect.Effect<Summary, StateError, StateStore> =>
+export const summarize = (): Effect.Effect<Summary, StateError, StateStore.StateStore> =>
   Effect.gen(function* () {
-    const store = yield* StateStore;
-    const targets = yield* store.listTargets();
+    const targets = yield* StateStore.listTargets();
     return {
       done: !targets.some((target) => target.status === 'pending' || target.status === 'active'),
       errored: targets.filter((target) => target.status === 'error').length,

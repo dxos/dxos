@@ -16,11 +16,6 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
-    },
-    "./stream": {
-      "source": "./src/stream.ts",
-      "types": "./dist/types/src/stream.d.ts",
-      "import": "./dist/lib/stream.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -32,7 +27,6 @@
     "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
     "compress-json": "catalog:",

@@ -4,22 +4,22 @@
 
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 
-import type * as Node from '@dxos/app-graph/Node';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { log } from '@dxos/log';
 import { type TreeData } from '@dxos/react-ui-list';
 
-const removeItem = (tree: Node.NodeArg<any>, source: TreeData) => {
+const removeItem = (tree: AppGraphNode.NodeArg<any>, source: TreeData) => {
   const parent = getNode(tree, source.path.slice(1, -1));
-  const index = parent.nodes!.findIndex((node: Node.NodeArg<any>) => node.id === source.id);
+  const index = parent.nodes!.findIndex((node: AppGraphNode.NodeArg<any>) => node.id === source.id);
   const item = parent.nodes![index];
   parent.nodes!.splice(index, 1);
   return item;
 };
 
-const getNode = (tree: Node.NodeArg<any>, path: string[]) => {
+const getNode = (tree: AppGraphNode.NodeArg<any>, path: string[]) => {
   let node = tree;
   for (const part of path) {
-    node = node.nodes!.find((n: Node.NodeArg<any>) => n.id === part)!;
+    node = node.nodes!.find((n: AppGraphNode.NodeArg<any>) => n.id === part)!;
   }
   return node;
 };
@@ -31,7 +31,7 @@ export const updateState = ({
   source,
   target,
 }: {
-  state: Node.NodeArg<any>;
+  state: AppGraphNode.NodeArg<any>;
   instruction: Instruction;
   source: TreeData;
   target: TreeData;

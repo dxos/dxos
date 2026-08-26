@@ -36,4 +36,12 @@ export const TEST_TAGS: NonNullable<TestProjectConfiguration['test']>['tags'] = 
     // (which must also un-skip, since generation runs through the same suites).
     skip: !envEnabled('DX_RUN_MODEL_FIXTURE_TESTS') && !envEnabled('DX_UPDATE_MODEL_FIXTURES'),
   },
+  {
+    name: 'memory',
+    description: 'Retention/footprint tests that need a forced GC. Skipped by default.',
+    // Gated on DX_DEBUG_LEAKS rather than a flag of its own: that is the same variable
+    // `vite.base.config.ts` keys `--expose-gc` off, and without `global.gc` every WeakRef still
+    // reads as alive, so an un-gated run would report retention that isn't there.
+    skip: !envEnabled('DX_DEBUG_LEAKS'),
+  },
 ];

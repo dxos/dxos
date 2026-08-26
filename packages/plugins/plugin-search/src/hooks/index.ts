@@ -9,4 +9,5 @@ export { GlobalFilterProvider, useGlobalFilteredObjects } from '@dxos/react-ui-s
 export { useGlobalSearch, useGlobalSearchResults } from './SearchContext';
 export * from './useGlobalSearch';
 export * from './useSearchResults';
+export * from './useSearchableTypes';
 export * from './useWebSearch';

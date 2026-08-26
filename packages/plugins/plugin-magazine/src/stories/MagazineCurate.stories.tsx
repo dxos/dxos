@@ -33,12 +33,12 @@ import { Panel } from '@dxos/react-ui';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
+import { MagazinePlugin } from '#plugin';
 import { MagazineSkill } from '#skills';
 import { translations } from '#translations';
 import { Magazine, Subscription } from '#types';
 
 import { MagazineArticle } from '../containers/MagazineArticle/MagazineArticle';
-import { MagazinePlugin } from '../plugin';
 
 // Curation runs the agent (CurateMagazine → RunInstructions). The process-manager runtime therefore needs
 // the full agent stack: RoutinePlugin supplies the OpaqueToolkit / Registry / Trace LayerSpecs and

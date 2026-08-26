@@ -10,7 +10,7 @@
 
 import React, { useCallback } from 'react';
 
-import type * as Node from '@dxos/app-graph/Node';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -110,7 +110,7 @@ const useMenuActions = (
 
   const onAction: ActionExecutor = useCallback(
     (action) => {
-      void runAction(action as Node.Action, { caller: meta.profile.key });
+      void runAction(action as AppGraphNode.Action, { caller: meta.profile.key });
     },
     [runAction],
   );

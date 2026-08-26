@@ -82,6 +82,10 @@ const startupTimeout = (() => {
 // Injected by the `define` block in vite.config.ts; '' in production builds.
 declare const __DX_DEV_SERVER_BOOT_ID__: string;
 
+// Session id for the agent debug port when the dev server was launched with the debug-port flag.
+// Always '' in production builds, so the port cannot be auto-started on a deployed origin.
+declare const __DX_DEBUG_PORT_SESSION__: string;
+
 declare global {
   interface ImportMeta {
     env: ImportMetaEnv;
@@ -207,12 +211,13 @@ const main = async () => {
   // Load these in parallel; HTTP/2 multiplexes the three chunks and even on
   // local-disk the parser can interleave parses. The wasm init rides the same wave: it must
   // complete before anything touches automerge (slim entrypoints — see util/automerge-wasm.ts).
-  const [{ Config, defs, SaveConfig }, { Client, createClientServices }, AppMigrations] = await Promise.all([
-    import('@dxos/config'),
-    import('@dxos/react-client'),
-    import('@dxos/app-toolkit/AppMigrations'),
-    initAutomergeWasm(),
-  ]);
+  const [{ Config, defs, SaveConfig, getEnvString }, { Client, createClientServices }, AppMigrations] =
+    await Promise.all([
+      import('@dxos/config'),
+      import('@dxos/react-client'),
+      import('@dxos/app-toolkit/AppMigrations'),
+      initAutomergeWasm(),
+    ]);
 
   profiler?.mark('dynamic-imports:end');
   profiler?.measure('dynamic-imports', 'dynamic-imports:start', 'dynamic-imports:end');
@@ -244,7 +249,7 @@ const main = async () => {
   bootStatus('Reading configuration…');
 
   let config = await setupConfig();
-  if (shouldRunStorageResetMigration(config.values.runtime?.app?.env?.DX_ENVIRONMENT)) {
+  if (shouldRunStorageResetMigration(getEnvString(config, 'DX_ENVIRONMENT'))) {
     await runStorageResetMigration();
     window.location.replace(window.location.href);
     return;
@@ -259,7 +264,7 @@ const main = async () => {
     await SaveConfig({
       runtime: {
         client: {
-          storage: { dataStore: defs.Runtime.Client.Storage.StorageDriver.IDB },
+          storage: { dataStore: defs.Runtime_Client_Storage_StorageDriver.IDB },
         },
       },
     });
@@ -364,7 +369,7 @@ const main = async () => {
         return platform === 'android' || platform === 'ios';
       }),
     ),
-    Match.when(false, () => Effect.sync(() => isTrue(config.values.runtime?.app?.env?.DX_MOBILE) || isMobile$())),
+    Match.when(false, () => Effect.sync(() => isTrue(getEnvString(config, 'DX_MOBILE')) || isMobile$())),
     Match.exhaustive,
     EffectEx.runPromise,
   );
@@ -382,10 +387,10 @@ const main = async () => {
   // env / platform constraints. Worker factories are passed unconditionally; the factory only
   // invokes the one required by the configured mode. Host mode (in-thread services) is opt-in via
   // DX_HOST; otherwise services run in a dedicated worker elected via a lock (leader/follower).
-  const useLocalServices = isTrue(config.values.runtime?.app?.env?.DX_HOST);
+  const useLocalServices = isTrue(getEnvString(config, 'DX_HOST'));
   const servicesMode = useLocalServices
-    ? defs.Runtime.Client.ServicesMode.HOST
-    : defs.Runtime.Client.ServicesMode.DEDICATED_WORKER;
+    ? defs.Runtime_Client_ServicesMode.HOST
+    : defs.Runtime_Client_ServicesMode.DEDICATED_WORKER;
 
   config = new Config(
     {
@@ -396,7 +401,7 @@ const main = async () => {
           singleClientMode: useSingleClientMode,
           servicesMode,
           // Host and dedicated worker both use OPFS-backed SQLite.
-          storage: { sqliteMode: defs.Runtime.Client.Storage.SqliteMode.OPFS },
+          storage: { sqliteMode: defs.Runtime_Client_Storage_SqliteMode.OPFS },
         },
       },
     },
@@ -442,9 +447,16 @@ const main = async () => {
   const client = new Client({ config, services });
   void client.initialize().catch((err) => log.catch(err));
 
+  // Started here rather than from plugin-debug, which a plain local `serve` leaves disabled —
+  // tying the flag to it would make the flag silently do nothing.
+  if (__DX_DEBUG_PORT_SESSION__) {
+    const { getDebugPortController } = await import('@dxos/client/devtools');
+    getDebugPortController().start({ session: __DX_DEBUG_PORT_SESSION__, persist: true });
+  }
+
   profiler?.mark('plugins:start');
 
-  const isPwa = !isFalse(config.values.runtime?.app?.env?.DX_PWA);
+  const isPwa = !isFalse(getEnvString(config, 'DX_PWA'));
   // The forked `client.initialize()` runs outside the render tree: a failure or a stalled worker
   // handshake reaches no error boundary, leaving suspended consumers spinning. Plugins raise it
   // here, and `Main` swaps the app for the same fatal dialog the app boundary would have shown.
@@ -462,13 +474,13 @@ const main = async () => {
 
     // Strictly the `dev` cloud environment (not preview) or a local `DX_DEV=true` opt-in, so a plain
     // local `serve` keeps the lean default plugin set (see `getDefaults` in plugin-defs.tsx).
-    isDev: config.values.runtime?.app?.env?.DX_ENVIRONMENT === 'dev' || isTrue(config.values.runtime?.app?.env?.DX_DEV),
+    isDev: getEnvString(config, 'DX_ENVIRONMENT') === 'dev' || isTrue(getEnvString(config, 'DX_DEV')),
     isLocal: !isTauri && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
     isPwa,
     isTauri,
     isPopover,
     isMobile,
-    isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
+    isStrict: !isFalse(getEnvString(config, 'DX_STRICT')),
   };
 
   // `getPlugins` is synchronous: each plugin's main entry exposes only

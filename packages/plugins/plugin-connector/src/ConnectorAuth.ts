@@ -7,7 +7,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import type * as Node from '@dxos/app-graph/Node';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { Database, type Key, Obj, type Ref } from '@dxos/echo';
 import { Connection } from '@dxos/link';
@@ -81,7 +81,7 @@ export const actions = ({
   existingTarget,
   allConnectors,
   allConnections,
-}: ActionsOptions): Node.NodeArg<typeof Node.actionGroupSymbol>[] => {
+}: ActionsOptions): AppGraphNode.NodeArg<typeof AppGraphNode.actionGroupSymbol>[] => {
   const offered = offeredConnectors(allConnectors, connectorIds);
   // Reuse binds the object as a new sync target, so only offer it when there is a target to bind.
   const connections = existingTarget ? reusableConnections(allConnections, connectorIds) : [];
@@ -159,7 +159,7 @@ export const GROUP_ID = 'connectorAuth';
  * which is wrong; a disabled Connect says the capability exists and is currently unavailable. Pairs
  * with {@link actions}, which returns `[]` in exactly that case.
  */
-export const unavailableActions = (): Node.NodeArg<typeof Node.actionGroupSymbol>[] => [
+export const unavailableActions = (): AppGraphNode.NodeArg<typeof AppGraphNode.actionGroupSymbol>[] => [
   AppNode.makeToolbarActionGroup({
     id: GROUP_ID,
     label: ['connect.label', { ns: meta.profile.key }],

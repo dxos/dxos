@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import { describe, test } from 'vitest';
 
-import * as Graph from '@dxos/app-graph/Graph';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import { Key } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
@@ -56,8 +56,8 @@ describe('GraphPath', () => {
     const spaceId = Key.SpaceId.random();
     const objectId = Key.EntityId.random();
     // Seed via addNode: the GraphProps.nodes constructor option does not register nodes (latent upstream bug).
-    const graph = Graph.make();
-    Graph.addNode(graph, { id: `root/${spaceId}`, type: 'test.workspace', properties: {} });
+    const graph = AppGraph.make();
+    AppGraph.addNode(graph, { id: `root/${spaceId}`, type: 'test.workspace', properties: {} });
 
     test('parses a canonical database path', ({ expect }) => {
       const path = `root/${spaceId}/system/database/test.document/${objectId}`;
@@ -91,8 +91,8 @@ describe('GraphPath', () => {
   describe('tryGetEidCandidates', () => {
     const spaceId = Key.SpaceId.random();
     const objectId = Key.EntityId.random();
-    const graph = Graph.make();
-    Graph.addNode(graph, { id: `root/${spaceId}`, type: 'test.workspace', properties: {} });
+    const graph = AppGraph.make();
+    AppGraph.addNode(graph, { id: `root/${spaceId}`, type: 'test.workspace', properties: {} });
 
     test('a canonical path yields its trailing object', ({ expect }) => {
       const path = `root/${spaceId}/system/database/test.document/${objectId}`;

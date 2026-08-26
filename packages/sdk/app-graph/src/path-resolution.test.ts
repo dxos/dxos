@@ -8,12 +8,13 @@ import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
+import * as GraphNode from '@dxos/graph/GraphNode';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
 
-import * as Graph from './graph';
-import * as GraphBuilder from './graph-builder';
-import * as Node from './node';
-import * as NodeMatcher from './node-matcher';
+import * as Graph from './AppGraph';
+import * as GraphBuilder from './AppGraphBuilder';
+import * as Node from './AppGraphNode';
 import * as PathResolution from './path-resolution';
 
 const WORKSPACE_TYPE = 'test.workspace';
@@ -48,7 +49,7 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
   const workspaces = Effect.runSync(
     GraphBuilder.createExtension({
       id: 'workspaces',
-      match: NodeMatcher.whenNodeType(Node.RootType),
+      match: GraphNodeMatcher.whenNodeType(Node.RootType),
       connector: () =>
         Effect.succeed([
           { id: WORKSPACE_A, type: WORKSPACE_TYPE },
@@ -62,10 +63,10 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
       id: 'docs',
       // Direct children of the workspace base: an empty static template (`root/<ws>/<id>`).
       url: { key: 'doc', kind: 'item', path: [] },
-      match: NodeMatcher.whenNodeType(WORKSPACE_TYPE),
+      match: GraphNodeMatcher.whenNodeType(WORKSPACE_TYPE),
       connector: (workspaceNode) =>
         Effect.succeed(
-          workspaceNode.id === `${Node.RootId}/${WORKSPACE_A}`
+          workspaceNode.id === `${GraphNode.RootId}/${WORKSPACE_A}`
             ? [
                 { id: 'docA', type: DOC_TYPE },
                 { id: 'docB', type: DOC_TYPE },
@@ -80,7 +81,7 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
   const comments = Effect.runSync(
     GraphBuilder.createExtension({
       id: 'comments',
-      match: NodeMatcher.whenNodeType(DOC_TYPE),
+      match: GraphNodeMatcher.whenNodeType(DOC_TYPE),
       connector: () => Effect.succeed([{ id: '~comments', type: COMMENTS_TYPE }]),
     }),
   );
@@ -91,7 +92,7 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
     GraphBuilder.createExtension({
       id: 'sharedKeyDocs',
       url: { key: 'doc', kind: 'item', path: [] },
-      match: NodeMatcher.whenNodeType(WORKSPACE_TYPE),
+      match: GraphNodeMatcher.whenNodeType(WORKSPACE_TYPE),
       connector: () => Effect.succeed([{ id: 'sharedDoc', type: OTHER_DOC_TYPE }]),
     }),
   );
@@ -102,7 +103,7 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
   const group = Effect.runSync(
     GraphBuilder.createExtension({
       id: 'group',
-      match: NodeMatcher.whenNodeType(WORKSPACE_TYPE),
+      match: GraphNodeMatcher.whenNodeType(WORKSPACE_TYPE),
       connector: () => Effect.succeed([{ id: GROUP_ID, type: GROUP_TYPE }]),
     }),
   );
@@ -111,7 +112,7 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
     GraphBuilder.createExtension({
       id: 'sectionedDocs',
       url: { key: 'sectioned', kind: 'item', path: [GROUP_ID] },
-      match: NodeMatcher.whenNodeType(GROUP_TYPE),
+      match: GraphNodeMatcher.whenNodeType(GROUP_TYPE),
       connector: () => Effect.succeed([{ id: 'secDocA', type: SECTIONED_TYPE }]),
     }),
   );
@@ -123,7 +124,7 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
     GraphBuilder.createExtension({
       id: 'inlineDocs',
       url: { key: 'inline', kind: 'item', path: [INLINE_SECTION_ID] },
-      match: NodeMatcher.whenNodeType(WORKSPACE_TYPE),
+      match: GraphNodeMatcher.whenNodeType(WORKSPACE_TYPE),
       connector: () =>
         Effect.succeed([
           { id: INLINE_SECTION_ID, type: INLINE_SECTION_TYPE, nodes: [{ id: 'inlineDocA', type: INLINE_DOC_TYPE }] },
@@ -142,7 +143,7 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
         kind: 'item',
         path: ({ id, workspaceBaseId }) => Effect.succeed(`${workspaceBaseId}/${GROUP_ID}/${id}`),
       },
-      match: NodeMatcher.whenNodeType(GROUP_TYPE),
+      match: GraphNodeMatcher.whenNodeType(GROUP_TYPE),
       connector: () => Effect.succeed([{ id: 'dynDocA', type: SECTIONED_TYPE }]),
     }),
   );
@@ -153,7 +154,7 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
   const subGroup = Effect.runSync(
     GraphBuilder.createExtension({
       id: 'subGroup',
-      match: NodeMatcher.whenNodeType(GROUP_TYPE),
+      match: GraphNodeMatcher.whenNodeType(GROUP_TYPE),
       connector: () => Effect.succeed([{ id: SUBGROUP_ID, type: SUBGROUP_TYPE }]),
     }),
   );
@@ -162,7 +163,7 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
     GraphBuilder.createExtension({
       id: 'nestedDocs',
       url: { key: 'nested', kind: 'item', path: [GROUP_ID] },
-      match: NodeMatcher.whenNodeType(SUBGROUP_TYPE),
+      match: GraphNodeMatcher.whenNodeType(SUBGROUP_TYPE),
       connector: () => Effect.succeed([{ id: 'nestedDocA', type: NESTED_TYPE }]),
     }),
   );
@@ -173,7 +174,7 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
     GraphBuilder.createExtension({
       id: 'homes',
       url: { key: 'home', kind: 'singleton', path: [] },
-      match: NodeMatcher.whenNodeType(WORKSPACE_TYPE),
+      match: GraphNodeMatcher.whenNodeType(WORKSPACE_TYPE),
       connector: () => Effect.succeed([{ id: HOME_SEGMENT, type: HOME_TYPE }]),
     }),
   );
@@ -204,7 +205,7 @@ describe('path-resolution', () => {
           pairs: [{ key: 'doc', id: 'docA', workspace: WORKSPACE_A }],
         }),
       );
-      expect(results).toEqual([{ pairIndex: 0, nodeId: `${Node.RootId}/${WORKSPACE_A}/docA` }]);
+      expect(results).toEqual([{ pairIndex: 0, nodeId: `${GraphNode.RootId}/${WORKSPACE_A}/docA` }]);
     });
 
     test('resolves a two-pair chain', async ({ expect }) => {
@@ -219,8 +220,8 @@ describe('path-resolution', () => {
         }),
       );
       expect(results).toEqual([
-        { pairIndex: 0, nodeId: `${Node.RootId}/${WORKSPACE_A}/docA` },
-        { pairIndex: 1, nodeId: `${Node.RootId}/${WORKSPACE_A}/docB` },
+        { pairIndex: 0, nodeId: `${GraphNode.RootId}/${WORKSPACE_A}/docA` },
+        { pairIndex: 1, nodeId: `${GraphNode.RootId}/${WORKSPACE_A}/docB` },
       ]);
     });
 
@@ -236,8 +237,8 @@ describe('path-resolution', () => {
         }),
       );
       expect(results).toEqual([
-        { pairIndex: 0, nodeId: `${Node.RootId}/${WORKSPACE_A}/docA` },
-        { pairIndex: 1, nodeId: `${Node.RootId}/${WORKSPACE_A}/docA/~comments` },
+        { pairIndex: 0, nodeId: `${GraphNode.RootId}/${WORKSPACE_A}/docA` },
+        { pairIndex: 1, nodeId: `${GraphNode.RootId}/${WORKSPACE_A}/docA/~comments` },
       ]);
     });
 
@@ -253,8 +254,8 @@ describe('path-resolution', () => {
         }),
       );
       expect(results).toEqual([
-        { pairIndex: 0, nodeId: `${Node.RootId}/${WORKSPACE_A}/docA` },
-        { pairIndex: 1, nodeId: `${Node.RootId}/${WORKSPACE_B}/docC` },
+        { pairIndex: 0, nodeId: `${GraphNode.RootId}/${WORKSPACE_A}/docA` },
+        { pairIndex: 1, nodeId: `${GraphNode.RootId}/${WORKSPACE_B}/docC` },
       ]);
     });
 
@@ -278,7 +279,7 @@ describe('path-resolution', () => {
           pairs: [{ key: 'doc', id: 'missingDoc', workspace: WORKSPACE_A }],
         }),
       );
-      expect(results).toEqual([{ pairIndex: 0, candidateId: `${Node.RootId}/${WORKSPACE_A}/missingDoc` }]);
+      expect(results).toEqual([{ pairIndex: 0, candidateId: `${GraphNode.RootId}/${WORKSPACE_A}/missingDoc` }]);
     });
 
     // Leaking it would make every caller disambiguate a field it cannot use.
@@ -301,7 +302,7 @@ describe('path-resolution', () => {
           pairs: [{ key: 'sectioned', id: 'secDocA', workspace: WORKSPACE_A }],
         }),
       );
-      expect(results).toEqual([{ pairIndex: 0, nodeId: `${Node.RootId}/${WORKSPACE_A}/${GROUP_ID}/secDocA` }]);
+      expect(results).toEqual([{ pairIndex: 0, nodeId: `${GraphNode.RootId}/${WORKSPACE_A}/${GROUP_ID}/secDocA` }]);
     });
 
     test('round-trips a static-urlPath node back to its key/id', async ({ expect }) => {
@@ -326,7 +327,7 @@ describe('path-resolution', () => {
         }),
       );
       expect(results).toEqual([
-        { pairIndex: 0, nodeId: `${Node.RootId}/${WORKSPACE_A}/${INLINE_SECTION_ID}/inlineDocA` },
+        { pairIndex: 0, nodeId: `${GraphNode.RootId}/${WORKSPACE_A}/${INLINE_SECTION_ID}/inlineDocA` },
       ]);
     });
 
@@ -339,7 +340,7 @@ describe('path-resolution', () => {
         }),
       );
       expect(results).toEqual([
-        { pairIndex: 0, nodeId: `${Node.RootId}/${WORKSPACE_A}/${GROUP_ID}/${SUBGROUP_ID}/nestedDocA` },
+        { pairIndex: 0, nodeId: `${GraphNode.RootId}/${WORKSPACE_A}/${GROUP_ID}/${SUBGROUP_ID}/nestedDocA` },
       ]);
     });
 
@@ -368,7 +369,7 @@ describe('path-resolution', () => {
           pairs: [{ key: 'home', workspace: WORKSPACE_A }],
         }),
       );
-      expect(results).toEqual([{ pairIndex: 0, nodeId: `${Node.RootId}/${WORKSPACE_A}/${HOME_SEGMENT}` }]);
+      expect(results).toEqual([{ pairIndex: 0, nodeId: `${GraphNode.RootId}/${WORKSPACE_A}/${HOME_SEGMENT}` }]);
     });
 
     test('round-trips an id-less fixed node to a bare (id-less) pair', async ({ expect }) => {
@@ -392,7 +393,7 @@ describe('path-resolution', () => {
           pairs: [{ key: 'dyn', id: 'dynDocA', workspace: WORKSPACE_A }],
         }),
       );
-      expect(results).toEqual([{ pairIndex: 0, nodeId: `${Node.RootId}/${WORKSPACE_A}/${GROUP_ID}/dynDocA` }]);
+      expect(results).toEqual([{ pairIndex: 0, nodeId: `${GraphNode.RootId}/${WORKSPACE_A}/${GROUP_ID}/dynDocA` }]);
     });
 
     test('a resolver candidate that does not exist does not resolve', async ({ expect }) => {
@@ -403,7 +404,9 @@ describe('path-resolution', () => {
           pairs: [{ key: 'dyn', id: 'missing', workspace: WORKSPACE_A }],
         }),
       );
-      expect(results).toEqual([{ pairIndex: 0, candidateId: `${Node.RootId}/${WORKSPACE_A}/${GROUP_ID}/missing` }]);
+      expect(results).toEqual([
+        { pairIndex: 0, candidateId: `${GraphNode.RootId}/${WORKSPACE_A}/${GROUP_ID}/missing` },
+      ]);
     });
 
     test('a key shared by two extensions resolves nodes produced by either', async ({ expect }) => {
@@ -414,7 +417,7 @@ describe('path-resolution', () => {
           pairs: [{ key: 'doc', id: 'sharedDoc', workspace: WORKSPACE_A }],
         }),
       );
-      expect(results).toEqual([{ pairIndex: 0, nodeId: `${Node.RootId}/${WORKSPACE_A}/sharedDoc` }]);
+      expect(results).toEqual([{ pairIndex: 0, nodeId: `${GraphNode.RootId}/${WORKSPACE_A}/sharedDoc` }]);
     });
 
     test('a shared key spends one deadline, not one per extension', async ({ expect }) => {
@@ -430,7 +433,7 @@ describe('path-resolution', () => {
           { wait: () => '200 millis' },
         ),
       );
-      expect(results).toEqual([{ pairIndex: 0, candidateId: `${Node.RootId}/${WORKSPACE_A}/neverArrives` }]);
+      expect(results).toEqual([{ pairIndex: 0, candidateId: `${GraphNode.RootId}/${WORKSPACE_A}/neverArrives` }]);
       expect(Date.now() - started).toBeLessThan(400);
     });
 
@@ -447,7 +450,9 @@ describe('path-resolution', () => {
           { wait: () => '200 millis' },
         ),
       );
-      expect(results).toEqual([{ pairIndex: 0, candidateId: `${Node.RootId}/${WORKSPACE_A}/${GROUP_ID}/missing` }]);
+      expect(results).toEqual([
+        { pairIndex: 0, candidateId: `${GraphNode.RootId}/${WORKSPACE_A}/${GROUP_ID}/missing` },
+      ]);
       expect(Date.now() - started).toBeGreaterThanOrEqual(150);
     });
   });
@@ -498,7 +503,7 @@ describe('path-resolution', () => {
 
     test('returns none for a node with no key-declaring producer', async ({ expect }) => {
       const builder = buildTestBuilder();
-      const represented = PathResolution.representNode(builder, Node.RootId);
+      const represented = PathResolution.representNode(builder, GraphNode.RootId);
       expect(Option.isNone(represented)).toBe(true);
     });
   });
@@ -522,7 +527,7 @@ describe('path-resolution', () => {
           pairs: [{ key: 'doc', id: 'docA', workspace: WORKSPACE_A }],
         }),
       );
-      const node = Option.getOrThrow(Graph.getNode(builder.graph, `${Node.RootId}/${WORKSPACE_A}/docA`));
+      const node = Option.getOrThrow(Graph.getNode(builder.graph, `${GraphNode.RootId}/${WORKSPACE_A}/docA`));
       expect(node.properties.urlSegment).toBe('/doc/docA');
     });
 
@@ -534,7 +539,9 @@ describe('path-resolution', () => {
           pairs: [{ key: 'home', workspace: WORKSPACE_A }],
         }),
       );
-      const node = Option.getOrThrow(Graph.getNode(builder.graph, `${Node.RootId}/${WORKSPACE_A}/${HOME_SEGMENT}`));
+      const node = Option.getOrThrow(
+        Graph.getNode(builder.graph, `${GraphNode.RootId}/${WORKSPACE_A}/${HOME_SEGMENT}`),
+      );
       expect(node.properties.urlSegment).toBe('/home');
     });
 
@@ -550,7 +557,10 @@ describe('path-resolution', () => {
         }),
       );
       const node = Option.getOrThrow(
-        Graph.getNode(builder.graph, `${Node.RootId}/${WORKSPACE_A}/docA/${builder.urlGrammar.linkedPrefix}comments`),
+        Graph.getNode(
+          builder.graph,
+          `${GraphNode.RootId}/${WORKSPACE_A}/docA/${builder.urlGrammar.linkedPrefix}comments`,
+        ),
       );
       expect(node.properties.urlSegment).toBe('/companion/comments');
     });
@@ -570,7 +580,7 @@ describe('path-resolution', () => {
         }),
       );
       const node = Option.getOrThrow(
-        Graph.getNode(builder.graph, `${Node.RootId}/${WORKSPACE_A}/${GROUP_ID}/${SUBGROUP_ID}/nestedDocA`),
+        Graph.getNode(builder.graph, `${GraphNode.RootId}/${WORKSPACE_A}/${GROUP_ID}/${SUBGROUP_ID}/nestedDocA`),
       );
       expect(node.properties.urlSegment).toBe(`/nested/${SUBGROUP_ID}${builder.urlGrammar.tailSeparator}nestedDocA`);
     });

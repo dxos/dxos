@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
-import { Database, Err, type Ref } from '@dxos/echo';
+import { Database, Error, type Ref } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 
 import { DISCORD_API_BASE } from '../constants';
@@ -42,7 +42,7 @@ export const makeDiscordLayerFromToken = (token: string): Layer.Layer<DiscordRES
  */
 export const makeDiscordLayer = (
   connectionRef: Ref.Ref<Connection.Connection>,
-): Layer.Layer<DiscordREST, Err.EntityNotFoundError> =>
+): Layer.Layer<DiscordREST, Error.EntityNotFoundError> =>
   Layer.unwrap(
     Effect.gen(function* () {
       const connection = yield* Database.load(connectionRef);
@@ -70,7 +70,7 @@ export const makeDiscordUserLayerFromToken = (token: string): Layer.Layer<Discor
  */
 export const makeDiscordUserLayer = (
   connectionRef: Ref.Ref<Connection.Connection>,
-): Layer.Layer<DiscordREST, Err.EntityNotFoundError> =>
+): Layer.Layer<DiscordREST, Error.EntityNotFoundError> =>
   Layer.unwrap(
     Effect.gen(function* () {
       const connection = yield* Database.load(connectionRef);

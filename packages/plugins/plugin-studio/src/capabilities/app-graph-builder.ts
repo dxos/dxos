@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
@@ -35,7 +35,7 @@ export default Capability.makeModule(
        * virtual "Artifacts" child node that opens the ArtifactsArticle. Mirrors plugin-inbox's
        * Mailboxes section + virtual Drafts/Topics nodes.
        */
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'studioSection',
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.content),
         connector: (space, get) => {
@@ -60,7 +60,7 @@ export default Capability.makeModule(
         },
       }),
 
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'studioArtifactsNode',
         url: { key: 'studio', kind: 'item', path: [GraphPath.GroupSegments.content, STUDIO_SEGMENT] },
         match: (node) => {
@@ -72,7 +72,7 @@ export default Capability.makeModule(
         connector: (space, get) => {
           const artifacts = get(space.db.query(Filter.type(Artifact.Artifact)).atom);
           return Effect.succeed([
-            Node.make({
+            AppGraphNode.make({
               id: ARTIFACTS_SEGMENT,
               type: ARTIFACTS_NODE_TYPE,
               data: ARTIFACTS_NODE_DATA,

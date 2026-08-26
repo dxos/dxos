@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
@@ -43,7 +44,7 @@ const make = () =>
           status --short). Every result reports the absolute directory it ran in.
         - Read before you write. Use bash (cat, sed -n '1,80p', rg -n) to see the exact text,
           then quote it back in an edit. Never edit a file you have not read in this conversation.
-        - Edit with the edit tool, not with sed, awk or a heredoc. It matches literal text, applies a
+        - Edit with the ${Operation.toolName(ComputerOperation.Edits)} tool, not with sed, awk or a heredoc. It matches literal text, applies a
           whole batch or nothing at all, and tells you what matched — a shell rewrite silently
           succeeds when it changed the wrong line.
         - Verify with bash. Re-read the changed region, and run the project's own checks (its test,

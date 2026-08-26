@@ -9,8 +9,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 
-import { PageNumber, Pager, PresentationShell, Layout as PresenterLayout } from '#components';
-import { Presenter } from '#types';
+import { PageNumber, Pager, PresentationShell, PresenterContext, Layout as PresenterLayout } from '#components';
 
 import { useExitPresenter } from '../../useExitPresenter';
 
@@ -18,7 +17,7 @@ export type CollectionArticleProps = AppSurface.ObjectArticleProps<Collection.Co
 
 export const CollectionArticle = ({ role, subject: collection }: CollectionArticleProps) => {
   const [slide, setSlide] = useState(0);
-  const { running } = useContext(Presenter.PresenterContext);
+  const { running } = useContext(PresenterContext);
   const handleExit = useExitPresenter(collection);
 
   return (

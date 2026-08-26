@@ -334,6 +334,57 @@ service ChessEngine
 A persistence layer — schema, queries, and backend. In DXOS contexts the
 backend is typically ECHO; the construct is general enough for SQL or any store.
 
+## QA Dialect (Deus.QA)
+
+Defined in [`../lang/qa.mdl`](../lang/qa.mdl). Adds one construct, `flow`, so a specification
+doubles as a test plan a human tester and an agent tester execute from the same source.
+
+`test` and `flow` are deliberately distinct. A `test` is a _derivable_ criterion — given/when/then,
+targeting vitest or a storybook play. A `flow` is an _orchestrable_ script against the running
+app: N ordered steps, each judged on its own criterion.
+
+```mdl
+flow QA-1: Create and open a document
+  actors: both
+  covers: [F-1.1, T-1]
+  given:
+    - a space is open and contains at least one collection
+  steps:
+    - name: Create the document
+      do: In the navtree, click + on a collection and choose Markdown. Name it "Notes".
+      invoke: [op:createMarkdown] { name: "Notes", content: "# Notes\n" }
+      capture: created
+      expect: a detached Document named "Notes" is returned; nothing is in the navtree yet
+      assert: return !!$created.object
+```
+
+Steps are items of a `steps` list, not repeated `step <n>:` keys — core declares block bodies as
+`key[?]: value` with an indented `-` list as the multi-line form, and a positional pseudo-key both
+departs from that and forces hand-renumbering when a step is inserted. Numbering is by position;
+a step needing a handle stable across insertions declares `id:`.
+
+`do` and `expect` are required on every step — that is what keeps a flow human-runnable, and a
+step no human can perform is a design smell rather than a shortcut. `invoke` and `assert` are the
+agent's affordances, and their absence is meaningful: a flow containing a step with no operation
+behind it (a drag, a reload, a judgement about flicker) cannot declare `actors: agent`.
+
+A flow runs in three stages — `before` (fixture), `steps` (the test), `after` (teardown) — so a
+partial run is meaningful and a failure is legible: a `before` failure is a broken fixture, a
+`steps` failure is a defect.
+
+Flows live in a `## QA` section of each `PLUGIN.mdl`, or in `APP.mdl` for journeys crossing
+plugins. Agents execute them per the `running-qa-flows` skill; the transport is the agent debug
+port.
+
+Two consequences reach beyond the dialect:
+
+- **`op` gains `key`** (`op@1.1`) — the runtime operation key. Without it a flow cannot say which
+  operation it means, and the ambiguity is real: `plugin-markdown` declares one `op create` but
+  ships two runtime operations with different service requirements.
+- **`requires` is informational, not a branch.** An operation's declaration cannot see the
+  services its downstream calls need, so a runner invokes everything through the operation invoker
+  with an explicit `spaceId` rather than deciding per step.
+
 ## Domain Dialects
 
 ### Deus.DXOS

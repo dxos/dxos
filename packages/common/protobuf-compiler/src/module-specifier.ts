@@ -54,6 +54,9 @@ export class ModuleSpecifier {
 
 export const CODEC_MODULE = new ModuleSpecifier('@dxos/codec-protobuf', import.meta.dirname);
 
+// `Stream` lives in @dxos/async so that generated service types do not pull in the protobuf.js codec.
+export const ASYNC_MODULE = new ModuleSpecifier('@dxos/async', import.meta.dirname);
+
 const normalizeRelativePath = (path: string) => {
   if (!path.startsWith('.')) {
     return `./${path}`;

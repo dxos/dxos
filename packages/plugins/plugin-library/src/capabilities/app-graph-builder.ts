@@ -6,8 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import type * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
@@ -15,6 +14,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { meta } from '#meta';
@@ -26,7 +26,7 @@ import { getBooksPath } from '../paths';
 export const NOTES_COMPANION_VARIANT = 'notes';
 
 /** Matches a Book object node, so its notes companion appears alongside the book article. */
-const whenBook: NodeMatcher.NodeMatcher<Book.Book> = (node) =>
+const whenBook: GraphNodeMatcher.NodeMatcher<Book.Book> = (node) =>
   Book.instanceOf(node.data) ? Option.some(node.data) : Option.none();
 
 export default Capability.makeModule(
@@ -39,7 +39,7 @@ export default Capability.makeModule(
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.content),
         groupSegment: GraphPath.GroupSegments.content,
         createObject: (space) =>
-          Operation.invoke(SpaceOperation.OpenCreateObject, {
+          Operation.invoke(SpaceOperation.OpenObjectForm, {
             target: space.db,
             typename: Type.getTypename(Book.Book),
             targetNodeId: getBooksPath(space.db.spaceId),
@@ -47,7 +47,7 @@ export default Capability.makeModule(
       }),
 
       // Private notes companion (a markdown editor over the book's notes document).
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'bookNotesCompanion',
         match: whenBook,
         connector: (book) =>

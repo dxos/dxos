@@ -99,7 +99,7 @@ export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Un
           });
 
         // File new objects in the current document's collection; with no containing collection
-        // `OpenCreateObject` falls back to the space's own default placement.
+        // `OpenObjectForm` falls back to the space's own default placement.
         const target = containing[0] ?? db;
 
         const createItem: EditorMenuItem = {
@@ -107,15 +107,17 @@ export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Un
           label: ['add-object.label', { ns: meta.profile.key }],
           icon: 'ph--plus--regular',
           onSelect: ({ view, head }) => {
-            void invokePromise?.(SpaceOperation.OpenCreateObject, {
+            void invokePromise?.(SpaceOperation.OpenObjectForm, {
               target,
               // Keep the deck where it is: the link is inserted back into the editor the user is in.
               navigable: false,
-              initialFormValues: name ? { name } : undefined,
-              onCreateObject: (object: Obj.Unknown) => {
+              defaults: name ? { name } : undefined,
+            }).then(({ data }) => {
+              const object = data?.target;
+              if (object) {
                 insertLink(view, head, toLocalizedString(getLabel(object), t), Obj.getURI(object), block);
                 view.focus();
-              },
+              }
             });
           },
         };

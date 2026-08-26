@@ -14,7 +14,7 @@ import * as GameUtil from '@dxos/plugin-game/GameUtil';
 
 const ChessBot = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.script.chessBot'),
+    key: DXN.make('com.example.operation.script.chessBot'),
     name: 'Chess Bot',
     description: 'Plays a random move in a chess game.',
   },

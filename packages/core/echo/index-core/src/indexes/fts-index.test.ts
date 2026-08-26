@@ -18,6 +18,8 @@ import { FtsIndex } from './fts-index';
 import type { IndexerObject } from './interface';
 
 const TYPE_PERSON = DXN.make('com.example.type.person', '0.1.0');
+const TYPE_PERSON_VERSIONLESS = DXN.make('com.example.type.person');
+const TYPE_TASK = DXN.make('com.example.type.task', '0.1.0');
 const TYPE_DEFAULT = DXN.make('com.example.type.Type', '0.1.0');
 
 const TestLayer = SqlTransaction.layer.pipe(
@@ -616,6 +618,76 @@ describe('FtsIndex', () => {
       expect(objectIds).toContain(queueObj.data.id);
       // Should NOT contain space2 object (not in space1 and not the specified queue).
       expect(objectIds).not.toContain(space2Obj.data.id);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'should scope matches by typeDxns',
+    Effect.fnUntraced(function* () {
+      const index = new FtsIndex();
+      const metaIndex = new EntityMetaIndex();
+      yield* index.migrate();
+      yield* metaIndex.migrate();
+
+      const spaceId = SpaceId.random();
+      const person: IndexerObject = {
+        spaceId,
+        queueId: null,
+        queueNamespace: null,
+        documentId: 'doc-person',
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: {
+          id: EntityId.random(),
+          [ATTR_TYPE]: TYPE_PERSON,
+          title: 'Shared Term Person',
+        },
+      };
+      const task: IndexerObject = {
+        spaceId,
+        queueId: null,
+        queueNamespace: null,
+        documentId: 'doc-task',
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: {
+          id: EntityId.random(),
+          [ATTR_TYPE]: TYPE_TASK,
+          title: 'Shared Term Task',
+        },
+      };
+
+      yield* metaIndex.update([person, task]);
+      yield* metaIndex.lookupRecordIds([person, task]);
+      yield* index.update([person, task]);
+
+      const defaultQuery = { query: 'Shared', spaceId: null, includeAllQueues: false, queueIds: null } as const;
+
+      // No type scope — both match.
+      const unscoped = yield* index.query(defaultQuery);
+      expect(unscoped).toHaveLength(2);
+      const nullScope = yield* index.query({ ...defaultQuery, typeDxns: null });
+      expect(nullScope).toHaveLength(2);
+
+      // Scoped to one type.
+      const personOnly = yield* index.query({ ...defaultQuery, typeDxns: [TYPE_PERSON] });
+      expect(personOnly).toHaveLength(1);
+      expect(personOnly[0].objectId).toBe(person.data.id);
+
+      // Versionless DXN matches versioned rows.
+      const versionless = yield* index.query({ ...defaultQuery, typeDxns: [TYPE_PERSON_VERSIONLESS] });
+      expect(versionless).toHaveLength(1);
+      expect(versionless[0].objectId).toBe(person.data.id);
+
+      // Multiple types are OR-ed.
+      const both = yield* index.query({ ...defaultQuery, typeDxns: [TYPE_PERSON, TYPE_TASK] });
+      expect(both).toHaveLength(2);
+
+      // Empty scope matches nothing.
+      const none = yield* index.query({ ...defaultQuery, typeDxns: [] });
+      expect(none).toHaveLength(0);
     }, Effect.provide(TestLayer)),
   );
 

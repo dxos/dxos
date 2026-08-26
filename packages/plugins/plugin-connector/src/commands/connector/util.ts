@@ -34,7 +34,9 @@ export const OAUTH_PRESETS: OAuthPreset[] = [
     label: 'Google',
     scopes: [
       'https://www.googleapis.com/auth/calendar.readonly',
-      'https://www.googleapis.com/auth/gmail.readonly',
+      // `gmail.modify` (not `gmail.readonly`) — must stay within the scope set declared for
+      // restricted-scope verification (DX-794); see plugin-google `src/scopes.ts`.
+      'https://www.googleapis.com/auth/gmail.modify',
       'https://www.googleapis.com/auth/gmail.send',
       'https://www.googleapis.com/auth/userinfo.email',
       'https://www.googleapis.com/auth/youtube.readonly',

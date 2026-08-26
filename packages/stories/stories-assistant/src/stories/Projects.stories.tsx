@@ -66,18 +66,18 @@ const decorators = createDecorators({
       text: PROJECT_INSTRUCTIONS,
       commands: PROJECT_COMMANDS,
     });
-    Obj.setParent(instructions, project);
     Obj.update(project, (project) => {
       project.instructions = Ref.make(instructions);
     });
+    Obj.setParent(instructions, project);
     space.db.add(project);
     await space.db.flush({ indexes: true });
   },
   // Mirror ChatCompanion's project wiring: instructions steer via the chat's ref; skills and
   // context objects (plus the project itself) travel via bindings.
-  onChatCreated: async ({ space, chat, binder }) => {
+  onChatCreated: async ({ db, chat, binder }) => {
     const { Project } = await import('@dxos/compute');
-    const [project] = await space.db.query(Filter.type(Project.Project)).run();
+    const [project] = await db.query(Filter.type(Project.Project)).run();
     if (!chat.instructions && project.instructions) {
       const instructionsRef = project.instructions;
       Obj.update(chat, (chat) => {

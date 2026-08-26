@@ -3,7 +3,6 @@
 //
 
 import { it } from '@effect/vitest';
-import * as Context from 'effect/Context';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
@@ -30,31 +29,31 @@ const testRuntime = ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntim
 const Compute = Operation.make({
   input: Schema.Struct({ value: Schema.Number }),
   output: Schema.Struct({ value: Schema.Number }),
-  meta: { key: DXN.make('org.example.test.compute') },
+  meta: { key: DXN.make('com.example.operation.test.compute') },
 });
 
 const ToString = Operation.make({
   input: Schema.Struct({ value: Schema.Number }),
   output: Schema.Struct({ string: Schema.String }),
-  meta: { key: DXN.make('org.example.test.toString') },
+  meta: { key: DXN.make('com.example.operation.test.toString') },
 });
 
 const Add = Operation.make({
   input: Schema.Tuple([Schema.Number, Schema.Number]),
   output: Schema.Number,
-  meta: { key: DXN.make('org.example.test.add') },
+  meta: { key: DXN.make('com.example.operation.test.add') },
 });
 
 const SideEffect = Operation.make({
   input: Schema.Void,
   output: Schema.Void,
-  meta: { key: DXN.make('org.example.test.sideEffect') },
+  meta: { key: DXN.make('com.example.operation.test.sideEffect') },
 });
 
 const Fail = Operation.make({
   input: Schema.Struct({ value: Schema.Number }),
   output: Schema.Void,
-  meta: { key: DXN.make('org.example.test.fail') },
+  meta: { key: DXN.make('com.example.operation.test.fail') },
 });
 
 //
@@ -293,7 +292,7 @@ describe('OperationInvoker.invokePromise concurrency contract', () => {
     const Write = Operation.make({
       input: Schema.Struct({ value: Schema.String, stall: Schema.Boolean }),
       output: Schema.Void,
-      meta: { key: DXN.make('org.example.test.write') },
+      meta: { key: DXN.make('com.example.operation.test.write') },
     });
 
     const applied: string[] = [];
@@ -321,49 +320,5 @@ describe('OperationInvoker.invokePromise concurrency contract', () => {
     // Issued [stale, newest]; applied [newest, stale] — with last-write-wins state the stale value
     // wins, which is why such state must not be dispatched through invokePromise.
     expect(applied).toEqual(['newest', 'stale']);
-  });
-});
-
-//
-// Type-level tests for Operation.withHandler service constraints.
-//
-
-describe('Operation.withHandler type safety', () => {
-  test('handler using undeclared service is a type error', () => {
-    class DeclaredService extends Context.Service<DeclaredService, { declared: () => void }>()(
-      '@test/DeclaredService',
-    ) {}
-    class UndeclaredService extends Context.Service<UndeclaredService, { undeclared: () => void }>()(
-      '@test/UndeclaredService',
-    ) {}
-
-    const opWithDeclaredService = Operation.make({
-      input: Schema.Void,
-      output: Schema.Void,
-      meta: { key: DXN.make('org.example.test.declaredService') },
-      services: [DeclaredService],
-    });
-
-    // Using the declared service is allowed.
-    Operation.withHandler(opWithDeclaredService, (_input) =>
-      Effect.gen(function* () {
-        yield* DeclaredService;
-      }),
-    );
-
-    // Using an undeclared service should be a type error.
-    Operation.withHandler(opWithDeclaredService, (_input) =>
-      // @ts-expect-error - UndeclaredService is not in the operation's services
-      Effect.gen(function* () {
-        yield* UndeclaredService;
-      }),
-    );
-
-    // Operation.Service is always available to handlers without declaring it.
-    Operation.withHandler(opWithDeclaredService, (_input) =>
-      Effect.gen(function* () {
-        yield* Operation.schedule(SideEffect);
-      }),
-    );
   });
 });

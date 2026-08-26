@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
@@ -24,13 +25,13 @@ const make = () =>
         Planning: the trip's bound object may already contain "activity" segments — fixed
         appointments at specific addresses, ordered by time. Fill in the connections between them.
         For each gap between two consecutive activities in different places, add a "road" segment
-        (subKind transfer/car) from the first place to the second using the add-segment tool. When
+        (subKind transfer/car) from the first place to the second using the ${Operation.toolName(TripOperation.AddSegment)} tool. When
         consecutive activities span an overnight stay, add an "accommodation" segment near the
-        relevant activity with sensible check-in/check-out times. Use the plan-route tool to compute
+        relevant activity with sensible check-in/check-out times. Use the ${Operation.toolName(RoutingOperation.PlanRoute)} tool to compute
         driving routes once road segments exist. Keep segments in chronological order and reuse the
         activities' addresses as origins/destinations.
 
-        Bookings: use the search-bookings tool to find travel (flights first). Set the query _tag to
+        Bookings: use the ${Operation.toolName(BookingOperation.SearchBookings)} tool to find travel (flights first). Set the query _tag to
         'flight' and provide origin and destination as IATA codes (e.g. JFK, LHR), a departureDate
         (ISO date), and optionally serviceClass ('economy' | 'premium' | 'business' | 'first') and
         passengers. Pass a provider id only if the user named a specific provider. Summarize the

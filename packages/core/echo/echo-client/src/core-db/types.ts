@@ -153,3 +153,13 @@ export interface LoadObjectDocumentOptions {
 }
 
 export type InitRootProxyFn = (core: unknown) => void;
+
+/** @see EntityManager `_releaseObject`. */
+export type ReleaseObjectOptions = {
+  /**
+   * Also drop the object's document (when nothing else is mounted in it). Set where the object left
+   * the space directory; never where its core was merely collected, since the document may still be
+   * under load or shared.
+   */
+  releaseDocument?: boolean;
+};

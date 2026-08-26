@@ -83,18 +83,20 @@ Use `--on-failure=continue` to continue running other unrelated tasks even if so
 
 ### Plugin sets
 
-Composer builds one of **two plugin sets**, chosen at build time by `DX_PLUGIN_SET`:
+Composer builds one of **three plugin sets**, chosen at build time by `DX_PLUGIN_SET`:
 
-| Set            | Selected by                | Plugins                                   | Registry                         |
-| :------------- | :------------------------- | :---------------------------------------- | :------------------------------- |
-| full (default) | `DX_PLUGIN_SET` unset      | `src/plugin-defs.tsx` — the whole catalog | yes, incl. the dev plugin loader |
-| curated        | `DX_PLUGIN_SET=production` | `src/plugin-defs.production.tsx`          | no                               |
+| Set            | Selected by                | Plugins                                                   | Registry                         |
+| :------------- | :------------------------- | :-------------------------------------------------------- | :------------------------------- |
+| full (default) | `DX_PLUGIN_SET` unset      | `src/plugin-defs.tsx` — the whole catalog                 | yes, incl. the dev plugin loader |
+| curated        | `DX_PLUGIN_SET=production` | `src/plugin-defs.production.tsx`                          | no                               |
+| mobile         | `DX_PLUGIN_SET=mobile`     | `src/plugin-defs.mobile.tsx` — chat and its content types | yes                              |
 
 `vite.config.ts` aliases `./plugin-defs` to the selected file, so **selection is build-time, not a
-runtime flag** — a plugin the curated set doesn't name never enters the module graph (that's the
+runtime flag** — a plugin the chosen set doesn't name never enters the module graph (that's the
 bundle-size half of it; a runtime toggle would ship everything and merely hide the UI).
-`composer-app:check-plugin-set` reads the build's own sourcemaps and fails if one leaks in; **Check**
-runs it beside `check-boot-budget`.
+`composer-app:check-plugin-set` reads the build's own sourcemaps and fails if a plugin outside the
+**production** set leaks in — it only guards that one set, never whichever set a given build actually
+chose; **Check** runs it beside `check-boot-budget`.
 
 Consequences worth knowing before you debug something:
 

@@ -55,6 +55,25 @@ const _escapeLikePrefix = (prefix: string) => {
   return `${escaped}:%`;
 };
 
+/**
+ * WHERE fragment matching the `typeDXN` column against any of the given type identifiers,
+ * covering legacy-equivalent stored forms and — for versionless DXNs — versioned rows via a
+ * LIKE prefix. Shared with `FtsIndex` so type scoping matches identically across indexes.
+ */
+export const buildTypeDxnCondition = (sql: SqlClient.SqlClient, typeDxns: readonly string[]): Statement.Fragment =>
+  sql.or(
+    typeDxns.map((typeDXN) => {
+      const normalized = _normalizeTypeUri(typeDXN);
+      const parsedDxn = DXN.isDXN(normalized) ? normalized : undefined;
+      const hasNoVersion = parsedDxn !== undefined && DXN.getVersion(parsedDxn) === undefined;
+      const forms = _typeUriEquivalents(normalized);
+      const exactMatch = sql.or(forms.map((form) => sql`typeDXN = ${form}`));
+      return hasNoVersion
+        ? sql.or([exactMatch, sql.or(forms.map((form) => sql`typeDXN LIKE ${_escapeLikePrefix(form)} ESCAPE '\\'`))])
+        : exactMatch;
+    }),
+  );
+
 export const EntityMeta = Schema.Struct({
   recordId: Schema.Number,
   objectId: EntityId,
@@ -175,19 +194,9 @@ export class EntityMetaIndex implements Index {
     ): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
-        const normalizedTypeDXN = _normalizeTypeUri(query.typeDXN);
-        const parsedDxn = DXN.isDXN(normalizedTypeDXN) ? normalizedTypeDXN : undefined;
-        const hasNoVersion = parsedDxn !== undefined && DXN.getVersion(parsedDxn) === undefined;
-        const forms = _typeUriEquivalents(normalizedTypeDXN);
-        const exactMatch = sql.or(forms.map((form) => sql`typeDXN = ${form}`));
-        // Version wildcard must cover every equivalent form so a versionless query still matches
-        // legacy versioned rows written under the single-slash prefix.
-        const likeMatch = sql.or(forms.map((form) => sql`typeDXN LIKE ${_escapeLikePrefix(form)} ESCAPE '\\'`));
-
         // SQLite stores booleans as integers, so we need to specify the raw row type.
-        const rows = hasNoVersion
-          ? yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND (${exactMatch} OR ${likeMatch})`
-          : yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND ${exactMatch}`;
+        const rows =
+          yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND (${buildTypeDxnCondition(sql, [query.typeDXN])})`;
         return rows.map((row) => ({
           ...row,
           deleted: !!row.deleted,
@@ -260,21 +269,7 @@ export class EntityMetaIndex implements Index {
         }
         const sql = yield* SqlClient.SqlClient;
         const sourceCondition = buildSourceCondition(sql, spaceIds, includeAllQueues, queueIds);
-        const typeWhere = sql.or(
-          typeDxns.map((typeDXN) => {
-            const normalized = _normalizeTypeUri(typeDXN);
-            const parsedDxn = DXN.isDXN(normalized) ? normalized : undefined;
-            const hasNoVersion = parsedDxn !== undefined && DXN.getVersion(parsedDxn) === undefined;
-            const forms = _typeUriEquivalents(normalized);
-            const exactMatch = sql.or(forms.map((form) => sql`typeDXN = ${form}`));
-            return hasNoVersion
-              ? sql.or([
-                  exactMatch,
-                  sql.or(forms.map((form) => sql`typeDXN LIKE ${_escapeLikePrefix(form)} ESCAPE '\\'`)),
-                ])
-              : exactMatch;
-          }),
-        );
+        const typeWhere = buildTypeDxnCondition(sql, typeDxns);
         const queueWindow = buildQueueWindow(sql, window);
         const rows = inverted
           ? yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition} AND NOT ${typeWhere}${queueWindow}`

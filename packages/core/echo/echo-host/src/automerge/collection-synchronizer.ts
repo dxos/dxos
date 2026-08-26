@@ -216,11 +216,34 @@ export class CollectionSynchronizer extends Resource {
     validateCollectionState(state);
     const perCollectionState = this._getOrCreatePerCollectionState(collectionId);
     const previousRemoteState = perCollectionState.remoteStates.get(peerId);
-    if (previousRemoteState && isCollectionStateEqual(previousRemoteState, state)) {
+    // Dedupe an unchanged remote state only while that peer is fully caught up. A peer whose
+    // state is unchanged AND still diverges from ours is a stalled sync: skipping the diff
+    // would suppress `peerCollectionStateUpdated`, and with it the `_handleCollectionSync`
+    // replication retry, for as long as the remote keeps repeating itself — i.e. forever.
+    // The poll below can then only ever act on change, never on a stall, and the sole escape
+    // is a reconnect.
+    if (
+      previousRemoteState &&
+      isCollectionStateEqual(previousRemoteState, state) &&
+      this._isSyncedWithPeer(collectionId, peerId)
+    ) {
       return;
     }
     perCollectionState.remoteStates.set(peerId, state);
     this._diffCollectionState(collectionId, peerId);
+  }
+
+  /** True when the last recorded state for `peerId` has no outstanding work against our local state. */
+  private _isSyncedWithPeer(collectionId: string, peerId: PeerId): boolean {
+    const perCollectionState = this._getOrCreatePerCollectionState(collectionId);
+    const remoteState = perCollectionState.remoteStates.get(peerId);
+    if (!remoteState) {
+      return false;
+    }
+
+    const localState = perCollectionState.localState ?? { documents: {} };
+    const diff = diffCollectionStateForPeer(localState, remoteState, { isEdgePeer: isEdgePeerId(peerId) });
+    return diff.different.length === 0 && diff.missingOnLocal.length === 0 && diff.missingOnRemote.length === 0;
   }
 
   private _diffCollectionState(collectionId: string, peerId: PeerId) {

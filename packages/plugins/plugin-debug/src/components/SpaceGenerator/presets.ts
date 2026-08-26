@@ -248,7 +248,7 @@ export const generator = () => ({
           const canvasModel = CanvasGraphModel.create<ComputeShape>();
 
           let functionTrigger: Trigger.Trigger | undefined;
-          canvasModel.builder.call((builder) => {
+          {
             const gpt = canvasModel.createNode(createGpt(position({ x: 0, y: -14 })));
             const triggerShape = createTrigger({
               spaceId: space.id,
@@ -260,28 +260,29 @@ export const generator = () => ({
             const { queueId } = setupQueue(space, canvasModel);
             const append = canvasModel.createNode(createAppend(position({ x: 10, y: 6 })));
 
-            builder
-              .createEdge({
-                source: trigger.id,
-                target: gpt.id,
-                input: 'prompt',
-                output: 'bodyText',
-              })
-              .createEdge({ source: gpt.id, target: text.id, output: 'text' })
-              .createEdge({
-                source: queueId.id,
-                target: append.id,
-                input: 'id',
-              })
-              .createEdge({
-                source: gpt.id,
-                target: append.id,
-                output: 'messages',
-                input: 'items',
-              });
+            canvasModel.createEdge({
+              source: trigger.id,
+              target: gpt.id,
+              input: 'prompt',
+              output: 'bodyText',
+            });
+
+            canvasModel.createEdge({ source: gpt.id, target: text.id, output: 'text' });
+            canvasModel.createEdge({
+              source: queueId.id,
+              target: append.id,
+              input: 'id',
+            });
+
+            canvasModel.createEdge({
+              source: gpt.id,
+              target: append.id,
+              output: 'messages',
+              input: 'items',
+            });
 
             functionTrigger = triggerShape.functionTrigger!.target!;
-          });
+          }
 
           const computeModel = createComputeGraph(canvasModel);
 
@@ -351,7 +352,7 @@ export const generator = () => ({
     //       const templateContent = ['{'];
 
     //       let functionTrigger: FunctionTrigger | undefined;
-    //       canvasModel.builder.call((builder) => {
+    //       {
     //         const triggerShape = createTrigger({
     //           spaceId: space.id,
     //           triggerKind: 'email',
@@ -371,10 +372,10 @@ export const generator = () => ({
     //         const properties = SchemaAST.getPropertySignatures(EmailTriggerOutput.ast);
     //         for (let i = 0; i < properties.length; i++) {
     //           const propName = properties[i].name.toString();
-    //           builder.createEdge({ source: trigger.id, target: template.id, input: propName, output: propName });
+    //           canvasModel.createEdge({ source: trigger.id, target: template.id, input: propName, output: propName });
     //           templateContent.push(`  "${propName}": "{{${propName}}}"` + (i === properties.length - 1 ? '' : ','));
     //         }
-    //         templateContent.push('}');
+    //         templateContent.push('}
 
     //         builder
     //           .createEdge({ source: tableId.id, target: appendToTable.id, input: 'id' })
@@ -405,7 +406,7 @@ export const generator = () => ({
         const objects = range(n, () => {
           const canvasModel = CanvasGraphModel.create<ComputeShape>();
 
-          canvasModel.builder.call((builder) => {
+          {
             const gpt = canvasModel.createNode(createGpt(position({ x: 0, y: -14 })));
             const chat = canvasModel.createNode(createChat(position({ x: -18, y: -2 })));
             const text = canvasModel.createNode(createText(position({ x: 19, y: 3, width: 10, height: 10 })));
@@ -413,21 +414,21 @@ export const generator = () => ({
 
             const append = canvasModel.createNode(createAppend(position({ x: 10, y: 6 })));
 
-            builder
-              .createEdge({ source: chat.id, target: gpt.id, input: 'prompt' })
-              .createEdge({ source: gpt.id, target: text.id, output: 'text' })
-              .createEdge({
-                source: queueId.id,
-                target: append.id,
-                input: 'id',
-              })
-              .createEdge({
-                source: gpt.id,
-                target: append.id,
-                output: 'messages',
-                input: 'items',
-              });
-          });
+            canvasModel.createEdge({ source: chat.id, target: gpt.id, input: 'prompt' });
+            canvasModel.createEdge({ source: gpt.id, target: text.id, output: 'text' });
+            canvasModel.createEdge({
+              source: queueId.id,
+              target: append.id,
+              input: 'id',
+            });
+
+            canvasModel.createEdge({
+              source: gpt.id,
+              target: append.id,
+              output: 'messages',
+              input: 'items',
+            });
+          }
 
           const computeModel = createComputeGraph(canvasModel);
 
@@ -458,7 +459,7 @@ export const generator = () => ({
     //       const templateContent = ['{'];
 
     //       let functionTrigger: FunctionTrigger | undefined;
-    //       canvasModel.builder.call((builder) => {
+    //       {
     //         const gpt = canvasModel.createNode(
     //           createGpt(rawPosition({ centerX: -400, centerY: -112, width: 256, height: 202 })),
     //         );
@@ -495,15 +496,15 @@ export const generator = () => ({
     //         );
 
     //         templateContent.push('  "category": "{{text}}",');
-    //         builder.createEdge({ source: gpt.id, target: template.id, input: 'text', output: 'text' });
+    //         canvasModel.createEdge({ source: gpt.id, target: template.id, input: 'text', output: 'text' });
 
     //         const properties = SchemaAST.getPropertySignatures(EmailTriggerOutput.ast);
     //         for (let i = 0; i < properties.length; i++) {
     //           const propName = properties[i].name.toString();
-    //           builder.createEdge({ source: trigger.id, target: template.id, input: propName, output: propName });
+    //           canvasModel.createEdge({ source: trigger.id, target: template.id, input: propName, output: propName });
     //           templateContent.push(`  "${propName}": "{{${propName}}}"` + (i === properties.length - 1 ? '' : ','));
     //         }
-    //         templateContent.push('}');
+    //         templateContent.push('}
 
     //         builder
     //           .createEdge({ source: tableId.id, target: appendToTable.id, input: 'id' })
@@ -539,7 +540,7 @@ export const generator = () => ({
         const objects = range(n, () => {
           const canvasModel = CanvasGraphModel.create<ComputeShape>();
 
-          canvasModel.builder.call((builder) => {
+          {
             const sourceCurrency = canvasModel.createNode(
               createConstant({ value: 'USD', ...position({ x: -10, y: -5 }) }),
             );
@@ -549,23 +550,24 @@ export const generator = () => ({
             const converter = canvasModel.createNode(createFunction(position({ x: 0, y: 0 })));
             const view = canvasModel.createNode(createSurface(position({ x: 12, y: 0 })));
 
-            builder
-              .createEdge({
-                source: sourceCurrency.id,
-                target: converter.id,
-                input: 'from',
-              })
-              .createEdge({
-                source: targetCurrency.id,
-                target: converter.id,
-                input: 'to',
-              })
-              .createEdge({
-                source: converter.id,
-                target: view.id,
-                output: 'rate',
-              });
-          });
+            canvasModel.createEdge({
+              source: sourceCurrency.id,
+              target: converter.id,
+              input: 'from',
+            });
+
+            canvasModel.createEdge({
+              source: targetCurrency.id,
+              target: converter.id,
+              input: 'to',
+            });
+
+            canvasModel.createEdge({
+              source: converter.id,
+              target: view.id,
+              output: 'rate',
+            });
+          }
 
           const computeModel = createComputeGraph(canvasModel);
 
@@ -583,7 +585,7 @@ export const generator = () => ({
           const canvasModel = CanvasGraphModel.create<ComputeShape>();
 
           let functionTrigger: Trigger.Trigger | undefined;
-          canvasModel.builder.call((builder) => {
+          {
             const triggerShape = createTrigger({
               spaceId: space.id,
               triggerKind: 'timer',
@@ -607,35 +609,38 @@ export const generator = () => ({
             const view = canvasModel.createNode(createText(position({ x: 12, y: 0 })));
             const queue = canvasModel.createNode(createFeed(position({ x: 0, y: 12 })));
 
-            builder
-              .createEdge({
-                source: trigger.id,
-                target: converter.id,
-                input: 'tick',
-              })
-              .createEdge({
-                source: channelId.id,
-                target: converter.id,
-                input: 'channelId',
-              })
-              .createEdge({
-                source: queueId.id,
-                target: converter.id,
-                input: 'queueId',
-              })
-              .createEdge({
-                source: converter.id,
-                target: view.id,
-                output: 'newMessages',
-              })
-              .createEdge({
-                source: queueId.id,
-                target: queue.id,
-                input: 'input',
-              });
+            canvasModel.createEdge({
+              source: trigger.id,
+              target: converter.id,
+              input: 'tick',
+            });
+
+            canvasModel.createEdge({
+              source: channelId.id,
+              target: converter.id,
+              input: 'channelId',
+            });
+
+            canvasModel.createEdge({
+              source: queueId.id,
+              target: converter.id,
+              input: 'queueId',
+            });
+
+            canvasModel.createEdge({
+              source: converter.id,
+              target: view.id,
+              output: 'newMessages',
+            });
+
+            canvasModel.createEdge({
+              source: queueId.id,
+              target: queue.id,
+              input: 'input',
+            });
 
             functionTrigger = triggerShape.functionTrigger!.target!;
-          });
+          }
 
           const computeModel = createComputeGraph(canvasModel);
           attachTrigger(functionTrigger, computeModel);
@@ -664,7 +669,7 @@ export const generator = () => ({
     //       invariant(messages, 'Table not found.');
 
     //       let functionTrigger: FunctionTrigger | undefined;
-    //       canvasModel.builder.call((builder) => {
+    //       {
     //         const triggerShape = createTrigger({
     //           spaceId: space.id,
     //           triggerKind: 'queue',
@@ -685,7 +690,7 @@ export const generator = () => ({
     //           .createEdge({ source: trigger.id, target: appendToTable.id, input: 'items', output: 'item' });
 
     //         functionTrigger = triggerShape.functionTrigger!.target!;
-    //       });
+    //       }
 
     //       const computeModel = createComputeGraph(canvasModel);
     //       attachTrigger(functionTrigger, computeModel);
@@ -715,7 +720,7 @@ const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
   );
 
   let functionTrigger: Trigger.Trigger | undefined;
-  canvasModel.builder.call((builder) => {
+  {
     const triggerShape = createTrigger({
       spaceId: space.id,
       triggerKind,
@@ -732,20 +737,20 @@ const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
       createRandom(rawPosition({ centerX: -509, centerY: -30, width: 64, height: 64 })),
     );
 
-    builder
-      .createEdge({ source: queueId.id, target: append.id, input: 'id' })
-      .createEdge({ source: template.id, target: append.id, input: 'items' })
-      .createEdge({
-        source: trigger.id,
-        target: template.id,
-        output: triggerOutputName,
-        input: 'type',
-      })
-      .createEdge({
-        source: random.id,
-        target: template.id,
-        input: 'changeId',
-      });
+    canvasModel.createEdge({ source: queueId.id, target: append.id, input: 'id' });
+    canvasModel.createEdge({ source: template.id, target: append.id, input: 'items' });
+    canvasModel.createEdge({
+      source: trigger.id,
+      target: template.id,
+      output: triggerOutputName,
+      input: 'type',
+    });
+
+    canvasModel.createEdge({
+      source: random.id,
+      target: template.id,
+      input: 'changeId',
+    });
 
     functionTrigger = triggerShape.functionTrigger!.target!;
     const triggerSpec = functionTrigger.spec;
@@ -753,7 +758,7 @@ const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
     Obj.update(functionTrigger, (functionTrigger) => {
       initSpec(functionTrigger.spec as any);
     });
-  });
+  }
 
   const computeModel = createComputeGraph(canvasModel);
 

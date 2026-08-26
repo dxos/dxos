@@ -12,7 +12,12 @@ import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilitie
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
+import { meta } from '#meta';
+import { translations } from '#translations';
 import { SheetCapabilities, SheetEvents } from '#types';
+
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
 
 // Ordering-only: registers the sort comparator once the app graph exists; the body reads
 // nothing else.
@@ -22,6 +27,7 @@ export const AnchorSort = AppCapability.anchorSort(() => import('./anchor-sort')
 });
 export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config'), {
   activatesOn: SheetEvents.Start,
+  environments: ['node'],
 });
 export const ComputeGraphRegistry = Capability.lazyModule(
   'ComputeGraphRegistry',
@@ -35,7 +41,9 @@ export const ComputeGraphRegistry = Capability.lazyModule(
   },
   () => import('./compute-graph-registry'),
 );
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
+  environments: ['node'],
+});
 export const Markdown = Capability.lazyModule(
   'MarkdownExtension',
   {
@@ -58,7 +66,17 @@ export const SheetState = Capability.lazyModule(
   { provides: [SheetCapabilities.GridInstances], activatesOn: SheetEvents.Start },
   () => import('./state'),
 );
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
+  environments: ['node'],
+});
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'), {
   activatesOn: SheetEvents.Start,
+  environments: ['node'],
+});
+export const Translations = AppCapability.translations(translations);
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
 });

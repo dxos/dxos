@@ -308,10 +308,11 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   );
 
   const handleResolve = useCallback(
-    (anchor: AnchoredTo.AnchoredTo) =>
-      invokePromise(CommentOperation.ToggleResolved, {
-        thread: Relation.getSource(anchor) as Thread.Thread,
-      }),
+    (anchor: AnchoredTo.AnchoredTo) => {
+      // The control flips, so it reads the thread's status and states the one it wants.
+      const thread = Relation.getSource(anchor) as Thread.Thread;
+      return invokePromise(CommentOperation.SetResolved, { thread, resolved: thread.status !== 'resolved' });
+    },
     [invokePromise],
   );
 
@@ -345,7 +346,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         anchor: anchor.anchor,
         proposal,
       });
-      await invokePromise(CommentOperation.ToggleResolved, { thread });
+      await invokePromise(CommentOperation.SetResolved, { thread, resolved: true });
     },
     [invokePromise, subject],
   );
@@ -364,7 +365,10 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         anchor: anchor.anchor,
         branch,
       });
-      await invokePromise(CommentOperation.ToggleResolved, { thread: Relation.getSource(anchor) as Thread.Thread });
+      await invokePromise(CommentOperation.SetResolved, {
+        thread: Relation.getSource(anchor) as Thread.Thread,
+        resolved: true,
+      });
     },
     [invokePromise, subject, reviewBranch],
   );

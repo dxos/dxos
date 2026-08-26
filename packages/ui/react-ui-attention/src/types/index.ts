@@ -9,3 +9,8 @@
 export * as Attention from './Attention';
 export * as Selection from './Selection';
 export * as ViewState from './ViewState';
+
+// The view-state backends: Effect atoms over the definitions above, with no React of their own, so
+// a headless host can construct a `ViewState.Manager` without the provider component that wraps it
+// in the browser.
+export * from '../core';

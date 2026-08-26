@@ -12,10 +12,6 @@ import { OutlineOperation } from '#types';
 
 import { InvalidOperationInput } from '../errors';
 
-/**
- * Item-wise upsert is the default so an agent can flip one checkbox without rewriting the
- * document — the markdown is a human surface too, and prose between items must survive.
- */
 const handler: Operation.WithHandler<typeof OutlineOperation.UpdateOutline> = OutlineOperation.UpdateOutline.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ outline: outlineRef, items, content }) {

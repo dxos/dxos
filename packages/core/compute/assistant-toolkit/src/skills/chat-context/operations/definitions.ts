@@ -12,7 +12,7 @@ import { trim } from '@dxos/util';
 
 export const ContextAdd = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.database.contextAdd'),
+    key: DXN.make('org.dxos.operation.assistantToolkit.addContext'),
     name: 'Add to context',
     icon: 'ph--plus-circle--regular',
     description: trim`
@@ -31,7 +31,7 @@ export const ContextAdd = Operation.make({
 
 export const ContextRemove = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.database.contextRemove'),
+    key: DXN.make('org.dxos.operation.assistantToolkit.removeContext'),
     name: 'Remove from context',
     icon: 'ph--minus-circle--regular',
     description: trim`

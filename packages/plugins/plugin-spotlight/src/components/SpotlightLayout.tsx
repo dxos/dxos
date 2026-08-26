@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import './spotlight.css';
+
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { COMMANDS_DIALOG } from '@dxos/plugin-navtree';
+import { COMMANDS_DIALOG } from '@dxos/plugin-navtree/meta';
 import { Dialog, ErrorFallback, useAsyncEffect } from '@dxos/react-ui';
 import { isTauri } from '@dxos/util';
 

@@ -43,14 +43,14 @@ const seedTaskSet = (space: Space) => {
     },
     {
       title: 'Finalize roast curve',
-      status: 'in-progress',
+      status: 'started',
       priority: 'high',
       assignee: { contact: Ref.make(kai) },
       milestone: Ref.make(roasting),
     },
     {
       title: 'Draft launch email',
-      status: 'in-progress',
+      status: 'started',
       assignee: { role: 'assistant', name: 'Scout' },
       milestone: Ref.make(launch),
     },

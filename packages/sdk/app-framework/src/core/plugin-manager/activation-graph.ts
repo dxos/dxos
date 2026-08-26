@@ -2,7 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Graph, GraphModel } from '@dxos/graph';
+import * as Option from 'effect/Option';
+
+import * as GraphEdge from '@dxos/graph/GraphEdge';
+import * as GraphModel from '@dxos/graph/GraphModel';
+import * as GraphNode from '@dxos/graph/GraphNode';
 
 import type * as Capability from '../capability';
 import type * as Plugin from '../plugin';
@@ -26,8 +30,8 @@ import type * as Plugin from '../plugin';
 
 export type EdgeKind = 'hard' | 'soft';
 
-export type ActivationNode = Graph.Node.Node<Plugin.PluginModule>;
-export type ActivationEdge = Graph.Edge.Edge<{ capability: string }>;
+export type ActivationNode = GraphNode.Of<Plugin.PluginModule>;
+export type ActivationEdge = GraphEdge.Of<{ capability: string }>;
 export type ActivationGraphModel = GraphModel.GraphModel<ActivationNode, ActivationEdge>;
 
 export type CycleEntry = { module: string; capability: string };
@@ -231,100 +235,31 @@ export const buildSingletonGraph = (modules: readonly Plugin.PluginModule[]): Ac
   return model;
 };
 
-/** Outgoing adjacency (provider -> consumers) restricted to the given edge kinds. */
-const adjacency = (
-  model: ActivationGraphModel,
-  kinds: readonly EdgeKind[],
-): Map<string, Array<{ target: string; capability: string }>> => {
-  const out = new Map<string, Array<{ target: string; capability: string }>>();
-  for (const edge of model.edges) {
-    if (!kinds.includes(edge.type as EdgeKind)) {
-      continue;
-    }
-    const targets = out.get(edge.source) ?? [];
-    targets.push({ target: edge.target, capability: edge.data.capability });
-    out.set(edge.source, targets);
-  }
-  return out;
-};
+const edgeOfKind =
+  (kinds: readonly EdgeKind[]) =>
+  (edge: ActivationEdge): boolean =>
+    kinds.some((kind) => kind === edge.type);
 
 /**
- * Kahn's algorithm over the graph restricted to the given edge kinds, returning topological
- * activation waves (modules in the same wave have no edges among them and activate
- * concurrently). Returns `undefined` when the restricted graph is cyclic.
+ * Topological activation waves over the given edge kinds (modules in the same wave have no edges
+ * among them and activate concurrently). Returns `undefined` when the restricted graph is cyclic.
  */
 export const computeActivationWaves = (
   model: ActivationGraphModel,
   kinds: readonly EdgeKind[],
-): Plugin.PluginModule[][] | undefined => {
-  const edges = adjacency(model, kinds);
-  const inDegree = new Map(model.nodes.map((node) => [node.id, 0]));
-  for (const [, targets] of edges) {
-    for (const { target } of targets) {
-      inDegree.set(target, (inDegree.get(target) ?? 0) + 1);
-    }
-  }
-
-  const waves: Plugin.PluginModule[][] = [];
-  let visited = 0;
-  let frontier = model.nodes.filter((node) => (inDegree.get(node.id) ?? 0) === 0);
-  while (frontier.length > 0) {
-    waves.push(frontier.map((node) => node.data));
-    visited += frontier.length;
-    const next: ActivationNode[] = [];
-    for (const node of frontier) {
-      for (const { target } of edges.get(node.id) ?? []) {
-        const remaining = (inDegree.get(target) ?? 0) - 1;
-        inDegree.set(target, remaining);
-        if (remaining === 0) {
-          const targetNode = model.findNode(target);
-          if (targetNode) {
-            next.push(targetNode);
-          }
-        }
-      }
-    }
-    frontier = next;
-  }
-  return visited === model.nodes.length ? waves : undefined;
-};
+): Plugin.PluginModule[][] | undefined =>
+  Option.getOrUndefined(
+    Option.map(model.topoLevels(edgeOfKind(kinds)), (levels) =>
+      levels.map((level) => level.map((id) => model.getNode(id).data)),
+    ),
+  );
 
 /**
  * Finds one cycle in the graph (restricted to the given edge kinds) for diagnostics: each entry
  * is a module and the capability identifier on its outgoing edge within the cycle.
  */
-export const findCyclePath = (model: ActivationGraphModel, kinds: readonly EdgeKind[]): CycleEntry[] => {
-  const edges = adjacency(model, kinds);
-  const state = new Map<string, 'visiting' | 'done'>();
-  let cycle: CycleEntry[] = [];
-
-  const visit = (id: string, stack: CycleEntry[]): boolean => {
-    state.set(id, 'visiting');
-    for (const { target, capability } of edges.get(id) ?? []) {
-      if (state.get(target) === 'done') {
-        continue;
-      }
-      const entry = { module: id, capability };
-      if (state.get(target) === 'visiting') {
-        const start = stack.findIndex((frame) => frame.module === target);
-        cycle = [...stack.slice(start === -1 ? 0 : start), entry];
-        return true;
-      }
-      if (visit(target, [...stack, entry])) {
-        return true;
-      }
-    }
-    state.set(id, 'done');
-    return false;
-  };
-
-  for (const node of model.nodes) {
-    if (!state.has(node.id) && visit(node.id, [])) {
-      break;
-    }
-  }
-  return cycle;
-};
+export const findCyclePath = (model: ActivationGraphModel, kinds: readonly EdgeKind[]): CycleEntry[] =>
+  model.findCycle(edgeOfKind(kinds)).map((step) => ({ module: step.node, capability: step.edge.data.capability }));
 
 /** Ids of the providers the module must not run before (its incoming hard edges). */
 export const requiredProviderIds = (model: ActivationGraphModel, moduleId: string): string[] =>

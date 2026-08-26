@@ -21,10 +21,10 @@ import { createEvalRunner } from '../runner';
 // judgment a deterministic check can't make — is graded by an LLM judge (TESTING.md dimensions
 // A/B/H); every other criterion stays dimension-G (deterministic).
 
-const UPDATE_TASKS_OPERATION_KEY = 'dxn:org.dxos.function.planning.updateTasks';
+const UPDATE_TASKS_OPERATION_KEY = 'dxn:org.dxos.operation.assistantToolkit.updateTasks';
 const OBJECT_WRITE_OPERATION_KEYS = [
-  'dxn:org.dxos.function.database.objectCreate',
-  'dxn:org.dxos.function.database.objectUpdate',
+  'dxn:org.dxos.operation.space.addObject',
+  'dxn:org.dxos.operation.space.updateObject',
 ];
 const OUTLINE_TYPENAME = 'org.dxos.type.outline';
 
@@ -41,7 +41,7 @@ const HAIKU_JUDGE_RUBRIC = trim`
 const task = createEvalRunner({
   sessionChat: true,
   instructions: trim`
-    Create exactly 3 plan tasks with update-tasks for writing a short haiku (3 lines) on these topics:
+    Create exactly 3 plan tasks with assistant-toolkit-update-tasks for writing a short haiku (3 lines) on these topics:
     1. spring rain
     2. ocean waves
     3. night stars
@@ -49,13 +49,13 @@ const task = createEvalRunner({
     Work through the tasks one at a time:
     - Mark only the current task in-progress.
     - Write the haiku for that topic in your response (visible in the chat feed).
-    - Mark that task done with update-tasks before starting the next task.
+    - Mark that task done with assistant-toolkit-update-tasks before starting the next task.
 
     When all three haikus are written and all tasks are done, call completeJob.
   `,
   input: Schema.Unknown,
   output: Schema.Unknown,
-  // Three sequential subtasks, each an update-tasks call + haiku turn, plus a final judge call.
+  // Three sequential subtasks, each a assistant-toolkit-update-tasks call + haiku turn, plus a final judge call.
   timeout: 150_000,
   dbQuery: () =>
     Effect.gen(function* () {
@@ -116,7 +116,7 @@ evalite('Planning — create three haiku tasks and complete each one', {
     },
     {
       name: 'used-update-tasks',
-      description: 'The update-tasks tool was used at least 3 times (once per task).',
+      description: 'The assistant-toolkit-update-tasks tool was used at least 3 times (once per task).',
       scorer: ({ output }) => (output.dbQuery.usedUpdateTasks ? 1 : 0),
     },
     {

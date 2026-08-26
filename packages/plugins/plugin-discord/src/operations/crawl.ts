@@ -33,11 +33,10 @@ const handler: Operation.WithHandler<typeof DiscordOperation.CrawlDiscordChannel
         const sourceLayer = discordSourceLayerFromConnection(connection).pipe(Layer.provide(Database.layer(db)));
 
         const program = Effect.gen(function* () {
-          const store = yield* QuestionStore;
-          const known = new Set((yield* store.list()).map((question) => question.text));
+          const known = new Set((yield* QuestionStore.list()).map((question) => question.text));
           for (const text of questions ?? []) {
             if (!known.has(text)) {
-              yield* store.add(text);
+              yield* QuestionStore.add(text);
               // Track within this batch too, so a repeated text in `questions` is added once.
               known.add(text);
             }

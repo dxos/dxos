@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
@@ -22,7 +23,7 @@ const make = () =>
         request mapping, and a result mapping.
 
         Workflow:
-        1. Call analyze-provider with the Provider's ref to fetch the vendor site's page source.
+        1. Call ${Operation.toolName(SearchOperation.AnalyzeProvider)} with the Provider's ref to fetch the vendor site's page source.
         2. Inspect the source to understand how the site exposes search and lists results.
         3. Derive the search schema as a JSONSchema object whose properties are the typed search
            fields the user can fill in (string / number / boolean). Express ranges (e.g. min/max
@@ -37,7 +38,7 @@ const make = () =>
            use the top candidate (the element that wraps the fields and repeats once per result) as
            the itemLocator, and prefer the exact selector shown — e.g. a "^=" prefix selector when
            container ids are indexed (advertCard-0, advertCard-1), not an exact match.
-        6. Call set-provider-template with the Provider's ref, the request and result mappings, and
+        6. Call ${Operation.toolName(SearchOperation.SetProviderTemplate)} with the Provider's ref, the request and result mappings, and
            the searchSchema as a JSON string (a JSON Schema object serialized with JSON.stringify,
            e.g. '{"type":"object","properties":{"make":{"type":"string","title":"Make"}}}').
 

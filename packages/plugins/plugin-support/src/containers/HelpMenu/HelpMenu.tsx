@@ -7,6 +7,7 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { getEnvString } from '@dxos/config';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
 import { useConfig } from '@dxos/react-client';
 import { DropdownMenu, Flex, Icon, IconButton, useTranslation } from '@dxos/react-ui';
@@ -45,7 +46,7 @@ export const HelpMenu = () => {
   );
 
   // The dashboard on production, the channel's own latest installer elsewhere.
-  const downloadHref = downloadUrl(config.values.runtime?.app?.env?.DX_ENVIRONMENT);
+  const downloadHref = downloadUrl(getEnvString(config, 'DX_ENVIRONMENT'));
 
   return (
     <DropdownMenu.Root>

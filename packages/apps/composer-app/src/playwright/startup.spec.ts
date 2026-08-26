@@ -15,6 +15,7 @@ import {
   appendBenchmarkRow,
   appendRunSample,
   collectStartupReport,
+  throttleProfile,
   trackNetwork,
   waitForReady,
   writeReport,
@@ -226,14 +227,12 @@ test.describe.serial('Startup timing harness', () => {
       test.skip(true, 'CDP session unavailable');
       return;
     }
+    // Overridable, since the default Fast 3G profile can outrun `waitForReady`'s 300 s budget.
+    const { cpuRate, ...conditions } = throttleProfile();
     await cdp.send('Network.enable');
-    await cdp.send('Network.emulateNetworkConditions', {
-      offline: false,
-      latency: 150,
-      downloadThroughput: (1.5 * 1024 * 1024) / 8,
-      uploadThroughput: (750 * 1024) / 8,
-    });
-    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 2 });
+    await cdp.send('Network.emulateNetworkConditions', { offline: false, ...conditions });
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: cpuRate });
+    log.info('throttle profile', { ...conditions, cpuRate });
 
     const network = trackNetwork(page);
     await observeLongTasks(page);

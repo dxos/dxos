@@ -13,12 +13,12 @@ import { DXN } from '@dxos/keys';
 
 import * as Input from './input';
 
-const TaskSet = Type.makeObject<{ name: string }>(DXN.make('org.example.type.taskSet', '0.1.0'))(
+const TaskSet = Type.makeObject<{ name: string }>(DXN.make('com.example.type.taskSet', '0.1.0'))(
   Schema.Struct({ name: Schema.String }),
 );
 
 const CreateTask = Operation.make({
-  meta: { key: DXN.make('org.example.fn.taskCreate'), name: 'Create Task' },
+  meta: { key: DXN.make('com.example.operation.fn.taskCreate'), name: 'Create Task' },
   input: Schema.Struct({
     title: Schema.String,
     taskSet: Ref.Ref(TaskSet).annotate({ description: 'Owning task set.' }),
@@ -75,7 +75,7 @@ describe('Input', () => {
     expect(Input.declaresSpaceId(record())).to.be.false;
     const withSpaceId = Operation.serialize(
       Operation.make({
-        meta: { key: DXN.make('org.example.fn.withSpace'), name: 'With space' },
+        meta: { key: DXN.make('com.example.operation.fn.withSpace'), name: 'With space' },
         input: Schema.Struct({ spaceId: Schema.String }),
         output: Schema.Struct({}),
       }),

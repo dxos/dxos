@@ -160,7 +160,7 @@ export const getSchemaVersion = (schema: Schema.Top): string | undefined => getT
 /**
  * Gets the typename of the object without the version.
  * Returns only the name portion, not the DXN.
- * @example "org.example.type.contact"
+ * @example "com.example.type.contact"
  *
  * @internal (use Obj.getTypename)
  */

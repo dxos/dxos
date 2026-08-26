@@ -53,7 +53,7 @@ export const EntityMetaSchema = Schema.Struct({
   tags: Schema.Array(TagRefSchema),
 
   /**
-   * Fully-qualified registry key for the object (FQN format, e.g. `org.example.type.foo`).
+   * Fully-qualified registry key for the object (FQN format, e.g. `com.example.type.foo`).
    * Identifies the canonical registry entry the object instance was created from.
    */
   key: Schema.optional(Schema.String),

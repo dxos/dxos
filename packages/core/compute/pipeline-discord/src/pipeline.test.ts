@@ -32,20 +32,17 @@ describe('DiscordPipeline', () => {
       expect(summary.errored).toBe(0);
       expect(summary.steps).toBeGreaterThan(0);
 
-      const messages = yield* MessageStore;
-      expect(yield* messages.count()).toBe(4);
-      const channelMessages = yield* messages.listByTarget('chan-1');
+      expect(yield* MessageStore.count()).toBe(4);
+      const channelMessages = yield* MessageStore.listByTarget('chan-1');
       expect(channelMessages.map((message) => message.id)).toEqual(['1000', '1001']);
 
-      const registry = yield* AgentRegistry;
-      const agents = yield* registry.list();
+      const agents = yield* AgentRegistry.list();
       expect(agents.length).toBe(3);
 
       const facts = yield* (yield* FactStore).query({});
       expect(facts.length).toBeGreaterThan(0);
 
-      const state = yield* StateStore;
-      expect(yield* state.getRunStatus()).toBe('done');
+      expect(yield* StateStore.getRunStatus()).toBe('done');
     }, Effect.provide(TestLayer)),
   );
 
@@ -54,16 +51,14 @@ describe('DiscordPipeline', () => {
     Effect.fnUntraced(function* () {
       const first = yield* DiscordPipeline.run(CONFIG, { maxSteps: 1 });
       expect(first.done).toBe(false);
-      const state = yield* StateStore;
-      expect(yield* state.getRunStatus()).toBe('paused');
+      expect(yield* StateStore.getRunStatus()).toBe('paused');
 
       const second = yield* DiscordPipeline.run(CONFIG);
       expect(second.done).toBe(true);
 
-      const registry = yield* AgentRegistry;
-      const agents = yield* registry.list();
+      const agents = yield* AgentRegistry.list();
       expect(agents.reduce((total, agent) => total + agent.messageCount, 0)).toBe(4);
-      expect(yield* (yield* MessageStore).count()).toBe(4);
+      expect(yield* MessageStore.count()).toBe(4);
     }, Effect.provide(TestLayer)),
   );
 
@@ -72,19 +67,17 @@ describe('DiscordPipeline', () => {
     Effect.fnUntraced(function* () {
       yield* DiscordPipeline.run(CONFIG);
       const factsBefore = (yield* (yield* FactStore).query({})).length;
-      const state = yield* StateStore;
       // Simulate a resume-overlap: reopen the channel with a rolled-back durable cursor.
-      yield* state.setStatus('chan-1', 'active');
-      yield* state.setCursor('chan-1', '0');
+      yield* StateStore.setStatus('chan-1', 'active');
+      yield* StateStore.setCursor('chan-1', '0');
 
       const summary = yield* DiscordPipeline.run(CONFIG);
       expect(summary.done).toBe(true);
 
       // Refetched messages were dropped before agent stats: counts unchanged.
-      const registry = yield* AgentRegistry;
-      const agents = yield* registry.list();
+      const agents = yield* AgentRegistry.list();
       expect(agents.reduce((total, agent) => total + agent.messageCount, 0)).toBe(4);
-      expect(yield* (yield* MessageStore).count()).toBe(4);
+      expect(yield* MessageStore.count()).toBe(4);
       // Fact count also unchanged (nothing re-extracted).
       const factsAfter = (yield* (yield* FactStore).query({})).length;
       expect(factsAfter).toBe(factsBefore);
@@ -94,12 +87,11 @@ describe('DiscordPipeline', () => {
   it.effect(
     'attempts open questions at target end (deterministic model declines, question stays open)',
     Effect.fnUntraced(function* () {
-      const questions = yield* QuestionStore;
-      yield* questions.add('Who works on OPFS?', 'q-1');
+      yield* QuestionStore.add('Who works on OPFS?', 'q-1');
       yield* DiscordPipeline.run(CONFIG);
       // The deterministic extractor never emits an `answer` field, so the question remains
       // open — the answered path is covered by answer-questions.test.ts with a routing fake.
-      expect((yield* questions.get('q-1'))?.status).toBe('open');
+      expect((yield* QuestionStore.get('q-1'))?.status).toBe('open');
     }, Effect.provide(TestLayer)),
   );
 });

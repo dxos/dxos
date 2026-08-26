@@ -11,11 +11,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapability } from '@dxos/app-framework/ui';
-import { qualifyId } from '@dxos/app-graph';
-import * as Graph from '@dxos/app-graph/Graph';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
@@ -27,6 +24,9 @@ import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { useQuery } from '@dxos/echo-react';
+import { qualifyId } from '@dxos/graph/GraphNode';
+import * as GraphNode from '@dxos/graph/GraphNode';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -42,10 +42,10 @@ import { Text } from '@dxos/schema';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 import { isNonNullable } from '@dxos/util';
 
+import { ReviewPlugin, type ReviewPluginOptions } from '#plugin';
 import { translations } from '#translations';
 import { AgentIdentity, CommentCapabilities } from '#types';
 
-import { ReviewPlugin, type ReviewPluginOptions } from '../../plugin';
 import { textOf } from '../../should-trigger-agent';
 import { ReviewStoryLayout, SAMPLE_CONTENT, STORY_AGENT_NAME, seedAgentSuggestions } from '../../testing';
 
@@ -127,9 +127,9 @@ const StoryAppGraphBuilder = Capability.inlineModule(
   { provides: [AppCapabilities.AppGraphBuilder] },
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
-    const extensions = yield* GraphBuilder.createExtension({
+    const extensions = yield* AppGraphBuilder.createExtension({
       id: 'storyDocs',
-      match: NodeMatcher.whenRoot,
+      match: GraphNodeMatcher.whenRoot,
       connector: (_, get) =>
         Effect.gen(function* () {
           const client = capabilities.get(ClientCapabilities.Client);
@@ -192,12 +192,12 @@ const DefaultStory = ({ agentMode }: StoryArgs) => {
   const { graph } = useAppGraph();
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
-  const attendableId = doc && qualifyId(Node.RootId, doc.id);
+  const attendableId = doc && qualifyId(GraphNode.RootId, doc.id);
 
   // Story renders surfaces directly (no deck), so expand graph actions for the doc node.
   useEffect(() => {
     if (attendableId) {
-      void Graph.expandSync(graph, attendableId, 'action');
+      void AppGraph.expandSync(graph, attendableId, 'action');
     }
   }, [graph, attendableId]);
 

@@ -1,0 +1,45 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+# Composer plugins on the single-entry pattern: one canonical plugin.ts + capabilities/index.ts
+# with per-module `environments` annotations. `gen-modules` emits the headless `#capabilities`
+# barrels (src/capabilities/gen/, gitignored) and syncs the package.json condition
+# map. `build` and `test` name it directly rather than through the `~:#prebuild` tag: a
+# same-project tag dep declared in this file resolves to nothing (moon applies the tag after the
+# dep is resolved), so the generator silently never ran for its own package. The `prebuild` tag
+# stays for `^:#prebuild`, which dependents do resolve. `lint` needs neither — oxlint ignores
+# `**/gen/*`.
+tasks:
+  gen-modules:
+    command: pnpm exec dx-plugin gen
+    deps:
+      - app-framework:compile-plugin-cli
+    inputs:
+      # The whole source tree, not just `src/capabilities/index.ts`: `parseBarrel` follows
+      # `export * from` and `export { X } from` into arbitrary files and slices statements out of
+      # them, so the barrel's own path is not the read set. plugin-space reaches
+      # `src/capabilities/app-graph-builder/index.ts` (which carries an `environments` annotation)
+      # and `src/util/space-display.ts` that way. Naming the read set by hand is how this went
+      # stale before; the task takes under a second, so over-invalidating is the cheap side.
+      - src/**/*
+      - package.json
+      # Modules declaring per-family `environments` defaults, which the generator reads statically
+      # from another package's source — a default changing there changes every plugin's output
+      # while leaving the barrel untouched. This list is necessarily incomplete: defaults resolve
+      # from any namespace import, so a new family package must be added here or its plugins cache
+      # stale. See DESIGN.md §6.8.
+      - /packages/sdk/app-toolkit/src/app-framework/AppCapability.ts
+    outputs:
+      # Optional: a plugin that declares no conditions produces zero gen files, and a required
+      # output fails the task when nothing was written.
+      - file: src/capabilities/gen
+        optional: true
+    tags:
+      - prebuild
+  build:
+    deps:
+      - ~:gen-modules
+  test:
+    deps:
+      - ~:gen-modules
+
+inheritedBy:
+  tags: composer-plugin

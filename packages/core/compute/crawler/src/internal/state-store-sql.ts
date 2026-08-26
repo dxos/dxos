@@ -12,7 +12,7 @@ import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { StateError } from '../errors';
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/state-store';
-import { type RunStatus, type StateStoreApi } from '../StateStore';
+import type * as StateStore from '../StateStore';
 import type * as Type from '../types';
 
 /**
@@ -52,7 +52,7 @@ type Row = {
 const parseTargetStatus = (value: string): Type.TargetStatus =>
   value === 'pending' || value === 'active' || value === 'done' ? value : 'error';
 
-const parseRunStatus = (value: string): RunStatus =>
+const parseRunStatus = (value: string): StateStore.RunStatus =>
   value === 'idle' || value === 'running' || value === 'paused' || value === 'done' ? value : 'error';
 
 const toTarget = (row: Row): Type.Target => ({
@@ -69,7 +69,7 @@ const toTarget = (row: Row): Type.Target => ({
 
 const fail = (message: string) => (cause: unknown) => new StateError({ message, cause });
 
-export const makeSql = (sql: SqlClient.SqlClient): StateStoreApi => ({
+export const makeSql = (sql: SqlClient.SqlClient): StateStore.Service => ({
   pushTargets: (targets) =>
     sql
       .withTransaction(

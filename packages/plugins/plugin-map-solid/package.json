@@ -29,14 +29,8 @@
       "default": "./dist/lib/neutral/meta.mjs"
     },
     "#plugin": {
-      "source": {
-        "workerd": "./src/plugin.workerd.ts",
-        "node": "./src/plugin.node.ts",
-        "default": "./src/plugin.tsx"
-      },
+      "source": "./src/plugin.tsx",
       "types": "./dist/types/src/plugin.d.ts",
-      "workerd": "./dist/lib/neutral/plugin.workerd.mjs",
-      "node": "./dist/lib/neutral/plugin.node.mjs",
       "default": "./dist/lib/neutral/plugin.mjs"
     }
   },

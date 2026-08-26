@@ -19,7 +19,7 @@ import { Main } from './Main';
 const createServices = (config?: Config) =>
   createClientServices(
     new Config(
-      { runtime: { client: { servicesMode: defs.Runtime.Client.ServicesMode.DEDICATED_WORKER } } },
+      { runtime: { client: { servicesMode: defs.Runtime_Client_ServicesMode.DEDICATED_WORKER } } },
       ...(config ? [config.values] : []),
     ),
     {

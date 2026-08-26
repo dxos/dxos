@@ -4,4 +4,4 @@
 
 // Eager re-export of `RoutinePlugin`. See `@dxos/plugin-testing/src/core.ts`
 // for the rationale.
-export * from './plugin';
+export * from '#plugin';

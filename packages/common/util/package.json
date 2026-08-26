@@ -29,7 +29,9 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@hazae41/symbol-dispose-polyfill": "catalog:"
+    "@hazae41/symbol-dispose-polyfill": "catalog:",
+    "@tauri-apps/plugin-dialog": "catalog:",
+    "@tauri-apps/plugin-fs": "catalog:"
   },
   "devDependencies": {
     "@dxos/crypto": "workspace:*"

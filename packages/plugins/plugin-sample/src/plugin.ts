@@ -10,14 +10,18 @@
 // `Plugin.make` finalizes the plugin (must be the last call in the chain).
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface, SampleSettings, Schema } from '#capabilities';
+import {
+  AppGraphBuilder,
+  CreateObject,
+  OperationHandler,
+  PluginAsset,
+  ReactSurface,
+  SampleSettings,
+  Schema,
+  Translations,
+} from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
-
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SamplePlugin = Plugin.define(meta).pipe(
   // Registers graph builder extensions (actions, connectors, companions).
@@ -31,28 +35,21 @@ export const SamplePlugin = Plugin.define(meta).pipe(
   // Registers operation handlers.
   Plugin.addModule(OperationHandler),
 
-  // Registers ECHO schemas so the framework knows about this type.
-  // Required for queries, serialization, and type resolution.
-  Plugin.addModule(Schema),
-
-  // Registers the settings module.
-  Plugin.addModule(SampleSettings),
+  // Finalizes the plugin. Must be the last call in the chain.
+  Plugin.addModule(PluginAsset),
 
   // Registers React surface contributions.
   Plugin.addModule(ReactSurface),
 
-  // Registers i18n translations.
-  Plugin.addModule(AppCapability.translations(translations)),
+  // Registers the settings module.
+  Plugin.addModule(SampleSettings),
 
-  // Finalizes the plugin. Must be the last call in the chain.
-  Plugin.addModule(
-    AppCapability.pluginAsset({
-      pluginId: meta.profile.key,
-      path: 'PLUGIN.mdl',
-      content: pluginSpec,
-      mimeType: 'application/x-mdl',
-    }),
-  ),
+  // Registers ECHO schemas so the framework knows about this type.
+  // Required for queries, serialization, and type resolution.
+  Plugin.addModule(Schema),
+
+  // Registers i18n translations.
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

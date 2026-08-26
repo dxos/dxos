@@ -36,6 +36,24 @@ export const TypeInputOptionsAnnotation = Annotation.make({
  */
 export const allTypesQuery = Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry());
 
+/**
+ * Whether a type is user-facing: an object type (not a relation or meta-schema) that is not
+ * annotated hidden, unless `includeHidden`. Shared by the nav tree's Database section and the
+ * search type scope so the two agree.
+ */
+export const isUserType = (type: Type.AnyEntity, options?: { includeHidden?: boolean }): boolean => {
+  if (Type.isRelation(type) || Type.isTypeKind(type)) {
+    return false;
+  }
+  if (!options?.includeHidden) {
+    const hidden = HiddenAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false));
+    if (hidden) {
+      return false;
+    }
+  }
+  return true;
+};
+
 export type TypeOption = {
   /** Full type URI (DXN or EID), suitable for use with Filter.type. */
   typeUri: URI.URI;

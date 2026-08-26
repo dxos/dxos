@@ -5,6 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
+import { log } from '@dxos/log';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldRenderer, type FormFieldRendererProps, type FormUpdateMeta } from '@dxos/react-ui-form';
 
@@ -120,6 +121,13 @@ export type FeedbackFormDownloadLogsProps = {
 
 const FeedbackFormDownloadLogs = ({ onDownloadLogs }: FeedbackFormDownloadLogsProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const handleClick = useCallback(async () => {
+    try {
+      await onDownloadLogs?.();
+    } catch (err) {
+      log.catch(err);
+    }
+  }, [onDownloadLogs]);
 
   if (!onDownloadLogs) {
     return null;
@@ -132,7 +140,7 @@ const FeedbackFormDownloadLogs = ({ onDownloadLogs }: FeedbackFormDownloadLogsPr
         type='button'
         icon='ph--download-simple--regular'
         label={t('download-logs.label')}
-        onClick={() => void onDownloadLogs()}
+        onClick={handleClick}
         data-testid='download-logs-button'
       />
     </div>

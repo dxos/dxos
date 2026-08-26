@@ -1,0 +1,36 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+
+import * as Operation from '@dxos/compute/Operation';
+import { Database, Obj } from '@dxos/echo';
+
+import { ProjectOperation } from '#types';
+
+const handler: Operation.WithHandler<typeof ProjectOperation.ArtifactList> = ProjectOperation.ArtifactList.pipe(
+  Operation.withHandler(
+    Effect.fn(function* ({ project: projectRef }) {
+      const project = yield* Database.load(projectRef);
+      const artifacts = yield* Effect.forEach(project.artifacts, (ref) =>
+        Database.load(ref).pipe(
+          Effect.map((object) => ({
+            dxn: Obj.getURI(object),
+            typename: Obj.getTypename(object),
+            label: Obj.getLabel(object),
+          })),
+          // A broken ref yields a placeholder row rather than failing the whole listing; other
+          // load failures (transport, decoding) still propagate.
+          Effect.catchTag('EntityNotFoundError', () =>
+            Effect.succeed({ dxn: ref.uri, typename: undefined, label: undefined }),
+          ),
+        ),
+      );
+
+      return { artifacts };
+    }),
+  ),
+);
+
+export default handler;

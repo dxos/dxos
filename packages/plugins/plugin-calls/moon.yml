@@ -1,6 +1,7 @@
 layer: library
 language: typescript
 tags:
+  - composer-plugin
   - ts-vite-build
   - ts-test
   - pack
@@ -14,6 +15,7 @@ tasks:
       --export ./CallsPlugin
       --to "{react,react-dom}"
       --conditions workerd,worker
+      --conditions node
       --fail-on present
     deps:
       - dx-trace-imports:build

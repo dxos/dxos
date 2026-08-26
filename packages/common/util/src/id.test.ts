@@ -16,7 +16,7 @@ describe('id', () => {
   });
 
   test('accepts hyphens in authority segments', ({ expect }) => {
-    expect(id`my-org.example.foo`).toBe('my-org.example.foo');
+    expect(id`my-com.example.foo`).toBe('my-com.example.foo');
   });
 
   test('accepts mixed-case name segment', ({ expect }) => {
@@ -56,7 +56,7 @@ describe('id', () => {
   });
 
   test('throws on hyphens in the name segment', ({ expect }) => {
-    expect(() => id`org.example.foo-bar`).toThrow(/Invalid id/);
+    expect(() => id`com.example.foo-bar`).toThrow(/Invalid id/);
   });
 
   test('throws on disallowed characters', ({ expect }) => {
@@ -75,7 +75,7 @@ describe('isWellFormedId', () => {
     expect(isWellFormedId('com.example.foo')).toBe(true);
     expect(isWellFormedId('org.dxos.plugin.deck')).toBe(true);
     expect(isWellFormedId('a1.b2.c3')).toBe(true);
-    expect(isWellFormedId('my-org.example.foo')).toBe(true);
+    expect(isWellFormedId('my-com.example.foo')).toBe(true);
   });
 
   test('rejects ids with fewer than three parts', ({ expect }) => {
@@ -89,7 +89,7 @@ describe('isWellFormedId', () => {
     expect(isWellFormedId('foo.bar.')).toBe(false);
     expect(isWellFormedId('.foo.bar')).toBe(false);
     expect(isWellFormedId('foo..bar.baz')).toBe(false);
-    expect(isWellFormedId('org.example.foo-bar')).toBe(false);
+    expect(isWellFormedId('com.example.foo-bar')).toBe(false);
   });
 });
 

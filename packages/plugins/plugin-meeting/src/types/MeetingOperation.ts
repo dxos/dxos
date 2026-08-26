@@ -12,14 +12,14 @@ import { Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { Channel, Event } from '@dxos/types';
 
-import { meta } from '#meta';
-
 import * as Meeting from './Meeting';
 
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
 export const Create = Operation.make({
-  meta: { key: makeKey('create'), name: 'Create Meeting', icon: 'ph--video-camera--regular' },
+  meta: {
+    key: DXN.make('org.dxos.operation.meeting.create'),
+    name: 'Create Meeting',
+    icon: 'ph--video-camera--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
@@ -34,7 +34,7 @@ export const Create = Operation.make({
 
 export const SetActive = Operation.make({
   meta: {
-    key: makeKey('setActive'),
+    key: DXN.make('org.dxos.operation.meeting.setActive'),
     name: 'Set Active Meeting',
     icon: 'ph--video-camera--regular',
   },
@@ -49,7 +49,7 @@ export const SetActive = Operation.make({
 
 export const HandlePayload = Operation.make({
   meta: {
-    key: makeKey('handlePayload'),
+    key: DXN.make('org.dxos.operation.meeting.handlePayload'),
     name: 'Handle Meeting Payload',
     icon: 'ph--arrows-clockwise--regular',
   },
@@ -65,7 +65,7 @@ export const HandlePayload = Operation.make({
 
 export const Summarize = Operation.make({
   meta: {
-    key: makeKey('summarize'),
+    key: DXN.make('org.dxos.operation.meeting.summarize'),
     name: 'Summarize Meeting',
     icon: 'ph--text-align-left--regular',
   },

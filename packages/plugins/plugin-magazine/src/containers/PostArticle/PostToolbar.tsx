@@ -20,8 +20,8 @@ export type PostToolbarProps = {
   onSetStarred: (value: boolean) => void;
   onSetArchived: (value: boolean) => void;
   onMarkUnread: () => void;
-  onRefresh: () => void;
   onOpenOriginal: () => void;
+  onRefresh: () => void;
 };
 
 /**
@@ -37,8 +37,8 @@ export const PostToolbar = ({
   onSetStarred,
   onSetArchived,
   onMarkUnread,
-  onRefresh,
   onOpenOriginal,
+  onRefresh,
 }: PostToolbarProps) => {
   const menuActions = useMenuBuilder(
     (get) => {

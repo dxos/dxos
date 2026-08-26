@@ -17,6 +17,7 @@ tasks:
   build:
     args:
       - '--entryPoint=src/react.ts'
+      - '--entryPoint=src/translations.ts'
       - '--entryPoint=src/testing/index.ts'
   test:
     inputs:

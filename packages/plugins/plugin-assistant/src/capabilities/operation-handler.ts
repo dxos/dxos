@@ -12,9 +12,8 @@ import {
   AgentWizardHandlers,
   AlarmHandlers,
   ChatContextHandlers,
-  DelegationHandlers,
+  DelegationSkillHandlers,
   PlanningHandlers,
-  ProjectHandlers,
   SkillManagerHandlers,
   WebSearchHandlers,
 } from '@dxos/assistant-toolkit';
@@ -35,10 +34,9 @@ export default Capability.makeModule(
       ChatContextHandlers,
       WebSearchHandlers,
       AgentWizardHandlers,
-      DelegationHandlers,
+      DelegationSkillHandlers,
       PlanningHandlers,
       AlarmHandlers,
-      ProjectHandlers,
     ]);
   }),
 );

@@ -14,6 +14,7 @@ import React, { type PropsWithChildren, useCallback, useContext, useEffect, useM
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { random } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -22,10 +23,9 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { getSize, mx } from '@dxos/ui-theme';
 import { safeParseInt } from '@dxos/util';
 
+import * as Graph from '../AppGraph';
+import * as GraphBuilder from '../AppGraphBuilder';
 import * as CreateAtom from '../atoms';
-import * as Graph from '../graph';
-import * as GraphBuilder from '../graph-builder';
-import * as Node from '../node';
 import { JsonTree } from './Tree';
 
 const DEFAULT_PERIOD = 500;
@@ -55,7 +55,7 @@ const createGraph = (client: Client, registry: Registry.AtomRegistry): Graph.Exp
       Atom.make((get) =>
         Function.pipe(
           get(node),
-          Option.flatMap((node) => (node.id === Node.RootId ? Option.some(node) : Option.none())),
+          Option.flatMap((node) => (node.id === GraphNode.RootId ? Option.some(node) : Option.none())),
           Option.map(() => {
             const spaces = get(CreateAtom.fromObservable(client.spaces)) ?? [];
             return spaces
@@ -106,7 +106,7 @@ const createGraph = (client: Client, registry: Registry.AtomRegistry): Graph.Exp
   graph.onNodeChanged.on(({ id }) => {
     Graph.expandSync(graph, id, 'child');
   });
-  Graph.expandSync(graph, Node.RootId, 'child');
+  Graph.expandSync(graph, GraphNode.RootId, 'child');
   (window as any).graph = graph;
   return graph;
 };
@@ -369,7 +369,7 @@ const GraphTree = ({ graph }: { graph: Graph.ExpandableGraph }) => {
     <div role='tree' className='p-2 overflow-auto'>
       <GraphTreeItem
         graph={graph}
-        id={Node.RootId}
+        id={GraphNode.RootId}
         ancestors={NO_ANCESTORS}
         selectedId={selectedId}
         onSelect={onSelect}

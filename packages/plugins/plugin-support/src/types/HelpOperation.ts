@@ -10,13 +10,9 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
 export const Start = Operation.make({
   meta: {
-    key: makeKey('startWelcomeTour'),
+    key: DXN.make('org.dxos.operation.support.startWelcomeTour'),
     name: 'Start welcome tour',
     icon: 'ph--question--regular',
   },
@@ -32,7 +28,7 @@ export const Start = Operation.make({
  */
 export const HideWelcome = Operation.make({
   meta: {
-    key: makeKey('hideWelcome'),
+    key: DXN.make('org.dxos.operation.support.hideWelcome'),
     name: 'Hide Welcome',
     icon: 'ph--eye-slash--regular',
   },

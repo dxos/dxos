@@ -20,6 +20,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
+      const platform = yield* Capability.get(DeckCapabilities.Platform).pipe(
+        Effect.catch(() => Effect.succeed('desktop' as const)),
+      );
 
       {
         const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
@@ -54,7 +57,8 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
         const first = deck.active[0];
         if (first) {
           yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: first });
-        } else {
+        } else if (platform !== 'mobile') {
+          // Mobile lands on the workspace's own list panel; auto-opening the first child would skip it.
           const [item] = openableChildren(graph, input.subject);
           if (item) {
             // Use `invoke` (synchronous) rather than `schedule` (fire-and-forget) so

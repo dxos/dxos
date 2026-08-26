@@ -27,7 +27,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManagerOptions, type TransportFactory, createIceProvider } from '@dxos/network-manager';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
+import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
 import { layerFile, layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platform';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
@@ -194,7 +194,7 @@ export class LocalClientServices implements ClientServicesProvider {
     //   cleaning up _opfsWorker and _runtime. Consider wrapping in try/catch to clean up on failure.
     const sqliteMode =
       this._params.config?.get('runtime.client.storage.sqliteMode') ??
-      Runtime.Client.Storage.SqliteMode.UNSPECIFIED_SQLITE_MODE;
+      Runtime_Client_Storage_SqliteMode.UNSPECIFIED_SQLITE_MODE;
     log('initiatlizing sqlite', {
       sqliteMode,
       createOpfsWorker: !!this._createOpfsWorker,
@@ -202,7 +202,7 @@ export class LocalClientServices implements ClientServicesProvider {
     });
     let sqliteLayer;
     switch (sqliteMode) {
-      case Runtime.Client.Storage.SqliteMode.OPFS: {
+      case Runtime_Client_Storage_SqliteMode.OPFS: {
         if (!this._createOpfsWorker) {
           throw new Error(
             'LocalClientServices: runtime.client.storage.sqlite_mode=OPFS requires a createOpfsWorker option.',
@@ -213,7 +213,7 @@ export class LocalClientServices implements ClientServicesProvider {
         log('using sqlite opfs worker');
         break;
       }
-      case Runtime.Client.Storage.SqliteMode.FILE: {
+      case Runtime_Client_Storage_SqliteMode.FILE: {
         if (!this._sqlitePath) {
           throw new Error(
             'LocalClientServices: runtime.client.storage.sqlite_mode=FILE requires sqlitePath (or runtime.client.storage.data_root with persistent=true).',
@@ -223,10 +223,10 @@ export class LocalClientServices implements ClientServicesProvider {
         log('using sqlite file', { sqlitePath: this._sqlitePath });
         break;
       }
-      case Runtime.Client.Storage.SqliteMode.MEMORY:
-      case Runtime.Client.Storage.SqliteMode.UNSPECIFIED_SQLITE_MODE:
+      case Runtime_Client_Storage_SqliteMode.MEMORY:
+      case Runtime_Client_Storage_SqliteMode.UNSPECIFIED_SQLITE_MODE:
       default: {
-        if (sqliteMode === Runtime.Client.Storage.SqliteMode.UNSPECIFIED_SQLITE_MODE) {
+        if (sqliteMode === Runtime_Client_Storage_SqliteMode.UNSPECIFIED_SQLITE_MODE) {
           log.warn('runtime.client.storage.sqlite_mode not set, using in-memory SQLite');
         }
         sqliteLayer = layerMemory;

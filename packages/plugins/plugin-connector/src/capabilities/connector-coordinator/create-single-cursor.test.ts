@@ -37,7 +37,7 @@ describe('createSingleCursor', () => {
   // Stand-in materialize operation: creates a fresh Expando named after the connection's
   // access-token account (real connectors, e.g. Gmail, materialize a Mailbox the same way).
   const MaterializeExampleTarget = Operation.make({
-    meta: { key: DXN.make('org.dxos.test.createSingleCursor.materialize') },
+    meta: { key: DXN.make('com.example.operation.test.createSingleCursor.materialize') },
     input: ConnectorSpec.MaterializeTargetInput,
     output: ConnectorSpec.MaterializeTargetOutput,
   });
@@ -64,7 +64,7 @@ describe('createSingleCursor', () => {
   // Never invoked here — `ConnectorSync` requires an operation, and this test only exercises
   // target materialization and binding.
   const SyncExampleTarget = Operation.make({
-    meta: { key: DXN.make('org.dxos.test.createSingleCursor.sync') },
+    meta: { key: DXN.make('com.example.operation.test.createSingleCursor.sync') },
     input: Schema.Struct({ connection: Ref.Ref(Connection.Connection), priority: Schema.optional(Schema.String) }),
     output: Schema.Any,
   });

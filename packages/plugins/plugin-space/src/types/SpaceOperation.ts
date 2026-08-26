@@ -14,20 +14,16 @@ import * as Operation from '@dxos/compute/Operation';
 import { Collection, Database, DXN, Entity, Obj, QueryAST, Ref, Tag, Type, View } from '@dxos/echo';
 import { SpacesService } from '@dxos/protocols/rpc';
 
-import { meta } from '#meta';
-
 // `Module` suffix because the client's `SpaceSchema` (the Space entity schema) already holds the
 // bare name in this file.
 import * as SpaceSchemaModule from './SpaceSchema';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /**
  * Operations for the Space plugin.
  */
 export const Create = Operation.make({
   meta: {
-    key: makeKey('create'),
+    key: DXN.make('org.dxos.operation.space.create'),
     name: 'Create Space',
     description: 'Create a new space.',
     icon: 'ph--plus--regular',
@@ -43,7 +39,7 @@ export const Create = Operation.make({
 
 export const Join = Operation.make({
   meta: {
-    key: makeKey('join'),
+    key: DXN.make('org.dxos.operation.space.join'),
     name: 'Join Space',
     description: 'Join a space via invitation.',
     icon: 'ph--sign-in--regular',
@@ -59,7 +55,7 @@ export const Join = Operation.make({
 
 export const Open = Operation.make({
   meta: {
-    key: makeKey('open'),
+    key: DXN.make('org.dxos.operation.space.open'),
     name: 'Open Space',
     description: 'Open a space.',
     icon: 'ph--arrow-square-out--regular',
@@ -72,7 +68,7 @@ export const Open = Operation.make({
 
 export const Close = Operation.make({
   meta: {
-    key: makeKey('close'),
+    key: DXN.make('org.dxos.operation.space.close'),
     name: 'Close Space',
     description: 'Close a space.',
     icon: 'ph--x-circle--regular',
@@ -85,7 +81,7 @@ export const Close = Operation.make({
 
 export const Delete = Operation.make({
   meta: {
-    key: makeKey('delete'),
+    key: DXN.make('org.dxos.operation.space.delete'),
     name: 'Delete Space',
     description: 'Delete a space. The deletion replicates to all of your devices.',
     icon: 'ph--trash--regular',
@@ -99,7 +95,7 @@ export const Delete = Operation.make({
 
 export const Share = Operation.make({
   meta: {
-    key: makeKey('share'),
+    key: DXN.make('org.dxos.operation.space.share'),
     name: 'Share Space',
     description: 'Share a space.',
     icon: 'ph--share-network--regular',
@@ -116,7 +112,7 @@ export const Share = Operation.make({
 
 export const OpenSettings = Operation.make({
   meta: {
-    key: makeKey('openSettings'),
+    key: DXN.make('org.dxos.operation.space.openSettings'),
     name: 'Open Space Settings',
     description: 'Open space settings.',
     icon: 'ph--gear--regular',
@@ -129,7 +125,7 @@ export const OpenSettings = Operation.make({
 
 export const WaitForObject = Operation.make({
   meta: {
-    key: makeKey('waitForObject'),
+    key: DXN.make('org.dxos.operation.space.waitForObject'),
     name: 'Wait For Object',
     description: 'Wait for an object to be available.',
     icon: 'ph--clock-countdown--regular',
@@ -158,7 +154,7 @@ export type ObjectDraft = Schema.Schema.Type<typeof ObjectDraft>;
 
 export const AddObject = Operation.make({
   meta: {
-    key: makeKey('addObject'),
+    key: DXN.make('org.dxos.operation.space.addObject'),
     name: 'Add Object',
     description:
       'Creates an object in the space and files it so it appears in Composer. Describe it with ' +
@@ -208,7 +204,7 @@ export type RemoveObjectsOutput = Schema.Schema.Type<typeof RemoveObjectsOutput>
 
 export const RemoveObjects = Operation.make({
   meta: {
-    key: makeKey('removeObjects'),
+    key: DXN.make('org.dxos.operation.space.removeObjects'),
     name: 'Remove Objects',
     description:
       'Deletes entities (objects, relations, or persisted types) from the space and unlinks them ' +
@@ -239,7 +235,7 @@ export const RemoveObjects = Operation.make({
  */
 export const CollectGarbage = Operation.make({
   meta: {
-    key: makeKey('collectGarbage'),
+    key: DXN.make('org.dxos.operation.space.collectGarbage'),
     name: 'Collect Garbage',
     description: "Permanently reclaim the storage held by a space's deleted objects.",
     icon: 'ph--recycle--regular',
@@ -261,7 +257,7 @@ export const CollectGarbage = Operation.make({
  */
 export const RemoveAllObjects = Operation.make({
   meta: {
-    key: makeKey('removeAllObjects'),
+    key: DXN.make('org.dxos.operation.space.removeAllObjects'),
     name: 'Remove All Objects',
     description: 'Permanently remove all objects from a space, preserving the space properties.',
     icon: 'ph--trash--regular',
@@ -284,7 +280,7 @@ export type DeleteFieldOutput = Schema.Schema.Type<typeof DeleteFieldOutput>;
 
 export const DeleteField = Operation.make({
   meta: {
-    key: makeKey('deleteField'),
+    key: DXN.make('org.dxos.operation.space.deleteField'),
     name: 'Delete Field',
     description: 'Delete a field from a view.',
     icon: 'ph--minus-circle--regular',
@@ -297,11 +293,21 @@ export const DeleteField = Operation.make({
   output: DeleteFieldOutput,
 });
 
-export const OpenCreateObject = Operation.make({
+/**
+ * Opens a form over a new object and suspends until the user confirms or dismisses it.
+ *
+ * The two modes differ in when the object exists:
+ * - `draft` (default) builds it from the form's values on submit, so nothing is written if the
+ *   dialog is dismissed.
+ * - `live` adds it to the database before the form opens, so fields that resolve against the
+ *   database — dynamic option lookups, autofill, inline refs, child objects — behave exactly as
+ *   they do after creation. A dismissal removes it again.
+ */
+export const OpenObjectForm = Operation.make({
   meta: {
-    key: makeKey('openCreateObject'),
-    name: 'Open Create Object Dialog',
-    description: 'Open the create object dialog.',
+    key: DXN.make('org.dxos.operation.space.openObjectForm'),
+    name: 'Open Object Form',
+    description: 'Open a form over a new object and return it once confirmed.',
     icon: 'ph--plus--regular',
   },
   services: [Capability.Service],
@@ -309,22 +315,36 @@ export const OpenCreateObject = Operation.make({
     target: Schema.Union([Database.Database, Type.getSchema(Collection.Collection)]).annotate({
       description: 'The database or collection to create in.',
     }),
+    mode: Schema.optional(
+      Schema.Literals(['draft', 'live']).annotate({
+        description: 'Whether the object is built on submit (`draft`, the default) or up front (`live`).',
+      }),
+    ),
     views: Schema.optional(Schema.Boolean),
     typename: Schema.optional(Schema.String),
-    initialFormValues: Schema.optional(Schema.Any),
+    // An Effect Schema is not itself serializable, so it can only be passed in-process.
+    schema: Schema.optional(
+      Schema.Any.annotate({
+        description:
+          "Form schema, overriding the type's own. Typically a projection, e.g. `Type.getSchema(T).pipe(Schema.pick(...))`.",
+      }),
+    ),
+    defaults: Schema.optional(
+      Schema.Any.annotate({ description: 'Initial values, seeded into the form (`draft`) or the object (`live`).' }),
+    ),
     navigable: Schema.optional(Schema.Boolean),
     targetNodeId: Schema.optional(
       Schema.String.annotate({ description: 'Qualified graph node ID of the target collection.' }),
     ),
-    // TODO(wittjosiah): This is a function, is there a better way to handle this?
-    onCreateObject: Schema.optional(Schema.Any),
   }),
-  output: Schema.Void,
+  output: Schema.UndefinedOr(Ref.Ref(Obj.Unknown)).annotate({
+    description: 'The created object, or nothing if the dialog was dismissed.',
+  }),
 });
 
 export const OpenCreateSpace = Operation.make({
   meta: {
-    key: makeKey('openCreateSpace'),
+    key: DXN.make('org.dxos.operation.space.openCreate'),
     name: 'Open Create Space Dialog',
     description: 'Open the create space dialog.',
     icon: 'ph--plus--regular',
@@ -335,7 +355,7 @@ export const OpenCreateSpace = Operation.make({
 
 export const OpenImportSpace = Operation.make({
   meta: {
-    key: makeKey('openImportSpace'),
+    key: DXN.make('org.dxos.operation.space.openImport'),
     name: 'Open Import Space Dialog',
     description: 'Open the import space dialog to create a new space from a backup.',
     icon: 'ph--download--regular',
@@ -346,7 +366,7 @@ export const OpenImportSpace = Operation.make({
 
 export const ImportSpace = Operation.make({
   meta: {
-    key: makeKey('importSpace'),
+    key: DXN.make('org.dxos.operation.space.import'),
     name: 'Import Space',
     description: 'Import a space archive as a new space.',
     icon: 'ph--upload--regular',
@@ -366,7 +386,7 @@ export const ImportSpace = Operation.make({
 
 export const ExportSpace = Operation.make({
   meta: {
-    key: makeKey('exportSpace'),
+    key: DXN.make('org.dxos.operation.space.export'),
     name: 'Export Space',
     description: 'Export a space as a backup and download the archive.',
     icon: 'ph--download--regular',
@@ -380,7 +400,7 @@ export const ExportSpace = Operation.make({
 
 export const Migrate = Operation.make({
   meta: {
-    key: makeKey('migrate'),
+    key: DXN.make('org.dxos.operation.space.migrate'),
     name: 'Migrate Space',
     description: 'Migrate a space to a new version.',
     icon: 'ph--arrows-clockwise--regular',
@@ -395,7 +415,7 @@ export const Migrate = Operation.make({
 
 export const Snapshot = Operation.make({
   meta: {
-    key: makeKey('snapshot'),
+    key: DXN.make('org.dxos.operation.space.snapshot'),
     name: 'Create Snapshot',
     description: 'Create a snapshot of the space.',
     icon: 'ph--camera--regular',
@@ -411,7 +431,7 @@ export const Snapshot = Operation.make({
 
 export const Rename = Operation.make({
   meta: {
-    key: makeKey('rename'),
+    key: DXN.make('org.dxos.operation.space.rename'),
     name: 'Rename Space',
     description: 'Rename a space.',
     icon: 'ph--pencil-simple--regular',
@@ -425,7 +445,7 @@ export const Rename = Operation.make({
 
 export const RenameObject = Operation.make({
   meta: {
-    key: makeKey('renameObject'),
+    key: DXN.make('org.dxos.operation.space.renameObject'),
     name: 'Rename Object',
     description: 'Rename an entity (object, relation, or persisted type).',
     icon: 'ph--pencil-simple--regular',
@@ -439,7 +459,7 @@ export const RenameObject = Operation.make({
 
 export const OpenMembers = Operation.make({
   meta: {
-    key: makeKey('openMembers'),
+    key: DXN.make('org.dxos.operation.space.openMembers'),
     name: 'Open Members',
     description: 'Open the members panel for a space.',
     icon: 'ph--users--regular',
@@ -452,7 +472,7 @@ export const OpenMembers = Operation.make({
 
 export const GetShareLink = Operation.make({
   meta: {
-    key: makeKey('getShareLink'),
+    key: DXN.make('org.dxos.operation.space.getShareLink'),
     name: 'Get Share Link',
     description: 'Get a shareable link for a space.',
     icon: 'ph--link--regular',
@@ -472,7 +492,7 @@ export const StoredSchemaForm = Schema.Struct({
 
 export const AddType = Operation.make({
   meta: {
-    key: makeKey('addType'),
+    key: DXN.make('org.dxos.operation.space.addType'),
     name: 'Add Type',
     description: 'Add a type to the space.',
     icon: 'ph--code--regular',
@@ -506,7 +526,7 @@ const RelationEnd = Schema.Union([Obj.Unknown, Ref.Ref(Obj.Unknown)]);
 
 export const AddRelation = Operation.make({
   meta: {
-    key: makeKey('addRelation'),
+    key: DXN.make('org.dxos.operation.space.addRelation'),
     name: 'Add Relation',
     description:
       'Relate two objects. The relation is itself typed, so name a relation type the space knows — ' +
@@ -537,7 +557,7 @@ export const AddRelation = Operation.make({
 // TODO(wittjosiah): This appears to be unused.
 export const DuplicateObject = Operation.make({
   meta: {
-    key: makeKey('duplicateObject'),
+    key: DXN.make('org.dxos.operation.space.duplicateObject'),
     name: 'Duplicate Object',
     description: 'Duplicate an object.',
     icon: 'ph--file--regular',
@@ -554,7 +574,7 @@ export const DuplicateObject = Operation.make({
  */
 export const RestoreField = Operation.make({
   meta: {
-    key: makeKey('restoreField'),
+    key: DXN.make('org.dxos.operation.space.restoreField'),
     name: 'Restore Field',
     description: 'Restore a deleted field to a view.',
     icon: 'ph--clock-counter-clockwise--regular',
@@ -575,7 +595,7 @@ export const RestoreField = Operation.make({
  */
 export const RestoreObjects = Operation.make({
   meta: {
-    key: makeKey('restoreObjects'),
+    key: DXN.make('org.dxos.operation.space.restoreObjects'),
     name: 'Restore Objects',
     description: 'Restore deleted entities to a space.',
     icon: 'ph--clock-counter-clockwise--regular',
@@ -608,7 +628,7 @@ export type DuplicateGroupResult = Schema.Schema.Type<typeof DuplicateGroupResul
  */
 export const FindDuplicates = Operation.make({
   meta: {
-    key: makeKey('findDuplicates'),
+    key: DXN.make('org.dxos.operation.space.findDuplicates'),
     name: 'Find Duplicates',
     description: 'Group objects of a type that share an identity key (e.g. an email address).',
     icon: 'ph--copy--regular',
@@ -625,7 +645,7 @@ export const FindDuplicates = Operation.make({
 /** Merges a duplicate group into its lowest-EntityId member and removes the others. */
 export const MergeDuplicates = Operation.make({
   meta: {
-    key: makeKey('mergeDuplicates'),
+    key: DXN.make('org.dxos.operation.space.mergeDuplicates'),
     name: 'Merge Duplicates',
     description: 'Merge a duplicate group into a single object.',
     icon: 'ph--arrows-merge--regular',
@@ -655,7 +675,7 @@ const typenameParameter = Schema.String.annotate({
 
 export const GetObjects = Operation.make({
   meta: {
-    key: makeKey('getObjects'),
+    key: DXN.make('org.dxos.operation.space.getObjects'),
     name: 'Get Objects',
     description:
       'Read objects and relations by reference, returning their content as a point-in-time snapshot. ' +
@@ -674,7 +694,7 @@ export const GetObjects = Operation.make({
 
 export const UpdateObject = Operation.make({
   meta: {
-    key: makeKey('updateObject'),
+    key: DXN.make('org.dxos.operation.space.updateObject'),
     name: 'Update Object',
     description: 'Patch the properties of an object. Supplied field values replace existing ones.',
     icon: 'ph--pencil--regular',
@@ -693,7 +713,7 @@ export const UpdateObject = Operation.make({
 
 export const QueryObjects = Operation.make({
   meta: {
-    key: makeKey('queryObjects'),
+    key: DXN.make('org.dxos.operation.space.queryObjects'),
     name: 'Query Objects',
     description:
       'Query the space for objects by typename and/or full-text search. Omit both to list everything. ' +
@@ -726,7 +746,7 @@ export const QueryObjects = Operation.make({
 
 export const AddTag = Operation.make({
   meta: {
-    key: makeKey('addTag'),
+    key: DXN.make('org.dxos.operation.space.addTag'),
     name: 'Add Tag',
     description: 'Add a tag to an object. Tags are objects, so query for one before creating another.',
     icon: 'ph--tag--regular',
@@ -743,7 +763,7 @@ export const AddTag = Operation.make({
 
 export const RemoveTag = Operation.make({
   meta: {
-    key: makeKey('removeTag'),
+    key: DXN.make('org.dxos.operation.space.removeTag'),
     name: 'Remove Tag',
     description: 'Remove a tag from an object.',
     icon: 'ph--tag--regular',
@@ -766,7 +786,7 @@ export const RemoveTag = Operation.make({
 //  in the registry, so the difference is the scope queried and the shape returned.
 export const QueryTypes = Operation.make({
   meta: {
-    key: makeKey('queryTypes'),
+    key: DXN.make('org.dxos.operation.space.queryTypes'),
     name: 'Query Types',
     description:
       'List the types objects in this space can have — those persisted in the space and those the ' +

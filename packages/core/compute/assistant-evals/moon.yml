@@ -8,3 +8,7 @@ tasks:
     command: evalite
     args:
       - src/evals
+  # One scenario at a time: `evals` hardcodes the directory, so appending a file to it gives evalite
+  # two positionals and it exits on "Too many arguments".
+  eval:
+    command: evalite run

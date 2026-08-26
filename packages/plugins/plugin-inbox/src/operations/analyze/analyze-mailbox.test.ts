@@ -23,11 +23,9 @@ import { TagIndex } from '@dxos/schema';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { InboxOperationHandlerSet } from '#operations';
+import { InboxCapabilities, InboxOperation, Mailbox } from '#types';
 
 import { inboxMailboxProcessors } from '../../capabilities/mailbox-processors';
-import * as InboxCapabilities from '../../types/InboxCapabilities';
-import * as InboxOperation from '../../types/InboxOperation';
-import * as Mailbox from '../../types/Mailbox';
 
 /** A service no layer in this test provides — the whole point of the stub below. */
 class MissingService extends Context.Service<MissingService, { readonly unused: true }>()(
@@ -42,7 +40,7 @@ class MissingService extends Context.Service<MissingService, { readonly unused: 
  * `AnalyzeMailbox` moved to plugin-brain.
  */
 const StubOperation = Operation.make({
-  meta: { key: DXN.make('org.dxos.plugin.inbox.testing.operation.stub'), name: 'Stub' },
+  meta: { key: DXN.make('com.example.operation.inbox.testing.stub'), name: 'Stub' },
   services: [MissingService],
   input: Schema.Struct({ mailbox: Ref.Ref(Mailbox.Mailbox) }),
   output: Schema.Void,

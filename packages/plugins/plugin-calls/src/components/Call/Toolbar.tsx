@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useActions, useNode } from '@dxos/plugin-graph/hooks';
@@ -130,7 +130,7 @@ export const Toolbar = ({
 
             {/* Companion actions. */}
             {actions
-              .filter((action): action is Node.Action => Node.isAction(action))
+              .filter((action): action is AppGraphNode.Action => AppGraphNode.isAction(action))
               .map((action) => (
                 <IconButton
                   key={action.id}

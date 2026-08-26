@@ -29,7 +29,7 @@ EntityId.dangerouslyDisableRandomness();
  */
 const DelegatedWork = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.delegatedWork'),
+    key: DXN.make('com.example.operation.delegatedWork'),
     name: 'Delegated work',
     description: 'Performs a delegated unit of work',
   },

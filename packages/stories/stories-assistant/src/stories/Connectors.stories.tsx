@@ -59,8 +59,8 @@ export const WithMail: Story = {
       await space.db.appendToFeed(feedObj, messages);
     },
     types: [Feed.Feed, Mailbox.Mailbox],
-    onChatCreated: async ({ space, binder }) => {
-      const mailboxes = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+    onChatCreated: async ({ db, binder }) => {
+      const mailboxes = await db.query(Filter.type(Mailbox.Mailbox)).run();
       const mailbox = mailboxes[0];
       if (mailbox) {
         await binder.bind({ objects: [Ref.make(mailbox)] });
@@ -101,8 +101,8 @@ export const WithGmail: Story = {
         [StoryRole.Context],
       ];
     },
-    onChatCreated: async ({ space, binder }) => {
-      const mailboxes = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+    onChatCreated: async ({ db, binder }) => {
+      const mailboxes = await db.query(Filter.type(Mailbox.Mailbox)).run();
       const mailbox = mailboxes[0];
       if (mailbox) {
         await binder.bind({ objects: [Ref.make(mailbox)] });
@@ -130,9 +130,9 @@ export const WithConnectorPrompt: Story = {
       };
     },
     types: [Feed.Feed, Mailbox.Mailbox],
-    onChatCreated: async ({ space, chat }) => {
+    onChatCreated: async ({ db, chat }) => {
       const feed = await chat.feed.load();
-      await space.db.appendToFeed(feed, [
+      await db.appendToFeed(feed, [
         Message.make({
           sender: 'assistant',
           blocks: [
@@ -165,8 +165,8 @@ export const WithCalendar: Story = {
     onInit: async ({ space }) => {
       space.db.add(Calendar.make({ name: 'Calendar' }));
     },
-    onChatCreated: async ({ space, binder }) => {
-      const calendars = await space.db.query(Filter.type(Calendar.Calendar)).run();
+    onChatCreated: async ({ db, binder }) => {
+      const calendars = await db.query(Filter.type(Calendar.Calendar)).run();
       const calendar = calendars[0];
       if (calendar) {
         await binder.bind({ objects: [Ref.make(calendar)] });
@@ -201,8 +201,8 @@ export const WithTranscription: Story = {
       await space.db.appendToFeed(feed, messages);
       space.db.add(Transcript.make(Ref.make(feed)));
     },
-    onChatCreated: async ({ space, binder }) => {
-      const objects = await space.db.query(Filter.type(Transcript.Transcript)).run();
+    onChatCreated: async ({ db, binder }) => {
+      const objects = await db.query(Filter.type(Transcript.Transcript)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
     skills: [AssistantSkill.key, TranscriptionSkill.key],

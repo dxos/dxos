@@ -18,6 +18,44 @@ export const getRenderedPlanks = (active: readonly string[], flatten: boolean | 
 };
 
 /**
+ * Whether `plankId` shows its companion.
+ *
+ * Flat mode lays out one plank at a time, so the companion is a property of the deck rather than of the
+ * plank: moving between articles keeps the pane in whatever state it was left in, and closing it once
+ * closes it everywhere. Which TAB it shows still resolves per plank, from the plank's own companions and
+ * the globally-selected variant. Stacked mode keeps the flag per plank — several planks are visible at
+ * once, so each carries its own.
+ */
+export const isCompanionOpen = (
+  companionPlanks: readonly string[],
+  flatten: boolean | undefined,
+  plankId: string | undefined,
+): boolean => (flatten ? companionPlanks.length > 0 : !!plankId && companionPlanks.includes(plankId));
+
+/**
+ * `companionPlanks` with `plankId` marked open. Flat mode holds a single entry (the flag is deck-wide),
+ * stacked mode appends.
+ */
+export const openCompanionPlank = (
+  companionPlanks: readonly string[],
+  flatten: boolean | undefined,
+  plankId: string,
+): string[] => {
+  if (flatten) {
+    return [plankId];
+  }
+
+  return companionPlanks.includes(plankId) ? [...companionPlanks] : [...companionPlanks, plankId];
+};
+
+/** `companionPlanks` with `plankId` marked closed; flat mode closes the deck's companion outright. */
+export const closeCompanionPlank = (
+  companionPlanks: readonly string[],
+  flatten: boolean | undefined,
+  plankId: string | undefined,
+): string[] => (flatten ? [] : companionPlanks.filter((id) => id !== plankId));
+
+/**
  * The open plank attention currently points into, or undefined when it points nowhere in the deck.
  * Attention can rest on something nested inside a plank (a child attendable, or the companion pane
  * itself, which shares its context plank's `attendableId`), so ids are matched by path prefix.

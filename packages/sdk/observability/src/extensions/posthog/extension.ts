@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { type PostHogConfig } from 'posthog-js';
 
-import { type Config } from '@dxos/config';
+import { type Config, getEnvString } from '@dxos/config';
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 
@@ -31,24 +31,33 @@ export type ExtensionsOptions = {
    * When omitted the full store is exported without trimming.
    */
   feedbackLogMaxSize?: number;
+  /**
+   * Where to POST feedback logs, defaulting to {@link DEFAULT_FEEDBACK_LOGS_ENDPOINT}.
+   * A native build serves its frontend from its own origin and has no such route there, so it must
+   * pass the absolute URL of a deployment that does.
+   */
+  feedbackLogsEndpoint?: string;
 };
 
+/** Same-origin route of the web deployment, which proxies the upload to object storage. */
+const DEFAULT_FEEDBACK_LOGS_ENDPOINT = '/api/feedback-logs';
+
 /** Upload serialized logs to the feedback-logs endpoint. Returns the R2 key on success. */
-const uploadLogs = async (body: string): Promise<string | undefined> => {
+const uploadLogs = async (endpoint: string, body: string): Promise<string | undefined> => {
   try {
-    const response = await fetch('/api/feedback-logs', {
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-ndjson' },
       body,
     });
     if (!response.ok) {
-      log.warn('feedback log upload failed', { status: response.status });
+      log.warn('feedback log upload failed', { endpoint, status: response.status });
       return undefined;
     }
     const { key } = await response.json();
     return key;
   } catch (err) {
-    log.warn('feedback log upload error', { error: err });
+    log.warn('feedback log upload error', { endpoint, error: err });
     return undefined;
   }
 };
@@ -61,6 +70,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   posthog: posthogConfig,
   logStore,
   feedbackLogMaxSize,
+  feedbackLogsEndpoint = DEFAULT_FEEDBACK_LOGS_ENDPOINT,
 }) {
   if (typeof window === 'undefined') {
     log('PostHog is being stubbed because it is running in a worker.');
@@ -68,8 +78,8 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   }
 
   const feedbackSurveyId = config.get('runtime.app.env.DX_POSTHOG_FEEDBACK_SURVEY_ID');
-  const apiKey = config.get('runtime.app.env.DX_POSTHOG_API_KEY');
-  const api_host = config.get('runtime.app.env.DX_POSTHOG_API_HOST');
+  const apiKey = getEnvString(config, 'DX_POSTHOG_API_KEY');
+  const api_host = getEnvString(config, 'DX_POSTHOG_API_HOST');
   if (!apiKey || !api_host) {
     log.info('Missing POSTHOG_API_KEY or POSTHOG_API_HOST');
     return stubExtension;
@@ -173,7 +183,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
                   if (form.includeLogs !== false && logStore !== undefined) {
                     const ndjson = await logStore.export({ maxSize: feedbackLogMaxSize });
                     if (ndjson.length > 0) {
-                      debugLogDumpKey = (await uploadLogs(ndjson)) ?? 'failed';
+                      debugLogDumpKey = (await uploadLogs(feedbackLogsEndpoint, ndjson)) ?? 'failed';
                     }
                   }
 

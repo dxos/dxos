@@ -10,6 +10,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
+import { translations } from '../translations';
 import { OnboardingCapabilities } from './capabilities';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
@@ -20,13 +21,14 @@ export const DefaultContent = Capability.lazyModule(
       Capabilities.OperationInvoker,
       AppCapabilities.AppGraph,
       ClientCapabilities.Client,
+      ClientCapabilities.SchemaRegistered,
       SpaceCapabilities.OnCreateSpace,
       SpaceCapabilities.DefaultSpace,
     ],
     provides: [],
     // Runtime event: the default space exists once identity is created, not at startup.
-    // `requires: [SpaceCapabilities.DefaultSpace]` orders this after plugin-space's
-    // `IdentityCreated` module within the same event wave.
+    // `DefaultSpace` orders this after plugin-space's `IdentityCreated` in the same wave;
+    // `SchemaRegistered` pulls the idle-gated schema registration into it, for the seeded README.
     activatesOn: ClientEvents.IdentityCreated,
   },
   () => import('./default-content'),
@@ -59,3 +61,4 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
 });
 
 export * from './capabilities';
+export const Translations = AppCapability.translations(translations);

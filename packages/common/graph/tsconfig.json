@@ -28,6 +28,9 @@
       "path": "../invariant"
     },
     {
+      "path": "../log"
+    },
+    {
       "path": "../util"
     }
   ]

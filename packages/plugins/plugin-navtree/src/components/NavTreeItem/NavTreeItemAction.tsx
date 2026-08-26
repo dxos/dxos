@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import type * as Node from '@dxos/app-graph/Node';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { IconButton, toLocalizedString, useDensityContext, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
@@ -27,11 +27,11 @@ const lgActionButtonProps = {
 };
 
 export type NavTreeItemActionMenuProps = NavTreeNode.ActionProperties & {
-  parent: Node.Node;
+  parent: AppGraphNode.Node;
   path?: string[];
   caller?: string;
   monolithic?: boolean;
-  menuActions?: Node.Action[];
+  menuActions?: AppGraphNode.Action[];
 };
 
 export const NavTreeItemActionDropdownMenu = composable<HTMLButtonElement, NavTreeItemActionMenuProps>(
@@ -40,7 +40,7 @@ export const NavTreeItemActionDropdownMenu = composable<HTMLButtonElement, NavTr
     const density = useDensityContext();
     const runAction = useActionRunner();
     const handleAction = useCallback(
-      (action: Node.Action, params: Node.InvokeProps = {}) => runAction(action, { ...params, path }),
+      (action: AppGraphNode.Action, params: AppGraphNode.InvokeProps = {}) => runAction(action, { ...params, path }),
       [runAction, path],
     );
 
@@ -68,10 +68,10 @@ export const NavTreeItemActionDropdownMenu = composable<HTMLButtonElement, NavTr
 NavTreeItemActionDropdownMenu.displayName = 'NavTreeItemActionDropdownMenu';
 
 export const NavTreeItemMonolithicAction = (
-  props: Node.Action & {
-    parent: Node.Node;
+  props: AppGraphNode.Action & {
+    parent: AppGraphNode.Node;
     path?: string[];
-    onAction?: (action: Node.Action) => void;
+    onAction?: (action: AppGraphNode.Action) => void;
     baseLabel: string;
   },
 ) => {

@@ -224,6 +224,8 @@ export const translations = [
         'create-space-dialog.title': 'Create Space',
         'create-space-dialog.error.message': 'Failed to create space. Please try again.',
         'create-object-dialog.title': 'Create {{object}}',
+        'object-form-confirm.label': 'OK',
+        'object-form-cancel.label': 'Cancel',
         'space-input.placeholder': 'Select space',
         'schema-input.placeholder': 'Select type',
         'plugin-subtitle.label': '{{plugin}} Plugin',

@@ -268,11 +268,11 @@ describe('Integration tests', () => {
 
     // Register a keyed (non-type) entity in the in-process registry — e.g. an operation descriptor.
     const registryObject = Obj.make(TestSchema.Expando, {
-      [Obj.Meta]: { key: 'org.example.function.translate', version: '0.1.0' },
+      [Obj.Meta]: { key: 'com.example.function.translate', version: '0.1.0' },
       label: 'Translate',
     });
     db.graph.registry.add([registryObject]);
-    const keyDXN = DXN.make('org.example.function.translate', '0.1.0');
+    const keyDXN = DXN.make('com.example.function.translate', '0.1.0');
 
     // A database object holds a reference to the registry object via its key DXN.
     const object = db.add(Obj.make(TestSchema.Expando, { fn: db.makeRef(keyDXN) })) as any;

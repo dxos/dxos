@@ -79,19 +79,33 @@ const createWorkerFactory = (storageLockKey: string) => () => {
   return channel.port2 as WorkerProtocol.WorkerOrPort;
 };
 
+/**
+ * A coordinator link that is broken in both directions: nothing this tab sends reaches a peer, and
+ * no heartbeat, `new-leader`, or `provide-port` ever reaches this tab. Models the observed wedged
+ * tab whose SharedWorker link died — it can still take Web Locks, so it can still evict a leader.
+ */
+const createBrokenCoordinator = (): WorkerProtocol.WorkerCoordinator => ({
+  onMessage: new Event<WorkerProtocol.CoordinatorMessage>(),
+  sendMessage: () => {},
+});
+
 type Connected = { clientToWorker: MessagePort; workerToClient: MessagePort; isOwner: boolean };
 
 const makeConnection = (
   hub: ReturnType<typeof createHub>,
   keys: { leaderLockKey: string; storageLockKey: string },
   leaderTimeouts = { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout: 3_000 },
-  options: { maxLeaderFailures?: number } = {},
+  options: {
+    maxLeaderFailures?: number;
+    createWorker?: () => WorkerProtocol.WorkerOrPort;
+    createCoordinator?: () => WorkerProtocol.WorkerCoordinator;
+  } = {},
 ) => {
   const connectedTrigger = new Trigger<Connected>();
   const failures: unknown[] = [];
   const connection = new Client.Connection({
-    createWorker: createWorkerFactory(keys.storageLockKey),
-    createCoordinator: () => hub.connect(),
+    createWorker: options.createWorker ?? createWorkerFactory(keys.storageLockKey),
+    createCoordinator: options.createCoordinator ?? (() => hub.connect()),
     leaderLockKey: keys.leaderLockKey,
     leaderTimeouts,
     maxLeaderFailures: options.maxLeaderFailures,
@@ -269,6 +283,56 @@ describe('Connection multi-client', () => {
     await asyncTimeout(connected.wait(), 10_000);
     expect(attempts).toBeGreaterThan(1);
   });
+
+  test('a tab with a broken coordinator link stops stealing instead of restarting the leader forever', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+    const timeouts = { heartbeatInterval: 20, staleTimeout: 100, portTimeout: 200 };
+
+    let leaderWorkers = 0;
+    const countingWorkerFactory = () => {
+      leaderWorkers++;
+      return createWorkerFactory(keys.storageLockKey)();
+    };
+
+    const leader = makeConnection(hub, keys, timeouts, { createWorker: countingWorkerFactory });
+    await asyncTimeout(leader.connection.open(), 10_000);
+    onTestFinished(async () => {
+      await leader.connection.close();
+    });
+    expect((await asyncTimeout(leader.connected, 10_000)).isOwner).toBe(true);
+    expect(leaderWorkers).toBe(1);
+
+    // A steal by this tab is always wasted — it can never receive a port — but still aborts the
+    // incumbent's lock, terminating its worker and forcing a full re-boot.
+    const wedged = makeConnection(hub, keys, timeouts, {
+      maxLeaderFailures: 2,
+      createCoordinator: createBrokenCoordinator,
+    });
+    // Asserted in teardown rather than discarded: `open()` must reject because no port ever arrives,
+    // and swallowing it here would hide any other failure the connection reports.
+    const wedgedOpen = expect(wedged.connection.open()).rejects.toThrow();
+    onTestFinished(async () => {
+      await wedged.connection.close();
+      await wedgedOpen;
+    });
+
+    // ~20 port timeouts' worth of runway, so an unbounded steal loop has room to show itself.
+    await sleep(4_000);
+
+    // Bounded by the steal budget: at most `maxLeaderFailures` evictions, one worker re-creation each.
+    expect(leaderWorkers).toBeLessThanOrEqual(1 + 2);
+
+    // Escalated once so the app can surface a reload, rather than degrading silently forever.
+    expect(wedged.failures).toHaveLength(1);
+    expect(wedged.failures[0]).toBeInstanceOf(Error);
+
+    // And election is not left stranded: someone still holds the lock, so a tab still owns a
+    // worker. A steal that only evicts — without the stealer re-entering election — can end with
+    // the lock free and every tab waiting on a leader that no longer exists.
+    const { held } = await navigator.locks.query();
+    expect((held ?? []).map(({ name }) => name)).toContain(keys.leaderLockKey);
+  }, 30_000);
 
   test('rejects a non-positive maxLeaderFailures', () => {
     const hub = createHub();

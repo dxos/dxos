@@ -586,28 +586,29 @@ export const syncOrOfferRoutine = ({
       Effect.gen(function* () {
         const invoker = yield* Operation.Service;
         const capabilities = yield* Capability.Service;
-        yield* invoker.invoke(SpaceOperation.OpenCreateObject, {
+        const result = yield* invoker.invoke(SpaceOperation.OpenObjectForm, {
           target: db,
           typename: Type.getTypename(Routine.Routine),
-          initialFormValues: { templateId: SyncTemplate.ID, subject: subject ?? connection },
+          defaults: { templateId: SyncTemplate.ID, subject: subject ?? connection },
           navigable: false,
-          onCreateObject: (created: Obj.Unknown) => {
-            // The dialog's save callback is a plain function; re-enter the Effect world with the
-            // services captured above.
-            Effect.runFork(
-              syncCreatedRoutine({ created, connector, spaceId: db.spaceId, priority }).pipe(
-                Effect.provideService(Operation.Service, invoker),
-                Effect.provideService(Capability.Service, capabilities),
-                Effect.catch((error) => Effect.sync(() => log.warn('sync after routine created failed', { error }))),
-                // An EDGE force-run that outlives its replication backoff arrives as a defect
-                // (`Effect.orDie`), which the typed catch above would let escape unreported.
-                Effect.catchDefect((defect) =>
-                  Effect.sync(() => log.warn('sync after routine created died', { defect })),
-                ),
-              ),
-            );
-          },
         });
+        const created = result?.target;
+        if (created) {
+          // Forked, not yielded: the offer is done once the routine exists, and the caller waited
+          // for the dialog already — it should not also wait out the first sync.
+          Effect.runFork(
+            syncCreatedRoutine({ created, connector, spaceId: db.spaceId, priority }).pipe(
+              Effect.provideService(Operation.Service, invoker),
+              Effect.provideService(Capability.Service, capabilities),
+              Effect.catch((error) => Effect.sync(() => log.warn('sync after routine created failed', { error }))),
+              // An EDGE force-run that outlives its replication backoff arrives as a defect
+              // (`Effect.orDie`), which the typed catch above would let escape unreported.
+              Effect.catchDefect((defect) =>
+                Effect.sync(() => log.warn('sync after routine created died', { defect })),
+              ),
+            ),
+          );
+        }
       }).pipe(Effect.catch((error) => Effect.sync(() => log.warn('offer sync routine failed', { error })))),
     ),
     Effect.provide(Database.layer(db)),

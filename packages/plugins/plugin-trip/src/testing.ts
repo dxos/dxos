@@ -3,4 +3,4 @@
 //
 
 // Eager re-export of TripPlugin. See @dxos/plugin-testing/src/core.ts for rationale.
-export * from './plugin';
+export * from '#plugin';

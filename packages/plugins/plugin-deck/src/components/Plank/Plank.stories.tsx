@@ -10,7 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
-import type * as Node from '@dxos/app-graph/Node';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -23,12 +23,13 @@ import { Organization, Person } from '@dxos/types';
 import { DeckState, OperationHandler } from '#capabilities';
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
+import type { DeckCapabilities } from '#types';
 
 import { Plank } from './Plank';
 
 random.seed(99);
 
-const TestPlugin = Plugin.define(pluginMeta).pipe(
+const TestPlugin = Plugin.define<DeckCapabilities.DeckPluginOptions>(pluginMeta).pipe(
   Plugin.addModule(DeckState),
   Plugin.addModule(OperationHandler),
   Plugin.make,
@@ -57,7 +58,7 @@ const TestExtension = Capability.contribute(
 // A border makes each plank's bounds obvious against the deck surface.
 const PLANK_CLASSNAMES = 'border border-separator';
 
-const useNode = (data: Obj.Any, icon: string): Node.Node =>
+const useNode = (data: Obj.Any, icon: string): AppGraphNode.Node =>
   useMemo(
     () => ({ id: data.id, type: 'test', data, properties: { label: Obj.getLabel(data) ?? 'Untitled', icon } }),
     [data, icon],

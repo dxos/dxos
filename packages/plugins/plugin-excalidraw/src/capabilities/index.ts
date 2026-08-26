@@ -8,11 +8,13 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import * as IllustratorEvents from '@dxos/plugin-illustrator/IllustratorEvents';
 
+import { translations } from '#translations';
 import { ExcalidrawCapabilities } from '#types';
 
+// Browser-only: the variant supplies the React article/card components that render a drawing.
 export const DrawingVariant = Capability.lazyModule(
   'drawing-variant',
-  { provides: [IllustratorCapabilities.VariantProvider], activatesOn: IllustratorEvents.Start },
+  { provides: [IllustratorCapabilities.VariantProvider], activatesOn: IllustratorEvents.Start, environments: [] },
   () => import('./drawing-variant'),
 );
 
@@ -24,3 +26,4 @@ export const ExcalidrawSettings = AppCapability.settings(() => import('./setting
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article'],
 });
+export const Translations = AppCapability.translations(translations);

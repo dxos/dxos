@@ -22,7 +22,7 @@ import { AssistantTestLayer } from '../testing';
 
 const OrganizationList = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.organizationList'),
+    key: DXN.make('com.example.operation.organizationList'),
     name: 'Organization List',
     description: 'List organizations',
   },

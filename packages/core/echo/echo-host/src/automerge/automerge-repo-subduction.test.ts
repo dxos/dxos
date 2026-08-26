@@ -286,6 +286,45 @@ describe.skipIf(process.env.CI)('AutomergeRepo with Subduction', () => {
     // out at 15 s.
     test.todo('recovering from a lost connection');
 
+    // Isolates a field report of a permanently diverged document (local and edge heads sharing
+    // nothing for days) away from peer-to-peer subduction: two JS peers recover from exactly that
+    // state here, including when the doc is denied on a second connection, so the reported failure
+    // is not in this path.
+    test('partitioned concurrent edits converge on reconnect', { timeout: 60_000 }, async () => {
+      let connectionState: 'on' | 'off' = 'on';
+      const { repos, adapters } = await createHostClientRepoTopology({
+        connectionStateProvider: () => connectionState,
+      });
+      const [host, client] = repos;
+      await connectAdapters(adapters);
+
+      const handleA = host.create<{ fromHost?: string; fromClient?: string }>();
+      handleA.change((doc: any) => {
+        doc.fromHost = 'initial';
+      });
+      await waitForSubductionSave();
+      const handleB = await findInStates<{ fromHost?: string; fromClient?: string }>(client, handleA.url, FIND_STATES);
+      await expect.poll(() => handleB.doc()?.fromHost, { timeout: 20_000 }).toEqual('initial');
+
+      // Gate the transport rather than `disconnectAdapters`, which clears the peer ids
+      // `reconnectAdapters` needs, then edit both sides so neither head descends from the other.
+      connectionState = 'off';
+      handleA.change((doc: any) => {
+        doc.fromHost = 'host-offline';
+      });
+      handleB.change((doc: any) => {
+        doc.fromClient = 'client-offline';
+      });
+      await waitForSubductionSave();
+      expect(getHeads(handleA.doc()!).some((head) => getHeads(handleB.doc()!).includes(head))).toBe(false);
+
+      connectionState = 'on';
+      await reconnectAdapters(adapters);
+
+      await expect.poll(() => handleB.doc()?.fromHost, { timeout: 30_000 }).toEqual('host-offline');
+      await expect.poll(() => handleA.doc()?.fromClient, { timeout: 30_000 }).toEqual('client-offline');
+    });
+
     // Mirrored from `automerge-repo.test.ts:'replicate document after request'`,
     // adapted for subduction:
     //   - Classical version asserts the query reaches `'unavailable'` before

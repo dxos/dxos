@@ -139,7 +139,7 @@ component CommandsDialogContent
 
 ```mdl
 component CommandsTrigger
-  desc: Search-input surface slot component — opens the commands dialog on click or ⌘K / Ctrl+K.
+  desc: Search-input surface slot component — opens the commands dialog on click or ⇧⌘K / Ctrl+Shift+K.
   slots:
     (none)
   actions:
@@ -237,7 +237,7 @@ feat F-5: Keyboard Shortcuts
 
   req F-5.1: NavTree plugin registers keyboard shortcuts for all graph actions that declare a keyBinding property.
   req F-5.2: Graph is traversed on change (debounced 500 ms) to bind newly added shortcuts.
-  req F-5.3: The commands dialog is opened via ⌘K (macOS) / Ctrl+K (Windows/Linux).
+  req F-5.3: The commands dialog is opened via ⇧⌘K (macOS) / Ctrl+Shift+K (Windows/Linux).
   req F-5.4:
     when: plugin deactivates
     then: Keyboard.singleton is destroyed and all shortcuts are unregistered
@@ -296,7 +296,7 @@ test T-4: Select item
 ```mdl
 test T-5: Command palette opens on keyboard shortcut
   given: NavTree is active
-  when: user presses ⌘K (macOS) or Ctrl+K (Windows)
+  when: user presses ⇧⌘K (macOS) or Ctrl+Shift+K (Windows)
   then:
     - CommandsDialogContent is shown in the layout dialog slot
     - search input is focused

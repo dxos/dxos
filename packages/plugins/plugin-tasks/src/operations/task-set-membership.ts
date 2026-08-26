@@ -43,18 +43,19 @@ export const findMilestoneTaskSet = (
  * sub-task hangs off its parent task so it cascades with it, a root task off the set.
  */
 export const addTaskToSet = (taskSet: TaskSet.TaskSet, task: Task.Task, parentTask?: Task.Task): void => {
-  Obj.setParent(task, parentTask ?? taskSet);
+  // Ref before parent edge: the array entry is what makes the task referenced content of the set.
   Obj.update(taskSet, (taskSet) => {
     taskSet.tasks = [...taskSet.tasks, Ref.make(task)];
   });
+  Obj.setParent(task, parentTask ?? taskSet);
 };
 
 /** Add a milestone to a set, appended to the sequence and parented for cascade. */
 export const addMilestoneToSet = (taskSet: TaskSet.TaskSet, milestone: Milestone.Milestone): void => {
-  Obj.setParent(milestone, taskSet);
   Obj.update(taskSet, (taskSet) => {
     taskSet.milestones = [...taskSet.milestones, Ref.make(milestone)];
   });
+  Obj.setParent(milestone, taskSet);
 };
 
 /** Every task in `taskSet` transitively under `task`, including `task` itself. Cycle-safe. */

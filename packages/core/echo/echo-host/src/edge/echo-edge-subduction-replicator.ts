@@ -447,6 +447,7 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
 
   async shouldAdvertise(params: ShouldAdvertiseProps): Promise<boolean> {
     if (!this._sharedPolicyEnabled) {
+      log.verbose('share policy probe', { documentId: params.documentId, allow: true, reason: 'policy-disabled' });
       return true;
     }
     const spaceId = await this._context.getContainingSpaceIdForDocument(params.documentId);
@@ -463,7 +464,17 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
       // If a document is not present locally return true only if it already exists on edge.
       return remoteDocumentExists;
     }
-    return spaceId === this._spaceId;
+    // `reason` separates the expected cross-space denial — which fans out across every
+    // space-scoped peer each sync round — from a same-space document being wrongly refused.
+    const allow = spaceId === this._spaceId;
+    log.verbose('share policy probe', {
+      documentId: params.documentId,
+      allow,
+      reason: allow ? 'same-space' : 'cross-space',
+      documentSpaceId: spaceId,
+      connectionSpaceId: this._spaceId,
+    });
+    return allow;
   }
 
   shouldSyncCollection(params: ShouldSyncCollectionProps): boolean {

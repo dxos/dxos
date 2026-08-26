@@ -78,6 +78,54 @@ GitHub's REST API is **also unreachable from the shell**: `curl https://api.gith
 `Monitor` around it — it fails identically whether CI is red, green, or still running, so silence
 means nothing. Read run status through the `mcp__github__*` tools, which go through the server side.
 
+### `moon` itself may not run at all
+
+moon loads its `javascript`/`bun` toolchains as WASM plugins from ghcr, whose blob host
+(`pkg-containers.githubusercontent.com`) the egress gateway answers 403 to. When it does, EVERY
+`pnpm exec moon run …` dies with `plugin::loader::registry::load_failure` — build, test and lint
+are all unavailable, and nothing can be validated the normal way. Confirm with
+`curl -sS "$HTTPS_PROXY/__agentproxy/status"` (the host appears under `recentRelayFailures`).
+
+Fallback: typecheck against SOURCES instead of built `dist/types`, via the `source` export
+condition every `@dxos` package declares. Write a throwaway config in the package, run it, delete it:
+
+The `extends` path is relative to the package, so count the directories: three levels for
+`packages/plugins/plugin-x`, four for `packages/core/compute/nlp`. Get it wrong and tsc fails before
+it type-checks anything.
+
+```jsonc
+// packages/plugins/<pkg>/tsconfig.check.json — three levels deep; add a `../` per extra level
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": false,
+    "incremental": false,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "emitDeclarationOnly": false,
+    "noEmit": true,
+    "customConditions": ["source"],
+    "types": ["node", "vite/client"],
+    "skipLibCheck": true,
+  },
+  "include": ["dx.config.ts", "src/**/*.ts", "src/**/*.tsx"],
+}
+```
+
+Run it so the filter cannot swallow the verdict — in a pipeline the shell reports `grep`'s status,
+not `tsc`'s, so a real failure reads as success whenever the filter matches nothing:
+
+```bash
+pnpm exec tsc -p tsconfig.check.json > /tmp/tsc.log; status=$?; grep -E "^(src|dx\.config)" /tmp/tsc.log; exit $status
+```
+
+The filter narrows the output to the package's own paths. The hundreds of `../../…` errors are pre-existing and not yours: codegen'd packages
+(`@dxos/protocols`) have no sources to resolve. This catches real type errors but is NOT the build
+— no vite, no declaration emit, no project references — so say so when reporting.
+
+`pnpm exec oxlint <paths>` and `pnpm format` still work; neither goes through moon.
+
 ## Nothing is prebuilt, and `node_modules` may be missing
 
 The clone ships no build outputs, and `node_modules` only where the setup command ran. A first

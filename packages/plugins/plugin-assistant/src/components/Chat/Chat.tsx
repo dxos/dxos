@@ -7,6 +7,7 @@ import * as Option from 'effect/Option';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { resolveSlashCommand } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
@@ -22,8 +23,8 @@ import {
 } from '@dxos/react-ui-assistant';
 import { type MessageRange, type OutlineMarker, Outline as OutlineRail, useFeedModel } from '@dxos/react-ui-feed';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
-import { Outline } from '@dxos/types';
-import { Message } from '@dxos/types';
+import { TaskList } from '@dxos/react-ui-task';
+import { Message, TaskSet } from '@dxos/types';
 import { keyToFallback } from '@dxos/util';
 
 import { useChatToolbarActions, useDebug } from '#hooks';
@@ -35,7 +36,6 @@ import {
   ChatPrompt as NaturalChatPrompt,
   type ChatPromptProps as NaturalChatPromptProps,
 } from '../ChatPrompt';
-import { TaskList } from '../TaskList';
 import { ChatContextProvider, type ChatContextValue, type ChatRequestTiming, useChatContext } from './context';
 import { type ChatEvent } from './events';
 import { SurfaceWidget } from './SurfaceWidget';
@@ -130,6 +130,26 @@ const ChatRoot = ({
         case 'submit': {
           const text = ev.text.trim();
           if (!streaming && text.length) {
+            // A leading /command is a deterministic shortcut — executed directly, no model in
+            // the loop; an unknown command falls through to the model as plain text.
+            const resolved = resolveSlashCommand(text);
+            if (resolved) {
+              void Promise.resolve(onSubmit?.(text)).then(() => {
+                if (!chat || !db) {
+                  event.emit({ type: 'error', error: new Error('Command requires a persisted chat.') });
+                  return;
+                }
+                const result = resolved.command.execute(resolved.args, { db, chat });
+                if (result instanceof Error) {
+                  event.emit({ type: 'error', error: result });
+                } else if (result.followUp) {
+                  // Some effects run on the supervisor loop (delegation spawns post-turn), so the
+                  // command wakes the conversation with a short synthetic prompt.
+                  void processor.request({ message: result.followUp });
+                }
+              });
+              break;
+            }
             lastPrompt.current = ev.text;
             const context = getContext?.();
             // Await persistence (transient chat) before requesting so the agent resolves the
@@ -176,7 +196,7 @@ const ChatRoot = ({
     });
     // `feed` and `messages` are dependencies because the rewind branch reads and writes them: without
     // them the handler would keep resolving rewinds against whatever was mounted first.
-  }, [event, dump, processor, streaming, onEvent, onSubmit, getContext, feed, messages]);
+  }, [event, dump, processor, streaming, onEvent, onSubmit, getContext, feed, messages, chat, db]);
 
   return (
     <ChatContextProvider
@@ -528,36 +548,65 @@ ChatPrompt.displayName = CHAT_PROMPT_NAME;
 const CHAT_TASK_LIST_NAME = 'Chat.TaskList';
 
 type ChatTaskListProps = {
-  outline?: Outline.Outline;
+  taskSet?: TaskSet.TaskSet;
 };
 
-// TODO(burdon): Project chats keep their working checklist on the parent project's outline —
-//  resolve via the parent edge (needs a reactive parent lookup), not only `chat.outline`.
+// TODO(burdon): Project chats keep their working tasks on the parent project's task set —
+//  resolve via the parent edge (needs a reactive parent lookup), not only `chat.taskSet`.
 const ChatTaskList = composable<HTMLDivElement, ChatTaskListProps>(
-  ({ outline: outlineProp, ...props }, forwardedRef) => {
+  ({ taskSet: taskSetProp, ...props }, forwardedRef) => {
     const { chat } = useChatContext(CHAT_TASK_LIST_NAME);
 
-    const outline = useAtomValue(
+    const taskSet = useAtomValue(
       useMemo(
         () =>
           Atom.make(
             (get) =>
-              outlineProp ??
+              taskSetProp ??
               Option.fromNullishOr(chat).pipe(
                 Option.map((_) => get(Obj.atom(_))),
-                Option.flatMapNullishOr((_) => _?.outline?.atom),
+                Option.flatMapNullishOr((_) => _?.taskSet?.atom),
                 Option.map(get),
                 Option.getOrUndefined,
               ),
           ),
-        [chat, outlineProp],
+        [chat, taskSetProp],
       ),
     );
-    if (!outline) {
+
+    // Subscribe to the set (membership) and to each ref (row objects) — a query would only
+    // re-emit on membership changes, leaving row edits stale.
+    const [taskSetSnapshot] = useObject(taskSet);
+    const taskRefs = taskSetSnapshot?.tasks;
+    const tasks = useAtomValue(
+      useMemo(() => Atom.make((get) => TaskSet.dedupeById((taskRefs ?? []).map((ref) => get(ref.atom)))), [taskRefs]),
+    );
+
+    // `TaskSet.addTask` is the shared primitive the task verbs use, so the parent edge and the
+    // set's refs stay consistent without a cross-plugin operation dependency.
+    const handleCreate = useCallback(
+      (title: string) => {
+        const db = taskSet && Obj.getDatabase(taskSet);
+        if (taskSet && db) {
+          TaskSet.addTask(db, taskSet, title);
+        }
+      },
+      [taskSet],
+    );
+    if (!taskSet || tasks.length === 0) {
       return null;
     }
 
-    return <TaskList {...composableProps(props)} outline={outline} ref={forwardedRef} />;
+    return (
+      <TaskList.Root tasks={tasks} showGroupLabels={false} showOrdinals onTaskCreate={handleCreate}>
+        <div {...composableProps(props, { classNames: 'flex flex-col min-h-0' })} ref={forwardedRef}>
+          <TaskList.Viewport classNames='min-h-0'>
+            <TaskList.Content />
+          </TaskList.Viewport>
+          <TaskList.Create classNames='shrink-0' />
+        </div>
+      </TaskList.Root>
+    );
   },
 );
 

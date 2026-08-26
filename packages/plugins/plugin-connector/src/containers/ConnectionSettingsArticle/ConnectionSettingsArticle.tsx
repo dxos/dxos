@@ -38,7 +38,7 @@ export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps
     if (!space) {
       return;
     }
-    void invokePromise(SpaceOperation.OpenCreateObject, {
+    void invokePromise(SpaceOperation.OpenObjectForm, {
       target: space.db,
       typename: Type.getTypename(Connection.Connection),
     });

@@ -12,7 +12,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Operation from '@dxos/compute/Operation';
-import { Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
+import { Collection, Database, Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
 import { Kind as EntityKind } from '@dxos/echo/Entity';
 import { log } from '@dxos/log';
@@ -31,7 +31,8 @@ const ONBOARDING_DOCUMENT_LABELS = new Set(['Welcome to Composer']);
 const handler: Operation.WithHandler<typeof AssistantOperation.GenerateHomeSuggestions> =
   AssistantOperation.GenerateHomeSuggestions.pipe(
     Operation.withHandler(
-      Effect.fnUntraced(function* ({ db }) {
+      Effect.fnUntraced(function* () {
+        const { db } = yield* Database.Service;
         const spaceId = db.spaceId;
 
         // Cache check: return early if a fresh result exists.

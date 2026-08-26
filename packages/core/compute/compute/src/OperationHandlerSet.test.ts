@@ -14,8 +14,8 @@ import { DXN } from '@dxos/keys';
 import * as Operation from './Operation';
 import * as OperationHandlerSet from './OperationHandlerSet';
 
-const KEY_A = DXN.make('org.example.test.a');
-const KEY_B = DXN.make('org.example.test.b');
+const KEY_A = DXN.make('com.example.test.a');
+const KEY_B = DXN.make('com.example.test.b');
 
 const makeHandler = (key: DXN.DXN, output: string) =>
   Operation.withHandler(Operation.make({ input: Schema.Void, output: Schema.String, meta: { key } }), () =>
@@ -130,6 +130,27 @@ describe('OperationHandlerSet.lazy', () => {
     // Cached per key across lookups.
     await EffectEx.runPromise(OperationHandlerSet.getHandlerByKey(set, KEY_A));
     expect(loads.a).toEqual(1);
+  });
+
+  test('a failed load is not memoized, so a retry re-imports', async ({ expect }) => {
+    let loads = 0;
+    const set = OperationHandlerSet.lazy([
+      Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY_A } }).pipe(
+        Operation.lazyHandler(() => {
+          loads++;
+          return loads === 1
+            ? Promise.reject(new TypeError('Failed to fetch dynamically imported module'))
+            : Promise.resolve({ default: makeHandler(KEY_A, 'A') });
+        }),
+      ),
+    ]);
+    await expect(set.getHandlerFor(KEY_A)).rejects.toThrow('Failed to fetch dynamically imported module');
+    const found = await set.getHandlerFor(KEY_A);
+    expect(found?.meta.key).toEqual(KEY_A);
+    expect(loads).toEqual(2);
+    // The successful load is still cached.
+    await set.getHandlerFor(KEY_A);
+    expect(loads).toEqual(2);
   });
 
   test('merge loads only the matched child', async ({ expect }) => {

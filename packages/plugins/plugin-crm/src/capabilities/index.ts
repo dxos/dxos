@@ -12,6 +12,12 @@ import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import * as RoutineEvents from '@dxos/plugin-routine/RoutineEvents';
 
+import { meta } from '#meta';
+import { translations } from '#translations';
+
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
+
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 
 export const AutomationTemplates = Capability.lazyModule(
@@ -34,6 +40,12 @@ export const MailboxProcessor = Capability.lazyModule(
   () => import('./mailbox-processor'),
 );
 
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
+});
 export const SenderAction = Capability.lazyModule(
   'SenderAction',
   // Rides the inbox feature it contributes to, like its MailboxAction sibling — the entry is
@@ -54,3 +66,4 @@ export const SkillDefinition = AppCapability.skillDefinition(() => import('./ski
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
 });
+export const Translations = AppCapability.translations(translations);

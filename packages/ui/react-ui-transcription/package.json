@@ -16,6 +16,11 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./capture": {
+      "source": "./src/capture/index.ts",
+      "types": "./dist/types/src/capture/index.d.ts",
+      "import": "./dist/lib/capture.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

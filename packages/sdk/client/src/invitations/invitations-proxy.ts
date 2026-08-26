@@ -3,6 +3,7 @@
 //
 
 import { Event, MulticastObservable, type Observable, PushStream, Trigger } from '@dxos/async';
+import { type Stream } from '@dxos/async';
 import {
   AuthenticatingInvitation,
   CancellableInvitation,
@@ -10,7 +11,6 @@ import {
   InvitationEncoder,
   type Invitations,
 } from '@dxos/client-protocol';
-import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';

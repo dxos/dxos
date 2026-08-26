@@ -10,9 +10,9 @@ import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import { AiService } from '@dxos/ai';
 import { FactStore, FactStoreLive } from '@dxos/pipeline-rdf';
 
-import { AgentRegistry } from '../AgentRegistry';
+import * as AgentRegistry from '../AgentRegistry';
 import { type Page, Source, type SourceApi, type ThreadRef } from '../Source';
-import { StateStore } from '../StateStore';
+import * as StateStore from '../StateStore';
 import type * as Type from '../types';
 
 // --- Fixture shape (a lean subset of plugin-discord's DiscordChannelFixture) -----------------------
@@ -252,6 +252,7 @@ const extractFromPrompt = (prompt: string) => {
  * model — so the crawler builds a real fact graph from real message content with no token. Swap in
  * a live `AiService` to get model-quality extraction over the same pipeline.
  */
+// TODO(dmaretskyi): Extract to ai package as MockAiServiceLayer -- where you're able to configure prebaked replies in options. See about unifiying with scripted model.
 export const deterministicAiService = (): Layer.Layer<AiService.AiService> =>
   Layer.succeed(AiService.AiService, {
     // The @effect/ai LanguageModel surface is large and external; a test/offline fake fills only
@@ -271,7 +272,7 @@ export const deterministicAiService = (): Layer.Layer<AiService.AiService> =>
  * State + agent registry + semantic store, with NO `Source` and NO `AiService`. Compose with a
  * `Source` layer and an `AiService` (the deterministic stand-in or a real model) to run the crawler.
  */
-export const coreLayer: Layer.Layer<StateStore | AgentRegistry | FactStore> = Layer.mergeAll(
+export const coreLayer: Layer.Layer<StateStore.StateStore | AgentRegistry.AgentRegistry | FactStore> = Layer.mergeAll(
   StateStore.layerMemory,
   AgentRegistry.layerMemory,
   FactStoreLive.layerMemory,
@@ -281,15 +282,14 @@ export const coreLayer: Layer.Layer<StateStore | AgentRegistry | FactStore> = La
  * Everything the crawler needs EXCEPT a {@link Source}: {@link coreLayer} + the deterministic
  * extractor. Compose with any `Source` layer to run the crawler offline (no AI token).
  */
-export const servicesLayer: Layer.Layer<StateStore | AgentRegistry | FactStore | AiService.AiService> = Layer.merge(
-  coreLayer,
-  deterministicAiService(),
-);
+export const servicesLayer: Layer.Layer<
+  StateStore.StateStore | AgentRegistry.AgentRegistry | FactStore | AiService.AiService
+> = Layer.merge(coreLayer, deterministicAiService());
 
 /** All services the crawler needs, wired against a fixture + the deterministic extractor. */
 export const TestLayer = (
   fixture: Fixture,
-): Layer.Layer<Source | StateStore | AgentRegistry | FactStore | AiService.AiService> =>
+): Layer.Layer<Source | StateStore.StateStore | AgentRegistry.AgentRegistry | FactStore | AiService.AiService> =>
   Layer.merge(fixtureSourceLayer(fixture), servicesLayer);
 
 /** A channel with one message that spawns a thread — exercises depth-first descent + per-thread resume. */

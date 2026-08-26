@@ -11,19 +11,9 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
-import { meta } from '#meta';
-
 import * as Video from './Video';
 
 // TODO(burdon): @wittjosiah extend and factor out?
-
-type NoHyphens<S extends string> = S extends `${string}-${string}` ? never : S;
-
-function makeKey<const Head extends readonly string[], const Last extends string>(
-  ...parts: [...Head, NoHyphens<Last>]
-) {
-  return DXN.make(parts.join('.'));
-}
 
 /**
  * Transcribe a video via the remote EDGE transcription service and link the resulting
@@ -31,7 +21,7 @@ function makeKey<const Head extends readonly string[], const Last extends string
  */
 export const Transcribe = Operation.make({
   meta: {
-    key: makeKey(meta.profile.key, 'operation', 'transcribe'),
+    key: DXN.make('org.dxos.operation.video.transcribe'),
     name: 'Transcribe Video',
     description: 'Transcribes a video via the EDGE transcription service and links the transcript.',
     icon: 'ph--subtitles--regular',
@@ -54,7 +44,7 @@ export const Transcribe = Operation.make({
  */
 export const Summarize = Operation.make({
   meta: {
-    key: makeKey(meta.profile.key, 'operation', 'summarize'),
+    key: DXN.make('org.dxos.operation.video.summarize'),
     name: 'Summarize Video',
     description: "Summarizes the video's transcript and links the summary.",
     icon: 'ph--text-align-left--regular',
@@ -77,7 +67,7 @@ export const Summarize = Operation.make({
  */
 export const FetchTranscript = Operation.make({
   meta: {
-    key: makeKey(meta.profile.key, 'operation', 'fetchTranscript'),
+    key: DXN.make('org.dxos.operation.video.fetchTranscript'),
     name: 'Fetch Video Transcript',
     description: "Loads a video's published caption tracks and links the transcript.",
     icon: 'ph--closed-captioning--regular',
@@ -101,7 +91,7 @@ export const FetchTranscript = Operation.make({
  */
 export const FetchDescription = Operation.make({
   meta: {
-    key: makeKey(meta.profile.key, 'operation', 'fetchDescription'),
+    key: DXN.make('org.dxos.operation.video.fetchDescription'),
     name: 'Fetch Video Description',
     description: "Loads a video's watch page via the CRX proxy and extracts the full description.",
     icon: 'ph--text-align-left--regular',

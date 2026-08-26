@@ -20,12 +20,23 @@ import { meta } from '#meta';
 
 import { type ChatEvent } from '../Chat/events';
 
+/**
+ * 44px at the 16px (pointer: fine) root font-size, the iOS HIG minimum touch target; the density
+ * knobs cap a control at 40px, so a finger-driven control has to be sized past them. Applied only
+ * where a finger is plausibly the pointer, so the desktop row keeps its density rhythm.
+ */
+const TOUCH_TARGET = 'max-md:size-11 pointer-coarse:size-11';
+
 export type ChatActionsProps = ThemedClassName<
   PropsWithChildren<{
     docId?: string;
     microphone?: boolean;
     processing?: boolean;
     debug?: boolean;
+    /** Submits the current prompt; the send control renders only when provided. */
+    onSend?: () => void;
+    /** Whether the prompt holds text and the processor would accept it; drives the send control's enablement. */
+    canSend?: boolean;
     onEvent?: (event: ChatEvent) => void;
   }>
 >;
@@ -37,6 +48,8 @@ export const ChatActions = ({
   microphone,
   processing,
   debug,
+  onSend,
+  canSend,
   onEvent,
 }: ChatActionsProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -253,10 +266,24 @@ export const ChatActions = ({
         />
       )}
 
+      {/* Enter is the only other way to submit, and a touch keyboard offers no such affordance. */}
+      {onSend && (
+        <IconButton
+          disabled={!canSend}
+          variant='ghost'
+          classNames={mx(TOUCH_TARGET, canSend && 'text-accent-text')}
+          icon='ph--paper-plane-right--regular'
+          iconOnly
+          label={t('send.label')}
+          data-testid='assistant.send'
+          onClick={onSend}
+        />
+      )}
+
       <IconButton
         disabled={!processing} // TODO(dmaretskyi): Set processing state correctly on rehydrated agents.
         variant='ghost'
-        classNames={processing && 'text-error-text'}
+        classNames={mx(TOUCH_TARGET, processing && 'text-error-text')}
         icon={processing ? 'ph--square--duotone' : 'ph--square--regular'}
         iconOnly
         label={t('cancel-processing.button')}

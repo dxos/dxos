@@ -46,7 +46,7 @@ const appendTask = createEvalRunner({
     Create a new markdown document named "Empty Notes" with empty content (no body text).
     Open the document and confirm its content is empty.
 
-    Use the markdown Update operation (org.dxos.function.markdown.update) to append this exact line
+    Use the markdown Update operation (org.dxos.operation.markdown.update) to append this exact line
     without providing oldString (omit oldString entirely — do not pass an empty string):
     "Hello from an empty document."
 

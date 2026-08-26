@@ -18,5 +18,5 @@ export const handlers = OperationHandlerSet.lazy([
   CommentOperation.RestoreMessage.pipe(Operation.lazyHandler(() => import('./restore-message'))),
   CommentOperation.Select.pipe(Operation.lazyHandler(() => import('./select'))),
   CommentOperation.SetAgentConfig.pipe(Operation.lazyHandler(() => import('./set-agent-config'))),
-  CommentOperation.ToggleResolved.pipe(Operation.lazyHandler(() => import('./toggle-resolved'))),
+  CommentOperation.SetResolved.pipe(Operation.lazyHandler(() => import('./set-resolved'))),
 ]);

@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as Operation from '@dxos/compute/Operation';
@@ -16,7 +16,7 @@ import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { getCalendarRangeSelectionId } from '@dxos/plugin-inbox';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';
-import { Selection, ViewState } from '@dxos/react-ui-attention';
+import { Selection, ViewState } from '@dxos/react-ui-attention/types';
 import { Event } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -52,7 +52,7 @@ export default Capability.makeModule(
       }),
     );
 
-    const extension = yield* GraphBuilder.createExtension({
+    const extension = yield* AppGraphBuilder.createExtension({
       id: 'tripSegment',
       match: (node) => (Trip.instanceOf(node.data) ? Option.some({ trip: node.data, nodeId: node.id }) : Option.none()),
       connector: (matched, get) => {
@@ -80,7 +80,7 @@ export default Capability.makeModule(
     });
 
     // Context-menu action on a Trip: merge it into the nearest other trip (by date) and delete it.
-    const mergeExtension = yield* GraphBuilder.createExtension({
+    const mergeExtension = yield* AppGraphBuilder.createExtension({
       id: 'tripMerge',
       match: (node) => (Trip.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
       actions: (trip) =>
@@ -100,7 +100,7 @@ export default Capability.makeModule(
     // Context-menu action written into the calendar's menu: create a trip + itinerary from the events
     // in the calendar's currently-selected date range (or the next N days from today when nothing is
     // selected). The Trip is created and opened immediately while the planning skill runs.
-    const planTripExtension = yield* GraphBuilder.createExtension({
+    const planTripExtension = yield* AppGraphBuilder.createExtension({
       id: 'calendarPlanTrip',
       match: (node) =>
         Calendar.instanceOf(node.data) ? Option.some({ calendar: node.data, nodeId: node.id }) : Option.none(),

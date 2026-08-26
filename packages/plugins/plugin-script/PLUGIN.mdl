@@ -157,7 +157,7 @@ op create
     templateId?: string
   output: { function: string }
   effects: [echo:write]
-  note: Operation key `org.dxos.function.script.create`.
+  note: Operation key `org.dxos.operation.script.create`.
 ```
 
 ```mdl
@@ -167,7 +167,7 @@ op read
     function: Ref<Script>
   output: { name?: string, source: string, description?: string }
   effects: [echo:read]
-  note: Operation key `org.dxos.function.script.read`.
+  note: Operation key `org.dxos.operation.script.read`.
 ```
 
 ```mdl
@@ -182,7 +182,7 @@ op update
     edits?: { oldString: string, newString: string, replaceAll?: boolean }[]
   output: { function: string }
   effects: [echo:read, echo:write]
-  note: Operation key `org.dxos.function.script.update`.
+  note: Operation key `org.dxos.operation.script.update`.
 ```
 
 ```mdl
@@ -192,7 +192,7 @@ op delete
     function: Ref<Script>
   output: void
   effects: [echo:read, echo:write]
-  note: Operation key `org.dxos.function.script.delete`.
+  note: Operation key `org.dxos.operation.script.delete`.
 ```
 
 ```mdl
@@ -208,7 +208,7 @@ op deploy
   errors:
     CompileError: TypeScript source fails to compile
     DeploymentFailed: EDGE runtime rejected the deployment
-  note: Operation key `org.dxos.function.script.deploy`.
+  note: Operation key `org.dxos.operation.script.deploy`.
 ```
 
 ```mdl
@@ -222,7 +222,7 @@ op invoke
   errors:
     NotDeployed: function has not been deployed
     InvocationError: function threw at runtime
-  note: Operation key `org.dxos.function.script.invoke`.
+  note: Operation key `org.dxos.operation.script.invoke`.
 ```
 
 ```mdl
@@ -258,7 +258,7 @@ op installFunction
     key: string
   output: { function: string, name: string, version: string }
   effects: [echo:write, http]
-  note: Operation key `org.dxos.function.script.install`.
+  note: Operation key `org.dxos.operation.script.install`.
 ```
 
 UI-facing operation (creates Script via the navtree / "create object" flow).

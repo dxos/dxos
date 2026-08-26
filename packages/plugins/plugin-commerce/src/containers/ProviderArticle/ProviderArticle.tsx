@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import type * as Node from '@dxos/app-graph/Node';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { useObject } from '@dxos/echo-react';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
@@ -117,9 +117,9 @@ const useMenuActions = (
   const onAction: ActionExecutor = useCallback(
     (action) => {
       // Boundary: the menu's ActionExecutor surfaces a structural menu-action node, while the graph
-      // runner needs the nominal `Node.Action`. The objects are the same graph actions the builder
+      // runner needs the nominal `AppGraphNode.Action`. The objects are the same graph actions the builder
       // produced (filtered to `disposition: 'toolbar'`), so the coercion is safe here.
-      void runAction(action as Node.Action, { caller: meta.profile.key });
+      void runAction(action as AppGraphNode.Action, { caller: meta.profile.key });
     },
     [runAction],
   );

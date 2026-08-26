@@ -27,6 +27,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@radix-ui/react-compose-refs": "catalog:",
     "alea": "catalog:",

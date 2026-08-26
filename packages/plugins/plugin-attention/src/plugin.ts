@@ -8,10 +8,10 @@ import { Attention, Keyboard, OperationHandler, ReactContext } from '#capabiliti
 import { meta } from '#meta';
 
 export const AttentionPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(OperationHandler),
   Plugin.addModule(Attention),
-  Plugin.addModule(ReactContext),
   Plugin.addModule(Keyboard),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(ReactContext),
   Plugin.make,
 );
 

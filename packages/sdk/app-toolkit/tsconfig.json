@@ -18,6 +18,9 @@
       "path": "../../common/errors"
     },
     {
+      "path": "../../common/graph"
+    },
+    {
       "path": "../../common/i18n"
     },
     {
@@ -91,6 +94,9 @@
     },
     {
       "path": "../client-protocol"
+    },
+    {
+      "path": "../config"
     },
     {
       "path": "../migrations"

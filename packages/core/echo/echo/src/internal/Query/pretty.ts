@@ -68,6 +68,8 @@ export const prettyFilter = (filter: QueryAST.Filter): string => {
       return `Filter.feedCursor(${JSON.stringify({ begin: filter.begin, end: filter.end })})`;
     case 'child-of':
       return `Filter.childOf([${filter.parents.map((p) => JSON.stringify(p)).join(', ')}], { transitive: ${filter.transitive} })`;
+    case 'has-parent':
+      return `Filter.hasParent(${filter.value})`;
     case 'not':
       return `Filter.not(${prettyFilter(filter.filter)})`;
     case 'and':

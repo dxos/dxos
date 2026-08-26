@@ -31,7 +31,6 @@ extensions/
     blocks                        — draw each top-level block as a box with a drag-handle to reorder
     fader                         — fade-in glow on appended text, expiring on a timer
     pos / posTheme / posPopover   — part-of-speech marks, underline theme, hover popover
-    replacer                      — typing auto-replacements (`-->` → `→`)
     comments                      — comment-thread ranges: cursors, highlight layer, cut/paste restore
     assistant                     — LLM proofreading linter drawing underlines + lint panel
   language/
@@ -40,6 +39,7 @@ extensions/
     markdown/
       createMarkdownExtensions    — base markdown language, GFM tags, highlight, keymaps
       decorateMarkdown            — WYSIWYG decorator (headings, lists, tasks, quotes, code, links, HR)
+      substitutions               — typing auto-substitutions (`-->` → `→`) and key chords (`Alt--` → `—`)
       image                       — replace image links with `<img>` block widgets
       table                       — replace GFM tables with rendered `<table>` widgets
       linkTooltip                 — hover preview for markdown links

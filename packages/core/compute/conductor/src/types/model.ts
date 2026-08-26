@@ -3,20 +3,16 @@
 //
 
 import { Obj, Ref } from '@dxos/echo';
-import { Graph, GraphModel } from '@dxos/graph';
+import * as GraphEdge from '@dxos/graph/GraphEdge';
+import * as GraphModel from '@dxos/graph/GraphModel';
 import { EntityId } from '@dxos/keys';
 import { type MakeOptional } from '@dxos/util';
 
 import { type ComputeEdge, ComputeGraph, type ComputeNode, isComputeGraph } from './graph';
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './schema';
 
-export class ComputeGraphModel extends GraphModel.AbstractGraphModel<
-  ComputeNode,
-  ComputeEdge,
-  ComputeGraphModel,
-  ComputeGraphBuilder
-> {
-  static create(graph?: Partial<Graph.Graph<ComputeNode, ComputeEdge>>): ComputeGraphModel {
+export class ComputeGraphModel extends GraphModel.AbstractGraphModel<ComputeNode, ComputeEdge, ComputeGraphModel> {
+  static create(graph?: Partial<GraphModel.Data<ComputeNode, ComputeEdge>>): ComputeGraphModel {
     return new ComputeGraphModel(
       Obj.make(ComputeGraph, {
         graph: {
@@ -31,7 +27,7 @@ export class ComputeGraphModel extends GraphModel.AbstractGraphModel<
   private readonly _root: ComputeGraph;
 
   constructor(root: ComputeGraph) {
-    super(root.graph as Graph.Graph<ComputeNode, ComputeEdge>, (fn) => Obj.update(root, fn));
+    super({ graph: root.graph as GraphModel.Data<ComputeNode, ComputeEdge>, change: (fn) => Obj.update(root, fn) });
     this._root = root;
   }
 
@@ -39,11 +35,7 @@ export class ComputeGraphModel extends GraphModel.AbstractGraphModel<
     return this._root;
   }
 
-  override get builder() {
-    return new ComputeGraphBuilder(this);
-  }
-
-  override copy(graph?: Partial<Graph.Graph<ComputeNode, ComputeEdge>>): ComputeGraphModel {
+  override copy(graph?: Partial<GraphModel.Data<ComputeNode, ComputeEdge>>): ComputeGraphModel {
     return ComputeGraphModel.create(graph);
   }
 
@@ -73,30 +65,18 @@ export class ComputeGraphModel extends GraphModel.AbstractGraphModel<
         ? target.node
         : target.node.id;
 
+    const output = source.property ?? DEFAULT_OUTPUT;
+    const input = target.property ?? DEFAULT_INPUT;
     const edge: ComputeEdge = {
-      id: Graph.createEdgeId({ source: sourceId, target: targetId }),
+      // Ports disambiguate the parallel edges a pair of nodes may carry.
+      id: GraphEdge.createId({ source: sourceId, target: targetId, relation: `${output}-${input}` }),
       source: sourceId,
       target: targetId,
-      output: source.property ?? DEFAULT_OUTPUT,
-      input: target.property ?? DEFAULT_INPUT,
+      output,
+      input,
     };
 
     this.addEdge(edge);
     return edge;
-  }
-}
-
-class ComputeGraphBuilder extends GraphModel.AbstractBuilder<ComputeNode, ComputeEdge, ComputeGraphModel> {
-  createNode(props: Partial<ComputeNode>): this {
-    this.model.createNode(props);
-    return this;
-  }
-
-  createEdge(
-    source: { node: string | ComputeNode; property?: string },
-    target: { node: string | ComputeNode | ComputeGraph; property?: string },
-  ): this {
-    this.model.createEdge(source, target);
-    return this;
   }
 }

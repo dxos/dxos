@@ -26,11 +26,11 @@ export type EdgeServiceName = (typeof EdgeServiceName)[keyof typeof EdgeServiceN
  */
 export const EDGE_SERVICE_DEFAULTS: Readonly<Record<EdgeServiceName, string>> = Object.freeze({
   [EdgeServiceName.Calls]: 'https://calls.dxos.network',
-  [EdgeServiceName.Image]: 'https://image.main.dxos.network',
+  [EdgeServiceName.Image]: 'https://image.dxos.network',
   [EdgeServiceName.Transcription]: 'https://calls.dxos.network',
   [EdgeServiceName.Discord]: 'https://discord.dxos.network',
   [EdgeServiceName.CorsProxy]: 'https://cors.dxos.network',
-  [EdgeServiceName.Introspect]: 'https://introspect.labs.dxos.network/mcp',
+  [EdgeServiceName.Introspect]: 'https://introspect.dxos.network/mcp',
 });
 
 /**

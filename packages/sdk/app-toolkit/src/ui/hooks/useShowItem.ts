@@ -27,7 +27,7 @@ export type ShowItemOptions = {
  * Master-detail dispatch helper. Selects the item in the attention context,
  * then — based on the current layout mode — shows its detail surface:
  *
- * - `'simple'`: expand the complementary sidebar on the given companion segment.
+ * - `'mobile'`: expand the complementary sidebar on the given companion segment.
  * - deck modes (`'solo'`/`'multi'`): open the item as a sibling plank beside the master
  *   (`pivotId = contextId`), when a `path` is provided.
  * - otherwise: swap the current plank's companion to the given segment.
@@ -43,10 +43,10 @@ export const useShowItem = () => {
         subject: { mode: 'single', id: selectionId },
       });
 
-      // `mode` carries both the layout's identity (`simple`) and the deck's own mode, so every deck
+      // `mode` carries both the layout's platform (`mobile`) and the deck's own mode, so every deck
       // mode — whatever the plank count — opens the detail beside its master.
       switch (layout.mode) {
-        case 'simple':
+        case 'mobile':
           return invokePromise(LayoutOperation.UpdateComplementary, {
             subject: companion,
             state: 'expanded',

@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
@@ -25,7 +25,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       // Show Provider.Provider objects as nodes under each space.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'commerceProviders',
         url: { key: 'commerce', kind: 'item', path: [] },
         match: AppNodeMatcher.whenSpace,
@@ -37,7 +37,7 @@ export default Capability.makeModule(
 
           return Effect.succeed([
             // TODO(wittjosiah): Should be AppNode.makeSection() but currently has selectable data.
-            Node.make({
+            AppGraphNode.make({
               // The segment is shared with the navigation resolver, which spells provider paths.
               id: getProvidersSectionId(),
               type: 'providers', // TODO(burdon): Const.
@@ -63,7 +63,7 @@ export default Capability.makeModule(
       }),
 
       // Run action on each Search.Search node.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'commerceRun',
         match: (node) => (Search.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (search) =>
@@ -95,7 +95,7 @@ export default Capability.makeModule(
       }),
 
       // Re-analyze action on each Provider.Provider node.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'commerceAnalyze',
         match: (node) => (Provider.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (provider) =>

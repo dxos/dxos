@@ -46,7 +46,7 @@ const defaultDeckEphemeralState: DeckSchema.EphemeralDeckState = {
 };
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* () {
+  Effect.fnUntraced(function* ({ platform = 'desktop' }: DeckCapabilities.DeckPluginOptions = {}) {
     // Migrate a legacy (pre single-mode-deck) blob before the KVS atom's schema decode would
     // otherwise silently strip its removed fields (see migratePersistedState for details).
     migratePersistedState(STATE_KEY);
@@ -70,7 +70,7 @@ export default Capability.makeModule(
       const deck = state.decks[state.activeDeck];
       invariant(deck, `Deck not found: ${state.activeDeck}`);
       return {
-        mode: DeckSchema.getMode(deck, !!ephemeral.fullscreen),
+        mode: platform === 'mobile' ? 'mobile' : DeckSchema.getMode(deck, !!ephemeral.fullscreen),
         dialogOpen: ephemeral.dialogOpen,
         sidebarOpen: state.sidebarState === 'expanded',
         complementarySidebarOpen: state.complementarySidebarState === 'expanded',
@@ -85,6 +85,7 @@ export default Capability.makeModule(
       Capability.contribute(DeckCapabilities.State, stateAtom),
       Capability.contribute(DeckCapabilities.EphemeralState, ephemeralAtom),
       Capability.contribute(AppCapabilities.Layout, layoutAtom),
+      Capability.contribute(DeckCapabilities.Platform, platform),
     ];
   }),
 );

@@ -7,14 +7,14 @@ import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import type * as PluginNS from '@dxos/app-framework/Plugin';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { isSpace } from '@dxos/client/echo';
 import { Filter, Type } from '@dxos/echo';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -47,10 +47,10 @@ export default Capability.makeModule(
       // specification" button — when this extension isn't registered (i.e.
       // plugin-code isn't enabled) or the spec content can't be resolved,
       // the node is absent and the button stays hidden.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'pluginSpec',
         url: { key: 'spec', kind: 'item', path: [] },
-        match: NodeMatcher.whenNodeType('org.dxos.plugin'),
+        match: GraphNodeMatcher.whenNodeType('org.dxos.plugin'),
         connector: (node, get) => {
           const plugin = node.data as PluginNS.Plugin;
           const { key: slug, name, spec } = plugin.meta.profile;
@@ -64,7 +64,7 @@ export default Capability.makeModule(
             return Effect.succeed([]);
           }
           return Effect.succeed([
-            Node.make({
+            AppGraphNode.make({
               id: 'spec',
               type: PLUGIN_SPEC_TYPE,
               data: makePluginSpecSubject({ pluginId: slug, name, content }),
@@ -79,7 +79,7 @@ export default Capability.makeModule(
       }),
 
       // Top-level "Code Projects" section in each space that has at least one CodeProject.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'codeProjectsSection',
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
@@ -103,7 +103,7 @@ export default Capability.makeModule(
       }),
 
       // Listing of CodeProjects under the section, each with Spec + Build sub-nodes.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'codeProjectListing',
         url: { key: 'code', kind: 'item', path: [getCodeProjectsSectionId()] },
         match: (node) => {
@@ -116,7 +116,7 @@ export default Capability.makeModule(
           return Effect.succeed(
             projects.map((project: CodeProject.CodeProject) => {
               const spec = get(project.spec.atom);
-              return Node.make({
+              return AppGraphNode.make({
                 id: project.id,
                 type: Type.getTypename(CodeProject.CodeProject),
                 data: project,
@@ -128,7 +128,7 @@ export default Capability.makeModule(
                   project,
                 },
                 nodes: [
-                  Node.make({
+                  AppGraphNode.make({
                     id: getCodeProjectSpecId(),
                     type: CODE_PROJECT_SPEC_TYPE,
                     data: spec ?? null,
@@ -138,7 +138,7 @@ export default Capability.makeModule(
                       iconHue: 'indigo',
                     },
                   }),
-                  Node.make({
+                  AppGraphNode.make({
                     id: getCodeProjectBuildId(),
                     type: CODE_PROJECT_BUILD_TYPE,
                     data: project,

@@ -274,7 +274,7 @@ op scaffoldProject
   output: { files: { path: string, size: number }[] }
   effects: [echo:read, echo:write]
   requires: [Database]
-  note:   Operation key `org.dxos.function.code.scaffold`.
+  note:   Operation key `org.dxos.operation.code.scaffold`.
 ```
 
 ```mdl
@@ -302,7 +302,7 @@ op resetProject
   output: { removed: number }
   effects: [echo:read, echo:write]
   requires: [Database]
-  note:   Operation key `org.dxos.function.code.reset`.
+  note:   Operation key `org.dxos.operation.code.reset`.
 ```
 
 ```mdl

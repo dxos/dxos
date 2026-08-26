@@ -1,6 +1,7 @@
 // Base tsconfig for all projects.
 // Don't rename it tsconfig.json. This is specifically non-standard name so TSC doesn't pick it up.
 {
+  "$schema": "./node_modules/@effect/tsgo/schema.json",
   "compilerOptions": {
     "allowJs": false,
     "composite": true,
@@ -45,7 +46,39 @@
         // the language service will "follow" the re-export and import directly
         // from the original file where the symbol is defined,
         // instead of importing from the barrel.
-        "topLevelNamedReexports": "follow"
+        "topLevelNamedReexports": "follow",
+
+        // Effect diagnostics gate the build at warning and error, which is the default.
+        // The rules below are off ONLY because they have a standing backlog, and every
+        // one is meant to come back on as soon as its findings are cleared. Off rather
+        // than reported-and-ignored, so what still fires is actionable and a green build
+        // means something. Each TODO is scheduled work, not a settled preference: clear
+        // the findings, flip the rule, delete the line.
+        //
+        // Style suggestions stay in the editor and out of build logs: 1529 of them
+        // across the repo would bury everything else.
+        "includeSuggestionsInTsc": false,
+        "diagnosticSeverity": {
+          // TODO(wittjosiah): Re-enable once cleared. Untagged errors in the failure
+          // channel, 340 findings across the two.
+          "globalErrorInEffectFailure": "off",
+          "globalErrorInEffectCatch": "off",
+          // TODO(wittjosiah): Re-enable once cleared. Stacked Effect.provide calls,
+          // 82 findings.
+          "multipleEffectProvide": "off",
+          // TODO(wittjosiah): Re-enable once cleared. Fires on the generic capability
+          // factories, always naming the MultiTag arm of AnyTag. Ruled out by experiment:
+          // a minimal generic Effect parameter does not fire, nor does the type
+          // parameter's default, the `any` in AnyTag, or Contributions<T> as MultiTag's
+          // key value. Removing the MultiTag arm clears it, so the cause is in how a
+          // multi capability's identifier reaches Requirements.
+          "missingEffectContext": "off",
+          // TODO(wittjosiah): Re-enable once cleared. 7 findings across the three,
+          // so these are the cheapest to retire.
+          "unknownInEffectCatch": "off",
+          "layerMergeAllWithDependencies": "off",
+          "lazyPromiseInEffectSync": "off"
+        }
       }
     ]
   },

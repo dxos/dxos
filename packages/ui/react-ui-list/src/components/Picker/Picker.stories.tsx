@@ -16,7 +16,7 @@ import React, { useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
 import { Column, ScrollArea } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Picker } from './Picker';
 
@@ -60,7 +60,7 @@ const DefaultStory = ({ items = allItems, controlled = false, disabledIndices = 
   );
 
   return (
-    <Column.Root gutter='sm' classNames='w-[24rem] border border-separator rounded-md py-form-gap'>
+    <Column.Root gutter='sm' classNames='border border-separator rounded-md py-form-gap'>
       <Picker.Root>
         <Column.Center>
           <Picker.Input
@@ -105,7 +105,7 @@ const DefaultStory = ({ items = allItems, controlled = false, disabledIndices = 
 const meta = {
   title: 'ui/react-ui-list/Picker',
   render: (args) => <DefaultStory {...args} />,
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'centered', classNames: 'w-[24rem]' })],
   parameters: {
     layout: 'centered',
   },

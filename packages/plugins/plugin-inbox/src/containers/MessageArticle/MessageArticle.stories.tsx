@@ -20,10 +20,10 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, TestGrid, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
+import { InboxPlugin } from '#plugin';
 import { initializeMailbox, seedSummaries } from '#testing';
 import { Mailbox } from '#types';
 
-import { InboxPlugin } from '../../plugin';
 import { MessageArticle } from './MessageArticle';
 
 const ATTENDABLE_ID = 'story';

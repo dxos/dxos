@@ -378,11 +378,12 @@ const RssCreate = Schema.Struct({
   ),
 });
 
-const CreateFeedSchema = Schema.Union([StandardSiteCreate, RssCreate]);
+const CreateFeedSchema = Schema.Union([RssCreate, StandardSiteCreate]);
 
 /**
- * A discriminated-union create form: selecting `type` reveals that member's fields (combobox + select for
- * `standard-site`, URL + autofill for `rss`). Mirrors the magazine create-feed schema.
+ * A discriminated-union create form: the form opens on the union's FIRST member (here `rss`) and selecting
+ * `type` swaps to another member's fields (URL + autofill for `rss`, combobox + select for `standard-site`).
+ * Mirrors the magazine create-feed schema.
  */
 export const DiscriminatedUnion: Story<Schema.Schema.Type<typeof CreateFeedSchema>> = {
   args: {

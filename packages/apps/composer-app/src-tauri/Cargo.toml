@@ -31,6 +31,9 @@ tauri-plugin-shell = "2"
 tauri-plugin-deep-link = "2.4"
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = { version = "2", features = ["watch"] }
+# `unsafe-headers` lets the web view set X-Access-Token; `dangerous-settings` lets it accept the
+# LaMetric device's self-signed certificate on the LAN.
+tauri-plugin-http = { version = "2", features = ["unsafe-headers", "dangerous-settings"] }
 
 # Plugin asset cache: shared between desktop and mobile (iOS).
 sha2 = "0.10"

@@ -15,19 +15,14 @@
   "imports": {
     "#capabilities": {
       "source": {
-        "workerd": "./src/capabilities/workerd.ts",
-        "node": "./src/capabilities/node.ts",
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
         "default": "./src/capabilities/index.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
       "workerd": "./dist/lib/capabilities.workerd.mjs",
-      "node": "./dist/lib/capabilities/node.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
       "default": "./dist/lib/capabilities.mjs"
-    },
-    "#capabilities/node": {
-      "source": "./src/capabilities/node.ts",
-      "types": "./dist/types/src/capabilities/node.d.ts",
-      "default": "./dist/lib/capabilities/node.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
@@ -44,6 +39,11 @@
       "types": "./dist/types/src/hooks/index.d.ts",
       "default": "./dist/lib/hooks.mjs"
     },
+    "#dashboard": {
+      "source": "./src/dashboard/index.ts",
+      "types": "./dist/types/src/dashboard/index.d.ts",
+      "default": "./dist/lib/dashboard.mjs"
+    },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
@@ -55,14 +55,8 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": {
-        "workerd": "./src/plugin.workerd.ts",
-        "node": "./src/plugin.node.ts",
-        "default": "./src/plugin.ts"
-      },
+      "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
-      "workerd": "./dist/lib/plugin.workerd.mjs",
-      "node": "./dist/lib/plugin.node.mjs",
       "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
@@ -173,6 +167,11 @@
       "source": "./src/types/SpaceSurface.ts",
       "types": "./dist/types/src/types/SpaceSurface.d.ts",
       "import": "./dist/lib/SpaceSurface.mjs"
+    },
+    "./dashboard": {
+      "source": "./src/dashboard/index.ts",
+      "types": "./dist/types/src/dashboard/index.d.ts",
+      "import": "./dist/lib/dashboard.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -222,6 +221,7 @@
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/extractor": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/halo": "workspace:*",
     "@dxos/halo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -234,6 +234,7 @@
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/plugin-settings": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",
+    "@dxos/progress": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",

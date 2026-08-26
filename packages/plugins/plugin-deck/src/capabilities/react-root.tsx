@@ -3,51 +3,34 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { useCallback } from 'react';
+import React from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 
 import { DeckLayout } from '#containers';
-import { useDeckState } from '#hooks';
+import { useDismissToast } from '#hooks';
 import { meta } from '#meta';
+import type { DeckCapabilities } from '#types';
 
-export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contribute(Capabilities.ReactRoot, {
-      id: meta.profile.key,
-      root: () => {
-        const { state, updateEphemeral } = useDeckState();
+export default Capability.makeModule(
+  Effect.fnUntraced(function* ({ platform = 'desktop' }: DeckCapabilities.DeckPluginOptions = {}) {
+    // Headless on mobile: `@dxos/plugin-mobile` contributes the root there, and this plugin keeps
+    // only the state and operations behind it. An empty multi-contribution is the framework's way
+    // to decline — the module still covers its declared `provides` (see `#validateProvides`).
+    if (platform === 'mobile') {
+      return Capability.contributeAll(Capabilities.ReactRoot, []);
+    }
 
-        const handleDismissToast = useCallback(
-          (id: string) => {
-            if (!state.toasts.some((toast) => toast.id === id)) {
-              return;
-            }
-            // Allow time for the toast exit animation (animate-toast-hide, 100ms) before unmounting.
-            // TODO(burdon): Factor out and unregister timeout.
-            setTimeout(() => {
-              // Re-resolve the toast by id inside the update: the toast list may have changed during
-              // the delay, so a captured index would point at the wrong (or a missing) entry.
-              updateEphemeral((s) => {
-                const toastToRemove = s.toasts.find((toast) => toast.id === id);
-                if (!toastToRemove) {
-                  return s;
-                }
-                const newCurrentUndoId = toastToRemove.id === s.currentUndoId ? undefined : s.currentUndoId;
-                return {
-                  ...s,
-                  currentUndoId: newCurrentUndoId,
-                  toasts: s.toasts.filter((toast) => toast.id !== id),
-                };
-              });
-            }, 150);
-          },
-          [state.toasts, updateEphemeral],
-        );
+    return Capability.contributeAll(Capabilities.ReactRoot, [
+      {
+        id: meta.profile.key,
+        root: () => {
+          const handleDismissToast = useDismissToast();
 
-        return <DeckLayout onDismissToast={handleDismissToast} />;
+          return <DeckLayout onDismissToast={handleDismissToast} />;
+        },
       },
-    }),
-  ),
+    ]);
+  }),
 );

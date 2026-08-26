@@ -61,7 +61,7 @@ const meta = {
           space.db.add(
             Obj.make(Task.Task, {
               title: random.person.fullName(),
-              status: random.helpers.arrayElement(['todo', 'in-progress', 'done'] as const),
+              status: random.helpers.arrayElement(['todo', 'started', 'done'] as const),
               description: random.lorem.sentence(),
             }),
           );

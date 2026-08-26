@@ -57,17 +57,18 @@ export const makeRoutine = ({
   trigger?: Trigger.Trigger;
 }): Routine.Routine => {
   const routine = Routine.make({ ...props, triggers });
+  // Ref before parent edge: the ref is what declares the edge (see `Obj.isDeclaredParentEdge`).
   if (instructions) {
-    Obj.setParent(instructions, routine);
     Obj.update(routine, (routine) => {
       routine.spec = { kind: 'instructions', instructions: Ref.make(instructions) };
     });
+    Obj.setParent(instructions, routine);
   }
   if (trigger) {
-    Obj.setParent(trigger, routine);
     Obj.update(routine, (routine) => {
       routine.triggers.push(Ref.make(trigger));
     });
+    Obj.setParent(trigger, routine);
   }
   // Wire every attached trigger (singular or `triggers`) from the action; preserves template-provided
   // input. Gated on `spec`: with no action yet, wiring would null out pre-set trigger runnables.
