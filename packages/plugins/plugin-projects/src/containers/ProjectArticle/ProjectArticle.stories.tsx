@@ -25,7 +25,7 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { Text } from '@dxos/schema';
-import { Milestone, Outline, Task, TaskSet } from '@dxos/types';
+import { Milestone, Outline, Repo, Task, TaskSet } from '@dxos/types';
 
 import { translations } from '#translations';
 
@@ -75,6 +75,13 @@ const seedContent = async () => {
     throw new Error('The story did not create a project.');
   }
   const { space, project, taskSet } = context;
+
+  // The project names its repository, which is what makes a `#nnn` reference in its documents
+  // resolve (plugin-github reads `project.repo`).
+  const repo = space.db.add(Repo.make({ name: 'dxos', owner: 'dxos', url: 'https://github.com/dxos/dxos' }));
+  Obj.update(project, (project) => {
+    project.repo = Ref.make(repo);
+  });
 
   const instructions = Instructions.make({ text: 'You are an assistant focused on this project.' });
   const artifact = space.db.add(Text.make({ name: ARTIFACT_TITLE, content: 'Notes.' }));
@@ -187,6 +194,7 @@ const meta = {
             TaskSet.TaskSet,
             Task.Task,
             Milestone.Milestone,
+            Repo.Repo,
           ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

@@ -166,6 +166,12 @@ Each is independent of the others; none is started.
       is parsed as an ATX heading, so `#foo` comes out as a title. The thread
       renders through CodeMirror (`MarkdownBlock` → `decorateMarkdown`), so the
       fix belongs there rather than in `MarkdownView`.
+- [x] **`Repo` type + `Project.repo`** — a host-agnostic repository type in
+      `@dxos/types` (`owner`, `name`, `url`, `defaultBranch`, optional
+      `organization`; which host it lives on stays provenance on `Obj.getMeta`
+      keys) and an optional `Project.repo` ref naming the repository a project's
+      work lands in, independent of whether its tasks are mirrored. Project
+      bumped to `0.6.0`.
 - [x] **plugin-github contributes a `#nnn` decoration** — `githubReferences()`
       decorates `#nnn` as a link to `…/issues/<n>` (GitHub redirects to the PR
       when the number is one), contributed through

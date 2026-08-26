@@ -7,6 +7,7 @@ import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
+import { Repo } from '@dxos/types';
 import { createMarkdownExtensions } from '@dxos/ui-editor';
 
 import { type GitHubReferenceResolver, githubReferences, referenceUrl } from './references';
@@ -64,6 +65,13 @@ describe('github references', () => {
   test('ignores a reference inside a link target', ({ expect }) => {
     const view = createView('[the PR](https://github.com/dxos/dxos/pull/12752#issuecomment-1)');
     expect(links(view).map(({ href }) => href)).not.toContain('https://github.com/dxos/dxos/issues/1');
+    view.destroy();
+  });
+
+  test('a repo object supplies the target', ({ expect }) => {
+    const repo = Repo.make({ name: 'dxos', owner: 'dxos', url: 'https://github.com/dxos/dxos' });
+    const view = createView('Blocked on #12752.', (number) => referenceUrl(Repo.fullName(repo), number));
+    expect(links(view)).toEqual([{ text: '#12752', href: 'https://github.com/dxos/dxos/issues/12752' }]);
     view.destroy();
   });
 
