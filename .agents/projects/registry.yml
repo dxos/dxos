@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: project-tasks
+    status: active
+    user: burdon
+    host: burdon-mbp-2092
+    created: 2026-08-25
+    summary: 'Agent delegation and task management over the two-forms model — make the delegation loop (supervisor -> durable Task in a TaskSet -> sub-agent -> fold-back) work live and be visible in the UI.'
+    tasks: .agents/projects/project-tasks/TASKS.md
+    design: .agents/projects/project-tasks/DESIGN.md
+    prs: []
+    resume: 'Delegation fix DONE and live-verified (3 commits on branch claude/agent-delegation-task-management-8bdbbe, unpushed): completeJob is now a Tool.dynamic so its schema reaches Anthropic verbatim — the structured-output transformer rewrites Record/ObjectKeyword into typeless subschemas the API rejects, which killed EVERY live delegation at the sub-agent''s first model call; onComplete now posts error messages only (stack stays in log.warn). NEXT: open the PR (add assistant-toolkit changeset), then the joined story (delegation chat beside a TaskSet surface) and the promote-task verb gap.'
   - name: hardware-devices
     status: active
     user: burdon
