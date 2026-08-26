@@ -35,10 +35,8 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
 ) => Effect.Effect<ContentBlock.ToolResult, AiError.AiError, Tool.HandlerServices<Tools[keyof Tools]>> = Effect.fn(
   'callTool',
 )(function* (toolkit, toolCall) {
-  // Models occasionally emit syntactically invalid arguments; reporting the parse failure back as
-  // a tool error lets the turn continue and the model retry, instead of silently calling the tool
-  // with no arguments.
-  // A tool without parameters is called with no arguments at all.
+  // Empty input means a tool without parameters; unparseable input is reported back as a tool
+  // error so the model can retry rather than the tool running with no arguments.
   const input = toolCall.input.trim().length === 0 ? {} : safeParseJson<Record<string, unknown>>(toolCall.input);
   if (input === undefined) {
     log.warn('tool call arguments did not parse', { tool: toolCall.name, input: toolCall.input });

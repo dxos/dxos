@@ -16,11 +16,9 @@ import { log } from '@dxos/log';
  * The streamed `tool-params-start`, `tool-params-delta`, and `tool-params-end` parts are not
  * affected.
  *
- * A stream that fails because tool call parameters did not parse ends cleanly instead: consumers
- * of this combinator read only the raw delta parts, which have already been emitted by the time
- * the terminal parse failure arrives. The failure arrives either in the error channel (as an
- * `InvalidOutputError`) or, depending on the provider, as a raw `SyntaxError` defect — both end
- * the stream, so the turn can complete and the model can be told its arguments were malformed.
+ * A stream that fails because tool call parameters did not parse ends cleanly instead — as an
+ * `InvalidOutputError` failure or, depending on the provider, a raw `SyntaxError` defect — since
+ * the raw delta parts consumers read have all been emitted by then.
  */
 export const withoutToolCallParsing = <Tools extends Record<string, Tool.Any>, E extends AiError.AiError, R>(
   stream: Stream.Stream<Response.StreamPart<Tools>, E, R>,
@@ -37,13 +35,9 @@ export const withoutToolCallParsing = <Tools extends Record<string, Tool.Any>, E
   );
 };
 
-/**
- * A malformed-arguments failure is recoverable (the model is re-prompted with the tool error);
- * any other failure must propagate.
- */
 const isToolCallParseFailure = (cause: Cause.Cause<unknown>): boolean =>
-  cause.reasons.length > 0 &&
   // `reasons` is flat, so a cause combining an unrelated failure must still propagate in full.
+  cause.reasons.length > 0 &&
   cause.reasons.every((reason) =>
     reason._tag === 'Fail'
       ? isInvalidOutputError(reason.error)

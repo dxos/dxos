@@ -194,9 +194,8 @@ export const parseResponse =
         });
 
         /**
-         * Finalizes a block left open when the stream ends mid-block (e.g. malformed tool call
-         * parameters truncate the provider stream before `tool-params-end`), which would otherwise
-         * leave it pending forever in the UI and invisible to the tool runner.
+         * Finalizes a block left open when the stream ends mid-block, which would otherwise stay
+         * pending forever and invisible to the tool runner.
          */
         const flushBlock = Effect.fnUntraced(function* (out: ContentBlock.Any[]) {
           if (!block) {
