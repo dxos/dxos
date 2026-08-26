@@ -25,17 +25,15 @@ const AnthropicTokenForm = Schema.Struct({
  * are tolerated so the form still works in environments where the direct browser call is blocked.
  */
 const validateAnthropicKey = (apiKey: string): Effect.Effect<void, Error> =>
-  Effect.tryPromise({
-    try: () =>
-      fetch('https://api.anthropic.com/v1/models', {
-        headers: {
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true',
-        },
-      }),
-    catch: (cause) => cause,
-  }).pipe(
+  Effect.tryPromise(() =>
+    fetch('https://api.anthropic.com/v1/models', {
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+    }),
+  ).pipe(
     Effect.matchEffect({
       onSuccess: (response) =>
         response.status === 401 || response.status === 403

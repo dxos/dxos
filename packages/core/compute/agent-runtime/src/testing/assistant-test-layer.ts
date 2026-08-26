@@ -320,10 +320,9 @@ export type AssistantTestServicesWithTriggers = AssistantTestServices | TriggerD
 export const AssistantTestLayerWithTriggers = (
   options: TestLayerWithTriggersOptions,
 ): Layer.Layer<AssistantTestServicesWithTriggers, never, TestContextService> =>
-  Layer.mergeAll(
-    AssistantTestLayer(options),
-    TriggerDispatcher.layer({ timeControl: 'manual', startingTime: new Date('2025-09-05T15:01:00.000Z') }).pipe(
-      Layer.provide(AtomRegistry.layer),
-    ),
-    TriggerStateStore.layerMemory,
-  ) as any;
+  // provideMerge rather than mergeAll: the dispatcher consumes the state store and the test
+  // layer's services, and mergeAll builds siblings in parallel without wiring them together.
+  TriggerDispatcher.layer({ timeControl: 'manual', startingTime: new Date('2025-09-05T15:01:00.000Z') }).pipe(
+    Layer.provideMerge(TriggerStateStore.layerMemory),
+    Layer.provideMerge(AssistantTestLayer(options)),
+  );

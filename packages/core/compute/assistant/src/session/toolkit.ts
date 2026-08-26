@@ -49,6 +49,9 @@ export const createToolkit = ({
     const combinedHandlerLayer = Layer.mergeAll(
       Layer.succeedContext(skillToolHandler),
       toolkitProp?.layer ?? OpaqueToolkit.empty.layer,
+      // Opaque handler layers are independent; the `unknown` they provide is OpaqueToolkit's
+      // deliberate type erasure, not a service another merged layer consumes.
+      // @effect-diagnostics-next-line layerMergeAllWithDependencies:off
       opaqueToolkit.layer,
     );
     return OpaqueToolkit.make(mergedToolkit, combinedHandlerLayer as any) as OpaqueToolkit.OpaqueToolkit;
