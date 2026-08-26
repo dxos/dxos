@@ -2,5 +2,9 @@ name = "discord-worker"
 main = "src/worker.ts"
 compatibility_date = "2024-04-05"
 
+# EDGE_ENDPOINT is deliberately unset: the worker treats "unset" as "EDGE integration not wired up
+# yet" and answers without forwarding. Set it to the environment's edge base URL (production is
+# https://edge.network) to enable /connect and /track forwarding to `<edge>/discord/*`. It must not
+# carry a placeholder value -- the previous `https://edge.dxos.network` doubled as the disabled
+# sentinel, so a real endpoint could not be distinguished from an unconfigured one.
 [vars]
-EDGE_ENDPOINT = "https://edge.network"
