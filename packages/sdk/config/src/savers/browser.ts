@@ -7,11 +7,12 @@
 import localforage from 'localforage';
 
 import { log } from '@dxos/log';
-import { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
+
+import { type ConfigInit } from '../types';
 
 let PERFORMING_CONFIG_SAVE = false;
 
-export const SaveConfig = async (config: ConfigProto): Promise<void> => {
+export const SaveConfig = async (config: ConfigInit): Promise<void> => {
   if (PERFORMING_CONFIG_SAVE) {
     log.warn('Already performing config save');
     return;

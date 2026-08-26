@@ -9,6 +9,7 @@ import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 import { AssistantOperation } from '#types';
 
 export const AssistantOperationHandlerSet = OperationHandlerSet.lazy([
+  AssistantOperation.BindChatContext.pipe(Operation.lazyHandler(() => import('./bind-chat-context'))),
   AssistantOperation.CreateChat.pipe(Operation.lazyHandler(() => import('./create-chat'))),
   AssistantOperation.EnsureCompanionChat.pipe(Operation.lazyHandler(() => import('./ensure-companion-chat'))),
   AssistantOperation.ForkChat.pipe(Operation.lazyHandler(() => import('./fork-chat'))),

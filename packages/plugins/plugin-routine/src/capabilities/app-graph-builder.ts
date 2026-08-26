@@ -54,20 +54,6 @@ export default Capability.makeModule(
           ]);
         },
       }),
-      AppGraphBuilder.createExtension({
-        id: 'automationCompanion',
-        match: AppNodeMatcher.whenEchoObjectMatches,
-        connector: () =>
-          Effect.succeed([
-            AppNode.makeCompanion({
-              variant: 'automation',
-              label: ['automation-companion.label', { ns: meta.profile.key }],
-              icon: 'ph--lightning--regular',
-              data: 'automation',
-              position: Position.last,
-            }),
-          ]),
-      }),
       AppGraphBuilder.createTypeExtension({
         id: 'routineRuns',
         type: Routine.Routine,

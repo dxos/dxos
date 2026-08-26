@@ -46,8 +46,8 @@ import {
 
 /**
  * A collection is always a navigation target; what differs is what navigating to it shows. When a
- * plugin renders collections as their own article (stack, simple-layout) that article wins, otherwise
- * the deck opens the collection's contents. Returning `undefined` leaves the ordinary open in place.
+ * plugin renders collections as their own article (stack) that article wins, otherwise the deck opens
+ * the collection's contents. Returning `undefined` leaves the ordinary open in place.
  */
 const collectionDeck = (object: Obj.Unknown, hasCollectionArticle: boolean): DeckSpec.DeckSpec | undefined =>
   !hasCollectionArticle && Obj.instanceOf(Collection.Collection, object) ? { initial: 'children' } : undefined;
@@ -95,6 +95,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
             id: GraphPath.GroupSegments.content,
             type: GraphPath.GroupTypes.content,
             label: ['nav-tree-group-content.label', { ns: meta.profile.key }],
+            icon: 'ph--files--regular',
             space,
             position: 200,
           }),

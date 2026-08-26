@@ -7,12 +7,11 @@ import { getUserFunctionIdInMetadata } from '@dxos/compute-runtime';
 import * as Operation from '@dxos/compute/Operation';
 import * as Script from '@dxos/compute/Script';
 import { Context } from '@dxos/context';
-import { Obj, Ref } from '@dxos/echo';
+import { type Database, Obj, Ref } from '@dxos/echo';
 import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/edge-compute';
 import { bundleFunction } from '@dxos/edge-compute/bundler';
 import { log } from '@dxos/log';
 import { FunctionRuntimeKind } from '@dxos/protocols';
-import { type Space } from '@dxos/react-client/echo';
 
 export const isScriptDeployed = ({ script, fn }: { script: Script.Script; fn: any }): boolean => {
   const existingFunctionId = fn && getUserFunctionIdInMetadata(Obj.getMeta(fn));
@@ -22,7 +21,7 @@ export const isScriptDeployed = ({ script, fn }: { script: Script.Script; fn: an
 type DeployScriptProps = {
   script: Script.Script;
   client: Client;
-  space: Space;
+  db: Database.Database;
   fn?: Operation.PersistentOperation;
   existingFunctionId?: string;
 };
@@ -35,11 +34,11 @@ type DeployScriptResult = { success: boolean; error?: Error; functionId?: string
 export const deployScript = async ({
   script,
   client,
-  space,
+  db,
   fn,
   existingFunctionId,
 }: DeployScriptProps): Promise<DeployScriptResult> => {
-  const validationError = validateDeployInputs(script, space);
+  const validationError = validateDeployInputs(script, db);
   if (validationError) {
     return { success: false, error: validationError };
   }
@@ -67,7 +66,7 @@ export const deployScript = async ({
       runtime: FunctionRuntimeKind.enums.WORKER_LOADER,
     });
 
-    const storedFunction = createOrUpdateFunctionInSpace(space, fn, script, newFunction);
+    const storedFunction = createOrUpdateFunction(db, fn, script, newFunction);
     Obj.update(script, (script) => {
       script.changed = false;
     });
@@ -82,15 +81,15 @@ export const deployScript = async ({
 /**
  * Validate inputs for script deployment.
  */
-const validateDeployInputs = (script: Script.Script, space: Space): Error | null => {
-  if (!script.source || !space) {
-    return new Error('Script source or space not available');
+const validateDeployInputs = (script: Script.Script, db: Database.Database): Error | null => {
+  if (!script.source || !db) {
+    return new Error('Script source or database not available');
   }
   return null;
 };
 
-const createOrUpdateFunctionInSpace = (
-  space: Space,
+const createOrUpdateFunction = (
+  db: Database.Database,
   fn: Operation.PersistentOperation | undefined,
   script: Script.Script,
   newFunction: Operation.PersistentOperation,
@@ -102,6 +101,6 @@ const createOrUpdateFunctionInSpace = (
     Obj.update(newFunction, (newFunction) => {
       newFunction.source = Ref.make(script);
     });
-    return space.db.add(newFunction);
+    return db.add(newFunction);
   }
 };

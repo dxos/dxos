@@ -28,13 +28,14 @@ import { Organization, Person } from '@dxos/types';
 import { DeckState, OperationHandler } from '#capabilities';
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
+import type { DeckCapabilities } from '#types';
 
 import { Plank } from '../Plank';
 import { Matrix, type MatrixController, type MatrixRootProps } from './Matrix';
 
 random.seed(123);
 
-const TestPlugin = Plugin.define(pluginMeta).pipe(
+const TestPlugin = Plugin.define<DeckCapabilities.DeckPluginOptions>(pluginMeta).pipe(
   Plugin.addModule(DeckState),
   Plugin.addModule(OperationHandler),
   Plugin.make,

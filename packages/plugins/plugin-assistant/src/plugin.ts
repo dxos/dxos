@@ -24,6 +24,7 @@ import {
   Schema,
   Settings,
   SkillDefinition,
+  SubjectContext,
   Toolkit,
 } from '#capabilities';
 import { meta } from '#meta';
@@ -64,6 +65,7 @@ export const AssistantPlugin = Plugin.define<AssistantOptions.AssistantPluginOpt
     Plugin.addModule(Toolkit),
     Plugin.addModule(AgentHydrator),
     Plugin.addModule(CompanionChatProvisioner),
+    Plugin.addModule(SubjectContext),
     Plugin.addModule(Connector),
     Plugin.addModule(
       AppCapability.pluginAsset({

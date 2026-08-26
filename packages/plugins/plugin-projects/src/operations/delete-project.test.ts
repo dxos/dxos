@@ -51,24 +51,25 @@ describe('deleting a project', () => {
     });
     Obj.setParent(instructions, project);
 
-    // Mirrors ProjectOperation.CreateChat: the chat is owned by the parent edge, not a ref field.
+    // Mirrors a project companion chat: the chat is owned by the parent edge, not a ref field.
     const feed = db.add(Feed.make());
     const chat = db.add(Chat.make({ name: 'Chat', feed: Ref.make(feed) }));
     Chat.linkCompanion({ chat, subject: project });
 
-    // Mirrors the routine-template create flow: neither owned nor referenced by the project — the
-    // routine reaches it only through its own instructions, which is the edge the companion queries.
-    const routineInstructions = db.add(Instructions.make({ objects: [Ref.make(project)] }));
-    const routine = db.add(
+    const ownedRoutine = Routine.make({ name: 'Owned', triggers: [] });
+    Project.addRoutine(project, ownedRoutine);
+
+    const standaloneInstructions = db.add(Instructions.make({ objects: [Ref.make(project)] }));
+    const standaloneRoutine = db.add(
       Routine.make({
-        name: 'Routine',
+        name: 'Standalone',
         triggers: [],
-        spec: { kind: 'instructions', instructions: Ref.make(routineInstructions) },
+        spec: { kind: 'instructions', instructions: Ref.make(standaloneInstructions) },
       }),
     );
     await db.flush();
 
-    return { db, project, instructions, chat, routine };
+    return { db, project, instructions, chat, ownedRoutine, standaloneRoutine };
   };
 
   type TestDatabase = Awaited<ReturnType<typeof setup>>['db'];
@@ -103,8 +104,6 @@ describe('deleting a project', () => {
     const { db, project, instructions } = await setup();
     expect(await countOf(db, Filter.type(Project.Project))).toEqual(1);
     expect(await countOf(db, Filter.type(Chat.Chat))).toEqual(1);
-    // By id, not by a type count: the connected routine owns Instructions of its own, and only the
-    // project's are supposed to go.
     expect(await countOf(db, Filter.id(instructions.id))).toEqual(1);
 
     db.remove(project);
@@ -115,17 +114,15 @@ describe('deleting a project', () => {
     expect(await countOf(db, Filter.id(instructions.id))).toEqual(0);
   });
 
-  // Deliberate: `Project.routines` and the routine→project parent edge are gone, so a routine is a
-  // standalone object connected only by its instructions. Sweeping up the routines a deleted project
-  // strands is the separate deletion-guard/staleness work, not a cascade.
-  test('connected routines survive it', async ({ expect }) => {
-    const { db, project } = await setup();
-    expect(await countOf(db, Filter.type(Routine.Routine))).toEqual(1);
+  test('owned routines go with it, routines that merely reference it stay', async ({ expect }) => {
+    const { db, project, ownedRoutine, standaloneRoutine } = await setup();
+    expect(await countOf(db, Filter.id(ownedRoutine.id))).toEqual(1);
 
     db.remove(project);
     await db.flush();
 
-    expect(await countOf(db, Filter.type(Routine.Routine))).toEqual(1);
+    expect(await countOf(db, Filter.id(ownedRoutine.id))).toEqual(0);
+    expect(await countOf(db, Filter.id(standaloneRoutine.id))).toEqual(1);
   });
 
   test('owned descendants are reachable transitively before removal, so their planks can be closed', async ({

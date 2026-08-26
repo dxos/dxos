@@ -6,23 +6,23 @@ at the bottom — read those before picking up a thread.
 
 ## Status
 
-| #   | Thread                                  | State       | Notes                                                                    |
-| --- | --------------------------------------- | ----------- | ------------------------------------------------------------------------ |
-| 1   | `@dxos/effect-proto` removal            | **done**    | Package deleted; storybook rewritten on a hand-authored Effect Schema.   |
-| 2   | Test/example protos                     | todo        | Untouched — `#3`'s harness was built against real dxos messages instead. |
-| 3   | Shape-compat layer                      | **done**    | `@dxos/protocols/buf-shape-compat` + conformance harness (5 tests).      |
-| 4   | `dxos.config`                           | **blocked** | Needs a decision on `@dxos/config`'s public surface — see findings.      |
-| 5   | devtools                                | **part**    | Enum imports moved; the rest needs `#7` first.                           |
-| 6   | `Stream` extraction                     | **done**    | Moved to `@dxos/async`; generator emits it from there.                   |
-| 7   | `protoMessage()` / `serviceError` → buf | todo        | The chokepoint. Unblocks `#5` and most of the import sweep.              |
-| 8   | Remaining `ServiceDescriptor` RPC       | todo        | Cross-peer wire compatibility; sequence after `#6` (now done).           |
-| 9a  | keyring `KeyRecord`                     | **done**    | No substituted fields; wire format unchanged, asserted byte-for-byte.    |
-| 9b  | `echo.query.Heads`                      | **done**    | Same; also dropped the workerd lazy-codec workaround.                    |
-| 9c  | `echo/metadata` + `echo/feed`           | todo        | Needs fixture profiles per storage version.                              |
-| 9d  | credentials signing/verification        | todo        | Highest risk; additionally needs `Any` support in the compat layer.      |
+| #   | Thread                                  | State    | Notes                                                                    |
+| --- | --------------------------------------- | -------- | ------------------------------------------------------------------------ |
+| 1   | `@dxos/effect-proto` removal            | **done** | Package deleted; storybook rewritten on a hand-authored Effect Schema.   |
+| 2   | Test/example protos                     | todo     | Untouched — `#3`'s harness was built against real dxos messages instead. |
+| 3   | Shape-compat layer                      | **done** | `@dxos/protocols/buf-shape-compat` + conformance harness (5 tests).      |
+| 4   | `dxos.config`                           | **done** | Converted natively; `@dxos/config` inputs are `ConfigInit`, values buf.  |
+| 5   | devtools                                | **part** | Enum imports moved; the rest needs `#7` first.                           |
+| 6   | `Stream` extraction                     | **done** | Moved to `@dxos/async`; generator emits it from there.                   |
+| 7   | `protoMessage()` / `serviceError` → buf | todo     | The chokepoint. Unblocks `#5` and most of the import sweep.              |
+| 8   | Remaining `ServiceDescriptor` RPC       | todo     | Cross-peer wire compatibility; sequence after `#6` (now done).           |
+| 9a  | keyring `KeyRecord`                     | **done** | No substituted fields; wire format unchanged, asserted byte-for-byte.    |
+| 9b  | `echo.query.Heads`                      | **done** | Same; also dropped the workerd lazy-codec workaround.                    |
+| 9c  | `echo/metadata` + `echo/feed`           | todo     | Needs fixture profiles per storage version.                              |
+| 9d  | credentials signing/verification        | todo     | Highest risk; additionally needs `Any` support in the compat layer.      |
 
 **Next up, in order:** `#7` (unblocks `#5` and the sweep) → rest of `#5` → `#9c` → `#8` → `#9d`.
-`#2` and `#4` are independent and can slot in anywhere; `#4` needs the API decision first.
+`#2` is independent and can slot in anywhere.
 
 Deleting `protobuf-compiler`/`codec-protobuf` and dropping `protobufjs` from the catalog is the
 last step, and needs every thread above done.
@@ -128,16 +128,14 @@ Per open thread, assuming no behaviour change and no proto edits.
 | 9c     | `echo/metadata` + `echo/feed`, with a fixture profile per storage version                            | 1 week      |
 | 8      | `ServiceDescriptor`/`createProtoRpcPeer` for mesh/teleport, iframe, bridge, agentmanager             | 1.5–2 weeks |
 | 9d     | Credentials signing/verification, incl. `Any` support in the compat layer                            | 1–1.5 weeks |
-| 4      | `dxos.config`, after the `@dxos/config` API decision                                                 | 1–2 weeks   |
 | 2      | Test/example protos                                                                                  | 2–3 days    |
 | —      | Import sweep of the remaining `@dxos/protocols/proto/*` declarations, behind `#7`                    | 2–3 weeks   |
 | —      | Delete `protobuf-compiler`, `codec-protobuf`, `substitutions.ts`; drop `protobufjs` from the catalog | 3–5 days    |
 
-**Remaining: roughly 8.5–12.5 engineer-weeks**, of which the import sweep is the long tail and the
+**Remaining: roughly 7.5–11.5 engineer-weeks**, of which the import sweep is the long tail and the
 only item that touches most of the repo. That is the sum of the rows above at five days
-to the week, and it exceeds the 7–10.5 weeks the first draft estimated for the _whole_ migration:
-the early threads surfaced four generator divergences that the first pass had not priced, and
-`#4` turned out to be an API change rather than a codemod.
+to the week, and it is still close to the 7–10.5 weeks the first draft estimated for the _whole_
+migration: the early threads surfaced generator divergences that the first pass had not priced.
 
 Main risks, in order: credential signature stability (`#9d`), decoded-shape drift silently changing
 behaviour across the sweep, and the five generator divergences below.
@@ -153,7 +151,7 @@ groups: `#7` and `#9a`–`#9d` on the shape-compat layer (`#3`), and `#8` on the
 | 1   | `@dxos/effect-proto` removal            | 2 files                                                                                     | very low    | very low   | The only real consumer is `react-ui-form`'s `ObjectTree.stories.tsx` (`parseProto`) — a storybook. Deletes an entire protobuf.js dependent.                                                                                         |
 | 2   | Test/example protos                     | `tools/protobuf-test`, `codec-protobuf/test`, `protobuf-compiler/test`, `example/testing/*` | very low    | low        | No persisted data, no signatures. Doubles as the conformance harness for #3.                                                                                                                                                        |
 | 3   | Shape-compat layer                      | new module in `@dxos/protocols`                                                             | low         | high       | Buf encode/decode reproducing the substituted shapes (PublicKey, PrivateKey, TimeframeVector, Any, Struct, Timestamp) plus byte/JSON-equality tests against protobuf.js. Nothing switches over, so risk stays low; gates #7 and #9. |
-| 4   | `dxos.config`                           | 33 files                                                                                    | low         | low–medium | Read-mostly, not persisted, not signed. Good codemod pilot for enum and default-value differences.                                                                                                                                  |
+| 4   | `dxos.config`                           | 55 files                                                                                    | low         | medium     | Read-mostly, not persisted, not signed — but a public API change, since `@dxos/config` re-exported the generated namespace. Landed natively; see findings.                                                                          |
 | 5   | devtools                                | 20 files                                                                                    | low         | low–medium | Diagnostic-only; regressions are visible and harmless. Already on effect-rpc (verified — see below), so this is a type-import sweep that rides on #7, not an RPC-seam exercise.                                                     |
 | 6   | `Stream` extraction                     | 26 import sites                                                                             | low         | medium     | Move `Stream` out of `codec-protobuf` into its own package; unblocks deleting that package.                                                                                                                                         |
 | 7   | `protoMessage()` / `serviceError` → buf | 64 sites, 1 file                                                                            | medium      | low        | The chokepoint: re-points the whole effect-rpc stack off protobuf.js in one file. Highest leverage per line changed, but a shape mismatch breaks every client service at once.                                                      |
@@ -165,15 +163,37 @@ groups: `#7` and `#9a`–`#9d` on the shape-compat layer (`#3`), and `#8` on the
 
 ## Findings
 
-### `dxos.config` (#4) is not a codemod
+### `dxos.config` (#4) was an API change, and it landed
 
-`packages/sdk/config/src/index.ts` re-exports `@dxos/protocols/proto/dxos/config` wholesale — as
-`defs` (the generated namespace, whose enums are numeric-valued objects) and as the public
-`ConfigProto` type. Every `Runtime.Client.ServicesMode.DEDICATED_WORKER`-style reference in the
-apps therefore reads through that re-export. buf renders those enums differently, so switching
-`@dxos/config` to buf changes its public surface rather than just its imports. #4 needs a decision
-on that surface first and is re-rated high complexity; it is not the cheap codemod pilot the first
-draft of this audit assumed.
+`@dxos/config` re-exported the generated protobuf.js namespace wholesale, as `defs` and as the
+public `ConfigProto` type, so every `Runtime.Client.ServicesMode.DEDICATED_WORKER`-style reference
+in the apps read through it. buf renders nested types flat (`Runtime_Client_ServicesMode`), which
+made this an API change rather than an import rewrite.
+
+A compat shim that reproduced the protobuf.js shapes was tried first and abandoned: preserving the
+nested names needed a recursive mapped type that had to special-case `$typeName`/`$unknown`,
+`Struct`, `Any`, repeated-field optionality, and — fatally — enum identity, since TypeScript enums
+are nominal and buf's are unassignable to protobuf.js' despite identical numbering. The only way
+through was widening enum fields to `number`, losing type safety across the whole config surface.
+
+Converting natively instead cost 55 files and no type-safety loss:
+
+- Call sites use buf's flat names; `defs` re-exports the generated buf module.
+- `ConfigInit` (`MessageInitShape<typeof ConfigSchema>`) is the input type for loaders, savers and
+  the `Config` constructor; `Config.values` is a real buf message, normalised by `create()`.
+- `ConfigKey` derivation needs its own projection (`ConfigFields`) to drop `$typeName`/`$unknown`,
+  treat repeated fields as leaves, and stop at `Struct` — recursing into buf's `JsonValue` makes
+  TypeScript bail and silently collapse the key union to `""`.
+- `SystemService.getConfig` moved to a new native `bufMessage()` codec, same wire format.
+- `runtime.app.env` is a `Struct`, so its values type as `JsonValue`, not `any`. Fourteen sites
+  that wanted a string now go through `getEnvString(config, key)`.
+
+Two behaviour changes fell out. `validateConfig` no longer type-checks at runtime: `ConfigInit`
+covers compile-time callers, and the one-pass `fromJson` alternative cannot work because config
+inputs legitimately carry packed `Any` messages, which `JSON.stringify` mangles. Validation of
+untrusted YAML belongs in the loaders. And `toJson` on a config carrying `Module.record` now needs
+a type registry (`createRegistry(StructSchema)`), where the protobuf.js substitution resolved the
+payload implicitly.
 
 ### What landed in #5, and why the rest cannot
 

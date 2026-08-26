@@ -133,7 +133,7 @@ const TestHanlers = OperationHandlerSet.make(
         Obj.update(counter, (counter) => {
           counter.count++;
         });
-        yield* Operation.runAgain();
+        return yield* Operation.runAgain();
       }),
     ),
   ),

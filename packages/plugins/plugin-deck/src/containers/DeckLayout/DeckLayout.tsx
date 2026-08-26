@@ -11,10 +11,8 @@ import { useDeckState } from '#hooks';
 import { DeckCapabilities } from '#types';
 
 import { Deck } from '../Deck';
+import { Dialog, PopoverContent, PopoverRoot, Toaster, type ToasterProps } from '../Overlays';
 import { ActiveNode } from './ActiveNode';
-import { Dialog } from './Dialog';
-import { PopoverContent, PopoverRoot } from './Popover';
-import { Toaster, type ToasterProps } from './Toast';
 
 export type DeckLayoutProps = Pick<ToasterProps, 'onDismissToast'>;
 

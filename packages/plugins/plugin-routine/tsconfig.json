@@ -55,9 +55,6 @@
       "path": "../../core/compute/edge-compute"
     },
     {
-      "path": "../../core/compute/link"
-    },
-    {
       "path": "../../core/echo/echo"
     },
     {

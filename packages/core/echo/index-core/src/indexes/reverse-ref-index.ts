@@ -138,7 +138,7 @@ export class ReverseRefIndex implements Index {
             Effect.gen(function* () {
               const { recordId, data } = object;
               if (recordId === null) {
-                yield* Effect.die(new Error('ReverseRefIndex.update requires recordId to be set'));
+                return yield* Effect.die(new Error('ReverseRefIndex.update requires recordId to be set'));
               }
 
               // Delete existing references for this record.

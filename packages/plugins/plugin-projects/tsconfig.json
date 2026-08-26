@@ -37,6 +37,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/agent-runtime"
+    },
+    {
       "path": "../../core/compute/ai"
     },
     {
@@ -47,6 +50,9 @@
     },
     {
       "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/compute-runtime"
     },
     {
       "path": "../../core/compute/extractor-lib"
@@ -83,9 +89,6 @@
     },
     {
       "path": "../../ui/react-ui"
-    },
-    {
-      "path": "../../ui/react-ui-attention"
     },
     {
       "path": "../../ui/react-ui-form"

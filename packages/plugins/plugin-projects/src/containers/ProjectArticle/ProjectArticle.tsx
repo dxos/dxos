@@ -9,14 +9,15 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { Chat } from '@dxos/assistant-toolkit';
 import * as Project from '@dxos/compute/Project';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { SchemaAST } from '@dxos/effect';
+import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Flex, Icon, Panel, useTranslation } from '@dxos/react-ui';
-import { Attention } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -24,7 +25,6 @@ import { type Milestone } from '@dxos/types';
 
 import { ObjectCard } from '#components';
 import { meta } from '#meta';
-import { ProjectOperation } from '#types';
 
 // Pick the editable header fields from the Project schema rather than redeclaring them. v4 exposes
 // `mapFields` only on a `Struct`, and `Type.getSchema` erases to `Codec`, so the pick runs on the AST
@@ -46,7 +46,8 @@ export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>
  */
 export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const actions = useToolbarActions(subject);
+  const { invokePromise } = useOperationInvoker();
+  const actions = useToolbarActions(subject, () => void handleAddArtifact());
   const [project, updateProject] = useObject(subject);
   const db = Obj.getDatabase(subject);
   // Resolve reactively: on a cold load (deep link) the owned ref's target is not yet in memory,
@@ -58,6 +59,9 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   // components — the boundary is surfaces/operations only).
   const [taskSetSnapshot] = useObject(project.taskSet);
   const taskSet = Obj.getReactiveOrUndefined(taskSetSnapshot);
+  // The project's scratch outline (created lazily by its chats). Resolved reactively, as above.
+  const [outlineSnapshot] = useObject(project.outline);
+  const outline = Obj.getReactiveOrUndefined(outlineSnapshot);
   const milestoneRefs = taskSetSnapshot?.milestones ?? [];
 
   // Read once per project identity; the uncontrolled form owns edits after mount.
@@ -66,7 +70,6 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     [subject],
   );
 
-  const { invokePromise } = useOperationInvoker();
   const handleOpen = useCallback(
     (object: Obj.Unknown) => {
       void invokePromise(LayoutOperation.Open, {
@@ -90,6 +93,27 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     [invokePromise, updateProject],
   );
 
+  // The create dialog places the object in the space; the ref array is what makes it this project's,
+  // so the link is written here. A dismissed dialog returns nothing and leaves the project untouched.
+  const handleAddArtifact = useCallback(async () => {
+    if (!db) {
+      return;
+    }
+
+    const { data: ref } = await invokePromise(SpaceOperation.OpenObjectForm, {
+      target: db,
+      targetNodeId: attendableId,
+      navigable: false,
+    });
+    if (!ref) {
+      return;
+    }
+
+    updateProject((project) => {
+      project.artifacts = [...project.artifacts, ref];
+    });
+  }, [db, attendableId, invokePromise, updateProject]);
+
   const handleValuesChanged = useCallback(
     (values: Partial<HeaderValues>) => {
       updateProject((project) => {
@@ -105,9 +129,6 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   }
 
   return (
-    // `Menu.Root` wraps the panel rather than sitting inside the toolbar: `ToolbarMenu` disables itself
-    // unless the menu scope's `attendableId` has attention, so the scope has to span the surface that
-    // receives attention, not just the toolbar row.
     <Menu.Root {...actions} attendableId={attendableId}>
       <Panel.Root role={role}>
         <Panel.Toolbar>
@@ -131,15 +152,28 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                   </Form.Section>
                 )}
 
-                {milestoneRefs.length > 0 && (
-                  <Form.Section title={t('milestones.label')}>
-                    <MilestoneList refs={milestoneRefs} />
+                {/* Above Tasks: the outline is where work is drafted, the task set where it lands.
+                    `taskSet` rides along so promoting an item files it into THIS project's ledger
+                    rather than into a set owned by the outline. */}
+                {outline && (
+                  <Form.Section title={t('outline.label')}>
+                    <Surface.Surface
+                      type={AppSurface.Section}
+                      data={{ subject: outline, attendableId, taskSet }}
+                      limit={1}
+                    />
                   </Form.Section>
                 )}
 
                 {taskSet && (
                   <Form.Section title={t('tasks.label')}>
                     <Surface.Surface type={AppSurface.Section} data={{ subject: taskSet, attendableId }} limit={1} />
+                  </Form.Section>
+                )}
+
+                {milestoneRefs.length > 0 && (
+                  <Form.Section title={t('milestones.label')}>
+                    <MilestoneList refs={milestoneRefs} />
                   </Form.Section>
                 )}
 
@@ -187,11 +221,29 @@ const MilestoneRow = ({ milestoneRef }: { milestoneRef: Ref.Ref<Milestone.Milest
  * actions are expected to diverge as the toolbar grows, and the graph's create-chat action serves
  * the navtree row.
  */
-const useToolbarActions = (project: Project.Project) => {
+const useToolbarActions = (project: Project.Project, onAddArtifact: () => void) => {
   const { invokePromise } = useOperationInvoker();
   // The handler resolves `Database.Service`, which only the space context supplies — without this
   // the invocation fails with ServiceNotAvailable.
   const spaceId = Obj.getDatabase(project)?.spaceId;
+
+  // Persisted on click rather than on the first message, so the chat is in the navtree straight away;
+  // the parent edge before the add is what files it under the project rather than the space root.
+  const createChat = useCallback(async () => {
+    if (!spaceId) {
+      return;
+    }
+
+    const { data } = await invokePromise(AssistantOperation.CreateChat, {}, { spaceId });
+    const chat = data?.object;
+    if (!chat) {
+      return;
+    }
+
+    Chat.linkCompanion({ chat, subject: project });
+    await invokePromise(SpaceOperation.AddObject, { object: chat }, { spaceId });
+    await invokePromise(AssistantOperation.SetCurrentChat, { companionTo: project, chat }, { spaceId });
+  }, [invokePromise, project, spaceId]);
 
   return useMenuBuilder(
     (): ActionGraphProps =>
@@ -204,23 +256,20 @@ const useToolbarActions = (project: Project.Project) => {
             disposition: 'toolbar',
             testId: 'projectsPlugin.createChat',
           },
-          () => void invokePromise(ProjectOperation.CreateChat, { project }, { spaceId }),
+          () => void createChat(),
         )
-        // The growing gap pushes the routines button to the trailing edge: it opens a companion rather
-        // than creating anything, so it reads as navigation, not a peer of the create actions.
-        .separator()
         .action(
-          'routines',
+          'add-artifact',
           {
-            label: ['routines.label', { ns: meta.profile.key }],
-            icon: 'ph--lightning--regular',
+            label: ['add-artifact.label', { ns: meta.profile.key }],
+            icon: 'ph--plus--regular',
             disposition: 'toolbar',
-            testId: 'projectsPlugin.routines',
+            testId: 'projectsPlugin.addArtifact',
           },
-          () => void invokePromise(LayoutOperation.UpdateCompanion, { subject: Attention.linkedSegment('automation') }),
+          onAddArtifact,
         )
         .build(),
-    [project, invokePromise, spaceId],
+    [project, invokePromise, spaceId, onAddArtifact],
   );
 };
 

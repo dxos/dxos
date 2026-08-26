@@ -23,12 +23,13 @@ import { isSpace } from '@dxos/client/echo';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import { Sequence } from '@dxos/conductor';
-import { Database, DXN, Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
+import { Database, DXN, Filter, Obj, type Ref, Type } from '@dxos/echo';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Attention } from '@dxos/react-ui-attention';
+import { AI_ACTION_ICON } from '@dxos/ui-types';
 import { Position } from '@dxos/util';
 
 import { ASSISTANT_COMPANION_VARIANT, meta } from '#meta';
@@ -36,14 +37,6 @@ import { AssistantCapabilities, AssistantOperation } from '#types';
 
 /** Operation definitions to seed as `PersistentOperation` records for automation / triggers. */
 const computeOperationsToImport = [RunInstructions] as const;
-
-/**
- * Chats belonging to the top-level Chats section: unparented chats. Ownership is the ECHO parent
- * edge — a companion chat is parented to its subject (and surfaces in that subject's companion
- * panel), a project chat to its project (and is that project's navtree child, plugin-projects
- * `projectChats`) — so "standalone" is simply "no parent".
- */
-export const standaloneChatsQuery = Query.select(Filter.and(Filter.type(Chat.Chat), Filter.hasParent(false)));
 
 /** Match ECHO objects that are NOT chats. */
 const whenNonChatObject = GraphNodeMatcher.whenAll(
@@ -70,6 +63,7 @@ export default Capability.makeModule(
               id: GraphPath.GroupSegments.ai,
               type: GraphPath.GroupTypes.ai,
               label: ['nav-tree-group-ai.label', { ns: meta.profile.key }],
+              icon: AI_ACTION_ICON,
               space,
               position: 300,
             }),
@@ -221,9 +215,7 @@ export default Capability.makeModule(
           ]),
       }),
 
-      // Section node: standalone Chat.Chat objects per AI group (companions and project chats excluded).
       TypeSection.createTypeSectionExtension(Chat.Chat, {
-        query: standaloneChatsQuery,
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
         groupSegment: GraphPath.GroupSegments.ai,
         urlKey: 'chat',
@@ -244,7 +236,7 @@ export default Capability.makeModule(
                 Effect.gen(function* () {
                   const { object: chat } = yield* Operation.invoke(
                     AssistantOperation.CreateChat,
-                    { db: space.db },
+                    {},
                     { spaceId: space.db.spaceId },
                   );
                   yield* Operation.invoke(SpaceOperation.AddObject, { object: chat }, { spaceId: space.db.spaceId });

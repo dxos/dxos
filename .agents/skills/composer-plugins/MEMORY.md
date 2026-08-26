@@ -4,6 +4,29 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-08-19 — plugin-stream-deck (new plugin)
+
+- Two `vite.config.ts` entries whose names differ ONLY BY CASE (`protocol` + `Protocol`) silently emit `protocol.mjs` and `Protocol2.mjs`; the `./Protocol` exports-map path then resolves to the WRONG file on macOS's case-insensitive FS, and rolldown statically inlines the missing namespace members as `void 0` — no build error, no runtime error, just `undefined` config. Never let two entry names collide case-insensitively.
+- For a package consumed by BOTH source (typecheck) and dist (a bundling consumer), verify the built artifact too: typecheck resolves the `source` condition, so a mismatch between a namespace barrel and a flat module only shows up against `dist`.
+- A rolldown/vite `nodeTarget: true` LIBRARY build is not a runnable Node bundle: deps stay external. For a self-contained Node executable override `build.rollupOptions.external` to `builtinModules` (BOTH `x` and `node:x` — CJS deps like `ws` require unprefixed), set `resolve.conditions: ['node',…]` + `mainFields` without `browser` (else `ws` resolves to a browser build that throws), and add a `createRequire` banner (rolldown's CJS shim defers to a `require` in scope).
+- Node cannot execute decorators, and the bundler may PRESERVE one on a class expression → `SyntaxError` at load. Elgato's `@action({UUID})` only assigns `manifestId`, so `override readonly manifestId = UUID` is equivalent and needs no lowering.
+- Never build an Effect Schema decoder at module scope in code that gets bundled into a single file: module bodies can run before an imported module's exports initialize (`Cannot read properties of undefined (reading 'ast')`). Build it lazily on first use.
+- `node --check <bundle>` plus a stand-in harness for the host application catches an entire class of bundle-only defects (decorators, init order, wrong resolution conditions) that no unit test sees. Worth a dedicated moon task for any package that ships a runnable bundle.
+- Injecting a fixed-size SVG into a flexible tile with `overflow-hidden` CROPS it (labels vanish) — it does not scale. Size the child: `[&>svg]:w-full [&>svg]:h-full`. Only visible in a narrow container, so check at the real panel width, not a centered story.
+- `expect.poll(...)` in vitest is the clean way to await socket/async side effects; a `once('message')` listener attached AFTER `open` races a server that greets on connect — buffer from socket construction instead.
+
+- `Filter.tag(x)` matches a tag's **URI/EID**, NOT its label (`internal/Filter/match.ts` `matchesTag`). Query by label = resolve the `Tag` object first (`Filter.type(Tag.Tag)` + case-insensitive label match, keyless only per `Tag.isUserTag`), then `Filter.tag(Obj.getURI(tag))`. `Filter.tag('favorite')` silently matches nothing.
+- `GraphBuilder.createExtension({...})` returns an **Effect**, not an extension: the canonical shape is `const extensions = yield* Effect.all([createExtension(...), ...])` then `Capability.contribute(AppCapabilities.AppGraphBuilder, extensions.flat())`. Wrapping each call in `Effect.succeed` yields `Effect[]` and fails the `BuilderExtensions` typecheck.
+- Capability barrels use the `AppCapability.*` makers (`appGraphBuilder(() => import(...))`, `surface(() => import(...), { roles })`); bare `Capability.lazyModule(fn)` needs 3 args and bypasses the maker's activation gate.
+- A story `render` fn must not return `null` — `ArgsStoryFn` rejects `JSX.Element | null` (`error TS2322`). Return `<div />` for the not-ready branch.
+- `withTheme`/`withLayout` come from `@dxos/react-ui/testing`, and `withTheme` is **called** (`withTheme()`); `@dxos/storybook-utils` does not export them.
+- Client-backed **container** stories do not render in an ad-hoc root-launched `storybook dev` (client worker never initialises; the reference `plugin-kanban` container story is equally blank). Verify container stories with `moon run <p>:test-storybook`; use component stories for visual/screenshot checks.
+- Lint rule `dxos-subpath-exports` requires a namespace re-exported from `src/index.ts` to have an exports-map entry whose subpath matches the namespace name (`Protocol` -> `./Protocol` -> `src/protocol/Protocol.ts`) plus the matching `vite.config.ts` entry — a `./protocol` barrel subpath does not satisfy it.
+- Translation keys must be dot.kebab-case (`plugin.name`, not `plugin name`) or `translation-key-format` fails lint.
+- Type DXN final segment must be camelCase: `org.dxos.type.test.streamDeckItem`, never `stream-deck-item` (the NSID check surfaces as a bizarre string-literal type error).
+- Rendering for hardware/off-document targets: build **SVG strings** and inline the icon (`[data-dx-icon-sprite] #<name>`.innerHTML + its viewBox), setting both `fill` and `color` so the sprite's `fill="currentColor"` resolves. Theme CSS custom properties do not exist outside the app, so such renderers need literal hex.
+- `useProgressMonitors()` (`@dxos/app-toolkit/ui`) degrades to an empty task list when no `ProgressRegistry` host is present, so it is safe in stories/tests without extra capabilities.
+
 ## 2026-08-20 — plugin-lingo (new plugin scaffold)
 
 - `Capability.contribute(Capabilities.OperationHandler, XOperationHandlerSet)` takes the SET, not `.handlers` — `.handlers` fails the overload (`plugin-bookmarks/src/capabilities/operation-handler.ts` is the reference).

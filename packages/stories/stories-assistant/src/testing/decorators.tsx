@@ -39,6 +39,7 @@ import { type Space } from '@dxos/client/echo';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Project from '@dxos/compute/Project';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Skill from '@dxos/compute/Skill';
 import { ExampleHandlers } from '@dxos/compute/testing';
@@ -186,6 +187,7 @@ const toStoryDecoratorsProps = ({
     Text.Text,
     Skill.Skill,
     Operation.PersistentOperation,
+    Project.Project,
     Markdown.Document,
     Instructions.Instructions,
     Trigger.Trigger,
@@ -219,6 +221,13 @@ export const createDecorators = <Args = any,>(
 type CreateAgentOptions = {
   name?: string;
   instructions?: string;
+
+  /**
+   * Name of a project to parent the agent to. Delegation files tasks into the project's task set —
+   * a conversation with no project above it has nowhere durable to promote to, so a story that
+   * delegates has to supply one.
+   */
+  project?: string;
 };
 
 type StoryPluginOptions = {
@@ -302,6 +311,10 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
             ),
           ),
         );
+        if (agentOptions.project) {
+          const project = space.db.add(Project.make({ name: agentOptions.project }));
+          Obj.setParent(agent, project);
+        }
         yield* Effect.tryPromise(() => space.db.flush({ indexes: true }));
 
         if (onChatCreated) {
@@ -323,7 +336,9 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
         // skills and the chat), then apply any story-specific context bindings. The story-side
         // `onChatCreated` must run here: the operation handler that creates the chat is owned by
         // the assistant plugin and has no hook for it.
-        const { object: chat } = yield* invoke(AssistantOperation.CreateChat, { db: space.db });
+        const { object: chat } = yield* invoke(AssistantOperation.CreateChat, {}, { spaceId: space.db.spaceId });
+        // Added directly: this harness registers no plugin-space handlers, so `AddObject` has none.
+        space.db.add(chat);
         if (onChatCreated) {
           const registry = yield* Capabilities.AtomRegistry;
           const feed = yield* Effect.promise(() => chat.feed.load());

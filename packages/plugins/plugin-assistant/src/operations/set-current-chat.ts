@@ -29,7 +29,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.SetCurrentChat> =
         const db = Obj.getDatabase(companionTo);
         if (db) {
           const { data } = yield* Effect.promise(() =>
-            operationInvoker.invokePromise(AssistantOperation.CreateChat, { db, addToSpace: false }),
+            operationInvoker.invokePromise(AssistantOperation.CreateChat, {}, { spaceId: db.spaceId }),
           );
           if (data?.object) {
             yield* Capabilities.updateAtomValue(AssistantCapabilities.CompanionChatCache, (current) => ({
