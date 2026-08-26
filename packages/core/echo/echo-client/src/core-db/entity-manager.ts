@@ -93,10 +93,7 @@ export type EntityManagerProps = {
   /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
   branchStore?: BranchStore;
 
-  /**
-   * Mints the caller-facing proxy for a core that has none yet — injected because the proxy layer is
-   * built on this one, so importing it here would invert the dependency.
-   */
+  /** Mints the caller-facing proxy for a core, injected because the proxy layer is built on this one. */
   createEntity: (core: ObjectCore) => Entity.Unknown;
 };
 
@@ -415,10 +412,7 @@ export class EntityManager implements IDatabaseBinding {
     return core;
   }
 
-  /**
-   * The entity for an id already in the working set, or undefined. `core.rootProxy` is the identity
-   * map, so that a second one cannot hold every proxy the database has ever handed out.
-   */
+  /** The entity for an id already in the working set, keyed on `core.rootProxy` so no second identity map outlives it. */
   getEntityById(id: string, { deleted = false }: { deleted?: boolean } = {}): Entity.Unknown | undefined {
     const core = this.getObjectCoreById(id);
     if (!core || (core.isDeleted() && !deleted)) {
@@ -427,7 +421,7 @@ export class EntityManager implements IDatabaseBinding {
     return core.rootProxy ?? this._createEntity(core);
   }
 
-  /** {@link getEntityById}, loading the object's document first. */
+  /** Like {@link getEntityById}, but loads the object's document first. */
   async loadEntityById(
     objectId: string,
     { allowDeleted = false, ...options }: LoadObjectOptions & { allowDeleted?: boolean } = {},
@@ -1752,10 +1746,8 @@ export class EntityManager implements IDatabaseBinding {
   /**
    * Drops objects whose directory entry was removed — a garbage-collection pass replicating in, or
    * a local {@link retainObjects}. Nothing else re-derives the working set from the directory, so an
-   * object left here keeps answering queries long after its document is gone.
-   *
-   * An object whose document is still being created is bound before its link is written, so it is
-   * momentarily absent from the directory; those are skipped rather than evicted mid-flight.
+   * object left here keeps answering queries long after its document is gone. An object whose
+   * document is still being created is momentarily absent from the directory, so it is skipped.
    */
   private _evictRemovedObjects(event: ChangeEvent<DatabaseDirectory>): void {
     // Bound documents count, not just live cores: a core collected before its entry was removed
@@ -1784,12 +1776,10 @@ export class EntityManager implements IDatabaseBinding {
    *
    * `releaseDocument` separates the two: an unlinked object's document is dropped too (with the last
    * object mounted in it, and never the space root), since it is the document that holds the payload.
-   * A merely collected core leaves its document alone — see the comment inline.
    */
   private _releaseObject(objectId: string, { releaseDocument = false }: ReleaseObjectOptions = {}): void {
-    // Never dropped while still resolving: aborting one releases its load ops, and the last release
-    // cancels their IO — a load a reader is waiting on. It is dropped when it settles instead, since
-    // the finalizer that brought us here fires once and nothing else would come back for it.
+    // Never dropped while still resolving, because aborting one releases its load ops and cancels
+    // the IO a reader is waiting on; it is dropped when it settles instead.
     const request = this._satisfactionRequests.get(objectId as EntityId);
     if (request != null) {
       if (isSettled(request)) {
@@ -1831,9 +1821,8 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   /**
-   * Drops a released object's request once it settles — deferred by a turn, because the abort runs
-   * from inside the request's own state change, where releasing its ops would cancel IO mid-flight.
-   * Skipped if the object came back in the meantime.
+   * Drops a released object's request once it settles, deferred by a turn because the abort runs from
+   * inside the request's own state change, where releasing its ops would cancel IO mid-flight.
    */
   private _dropSatisfactionRequestWhenSettled(objectId: string, request: RefResolverRequest): void {
     if (this._ctx == null) {
