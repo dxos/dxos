@@ -133,6 +133,21 @@ TaskListViewport.displayName = 'TaskList.Viewport';
 // Content — the rows, grouped by status when the root says so.
 //
 
+/**
+ * The rows and the create row are separate grids (the create row sits outside the scrolling
+ * viewport), so their leading gutters — ordinal, then status — are declared once here: only
+ * matching templates keep the `+` under the status control and the input under the titles.
+ * Tailwind scans for whole class names, hence four literals rather than a composed prefix. The
+ * status gutter is `1.5rem` because that is the width of the `density='sm'` icon button it holds;
+ * a narrower track makes the button overflow it and align left instead of centring.
+ */
+const GRID_COLS = {
+  content: 'grid-cols-[1.5rem_1fr_min-content_min-content_2rem]',
+  contentWithOrdinals: 'grid-cols-[2rem_1.5rem_1fr_min-content_min-content_2rem]',
+  create: 'grid-cols-[1.5rem_1fr]',
+  createWithOrdinals: 'grid-cols-[2rem_1.5rem_1fr]',
+};
+
 type TaskListContentProps = ComposableProps;
 
 const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
@@ -158,9 +173,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
         // list to one row and let the rest overflow invisibly.
         classNames: mx(
           'group grid auto-rows-[2rem] gap-x-2 items-center w-full min-w-0',
-          showOrdinals
-            ? 'grid-cols-[2rem_1rem_1fr_min-content_min-content_2rem]'
-            : 'grid-cols-[1rem_1fr_min-content_min-content_2rem]',
+          showOrdinals ? GRID_COLS.contentWithOrdinals : GRID_COLS.content,
         ),
       })}
       aria-label='Tasks'
@@ -248,7 +261,10 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
         {...rest}
         id={task.id}
         data-testid='taskList.item'
-        classNames={mx('group col-span-full grid grid-cols-subgrid', className)}
+        // `px-0`: a subgrid's own inline padding shrinks its first and last tracks, so the listbox
+        // item's default inset would push the status control off the column the create row's `+`
+        // sits in. The list's inset belongs to the host, not the row.
+        classNames={mx('group col-span-full grid grid-cols-subgrid px-0', className)}
         ref={forwardedRef}
       >
         {ordinal !== undefined && (
@@ -342,7 +358,7 @@ const TaskListCreate = composable<HTMLDivElement, { placeholder?: string }>(
         data-testid='taskList.create'
         className={mx(
           'grid gap-x-2 items-center w-full min-w-0 h-8',
-          showOrdinals ? 'grid-cols-[2rem_1rem_1fr]' : 'grid-cols-[1rem_1fr]',
+          showOrdinals ? GRID_COLS.createWithOrdinals : GRID_COLS.create,
           className,
         )}
         ref={forwardedRef}
