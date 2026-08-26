@@ -18,7 +18,7 @@ import { log } from '@dxos/log';
 import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { type QueryRequest, type QueryResponse, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
 import { type QueryService } from '@dxos/protocols/rpc';
-import { trace } from '@dxos/tracing';
+import { type TraceDiagnostic, trace } from '@dxos/tracing';
 
 import { type AutomergeHost } from '../automerge';
 import { QueryExecutor } from '../query';
@@ -97,32 +97,15 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     averageQueriesActive: 0,
   };
 
+  readonly #diagnostics: TraceDiagnostic[] = [];
+
   // TODO(burdon): OK for options, but not params. Pass separately and type readonly here.
   'constructor'(private readonly _params: QueryServiceProps) {
     super();
-
-    trace.diagnostic({
-      id: 'active-queries',
-      name: 'Active Queries',
-      fetch: () => {
-        return Array.from(this._queries).map((query) => {
-          return {
-            query: JSON.stringify(query.executor.query),
-            plan: JSON.stringify(query.executor.plan),
-            trace: JSON.stringify(query.executor.trace),
-          };
-        });
-      },
-    });
-
-    trace.diagnostic<QueryInvalidationStats>({
-      id: 'query-invalidation',
-      name: 'Query Invalidation',
-      fetch: async () => ({ ...this.#stats }),
-    });
   }
 
   override async '_open'(): Promise<void> {
+    this.#registerDiagnostics();
     this._updateQueries = new DeferredTask(this._ctx, () => this._executeQueries(this._ctx));
   }
 
@@ -130,6 +113,38 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
   override async '_close'(): Promise<void> {
     await this._updateQueries.join();
     await Promise.all(Array.from(this._queries).map((query) => query.close()));
+
+    for (const diagnostic of this.#diagnostics.splice(0)) {
+      diagnostic.unregister();
+    }
+  }
+
+  /**
+   * Registered on open and unregistered on close: the closures capture `this`, so leaving them in
+   * the registry pins the most recent service for the lifetime of the process and makes a real leak
+   * harder to spot.
+   */
+  #registerDiagnostics(): void {
+    this.#diagnostics.push(
+      trace.diagnostic({
+        id: 'active-queries',
+        name: 'Active Queries',
+        fetch: () => {
+          return Array.from(this._queries).map((query) => {
+            return {
+              query: JSON.stringify(query.executor.query),
+              plan: JSON.stringify(query.executor.plan),
+              trace: JSON.stringify(query.executor.trace),
+            };
+          });
+        },
+      }),
+      trace.diagnostic<QueryInvalidationStats>({
+        id: 'query-invalidation',
+        name: 'Query Invalidation',
+        fetch: async () => ({ ...this.#stats }),
+      }),
+    );
   }
 
   /**

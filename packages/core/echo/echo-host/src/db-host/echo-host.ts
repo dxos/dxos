@@ -36,7 +36,7 @@ import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 import { type DataService, type FeedService } from '@dxos/protocols/rpc';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
-import { trace } from '@dxos/tracing';
+import { type TraceDiagnostic, trace } from '@dxos/tracing';
 
 import {
   AutomergeHost,
@@ -162,6 +162,8 @@ export class EchoHost extends Resource {
   /** Last known document set per space, to detect what left the directory. */
   private readonly _spaceDocumentIds = new Map<SpaceId, Set<DocumentId>>();
 
+  readonly #diagnostics: TraceDiagnostic[] = [];
+
   // Feed sync handlers are wired lazily via `setFeedSyncHandlers` to break the construction-time
   // cycle with the FeedSyncer, which itself depends on `this.feedStore`.
   #syncFeed?: (ctx: Context, request: FeedService.SyncFeedRequest) => Promise<void>;
@@ -223,46 +225,59 @@ export class EchoHost extends Resource {
       getSpaceStats: (spaceId) => this.getSpaceStats(spaceId),
       runGarbageCollection: (spaceId, options) => this.runGarbageCollection(spaceId, options),
     });
+  }
 
-    trace.diagnostic<EchoStatsDiagnostic>({
-      id: 'echo-stats',
-      name: 'Echo Stats',
-      fetch: async () => {
-        return {
-          dataStats: this._echoDataMonitor.computeStats(),
-          loadedDocsCount: this._automergeHost.loadedDocsCount,
-        };
-      },
-    });
+  /**
+   * Registered on open and unregistered on close: the closures capture `this`, so leaving them
+   * in the registry pins the most recent host for the lifetime of the process and makes a real
+   * leak harder to spot.
+   */
+  #registerDiagnostics(): void {
+    this.#diagnostics.push(
+      trace.diagnostic<EchoStatsDiagnostic>({
+        id: 'echo-stats',
+        name: 'Echo Stats',
+        fetch: async () => {
+          return {
+            dataStats: this._echoDataMonitor.computeStats(),
+            loadedDocsCount: this._automergeHost.loadedDocsCount,
+          };
+        },
+      }),
+      trace.diagnostic({
+        id: 'database-roots',
+        name: 'Database Roots',
+        fetch: async () => {
+          return Array.from(this._spaceStateManager.roots.values()).map((root) => ({
+            url: root.url,
+            isLoaded: root.isLoaded,
+            spaceKey: root.getSpaceKey(),
+            inlineObjects: root.getInlineObjectCount(),
+            linkedObjects: root.getLinkedObjectCount(),
+          }));
+        },
+      }),
+      trace.diagnostic({
+        id: 'database-root-metrics',
+        name: 'Database Roots (with metrics)',
+        fetch: async () => {
+          return Array.from(this._spaceStateManager.roots.values()).map((root) => ({
+            url: root.url,
+            isLoaded: root.isLoaded,
+            spaceKey: root.getSpaceKey(),
+            inlineObjects: root.getInlineObjectCount(),
+            linkedObjects: root.getLinkedObjectCount(),
+            ...(root.measureMetrics() ?? {}),
+          }));
+        },
+      }),
+    );
+  }
 
-    trace.diagnostic({
-      id: 'database-roots',
-      name: 'Database Roots',
-      fetch: async () => {
-        return Array.from(this._spaceStateManager.roots.values()).map((root) => ({
-          url: root.url,
-          isLoaded: root.isLoaded,
-          spaceKey: root.getSpaceKey(),
-          inlineObjects: root.getInlineObjectCount(),
-          linkedObjects: root.getLinkedObjectCount(),
-        }));
-      },
-    });
-
-    trace.diagnostic({
-      id: 'database-root-metrics',
-      name: 'Database Roots (with metrics)',
-      fetch: async () => {
-        return Array.from(this._spaceStateManager.roots.values()).map((root) => ({
-          url: root.url,
-          isLoaded: root.isLoaded,
-          spaceKey: root.getSpaceKey(),
-          inlineObjects: root.getInlineObjectCount(),
-          linkedObjects: root.getLinkedObjectCount(),
-          ...(root.measureMetrics() ?? {}),
-        }));
-      },
-    });
+  #unregisterDiagnostics(): void {
+    for (const diagnostic of this.#diagnostics.splice(0)) {
+      diagnostic.unregister();
+    }
   }
 
   get spaceIds(): SpaceId[] {
@@ -312,6 +327,8 @@ export class EchoHost extends Resource {
   }
 
   protected override async _open(ctx: Context): Promise<void> {
+    this.#registerDiagnostics();
+
     log('echo-host: running index engine migration...');
     await RuntimeProvider.runPromise(this._runtime)(this._indexEngine.migrate());
     log('echo-host: index engine migration done');
@@ -389,6 +406,8 @@ export class EchoHost extends Resource {
     await this._queryService.close(ctx);
     await this._spaceStateManager.close(ctx);
     await this._automergeHost.close();
+
+    this.#unregisterDiagnostics();
   }
 
   /**
