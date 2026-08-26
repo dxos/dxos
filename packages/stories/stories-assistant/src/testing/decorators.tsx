@@ -232,13 +232,13 @@ type CreateAgentOptions = {
 };
 
 type StoryPluginOptions = {
-  onChatCreated?: (props: { space: Space; chat: Chat.Chat; binder: AiContext.Binder }) => Promise<void>;
-
   /**
    * If set, the story creates an Agent (with its own Chat) instead of a standalone Chat.
    * Accepts `true` for defaults, or an options object for name/instructions.
    */
   createAgent?: boolean | CreateAgentOptions;
+
+  onChatCreated?: (props: { db: Database.Database; chat: Chat.Chat; binder: AiContext.Binder }) => Promise<void>;
 };
 
 const StoryPlugin = Plugin.define<StoryPluginOptions>(
@@ -334,7 +334,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
           yield* Effect.tryPromise(() => binder.open());
           // Ensure the binder is released even if the callback fails, so subscriptions/state do not
           // leak into later story or test runs.
-          yield* Effect.tryPromise(() => onChatCreated({ space, chat, binder })).pipe(
+          yield* Effect.tryPromise(() => onChatCreated({ db: space.db, chat, binder })).pipe(
             Effect.ensuring(Effect.promise(() => binder.close())),
           );
         }
@@ -354,7 +354,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
           yield* Effect.tryPromise(() => binder.open());
           // Ensure the binder is released even if the callback fails, so subscriptions/state do not
           // leak into later story or test runs.
-          yield* Effect.tryPromise(() => onChatCreated({ space, chat, binder })).pipe(
+          yield* Effect.tryPromise(() => onChatCreated({ db: space.db, chat, binder })).pipe(
             Effect.ensuring(Effect.promise(() => binder.close())),
           );
         }

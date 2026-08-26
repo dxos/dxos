@@ -17,7 +17,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
-import { type Actor, type Task } from '@dxos/types';
+import { type Actor, type Task, TaskSet } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
@@ -218,7 +218,7 @@ type TaskListItemProps = ComposableProps<{ task: Task.Task; ordinal?: number }>;
 const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: number }>(
   ({ task, ordinal, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
-    const { onTaskUpdate, onTaskDelete, onTaskSelect } = useTaskListContext('TaskList.Item');
+    const { tasks, onTaskUpdate, onTaskDelete, onTaskSelect } = useTaskListContext('TaskList.Item');
     const { className, ...rest } = composableProps(props);
 
     // Subscribe per row: a query re-emits when membership changes, not when a task's own fields do,
@@ -227,6 +227,8 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
     const current = snapshot ?? task;
 
     const done = current.status === 'done';
+    // Virtual: an open task whose dependencies (resolved within the set) are not all done.
+    const blocked = (current.status ?? 'todo') === 'todo' && !TaskSet.isTaskReady(tasks, task);
     // A started agent task is actively being worked by a sub-agent (started is stamped at spawn),
     // so it spins; a human-started task keeps the static glyph.
     const active = current.status === 'started' && current.assignee?.role === 'assistant';
@@ -267,10 +269,11 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
           </span>
         )}
         <span
-          className={onTaskSelect ? 'truncate cursor-pointer' : 'truncate'}
+          className={mx('flex items-center gap-1 min-w-0', onTaskSelect && 'cursor-pointer')}
           onClick={onTaskSelect ? () => onTaskSelect(task) : undefined}
         >
-          {current.title}
+          <span className='truncate'>{current.title}</span>
+          {blocked && <Tag hue='amber'>{t('task-blocked.label')}</Tag>}
         </span>
         {current.assignee ? <TaskListAssignee assignee={current.assignee} /> : <div />}
         {current.priority && current.priority !== 'none' ? <Tag hue='neutral'>{current.priority}</Tag> : <div />}

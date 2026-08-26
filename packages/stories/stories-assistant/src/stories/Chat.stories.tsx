@@ -16,7 +16,7 @@ import {
 } from '@dxos/assistant-toolkit';
 import { Chat as AssistantChat } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import { type Space } from '@dxos/react-client/echo';
 import { Outline, type Task, TaskSet } from '@dxos/types';
@@ -138,12 +138,12 @@ const EXECUTABLE_TASKS = [
     title: 'Compute (1+2+3+4)! using the calculator',
     expression: '(1+2+3+4)!',
     result: '3628800',
-    dependencies: [],
+    dependencies: [2],
   },
 ];
 
-const seedExecutableTasks = async ({ space, chat }: { space: Space; chat: AssistantChat.Chat }) => {
-  const taskSet = space.db.add(TaskSet.make({ name: 'Compute' }));
+const seedExecutableTasks = async ({ db, chat }: { db: Database.Database; chat: AssistantChat.Chat }) => {
+  const taskSet = db.add(TaskSet.make({ name: 'Compute' }));
   storyTaskSet = taskSet;
   // A project chat files into the PROJECT's ledger (the resolution `peekTaskSetRef` uses); the
   // chat also carries the same ref so `Chat.TaskList` (which reads only `chat.taskSet` — see its
@@ -157,13 +157,18 @@ const seedExecutableTasks = async ({ space, chat }: { space: Space; chat: Assist
   Obj.update(chat, (chat) => {
     chat.taskSet = Ref.make(taskSet);
   });
-  let tasks: Task.Task[] = [];
-  for (const { title } of EXECUTABLE_TASKS) {
-    const task = Outline.addTask(space.db, taskSet, title, previous ? { dependsOn: [Ref.make(previous)] } : {});
-    tasks.push(task);
+  // `dependencies` are 1-based ordinals (the numbering the checklist and UI speak), so they can
+  // only point at earlier entries.
+  const tasks: Task.Task[] = [];
+  for (const { title, dependencies } of EXECUTABLE_TASKS) {
+    const dependsOn = dependencies
+      .map((ordinal) => tasks[ordinal - 1])
+      .filter((dep) => dep !== undefined)
+      .map((dep) => Ref.make(dep));
+    tasks.push(Outline.addTask(db, taskSet, title, dependsOn.length > 0 ? { dependsOn } : {}));
   }
 
-  await space.db.flush();
+  await db.flush();
 };
 
 /** One scripted sub-agent per task, routed by the task title in the synthesized instructions. */
@@ -259,8 +264,8 @@ export const WithWebSearch: Story = {
  */
 export const WithTasks: Story = {
   decorators: createDecorators({
-    onChatCreated: async ({ space, chat }) => {
-      const taskSet = space.db.add(TaskSet.make({ name: 'Launch plan' }));
+    onChatCreated: async ({ db, chat }) => {
+      const taskSet = db.add(TaskSet.make({ name: 'Launch plan' }));
       Obj.update(chat, (chat) => {
         chat.taskSet = Ref.make(taskSet);
       });
@@ -276,9 +281,9 @@ export const WithTasks: Story = {
         { title: 'Update the price list', status: 'todo' },
       ];
       for (const { title, status } of seed) {
-        Outline.addTask(space.db, taskSet, title, { status });
+        Outline.addTask(db, taskSet, title, { status });
       }
-      await space.db.flush();
+      await db.flush();
     },
   }),
   args: {
@@ -302,7 +307,7 @@ export const WithTaskDrain: Story = {
     onChatCreated: seedExecutableTasks,
   }),
   args: {
-    layout: [[StoryRole.Chat], [AppSurface.deckCompanion('trace'), StoryRole.Context]],
+    layout: [[StoryRole.Chat], [AppSurface.deckCompanion('trace')]],
   },
   tags: ['!test'],
 };
@@ -324,7 +329,7 @@ export const TestPlanning: Story = {
     onInit: captureSpace,
   }),
   args: {
-    layout: [[StoryRole.Chat], [AppSurface.deckCompanion('trace'), StoryRole.Context]],
+    layout: [[StoryRole.Chat], [AppSurface.deckCompanion('trace')]],
   },
   // Live model: whether the agent reaches for `update-tasks` at all is model-behavioural, so this
   // stays out of CI. `TestPlanningScripted` is the deterministic counterpart.

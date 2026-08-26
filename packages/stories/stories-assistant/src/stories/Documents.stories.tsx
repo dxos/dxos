@@ -115,8 +115,8 @@ export const WithMarkdown: Story = {
         [StoryRole.Logging],
       ];
     },
-    onChatCreated: async ({ space, binder }) => {
-      const objects = await space.db.query(Filter.type(Markdown.Document)).run();
+    onChatCreated: async ({ db, binder }) => {
+      const objects = await db.query(Filter.type(Markdown.Document)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
     skills: [AssistantSkill.key, MarkdownSkill.key, CommentSkill.key],
@@ -168,8 +168,8 @@ export const WithSkills: Story = {
       addToRootCollection(space, [document, skill]);
       return [[StoryRole.Chat], [StoryRole.Tasks, Cell.article(skill)]];
     },
-    onChatCreated: async ({ space, binder }) => {
-      const objects = await space.db.query(Filter.type(Markdown.Document)).run();
+    onChatCreated: async ({ db, binder }) => {
+      const objects = await db.query(Filter.type(Markdown.Document)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
@@ -226,8 +226,8 @@ export const WithScript: Story = {
       addToRootCollection(space, [script]);
       return [[StoryRole.Chat], [Cell.article(script)]];
     },
-    onChatCreated: async ({ space, binder }) => {
-      const skills = await space.db.query(Query.select(Filter.type(Skill.Skill))).run();
+    onChatCreated: async ({ db, binder }) => {
+      const skills = await db.query(Query.select(Filter.type(Skill.Skill))).run();
       await binder.bind({ skills: skills.map((skill) => Ref.make(skill)) });
     },
   }),

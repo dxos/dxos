@@ -64,6 +64,9 @@ export default PlanReminder.pipe(
 const checklistCompletionCheckSystem = trim`
   You decide whether an agent should stop or continue working on its checklist, given the
   conversation so far and the agent's remaining items.
+  The user's request defines the scope: if the user asked for a specific task or subset and that
+  work is complete, the agent must STOP even though other items remain open — open items alone
+  are not a reason to continue.
   Reply with exactly one word: "stop" or "continue". Do not use tools. Do not add explanation.
 `;
 
@@ -74,7 +77,8 @@ const checklistCompletionCheckPrompt = (markdown: string): string => trim`
   ${markdown}
   </checklist>
 
-  Should the agent STOP now (no more work needed) or CONTINUE working on the checklist?
+  Should the agent STOP now (the user's request is fulfilled, even if other items remain open) or
+  CONTINUE working on the checklist (the user asked for more than has been done)?
   Reply with exactly one word: "stop" or "continue".
 `;
 
