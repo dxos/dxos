@@ -33,14 +33,14 @@ export const upload = (
   client: EdgeServiceClient,
   blob: Blob,
   opts?: UploadOptions,
-): Effect.Effect<Result, EdgeServiceError> => uploadToPath(client, blob, '/upload', opts);
+): Effect.Effect<Result, EdgeServiceError> => uploadToPath(client, blob, 'upload', opts);
 
 /** Store an image and create a thumbnail, returning its hosted CDN URL (POST `/thumbnail`). */
 export const thumbnail = (
   client: EdgeServiceClient,
   blob: Blob,
   opts?: UploadOptions,
-): Effect.Effect<Result, EdgeServiceError> => uploadToPath(client, blob, '/thumbnail', opts);
+): Effect.Effect<Result, EdgeServiceError> => uploadToPath(client, blob, 'thumbnail', opts);
 
 const uploadToPath = (
   client: EdgeServiceClient,

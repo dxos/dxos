@@ -53,7 +53,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           persist-credentials: false
 
       - name: Setup

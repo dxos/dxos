@@ -450,7 +450,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           persist-credentials: false
 
       - name: Extract branch

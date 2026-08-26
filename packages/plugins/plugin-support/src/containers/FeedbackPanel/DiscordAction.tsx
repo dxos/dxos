@@ -16,6 +16,7 @@ import { meta } from '#meta';
 import { SupportOperation } from '#types';
 
 import { formatRequestMessage } from './request';
+import { useScreenshotAttachment } from './useScreenshotAttachment';
 
 /** Build a direct PostHog event permalink (±15s search window via timestamp). */
 const makePostHogEventUrl = (projectId: string, eventUuid: string): string =>
@@ -40,10 +41,13 @@ export const DiscordAction = ({ disabled }: DiscordActionProps) => {
     (config.values.runtime?.app?.env?.DX_DISCORD_SERVICE_URL as string | undefined) ?? discordEndpoint;
 
   const discordPresence = useDiscordPresence(discordServiceUrl);
+  const attachScreenshot = useScreenshotAttachment();
 
   const handleDiscord = useCallback<FeedbackSubmitHandler>(
     async (values) => {
-      const message = formatRequestMessage(values);
+      // Capture before submitting, while the reported screen is still on-screen.
+      const screenshot = await attachScreenshot(values);
+      const message = formatRequestMessage(values, screenshot.url);
 
       // PostHog submission is the primary path — if it fails the error propagates
       // and no misleading toast is shown.
@@ -102,7 +106,7 @@ export const DiscordAction = ({ disabled }: DiscordActionProps) => {
         });
       }
     },
-    [invokePromise, discordServiceUrl, posthogProjectId],
+    [invokePromise, discordServiceUrl, posthogProjectId, attachScreenshot],
   );
 
   // Nothing to offer without the service: rendering the button would submit into a no-op, and the
