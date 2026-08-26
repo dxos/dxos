@@ -23,12 +23,13 @@ import {
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 
-import { AssistantSkill } from '#skills';
+import { AssistantSkill, PluginManagerSkill } from '#skills';
 
 const skillDefinition = () =>
   Effect.succeed([
     Capability.contributeAll(AppCapabilities.SkillDefinition, [
       AssistantSkill,
+      PluginManagerSkill,
       BrowserSkill,
       DatabaseSkill,
       ChatContextSkill,
