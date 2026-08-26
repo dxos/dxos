@@ -31,10 +31,12 @@
  * Raise a budget only for growth you have looked at and accepted — that is the review point
  * this check exists to create.
  *
- * Flags, both for the base-vs-head comparison the `boot-budget` CI job posts on a PR
- * (`compare-boot-budget.mjs`): `--report <file>` writes the measurement as JSON, and `--no-fail`
- * measures without gating, so a base commit already over budget still yields a number to
- * compare against instead of failing the run.
+ * Every run also writes the measurement to `boot-budget.json`, which `moon.yml` declares as this
+ * task's `outputs`. That is what lets the `boot-budget` CI job measure a PR's base commit from the
+ * remote cache — a few KB of JSON restored in seconds — instead of rebuilding its bundle. The
+ * report is written before the budget is applied, so an over-budget commit still yields a number.
+ * Taking no arguments is load-bearing: moon folds passthrough args into the task hash, and any
+ * would turn that cache hit into a full rebuild.
  */
 
 import { readFileSync, statSync, writeFileSync } from 'node:fs';
@@ -62,10 +64,6 @@ const MAX_PRELOAD_ENTRIES = 25;
  */
 const MAX_PRELOAD_BYTES = 4.45 * 1024 * 1024;
 
-const args = process.argv.slice(2);
-const reportPath = args.includes('--report') ? args[args.indexOf('--report') + 1] : undefined;
-const gate = !args.includes('--no-fail');
-
 const outDir = path.join(process.cwd(), 'out/composer');
 const html = readFileSync(path.join(outDir, 'index.html'), 'utf8');
 
@@ -92,25 +90,23 @@ console.log(
     `(budget: ${MAX_PRELOAD_ENTRIES} entries, ${asMb(MAX_PRELOAD_BYTES)} MB)`,
 );
 
-if (reportPath) {
-  writeFileSync(
-    reportPath,
-    JSON.stringify(
-      {
-        count: entries.length,
-        bytes,
-        budget: { count: MAX_PRELOAD_ENTRIES, bytes: MAX_PRELOAD_BYTES },
-        entries: entries.map((entry) => ({ name: path.basename(entry.href), bytes: entry.bytes })),
-      },
-      null,
-      2,
-    ),
-  );
-}
+writeFileSync(
+  'boot-budget.json',
+  JSON.stringify(
+    {
+      count: entries.length,
+      bytes,
+      budget: { count: MAX_PRELOAD_ENTRIES, bytes: MAX_PRELOAD_BYTES },
+      entries: entries.map((entry) => ({ name: path.basename(entry.href), bytes: entry.bytes })),
+    },
+    null,
+    2,
+  ),
+);
 
 const overCount = entries.length > MAX_PRELOAD_ENTRIES;
 const overBytes = bytes > MAX_PRELOAD_BYTES;
-if ((!overCount && !overBytes) || !gate) {
+if (!overCount && !overBytes) {
   process.exit(0);
 }
 

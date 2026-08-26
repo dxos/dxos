@@ -254,3 +254,6 @@ tools/vscode/vscode-mdl/dist
 
 # Generated headless capability barrels (dx-plugin prebuild, produced by plugin prebuild tasks).
 **/src/capabilities/gen/
+
+# Boot graph measurement, written by `composer-app:check-boot-budget` as a cacheable moon output.
+packages/apps/composer-app/boot-budget.json

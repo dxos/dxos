@@ -263,22 +263,37 @@ jobs:
         continue-on-error: true
         run: moon run composer-app:check-boot-budget
 
-      # Stashed outside the tree because the base checkout below replaces `scripts/`: both sides must
-      # be measured by THIS commit's script, or an edit to the measurement reads as a size change.
-      - name: Measure this PR's boot graph
+      # The step above already wrote `boot-budget.json`; stash it, plus the comparison script, outside
+      # the tree, which the base checkout below replaces.
+      - name: Record this PR's measurement
+        id: head
         if: env.COMPARE == 'true'
-        working-directory: packages/apps/composer-app
+        # The comparison is advisory, so a measurement that did not land degrades to no comment
+        # rather than to a red job on a PR that is otherwise fine.
+        continue-on-error: true
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
-          cp scripts/check-boot-budget.mjs "$RUNNER_TEMP/measure.mjs"
-          cp scripts/compare-boot-budget.mjs "$RUNNER_TEMP/compare.mjs"
-          node "$RUNNER_TEMP/measure.mjs" --report "$RUNNER_TEMP/boot-budget.head.json" --no-fail
+          cp packages/apps/composer-app/boot-budget.json "$RUNNER_TEMP/boot-budget.head.json"
+          cp packages/apps/composer-app/scripts/compare-boot-budget.mjs "$RUNNER_TEMP/compare.mjs"
+          # Two numbers only compare if one script produced both, and the base's necessarily comes
+          # from the base's own copy — so a PR that edits the measurement gets no comparison rather
+          # than a misleading one.
+          if git diff --quiet "$BASE_SHA" HEAD -- packages/apps/composer-app/scripts/check-boot-budget.mjs; then
+            echo 'comparable=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'comparable=false' >> "$GITHUB_OUTPUT"
+            echo '::notice::boot budget measurement changed in this PR — skipping the base comparison.'
+          fi
 
-      # Building the base rather than trending a stored number: the comparison is then exact for
-      # this pair of commits and depends on no artifact retention. `continue-on-error` because a base
-      # that will not build is not this PR's failure — the comparison is simply skipped.
+      # Measuring the base commit itself rather than trending a stored number: the comparison is then
+      # exact for this pair of commits and depends on no artifact retention. It is cheap because
+      # `check-boot-budget` declares the report as its `outputs` — main's own run of this job put the
+      # base's JSON in the remote cache, so this restores it instead of rebuilding the bundle.
+      # `continue-on-error` because a base that will not measure is not this PR's failure.
       - name: Measure the base commit's boot graph
         id: base
-        if: env.COMPARE == 'true'
+        if: env.COMPARE == 'true' && steps.head.outputs.comparable == 'true'
         continue-on-error: true
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -288,21 +303,17 @@ jobs:
           git checkout --detach "$BASE_SHA"
           # The base lockfile can differ from the head one, so the tree has to be re-installed against it.
           pnpm install --prefer-offline
-          # Hydrates the library builds the bundle needs; it may or may not run the bundle itself.
-          moon run composer-app:bundle
-          # `bundle` declares no `outputs`, so a moon cache hit restores NOTHING to disk and leaves the
-          # head's bundle sitting in `out/composer` — the base would then measure as the head and every
-          # comparison would read "no change" on exactly the PRs that move the graph. So clear the
-          # directory and run the task's own script, which cannot be short-circuited.
-          rm -rf packages/apps/composer-app/out/composer
-          cd packages/apps/composer-app
-          pnpm exec vite build --configLoader native
-          pnpm run --silent build:functions
-          node "$RUNNER_TEMP/measure.mjs" --report "$RUNNER_TEMP/boot-budget.base.json" --no-fail
+          # Deleting first is what keeps this honest: if the cache ever stops restoring the report, the
+          # copy below fails loudly instead of measuring the head's leftover file as if it were the base.
+          rm -f packages/apps/composer-app/boot-budget.json
+          # A base already over budget writes its report and then exits non-zero, which is still a
+          # usable number; the copy is what decides whether the measurement actually happened.
+          moon run composer-app:check-boot-budget || true
+          cp packages/apps/composer-app/boot-budget.json "$RUNNER_TEMP/boot-budget.base.json"
 
       - name: Compare with the base
         id: compare
-        if: env.COMPARE == 'true' && steps.base.outcome == 'success'
+        if: steps.base.outcome == 'success'
         run: |
           node "$RUNNER_TEMP/compare.mjs" \
             --base "$RUNNER_TEMP/boot-budget.base.json" \
