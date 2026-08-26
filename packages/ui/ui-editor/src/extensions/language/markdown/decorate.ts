@@ -17,6 +17,18 @@ import { image } from './image';
 import { bulletListIndentationWidth, formattingStyles, orderedListIndentationWidth } from './styles';
 import { table } from './table';
 
+/** The anchor every link form renders as, so a bare address is styled like a bracketed one. */
+const linkMark = (url: string, withButton = false) =>
+  Decoration.mark({
+    tagName: 'a',
+    attributes: {
+      class: withButton ? 'cm-link cm-link-with-button' : 'cm-link',
+      href: url,
+      rel: 'noreferrer',
+      target: '_blank',
+    },
+  });
+
 export type NodeData = { name: 'Link'; url: string } | { name: 'Image'; url: string };
 
 export interface DecorateOptions {
@@ -531,15 +543,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           decoRanges.push({
             from: marks[0].to,
             to: !editing && options.renderLinkButton ? node.to : marks[1].from,
-            deco: Decoration.mark({
-              tagName: 'a',
-              attributes: {
-                class: options.renderLinkButton ? 'cm-link cm-link-with-button' : 'cm-link',
-                href: url,
-                rel: 'noreferrer',
-                target: '_blank',
-              },
-            }),
+            deco: linkMark(url, !!options.renderLinkButton),
           });
 
           if (!editing) {
@@ -554,6 +558,48 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
             });
           }
         }
+        break;
+      }
+
+      //
+      // Autolink > [LinkMark, URL, LinkMark] — the `<https://example.com>` form.
+      //
+
+      case 'Autolink': {
+        const urlNode = node.node.getChild('URL');
+        const marks = node.node.getChildren('LinkMark');
+        if (!urlNode) {
+          break;
+        }
+        const url = state.sliceDoc(urlNode.from, urlNode.to);
+        if (options.skip?.({ name: 'Link', url })) {
+          break;
+        }
+        const editing = editingRange(state, node, focus);
+        if (!editing && marks.length >= 2) {
+          // The angle brackets are syntax, not part of the address.
+          atomicDecoRanges.push({ from: node.from, to: marks[0].to, deco: hide });
+          atomicDecoRanges.push({ from: marks[1].from, to: node.to, deco: hide });
+        }
+        decoRanges.push({ from: urlNode.from, to: urlNode.to, deco: linkMark(url) });
+        break;
+      }
+
+      //
+      // URL — a bare address the GFM autolink extension matched. It is also the target inside
+      // `Link`/`Autolink`, which own their own decoration, so only a top-level one is a link here.
+      //
+
+      case 'URL': {
+        const parent = node.node.parent?.name;
+        if (parent === 'Link' || parent === 'Autolink') {
+          break;
+        }
+        const url = state.sliceDoc(node.from, node.to);
+        if (options.skip?.({ name: 'Link', url })) {
+          break;
+        }
+        decoRanges.push({ from: node.from, to: node.to, deco: linkMark(url) });
         break;
       }
 

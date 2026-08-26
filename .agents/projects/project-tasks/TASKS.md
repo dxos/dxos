@@ -163,19 +163,31 @@ Each is independent of the others; none is started.
       on the next attempt. `retry` masks it in CI. Fix belongs in the story
       harness (await the outgoing client's teardown before mounting the next).
 - [ ] **`#foo` renders as a heading in chat markdown** — a `#` inside a message
-      is parsed as an ATX heading, so `#foo` comes out as a title. Reproduce and
-      fix in whichever renderer the thread uses (`MarkdownView` wraps
-      react-markdown + remark-gfm; editor-backed surfaces go through
-      `decorateMarkdown`), then linkify issue references intelligently: `#123`
-      becomes a link to the PR/issue in the relevant repo, with the repo
-      resolved from context rather than hard-coded.
+      is parsed as an ATX heading, so `#foo` comes out as a title. The thread
+      renders through CodeMirror (`MarkdownBlock` → `decorateMarkdown`), so the
+      fix belongs there rather than in `MarkdownView`.
+- [ ] **plugin-github contributes a `#nnn` decoration** — a CodeMirror extension
+      contributed by plugin-github that decorates `#nnn` as a link to the PR or
+      issue, so the reference resolves through the plugin that owns the GitHub
+      integration rather than being hard-coded in the editor. Needs the repo
+      resolved from context (the space's connected repo), and the extension
+      contributed to the editor surfaces the way other plugins contribute theirs.
+      Story data already seeds `#nnn` references in `ProjectArticle` and
+      `TaskList` (`--with-descriptions`).
 - [x] **Outliner menu popover has no arrow** — not the outliner's: `Popover`'s
       content carried `overflow-hidden`, and Radix positions the arrow as a
       child of the content straddling its edge, so EVERY `Popover.Arrow` in the
       app was clipped. Clipping moved to `Popover.Viewport` (the box that
       scrolls and holds the rounded corners); verified live on the outliner menu
       and the react-ui popover story.
-- [ ] **Autolink bare URLs in chat markdown** — a naked `https://…` in a message
-      should render as an anchor, not plain text. remark-gfm's autolink literal
-      covers the common case, so first establish whether the thread renders
-      through that path at all.
+- [x] **Autolink bare URLs in chat markdown** — the chat renders messages through
+      CodeMirror (`MarkdownBlock` → `decorateMarkdown`), not react-markdown. The
+      GFM parser already emitted `URL` (bare) and `Autolink` (`<…>`) nodes, but
+      `decorateMarkdown` only decorated the bracketed `Link` form, so neither
+      rendered as an anchor. Both cases added, sharing one anchor decoration.
+- [ ] **Task descriptions in the list are plain text** — `TaskList` renders
+      `Task.description` into a `<span>`, so the URLs and `#nnn` references now
+      seeded in the stories stay inert there. Decide between rendering the
+      description as markdown (a read-only `MarkdownBlock`, which brings the
+      autolink and any `#nnn` decoration with it) and a lightweight linkify for
+      a single truncated line.

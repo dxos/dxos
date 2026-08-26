@@ -33,6 +33,11 @@ import { ProjectArticle } from './ProjectArticle';
 
 const PROJECT_NAME = 'Project 1';
 const TASK_TITLE = 'Ship the tasks section';
+// A task whose text carries the two reference forms the markdown surfaces are expected to linkify:
+// a bare URL (GFM autolink) and a GitHub issue reference (plugin-github's decoration, not built).
+const LINK_TASK_TITLE = 'Follow up on #12752 before the release';
+const LINK_TASK_DESCRIPTION =
+  'Spec at https://github.com/dxos/dxos/pull/12752 — the preview build is at https://pr-12752-composer-dev.dxos.workers.dev, and it supersedes #12431.';
 const ARTIFACT_TITLE = 'Design Notes';
 const MILESTONE_NAME = 'Beta';
 const OUTLINE_ITEM = 'Draft the launch checklist';
@@ -85,8 +90,12 @@ const seedContent = async () => {
   }
   const task = space.db.add(Task.make({ title: TASK_TITLE, status: 'todo' }));
   Obj.setParent(task, taskSet);
+  const linkTask = space.db.add(
+    Task.make({ title: LINK_TASK_TITLE, description: LINK_TASK_DESCRIPTION, status: 'todo' }),
+  );
+  Obj.setParent(linkTask, taskSet);
   Obj.update(taskSet, (taskSet) => {
-    taskSet.tasks = [Ref.make(task)];
+    taskSet.tasks = [Ref.make(task), Ref.make(linkTask)];
   });
 
   // The third item is what promotion leaves behind: a link to the task in the project's set.
