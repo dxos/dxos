@@ -19,7 +19,7 @@ supported" / "Schema type is missing"). Two layers conspired to produce one:
    `Schema.Any` serializes to `{}`. Every delegated sub-agent takes this path —
    the delegation strategy synthesizes Instructions with no output — so every
    live delegation died at the sub-agent's first model call.
-2. Replacing `Any` with a concrete union was not sufficient: a *static*
+2. Replacing `Any` with a concrete union was not sufficient: a _static_
    `Tool.make` is serialized through the provider's structured-output
    transformer (`toCodecAnthropic`), which rewrites `Record` and
    `ObjectKeyword` members into "[key, value] pairs" encodings whose value

@@ -22,7 +22,8 @@ import {
 } from '@dxos/react-ui-assistant';
 import { type MessageRange, type OutlineMarker, Outline as OutlineRail, useFeedModel } from '@dxos/react-ui-feed';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
-import { Outline } from '@dxos/types';
+import { TaskList } from '@dxos/react-ui-task';
+import { Outline, Task } from '@dxos/types';
 import { Message } from '@dxos/types';
 import { keyToFallback } from '@dxos/util';
 
@@ -35,7 +36,6 @@ import {
   ChatPrompt as NaturalChatPrompt,
   type ChatPromptProps as NaturalChatPromptProps,
 } from '../ChatPrompt';
-import { TaskList } from '../TaskList';
 import { ChatContextProvider, type ChatContextValue, type ChatRequestTiming, useChatContext } from './context';
 import { type ChatEvent } from './events';
 import { SurfaceWidget } from './SurfaceWidget';
@@ -553,11 +553,28 @@ const ChatTaskList = composable<HTMLDivElement, ChatTaskListProps>(
         [chat, outlineProp],
       ),
     );
-    if (!outline) {
+
+    // The checklist is markdown; project it onto transient (un-persisted) tasks so the shared
+    // task list renders it. Durable promoted tasks keep richer state elsewhere.
+    const [text] = useObject(outline?.content);
+    const tasks = useMemo(
+      () =>
+        Outline.parseChecklist(text?.content ?? '').map((item) =>
+          Task.make({ title: item.title, status: item.done ? 'done' : 'todo' }),
+        ),
+      [text?.content],
+    );
+    if (tasks.length === 0) {
       return null;
     }
 
-    return <TaskList {...composableProps(props)} outline={outline} ref={forwardedRef} />;
+    return (
+      <TaskList.Root tasks={tasks} showGroupLabels={false}>
+        <TaskList.Viewport {...composableProps(props, { classNames: 'dx-container' })} ref={forwardedRef}>
+          <TaskList.Content classNames='max-h-[4lh]' />
+        </TaskList.Viewport>
+      </TaskList.Root>
+    );
   },
 );
 
