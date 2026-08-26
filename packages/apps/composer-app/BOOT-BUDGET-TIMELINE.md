@@ -17,7 +17,8 @@ by log content, not by job name.
 The budget was re-baselined once, at `987f7e1c`: 30 entries / 6.00 MB down to 25 / 4.25 MB.
 Rows are flagged `OVER` by the job's own verdict where the check owns its runner, and by
 `MB > budget` before that (the shared `e2e` / `check` jobs fail for unrelated reasons too, so
-their conclusion is not a budget signal).
+their conclusion is not a budget signal). MB values are the script's two-decimal display over a
+raw byte comparison, so at the ceiling the status column is authoritative and the number is not.
 
 ## The shape of it
 
@@ -34,7 +35,7 @@ Two eras, and the second one has eaten its entire margin:
 | 08-25 | `22bea85f` | 4.05 → **4.15** | config: convert dxos.config to buf (#12733) |
 | 08-26 | `b02fe163` | 4.16 → 4.18 | graph on Effect's Graph module (#12594); 21 → 22 entries |
 | 08-26 | `48eb05d6` | 4.18 → **4.24** | protocols: route protoMessage through buf (#12748) |
-| 08-26 | `9817b6f2` | 4.24 → 4.25 | lands exactly on the ceiling (#12750) |
+| 08-26 | `9817b6f2` | 4.24 → 4.25 | first run to display 4.25 MB while still under the raw byte ceiling (#12750) |
 | 08-26 | `e954c0ff` | **OVER** | protocols: `google.protobuf.Any` in shape-compat (#12753) — first failing run |
 
 Everything since `e954c0ff` is red. The 4.25 MB ceiling was set at `987f7e1c` with ~0.2 MB of
