@@ -131,10 +131,11 @@ jobs:
     timeout-minutes: 60
 
     steps:
+      # Blobless: full history without every historical file version. Nothing in the tree is LFS-tracked.
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           ref: ${{ inputs.ref || github.sha }}
 
       - name: Install Linux dependencies
@@ -352,10 +353,11 @@ jobs:
     continue-on-error: true
 
     steps:
+      # Blobless: full history without every historical file version. Nothing in the tree is LFS-tracked.
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           ref: ${{ inputs.ref || github.sha }}
 
       - uses: tecolicom/actions-use-homebrew-tools@v1

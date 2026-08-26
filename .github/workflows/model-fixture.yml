@@ -48,12 +48,13 @@ jobs:
       VITEST_XML_REPORT: 'true'
       MOON_CONCURRENCY: 4
     steps:
+      # Blobless: full history without every historical file version. Nothing in the tree is LFS-tracked.
       - name: Checkout
         uses: actions/checkout@v5
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           persist-credentials: false
 
       - name: Setup

@@ -38,11 +38,12 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 45
     steps:
+      # Blobless: full history without every historical file version. Nothing in the tree is LFS-tracked.
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
 
       - name: Setup
         uses: ./.github/actions/setup
