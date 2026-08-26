@@ -10,7 +10,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type Client } from '@dxos/client';
-import { ProcessManager, RemoteProcessManager, RemoteProcessManagerAdapter } from '@dxos/compute-runtime';
+import { RemoteProcessManager } from '@dxos/compute-runtime';
 import type * as Process from '@dxos/compute/Process';
 import { Context as DxosContext } from '@dxos/context';
 import { type EdgeHttpClient } from '@dxos/edge-client';
@@ -18,7 +18,6 @@ import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { createEdgeClient } from './edge-client';
-import * as EdgeProcessControl from './EdgeProcessControl';
 
 /**
  * EDGE implementation of {@link RemoteProcessManager.Service}.
@@ -96,29 +95,3 @@ export const fromClient = (client: Client): Layer.Layer<RemoteProcessManager.Ser
  * Used where edge is not configured.
  */
 export const layer: Layer.Layer<RemoteProcessManager.Service, never, Registry.AtomRegistry> = make();
-
-/**
- * Space-scoped process control: presents the EDGE process host as a local
- * {@link ProcessManager.Manager}, so a stack written for the in-process manager — notably
- * `AgentService.layer` — runs against EDGE by swapping this layer in. Processes are per-space, which
- * is why this is scoped where the monitor above is not.
- */
-export const processManagerFromEdgeClient = (
-  edgeClient: EdgeHttpClient,
-  spaceId: SpaceId,
-): Layer.Layer<ProcessManager.Service, never, Registry.AtomRegistry> =>
-  RemoteProcessManagerAdapter.layer(EdgeProcessControl.make(() => edgeClient, spaceId));
-
-/**
- * Build from a `Client`, deferring edge-client creation until first use (identity may be absent at
- * boot).
- */
-export const processManagerFromClient = (
-  client: Client,
-  spaceId: SpaceId,
-): Layer.Layer<ProcessManager.Service, never, Registry.AtomRegistry> => {
-  let cached: EdgeHttpClient | undefined;
-  return RemoteProcessManagerAdapter.layer(
-    EdgeProcessControl.make(() => (cached ??= createEdgeClient(client)), spaceId),
-  );
-};

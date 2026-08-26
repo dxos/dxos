@@ -91,14 +91,14 @@ export interface SubmitInputRequest {
   input: unknown;
 }
 
-/**
- * A process's RPC surface is served as effect-rpc-over-HTTP: the host mounts an `RpcServer` for the
- * process's declared `RpcGroup` and the client drives it with `RpcClient` over
- * `RpcClient.makeProtocolHttp`. So the route has no envelope type of its own — the bodies are
- * whatever `RpcSerialization` is configured on both ends, and schema encoding of every request and
- * response is effect's, not ours.
- */
-export const RPC_SERIALIZATION = 'ndjson' as const;
+//
+// A process's RPC surface is served as effect-rpc-over-HTTP: the host mounts an `RpcServer` for the
+// process's declared `RpcGroup` and the client drives it with `RpcClient` over
+// `RpcClient.makeProtocolHttp`, with `ndjson` serialization on both ends. So the route has no
+// envelope type of its own — schema encoding of every request and response is effect's, not ours,
+// and this module stays types-only (it is boot-reachable through the package barrel, so a single
+// exported value would keep it in the eager graph).
+//
 
 /**
  * One event in a process's output/trace log. `seq` is monotonic per process and is what the cursor

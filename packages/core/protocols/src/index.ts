@@ -15,7 +15,7 @@ export * from './storage.ts';
 export type * from './types.ts';
 export * as Config2 from './Config2.ts';
 export * as FunctionProtocol from './FunctionProtocol.ts';
-export * as ProcessProtocol from './ProcessProtocol.ts';
+export type * as ProcessProtocol from './ProcessProtocol.ts';
 export * as FeedProtocol from './FeedProtocol.ts';
 export * as TraceProtocol from './TraceProtocol.ts';
 
