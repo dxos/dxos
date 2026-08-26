@@ -221,6 +221,25 @@ export class EdgeHttpClient extends BaseHttpClient {
     return this._call(ctx, new URL('/db/identity/recover', this.baseUrl), { ...args, body, method: 'POST' });
   }
 
+  /**
+   * Tells edge which document is the space's root, so it can find the space's credentials without
+   * opening every document it stores. Returns the root in force, which differs from `rootDocumentUrl`
+   * when the space was already anchored — the record is write-once.
+   */
+  public async recordSpaceRoot(
+    ctx: Context,
+    spaceId: SpaceId,
+    body: { rootDocumentUrl: string },
+    args?: EdgeHttpCallArgs,
+  ): Promise<{ rootDocumentUrl: string }> {
+    return this._call(ctx, new URL(`/db/spaces/${spaceId}/root`, this.baseUrl), {
+      ...args,
+      body,
+      method: 'POST',
+      auth: true,
+    });
+  }
+
   //
   // Invitations (space join)
   //

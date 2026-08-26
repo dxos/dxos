@@ -536,10 +536,30 @@ export class DataSpaceManager extends Resource {
       }
 
       await this._mirrorCredentialsToDocument(ctx, space);
+      await this._reportSpaceRootToEdge(ctx, space);
       return true;
     } catch (err) {
       log.warn('failed to anchor space on a root document', { spaceId: space.id, err });
       return false;
+    }
+  }
+
+  /**
+   * Tells edge which document is the space root. Edge cannot derive it — a space id is the hash of
+   * its space key, which no document id reproduces — so without this the credentials document is
+   * never found and the space stays on its control feed.
+   */
+  private async _reportSpaceRootToEdge(ctx: Context, space: DataSpace): Promise<void> {
+    const refs = this._echoHost.getSpaceRootRefs(space.id);
+    if (!this._edgeHttpClient || !refs) {
+      return;
+    }
+
+    try {
+      await this._edgeHttpClient.recordSpaceRoot(ctx, space.id, { rootDocumentUrl: refs.spaceRootDocUrl });
+    } catch (err) {
+      // Anchoring is local and already done; edge picks the root up on a later attempt.
+      log.warn('failed to report the space root to edge', { spaceId: space.id, err });
     }
   }
 
