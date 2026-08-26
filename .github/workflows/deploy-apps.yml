@@ -256,7 +256,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           # On production, the bumped release commit; otherwise the triggering commit.
           ref: ${{ needs.release.outputs.sha || github.sha }}
 
@@ -330,7 +330,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           ref: ${{ needs.release.outputs.sha || github.sha }}
 
       # Needed before "Check app targets this environment" — apps.mjs imports json5 from node_modules.
