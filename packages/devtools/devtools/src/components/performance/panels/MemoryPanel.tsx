@@ -4,6 +4,7 @@
 
 import React from 'react';
 
+import { type HeapInfo } from '@dxos/tracing';
 import { mx } from '@dxos/ui-theme';
 import { Unit } from '@dxos/util';
 
@@ -12,6 +13,25 @@ import { type CustomPanelProps, Panel } from '../Panel';
 
 const MEM_WARNING = 40 / 100;
 
+/** One realm's heap: used of allocated, and used as a fraction of the realm's limit. */
+const HeapRow = ({ label, heap }: { label: string; heap?: HeapInfo }) => {
+  const used = heap && heap.used / heap.limit;
+  return (
+    <>
+      <span className='text-subdued'>{label}</span>
+      <span className='text-end' title='Used / allocated heap'>
+        {heap ? `${Unit.Megabyte(heap.used)} / ${Unit.Megabyte(heap.total)}` : 'n/a'}
+      </span>
+      <span
+        className={mx('text-end', used !== undefined && used > MEM_WARNING && 'text-error-text')}
+        title='Used of limit'
+      >
+        {used !== undefined ? String(Unit.Percent(used)) : ''}
+      </span>
+    </>
+  );
+};
+
 export const MemoryPanel = ({ memory, ...props }: CustomPanelProps<{ memory?: MemoryInfo }>) => {
   return (
     <Panel
@@ -19,14 +39,9 @@ export const MemoryPanel = ({ memory, ...props }: CustomPanelProps<{ memory?: Me
       icon='ph--cpu--regular'
       title={'Memory'}
       info={
-        <div className='flex items-center gap-2'>
-          <span title='Used (heap size)'>{String(Unit.Megabyte(memory?.usedJSHeapSize ?? 0))}</span>
-          <span title='Allocated (heap size)'>{String(Unit.Megabyte(memory?.totalJSHeapSize ?? 0))}</span>
-          {memory?.used !== undefined && (
-            <span title='Used (available)' className={mx(memory?.used > MEM_WARNING && 'text-error-text')}>
-              {String(Unit.Percent(memory?.used ?? 0))}
-            </span>
-          )}
+        <div className='grid grid-cols-[auto_auto_auto] gap-x-2'>
+          <HeapRow label='tab' heap={memory?.tab} />
+          <HeapRow label='worker' heap={memory?.worker} />
         </div>
       }
     />

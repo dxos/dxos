@@ -11,11 +11,20 @@ import { log } from '@dxos/log';
 import { type QueryEdgeStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { DiagnosticsChannel, type DiagnosticsRequest } from '@dxos/tracing';
+import {
+  DiagnosticsChannel,
+  type DiagnosticsRequest,
+  type HeapInfo,
+  WORKER_INSTANCE_TAG,
+  readHeap,
+} from '@dxos/tracing';
 
 // TODO(burdon): Factor out.
 
 /**
+ * Per-realm heap usage. The tab reads its own; the worker answers over the diagnostics channel,
+ * because `performance.memory` reports only the realm that reads it.
+ *
  * https://developer.mozilla.org/en-US/docs/Web/API/Performance/memory
  * https://github.com/WICG/performance-measure-memory
  * https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts
@@ -23,10 +32,8 @@ import { DiagnosticsChannel, type DiagnosticsRequest } from '@dxos/tracing';
  * https://web.dev/articles/coop-coep
  */
 export type MemoryInfo = {
-  jsHeapSizeLimit: number;
-  totalJSHeapSize: number;
-  usedJSHeapSize: number;
-  used: number;
+  tab?: HeapInfo;
+  worker?: HeapInfo;
 };
 
 /**
@@ -108,21 +115,11 @@ export const useStats = (): [Stats, () => void] => {
       documentsToReconcile: 0,
     };
 
-    if ('measureUserAgentSpecificMemory' in window.performance) {
-      // TODO(burdon): Breakdown.
-      // https://developer.mozilla.org/en-US/docs/Web/API/Performance/measureUserAgentSpecificMemory
-      // const { bytes } = (await (window.performance as any).measureUserAgentSpecificMemory()) as { bytes: number };
-    }
-    const memory: MemoryInfo = (window.performance as any).memory;
-    if (memory && typeof memory === 'object' && 'usedJSHeapSize' in memory) {
-      memory.used = memory.usedJSHeapSize / memory.jsHeapSizeLimit;
-    }
-
     log('collected stats', { elapsed: performance.now() - begin });
     setStats((stats) =>
       Object.assign({}, stats, {
         performanceEntries,
-        memory,
+        memory: Object.assign({}, stats.memory, { tab: readHeap() }),
         database,
       }),
     );
@@ -196,9 +193,15 @@ export const useStats = (): [Stats, () => void] => {
   }, []);
 
   const echoStatsDiagnostic = useDiagnostic<EchoStatsDiagnostic>(
-    { id: 'echo-stats', instanceTag: 'shared-worker' },
+    { id: 'echo-stats', instanceTag: WORKER_INSTANCE_TAG },
     1_000,
   );
+
+  const workerHeap = useDiagnostic<HeapInfo | undefined>({ id: 'heap', instanceTag: WORKER_INSTANCE_TAG }, 1_000);
+
+  if (workerHeap && stats.memory?.worker !== workerHeap) {
+    stats.memory = Object.assign({}, stats.memory, { worker: workerHeap });
+  }
 
   if (stats.database && echoStatsDiagnostic) {
     stats.database.documents = echoStatsDiagnostic.loadedDocsCount;

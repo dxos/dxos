@@ -8,7 +8,6 @@ export type MemoryScope = 'window' | 'shared-worker' | 'dedicated-worker' | 'oth
 export type CrossRealmMemory = Partial<Record<MemoryScope, number>>;
 
 type PerformanceWithMemory = Performance & {
-  memory?: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number };
   measureUserAgentSpecificMemory?: () => Promise<UserAgentSpecificMemory>;
 };
 
@@ -17,16 +16,6 @@ export type MemoryBreakdownEntry = { bytes: number; attribution: { scope?: strin
 type UserAgentSpecificMemory = {
   bytes: number;
   breakdown: MemoryBreakdownEntry[];
-};
-
-/** Chromium-only and main-thread-only, hence the feature test rather than a direct read. */
-export const readHeap = (): { used?: number; total?: number; limit?: number } => {
-  const memory = (globalThis.performance as PerformanceWithMemory | undefined)?.memory;
-  if (!memory) {
-    return {};
-  }
-
-  return { used: memory.usedJSHeapSize, total: memory.totalJSHeapSize, limit: memory.jsHeapSizeLimit };
 };
 
 /** True when `measureUserAgentSpecificMemory` is available; it needs cross-origin isolation. */

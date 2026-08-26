@@ -11,6 +11,7 @@ import { Config } from '@dxos/config';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
+import { TRACE_PROCESSOR, WORKER_INSTANCE_TAG } from '@dxos/tracing';
 import * as Worker from '@dxos/worker-framework/Worker';
 
 import { STORAGE_LOCK_KEY } from '../../lock-key';
@@ -38,6 +39,9 @@ const probeOpfsAvailable = async (): Promise<boolean> => {
 
 /** Runs the dedicated worker loop. Exported so apps can use a custom worker entrypoint and inject setup (e.g. observability). */
 export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): void => {
+  // Tags this realm's diagnostics so a client can address the worker rather than its own tab.
+  TRACE_PROCESSOR.setInstanceTag(WORKER_INSTANCE_TAG);
+
   Worker.run({
     storageLockKey: STORAGE_LOCK_KEY,
     createRuntime: ({ config: configValues, requestShutdown }) =>

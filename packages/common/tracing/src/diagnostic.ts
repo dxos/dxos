@@ -10,6 +10,9 @@ import { createId } from './util';
 
 export const DIAGNOSTICS_TIMEOUT = 10_000;
 
+/** Instance tag of the dedicated worker realm, so clients can address it rather than their own tab. */
+export const WORKER_INSTANCE_TAG = 'worker';
+
 export type DiagnosticMetadata = {
   id: string;
   instanceId: string;

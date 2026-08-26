@@ -12,10 +12,11 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ConnectionState, type NetworkStatus, Platform } from '@dxos/protocols/proto/dxos/client/services';
+import { readHeap } from '@dxos/tracing';
 
 import { type DataProvider } from '../observability';
 import { EventLoopLagTracker, LAG_SAMPLE_INTERVAL_MS, LAG_WINDOW_MS } from './event-loop-lag';
-import { type CrossRealmMemory, measureCrossRealmMemory, readHeap, supportsCrossRealmMemory } from './memory';
+import { type CrossRealmMemory, measureCrossRealmMemory, supportsCrossRealmMemory } from './memory';
 import { SyncEpisodeTracker } from './sync-episodes';
 import { subscribeSyncSummary } from './sync-state';
 
@@ -145,9 +146,9 @@ export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>):
 
     // Heap is a synchronous read, so the gauge reads it directly at collection time.
     const heapGauges = [
-      ['dxos.client.runtime.heapUsed', () => readHeap().used],
-      ['dxos.client.runtime.heapTotal', () => readHeap().total],
-      ['dxos.client.runtime.heapSizeLimit', () => readHeap().limit],
+      ['dxos.client.runtime.heapUsed', () => readHeap()?.used],
+      ['dxos.client.runtime.heapTotal', () => readHeap()?.total],
+      ['dxos.client.runtime.heapSizeLimit', () => readHeap()?.limit],
     ] as const;
     for (const [name, read] of heapGauges) {
       ctx.onDispose(observability.metrics.observe(name, read, undefined, BYTES));
