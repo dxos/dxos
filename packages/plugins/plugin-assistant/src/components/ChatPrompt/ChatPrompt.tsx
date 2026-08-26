@@ -7,7 +7,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
-import { type Chat } from '@dxos/assistant-toolkit';
+import { type Chat, SlashCommands } from '@dxos/assistant-toolkit';
 import { type Event } from '@dxos/async';
 import * as Project from '@dxos/compute/Project';
 import { type Database, Obj } from '@dxos/echo';
@@ -94,14 +94,18 @@ export const ChatPrompt = ({
 
   const keymapExtensions = useChatKeymapExtensions({ event });
 
-  // Sentinel-command completion is sourced from the bound project's instructions, if any.
+  // Command completion: `$` sentinels come from the bound project's instructions; `/` commands
+  // are the deterministic operation shortcuts (see assistant-toolkit `SlashCommands`).
   const [companion] = useObject(companionTo);
   const [instructions] = useObject(Obj.instanceOf(Project.Project, companion) ? companion.instructions : undefined);
   const commandsRef = useDynamicRef(instructions?.commands ?? []);
   const commandsExtension = useMemo(
     () =>
       commands({
-        getCommands: () => commandsRef.current.map(({ sentinel, description }) => ({ sentinel, description })),
+        getCommands: () => [
+          ...commandsRef.current.map(({ sentinel, description }) => ({ sentinel, description })),
+          ...SlashCommands.map(({ command, description }) => ({ sentinel: command, description })),
+        ],
       }),
     [commandsRef],
   );

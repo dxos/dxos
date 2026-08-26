@@ -73,7 +73,7 @@ TaskSet {
 ```ts
 Task {
   title, description?, priority?               // unchanged
-  status: 'todo' | 'in-progress' | 'done' | 'failed' | 'cancelled'   // +failed +cancelled (agent parity)
+  status: 'todo' | 'started' | 'done' | 'failed' | 'cancelled'   // +failed +cancelled (agent parity)
   assignee?: Actor                             // WAS assigned: Ref<Person>
   estimate?: number                            // unchanged
   // NO taskSet field (REVISED 2026-08-01): containment is the ECHO parent edge —
@@ -91,7 +91,7 @@ Task {
   DECIDED (Phase 0): no `Ref<Agent>` variant — DID identifies an agent; `Agent` carries the DID
   once populated (ties into DESIGN.md "Agent ↔ Project convergence").
   Migration wraps the old ref: `assigned: ref` → `assignee: { contact: ref }`.
-- The tri-state `todo/in-progress/done` stays the human-visible core; `failed`/`cancelled` exist
+- The tri-state `todo/started/done` stays the human-visible core; `failed`/`cancelled` exist
   so a delegated agent task and a human task share one status vocabulary (see §6).
 
 ### 3.3 `Project` (`0.2.0 → 0.3.0`) — all new fields optional

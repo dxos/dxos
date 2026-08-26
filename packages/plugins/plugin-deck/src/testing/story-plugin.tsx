@@ -188,7 +188,7 @@ const storySurfaces = Capability.inlineModule('story-surfaces', { provides: [Cap
 
           return (
             // Stamped so a host's play test can assert the companion body resolved, not just its tab.
-            <div role='none' className='contents' data-testid='story.companion' data-companion-variant={variant}>
+            <div className='contents' data-testid='story.companion' data-companion-variant={variant}>
               <Syntax.Root
                 data={{
                   primaryItem: companionTo,

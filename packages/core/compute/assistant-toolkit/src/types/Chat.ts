@@ -14,8 +14,7 @@ import * as Project from '@dxos/compute/Project';
 import { Annotation, Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { type EntityNotFoundError } from '@dxos/echo/Error';
-import { type Text } from '@dxos/schema';
-import { Outline, type TaskSet } from '@dxos/types';
+import { type Task, TaskSet } from '@dxos/types';
 
 import { HarnessContextError } from '../errors';
 
@@ -39,11 +38,11 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
     instructions: Schema.optional(Ref.Ref(Instructions.Instructions).pipe(FormInputAnnotation.set(false))),
 
     /**
-     * Scratch checklist for a standalone chat, created lazily when the first item is recorded.
-     * A project chat leaves this unset and writes the project's outline instead — see
-     * {@link ensureOutline}.
+     * Working task set for a standalone chat, created lazily when the first task is recorded.
+     * A project chat leaves this unset and files into the project's task set instead — see
+     * {@link ensureTaskSet}.
      */
-    outline: Schema.optional(Ref.Ref(Outline.Outline).pipe(FormInputAnnotation.set(false))),
+    taskSet: Schema.optional(Ref.Ref(TaskSet.TaskSet).pipe(FormInputAnnotation.set(false))),
   }).pipe(
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({
@@ -83,49 +82,61 @@ export const linkCompanion = ({ chat, subject }: { chat: Chat; subject: Obj.Unkn
 };
 
 /**
- * Returns the conversation's working outline, creating one lazily: a project chat (parented to a
- * project, directly or through its agent) resolves — and if needed creates — the PROJECT's outline,
- * so all of a project's chats share one scratch surface; a standalone chat owns its own.
+ * Returns the conversation's working task set, creating one lazily: a project chat (parented to a
+ * project, directly or through its agent) resolves — and if needed creates — the PROJECT's task
+ * set, so all of a project's chats file into one ledger; a standalone chat owns its own.
  */
-export const ensureOutline = (chat: Chat): Effect.Effect<Outline.Outline, EntityNotFoundError, Database.Service> =>
+export const ensureTaskSet = (chat: Chat): Effect.Effect<TaskSet.TaskSet, EntityNotFoundError, Database.Service> =>
   Effect.gen(function* () {
     const project = peekProject(chat);
     if (project) {
-      if (project.outline) {
-        return yield* Database.load(project.outline);
+      if (project.taskSet) {
+        return yield* Database.load(project.taskSet);
       }
-      const outline = yield* Database.add(Outline.make({ name: project.name }));
+      const taskSet = yield* Database.add(TaskSet.make({ name: project.name }));
       Obj.update(project, (project) => {
-        project.outline = Ref.make(outline);
+        project.taskSet = Ref.make(taskSet);
       });
       yield* Database.flush();
-      return outline;
+      return taskSet;
     }
 
-    if (chat.outline) {
-      return yield* Database.load(chat.outline);
+    if (chat.taskSet) {
+      return yield* Database.load(chat.taskSet);
     }
 
-    const outline = yield* Database.add(Outline.make({ name: chat.name }));
+    const taskSet = yield* Database.add(TaskSet.make({ name: chat.name }));
     Obj.update(chat, (chat) => {
-      chat.outline = Ref.make(outline);
+      chat.taskSet = Ref.make(taskSet);
     });
 
     yield* Database.flush();
-    return outline;
+    return taskSet;
   });
 
 /**
- * Loads the markdown text object behind the conversation's working outline.
+ * Client-side (non-Effect) twin of {@link ensureTaskSet} for UI affordances that already hold the
+ * database. Returns undefined when the owner's ref exists but is not loaded yet, rather than
+ * risking a duplicate set.
  */
-export const ensureOutlineText = (
-  chat: Chat,
-): Effect.Effect<{ outline: Outline.Outline; text: Text.Text }, EntityNotFoundError, Database.Service> =>
-  Effect.gen(function* () {
-    const outline = yield* ensureOutline(chat);
-    const text = yield* Database.load(outline.content);
-    return { outline, text };
-  });
+export const ensureTaskSetSync = (db: Database.Database, chat: Chat): TaskSet.TaskSet | undefined => {
+  const project = peekProject(chat);
+  const ref = project ? project.taskSet : chat.taskSet;
+  if (ref) {
+    return ref.target;
+  }
+  const taskSet = db.add(TaskSet.make({ name: project ? project.name : chat.name }));
+  if (project) {
+    Obj.update(project, (project) => {
+      project.taskSet = Ref.make(taskSet);
+    });
+  } else {
+    Obj.update(chat, (chat) => {
+      chat.taskSet = Ref.make(taskSet);
+    });
+  }
+  return taskSet;
+};
 
 /** Bound on the parent walk below; a conversation sits one or two edges under its project. */
 const MAX_OWNER_DEPTH = 8;
@@ -148,32 +159,70 @@ export const peekProject = (chat: Chat): Project.Project | undefined => {
 };
 
 /**
- * The task set a conversation's promoted items are filed into: the owning project's ledger.
- *
- * An outline owns no task set, so a conversation with no project above it has nowhere to promote to;
- * callers withhold the affordance rather than create a set nothing else can find.
+ * The conversation's working-task-set ref if one already exists (the parent project's, else the
+ * chat's own) — never creates. See {@link ensureTaskSet} for the creating variant.
  */
-export const peekTaskSetRef = (chat: Chat): Ref.Ref<TaskSet.TaskSet> | undefined => peekProject(chat)?.taskSet;
-
-/**
- * The conversation's working-outline ref if one already exists (the parent project's, else the
- * chat's own) — never creates. See {@link ensureOutline} for the creating variant.
- */
-export const peekOutlineRef = (chat: Chat): Ref.Ref<Outline.Outline> | undefined => {
+export const peekTaskSetRef = (chat: Chat): Ref.Ref<TaskSet.TaskSet> | undefined => {
   const project = peekProject(chat);
-  return project ? project.outline : chat.outline;
+  return project ? project.taskSet : chat.taskSet;
 };
 
-/** The conversation's checklist markdown, or a placeholder when none exists. Never creates. */
+/** The conversation's tasks in the set's canonical order, or empty when no set exists. Never creates. */
+export const loadTasks = (chat: Chat): Effect.Effect<Task.Task[], never, Database.Service> =>
+  Effect.gen(function* () {
+    const ref = peekTaskSetRef(chat);
+    const taskSet = ref ? yield* Database.load(ref).pipe(Effect.orElseSucceed(() => undefined)) : undefined;
+    if (!taskSet) {
+      return [];
+    }
+    const tasks = yield* Effect.forEach(taskSet.tasks, (task) =>
+      Database.load(task).pipe(Effect.orElseSucceed(() => undefined)),
+    );
+    return TaskSet.dedupeById(tasks);
+  });
+
+/** A task is open until it reaches a terminal status. */
+export const isOpenTask = (task: Task.Task): boolean => (task.status ?? 'todo') === 'todo' || task.status === 'started';
+
+/**
+ * The conversation's tasks rendered as a numbered checklist (the format the planning prompts
+ * speak), or a placeholder when none exist. Ordinals match the task list UI, and non-default
+ * status/dependencies are noted so the model can reason about readiness. Never creates.
+ */
 export const formatChecklist = (chat: Chat): Effect.Effect<string, never, Database.Service> =>
   Effect.gen(function* () {
-    const ref = peekOutlineRef(chat);
-    const outline = ref ? yield* Database.load(ref).pipe(Effect.orElseSucceed(() => undefined)) : undefined;
-    const text = outline
-      ? yield* Database.load(outline.content).pipe(Effect.orElseSucceed(() => undefined))
-      : undefined;
-    return text?.content ?? 'No checklist found.';
+    const tasks = yield* loadTasks(chat);
+    if (tasks.length === 0) {
+      return 'No checklist found.';
+    }
+    return renderNumberedChecklist(tasks);
   });
+
+/**
+ * Renders tasks as `1. [ ] Title` lines, ordinals in set order. Status/dependency notes go on
+ * their own indented line — appended to the title, models paste them back through title-keyed
+ * upserts and duplicate the task.
+ */
+export const renderNumberedChecklist = (tasks: readonly Task.Task[]): string => {
+  const ordinals = new Map(tasks.map((task, index) => [task.id, index + 1]));
+  return tasks
+    .map((task, index) => {
+      const line = `${index + 1}. [${task.status === 'done' ? 'x' : ' '}] ${task.title}`;
+      const notes: string[] = [];
+      if (task.status && task.status !== 'todo' && task.status !== 'done') {
+        notes.push(task.status);
+      }
+      const deps = (task.dependsOn ?? [])
+        .map((ref) => ref.target)
+        .filter((target) => target !== undefined)
+        .map((target) => ordinals.get(target.id) ?? target.title);
+      if (deps.length > 0) {
+        notes.push(`depends on ${deps.join(', ')}`);
+      }
+      return notes.length > 0 ? `${line}\n   (${notes.join('; ')})` : line;
+    })
+    .join('\n');
+};
 
 /**
  * Resolves the bound session {@link Chat} for the current conversation.

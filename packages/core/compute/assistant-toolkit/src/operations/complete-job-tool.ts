@@ -19,31 +19,54 @@ const UNDECLARED_TYPE = 'type' in UNDECLARED_OUTPUT ? UNDECLARED_OUTPUT.type : u
 const isUndeclaredOutput = (output: JsonSchema.JsonSchema): boolean =>
   ('$id' in output && output.$id === '/schemas/unknown') || ('type' in output && output.type === UNDECLARED_TYPE);
 
-/** The tool a routine signals completion with: its declared output under `success`, or a failure. */
-export const makeCompleteJobTool = (output: JsonSchema.JsonSchema) => {
-  // A routine that declares no output still has to let `completeJob` carry an arbitrary success
-  // payload — decoding against the default would reject one with `Expected null | undefined`.
-  const undeclared = isUndeclaredOutput(output);
-  const tool = Tool.make('completeJob', {
+/**
+ * Accepts any JSON value, unlike `Schema.Any`, while serializing to concrete types. This matters
+ * twice: the Anthropic API rejects a strict tool whose schema contains the empty `{}` subschema
+ * `Schema.Any` serializes to, and — observed live — a schema-less `success` invites the model to
+ * emit invalid JSON (digit-separated numbers such as `3,628,800`), which kills the sub-agent.
+ * `ObjectKeyword` rather than `Record(String, Any)`: the provider's structured-output codec
+ * rewrites records into [key, value] tuples whose value member is again the empty schema.
+ */
+const JsonPayload = Schema.Union([
+  Schema.String,
+  Schema.Number,
+  Schema.Boolean,
+  Schema.ObjectKeyword,
+  Schema.Array(Schema.Any),
+]);
+
+/** The parameters `completeJob` decodes: the declared output (or any JSON payload) under `success`. */
+export const makeCompleteJobParameters = (output: JsonSchema.JsonSchema) =>
+  Schema.Struct({
     // Both fields accept `null` because models emit it for a field they mean to omit.
-    parameters: Schema.Struct({
-      success: Schema.optional(Schema.NullOr(undeclared ? Schema.Any : JsonSchema.toEffectSchema(output))),
-      failure: Schema.optional(
-        Schema.NullOr(
-          Schema.Struct({
-            message: Schema.String.annotate({
-              description: 'Short message describing the error.',
-            }),
-            description: Schema.optional(Schema.NullOr(Schema.String)).annotate({
-              description: 'Optional longer message describing in detail what went wrong',
-            }),
+    success: Schema.optional(
+      Schema.NullOr(isUndeclaredOutput(output) ? JsonPayload : JsonSchema.toEffectSchema(output)),
+    ),
+    failure: Schema.optional(
+      Schema.NullOr(
+        Schema.Struct({
+          message: Schema.String.annotate({
+            description: 'Short message describing the error.',
           }),
-        ),
+          description: Schema.optional(Schema.NullOr(Schema.String)).annotate({
+            description: 'Optional longer message describing in detail what went wrong',
+          }),
+        }),
       ),
-    }),
+    ),
   });
 
-  // `Schema.Any` serializes to the empty schema, which Anthropic's strict tool validation rejects
-  // while admitting no free-form object in its place.
-  return tool.annotate(Tool.Strict, !undeclared);
-};
+/**
+ * The tool a routine signals completion with: its declared output under `success`, or a failure.
+ *
+ * Dynamic rather than static: a dynamic tool's JSON schema reaches the provider verbatim, while a
+ * static tool is serialized through the provider's structured-output transformer, which rewrites
+ * object members into typeless subschemas the Anthropic API rejects. The caller decodes the
+ * (unvalidated) input against {@link makeCompleteJobParameters}, so what the model is told and
+ * what is validated agree.
+ */
+export const makeCompleteJobTool = (output: JsonSchema.JsonSchema) =>
+  Tool.dynamic('completeJob', {
+    parameters: JsonSchema.toJsonSchema(makeCompleteJobParameters(output)),
+    failure: Schema.String,
+  }).annotate(Tool.Strict, false);

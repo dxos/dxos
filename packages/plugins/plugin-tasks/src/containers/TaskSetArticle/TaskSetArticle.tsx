@@ -12,7 +12,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { TaskList, type TaskPatch, type TaskStatus } from '@dxos/react-ui-task';
+import { TaskList, type TaskPatch } from '@dxos/react-ui-task';
 import { type Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -35,7 +35,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
 
   const tasks = useSetTasks(taskSet);
 
-  const statusLabel = useCallback((status: TaskStatus) => t(`task-status.${status}.label`), [t]);
+  const statusLabel = useCallback((status: Task.Status) => t(`task-status.${status}.label`), [t]);
   const handleCreate = useCallback(
     (title: string) => void invokePromise(TaskOperation.CreateTask, { taskSet: Ref.make(taskSet), title }, { spaceId }),
     [invokePromise, taskSet, spaceId],
