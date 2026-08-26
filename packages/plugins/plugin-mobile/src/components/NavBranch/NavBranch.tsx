@@ -7,8 +7,8 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import * as Graph from '@dxos/app-graph/Graph';
-import type * as Node from '@dxos/app-graph/Node';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useConnections } from '@dxos/plugin-graph/hooks';
@@ -40,7 +40,7 @@ const NO_EMPTY_GROUPS: ReadonlySet<string> = new Set();
  * no contributor at all) and of the space's contents (the Assistant sections appear with the first
  * chat), so it is read reactively rather than decided once.
  */
-const useEmptyGroupIds = (graph: Graph.ExpandableGraph, nodes: Node.Node[]): ReadonlySet<string> => {
+const useEmptyGroupIds = (graph: AppGraph.ExpandableGraph, nodes: AppGraphNode.Node[]): ReadonlySet<string> => {
   const groupIds = useMemo(
     () => nodes.filter((node) => node.properties.disposition === 'group').map((node) => node.id),
     [nodes],
@@ -57,7 +57,7 @@ const useEmptyGroupIds = (graph: Graph.ExpandableGraph, nodes: Node.Node[]): Rea
   // the browser paints, instead of a frame later.
   useLayoutEffect(() => {
     for (const groupId of groupKey.split('\n').filter(Boolean)) {
-      Graph.expandSync(graph, groupId, 'child');
+      AppGraph.expandSync(graph, groupId, 'child');
     }
     setExpandedKey(groupKey);
   }, [graph, groupKey]);
@@ -134,7 +134,7 @@ export const NavBranch = ({ id }: NavBranchProps) => {
   );
 };
 
-const NavBranchTile: MosaicStackTileComponent<Node.Node> = (props) => {
+const NavBranchTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
   const data = props.data;
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();

@@ -99,6 +99,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-panproto": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",

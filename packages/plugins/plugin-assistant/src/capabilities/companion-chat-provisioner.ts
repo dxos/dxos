@@ -9,8 +9,8 @@ import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as Graph from '@dxos/app-graph/Graph';
-import type * as Node from '@dxos/app-graph/Node';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Obj } from '@dxos/echo';
@@ -80,7 +80,7 @@ export default Capability.makeModule(
      * so the caller can tear down the connection subscription.
      */
     const provisionForPlank = (plankId: string, companionVariant: string | undefined): boolean => {
-      const node: Node.Node | null = Graph.getNode(graph, plankId).pipe(Option.getOrNull);
+      const node: AppGraphNode.Node | null = AppGraph.getNode(graph, plankId).pipe(Option.getOrNull);
       if (!node || !Obj.isObject(node.data) || Obj.instanceOf(Chat.Chat, node.data)) {
         return false;
       }
@@ -177,11 +177,11 @@ export default Capability.makeModule(
  * Returns the variant that would actually be rendered for a given plank.
  */
 const resolveEffectiveVariant = (
-  graph: Graph.BaseGraph,
+  graph: AppGraph.BaseGraph,
   plankId: string,
   preferredVariant: string | undefined,
 ): string | undefined => {
-  const companions = Graph.getConnections(graph, plankId, 'child')
+  const companions = AppGraph.getConnections(graph, plankId, 'child')
     .filter((node) => node.type === DeckSchema.PLANK_COMPANION_TYPE)
     .toSorted((a, b) => Position.compare(a.properties, b.properties));
 

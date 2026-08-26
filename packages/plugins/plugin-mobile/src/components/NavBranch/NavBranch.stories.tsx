@@ -11,13 +11,14 @@ import { expect, within } from 'storybook/test';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import * as Graph from '@dxos/app-graph/Graph';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
+import * as GraphNode from '@dxos/graph/GraphNode';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Dnd } from '@dxos/react-ui-dnd';
 import { withLayout } from '@dxos/react-ui/testing';
@@ -28,22 +29,22 @@ import { NavBranch } from './NavBranch';
 
 // The graph composes a child's id from its parent's path, so an extension matching a contributed node
 // has to name the full path, not the id the connector declared.
-const BRANCH_ID = `${Node.RootId}/branchWithGroups`;
-const EMPTY_BRANCH_ID = `${Node.RootId}/branchEmpty`;
+const BRANCH_ID = `${GraphNode.RootId}/branchWithGroups`;
+const EMPTY_BRANCH_ID = `${GraphNode.RootId}/branchEmpty`;
 const EMPTY_GROUP_ID = `${BRANCH_ID}/groupEmpty`;
 const POPULATED_GROUP_ID = `${BRANCH_ID}/groupPopulated`;
 const segment = (id: string) => id.slice(id.lastIndexOf('/') + 1);
 
 const makeBranch = (id: string, label: string) =>
-  Node.make({ id: segment(id), type: 'story-branch', data: null, properties: { label, role: 'branch' } });
+  AppGraphNode.make({ id: segment(id), type: 'story-branch', data: null, properties: { label, role: 'branch' } });
 
 const makeGroup = (id: string, label: string) =>
-  Node.make({ id: segment(id), type: 'story-group', data: null, properties: { label, disposition: 'group' } });
+  AppGraphNode.make({ id: segment(id), type: 'story-group', data: null, properties: { label, disposition: 'group' } });
 
 const makeLeaf = (id: string, label: string) =>
-  Node.make({ id, type: 'story-leaf', data: { id }, properties: { label, icon: 'ph--file--regular' } });
+  AppGraphNode.make({ id, type: 'story-leaf', data: { id }, properties: { label, icon: 'ph--file--regular' } });
 
-const whenId = (id: string) => (node: Node.Node) => (node.id === id ? Option.some(node) : Option.none());
+const whenId = (id: string) => (node: AppGraphNode.Node) => (node.id === id ? Option.some(node) : Option.none());
 
 /**
  * A branch holding a leaf, a group nothing contributes to, and a group with a child — the shape the
@@ -54,13 +55,13 @@ const storyGraph = Capability.inlineModule(
   { provides: [AppCapabilities.AppGraphBuilder] },
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'roots',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([makeBranch(BRANCH_ID, 'With groups'), makeBranch(EMPTY_BRANCH_ID, 'Empty branch')]),
       }),
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'branchChildren',
         match: whenId(BRANCH_ID),
         connector: () =>
@@ -70,7 +71,7 @@ const storyGraph = Capability.inlineModule(
             makeGroup(POPULATED_GROUP_ID, 'Populated group'),
           ]),
       }),
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'populatedGroupChildren',
         match: whenId(POPULATED_GROUP_ID),
         connector: () => Effect.succeed([makeLeaf('leaf-b', 'Leaf B')]),
@@ -92,8 +93,8 @@ const StoryRoot = ({ id }: { id: string }) => {
   // children already resolved — the state the panel above it leaves behind in the app. The cold-mount
   // story is about whether the *groups* one level further down are known, not about this.
   useState(() => {
-    Graph.expandSync(graph, Node.RootId, 'child');
-    Graph.expandSync(graph, id, 'child');
+    AppGraph.expandSync(graph, GraphNode.RootId, 'child');
+    AppGraph.expandSync(graph, id, 'child');
   });
 
   return (

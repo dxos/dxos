@@ -170,6 +170,7 @@
     "@dxos/echo-react": "workspace:*",
     "@dxos/edge-compute": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",

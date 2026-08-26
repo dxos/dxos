@@ -188,44 +188,41 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
 });
 const gpt1 = () => {
   const model = ComputeGraphModel.create();
-  model.builder
-    .createNode({ id: 'gpt1-INPUT', type: NODE_INPUT })
-    .createNode({ id: 'gpt1-GPT', type: 'gpt' })
-    .createNode({ id: 'gpt1-OUTPUT', type: NODE_OUTPUT })
-    .createEdge({ node: 'gpt1-INPUT', property: 'prompt' }, { node: 'gpt1-GPT', property: 'prompt' })
-    .createEdge({ node: 'gpt1-GPT', property: 'text' }, { node: 'gpt1-OUTPUT', property: 'text' });
+  model.createNode({ id: 'gpt1-INPUT', type: NODE_INPUT });
+  model.createNode({ id: 'gpt1-GPT', type: 'gpt' });
+  model.createNode({ id: 'gpt1-OUTPUT', type: NODE_OUTPUT });
+  model.createEdge({ node: 'gpt1-INPUT', property: 'prompt' }, { node: 'gpt1-GPT', property: 'prompt' });
+  model.createEdge({ node: 'gpt1-GPT', property: 'text' }, { node: 'gpt1-OUTPUT', property: 'text' });
 
   return model;
 };
 
 const templateGpt = () => {
   const model = ComputeGraphModel.create();
-  model.builder
-    .createNode({ id: 'tg-INPUT', type: NODE_INPUT })
-    .createNode({
-      id: 'tg-TEMPLATE',
-      type: 'template',
-      valueType: 'string',
-      value: 'You are a helpful assistant. Always reply concisely.',
-    })
-    .createNode({ id: 'tg-GPT', type: 'gpt' })
-    .createNode({ id: 'tg-OUTPUT', type: NODE_OUTPUT })
-    .createEdge({ node: 'tg-INPUT', property: 'prompt' }, { node: 'tg-GPT', property: 'prompt' })
-    .createEdge({ node: 'tg-TEMPLATE', property: DEFAULT_OUTPUT }, { node: 'tg-GPT', property: 'systemPrompt' })
-    .createEdge({ node: 'tg-GPT', property: 'text' }, { node: 'tg-OUTPUT', property: 'text' });
+  model.createNode({ id: 'tg-INPUT', type: NODE_INPUT });
+  model.createNode({
+    id: 'tg-TEMPLATE',
+    type: 'template',
+    valueType: 'string',
+    value: 'You are a helpful assistant. Always reply concisely.',
+  });
+  model.createNode({ id: 'tg-GPT', type: 'gpt' });
+  model.createNode({ id: 'tg-OUTPUT', type: NODE_OUTPUT });
+  model.createEdge({ node: 'tg-INPUT', property: 'prompt' }, { node: 'tg-GPT', property: 'prompt' });
+  model.createEdge({ node: 'tg-TEMPLATE', property: DEFAULT_OUTPUT }, { node: 'tg-GPT', property: 'systemPrompt' });
+  model.createEdge({ node: 'tg-GPT', property: 'text' }, { node: 'tg-OUTPUT', property: 'text' });
 
   return model;
 };
 
 const gpt2 = () => {
   const model = ComputeGraphModel.create();
-  model.builder
-    .createNode({ id: 'gpt2-INPUT', type: NODE_INPUT })
-    .createNode({ id: 'gpt2-GPT', type: 'gpt' })
-    .createNode({ id: 'gpt2-OUTPUT', type: NODE_OUTPUT })
-    .createEdge({ node: 'gpt2-INPUT', property: 'prompt' }, { node: 'gpt2-GPT', property: 'prompt' })
-    .createEdge({ node: 'gpt2-GPT', property: 'text' }, { node: 'gpt2-OUTPUT', property: 'text' })
-    .createEdge({ node: 'gpt2-GPT', property: 'tokenStream' }, { node: 'gpt2-OUTPUT', property: 'tokenStream' });
+  model.createNode({ id: 'gpt2-INPUT', type: NODE_INPUT });
+  model.createNode({ id: 'gpt2-GPT', type: 'gpt' });
+  model.createNode({ id: 'gpt2-OUTPUT', type: NODE_OUTPUT });
+  model.createEdge({ node: 'gpt2-INPUT', property: 'prompt' }, { node: 'gpt2-GPT', property: 'prompt' });
+  model.createEdge({ node: 'gpt2-GPT', property: 'text' }, { node: 'gpt2-OUTPUT', property: 'text' });
+  model.createEdge({ node: 'gpt2-GPT', property: 'tokenStream' }, { node: 'gpt2-OUTPUT', property: 'tokenStream' });
 
   return model;
 };

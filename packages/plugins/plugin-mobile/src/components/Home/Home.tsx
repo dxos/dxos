@@ -5,9 +5,10 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { useConnections } from '@dxos/plugin-graph/hooks';
 import { Avatar, Icon, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
@@ -28,7 +29,7 @@ export const Home = (_: HomeProps) => {
   const { t } = useTranslation(meta.profile.key);
   // Profile and settings moved to the navbar's main menu; Home lists spaces only.
   const items = useItemsByDisposition('workspace');
-  useExpandPath(Node.RootId);
+  useExpandPath(GraphNode.RootId);
 
   const { results, handleSearch } = useSearchListResults({
     items,
@@ -54,7 +55,7 @@ export const Home = (_: HomeProps) => {
   );
 };
 
-const WorkspaceTile: MosaicStackTileComponent<Node.Node> = (props) => {
+const WorkspaceTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
   const data = props.data;
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
@@ -125,13 +126,13 @@ const WorkspaceTile: MosaicStackTileComponent<Node.Node> = (props) => {
 };
 
 /** Filters nodes by disposition. */
-const filterItems = (node: Node.Node, disposition: string) => {
+const filterItems = (node: AppGraphNode.Node, disposition: string) => {
   return node.properties.disposition === disposition;
 };
 
 /** Returns root-level items filtered by disposition. */
 const useItemsByDisposition = (disposition: string) => {
   const { graph } = useAppGraph();
-  const connections = useConnections(graph, Node.RootId, 'child');
+  const connections = useConnections(graph, GraphNode.RootId, 'child');
   return useMemo(() => connections.filter((node) => filterItems(node, disposition)), [connections, disposition]);
 };

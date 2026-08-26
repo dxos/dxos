@@ -161,6 +161,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/halo-react": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",

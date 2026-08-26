@@ -8,8 +8,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type Space, isSpace } from '@dxos/client/echo';
 import { Annotation, Filter, Obj, Query, Ref, Registry, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -73,7 +73,7 @@ export const createTypeSectionExtension = (
      * Use when the section should live under a group node rather than directly under a space.
      * The match must still return `Option<Space>` so the connector can query the space db.
      */
-    match?: (node: Node.Node) => Option.Option<Space>;
+    match?: (node: AppGraphNode.Node) => Option.Option<Space>;
     /**
      * Group segment the section nests under (e.g. `GraphPath.GroupSegments.ai`), when `match` places it
      * beneath a navtree group rather than directly under the space. Included in the forward-resolution
@@ -104,7 +104,7 @@ export const createTypeSectionExtension = (
      */
     sectionUrlKey?: string;
   },
-): Effect.Effect<GraphBuilder.BuilderExtension[], never, never> => {
+): Effect.Effect<AppGraphBuilder.BuilderExtension[], never, never> => {
   const typename = Type.getTypename(type);
   invariant(typename, 'Schema must have a typename to create a type section extension.');
 
@@ -117,7 +117,9 @@ export const createTypeSectionExtension = (
 
   // Only allow reordering within this section — reject drops from other type sections.
   const canDropSameType = (source: TreeData) =>
-    Node.isGraphNode(source.item) && Obj.isObject(source.item.data) && Obj.getTypename(source.item.data) === typename;
+    AppGraphNode.isGraphNode(source.item) &&
+    Obj.isObject(source.item.data) &&
+    Obj.getTypename(source.item.data) === typename;
 
   /** Node-id segments from the space down to the section node — the section's own path. */
   const sectionSegments = options.groupSegment ? [options.groupSegment, typename] : [typename];
@@ -151,7 +153,7 @@ export const createTypeSectionExtension = (
   };
 
   /** Matches this type's section node (the parent the objects and the create action hang off). */
-  const whenSection = (node: Node.Node): Option.Option<Space> => {
+  const whenSection = (node: AppGraphNode.Node): Option.Option<Space> => {
     const space = isSpace(node.properties.space) ? node.properties.space : undefined;
     // `testId` is the exclusive sentinel: object nodes share `type === typename` but carry
     // `testId: 'spacePlugin.object'`, so this guard distinguishes section from object nodes.
@@ -161,7 +163,7 @@ export const createTypeSectionExtension = (
   // The section node itself. Addressable in its own right only when sectionUrlKey is declared —
   // that makes it a singleton so selecting it opens a plank. Without it the node is a bare
   // container and only its objects get a URL.
-  const sectionExtension = GraphBuilder.createExtension({
+  const sectionExtension = AppGraphBuilder.createExtension({
     id: typename,
     url: options.sectionUrlKey ? { key: options.sectionUrlKey, kind: 'singleton', path: sectionSegments } : undefined,
     match: options.match ?? AppNodeMatcher.whenSpace,
@@ -185,7 +187,7 @@ export const createTypeSectionExtension = (
       const iconHue = annotation?.hue;
 
       return Effect.succeed([
-        Node.make({
+        AppGraphNode.make({
           id: typename,
           type: typename,
           data: options.sectionUrlKey ? (typeEntity ?? null) : null,
@@ -207,7 +209,7 @@ export const createTypeSectionExtension = (
 
   // The section's objects — always a separate extension so each object gets its own item binding
   // (keyed by urlKey) independent of how the section node itself is addressed.
-  const objectsExtension = GraphBuilder.createExtension({
+  const objectsExtension = AppGraphBuilder.createExtension({
     id: `${typename}.sectionObjects`,
     url: { key: options.urlKey, kind: 'item', path: sectionSegments },
     match: whenSection,
@@ -225,12 +227,12 @@ export const createTypeSectionExtension = (
 
   const { createObject } = options;
 
-  const actionsExtension = GraphBuilder.createExtension({
+  const actionsExtension = AppGraphBuilder.createExtension({
     id: `${typename}.sectionCreate`,
     match: whenSection,
     actions: (space) =>
       Effect.succeed([
-        Node.makeAction({
+        AppGraphNode.makeAction({
           id: 'create',
           data: () => createObject(space),
           properties: {

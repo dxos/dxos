@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
@@ -78,7 +78,7 @@ export default Capability.makeModule(
  * (e.g. plugin-brain's mailbox Analyze action).
  */
 export const createMailboxProjectExtension = () =>
-  GraphBuilder.createExtension({
+  AppGraphBuilder.createExtension({
     id: 'mailboxProjectActions',
     match: (node) =>
       node.properties.systemTag === 'inbox' && Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none(),
@@ -89,7 +89,7 @@ export const createMailboxProjectExtension = () =>
       }
 
       return Effect.succeed([
-        Node.makeAction({
+        AppGraphNode.makeAction({
           id: 'setupProject',
           data: () =>
             Effect.gen(function* () {
@@ -123,7 +123,7 @@ export const createMailboxProjectExtension = () =>
  * through whichever project currently parents the chat.
  */
 export const createProjectChatsExtension = () =>
-  GraphBuilder.createExtension({
+  AppGraphBuilder.createExtension({
     id: 'projectChats',
     match: (node) => (Obj.instanceOf(Project.Project, node.data) ? Option.some(node.data) : Option.none()),
     connector: (project, get) => {
@@ -149,12 +149,12 @@ export const createProjectChatsExtension = () =>
  * the toolbar grows, and a shared `toolbar` disposition here would double up with it.
  */
 export const createProjectActionExtension = () =>
-  GraphBuilder.createExtension({
+  AppGraphBuilder.createExtension({
     id: 'projectActions',
     match: (node) => (Obj.instanceOf(Project.Project, node.data) ? Option.some(node.data) : Option.none()),
     actions: (project) =>
       Effect.succeed([
-        Node.makeAction({
+        AppGraphNode.makeAction({
           id: AssistantOperation.CreateChat.meta.key,
           data: () =>
             Effect.gen(function* () {
@@ -202,7 +202,7 @@ const isArtifactsBranch = (data: unknown): data is ArtifactsBranch =>
  * graph merges them, but chats are ECHO children while artifacts hang off the ref array.
  */
 export const createProjectArtifactsExtension = () =>
-  GraphBuilder.createExtension({
+  AppGraphBuilder.createExtension({
     id: 'projectArtifacts',
     match: (node) =>
       Obj.instanceOf(Project.Project, node.data)
@@ -212,7 +212,7 @@ export const createProjectArtifactsExtension = () =>
       Effect.succeed([
         // Built inline rather than via `AppNode.makeSection`: that helper takes a typed `Space`, which
         // would pull @dxos/client into this plugin's dependencies for a value it only passes through.
-        Node.make({
+        AppGraphNode.make({
           id: ARTIFACTS_SEGMENT,
           type: ARTIFACTS_SECTION_TYPE,
           // Wrapped, not the bare project: every Project-matching extension here (chats, actions,
@@ -242,7 +242,7 @@ export const createProjectArtifactsExtension = () =>
  * link is written here rather than left to the dialog's own placement.
  */
 export const createProjectArtifactsActionExtension = () =>
-  GraphBuilder.createExtension({
+  AppGraphBuilder.createExtension({
     id: 'projectArtifactsActions',
     match: (node) =>
       node.type === ARTIFACTS_SECTION_TYPE && isArtifactsBranch(node.data)
@@ -277,7 +277,7 @@ export const createProjectArtifactsActionExtension = () =>
     },
     actions: ({ project, nodeId }) =>
       Effect.succeed([
-        Node.makeAction({
+        AppGraphNode.makeAction({
           id: SpaceOperation.OpenObjectForm.meta.key,
           data: () =>
             Effect.gen(function* () {

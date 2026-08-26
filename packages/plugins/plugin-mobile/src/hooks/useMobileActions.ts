@@ -7,11 +7,12 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as Operation from '@dxos/compute/Operation';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { invariant } from '@dxos/invariant';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
@@ -75,7 +76,7 @@ const createMobileCompanionActions = (
   // An atom body cannot call `useMobileStack`, so its root-panel fallback is mirrored inline here.
   const activeId =
     deck.active[deck.active.length - 1] ??
-    (state.activeDeck === DeckSchema.DEFAULT_DECK_ID ? Node.RootId : state.activeDeck);
+    (state.activeDeck === DeckSchema.DEFAULT_DECK_ID ? GraphNode.RootId : state.activeDeck);
 
   // Keys off the active plank's own child connections rather than `deck.companionPlanks` (the desktop
   // side-by-side flag a declared-chain open in open.ts carries onto a replacement plank), so that
@@ -91,7 +92,7 @@ const createMobileCompanionActions = (
     const companionVariant = Attention.getLinkedVariant(companion.id);
     const companionAction = {
       id: `${idPrefix}-companion-${companion.id}`,
-      type: Node.ActionType,
+      type: AppGraphNode.ActionType,
       properties: {
         icon: companion.properties.icon ?? 'ph--circle-dashed--regular',
         label: companion.properties.label,
@@ -130,7 +131,7 @@ const createMobileAccountMenuSection = (
   get: Atom.AtomContext,
   parentId: string,
 ): Pick<ActionGraphProps, 'nodes' | 'edges'> => {
-  const connections = get(graph.connections(Node.RootId, 'child'));
+  const connections = get(graph.connections(GraphNode.RootId, 'child'));
   const userAccountItem = connections.find((node) => node.properties.disposition === 'user-account');
   const pinnedItems = connections
     .filter((node) => node.properties.disposition === 'pin-end')
@@ -143,7 +144,7 @@ const createMobileAccountMenuSection = (
   const separator = createLineSeparator(`${parentId}-account-separator`, parentId);
   const actions = displacedItems.map((item) => ({
     id: `${parentId}-account-${item.id}`,
-    type: Node.ActionType,
+    type: AppGraphNode.ActionType,
     properties: {
       icon: item.properties.icon,
       label: item.properties.label,
@@ -193,8 +194,8 @@ export const useMobileNavbarActions = (): MobileNavbarActions => {
         edges.push({ source: 'root', target: mainMenuGroup.id, relation: 'child' });
 
         // `graphActions` returns typed `ActionGraphProps` directly, so no cast is needed to bridge
-        // `@dxos/app-graph`'s `Node.ActionLike[]` into `@dxos/react-ui-menu`'s node/edge shape.
-        const menu = graphActions(graph, get, Node.RootId, {
+        // `@dxos/app-graph`'s `AppGraphNode.ActionLike[]` into `@dxos/react-ui-menu`'s node/edge shape.
+        const menu = graphActions(graph, get, GraphNode.RootId, {
           rootId: MAIN_MENU_GROUP_ID,
           filter: (action) => action.properties.disposition === 'menu',
         });
@@ -244,7 +245,7 @@ export const useMobileDrawerActions = (consumerName: string): MobileDrawerAction
           const isExpanded = state.complementarySidebarState === 'expanded';
           const toggleExpandAction = {
             id: 'drawer-toggle-expand',
-            type: Node.ActionType,
+            type: AppGraphNode.ActionType,
             properties: {
               icon: isExpanded ? 'ph--arrow-down--regular' : 'ph--arrow-up--regular',
               label: isExpanded ? t('collapse-drawer.label') : t('expand-drawer.label'),
@@ -264,7 +265,7 @@ export const useMobileDrawerActions = (consumerName: string): MobileDrawerAction
 
         const closeAction = {
           id: 'drawer-close',
-          type: Node.ActionType,
+          type: AppGraphNode.ActionType,
           properties: {
             icon: 'ph--x--regular',
             label: t('close-drawer.label'),

@@ -182,6 +182,7 @@
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/halo": "workspace:*",
     "@dxos/halo-adapter-client": "workspace:*",
     "@dxos/halo-react": "workspace:*",
