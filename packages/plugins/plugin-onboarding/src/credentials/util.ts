@@ -2,12 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-/**
- * Appends `path` to `hubUrl`, keeping any path it carries — hub is addressed under EDGE's `/hub`
- * prefix, and `new URL('/account/login', base)` would discard it.
- */
-const hubEndpoint = (hubUrl: string, path: string): string =>
-  `${hubUrl.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
+/** Slash-terminated so a relative path resolves beneath hub's `/hub` prefix rather than replacing it. */
+const hubBase = (hubUrl: string): string => `${hubUrl.replace(/\/+$/, '')}/`;
 
 /**
  * POST `/account/request-access` on hub-service. Adds an email to the waitlist
@@ -25,7 +21,7 @@ export const joinWaitlist = async ({
   identityDid?: string;
   message?: string;
 }): Promise<void> => {
-  await fetch(hubEndpoint(hubUrl, '/account/request-access'), {
+  await fetch(new URL('account/request-access', hubBase(hubUrl)), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, identityDid, message }),
@@ -58,7 +54,7 @@ export const login = async ({
   identityKey?: string;
   redirectUrl?: string;
 }): Promise<{ needsIdentity?: boolean; admitted?: boolean }> => {
-  const response = await fetch(hubEndpoint(hubUrl, '/account/login'), {
+  const response = await fetch(new URL('account/login', hubBase(hubUrl)), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, identityDid, identityKey, redirectUrl }),

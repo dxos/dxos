@@ -6,7 +6,7 @@
 // dependencies so they can be bundled into workerd / browser environments
 // without pulling in protobufjs or similar node-only packages.
 
-const LEGACY_CORS_PROXY_URL = 'https://dxos.network/cors';
+const LEGACY_CORS_PROXY_URL = 'https://dxos.network/cors/';
 
 // Matches EDGE_CLIENT_TAG_HEADER from @dxos/protocols.
 // Duplicated here to avoid importing the heavy protocols bundle in edge environments.
@@ -26,9 +26,9 @@ const remapAuthorizationForProxy = (headers: Headers): Headers => {
  * TEMPORARY — delete when the authenticated `/proxy/*` route on edge ships.
  */
 export const proxyFetchLegacy = (target: URL, init: RequestInit = {}, clientTag?: string): Promise<Response> => {
-  // Appended to the base path rather than resolved as an absolute path: `new URL('/a', base)` would
-  // discard the base's own `/cors` prefix and address edge's root instead.
-  const proxyUrl = new URL(`${LEGACY_CORS_PROXY_URL}/${target.host}${target.pathname}${target.search}`);
+  // Relative to the slash-terminated base so the `/cors` prefix survives; an absolute path would
+  // replace it and address edge's root instead.
+  const proxyUrl = new URL(`${target.host}${target.pathname}${target.search}`, LEGACY_CORS_PROXY_URL);
   if (target.protocol === 'http:') {
     proxyUrl.searchParams.set('scheme', 'http');
   }

@@ -160,8 +160,8 @@ export const uploadScreenshot = async (
   form.append('file', blob, `composer-${Date.now()}.${ext}`);
 
   try {
-    // Appended, not resolved: `new URL('/upload', base)` would drop the base's `/image` prefix.
-    const res = await fetch(`${serviceUrl.replace(/\/+$/, '')}/upload`, {
+    // Relative to a slash-terminated base so the `/image` prefix survives.
+    const res = await fetch(new URL('upload', `${serviceUrl.replace(/\/+$/, '')}/`), {
       method: 'POST',
       body: form,
       // 15s aligns with plugin-crm's external-fetch timeout.

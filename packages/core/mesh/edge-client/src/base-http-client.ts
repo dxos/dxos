@@ -82,7 +82,10 @@ export abstract class BaseHttpClient {
   private _authPrefetch: Promise<void> | undefined;
 
   constructor(baseUrl: string, options?: BaseHttpClientOptions) {
-    this._baseUrl = getEdgeUrlWithProtocol(baseUrl, 'http');
+    // Slash-terminated so a base that carries a service prefix (`…/hub`) composes with relative
+    // request paths; `new URL('account/me', '…/hub')` would otherwise resolve to `…/account/me`.
+    const url = getEdgeUrlWithProtocol(baseUrl, 'http');
+    this._baseUrl = url.endsWith('/') ? url : `${url}/`;
     this._clientTag = options?.clientTag;
     this._apiKey = options?.apiKey;
     log('created', { url: this._baseUrl });
