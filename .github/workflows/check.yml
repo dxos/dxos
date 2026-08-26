@@ -191,14 +191,8 @@ jobs:
         continue-on-error: true
         run: moon run composer-app:check-plugin-set
 
-      # The docs site's internal links: `starlight-links-validator` runs as the last phase of
-      # `astro build`, so bundling the site IS the link check — there is no narrower task to call.
-      # That build used to happen only in the nightly `Deploy Apps` run, which let a broken
-      # cross-reference merge clean and resurface hours later as a failed preview deploy of every app
-      # (run 32942291591). `docs:bundle` rather than a link-only task of our own, so what gates the PR
-      # and what the deploy runs cannot drift apart. Rides stage 2's warm `^:build` graph for the same
-      # reason the plugin-set check does; a PR that touches neither the docs nor their dependencies
-      # replays the moon cache instead of rebuilding.
+      # `starlight-links-validator` runs as the last phase of `astro build`, so bundling the site IS
+      # the link check.
       - name: Check docs links
         id: docs
         continue-on-error: true

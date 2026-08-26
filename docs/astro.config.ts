@@ -82,8 +82,8 @@ export default defineConfig({
           collapsed: false,
         },
       ],
-      // `/typedoc/**` is generated output and `/blog/**`, `/privacy` and `/terms` are custom pages under
-      // `src/pages`, which the validator cannot resolve because they are not content-collection routes.
+      // The validator cannot resolve links to custom pages under `src/pages` (`/blog`, `/privacy`,
+      // `/terms`) — they are not content-collection routes.
       plugins: [starlightLinksValidator({ exclude: ['/typedoc/**', '/blog/**', '/privacy', '/terms'] })],
       // PostHog snippet: https://posthog.com/docs/getting-started/install
       head:
