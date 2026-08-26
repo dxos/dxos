@@ -38,21 +38,25 @@ test.describe('Assistant', () => {
       recordVideo: { dir: testInfo.outputDir, size: { width: 1280, height: 800 } },
     });
 
-    const host = new AppManager(context, false);
-    await host.init();
-    await host.createSpace();
-    await host.createObject({ type: 'Chat' });
+    // Closed in `finally` because the recording is only written out on context close — a failed run is
+    // the one whose video is worth watching.
+    try {
+      const host = new AppManager(context, false);
+      await host.init();
+      await host.createSpace();
+      await host.createObject({ type: 'Chat' });
 
-    const assistant = new Assistant(Assistant.plank(host.page));
-    await expect(assistant.prompt).toBeVisible({ timeout: SURFACE_TIMEOUT });
+      const assistant = new Assistant(Assistant.plank(host.page));
+      await expect(assistant.prompt).toBeVisible({ timeout: SURFACE_TIMEOUT });
 
-    await assistant.send(PROMPT);
-    await expect.poll(async () => REPLY.test(await assistant.text()), { timeout: RESPONSE_TIMEOUT }).toBe(true);
+      await assistant.send(PROMPT);
+      await expect.poll(async () => REPLY.test(await assistant.text()), { timeout: RESPONSE_TIMEOUT }).toBe(true);
 
-    // The video ends at context close, so leave the answer on screen long enough to read.
-    await host.page.waitForTimeout(3_000);
-    await context.close();
-
-    log.info('video recorded', { dir: testInfo.outputDir });
+      // Leave the answer on screen long enough to read.
+      await host.page.waitForTimeout(3_000);
+    } finally {
+      await context.close();
+      log.info('video recorded', { dir: testInfo.outputDir });
+    }
   });
 });

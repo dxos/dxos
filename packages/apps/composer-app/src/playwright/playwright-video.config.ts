@@ -6,6 +6,11 @@ import { defineConfig } from '@playwright/test';
 
 import { e2ePreset } from '@dxos/test-utils/playwright';
 
+// The spec and the served app both require PWA off, and this config exists only to record that run —
+// so it sets the flag rather than exiting on a bare invocation that forgot it. Workers and the
+// `webServer` command inherit this, as both are spawned after the config loads.
+process.env.DX_PWA = 'false';
+
 const preset = e2ePreset(import.meta.dirname);
 
 export default defineConfig({
