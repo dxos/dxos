@@ -89,38 +89,133 @@ came from. A viewer then sees the spec and the app agreeing, which is the whole 
 
 ## 4. Trim the dead air
 
-An agent-driven recording is mostly still frames: the browser holds one frame while you decide the
-next gesture. The chess run below was **12:52 of which 2:56 was not dead air** — one still stretch ran
-34.8 seconds.
+An agent-driven recording is almost entirely still frames: the browser holds one frame while you decide
+the next gesture. Measure before tuning — `--report` costs one decode and no encode:
 
 ```bash
-node .agents/skills/recording-demos/scripts/trim-static.mjs --in /tmp/demo/*.webm --out demo.webm
+node .agents/skills/recording-demos/scripts/trim-static.mjs --in /tmp/demo/*.webm --report
 ```
-
-It caps each motionless stretch at `--max-static` seconds (default 1.5) and reports what it did:
 
 ```json
 {
-  "frames": { "read": 11591, "kept": 2639 },
-  "seconds": { "before": 772.6, "after": 175.9 },
-  "reduction": "77%",
-  "longestStillRun": "34.8s",
-  "cap": "1.5s"
+  "frames": 11591,
+  "motionFrames": 254,
+  "motionSeconds": 16.9,
+  "stillRuns": 135,
+  "stillSeconds": 755.8,
+  "longestStillRun": 34.8,
+  "atCap": { "0.5s": 76.6, "1s": 130.1, "1.5s": 179 }
 }
 ```
 
-Frames are compared on a strided sample of the Y plane with a tolerance, because a caret or a spinner
-changes a few pixels every frame and an exact comparison finds no still stretches at all. Raise
-`--threshold` if slow animations are being treated as motion; lower it if real motion is being cut.
+Read that as: **16.9 seconds of motion in 12:52**, split by 135 separate pauses. The cap, not the
+content, decides the length — 135 pauses × 1.5s is ~3 minutes on its own. `atCap` prices each choice
+before you spend an encode on it.
 
-**This needs a full ffmpeg.** The build bundled with Playwright has no `rawvideo`, no PNG decoder and
-none of `select`/`concat`/`mpdecimate`, so frames cannot be fed back into it. `apt-get update &&
-apt-get install -y ffmpeg`, or point `FFMPEG_PATH` at a real one.
+```bash
+node .agents/skills/recording-demos/scripts/trim-static.mjs \
+  --in /tmp/demo/*.webm --out demo.webm --max-static 0.5 --caption-hold 2.5
+```
+
+Two caps, because the hold budget should be spent where information appears: `--caption-hold` for a
+pause that begins just after a step caption went up (the one the viewer has to read), `--max-static`
+for every other pause. Uniform capping buys length without readability.
+
+### Tuning the motion metric
+
+Frames are compared on a strided sample of the Y plane, counting samples that changed by more than
+`--delta` and calling it motion past `--threshold` (a _fraction_ of samples, default 0.002).
+
+**Do not average the difference over the frame.** That was the first implementation and it silently
+trimmed the chess drags: a piece crossing two squares is ~0.7% of a 1280×800 frame, which averages
+down into the same range as a blinking caret. The symptom is subtle — the video still looks plausible,
+but gestures are missing and `motionSeconds` is implausibly low (it read 4.5s for a run containing four
+drags; the fraction metric found 8.3s). If drags look clipped, check `--report` first.
+
+Raise `--threshold` if a spinner or animation is being counted as motion; lower it if real gestures are
+being cut.
+
+**A full ffmpeg is required.** The build bundled with Playwright is stripped — no `rawvideo`, no PNG
+decoder, none of `select`/`concat`/`mpdecimate` — so frames cannot be fed back into it at all.
+`apt-get update && apt-get install -y ffmpeg`, or point `FFMPEG_PATH` at a real one. (In the cloud
+sandbox `apt-get update` first: the preinstalled index is stale and the install 404s without it.)
+
+## 4b. Step titles as real annotations
+
+`.webm` carries time-ranged annotations, and the trimmer writes both from the driver's `timeline.json`
+— so the steps survive outside the burned-in banner:
+
+- **Matroska chapters** — titles with start/end times, navigable in mpv, VLC and mkvtoolnix.
+- **An embedded WebVTT track** (`Stream #0:1: Subtitle: webvtt`), which is part of the WebM spec, and
+  carries the caption's subtitle line too.
+
+Both are verified by reading the output back:
+
+```bash
+ffmpeg -hide_banner -i demo.annotated.webm 2>&1 | grep -E "Chapter #|title|Subtitle"
+```
+
+The trimmer remaps each caption's timestamp through the frames it dropped, so the annotations line up
+with the trimmed timeline rather than the original one. A `.vtt` sidecar is written next to the video
+for players that want it separately.
+
+**One caption per step, and let the step finish first.** Two captions issued back to back map to the
+same output frame, which becomes a zero-length chapter that players discard silently — the trimmer
+collapses those (keeping the later one, per `--min-chapter`), but the step title is then lost from the
+list. Caption the step, perform it, verify it, then caption the next.
 
 ## 5. Send it
 
-Attach the `.webm` (and any stills worth calling out) with `SendUserFile`. Say what was driven, which
-steps passed, and what the trim did — a video with no claim attached is not evidence of anything.
+`SendUserFile` with the `.webm` and any stills worth calling out. Say what was driven, which steps
+passed, and what the trim did — a video with no claim attached is not evidence of anything.
+
+The trimmer also writes a self-contained `<name>.html` viewer: the video plus a clickable step list
+that seeks. That is for local review — browsers implement neither half of what is muxed into the file
+(no browser has a chapter UI for Matroska, and `<video>` populates `textTracks` only from `<track>`
+elements in the page, never from an in-container WebVTT track), so a page is the only way to click
+through steps in a browser. It is **not** a route into a PR.
+
+## 5b. Attaching a demo to a PR
+
+Measured against this session's API, not assumed — the answer is narrower than it looks:
+
+| in a PR body/comment                                  | survives? | evidence                                     |
+| ----------------------------------------------------- | --------- | -------------------------------------------- |
+| bare URL                                              | **yes**   | stored verbatim                              |
+| `[text](url)` link                                    | **yes**   | stored verbatim                              |
+| `![poster](url)` image                                | **no**    | the `!` is stripped; it becomes a plain link |
+| `<video src=…>`, `<source>`, `<track>`, `<img src=…>` | **no**    | escaped and wrapped in backticks             |
+
+The session's API proxy neutralises any URL-bearing HTML tag on write — `<video controls width="600">`
+(no `src`) passes through untouched while `<video src="…">` is stored as ` ``&lt;video src="…"&gt;`` `.
+So an agent cannot emit an inline player or an inline image, whatever GitHub's own renderer would do
+with it. Test it the same way if this changes: patch a marker block into a PR body you own, read the
+body back through the API, restore it.
+
+What that leaves:
+
+1. **Ask the human to drag the file into the comment box.** GitHub's attachment upload is a web-UI
+   endpoint with no public API, and it is the only route to an inline player. It yields a
+   `https://github.com/user-attachments/assets/…` URL — and **bare URLs are not rewritten**, so once
+   that URL exists an agent can paste it into the body and it renders. This is the path to prefer.
+2. **An external bucket (R2, S3).** Credentials via `.secrets/` per `AGENTS.md`. The result is a plain
+   link, not a player, and no poster image — see the table.
+3. **A release asset.** `uploads.github.com` is reachable and release endpoints are repo-scoped, so it
+   is technically possible, but it creates a visible release. In this repo releases mean published
+   packages: outward-facing, so get explicit approval first.
+4. **Committing the video.** Avoid — a multi-megabyte blob stays in history forever.
+
+## 6. Watch the demo before shipping it
+
+Play it back, or step the frames, before attaching. Two different classes of problem only show up here:
+
+- **The recording is wrong.** Gestures clipped by an over-aggressive motion threshold, a caption that
+  covers the thing it describes, a step whose outcome never appears. Fix the recording.
+- **The app is wrong.** A demo is the first time anyone _watches_ the feature rather than asserting on
+  it, and it surfaces what tests do not: a flash of an empty state, a spinner that outlives its work, a
+  layout that jumps, an interaction that needs two attempts. **If the demo reveals a defect in
+  something you built earlier in this session, fix it now** — do not ship a video that documents your
+  own bug and say nothing. Re-record after the fix; the recording is cheap and the credibility is not.
 
 ## Running a `.mdl` flow this way
 

@@ -20,7 +20,7 @@
  */
 
 import { chromium } from '@playwright/test';
-import { mkdirSync, readdirSync } from 'node:fs';
+import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import path from 'node:path';
 
@@ -59,6 +59,14 @@ const context = await browser.newContext({
   recordVideo: { dir: options.out, size: viewport },
 });
 const page = await context.newPage();
+
+/**
+ * When each caption went up, measured from the first frame of the recording. `trim-static.mjs` remaps
+ * these onto the trimmed timeline and turns them into chapters and a WebVTT track, so the steps stay
+ * navigable instead of living only in burned-in pixels.
+ */
+const started = Date.now();
+const timeline = [];
 
 /** Captions are re-injected per call because a navigation wipes the overlay. */
 const CAPTION_ID = '__demo_caption__';
@@ -172,10 +180,11 @@ const handlers = {
   eval: async (command) => ({ value: await page.evaluate(command.expr) }),
   caption: async (command) => {
     await showCaption(command.value, command.subtitle);
+    timeline.push({ ms: Date.now() - started, text: command.value, subtitle: command.subtitle });
     if (command.hold) {
       await page.waitForTimeout(command.hold);
     }
-    return {};
+    return { at: (Date.now() - started) / 1000 };
   },
   clearCaption: async () => {
     await page.evaluate((id) => document.getElementById(id)?.remove(), CAPTION_ID);
@@ -191,10 +200,12 @@ const handlers = {
     return { file };
   },
   stop: async () => {
+    const timelineFile = path.join(options.out, 'timeline.json');
+    writeFileSync(timelineFile, JSON.stringify({ started, steps: timeline }, null, 2));
     await context.close();
     await browser.close();
     const video = readdirSync(options.out).find((entry) => entry.endsWith('.webm'));
-    return { video: video ? path.join(options.out, video) : undefined };
+    return { video: video ? path.join(options.out, video) : undefined, timeline: timelineFile, steps: timeline.length };
   },
 };
 
