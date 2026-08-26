@@ -32,6 +32,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Provider } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { useCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Obj } from '@dxos/echo';
@@ -49,7 +50,7 @@ import {
 } from '@dxos/pipeline-transcription';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
+import markdownDescriptorUrl from '@dxos/plugin-markdown/dxplugin.jsonc';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as ProgressPlugin from '@dxos/plugin-progress/ProgressPlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
@@ -72,6 +73,10 @@ import {
 import { PIPELINE_RUN, PipelineStoryContext } from '../modules';
 import { StoryRole } from '../modules';
 import { StoryModulesPlugin } from '../testing/modules';
+
+// Loaded once at module scope: a descriptor is data behind a URL, and the plugin arrays below
+// are built synchronously.
+const MarkdownPlugin = await EffectEx.runPromise(Plugin.loadManifest(markdownDescriptorUrl));
 
 const OWNER_EMAIL = 'alice@example.com';
 
@@ -514,7 +519,7 @@ const meta = {
     },
     plugins: [
       SpacePlugin({}),
-      MarkdownPlugin.make(),
+      MarkdownPlugin(),
       TranscriptionPlugin.make(),
       BrainPlugin.make(),
       ProgressPlugin.make(),

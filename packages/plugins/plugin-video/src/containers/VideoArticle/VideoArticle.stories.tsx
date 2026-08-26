@@ -6,11 +6,13 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { EffectEx } from '@dxos/effect';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
+import markdownDescriptorUrl from '@dxos/plugin-markdown/dxplugin.jsonc';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
@@ -22,6 +24,10 @@ import { translations } from '#translations';
 import { Video } from '#types';
 
 import { VideoArticle } from './VideoArticle';
+
+// Loaded once at module scope: a descriptor is data behind a URL, and the plugin arrays below
+// are built synchronously.
+const MarkdownPlugin = await EffectEx.runPromise(Plugin.loadManifest(markdownDescriptorUrl));
 
 const DefaultStory = () => {
   const [space] = useSpaces();
@@ -74,7 +80,7 @@ const meta = {
               yield* Effect.promise(() => space.db.flush({ indexes: true }));
             }),
         }),
-        MarkdownPlugin.make(),
+        MarkdownPlugin(),
         VideoPlugin(),
       ],
     }),

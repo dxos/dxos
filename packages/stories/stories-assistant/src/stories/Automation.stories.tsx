@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { RunInstructions, WebSearchSkill } from '@dxos/assistant-toolkit';
 import * as Instructions from '@dxos/compute/Instructions';
@@ -11,6 +12,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Reply } from '@dxos/compute/testing';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Query, Ref } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import * as ChessOperation from '@dxos/plugin-chess/ChessOperation';
 import { meta as automationMeta } from '@dxos/plugin-routine';
 import { Text } from '@dxos/schema';
@@ -120,9 +122,11 @@ export const WithChessTrigger: Story = {
 export const WithPrompt: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const MarkdownPlugin = await import('@dxos/plugin-markdown/dxplugin.jsonc');
+      const MarkdownPlugin = await import('@dxos/plugin-markdown/dxplugin.jsonc').then(({ default: url }) =>
+        EffectEx.runPromise(Plugin.loadManifest(url)),
+      );
       return {
-        plugins: [MarkdownPlugin.make()],
+        plugins: [MarkdownPlugin()],
       };
     },
     types: [Text.Text],

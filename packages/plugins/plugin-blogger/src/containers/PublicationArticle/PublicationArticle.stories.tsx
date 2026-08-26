@@ -8,11 +8,13 @@ import React, { useMemo } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Obj, Ref } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
+import markdownDescriptorUrl from '@dxos/plugin-markdown/dxplugin.jsonc';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -23,6 +25,10 @@ import { translations } from '#translations';
 import { Blog } from '#types';
 
 import { PublicationArticle } from './PublicationArticle';
+
+// Loaded once at module scope: a descriptor is data behind a URL, and the plugin arrays below
+// are built synchronously.
+const MarkdownPlugin = await EffectEx.runPromise(Plugin.loadManifest(markdownDescriptorUrl));
 
 const POST_COUNT = 3;
 
@@ -67,7 +73,7 @@ const meta = {
               yield* initializeIdentity(client);
             }),
         }),
-        MarkdownPlugin.make(),
+        MarkdownPlugin(),
       ],
     }),
   ],

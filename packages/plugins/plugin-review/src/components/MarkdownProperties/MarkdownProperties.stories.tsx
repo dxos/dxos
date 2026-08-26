@@ -11,9 +11,10 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Query, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
+import markdownDescriptorUrl from '@dxos/plugin-markdown/dxplugin.jsonc';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
@@ -29,6 +30,10 @@ import { Branch, Version } from '@dxos/versioning';
 import { translations } from '#translations';
 
 import { MarkdownProperties } from './MarkdownProperties';
+
+// Loaded once at module scope: a descriptor is data behind a URL, and the plugin arrays below
+// are built synchronously.
+const MarkdownPlugin = await EffectEx.runPromise(Plugin.loadManifest(markdownDescriptorUrl));
 
 const MarkdownExtensionsPlugin = Plugin.define(
   Plugin.makeMeta({
@@ -89,7 +94,7 @@ const meta = {
         }),
         // Contributes the versioning-state atom consumed by useVersioning.
         SpacePlugin({}),
-        MarkdownPlugin.make(),
+        MarkdownPlugin(),
       ],
     })),
   ],

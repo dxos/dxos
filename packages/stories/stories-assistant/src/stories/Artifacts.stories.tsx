@@ -4,7 +4,9 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { Filter, Ref, Type, View } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import * as ChessSkill from '@dxos/plugin-chess/ChessSkill';
 import * as MapSkill from '@dxos/plugin-map/MapSkill';
@@ -129,12 +131,14 @@ export const WithTrip: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
       const [MarkdownPlugin, { Map }, MapPlugin] = await Promise.all([
-        import('@dxos/plugin-markdown/dxplugin.jsonc'),
+        import('@dxos/plugin-markdown/dxplugin.jsonc').then(({ default: url }) =>
+          EffectEx.runPromise(Plugin.loadManifest(url)),
+        ),
         import('@dxos/plugin-map'),
         import('@dxos/plugin-map/MapPlugin'),
       ]);
       return {
-        plugins: [MarkdownPlugin.make(), MapPlugin.make()],
+        plugins: [MarkdownPlugin(), MapPlugin.make()],
         types: [Map.Map],
       };
     },

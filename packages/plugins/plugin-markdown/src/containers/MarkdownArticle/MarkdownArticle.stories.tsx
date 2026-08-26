@@ -14,12 +14,13 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
+import descriptorUrl from '@dxos/plugin-markdown/dxplugin.jsonc';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
@@ -39,6 +40,10 @@ import { Organization, Person } from '@dxos/types';
 
 import { translations } from '#translations';
 import { Markdown, MarkdownCapabilities } from '#types';
+
+// Loaded once at module scope: a descriptor is data behind a URL, and the plugin arrays below
+// are built synchronously.
+const MarkdownPlugin = await EffectEx.runPromise(Plugin.loadManifest(descriptorUrl));
 
 random.seed(1);
 
@@ -167,7 +172,7 @@ const meta = {
 
         // Contributes the versioning-state atom consumed by useVersioning.
         SpacePlugin({}),
-        MarkdownPlugin.make(),
+        MarkdownPlugin(),
         PreviewPlugin.make(),
       ],
     })),

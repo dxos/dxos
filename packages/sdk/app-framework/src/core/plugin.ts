@@ -655,9 +655,8 @@ export const resolveLazy = (plugin: Plugin): Effect.Effect<Plugin, LazyPluginErr
 //
 
 /**
- * Accepted inputs to {@link fromManifest}: a decoded descriptor, the module namespace produced by
- * `await import('@dxos/plugin-x/dxplugin.jsonc')`, or the raw JSONC text of a descriptor fetched
- * over HTTP. One entry point covers the bundler path and the published-plugin path.
+ * Accepted inputs to {@link fromManifest}: a decoded descriptor, a module namespace wrapping one, or
+ * the raw JSONC text of a descriptor read from a URL — which is how {@link loadManifest} supplies it.
  */
 export { DXPLUGIN_SCHEMA_FILENAME, DXPLUGIN_SCHEMA_PATH, descriptorJsonSchema } from './plugin-schema';
 
@@ -722,7 +721,8 @@ export const parseDescriptor = (source: ManifestSource): Config2.Descriptor => {
  * `Plugin.define(meta).pipe(Plugin.addModule(…), Plugin.make)`.
  *
  * ```ts
- * const MarkdownPlugin = Plugin.fromManifest(await import('@dxos/plugin-markdown/dxplugin.jsonc'));
+ * import descriptorUrl from '@dxos/plugin-markdown/dxplugin.jsonc';
+ * const MarkdownPlugin = yield* Plugin.loadManifest(descriptorUrl);
  * ```
  *
  * Each module activates by importing its `src` and calling that file's default export with the
@@ -731,6 +731,39 @@ export const parseDescriptor = (source: ManifestSource): Config2.Descriptor => {
  * vite loader has already emitted the module as a build entrypoint and rewritten `src` to the
  * built asset, so re-analyzing it here would duplicate the chunk.
  */
+/**
+ * Reads a descriptor from a URL and builds the plugin from it, resolving every relative `src`
+ * against that URL. This is the one path a plugin is loaded by — a descriptor emitted by this
+ * repo's build and one fetched from a registry differ only in where the URL points.
+ */
+export const loadManifest = <T = void>(
+  url: string | URL,
+  options?: Omit<FromManifestOptions, 'baseUrl'>,
+): Effect.Effect<PluginFactory<T>, PluginDescriptorError> =>
+  Effect.map(readManifest(url), (text) => fromManifest<T>(text, { ...options, baseUrl: url }));
+
+/**
+ * `fetch` refuses a `file:` URL under node, which is what a descriptor resolves to outside a browser
+ * (vitest, a bundled CLI), so that scheme is read from disk instead — imported dynamically to keep
+ * `node:fs` out of a browser bundle.
+ */
+const readManifest = (url: string | URL): Effect.Effect<string, PluginDescriptorError> =>
+  Effect.tryPromise({
+    try: async () => {
+      const href = typeof url === 'string' ? url : url.href;
+      if (href.startsWith('file:')) {
+        const { readFile } = await import('node:fs/promises');
+        return readFile(new URL(href), 'utf-8');
+      }
+      const response = await fetch(href);
+      if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText}`);
+      }
+      return response.text();
+    },
+    catch: (cause) => new PluginDescriptorError({ context: { url: String(url), reason: 'fetch-failed' }, cause }),
+  });
+
 export const fromManifest = <T = void>(source: ManifestSource, options?: FromManifestOptions): PluginFactory<T> => {
   const descriptor = parseDescriptor(source);
   const meta = getMetaFromDescriptor(descriptor);

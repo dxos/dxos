@@ -4,8 +4,10 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Feed, Filter, Ref } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import { meta as connectorMeta } from '@dxos/plugin-connector';
 import * as ConnectorsSkill from '@dxos/plugin-connector/ConnectorsSkill';
@@ -44,11 +46,13 @@ export const WithMail: Story = {
     lazyPlugins: async () => {
       const [InboxPlugin, MarkdownPlugin, ThreadPlugin] = await Promise.all([
         import('@dxos/plugin-inbox/InboxPlugin'),
-        import('@dxos/plugin-markdown/dxplugin.jsonc'),
+        import('@dxos/plugin-markdown/dxplugin.jsonc').then(({ default: url }) =>
+          EffectEx.runPromise(Plugin.loadManifest(url)),
+        ),
         import('@dxos/plugin-thread/ThreadPlugin'),
       ]);
       return {
-        plugins: [InboxPlugin.make(), MarkdownPlugin.make(), ThreadPlugin.make()],
+        plugins: [InboxPlugin.make(), MarkdownPlugin(), ThreadPlugin.make()],
       };
     },
     onInit: async ({ space }) => {

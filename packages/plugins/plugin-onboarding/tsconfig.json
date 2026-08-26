@@ -5,9 +5,9 @@
   "compilerOptions": {
     "outDir": "dist/types",
     "types": [
+      "../../sdk/app-framework/src/dxplugin.d.ts",
       "node",
-      "vite/client",
-      "../../sdk/app-framework/src/dxplugin.d.ts"
+      "vite/client"
     ]
   },
   "exclude": [

@@ -5,7 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { Filter, Ref } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import { UmlSkill } from '@dxos/plugin-illustrator';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
@@ -94,12 +96,14 @@ const decorators = createDecorators<StoryArgs>(({ args }) => ({
     const [{ Drawing }, IllustratorPlugin, MarkdownPlugin, SpacePlugin, TldrawPlugin] = await Promise.all([
       import('@dxos/plugin-illustrator'),
       import('@dxos/plugin-illustrator/IllustratorPlugin'),
-      import('@dxos/plugin-markdown/dxplugin.jsonc'),
+      import('@dxos/plugin-markdown/dxplugin.jsonc').then(({ default: url }) =>
+        EffectEx.runPromise(Plugin.loadManifest(url)),
+      ),
       import('@dxos/plugin-space/SpacePlugin'),
       import('@dxos/plugin-tldraw/TldrawPlugin'),
     ]);
     return {
-      plugins: [IllustratorPlugin.make(), MarkdownPlugin.make(), SpacePlugin.make({}), TldrawPlugin.make()],
+      plugins: [IllustratorPlugin.make(), MarkdownPlugin(), SpacePlugin.make({}), TldrawPlugin.make()],
       types: [Drawing.Drawing, Drawing.Canvas],
     };
   },

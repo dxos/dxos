@@ -6,16 +6,18 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import * as CallsPlugin from '@dxos/plugin-calls/CallsPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
+import markdownDescriptorUrl from '@dxos/plugin-markdown/dxplugin.jsonc';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
@@ -30,6 +32,10 @@ import { Transcript } from '@dxos/types';
 
 import { MeetingPlugin } from '#plugin';
 import { Meeting } from '#types';
+
+// Loaded once at module scope: a descriptor is data behind a URL, and the plugin arrays below
+// are built synchronously.
+const MarkdownPlugin = await EffectEx.runPromise(Plugin.loadManifest(markdownDescriptorUrl));
 
 type StoryArgs = {};
 
@@ -193,7 +199,7 @@ const meta = {
         CallsPlugin.make(),
         TranscriptionPlugin.make(),
         MeetingPlugin(),
-        MarkdownPlugin.make(),
+        MarkdownPlugin(),
         PreviewPlugin.make(),
       ],
     })),

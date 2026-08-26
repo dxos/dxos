@@ -9,12 +9,14 @@ import { expect, waitFor, within } from 'storybook/test';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Obj } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
+import markdownDescriptorUrl from '@dxos/plugin-markdown/dxplugin.jsonc';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -26,6 +28,10 @@ import { translations } from '#translations';
 import { Blog } from '#types';
 
 import { PostArticle } from './PostArticle';
+
+// Loaded once at module scope: a descriptor is data behind a URL, and the plugin arrays below
+// are built synchronously.
+const MarkdownPlugin = await EffectEx.runPromise(Plugin.loadManifest(markdownDescriptorUrl));
 
 /** Builds a `Post` whose single body document is seeded with recognizable text for the assertion. */
 const makeStoryPost = (): Blog.Post => {
@@ -68,7 +74,7 @@ const meta = {
               yield* initializeIdentity(client);
             }),
         }),
-        MarkdownPlugin.make(),
+        MarkdownPlugin(),
       ],
     }),
   ],

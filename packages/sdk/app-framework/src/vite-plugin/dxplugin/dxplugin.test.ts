@@ -12,6 +12,7 @@ import { DXPLUGIN_BUILT_FILENAME, DXPLUGIN_FILENAME, dxPluginManifest } from './
 const DESCRIPTOR = `
 {
   // A descriptor with a comment, which plain JSON handling would reject.
+  "$schema": "../../../node_modules/@dxos/app-framework/dxplugin.schema.json",
   "key": "org.dxos.plugin.test",
   "name": "Test",
   "modules": [{ "id": "Surface", "src": "./src/surface.ts" }],
@@ -23,79 +24,55 @@ describe('dxPluginManifest', () => {
     expect(invoke(configure('serve').load, undefined, '/some/other.ts')).toBeNull();
   });
 
-  test('serves module sources from the dev server, leaving them unbundled', ({ expect }) => {
+  test('a descriptor imports as its URL, never as a module wrapping the data', ({ expect }) => {
     const { dir, path } = writeDescriptor();
-    const emitted: { id?: string }[] = [];
+    const emitted: Emitted[] = [];
     const code = load(configure('serve'), path, emitted);
-    expect(code).toContain(`src: "/@fs/${join(dir, 'src/surface.ts')}"`);
+    // The dev server answers that URL with the descriptor, so nothing is bundled to reach it.
+    expect(code).toBe(`export default "/@fs/${join(dir, DXPLUGIN_FILENAME).replace(/^\//, '')}";\n`);
     expect(emitted).toEqual([]);
   });
 
-  test('emits each module source as a build entrypoint and points src at the built chunk', ({ expect }) => {
+  test('a build points the URL at an emitted asset and declares each module a chunk', ({ expect }) => {
     const { dir, path } = writeDescriptor();
-    const emitted: { id?: string }[] = [];
+    const emitted: Emitted[] = [];
     const code = load(configure('build'), path, emitted);
     // Declared, not inferred from an `import()` — a module reachable only through the descriptor
     // would otherwise be tree-shaken away.
-    expect(emitted).toEqual([expect.objectContaining({ type: 'chunk', id: join(dir, 'src/surface.ts') })]);
-    // Resolved at runtime by rollup to the emitted chunk's URL, so `.ts` becomes the shipped `.js`.
-    expect(code).toContain('src: import.meta.ROLLUP_FILE_URL_ref123');
+    expect(emitted).toContainEqual(expect.objectContaining({ type: 'chunk', id: join(dir, 'src/surface.ts') }));
+    expect(emitted).toContainEqual(expect.objectContaining({ type: 'asset', name: DXPLUGIN_BUILT_FILENAME }));
+    expect(code).toContain('import.meta.ROLLUP_FILE_URL_');
   });
 
-  test('carries the descriptor metadata through unchanged', ({ expect }) => {
+  test('the emitted asset names the chunks that shipped, and drops the authoring aid', ({ expect }) => {
     const { path } = writeDescriptor();
-    const code = load(configure('serve'), path, []);
-    expect(code).toContain('"key": "org.dxos.plugin.test"');
-    // Module fields are serialized per module, so they carry through in compact form.
-    expect(code).toContain('"id":"Surface"');
-  });
+    const emitted: Emitted[] = [];
+    const plugin = configure('build');
+    load(plugin, path, emitted);
 
-  test('assigns each src to its own module, whatever an authored field holds', ({ expect }) => {
-    // A field whose value looks like a generated marker must not capture another module's `src`.
-    const { dir, path } = writeDescriptor(`
-      {
-        "key": "org.dxos.plugin.test",
-        "name": "__dxplugin_src_0__",
-        "modules": [
-          { "id": "__dxplugin_src_0__", "src": "./src/first.ts" },
-          { "id": "Second", "src": "./src/second.ts" },
-        ],
-      }
-    `);
-    const code = load(configure('serve'), path, []);
-    expect(code).toContain(`src: "/@fs/${join(dir, 'src/first.ts')}"`);
-    expect(code).toContain(`src: "/@fs/${join(dir, 'src/second.ts')}"`);
+    const bundle: Record<string, { type: string; source?: string }> = {
+      'chunk-surface.mjs': { type: 'asset' },
+      [DXPLUGIN_BUILT_FILENAME]: { type: 'asset' },
+    };
+    invoke(plugin.generateBundle, context(emitted), {}, bundle);
+
+    const descriptor = JSON.parse(bundle[DXPLUGIN_BUILT_FILENAME].source!);
+    expect(descriptor.modules).toEqual([{ id: 'Surface', src: './chunk-surface.mjs' }]);
+    // `$schema` points into the workspace's `node_modules` — meaningless once published.
+    expect(descriptor).not.toHaveProperty('$schema');
   });
 
   test('builds a named manifest without waiting for a module to import it', ({ expect }) => {
     const { dir } = writeDescriptor();
-    const emitted: { id?: string }[] = [];
+    const emitted: Emitted[] = [];
     const plugin = configure('build', dir);
     invoke(plugin.buildStart, context(emitted));
-    expect(emitted).toEqual([expect.objectContaining({ type: 'chunk', id: join(dir, 'src/surface.ts') })]);
-  });
-
-  test('emits the descriptor as JSON pointing at the chunks that shipped', ({ expect }) => {
-    const { dir } = writeDescriptor(`
-      {
-        "$schema": "../../../node_modules/@dxos/app-framework/dxplugin.schema.json",
-        "key": "org.dxos.plugin.test",
-        "name": "Test",
-        "modules": [{ "id": "Surface", "src": "./src/surface.ts" }],
-      }
-    `);
-    const emitted: { id?: string; fileName?: string; source?: string }[] = [];
-    const plugin = configure('build', dir);
-    invoke(plugin.buildStart, context(emitted));
-    invoke(plugin.generateBundle, context(emitted));
-
-    const asset = emitted.find(({ fileName }) => fileName === DXPLUGIN_BUILT_FILENAME);
-    const descriptor = JSON.parse(asset!.source!);
-    expect(descriptor.modules).toEqual([{ id: 'Surface', src: './chunk-surface.mjs' }]);
-    // An authoring aid pointing into the workspace's `node_modules` — meaningless once published.
-    expect(descriptor).not.toHaveProperty('$schema');
+    expect(emitted).toContainEqual(expect.objectContaining({ type: 'chunk', id: join(dir, 'src/surface.ts') }));
+    expect(emitted).toContainEqual(expect.objectContaining({ type: 'asset', fileName: DXPLUGIN_BUILT_FILENAME }));
   });
 });
+
+type Emitted = { type?: string; id?: string; name?: string; fileName?: string; source?: string };
 
 const writeDescriptor = (descriptor = DESCRIPTOR) => {
   const dir = mkdtempSync(join(tmpdir(), 'dxplugin-'));
@@ -104,27 +81,23 @@ const writeDescriptor = (descriptor = DESCRIPTOR) => {
   return { dir, path };
 };
 
-// Rollup's `PluginContext` is a ~30-member interface a test cannot implement, and `load` reaches
-// exactly one of them, so the structural gap is bridged here rather than at each call site.
+// Rollup's `PluginContext` is a ~30-member interface a test cannot implement, and these hooks reach
+// only a few of them, so the structural gap is bridged here rather than at each call site.
 const invoke = (hook: unknown, self: unknown, ...args: unknown[]): any =>
   (hook as (this: unknown, ...args: unknown[]) => any).call(self, ...args);
 
-/** Stub context recording the chunks `load` emits, and handing back a fixed reference id. */
-const context = (emitted: { id?: string; fileName?: string; source?: string }[]) => ({
-  getFileName: () => 'chunk-surface.mjs',
+/** Stub context recording what the hooks emit, and naming the one chunk deterministically. */
+const context = (emitted: Emitted[]) => ({
   // Names the browser dev-server environment, which is what selects the `/@fs/` form.
   environment: { name: 'client' },
-  emitFile: (file: { id?: string; fileName?: string; source?: string }) => {
+  getFileName: (ref: string) => (ref === 'asset0' ? DXPLUGIN_BUILT_FILENAME : 'chunk-surface.mjs'),
+  emitFile: (file: Emitted) => {
     emitted.push(file);
-    return 'ref123';
+    return file.type === 'asset' ? 'asset0' : 'chunk0';
   },
 });
 
-const load = (
-  plugin: ReturnType<typeof dxPluginManifest>,
-  path: string,
-  emitted: { id?: string; fileName?: string; source?: string }[],
-): string => {
+const load = (plugin: ReturnType<typeof dxPluginManifest>, path: string, emitted: Emitted[]): string => {
   const result = invoke(plugin.load, context(emitted), path);
   return typeof result === 'string' ? result : result.code;
 };

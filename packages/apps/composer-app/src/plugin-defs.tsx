@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import { EffectEx } from '@dxos/effect';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as BloggerPlugin from '@dxos/plugin-blogger/BloggerPlugin';
 import * as BlueskyPlugin from '@dxos/plugin-bluesky/BlueskyPlugin';
@@ -45,7 +46,7 @@ import * as LingoPlugin from '@dxos/plugin-lingo/LingoPlugin';
 import * as MagazinePlugin from '@dxos/plugin-magazine/MagazinePlugin';
 import * as MapPluginSolid from '@dxos/plugin-map-solid/MapPlugin';
 import * as MapPlugin from '@dxos/plugin-map/MapPlugin';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
+import markdownDescriptorUrl from '@dxos/plugin-markdown/dxplugin.jsonc';
 import * as MeetingPlugin from '@dxos/plugin-meeting/MeetingPlugin';
 import * as MermaidPlugin from '@dxos/plugin-mermaid/MermaidPlugin';
 import * as OsrmPlugin from '@dxos/plugin-osrm/OsrmPlugin';
@@ -81,6 +82,10 @@ import { isTruthy } from '@dxos/util';
 
 import { type PluginConfig, getCorePlugins } from './plugin-defs.core';
 
+// Loaded once at module scope: a descriptor is data behind a URL, and both plugin sets are
+// assembled synchronously.
+const MarkdownPlugin = await EffectEx.runPromise(Plugin.loadManifest(markdownDescriptorUrl));
+
 export type { PluginConfig, State } from './plugin-defs.core';
 
 /**
@@ -97,7 +102,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
     GooglePlugin.meta.profile.key,
     JmapPlugin.meta.profile.key,
     KanbanPlugin.meta.profile.key,
-    MarkdownPlugin.meta.profile.key,
+    MarkdownPlugin().meta.profile.key,
     SheetPlugin.meta.profile.key,
     IllustratorPlugin.meta.profile.key,
     TldrawPlugin.meta.profile.key,
@@ -192,7 +197,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     LibraryPlugin.make(),
     MapPlugin.make(),
     isLocal && MapPluginSolid.make(),
-    MarkdownPlugin.make(),
+    MarkdownPlugin(),
     MeetingPlugin.make(),
     MermaidPlugin.make(),
     // Desktop-only, and not core: the native file picker is a full-catalog capability, unlike

@@ -29,10 +29,11 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Text as EchoText, Obj } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
+import markdownDescriptorUrl from '@dxos/plugin-markdown/dxplugin.jsonc';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { translations as markdownTranslations } from '@dxos/plugin-markdown/translations';
@@ -64,6 +65,10 @@ import {
   tableSuggestScenario,
 } from '../testing';
 import { runScenarioStorybook, selectViewMode } from '../testing/scenario-executor-storybook';
+
+// Loaded once at module scope: a descriptor is data behind a URL, and the plugin arrays below
+// are built synchronously.
+const MarkdownPlugin = await EffectEx.runPromise(Plugin.loadManifest(markdownDescriptorUrl));
 
 const concat = (...lines: string[]) => lines.join('\n');
 
@@ -307,7 +312,7 @@ const meta = {
         }),
         SpacePlugin({}),
         ReviewPlugin(),
-        MarkdownPlugin.make(),
+        MarkdownPlugin(),
       ],
     })),
   ],

@@ -14,10 +14,11 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { promptRunExtension } from '@dxos/plugin-assistant/extensions';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
+import markdownDescriptorUrl from '@dxos/plugin-markdown/dxplugin.jsonc';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { translations as markdownTranslations } from '@dxos/plugin-markdown/translations';
@@ -30,6 +31,10 @@ import { Text } from '@dxos/schema';
 
 import README_CONTENT from '../content/readme.md?raw';
 import { README_DOCUMENT_NAME } from './default-content';
+
+// Loaded once at module scope: a descriptor is data behind a URL, and the plugin arrays below
+// are built synchronously.
+const MarkdownPlugin = await EffectEx.runPromise(Plugin.loadManifest(markdownDescriptorUrl));
 
 /**
  * Contributes the assistant's prompt-run extension so the ```prompt blocks in the README (e.g. the
@@ -93,7 +98,7 @@ const meta = {
               yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
-        MarkdownPlugin.make(),
+        MarkdownPlugin(),
       ],
     }),
   ],

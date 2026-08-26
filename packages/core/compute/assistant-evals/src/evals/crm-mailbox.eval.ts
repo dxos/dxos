@@ -6,17 +6,22 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { Obj, Relation } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import * as CrmPlugin from '@dxos/plugin-crm/CrmPlugin';
 import * as ProfileOf from '@dxos/plugin-crm/ProfileOf';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
+import markdownDescriptorUrl from '@dxos/plugin-markdown/dxplugin.jsonc';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { findObject } from '../assertions';
 import { judge } from '../judge';
 import { createEvalRunner } from '../runner';
+
+// Loaded once at module scope: a descriptor is data behind a URL, and the plugin arrays below
+// are built synchronously.
+const MarkdownPlugin = await EffectEx.runPromise(Plugin.loadManifest(markdownDescriptorUrl));
 
 // Ported from the gated `CRM Mailbox` scenario (../testing/crm-mailbox.test.ts).
 // Grades the DB effect directly instead of the agent's self-reported `completedCriteria`. Existence
@@ -84,7 +89,7 @@ const task = createEvalRunner({
   `,
   input: Schema.Unknown,
   output: Schema.Unknown,
-  plugins: [CrmPlugin.make(), MarkdownPlugin.make()],
+  plugins: [CrmPlugin.make(), MarkdownPlugin()],
   // Research (web search) + CRM + markdown tool calls chain across several turns; observed ~95s live.
   timeout: 150_000,
   dbQuery: () =>

@@ -6,13 +6,19 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { Database } from '@dxos/echo';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
+import { EffectEx } from '@dxos/effect';
+import markdownDescriptorUrl from '@dxos/plugin-markdown/dxplugin.jsonc';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { trim } from '@dxos/util';
 
 import { findObject, objectExists } from '../assertions';
 import { createEvalRunner } from '../runner';
+
+// Loaded once at module scope: a descriptor is data behind a URL, and the plugin arrays below
+// are built synchronously.
+const MarkdownPlugin = await EffectEx.runPromise(Plugin.loadManifest(markdownDescriptorUrl));
 
 // Ported from the gated `Markdown` scenarios (../testing/markdown.test.ts).
 // Grades the DB effect directly instead of the agent's self-reported `completedCriteria`.
@@ -24,7 +30,7 @@ const draftTask = createEvalRunner({
   `,
   input: Schema.Unknown,
   output: Schema.Unknown,
-  plugins: [MarkdownPlugin.make()],
+  plugins: [MarkdownPlugin()],
   dbQuery: () => objectExists(Markdown.Document, () => true),
 });
 
@@ -54,7 +60,7 @@ const appendTask = createEvalRunner({
   `,
   input: Schema.Unknown,
   output: Schema.Unknown,
-  plugins: [MarkdownPlugin.make()],
+  plugins: [MarkdownPlugin()],
   dbQuery: () =>
     Effect.gen(function* () {
       const doc = yield* findObject(Markdown.Document, (d) => d.name === 'Empty Notes');

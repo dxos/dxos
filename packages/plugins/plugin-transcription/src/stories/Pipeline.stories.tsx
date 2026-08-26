@@ -53,7 +53,7 @@ import {
 } from '@dxos/pipeline-transcription';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
+import markdownDescriptorUrl from '@dxos/plugin-markdown/dxplugin.jsonc';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
@@ -73,6 +73,10 @@ import { translations } from '#translations';
 import { TranscriptionCapabilities } from '#types';
 
 import { TranscriptionPlugin } from '../plugin';
+
+// Loaded once at module scope: a descriptor is data behind a URL, and the plugin arrays below
+// are built synchronously.
+const MarkdownPlugin = await EffectEx.runPromise(Plugin.loadManifest(markdownDescriptorUrl));
 
 const SAMPLE_CONTENT = trim`
   # Test
@@ -331,7 +335,7 @@ const meta = {
             }),
         }),
         SpacePlugin({}),
-        MarkdownPlugin.make(),
+        MarkdownPlugin(),
         StoryGraphPlugin(),
         TranscriptionPlugin(),
       ],

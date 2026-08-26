@@ -7,17 +7,19 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { RunInstructions } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { EffectEx } from '@dxos/effect';
 import { AssistantPlugin } from '@dxos/plugin-assistant/testing';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { ExplorerPlugin } from '@dxos/plugin-explorer/testing';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
+import markdownDescriptorUrl from '@dxos/plugin-markdown/dxplugin.jsonc';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -30,6 +32,10 @@ import { translations } from '#translations';
 import { Notebook } from '#types';
 
 import { NotebookArticle } from './NotebookArticle';
+
+// Loaded once at module scope: a descriptor is data behind a URL, and the plugin arrays below
+// are built synchronously.
+const MarkdownPlugin = await EffectEx.runPromise(Plugin.loadManifest(markdownDescriptorUrl));
 
 const meta: Meta<typeof NotebookArticle> = {
   title: 'plugins/plugin-script/containers/NotebookArticle',
@@ -65,7 +71,7 @@ const meta: Meta<typeof NotebookArticle> = {
         AssistantPlugin(),
         RoutinePlugin(),
         ExplorerPlugin.make(),
-        MarkdownPlugin.make(),
+        MarkdownPlugin(),
       ],
     }),
   ],

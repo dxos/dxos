@@ -3,11 +3,14 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-// Imported by package specifier, not relatively: TypeScript applies an ambient wildcard module
-// declaration only to non-relative specifiers.
-import descriptor from '@dxos/plugin-markdown/dxplugin.jsonc';
+import { DXN } from '@dxos/keys';
 
-// Derived from the default export rather than re-exporting the loader's `meta`, because a host that
-// reads the raw JSONC — the bun-compiled CLI — has only the data, and a named re-export of an export
-// that does not exist there is a load-time SyntaxError.
-export const meta = Plugin.getMetaFromDescriptor(descriptor);
+/**
+ * Authored here rather than read from `dxplugin.jsonc`, because the descriptor is fetched over a URL
+ * and this is needed synchronously: capability tags are built from `meta.profile.key` at module
+ * scope. `meta.test.ts` fails if the two ever disagree.
+ */
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.markdown'),
+  name: 'Markdown',
+});

@@ -2,9 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import { EffectEx } from '@dxos/effect';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
+import markdownDescriptorUrl from '@dxos/plugin-markdown/dxplugin.jsonc';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as ReviewPlugin from '@dxos/plugin-review/ReviewPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
@@ -12,6 +13,10 @@ import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
 import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 
 import { type PluginConfig, getCorePlugins } from './plugin-defs.core';
+
+// Loaded once at module scope: a descriptor is data behind a URL, and both plugin sets are
+// assembled synchronously.
+const MarkdownPlugin = await EffectEx.runPromise(Plugin.loadManifest(markdownDescriptorUrl));
 
 export type { PluginConfig, State } from './plugin-defs.core';
 
@@ -24,7 +29,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => [
   ...getCorePlugins({ ...config, isExtensible: false }),
   // `Agent` and `Sequence` are unfinished, so the curated set does not offer creating them.
   AssistantPlugin.make({ experimentalTypes: false }),
-  MarkdownPlugin.make(),
+  MarkdownPlugin(),
   ProjectsPlugin.make(),
   ReviewPlugin.make(),
   TasksPlugin.make(),

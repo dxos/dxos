@@ -16,8 +16,9 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { DXN, Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { EffectEx } from '@dxos/effect';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
+import markdownDescriptorUrl from '@dxos/plugin-markdown/dxplugin.jsonc';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -30,6 +31,10 @@ import { Language, Vocabulary, Word } from '#types';
 
 import { TEST_PASSAGE, TEST_PASSAGE_TRANSLATION, makeTestDeck } from '../../testing';
 import { ReaderArticle } from './ReaderArticle';
+
+// Loaded once at module scope: a descriptor is data behind a URL, and the plugin arrays below
+// are built synchronously.
+const MarkdownPlugin = await EffectEx.runPromise(Plugin.loadManifest(markdownDescriptorUrl));
 
 /**
  * A scripted model, so the split view shows a real translation offline.
@@ -133,7 +138,7 @@ const meta = {
               yield* Effect.promise(() => space.db.flush({ indexes: true }));
             }),
         }),
-        MarkdownPlugin.make(),
+        MarkdownPlugin(),
         StoryAiPlugin(),
         LingoPlugin(),
       ],

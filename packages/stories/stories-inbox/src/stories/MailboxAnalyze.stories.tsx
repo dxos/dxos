@@ -18,6 +18,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { useActiveSpace, useProgressMonitors } from '@dxos/app-toolkit/ui';
 import * as Project from '@dxos/compute/Project';
 import { Feed, Filter, Obj, Query, Ref, Tag } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { EffectEx, createKvsStore } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
@@ -37,7 +38,7 @@ import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as MessageExtractor from '@dxos/plugin-inbox/MessageExtractor';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
+import markdownDescriptorUrl from '@dxos/plugin-markdown/dxplugin.jsonc';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as ProgressPlugin from '@dxos/plugin-progress/ProgressPlugin';
@@ -68,6 +69,10 @@ import { Message, Organization, Person, Task } from '@dxos/types';
 import { StoryRole } from '../modules';
 import { StoryTripAiPlugin, seedFromFixture, seedFromMessages, seedFromObjects, seedFromTrips } from '../testing';
 import { StoryModulesPlugin } from '../testing/modules';
+
+// Loaded once at module scope: a descriptor is data behind a URL, and the plugin arrays below
+// are built synchronously.
+const MarkdownPlugin = await EffectEx.runPromise(Plugin.loadManifest(markdownDescriptorUrl));
 
 /** Local Ollama model driving the `AnalyzeMailbox` fact variant; Ollama needs `strict: false`. */
 const OLLAMA_MODEL = 'com.alibaba.model.qwen-2-5-7b.instruct';
@@ -656,7 +661,7 @@ const meta = {
       BrainPlugin.make(),
       ConnectorPlugin.make(),
       CrmPlugin.make(),
-      MarkdownPlugin.make(),
+      MarkdownPlugin(),
       PreviewPlugin.make(),
       ProgressPlugin.make(),
       TripPlugin(),

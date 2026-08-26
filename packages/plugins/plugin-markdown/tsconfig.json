@@ -4,8 +4,8 @@
   ],
   "compilerOptions": {
     "types": [
-      "@dxos/typings",
       "../../sdk/app-framework/src/dxplugin.d.ts",
+      "@dxos/typings",
       "node"
     ]
   },

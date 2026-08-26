@@ -6,18 +6,24 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { AiContext } from '@dxos/assistant';
 import { Chat, ProjectSkill } from '@dxos/assistant-toolkit';
 import * as Project from '@dxos/compute/Project';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { EID } from '@dxos/keys';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
+import markdownDescriptorUrl from '@dxos/plugin-markdown/dxplugin.jsonc';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { trim } from '@dxos/util';
 
 import { findObject } from '../assertions';
 import { createEvalRunner } from '../runner';
 import { getDefaultSkills } from '../skills';
+
+// Loaded once at module scope: a descriptor is data behind a URL, and the plugin arrays below
+// are built synchronously.
+const MarkdownPlugin = await EffectEx.runPromise(Plugin.loadManifest(markdownDescriptorUrl));
 
 // The plugin-projects system test: a Chat runs in a Project's context (the project's own
 // Instructions, passed by reference) and the model is directed to create a markdown document.
@@ -42,7 +48,7 @@ const task = createEvalRunner({
   input: Schema.Unknown,
   output: Schema.Unknown,
   skills: [...getDefaultSkills(), Ref.make(ProjectSkill.make())],
-  plugins: [MarkdownPlugin.make()],
+  plugins: [MarkdownPlugin()],
   types: [Project.Project],
   // Multi-tool scenario (create + context-add + artifact-add), so allow more round-trips.
   timeout: 150_000,

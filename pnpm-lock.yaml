@@ -15239,6 +15239,9 @@ importers:
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -16798,6 +16801,9 @@ importers:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
     devDependencies:
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client

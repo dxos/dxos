@@ -5,12 +5,18 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import * as Plugin from '@dxos/app-framework/Plugin';
+import { EffectEx } from '@dxos/effect';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as CrmPlugin from '@dxos/plugin-crm/CrmPlugin';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
+import markdownDescriptorUrl from '@dxos/plugin-markdown/dxplugin.jsonc';
 
 import { StoryRole } from '../modules';
 import { ModuleContainer, createDecorators, storyParameters } from '../testing';
+
+// Loaded once at module scope: a descriptor is data behind a URL, and the plugin arrays below
+// are built synchronously.
+const MarkdownPlugin = await EffectEx.runPromise(Plugin.loadManifest(markdownDescriptorUrl));
 
 const MAILBOX_NAME = 'Clients';
 
@@ -22,7 +28,7 @@ const meta: Meta<typeof ModuleContainer> = {
     mailboxName: MAILBOX_NAME,
     // Own the skills the template binds: crm (CrmPlugin), webSearch + database (AssistantPlugin),
     // markdown (MarkdownPlugin). A skill whose plugin is absent renders as an unnamed row.
-    plugins: [CrmPlugin.make(), AssistantPlugin.make(), MarkdownPlugin.make()],
+    plugins: [CrmPlugin.make(), AssistantPlugin.make(), MarkdownPlugin()],
   }),
   args: {
     layout: [

@@ -7,17 +7,19 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 import { expect, screen, userEvent, within } from 'storybook/test';
 
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import * as CallsPlugin from '@dxos/plugin-calls/CallsPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';
 import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
+import markdownDescriptorUrl from '@dxos/plugin-markdown/dxplugin.jsonc';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
@@ -30,6 +32,10 @@ import { Actor, AnchoredTo, Event, Transcript } from '@dxos/types';
 
 import { MeetingPlugin } from '#plugin';
 import { Meeting } from '#types';
+
+// Loaded once at module scope: a descriptor is data behind a URL, and the plugin arrays below
+// are built synchronously.
+const MarkdownPlugin = await EffectEx.runPromise(Plugin.loadManifest(markdownDescriptorUrl));
 
 type StoryArgs = {
   /** Seed a Meeting already linked to the event (toolbar shows "Open meeting"); otherwise "Create meeting". */
@@ -194,7 +200,7 @@ const meta = {
         CallsPlugin.make(),
         TranscriptionPlugin.make(),
         MeetingPlugin(),
-        MarkdownPlugin.make(),
+        MarkdownPlugin(),
         PreviewPlugin.make(),
       ],
     })),

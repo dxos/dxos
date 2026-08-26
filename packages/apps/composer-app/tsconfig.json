@@ -11,9 +11,9 @@
     "module": "ESNext",
     "outDir": "dist/types",
     "types": [
+      "../../sdk/app-framework/src/dxplugin.d.ts",
       "node",
-      "sharedworker",
-      "../../sdk/app-framework/src/dxplugin.d.ts"
+      "sharedworker"
     ]
   },
   "exclude": [

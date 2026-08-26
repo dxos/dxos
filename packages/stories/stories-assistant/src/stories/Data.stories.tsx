@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { EXA_API_KEY } from '@dxos/ai/testing';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { ChatContextSkill, RunInstructions, WebSearchSkill } from '@dxos/assistant-toolkit';
 import * as Instructions from '@dxos/compute/Instructions';
@@ -12,6 +13,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag, View } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { AccessToken } from '@dxos/link';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import { CrmSkill } from '@dxos/plugin-crm';
@@ -70,12 +72,14 @@ export const WithResearch: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
       const [MarkdownPlugin, TablePlugin, ThreadPlugin] = await Promise.all([
-        import('@dxos/plugin-markdown/dxplugin.jsonc'),
+        import('@dxos/plugin-markdown/dxplugin.jsonc').then(({ default: url }) =>
+          EffectEx.runPromise(Plugin.loadManifest(url)),
+        ),
         import('@dxos/plugin-table/TablePlugin'),
         import('@dxos/plugin-thread/ThreadPlugin'),
       ]);
       return {
-        plugins: [MarkdownPlugin.make(), TablePlugin.make(), ThreadPlugin.make()],
+        plugins: [MarkdownPlugin(), TablePlugin.make(), ThreadPlugin.make()],
       };
     },
     types: [...researchStoryEchoTypes, Feed.Feed],
@@ -179,11 +183,13 @@ export const WithProject: Story = {
     lazyPlugins: async () => {
       const [InboxPlugin, MarkdownPlugin, PipelinePlugin] = await Promise.all([
         import('@dxos/plugin-inbox/InboxPlugin'),
-        import('@dxos/plugin-markdown/dxplugin.jsonc'),
+        import('@dxos/plugin-markdown/dxplugin.jsonc').then(({ default: url }) =>
+          EffectEx.runPromise(Plugin.loadManifest(url)),
+        ),
         import('@dxos/plugin-pipeline/PipelinePlugin'),
       ]);
       return {
-        plugins: [InboxPlugin.make(), MarkdownPlugin.make(), PipelinePlugin.make()],
+        plugins: [InboxPlugin.make(), MarkdownPlugin(), PipelinePlugin.make()],
       };
     },
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
@@ -362,19 +368,15 @@ export const WithCRM: Story = {
       const [CrmPlugin, InboxPlugin, MarkdownPlugin, SpacePlugin, TablePlugin] = await Promise.all([
         import('@dxos/plugin-crm/CrmPlugin'),
         import('@dxos/plugin-inbox/InboxPlugin'),
-        import('@dxos/plugin-markdown/dxplugin.jsonc'),
+        import('@dxos/plugin-markdown/dxplugin.jsonc').then(({ default: url }) =>
+          EffectEx.runPromise(Plugin.loadManifest(url)),
+        ),
         // Registers the object-verb handlers behind the Database skill.
         import('@dxos/plugin-space/SpacePlugin'),
         import('@dxos/plugin-table/TablePlugin'),
       ]);
       return {
-        plugins: [
-          CrmPlugin.make(),
-          InboxPlugin.make(),
-          MarkdownPlugin.make(),
-          SpacePlugin.make({}),
-          TablePlugin.make(),
-        ],
+        plugins: [CrmPlugin.make(), InboxPlugin.make(), MarkdownPlugin(), SpacePlugin.make({}), TablePlugin.make()],
       };
     },
     types: [

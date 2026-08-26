@@ -3,9 +3,9 @@
 //
 
 import { existsSync, readFileSync } from 'node:fs';
-import { dirname, posix, resolve } from 'node:path';
+import { dirname, join, posix, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { type Plugin as VitePlugin } from 'vite';
+import { type Rollup, type Plugin as VitePlugin } from 'vite';
 
 import { parseJsonc } from '../../core/jsonc.ts';
 
@@ -15,11 +15,28 @@ export const DXPLUGIN_FILENAME = 'dxplugin.jsonc';
 /** The descriptor as a build emits it: plain JSON, `src` pointing at the chunks that shipped. */
 export const DXPLUGIN_BUILT_FILENAME = 'dxplugin.json';
 
+/** Vite's escape hatch for a path outside the project root. */
+const FS_PREFIX = '/@fs/';
+
+/**
+ * Descriptor as the dev server serves it over HTTP: strict JSON, so `res.json()` and a native JSON
+ * module both work, and `src` left relative — resolved against the descriptor's own URL it already
+ * names a path the dev server transforms on demand.
+ */
+const serialized = (raw: unknown): string => {
+  const { modules, profile } = readDescriptor(raw);
+  const { $schema: _schema, ...rest } = profile;
+  return `${JSON.stringify({ ...rest, modules }, null, 2)}\n`;
+};
+
 /** A descriptor module, as the loader needs it: anything else on the entry rides through untouched. */
 type RawModule = { src: string } & Record<string, unknown>;
 
 const isModule = (value: unknown): value is RawModule =>
   typeof value === 'object' && value !== null && 'src' in value && typeof value.src === 'string';
+
+/** Restores the leading separator `/@fs/` consumed, leaving a Windows drive path alone. */
+const fsPathFromPrefixed = (path: string): string => (/^[A-Za-z]:/.test(path) ? path : `/${path}`);
 
 /**
  * Narrows the parsed descriptor structurally rather than against the schema: keeping the loader
@@ -42,6 +59,35 @@ const readDescriptor = (raw: unknown): { modules: RawModule[]; profile: Record<s
 };
 
 /**
+ * Declares a descriptor's modules as build entrypoints and reserves the asset its URL will point at.
+ * The asset's source is withheld until `generateBundle`, where the chunks finally have filenames.
+ */
+const emitDescriptor = (
+  ctx: Pick<Rollup.PluginContext, 'emitFile'>,
+  path: string,
+  fileName?: string,
+): { asset: string; profile: Record<string, unknown>; modules: { module: RawModule; ref: string }[] } => {
+  const { modules, profile } = readDescriptor(parseJsonc(readFileSync(path, 'utf-8')));
+  const dir = dirname(path);
+  return {
+    // Source is a placeholder: rolldown has no `setAssetSource`, so the real JSON is written over
+    // this entry in `generateBundle`, once `getFileName` can name the chunks.
+    asset: ctx.emitFile({
+      type: 'asset',
+      source: '{}',
+      ...(fileName ? { fileName } : { name: DXPLUGIN_BUILT_FILENAME }),
+    } satisfies Rollup.EmittedAsset),
+    profile,
+    modules: modules.map((module) => ({
+      module,
+      // Declared rather than inferred from an `import()`: a module reachable only through a
+      // descriptor would otherwise be tree-shaken away.
+      ref: ctx.emitFile({ type: 'chunk', id: resolve(dir, module.src), preserveSignature: 'exports-only' }),
+    })),
+  };
+};
+
+/**
  * Loader for `dxplugin.jsonc` plugin descriptors, modelled on vite's own HTML handling: a
  * descriptor is not an opaque asset but a *document that references modules*, so the loader walks
  * its `modules[].src` list and hands each referenced file to vite as a first-class module.
@@ -55,10 +101,9 @@ const readDescriptor = (raw: unknown): { modules: RawModule[]; profile: Record<s
  *   *declared* rather than inferred from an `import()` expression, so a module reachable only
  *   through a descriptor is never tree-shaken away.
  *
- * The descriptor is served as a JS module whose default export is the rewritten descriptor, so
- * `await import('@dxos/plugin-x/dxplugin.jsonc')` yields data the app hands straight to
- * {@link Plugin.fromManifest}. A host loading a *published* plugin instead fetches the same file
- * over HTTP and parses the JSONC itself; `Plugin.fromManifest` accepts either.
+ * The descriptor stays **data**: importing one yields its URL, never a module wrapping it, so a
+ * plugin built here and a plugin fetched from anywhere are loaded by the same code path —
+ * `Plugin.loadManifest(url)`. The dev server answers a plain GET on that URL with strict JSON.
  */
 export type DxPluginManifestOptions = {
   /**
@@ -73,13 +118,46 @@ export type DxPluginManifestOptions = {
 export const dxPluginManifest = (options: DxPluginManifestOptions = {}): VitePlugin => {
   let isBuild = false;
   let manifestPath: string | undefined;
-  // `src` -> the emitted chunk's reference id; resolved to filenames only once the bundle is written.
-  let emitted: { profile: Record<string, unknown>; modules: { module: RawModule; ref: string }[] } | undefined;
+  // Descriptors awaiting their asset source: chunk filenames only exist once the bundle is written,
+  // so each emitted descriptor holds its modules' reference ids until `generateBundle` resolves them.
+  const pending: { asset: string; profile: Record<string, unknown>; modules: { module: RawModule; ref: string }[] }[] =
+    [];
 
   return {
     name: '@dxos/vite-plugin-dxplugin',
     // Ahead of vite's JSON plugin, which would otherwise claim the file and choke on its comments.
     enforce: 'pre',
+
+    // Served as data, not as a module: a plain GET — a browser navigation, `curl`, or a host fetching
+    // a plugin it was pointed at — has to answer with the descriptor itself. Vite's static middleware
+    // would otherwise hand back the raw JSONC, which no `JSON.parse` accepts.
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const [pathname] = (req.url ?? '').split('?');
+        if (!pathname.endsWith(DXPLUGIN_FILENAME)) {
+          next();
+          return;
+        }
+
+        const decoded = decodeURIComponent(pathname);
+        const path = decoded.startsWith(FS_PREFIX)
+          ? // `/@fs/` strips to an absolute path on POSIX and to `C:/…` on Windows; neither keeps the slash.
+            fsPathFromPrefixed(decoded.slice(FS_PREFIX.length))
+          : join(server.config.root, decoded);
+
+        // Checked against `server.fs.allow` inline rather than through vite's own helper, because
+        // importing a *value* from vite would make it a runtime dependency of this file — and staying
+        // dependency-free is what lets `vite.base.config.ts` import the loader by path.
+        const allow = server.config.server.fs?.allow ?? [];
+        if (!existsSync(path) || !allow.some((root) => !relative(root, path).startsWith('..'))) {
+          next();
+          return;
+        }
+
+        res.setHeader('Content-Type', 'application/json');
+        res.end(serialized(parseJsonc(readFileSync(path, 'utf-8'))));
+      });
+    },
 
     configResolved(config) {
       isBuild = config.command === 'build';
@@ -93,43 +171,29 @@ export const dxPluginManifest = (options: DxPluginManifestOptions = {}): VitePlu
       if (!manifestPath) {
         return;
       }
-      const { modules, profile } = readDescriptor(parseJsonc(readFileSync(manifestPath, 'utf-8')));
-      const dir = dirname(manifestPath);
-      emitted = {
-        profile,
-        modules: modules.map((module) => ({
-          module,
-          ref: this.emitFile({
-            type: 'chunk',
-            id: resolve(dir, module.src),
-            preserveSignature: 'exports-only',
-          }),
-        })),
-      };
+      pending.push(emitDescriptor(this, manifestPath, DXPLUGIN_BUILT_FILENAME));
     },
 
     // JSON, not JSONC: the emitted copy is for hosts that fetch a published plugin and parse it with
     // whatever their runtime offers, so it must not require a comment-tolerant parser.
-    generateBundle(_output, _bundle) {
-      if (!emitted) {
-        return;
+    generateBundle(_options, bundle) {
+      for (const { asset, profile, modules } of pending) {
+        // `$schema` is an authoring aid pointing into the workspace's `node_modules`; it means nothing
+        // to a host that fetched this file, so it does not travel with the artifact.
+        const { $schema: _schema, ...rest } = profile;
+        const descriptor = {
+          ...rest,
+          modules: modules.map(({ module, ref }) => {
+            const { src: _src, ...fields } = module;
+            // Relative to the emitted descriptor, which sits at the bundle root beside the chunks.
+            return { ...fields, src: `./${posix.normalize(this.getFileName(ref))}` };
+          }),
+        };
+        const emitted = bundle[this.getFileName(asset)];
+        if (emitted?.type === 'asset') {
+          emitted.source = `${JSON.stringify(descriptor, null, 2)}\n`;
+        }
       }
-      // `$schema` is an authoring aid pointing into the workspace's `node_modules`; it means nothing
-      // to a host that fetched this file, so it does not travel with the artifact.
-      const { $schema: _schema, ...profile } = emitted.profile;
-      const descriptor = {
-        ...profile,
-        modules: emitted.modules.map(({ module, ref }) => {
-          const { src: _src, ...rest } = module;
-          // Relative to the emitted descriptor, which sits at the bundle root beside the chunks.
-          return { ...rest, src: `./${posix.normalize(this.getFileName(ref))}` };
-        }),
-      };
-      this.emitFile({
-        type: 'asset',
-        fileName: DXPLUGIN_BUILT_FILENAME,
-        source: `${JSON.stringify(descriptor, null, 2)}\n`,
-      });
     },
 
     // A library build externalizes every non-relative import, and an externalized id never reaches
@@ -148,39 +212,19 @@ export const dxPluginManifest = (options: DxPluginManifestOptions = {}): VitePlu
         return null;
       }
 
-      const { modules: declared, profile } = readDescriptor(parseJsonc(readFileSync(path, 'utf-8')));
-      const dir = dirname(path);
+      // The import yields a URL, not the descriptor: the data is fetched from it, so one code path
+      // loads a plugin whether it was built here or published elsewhere.
+      if (isBuild) {
+        const { asset, profile, modules } = emitDescriptor(this, path);
+        pending.push({ asset, profile, modules });
+        return { code: `export default import.meta.ROLLUP_FILE_URL_${asset};\n`, moduleSideEffects: false };
+      }
 
-      // Only the browser dev server serves `/@fs/`; a node consumer (vitest, an SSR transform) has to
-      // import the file itself, so the dev form follows the environment rather than assuming a browser.
-      const servesFs = this.environment?.name === 'client';
-
-      // `src` is a JS expression because rollup substitutes `import.meta.ROLLUP_FILE_URL_*` only in
-      // code position, and each module is serialized alone so no authored field can capture it.
-      const modules = declared.map((module) => {
-        const absolute = resolve(dir, module.src);
-        const src = isBuild
-          ? `import.meta.ROLLUP_FILE_URL_${this.emitFile({ type: 'chunk', id: absolute, preserveSignature: 'exports-only' })}`
-          : JSON.stringify(servesFs ? `/@fs/${absolute}` : pathToFileURL(absolute).href);
-        const { src: _src, ...rest } = module;
-        return `{ ...${JSON.stringify(rest)}, src: ${src} }`;
-      });
-
-      const body = `{ ...${JSON.stringify(profile, null, 2)}, modules: [${modules.join(', ')}] }`;
-
-      // Named `make`/`meta` alongside the data, so a consumer imports the descriptor as it would a
-      // plugin namespace and never restates `fromManifest` at the call site. Only the loader can
-      // offer them: a host reading the raw file gets data and calls `Plugin.fromManifest` itself.
-      const code = [
-        "import * as Plugin from '@dxos/app-framework/Plugin';",
-        `const descriptor = ${body};`,
-        'export const meta = Plugin.getMetaFromDescriptor(descriptor);',
-        'export const make = Plugin.fromManifest(descriptor);',
-        'export default descriptor;',
-        '',
-      ].join('\n');
-
-      return { code, moduleSideEffects: false };
+      // Only the browser dev server serves `/@fs/`; a node consumer (vitest, an SSR transform) reads
+      // the file itself, so the dev form follows the environment rather than assuming a browser.
+      const url =
+        this.environment?.name === 'client' ? `${FS_PREFIX}${path.replace(/^\//, '')}` : pathToFileURL(path).href;
+      return { code: `export default ${JSON.stringify(url)};\n`, moduleSideEffects: false };
     },
   };
 };

@@ -27,11 +27,12 @@ import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { useQuery } from '@dxos/echo-react';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
+import markdownDescriptorUrl from '@dxos/plugin-markdown/dxplugin.jsonc';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
@@ -48,6 +49,10 @@ import { AgentIdentity, CommentCapabilities } from '#types';
 import { ReviewPlugin, type ReviewPluginOptions } from '../../plugin';
 import { textOf } from '../../should-trigger-agent';
 import { ReviewStoryLayout, SAMPLE_CONTENT, STORY_AGENT_NAME, seedAgentSuggestions } from '../../testing';
+
+// Loaded once at module scope: a descriptor is data behind a URL, and the plugin arrays below
+// are built synchronously.
+const MarkdownPlugin = await EffectEx.runPromise(Plugin.loadManifest(markdownDescriptorUrl));
 
 // Phrases in SAMPLE_CONTENT that the seeded comment threads are anchored to.
 const SEED_PHRASES = ['comment threads', 'Effect schema', 'virtual stack'];
@@ -251,7 +256,7 @@ const meta = {
           agentRunner: StubAgentRunner,
           agentIdentity: { name: STORY_AGENT_NAME },
         } satisfies ReviewPluginOptions),
-        MarkdownPlugin.make(),
+        MarkdownPlugin(),
         StoryGraphPlugin(),
       ],
     })),

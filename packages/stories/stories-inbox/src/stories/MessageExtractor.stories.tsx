@@ -20,6 +20,7 @@ import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Feed, Filter, Obj, Tag, Type } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { type ObjectExtractor } from '@dxos/extractor';
 import { mockAiService } from '@dxos/extractor/testing';
 import { DXN } from '@dxos/keys';
@@ -30,7 +31,7 @@ import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
+import markdownDescriptorUrl from '@dxos/plugin-markdown/dxplugin.jsonc';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as Booking from '@dxos/plugin-trip/Booking';
@@ -46,6 +47,10 @@ import { Message as MessageType, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import FLIGHT_EMAIL from '../testing/flight.md?raw';
+
+// Loaded once at module scope: a descriptor is data behind a URL, and the plugin arrays below
+// are built synchronously.
+const MarkdownPlugin = await EffectEx.runPromise(Plugin.loadManifest(markdownDescriptorUrl));
 
 // MessageArticle calls LayoutOperation.Open/Select/UpdateCompanion from its callbacks. Provide
 // no-op handlers so the operations resolve without pulling in DeckPlugin.
@@ -285,7 +290,7 @@ const meta = {
     },
     plugins: [
       InboxPlugin(),
-      MarkdownPlugin.make(),
+      MarkdownPlugin(),
       TripPlugin(),
       PreviewPlugin.make(),
       MockDeckOperationsPlugin(),

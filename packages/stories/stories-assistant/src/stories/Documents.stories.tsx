@@ -6,10 +6,12 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { ToolId } from '@dxos/ai';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Script from '@dxos/compute/Script';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { Filter, Query, Ref } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
@@ -84,12 +86,14 @@ export const WithMarkdown: Story = {
       // (and the versioning UI) reads; without it the story throws "No capability found".
       // ReviewPlugin contributes the `history` companion surface the HistoryModule renders into.
       const [MarkdownPlugin, ReviewPlugin, SpacePlugin] = await Promise.all([
-        import('@dxos/plugin-markdown/dxplugin.jsonc'),
+        import('@dxos/plugin-markdown/dxplugin.jsonc').then(({ default: url }) =>
+          EffectEx.runPromise(Plugin.loadManifest(url)),
+        ),
         import('@dxos/plugin-review/ReviewPlugin'),
         import('@dxos/plugin-space/SpacePlugin'),
       ]);
       return {
-        plugins: [MarkdownPlugin.make(), ReviewPlugin.make(), SpacePlugin.make({})],
+        plugins: [MarkdownPlugin(), ReviewPlugin.make(), SpacePlugin.make({})],
       };
     },
     onInit: async ({ space }) => {
@@ -149,11 +153,13 @@ export const WithSkills: Story = {
     lazyPlugins: async () => {
       const [InboxPlugin, MarkdownPlugin, TablePlugin] = await Promise.all([
         import('@dxos/plugin-inbox/InboxPlugin'),
-        import('@dxos/plugin-markdown/dxplugin.jsonc'),
+        import('@dxos/plugin-markdown/dxplugin.jsonc').then(({ default: url }) =>
+          EffectEx.runPromise(Plugin.loadManifest(url)),
+        ),
         import('@dxos/plugin-table/TablePlugin'),
       ]);
       return {
-        plugins: [InboxPlugin.make(), MarkdownPlugin.make(), TablePlugin.make()],
+        plugins: [InboxPlugin.make(), MarkdownPlugin(), TablePlugin.make()],
       };
     },
     onInit: async ({ space }) => {
@@ -179,11 +185,13 @@ export const WithScript: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
       const [MarkdownPlugin, ScriptPlugin] = await Promise.all([
-        import('@dxos/plugin-markdown/dxplugin.jsonc'),
+        import('@dxos/plugin-markdown/dxplugin.jsonc').then(({ default: url }) =>
+          EffectEx.runPromise(Plugin.loadManifest(url)),
+        ),
         import('@dxos/plugin-script/ScriptPlugin'),
       ]);
       return {
-        plugins: [MarkdownPlugin.make(), ScriptPlugin.make()],
+        plugins: [MarkdownPlugin(), ScriptPlugin.make()],
       };
     },
     types: [Script.Script, Text.Text],

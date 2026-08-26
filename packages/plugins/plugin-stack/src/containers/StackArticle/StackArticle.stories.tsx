@@ -7,15 +7,17 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Collection, Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { EffectEx } from '@dxos/effect';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
+import markdownDescriptorUrl from '@dxos/plugin-markdown/dxplugin.jsonc';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -31,6 +33,10 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 
 import { StackArticle, type StackArticleProps } from './StackArticle';
+
+// Loaded once at module scope: a descriptor is data behind a URL, and the plugin arrays below
+// are built synchronously.
+const MarkdownPlugin = await EffectEx.runPromise(Plugin.loadManifest(markdownDescriptorUrl));
 
 // A minimal sketch (tldraw `tldraw.com/2`) snapshot, used as a test image.
 const SKETCH_CONTENT = new TldrawModel.RecordBuilder()
@@ -104,7 +110,7 @@ const meta: Meta<typeof StackArticle> = {
               );
             }),
         }),
-        MarkdownPlugin.make(),
+        MarkdownPlugin(),
         IllustratorPlugin.make(),
         TldrawPlugin.make(),
         SpacePlugin({}),

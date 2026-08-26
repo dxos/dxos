@@ -5,9 +5,11 @@
 import { describe, test } from '@effect/vitest';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as MarkdownPlugin from '@dxos/plugin-markdown/dxplugin.jsonc';
+
+import { meta } from '#meta';
 
 const PACKAGE_DIR = join(__dirname, '..');
 
@@ -18,14 +20,18 @@ const descriptor = readFileSync(join(PACKAGE_DIR, 'dxplugin.jsonc'), 'utf-8');
  * comparing against a hand-written entrypoint — there is no longer one to compare against.
  */
 describe('dxplugin.jsonc', () => {
-  test('is the source of the plugin metadata', ({ expect }) => {
-    expect(MarkdownPlugin.meta.profile).toMatchObject({ key: 'org.dxos.plugin.markdown', name: 'Markdown' });
-    expect(MarkdownPlugin.meta.profile).not.toHaveProperty('$schema');
+  // `meta` is authored in `#meta` because capability tags need it synchronously, so nothing but this
+  // stops the two drifting once the descriptor is fetched rather than imported.
+  test('agrees with the metadata authored in `#meta`', ({ expect }) => {
+    const { key, name } = Plugin.parseDescriptor(descriptor);
+    expect({ key, name }).toEqual({ key: meta.profile.key, name: meta.profile.name });
   });
 
   test('builds the plugin, narrowed to the loading platform', ({ expect }) => {
     // Resolved under the node condition here, so the browser-only modules are absent.
-    expect(MarkdownPlugin.make().modules.map(({ id }) => id)).toEqual([
+    expect(
+      Plugin.fromManifest(descriptor, { baseUrl: pathToFileURL(`${PACKAGE_DIR}/`) })().modules.map(({ id }) => id),
+    ).toEqual([
       'org.dxos.plugin.markdown.module.SkillDefinition',
       'org.dxos.plugin.markdown.module.CreateObject',
       'org.dxos.plugin.markdown.module.OperationHandler',
