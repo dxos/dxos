@@ -15,18 +15,21 @@ import { headObject, objectKey } from '#services';
 
 import { S3_CONNECTOR_ID, S3_SOURCE } from '../constants';
 
+// Every field is `NonEmptyString`, not `String`: the dialog closes before `onSubmit` runs, so a
+// failure raised there lands after unmount and is never shown. Rejecting empty in the schema keeps
+// the form from submitting at all.
 const S3CredentialForm = Schema.Struct({
-  endpoint: Schema.String.annotate({
+  endpoint: Schema.NonEmptyString.annotate({
     title: 'Bucket endpoint',
     description:
       'The virtual-hosted bucket host, e.g. media.<account-id>.r2.cloudflarestorage.com or media.s3.eu-west-1.amazonaws.com.',
     examples: ['media.abc123.r2.cloudflarestorage.com'],
   }),
-  accessKeyId: Schema.String.annotate({
+  accessKeyId: Schema.NonEmptyString.annotate({
     title: 'Access key ID',
     description: 'The S3 access key ID. For R2: Cloudflare dashboard → R2 → Manage API tokens.',
   }),
-  secretAccessKey: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({
+  secretAccessKey: Schema.NonEmptyString.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({
     title: 'Secret access key',
     description: 'Shown once when the key pair is created; it cannot be read back afterwards.',
   }),
@@ -58,16 +61,32 @@ export const createS3ConnectorEntry = (): ConnectorSpec.ConnectorEntry => ({
   credentialForm: {
     schema: S3CredentialForm,
     defaultValues: { endpoint: '', accessKeyId: '', secretAccessKey: '' } satisfies Partial<S3CredentialFormValues>,
+
+    // Runs while the dialog is still open, so these messages are the ones the user actually sees.
+    // Catches what the schema cannot: input that is non-empty but collapses to nothing once trimmed,
+    // and an endpoint that survives normalization as something other than a bare host.
+    onValidate: ({ values }) =>
+      Effect.gen(function* () {
+        const host = normalizeEndpoint(values.endpoint);
+        if (!host) {
+          return yield* Effect.fail(new Error('Enter the bucket endpoint, e.g. media.abc123.r2.cloudflarestorage.com'));
+        }
+        if (!/^[a-z0-9.-]+(:\d+)?$/.test(host)) {
+          return yield* Effect.fail(new Error(`Not a valid bucket host: ${host}`));
+        }
+        if (!values.accessKeyId.trim()) {
+          return yield* Effect.fail(new Error('Enter the access key ID.'));
+        }
+        if (!values.secretAccessKey.trim()) {
+          return yield* Effect.fail(new Error('Enter the secret access key.'));
+        }
+      }),
+
     onSubmit: ({ values, connector }) =>
       Effect.gen(function* () {
         const host = normalizeEndpoint(values.endpoint);
         const accessKeyId = values.accessKeyId.trim();
         const secretAccessKey = values.secretAccessKey.trim();
-        if (!host || !accessKeyId || !secretAccessKey) {
-          return yield* Effect.fail(
-            new Error('An S3 connection requires an endpoint, an access key ID and a secret access key.'),
-          );
-        }
 
         const accessToken = Obj.make(AccessToken.AccessToken, {
           source: host,

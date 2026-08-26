@@ -1,8 +1,9 @@
 # plugin-s3 — Tasks
 
-_Resume: verify an upload and a render against a real R2 bucket (Phase 2) — no request has yet been
-made to a real endpoint. Uncommitted: none. Last: the plugin was loaded, enabled and exercised in a
-running Composer; the blob backend is confirmed registered on the hypergraph._
+_Resume: exercise the connector + upload path through the browser UI — the wire protocol is proven
+against real R2 but CORS is still entirely unverified, since the live test ran in Node. Uncommitted:
+none. Last: full R2 round trip passed and turned up a real bug (R2 returns 400, not 403, for an
+unsigned read of a private bucket)._
 
 ## Phase 1: S3 blob backend + connector
 
@@ -43,23 +44,35 @@ on the hypergraph plus a `FileCapabilities.Backend` descriptor, with credentials
 
 ## Phase 2: Verify against a live bucket
 
-Nothing has touched a real endpoint. Everything below needs an actual R2 bucket and a key pair,
-which only the user can create — see "Handing an agent a credential" in AGENTS.md (`.secrets/`).
-
 ### Tasks
 
-- [ ] **Connect a real R2 bucket** through the connector UI and confirm `testConnection` reports
-      success (404 path) and reports failure for a bad key (403 path).
+- [x] **Full round trip against real R2** — `dev-sandbox-storage` in the DXOS account, via the key
+      in `.secrets/r2.yml`. Nine steps pass: HEAD-miss, PUT, HEAD-hit, GET (byte-identical),
+      presigned URL fetched with no `Authorization` header, unsigned read on a private bucket,
+      wrong-secret rejection, and DELETE cleanup with a HEAD to confirm removal. The test object was
+      deleted; nothing is left in the bucket. Script:
+      `scratchpad/r2-live-test.mjs` (not committed — it reads the secret).
+- [x] **Found and fixed a real bug the unit tests could not have caught.** R2 answers an
+      unauthenticated request to a private bucket with **`400 InvalidArgument`**, not the `403` AWS
+      returns, so the 404/403-only miss rule made the public-bucket fallback _throw_. Reads now
+      distinguish signed from unsigned: a signed read is authoritative (404/403 miss, anything else
+      raises), an unsigned read is speculative (any 4xx means "not publicly readable"). Regression
+      coverage in `s3-client.test.ts`.
+- [x] **Learned: R2 public access is a different hostname.** The S3 API endpoint always requires a
+      signature; public objects are served from `pub-<hash>.r2.dev` or a custom domain. The unsigned
+      fallback is therefore only reachable on R2 if the stored endpoint _is_ that public host. AWS
+      and MinIO have no such split. Documented in the README.
+- [ ] **Connect through the connector UI** end to end and confirm `testConnection` reports success
+      for a good key and failure for a bad one. The signing underneath is proven; what is unverified
+      is the UI path.
 - [ ] **Upload a file** with S3 selected as the backend; confirm the object lands at
       `<spaceId>/<contentHash>` and the ECHO `Blob` records the `s3://` URI.
 - [ ] **Render an image** from the bucket — exercises `getUrl`'s presigned path in an `<img>`.
 - [ ] **Confirm the CORS failure mode** with the policy absent, and check the README's policy is
-      sufficient (particularly the `AllowedHeaders` list against a real signed PUT).
-- [ ] **Public-bucket read with no credential in the space** — the URL-construction half of the
-      unsigned fallback is confirmed live (see Phase 1); what remains is an actual fetch of a real
-      public object.
+      sufficient (particularly the `AllowedHeaders` list against a real signed PUT). Note the live
+      test ran in Node, where CORS does not apply — this is still entirely unverified in a browser.
 - [ ] **A non-R2 endpoint** (MinIO or real AWS S3) to confirm the region-from-host parsing is right
-      where the region actually matters.
+      where the region actually matters. R2 ignores the region, so today's pass does not exercise it.
 
 ## Phase 3: Deferred
 

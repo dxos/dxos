@@ -51,5 +51,12 @@ Downloads do not require a credential: a space that holds none falls back to an 
 which succeeds against a public bucket. That is what lets a viewer render a shared object without
 being handed the writer's keys.
 
+**For R2, "public" means a different hostname.** The S3 API endpoint
+(`<bucket>.<account>.r2.cloudflarestorage.com`) always requires a signature and answers an
+unauthenticated request with `400 InvalidArgument` — not the `403` AWS returns. R2 serves public
+objects from `pub-<hash>.r2.dev` or a custom domain instead. So an unsigned read only works if the
+stored endpoint *is* that public hostname. AWS S3 and MinIO have no such split: their public objects
+are readable unsigned from the same endpoint.
+
 Removing the key from the client altogether means having EDGE mint presigned URLs on the client's
 behalf. That is a larger change and is not what this plugin does.

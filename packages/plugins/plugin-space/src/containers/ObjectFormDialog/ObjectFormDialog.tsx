@@ -316,7 +316,11 @@ export const ObjectFormDialog = ({
         // Settled before navigating, as in the live path: the object is created and persisted by
         // this point, so a navigation failure must not report it to the caller as a dismissal.
         handle?.settle(result.object);
-        yield* navigateTo(result.object);
+        // A create may legitimately finish without an object: the connector entry hands off to an
+        // OAuth popup or credential dialog and the Connection appears later, out of band.
+        if (result.object) {
+          yield* navigateTo(result.object);
+        }
       }).pipe(
         // A failed create still has to settle, or the operation waiting on the dialog never returns.
         Effect.ensuring(Effect.sync(() => handle?.settle())),

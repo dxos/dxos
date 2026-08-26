@@ -100,13 +100,25 @@ const readRequest = async (
   return request(url, { method, headers });
 };
 
-/** `undefined` when the object is absent (404) or the caller may not read it (403 on a private bucket). */
+/**
+ * Whether a failed read should be reported as "not there" rather than raised.
+ *
+ * A signed read is authoritative, so only 404 and 403 are misses and anything else is a fault worth
+ * surfacing. An unsigned read is speculative — it is a guess that the bucket is public — so any
+ * client error just means "not publicly readable". The distinction is load-bearing: R2 answers an
+ * unauthenticated request to a private bucket with `400 InvalidArgument`, not the 403 that AWS
+ * returns, so a 404/403-only rule turns the public-bucket fallback into a thrown error.
+ */
+const isMiss = (status: number, signed: boolean): boolean =>
+  signed ? status === 404 || status === 403 : status >= 400 && status < 500;
+
+/** `undefined` when the object is absent, or not readable with the credentials in hand. */
 export const getObject = async (options: ReadOptions): Promise<Uint8Array | undefined> => {
   const response = await readRequest('GET', options);
-  if (response.status === 404 || response.status === 403) {
-    return undefined;
-  }
   if (!response.ok) {
+    if (isMiss(response.status, !!options.credentials)) {
+      return undefined;
+    }
     throw new S3RequestError(response.status, response.statusText, await response.text().catch(() => ''));
   }
 
@@ -115,10 +127,10 @@ export const getObject = async (options: ReadOptions): Promise<Uint8Array | unde
 
 export const headObject = async (options: ReadOptions): Promise<boolean> => {
   const response = await readRequest('HEAD', options);
-  if (response.status === 404 || response.status === 403) {
-    return false;
-  }
   if (!response.ok) {
+    if (isMiss(response.status, !!options.credentials)) {
+      return false;
+    }
     throw new S3RequestError(response.status, response.statusText, await response.text().catch(() => ''));
   }
 

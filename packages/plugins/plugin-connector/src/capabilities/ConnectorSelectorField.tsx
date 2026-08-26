@@ -21,7 +21,10 @@ export type ConnectorSelectorFieldProps = Surface.ComponentProps<AppSurface.Form
 export const ConnectorSelectorField = ({ data, ...inputProps }: ConnectorSelectorFieldProps) => {
   const connectors = useCapabilities(Connector).flat();
   const options = useMemo(
-    () => connectors.map((connector) => ({ value: connector.id, label: connector.label ?? connector.id })),
+    () =>
+      connectors
+        .map((connector) => ({ value: connector.id, label: connector.label ?? connector.id }))
+        .sort((left, right) => left.label.localeCompare(right.label, undefined, { sensitivity: 'base' })),
     [connectors],
   );
 

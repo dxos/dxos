@@ -41,12 +41,12 @@ bucket, region, key id and secret: five values into three fields.
 
 Resolved by using **virtual-hosted-style addressing**, which is how S3 addresses buckets anyway:
 
-| Value        | Where it lives                                                     |
-| ------------ | ------------------------------------------------------------------ |
+| Value             | Where it lives                                                       |
+| ----------------- | -------------------------------------------------------------------- |
 | bucket + endpoint | `AccessToken.source` = `<bucket>.<account>.r2.cloudflarestorage.com` |
-| access key id | `AccessToken.account`                                              |
-| secret key   | `AccessToken.token`                                                 |
-| region       | parsed from the host; `auto` when it encodes none (R2, MinIO)      |
+| access key id     | `AccessToken.account`                                                |
+| secret key        | `AccessToken.token`                                                  |
+| region            | parsed from the host; `auto` when it encodes none (R2, MinIO)        |
 
 This buys three things: one `Connection` addresses exactly one bucket (the granularity `Connection`
 already models); a read resolves its own credential from the URI's host with no side table mapping

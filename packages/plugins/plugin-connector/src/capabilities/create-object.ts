@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { Obj, Type } from '@dxos/echo';
+import { Type } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
@@ -40,8 +40,8 @@ export default Capability.makeModule(
             id,
             subject: [],
             // The connection is created asynchronously by the coordinator (OAuth popup /
-            // credential dialog), so no object exists at return time; the contract requires one.
-            object: undefined as unknown as Obj.Unknown,
+            // credential dialog), so no object exists at return time.
+            object: undefined,
           };
         }),
     });
