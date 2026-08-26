@@ -42,7 +42,9 @@ describe('services/device', () => {
   });
 
   test('the joining device never mints a competing halo root', async () => {
-    const [host, guest] = await chain<ServiceContext>([closeAfterTest])(createPeers(2));
+    const [host, guest] = await chain<ServiceContext>([closeAfterTest])(
+      createPeers(2, undefined, { automergeCredentials: true }),
+    );
 
     const identity = await host.createIdentity();
     const spaceId = identity.haloSpaceId;

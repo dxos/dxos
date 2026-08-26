@@ -82,7 +82,7 @@ describe('identity/identity-manager', () => {
   });
 
   test('anchors the halo space on a space root document and mirrors its credentials', async () => {
-    const peer = await createServiceContext();
+    const peer = await createServiceContext({ runtimeProps: { automergeCredentials: true } });
     await peer.open(new Context());
     onTestFinished(() => peer.close());
 

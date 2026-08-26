@@ -380,6 +380,7 @@ export class DataSpaceManager extends Resource {
 
     const metadata: SpaceMetadata = {
       key: spaceKey,
+      spaceId,
       genesisFeedKey: controlFeedKey,
       controlFeedKey,
       dataFeedKey,
@@ -481,6 +482,7 @@ export class DataSpaceManager extends Resource {
     const tags = opts.tags ? Array.from(opts.tags) : [];
     const metadata: SpaceMetadata = {
       key: opts.spaceKey,
+      spaceId: await createIdFromSpaceKey(opts.spaceKey),
       genesisFeedKey: opts.genesisFeedKey,
       controlTimeframe: opts.controlTimeframe,
       dataTimeframe: opts.dataTimeframe,

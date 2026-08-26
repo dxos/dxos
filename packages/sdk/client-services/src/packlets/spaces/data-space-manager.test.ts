@@ -46,7 +46,7 @@ describe('DataSpaceManager', () => {
   test('an anchored space still takes its id from the space genesis key', async () => {
     const builder = new TestBuilder();
 
-    const peer = builder.createPeer();
+    const peer = builder.createPeer({ dataSpaceProps: { automergeCredentials: true } });
     await peer.createIdentity();
     await openAndClose(peer.echoHost, peer.dataSpaceManager);
 
@@ -214,7 +214,7 @@ describe('DataSpaceManager', () => {
   test('a legacy space anchors itself on the next load, with nobody calling migrate', async () => {
     const builder = new TestBuilder();
 
-    const peer = builder.createPeer();
+    const peer = builder.createPeer({ dataSpaceProps: { automergeCredentials: true } });
     await peer.createIdentity();
     await openAndClose(peer.echoHost, peer.dataSpaceManager);
 
@@ -244,7 +244,7 @@ describe('DataSpaceManager', () => {
   test('a credential deleted from the document is still read back', async () => {
     const builder = new TestBuilder();
 
-    const peer = builder.createPeer();
+    const peer = builder.createPeer({ dataSpaceProps: { automergeCredentials: true } });
     await peer.createIdentity();
     await openAndClose(peer.echoHost, peer.dataSpaceManager);
 
