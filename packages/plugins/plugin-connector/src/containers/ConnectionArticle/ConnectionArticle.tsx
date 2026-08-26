@@ -5,6 +5,8 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
@@ -15,6 +17,7 @@ import { ConnectionView } from '#components';
 import { useConnector, useReauthenticate, useSyncConnection, useSyncTargetsChecklist, useTestConnection } from '#hooks';
 
 import * as Binding from '../../Binding';
+import { connectionsDeckSubject } from '../../constants';
 
 export type ConnectionArticleProps = AppSurface.ObjectArticleProps<Connection.Connection>;
 
@@ -45,8 +48,18 @@ export const ConnectionArticle = ({ subject, role }: ConnectionArticleProps) => 
   const handleDelete = useCallback(() => {
     // Only the connection: its cursors are left dormant, holding the sync progress a later re-connect of
     // the same account resumes from.
-    void invokePromise(SpaceOperation.RemoveObjects, { objects: [subject] });
-  }, [invokePromise, subject]);
+    const spaceId = db?.spaceId;
+    void invokePromise(SpaceOperation.RemoveObjects, { objects: [subject] }).then(
+      () =>
+        // Fall back to the Connections section: this article's own subject stops resolving the
+        // moment the connection is gone, which would otherwise leave the deck on a dead node.
+        spaceId &&
+        invokePromise(LayoutOperation.Open, {
+          subject: [connectionsDeckSubject(GraphPath.getSpacePath(spaceId))],
+          navigation: 'immediate',
+        }),
+    );
+  }, [invokePromise, subject, db]);
 
   const handleRemoveBinding = useCallback(
     (binding: Cursor.ExternalCursor) => {
