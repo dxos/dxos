@@ -177,33 +177,48 @@ through steps in a browser. It is **not** a route into a PR.
 
 ## 5b. Attaching a demo to a PR
 
-Measured against this session's API, not assumed — the answer is narrower than it looks:
+**A still can be embedded; a video cannot.** Use the SHA-pinned hosting technique from
+[[composer-ui]] ("Hosting"): commit the PNG, take
+`https://raw.githubusercontent.com/dxos/dxos/<full-sha>/<path>` from that commit, embed it, then delete
+the file in the next commit. `refs/pull/<n>/head` keeps serving the blob, so the URL survives both the
+delete and the branch being deleted at merge, and the PR's final diff carries no binaries. Verify with
+`curl -o /dev/null -w '%{http_code}'` after the deleting commit lands.
 
-| in a PR body/comment                                  | survives? | evidence                                     |
-| ----------------------------------------------------- | --------- | -------------------------------------------- |
-| bare URL                                              | **yes**   | stored verbatim                              |
-| `[text](url)` link                                    | **yes**   | stored verbatim                              |
-| `![poster](url)` image                                | **no**    | the `!` is stripped; it becomes a plain link |
-| `<video src=…>`, `<source>`, `<track>`, `<img src=…>` | **no**    | escaped and wrapped in backticks             |
+**Never commit the video.** A multi-megabyte blob does not belong in git, and the retention that makes
+the pinned-URL trick work also means you cannot take it back. Commit a contact sheet instead — nine
+frames at the chapter starts, tiled, is ~330 KB and shows the whole flow:
 
-The session's API proxy neutralises any URL-bearing HTML tag on write — `<video controls width="600">`
-(no `src`) passes through untouched while `<video src="…">` is stored as ` ``&lt;video src="…"&gt;`` `.
-So an agent cannot emit an inline player or an inline image, whatever GitHub's own renderer would do
-with it. Test it the same way if this changes: patch a marker block into a PR body you own, read the
-body back through the API, restore it.
+```bash
+i=0; for t in 7.5 14.0 22.5 30.6 31.6 34.4 35.3 38.6 43.2; do i=$((i+1));
+  ffmpeg -loglevel error -ss $t -i demo.webm -frames:v 1 -vf scale=426:-1 -y sheet/$(printf %02d $i).png; done
+ffmpeg -loglevel error -framerate 1 -i 'sheet/%02d.png' \
+  -vf 'tile=3x3:margin=8:padding=6:color=0x111111' -frames:v 1 -y contact-sheet.png
+```
 
-What that leaves:
+Pick times just _after_ each chapter start so the frame lands past the transition, and check the result
+— adjacent chapters often render the same screen, and a duplicate panel wastes a ninth of the sheet.
 
-1. **Ask the human to drag the file into the comment box.** GitHub's attachment upload is a web-UI
-   endpoint with no public API, and it is the only route to an inline player. It yields a
-   `https://github.com/user-attachments/assets/…` URL — and **bare URLs are not rewritten**, so once
-   that URL exists an agent can paste it into the body and it renders. This is the path to prefer.
-2. **An external bucket (R2, S3).** Credentials via `.secrets/` per `AGENTS.md`. The result is a plain
-   link, not a player, and no poster image — see the table.
-3. **A release asset.** `uploads.github.com` is reachable and release endpoints are repo-scoped, so it
-   is technically possible, but it creates a visible release. In this repo releases mean published
-   packages: outward-facing, so get explicit approval first.
-4. **Committing the video.** Avoid — a multi-megabyte blob stays in history forever.
+What survives this session's API proxy, measured rather than assumed:
+
+| in a PR body                                      | survives                                           |
+| ------------------------------------------------- | -------------------------------------------------- |
+| `![x](https://raw.githubusercontent.com/…)`       | **yes** — GitHub-hosted absolute URLs keep the `!` |
+| `![x](relative/path.png)`                         | no — the `!` is stripped, leaving a link           |
+| `<video src>`, `<source>`, `<track>`, `<img src>` | no — escaped and wrapped in backticks              |
+| bare URL, `[text](url)`                           | yes, verbatim                                      |
+
+So there is no route to an inline player: `<video>` is escaped, and GitHub's attachment upload (the only
+thing that yields a player) is a web-UI endpoint — `POST /upload/policies/assets` answers `403` here.
+For the video itself, either attach it to the conversation with `SendUserFile` and let a human drag it
+into a comment, or host it outside git (R2/S3, credentials via `.secrets/` per `AGENTS.md`) and link it.
+
+### Before/after, when the demo is a fix
+
+For a change to rendered output, a pair of stills beats a clip: see [[composer-ui]]
+("Before/after screenshots") — both states from **one build** (re-apply the old value in the live page
+rather than rebuilding `main`), with `getBoundingClientRect()` / `getComputedStyle` numbers printed
+beside them. The driver's `eval` op does the measuring; `screenshot` takes the pair. A video of a layout
+fix mostly proves the app still runs.
 
 ## 6. Watch the demo before shipping it
 
