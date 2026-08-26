@@ -122,9 +122,21 @@ export const Default: Story = {
 //
 
 const EXECUTABLE_TASKS = [
-  { title: 'Compute 10! using the calculator', expression: '10!', result: '3628800' },
-  { title: 'Compute 12^2 using the calculator', expression: '12^2', result: '144' },
-  { title: 'Compute (1+2+3+4)! using the calculator', expression: '(1+2+3+4)!', result: '3628800' },
+  {
+    title: 'Compute 10! using the calculator',
+    expression: '10!',
+    result: '3628800',
+  },
+  {
+    title: 'Compute 12^2 using the calculator',
+    expression: '12^2',
+    result: '144',
+  },
+  {
+    title: 'Compute (1+2+3+4)! using the calculator',
+    expression: '(1+2+3+4)!',
+    result: '3628800',
+  },
 ];
 
 const seedExecutableTasks = async ({ space, chat }: { space: Space; chat: AssistantChat.Chat }) => {

@@ -248,24 +248,24 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
         ref={forwardedRef}
       >
         {ordinal !== undefined && <span className='justify-self-end text-xs text-subdued'>{ordinal}</span>}
-        <IconButton
-          classNames={mx('justify-self-center', iconClassNames)}
-          variant='ghost'
-          density='sm'
-          icon={icon}
-          iconOnly
-          label={
-            // TODO(burdon): Map to status label.
-            onTaskUpdate
-              ? done
-                ? t('mark-todo.label')
-                : t('mark-done.label')
-              : done
-                ? t('status-done.label')
-                : t('status-pending.label')
-          }
-          onClick={handleToggle}
-        />
+        {onTaskUpdate ? (
+          <IconButton
+            classNames={mx('justify-self-center', iconClassNames)}
+            variant='ghost'
+            density='sm'
+            icon={icon}
+            iconOnly
+            label={done ? t('mark-todo.label') : t('mark-done.label')}
+            onClick={handleToggle}
+          />
+        ) : (
+          // Read-only rows get a non-interactive glyph announced by its actual status; one grid
+          // cell, so the sr-only text must not become a column of its own.
+          <span className='grid place-items-center justify-self-center'>
+            <Icon icon={icon} classNames={iconClassNames} size={4} />
+            <span className='sr-only'>{t(`status-${current.status ?? 'todo'}.label`)}</span>
+          </span>
+        )}
         <span
           className={onTaskSelect ? 'truncate cursor-pointer' : 'truncate'}
           onClick={onTaskSelect ? () => onTaskSelect(task) : undefined}

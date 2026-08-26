@@ -55,6 +55,11 @@ be visible in the UI, closing the gaps the storybook audit surfaced.
       writes the owner ref in separate operations, so concurrent peers can race
       and orphan a set (CodeRabbit on #12752); needs a create-if-absent
       primitive or a reconcile that adopts the losing set's tasks.
+- [ ] **Data-flow dependencies** — `dependsOn` is scheduling-only today: a
+      sub-agent receives just its task title, so a dependent task cannot
+      consume a predecessor's result. Render completed dependencies' results
+      (held by the supervisor from fold-back exits) into the dependent
+      sub-agent's synthesized instructions.
 - [ ] **Cancel/delete tasks** — cancel a started (possibly delegated) task from
       the UI and the agent surface, and delete via the TaskOperation verb so
       the set's refs and lifecycle parent edges stay consistent; a cancelled
