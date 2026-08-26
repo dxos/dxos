@@ -455,7 +455,8 @@ export class EchoHost extends Resource {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     const spaceId = await createIdFromSpaceKey(spaceKey);
 
-    const automergeRoot = await this._automergeHost.createDoc<DatabaseDirectory>({
+    // Released once the root is assigned: `updateSpaceRoot` takes the lease the space keeps.
+    using automergeRoot = await this._automergeHost.createDoc<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
       // spaceKey is deprecated but still written so older clients can resolve the owning space.
       access: { spaceId, spaceKey: spaceKey.toHex() },
@@ -481,9 +482,11 @@ export class EchoHost extends Resource {
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
     const spaceId = await createIdFromSpaceKey(spaceKey);
-    const rootHandle = await this._automergeHost.createDoc<Partial<SpaceRoot>>({});
+    // Both released here: the directory's lease is retaken by `updateSpaceRoot`, and the space root
+    // document is only written once.
+    using rootHandle = await this._automergeHost.createDoc<Partial<SpaceRoot>>({});
 
-    const directoryHandle = await this._automergeHost.createDoc<DatabaseDirectory>({
+    using directoryHandle = await this._automergeHost.createDoc<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
       // spaceKey is deprecated but still written so older clients can resolve the owning space.
       access: { spaceId, spaceKey: spaceKey.toHex() },

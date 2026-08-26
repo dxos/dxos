@@ -285,8 +285,9 @@ export class DocumentsSynchronizer extends Resource {
     const syncState = this._syncStates.get(documentId);
     invariant(syncState, 'Sync state for document not found');
     const headsBefore = A.getHeads(syncState.lease.handle.doc());
-    // This will update corresponding handle in the repo.
-    await this._params.automergeHost.createDoc(mutation, { documentId, preserveHistory: true });
+    // This will update corresponding handle in the repo. The import's own lease is surplus —
+    // `syncState.lease` is what keeps the document resident while the client subscribes.
+    using _imported = await this._params.automergeHost.createDoc(mutation, { documentId, preserveHistory: true });
 
     if (A.equals(headsBefore, syncState.lastSentHead)) {
       // No new mutations were discovered on network, so we do not need to send updates from worker to client.

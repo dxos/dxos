@@ -157,8 +157,21 @@ export class SpaceStateManager extends Resource {
       await rootCtx.dispose();
       this._perRootContext.delete(documentId);
     }
-    this._roots.get(documentId)?.[Symbol.dispose]();
-    this._roots.delete(documentId);
+    // Kept while another space still reads through the same root, whose lease it shares.
+    if (!this._isRootReferenced(documentId)) {
+      this._roots.get(documentId)?.[Symbol.dispose]();
+      this._roots.delete(documentId);
+    }
+  }
+
+  /** Whether any space still reads through this root document. */
+  private _isRootReferenced(documentId: DocumentId): boolean {
+    for (const rootId of this._rootBySpace.values()) {
+      if (rootId === documentId) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /** Takes ownership of `lease`: the root holds it until the space is removed or the manager closes. */
@@ -185,6 +198,14 @@ export class SpaceStateManager extends Resource {
     }
 
     this._rootBySpace.set(spaceId, root.handle.documentId);
+
+    // The replaced root is released here rather than at `removeSpace`, which only ever sees the
+    // current one — its lease would otherwise keep the retired directory resident for the session.
+    // A root shared with another space stays, since that space still reads through it.
+    if (prevRootId && prevRootId !== root.documentId && !this._isRootReferenced(prevRootId)) {
+      this._roots.get(prevRootId)?.[Symbol.dispose]();
+      this._roots.delete(prevRootId);
+    }
 
     await this._saveSpace(spaceId, root.url);
 

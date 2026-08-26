@@ -599,9 +599,13 @@ export class AutomergeHost extends Resource {
     // Only a loaded document is evicted: `_repo.flush` persists ready handles, so dropping one that
     // is still loading would discard data that is only in memory.
     if (getHandleState(this._repo, documentId) !== 'ready') {
-      await asyncTimeout(this._waitForReady(this._repo.findWithProgress(documentId)), EVICT_SETTLE_TIMEOUT).catch(
-        (err) => log('document did not settle before eviction', { documentId, err }),
-      );
+      const abort = new AbortController();
+      await asyncTimeout(
+        this._waitForReady(this._repo.findWithProgress(documentId), abort.signal),
+        EVICT_SETTLE_TIMEOUT,
+      )
+        .catch((err) => log('document did not settle before eviction', { documentId, err }))
+        .finally(() => abort.abort());
       if (getHandleState(this._repo, documentId) !== 'ready') {
         log('skipped eviction of a document that is not loaded', { documentId });
         return;
@@ -664,7 +668,12 @@ export class AutomergeHost extends Resource {
 
     // `_waitForReady` (vs `progress.whenReady()`) treats `'unavailable'` as transient — the query routinely transits through it when classical sync sees `peers.size === 0` before the next peer arrives.
     if (opts?.timeout) {
-      await cancelWithContext(ctx, asyncTimeout(this._waitForReady(progress), opts.timeout));
+      const abort = new AbortController();
+      try {
+        await cancelWithContext(ctx, asyncTimeout(this._waitForReady(progress, abort.signal), opts.timeout));
+      } finally {
+        abort.abort();
+      }
     } else {
       await cancelWithContext(ctx, this._waitForReady(progress));
     }
@@ -676,8 +685,14 @@ export class AutomergeHost extends Resource {
     return lease;
   }
 
-  /** Resolve on `'ready'`, reject on `'failed'`, treat `'unavailable'` as transient; caller bounds via `opts.timeout` / `ctx`. */
-  private _waitForReady<T>(progress: DocumentProgress<T>): Promise<DocHandle<T>> {
+  /**
+   * Resolve on `'ready'`, reject on `'failed'`, treat `'unavailable'` as transient; caller bounds via
+   * `opts.timeout` / `ctx`.
+   *
+   * `signal` unsubscribes an abandoned wait: a bounded caller stops awaiting but the query lives on,
+   * so without it a document that never settles gains a subscriber per attempt.
+   */
+  private _waitForReady<T>(progress: DocumentProgress<T>, signal?: AbortSignal): Promise<DocHandle<T>> {
     const peeked = progress.peek();
     if (peeked.state === 'ready') {
       return Promise.resolve(peeked.handle);
@@ -695,6 +710,10 @@ export class AutomergeHost extends Resource {
           reject(state.error);
         }
         // `'unavailable'` and `'loading'` are non-terminal — keep waiting.
+      });
+      signal?.addEventListener('abort', () => {
+        unsubscribe();
+        reject(signal.reason instanceof Error ? signal.reason : new Error('Wait for document aborted.'));
       });
     });
   }

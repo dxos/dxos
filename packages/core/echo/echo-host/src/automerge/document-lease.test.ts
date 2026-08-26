@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, onTestFinished, test } from 'vitest';
+import { describe, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
 import { openAndClose } from '@dxos/test-utils';
@@ -23,7 +23,7 @@ describe('document leases', () => {
     return host;
   };
 
-  test('a document is evicted once its last lease is disposed', async () => {
+  test('a document is evicted once its last lease is disposed', async ({ expect }) => {
     const host = await setup();
     const created = await host.createDoc<{ text: string }>({ text: 'hello' });
     const documentId = created.documentId;
@@ -39,7 +39,7 @@ describe('document leases', () => {
     expect(reloaded!.handle.doc()!.text).toBe('hello');
   });
 
-  test('a document with a second lease outstanding stays resident', async () => {
+  test('a document with a second lease outstanding stays resident', async ({ expect }) => {
     const host = await setup();
     using first = await host.createDoc<{ text: string }>({ text: 'hello' });
     await host.flush(Context.default());
@@ -51,7 +51,7 @@ describe('document leases', () => {
     expect(host.leasedDocsCount).toBe(1);
   });
 
-  test('re-acquiring a document before the drain cancels its eviction', async () => {
+  test('re-acquiring a document before the drain cancels its eviction', async ({ expect }) => {
     const host = await setup();
     const created = await host.createDoc<{ text: string }>({ text: 'hello' });
     await host.flush(Context.default());
@@ -66,7 +66,7 @@ describe('document leases', () => {
     expect(reacquired.handle.doc()!.text).toBe('hello');
   });
 
-  test('evicting a document that was never flushed persists it first', async () => {
+  test('evicting a document that was never flushed persists it first', async ({ expect }) => {
     const host = await setup();
     // An unsaved document exists only in memory, so eviction has to write it out before dropping the
     // handle — otherwise releasing a freshly created object would lose it.
@@ -82,7 +82,7 @@ describe('document leases', () => {
     expect(reloaded!.handle.doc()!.text).toBe('unflushed');
   });
 
-  test('disposal is idempotent, and the document is unreachable afterwards', async () => {
+  test('disposal is idempotent, and the document is unreachable afterwards', async ({ expect }) => {
     const host = await setup();
     const lease = await host.createDoc<{ text: string }>({ text: 'hello' });
     await host.flush(Context.default());
@@ -95,7 +95,7 @@ describe('document leases', () => {
     expect(() => lease.handle).toThrow();
   });
 
-  test('a write through one lease is visible through another', async () => {
+  test('a write through one lease is visible through another', async ({ expect }) => {
     const host = await setup();
     using first = await host.createDoc<{ text: string }>({ text: 'hello' });
     using second = host.acquireDoc<{ text: string }>(first.documentId);

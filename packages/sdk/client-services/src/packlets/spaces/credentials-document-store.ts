@@ -27,7 +27,11 @@ const CREDENTIALS_PATH = ['credentials'];
  * Read/write access to a space's credentials document, the successor to its control feed.
  */
 export class CredentialsDocumentStore implements Disposable {
-  constructor(private readonly _lease: DocumentLease<CredentialsDocument>) {}
+  readonly #lease: DocumentLease<CredentialsDocument>;
+
+  constructor(lease: DocumentLease<CredentialsDocument>) {
+    this.#lease = lease;
+  }
 
   get url(): AutomergeUrl {
     return this.#handle.url;
@@ -35,11 +39,11 @@ export class CredentialsDocumentStore implements Disposable {
 
   /** Releases the credentials document; the store cannot be read or written after this. */
   [Symbol.dispose](): void {
-    this._lease[Symbol.dispose]();
+    this.#lease[Symbol.dispose]();
   }
 
   get #handle(): DocHandle<CredentialsDocument> {
-    return this._lease.handle;
+    return this.#lease.handle;
   }
 
   /**
@@ -97,12 +101,24 @@ export const openCredentialsDocument = async (
   echoHost: EchoHost,
   spaceId: SpaceId,
 ): Promise<CredentialsDocumentStore> => {
+  const open = async (url: AutomergeUrl): Promise<CredentialsDocumentStore> => {
+    // The lease is held by the store: it writes credentials for as long as the space is open.
+    const lease = await echoHost.loadDoc<CredentialsDocument>(ctx, url);
+    invariant(lease, 'Credentials document must load.');
+    return store(lease);
+  };
+
+  // Disposed with the caller's context, which is what bounds the store's lifetime — the lease would
+  // otherwise keep the document resident for the session.
+  const store = (lease: DocumentLease<CredentialsDocument>): CredentialsDocumentStore => {
+    const opened = new CredentialsDocumentStore(lease);
+    ctx.onDispose(() => opened[Symbol.dispose]());
+    return opened;
+  };
+
   const existing = echoHost.getSpaceRootRefs(spaceId)?.credentialsDocUrl;
   if (existing) {
-    // The lease is held by the store: it writes credentials for as long as the space is open.
-    const lease = await echoHost.loadDoc<CredentialsDocument>(ctx, existing);
-    invariant(lease, 'Credentials document must load.');
-    return new CredentialsDocumentStore(lease);
+    return open(existing);
   }
 
   // The creating lease becomes the store's, so the document is never released between being created
@@ -112,6 +128,12 @@ export const openCredentialsDocument = async (
     spaceId,
     credentials: {},
   });
-  await echoHost.setCredentialsDocument(ctx, spaceId, created.handle.url);
-  return new CredentialsDocumentStore(created);
+  // The link is what the space root records, and a concurrent call may have won it: the store must
+  // follow the linked document, since writes to an unlinked one would never be read back.
+  const linked = await echoHost.setCredentialsDocument(ctx, spaceId, created.handle.url);
+  if (linked !== created.handle.url) {
+    created[Symbol.dispose]();
+    return open(linked);
+  }
+  return store(created);
 };
