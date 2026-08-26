@@ -17,7 +17,8 @@ import type * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 import * as RpcSerialization from 'effect/unstable/rpc/RpcSerialization';
 
 import { type Client } from '@dxos/client';
-import { type ProcessManager, type RemoteProcessManager, RemoteProcessManagerAdapter } from '@dxos/compute-runtime';
+import { type ProcessManager, type RemoteProcessManager } from '@dxos/compute-runtime';
+import { RemoteProcessManagerAdapter } from '@dxos/compute-runtime/remote-process';
 import type * as Process from '@dxos/compute/Process';
 import { Context as DxosContext } from '@dxos/context';
 import type { EdgeProcessHttpClient } from '@dxos/edge-client/process';
