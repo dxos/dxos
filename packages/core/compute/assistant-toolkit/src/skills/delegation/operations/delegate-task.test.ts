@@ -19,12 +19,12 @@ import { Outline, Task, TaskSet } from '@dxos/types';
 import { Agent, Chat } from '../../../types';
 import DelegationSkill from '../skill';
 import { DelegateTask } from './definitions';
-import { DelegationHandlers } from './index';
+import { DelegationSkillHandlers } from './index';
 
 EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  operationHandlers: DelegationHandlers,
+  operationHandlers: DelegationSkillHandlers,
   types: [
     Agent.Agent,
     Outline.Outline,

@@ -9,8 +9,12 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
+import { BaseError } from '@dxos/errors';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
+
+/** Evaluation failure carrying the parser error as its cause. */
+export class InvalidExpressionError extends BaseError.extend('INVALID_EXPRESSION', 'Invalid expression') {}
 
 /**
  * Story-local arithmetic tool, so delegation demos exercise a real (locally defined) tool call:
@@ -95,6 +99,10 @@ export const evaluateExpression = (expression: string): number => {
       if (!Number.isInteger(value) || value < 0) {
         fail(`factorial of non-natural number ${value}`);
       }
+      // 170! is the largest finite double; a larger operand would also spin the handler.
+      if (value > 170) {
+        fail(`factorial operand ${value} too large (max 170)`);
+      }
       let acc = 1;
       for (let i = 2; i <= value; i++) {
         acc *= i;
@@ -127,6 +135,9 @@ export const evaluateExpression = (expression: string): number => {
   if (position !== input.length) {
     fail(`unexpected "${input[position]}"`);
   }
+  if (!Number.isFinite(value)) {
+    fail(`non-finite result ${value}`);
+  }
   return value;
 };
 
@@ -135,7 +146,7 @@ const CalculateHandler = Calculate.pipe(
     Effect.fn(function* ({ expression }) {
       const result = yield* Effect.try({
         try: () => evaluateExpression(expression),
-        catch: (error) => new Error(`Invalid expression: ${String(error)}`),
+        catch: (cause) => new InvalidExpressionError({ cause, context: { expression } }),
       });
       return { result };
     }),

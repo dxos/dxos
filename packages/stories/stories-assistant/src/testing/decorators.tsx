@@ -29,7 +29,7 @@ import {
   AgentHandlers,
   AgentSkill,
   Chat,
-  DelegationHandlers,
+  DelegationSkillHandlers,
   DelegationSkill,
   PlanningHandlers,
   PlanningSkill,
@@ -279,7 +279,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
         Capability.contributeAll(Capabilities.OperationHandler, [
           MarkdownOperationHandlerSet.handlers,
           PlanningHandlers,
-          DelegationHandlers,
+          DelegationSkillHandlers,
           AgentHandlers,
           ExampleHandlers,
           CalculatorHandlers,

@@ -19,7 +19,7 @@ import { Text } from '@dxos/schema';
 import { Message, Outline, Task, TaskSet } from '@dxos/types';
 
 import { AgentHandlers } from '../operations';
-import { DelegationHandlers, DelegationSkill } from '../skills';
+import { DelegationSkillHandlers, DelegationSkill } from '../skills';
 import { DelegateTask } from '../skills/delegation/operations/definitions';
 import { Agent, Chat } from '../types';
 import { makeDelegationStrategy } from './delegation-strategy';
@@ -56,7 +56,7 @@ const TestLayer = AssistantTestLayer({
       ],
     },
   ]),
-  operationHandlers: [DelegationHandlers, AgentHandlers],
+  operationHandlers: [DelegationSkillHandlers, AgentHandlers],
   skills: [DelegationSkill.make()],
   types: [
     Agent.Agent,
@@ -100,7 +100,7 @@ const FailingTestLayer = AssistantTestLayer({
       ],
     },
   ]),
-  operationHandlers: [DelegationHandlers, AgentHandlers],
+  operationHandlers: [DelegationSkillHandlers, AgentHandlers],
   skills: [DelegationSkill.make()],
   types: [
     Agent.Agent,

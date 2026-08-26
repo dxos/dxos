@@ -8,7 +8,7 @@ import { userEvent, within } from 'storybook/test';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import {
-  DelegationOperations,
+  DelegationSkillOperations,
   DelegationSkill,
   PlanningOperations,
   PlanningSkill,
@@ -138,7 +138,7 @@ const EXECUTABLE_TASKS = [
     title: 'Compute (1+2+3+4)! using the calculator',
     expression: '(1+2+3+4)!',
     result: '3628800',
-    dependencies: [2],
+    dependencies: [],
   },
 ];
 
@@ -480,7 +480,7 @@ export const TestDelegationScripted: Story = {
           {
             parts: [
               text('On it — delegating.'),
-              toolCall(Operation.toolName(DelegationOperations.DelegateTask), { title: TASK_TITLE }),
+              toolCall(Operation.toolName(DelegationSkillOperations.DelegateTask), { title: TASK_TITLE }),
             ],
           },
           { parts: [text('Delegated. I will report back when it completes.')] },
@@ -597,7 +597,7 @@ export const TestTaskDelegationScripted: Story = {
           {
             parts: [
               text('Delegating task 1.'),
-              toolCall(Operation.toolName(DelegationOperations.DelegateTasks), { tasks: [1] }),
+              toolCall(Operation.toolName(DelegationSkillOperations.DelegateTasks), { tasks: [1] }),
             ],
           },
           { parts: [text('Task 1 delegated. I will report back when it completes.')] },
@@ -646,7 +646,7 @@ export const TestTaskDrainScripted: Story = {
           {
             parts: [
               text('Delegating all three tasks; they will run in dependency order.'),
-              toolCall(Operation.toolName(DelegationOperations.DelegateTasks), { tasks: [1, 2, 3] }),
+              toolCall(Operation.toolName(DelegationSkillOperations.DelegateTasks), { tasks: [1, 2, 3] }),
             ],
           },
           { parts: [text('All three delegated; the sub-agents will report back as each completes.')] },
