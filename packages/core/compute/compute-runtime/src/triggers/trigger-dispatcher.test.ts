@@ -191,6 +191,23 @@ const registerOperation = (operation: Operation.Definition.Any) =>
     return record;
   });
 
+/**
+ * Poll a predicate against real time. The timer lifecycle is driven by the trigger-query
+ * subscription callback, which runs on its own fiber, so a transition is never observable on the
+ * turn that caused it. Returns the final value so a caller can assert either polarity — a `false`
+ * result after the full budget is the "never happened" assertion.
+ */
+const waitFor = (predicate: () => boolean, attempts = 100) =>
+  Effect.gen(function* () {
+    for (let attempt = 0; attempt < attempts; attempt++) {
+      if (predicate()) {
+        return true;
+      }
+      yield* Effect.sleep(Duration.millis(20));
+    }
+    return predicate();
+  });
+
 describe('TriggerDispatcher', () => {
   describe('Time Control', () => {
     it.effect(
@@ -640,6 +657,44 @@ describe('TriggerDispatcher', () => {
           }).pipe(Effect.ensuring(dispatcher.stop()));
         },
         Effect.provide(TestLayer({ timeControl: 'natural', livePollInterval: Duration.hours(1) })),
+      ),
+    );
+
+    // `it.live` (not `it.effect`): the timer is started and stopped from a real subscription
+    // callback, so the waits below must pass real time rather than a virtual clock nothing advances.
+    it.live(
+      'schedules no timer while no trigger exists, and starts/stops one across the empty boundary',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const dispatcher = yield* TriggerDispatcher;
+          yield* dispatcher.start();
+
+          // Stopped in a finalizer: a failure below would otherwise leave a detached timer fiber
+          // and the reactive subscriptions running into the next test.
+          yield* Effect.gen(function* () {
+            // An idle dispatcher is up, but schedules no repeating wake at all.
+            expect(dispatcher.running).toBe(true);
+            expect(yield* waitFor(() => dispatcher.timerScheduled, 10)).toBe(false);
+
+            // The first trigger starts the loop.
+            const functionObj = yield* registerOperation(Reply);
+            const trigger = Trigger.make({
+              runnable: Ref.make(functionObj),
+              enabled: true,
+              spec: Trigger.specTimer('* * * * *'),
+            });
+            yield* Database.add(trigger);
+            yield* Database.flush();
+            expect(yield* waitFor(() => dispatcher.timerScheduled)).toBe(true);
+
+            // Removing the last trigger stops it again.
+            yield* Database.remove(trigger);
+            yield* Database.flush();
+            expect(yield* waitFor(() => !dispatcher.timerScheduled)).toBe(true);
+          }).pipe(Effect.ensuring(dispatcher.stop()));
+        },
+        // Also covers the devtools/cli path, which passes a 1s interval rather than the default.
+        Effect.provide(TestLayer({ timeControl: 'natural', livePollInterval: Duration.seconds(1) })),
       ),
     );
   });
