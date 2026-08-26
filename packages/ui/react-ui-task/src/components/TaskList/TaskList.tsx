@@ -6,21 +6,30 @@ import { createContext } from '@radix-ui/react-context';
 import React, { Fragment, type KeyboardEvent, type PropsWithChildren, useCallback, useMemo, useState } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { Icon, IconButton, IconButtonProps, Input, Tag, composable, composableProps } from '@dxos/react-ui';
+import {
+  Icon,
+  IconButton,
+  IconButtonProps,
+  Input,
+  Tag,
+  composable,
+  composableProps,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { type Actor, type Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
+import { translationKey } from '#translations';
+
 const TASK_LIST_NAME = 'TaskList.Root';
 
-export type TaskStatus = NonNullable<Task.Task['status']>;
-
 /** Linear-style status groups, most active first. */
-export const STATUS_ORDER: TaskStatus[] = ['in-progress', 'todo', 'done', 'failed', 'cancelled'];
+export const STATUS_ORDER: Task.Status[] = ['in-progress', 'todo', 'done', 'failed', 'cancelled'];
 
 /** Fallback status labels. */
-const DEFAULT_STATUS_LABELS: Record<TaskStatus, string> = {
+const DEFAULT_STATUS_LABELS: Record<Task.Status, string> = {
   'in-progress': 'In progress',
   'todo': 'To Do',
   'done': 'Done',
@@ -38,7 +47,7 @@ type TaskListContextValue = {
   tasks: readonly Task.Task[];
   groupByStatus: boolean;
   showGroupLabels: boolean;
-  statusLabel: (status: TaskStatus) => string;
+  statusLabel: (status: Task.Status) => string;
   onTaskCreate?: (title: string) => void;
   onTaskUpdate?: (task: Task.Task, patch: TaskPatch) => void;
   onTaskDelete?: (task: Task.Task) => void;
@@ -58,7 +67,7 @@ type TaskListRootProps = PropsWithChildren<{
   /** Render the status heading above each group; grouping order is kept either way. */
   showGroupLabels?: boolean;
   /** i18n hook for group headings; defaults to English labels. */
-  statusLabel?: (status: TaskStatus) => string;
+  statusLabel?: (status: Task.Status) => string;
   /** Enables `Create`; called with the trimmed title. */
   onTaskCreate?: (title: string) => void;
   /** Enables the done toggle. Every mutation is delegated — the list never writes. */
@@ -184,11 +193,20 @@ TaskListGroupLabel.displayName = 'TaskList.GroupLabel';
 // Item — one row. Exported so a host can render its own selection of tasks.
 //
 
+const STATUS_ICONS: Record<Task.Status, string> = {
+  'todo': 'ph--square--regular',
+  'in-progress': 'ph--clock--regular',
+  'done': 'ph--check--regular',
+  'failed': 'ph--x--regular',
+  'cancelled': 'ph--x--regular',
+};
+
 type TaskListItemProps = ComposableProps<{ task: Task.Task }>;
 
 const TaskListItem = composable<HTMLLIElement, { task: Task.Task }>(({ task, ...props }, forwardedRef) => {
   const { onTaskUpdate, onTaskDelete, onTaskSelect } = useTaskListContext('TaskList.Item');
   const { className, ...rest } = composableProps(props);
+  const { t } = useTranslation(translationKey);
   // Subscribe per row: a query re-emits when membership changes, not when a task's own fields do,
   // so a rename elsewhere (task form, agent, sync) would otherwise leave the row stale.
   const [snapshot] = useObject(task);
@@ -211,10 +229,18 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task }>(({ task, ...
         classNames={mx('justify-self-center text-subdued', done && 'text-success-text')}
         variant='ghost'
         density='sm'
-        icon={done ? 'ph--check--regular' : 'ph--square--regular'}
+        icon={STATUS_ICONS[current.status ?? 'todo']}
         iconOnly
-        // TODO(burdon): Translations.
-        label={onTaskUpdate ? (done ? 'Mark todo' : 'Mark done') : done ? 'Done' : 'Pending'}
+        label={
+          // TODO(burdon): Map to status label.
+          onTaskUpdate
+            ? done
+              ? t('mark-todo.label')
+              : t('mark-done.label')
+            : done
+              ? t('status-done.label')
+              : t('status-pending.label')
+        }
         onClick={handleToggle}
       />
       <span
@@ -229,8 +255,7 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task }>(({ task, ...
         <CompactIconButton
           variant='ghost'
           icon='ph--x--regular'
-          // TODO(burdon): Translate.
-          label='Delete task'
+          label={t('delete-task.label')}
           classNames='invisible group-hover:visible'
           onClick={() => onTaskDelete(task)}
         />

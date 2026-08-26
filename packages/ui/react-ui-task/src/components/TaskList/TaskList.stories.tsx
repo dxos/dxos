@@ -10,6 +10,8 @@ import { Obj } from '@dxos/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Task } from '@dxos/types';
 
+import { translations } from '#translations';
+
 import { TaskList, type TaskPatch } from './TaskList';
 
 const seed = (): Task.Task[] => [
@@ -78,6 +80,7 @@ const meta = {
   title: 'ui/react-ui-task/TaskList',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
+  parameters: { translations },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

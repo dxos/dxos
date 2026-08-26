@@ -4,12 +4,14 @@
 
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
+import { translations as taskTranslations } from '@dxos/react-ui-task/translations';
 import { Outline } from '@dxos/types';
 
 import { meta } from '#meta';
 import { Journal } from '#types';
 
 export const translations = [
+  ...taskTranslations,
   {
     'en-US': {
       [Type.getTypename(Journal.Journal)]: {
