@@ -159,6 +159,9 @@ const decodeArgs = [
 // capped are what a lower `--max-static` buys, and motion is the floor the trim can never go below.
 if (options.report) {
   const decoder = spawn(FFMPEG, decodeArgs);
+  // Registered at spawn, not after the loop: `once` on a process that has already closed never
+  // resolves, so a late listener turns an ffmpeg crash into a hang.
+  const decoderClosed = once(decoder, 'close');
   decoder.stderr.pipe(process.stderr);
   let pending = Buffer.alloc(0);
   let previous;
@@ -192,7 +195,7 @@ if (options.report) {
   if (run) {
     runs.push({ length: run, start: runStart });
   }
-  const [decoderStatus] = await once(decoder, 'close');
+  const [decoderStatus] = await decoderClosed;
   if (decoderStatus !== 0) {
     console.error(`ffmpeg decode failed (exit ${decoderStatus}) — statistics would be partial`);
     process.exit(1);
@@ -260,6 +263,10 @@ const encoder = spawn(FFMPEG, [
   output,
 ]);
 
+// Both registered before any awaiting, for the reason above.
+const decoderClosed = once(decoder, 'close');
+const encoderClosed = once(encoder, 'close');
+
 decoder.stderr.pipe(process.stderr);
 encoder.stderr.pipe(process.stderr);
 
@@ -308,8 +315,8 @@ for await (const chunk of decoder.stdout) {
 }
 
 encoder.stdin.end();
-const [encoderStatus] = await once(encoder, 'close');
-const [decodeStatus] = decoder.exitCode === null ? await once(decoder, 'close') : [decoder.exitCode];
+const [encoderStatus] = await encoderClosed;
+const [decodeStatus] = await decoderClosed;
 if (decodeStatus !== 0 || encoderStatus !== 0) {
   console.error(`ffmpeg failed (decode ${decodeStatus}, encode ${encoderStatus}) — output is unusable`);
   process.exit(1);
@@ -399,8 +406,8 @@ const annotate = async () => {
   small { display: block; opacity: .6; }
   code { opacity: .5; font-size: 12px; }
 </style>
-<video id="v" controls src="${escapeHtml(path.basename(annotated))}">
-  <track kind="chapters" srclang="en" src="${escapeHtml(path.basename(vttFile))}" default>
+<video id="v" controls src="${escapeHtml(encodeURIComponent(path.basename(annotated)))}">
+  <track kind="chapters" srclang="en" src="${escapeHtml(encodeURIComponent(path.basename(vttFile)))}" default>
 </video>
 <ol id="steps">${marks
       .map(
