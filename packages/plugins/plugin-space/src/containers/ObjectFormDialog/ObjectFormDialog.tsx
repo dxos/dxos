@@ -123,8 +123,9 @@ export const ObjectFormDialog = ({
     [createObjectEntries],
   );
 
-  // The type selector is shown while no type has been resolved; the registry button is only relevant then.
-  const showTypeSelector = !(typename && resolve(typename));
+  // Matches the panel's own gate: the selector shows while no type has been *chosen*, not while its
+  // entry is still resolving — otherwise the registry button blinks in for the same frame.
+  const showTypeSelector = !typename;
   // Gated here as well as in the button: `Dialog.Close asChild` needs an element child, so the
   // action bar cannot wrap a button that renders nothing.
   const registryAvailable = usePluginRegistryAvailable();

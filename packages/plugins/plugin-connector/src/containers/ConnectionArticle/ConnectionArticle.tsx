@@ -39,7 +39,7 @@ export const ConnectionArticle = ({ subject, role }: ConnectionArticleProps) => 
 
   const { available: syncTargetsAvailable, loading, openChecklist } = useSyncTargetsChecklist(subject);
   const { available: syncAvailable, syncing, sync } = useSyncConnection(subject);
-  const { status: testStatus, error: testError, retest } = useTestConnection(subject);
+  const { status: testStatus, error: testError, testing, retest } = useTestConnection(subject);
   const { available: canReauthenticate, reauthenticating, reauthenticate } = useReauthenticate(subject);
 
   const handleDelete = useCallback(() => {
@@ -77,6 +77,7 @@ export const ConnectionArticle = ({ subject, role }: ConnectionArticleProps) => 
       syncTargetsAvailable={syncTargetsAvailable}
       testStatus={testStatus}
       testError={testError}
+      testing={testing}
       canReauthenticate={canReauthenticate}
       reauthenticating={reauthenticating}
       onSync={() => void sync()}

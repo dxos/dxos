@@ -118,11 +118,6 @@
       "types": "./dist/types/src/types/ConnectorEvents.d.ts",
       "import": "./dist/lib/ConnectorEvents.mjs"
     },
-    "./ConnectorForm": {
-      "source": "./src/types/ConnectorForm.ts",
-      "types": "./dist/types/src/types/ConnectorForm.d.ts",
-      "import": "./dist/lib/ConnectorForm.mjs"
-    },
     "./ConnectorOperation": {
       "source": "./src/types/ConnectorOperation.ts",
       "types": "./dist/types/src/types/ConnectorOperation.d.ts",
@@ -165,9 +160,6 @@
       "ConnectorEvents": [
         "dist/types/src/types/ConnectorEvents.d.ts"
       ],
-      "ConnectorForm": [
-        "dist/types/src/types/ConnectorForm.d.ts"
-      ],
       "ConnectorOperation": [
         "dist/types/src/types/ConnectorOperation.d.ts"
       ],
@@ -208,6 +200,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-search": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*"
   },

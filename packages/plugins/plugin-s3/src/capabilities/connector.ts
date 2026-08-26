@@ -19,11 +19,26 @@ import { S3_CONNECTOR_ID, S3_SOURCE } from '../constants';
 // failure raised there lands after unmount and is never shown. Rejecting empty in the schema keeps
 // the form from submitting at all.
 const S3CredentialForm = Schema.Struct({
+  name: Schema.optional(
+    Schema.String.annotate({
+      title: 'Name',
+      description: 'Optional label for this connection. Defaults to the bucket name.',
+    }),
+  ),
+  // Bucket and endpoint are separate fields because that is how every dashboard hands them over:
+  // Cloudflare shows one account-wide endpoint and lists buckets beside it. Asking for them
+  // pre-joined invites the account endpoint on its own, which addresses no bucket at all and fails
+  // only later, as an opaque `InvalidBucketName` from the first request.
+  bucket: Schema.NonEmptyString.annotate({
+    title: 'Bucket',
+    description: 'The bucket name on its own, e.g. media.',
+    examples: ['media'],
+  }),
   endpoint: Schema.NonEmptyString.annotate({
-    title: 'Bucket endpoint',
+    title: 'Endpoint',
     description:
-      'The virtual-hosted bucket host, e.g. media.<account-id>.r2.cloudflarestorage.com or media.s3.eu-west-1.amazonaws.com.',
-    examples: ['media.abc123.r2.cloudflarestorage.com'],
+      'The account endpoint without the bucket, e.g. <account-id>.r2.cloudflarestorage.com or s3.eu-west-1.amazonaws.com.',
+    examples: ['abc123.r2.cloudflarestorage.com'],
   }),
   accessKeyId: Schema.NonEmptyString.annotate({
     title: 'Access key ID',
@@ -50,6 +65,17 @@ export const normalizeEndpoint = (endpoint: string): string =>
     .toLowerCase();
 
 /**
+ * Joins bucket and endpoint into the virtual-hosted host that addresses the bucket. Tolerates an
+ * endpoint that already carries the bucket, since that is what the field asked for previously and
+ * what a user copying a full bucket URL will paste.
+ */
+export const composeHost = ({ bucket, endpoint }: { bucket: string; endpoint: string }): string => {
+  const host = normalizeEndpoint(endpoint);
+  const name = bucket.trim().toLowerCase();
+  return !name || host.startsWith(`${name}.`) ? host : `${name}.${host}`;
+};
+
+/**
  * The S3 connector. The bucket endpoint becomes `AccessToken.source`, the access key id
  * `AccessToken.account` (a non-secret identifier) and the secret `AccessToken.token` — so one
  * connection addresses exactly one bucket and the blob backend can find it from a URI's host alone.
@@ -60,16 +86,24 @@ export const createS3ConnectorEntry = (): ConnectorSpec.ConnectorEntry => ({
   label: 'S3 Storage',
   credentialForm: {
     schema: S3CredentialForm,
-    defaultValues: { endpoint: '', accessKeyId: '', secretAccessKey: '' } satisfies Partial<S3CredentialFormValues>,
+    defaultValues: {
+      bucket: '',
+      endpoint: '',
+      accessKeyId: '',
+      secretAccessKey: '',
+    } satisfies Partial<S3CredentialFormValues>,
 
     // Runs while the dialog is still open, so these messages are the ones the user actually sees.
     // Catches what the schema cannot: input that is non-empty but collapses to nothing once trimmed,
     // and an endpoint that survives normalization as something other than a bare host.
     onValidate: ({ values }) =>
       Effect.gen(function* () {
-        const host = normalizeEndpoint(values.endpoint);
+        if (!values.bucket.trim()) {
+          return yield* Effect.fail(new Error('Enter the bucket name.'));
+        }
+        const host = composeHost(values);
         if (!host) {
-          return yield* Effect.fail(new Error('Enter the bucket endpoint, e.g. media.abc123.r2.cloudflarestorage.com'));
+          return yield* Effect.fail(new Error('Enter the endpoint, e.g. abc123.r2.cloudflarestorage.com'));
         }
         if (!/^[a-z0-9.-]+(:\d+)?$/.test(host)) {
           return yield* Effect.fail(new Error(`Not a valid bucket host: ${host}`));
@@ -84,7 +118,7 @@ export const createS3ConnectorEntry = (): ConnectorSpec.ConnectorEntry => ({
 
     onSubmit: ({ values, connector }) =>
       Effect.gen(function* () {
-        const host = normalizeEndpoint(values.endpoint);
+        const host = composeHost(values);
         const accessKeyId = values.accessKeyId.trim();
         const secretAccessKey = values.secretAccessKey.trim();
 
@@ -94,7 +128,9 @@ export const createS3ConnectorEntry = (): ConnectorSpec.ConnectorEntry => ({
           token: secretAccessKey,
         });
         const connection = Obj.make(Connection.Connection, {
-          name: connector.label ? `${connector.label} · ${host}` : host,
+          // The bucket alone, not the connector label plus the full endpoint: the name is a sidebar
+          // row, and the account id in a virtual-hosted host is 32 characters of noise there.
+          name: values.name?.trim() || values.bucket.trim(),
           connectorId: connector.id,
           accessToken: Ref.make(accessToken),
         });

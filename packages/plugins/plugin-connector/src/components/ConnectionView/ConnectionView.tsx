@@ -47,6 +47,8 @@ export type ConnectionViewProps = {
   testStatus: TestConnectionStatus;
   /** User-facing reason when `testStatus` is `'invalid'`. */
   testError?: string;
+  /** Whether a probe is in flight; `testStatus` continues to show the previous verdict meanwhile. */
+  testing?: boolean;
   /** True when the connector supports in-place reauthentication (OAuth connectors). */
   canReauthenticate: boolean;
   /** True while a reauthentication popup/redirect is being initiated. */
@@ -81,6 +83,7 @@ export const ConnectionView = ({
   syncTargetsAvailable,
   testStatus,
   testError,
+  testing = false,
   canReauthenticate,
   reauthenticating,
   onSync,
@@ -129,8 +132,8 @@ export const ConnectionView = ({
                           ) : undefined
                         }
                       >
-                        <Button onClick={onTestConnection} disabled={testStatus === 'testing'}>
-                          {t('test-connection.label')}
+                        <Button onClick={onTestConnection} disabled={testing}>
+                          {testing ? t('testing-connection.label') : t('test-connection.label')}
                         </Button>
                       </Form.Row>
                     )}

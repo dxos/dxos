@@ -34,9 +34,33 @@ export class S3RequestError extends Error {
   }
 }
 
+/**
+ * A request the browser refused to send or whose response it refused to expose. Almost always a
+ * missing bucket CORS policy, which `fetch` reports as an opaque `TypeError` with the real reason
+ * confined to the devtools console — so name the likely cause here rather than let a blocked
+ * preflight surface as "Failed to fetch".
+ */
+export class S3NetworkError extends Error {
+  constructor(
+    readonly host: string,
+    override readonly cause: unknown,
+  ) {
+    super(
+      `Could not reach ${host}. The bucket's CORS policy must allow this origin for GET, HEAD and PUT ` +
+        `(and the authorization, x-amz-content-sha256 and x-amz-date headers). Original error: ` +
+        String(cause instanceof Error ? cause.message : cause),
+    );
+    this.name = 'S3NetworkError';
+  }
+}
+
 const request = async (input: URL, init: RequestInit & { headers?: Record<string, string> }): Promise<Response> => {
   const signal = AbortSignal.timeout(S3_TIMEOUT_MS);
-  return fetch(input, { ...init, signal });
+  try {
+    return await fetch(input, { ...init, signal });
+  } catch (cause) {
+    throw new S3NetworkError(input.host, cause);
+  }
 };
 
 export type PutOptions = {
