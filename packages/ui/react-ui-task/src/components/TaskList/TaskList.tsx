@@ -17,6 +17,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import { MarkdownView } from '@dxos/react-ui-markdown';
 import { type Actor, type Task, TaskSet } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
@@ -228,6 +229,11 @@ TaskListGroupLabel.displayName = 'TaskList.GroupLabel';
 // Item — one row. Exported so a host can render its own selection of tasks.
 //
 
+/** A description is a line in a row, not a document: no paragraph block, no heading scale. */
+const DESCRIPTION_COMPONENTS = {
+  p: ({ children }: PropsWithChildren) => <span>{children}</span>,
+};
+
 const STATUS_ICONS: Record<Task.Status, { icon: string; classNames?: string }> = {
   todo: { icon: 'ph--square--regular', classNames: 'text-subdued' },
   started: { icon: 'ph--hourglass--regular', classNames: 'text-info-text' },
@@ -305,13 +311,10 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
           </span>
         )}
         <span
-          className={mx('flex flex-col justify-center gap-0.5 min-w-0', onTaskSelect && 'cursor-pointer')}
+          className={mx('flex h-8 items-center gap-1 min-w-0', onTaskSelect && 'cursor-pointer')}
           onClick={onTaskSelect ? () => onTaskSelect(task) : undefined}
         >
-          <span className='flex h-8 items-center gap-1 min-w-0'>
-            <span className='truncate'>{current.title}</span>
-          </span>
-          {description && <span className='pb-1 text-sm text-subdued line-clamp-3'>{description}</span>}
+          <span className='truncate'>{current.title}</span>
         </span>
         {current.assignee ? (
           <span className='flex h-8 items-center'>
@@ -331,6 +334,19 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
             label={t('delete-task.label')}
             classNames='invisible group-hover/row:visible group-focus-within/row:visible'
             onClick={() => onTaskDelete(task)}
+          />
+        )}
+        {description && (
+          // Its own row in the subgrid, starting under the title and spanning the label columns.
+          <MarkdownView
+            content={description}
+            classNames={mx(
+              ordinal !== undefined ? 'col-start-3' : 'col-start-2',
+              'col-span-3 pb-1 text-sm text-description line-clamp-3',
+            )}
+            // The row supplies the type scale and the clamp, so the description renders as one
+            // inline run rather than the block paragraph the default component wraps it in.
+            components={DESCRIPTION_COMPONENTS}
           />
         )}
       </Listbox.Item>
