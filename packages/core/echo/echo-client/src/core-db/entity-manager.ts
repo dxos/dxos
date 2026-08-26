@@ -21,7 +21,7 @@ import {
 } from '@dxos/async';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { raise, warnAfterTimeout } from '@dxos/debug';
-import { type Database, Ref } from '@dxos/echo';
+import { type Database, type Entity, Ref } from '@dxos/echo';
 import {
   type BranchRecord,
   DatabaseDirectory,
@@ -88,6 +88,13 @@ export type EntityManagerProps = {
   spaceKey: PublicKey;
   /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
   branchStore?: BranchStore;
+
+  /**
+   * Mints the caller-facing proxy for a core that has none yet. Injected because the proxy layer
+   * (`echo-handler`) is built on this one, so calling into it directly would be a cycle; entity
+   * surfacing itself belongs here, beside the working set it reads.
+   */
+  createEntity: (core: ObjectCore) => Entity.Unknown;
 };
 
 /**
@@ -121,6 +128,8 @@ export class EntityManager implements IDatabaseBinding {
 
   /** Optional device-local persistence for {@link _currentBranches} (survives reload, never syncs). */
   private readonly _branchStore?: BranchStore;
+
+  private readonly _createEntity: (core: ObjectCore) => Entity.Unknown;
 
   /**
    * Object ids whose backing document was determined to be not on local disk
@@ -196,6 +205,7 @@ export class EntityManager implements IDatabaseBinding {
   private readonly _rootChangedEvent = new Event<void>();
 
   constructor(options: EntityManagerProps) {
+    this._createEntity = options.createEntity;
     this._spaceKey = options.spaceKey;
     this._spaceId = options.spaceId;
     this._hypergraph = options.graph;
@@ -400,6 +410,32 @@ export class EntityManager implements IDatabaseBinding {
     // would report `main` for an object reading and writing a branch.
     core.branch = this.getCurrentBranch(objectId);
     return core;
+  }
+
+  /**
+   * The entity for an id already in the working set, or undefined.
+   *
+   * `core.rootProxy` is the identity map — a second one keyed by core (as `DatabaseImpl` used to
+   * keep) held every proxy the database had ever handed out, so nothing it loaded could be released.
+   */
+  getEntityById(id: string, { deleted = false }: { deleted?: boolean } = {}): Entity.Unknown | undefined {
+    const core = this.getObjectCoreById(id);
+    if (!core || (core.isDeleted() && !deleted)) {
+      return undefined;
+    }
+    return core.rootProxy ?? this._createEntity(core);
+  }
+
+  /** {@link getEntityById}, loading the object's document first. */
+  async loadEntityById(
+    objectId: string,
+    { allowDeleted = false, ...options }: LoadObjectOptions & { allowDeleted?: boolean } = {},
+  ): Promise<Entity.Unknown | undefined> {
+    const core = await this.loadObjectCoreById(objectId, options);
+    if (!core || (core.isDeleted() && !allowDeleted)) {
+      return undefined;
+    }
+    return core.rootProxy ?? this._createEntity(core);
   }
 
   async loadObjectCoreById(

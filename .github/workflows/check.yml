@@ -280,10 +280,18 @@ jobs:
           DX_DEBUG_LEAKS_DIR: ${{ runner.temp }}/profiles
         run: moon run echo-client-e2e:test -- src/feed-retention.test.ts
 
-      - name: Automerge retention
+      # One invocation per test, because vitest isolation is per FILE and both tests live in one:
+      # a single run leaves the second test measuring the first test's WASM, which is never returned
+      # to the OS. A fresh process per test is the only clean floor.
+      - name: Automerge retention (collection)
         env:
           DX_DEBUG_LEAKS_DIR: ${{ runner.temp }}/profiles
-        run: moon run echo-client-e2e:test -- src/automerge-retention.test.ts
+        run: moon run echo-client-e2e:test -- src/automerge-retention.test.ts -t 'collecting removed objects releases them'
+
+      - name: Automerge retention (caller reference)
+        env:
+          DX_DEBUG_LEAKS_DIR: ${{ runner.temp }}/profiles
+        run: moon run echo-client-e2e:test -- src/automerge-retention.test.ts -t 'dropping the caller reference releases objects'
 
   # Every vitest flavour in one sharded job: unit (`:test`), browser (`:test-browser`), storybook
   # (`:test-storybook`) and the Cloudflare Workers runtime (`:test-workerd`). They used to be three
