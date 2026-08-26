@@ -122,7 +122,7 @@ the drain loop; this PR (#12752).
 ## Phase 3: Task UX backlog
 
 Follow-ups raised while reviewing the TaskList and chat surfaces (2026-08-26).
-Each is independent of the others; none is started.
+Each is independent of the others; the checked items shipped in #12784.
 
 ### Tasks
 

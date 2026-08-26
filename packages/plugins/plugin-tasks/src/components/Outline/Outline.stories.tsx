@@ -23,7 +23,7 @@ const OutlineStory = ({ content = '- [x] Initial content', references }: StoryAr
       return space.db.add(Text.make({ content }));
     }
     return undefined;
-  }, [space]);
+  }, [space, content]);
   // The outline owns its core extensions; a host adds what only it knows about. Here that is
   // plugin-github's `#123` decoration, which in the app resolves against the project's repository.
   const extensions = useMemo(

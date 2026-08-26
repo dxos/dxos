@@ -9,11 +9,7 @@ import { describe, test } from 'vitest';
 import { createMarkdownExtensions } from './bundle';
 import { decorateMarkdown } from './decorate';
 
-/**
- * The GFM parser already produces `URL` (a bare address) and `Autolink` (`<…>`) nodes — the bundle
- * enables the extension — but parsing is not rendering: only `decorateMarkdown` turns a node into an
- * anchor, and it used to decorate the bracketed `Link` form alone.
- */
+/** The GFM parser produces the nodes; only `decorateMarkdown` turns one into an anchor. */
 const createView = (doc: string) => {
   const parent = document.createElement('div');
   return new EditorView({
