@@ -33,7 +33,6 @@ jobs:
         with:
           detached: true
 
-      # Blobless: full history without every historical file version. Nothing in the tree is LFS-tracked.
       - name: Checkout DXOS
         uses: actions/checkout@v5
         with:
@@ -41,7 +40,6 @@ jobs:
           filter: blob:none
           path: dxos
 
-      # `lfs: true` stays: dxos/edge may track LFS files, unlike this tree.
       - name: Checkout EDGE
         uses: actions/checkout@v5
         with:

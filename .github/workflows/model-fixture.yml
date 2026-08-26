@@ -48,7 +48,6 @@ jobs:
       VITEST_XML_REPORT: 'true'
       MOON_CONCURRENCY: 4
     steps:
-      # Blobless: full history without every historical file version. Nothing in the tree is LFS-tracked.
       - name: Checkout
         uses: actions/checkout@v5
         with:

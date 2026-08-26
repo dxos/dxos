@@ -37,7 +37,6 @@ jobs:
       pull-requests: write
       issues: write
     steps:
-      # Blobless: full history without every historical file version. Nothing in the tree is LFS-tracked.
       - name: Checkout
         uses: actions/checkout@v5
         with:

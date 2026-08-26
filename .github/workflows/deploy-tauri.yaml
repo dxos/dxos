@@ -131,7 +131,6 @@ jobs:
     timeout-minutes: 60
 
     steps:
-      # Blobless: full history without every historical file version. Nothing in the tree is LFS-tracked.
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
@@ -353,7 +352,6 @@ jobs:
     continue-on-error: true
 
     steps:
-      # Blobless: full history without every historical file version. Nothing in the tree is LFS-tracked.
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0

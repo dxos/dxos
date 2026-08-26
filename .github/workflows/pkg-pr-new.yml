@@ -32,7 +32,6 @@ jobs:
     # workspace packages, which does not fit the previous 30.
     timeout-minutes: 60
     steps:
-      # Blobless: full history without every historical file version. Nothing in the tree is LFS-tracked.
       - name: Checkout
         uses: actions/checkout@v5
         with:
