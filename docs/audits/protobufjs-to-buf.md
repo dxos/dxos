@@ -117,9 +117,14 @@ payloads packed:
 
 `encodeCompat` / `decodeCompat` / `compatCodec` now take a `CompatOptions` argument and both sites are
 on the compat codec. These are the highest-traffic wire formats in the repo -- a byte mismatch breaks
-all peer communication rather than one call -- so both carry byte-equality fixtures against the legacy
-codec, plus a negative test proving the option actually gates (without it, a registered payload
-resolves).
+all peer communication rather than one call -- so both carry fixtures against the legacy codec, plus a
+negative test proving the option actually gates (without it, a registered payload resolves).
+
+`ReliablePayload` asserts byte equality. `RpcMessage` deliberately does not, and cannot:
+protobuf.js writes its non-optional `stream: false` explicitly (`20 00`) where buf omits the proto3
+default, so the two differ by two bytes. Its fixture asserts cross-codec round-trips and the packed
+`Buffer` shape instead -- the rule this plan already states for data that is neither signed nor
+persisted.
 
 Two notes for `#8`. `createProtoRpcPeer` threads `encodingOptions` down to the codec, so this argument
 is the prerequisite that path needed. And `rpc.ts` keeps its lazy-codec comment ("breaks in workerd");
