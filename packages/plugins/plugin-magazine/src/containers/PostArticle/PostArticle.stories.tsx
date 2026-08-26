@@ -19,10 +19,10 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
+import { MagazinePlugin } from '#plugin';
 import { translations } from '#translations';
 import { Subscription } from '#types';
 
-import { MagazinePlugin } from '../../plugin';
 import { PostArticle } from './PostArticle';
 
 const SAMPLE_MARKDOWN = `# Local-first software

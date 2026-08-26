@@ -18,9 +18,6 @@
       "path": "../../common/effect"
     },
     {
-      "path": "../../common/effect-proto"
-    },
-    {
       "path": "../../common/invariant"
     },
     {
@@ -43,9 +40,6 @@
     },
     {
       "path": "../../core/echo/echo-react"
-    },
-    {
-      "path": "../../core/protocols"
     },
     {
       "path": "../../sdk/react-client"

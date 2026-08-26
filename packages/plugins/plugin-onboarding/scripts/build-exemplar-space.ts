@@ -1149,7 +1149,7 @@ const makeTaskSet = (
     Task.make({
       title: 'Finalize roast curve (v3)',
       milestone: Ref.make(roast),
-      status: 'in-progress',
+      status: 'started',
       priority: 'high',
       assignee: { contact: Ref.make(people.kai) },
       description: 'Currently on v2 with adjusted development time. One more iteration before sign-off.',
@@ -1157,7 +1157,7 @@ const makeTaskSet = (
     Task.make({
       title: 'Send v2 samples to wholesalers',
       milestone: Ref.make(launch),
-      status: 'in-progress',
+      status: 'started',
       priority: 'medium',
       assignee: { contact: Ref.make(people.sam) },
       description: 'North Star, Hatch, Olive & Vine. 2 lb each.',
@@ -1165,7 +1165,7 @@ const makeTaskSet = (
     Task.make({
       title: 'Design label — Letterform Press',
       milestone: Ref.make(launch),
-      status: 'in-progress',
+      status: 'started',
       priority: 'medium',
       assignee: { contact: Ref.make(people.riley) },
       description: 'Final draft due to the printer in 10 days.',

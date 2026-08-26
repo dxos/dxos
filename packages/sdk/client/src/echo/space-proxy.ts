@@ -74,9 +74,9 @@ const EPOCH_CREATION_TIMEOUT = 60_000;
  * helper is retained only for callers that need {@link Space} proxy members
  * (`properties`, `members`, `key`, `state`, `listen`, identity).
  *
- * @deprecated Use {@link Obj.getSpace} instead.
+ * @deprecated Use {@link Obj.getDatabase} instead.
  */
-// TODO(burdon): Hypergraph.getSpace().
+// TODO(burdon): Hypergraph.getSpace()?
 export const getSpace = (object?: any): Space | undefined => {
   if (!object) {
     return undefined;

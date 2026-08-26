@@ -15,7 +15,6 @@ import { ReferenceAnnotationId, type ReferenceAnnotationValue, getTypeAnnotation
 import { EffectEx, SchemaAST, SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Space } from '@dxos/react-client/echo';
 import { Person } from '@dxos/types';
 
 // TODO(wittjosiah): Factor out and add tests.
@@ -144,9 +143,9 @@ const typenameFromFilter = (filter: QueryAST.Filter): Option.Option<string> =>
   );
 
 // TODO(wittjosiah): Currently assumes from scope is at the top-level of the ast.
-export const getQueryTarget = (query: QueryAST.Query, space?: Space) => {
+export const getQueryTarget = (query: QueryAST.Query, db?: Database.Database) => {
   return Match.value(query).pipe(
-    Match.when({ type: 'from' }, () => space?.db),
-    Match.orElse(() => space?.db),
+    Match.when({ type: 'from' }, () => db),
+    Match.orElse(() => db),
   );
 };

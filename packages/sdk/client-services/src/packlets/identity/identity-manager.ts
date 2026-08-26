@@ -19,8 +19,8 @@ import { invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { Device, DeviceKind } from '@dxos/protocols/proto/dxos/client/services';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type IdentityRecord, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import {
@@ -86,7 +86,7 @@ export type IdentityManagerProps = {
   feedStore: FeedStore<FeedMessage>;
   spaceManager: SpaceManager;
   edgeConnection?: EdgeConnection;
-  edgeFeatures?: Runtime.Client.EdgeFeatures;
+  edgeFeatures?: Runtime_Client_EdgeFeatures;
   devicePresenceAnnounceInterval?: number;
   devicePresenceOfflineTimeout?: number;
   /** See {@link DataSpaceManagerRuntimeProps.automergeCredentials}. Off by default. */
@@ -140,7 +140,7 @@ export class IdentityManager {
   private readonly _devicePresenceOfflineTimeout: number;
   private readonly _automergeCredentials: boolean;
   private readonly _edgeConnection: EdgeConnection | undefined;
-  private readonly _edgeFeatures: Runtime.Client.EdgeFeatures | undefined;
+  private readonly _edgeFeatures: Runtime_Client_EdgeFeatures | undefined;
 
   private _identity?: Identity;
   /** Owns the HALO anchoring subscriptions, which outlive any single open() call. */

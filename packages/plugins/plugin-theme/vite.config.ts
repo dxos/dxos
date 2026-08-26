@@ -8,6 +8,7 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
     ThemePlugin: 'src/ThemePlugin.ts',
+    capabilities: 'src/capabilities/index.ts',
     meta: 'src/meta.ts',
     plugin: 'src/plugin.ts',
     testing: 'src/testing.ts',

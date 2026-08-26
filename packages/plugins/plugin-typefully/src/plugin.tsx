@@ -3,27 +3,15 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { Connector, PublisherService } from '#capabilities';
+import { Connector, PluginAsset, PublisherService, Translations } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
-
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const TypefullyPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(
-    AppCapability.pluginAsset({
-      pluginId: meta.profile.key,
-      path: 'PLUGIN.mdl',
-      content: pluginSpec,
-      mimeType: 'application/x-mdl',
-    }),
-  ),
   Plugin.addModule(Connector),
+  Plugin.addModule(PluginAsset),
   Plugin.addModule(PublisherService),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

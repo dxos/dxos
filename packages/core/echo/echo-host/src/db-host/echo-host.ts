@@ -681,8 +681,8 @@ export class EchoHost extends Resource {
   }
 
   /**
-   * Per-space storage metrics: objects (alive/deleted), automerge documents, feeds, feed blocks.
-   * See `docs/GARBAGE_COLLECTION.md`.
+   * Per-space storage metrics: objects (alive/deleted), automerge documents, feeds, feed blocks,
+   * plus what the host is holding in memory. See `docs/GARBAGE_COLLECTION.md`.
    */
   async getSpaceStats(spaceId: SpaceId): Promise<DataService.DatabaseStats> {
     const root = await this.#ensureSpaceRootLoaded(spaceId);
@@ -696,6 +696,13 @@ export class EchoHost extends Resource {
       documents: this.#allSpaceDocumentIds(documents).size,
       feeds: feeds.length,
       feedBlocks,
+      // Sampled after the walk above, which loads the space root: reading it first would report a
+      // residency the call itself then changes.
+      loaded: {
+        documents: this._automergeHost.loadedDocsCountForSpace(spaceId),
+        documentsTotal: this._automergeHost.loadedDocsCount,
+        queriesTotal: this._queryService.activeQueryCount,
+      },
     };
   }
 

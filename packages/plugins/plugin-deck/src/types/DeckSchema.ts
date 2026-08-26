@@ -80,7 +80,17 @@ export const getMode = (deck: { active: readonly string[] }, fullscreen: boolean
 // Persisted plugin state (stored in KVS/localStorage).
 export const StoredDeckState = Schema.Struct({
   sidebarState: Schema.Literals(['closed', 'collapsed', 'expanded']),
+  /**
+   * Openness of the deck-level complementary sidebar on desktop, and of the whole companion drawer on
+   * mobile — read it through {@link getCompanionSelection} rather than directly, which is what keeps
+   * the two meanings apart.
+   */
   complementarySidebarState: Schema.Literals(['closed', 'collapsed', 'expanded']),
+  /**
+   * Which panel that sidebar shows: a deck-level companion variant on desktop, but the selected *plank*
+   * companion on mobile, where the drawer has no planks to hang `companionPlanks` off — see
+   * {@link getCompanionSelection} for the platform-correct read.
+   */
   complementarySidebarPanel: Schema.optional(Schema.String),
   activeDeck: Schema.String,
   previousDeck: Schema.String,
@@ -89,6 +99,42 @@ export const StoredDeckState = Schema.Struct({
   ),
 }).mapFields(Struct.map(Schema.mutableKey));
 export type StoredDeckState = Schema.Schema.Type<typeof StoredDeckState>;
+
+/** Which root layout renders the deck's state; the two hosts express companion visibility differently. */
+export type Platform = 'mobile' | 'desktop';
+
+/** Which plank companion the host currently has on screen. */
+export type CompanionSelection = {
+  /** Whether the companion pane is on screen at all. */
+  open: boolean;
+  /** The chosen tab; absent means the pane falls back to the plank's first companion. */
+  variant?: string;
+};
+
+/**
+ * The plank companion the host is showing, in one shape for consumers outside the layout (e.g. the
+ * assistant provisioning a chat for the plank). The deck marks the pane open per plank
+ * (`companionPlanks`) and keeps the chosen tab in global view state, while the mobile drawer has no
+ * planks and holds both in `complementarySidebar*` — that split is a layout detail, not one every
+ * consumer should have to re-derive.
+ *
+ * Both sets of fields can be *written* on either platform — a URL restore invokes `UpdateCompanion`
+ * without knowing the host — so it is this read, not the writes, that makes the answer correct: each
+ * branch consults only the fields its host actually renders from and ignores the other's.
+ */
+export const getCompanionSelection = (
+  platform: Platform,
+  state: StoredDeckState,
+  viewStateVariant: string | undefined,
+): CompanionSelection => {
+  if (platform === 'mobile') {
+    const open = state.complementarySidebarState !== 'closed' && state.complementarySidebarPanel !== undefined;
+    return { open, variant: open ? state.complementarySidebarPanel : undefined };
+  }
+
+  const open = (state.decks[state.activeDeck]?.companionPlanks.length ?? 0) > 0;
+  return { open, variant: open ? viewStateVariant : undefined };
+};
 
 // Transient/ephemeral plugin state (not persisted).
 export const EphemeralDeckState = Schema.Struct({

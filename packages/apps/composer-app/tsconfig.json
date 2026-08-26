@@ -127,6 +127,9 @@
       "path": "../../plugins/plugin-chess-com"
     },
     {
+      "path": "../../plugins/plugin-claude-agents"
+    },
+    {
       "path": "../../plugins/plugin-client"
     },
     {
@@ -220,6 +223,9 @@
       "path": "../../plugins/plugin-kanban"
     },
     {
+      "path": "../../plugins/plugin-lametric"
+    },
+    {
       "path": "../../plugins/plugin-library"
     },
     {
@@ -245,6 +251,9 @@
     },
     {
       "path": "../../plugins/plugin-mermaid"
+    },
+    {
+      "path": "../../plugins/plugin-mobile"
     },
     {
       "path": "../../plugins/plugin-native"
@@ -316,9 +325,6 @@
       "path": "../../plugins/plugin-sidekick"
     },
     {
-      "path": "../../plugins/plugin-simple-layout"
-    },
-    {
       "path": "../../plugins/plugin-slack"
     },
     {
@@ -335,6 +341,9 @@
     },
     {
       "path": "../../plugins/plugin-status-bar"
+    },
+    {
+      "path": "../../plugins/plugin-stream-deck"
     },
     {
       "path": "../../plugins/plugin-studio"

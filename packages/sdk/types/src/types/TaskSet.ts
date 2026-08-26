@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, EID, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, type Database, DXN, EID, Obj, Ref, Type } from '@dxos/echo';
 import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Format } from '@dxos/echo/Format';
 
@@ -51,6 +51,36 @@ export const make = (
 
 /** Returns true when value is a TaskSet object. */
 export const instanceOf = (value: unknown): value is TaskSet => Obj.instanceOf(TaskSet, value);
+
+/**
+ * Create a task in the set. Membership is the set's `tasks` array; the parent edge is set
+ * alongside so the task cascade-deletes with the set.
+ */
+export const addTask = (
+  db: Database.Database,
+  taskSet: TaskSet,
+  title: string,
+  props: Partial<Omit<Obj.MakeProps<typeof Task.Task>, 'title'>> = {},
+): Task.Task => {
+  const task = db.add(Task.make({ title: title.trim(), status: 'todo', ...props }));
+  Obj.setParent(task, taskSet);
+  Obj.update(taskSet, (taskSet) => {
+    taskSet.tasks = [...taskSet.tasks, Ref.make(task)];
+  });
+  return task;
+};
+
+/**
+ * Delete a task: removed from the set's `tasks` array and from the database. `dependsOn` refs
+ * pointing at it are left dangling by design — {@link isTaskReady} reads a dangling dependency as
+ * satisfied, matching the file's dangling-ref convention.
+ */
+export const deleteTask = (db: Database.Database, taskSet: TaskSet, task: Task.Task): void => {
+  Obj.update(taskSet, (taskSet) => {
+    taskSet.tasks = taskSet.tasks.filter((ref) => refId(ref) !== task.id);
+  });
+  db.remove(task);
+};
 
 //
 // Derived views. Nothing below is stored: hierarchy, milestone grouping, and progress are all
@@ -119,6 +149,19 @@ export const rootTasks = (tasks: readonly Task.Task[]): Task.Task[] => {
 export const subTasks = (tasks: readonly Task.Task[], task: Task.Task): Task.Task[] => {
   const parent = task.id;
   return tasks.filter((candidate) => refId(candidate.parentTask) === parent);
+};
+
+/**
+ * Whether every `dependsOn` of `task` is `done`, resolved within `tasks` — a dangling dependency
+ * ref reads as satisfied, not as a permanent block.
+ */
+export const isTaskReady = (tasks: readonly Task.Task[], task: Task.Task): boolean => {
+  const byId = new Map(tasks.map((candidate) => [candidate.id, candidate]));
+  return (task.dependsOn ?? []).every((ref) => {
+    const id = refId(ref);
+    const dep = id === undefined ? undefined : byId.get(id);
+    return !dep || dep.status === 'done';
+  });
 };
 
 /**

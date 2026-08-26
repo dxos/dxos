@@ -38,8 +38,8 @@ const meta = {
   component: OutlineStory,
   decorators: [
     withTheme(),
-    withLayout({ layout: 'fullscreen' }),
-    // TODO(burdon): Can we create a storybook for the Outliner without the database?
+    withLayout({ layout: 'column' }),
+    // TODO(burdon): Create a storybook without the database.
     withClientProvider({
       createIdentity: true,
       createSpace: true,

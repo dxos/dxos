@@ -6,7 +6,7 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useContext, useMemo } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
-import * as Graph from '@dxos/app-graph/Graph';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import { type Database, Filter, type Obj, type Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
@@ -59,8 +59,8 @@ export const ConnectorAuthMenu = ({ connectorIds, db, existingTarget }: Connecto
     if (actions.length === 0) {
       return undefined;
     }
-    const nextGraph = Graph.make({ registry });
-    nextGraph.pipe(Graph.addNodes([{ id: NODE_ID, type: NODE_ID, data: null, properties: {}, actions }]));
+    const nextGraph = AppGraph.make({ registry });
+    AppGraph.addNodes(nextGraph, [{ id: NODE_ID, type: NODE_ID, data: null, properties: {}, actions }]);
     return nextGraph;
   }, [registry, connectorIds, db, existingTarget, allConnectors, allConnections]);
 

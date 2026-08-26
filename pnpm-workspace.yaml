@@ -101,8 +101,10 @@ catalog:
   '@effect/sql-sqlite-bun': 4.0.0-rc.108
   '@effect/sql-sqlite-node': 4.0.0-rc.108
   '@effect/sql-sqlite-wasm': 4.0.0-rc.108
+  '@effect/tsgo': ^0.36.5
   '@effect/vitest': 4.0.0-rc.108
   '@effect/wa-sqlite': ^0.1.2
+  '@elgato/streamdeck': ^2.1.2
   '@emoji-mart/data': ^1.1.2
   '@emoji-mart/react': ^1.1.1
   '@excalidraw/excalidraw': ^0.18.0
@@ -235,6 +237,7 @@ catalog:
   '@tauri-apps/plugin-dialog': ^2.7.2
   '@tauri-apps/plugin-fs': ^2.5.1
   '@tauri-apps/plugin-haptics': ^2.3.2
+  '@tauri-apps/plugin-http': ^2.5.9
   '@tauri-apps/plugin-opener': ^2.5.4
   '@tauri-apps/plugin-os': ^2.3.2
   '@tauri-apps/plugin-process': ^2.3.1
@@ -314,6 +317,7 @@ catalog:
   '@types/vscode': ^1.74.0
   '@types/webextension-polyfill': ^0.12.3
   '@types/wicg-file-system-access': ^2020.9.6
+  '@types/ws': ^8.18.1
   '@types/wtfnode': ^0.10.0
   '@types/yargs': ~16.0.1
   '@types/zen-observable': ^0.8.3
@@ -546,6 +550,7 @@ catalog:
   once: ^1.4.0
   openapi-types: ^12.1.3
   oxc-resolver: ^11.9.0
+  oxlint-tsgolint: ^7.0.2001
   papaparse: ^5.5.3
   parjs: ^1.3.9
   parsimmon: ^1.18.1
@@ -657,6 +662,7 @@ catalog:
   ts-morph: ^16.0.0
   tsdown: ^0.22.14
   tslib: ^2.8.1
+  tstyche: ^7.2.3
   tsx: ^4.21.0
   tty-browserify: ~0.0.1
   turndown: ^7.2.1

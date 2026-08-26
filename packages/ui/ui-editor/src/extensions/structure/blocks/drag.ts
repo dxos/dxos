@@ -92,20 +92,21 @@ const AUTOSCROLL_MAX_SPEED = 14;
 const DRAG_THRESHOLD = 4;
 
 // The gutters on each side of the content, where the grip (left) and menu (right) float, centered within.
-// `GUTTER_WIDTH` (3rem) is the strip width; `CONTENT_WIDTH` reserves one on each side (`6rem` = 2×3rem) and
-// centers the column — keep the two in sync. Shared by the grip (`drag.ts`), menu (`menu.ts`), and the
-// outliner content (`outliner.ts`).
+// `GUTTER_WIDTH` (2rem) is the strip width;
+// `CONTENT_WIDTH` reserves one on each side (`4rem` = 2×2rem) and centers the column — keep the two in sync.
+// Shared by the grip (`drag.ts`), menu (`menu.ts`), and the outliner content (`outliner.ts`).
 // Both utilities need `!`: CodeMirror's own `.ͼ1 .cm-content` rule sets `margin: 0` at a higher
 // specificity, which otherwise drops the centering and collapses both gutters onto one side.
-export const GUTTER_WIDTH = 48;
-export const CONTENT_WIDTH = 'max-w-[min(50rem,100%-6rem)]! mx-auto!';
+export const GUTTER_WIDTH = 32; // 2rem
+export const CONTENT_WIDTH = 'max-w-[min(50rem,100%-4rem)]! mx-auto!';
 
-// Square grip size (px) and its drag-handle icon. Matches `dx-button` density `xs` + `aspect-square`
-// (`size-6`), so the button's own box lines up with the centering math below.
-const GRIP_SIZE = 24;
 const GRIP_ICON = 'ph--dots-six-vertical--regular';
 
-// A grip's target placement, computed in the measure read phase and applied in the write phase.
+// A grip's target placement — the POINT it centres on, not its top-left corner — computed in the measure
+// read phase and applied in the write phase. The element is centred on it by a CSS
+// `translate(-50%, -50%)` rather than by subtracting half of a hard-coded size here: the grip is a
+// `dx-button`, so its rendered box follows the theme (it grew from 24px to 32px, which left every grip
+// sitting 4px below its row).
 type GripPosition = { index: number; anchor: number; left: number; top: number };
 
 // The `from` of the block under the pointer (a hovered block shows its grip), or null.
@@ -612,8 +613,8 @@ const createDragPlugin = (
         }
         const contentRect = this.view.contentDOM.getBoundingClientRect();
         return {
-          left: contentRect.left - GUTTER_WIDTH / 2 - GRIP_SIZE / 2,
-          top: (coords.top + coords.bottom) / 2 - GRIP_SIZE / 2,
+          left: contentRect.left - GUTTER_WIDTH / 2,
+          top: (coords.top + coords.bottom) / 2,
         };
       }
 
@@ -786,6 +787,8 @@ const dragTheme = EditorView.theme({
     position: 'fixed',
     zIndex: '5',
     cursor: 'grab',
+    // `left`/`top` name the centre point; the browser centres the real box on it, whatever its size.
+    transform: 'translate(-50%, -50%)',
   },
   '.cm-blockDragHandleIcon': {
     display: 'grid',
@@ -949,8 +952,8 @@ const createGripOverlay = (
         }
         // Centered within the 3rem gutter immediately left of the content.
         const contentRect = view.contentDOM.getBoundingClientRect();
-        const left = contentRect.left - GUTTER_WIDTH / 2 - GRIP_SIZE / 2;
-        return [{ index, anchor: block.from, left, top: (coords.top + coords.bottom) / 2 - GRIP_SIZE / 2 }];
+        const left = contentRect.left - GUTTER_WIDTH / 2;
+        return [{ index, anchor: block.from, left, top: (coords.top + coords.bottom) / 2 }];
       }
 
       #write(positions: GripPosition[]) {

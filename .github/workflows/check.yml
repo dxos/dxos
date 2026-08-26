@@ -147,11 +147,11 @@ jobs:
       # ~15 s warm, minutes cold, and the floor under everything below it.
       - name: Check Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: moon run :lint :build --affected remote
+        run: moon run :lint :build :test-types --affected remote
 
       - name: Check All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: moon run :lint :build
+        run: moon run :lint :build :test-types
 
       # `check-module-structure` traces the built artifacts (`deps: [build]`), so it cannot move ahead
       # of the gate however cheap it looks — its 5 s is a post-build number.
@@ -176,52 +176,134 @@ jobs:
         continue-on-error: true
         run: pnpm run knip
 
-      # Static boot-graph budget over the production bundle. The class it catches is a property of an
-      # IMPORT EDGE — a boot-reachable module reaching a barrel instead of a subpath — so a refactor
-      # that relocates the edge silently drops the fix and neither the build nor the tests notice;
-      # three separate fixes were undone that way. Not `--affected`-scoped, because the offending edit
-      # lands in some other package. Here rather than on an `e2e` cell so that it gates the PR that
-      # introduces the regression: `e2e` runs on main/changeset-release or an explicit dispatch, so
-      # there it never gated one. `bundle` is not otherwise built in this workflow, so this step pays
-      # for it; stage 2 has at least warmed the library builds underneath it.
-      - name: Check boot budget
-        id: boot_budget
-        continue-on-error: true
-        run: moon run composer-app:check-boot-budget
-
       # What composer.space actually ships: fails when a plugin the production set does not name
       # reached the bundle anyway. Same reasoning as the boot budget — it is a property of an import
       # edge, invisible to the build, the tests, and the app's own UI (a plugin absent from the
       # registry can still be in the bundle) — and it needs its own `DX_PLUGIN_SET=production` bundle,
       # which no other step builds. Gated here so the PR that introduces the leak is the one that fails.
       #
-      # The second bundle is cheap and must stay a separate STEP: steps are sequential, so peak memory
-      # stays at one rolldown build (two concurrent ones would risk an OOM on this runner), and the
-      # `^:build` graph is already warm from the boot budget above — measured at 22s against that
-      # step's 41s, in a job that runs ~4m30s of a 30 minute timeout.
+      # `DX_PLUGIN_SET=production` bundle built here rather than on a runner of its own: the `^:build`
+      # graph is already warm from stage 2, which put its cost at 22s against the boot budget's 41s
+      # when the two shared this job — cheap enough that a second machine's ~160s of setup would
+      # dominate it.
       - name: Check production plugin set
         id: plugin_set
         continue-on-error: true
         run: moon run composer-app:check-plugin-set
 
       - name: Report slow-check failures
-        if: ${{ steps.knip.outcome == 'failure' || steps.boot_budget.outcome == 'failure' || steps.plugin_set.outcome == 'failure' }}
+        if: ${{ steps.knip.outcome == 'failure' || steps.plugin_set.outcome == 'failure' }}
         run: |
           if [ "${{ steps.knip.outcome }}" = failure ]; then
             echo '::error::knip failed — see the "Check dependencies" step.'
-          fi
-          if [ "${{ steps.boot_budget.outcome }}" = failure ]; then
-            echo '::error::boot budget failed — see the "Check boot budget" step.'
           fi
           if [ "${{ steps.plugin_set.outcome }}" = failure ]; then
             echo '::error::production plugin set check failed — see the "Check production plugin set" step.'
           fi
           exit 1
 
+  # Static boot-graph budget over the production bundle, on its own runner. The class it catches is a
+  # property of an IMPORT EDGE — a boot-reachable module reaching a barrel instead of a subpath — so a
+  # refactor that relocates the edge silently drops the fix and neither the build nor the tests notice;
+  # three separate fixes were undone that way. Not `--affected`-scoped, because the offending edit lands
+  # in some other package. Here rather than on an `e2e` cell so that it gates the PR that introduces the
+  # regression: `e2e` runs on main/changeset-release or an explicit dispatch, so there it never gated
+  # one. Split out of `check`, where its ~41s of bundling (nothing else in the workflow builds
+  # `bundle`) sat behind that job's whole stage 1+2 sequence; the library builds it needs come from the
+  # remote cache instead.
+  boot-budget:
+    permissions:
+      contents: read
+      packages: read
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Check boot budget
+        run: moon run composer-app:check-boot-budget
+
+  # Retention suites (the `memory` tag), which the normal `test` job skips: they need `--expose-gc`
+  # and force a single non-isolated fork, neither of which the sharded matrix can provide. Gated on
+  # DX_DEBUG_LEAKS, the one variable that both un-skips the tag and supplies the flag.
+  #
+  # Split in two on purpose. The feed suite is green and guards the fix that made feed objects
+  # collectable, so it gates. The automerge suite is known-red — dropping every reference to a
+  # queried object frees nothing — and runs `continue-on-error` so its checkpoint tables land in the
+  # log on every PR without blocking merges. Fold it into the gating step once it passes; do NOT
+  # silence it with `test.fails`, which would also swallow an unrelated crash (the WASM allocator
+  # abort this suite can provoke looks identical to an assertion failure from the outside).
+  memory:
+    permissions:
+      contents: read
+      packages: read
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 30
+    env:
+      DX_DEBUG_LEAKS: '1'
+      VITEST_ENV: 'node'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      # `DX_DEBUG_LEAKS_DIR` keeps the heap snapshots the probe writes out of the workspace. It is
+      # set per step, not on the job: `runner` is not among the contexts available to job-level `env`
+      # (only github/needs/strategy/matrix/vars/inputs), and referencing it there fails the whole
+      # workflow to parse — no jobs run at all.
+      - name: Feed retention
+        env:
+          DX_DEBUG_LEAKS_DIR: ${{ runner.temp }}/profiles
+        run: moon run echo-client-e2e:test -- src/feed-retention.test.ts
+
+      - name: Automerge retention (known red, reporting only)
+        continue-on-error: true
+        env:
+          DX_DEBUG_LEAKS_DIR: ${{ runner.temp }}/profiles
+        run: moon run echo-client-e2e:test -- src/automerge-retention.test.ts
+
+  # Every vitest flavour in one sharded job: unit (`:test`), browser (`:test-browser`), storybook
+  # (`:test-storybook`) and the Cloudflare Workers runtime (`:test-workerd`). They used to be three
+  # jobs split by flavour, which fixed each shard's size to its flavour's total — storybook alone ran
+  # far longer than workerd, and no amount of runners helped. `moon exec --job N --job-total` partitions
+  # the whole target set instead, so the four cells are sized by work rather than by kind and a new
+  # suite lands wherever there is room. File parallelism stays disabled — overloaded runners flake — so
+  # the win is concurrency across machines, not within one. `--on-failure continue` because moon's
+  # default bail drops a failing cell's remaining targets, hiding what they cost.
   test:
     strategy:
+      fail-fast: false
       matrix:
         node-version: ['24.11.1']
+        # 0-based: `--job` is an index. Four cells against the ~13m the three flavour jobs' critical
+        # path took, over ~160s of fixed per-cell setup.
+        shard: [0, 1, 2, 3]
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:${{ matrix.node-version }}
@@ -235,9 +317,13 @@ jobs:
       # while still excluding the heavier opt-in tag families.
       VITEST_TAGS_FILTER: '!sync && !sync-e2e && !functions-e2e && !manual'
       VITEST_ENV: 'node'
+      # Coverage is unsupported for the workers pool (v8 coverage imports `node:inspector/promises`,
+      # absent in workerd), so `vite.base.config.ts` drops it for the `workerd` project type — which is
+      # what lets a cell mix workerd targets with the rest under one flag.
       VITEST_COVERAGE: ${{ secrets.CODECOV_TOKEN != '' && 'true' || 'false' }}
       VITEST_XML_REPORT: 'true'
-      # NOTE: Browser tests also require a process for chromium. Limiting to 4 provides headroom for those processes.
+      # NOTE: Browser and storybook tests also require a process for chromium. Limiting to 4 provides
+      # headroom for those processes.
       MOON_CONCURRENCY: 4
       # Exposed so step conditions can branch on token presence without referencing
       # secrets directly (secrets are not allowed in if: expressions).
@@ -258,6 +344,7 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
+      # Unconditional: moon owns cell assignment, so which flavours a shard draws is not known here.
       - name: Install Playwright
         run: pnpm run install-playwright
 
@@ -272,12 +359,16 @@ jobs:
           org-slug: dxos
           token: ${{ secrets.TRUNK_TOKEN }}
           quarantine: true
-          run: moon run :test :test-browser --affected remote -- --no-file-parallelism
+          run: >-
+            moon exec --on-failure continue :test :test-browser :test-storybook :test-workerd
+            --affected remote --job ${{ matrix.shard }} --job-total 4 -- --no-file-parallelism
 
       # Fallback for fork PRs and local runs where TRUNK_TOKEN is unavailable.
       - name: Test Affected (no analytics)
         if: ${{ steps.extract_branch.outputs.branch != 'main' && env.TRUNK_TOKEN == '' }}
-        run: moon run :test :test-browser --affected remote -- --no-file-parallelism
+        run: >-
+          moon exec --on-failure continue :test :test-browser :test-storybook :test-workerd
+          --affected remote --job ${{ matrix.shard }} --job-total 4 -- --no-file-parallelism
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' && env.TRUNK_TOKEN != '' }}
@@ -287,18 +378,22 @@ jobs:
           org-slug: dxos
           token: ${{ secrets.TRUNK_TOKEN }}
           quarantine: true
-          run: moon exec --on-failure continue :test :test-browser -- --no-file-parallelism
+          run: >-
+            moon exec --on-failure continue :test :test-browser :test-storybook :test-workerd
+            --job ${{ matrix.shard }} --job-total 4 -- --no-file-parallelism
 
       # Fallback for forks running against their own main where TRUNK_TOKEN is unavailable.
       - name: Test All (no analytics)
         if: ${{ steps.extract_branch.outputs.branch == 'main' && env.TRUNK_TOKEN == '' }}
-        run: moon exec --on-failure continue :test :test-browser -- --no-file-parallelism
+        run: >-
+          moon exec --on-failure continue :test :test-browser :test-storybook :test-workerd
+          --job ${{ matrix.shard }} --job-total 4 -- --no-file-parallelism
 
       - name: Upload Test Results
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: vitest-report-${{ matrix.node-version }}
+          name: vitest-report-${{ matrix.node-version }}-${{ matrix.shard }}
           path: test-results
           retention-days: 7
 
@@ -310,188 +405,6 @@ jobs:
           handle_no_reports_found: true
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
-
-  # Storybook tests run on their own runner, in parallel with `test`, so the (large)
-  # set of :test-storybook tasks no longer serializes behind unit/browser tests in the
-  # `test` job. File parallelism stays disabled here too — overloaded runners flake — so
-  # the win is concurrency across machines, not within one.
-  storybook:
-    strategy:
-      matrix:
-        node-version: ['24.11.1']
-    runs-on: depot-ubuntu-24.04-8
-    container:
-      image: ghcr.io/dxos/gh-actions:${{ matrix.node-version }}
-      credentials:
-        username: dxos-bot
-        password: ${{ github.token }}
-    timeout-minutes: 30
-    env:
-      NODE_VERSION: ${{ matrix.node-version }}
-      # Opt in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
-      # while still excluding the heavier opt-in tag families.
-      VITEST_TAGS_FILTER: '!sync && !sync-e2e && !functions-e2e && !manual'
-      VITEST_ENV: 'node'
-      VITEST_COVERAGE: ${{ secrets.CODECOV_TOKEN != '' && 'true' || 'false' }}
-      VITEST_XML_REPORT: 'true'
-      # NOTE: Storybook tests spawn a process for chromium. Limiting to 4 provides headroom for those processes.
-      MOON_CONCURRENCY: 4
-      # Exposed so step conditions can branch on token presence without referencing
-      # secrets directly (secrets are not allowed in if: expressions).
-      TRUNK_TOKEN: ${{ secrets.TRUNK_TOKEN }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-          fetch-depth: 0
-          filter: blob:none
-          persist-credentials: false
-
-      - name: Extract branch
-        id: extract_branch
-        uses: ./.github/actions/branch
-
-      - name: Setup
-        uses: ./.github/actions/setup
-
-      - name: Install Playwright
-        run: pnpm run install-playwright
-
-      - name: Clean stale test results
-        run: rm -rf test-results
-
-      - name: Test Storybook Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' && env.TRUNK_TOKEN != '' }}
-        uses: trunk-io/analytics-uploader@v1
-        with:
-          junit-paths: 'test-results/**/results.xml'
-          org-slug: dxos
-          token: ${{ secrets.TRUNK_TOKEN }}
-          quarantine: true
-          run: moon run :test-storybook --affected remote -- --no-file-parallelism
-
-      # Fallback for fork PRs and local runs where TRUNK_TOKEN is unavailable.
-      - name: Test Storybook Affected (no analytics)
-        if: ${{ steps.extract_branch.outputs.branch != 'main' && env.TRUNK_TOKEN == '' }}
-        run: moon run :test-storybook --affected remote -- --no-file-parallelism
-
-      - name: Test Storybook All
-        if: ${{ steps.extract_branch.outputs.branch == 'main' && env.TRUNK_TOKEN != '' }}
-        uses: trunk-io/analytics-uploader@v1
-        with:
-          junit-paths: 'test-results/**/results.xml'
-          org-slug: dxos
-          token: ${{ secrets.TRUNK_TOKEN }}
-          quarantine: true
-          run: moon exec --on-failure continue :test-storybook -- --no-file-parallelism
-
-      # Fallback for forks running against their own main where TRUNK_TOKEN is unavailable.
-      - name: Test Storybook All (no analytics)
-        if: ${{ steps.extract_branch.outputs.branch == 'main' && env.TRUNK_TOKEN == '' }}
-        run: moon exec --on-failure continue :test-storybook -- --no-file-parallelism
-
-      - name: Upload Test Results
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: vitest-report-storybook-${{ matrix.node-version }}
-          path: test-results
-          retention-days: 7
-
-      - uses: codecov/codecov-action@v5
-        if: ${{ matrix.node-version == '24.11.1' && env.VITEST_COVERAGE == 'true' }}
-        with:
-          directory: ./coverage
-          fail_ci_if_error: false
-          handle_no_reports_found: true
-          token: ${{ secrets.CODECOV_TOKEN }}
-          verbose: true
-
-  # Workerd tests run in the Cloudflare Workers runtime (`@cloudflare/vitest-pool-workers`)
-  # on their own runner, in parallel with `test`/`storybook`. No chromium/Playwright needed —
-  # the workerd binary ships with the `workerd` npm package installed during setup.
-  workerd:
-    strategy:
-      matrix:
-        node-version: ['24.11.1']
-    runs-on: depot-ubuntu-24.04-8
-    container:
-      image: ghcr.io/dxos/gh-actions:${{ matrix.node-version }}
-      credentials:
-        username: dxos-bot
-        password: ${{ github.token }}
-    timeout-minutes: 30
-    env:
-      NODE_VERSION: ${{ matrix.node-version }}
-      # Opt in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
-      # while still excluding the heavier opt-in tag families.
-      VITEST_TAGS_FILTER: '!sync && !sync-e2e && !functions-e2e && !manual'
-      VITEST_ENV: 'node'
-      # v8 coverage imports `node:inspector/promises`, which the workerd runtime does not
-      # provide — coverage is unsupported for the workers pool, so keep it off for this job.
-      VITEST_COVERAGE: 'false'
-      VITEST_XML_REPORT: 'true'
-      MOON_CONCURRENCY: 4
-      # Exposed so step conditions can branch on token presence without referencing
-      # secrets directly (secrets are not allowed in if: expressions).
-      TRUNK_TOKEN: ${{ secrets.TRUNK_TOKEN }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-          fetch-depth: 0
-          filter: blob:none
-          persist-credentials: false
-
-      - name: Extract branch
-        id: extract_branch
-        uses: ./.github/actions/branch
-
-      - name: Setup
-        uses: ./.github/actions/setup
-
-      - name: Clean stale test results
-        run: rm -rf test-results
-
-      - name: Test Workerd Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' && env.TRUNK_TOKEN != '' }}
-        uses: trunk-io/analytics-uploader@v1
-        with:
-          junit-paths: 'test-results/**/results.xml'
-          org-slug: dxos
-          token: ${{ secrets.TRUNK_TOKEN }}
-          quarantine: true
-          run: moon run :test-workerd --affected remote -- --no-file-parallelism
-
-      # Fallback for fork PRs and local runs where TRUNK_TOKEN is unavailable.
-      - name: Test Workerd Affected (no analytics)
-        if: ${{ steps.extract_branch.outputs.branch != 'main' && env.TRUNK_TOKEN == '' }}
-        run: moon run :test-workerd --affected remote -- --no-file-parallelism
-
-      - name: Test Workerd All
-        if: ${{ steps.extract_branch.outputs.branch == 'main' && env.TRUNK_TOKEN != '' }}
-        uses: trunk-io/analytics-uploader@v1
-        with:
-          junit-paths: 'test-results/**/results.xml'
-          org-slug: dxos
-          token: ${{ secrets.TRUNK_TOKEN }}
-          quarantine: true
-          run: moon exec --on-failure continue :test-workerd -- --no-file-parallelism
-
-      # Fallback for forks running against their own main where TRUNK_TOKEN is unavailable.
-      - name: Test Workerd All (no analytics)
-        if: ${{ steps.extract_branch.outputs.branch == 'main' && env.TRUNK_TOKEN == '' }}
-        run: moon exec --on-failure continue :test-workerd -- --no-file-parallelism
-
-      - name: Upload Test Results
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: vitest-report-workerd-${{ matrix.node-version }}
-          path: test-results
-          retention-days: 7
 
   # Bundles once and publishes to the moon remote cache, so the cells hydrate the artifacts instead of
   # each rebuilding the graph. Concurrent cells cannot hit each other's cache writes, which is why this
@@ -758,10 +671,11 @@ jobs:
         run: node cli-verify/verify-installed.mjs .
 
   # Reports every nightly job from one place. e2e is in `needs` so a cancelled e2e is still reported (its
-  # former in-job step used `success() || failure()`, which skips on cancellation) and so the other three
-  # reports can no longer go out green while e2e is still running.
+  # former in-job step used `success() || failure()`, which skips on cancellation) and so the test report
+  # can no longer go out green while e2e is still running. `needs.test.result` aggregates the four
+  # shards: one red cell makes the whole matrix red.
   report:
-    needs: [test, storybook, workerd, e2e]
+    needs: [test, e2e]
     if: always() && github.event_name == 'schedule'
     runs-on: depot-ubuntu-24.04-8
     container:
@@ -785,18 +699,6 @@ jobs:
         with:
           name: test-24.11.1
           result: ${{ needs.test.result }}
-      - name: Send storybook report
-        if: always()
-        uses: ./.github/actions/test-report
-        with:
-          name: storybook-24.11.1
-          result: ${{ needs.storybook.result }}
-      - name: Send workerd report
-        if: always()
-        uses: ./.github/actions/test-report
-        with:
-          name: workerd-24.11.1
-          result: ${{ needs.workerd.result }}
       - name: Send e2e report
         if: always()
         uses: ./.github/actions/test-report
