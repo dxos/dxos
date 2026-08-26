@@ -69,6 +69,26 @@ is bumped to that commit. Write-ahead is fine; verification is not.
 - [ ] `agent-process.node.test.ts` — `AgentService` spawns and controls a remote agent on edge.
 - [ ] `pnpm format`, lint, and the touched test suites green in both repos; PRs opened.
 
+## Boot budget (do not re-investigate)
+
+`composer-app:check-boot-budget` is red on this branch and **on `main`** — dxos/dxos#12759, an
+unrelated PR, fails it identically with everything else green. Measured locally: the eager boot graph
+is 4,457,401 bytes against a 4,456,448 ceiling (953 over), and this branch contributes **zero** of
+them — none of its modules or modified files appear in any of the 22 boot chunks' sourcemaps. Its
+original 1,095-byte contribution was the seven process routes on `EdgeHttpClient`, fixed in 65f3227a
+by moving them to a subclass behind `@dxos/edge-client/process`.
+
+Consequences for the rest of this project:
+
+- The three subpath exports (`@dxos/edge-client/process`, `@dxos/compute-runtime/remote-process`,
+  `@dxos/edge-compute/process-control`) exist to keep this feature off Composer's eager boot graph.
+  Do not "simplify" them back into the package barrels.
+- Anything added to `EdgeHttpClient` itself, or to a boot-reachable barrel, costs boot bytes against
+  a budget with no margin left. Put new client surface on the subclass.
+- Resolving the red check needs either a `MAX_PRELOAD_BYTES` bump (accepted growth, which the
+  script's docstring invites) or finding what recently landed on `main` — a decision for the repo
+  owner, raised in a comment on the PR.
+
 ## Tracked follow-ups
 
 - [ ] WS push for outputs/trace instead of cursor polling (D7).
