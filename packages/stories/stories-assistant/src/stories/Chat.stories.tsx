@@ -301,7 +301,7 @@ export const WithPlanningScripted: Story = {
  * Live AI and timing-sensitive, so it is excluded from CI `test` runs (`tags: ['!test']`);
  * run it manually in storybook (it needs a reachable EDGE AI service via `config.remote`).
  */
-export const withDelegation: Story = {
+export const WithDelegation: Story = {
   ...WithSubAgents,
   tags: ['!test'],
   play: async ({ canvasElement }) => {

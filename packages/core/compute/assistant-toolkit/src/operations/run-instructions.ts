@@ -84,6 +84,8 @@ export default RunInstructions.pipe(
           If you are unable to complete the task, call [completeJob] with {"failure": {"message": "..."}}.
           Pass one of the two, never both, and omit the field you do not use.
           If no output is required, call [completeJob] with an empty object: {}
+          The success value must be strictly valid JSON: quote free text, and write numbers without
+          digit separators (3628800, never 3,628,800).
           Do not stop until you call [completeJob].
         `;
         if (data.systemInstructions) {

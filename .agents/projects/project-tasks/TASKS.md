@@ -1,6 +1,6 @@
 # Project Tasks — Tasks
 
-_Resume: open the PR (delegation fix + TaskList consolidation + Chat.taskSet pivot). Uncommitted: none. Last: Chat.outline replaced by Chat.taskSet; planning/delegation now write durable tasks._
+_Resume: Phase 2 build (see below). Uncommitted: none. Last: merged main (its completeJob strict fix adopted + JSON-guard prompt line, live-verified 2/2); key at .secrets/anthropic.env._
 
 ## Phase 1: Agent delegation over durable tasks
 
@@ -63,3 +63,29 @@ be visible in the UI, closing the gaps the storybook audit surfaced.
 - Tool projection pattern (verbatim schema rationale): `packages/core/compute/assistant/src/tool-runtime/services.ts` (`projectFunctionToTool`)
 - Stories: `packages/stories/stories-assistant/src/stories/Chat.stories.tsx`
 - Related project: `plugin-projects` (registry) — task model, delegation-as-promotion
+
+## Phase 2: Task execution and delegation demos
+
+Demonstrate the assistant tracking tasks and delegating sub-agents over them.
+All decisions user-approved 2026-08-25; scripted stories in CI, live twin for
+the drain loop; this PR (#12752).
+
+### Tasks
+
+- [ ] **Task.dependsOn** — optional array of suspended self-refs; ready = all
+      deps done.
+- [ ] **Numbered checklist** — `formatChecklist` renders ordinals + dependency
+      notes so model and UI share numbering.
+- [ ] **delegateTasks verb** — input array of (ordinal | title), resolved
+      server-side; stamps agent assignee; reconcile spawns; spawn sets
+      `started`; onComplete marks done/failed; sweep marks orphaned started
+      agent tasks failed (no zombies).
+- [ ] **Calculator skill (stories-assistant)** — local `compute(expression)`
+      operation so sub-agents demonstrably call a local tool.
+- [ ] **TaskList ordinals + spinner** — index column; `animate-spin` spinner
+      icon when status started && assignee assistant.
+- [ ] **Executable seeds + stories** — A/B/C seeds (B<-A, C<-B); scripted:
+      execute-first, delegate-first, drain-loop (deps-ordered); live twin of
+      the drain loop.
+- [ ] **Finish** — fixtures regen, suites, lint/format, live verify, changeset,
+      push, PR comments (at end), DESIGN.md in assistant-toolkit/docs.
