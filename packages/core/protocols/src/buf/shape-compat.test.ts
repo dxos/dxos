@@ -10,12 +10,13 @@ import { Timeframe } from '@dxos/timeframe';
 import { schema } from '../proto/index.ts';
 import { InvitationSchema } from './proto/gen/dxos/client/invitation_pb.ts';
 import { EchoMetadataSchema, SpaceMetadataSchema } from './proto/gen/dxos/echo/metadata_pb.ts';
+import { EchoObject_SnapshotSchema } from './proto/gen/dxos/echo/object_pb.ts';
 import { HeadsSchema } from './proto/gen/dxos/echo/query_pb.ts';
 import { ErrorSchema } from './proto/gen/dxos/error_pb.ts';
-import { ClaimSchema } from './proto/gen/dxos/halo/credentials_pb.ts';
+import { ClaimSchema, CredentialSchema } from './proto/gen/dxos/halo/credentials_pb.ts';
 import { KeyRecordSchema } from './proto/gen/dxos/halo/keyring_pb.ts';
 import { CommandSchema } from './proto/gen/dxos/mesh/muxer_pb.ts';
-import { UnsupportedSubstitutionError, decodeCompat, encodeCompat } from './shape-compat.ts';
+import { AnyEncodingError, decodeCompat, encodeCompat } from './shape-compat.ts';
 
 // Byte equality alone would miss a substitution decoding to the wrong JS type, and shape equality
 // alone would miss a field-numbering divergence between the two generators, so both are asserted.
@@ -163,10 +164,99 @@ describe('buf shape-compat', () => {
     expect(decoded.data).toBeUndefined();
   });
 
-  test('a message carrying google.protobuf.Any is rejected rather than mis-encoded', ({ expect }) => {
-    // Resolving `Any` needs a buf-side type registry and the `preserve_any` field option.
-    expect(() => encodeCompat(ClaimSchema, { id: PublicKey.random(), assertion: {} })).toThrow(
-      UnsupportedSubstitutionError,
-    );
+  test('an Any payload packs and unpacks in the legacy shape', ({ expect }) => {
+    const codec = schema.getCodecForType('dxos.halo.credentials.Claim');
+    const spaceKey = PublicKey.random();
+    const value = {
+      id: PublicKey.random(),
+      assertion: {
+        '@type': 'dxos.halo.credentials.SpaceMember',
+        'spaceKey': spaceKey,
+        'role': 2,
+        'genesisFeedKey': PublicKey.random(),
+      },
+    };
+
+    const legacyBytes = codec.encode(value);
+    expect(new Uint8Array(encodeCompat(ClaimSchema, value))).toEqual(new Uint8Array(legacyBytes));
+
+    // The packed payload's own substituted fields must come back substituted too.
+    const decoded = decodeCompat(ClaimSchema, legacyBytes);
+    expect(decoded.assertion['@type']).toBe('dxos.halo.credentials.SpaceMember');
+    expect(PublicKey.from(decoded.assertion.spaceKey).equals(spaceKey)).toBe(true);
+    expect(decoded.assertion.spaceKey).toBeInstanceOf(PublicKey);
+    // `toMatchObject`, because protobuf.js materialises the unset repeated `tags` as an empty array.
+    expect(codec.decode(encodeCompat(ClaimSchema, value)).assertion).toMatchObject(decoded.assertion);
+  });
+
+  test('a Credential round-trips byte-identically', ({ expect }) => {
+    // Credentials are the highest-stakes carrier of a packed `Any`; the signature payload itself is
+    // asserted against the real signing code in `credentials/signing.test.ts`.
+    const codec = schema.getCodecForType('dxos.halo.credentials.Credential');
+    const value = {
+      id: PublicKey.random(),
+      issuer: PublicKey.random(),
+      issuanceDate: new Date(1700000000123),
+      subject: {
+        id: PublicKey.random(),
+        assertion: {
+          '@type': 'dxos.halo.credentials.AuthorizedDevice',
+          'identityKey': PublicKey.random(),
+          'deviceKey': PublicKey.random(),
+        },
+      },
+      proof: {
+        type: 'Ed25519Signature2020',
+        creationDate: new Date(1700000000123),
+        signer: PublicKey.random(),
+        value: new Uint8Array([9, 8, 7]),
+      },
+    };
+
+    // Sub-second timestamps keep the bytes comparable: protobuf.js writes `nanos: 0` explicitly
+    // where buf omits the proto3 default, so a whole-second date diverges by two bytes.
+    const legacyBytes = codec.encode(value);
+    const bufBytes = encodeCompat(CredentialSchema, value);
+    expect(new Uint8Array(bufBytes)).toEqual(new Uint8Array(legacyBytes));
+
+    const decoded = decodeCompat(CredentialSchema, legacyBytes);
+    expect(decoded.issuanceDate).toBeInstanceOf(Date);
+    expect(decoded.issuer).toBeInstanceOf(PublicKey);
+    expect(decoded.subject.assertion['@type']).toBe('dxos.halo.credentials.AuthorizedDevice');
+    expect(decoded.subject.assertion.deviceKey).toBeInstanceOf(PublicKey);
+    expect(codec.decode(bufBytes)).toMatchObject({ proof: { type: 'Ed25519Signature2020' } });
+  });
+
+  test('an Any whose type is not in the registry stays packed', ({ expect }) => {
+    const value = {
+      id: PublicKey.random(),
+      assertion: { '@type': 'google.protobuf.Any', 'type_url': 'com.example.Unknown', 'value': new Uint8Array([1]) },
+    };
+
+    const decoded = decodeCompat(ClaimSchema, encodeCompat(ClaimSchema, value));
+    expect(decoded.assertion['@type']).toBe('google.protobuf.Any');
+    expect(decoded.assertion.type_url).toBe('com.example.Unknown');
+    expect(new Uint8Array(decoded.assertion.value)).toEqual(new Uint8Array([1]));
+  });
+
+  test('a preserve_any field leaves its payload packed', ({ expect }) => {
+    const codec = schema.getCodecForType('dxos.echo.object.EchoObject.Snapshot');
+    const value = {
+      model: { '@type': 'google.protobuf.Any', 'type_url': 'com.example.Model', 'value': new Uint8Array([4, 5]) },
+    };
+
+    const legacyBytes = codec.encode(value);
+    expect(new Uint8Array(encodeCompat(EchoObject_SnapshotSchema, value))).toEqual(new Uint8Array(legacyBytes));
+
+    // The compat layer normalises the packed bytes to a `Uint8Array`, where protobuf.js hands back
+    // a `Buffer` view.
+    const decoded = decodeCompat(EchoObject_SnapshotSchema, legacyBytes);
+    expect(decoded.model['@type']).toBe('google.protobuf.Any');
+    expect(decoded.model.type_url).toBe('com.example.Model');
+    expect(new Uint8Array(decoded.model.value)).toEqual(new Uint8Array([4, 5]));
+  });
+
+  test('packing an Any without an @type fails rather than writing an empty payload', ({ expect }) => {
+    expect(() => encodeCompat(ClaimSchema, { id: PublicKey.random(), assertion: {} })).toThrow(AnyEncodingError);
   });
 });
