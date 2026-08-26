@@ -31,11 +31,7 @@ import {
   VaultResponse,
 } from './types';
 
-/**
- * A transport failure (status 0) or a server-side/throttling response can succeed on a later
- * attempt; a 4xx is the caller's own request and never will, so retrying one only burns the
- * operation's time budget.
- */
+/** Only a transport, throttling or server-side failure can succeed on a later attempt. */
 export const isRetryable = (error: ClaudeAgentApiError): boolean =>
   error.status === 0 || error.status === 429 || error.status >= 500;
 
@@ -79,8 +75,8 @@ export const request = <A>({ apiKey, method, path, schema, body }: Request<A>): 
     // A transport failure (offline, abort, proxy error) has no HTTP status of its own.
     catch: (error) => (error instanceof ClaudeAgentApiError ? error : new ClaudeAgentApiError(0, String(error))),
   }).pipe(
-    // Fixed rather than exponential backoff: the control plane is called from an interactive
-    // operation, so a bounded, predictable delay matters more than politeness under sustained load.
+    // Fixed rather than exponential: this runs under an interactive operation, which needs a
+    // bounded delay.
     Effect.retry({
       schedule: Schedule.fixed(REQUEST_RETRY_DELAY).pipe(Schedule.upTo({ times: REQUEST_RETRIES })),
       while: isRetryable,
@@ -174,18 +170,11 @@ export const listEvents = (
 ): Effect.Effect<EventPage, ClaudeAgentApiError> =>
   request({ apiKey, method: 'GET', path: `/v1/sessions/${sessionId}/events?limit=${limit}`, schema: EventPage });
 
-/**
- * Creates the vault a session's credentials live in. One vault per session: it bounds what a live
- * credential edit can reach, and archiving it retires every secret that session was given.
- */
+/** One vault per session, so archiving it retires every secret that session was given. */
 export const createVault = (apiKey: string, displayName: string): Effect.Effect<VaultResponse, ClaudeAgentApiError> =>
   request({ apiKey, method: 'POST', path: '/v1/vaults', schema: VaultResponse, body: { display_name: displayName } });
 
-/**
- * Every credential in a vault. Secret values are write-only, so only the names come back — and the
- * listing is followed to its last page, since matching a name against a partial listing would read
- * an existing credential as absent and try to create it a second time.
- */
+/** Followed to the last page: a name absent from a partial listing would be created twice. */
 export const listVaultCredentials = (
   apiKey: string,
   vaultId: string,
@@ -221,10 +210,7 @@ export const createVaultCredential = (
     body: credential,
   });
 
-/**
- * Rotates a stored credential's secret in place. `secret_name` is immutable, so this is the only way
- * to change the value a running session resolves without tearing the session down.
- */
+/** `secret_name` is immutable, so rotating in place is the only way to change a live value. */
 export const updateVaultCredential = (
   apiKey: string,
   vaultId: string,

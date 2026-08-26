@@ -60,10 +60,7 @@ export const EventPage = Schema.Struct({
 });
 export interface EventPage extends Schema.Schema.Type<typeof EventPage> {}
 
-/**
- * An `environment_variable` vault credential, as sent to `POST /v1/vaults/{id}/credentials`. The
- * secret is substituted into outbound requests at egress, so it never reaches the container.
- */
+/** The secret is substituted at egress, so it never reaches the container. */
 export type EnvironmentVariableCredential = {
   display_name: string;
   auth: {
@@ -80,10 +77,7 @@ export const VaultResponse = Schema.Struct({
 });
 export interface VaultResponse extends Schema.Schema.Type<typeof VaultResponse> {}
 
-/**
- * A stored credential. `auth.secret_name` is the env var name the agent addresses; the secret value
- * is write-only and never returned, which is why an upsert matches on the name rather than diffing.
- */
+/** Secret values are write-only, so an upsert matches on `auth.secret_name`. */
 export const CredentialResponse = Schema.Struct({
   id: Schema.String,
   auth: Schema.optional(Schema.Struct({ secret_name: Schema.optional(Schema.String) })),
