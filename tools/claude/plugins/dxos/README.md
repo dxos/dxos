@@ -122,11 +122,39 @@ no services running.
 
 ### `mcp` — DXOS Composer
 
-Projects become live objects in a Composer space, reached through the MCP tools
-`dx mcp serve` exposes. A registry entry is a `Project`, its ledger is
-`Project.outline` (one markdown document), durable items are `Task` objects under
-the project's TaskSet, and design docs are artifact documents — so the same work
-is editable in Composer and from any machine, without a committed file.
+Projects become live objects in a Composer space, reached through MCP tools. A
+registry entry is a `Project`, its ledger is `Project.outline` (one markdown
+document), durable items are `Task` objects under the project's TaskSet, and
+design docs are artifact documents — so the same work is editable in Composer and
+from any machine, without a committed file.
+
+#### The bundled connector
+
+The plugin ships the deployed server, so enabling the plugin is the whole setup:
+
+```json
+"mcpServers": { "composer": { "type": "http", "url": "https://composer.dxos.network/mcp" } }
+```
+
+Run `/mcp`, pick `composer`, and choose Authenticate. The browser walks the
+passkey ceremony and hands back. Nothing is typed, because the identity is
+derived from the passkey signature rather than from anything you paste.
+
+Two prerequisites the install cannot create for you. You need a passkey
+registered in Composer at `composer.space` (Settings → create passkey) on an
+identity that has an account. And you need Chrome 128+ or Safari 18+: the
+ceremony is served from `auth.dxos.network` while the passkey's relying party is
+`composer.space`, so it depends on Related Origin Requests, which Firefox has not
+shipped.
+
+`dx mcp serve` remains the local alternative, and the directive handles both host
+shapes. The deployed host projects each verb as its own tool and adds the generic
+object tools; the local one exposes `queryOperations` / `invokeOperation` /
+`loadSkill` instead. Point the plugin at a local worker by overriding the `url`
+in your own settings.
+
+Tools from a bundled server are namespaced by plugin, so they read
+`mcp__plugin_dxos_composer__whoami`, not `mcp__composer__whoami`.
 
 Two rules the directive enforces:
 
