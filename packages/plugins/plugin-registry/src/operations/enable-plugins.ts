@@ -15,6 +15,7 @@ const handler: Operation.WithHandler<typeof EnablePlugins> = EnablePlugins.pipe(
     Effect.fnUntraced(function* ({ ids }) {
       const manager = yield* Plugin.Service;
       const installed = new Set(manager.getPlugins().map((plugin) => plugin.meta.profile.key));
+      const before = new Set(manager.getEnabled());
       const rejected: { id: string; reason: string }[] = [];
 
       for (const id of ids) {
@@ -25,7 +26,7 @@ const handler: Operation.WithHandler<typeof EnablePlugins> = EnablePlugins.pipe(
 
         // Already-enabled is not a failure: the call states the desired end state, so a caller
         // acting on a stale listing must not have to branch on it.
-        if (manager.getEnabled().includes(id)) {
+        if (before.has(id)) {
           continue;
         }
 
@@ -35,11 +36,18 @@ const handler: Operation.WithHandler<typeof EnablePlugins> = EnablePlugins.pipe(
         }
       }
 
-      // Report the manager's set rather than the requested ids: enabling one plugin enables its
-      // dependency closure, and the caller needs to see what actually came on.
-      const enabled = new Set(manager.getEnabled());
+      // Diff the manager's set rather than echoing the request: enabling one plugin enables its
+      // dependency closure, and the caller needs to see everything that came on. Requested ids that
+      // were already enabled are included too, so the reply states the end state the call asked for.
+      const enabled = new Set(manager.getEnabled().filter((id) => !before.has(id)));
+      for (const id of ids) {
+        if (before.has(id)) {
+          enabled.add(id);
+        }
+      }
+
       return {
-        enabled: ids.filter((id) => enabled.has(id)),
+        enabled: [...enabled],
         rejected,
       };
     }),

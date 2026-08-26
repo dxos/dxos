@@ -29,6 +29,25 @@ describe('RegistryOperation.EnablePlugins', () => {
     expect(rejected).toEqual([]);
   });
 
+  test('reports dependencies that came on with the requested plugin', async ({ expect }) => {
+    await using harness = await createComposerTestApp({
+      plugins: [RegistryPlugin(), GraphPlugin.make()],
+      enabled: [meta.profile.key],
+    });
+
+    const dependencies = harness.manager.getDependencies(graphKey, { transitive: true });
+    const { enabled } = await harness.runPromise(
+      Operation.invoke(RegistryOperation.EnablePlugins, { ids: [graphKey] }),
+    );
+
+    // Enabling one plugin enables its closure; the reply names everything that came on, not just
+    // what was asked for.
+    for (const id of dependencies.filter((id) => id !== meta.profile.key)) {
+      expect(enabled).toContain(id);
+    }
+    expect(new Set(enabled).size).toBe(enabled.length);
+  });
+
   test('rejects a plugin the host does not have installed', async ({ expect }) => {
     await using harness = await createComposerTestApp({ plugins: [RegistryPlugin()] });
 
