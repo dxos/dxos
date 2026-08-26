@@ -204,23 +204,16 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task }>(({ task, ...
       classNames={mx('px-0 py-0 group col-span-full grid grid-cols-subgrid', className)}
       ref={forwardedRef}
     >
-      {onTaskUpdate ? (
-        <IconButton
-          variant='ghost'
-          density='sm'
-          icon={done ? 'ph--check--regular' : 'ph--circle--regular'}
-          iconOnly
-          label={done ? 'Mark todo' : 'Mark done'}
-          classNames={mx('justify-self-center text-subdued', done && 'text-success-text')}
-          onClick={handleToggle}
-        />
-      ) : (
-        <Icon
-          icon={done ? 'ph--check--regular' : 'ph--circle--regular'}
-          classNames={mx('justify-self-center', done && 'text-success-text')}
-          size={4}
-        />
-      )}
+      <IconButton
+        classNames={mx('justify-self-center text-subdued', done && 'text-success-text')}
+        variant='ghost'
+        density='sm'
+        icon={done ? 'ph--check--regular' : 'ph--square--regular'}
+        iconOnly={!!onTaskUpdate}
+        // TODO(burdon): Translations.
+        label={onTaskUpdate ? (done ? 'Mark todo' : 'Mark done') : done ? 'Done' : 'Pending'}
+        onClick={handleToggle}
+      />
       <span
         className={onTaskSelect ? 'truncate cursor-pointer' : 'truncate'}
         onClick={onTaskSelect ? () => onTaskSelect(task) : undefined}

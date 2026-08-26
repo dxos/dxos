@@ -18,7 +18,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Filter } from '@dxos/echo';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import { type Space } from '@dxos/react-client/echo';
-import { Outline } from '@dxos/types';
+import { type Outline, TaskSet } from '@dxos/types';
 
 import { StoryRole } from '../modules';
 import { ModuleContainer, config, createDecorators, storyParameters } from '../testing';
@@ -35,21 +35,24 @@ const { text, toolCall, promptIncludes } = ScriptedLanguageModel;
 const TASK_TITLE = 'Compute 10 factorial';
 
 // Captured by `onInit` so play functions can assert on the real objects the skills write, rather
-// than on rendered text (no surface in these layouts renders the outline).
+// than on rendered text (no surface in these layouts renders the task list).
 let storySpace: Space | undefined;
 
 const captureSpace = async ({ space }: { space: Space }) => {
   storySpace = space;
 };
 
-/** The conversation's working checklist — for these chats, the chat's own lazily created outline. */
+/** The conversation's working tasks — for these chats, the chat's own lazily created task set. */
 const readChecklist = async (): Promise<Outline.ChecklistItem[]> => {
   if (!storySpace) {
     return [];
   }
-  const [outline] = await storySpace.db.query(Filter.type(Outline.Outline)).run();
-  const text = outline && (await outline.content.load());
-  return text ? Outline.parseChecklist(text.content) : [];
+  const [taskSet] = await storySpace.db.query(Filter.type(TaskSet.TaskSet)).run();
+  if (!taskSet) {
+    return [];
+  }
+  const tasks = await Promise.all(taskSet.tasks.map((ref) => ref.load()));
+  return tasks.map((task) => ({ title: task.title, done: task.status === 'done' }));
 };
 
 /** Polls the checklist until `predicate` holds, so assertions do not race the agent's writes. */

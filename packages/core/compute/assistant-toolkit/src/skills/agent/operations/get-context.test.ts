@@ -46,10 +46,9 @@ describe('GetContext', () => {
         const { agent, conversation } = yield* setupBoundAgent();
         const chat = yield* Agent.loadChat(agent);
         invariant(chat, 'Agent chat not found.');
-        const { text } = yield* Chat.ensureOutlineText(chat);
-        Obj.update(text, (text) => {
-          text.content = Outline.upsertChecklistItems(text.content, [{ title: 'Buy eggs', done: false }]);
-        });
+        const taskSet = yield* Chat.ensureTaskSet(chat);
+        const { db } = yield* Database.Service;
+        Outline.addTask(db, taskSet, 'Buy eggs');
         yield* Database.flush();
 
         const context = yield* Operation.invoke(AgentSkillOperations.GetContext, {}).pipe(Effect.provide(conversation));

@@ -7,7 +7,7 @@ import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
-import { toCodecAnthropic } from 'effect/unstable/ai/AnthropicStructuredOutput';
+import * as AnthropicStructuredOutput from 'effect/unstable/ai/AnthropicStructuredOutput';
 import * as Tool from 'effect/unstable/ai/Tool';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
@@ -170,7 +170,7 @@ describe('RunInstructions', () => {
     const output = routineOutputSchema(JsonSchema.toJsonSchema(Schema.Void));
     const tool = makeCompleteJobTool(output);
     const json = Tool.getJsonSchema(tool);
-    expect(Tool.getJsonSchema(tool, { transformer: toCodecAnthropic })).toEqual(json);
+    expect(Tool.getJsonSchema(tool, { transformer: AnthropicStructuredOutput.toCodecAnthropic })).toEqual(json);
 
     const typeless: string[] = [];
     const walk = (node: unknown, path: string, inKeyMap: boolean): void => {

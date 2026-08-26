@@ -17,7 +17,7 @@ informational queries, quick lookups or clarifications, and avoid creating verif
 
 ### TOOL SPECIFICATION
 
-`update-tasks` requires an array of task objects. The task list is a markdown checklist; the
+`update-tasks` requires an array of task objects. The task list is a durable set of tasks; the
 title is the key — reuse the exact title to update an existing item, use a new title to add one.
 Each task object contains:
 

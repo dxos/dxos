@@ -1,6 +1,6 @@
 # Project Tasks — Tasks
 
-_Resume: decide whether to open the PR for the delegation fix (3 commits on `claude/agent-delegation-task-management-8bdbbe`). Uncommitted: none. Last: live-verified the sub-agent delegation loop end to end._
+_Resume: open the PR (delegation fix + TaskList consolidation + Chat.taskSet pivot). Uncommitted: none. Last: Chat.outline replaced by Chat.taskSet; planning/delegation now write durable tasks._
 
 ## Phase 1: Agent delegation over durable tasks
 
@@ -27,8 +27,15 @@ be visible in the UI, closing the gaps the storybook audit surfaced.
 - [x] **Stop posting stack traces into the conversation** — `onComplete` posts
       only `Cause.prettyErrors` messages; full pretty cause stays in `log.warn`.
       Scripted failure-path test added.
-- [ ] **Open PR for the delegation fix** — 3 commits on this branch; add an
-      assistant-toolkit changeset.
+- [x] **Replace Chat.outline with Chat.taskSet** — the chat's working surface is
+      the durable task set: `ensureTaskSet`/`peekTaskSetRef`/`loadTasks`/
+      `formatChecklist` (renders tasks as checklist markdown for prompts);
+      UpdateTasks upserts durable tasks by title; DelegateTask files into the
+      conversation's set (standalone chats now delegate into their own);
+      the delegation strategy no longer mirrors to markdown; ChatTaskList and
+      the ChatArticle story read/seed the task set.
+- [ ] **Open PR** — delegation fix + shared TaskList consolidation +
+      Chat.taskSet pivot; add an assistant-toolkit changeset.
 - [ ] **Joined story: delegation beside a TaskSet surface** — chat delegating
       while a `TaskSetArticle` (or ChatTaskList over the durable TaskSet) shows
       the agent task appear, run, and complete.

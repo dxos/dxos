@@ -131,9 +131,8 @@ describe('makeDelegationStrategy', () => {
 
         const chat = yield* Agent.loadChat(agent);
         invariant(chat, 'Agent chat not found.');
-        // Delegation files into the PROJECT's task set — an outline owns none — so the conversation
-        // has to sit under a project for the strategy to have anything to reconcile. The agent is
-        // parented rather than the chat, which reaches the project through it.
+        // Delegation files into the PROJECT's task set here: the agent is parented rather than the
+        // chat, which reaches the project through it (a standalone chat would use its own set).
         const project = yield* Database.add(Project.make({ name: 'Test project' }));
         Obj.setParent(agent, project);
         yield* Database.flush();
@@ -166,12 +165,8 @@ describe('makeDelegationStrategy', () => {
         expect(Message.extractText(notification)).toContain(TASK_TITLE);
         expect(Message.extractText(notification)).toContain('3628800');
 
-        // ...marked the durable task done and checked off the checklist line.
+        // ...and marked the durable task done — the task set is the working surface.
         expect(tasks[0].status).toEqual('done');
-        const outlineAfterTurn = project.outline ? yield* Database.load(project.outline) : undefined;
-        invariant(outlineAfterTurn, 'Outline not created.');
-        const outlineText = yield* Database.load(outlineAfterTurn.content);
-        expect(Outline.parseChecklist(outlineText.content)).toEqual([{ title: TASK_TITLE, done: true }]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

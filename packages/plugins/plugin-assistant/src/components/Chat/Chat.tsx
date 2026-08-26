@@ -23,7 +23,7 @@ import {
 import { type MessageRange, type OutlineMarker, Outline as OutlineRail, useFeedModel } from '@dxos/react-ui-feed';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { TaskList } from '@dxos/react-ui-task';
-import { Outline, Task } from '@dxos/types';
+import { TaskSet } from '@dxos/types';
 import { Message } from '@dxos/types';
 import { keyToFallback } from '@dxos/util';
 
@@ -528,41 +528,38 @@ ChatPrompt.displayName = CHAT_PROMPT_NAME;
 const CHAT_TASK_LIST_NAME = 'Chat.TaskList';
 
 type ChatTaskListProps = {
-  outline?: Outline.Outline;
+  taskSet?: TaskSet.TaskSet;
 };
 
-// TODO(burdon): Project chats keep their working checklist on the parent project's outline —
-//  resolve via the parent edge (needs a reactive parent lookup), not only `chat.outline`.
+// TODO(burdon): Project chats keep their working tasks on the parent project's task set —
+//  resolve via the parent edge (needs a reactive parent lookup), not only `chat.taskSet`.
 const ChatTaskList = composable<HTMLDivElement, ChatTaskListProps>(
-  ({ outline: outlineProp, ...props }, forwardedRef) => {
+  ({ taskSet: taskSetProp, ...props }, forwardedRef) => {
     const { chat } = useChatContext(CHAT_TASK_LIST_NAME);
 
-    const outline = useAtomValue(
+    const taskSet = useAtomValue(
       useMemo(
         () =>
           Atom.make(
             (get) =>
-              outlineProp ??
+              taskSetProp ??
               Option.fromNullishOr(chat).pipe(
                 Option.map((_) => get(Obj.atom(_))),
-                Option.flatMapNullishOr((_) => _?.outline?.atom),
+                Option.flatMapNullishOr((_) => _?.taskSet?.atom),
                 Option.map(get),
                 Option.getOrUndefined,
               ),
           ),
-        [chat, outlineProp],
+        [chat, taskSetProp],
       ),
     );
 
-    // The checklist is markdown; project it onto transient (un-persisted) tasks so the shared
-    // task list renders it. Durable promoted tasks keep richer state elsewhere.
-    const [text] = useObject(outline?.content);
-    const tasks = useMemo(
-      () =>
-        Outline.parseChecklist(text?.content ?? '').map((item) =>
-          Task.make({ title: item.title, status: item.done ? 'done' : 'todo' }),
-        ),
-      [text?.content],
+    // Subscribe to the set (membership) and to each ref (row objects) — a query would only
+    // re-emit on membership changes, leaving row edits stale.
+    const [taskSetSnapshot] = useObject(taskSet);
+    const taskRefs = taskSetSnapshot?.tasks;
+    const tasks = useAtomValue(
+      useMemo(() => Atom.make((get) => TaskSet.dedupeById((taskRefs ?? []).map((ref) => get(ref.atom)))), [taskRefs]),
     );
     if (tasks.length === 0) {
       return null;
@@ -571,7 +568,7 @@ const ChatTaskList = composable<HTMLDivElement, ChatTaskListProps>(
     return (
       <TaskList.Root tasks={tasks} showGroupLabels={false}>
         <TaskList.Viewport {...composableProps(props, { classNames: 'dx-container' })} ref={forwardedRef}>
-          <TaskList.Content classNames='max-h-[4lh]' />
+          <TaskList.Content classNames='h-full max-h-[6lh]' />
         </TaskList.Viewport>
       </TaskList.Root>
     );

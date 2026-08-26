@@ -14,7 +14,7 @@ import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Message, Outline, Task, TaskSet } from '@dxos/types';
+import { Message, Task, TaskSet } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { RunInstructions } from '../operations';
@@ -185,8 +185,8 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
       // Reuse the chat just resolved rather than re-scanning every chat for the same feed.
       const agent = chat ? yield* Agent.loadForChat(chat) : undefined;
 
-      // Resolve the durable task by its id and record the outcome; on success the checklist line
-      // is checked off so the markdown mirror follows the durable state.
+      // Resolve the durable task by its id and record the outcome directly on it — the task set
+      // is the working surface, so there is no separate mirror to reconcile.
       let title = id;
       const tasks = yield* Database.query(Query.select(Filter.id(id))).run.pipe(Effect.orElseSucceed(() => []));
       const task = tasks.find((candidate): candidate is Task.Task => Obj.instanceOf(Task.Task, candidate));
@@ -195,21 +195,6 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
           task.status = Exit.isSuccess(exit) ? 'done' : 'failed';
         });
         title = task.title;
-
-        if (chat && Exit.isSuccess(exit)) {
-          const outlineRef = Chat.peekOutlineRef(chat);
-          const outline = outlineRef
-            ? yield* Database.load(outlineRef).pipe(Effect.orElseSucceed(() => undefined))
-            : undefined;
-          const text = outline
-            ? yield* Database.load(outline.content).pipe(Effect.orElseSucceed(() => undefined))
-            : undefined;
-          if (text) {
-            Obj.update(text, (text) => {
-              text.content = Outline.upsertChecklistItems(text.content, [{ title: task.title, done: true }]);
-            });
-          }
-        }
       }
 
       // Surface any artifacts the sub-agent produced as inline reference blocks in the notification
