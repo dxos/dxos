@@ -306,3 +306,17 @@ export const encodeCompat = <T extends Message>(schema: DescMessage, value: any)
  */
 export const decodeCompat = (schema: DescMessage, bytes: Uint8Array): any =>
   convert(schema, fromBinary(schema, bytes), 'fromProto');
+
+/** A codec over protobuf.js-shaped values, matching the surface a persisted store needs. */
+export type CompatCodec<T> = {
+  encode: (value: T) => Uint8Array;
+  decode: (bytes: Uint8Array) => T;
+};
+
+/**
+ * Codec adapter so a store can move its on-disk records to buf without changing its own plumbing.
+ */
+export const compatCodec = <T>(messageSchema: DescMessage): CompatCodec<T> => ({
+  encode: (value) => encodeCompat(messageSchema, value),
+  decode: (bytes) => decodeCompat(messageSchema, bytes),
+});

@@ -9,7 +9,12 @@ import { Timeframe } from '@dxos/timeframe';
 
 import { schema } from '../proto/index.ts';
 import { InvitationSchema } from './proto/gen/dxos/client/invitation_pb.ts';
-import { EchoMetadataSchema, SpaceMetadataSchema } from './proto/gen/dxos/echo/metadata_pb.ts';
+import { FeedMessageSchema } from './proto/gen/dxos/echo/feed_pb.ts';
+import {
+  EchoMetadataSchema,
+  LargeSpaceMetadataSchema,
+  SpaceMetadataSchema,
+} from './proto/gen/dxos/echo/metadata_pb.ts';
 import { EchoObject_SnapshotSchema } from './proto/gen/dxos/echo/object_pb.ts';
 import { HeadsSchema } from './proto/gen/dxos/echo/query_pb.ts';
 import { ErrorSchema } from './proto/gen/dxos/error_pb.ts';
@@ -254,6 +259,73 @@ describe('buf shape-compat', () => {
     expect(decoded.model['@type']).toBe('google.protobuf.Any');
     expect(decoded.model.type_url).toBe('com.example.Model');
     expect(new Uint8Array(decoded.model.value)).toEqual(new Uint8Array([4, 5]));
+  });
+
+  test('LargeSpaceMetadata carries a credential snapshot across codecs', ({ expect }) => {
+    // The metadata store's on-disk record; its credentials made it the `Any`-blocked half of #9c.
+    const codec = schema.getCodecForType('dxos.echo.metadata.LargeSpaceMetadata');
+    const value = {
+      controlPipelineSnapshot: {
+        timeframe: new Timeframe([[PublicKey.random(), 4]]),
+        messages: [
+          {
+            feedKey: PublicKey.random(),
+            credential: {
+              issuer: PublicKey.random(),
+              issuanceDate: new Date(1700000000123),
+              subject: {
+                id: PublicKey.random(),
+                assertion: {
+                  '@type': 'dxos.halo.credentials.AdmittedFeed',
+                  'spaceKey': PublicKey.random(),
+                  'identityKey': PublicKey.random(),
+                  'deviceKey': PublicKey.random(),
+                  'designation': 1,
+                },
+              },
+            },
+          },
+        ],
+      },
+    };
+
+    const legacyBytes = codec.encode(value);
+    expect(new Uint8Array(encodeCompat(LargeSpaceMetadataSchema, value))).toEqual(new Uint8Array(legacyBytes));
+
+    const decoded = decodeCompat(LargeSpaceMetadataSchema, legacyBytes);
+    expect(decoded.controlPipelineSnapshot.timeframe).toBeInstanceOf(Timeframe);
+    const message = decoded.controlPipelineSnapshot.messages[0];
+    expect(message.feedKey).toBeInstanceOf(PublicKey);
+    expect(message.credential.issuanceDate).toBeInstanceOf(Date);
+    expect(message.credential.subject.assertion['@type']).toBe('dxos.halo.credentials.AdmittedFeed');
+    expect(message.credential.subject.assertion.deviceKey).toBeInstanceOf(PublicKey);
+  });
+
+  test('FeedMessage carries a credential across codecs', ({ expect }) => {
+    const codec = schema.getCodecForType('dxos.echo.feed.FeedMessage');
+    const value = {
+      timeframe: new Timeframe([[PublicKey.random(), 1]]),
+      payload: {
+        credential: {
+          credential: {
+            issuer: PublicKey.random(),
+            issuanceDate: new Date(1700000000123),
+            subject: {
+              id: PublicKey.random(),
+              assertion: { '@type': 'dxos.halo.credentials.SpaceGenesis', 'spaceKey': PublicKey.random() },
+            },
+          },
+        },
+      },
+    };
+
+    const legacyBytes = codec.encode(value);
+    expect(new Uint8Array(encodeCompat(FeedMessageSchema, value))).toEqual(new Uint8Array(legacyBytes));
+
+    // The `payload` oneof must stay flat and its packed credential resolved.
+    const decoded = decodeCompat(FeedMessageSchema, legacyBytes);
+    expect(decoded.timeframe).toBeInstanceOf(Timeframe);
+    expect(decoded.payload.credential.credential.subject.assertion['@type']).toBe('dxos.halo.credentials.SpaceGenesis');
   });
 
   test('packing an Any without an @type fails rather than writing an empty payload', ({ expect }) => {
