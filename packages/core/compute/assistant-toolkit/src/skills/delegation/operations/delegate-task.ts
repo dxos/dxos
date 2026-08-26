@@ -28,14 +28,16 @@ const handler: Operation.WithHandler<typeof DelegateTask> = DelegateTask.pipe(
       const taskSet = yield* Chat.ensureTaskSet(chat);
       const { db } = yield* Database.Service;
 
+      // Queued (`todo`) rather than `started`: the reconcile loop spawns the sub-agent and marks
+      // the task started at spawn, so `started` always means a live process.
       const task = Outline.addTask(db, taskSet, title, {
-        status: 'started',
+        status: 'todo',
         assignee: { role: 'assistant' },
       });
       yield* Database.flush();
 
       return trim`
-        Delegated "${task.title}" as a started agent task (id: ${task.id}).
+        Delegated "${task.title}" as a queued agent task (id: ${task.id}).
         Current checklist:
         <checklist>
           ${yield* Chat.formatChecklist(chat)}

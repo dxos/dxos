@@ -72,6 +72,7 @@ import { Outline, Task, TaskSet } from '@dxos/types';
 import { Merge, isNonNullable } from '@dxos/util';
 
 import { moduleSurfaces } from '../modules';
+import { CalculatorHandlers, CalculatorSkill } from './calculator';
 
 /** Shared CSF parameters for the assistant story groups (fullscreen canvas + plugin translations). */
 export const storyParameters = {
@@ -265,7 +266,12 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
     activate: () =>
       Effect.succeed([
         // TODO(burdon): Clean up.
-        Capability.contributeAll(AppCapabilities.SkillDefinition, [MarkdownSkill, PlanningSkill, DelegationSkill]),
+        Capability.contributeAll(AppCapabilities.SkillDefinition, [
+          MarkdownSkill,
+          PlanningSkill,
+          DelegationSkill,
+          CalculatorSkill,
+        ]),
         // Supervisor behaviour, so a delegating story spawns its sub-agent. The app's copy rides
         // plugin-assistant's `AssistantStart`-gated skill-definition module, which loses the race
         // against `AgentService`'s layer — that layer reads this capability once, at build time.
@@ -276,6 +282,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
           DelegationHandlers,
           AgentHandlers,
           ExampleHandlers,
+          CalculatorHandlers,
         ]),
       ]),
   }),

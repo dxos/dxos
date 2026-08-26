@@ -4,7 +4,7 @@
 
 import * as Skill from '@dxos/compute/Skill';
 
-import { DelegateTask } from './operations/definitions';
+import { DelegateTask, DelegateTasks } from './operations/definitions';
 
 const SKILL_KEY = 'org.dxos.skill.delegation';
 
@@ -13,7 +13,7 @@ const make = () =>
     key: SKILL_KEY,
     name: 'Delegation',
     description: 'Delegates work to sub-agents and tracks it as plan tasks.',
-    tools: Skill.toolDefinitions({ operations: [DelegateTask] }),
+    tools: Skill.toolDefinitions({ operations: [DelegateTask, DelegateTasks] }),
   });
 
 const skill: Skill.Definition = {

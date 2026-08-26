@@ -19,6 +19,8 @@ informational queries, quick lookups or clarifications, and avoid creating verif
 
 `update-tasks` requires an array of task objects. The task list is a durable set of tasks; the
 title is the key — reuse the exact title to update an existing item, use a new title to add one.
+The title is exactly the text after the checkbox on the numbered line; never include the ordinal
+or the indented status/dependency note in a title.
 Each task object contains:
 
 - title (string, required): specific, actionable task description; also the update key

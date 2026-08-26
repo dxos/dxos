@@ -89,35 +89,59 @@ const extractArtifactIds = (value: unknown): string[] => {
 };
 
 /**
- * The durable agent tasks awaiting a sub-agent for this conversation: started tasks of the
- * working outline's task set whose assignee is an agent. Ordinary checklist items (markdown) are
- * never spawned — delegation happens only through the promotion the delegation-delegate-task tool performs.
+ * The durable agent tasks awaiting a sub-agent for this conversation: queued (`todo`) tasks of
+ * the working task set whose assignee is an agent, all of whose dependencies are done. Ordinary
+ * (unassigned) tasks are never spawned — delegation happens only through the delegation verbs.
+ * `started` always means a live process (set at spawn), so a started agent task with no process
+ * is an orphan — {@link sweepOrphanedTasks}.
  */
 const findPendingTasks = (
   chat: Chat.Chat,
   activeIds: ReadonlySet<string>,
 ): Effect.Effect<Task.Task[], never, Database.Service> =>
   Effect.gen(function* () {
-    // The ledger is the project's: an outline owns no task set, so a chat outside a project has no
-    // delegated tasks to reconcile.
-    const taskSetRef = Chat.peekTaskSetRef(chat);
-    const taskSet = taskSetRef
-      ? yield* Database.load(taskSetRef).pipe(Effect.orElseSucceed(() => undefined))
-      : undefined;
-    if (!taskSet) {
-      return [];
-    }
+    const tasks = yield* Chat.loadTasks(chat);
     // The set's `tasks` array is flat, so a delegated sub-task is found without descending.
-    return TaskSet.resolveTasks(taskSet).filter(
-      (task) => task.assignee?.role === 'assistant' && task.status === 'started' && !activeIds.has(task.id),
+    return tasks.filter(
+      (task) =>
+        task.assignee?.role === 'assistant' &&
+        (task.status ?? 'todo') === 'todo' &&
+        !activeIds.has(task.id) &&
+        TaskSet.isTaskReady(tasks, task),
     );
   });
 
 /**
- * Supervisor behaviour for the conversational agent: after each turn, every started agent
- * task not already running is run by a sub-agent (a synthesized minimal `Routine` executed via
- * `RunInstructions`); on completion the task status is updated, the checklist line is checked
- * off, and a templated message is posted back to the conversation.
+ * Fails agent tasks stuck in `started` with no live process — a crashed or never-exited
+ * sub-agent (e.g. the host reloaded mid-run) must not wedge the task or the delegation loop.
+ */
+const sweepOrphanedTasks = (
+  chat: Chat.Chat,
+  activeIds: ReadonlySet<string>,
+): Effect.Effect<void, never, Database.Service> =>
+  Effect.gen(function* () {
+    const tasks = yield* Chat.loadTasks(chat);
+    const orphans = tasks.filter(
+      (task) => task.assignee?.role === 'assistant' && task.status === 'started' && !activeIds.has(task.id),
+    );
+    if (orphans.length === 0) {
+      return;
+    }
+    for (const task of orphans) {
+      log.warn('orphaned delegated task failed', { taskId: task.id, title: task.title });
+      Obj.update(task, (task) => {
+        task.status = 'failed';
+      });
+    }
+    yield* Database.flush();
+  });
+
+/**
+ * Supervisor behaviour for the conversational agent: after each turn, every queued agent task
+ * whose dependencies are done is run by a sub-agent (a synthesized minimal `Routine` executed via
+ * `RunInstructions`), marked started at spawn; on exit the task is marked done/failed and a
+ * templated message is posted back to the conversation, whose turn re-runs this reconcile — so a
+ * batch of delegated tasks drains in dependency order without further prompting.
  */
 export const makeDelegationStrategy = (): DelegationStrategy => ({
   reconcile: (feed, activeIds) =>
@@ -127,6 +151,7 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
         return [];
       }
 
+      yield* sweepOrphanedTasks(chat, activeIds);
       const pending = yield* findPendingTasks(chat, activeIds);
       if (pending.length === 0) {
         return [];
@@ -162,6 +187,13 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
           }),
         );
 
+        // Started is stamped when the delegation is handed to the runtime — never by the
+        // delegation verbs — so `started` always means a spawning/live sub-agent and an orphaned
+        // `started` is detectable (see the sweep).
+        Obj.update(task, (task) => {
+          task.status = 'started';
+        });
+
         delegations.push({
           id: task.id,
           spawn: Effect.gen(function* () {
@@ -176,6 +208,7 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
           }),
         });
       }
+      yield* Database.flush();
       return delegations;
     }),
 

@@ -42,7 +42,15 @@ const seed = (): Task.Task[] => [
   }),
 ];
 
-const DefaultStory = ({ readonly, showGroupLabels }: { readonly?: boolean; showGroupLabels?: boolean }) => {
+const DefaultStory = ({
+  readonly,
+  showGroupLabels,
+  showOrdinals,
+}: {
+  readonly?: boolean;
+  showGroupLabels?: boolean;
+  showOrdinals?: boolean;
+}) => {
   const [tasks, setTasks] = useState<Task.Task[]>(seed);
 
   const handleCreate = useCallback((title: string) => {
@@ -64,6 +72,7 @@ const DefaultStory = ({ readonly, showGroupLabels }: { readonly?: boolean; showG
     <TaskList.Root
       tasks={tasks}
       showGroupLabels={showGroupLabels}
+      showOrdinals={showOrdinals}
       onTaskCreate={readonly ? undefined : handleCreate}
       onTaskUpdate={readonly ? undefined : handleUpdate}
       onTaskDelete={readonly ? undefined : handleDelete}
@@ -98,6 +107,13 @@ export const Readonly: Story = {
 export const WithoutGroupLabels: Story = {
   args: {
     showGroupLabels: false,
+  },
+};
+
+export const WithOrdinals: Story = {
+  args: {
+    showGroupLabels: false,
+    showOrdinals: true,
   },
 };
 

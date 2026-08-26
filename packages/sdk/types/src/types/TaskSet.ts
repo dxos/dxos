@@ -122,6 +122,19 @@ export const subTasks = (tasks: readonly Task.Task[], task: Task.Task): Task.Tas
 };
 
 /**
+ * Whether every `dependsOn` of `task` is `done`, resolved within `tasks` — a dangling dependency
+ * ref reads as satisfied, not as a permanent block.
+ */
+export const isTaskReady = (tasks: readonly Task.Task[], task: Task.Task): boolean => {
+  const byId = new Map(tasks.map((candidate) => [candidate.id, candidate]));
+  return (task.dependsOn ?? []).every((ref) => {
+    const id = refId(ref);
+    const dep = id === undefined ? undefined : byId.get(id);
+    return !dep || dep.status === 'done';
+  });
+};
+
+/**
  * The milestone a task is shown under: its own, else the nearest ancestor's (Linear's behavior),
  * as an entity id. Undefined for a backlog task. Walks within `tasks`, so it needs no
  * dereferencing, and is cycle-safe against a malformed `parentTask` loop.

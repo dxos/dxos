@@ -14,7 +14,7 @@ import * as Project from '@dxos/compute/Project';
 import { Annotation, Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { type EntityNotFoundError } from '@dxos/echo/Error';
-import { Outline, type Task, TaskSet } from '@dxos/types';
+import { type Task, TaskSet } from '@dxos/types';
 
 import { HarnessContextError } from '../errors';
 
@@ -161,8 +161,9 @@ export const loadTasks = (chat: Chat): Effect.Effect<Task.Task[], never, Databas
 export const isOpenTask = (task: Task.Task): boolean => (task.status ?? 'todo') === 'todo' || task.status === 'started';
 
 /**
- * The conversation's tasks rendered as checklist markdown (the format the planning prompts speak),
- * or a placeholder when none exist. Never creates.
+ * The conversation's tasks rendered as a numbered checklist (the format the planning prompts
+ * speak), or a placeholder when none exist. Ordinals match the task list UI, and non-default
+ * status/dependencies are noted so the model can reason about readiness. Never creates.
  */
 export const formatChecklist = (chat: Chat): Effect.Effect<string, never, Database.Service> =>
   Effect.gen(function* () {
@@ -170,10 +171,34 @@ export const formatChecklist = (chat: Chat): Effect.Effect<string, never, Databa
     if (tasks.length === 0) {
       return 'No checklist found.';
     }
-    return tasks
-      .map((task) => Outline.renderChecklistItem({ title: task.title, done: task.status === 'done' }))
-      .join('\n');
+    return renderNumberedChecklist(tasks);
   });
+
+/**
+ * Renders tasks as `1. [ ] Title` lines, ordinals in set order. Status/dependency notes go on
+ * their own indented line — appended to the title, models paste them back through title-keyed
+ * upserts and duplicate the task.
+ */
+export const renderNumberedChecklist = (tasks: readonly Task.Task[]): string => {
+  const ordinals = new Map(tasks.map((task, index) => [task.id, index + 1]));
+  return tasks
+    .map((task, index) => {
+      const line = `${index + 1}. [${task.status === 'done' ? 'x' : ' '}] ${task.title}`;
+      const notes: string[] = [];
+      if (task.status && task.status !== 'todo' && task.status !== 'done') {
+        notes.push(task.status);
+      }
+      const deps = (task.dependsOn ?? [])
+        .map((ref) => ref.target)
+        .filter((target) => target !== undefined)
+        .map((target) => ordinals.get(target.id) ?? target.title);
+      if (deps.length > 0) {
+        notes.push(`depends on ${deps.join(', ')}`);
+      }
+      return notes.length > 0 ? `${line}\n   (${notes.join('; ')})` : line;
+    })
+    .join('\n');
+};
 
 /**
  * Resolves the bound session {@link Chat} for the current conversation.

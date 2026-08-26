@@ -1,6 +1,6 @@
 # Project Tasks — Tasks
 
-_Resume: Phase 2 build (see below). Uncommitted: none. Last: merged main (its completeJob strict fix adopted + JSON-guard prompt line, live-verified 2/2); key at .secrets/anthropic.env._
+_Resume: push, CI, PR comments, DESIGN.md (assistant-toolkit/docs). Uncommitted: none. Last: Phase 2 complete — live drain verified 3/3 done, no duplicates, no JSON failures._
 
 ## Phase 1: Agent delegation over durable tasks
 
@@ -72,20 +72,27 @@ the drain loop; this PR (#12752).
 
 ### Tasks
 
-- [ ] **Task.dependsOn** — optional array of suspended self-refs; ready = all
+- [x] **Task.dependsOn** — optional array of suspended self-refs; ready = all
       deps done.
-- [ ] **Numbered checklist** — `formatChecklist` renders ordinals + dependency
+- [x] **Numbered checklist** — `formatChecklist` renders ordinals + dependency
       notes so model and UI share numbering.
-- [ ] **delegateTasks verb** — input array of (ordinal | title), resolved
+- [x] **delegateTasks verb** — input array of (ordinal | title), resolved
       server-side; stamps agent assignee; reconcile spawns; spawn sets
       `started`; onComplete marks done/failed; sweep marks orphaned started
       agent tasks failed (no zombies).
-- [ ] **Calculator skill (stories-assistant)** — local `compute(expression)`
+- [x] **Calculator skill (stories-assistant)** — local `compute(expression)`
       operation so sub-agents demonstrably call a local tool.
-- [ ] **TaskList ordinals + spinner** — index column; `animate-spin` spinner
+- [x] **TaskList ordinals + spinner** — index column; `animate-spin` spinner
       icon when status started && assignee assistant.
-- [ ] **Executable seeds + stories** — A/B/C seeds (B<-A, C<-B); scripted:
-      execute-first, delegate-first, drain-loop (deps-ordered); live twin of
-      the drain loop.
+- [x] **Executable seeds + stories** — A/B/C seeds (B<-A, C<-B); scripted
+      TestTaskExecution/TestTaskDelegation/TestTaskDrain (CI) + live
+      WithTaskDrain; stories reordered demos-first with Test-prefixed play
+      stories last. Fixes en route: agent-runtime re-reconciles after each
+      delegation exits (the drain was one-spawn-per-turn without it);
+      completeJob back to dynamic/typed-union schema after the live JSON
+      digit-separator failure recurred under main's non-strict Schema.Any;
+      checklist notes moved off the title line (models pasted them back into
+      title-keyed upserts, duplicating tasks). Live drain verified: 3/3 done,
+      3 fold-backs, no duplicates, no failures.
 - [ ] **Finish** — fixtures regen, suites, lint/format, live verify, changeset,
       push, PR comments (at end), DESIGN.md in assistant-toolkit/docs.
