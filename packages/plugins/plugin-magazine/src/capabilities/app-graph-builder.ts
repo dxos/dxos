@@ -17,7 +17,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref, Type } from '@dxos/echo';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Selection } from '@dxos/react-ui-attention';
+import { Selection } from '@dxos/react-ui-attention/types';
 
 import { meta } from '#meta';
 import { FeedOperation, Magazine, Subscription } from '#types';

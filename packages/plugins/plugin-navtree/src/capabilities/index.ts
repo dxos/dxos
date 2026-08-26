@@ -12,7 +12,12 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 
+import { meta } from '#meta';
+import { translations } from '#translations';
 import { NavTreeCapabilities } from '#types';
+
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const Expose = Capability.inlineModule(
@@ -39,6 +44,12 @@ export const Keyboard = Capability.lazyModule(
   () => import('./keyboard'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
+});
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: [
     'org.dxos.role.dialog',
@@ -56,3 +67,4 @@ export const State = Capability.lazyModule(
   },
   () => import('./state'),
 );
+export const Translations = AppCapability.translations(translations);

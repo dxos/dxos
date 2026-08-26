@@ -3,17 +3,15 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { OperationHandler, ReactSurface, SettingsAppGraphBuilder } from '#capabilities';
+import { OperationHandler, ReactSurface, SettingsAppGraphBuilder, Translations } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
 
 export const SettingsPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(SettingsAppGraphBuilder),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(SettingsAppGraphBuilder),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

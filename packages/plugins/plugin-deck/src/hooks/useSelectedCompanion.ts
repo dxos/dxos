@@ -5,7 +5,7 @@
 import { useMemo } from 'react';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { Attention } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention/types';
 
 /**
  * Resolves which companion to show based on variant preference.

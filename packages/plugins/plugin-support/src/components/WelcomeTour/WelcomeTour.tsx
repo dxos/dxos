@@ -12,6 +12,7 @@ import { useAsyncEffect } from '@dxos/react-ui';
 import { Tour } from '#types';
 
 import { Tooltip, floaterProps } from '../Tooltip';
+import { TourContext } from './TourContext';
 
 const addStepClass = (target: string | HTMLElement) => {
   const element = typeof target === 'string' ? document.querySelector(target) : target;
@@ -140,7 +141,7 @@ export const WelcomeTour = ({ steps: initialSteps, running: runningProp, onRunni
   };
 
   return (
-    <Tour.Context.Provider
+    <TourContext.Provider
       value={{
         running: running && !paused,
         steps,
@@ -165,6 +166,6 @@ export const WelcomeTour = ({ steps: initialSteps, running: runningProp, onRunni
         tooltipComponent={Tooltip}
         spotlightPadding={0}
       />
-    </Tour.Context.Provider>
+    </TourContext.Provider>
   );
 };

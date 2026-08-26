@@ -9,10 +9,19 @@ import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabili
 import * as AssistantEvents from '@dxos/plugin-assistant/AssistantEvents';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
+import { translations } from '#translations';
 import { ProjectCapabilities, ProjectsEvents } from '#types';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+// Narrower than the `appGraphBuilder` family default: the nodes it contributes carry
+// `LayoutOperation` actions, which mean nothing without an app shell.
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+  environments: [],
+});
+// Browser-only: the entry supplies `CreateProjectPanel`, the React form that picks the project
+// template and collects its name.
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
+  environments: [],
+});
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
 });
@@ -28,6 +37,10 @@ export const SubjectContext = Capability.lazyModule(
 );
 export const Templates = Capability.lazyModule(
   'Templates',
-  { provides: [ProjectCapabilities.Template], activatesOn: ProjectsEvents.Start },
+  {
+    provides: [ProjectCapabilities.Template],
+    activatesOn: ProjectsEvents.Start,
+  },
   () => import('./templates'),
 );
+export const Translations = AppCapability.translations(translations);

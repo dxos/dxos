@@ -16,7 +16,7 @@ import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { getCalendarRangeSelectionId } from '@dxos/plugin-inbox';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';
-import { Selection, ViewState } from '@dxos/react-ui-attention';
+import { Selection, ViewState } from '@dxos/react-ui-attention/types';
 import { Event } from '@dxos/types';
 
 import { meta } from '#meta';

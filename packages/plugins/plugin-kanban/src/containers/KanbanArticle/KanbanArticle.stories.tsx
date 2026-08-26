@@ -33,10 +33,9 @@ import { ViewModel, getTypeURIFromQuery } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
 
 import { useProjectionModel } from '#hooks';
+import { KanbanPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Kanban } from '#types';
-
-import { KanbanPlugin } from '../../plugin';
 
 random.seed(0);
 

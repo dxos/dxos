@@ -498,6 +498,9 @@ const config: KnipConfig = {
     'tailwindcss',
     // Provided by @storybook/test-runner, which the storybook harness installs on demand.
     'test-storybook',
+    // Shipped by @dxos/app-framework, a dependency of every plugin the `composer-plugin` tag
+    // applies to; the tag file that invokes it lives at the root, which declares no such dep.
+    'dx-plugin',
   ],
   ignoreDependencies: [
     //

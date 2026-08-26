@@ -36,10 +36,9 @@ import { Text } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person } from '@dxos/types';
 
+import { MarkdownPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Markdown, MarkdownCapabilities } from '#types';
-
-import { MarkdownPlugin } from '../../plugin';
 
 random.seed(1);
 
