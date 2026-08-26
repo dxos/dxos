@@ -48,9 +48,13 @@ be visible in the UI, closing the gaps the storybook audit surfaced.
       ref is durable and the UI needs no reactive parent lookup (closes the
       TODO on `ChatTaskList`).
 - [ ] **Show task status, dependencies, and trigger sub-agents from task list**
-      — surface per-task run state (in-progress/failed, active sub-agent) and
+      — surface per-task run state (started/failed, active sub-agent) and
       inter-task dependencies in the TaskList UI, and let a task row launch a
       sub-agent directly (the delegation loop without going through chat).
+- [ ] **Cancel/delete tasks** — cancel a started (possibly delegated) task from
+      the UI and the agent surface, and delete via the TaskOperation verb so
+      the set's refs and lifecycle parent edges stay consistent; a cancelled
+      delegated task should also interrupt its sub-agent process.
 
 ### References
 
