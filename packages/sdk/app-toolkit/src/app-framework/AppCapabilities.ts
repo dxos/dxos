@@ -14,7 +14,7 @@ import type { AiModelResolver as AiModelResolver$ } from '@dxos/ai';
 import type { OpaqueToolkit } from '@dxos/ai';
 import * as Capability$ from '@dxos/app-framework/Capability';
 import { BuilderExtensions } from '@dxos/app-graph';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as AppGraphBuilder$ from '@dxos/app-graph/AppGraphBuilder';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
@@ -144,7 +144,7 @@ export const StatsPanel = Capability$.makeSingleton<StatsPanelStore>()('org.dxos
  * `urlKey` declarations and node→extension provenance that URL resolution (`@dxos/app-graph`'s
  * `path-resolution.ts`) reads and reverse-maps — neither derivable from `graph` alone.
  */
-export type AppGraph = GraphBuilder.GraphBuilder;
+export type AppGraph = AppGraphBuilder$.GraphBuilder;
 
 /**
  * @category Capability

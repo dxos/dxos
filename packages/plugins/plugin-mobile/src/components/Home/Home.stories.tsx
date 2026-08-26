@@ -10,13 +10,14 @@ import { expect, screen, userEvent, within } from 'storybook/test';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import * as Graph from '@dxos/app-graph/Graph';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
+import * as GraphNode from '@dxos/graph/GraphNode';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { DeckStoryPlugin } from '@dxos/plugin-deck/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Dnd } from '@dxos/react-ui-dnd';
@@ -29,7 +30,7 @@ import { translations } from '#translations';
 import { Home } from './Home';
 
 const makeRootChild = (id: string, disposition: string, label: string, icon: string) =>
-  Node.make({ id, type: 'story-item', data: null, properties: { label, icon, disposition } });
+  AppGraphNode.make({ id, type: 'story-item', data: null, properties: { label, icon, disposition } });
 
 /**
  * A root with one node per disposition Home used to mix together (workspace, user-account, pin-end)
@@ -40,9 +41,9 @@ const storyGraph = Capability.inlineModule(
   'home-story-graph',
   { provides: [AppCapabilities.AppGraphBuilder] },
   Effect.fnUntraced(function* () {
-    const extension = yield* GraphBuilder.createExtension({
+    const extension = yield* AppGraphBuilder.createExtension({
       id: 'roots',
-      match: NodeMatcher.whenRoot,
+      match: GraphNodeMatcher.whenRoot,
       connector: () =>
         Effect.succeed([
           makeRootChild('story-workspace', 'workspace', 'My Space', 'ph--planet--regular'),
@@ -70,7 +71,7 @@ const HomeStoryPlugin = Plugin.define({
 /** Expands root synchronously before `Home` mounts, so its first commit already sees the fixture. */
 const useExpandRoot = () => {
   const { graph } = useAppGraph();
-  useState(() => Graph.expandSync(graph, Node.RootId, 'child'));
+  useState(() => AppGraph.expandSync(graph, GraphNode.RootId, 'child'));
 };
 
 const HomeStoryRoot = () => {

@@ -29,9 +29,9 @@ import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Message, Outline, Task, TaskSet } from '@dxos/types';
 
+import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
 
-import { AssistantPlugin } from '../../plugin';
 import { ChatArticle, ChatArticleProps } from './ChatArticle';
 
 /**

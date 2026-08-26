@@ -157,7 +157,10 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
         // Row height lives on the auto rows — an `h-8` on the grid itself would size the whole
         // list to one row and let the rest overflow invisibly.
         classNames: mx(
-          'group grid grid-cols-[2rem_1fr_min-content_min-content_2rem] auto-rows-[2rem] gap-x-2 items-center w-full min-w-0',
+          'group grid auto-rows-[2rem] gap-x-2 items-center w-full min-w-0',
+          showOrdinals
+            ? 'grid-cols-[2rem_1rem_1fr_min-content_min-content_2rem]'
+            : 'grid-cols-[1rem_1fr_min-content_min-content_2rem]',
         ),
       })}
       aria-label='Tasks'
@@ -248,31 +251,29 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
         classNames={mx('px-0 py-0 group col-span-full grid grid-cols-subgrid', className)}
         ref={forwardedRef}
       >
-        <div className='flex items-center justify-center'>
-          {ordinal !== undefined && (
-            <Tag hue={done ? 'green' : error ? 'rose' : 'neutral'} classNames='visible group-hover:invisible'>
-              #{ordinal}
+        {ordinal !== undefined && (
+          <div className='flex items-center justify-center'>
+            <Tag hue={done ? 'green' : error ? 'rose' : 'neutral'} classNames='tabular-nums'>
+              {ordinal}
             </Tag>
-          )}
-          {onTaskUpdate ? (
-            <IconButton
-              classNames={mx('invisible group-hover:visible justify-self-center', iconClassNames)}
-              variant='ghost'
-              density='sm'
-              icon={icon}
-              iconOnly
-              label={done ? t('mark-todo.label') : t('mark-done.label')}
-              onClick={handleToggle}
-            />
-          ) : (
-            // Read-only rows get a non-interactive glyph announced by its actual status;
-            // one grid cell, so the sr-only text must not become a column of its own.
-            <span className='invisible group-hover:visible grid place-items-center justify-self-center'>
-              <Icon icon={icon} classNames={iconClassNames} size={4} />
-              <span className='sr-only'>{t(`status-${current.status ?? 'todo'}.label`)}</span>
-            </span>
-          )}
-        </div>
+          </div>
+        )}
+        {onTaskUpdate ? (
+          <IconButton
+            classNames={mx('justify-self-center', iconClassNames)}
+            variant='ghost'
+            density='sm'
+            icon={icon}
+            iconOnly
+            label={done ? t('mark-todo.label') : t('mark-done.label')}
+            onClick={handleToggle}
+          />
+        ) : (
+          <span className='grid place-items-center justify-self-center'>
+            <Icon icon={icon} classNames={iconClassNames} size={4} />
+            <span className='sr-only'>{t(`status-${current.status ?? 'todo'}.label`)}</span>
+          </span>
+        )}
         <span
           className={mx('flex items-center gap-1 min-w-0', onTaskSelect && 'cursor-pointer')}
           onClick={onTaskSelect ? () => onTaskSelect(task) : undefined}
@@ -339,9 +340,14 @@ const TaskListCreate = composable<HTMLDivElement, { placeholder?: string }>(
       <div
         {...rest}
         data-testid='taskList.create'
-        className={mx('grid grid-cols-[2rem_1fr] gap-x-2 items-center w-full min-w-0 h-8', className)}
+        className={mx(
+          'grid gap-x-2 items-center w-full min-w-0 h-8',
+          showOrdinals ? 'grid-cols-[2rem_1rem_1fr]' : 'grid-cols-[1rem_1fr]',
+          className,
+        )}
         ref={forwardedRef}
       >
+        {showOrdinals && <span />}
         <Icon icon='ph--plus--regular' size={4} classNames='justify-self-center text-subdued' />
         <Input.Root>
           <Input.TextInput

@@ -5,7 +5,6 @@
 import { setAutoFreeze } from 'immer';
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import {
   AppGraphBuilder,
@@ -14,16 +13,14 @@ import {
   DeckState,
   NotificationTracker,
   OperationHandler,
+  PluginAsset,
   ReactRoot,
   ReactSurface,
+  Translations,
   UrlHandler,
 } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
 import type { DeckCapabilities } from '#types';
-
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../PLUGIN.mdl?raw';
 
 // NOTE(Zan): When producing values with immer, we shouldn't auto-freeze them because
 //   our signal implementation needs to add some hidden properties to the produced values.
@@ -32,23 +29,16 @@ setAutoFreeze(false);
 
 export const DeckPlugin = Plugin.define<DeckCapabilities.DeckPluginOptions>(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(DeckSettings),
   Plugin.addModule(CheckAppScheme),
+  Plugin.addModule(DeckSettings),
   Plugin.addModule(DeckState),
-  Plugin.addModule(ReactRoot),
-  Plugin.addModule(UrlHandler),
   Plugin.addModule(NotificationTracker),
-  Plugin.addModule(
-    AppCapability.pluginAsset({
-      pluginId: meta.profile.key,
-      path: 'PLUGIN.mdl',
-      content: pluginSpec,
-      mimeType: 'application/x-mdl',
-    }),
-  ),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(PluginAsset),
+  Plugin.addModule(ReactRoot),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(Translations),
+  Plugin.addModule(UrlHandler),
   Plugin.make,
 );
 

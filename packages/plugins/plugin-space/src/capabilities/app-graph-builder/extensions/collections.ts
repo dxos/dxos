@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as Graph from '@dxos/app-graph/Graph';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
@@ -86,7 +86,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
   return yield* Effect.all([
     // Content section group — created alongside collections so the group always
     // appears when the space plugin is active and hides when there are no children.
-    GraphBuilder.createExtension({
+    AppGraphBuilder.createExtension({
       id: GraphPath.GroupSegments.content,
       match: AppNodeMatcher.whenSpace,
       connector: (space) =>
@@ -103,7 +103,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     }),
 
     // Collections section virtual node under the content group.
-    GraphBuilder.createExtension({
+    AppGraphBuilder.createExtension({
       id: 'collectionsSection',
       match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.content),
       connector: (space, get) => {
@@ -120,7 +120,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
           : undefined;
 
         return Effect.succeed([
-          Node.make({
+          AppGraphNode.make({
             id: GraphPath.Segments.collections,
             type: COLLECTIONS_SECTION_TYPE,
             data: null,
@@ -144,7 +144,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     // nested-collection `objects` connector below so an object is addressed the same way wherever it
     // sits in the collection tree (the key names the *collection subgraph*, not the container's type;
     // the database subgraph addresses the same object under `db`).
-    GraphBuilder.createExtension({
+    AppGraphBuilder.createExtension({
       id: 'collections',
       url: { key: 'object', kind: 'item', path: [GraphPath.GroupSegments.content, GraphPath.Segments.collections] },
       match: (node) => {
@@ -199,7 +199,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     }),
 
     // Children of Collection.Collection nodes.
-    GraphBuilder.createExtension({
+    AppGraphBuilder.createExtension({
       id: 'objects',
       // Recursive over nested collections at any depth, so `object/<id>` addresses any object reachable
       // through a space's collection tree, not just the root collection's direct children. The shape is
@@ -268,7 +268,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     }),
 
     // Object actions.
-    GraphBuilder.createExtension({
+    AppGraphBuilder.createExtension({
       id: 'objectActions',
       match: (node) => {
         return node.data != null &&
@@ -290,7 +290,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const ephemeralState = get(ephemeralAtom);
 
         const parentId = nodeId.substring(0, nodeId.lastIndexOf('/'));
-        const parentNode = Option.getOrUndefined(Graph.getNode(appGraph.graph, parentId));
+        const parentNode = Option.getOrUndefined(AppGraph.getNode(appGraph.graph, parentId));
         const parentCollection =
           parentNode && Obj.instanceOf(Collection.Collection, parentNode.data) ? parentNode.data : undefined;
 
@@ -308,7 +308,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     }),
 
     // Action on the collections section header to add an object to the space's root collection.
-    GraphBuilder.createExtension({
+    AppGraphBuilder.createExtension({
       id: 'collectionsSectionActions',
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
@@ -316,7 +316,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
       },
       actions: (space) =>
         Effect.succeed([
-          Node.makeAction({
+          AppGraphNode.makeAction({
             id: SpaceOperation.OpenObjectForm.meta.key,
             data: () =>
               Effect.gen(function* () {
@@ -365,10 +365,10 @@ const constructObjectActions = ({
   const typename = Obj.getTypename(object);
   invariant(typename, 'Object has no typename');
 
-  const actions: Node.NodeArg<Node.ActionData<Operation.Service | Capability.Service>>[] = [
+  const actions: AppGraphNode.NodeArg<AppGraphNode.ActionData<Operation.Service | Capability.Service>>[] = [
     ...(Obj.instanceOf(Collection.Collection, object)
       ? [
-          Node.makeAction({
+          AppGraphNode.makeAction({
             id: SpaceOperation.OpenObjectForm.meta.key,
             data: () => Operation.invoke(SpaceOperation.OpenObjectForm, { target: object, targetNodeId: nodeId }),
             properties: {
@@ -380,9 +380,9 @@ const constructObjectActions = ({
           }),
         ]
       : []),
-    Node.makeAction({
+    AppGraphNode.makeAction({
       id: SpaceOperation.RenameObject.meta.key,
-      data: (params?: Node.InvokeProps) =>
+      data: (params?: AppGraphNode.InvokeProps) =>
         Operation.invoke(SpaceOperation.RenameObject, { object, caller: `${params?.caller}:${params?.parent?.id}` }),
       properties: {
         label: AppNode.getDynamicLabel('rename-object.label', typename, { defaultValue: 'Rename' }),
@@ -391,7 +391,7 @@ const constructObjectActions = ({
         testId: 'spacePlugin.renameObject',
       },
     }),
-    Node.makeAction({
+    AppGraphNode.makeAction({
       id: SpaceOperation.RemoveObjects.meta.key,
       data: () =>
         Operation.invoke(SpaceOperation.RemoveObjects, {
@@ -408,7 +408,7 @@ const constructObjectActions = ({
     }),
     ...(navigable || !Obj.instanceOf(Collection.Collection, object)
       ? [
-          Node.makeAction({
+          AppGraphNode.makeAction({
             id: 'copyLink',
             data: () =>
               Effect.gen(function* () {
@@ -430,7 +430,7 @@ const constructObjectActions = ({
           }),
         ]
       : []),
-    Node.makeAction({
+    AppGraphNode.makeAction({
       id: LayoutOperation.Expose.meta.key,
       data: () => Operation.invoke(LayoutOperation.Expose, { subject: GraphPath.getObjectPathFromObject(object) }),
       properties: {

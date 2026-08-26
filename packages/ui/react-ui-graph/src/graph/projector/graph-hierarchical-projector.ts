@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Graph } from '@dxos/graph';
+import * as GraphModel from '@dxos/graph/GraphModel';
 import { log } from '@dxos/log';
 
 import { type GraphLayoutNode } from '../types';
@@ -19,7 +19,7 @@ export class GraphHierarchicalProjector<
   NodeData = any,
   Options extends GraphHierarchicalProjectorOptions = any,
 > extends GraphRadialProjector<NodeData, Options> {
-  protected override onUpdate(graph?: Graph.Any) {
+  protected override onUpdate(graph?: GraphModel.AnyData) {
     log('onUpdate', {
       graph: { nodes: graph?.nodes.length, edges: graph?.edges.length },
       selection: this.selection?.getSelectedIds(),

@@ -3,7 +3,6 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import {
   AppGraphBuilder,
@@ -14,19 +13,20 @@ import {
   OperationHandler,
   ReactSurface,
   Settings,
-} from './capabilities';
+  Translations,
+} from '#capabilities';
+
 import { meta } from './meta';
-import { translations } from './translations';
 
 export const OnboardingPlugin = Plugin.define<OnboardingOptions>(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(Settings),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(OAuthRecoveryRedirect),
   Plugin.addModule(DefaultContent),
+  Plugin.addModule(OAuthRecoveryRedirect),
   Plugin.addModule(Onboarding),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(Settings),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

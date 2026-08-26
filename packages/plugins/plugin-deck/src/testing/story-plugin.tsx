@@ -10,13 +10,14 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
+import * as GraphNode from '@dxos/graph/GraphNode';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
 import { useConnections } from '@dxos/plugin-graph/hooks';
 import { random } from '@dxos/random';
@@ -125,13 +126,13 @@ export const STORY_ITEMS = Array.from({ length: 5 }, () => createItem());
  * Graph id of a top-level story item. The graph addresses a node by its path from the root, so the bare
  * {@link STORY_ITEMS} id names no node and opening it yields a plank that never resolves.
  */
-export const storyItemId = (index: number): string => `${Node.RootId}/${STORY_ITEMS[index].id}`;
+export const storyItemId = (index: number): string => `${GraphNode.RootId}/${STORY_ITEMS[index].id}`;
 
 /**
- * Maps a nested {@link StoryItem} tree to graph nodes so `Graph.getConnections` / `useConnections` see children.
+ * Maps a nested {@link StoryItem} tree to graph nodes so `AppGraph.getConnections` / `useConnections` see children.
  */
-const toStoryItemNode = (item: StoryItem, index: number, depth: number): Node.NodeArg<StoryItem> =>
-  Node.make({
+const toStoryItemNode = (item: StoryItem, index: number, depth: number): AppGraphNode.NodeArg<StoryItem> =>
+  AppGraphNode.make({
     id: item.id,
     type: 'story-item',
     data: item,
@@ -213,14 +214,14 @@ const storyGraphBuilder = Capability.inlineModule(
   { provides: [AppCapabilities.AppGraphBuilder] },
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'storyItems',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         connector: () => Effect.succeed(STORY_ITEMS.map((item, index) => toStoryItemNode(item, index, 0))),
       }),
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'storyItemCompanions',
-        match: NodeMatcher.whenNodeType('story-item'),
+        match: GraphNodeMatcher.whenNodeType('story-item'),
         connector: (node) =>
           Effect.succeed([
             AppNode.makeCompanion({
@@ -273,7 +274,7 @@ const NavContainer = forwardRef<HTMLDivElement, NavContainerProps>((_props, forw
   const layout = useLayout();
   const { invokePromise } = useOperationInvoker();
 
-  const items = useConnections(graph, Node.RootId, 'child');
+  const items = useConnections(graph, GraphNode.RootId, 'child');
   const activeSet = useMemo(() => new Set(layout.active), [layout.active]);
 
   return (
@@ -308,7 +309,8 @@ const ItemComponent = ({ id }: ItemComponentProps) => {
   const { invokePromise } = useOperationInvoker();
   const connections = useConnections(graph, id, 'child');
   const items = useMemo(
-    () => connections.filter((node) => !Node.isActionLike(node) && node.type !== DeckSchema.PLANK_COMPANION_TYPE),
+    () =>
+      connections.filter((node) => !AppGraphNode.isActionLike(node) && node.type !== DeckSchema.PLANK_COMPANION_TYPE),
     [connections],
   );
 

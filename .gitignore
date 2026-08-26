@@ -251,3 +251,6 @@ node_modules
 # "dummy-non-existing-folder" rather than skipping. Generated output, never sources.
 dummy-non-existing-folder/
 tools/vscode/vscode-mdl/dist
+
+# Generated headless capability barrels (dx-plugin prebuild, produced by plugin prebuild tasks).
+**/src/capabilities/gen/

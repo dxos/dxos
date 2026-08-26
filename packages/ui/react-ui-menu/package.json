@@ -35,6 +35,7 @@
   "dependencies": {
     "@dxos/app-graph": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keyboard": "workspace:*",
     "@dxos/log": "workspace:*",

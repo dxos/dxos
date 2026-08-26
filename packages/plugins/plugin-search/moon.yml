@@ -1,8 +1,28 @@
 layer: library
 language: typescript
 tags:
+  - composer-plugin
   - ts-vite-build
   - ts-test
   - ts-test-storybook
   - pack
   - storybook
+
+tasks:
+  check-module-structure:
+    command: >-
+      pnpm exec dx-trace-imports
+      --export ./SearchPlugin
+      --to "{react,react-dom}"
+      --conditions workerd,worker
+      --conditions node
+      --fail-on present
+    deps:
+      - dx-trace-imports:build
+      - build
+    inputs:
+      - tsconfig.json
+      - '@group(production)'
+      - /pnpm-lock.yaml
+    options:
+      timeout: 60

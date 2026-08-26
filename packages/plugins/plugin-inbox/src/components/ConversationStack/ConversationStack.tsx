@@ -9,7 +9,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
-import type * as Graph from '@dxos/app-graph/Graph';
+import type * as AppGraph from '@dxos/app-graph/AppGraph';
 import { Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { normalizeText } from '@dxos/markdown';
@@ -121,7 +121,7 @@ type ConversationStackContextValue = {
   /** Ids of the expanded messages; every other message renders as a collapsed summary. */
   expanded: ReadonlySet<string>;
   /** App graph for contributed (`disposition: 'toolbar'`) actions (container-resolved). */
-  graph?: Graph.ReadableGraph;
+  graph?: AppGraph.ReadableGraph;
   /** Process-manager runtime for draft send / composer AI (container-resolved). */
   runtime?: Capabilities.ProcessManagerRuntime;
   /** Send operation per installed mail provider, keyed by connector id (container-resolved). */

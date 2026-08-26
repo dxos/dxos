@@ -14,8 +14,8 @@ import * as NativeOAuth from '@dxos/app-toolkit/NativeOAuth';
 import { type Client } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ClientOperation } from '@dxos/plugin-client';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import { ClientOperation } from '@dxos/plugin-client/ClientOperation';
 
 import { OnboardingOperation } from '../operations';
 import {
