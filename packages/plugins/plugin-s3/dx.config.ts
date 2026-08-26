@@ -17,7 +17,7 @@ export default Config2.make({
       time via CredentialsService. Public buckets can be read without any credential. This plugin is
       headless — it contributes a storage backend and a connector, and has no UI surfaces of its own.
     `,
-    icon: { key: 'ph--bucket--regular', hue: 'orange' },
+    icon: { key: 'ph--cloud-arrow-up--regular', hue: 'orange' },
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-s3',
     dependsOn: ['org.dxos.plugin.file'],
     tags: ['labs'],

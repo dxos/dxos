@@ -1,8 +1,8 @@
 # plugin-s3 — Tasks
 
-_Resume: verify an upload and a render against a real R2 bucket (Phase 2) — nothing has been run
-against a live endpoint yet. Uncommitted: none. Last: Phase 1 complete, package builds/tests/lints
-clean and composer-app typechecks with the plugin registered._
+_Resume: verify an upload and a render against a real R2 bucket (Phase 2) — no request has yet been
+made to a real endpoint. Uncommitted: none. Last: the plugin was loaded, enabled and exercised in a
+running Composer; the blob backend is confirmed registered on the hypergraph._
 
 ## Phase 1: S3 blob backend + connector
 
@@ -32,6 +32,14 @@ on the hypergraph plus a `FileCapabilities.Backend` descriptor, with credentials
 - [x] **Register in composer-app** — import, `isDev` default, experimental list; composer-app
       typechecks clean.
 - [x] **Docs** — README (including the R2 CORS policy and the trust model), PLUGIN.mdl, changeset.
+- [x] **Load it in a running Composer** — dev server on :5183 out of this worktree. The plugin lists
+      in the registry under Labs with its name, description and tag; enabling it activates both
+      modules with no console errors and the toggle survives a reload. `getBlobUrl` on an
+      `s3://host/key` resolves through the backend to `https://host/key` while an unregistered
+      scheme returns `undefined` — which proves both that the backend is registered for the scheme
+      and that the unsigned public-bucket fallback works. Icon fixed on the way:
+      `ph--bucket--regular` does not exist in Phosphor and the sprite builder **crashes the whole
+      dev server** on a missing icon rather than warning; it is now `ph--cloud-arrow-up--regular`.
 
 ## Phase 2: Verify against a live bucket
 
@@ -47,8 +55,9 @@ which only the user can create — see "Handing an agent a credential" in AGENTS
 - [ ] **Render an image** from the bucket — exercises `getUrl`'s presigned path in an `<img>`.
 - [ ] **Confirm the CORS failure mode** with the policy absent, and check the README's policy is
       sufficient (particularly the `AllowedHeaders` list against a real signed PUT).
-- [ ] **Public-bucket read with no credential in the space** — the unsigned fallback path, which is
-      the one behavior with no test coverage at all.
+- [ ] **Public-bucket read with no credential in the space** — the URL-construction half of the
+      unsigned fallback is confirmed live (see Phase 1); what remains is an actual fetch of a real
+      public object.
 - [ ] **A non-R2 endpoint** (MinIO or real AWS S3) to confirm the region-from-host parsing is right
       where the region actually matters.
 
