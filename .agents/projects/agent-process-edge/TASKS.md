@@ -21,9 +21,14 @@ Design: [DESIGN.md](./DESIGN.md). Branch (both repos): `claude/agent-process-edg
 
 ## Phase 2 — process host (edge) — IN PROGRESS
 
-**Blocked on publication:** the edge repo consumes `@dxos/*` from pinned `pkg.pr.new` builds, so
-nothing here compiles until PR #12765's packages publish and `pnpm-workspace.yaml`'s `dxos` catalog
-is bumped to that commit. Write-ahead is fine; verification is not.
+**Blocked on publication, which needs #12765 MERGED.** The edge repo consumes `@dxos/*` from pinned
+`pkg.pr.new` builds, and `.github/workflows/pkg-pr-new.yml` in dxos/dxos triggers only on push to
+`main` (plus `workflow_dispatch`) — a green PR publishes nothing. So nothing here compiles until
+#12765 lands and this repo's `dxos` catalog is bumped to that commit. Write-ahead is fine;
+verification is not.
+
+The one way to unblock earlier: a maintainer dispatches the `pkg.pr.new` workflow manually against
+`claude/agent-process-edge-g21cil`, which publishes commit-pinned packages without merging.
 
 - [x] `DurableObjectKeyValueStore`: `effect` `KeyValueStore` over `ctx.storage` — this is what lets
       `ProcessManagerImpl` run inside a DO unchanged (D5).
