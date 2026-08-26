@@ -85,9 +85,11 @@ approximation of "actively worked"; the live-process signal is a tracked follow-
 ## Demos (stories-assistant / Chat)
 
 Seeds: three calculator tasks with A ← B ← C dependencies; a story-local Calculator skill
-(`compute(expression)`) makes tool use observable. Scripted (CI): `TestTaskExecution` (assistant
-executes task 1 itself), `TestTaskDelegation` (delegates task 1 by ordinal), `TestTaskDrain`
-(delegates all; drains in dependency order). Live: `WithTaskDrain` — type the prompt yourself.
+(`compute(expression)`) makes tool use observable. Naming: the `Test` prefix marks a play
+script, the `Scripted` suffix an offline model (CI-runnable). Scripted: `TestTaskExecutionScripted`
+(assistant executes task 1 itself), `TestTaskDelegationScripted` (delegates task 1 by ordinal),
+`TestTaskDrainScripted` (delegates all; drains in dependency order). Live: `WithTaskDrain` —
+type the prompt yourself.
 
 ## Invariants
 

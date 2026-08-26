@@ -116,39 +116,6 @@ export const Default: Story = {
   },
 };
 
-/**
- * Chat over a pre-seeded working task set: `Chat.TaskList` renders the durable tasks between the
- * thread and the prompt from the first frame, status-grouped without headings.
- */
-export const WithTasks: Story = {
-  decorators: createDecorators({
-    onChatCreated: async ({ space, chat }) => {
-      const taskSet = space.db.add(TaskSet.make({ name: 'Launch plan' }));
-      Obj.update(chat, (chat) => {
-        chat.taskSet = Ref.make(taskSet);
-      });
-      // More than six rows, so the story also demonstrates the task strip's height cap.
-      const seed: { title: string; status: NonNullable<Task.Task['status']> }[] = [
-        { title: 'Source the beans', status: 'done' },
-        { title: 'Dial in the roast', status: 'started' },
-        { title: 'Print the labels', status: 'todo' },
-        { title: 'Design the bag', status: 'todo' },
-        { title: 'Photograph the pour', status: 'todo' },
-        { title: 'Draft the launch email', status: 'todo' },
-        { title: 'Schedule the tasting', status: 'todo' },
-        { title: 'Update the price list', status: 'todo' },
-      ];
-      for (const { title, status } of seed) {
-        Outline.addTask(space.db, taskSet, title, { status });
-      }
-      await space.db.flush();
-    },
-  }),
-  args: {
-    layout: [[StoryRole.Chat]],
-  },
-};
-
 //
 // Executable tasks — seeds the delegation/execution demos. B depends on A and C on B, so a drain
 // must run in dependency order; every title routes the work through the story-local calculator.
@@ -269,61 +236,36 @@ export const WithWebSearch: Story = {
   },
 };
 
-export const WithPlanning: Story = {
+/**
+ * Chat over a pre-seeded working task set: `Chat.TaskList` renders the durable tasks between the
+ * thread and the prompt from the first frame, status-grouped without headings.
+ */
+export const WithTasks: Story = {
   decorators: createDecorators({
-    lazyPlugins: async () => {
-      const MarkdownPlugin = await import('@dxos/plugin-markdown/MarkdownPlugin');
-      return {
-        plugins: [MarkdownPlugin.make()],
-      };
+    onChatCreated: async ({ space, chat }) => {
+      const taskSet = space.db.add(TaskSet.make({ name: 'Launch plan' }));
+      Obj.update(chat, (chat) => {
+        chat.taskSet = Ref.make(taskSet);
+      });
+      // More than six rows, so the story also demonstrates the task strip's height cap.
+      const seed: { title: string; status: NonNullable<Task.Task['status']> }[] = [
+        { title: 'Source the beans', status: 'done' },
+        { title: 'Dial in the roast', status: 'started' },
+        { title: 'Print the labels', status: 'todo' },
+        { title: 'Design the bag', status: 'todo' },
+        { title: 'Photograph the pour', status: 'todo' },
+        { title: 'Draft the launch email', status: 'todo' },
+        { title: 'Schedule the tasting', status: 'todo' },
+        { title: 'Update the price list', status: 'todo' },
+      ];
+      for (const { title, status } of seed) {
+        Outline.addTask(space.db, taskSet, title, { status });
+      }
+      await space.db.flush();
     },
-    skills: [MarkdownSkill.key, PlanningSkill.key],
-    onInit: captureSpace,
   }),
   args: {
-    layout: [[StoryRole.Chat], [AppSurface.deckCompanion('trace'), StoryRole.Context]],
-  },
-  // Live model: whether the agent reaches for `update-tasks` at all is model-behavioural, so this
-  // stays out of CI. `WithPlanningScripted` is the deterministic counterpart.
-  tags: ['!test'],
-  play: async ({ canvasElement }) => {
-    await submitPrompt(canvasElement, 'Plan a three-step checklist for launching a coffee blend. Use your task tool.');
-
-    // The skill writes checkbox lines into the conversation's outline document.
-    const items = await waitForChecklist((items) => items.length >= 3, { timeout: 240_000 });
-    if (items.length < 3) {
-      throw new Error('Expected at least three checklist items.');
-    }
-  },
-};
-
-/**
- * Interaction test for end-to-end delegation: enters a prompt that delegates a unit of work,
- * then waits for the supervisor to run the sub-agent and fold its result back into the conversation.
- *
- * Live AI and timing-sensitive, so it is excluded from CI `test` runs (`tags: ['!test']`);
- * run it manually in storybook (it needs a reachable EDGE AI service via `config.remote`).
- */
-export const WithDelegation: Story = {
-  ...WithSubAgents,
-  tags: ['!test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    // The chat prompt is a CodeMirror editor; locate it via its placeholder.
-    const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 30_000 });
-    const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
-    if (!editor) {
-      throw new Error('Chat editor not found.');
-    }
-
-    // Enter a prompt that delegates work to a sub-agent and submit it.
-    await userEvent.click(editor);
-    await userEvent.type(editor, 'Delegate a task to a sub-agent to compute 10 factorial.');
-    await userEvent.keyboard('{Enter}');
-
-    // The supervisor runs the sub-agent in the background and posts the result back to the chat.
-    await canvas.findByText(/sub-agent completed/i, {}, { timeout: 180_000 });
+    layout: [[StoryRole.Chat]],
   },
 };
 
@@ -349,17 +291,75 @@ export const WithTaskDrain: Story = {
 };
 
 //
-// Play/test stories — scripted (offline) models, run in CI. Kept last so the gallery leads
-// with the interactive demos.
+// Play/test stories (`Test` prefix = has a play script). Live ones first (excluded from CI via
+// `!test`); the `Scripted` suffix marks offline models, which run in CI.
 //
 
+export const TestPlanning: Story = {
+  decorators: createDecorators({
+    lazyPlugins: async () => {
+      const MarkdownPlugin = await import('@dxos/plugin-markdown/MarkdownPlugin');
+      return {
+        plugins: [MarkdownPlugin.make()],
+      };
+    },
+    skills: [MarkdownSkill.key, PlanningSkill.key],
+    onInit: captureSpace,
+  }),
+  args: {
+    layout: [[StoryRole.Chat], [AppSurface.deckCompanion('trace'), StoryRole.Context]],
+  },
+  // Live model: whether the agent reaches for `update-tasks` at all is model-behavioural, so this
+  // stays out of CI. `TestPlanningScripted` is the deterministic counterpart.
+  tags: ['!test'],
+  play: async ({ canvasElement }) => {
+    await submitPrompt(canvasElement, 'Plan a three-step checklist for launching a coffee blend. Use your task tool.');
+
+    // The skill writes checkbox lines into the conversation's outline document.
+    const items = await waitForChecklist((items) => items.length >= 3, { timeout: 240_000 });
+    if (items.length < 3) {
+      throw new Error('Expected at least three checklist items.');
+    }
+  },
+};
+
 /**
- * Deterministic counterpart to {@link WithPlanning}: the scripted model calls `update-tasks` twice
+ * Interaction test for end-to-end delegation: enters a prompt that delegates a unit of work,
+ * then waits for the supervisor to run the sub-agent and fold its result back into the conversation.
+ *
+ * Live AI and timing-sensitive, so it is excluded from CI `test` runs (`tags: ['!test']`);
+ * run it manually in storybook (it needs a reachable EDGE AI service via `config.remote`).
+ */
+export const TestDelegation: Story = {
+  ...WithSubAgents,
+  tags: ['!test'],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // The chat prompt is a CodeMirror editor; locate it via its placeholder.
+    const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 30_000 });
+    const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
+    if (!editor) {
+      throw new Error('Chat editor not found.');
+    }
+
+    // Enter a prompt that delegates work to a sub-agent and submit it.
+    await userEvent.click(editor);
+    await userEvent.type(editor, 'Delegate a task to a sub-agent to compute 10 factorial.');
+    await userEvent.keyboard('{Enter}');
+
+    // The supervisor runs the sub-agent in the background and posts the result back to the chat.
+    await canvas.findByText(/sub-agent completed/i, {}, { timeout: 180_000 });
+  },
+};
+
+/**
+ * Deterministic counterpart to {@link TestPlanning}: the scripted model calls `update-tasks` twice
  * (plan, then complete), so the checklist write-and-check-off path runs in CI. The second call
  * leaves no open items, which also keeps the end-of-request plan reminder from consulting the
  * model — the reminder only fires while work is outstanding.
  */
-export const TestPlanning: Story = {
+export const TestPlanningScripted: Story = {
   decorators: createDecorators({
     skills: [PlanningSkill.key],
     onInit: captureSpace,
@@ -425,7 +425,7 @@ export const TestPlanning: Story = {
  * script: the sub-agent route keys on the `RunInstructions` "non-interactive mode" system prompt,
  * the chat-naming turn has its own route, and the supervisor is the fallback. Runs in CI.
  */
-export const TestDelegation: Story = {
+export const TestDelegationScripted: Story = {
   decorators: createDecorators({
     createAgent: {
       name: 'Supervisor',
@@ -502,7 +502,7 @@ export const TestDelegation: Story = {
  * The assistant executes task 1 itself: marks it started, computes through the calculator tool,
  * and marks it done — tasks 2 and 3 stay untouched. Scripted, so it runs in CI.
  */
-export const TestTaskExecution: Story = {
+export const TestTaskExecutionScripted: Story = {
   decorators: createDecorators({
     skills: [PlanningSkill.key, CalculatorSkill.key],
     onInit: captureSpace,
@@ -555,7 +555,7 @@ export const TestTaskExecution: Story = {
  * spawns the sub-agent (marking the task started), the sub-agent computes through the calculator,
  * and the supervisor marks it done on exit. Scripted, so it runs in CI.
  */
-export const TestTaskDelegation: Story = {
+export const TestTaskDelegationScripted: Story = {
   decorators: createDecorators({
     createAgent: {
       name: 'Supervisor',
@@ -604,7 +604,7 @@ export const TestTaskDelegation: Story = {
  * each task's sub-agent spawns only once its predecessor is done, and each completion turn
  * re-runs the reconcile. Scripted, so it runs in CI.
  */
-export const TestTaskDrain: Story = {
+export const TestTaskDrainScripted: Story = {
   decorators: createDecorators({
     createAgent: {
       name: 'Supervisor',
