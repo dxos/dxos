@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+export * as AddOnlySet from './AddOnlySet';
 export * as Doc from './Doc';
 export { Edit, applyEdits } from './edits';
 export {

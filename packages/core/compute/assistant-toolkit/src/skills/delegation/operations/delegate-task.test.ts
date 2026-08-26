@@ -19,12 +19,12 @@ import { Outline, Task, TaskSet } from '@dxos/types';
 import { Agent, Chat } from '../../../types';
 import DelegationSkill from '../skill';
 import { DelegateTask } from './definitions';
-import { DelegationHandlers } from './index';
+import { DelegationSkillHandlers } from './index';
 
 EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  operationHandlers: DelegationHandlers,
+  operationHandlers: DelegationSkillHandlers,
   types: [
     Agent.Agent,
     Outline.Outline,
@@ -41,8 +41,8 @@ const TestLayer = AssistantTestLayer({
 });
 
 /**
- * A project conversation: delegation files into the project's task set, and an outline owns none, so
- * a chat outside a project has nowhere to promote to (see the degradation test below).
+ * A project conversation: delegation files into the project's task set; a standalone chat files
+ * into its own lazily created set (see the standalone test below).
  */
 const makeProjectAgent = Effect.gen(function* () {
   const agent = yield* Agent.makeInitialized({ name: 'Supervisor', instructions: 'Test.' }, DelegationSkill.make());
@@ -61,7 +61,7 @@ const invokeDelegateTask = (input: { title: string }, chatFeed: Feed.Feed) =>
 
 describe('DelegateTask', () => {
   it.effect(
-    'promotes delegated work to a durable in-progress agent task',
+    'promotes delegated work to a durable queued agent task',
     Effect.fnUntraced(
       function* ({ expect }) {
         const { agent, project } = yield* makeProjectAgent;
@@ -78,14 +78,9 @@ describe('DelegateTask', () => {
         expect(tasks).toHaveLength(1);
         expect(tasks[0]).toMatchObject({
           title: 'Research widgets',
-          status: 'in-progress',
+          status: 'todo',
           assignee: { role: 'assistant' },
         });
-
-        // The checklist mirrors the item, unchecked until the sub-agent completes.
-        const outline = yield* Database.load(project.outline!);
-        const text = yield* Database.load(outline.content);
-        expect(Outline.parseChecklist(text.content)).toEqual([{ title: 'Research widgets', done: false }]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -115,11 +110,10 @@ describe('DelegateTask', () => {
   );
 
   it.effect(
-    'is unavailable outside a project conversation',
+    "files into the chat's own task set outside a project",
     Effect.fnUntraced(
       function* ({ expect }) {
-        // No project parent means no ledger to file into, and an outline owns none — the operation
-        // reports that rather than creating a task set nothing else can find.
+        // No project parent: the chat lazily owns its own ledger, so delegation still promotes.
         const agent = yield* Agent.makeInitialized(
           { name: 'Supervisor', instructions: 'Test.' },
           DelegationSkill.make(),
@@ -130,8 +124,12 @@ describe('DelegateTask', () => {
         const chatFeed = agentChat?.feed?.target;
         invariant(chatFeed, 'Agent chat feed not found.');
 
-        const exit = yield* invokeDelegateTask({ title: 'Research widgets' }, chatFeed).pipe(Effect.exit);
-        expect(exit._tag).toBe('Failure');
+        yield* invokeDelegateTask({ title: 'Research widgets' }, chatFeed);
+
+        const chat = yield* Agent.loadChat(agent);
+        invariant(chat?.taskSet, 'Chat task set not created.');
+        const taskSet = yield* Database.load(chat.taskSet);
+        expect(TaskSet.resolveTasks(taskSet)).toHaveLength(1);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

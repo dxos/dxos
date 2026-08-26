@@ -25,11 +25,11 @@ describe('update-task', () => {
         priority: 'low',
       });
 
-      yield* updateTask.handler({ task: Ref.make(task), status: 'in-progress', estimate: 3 });
+      yield* updateTask.handler({ task: Ref.make(task), status: 'started', estimate: 3 });
 
       expect(task.title).toBe('Draft');
       expect(task.priority).toBe('low');
-      expect(task.status).toBe('in-progress');
+      expect(task.status).toBe('started');
       expect(task.estimate).toBe(3);
     }).pipe(Effect.provide(testLayer())),
   );

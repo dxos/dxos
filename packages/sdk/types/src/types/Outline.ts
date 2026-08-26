@@ -6,11 +6,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, type Database, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { CollectionItemAnnotation, Text } from '@dxos/schema';
 
 import * as Task from './Task';
-import * as TaskSet from './TaskSet';
 
 /**
  * Markdown checklist document: the cheap, fluid form of work. Items promoted to durable
@@ -31,28 +30,6 @@ export const make = ({ name, content }: { name?: string; content?: string } = {}
     name,
     content: Ref.make(Text.make({ content })),
   });
-};
-
-/**
- * Create a task in a given task set. Membership is the set's `tasks` array; the parent edge is set
- * alongside so the task cascade-deletes with the set.
- *
- * Takes the set rather than deriving it: an outline does not own one. Promotion files into the set
- * of whatever owns the outline — a project's inline outline files into the project's ledger — so an
- * outline with no such owner simply cannot promote, and callers offer no promote affordance.
- */
-export const addTask = (
-  db: Database.Database,
-  taskSet: TaskSet.TaskSet,
-  title: string,
-  props: Partial<Omit<Obj.MakeProps<typeof Task.Task>, 'title'>> = {},
-): Task.Task => {
-  const task = db.add(Task.make({ title: title.trim(), status: 'todo', ...props }));
-  Obj.setParent(task, taskSet);
-  Obj.update(taskSet, (taskSet) => {
-    taskSet.tasks = [...taskSet.tasks, Ref.make(task)];
-  });
-  return task;
 };
 
 //

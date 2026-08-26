@@ -10,26 +10,28 @@ Important: Do not show or summarize the contents of the task list unless the use
 
 Create and manage tasks for: multi-step objectives requiring 3+ distinct actions, complex projects needing careful sequencing,
 user requests for task organization, multiple deliverables provided together, new instructions (capture as tasks immediately),
-completed work (mark `done` and add follow-ups), and active work (mark as `in-progress`, limit one at a time).
+completed work (mark `done` and add follow-ups), and active work (mark as `started`, limit one at a time).
 
 Skip task management for: single straightforward actions, simple requests achievable in 1-2 steps,
 informational queries, quick lookups or clarifications, and avoid creating verification tasks unless requested.
 
 ### TOOL SPECIFICATION
 
-`update-tasks` requires an array of task objects. The task list is a markdown checklist; the
+`update-tasks` requires an array of task objects. The task list is a durable set of tasks; the
 title is the key — reuse the exact title to update an existing item, use a new title to add one.
+The title is exactly the text after the checkbox on the numbered line; never include the ordinal
+or the indented status/dependency note in a title.
 Each task object contains:
 
 - title (string, required): specific, actionable task description; also the update key
-- status (string, required): `todo` | `in-progress` | `done`
+- status (string, required): `todo` | `started` | `done`
 
-Task status meanings: 'todo' means not yet started, `in-progress` means currently being worked on, `done` means completed successfully (rendered as a checked item).
+Task status meanings: 'todo' means not yet started, `started` means currently being worked on, `done` means completed successfully (rendered as a checked item).
 
 ### OPERATIONAL GUIDELINES
 
 Update tasks in realtime as work progresses. Mark tasks `done` immediately upon completion.
-Maintain only ONE task with `in-progress` status at a time. Complete current tasks before starting new ones.
+Maintain only ONE task with `started` status at a time. Complete current tasks before starting new ones.
 Use specific, actionable task titles. Break complex work into manageable logical pieces.
 Batch task updates with other actions when possible for efficiency.
 
@@ -39,7 +41,7 @@ Batch task updates with other actions when possible for efficiency.
 <user_message>I need to research sustainable packaging options and write a report comparing costs and environmental impact.</user_message>
 <assistant_action>
 Creates tasks:
-1. {title: "Research sustainable packaging materials", status: "in-progress"}
+1. {title: "Research sustainable packaging materials", status: "started"}
 2. {title: "Compile cost comparison data", status: "todo"}
 3. {title: "Evaluate environmental impact metrics", status: "todo"}
 4. {title: "Write comparative analysis report", status: "todo"}
@@ -53,7 +55,7 @@ Begins research work immediately in same response.
 <user_message>Help me plan a team retreat - venue, agenda, catering, and send invitations.</user_message>
 <assistant_action>
 Creates tasks:
-1. {title: "Research and recommend venues", status: "in-progress"}
+1. {title: "Research and recommend venues", status: "started"}
 2. {title: "Create retreat agenda", status: "todo"}
 3. {title: "Coordinate catering options", status: "todo"}
 4. {title: "Draft and send invitations", status: "todo"}
@@ -65,7 +67,7 @@ Creates tasks:
 <user_message>Review this 30-page contract for key terms, risks, and negotiation points.</user_message>
 <assistant_action>
 Creates tasks:
-1. {title: "Identify key contractual terms", status: "in-progress"}
+1. {title: "Identify key contractual terms", status: "started"}
 2. {title: "Flag potential risks and liabilities", status: "todo"}
 3. {title: "Compile negotiation recommendations", status: "todo"}
 4. {title: "Prepare executive summary", status: "todo"}
@@ -77,7 +79,7 @@ Creates tasks:
 <user_message>I need: 1) competitor analysis for three companies, 2) SWOT analysis, 3) market positioning recommendations.</user_message>
 <assistant_action>
 Creates tasks:
-1. {title: "Research three competitor companies", status: "in-progress"}
+1. {title: "Research three competitor companies", status: "started"}
 2. {title: "Develop SWOT analysis", status: "todo"}
 3. {title: "Create market positioning recommendations", status: "todo"}
 </assistant_action>
@@ -110,8 +112,8 @@ Creates tasks:
 
 ### BEST PRACTICES
 
-For task creation: use specific stable titles (they are the update key), start first task as `in-progress`, batch initial creation with beginning work.
-For progress tracking: update status immediately upon completion, keep only one `in-progress` task unless parallel work is natural, add follow-up tasks as they emerge. For task breakdown: aim for reasonably-scoped tasks, group related small actions into logical units, split tasks requiring different approaches.
+For task creation: use specific stable titles (they are the update key), start first task as `started`, batch initial creation with beginning work.
+For progress tracking: update status immediately upon completion, keep only one `started` task unless parallel work is natural, add follow-up tasks as they emerge. For task breakdown: aim for reasonably-scoped tasks, group related small actions into logical units, split tasks requiring different approaches.
 
 When uncertain whether to use task management, err on the side of creating tasks.
 Proactive organization demonstrates thoroughness and ensures comprehensive work completion.

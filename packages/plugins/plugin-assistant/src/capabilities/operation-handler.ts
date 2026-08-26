@@ -12,7 +12,7 @@ import {
   AgentWizardHandlers,
   AlarmHandlers,
   ChatContextHandlers,
-  DelegationHandlers,
+  DelegationSkillHandlers,
   PlanningHandlers,
   SkillManagerHandlers,
   WebSearchHandlers,
@@ -34,7 +34,7 @@ export default Capability.makeModule(
       ChatContextHandlers,
       WebSearchHandlers,
       AgentWizardHandlers,
-      DelegationHandlers,
+      DelegationSkillHandlers,
       PlanningHandlers,
       AlarmHandlers,
     ]);

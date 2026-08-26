@@ -87,14 +87,18 @@ export const createServiceContext = async ({
   return host;
 };
 
-export const createPeers = async (numPeers: number, signalManagerFactory?: () => Promise<SignalManager>) => {
+export const createPeers = async (
+  numPeers: number,
+  signalManagerFactory?: () => Promise<SignalManager>,
+  runtimeProps?: ServiceContextRuntimeProps,
+) => {
   if (!signalManagerFactory) {
     const signalContext = new MemorySignalManagerContext();
     signalManagerFactory = async () => new MemorySignalManager(signalContext);
   }
   return await Promise.all(
     Array.from(Array(numPeers)).map(async () => {
-      const peer = await createServiceContext({ signalManagerFactory });
+      const peer = await createServiceContext({ signalManagerFactory, runtimeProps });
       await peer.open(new Context());
       return peer;
     }),

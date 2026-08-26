@@ -18,6 +18,7 @@ export const spaceGenesis = async (
   automergeRoot?: string,
   tags?: string[],
   membershipPolicy?: MembershipPolicy,
+  spaceRootUrl?: string,
 ) => {
   // TODO(dmaretskyi): Find a way to reconcile with credential generator.
   const credentials = [
@@ -43,6 +44,7 @@ export const spaceGenesis = async (
         'role': SpaceMember.Role.OWNER,
         'profile': signingContext.getProfile(),
         'genesisFeedKey': space.controlFeedKey ?? failUndefined(),
+        spaceRootUrl,
         'tags': tags ?? [],
       },
     }),

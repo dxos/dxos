@@ -5,13 +5,12 @@
 import { SqlMigrations } from '@dxos/sql-sqlite';
 
 import init from './0001_init.sql?raw';
+import spaceRoot from './0002_space_root.sql?raw';
 
-/**
- * Space-state migrations, keyed `<id>_<name>` as `Migrator.fromRecord` expects. Ids must only ever increase,
- * and an applied migration must never be edited — nothing verifies its contents.
- */
+/** An applied migration must never be edited — nothing verifies its contents. */
 export const MIGRATIONS = {
   '0001_init': SqlMigrations.apply(init),
+  '0002_space_root': SqlMigrations.apply(spaceRoot),
 };
 
 /** Own history table per store, since many stores share the client database. */

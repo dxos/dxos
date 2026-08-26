@@ -119,7 +119,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
               </div>
               <div className='dx-document flex flex-col px-4 pb-4'>
                 <div className='px-4'>
-                  <ChatComponent.TaskList classNames='border border-separator border-b-0 rounded-sm rounded-b-none text-description' />
+                  <ChatComponent.TaskList classNames='shrink-0 max-h-[calc(4*2rem+1px)] border border-separator border-b-0 rounded-t-sm text-description' />
                 </div>
                 <ChatComponent.Prompt
                   {...chatProps}

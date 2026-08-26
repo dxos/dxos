@@ -16,6 +16,26 @@ projects:
     design: .agents/projects/client-edge-audit/DESIGN.md
     prs: [12598]
     resume: 'PR #12598 OPEN (https://github.com/dxos/dxos/pull/12598) — watch Check to green. Phase 1 audit in DESIGN.md (boot path was already URL-gated everywhere; echo/halo/common have zero direct network calls; observability has 2 consent-gating bugs). Phase 2 verified by packages/sdk/client/src/client/client-offline.test.ts — empty Config boots, DB round-trips, ZERO network calls (fetch/WebSocket/isomorphic-ws intercepted) and ZERO WARN+ logs, green first run; only SDK fix needed was ipdata missing-key warn→debug. Phase 3 removed every SDK read-time edge-endpoint default: by revised decision the CLI first-run profile WRITES its endpoints (hub/edge/ICE/IPFS via defaultProfileEndpoints, DX_LOCAL_DEV forks edge to main.dxos.network per #12658) and no code path substitutes them on load (hub commands error when the profile lacks a hub URL), configPreset omit-when-unset (no implicit main), EDGE_SERVICE_DEFAULTS deleted (getEdgeServiceEndpoint returns string|undefined, pinned by no-default-endpoints.test.ts), plus CLI hub ?? fallbacks, DEFAULT_VAULT_URL, DEFAULT_IMAGE_SERVICE_URL, DEFAULT_INTROSPECT_MCP_URL, GptRealtime/plugin-wnfs localhost:8787, devtools halo.dxos.org target; ~10 consumers updated to handle absence (clear error at use / unconfigured UI state / skip), composer dx.yml gained the introspect entry. Full-repo :build green, touched-package tests+lint+format green. NEXT: drive PR #12598 review + Check to green and land, then Phase 4 backlog in TASKS.md: proxyFetchLegacy cors.dxos.network through config, optional capability contributions (module-loader warn), observability consent gating, plugin-script ??"" masking, react-edge-client removal, files: allowlists.'
+  - name: hypercore-removal
+    status: active
+    user: dmaretskyi
+    host: cloud-sandbox
+    created: 2026-08-24
+    summary: 'Delete hypercore: replicate the space credential chain as an Automerge document instead of a control feed, and re-anchor spaces on a small immutable space-root doc (space id = hash(root doc id)) that points at a rotatable directory doc and a rotatable credentials doc.'
+    tasks: .agents/projects/hypercore-removal/TASKS.md
+    design: .agents/projects/hypercore-removal/DESIGN.md
+    prs: []
+    resume: 'PR #12726 open and green; edge PR dxos/edge#945 green. THE NEW SCHEME IS OPT-IN BEHIND DX_AUTOMERGE_CREDENTIALS (config runtime.client.automergeCredentials, default FALSE) — with the flag off a space keeps its key-derived id and its hypercore control feed, nothing is mirrored, and the document never feeds the state machine. Space ids are ALWAYS derived from the space genesis key (and the halo from the identity key); the root-document derivation and the idDerivation discriminator were removed, so the root anchors the credentials document but does not identify the space. SpaceMetadata.space_id is the primary carried id. Landed: space root doc, echo_spaces migration 0002 (space_root_doc_url + credentials_doc_url), the credentials document with AddOnlySet history reads on both client and edge (a delete cannot revoke a member), SpaceMember.space_root_url, halo anchoring, transparent migration on load, and the edge-side doc-backed reader. Client tests default to the hypercore path; the automerge path has explicit opt-in tests. NEXT: the CredentialSource split inside ControlPipeline (the doc-backed reader is still not authoritative on the client), then Phase 3 dual-write and the per-space flip — which is BLOCKED on choosing between EDGE-executed migration (preferred) and client-creates/EDGE-records. Also blocked: halo documents have no replication between devices.'
+  - name: project-tasks
+    status: active
+    user: burdon
+    host: burdon-mbp-2092
+    created: 2026-08-25
+    summary: 'Agent delegation and task management over the two-forms model — make the delegation loop (supervisor -> durable Task in a TaskSet -> sub-agent -> fold-back) work live and be visible in the UI.'
+    tasks: .agents/projects/project-tasks/TASKS.md
+    design: .agents/projects/project-tasks/DESIGN.md
+    prs: [12752]
+    resume: "PR #12752 is open on branch claude/agent-delegation-task-management-8bdbbe and carries the whole stream: the delegation fix (completeJob is a Tool.dynamic so its schema reaches Anthropic verbatim — the structured-output transformer rewrites Record/ObjectKeyword into typeless subschemas the API rejects, which killed EVERY live delegation at the sub-agent's first model call), Chat.taskSet replacing Chat.outline, Task.dependsOn + the delegate-tasks verb, the scripted + live drain stories, and the /task:create|run|delete slash commands. All review threads are resolved. NEXT: land it once Check is green, then the joined story (delegation chat beside a TaskSet surface), the promote-task verb, and binding slash commands to real operation invocations."
   - name: hardware-devices
     status: active
     user: burdon

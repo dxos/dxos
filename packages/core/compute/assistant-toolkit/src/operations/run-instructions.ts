@@ -6,6 +6,7 @@ import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
@@ -27,7 +28,7 @@ import { trim } from '@dxos/util';
 
 import { PromptError } from '../errors';
 import * as Chat from '../types/Chat';
-import { makeCompleteJobTool } from './complete-job-tool';
+import { makeCompleteJobParameters, makeCompleteJobTool } from './complete-job-tool';
 import { RunInstructions } from './definitions';
 
 const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-4-8.default');
@@ -84,6 +85,8 @@ export default RunInstructions.pipe(
           If you are unable to complete the task, call [completeJob] with {"failure": {"message": "..."}}.
           Pass one of the two, never both, and omit the field you do not use.
           If no output is required, call [completeJob] with an empty object: {}
+          The success value must be strictly valid JSON: quote free text, and write numbers without
+          digit separators (3628800, never 3,628,800).
           Do not stop until you call [completeJob].
         `;
         if (data.systemInstructions) {
@@ -104,6 +107,7 @@ export default RunInstructions.pipe(
         const resultSink = yield* Deferred.make<unknown, PromptError>();
         const promptToolkit = makePromptAgentToolkit({
           completeJobTool: makeCompleteJobTool(instructions.output),
+          parameters: makeCompleteJobParameters(instructions.output),
           resultSink,
         });
 
@@ -167,11 +171,17 @@ export default RunInstructions.pipe(
 
 const makePromptAgentToolkit = (options: {
   completeJobTool: ReturnType<typeof makeCompleteJobTool>;
+  parameters: ReturnType<typeof makeCompleteJobParameters>;
   resultSink: Deferred.Deferred<unknown, PromptError>;
 }) => {
   class PromptAgentToolkit extends Toolkit.make(options.completeJobTool) {}
   const layer = PromptAgentToolkit.toLayer({
-    completeJob: Effect.fnUntraced(function* (result) {
+    completeJob: Effect.fnUntraced(function* (input) {
+      // A dynamic tool's input is unvalidated; a decode failure is reported to the model as a
+      // tool failure so it can correct the call.
+      const result = yield* Schema.decodeUnknownEffect(options.parameters)(input).pipe(
+        Effect.mapError((error) => String(error)),
+      );
       // A success payload wins over a failure sent alongside it, so a placeholder cannot discard
       // completed work.
       if (result.success == null && result.failure) {

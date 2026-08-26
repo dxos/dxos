@@ -29,13 +29,12 @@ import {
   AgentHandlers,
   AgentSkill,
   Chat,
-  DelegationHandlers,
   DelegationSkill,
+  DelegationSkillHandlers,
   PlanningHandlers,
   PlanningSkill,
   makeDelegationStrategy,
 } from '@dxos/assistant-toolkit';
-import { type Space } from '@dxos/client/echo';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -72,6 +71,7 @@ import { Outline, Task, TaskSet } from '@dxos/types';
 import { Merge, isNonNullable } from '@dxos/util';
 
 import { moduleSurfaces } from '../modules';
+import { CalculatorHandlers, CalculatorSkill } from './calculator';
 
 /** Shared CSF parameters for the assistant story groups (fullscreen canvas + plugin translations). */
 export const storyParameters = {
@@ -231,13 +231,13 @@ type CreateAgentOptions = {
 };
 
 type StoryPluginOptions = {
-  onChatCreated?: (props: { space: Space; chat: Chat.Chat; binder: AiContext.Binder }) => Promise<void>;
-
   /**
    * If set, the story creates an Agent (with its own Chat) instead of a standalone Chat.
    * Accepts `true` for defaults, or an options object for name/instructions.
    */
   createAgent?: boolean | CreateAgentOptions;
+
+  onChatCreated?: (props: { db: Database.Database; chat: Chat.Chat; binder: AiContext.Binder }) => Promise<void>;
 };
 
 const StoryPlugin = Plugin.define<StoryPluginOptions>(
@@ -265,7 +265,12 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
     activate: () =>
       Effect.succeed([
         // TODO(burdon): Clean up.
-        Capability.contributeAll(AppCapabilities.SkillDefinition, [MarkdownSkill, PlanningSkill, DelegationSkill]),
+        Capability.contributeAll(AppCapabilities.SkillDefinition, [
+          MarkdownSkill,
+          PlanningSkill,
+          DelegationSkill,
+          CalculatorSkill,
+        ]),
         // Supervisor behaviour, so a delegating story spawns its sub-agent. The app's copy rides
         // plugin-assistant's `AssistantStart`-gated skill-definition module, which loses the race
         // against `AgentService`'s layer — that layer reads this capability once, at build time.
@@ -273,9 +278,10 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
         Capability.contributeAll(Capabilities.OperationHandler, [
           MarkdownOperationHandlerSet.handlers,
           PlanningHandlers,
-          DelegationHandlers,
+          DelegationSkillHandlers,
           AgentHandlers,
           ExampleHandlers,
+          CalculatorHandlers,
         ]),
       ]),
   }),
@@ -327,7 +333,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
           yield* Effect.tryPromise(() => binder.open());
           // Ensure the binder is released even if the callback fails, so subscriptions/state do not
           // leak into later story or test runs.
-          yield* Effect.tryPromise(() => onChatCreated({ space, chat, binder })).pipe(
+          yield* Effect.tryPromise(() => onChatCreated({ db: space.db, chat, binder })).pipe(
             Effect.ensuring(Effect.promise(() => binder.close())),
           );
         }
@@ -347,7 +353,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
           yield* Effect.tryPromise(() => binder.open());
           // Ensure the binder is released even if the callback fails, so subscriptions/state do not
           // leak into later story or test runs.
-          yield* Effect.tryPromise(() => onChatCreated({ space, chat, binder })).pipe(
+          yield* Effect.tryPromise(() => onChatCreated({ db: space.db, chat, binder })).pipe(
             Effect.ensuring(Effect.promise(() => binder.close())),
           );
         }

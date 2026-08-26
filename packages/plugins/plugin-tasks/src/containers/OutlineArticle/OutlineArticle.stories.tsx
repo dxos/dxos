@@ -89,7 +89,7 @@ const TaskSetView = ({ outline, taskSet }: { outline: Outline.Outline; taskSet?:
   const handleCreate = useCallback(
     (title: string) => {
       if (db && taskSet) {
-        Outline.addTask(db, taskSet, title);
+        TaskSet.addTask(db, taskSet, title);
       }
     },
     [db, taskSet],

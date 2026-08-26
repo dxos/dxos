@@ -11,6 +11,7 @@ import { type Resource } from '@dxos/react-ui';
 import { translations as assistantTranslations } from '@dxos/react-ui-assistant/translations';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
+import { translations as taskTranslations } from '@dxos/react-ui-task/translations';
 
 import { meta } from '#meta';
 
@@ -18,6 +19,7 @@ export const translations: Resource[] = [
   ...assistantTranslations,
   ...componentsTranslations,
   ...formTranslations,
+  ...taskTranslations,
   {
     'en-US': {
       [Type.getTypename(Skill.Skill)]: {

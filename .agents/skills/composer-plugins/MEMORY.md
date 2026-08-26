@@ -672,7 +672,7 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 - `dx-container` = `flex-1 min-h-0 min-w-0 h-full w-full overflow-hidden`; no flex-direction, so keep `flex flex-col`.
 - `ScrollArea.Root` theme already includes `dx-container` — do NOT add `min-h-0 grow`/`h-full`.
 - Pattern: pinned region (`shrink-0`, `border-b border-separator`) + scrolling region (stack or `ScrollArea`).
-- No `role='none'` on plain layout divs.
+- No `role=''` on plain layout divs.
 - No arbitrary spacing (`p-3`, `gap-2`). Use design-token utilities (`p-form-gap`, `gap-form-gap`, `pb-form-gap` — backed by `--spacing-form-gap`) or embed in `Form.Viewport`/`Form.Content` and let the form supply spacing.
 
 ### Forms
