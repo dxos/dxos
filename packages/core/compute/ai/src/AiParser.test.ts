@@ -498,6 +498,28 @@ describe('parser', () => {
         );
       }),
     );
+
+    it.effect(
+      'tool call truncated by malformed parameters is still emitted',
+      Effect.fn(function* ({ expect }) {
+        const result = yield* makeInputStream([
+          Response.makePart('tool-params-start', { id: '123', name: 'foo', providerExecuted: false }),
+          Response.makePart('tool-params-delta', { id: '123', delta: '{"objects": echo:///01' }),
+        ])
+          .pipe(AiParser.parseResponse())
+          .pipe(Stream.runCollect);
+
+        expect(result).toEqual([
+          {
+            _tag: 'toolCall',
+            toolCallId: '123',
+            name: 'foo',
+            input: '{"objects": echo:///01',
+            providerExecuted: false,
+          },
+        ]);
+      }),
+    );
   });
 });
 

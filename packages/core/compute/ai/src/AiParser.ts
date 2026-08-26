@@ -435,6 +435,18 @@ export const parseResponse =
           Effect.gen(function* () {
             const out: ContentBlock.Any[] = [];
             yield* flushText(out);
+            // A stream that ends mid-block (e.g. malformed tool call parameters truncate the
+            // provider stream before `tool-params-end`) would otherwise leave the block pending
+            // forever in the UI and invisible to the tool runner.
+            if (block) {
+              log.warn('stream ended with an unterminated block', { type: block._tag });
+              block.pending = false;
+              yield* emitFullBlock(block, out);
+              if (block._tag === 'toolCall') {
+                toolCalls++;
+              }
+              block = undefined;
+            }
             log('end', { blocks, parts, summary: stats });
             yield* onEnd(stats);
             return out;

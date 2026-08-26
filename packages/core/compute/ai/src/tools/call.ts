@@ -35,7 +35,21 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
 ) => Effect.Effect<ContentBlock.ToolResult, AiError.AiError, Tool.HandlerServices<Tools[keyof Tools]>> = Effect.fn(
   'callTool',
 )(function* (toolkit, toolCall) {
-  const input = safeParseJson<Record<string, unknown>>(toolCall.input, {});
+  // Models occasionally emit syntactically invalid arguments; reporting the parse failure back as
+  // a tool error lets the turn continue and the model retry, instead of silently calling the tool
+  // with no arguments.
+  // A tool without parameters is called with no arguments at all.
+  const input = toolCall.input.trim().length === 0 ? {} : safeParseJson<Record<string, unknown>>(toolCall.input);
+  if (input === undefined) {
+    log.warn('tool call arguments did not parse', { tool: toolCall.name, input: toolCall.input });
+    return {
+      _tag: 'toolResult',
+      toolCallId: toolCall.toolCallId,
+      name: toolCall.name,
+      error: `Invalid JSON arguments for tool '${toolCall.name}'. Retry the call with valid JSON.`,
+      providerExecuted: false,
+    } satisfies ContentBlock.ToolResult;
+  }
 
   // TODO(burdon): Replace with spans? (CORE: Auto stringify proxy objects?)
   log('toolCall', { toolCall: toolCall.name, input });
