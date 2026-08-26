@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { batchEvents } from './event-batch';
-import { EventId } from './symbols';
+import { batchEvents, drainEventTargets, emitEventTarget, rethrowEmitErrors } from './event-batch';
 
 /**
  * Generic change context tracking.
@@ -124,15 +123,17 @@ export const executeChange = (
     batchEvents(() => callback(proxy));
   } finally {
     exitContext();
+    // Collect listener errors rather than letting the first escape: `pendingOwnerNotifications` is
+    // module-level, so a target left queued behind a throwing listener would be retained for the
+    // lifetime of the process and re-emitted by the next change.
+    const errors: unknown[] = [];
     // Fire the primary notification (a real change).
     if (hasPendingNotifications(contextKey)) {
       clearPendingNotifications(contextKey);
-      (eventTarget as any)[EventId]?.emit();
+      emitEventTarget(eventTarget, errors);
     }
     // Fire owner chain notifications.
-    for (const ownerTarget of pendingOwnerNotifications) {
-      (ownerTarget as any)[EventId]?.emit();
-    }
-    pendingOwnerNotifications.clear();
+    drainEventTargets(pendingOwnerNotifications, errors);
+    rethrowEmitErrors(errors);
   }
 };
