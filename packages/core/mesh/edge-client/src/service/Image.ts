@@ -19,7 +19,7 @@ import { type EdgeServiceClient, type EdgeServiceError } from './edge-service';
  * production. Override per-environment via the client's `baseUrl`.
  */
 // TODO(burdon): Get from config.
-export const DEFAULT_IMAGE_SERVICE_URL = 'https://dxos.network/image';
+export const DEFAULT_IMAGE_SERVICE_URL = 'https://image.dxos.network';
 
 /** Hosted image returned by the service: a CDN `url` and its storage `id`. */
 export const Result = Schema.Struct({

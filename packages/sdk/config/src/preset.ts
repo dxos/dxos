@@ -15,7 +15,7 @@ export type ConfigPresetOptions = {
   edge?: 'local' | 'dev' | 'preview' | 'main' | 'production';
 
   /**
-   * Sandbox service, reached at `<edge>/sandbox`.
+   * Sandbox service (standalone worker; API at /api/sandbox).
    */
   sandbox?: 'local' | 'dev' | 'main' | 'production';
 };
@@ -31,13 +31,13 @@ const edgeUrl = (edge: NonNullable<ConfigPresetOptions['edge']>) =>
     Match.exhaustive,
   );
 
-// A bare edge origin: `SandboxClient` appends `/sandbox` itself.
+// TODO(burdon): Hosted environments share a single worker until per-env deployments exist.
 const sandboxUrl = (sandbox: NonNullable<ConfigPresetOptions['sandbox']>) =>
   Match.value(sandbox).pipe(
     Match.when('local', () => 'http://localhost:8792'),
-    Match.when('dev', () => EDGE_URLS.dev),
-    Match.when('main', () => EDGE_URLS.preview),
-    Match.when('production', () => EDGE_URLS.production),
+    Match.when('dev', () => 'https://sandbox-service.dxos.workers.dev'),
+    Match.when('main', () => 'https://sandbox-service.dxos.workers.dev'),
+    Match.when('production', () => 'https://sandbox-service.dxos.workers.dev'),
     Match.exhaustive,
   );
 

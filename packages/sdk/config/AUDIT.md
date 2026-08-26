@@ -20,14 +20,12 @@ Goals:
 > definitions into `config.proto` and deprecates dead fields; the call-site
 > migration (removing the hard-coded strings) follows.
 >
-> **Host update.** Every EDGE service now resolves against one host per environment —
-> `dxos.network`, `preview.dxos.network`, `dev.dxos.network` — with the service selected by a path
-> prefix beneath it. `EDGE_URLS` in [`edge-services.ts`](src/edge-services.ts) is the source of
-> truth for those hosts, and `EDGE_SERVICE_PATHS` for the prefixes of the six services a client
-> holds an endpoint for (`/calls`, `/image`, `/discord`, `/cors`, `/introspect/mcp`, and
-> transcription, which shares calls-service's `/calls`). The prefixes edge serves itself — `/ai`,
-> `/hub`, `/db`, `/sandbox` and the rest — are not in that map; `dxos/edge` →
-> `docs/audits/edge-hosts.md` is the full prefix inventory and retirement order.
+> **Host update.** EDGE's own entrypoint is one host per environment — `dxos.network`,
+> `preview.dxos.network`, `dev.dxos.network` — with the services bundled behind it selected by a
+> path prefix (`/ai`, `/hub`, `/db`, …). `EDGE_URLS` in [`edge-services.ts`](src/edge-services.ts)
+> is the source of truth for those hosts. The standalone workers in the tables below are NOT behind
+> edge: each keeps its own hostname, and `EDGE_SERVICE_DEFAULTS` still holds those hostnames.
+> `dxos/edge` → `docs/audits/edge-hosts.md` is the full inventory.
 >
 > The per-worker `*.dxos.network` and `*.dxos.workers.dev` hostnames in the tables below are the
 > pre-normalization state, kept because the **Source** column (config vs. HARDCODED) is what this

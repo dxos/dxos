@@ -21,7 +21,7 @@ import { Sandbox } from '#types';
 import { CreateSandbox, Exec } from './skills/functions';
 
 /**
- * Prereq: sandbox-service worker at http://localhost:8792.
+ * Prereq: sandbox-service worker at http://localhost:8792 (API at /api/sandbox).
  * Entity IDs must be unique per run (do not call `EntityId.dangerouslyDisableRandomness`) so sandbox-service
  * KV does not reject the same sandboxId under a new space from a prior run.
  */

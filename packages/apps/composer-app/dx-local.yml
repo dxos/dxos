@@ -23,4 +23,4 @@ runtime:
     edge:
       url: https://preview.dxos.network/
     sandbox:
-      url: https://preview.dxos.network
+      url: https://sandbox-service.dxos.workers.dev

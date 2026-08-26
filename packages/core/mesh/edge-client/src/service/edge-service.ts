@@ -22,7 +22,7 @@ const DEFAULT_TIMEOUT = Duration.seconds(15);
 const ERROR_BODY_LIMIT = 512;
 
 export type EdgeServiceClientOptions = {
-  /** Base URL the service is hosted at, path prefix included (e.g. `https://dxos.network/image`). */
+  /** Base URL the service is hosted at. */
   baseUrl: string;
   /** Tag included in the {@link EDGE_CLIENT_TAG_HEADER} header for metering. */
   clientTag?: string;

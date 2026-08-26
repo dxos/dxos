@@ -7,8 +7,8 @@ import { type Client } from '@dxos/client';
 import { SandboxClient } from './SandboxClient';
 
 /**
- * Edge origin serving sandbox-service (`runtime.services.sandbox.url`); {@link SandboxClient}
- * appends the `/sandbox` prefix.
+ * Sandbox-service worker origin (`runtime.services.sandbox.url`).
+ * REST API is mounted at `/api/sandbox` on this host.
  */
 export const getSandboxServiceUrl = (client: Client): string => {
   const url = client.config.values.runtime?.services?.sandbox?.url;
