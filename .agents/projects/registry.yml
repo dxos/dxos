@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: agent-process-edge
+    status: active
+    user: dmaretskyi
+    host: cloud-sandbox
+    created: 2026-08-26
+    summary: 'Run dxos/compute `Process` instances (AgentProcess first, plus a trivial test process) inside Cloudflare Durable Objects so Composer can start an agent chat that lives on EDGE and keeps running with the client closed.'
+    tasks: .agents/projects/agent-process-edge/TASKS.md
+    design: .agents/projects/agent-process-edge/DESIGN.md
+    prs: []
+    resume: 'Design written (DESIGN.md, D1-D8); no code yet. Key decision: the EDGE surface grows into `ProcessManager.Manager` rather than a parallel API, because `AgentService.layer` in @dxos/agent-runtime is written against that interface and nothing else -- so providing an edge-backed `ProcessManager.Service` makes remote agent control fall out for free. Server: `TriggersDispatcher` (one DO per space) becomes the process manager and owns an index of per-process `ProcessObject` DOs; each ProcessObject hosts ONE process via the existing `ProcessManagerImpl` over a DO-storage KeyValueStore, with a DO alarm mirroring the persisted `alarmDueAt` (ProcessHandle alarms are in-memory Effect.sleep, so they die with the isolate). Outputs/trace read by cursor, not pushed (D7). NEXT: Phase 1, the protocol interfaces + EdgeHttpClient methods.'
   - name: hypercore-removal
     status: active
     user: dmaretskyi
