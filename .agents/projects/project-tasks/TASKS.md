@@ -60,12 +60,16 @@ be visible in the UI, closing the gaps the storybook audit surfaced.
       consume a predecessor's result. Render completed dependencies' results
       (held by the supervisor from fold-back exits) into the dependent
       sub-agent's synthesized instructions.
-- [ ] **Slash commands for operations** — operations declare deterministic
-      shortcuts via a CommandAnnotation ({ command, args, parseArgs }); the
-      chat's bound skills assemble the registry; ChatPrompt's autocomplete
-      extension gains a `/` trigger fed by it; a leading /command invokes the
-      operation directly (synthetic message pair records it), unknown commands
-      fall through to the model. First: /run <ordinals> -> DelegateTasks.
+- [x] **Slash commands** — /task:create, /task:run, /task:delete shipped:
+      client-side execution via shared primitives (TaskSet.addTask/deleteTask,
+      ensureTaskSetSync), `/` completion (non-cycling, mono command column,
+      grid popover) + atomic dx-tag decoration in the prompt editor; /task:run
+      wakes the conversation with a scoped follow-up. Live-verified.
+- [ ] **Bind slash commands to operation invocations** — needs a client-side
+      harness bridge: harness-scoped operations (HarnessService) resolve their
+      services only inside the agent session, so the UI invoker's
+      DynamicRuntime cannot invoke them; also record command + result as feed
+      messages so the transcript reflects command activity.
 - [ ] **Cancel/delete tasks** — cancel a started (possibly delegated) task from
       the UI and the agent surface, and delete via the TaskOperation verb so
       the set's refs and lifecycle parent edges stay consistent; a cancelled

@@ -75,6 +75,19 @@ this shape, both observed against the live Anthropic API:
 
 The sub-agent system prompt additionally forbids digit separators and unquoted free text.
 
+## Slash commands
+
+`commands.ts` (this package) defines deterministic prompt shortcuts — `/task:create <title>`,
+`/task:run <selectors>`, `/task:delete <selectors>` — executed client-side by `Chat.Root` on
+submit (no model in the loop) through the shared task primitives (`TaskSet.addTask`/`deleteTask`,
+`ensureTaskSetSync`). Selectors are 1-based ordinals or exact titles. `/task:run` queues the named
+tasks and wakes the conversation with a scoped follow-up prompt (delegation spawns on the
+supervisor's reconcile). The prompt editor (`react-ui-chat` `commands()` extension) completes `/`
+commands at the prompt start (non-cycling list, command column in mono), and decorates a
+completed command token as an atomic `dx-tag` pill. Binding commands to operation invocations
+proper awaits a client-side harness bridge (harness-scoped operations resolve their services only
+inside the agent session) — tracked in the ledger.
+
 ## UI
 
 `TaskList` (`@dxos/react-ui-task`): status-grouped rows with `showGroupLabels` / `showOrdinals`;

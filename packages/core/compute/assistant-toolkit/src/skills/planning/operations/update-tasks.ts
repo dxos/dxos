@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
-import { Outline } from '@dxos/types';
+import { TaskSet } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { Chat } from '../../../types';
@@ -32,7 +32,7 @@ export default UpdateTasks.pipe(
             task.status = status;
           });
         } else {
-          existing.push(Outline.addTask(db, taskSet, title, { status }));
+          existing.push(TaskSet.addTask(db, taskSet, title, { status }));
         }
       }
       yield* Database.flush();

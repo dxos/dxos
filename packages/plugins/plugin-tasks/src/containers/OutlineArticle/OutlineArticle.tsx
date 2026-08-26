@@ -13,7 +13,7 @@ import { useQuery } from '@dxos/react-client/echo';
 import { Panel, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import { Outline as OutlineType, Task, type TaskSet } from '@dxos/types';
+import { Outline as OutlineType, Task, TaskSet } from '@dxos/types';
 
 import { Outline, type OutlineController } from '#components';
 import { meta } from '#meta';
@@ -57,7 +57,7 @@ export const OutlineArticle = ({
         return undefined;
       }
 
-      const task = OutlineType.addTask(db, taskSet, text);
+      const task = TaskSet.addTask(db, taskSet, text);
       return {
         label: task.title,
         url: Obj.getURI(task).toString(),

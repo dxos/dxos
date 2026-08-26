@@ -7,6 +7,7 @@ import * as Option from 'effect/Option';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { resolveSlashCommand } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
@@ -130,6 +131,26 @@ const ChatRoot = ({
         case 'submit': {
           const text = ev.text.trim();
           if (!streaming && text.length) {
+            // A leading /command is a deterministic shortcut — executed directly, no model in
+            // the loop; an unknown command falls through to the model as plain text.
+            const resolved = resolveSlashCommand(text);
+            if (resolved) {
+              void Promise.resolve(onSubmit?.(text)).then(() => {
+                if (!chat || !db) {
+                  event.emit({ type: 'error', error: new Error('Command requires a persisted chat.') });
+                  return;
+                }
+                const result = resolved.command.execute(resolved.args, { db, chat });
+                if (result instanceof Error) {
+                  event.emit({ type: 'error', error: result });
+                } else if (result.followUp) {
+                  // Some effects run on the supervisor loop (delegation spawns post-turn), so the
+                  // command wakes the conversation with a short synthetic prompt.
+                  void processor.request({ message: result.followUp });
+                }
+              });
+              break;
+            }
             lastPrompt.current = ev.text;
             const context = getContext?.();
             // Await persistence (transient chat) before requesting so the agent resolves the
@@ -176,7 +197,7 @@ const ChatRoot = ({
     });
     // `feed` and `messages` are dependencies because the rewind branch reads and writes them: without
     // them the handler would keep resolving rewinds against whatever was mounted first.
-  }, [event, dump, processor, streaming, onEvent, onSubmit, getContext, feed, messages]);
+  }, [event, dump, processor, streaming, onEvent, onSubmit, getContext, feed, messages, chat, db]);
 
   return (
     <ChatContextProvider
@@ -562,13 +583,13 @@ const ChatTaskList = composable<HTMLDivElement, ChatTaskListProps>(
       useMemo(() => Atom.make((get) => TaskSet.dedupeById((taskRefs ?? []).map((ref) => get(ref.atom)))), [taskRefs]),
     );
 
-    // `Outline.addTask` is the shared primitive the task verbs use, so the parent edge and the
+    // `TaskSet.addTask` is the shared primitive the task verbs use, so the parent edge and the
     // set's refs stay consistent without a cross-plugin operation dependency.
     const handleCreate = useCallback(
       (title: string) => {
         const db = taskSet && Obj.getDatabase(taskSet);
         if (taskSet && db) {
-          Outline.addTask(db, taskSet, title);
+          TaskSet.addTask(db, taskSet, title);
         }
       },
       [taskSet],

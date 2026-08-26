@@ -152,7 +152,7 @@ const meta = {
                 const taskSet = tasks.length ? space.db.add(TaskSet.make({ name: 'Test' })) : undefined;
                 if (taskSet) {
                   for (const { title, status } of tasks) {
-                    Outline.addTask(space.db, taskSet, title, { status });
+                    TaskSet.addTask(space.db, taskSet, title, { status });
                   }
                 }
                 const chat = space.db.add(

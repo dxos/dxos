@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
-import { Outline } from '@dxos/types';
+import { TaskSet } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { Chat } from '../../../types';
@@ -30,7 +30,7 @@ const handler: Operation.WithHandler<typeof DelegateTask> = DelegateTask.pipe(
 
       // Queued (`todo`) rather than `started`: the reconcile loop spawns the sub-agent and marks
       // the task started at spawn, so `started` always means a live process.
-      const task = Outline.addTask(db, taskSet, title, {
+      const task = TaskSet.addTask(db, taskSet, title, {
         status: 'todo',
         assignee: { role: 'assistant' },
       });

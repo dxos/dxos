@@ -85,7 +85,7 @@ const setupChatWithChecklist = Effect.fnUntraced(function* (states: readonly boo
   const taskSet = yield* Chat.ensureTaskSet(chat);
   const { db } = yield* Database.Service;
   states.forEach((done, index) => {
-    Outline.addTask(db, taskSet, `Task ${index}`, { status: done ? 'done' : 'todo' });
+    TaskSet.addTask(db, taskSet, `Task ${index}`, { status: done ? 'done' : 'todo' });
   });
   yield* Database.flush();
 

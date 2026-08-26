@@ -248,7 +248,7 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
         {...rest}
         id={task.id}
         data-testid='taskList.item'
-        classNames={mx('px-0 py-0 group col-span-full grid grid-cols-subgrid', className)}
+        classNames={mx('group col-span-full grid grid-cols-subgrid', className)}
         ref={forwardedRef}
       >
         {ordinal !== undefined && (

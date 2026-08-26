@@ -114,6 +114,30 @@ export const ensureTaskSet = (chat: Chat): Effect.Effect<TaskSet.TaskSet, Entity
     return taskSet;
   });
 
+/**
+ * Client-side (non-Effect) twin of {@link ensureTaskSet} for UI affordances that already hold the
+ * database. Returns undefined when the owner's ref exists but is not loaded yet, rather than
+ * risking a duplicate set.
+ */
+export const ensureTaskSetSync = (db: Database.Database, chat: Chat): TaskSet.TaskSet | undefined => {
+  const project = peekProject(chat);
+  const ref = project ? project.taskSet : chat.taskSet;
+  if (ref) {
+    return ref.target;
+  }
+  const taskSet = db.add(TaskSet.make({ name: project ? project.name : chat.name }));
+  if (project) {
+    Obj.update(project, (project) => {
+      project.taskSet = Ref.make(taskSet);
+    });
+  } else {
+    Obj.update(chat, (chat) => {
+      chat.taskSet = Ref.make(taskSet);
+    });
+  }
+  return taskSet;
+};
+
 /** Bound on the parent walk below; a conversation sits one or two edges under its project. */
 const MAX_OWNER_DEPTH = 8;
 

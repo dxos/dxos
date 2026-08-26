@@ -165,7 +165,7 @@ const seedExecutableTasks = async ({ db, chat }: { db: Database.Database; chat: 
       .map((ordinal) => tasks[ordinal - 1])
       .filter((dep) => dep !== undefined)
       .map((dep) => Ref.make(dep));
-    tasks.push(Outline.addTask(db, taskSet, title, dependsOn.length > 0 ? { dependsOn } : {}));
+    tasks.push(TaskSet.addTask(db, taskSet, title, dependsOn.length > 0 ? { dependsOn } : {}));
   }
 
   await db.flush();
@@ -281,7 +281,7 @@ export const WithTasks: Story = {
         { title: 'Update the price list', status: 'todo' },
       ];
       for (const { title, status } of seed) {
-        Outline.addTask(db, taskSet, title, { status });
+        TaskSet.addTask(db, taskSet, title, { status });
       }
       await db.flush();
     },

@@ -19,7 +19,7 @@ import { Text } from '@dxos/schema';
 import { Message, Outline, Task, TaskSet } from '@dxos/types';
 
 import { AgentHandlers } from '../operations';
-import { DelegationSkillHandlers, DelegationSkill } from '../skills';
+import { DelegationSkill, DelegationSkillHandlers } from '../skills';
 import { DelegateTask } from '../skills/delegation/operations/definitions';
 import { Agent, Chat } from '../types';
 import { makeDelegationStrategy } from './delegation-strategy';
