@@ -27,8 +27,8 @@ const gen = (args: string[]): void => {
     return;
   }
   for (const file of result.files) {
-    // eslint-disable-next-line no-console
     const values = file.values > 0 ? `, ${file.values} values` : '';
+    // eslint-disable-next-line no-console
     console.log(
       `dx-plugin gen: ${path.relative(pluginDir, file.path)} (${file.included} modules, ${file.stubbed} stubs${values})`,
     );

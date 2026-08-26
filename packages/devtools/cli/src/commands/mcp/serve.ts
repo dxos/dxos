@@ -87,9 +87,6 @@ export const serve = Command.make(
     // skill definitions to `AssistantStart`, so without both the projected surface is empty.
     yield* manager.activate(ActivationEvents.Idle);
     yield* manager.activate(AppActivationEvents.AssistantStart);
-    // Project templates gate on the projects plugin's own start event, which the browser fires
-    // from its React surfaces. A headless host has none, so it says so itself rather than each
-    // template dropping the gate to suit it.
     yield* manager.activate(ProjectsEvents.Start);
 
     const server = yield* makeLocalServer();

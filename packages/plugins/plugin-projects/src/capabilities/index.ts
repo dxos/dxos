@@ -39,7 +39,6 @@ export const Templates = Capability.lazyModule(
   'Templates',
   {
     provides: [ProjectCapabilities.Template],
-    // The host fires this: the React surfaces do so in the browser, `dx mcp serve` explicitly.
     activatesOn: ProjectsEvents.Start,
   },
   () => import('./templates'),

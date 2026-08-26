@@ -98,7 +98,7 @@ the task graph owns it (echo-query `prebuild-lezer` is the template).
 - [x] DESIGN.md refreshed: §5.4 escape hatch marked removed (zero `overrides.*.ts` remain), §5.6
       estimates replaced with the landed counts, §6.2 inbox entry corrected, §6.4 corrected to
       record the plugin-computer exception
-- [ ] **Verify the merge is green.** The merge commit was pushed with the test sweep still
+- [x] **Verify the merge is green.** The merge commit was pushed with the test sweep still
       running and five suites failing (`pipeline-discord`, `plugin-calls`, `plugin-sample`,
       `plugin-transformer`, `plugin-zen`); three match the known 15s-timeout flake, two were never
       examined. Its own message says the sweep is NOT part of its verification
@@ -126,7 +126,7 @@ the task graph owns it (echo-query `prebuild-lezer` is the template).
       plugin-presenter and plugin-support — passes the narrower target without touching
       `@dxos/react-ui`. Normalize them. (An earlier draft of this line said "four" and "87";
       both were wrong, measured 2026-08-25.)
-- [ ] **Generator drops non-maker barrel exports silently.** `parseBarrel` classifies an
+- [x] **Generator drops non-maker barrel exports silently.** `parseBarrel` classifies an
       `export const` whose initializer is not a `CallExpression` as `non-call-initializer`, and
       `generate.ts` then filters to `maker-call` — so such a member is neither sliced nor stubbed,
       it is simply absent from every generated barrel, with no warning. Live today: plugin-space
@@ -138,7 +138,7 @@ the task graph owns it (echo-query `prebuild-lezer` is the template).
       typechecked. `export function`, `export class` and `satisfies`-wrapped exports vanish the
       same way. Every canonical export should be sliced, stubbed, or refused with an error naming
       the construct
-- [ ] **Gen-task cache key does not cover what the generator reads.**
+- [x] **Gen-task cache key does not cover what the generator reads.**
       `.moon/tasks/tag-composer-plugin.yml` lists `src/capabilities/index.ts` plus two absolute
       maker-default paths, but `parseBarrel` follows `export * from` / `export { X } from` into
       arbitrary files. plugin-space's `AppGraphBuilder` annotation lives at
@@ -146,12 +146,12 @@ the task graph owns it (echo-query `prebuild-lezer` is the template).
       `environments` cache-hits and restores a stale barrel. Same class as §6.8, which was fixed
       for one file rather than at the root. Widen to `src/capabilities/**/*` (excluding `gen/`),
       or have the generator emit a depfile of what it actually parsed
-- [ ] **Generator and guard have zero tests.** 988 lines of AST slicing plus ~1,120 lines of
+- [x] **Generator and guard have zero tests.** 988 lines of AST slicing plus ~1,120 lines of
       `dx-trace-imports`, and `find` returns no `*.test.ts` in either. `app-framework/src` has 17
       test files, none touching `plugin-cli`. The dropped-export bug above is a ten-line fixture
       test. The spike prototype had a `compare.mjs` that diffed generated against handwritten
       barrels; the production tool shipped with less verification than its prototype
-- [ ] **Guard truncation paths report a silent pass.** `parse-imports.ts:110` catches a parse
+- [x] **Guard truncation paths report a silent pass.** `parse-imports.ts:110` catches a parse
       failure and returns `[]`, so the file's whole subtree leaves the graph and the guard prints
       "No import paths" — a pass. Same shape for an unreadable file and for a dependency whose
       dist is missing. DESIGN §6.7 states the lesson ("a structure guard needs to fail when it
@@ -173,10 +173,10 @@ the task graph owns it (echo-query `prebuild-lezer` is the template).
       human added by hand (`require`, `browser`, `deno`, a private one) is dropped on the next
       `dx-plugin gen`. Sits awkwardly against `Environment` being deliberately an open string.
       Merge into the existing entry instead of replacing it
-- [ ] `.moon/tasks/tag-composer-plugin.yml` names `SpaceCapability.ts` as one of "the modules
+- [x] `.moon/tasks/tag-composer-plugin.yml` names `SpaceCapability.ts` as one of "the modules
       declaring the per-family `environments` defaults". It declares none — verified by grep. The
       comment is wrong and the input is inert
-- [ ] Stale glob: `.moon/tasks/tag-composer-plugin.yml` still lists
+- [x] Stale glob: `.moon/tasks/tag-composer-plugin.yml` still lists
       `src/capabilities/overrides.*.ts` as an input. Harmless (matches nothing) but misleading now
       that the override mechanism is deleted
 - [x] Re-merge `origin/main` (`eaf9c7e3fa`, 3 commits). `plugin-claude-agents` (#12741) arrived
@@ -228,3 +228,36 @@ were more interesting than the reported symptoms.
       and fails on stale data; under `CI=true` it skips and the package passes 40/41, exit 0. No
       action — but it means a local `moon :test` sweep can never be fully green while that
       fixture is stale, which is worth knowing before chasing it again
+
+## Closed — 2026-08-26
+
+The mechanism shipped and the migration is complete: zero `plugin.{node,workerd}.ts`, zero
+`capabilities/{node,workerd}.ts`, zero `schema.{node,workerd}.ts` and zero `overrides.*.ts` remain
+anywhere under `packages/plugins`. Every capability is declared in its plugin's barrel, so every
+plugin entry is a list of `Plugin.addModule(Name)` and nothing else, and `dx-plugin gen` emits the
+headless barrels from one annotated source.
+
+What stays open moves with the work rather than with this project. PR #12743 replaces the barrel
+and the generator with a static `dxplugin.jsonc` manifest — its `platforms` field is this project's
+`environments` — so most of the remainder below is machinery that PR deletes outright. Those items
+belong to its tracking, not to a project whose mechanism they describe:
+
+- the `undefined` stub sentinel, and the latent slicer bugs (helper emission order, multi-declarator
+  statements, `parseBarrel` cycles, non-literal options bags reading as isomorphic)
+- `conditionDist` sniffing a build toolchain from a filename
+- `syncPackageImports` discarding hand-added conditions
+
+Three items outlive the mechanism and want their own issues:
+
+- **`plugin-computer` is untagged**, with a barrel and an unconditioned `#capabilities`. Safe only
+  because its two modules are headless families and its barrel imports no React.
+- **No check that a capabilities barrel implies the `composer-plugin` tag.** Eight plugins have
+  slipped it — google, jmap, lingo, computer, claude-agents, stream-deck, lametric, mobile — three
+  of them in a single day's merges. Until it exists, every merge from main reopens the hole.
+- **Guard-target drift**: 8 guards trace `--to "@dxos/react-ui"` where 79 trace
+  `{react,react-dom}`, so a bare `import from 'react'` passes the narrower ones — the exact leak
+  class DESIGN.md §6.6 catalogues.
+
+The rest (Phase 2's fresh-clone entrypoints and pkg-lint rule, Phase 4's hardening, the
+`plugin-client` timeout, `@dxos/plugin-routine/util` being a convention of one) predate or outlast
+this work and are unblocked by nothing here.

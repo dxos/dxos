@@ -9,7 +9,6 @@ import { type Matcher, type WorkspacePackageResolver, externalKey, matchesKey } 
 import { createImportResolver } from './package-resolution.ts';
 import { parseImportSpecifiers } from './parse-imports.ts';
 
-/** Nearest ancestor directory holding a `package.json`, i.e. the package a file belongs to. */
 const findPackageRoot = (filePath: string): string | null => {
   let dir = path.dirname(filePath);
   for (;;) {
@@ -24,11 +23,6 @@ const findPackageRoot = (filePath: string): string | null => {
   }
 };
 
-/**
- * Recurse into resolved files that belong to workspace `@dxos/*` packages (including
- * in-repo sources). Stop at the matcher target so we do not walk past terminals, and
- * skip third-party packages to keep the crawl fast.
- */
 const shouldRecurseInto = (
   resolved: string,
   matcher: Matcher,
@@ -46,12 +40,8 @@ export type ImportGraph = {
   /**
    * `#`-prefixed specifiers in the traced package's OWN files that failed to resolve, as
    * `<importer> -> <specifier>`. The package under test defines its own subpath imports, so a
-   * failure means the condition set resolves to a file that was never built — and the crawl then
-   * stops at that edge, which would otherwise read as a clean trace. Dependencies are excluded:
-   * a third-party or sibling package may legitimately declare no target for a condition being
-   * tested (`@dxos/crypto`'s `#subtle` has `node`/`browser` and no `default`, so it does not
-   * resolve under workerd), and policing that is a different question from whether this trace
-   * covered what it claims to.
+   * failure means the condition set resolves to a file that was never built, and the crawl stops
+   * at that edge. Only the traced package's own files are policed.
    */
   readonly unresolvedSubpaths: string[];
 };
@@ -88,8 +78,6 @@ export const buildImportGraph = (
     try {
       source = fs.readFileSync(fileKey, 'utf8');
     } catch (err) {
-      // Same reasoning as a parse failure: skipping the file silently removes its subtree and
-      // turns "could not look" into "found nothing", which reads as a pass.
       throw new Error(`failed to read ${fileKey}: ${err instanceof Error ? err.message : String(err)}`);
     }
 
@@ -110,7 +98,6 @@ export const buildImportGraph = (
         unresolvedSubpaths.push(`${fileKey} -> ${specifier}`);
       }
 
-      // Unresolvable bare specifiers (missing install, virtual modules) stay as external leaves.
       if (!specifier.startsWith('.') && !specifier.startsWith('/')) {
         const external = externalKey(specifier);
         deps.add(external);

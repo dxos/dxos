@@ -7,11 +7,6 @@ import path from 'node:path';
 
 const TS_EXTENSIONS = new Set(['.ts', '.tsx', '.mts', '.cts']);
 
-/**
- * Extensions whose contents are JavaScript and therefore have import edges to follow. Anything
- * else a module graph reaches — a stylesheet, an SVG, a `?raw` asset — is a leaf: it carries no
- * edges, so there is nothing to parse and nothing lost by not parsing it.
- */
 const SCRIPT_EXTENSIONS = new Set([...TS_EXTENSIONS, '.js', '.jsx', '.mjs', '.cjs']);
 
 const isScript = (filePath: string): boolean => SCRIPT_EXTENSIONS.has(path.extname(filePath).toLowerCase());
@@ -113,8 +108,6 @@ const collectSpecifiers = (value: unknown, out: Set<string>): void => {
  * the SWC parser. Type-only imports/exports are skipped since they carry no runtime edge.
  */
 export const parseImportSpecifiers = (source: string, filePath: string): string[] => {
-  // A non-script leaf has no edges to contribute; parsing one as JavaScript would fail on its
-  // first token.
   if (!isScript(filePath)) {
     return [];
   }
@@ -122,9 +115,6 @@ export const parseImportSpecifiers = (source: string, filePath: string): string[
   try {
     ast = parseSync(source, parseOptionsFor(filePath));
   } catch (err) {
-    // Returning no specifiers for a *script* drops its entire subtree from the graph, and the
-    // trace then reports "no import paths" — a pass produced by not looking. A guard has to fail
-    // when it cannot reach what it is checking.
     throw new Error(`failed to parse ${filePath}: ${err instanceof Error ? err.message : String(err)}`);
   }
   const specifiers = new Set<string>();

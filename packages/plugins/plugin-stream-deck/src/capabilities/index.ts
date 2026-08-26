@@ -12,10 +12,6 @@ import { StreamDeckCapabilities } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 
-// Surface-independent: the device has to stay live with no surface rendered, so this is gated on
-// spaces being ready rather than on the plugin's own UI appearing. Still browser-only — it renders
-// button frames through `@dxos/react-ui`'s icon registry, and `SpaceCapabilities.Dashboard` is
-// itself browser-only, so under node the requirement could never be met.
 export const BridgeDriver = Capability.lazyModule(
   'BridgeDriver',
   {
