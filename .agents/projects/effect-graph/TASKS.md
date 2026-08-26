@@ -335,5 +335,22 @@ Investigated 2026-08-13 (spike-verified) — full findings in DESIGN.md §app-gr
       pinches: incremental index maintenance; fallback: per-workspace partitioning.
 - [ ] **Upstream ask** — propose a single-clone `Graph.snapshot(mutable)` (today: `endMutation`
       kills the handle, so snapshot+continue costs two clones).
+- [ ] **Upstream ask: split `effect/Graph` by subpath** — `Graph.js` is one 131 KB module holding
+      the algorithms (`dijkstra`, `astar`, `bellmanFord`, `floydWarshall`, `stronglyConnectedComponents`)
+      and the exporters (`toGraphViz`, `toMermaid`) alongside the data structure, so whatever keeps
+      the module live keeps all of it. Composer does exactly that: `effect` is an import-map shared
+      package and `importMapPlugin` emits its wrapper with `preserveSignature: 'strict'`, which pins
+      every export. Measured 2026-08-26 by A/B bundling #12594 against its parent — the boot graph
+      pays 23.5 KB where the API `GraphModel` actually calls shakes to 6.7 KB. Standalone rolldown
+      1.2.4 and a plain `vite build` 8.2.1 both shake it clean (groups configured or not), so this
+      is our packaging and not a rolldown bug; subpaths would cap what a strict wrapper can pin.
+- [ ] **Why is the app graph boot-reachable at all?** — 26.7 KB of `@dxos/app-graph` + `@dxos/graph`
+      ships in the eager boot graph, and it PREDATES #12594 (measured at its parent), so it is not
+      the rebuild's doing. `@dxos/app-framework` has no runtime import of `@dxos/app-graph` and the
+      heavy consumers (plugin-navtree/-deck/-space) are lazy, so the edge is not obvious.
+      `computeBootPartition` walks the PARSE graph, so a barrel-only re-export is enough to group a
+      package into boot even when only lazy code calls it — and the import-map wrapper's strict
+      signature then stops tree-shaking from emptying it. Trace with
+      `DX_TRACE_BOOT_LEAK=1 moon run composer-app:bundle` (targets already added) and cut the edge.
 - [ ] **Adopt shared view helpers (C)** — swap app-graph's local family/equality patterns onto
       the Phase-1 primitives.
