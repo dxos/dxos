@@ -212,11 +212,7 @@ type TaskListGroupLabelProps = ComposableProps;
 const TaskListGroupLabel = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps(props);
   return (
-    <div
-      {...rest}
-      className={mx('col-span-full pt-3 pb-1 text-xs text-subdued uppercase', className)}
-      ref={forwardedRef}
-    >
+    <div {...rest} className={mx('col-span-full pt-3 pb-1 text-sm text-description', className)} ref={forwardedRef}>
       {children}
     </div>
   );
