@@ -52,8 +52,7 @@ const getIPData = Effect.fn(function* (config: Config) {
   // Fetch data if not cached.
   const IPDATA_API_KEY = config.get('runtime.app.env.DX_IPDATA_API_KEY');
   if (!IPDATA_API_KEY) {
-    // An absent key is a normal (offline/local) configuration, not a problem state — keep it off the console.
-    log('DX_IPDATA_API_KEY is not configured; IP geolocation tags will be absent from telemetry');
+    log.warn('DX_IPDATA_API_KEY is not configured; IP geolocation tags will be absent from telemetry');
     return cachedData?.data;
   }
 

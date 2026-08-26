@@ -17,8 +17,7 @@ defaults can be audited against a complete list. Findings live in DESIGN.md.
       DESIGN.md §Direct network call sites. Client stack: zero calls without
       edge URL; observability has 3 open consent-gating issues (ipdata
       pre-`disabled` ordering, OtelMetrics constructor-started exporter,
-      `posthog.init` ignoring `disabled`); its missing-key boot warn was fixed
-      in this branch.
+      `posthog.init` ignoring `disabled`), plus a missing-key boot warn.
 - [x] **Inventory config plumbing for the edge endpoint** —
       DESIGN.md §Config plumbing & defaults. SDK boot is clean; violations were
       in @dxos/config (defaultConfig, configPreset, EDGE_SERVICE_DEFAULTS) +
@@ -33,17 +32,15 @@ warnings/errors.
 
 - [x] **Determine current offline behavior** — SDK boot is already silent and
       clean (every edge site gated; signaling falls back to memory; the P2P
-      note logs at debug). App-level noise: ipdata missing-key boot warn
-      (fixed in this branch — downgraded to debug) and the module-loader
-      capability warn (Phase 4).
+      note logs at debug). App-level noise: ipdata missing-key boot warn and
+      the module-loader capability warn (both Phase 4).
 - [x] **Add an automated offline test** —
       [client-offline.test.ts](../../../packages/sdk/client/src/client/client-offline.test.ts):
       empty `Config()`, identity + space + object round-trip, `fetch`/
       `WebSocket`/isomorphic-ws intercepted, all WARN+ log entries captured;
       asserts zero network calls and zero warnings. Green.
-- [x] **Fix each offending site** — SDK boot path had none. Downgraded the
-      ipdata missing-key `log.warn` → debug (`ip-data.ts`); remaining app-level
-      items are Phase 4 follow-ups.
+- [x] **Fix each offending site** — SDK boot path had none; the app-level items
+      are Phase 4 follow-ups.
 
 ## Phase 3: No edge-endpoint defaults
 
@@ -100,6 +97,10 @@ warnings/errors.
       `disabled` check; `OtelMetrics` starts its 60s exporter in the
       constructor bypassing `if (disabled)`; `posthog.init` fires regardless of
       `disabled` (only autocapture is suppressed).
+- [ ] **ipdata missing-key boot warn** — `ip-data.ts` `log.warn`s on every boot
+      when `DX_IPDATA_API_KEY` is absent, which is a normal configuration. A
+      downgrade to debug was reverted out of this branch by request, so it stays
+      open here.
 - [ ] **plugin-script `?? ''` masking** — hooks/deploy.ts:128,
       skills/functions/deploy.ts:71, FunctionBinding.tsx:30 substitute empty
       string for a missing edge URL; surface absence instead.

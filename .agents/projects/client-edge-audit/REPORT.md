@@ -66,11 +66,10 @@ New test: [`packages/sdk/client/src/client/client-offline.test.ts`](../../../pac
 - Asserts both lists are empty. **Green on first run** — the SDK path needed no
   fixes.
 
-One offline-noise fix landed: the ipdata provider's every-boot
-`log.warn('DX_IPDATA_API_KEY is not configured…')` is now debug-level — a
-missing telemetry key is a normal configuration, not a problem state.
-
 Known remaining app-level (Composer, not SDK) noise, recorded in Phase 4:
+the ipdata provider's every-boot
+`log.warn('DX_IPDATA_API_KEY is not configured…')`, which a downgrade to debug
+would silence but which is left alone here by request; and
 `module-loader.ts:497` warns when a module legitimately contributes `[]`
 because its endpoint is absent (plugin-file edge backend, plugin-client hub
 client, now plugin-wnfs blockstore).
