@@ -697,6 +697,54 @@ describe('TriggerDispatcher', () => {
         Effect.provide(TestLayer({ timeControl: 'natural', livePollInterval: Duration.seconds(1) })),
       ),
     );
+
+    // The stop path leaves `_timerFiber` empty via a finalizer on the loop itself, so a second
+    // start has to fork a fresh loop rather than find a stale handle in the slot. Going one cycle
+    // further than the test above is what distinguishes a re-forkable timer from a one-shot.
+    it.live(
+      're-instates the timer when a trigger comes back into scope after the set emptied',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const dispatcher = yield* TriggerDispatcher;
+          const functionObj = yield* registerOperation(Reply);
+          const makeTrigger = () =>
+            Trigger.make({
+              runnable: Ref.make(functionObj),
+              enabled: true,
+              spec: Trigger.specTimer('* * * * *'),
+            });
+
+          yield* dispatcher.start();
+
+          // Stopped in a finalizer: a failure below would otherwise leave a detached timer fiber
+          // and the reactive subscriptions running into the next test.
+          yield* Effect.gen(function* () {
+            expect(yield* waitFor(() => dispatcher.timerScheduled, 10)).toBe(false);
+
+            const first = makeTrigger();
+            yield* Database.add(first);
+            yield* Database.flush();
+            expect(yield* waitFor(() => dispatcher.timerScheduled)).toBe(true);
+
+            yield* Database.remove(first);
+            yield* Database.flush();
+            expect(yield* waitFor(() => !dispatcher.timerScheduled)).toBe(true);
+
+            // The assertion this test exists for: a loop forks again after a prior one was stopped.
+            const second = makeTrigger();
+            yield* Database.add(second);
+            yield* Database.flush();
+            expect(yield* waitFor(() => dispatcher.timerScheduled)).toBe(true);
+
+            // And the restarted loop is still gated, rather than running on past its working set.
+            yield* Database.remove(second);
+            yield* Database.flush();
+            expect(yield* waitFor(() => !dispatcher.timerScheduled)).toBe(true);
+          }).pipe(Effect.ensuring(dispatcher.stop()));
+        },
+        Effect.provide(TestLayer({ timeControl: 'natural', livePollInterval: Duration.seconds(1) })),
+      ),
+    );
   });
 
   describe('Feed Triggers', () => {
