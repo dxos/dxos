@@ -5,10 +5,10 @@
 # - Rewrote .github/ path references to .depot/ (Dockerfile itself stays at .github/Dockerfile)
 # - Changed GitHub runs-on labels to their Depot equivalents
 # - Swapped docker/build-push-action for depot/build-push-action (Depot's own container-build
-#   product - up to 40x faster, native multi-platform, per wittjosiah's request), needing a new
-#   DEPOT_BUILD_TOKEN secret (project token for project mld2ddpgxv, created via the Depot
-#   dashboard - there's no CLI path to create one). Named DEPOT_BUILD_TOKEN rather than
-#   DEPOT_TOKEN: that name is reserved by Depot CI itself.
+#   product - up to 40x faster, native multi-platform, per wittjosiah's request), pushing to a new
+#   Depot project (dxos-docker-image, mld2ddpgxv). No token: input needed - tested with a real
+#   `depot ci run` (push:false, https://depot.dev/orgs/t8fblrl00n/workflows/jhr9qv6ppw): Depot CI's
+#   own ambient job identity authenticates to the project without a separate DEPOT_TOKEN/PAT.
 # - Swapped the GHCR login password from secrets.GITHUB_TOKEN to secrets.GH_DXOS_BOT_PAT: GHCR only
 #   accepts PATs, not the GitHub App tokens Depot CI's jobs get (flagged by CodeRabbit on #12779,
 #   same root cause that kept publish-all.yml on GitHub Actions). Reuses dxos-bot's existing PAT
@@ -48,11 +48,7 @@ jobs:
         with:
           registry: ghcr.io
           username: dxos-bot
-          # TODO(wittjosiah): confirm dxos-bot's PAT actually has write:packages - it's used
-          # elsewhere for git/npm operations, not yet confirmed for GHCR. GHCR doesn't authenticate
-          # GitHub App tokens like the one Depot CI's jobs get, so secrets.GITHUB_TOKEN (which
-          # worked on GitHub Actions) can't be swapped in as-is.
-          password: ${{ secrets.GH_DXOS_BOT_PAT }}
+          password: ${{ secrets.GH_DXOS_BOT_PAT }} # confirmed working: "Login Succeeded!" on a real depot ci run.
       - name: Set suffix if on branch
         run: |
           if [[ "${GITHUB_REF}" != "refs/heads/main" ]]; then
@@ -63,7 +59,6 @@ jobs:
         uses: depot/build-push-action@v1
         with:
           project: mld2ddpgxv
-          token: ${{ secrets.DEPOT_BUILD_TOKEN }}
           context: .github
           file: .github/Dockerfile
           push: true
