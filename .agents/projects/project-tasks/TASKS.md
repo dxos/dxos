@@ -42,6 +42,11 @@ be visible in the UI, closing the gaps the storybook audit surfaced.
 - [ ] **Promote-task verb** — outside delegation the agent still cannot create
       a durable Task (carried from plugin-projects; delegation is currently the
       only promotion path).
+- [ ] **Set taskSet for Chat objects that are children of Projects** — stamp
+      `chat.taskSet` with the project's set when the chat is parented, instead
+      of resolving through the parent walk at read time (`peekProject`), so the
+      ref is durable and the UI needs no reactive parent lookup (closes the
+      TODO on `ChatTaskList`).
 
 ### References
 
