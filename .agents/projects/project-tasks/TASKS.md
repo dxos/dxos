@@ -49,11 +49,8 @@ be visible in the UI, closing the gaps the storybook audit surfaced.
       TODO on `ChatTaskList`).
 - [ ] **Trigger sub-agents from the task row** — status, dependencies and the
       spinner all render; what is left is starting a delegation from the row
-      itself rather than through `/task:run`. (Was: "show status, dependencies,
-      and trigger sub-agents".)
-      — surface per-task run state (started/failed, active sub-agent) and
-      inter-task dependencies in the TaskList UI, and let a task row launch a
-      sub-agent directly (the delegation loop without going through chat).
+      itself rather than through `/task:run` — the delegation loop without going
+      through chat. (Was: "show status, dependencies, and trigger sub-agents".)
 - [ ] **Atomic task-set initialization** — `ensureTaskSet` creates the set and
       writes the owner ref in separate operations, so concurrent peers can race
       and orphan a set (CodeRabbit on #12752); needs a create-if-absent
