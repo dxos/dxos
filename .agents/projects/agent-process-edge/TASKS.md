@@ -28,7 +28,7 @@ is bumped to that commit. Write-ahead is fine; verification is not.
 - [x] `DurableObjectKeyValueStore`: `effect` `KeyValueStore` over `ctx.storage` — this is what lets
       `ProcessManagerImpl` run inside a DO unchanged (D5).
 - [x] `TestProcess` in the edge source tree — inputs→outputs, one RPC that reads state accumulated
-      from previous inputs (so a pass proves the call reached *that* instance), one alarm, explicit
+      from previous inputs (so a pass proves the call reached _that_ instance), one alarm, explicit
       succeed/fail. Declares no services, so a test on it can only fail on the protocol or the host.
 - [ ] Bump the `dxos` catalog to PR #12765's published commit.
 - [ ] Built-in process registry keyed by `Process.key` (`TestProcess` + `AgentProcess`).
@@ -40,8 +40,8 @@ is bumped to that commit. Write-ahead is fine; verification is not.
       from the EDGE bindings. `FunctionContext` in `@dxos/compute-runtime`'s `protocol.ts` already
       assembles exactly this set for invoked functions but does not export it; either export it or
       lift the layer builder. This is the largest remaining unknown.
-- [ ] `ProcessObject` class in `compute-service/wrangler.jsonc`: the `exports` map (`storage:
-      "sqlite"`) and a binding in the top-level plus all four env blocks, per
+- [ ] `ProcessObject` class in `compute-service/wrangler.jsonc`: a sqlite-storage entry in the
+      `exports` map and a binding in the top-level plus all four env blocks, per
       `scripts/check-wrangler-bindings.mjs`.
 - [ ] `TriggersDispatcher`: own the per-space process index (spawn/list/terminate/reap) and expose
       it over RPC; add the new methods to `rpcMethods`.
