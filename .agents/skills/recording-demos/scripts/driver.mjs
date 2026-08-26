@@ -220,21 +220,38 @@ const handlers = {
   },
 };
 
+/** A command is a few hundred bytes; anything larger is a mistake or an attempt to exhaust the heap. */
+const MAX_BODY = 64 * 1024;
+
 const server = createServer((request, response) => {
+  // Headers are complete before the first `data` event, so the token is checked before a single byte of
+  // body is buffered — an unauthorized caller cannot make this process accumulate anything.
+  if (request.headers[TOKEN_HEADER] !== token) {
+    response.writeHead(403, { 'content-type': 'application/json' });
+    response.end(JSON.stringify({ ok: false, error: `missing or bad ${TOKEN_HEADER}` }));
+    return request.destroy();
+  }
+
   let body = '';
-  request.on('data', (chunk) => (body += chunk));
+  request.on('data', (chunk) => {
+    body += chunk;
+    if (body.length > MAX_BODY) {
+      response.writeHead(413, { 'content-type': 'application/json' });
+      response.end(JSON.stringify({ ok: false, error: `body exceeds ${MAX_BODY} bytes` }));
+      request.destroy();
+    }
+  });
   request.on('end', async () => {
+    if (request.destroyed) {
+      return;
+    }
+
     let command;
     try {
       command = JSON.parse(body || '{}');
     } catch (error) {
       response.writeHead(400, { 'content-type': 'application/json' });
       return response.end(JSON.stringify({ ok: false, error: `bad json: ${error.message}` }));
-    }
-
-    if (request.headers[TOKEN_HEADER] !== token) {
-      response.writeHead(403, { 'content-type': 'application/json' });
-      return response.end(JSON.stringify({ ok: false, error: `missing or bad ${TOKEN_HEADER}` }));
     }
 
     const handler = handlers[command.op];
