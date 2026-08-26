@@ -26,7 +26,7 @@ Goals:
 > truth for those hosts, and `EDGE_SERVICE_PATHS` for the prefixes of the six services a client
 > holds an endpoint for (`/calls`, `/image`, `/discord`, `/cors`, `/introspect/mcp`, and
 > transcription, which shares calls-service's `/calls`). The prefixes edge serves itself — `/ai`,
-> `/hub`, `/db`, `/api/sandbox` and the rest — are not in that map; `dxos/edge` →
+> `/hub`, `/db`, `/sandbox` and the rest — are not in that map; `dxos/edge` →
 > `docs/audits/edge-hosts.md` is the full prefix inventory and retirement order.
 >
 > The per-worker `*.dxos.network` and `*.dxos.workers.dev` hostnames in the tables below are the

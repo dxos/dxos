@@ -15,7 +15,7 @@ runtime:
       url: https://dxos.network/
     iceProviders:
       - urls: https://dxos.network/ice
-    # A bare edge origin: SandboxClient appends /api/sandbox itself.
+    # A bare edge origin: SandboxClient appends /sandbox itself.
     sandbox:
       url: https://dxos.network
     ipfs:

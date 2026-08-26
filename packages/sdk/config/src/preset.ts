@@ -15,7 +15,7 @@ export type ConfigPresetOptions = {
   edge?: 'local' | 'dev' | 'preview' | 'main' | 'production';
 
   /**
-   * Sandbox service (standalone worker; API at /api/sandbox).
+   * Sandbox service, reached at `<edge>/sandbox`.
    */
   sandbox?: 'local' | 'dev' | 'main' | 'production';
 };
@@ -31,7 +31,7 @@ const edgeUrl = (edge: NonNullable<ConfigPresetOptions['edge']>) =>
     Match.exhaustive,
   );
 
-// A bare edge origin: `SandboxClient` appends `/api/sandbox` itself.
+// A bare edge origin: `SandboxClient` appends `/sandbox` itself.
 const sandboxUrl = (sandbox: NonNullable<ConfigPresetOptions['sandbox']>) =>
   Match.value(sandbox).pipe(
     Match.when('local', () => 'http://localhost:8792'),
