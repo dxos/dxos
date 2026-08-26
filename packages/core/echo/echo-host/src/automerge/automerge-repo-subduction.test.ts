@@ -9,6 +9,7 @@ import {
   type DocumentId,
   type Message,
   type PeerId,
+  type StorageAdapterInterface,
   type SubductionPolicy,
   generateAutomergeUrl,
   initSubduction,
@@ -187,6 +188,97 @@ describe.skipIf(process.env.CI)('AutomergeRepo with Subduction', () => {
       // round-trip can hit its internal timeout (~5 s) and only the heal retry succeeds,
       // pushing past the original 5 s window. See the same fix on `accept/connect syncs`.
       await expect.poll(() => peer2Handle.doc(), { timeout: 10_000 }).toEqual(hostHandle.doc());
+    });
+
+    // These two tests measure whether A's data reaches B's SUBDUCTION STORAGE,
+    // not whether B builds a DocHandle. `repo.handles` is only populated for
+    // documents the peer itself asked for, so a handle assertion cannot see an
+    // unrequested push at all. B's storage is also the honest analogue of the
+    // edge, which persists what is pushed to it into `sub_commits` /
+    // `sub_fragments` without ever calling `find()`.
+    // Counts only the record families that carry document bytes. A bare
+    // `['subduction']` prefix also matches each peer's own bookkeeping
+    // (`subduction-ids`, `subduction-remote-heads`), which a receiver writes
+    // even when no data arrived — so counting that would make the assertion
+    // pass vacuously.
+    const countSubductionRecords = async (storage: StorageAdapterInterface) => {
+      const [commits, fragments] = await Promise.all([
+        storage.loadRange(['subduction', 'commits']),
+        storage.loadRange(['subduction', 'fragments']),
+      ]);
+      return commits.length + fragments.length;
+    };
+
+    // Control: the doc is created while already connected, so A's save-time
+    // push has a peer to reach. Establishes that an unrequested push does land
+    // in a passive receiver's storage — without this, the repro below proves
+    // nothing.
+    test('control: freshly created document reaches a passive peer storage', { timeout: 15_000 }, async () => {
+      const storageA = await createSqliteAdapter();
+      const storageB = await createSqliteAdapter();
+
+      const { repos, adapters } = await createRepoTopology({
+        peers: ['A', 'B'],
+        connections: [['A', 'B']],
+        options: { storages: [storageA, storageB], roles: { A: 'connect', B: 'accept' } },
+      });
+      const [repoA] = repos;
+      await connectAdapters(adapters);
+
+      expect(await countSubductionRecords(storageB)).to.equal(0);
+
+      repoA.create<{ text?: string }>({ text: 'created-online' });
+      await waitForSubductionSave();
+
+      await expect.poll(() => countSubductionRecords(storageB), { timeout: 10_000 }).toBeGreaterThan(0);
+    });
+
+    // Repro for the "one dropped push is permanent" failure seen in production
+    // (space BD4XVOYP…, doc 2swhv3e…): a doc created and persisted while
+    // offline is never re-offered after a reload, because `#saveNewCommits`
+    // seeds `knownHashes` from disk (DXOS patch, subduction/source.js:442-455)
+    // and therefore finds nothing new to save — and propagation is downstream
+    // of saving. Differs from 'documents loaded from disk get replicated'
+    // above only in that the receiver never calls `find()`; the real edge is
+    // `accept`-only and never asks, so delivery has to come from A's push.
+    test('reloaded document reaches a passive peer storage', { timeout: 15_000 }, async () => {
+      const storageA = await createSqliteAdapter();
+      const storageB = await createSqliteAdapter();
+      let url: AutomergeUrl | undefined;
+
+      // (1) A creates the doc while offline and persists it. Its only
+      // save-time push happens here, with no peer connected to receive it.
+      {
+        const offlineA = createRepo({ network: [], storage: storageA }, { registerCleanup: false });
+        const handle = offlineA.create<{ text?: string }>({ text: 'persisted-offline' });
+        url = handle.url;
+        await offlineA.flush();
+        await waitForSubductionSave();
+        await shutdownRepo(offlineA);
+      }
+
+      // `Repo.shutdown()` closes its storage adapter; reopen before reusing it.
+      await storageA.open();
+
+      const { repos, adapters } = await createRepoTopology({
+        peers: ['A', 'B'],
+        connections: [['A', 'B']],
+        options: { storages: [storageA, storageB], roles: { A: 'connect', B: 'accept' } },
+      });
+      const [repoA] = repos;
+
+      // (2) A loads the doc again — this seeds `knownHashes` from the on-disk
+      // commit and fragment ids.
+      const handleA = await repoA.find<{ text?: string }>(url as AutomergeUrl);
+      await handleA.whenReady();
+      expect(handleA.doc()?.text).to.equal('persisted-offline');
+
+      expect(await countSubductionRecords(storageB)).to.equal(0);
+
+      // (3) Only now connect. B must receive the doc from A's push alone.
+      await connectAdapters(adapters);
+
+      await expect.poll(() => countSubductionRecords(storageB), { timeout: 10_000 }).toBeGreaterThan(0);
     });
 
     test('client creates doc and Repo persists it to disk', async () => {
