@@ -7,16 +7,16 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 
-import { createEnvironment, createSession } from '#api';
+import { createEnvironment, createSession, createVault, createVaultCredential } from '#api';
 import { ClaudeAgentOperation, ClaudeAgentSession, ClaudeManagedAgent } from '#types';
 
-import { DEFAULT_ENVIRONMENT_NAME } from '../constants';
-import { getApiKey } from '../credentials';
+import { DEFAULT_ENVIRONMENT_NAME, SESSION_VAULT_PREFIX } from '../constants';
+import { getApiKey, toVaultCredentials } from '../credentials';
 import { AgentNotDeployedError } from '../errors';
 
 const handler: Operation.WithHandler<typeof ClaudeAgentOperation.StartSession> = ClaudeAgentOperation.StartSession.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ agent, message, title, environmentId }) {
+    Effect.fn(function* ({ agent, message, title, environmentId, credentials }) {
       const agentObj = yield* Database.load(agent);
       const agentId = ClaudeManagedAgent.getAgentId(agentObj);
       if (!agentId) {
@@ -36,11 +36,21 @@ const handler: Operation.WithHandler<typeof ClaudeAgentOperation.StartSession> =
       }
 
       const sessionTitle = title ?? `${agentObj.name} session`;
+
+      // Created for every session, credentials or not: `vault_ids` is fixed at session creation, so
+      // a session started without a vault could never be given a credential mid-run.
+      const vault = yield* createVault(apiKey, `${SESSION_VAULT_PREFIX}-${agentObj.name}`);
+      const bound = yield* toVaultCredentials(credentials ?? []);
+      yield* Effect.forEach(bound, (credential) => createVaultCredential(apiKey, vault.id, credential), {
+        discard: true,
+      });
+
       const response = yield* createSession(apiKey, {
         agentId,
         environmentId: environment,
         title: sessionTitle,
         message,
+        vaultIds: [vault.id],
       });
 
       const session = yield* Database.add(
@@ -49,6 +59,7 @@ const handler: Operation.WithHandler<typeof ClaudeAgentOperation.StartSession> =
           agent: Ref.make(agentObj),
           sessionId: response.id,
           environmentId: environment,
+          vaultId: vault.id,
           status: response.status,
         }),
       );
@@ -58,6 +69,7 @@ const handler: Operation.WithHandler<typeof ClaudeAgentOperation.StartSession> =
         sessionId: response.id,
         environmentId: environment,
         provisionedEnvironment: provisioned,
+        boundCredentials: bound.map((credential) => credential.auth.secret_name),
       };
     }),
   ),

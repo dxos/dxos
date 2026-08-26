@@ -3,13 +3,40 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
 import { proxyFetchLegacy } from '@dxos/edge-client';
 
-import { ANTHROPIC_API_URL, ANTHROPIC_VERSION, MANAGED_AGENTS_BETA, REQUEST_TIMEOUT_MS } from '../constants';
+import {
+  ANTHROPIC_API_URL,
+  ANTHROPIC_VERSION,
+  MANAGED_AGENTS_BETA,
+  REQUEST_RETRIES,
+  REQUEST_RETRY_DELAY,
+  REQUEST_TIMEOUT_MS,
+} from '../constants';
 import { ClaudeAgentApiError } from '../errors';
-import { type AgentConfig, AgentResponse, EnvironmentResponse, EventPage, Ignored, SessionResponse } from './types';
+import {
+  type AgentConfig,
+  AgentResponse,
+  CredentialPage,
+  CredentialResponse,
+  EnvironmentResponse,
+  type EnvironmentVariableCredential,
+  EventPage,
+  Ignored,
+  SessionResponse,
+  VaultResponse,
+} from './types';
+
+/**
+ * A transport failure (status 0) or a server-side/throttling response can succeed on a later
+ * attempt; a 4xx is the caller's own request and never will, so retrying one only burns the
+ * operation's time budget.
+ */
+export const isRetryable = (error: ClaudeAgentApiError): boolean =>
+  error.status === 0 || error.status === 429 || error.status >= 500;
 
 type Request<A> = {
   apiKey: string;
@@ -51,6 +78,12 @@ export const request = <A>({ apiKey, method, path, schema, body }: Request<A>): 
     // A transport failure (offline, abort, proxy error) has no HTTP status of its own.
     catch: (error) => (error instanceof ClaudeAgentApiError ? error : new ClaudeAgentApiError(0, String(error))),
   }).pipe(
+    // Fixed rather than exponential backoff: the control plane is called from an interactive
+    // operation, so a bounded, predictable delay matters more than politeness under sustained load.
+    Effect.retry({
+      schedule: Schedule.fixed(REQUEST_RETRY_DELAY).pipe(Schedule.upTo({ times: REQUEST_RETRIES })),
+      while: isRetryable,
+    }),
     Effect.flatMap((json) =>
       Schema.decodeUnknownEffect(schema)(json).pipe(
         Effect.mapError((error) => new ClaudeAgentApiError(0, `Unexpected response shape: ${error}`)),
@@ -96,7 +129,7 @@ export const createEnvironment = (
 /** Starts a session against a deployed agent, optionally seeding it with the first user message. */
 export const createSession = (
   apiKey: string,
-  params: { agentId: string; environmentId: string; title?: string; message?: string },
+  params: { agentId: string; environmentId: string; title?: string; message?: string; vaultIds?: string[] },
 ): Effect.Effect<SessionResponse, ClaudeAgentApiError> =>
   request({
     apiKey,
@@ -106,6 +139,7 @@ export const createSession = (
     body: {
       agent: params.agentId,
       environment_id: params.environmentId,
+      ...(params.vaultIds?.length ? { vault_ids: params.vaultIds } : {}),
       ...(params.title ? { title: params.title } : {}),
       ...(params.message
         ? { initial_events: [{ type: 'user.message', content: [{ type: 'text', text: params.message }] }] }
@@ -138,3 +172,62 @@ export const listEvents = (
   limit: number,
 ): Effect.Effect<EventPage, ClaudeAgentApiError> =>
   request({ apiKey, method: 'GET', path: `/v1/sessions/${sessionId}/events?limit=${limit}`, schema: EventPage });
+
+/**
+ * Creates the vault a session's credentials live in. One vault per session: it bounds what a live
+ * credential edit can reach, and archiving it retires every secret that session was given.
+ */
+export const createVault = (apiKey: string, name: string): Effect.Effect<VaultResponse, ClaudeAgentApiError> =>
+  request({ apiKey, method: 'POST', path: '/v1/vaults', schema: VaultResponse, body: { name } });
+
+/** Lists a vault's credentials. Secret values are write-only, so only the names come back. */
+export const listVaultCredentials = (
+  apiKey: string,
+  vaultId: string,
+): Effect.Effect<CredentialPage, ClaudeAgentApiError> =>
+  request({ apiKey, method: 'GET', path: `/v1/vaults/${vaultId}/credentials`, schema: CredentialPage });
+
+/** Stores an environment-variable credential, keyed by its env var name within the vault. */
+export const createVaultCredential = (
+  apiKey: string,
+  vaultId: string,
+  credential: EnvironmentVariableCredential,
+): Effect.Effect<CredentialResponse, ClaudeAgentApiError> =>
+  request({
+    apiKey,
+    method: 'POST',
+    path: `/v1/vaults/${vaultId}/credentials`,
+    schema: CredentialResponse,
+    body: credential,
+  });
+
+/**
+ * Rotates a stored credential's secret in place. `secret_name` is immutable, so this is the only way
+ * to change the value a running session resolves without tearing the session down.
+ */
+export const updateVaultCredential = (
+  apiKey: string,
+  vaultId: string,
+  credentialId: string,
+  credential: EnvironmentVariableCredential,
+): Effect.Effect<CredentialResponse, ClaudeAgentApiError> =>
+  request({
+    apiKey,
+    method: 'POST',
+    path: `/v1/vaults/${vaultId}/credentials/${credentialId}`,
+    schema: CredentialResponse,
+    body: credential,
+  });
+
+/** Archives a credential, purging the secret and freeing its name for a replacement. */
+export const archiveVaultCredential = (
+  apiKey: string,
+  vaultId: string,
+  credentialId: string,
+): Effect.Effect<unknown, ClaudeAgentApiError> =>
+  request({
+    apiKey,
+    method: 'POST',
+    path: `/v1/vaults/${vaultId}/credentials/${credentialId}/archive`,
+    schema: Ignored,
+  });

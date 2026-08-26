@@ -56,6 +56,7 @@ type ClaudeAgentSession
     title: string
     agent: Ref<ClaudeManagedAgent>
     environmentId: string
+    vaultId?: string             # vlt_… holding the credentials bound to the run
     status?: string              # last observed API status
     stopReason?: string          # why the agent last went idle
 ```
@@ -132,11 +133,18 @@ feat F-4: Sessions
       is added to the space keyed by the returned session id
 
   req F-4.4:
+    when: Start Claude Agent Session is invoked
+    then: |
+      a vault is created for the run and passed as the session's only `vault_ids`
+      entry — always, credentials or not, since `vault_ids` is fixed at session
+      creation — and its id is stored on the ClaudeAgentSession
+
+  req F-4.5:
     when: Send Message To Claude Agent is invoked
     then: a `user.message` event is posted to the session; the operation does not
           wait for the agent to reply
 
-  req F-4.5:
+  req F-4.6:
     when: Get Claude Agent Transcript is invoked
     then: |
       the session state and its events are read, the object's status and
@@ -148,7 +156,7 @@ feat F-5: Skill
 
   req F-5.1:
     when: plugin is activated
-    then: the org.dxos.skill.claudeAgents skill is contributed with all six
+    then: the org.dxos.skill.claudeAgents skill is contributed with all eight
           operations as tools
 
   req F-5.2:
@@ -175,6 +183,44 @@ feat F-6: Credentials
   req F-6.2:
     when: the API returns a non-2xx response
     then: the operation fails with ClaudeAgentApiError carrying the status and body
+
+  req F-6.4:
+    when: a request fails on transport, 429 or 5xx
+    then: |
+      it is retried up to three times with a fixed one-second delay; a 4xx other
+      than 429 fails immediately, since the request itself is what was rejected
+```
+
+```mdl
+feat F-7: Session credentials
+
+  req F-7.1:
+    when: Start Claude Agent Session is invoked with `credentials`
+    then: |
+      each referenced AccessToken is resolved through the credentials service and
+      stored in the session's vault as an `environment_variable` credential named
+      by `as`, limited to `scope` (defaulting to the token's own source); the
+      operation returns the names bound and never a value
+
+  req F-7.2:
+    when: Set Claude Agent Session Credentials is invoked with a name already bound
+    then: |
+      the stored credential's secret is rotated in place rather than added a
+      second time (names are unique within a vault), and the change takes effect
+      on the running session's next operation without restarting it
+
+  req F-7.3:
+    when: Set or Revoke Claude Agent Session Credentials is invoked for a session
+          with no vault id
+    then: the operation fails with SessionVaultMissingError, since `vault_ids`
+          cannot be added to an existing session
+
+  req F-7.4:
+    when: Revoke Claude Agent Session Credentials is invoked
+    then: |
+      each named credential is archived, purging the secret and freeing the name;
+      a name that is not bound fails with CredentialNotBoundError rather than
+      reporting a revocation that did not happen
 ```
 
 ## Acceptance
@@ -204,6 +250,15 @@ test T-3: Transcript keeps prose only
   then:
     - only the user and agent messages remain, in order
     - an agent.message with no text block is dropped
+```
+
+```mdl
+test T-4: Retryable statuses
+  given: ClaudeAgentApiError values with statuses 0, 429, 503, 400, 401 and 404
+  when: isRetryable is applied
+  then:
+    - 0, 429 and 503 are retryable
+    - 400, 401 and 404 are not
 ```
 
 ---

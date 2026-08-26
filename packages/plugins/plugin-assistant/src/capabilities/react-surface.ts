@@ -123,8 +123,14 @@ export default Capability.makeModule(() =>
         id: 'integrationPrompt',
         filter: Surface.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'integration-prompt'),
         component: IntegrationPrompt,
-        // `data.data` is model-supplied JSON (untyped); narrow `service` before use.
-        props: ({ data }) => ({ service: typeof data.data?.service === 'string' ? data.data.service : undefined }),
+        // `data.data` is model-supplied JSON (untyped); narrow every field before use.
+        props: ({ data }) => ({
+          service: typeof data.data?.service === 'string' ? data.data.service : undefined,
+          scopes: Array.isArray(data.data?.scopes)
+            ? data.data.scopes.filter((scope): scope is string => typeof scope === 'string')
+            : undefined,
+          reason: typeof data.data?.reason === 'string' ? data.data.reason : undefined,
+        }),
       }),
       Surface.create({
         id: 'triggerStatus',
