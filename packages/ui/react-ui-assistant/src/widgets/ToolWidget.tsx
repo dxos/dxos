@@ -56,7 +56,7 @@ export const ToolWidget = ({ view, children }: ToolWidgetProps) => {
           push(block.toolCallId, {
             title: tool?.description ?? [t('tool-call.label'), block.name].filter(Boolean).join(' '),
             icon: block.operationIcon,
-            // Show the call's params; the block's transport metadata is noise to the reader.
+            // Show the call's params rather than the block's transport metadata.
             content: safeParseJson(block.input) ?? (block.input || {}),
           });
           break;
