@@ -149,6 +149,13 @@ Each is independent of the others; none is started.
       `decorateMarkdown`), then linkify issue references intelligently: `#123`
       becomes a link to the PR/issue in the relevant repo, with the repo
       resolved from context rather than hard-coded.
+- [ ] **Outliner menu popover has no arrow** — the popover opened from the
+      outliner's floating menu button renders without the pointer triangle, so
+      it reads as detached from its trigger. The trigger is the `dx-anchor`
+      built in `ui-editor`'s outliner `menu.ts` (which fires
+      `dx-anchor-activate`); `Popover.Arrow` (`popover.arrow` in the theme)
+      exists, so check whether the surface that answers the activation renders
+      one at all.
 - [ ] **Autolink bare URLs in chat markdown** — a naked `https://…` in a message
       should render as an anchor, not plain text. remark-gfm's autolink literal
       covers the common case, so first establish whether the thread renders
