@@ -20,6 +20,17 @@ export const EdgeServiceName = Object.freeze({
 export type EdgeServiceName = (typeof EdgeServiceName)[keyof typeof EdgeServiceName];
 
 /**
+ * The EDGE entrypoint per environment. `local` is `moon run edge:dev`, and `main.dxos.network`
+ * remains an alias of `preview` for clients in the field.
+ */
+export const EDGE_URLS = Object.freeze({
+  local: 'http://localhost:8787',
+  dev: 'https://dev.dxos.network',
+  preview: 'https://preview.dxos.network',
+  production: 'https://dxos.network',
+} as const);
+
+/**
  * Canonical dev/test default endpoints for EDGE services.
  * Single source of truth for the URLs previously hard-coded across plugins.
  * Production values are supplied per-app via `dx.yml` (`runtime.services.edgeServices`).
