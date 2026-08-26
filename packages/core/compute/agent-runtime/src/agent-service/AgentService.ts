@@ -31,11 +31,16 @@ import { AGENT_PROCESS_KEY, AgentProcess } from './agent-process';
 import { type DelegationStrategy } from './delegation-strategy';
 import { type MakeTurnProducer } from './turn-producer';
 
-/** The RPC control surface declared by {@link AgentProcess}, recovered from the executable type. */
-type AgentRpcs = ReturnType<typeof AgentProcess> extends Process.Process<any, any, any, infer Rpcs> ? Rpcs : never;
-
-/** Live handle to a spawned {@link AgentProcess}, carrying its `HarnessControl` RPC surface. */
-type AgentHandle = ProcessManager.Handle<string | ContentBlock.Any[], void, AgentRpcs>;
+/**
+ * Live handle to a spawned {@link AgentProcess}, carrying its input, output and `HarnessControl` RPC
+ * surface. Every parameter is recovered from the process definition rather than restated here: the
+ * input type is derived from the definition's schema, so writing it out by hand drifts (the schema's
+ * block array is `readonly`).
+ */
+type AgentHandle =
+  ReturnType<typeof AgentProcess> extends Process.Process<infer Input, infer Output, any, infer Rpcs>
+    ? ProcessManager.Handle<Input, Output, Rpcs>
+    : never;
 
 const isTerminalProcess = (state: Process.State): boolean =>
   state === Process.State.SUCCEEDED || state === Process.State.FAILED || state === Process.State.TERMINATED;

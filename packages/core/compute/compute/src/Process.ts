@@ -237,11 +237,11 @@ export interface Process<
 
   /**
    * Codecs for the process's inputs and outputs, from {@link MakeProcessOpts}. Exposed on the
-   * interface so a caller that moves an input across a boundary (a remote runtime) can encode it
+   * interface so a caller that moves a value across a boundary (a remote runtime) can encode it
    * with the definition's own schema rather than assuming the value is already JSON.
    */
-  readonly input: Schema.Codec<any, any>;
-  readonly output: Schema.Codec<any, any>;
+  readonly input: Schema.Codec<_Input, any>;
+  readonly output: Schema.Codec<_Output, any>;
 
   // Runtime RPC group, stored as `any`. `RpcGroup`/`RpcClient` are invariant in their type
   // argument (and `Callbacks.rpcHandlers` is contravariant in it), so referencing `_Rpcs` in the
