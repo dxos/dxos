@@ -465,6 +465,34 @@ export class AutomergeHost extends Resource {
     return Object.keys(this._repo.handles).length;
   }
 
+  /**
+   * Cached handles owned by one space — residency, not the space's document count.
+   *
+   * Counted by testing the space's collection state (which survives handle eviction, and is the
+   * same mapping `getContainingSpaceIdForDocument` trusts first) against the repo's cache, rather
+   * than by asking each cached handle which space it belongs to: that lookup can await a load, and
+   * a stats call must not fault documents in.
+   */
+  loadedDocsCountForSpace(spaceId: SpaceId): number {
+    const counted = new Set<string>();
+    for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds()) {
+      if (tryGetSpaceIdFromCollectionId(collectionId) !== spaceId) {
+        continue;
+      }
+      const state = this._collectionSynchronizer.getLocalCollectionState(collectionId);
+      if (!state) {
+        continue;
+      }
+      // A space registers a collection per root, so the same document can appear more than once.
+      for (const documentId of Object.keys(state.documents)) {
+        if (!counted.has(documentId) && this._repo.getHandle(documentId as DocumentId) !== undefined) {
+          counted.add(documentId);
+        }
+      }
+    }
+    return counted.size;
+  }
+
   get handles(): Readonly<Record<DocumentId, DocHandle<any>>> {
     return this._repo.handles;
   }

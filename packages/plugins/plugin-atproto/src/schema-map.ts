@@ -4,8 +4,8 @@
 
 import * as Option from 'effect/Option';
 
+import { type Space } from '@dxos/client/echo';
 import { Type } from '@dxos/echo';
-import { type Space } from '@dxos/react-client/echo';
 import { type AtprotoPolicy, AtprotoPolicyAnnotation, type AtprotoRecord, AtprotoRecordAnnotation } from '@dxos/schema';
 
 export type MappedType = {

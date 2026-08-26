@@ -36,7 +36,6 @@ export const translations = [
         'create-panel.template.placeholder': 'Filter templates…',
         'setup-project.label': 'Set up project',
         'create-chat.label': 'New chat',
-        'routines.label': 'Routines',
         'object-card.untitled.label': 'Untitled',
         'object-card.delete.label': 'Delete',
       },

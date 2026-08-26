@@ -5,7 +5,7 @@
 import React, { type ReactNode, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import type * as Node from '@dxos/app-graph/Node';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
@@ -25,7 +25,7 @@ import { Pane, type PaneTab } from '../Pane';
 //
 
 export type CompanionProps = ThemedClassName<{
-  companions: Node.Node[];
+  companions: AppGraphNode.Node[];
   /** Selected companion id. */
   value?: string;
   onValueChange?: (id: string) => void;

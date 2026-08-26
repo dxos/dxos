@@ -44,27 +44,40 @@ const OUTLINE_ITEM = 'Draft the launch checklist';
  */
 let seeded: { space: Space; project: Project.Project; taskSet: TaskSet.TaskSet } | undefined;
 
-/**
- * Seed a project with the same owned-object graph the create-object capability builds: an owned
- * Instructions document and task set, plus one referenced (non-owned) artifact.
- */
-const seedProject = (space: Space) => {
-  const project = Project.make({ name: PROJECT_NAME, description: 'Track the plugin-projects milestone.' });
-  const instructions = Instructions.make({ text: 'You are an assistant focused on this project.' });
-  // `Project.make` materializes the owned task set, so the seed uses that one rather than
-  // substituting its own — swapping it would leave the project's own set orphaned.
+/** A project exactly as `Project.make` leaves it: an owned task set and outline, nothing else. */
+const createProject = (space: Space) => {
+  const project = space.db.add(Project.make({ name: PROJECT_NAME }));
   const taskSet = project.taskSet?.target;
   if (!taskSet) {
     throw new Error('Expected the project to own a task set.');
   }
+  seeded = { space, project, taskSet };
+};
+
+/**
+ * Fills the default project with the graph the create-object capability builds: an owned
+ * Instructions document, checklist content on the owned outline, one referenced artifact, and a
+ * task in the owned set. Only the stories that assert on content call this — the default story
+ * shows an empty project.
+ */
+const seedContent = async () => {
+  // Called from `play`, which runs once the story has mounted but not necessarily once the client
+  // has finished initializing — the project is created by the plugin's `onClientInitialized`.
+  await waitFor(() => expect(seeded).toBeTruthy(), { timeout: 10_000 });
+  const context = seeded;
+  if (!context) {
+    throw new Error('The story did not create a project.');
+  }
+  const { space, project, taskSet } = context;
+
+  const instructions = Instructions.make({ text: 'You are an assistant focused on this project.' });
   const artifact = space.db.add(Text.make({ name: ARTIFACT_TITLE, content: 'Notes.' }));
   Obj.update(project, (project) => {
     project.instructions = Ref.make(instructions);
     project.artifacts = [Ref.make(artifact)];
   });
+  Obj.setParent(instructions, project);
 
-  // `Project.make` materializes the outline too, so the seed writes into that one rather than
-  // substituting its own — a replacement would leave the project's own outline orphaned.
   const outline = project.outline?.target;
   if (!outline?.content.target) {
     throw new Error('Expected the project to own an outline.');
@@ -72,19 +85,15 @@ const seedProject = (space: Space) => {
   Obj.update(outline.content.target, (text) => {
     text.content = `- [ ] ${OUTLINE_ITEM}\n- [ ] Book the launch review\n`;
   });
-  Obj.setParent(instructions, project);
 
-  space.db.add(project);
-
-  // Added after the cascade so the task lands in the persisted task set; membership is the set's
-  // `tasks` array, with the parent edge alongside for deletion cascade.
   const task = space.db.add(Task.make({ title: TASK_TITLE, status: 'todo' }));
   Obj.setParent(task, taskSet);
   Obj.update(taskSet, (taskSet) => {
     taskSet.tasks = [Ref.make(task)];
   });
 
-  seeded = { space, project, taskSet };
+  await space.db.flush({ indexes: true });
+  return context;
 };
 
 /** Adds a task to the set the way the verbs do — array membership plus the lifecycle parent edge. */
@@ -97,7 +106,12 @@ const addTask = (space: Space, taskSet: TaskSet.TaskSet, title: string, mileston
   return task;
 };
 
-const DefaultStory = () => {
+type StoryArgs = {
+  role: string;
+  attendableId: string;
+};
+
+const DefaultStory = ({ role, attendableId }: StoryArgs) => {
   const [space] = useSpaces();
   const projects = useQuery(space?.db, Filter.type(Project.Project));
   const project = projects.find((entry) => entry.name === PROJECT_NAME);
@@ -105,7 +119,7 @@ const DefaultStory = () => {
     return <Loading data={{ db: !!space?.db, project: !!project }} />;
   }
 
-  return <ProjectArticle role='article' subject={project} attendableId='test' />;
+  return <ProjectArticle role={role} subject={project} attendableId={attendableId} />;
 };
 
 const meta = {
@@ -133,7 +147,7 @@ const meta = {
             Effect.gen(function* () {
               const { defaultSpace } = yield* initializeIdentity(client);
               yield* Effect.promise(async () => {
-                seedProject(defaultSpace);
+                createProject(defaultSpace);
                 await defaultSpace.db.flush({ indexes: true });
               });
             }),
@@ -153,6 +167,11 @@ const meta = {
       ...tasksTranslations,
     ],
   },
+  // Each story mounts its own client: drop the previous story's context so `seedContent` cannot
+  // seed into a space that has already been torn down.
+  beforeEach: () => {
+    seeded = undefined;
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -160,8 +179,21 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  args: {
+    role: 'article',
+    attendableId: 'test',
+  },
+};
+
+/**
+ * Each section is asserted by its content rather than its heading, since an invalid surface id is
+ * dropped silently and leaves the heading rendering over an empty section.
+ */
+export const Sections: Story = {
+  ...Default,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    await seedContent();
 
     // Header form: the project name renders as the editable name field's value. Identity/space
     // setup runs async, so allow more than testing-library's default 1s timeout.
@@ -189,14 +221,11 @@ export const Default: Story = {
  * behaved (`Query.children()` never re-emitted on a member's property change).
  */
 export const Updates: Story = {
+  ...Default,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    const { space, project, taskSet } = await seedContent();
     await expect(canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    const context = seeded;
-    if (!context) {
-      throw new Error('The story did not seed a project.');
-    }
-    const { space, project, taskSet } = context;
 
     // 1. A member's own property change: renaming a task must reach its row.
     const RENAMED = 'Renamed in place';

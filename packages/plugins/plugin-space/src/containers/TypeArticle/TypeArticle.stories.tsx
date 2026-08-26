@@ -127,7 +127,7 @@ const DefaultStory = ({ type }: StoryArgs) => {
   }
 
   return (
-    <div role='none' className='w-full grid grid-cols-2'>
+    <div className='w-full grid grid-cols-2'>
       <TypeArticle role='article' space={space} type={type} attendableId='story' />
       <StoryCompanion space={space} type={type} />
     </div>

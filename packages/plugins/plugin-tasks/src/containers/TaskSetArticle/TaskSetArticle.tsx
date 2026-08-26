@@ -8,12 +8,11 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { getSpace } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { TaskList, type TaskPatch, type TaskStatus } from '@dxos/react-ui-task';
+import { TaskList, type TaskPatch } from '@dxos/react-ui-task';
 import { type Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -31,13 +30,12 @@ export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>
 export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSetArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
-  const space = getSpace(taskSet);
-  const spaceId = space?.id;
+  const spaceId = Obj.getDatabase(taskSet)?.spaceId;
   const { invokePromise } = useOperationInvoker();
 
   const tasks = useSetTasks(taskSet);
 
-  const statusLabel = useCallback((status: TaskStatus) => t(`task-status.${status}.label`), [t]);
+  const statusLabel = useCallback((status: Task.Status) => t(`task-status.${status}.label`), [t]);
   const handleCreate = useCallback(
     (title: string) => void invokePromise(TaskOperation.CreateTask, { taskSet: Ref.make(taskSet), title }, { spaceId }),
     [invokePromise, taskSet, spaceId],

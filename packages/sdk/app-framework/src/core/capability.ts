@@ -487,7 +487,27 @@ export interface Module<Options = void> {
   readonly requires?: readonly AnyTag[];
   readonly provides: readonly AnyTag[];
   readonly activatesOn?: ActivationEvent.Events;
+  readonly environments?: readonly Environment[];
 }
+
+/**
+ * A package.json export/import condition a module is additionally split out for, via
+ * {@link ModuleSpec}'s `environments` — `'node'` and `'workerd'` in this repo.
+ *
+ * Deliberately an open string rather than a union: conditions are defined by whichever build tool
+ * resolves the package, so the framework has no business enumerating them (a consumer targeting
+ * `deno`, `electron`, or a private condition is equally valid).
+ *
+ * There is no `'browser'` member because there is no `browser` condition — the canonical barrel IS
+ * the `default` condition, which is what a browser resolves. Omitting `environments` therefore
+ * means "do not split this module by environment", not "browser-only": no per-condition variant is
+ * generated for it at all.
+ *
+ * The annotation must be a literal array at the authoring site: barrel generation reads it
+ * statically (variants are emitted per condition, since bundlers follow lazy loaders), so a
+ * computed value would be invisible to the generator.
+ */
+export type Environment = string;
 
 /**
  * Spec shared by {@link lazyModule} and {@link inlineModule}: the requires/provides
@@ -501,6 +521,8 @@ type ModuleSpec<Provides extends readonly AnyTag[], Requires extends readonly An
   readonly activatesOn?: ActivationEvent.Events;
   /** Maps plugin options to the body's props; omit when they coincide. */
   readonly props?: (options: Options) => Props;
+  /** Conditions this module is additionally split out for (literal array); omitted means no split. */
+  readonly environments?: readonly Environment[];
 };
 
 /**
@@ -548,6 +570,7 @@ export const lazyModule = <
     requires: spec.requires,
     provides: spec.provides,
     activatesOn: spec.activatesOn,
+    environments: spec.environments,
   });
 };
 
@@ -580,6 +603,7 @@ export const inlineModule = <
     requires: spec.requires,
     provides: spec.provides,
     activatesOn: spec.activatesOn,
+    environments: spec.environments,
   });
 };
 
@@ -602,6 +626,8 @@ export type MakerOptions<
   activatesOn?: ActivationEvent.Events;
   /** Maps plugin options to the body's props; omit when they coincide. */
   props?: (options: Options) => Props;
+  /** Conditions this module is additionally split out for (literal array); omitted means no split. */
+  environments?: readonly Environment[];
 };
 
 /**
@@ -613,9 +639,19 @@ export type MakerOptions<
  * event-mode on it unless the call site declares its own `activatesOn`. This is how a capability
  * owner makes the well-behaved activation the default for every provider (e.g. operation
  * handlers park until an operation is invoked) — startup is not assumed.
+ *
+ * `defaults.environments` does the same for the runtime axis: a capability family that is headless
+ * by construction (schema, operation handlers) declares every environment once here rather than
+ * making each of ~36 plugins repeat the annotation — an omission that silently drops the module
+ * from the generated headless barrels. A UI-bound family leaves it unset, keeping browser-only the
+ * default. The call site's own `environments` still wins.
  */
 export const moduleMaker =
-  <C extends AnyTag>(defaultName: string, capability: C, defaults?: { activatesOn?: ActivationEvent.Events }) =>
+  <C extends AnyTag>(
+    defaultName: string,
+    capability: C,
+    defaults?: { activatesOn?: ActivationEvent.Events; environments?: readonly Environment[] },
+  ) =>
   <
     Props = void,
     Options = Props,
@@ -636,6 +672,7 @@ export const moduleMaker =
         provides: [capability, ...extra],
         activatesOn: options?.activatesOn ?? defaults?.activatesOn,
         props: options?.props,
+        environments: options?.environments ?? defaults?.environments,
       },
       loader,
     );

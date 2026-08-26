@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import { DXN, Type } from '@dxos/echo';
 
 import * as GraphPath from '../app/GraphPath';
@@ -35,7 +35,7 @@ const build = (sectionUrlKey?: string) =>
 const bindingsByKey = (sectionUrlKey?: string) =>
   Object.fromEntries(
     build(sectionUrlKey)
-      .map((extension) => extension.url)
+      .map((extension) => extension.meta)
       .filter((url): url is NonNullable<typeof url> => url !== undefined)
       .map((url) => [url.key, url]),
   );
@@ -53,7 +53,7 @@ describe('createTypeSectionExtension', () => {
 
     test('leaves the section node itself unaddressable', ({ expect }) => {
       // The section sits AT the binding's path, so it has no id of its own under that key.
-      expect(GraphBuilder.nodeUrlSegment(SECTION_NODE_ID, bindingsByKey().book)).toBeUndefined();
+      expect(AppGraphBuilder.nodeUrlSegment(SECTION_NODE_ID, bindingsByKey().book)).toBeUndefined();
     });
   });
 
@@ -75,8 +75,8 @@ describe('createTypeSectionExtension', () => {
 
     test('stamps /library on the section node and /book/<id> on its objects', ({ expect }) => {
       const bindings = bindingsByKey('library');
-      expect(GraphBuilder.nodeUrlSegment(SECTION_NODE_ID, bindings.library)).toBe('/library');
-      expect(GraphBuilder.nodeUrlSegment(`${SECTION_NODE_ID}/book1`, bindings.book)).toBe('/book/book1');
+      expect(AppGraphBuilder.nodeUrlSegment(SECTION_NODE_ID, bindings.library)).toBe('/library');
+      expect(AppGraphBuilder.nodeUrlSegment(`${SECTION_NODE_ID}/book1`, bindings.book)).toBe('/book/book1');
     });
 
     test('keeps object paths identical to the unsplit form', ({ expect }) => {

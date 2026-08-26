@@ -12,10 +12,6 @@ import { TaskOperation } from '#types';
 
 import { InvalidOperationInput } from '../errors';
 
-/**
- * Lists a set's milestones in sequence with progress derived from their tasks — a milestone stores
- * no status, so "met" is simply `done === total`.
- */
 const handler: Operation.WithHandler<typeof TaskOperation.ListMilestones> = TaskOperation.ListMilestones.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ taskSet: taskSetRef, project }) {

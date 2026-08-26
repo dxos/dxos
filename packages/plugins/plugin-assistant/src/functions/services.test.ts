@@ -10,7 +10,7 @@ import {
   AgentSkillHandlers,
   AgentWizardHandlers,
   ChatContextHandlers,
-  DelegationHandlers,
+  DelegationSkillHandlers,
   SkillManagerHandlers,
   WebSearchHandlers,
 } from '@dxos/assistant-toolkit';
@@ -28,7 +28,7 @@ const handlerSet = OperationHandlerSet.merge(
   ChatContextHandlers,
   WebSearchHandlers,
   AgentWizardHandlers,
-  DelegationHandlers,
+  DelegationSkillHandlers,
 );
 
 describe('operation registry round-trip', () => {
