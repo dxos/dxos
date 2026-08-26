@@ -15,21 +15,21 @@ Two repos:
 `@dxos/compute` already owns the process model (`Process.Process`, `Process.State`,
 `Process.Monitor`) and `@dxos/compute-runtime` owns two managers:
 
-| Interface | Shape today | Backed by |
-| --- | --- | --- |
-| `ProcessManager.Manager` | full control: `spawn`, `attach`, `list`, handles with inputs/outputs/RPC/terminate | `ProcessManagerImpl` (in-process, KV-persisted) |
-| `RemoteProcessManager.Manager` | read-only `processTree` + `cancel(trigger)` | `EdgeProcessManager` (HTTP, no process tree yet) |
-| `RemoteTriggerManager.Manager` | `triggers` atom + `invokeTrigger` | `EdgeTriggerManager` (HTTP poll) |
+| Interface                      | Shape today                                                                        | Backed by                                        |
+| ------------------------------ | ---------------------------------------------------------------------------------- | ------------------------------------------------ |
+| `ProcessManager.Manager`       | full control: `spawn`, `attach`, `list`, handles with inputs/outputs/RPC/terminate | `ProcessManagerImpl` (in-process, KV-persisted)  |
+| `RemoteProcessManager.Manager` | read-only `processTree` + `cancel(trigger)`                                        | `EdgeProcessManager` (HTTP, no process tree yet) |
+| `RemoteTriggerManager.Manager` | `triggers` atom + `invokeTrigger`                                                  | `EdgeTriggerManager` (HTTP poll)                 |
 
-So the remote surface exists but is a *monitor*, not a *controller*: it can cancel a trigger run and
+So the remote surface exists but is a _monitor_, not a _controller_: it can cancel a trigger run and
 (in principle) read a tree. Nothing can spawn a process on EDGE or talk to one.
 
 **Decision D1 — the remote surface grows into `ProcessManager.Manager`, it does not get a parallel
 API.** `AgentService.layer` (in `@dxos/agent-runtime`) is written against
 `ProcessManager.Manager` and nothing else: it spawns `AgentProcess`, `list`s by key/target,
 `hydrate`s, and drives `submitInput` / `runUntilSettled` / `subscribeEphemeral` / `terminate`
-through a `ProcessManager.Handle`. If EDGE is exposed as *another implementation of that same
-interface*, "AgentService can spawn and control remote agents on edge" is satisfied by providing a
+through a `ProcessManager.Handle`. If EDGE is exposed as _another implementation of that same
+interface_, "AgentService can spawn and control remote agents on edge" is satisfied by providing a
 different layer — no second agent API, no fork in the assistant stack.
 
 Concretely:
@@ -44,7 +44,7 @@ Concretely:
   `AgentService.layer` is then provided with.
 
 **Decision D2 — triggers keep their own interface.** `RemoteTriggerManager` stays as-is on the
-client. What changes is the server: the DO that dispatches triggers *is also* the process manager
+client. What changes is the server: the DO that dispatches triggers _is also_ the process manager
 (see D4), so a trigger firing an agent and a client spawning an agent go through one component.
 
 ## 2. Server topology (edge repo, `compute-service`)
@@ -71,7 +71,7 @@ client. What changes is the server: the DO that dispatches triggers *is also* th
 **Decision D3 — one DO per process, named by pid.** A process is a unit of isolated durable state
 with its own alarm; that is exactly a DO. Sharing one DO across a space's processes would serialize
 every agent turn in the space behind one single-threaded isolate and make one runaway agent's CPU
-budget everyone's problem. The dispatcher keeps only the *index* (pid → key, target, state,
+budget everyone's problem. The dispatcher keeps only the _index_ (pid → key, target, state,
 environment), which is what `list()` needs, and the process's own state lives in its own DO.
 
 **Decision D4 — the dispatcher is the process manager.** `TriggersDispatcher` already is the
@@ -79,7 +79,7 @@ per-space compute control point (it holds the space id, the trigger loader, the 
 inactivity timeout). Making it own process lifecycle keeps one DO per space as the single writer of
 "what compute exists for this space", which is what makes `list()` cheap and reaping correct. Its
 class name stays `TriggersDispatcher` for this phase (renaming a DO class is a migration, not a
-refactor — the binding name and every `rpcMethods` entry move with it); the *role* rename is
+refactor — the binding name and every `rpcMethods` entry move with it); the _role_ rename is
 documented and a follow-up task.
 
 **Decision D5 — reuse `ProcessManagerImpl` verbatim inside the DO; do not write a second runtime.**
@@ -109,27 +109,35 @@ scope here — that is the existing uploaded-function path.
 New routes on compute-service, mirroring the existing `/compute/functions/:spaceId/...` shape and
 carried by new `EdgeHttpClient` methods:
 
-| Route | Verb | Maps to |
-| --- | --- | --- |
-| `/compute/processes/:spaceId` | POST | `spawn` (body: process key, params, environment, annotations) → pid |
-| `/compute/processes/:spaceId` | GET | `list` (query: key, target, state) → `Process.Info[]` |
-| `/compute/processes/:spaceId/:pid` | GET | `status` → `Process.Info` |
-| `/compute/processes/:spaceId/:pid` | DELETE | `terminate` |
-| `/compute/processes/:spaceId/:pid/input` | POST | `submitInput` |
-| `/compute/processes/:spaceId/:pid/rpc` | POST | one RPC request/response against the process's `RpcGroup` |
-| `/compute/processes/:spaceId/:pid/events` | GET | cursor read of buffered outputs + ephemeral trace |
+| Route                                     | Verb   | Maps to                                                             |
+| ----------------------------------------- | ------ | ------------------------------------------------------------------- |
+| `/compute/processes/:spaceId`             | POST   | `spawn` (body: process key, params, environment, annotations) → pid |
+| `/compute/processes/:spaceId`             | GET    | `list` (query: key, target, state) → `Process.Info[]`               |
+| `/compute/processes/:spaceId/:pid`        | GET    | `status` → `Process.Info`                                           |
+| `/compute/processes/:spaceId/:pid`        | DELETE | `terminate`                                                         |
+| `/compute/processes/:spaceId/:pid/input`  | POST   | `submitInput`                                                       |
+| `/compute/processes/:spaceId/:pid/rpc`    | POST   | one RPC request/response against the process's `RpcGroup`           |
+| `/compute/processes/:spaceId/:pid/events` | GET    | cursor read of buffered outputs + ephemeral trace                   |
 
 **Decision D7 — outputs and trace are read by cursor, not pushed.** A stream needs a socket; edge
 already has one (the router WS) but wiring process fan-out into it is a larger change than this
-project needs, and a cursor read is what makes the *client* handle resumable across a reload — the
+project needs, and a cursor read is what makes the _client_ handle resumable across a reload — the
 property that matters for a cloud-hosted agent. `Handle.subscribeOutputs` / `subscribeEphemeral` on
 the remote handle are therefore `Stream`s over a poll with a monotonic sequence cursor; the DO
 retains a bounded ring of events. Pushing over the WS is a follow-up that changes only the transport
 behind those two streams.
 
+**Decision D9 — the RPC route is effect-rpc-over-HTTP, not a hand-rolled envelope.** The host mounts
+an `RpcServer` for the process's declared group and the client drives it with `RpcClient` over
+`RpcClient.makeProtocolHttp` (ndjson). So request and response schemas are encoded by the group
+itself, and neither side re-implements correlation or serialization. The Hono route forwards the raw
+request into the process's DO, which serves the app.
+
 **Decision D8 — `runToCompletion` / `runUntilSettled` are derived client-side** from polled state
 (`IDLE`/`SUCCEEDED` etc. per the local semantics), not new endpoints, so the two settle predicates
-cannot drift from `ProcessHandle`'s definitions.
+cannot drift from `ProcessHandle`'s definitions. Telling them apart remotely needs one extra wire
+field — `ProcessInfo.alarmPending` — since hybernation with a pending alarm means more queued turn
+work while hybernation without one means only background children remain.
 
 ## 4. Verification (edge test harness, e2e)
 

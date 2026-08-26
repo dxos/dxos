@@ -19,14 +19,7 @@ import type { SerializedError } from './edge';
  */
 
 /** Runtime state of a process; the wire spelling of `Process.State`. */
-export type ProcessState =
-  | 'RUNNING'
-  | 'HYBERNATING'
-  | 'IDLE'
-  | 'TERMINATING'
-  | 'TERMINATED'
-  | 'SUCCEEDED'
-  | 'FAILED';
+export type ProcessState = 'RUNNING' | 'HYBERNATING' | 'IDLE' | 'TERMINATING' | 'TERMINATED' | 'SUCCEEDED' | 'FAILED';
 
 /** Wire form of `Process.Environment`. */
 export interface ProcessEnvironment {
@@ -48,6 +41,13 @@ export interface ProcessInfo {
   params: ProcessParams;
   environment: ProcessEnvironment;
   state: ProcessState;
+  /**
+   * True while the process has an alarm scheduled. Distinguishes hybernation waiting on more queued
+   * turn work from hybernation waiting only on background children — the difference between the
+   * local `runToCompletion` and `runUntilSettled` predicates, which cannot be told apart remotely
+   * without it.
+   */
+  alarmPending: boolean;
   error: SerializedError | null;
   startedAt: number;
   /** Absent unless the process has reached a terminal state. */
