@@ -14,7 +14,7 @@ name: Publish
 #
 # Apps deploy via deploy-apps.yml (which also cuts the versioned Composer production release), never here.
 #
-# TODO(depot-ci): stays on GitHub Actions, for two independent reasons (flagged by CodeRabbit on
+# TODO(wittjosiah): stays on GitHub Actions, for two independent reasons (flagged by CodeRabbit on
 # #12779): npm's trusted-publisher OIDC only trusts GitHub-hosted Actions runners (plus GitLab.com and
 # CircleCI cloud) - Depot CI's runner identity isn't one of them, so the `id-token: write` provenance
 # flow would fail there. Separately, this job's `container:` pulls ghcr.io/dxos/gh-actions using
