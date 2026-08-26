@@ -4231,9 +4231,6 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../../common/invariant
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
@@ -13602,6 +13599,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/compute/assistant
+      '@dxos/compute-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute/compute-runtime
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client

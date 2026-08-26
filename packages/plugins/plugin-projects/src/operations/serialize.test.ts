@@ -29,8 +29,7 @@ describe('operation serialization', () => {
     expect(failures).toEqual([]);
   });
 
-  // A remote host derives the MCP readOnly/destructive hints from the serialized record, and an
-  // unclassified operation is badged conservatively — so every handler has to declare one.
+  // An unclassified operation reaches an MCP client badged as possibly destructive.
   test('every handler declares a mutation class, and it survives serialize', async ({ expect }) => {
     const handlers = await ProjectOperationHandlerSet.handlers.getHandlers();
     const classified = Object.fromEntries(
