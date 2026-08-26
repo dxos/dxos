@@ -144,6 +144,11 @@ Each is independent of the others; none is started.
       at full height) in the toolbar; the story also wraps the article in an
       `AttendableContainer`, without which nothing ever attends the article and
       the toolbar renders permanently unattended.
+- [ ] **A plugin extension contributes a tab** — the Overview/Tasks tablist is
+      hard-coded in `ProjectArticle`; make it a contribution point so e.g. a
+      GitHub extension can add a PRs tab to a project. Needs a surface/capability
+      for tab registration (label, icon, order) alongside the panel surface each
+      tab renders.
 - [ ] **ProjectArticle `Sections` story is flaky (~1 run in 4)** — the article
       renders with EVERY ref-gated section missing (no instructions, outline,
       or artifact card), which is the previous story's client being torn down
