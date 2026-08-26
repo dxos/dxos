@@ -33,8 +33,8 @@ describe('response schemas', () => {
   test('a vault response without an id is rejected', ({ expect }) => {
     // The id is recorded on the session and every later credential edit is addressed by it.
     const decodeVault = Schema.decodeUnknownOption(VaultResponse);
-    expect(decodeVault({ name: 'composer-session' })._tag).toBe('None');
-    expect(decodeVault({ id: 'vlt_1', name: 'composer-session' })._tag).toBe('Some');
+    expect(decodeVault({ display_name: 'composer-session' })._tag).toBe('None');
+    expect(decodeVault({ id: 'vlt_1', display_name: 'composer-session' })._tag).toBe('Some');
   });
 
   test('credential pages decode without secret values', ({ expect }) => {
@@ -46,6 +46,9 @@ describe('response schemas', () => {
     });
     expect(decoded._tag).toBe('Some');
     expect(decodeCredentials({ data: [{ auth: { secret_name: 'GH_TOKEN' } }] })._tag).toBe('None');
+    // A page cursor is what the listing follows; a null one ends it.
+    expect(decodeCredentials({ data: [], next_page: 'cursor' })._tag).toBe('Some');
+    expect(decodeCredentials({ data: [], next_page: null })._tag).toBe('Some');
   });
 
   test('an empty event page decodes', ({ expect }) => {

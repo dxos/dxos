@@ -27,5 +27,8 @@ export const DEFAULT_ENVIRONMENT_NAME = 'composer-default';
 /** Default number of session events read back by the transcript operation. */
 export const DEFAULT_TRANSCRIPT_LIMIT = 50;
 
+/** Page size used when listing a vault's credentials; the API's own maximum, to page as rarely as possible. */
+export const CREDENTIAL_PAGE_LIMIT = 100;
+
 /** Prefix for the per-session vault holding the credentials bound to that run. */
 export const SESSION_VAULT_PREFIX = 'composer-session';

@@ -76,7 +76,7 @@ export type EnvironmentVariableCredential = {
 
 export const VaultResponse = Schema.Struct({
   id: Schema.String,
-  name: Schema.optional(Schema.String),
+  display_name: Schema.optional(Schema.String),
 });
 export interface VaultResponse extends Schema.Schema.Type<typeof VaultResponse> {}
 
@@ -92,6 +92,7 @@ export interface CredentialResponse extends Schema.Schema.Type<typeof Credential
 
 export const CredentialPage = Schema.Struct({
   data: Schema.optional(Schema.Array(CredentialResponse)),
+  next_page: Schema.optional(Schema.NullOr(Schema.String)),
 });
 export interface CredentialPage extends Schema.Schema.Type<typeof CredentialPage> {}
 

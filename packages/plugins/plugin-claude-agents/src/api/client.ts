@@ -11,6 +11,7 @@ import { proxyFetchLegacy } from '@dxos/edge-client';
 import {
   ANTHROPIC_API_URL,
   ANTHROPIC_VERSION,
+  CREDENTIAL_PAGE_LIMIT,
   MANAGED_AGENTS_BETA,
   REQUEST_RETRIES,
   REQUEST_RETRY_DELAY,
@@ -177,15 +178,34 @@ export const listEvents = (
  * Creates the vault a session's credentials live in. One vault per session: it bounds what a live
  * credential edit can reach, and archiving it retires every secret that session was given.
  */
-export const createVault = (apiKey: string, name: string): Effect.Effect<VaultResponse, ClaudeAgentApiError> =>
-  request({ apiKey, method: 'POST', path: '/v1/vaults', schema: VaultResponse, body: { name } });
+export const createVault = (apiKey: string, displayName: string): Effect.Effect<VaultResponse, ClaudeAgentApiError> =>
+  request({ apiKey, method: 'POST', path: '/v1/vaults', schema: VaultResponse, body: { display_name: displayName } });
 
-/** Lists a vault's credentials. Secret values are write-only, so only the names come back. */
+/**
+ * Every credential in a vault. Secret values are write-only, so only the names come back — and the
+ * listing is followed to its last page, since matching a name against a partial listing would read
+ * an existing credential as absent and try to create it a second time.
+ */
 export const listVaultCredentials = (
   apiKey: string,
   vaultId: string,
-): Effect.Effect<CredentialPage, ClaudeAgentApiError> =>
-  request({ apiKey, method: 'GET', path: `/v1/vaults/${vaultId}/credentials`, schema: CredentialPage });
+): Effect.Effect<readonly CredentialResponse[], ClaudeAgentApiError> =>
+  Effect.gen(function* () {
+    const credentials: CredentialResponse[] = [];
+    let page: string | undefined;
+    do {
+      const response: CredentialPage = yield* request({
+        apiKey,
+        method: 'GET',
+        path: `/v1/vaults/${vaultId}/credentials?limit=${CREDENTIAL_PAGE_LIMIT}${page ? `&page=${encodeURIComponent(page)}` : ''}`,
+        schema: CredentialPage,
+      });
+      credentials.push(...(response.data ?? []));
+      page = response.next_page ?? undefined;
+    } while (page);
+
+    return credentials;
+  });
 
 /** Stores an environment-variable credential, keyed by its env var name within the vault. */
 export const createVaultCredential = (

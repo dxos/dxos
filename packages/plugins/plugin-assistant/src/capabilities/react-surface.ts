@@ -123,13 +123,15 @@ export default Capability.makeModule(() =>
         id: 'integrationPrompt',
         filter: Surface.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'integration-prompt'),
         component: IntegrationPrompt,
-        // `data.data` is model-supplied JSON (untyped); narrow every field before use.
+        // `data.data` is model-supplied JSON (untyped); narrow every field before use. A blank
+        // string is dropped rather than passed on: it would render an empty service name, and an
+        // empty reason would suppress the prompt's own fallback text.
         props: ({ data }) => ({
-          service: typeof data.data?.service === 'string' ? data.data.service : undefined,
+          service: nonBlank(data.data?.service),
           scopes: Array.isArray(data.data?.scopes)
             ? data.data.scopes.filter((scope): scope is string => typeof scope === 'string')
             : undefined,
-          reason: typeof data.data?.reason === 'string' ? data.data.reason : undefined,
+          reason: nonBlank(data.data?.reason),
         }),
       }),
       Surface.create({
@@ -140,3 +142,7 @@ export default Capability.makeModule(() =>
     ]),
   ),
 );
+
+/** A model-supplied string, or undefined when it is absent or blank. */
+const nonBlank = (value: unknown): string | undefined =>
+  typeof value === 'string' && value.trim() !== '' ? value.trim() : undefined;

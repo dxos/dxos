@@ -38,8 +38,13 @@ const handler: Operation.WithHandler<typeof ClaudeAgentOperation.StartSession> =
       const sessionTitle = title ?? `${agentObj.name} session`;
 
       // Created for every session, credentials or not: `vault_ids` is fixed at session creation, so
-      // a session started without a vault could never be given a credential mid-run.
-      const vault = yield* createVault(apiKey, `${SESSION_VAULT_PREFIX}-${agentObj.name}`);
+      // a session started without a vault could never be given a credential mid-run. Vault names are
+      // not unique server-side, so the run's own id is appended to tell one session's vault from the
+      // next in the Anthropic console.
+      const vault = yield* createVault(
+        apiKey,
+        `${SESSION_VAULT_PREFIX}-${agentObj.name}-${crypto.randomUUID().slice(0, 8)}`,
+      );
       const bound = yield* toVaultCredentials(credentials ?? []);
       yield* Effect.forEach(bound, (credential) => createVaultCredential(apiKey, vault.id, credential), {
         discard: true,

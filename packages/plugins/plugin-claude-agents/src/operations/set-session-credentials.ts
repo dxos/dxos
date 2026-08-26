@@ -34,7 +34,7 @@ const handler: Operation.WithHandler<typeof ClaudeAgentOperation.SetSessionCrede
         // present has to rotate the stored secret rather than create a second entry (which is a 409).
         const existing = yield* listVaultCredentials(apiKey, vaultId);
         const byName = new Map(
-          (existing.data ?? []).flatMap((credential) =>
+          existing.flatMap((credential) =>
             credential.auth?.secret_name ? [[credential.auth.secret_name, credential.id] as const] : [],
           ),
         );

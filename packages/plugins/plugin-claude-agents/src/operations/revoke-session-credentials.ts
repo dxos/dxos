@@ -30,7 +30,7 @@ const handler: Operation.WithHandler<typeof ClaudeAgentOperation.RevokeSessionCr
         const apiKey = yield* getApiKey;
         const existing = yield* listVaultCredentials(apiKey, vaultId);
         const byName = new Map(
-          (existing.data ?? []).flatMap((credential) =>
+          existing.flatMap((credential) =>
             credential.auth?.secret_name ? [[credential.auth.secret_name, credential.id] as const] : [],
           ),
         );

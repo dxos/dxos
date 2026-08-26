@@ -209,6 +209,19 @@ feat F-7: Session credentials
       second time (names are unique within a vault), and the change takes effect
       on the running session's next operation without restarting it
 
+  req F-7.5:
+    when: the credentials list repeats an environment variable name, or the vault
+          holds more credentials than one listing page
+    then: |
+      the repeated name keeps its last entry and the listing is followed to its
+      last page — both cases would otherwise create a name that already exists
+      and be rejected as a conflict
+
+  req F-7.6:
+    when: a referenced token resolves to an empty value
+    then: the operation fails with CredentialResolutionError naming the variable,
+          rather than binding a blank secret the agent only discovers as a 401
+
   req F-7.3:
     when: Set or Revoke Claude Agent Session Credentials is invoked for a session
           with no vault id

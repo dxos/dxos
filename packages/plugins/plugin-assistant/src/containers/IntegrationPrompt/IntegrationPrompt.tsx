@@ -47,10 +47,11 @@ export const IntegrationPrompt = ({ service, scopes, reason }: IntegrationPrompt
         <Flex column classNames='min-w-0'>
           <p className='text-sm font-medium truncate'>{t('integration-prompt.title', { service: label })}</p>
           <p className='text-sm text-subdued'>
-            {reason ??
-              (connectorIds.length > 0
-                ? t('integration-prompt.description', { service: label })
-                : t('integration-prompt.unavailable', { service: label }))}
+            {/* The unavailable state outranks the agent's reason: without a connector there is
+                nothing to connect, and showing why it is needed would read as an offer to. */}
+            {connectorIds.length > 0
+              ? (reason ?? t('integration-prompt.description', { service: label }))
+              : t('integration-prompt.unavailable', { service: label })}
           </p>
         </Flex>
       </Flex>
