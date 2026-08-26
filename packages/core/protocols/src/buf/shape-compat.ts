@@ -107,8 +107,7 @@ const packedAny = (typeUrl: string, value: Uint8Array) => ({
   'value': value,
 });
 
-// The legacy codec resolves `Any` payloads unless the field opts out, so the option decides the
-// shape rather than any caller-supplied encoding option.
+// The legacy codec resolves `Any` payloads unless the field opts out, so the option decides.
 const isPreservedAny = (field: DescField): boolean =>
   field.proto.options !== undefined &&
   hasExtension(field.proto.options, preserve_any) &&

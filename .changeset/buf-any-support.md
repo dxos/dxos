@@ -1,5 +1,4 @@
 ---
-'@dxos/client-services': minor
 '@dxos/protocols': minor
 ---
 

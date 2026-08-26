@@ -195,8 +195,8 @@ describe('buf shape-compat', () => {
   });
 
   test('a Credential round-trips byte-identically', ({ expect }) => {
-    // Credentials are the highest-stakes carrier of a packed `Any`; the signature payload itself is
-    // asserted against the real signing code in `credentials/signing.test.ts`.
+    // The signature payload itself is asserted against the real signing code in
+    // `credentials/buf-compat.test.ts`.
     const codec = schema.getCodecForType('dxos.halo.credentials.Credential');
     const value = {
       id: PublicKey.random(),
@@ -262,7 +262,7 @@ describe('buf shape-compat', () => {
   });
 
   test('LargeSpaceMetadata carries a credential snapshot across codecs', ({ expect }) => {
-    // The metadata store's on-disk record; its credentials made it the `Any`-blocked half of #9c.
+    // The metadata store's on-disk record, whose credentials carry a packed `Any`.
     const codec = schema.getCodecForType('dxos.echo.metadata.LargeSpaceMetadata');
     const value = {
       controlPipelineSnapshot: {
