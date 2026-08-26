@@ -4,7 +4,7 @@
 
 import { afterEach, describe, test, vi } from 'vitest';
 
-import { getObject, headObject } from './s3-client';
+import { getObject, headObject, probeAccess } from './s3-client';
 
 const URI = { host: 'bucket.account.r2.cloudflarestorage.com', key: 'SPACE/hash' };
 const CREDENTIALS = { accessKeyId: 'AKIA', secretAccessKey: 'secret' };
@@ -55,5 +55,60 @@ describe('s3 client read semantics', () => {
     respondWith(200);
     await expect(getObject({ uri: URI, credentials: CREDENTIALS })).resolves.toEqual(new Uint8Array([1, 2, 3]));
     await expect(headObject({ uri: URI, credentials: CREDENTIALS })).resolves.toBe(true);
+  });
+});
+
+/** The probe's messages are what the connection UI shows, so they are the behaviour under test. */
+describe('probeAccess diagnosis', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const respondWithCode = (status: number, code?: string) => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(code ? `<Error><Code>${code}</Code></Error>` : '', { status })),
+    );
+  };
+
+  test('a missing probe key means the signature was accepted', async ({ expect }) => {
+    respondWithCode(404);
+    await expect(probeAccess({ uri: URI, credentials: CREDENTIALS })).resolves.toBeUndefined();
+  });
+
+  test('names a wrong access key id', async ({ expect }) => {
+    respondWithCode(403, 'InvalidAccessKeyId');
+    await expect(probeAccess({ uri: URI, credentials: CREDENTIALS })).rejects.toThrow(
+      /access key ID is not recognized/,
+    );
+  });
+
+  test('names a wrong secret rather than blaming the key id', async ({ expect }) => {
+    respondWithCode(403, 'SignatureDoesNotMatch');
+    await expect(probeAccess({ uri: URI, credentials: CREDENTIALS })).rejects.toThrow(/secret access key is wrong/);
+  });
+
+  test('distinguishes a valid key without permission', async ({ expect }) => {
+    respondWithCode(403, 'AccessDenied');
+    await expect(probeAccess({ uri: URI, credentials: CREDENTIALS })).rejects.toThrow(/not permitted on bucket/);
+  });
+
+  test('names a bad bucket, which is the likeliest typo', async ({ expect }) => {
+    respondWithCode(400, 'InvalidBucketName');
+    await expect(probeAccess({ uri: URI, credentials: CREDENTIALS })).rejects.toThrow(/No bucket "bucket"/);
+  });
+
+  // The case that actually bit: a blocked CORS preflight rejects `fetch` itself, so there is no
+  // status to read and the recommendation has to come from the error we synthesise.
+  test('a blocked request recommends the CORS policy', async ({ expect }) => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        throw new TypeError('Failed to fetch');
+      }),
+    );
+    await expect(probeAccess({ uri: URI, credentials: CREDENTIALS })).rejects.toThrow(
+      /CORS policy.*GET, HEAD and PUT/s,
+    );
   });
 });

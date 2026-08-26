@@ -34,11 +34,16 @@ export class S3RequestError extends Error {
   }
 }
 
+/** The page's own origin, which is what a bucket CORS policy has to name. */
+const currentOrigin = (): string =>
+  typeof globalThis.location?.origin === 'string' ? globalThis.location.origin : 'this origin';
+
 /**
- * A request the browser refused to send or whose response it refused to expose. Almost always a
- * missing bucket CORS policy, which `fetch` reports as an opaque `TypeError` with the real reason
- * confined to the devtools console — so name the likely cause here rather than let a blocked
- * preflight surface as "Failed to fetch".
+ * A request the browser refused to send, or whose response it refused to expose. Almost always a
+ * missing bucket CORS policy: `fetch` reports that as an opaque `TypeError` and confines the real
+ * reason to the devtools console, so a blocked preflight would otherwise reach the user as
+ * "Failed to fetch". The message names the origin to allow and the exact grants needed, because
+ * that is the whole of the fix and nothing in the UI can apply it.
  */
 export class S3NetworkError extends Error {
   constructor(
@@ -46,13 +51,64 @@ export class S3NetworkError extends Error {
     override readonly cause: unknown,
   ) {
     super(
-      `Could not reach ${host}. The bucket's CORS policy must allow this origin for GET, HEAD and PUT ` +
-        `(and the authorization, x-amz-content-sha256 and x-amz-date headers). Original error: ` +
-        String(cause instanceof Error ? cause.message : cause),
+      `Could not reach ${host}. This is almost always the bucket's CORS policy: it must allow ` +
+        `${currentOrigin()} for GET, HEAD and PUT, with the authorization, content-type, ` +
+        `x-amz-content-sha256 and x-amz-date headers. Add that policy on the bucket and retry.`,
     );
     this.name = 'S3NetworkError';
   }
 }
+
+/** The S3 `<Code>` from an error body, which says far more than the HTTP status alone. */
+const errorCode = (body: string): string | undefined => /<Code>([^<]+)<\/Code>/.exec(body)?.[1];
+
+/**
+ * Checks that the credential can address the bucket, and explains it when it cannot.
+ *
+ * Distinct from `headObject`, which deliberately reports 403 and 404 alike as "not there" — correct
+ * when reading a blob, useless for a connection test, where telling a rejected key from an absent
+ * object is the entire point. Probes a key that should not exist: 404 proves the signature was
+ * accepted, and every other outcome names what to fix.
+ */
+export const probeAccess = async ({ uri, credentials }: { uri: S3Uri; credentials: S3Credentials }): Promise<void> => {
+  const url = toHttpsUrl(uri);
+  const headers = await signRequest({
+    method: 'HEAD',
+    url,
+    credentials: toSigningCredentials(credentials, uri.host),
+    date: new Date(),
+  });
+
+  // HEAD returns no body, so a failure is re-issued as GET purely to read the S3 error code.
+  const response = await request(url, { method: 'HEAD', headers });
+  if (response.ok || response.status === 404) {
+    return;
+  }
+
+  const getHeaders = await signRequest({
+    method: 'GET',
+    url,
+    credentials: toSigningCredentials(credentials, uri.host),
+    date: new Date(),
+  });
+  const body = await request(url, { method: 'GET', headers: getHeaders })
+    .then((res) => res.text())
+    .catch(() => '');
+
+  switch (errorCode(body) ?? String(response.status)) {
+    case 'InvalidAccessKeyId':
+      throw new Error(`The access key ID is not recognized by ${uri.host}.`);
+    case 'SignatureDoesNotMatch':
+      throw new Error('The secret access key is wrong — the request signature was rejected.');
+    case 'AccessDenied':
+      throw new Error(`The key is valid but not permitted on bucket "${uri.host.split('.')[0]}".`);
+    case 'NoSuchBucket':
+    case 'InvalidBucketName':
+      throw new Error(`No bucket "${uri.host.split('.')[0]}" at ${uri.host.split('.').slice(1).join('.')}.`);
+    default:
+      throw new S3RequestError(response.status, response.statusText, body);
+  }
+};
 
 const request = async (input: URL, init: RequestInit & { headers?: Record<string, string> }): Promise<Response> => {
   const signal = AbortSignal.timeout(S3_TIMEOUT_MS);

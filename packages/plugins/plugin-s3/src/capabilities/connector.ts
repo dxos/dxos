@@ -11,7 +11,7 @@ import { AccessToken, Connection } from '@dxos/link';
 import { ConnectionTestError } from '@dxos/plugin-connector';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
-import { headObject, objectKey } from '#services';
+import { objectKey, probeAccess } from '#services';
 
 import { S3_CONNECTOR_ID, S3_SOURCE } from '../constants';
 
@@ -139,19 +139,24 @@ export const createS3ConnectorEntry = (): ConnectorSpec.ConnectorEntry => ({
   },
 
   /**
-   * Probes a key that should not exist. A signed `HEAD` on a missing object answers 404 on a working
-   * connection and 403 when the key pair or signature is wrong, so the two are distinguishable
-   * without needing write permission or leaving anything behind in the bucket.
+   * Probes a key that should not exist: it needs no write permission and leaves nothing behind.
+   *
+   * Uses `probeAccess` rather than `headObject`, which reports 403 and 404 alike as "not there" —
+   * right for reading a blob, wrong here, where a rejected key reported as a miss would pass the
+   * test. The failure's own message is passed through as `ConnectionTestError.message`, since that
+   * is what the connection UI displays; the default would flatten every cause to "Connection test
+   * failed." and strand the diagnosis in the console.
    */
   testConnection: ({ accessToken }) =>
     Effect.tryPromise({
       try: () =>
-        headObject({
+        probeAccess({
           uri: { host: accessToken.source, key: objectKey({ spaceId: '_probe', contentHash: 'connection-test' }) },
           credentials: { accessKeyId: accessToken.account ?? '', secretAccessKey: accessToken.token },
         }),
-      catch: (cause) => new ConnectionTestError({ cause }),
-    }).pipe(Effect.asVoid),
+      catch: (cause) =>
+        new ConnectionTestError({ message: cause instanceof Error ? cause.message : String(cause), cause }),
+    }),
 });
 
 export default Capability.makeModule(
