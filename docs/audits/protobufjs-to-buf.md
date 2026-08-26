@@ -378,6 +378,12 @@ Measured while building the compat layer, so the ranking above understates #9c/#
 5. **`google.protobuf.Any`** needs a type registry to resolve, and the `preserve_any` field option
    to know when not to. Handled in `#3`; see above for the semantics reproduced.
 
+   A prefixed `type_url` (`type.googleapis.com/example.Message`, which buf's own `anyPack` emits)
+   deliberately stays packed rather than being resolved by its last path segment: the legacy codec
+   gates on `schema.hasType(type_url)` and leaves it packed too, and resolving it would change the
+   decoded shape of `Credential.subject.assertion` and so the canonical payload `signing.ts` signs.
+   Normalise on the producer when something buf-native starts packing, never on this consumer.
+
 ### Verified: devtools is already on effect-rpc
 
 `packages/devtools/devtools` imports its service types from `@dxos/protocols/rpc` and contains no
