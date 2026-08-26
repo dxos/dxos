@@ -30,9 +30,14 @@
  *
  * Raise a budget only for growth you have looked at and accepted — that is the review point
  * this check exists to create.
+ *
+ * Flags, both for the base-vs-head comparison the `boot-budget` CI job posts on a PR
+ * (`compare-boot-budget.mjs`): `--report <file>` writes the measurement as JSON, and `--no-fail`
+ * measures without gating, so a base commit already over budget still yields a number to
+ * compare against instead of failing the run.
  */
 
-import { readFileSync, statSync } from 'node:fs';
+import { readFileSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 /** Entry + modulepreload links. 20 today; sized to survive a partition reshuffle, not to track it. */
@@ -56,6 +61,10 @@ const MAX_PRELOAD_ENTRIES = 25;
  * this. Expect it to catch accepted growth too — that is the review point, not a false positive.
  */
 const MAX_PRELOAD_BYTES = 4.45 * 1024 * 1024;
+
+const args = process.argv.slice(2);
+const reportPath = args.includes('--report') ? args[args.indexOf('--report') + 1] : undefined;
+const gate = !args.includes('--no-fail');
 
 const outDir = path.join(process.cwd(), 'out/composer');
 const html = readFileSync(path.join(outDir, 'index.html'), 'utf8');
@@ -83,9 +92,25 @@ console.log(
     `(budget: ${MAX_PRELOAD_ENTRIES} entries, ${asMb(MAX_PRELOAD_BYTES)} MB)`,
 );
 
+if (reportPath) {
+  writeFileSync(
+    reportPath,
+    JSON.stringify(
+      {
+        count: entries.length,
+        bytes,
+        budget: { count: MAX_PRELOAD_ENTRIES, bytes: MAX_PRELOAD_BYTES },
+        entries: entries.map((entry) => ({ name: path.basename(entry.href), bytes: entry.bytes })),
+      },
+      null,
+      2,
+    ),
+  );
+}
+
 const overCount = entries.length > MAX_PRELOAD_ENTRIES;
 const overBytes = bytes > MAX_PRELOAD_BYTES;
-if (!overCount && !overBytes) {
+if ((!overCount && !overBytes) || !gate) {
   process.exit(0);
 }
 

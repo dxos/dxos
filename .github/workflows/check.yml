@@ -221,10 +221,18 @@ jobs:
   # one. Split out of `check`, where its ~41s of bundling (nothing else in the workflow builds
   # `bundle`) sat behind that job's whole stage 1+2 sequence; the library builds it needs come from the
   # remote cache instead.
+  #
+  # On a PR the job also measures the BASE commit and posts a sticky comment when the graph grew.
+  # That is advisory, not a second gate: growth that stays under the ceiling is otherwise invisible
+  # until the ceiling is hit, and the 2026-08-26 re-baseline absorbed ~400 KB accumulated across
+  # many changes that each passed on their own.
   boot-budget:
     permissions:
       contents: read
       packages: read
+      # For the base-vs-head comment below. Fork PRs get a read-only token regardless, which is why
+      # the comparison steps also require the head repo to be this one.
+      pull-requests: write
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -232,6 +240,10 @@ jobs:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 30
+    env:
+      COMPARE: >-
+        ${{ github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -244,8 +256,80 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
+      # `continue-on-error` so a PR that blows the budget still gets the comment below saying by how
+      # much and where; the final step turns the outcome back into a job failure.
       - name: Check boot budget
+        id: budget
+        continue-on-error: true
         run: moon run composer-app:check-boot-budget
+
+      # Stashed outside the tree because the base checkout below replaces `scripts/`: both sides must
+      # be measured by THIS commit's script, or an edit to the measurement reads as a size change.
+      - name: Measure this PR's boot graph
+        if: env.COMPARE == 'true'
+        working-directory: packages/apps/composer-app
+        run: |
+          cp scripts/check-boot-budget.mjs "$RUNNER_TEMP/measure.mjs"
+          cp scripts/compare-boot-budget.mjs "$RUNNER_TEMP/compare.mjs"
+          node "$RUNNER_TEMP/measure.mjs" --report "$RUNNER_TEMP/boot-budget.head.json" --no-fail
+
+      # Building the base rather than trending a stored number: the comparison is then exact for
+      # this pair of commits and depends on no artifact retention. `continue-on-error` because a base
+      # that will not build is not this PR's failure — the comparison is simply skipped.
+      - name: Measure the base commit's boot graph
+        id: base
+        if: env.COMPARE == 'true'
+        continue-on-error: true
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          trap 'git checkout --detach "$HEAD_SHA" >/dev/null 2>&1 || true' EXIT
+          git checkout --detach "$BASE_SHA"
+          # The base lockfile can differ from the head one, so the tree has to be re-installed against it.
+          pnpm install --prefer-offline
+          moon run composer-app:bundle
+          # The measurement resolves `out/composer` from the cwd, which is the app, not the workspace.
+          (cd packages/apps/composer-app && node "$RUNNER_TEMP/measure.mjs" \
+            --report "$RUNNER_TEMP/boot-budget.base.json" --no-fail)
+
+      - name: Compare with the base
+        id: compare
+        if: env.COMPARE == 'true' && steps.base.outcome == 'success'
+        run: |
+          node "$RUNNER_TEMP/compare.mjs" \
+            --base "$RUNNER_TEMP/boot-budget.base.json" \
+            --head "$RUNNER_TEMP/boot-budget.head.json"
+
+      - name: Post or remove boot graph comment
+        if: steps.compare.outcome == 'success'
+        uses: actions/github-script@v7
+        env:
+          INCREASED: ${{ steps.compare.outputs.increased }}
+          BODY: ${{ steps.compare.outputs.body }}
+        with:
+          script: |
+            const marker = '<!-- boot-budget -->';
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const existing = comments.find((comment) => comment.body && comment.body.includes(marker));
+            if (process.env.INCREASED === 'true') {
+              const body = `${marker}\n${process.env.BODY}`;
+              if (existing) {
+                await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+              } else {
+                await github.rest.issues.createComment({ owner, repo, issue_number, body });
+              }
+            } else if (existing) {
+              await github.rest.issues.deleteComment({ owner, repo, comment_id: existing.id });
+            }
+
+      - name: Report boot budget failure
+        if: steps.budget.outcome == 'failure'
+        run: |
+          echo '::error::boot budget exceeded — see the "Check boot budget" step.'
+          exit 1
 
   # Retention suites (the `memory` tag), which the normal `test` job skips: they need `--expose-gc`
   # and force a single non-isolated fork, neither of which the sharded matrix can provide. Gated on
