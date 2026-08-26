@@ -1,20 +1,3 @@
-# Depot CI Migration
-# Source: .github/workflows/docker-image.yml
-#
-# Changes made:
-# - Rewrote .github/ path references to .depot/ (Dockerfile itself stays at .github/Dockerfile)
-# - Changed GitHub runs-on labels to their Depot equivalents
-# - Swapped docker/build-push-action for depot/build-push-action (Depot's own container-build
-#   product - up to 40x faster, native multi-platform, per wittjosiah's request), pushing to a new
-#   Depot project (dxos-docker-image, mld2ddpgxv). No token: input needed - tested with a real
-#   `depot ci run` (push:false, https://depot.dev/orgs/t8fblrl00n/workflows/jhr9qv6ppw): Depot CI's
-#   own ambient job identity authenticates to the project without a separate DEPOT_TOKEN/PAT.
-# - Swapped the GHCR login password from secrets.GITHUB_TOKEN to secrets.GH_DXOS_BOT_PAT: GHCR only
-#   accepts PATs, not the GitHub App tokens Depot CI's jobs get (flagged by CodeRabbit on #12779,
-#   same root cause that kept publish-all.yml on GitHub Actions). Reuses dxos-bot's existing PAT
-#   (already a Depot secret) rather than minting a new single-purpose one - same username: dxos-bot
-#   pairing used for it elsewhere in deploy-apps.yml/publish-all.yml.
-
 name: Build and Push Docker Image
 permissions:
   contents: read
@@ -37,7 +20,7 @@ jobs:
     strategy:
       matrix:
         node_version: ['20.19.5', '24.11.1']
-    runs-on: depot-ubuntu-latest # was: ubuntu-latest. Mapped standard GitHub runner to Depot equivalent.
+    runs-on: depot-ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v5

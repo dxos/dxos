@@ -1,9 +1,3 @@
-# Depot CI Migration
-# Source: .github/workflows/pr-build.yml
-#
-# Changes made:
-# - Rewrote .github/ path references to .depot/
-
 name: PR Build
 # Builds the composer-app bundle for per-PR previews and uploads it as an artifact.
 # NO secrets are exposed here — this workflow runs untrusted PR code safely.

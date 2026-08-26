@@ -1,9 +1,3 @@
-# Depot CI Migration
-# Source: .github/workflows/edge-tests.yml
-#
-# Changes made:
-# - Changed GitHub runs-on labels to their Depot equivalents
-
 name: EDGE tests
 on:
   # push:
@@ -26,7 +20,7 @@ concurrency:
 # https://nx.dev/ci/intro/tutorials/github-actions
 jobs:
   edge-test:
-    runs-on: depot-ubuntu-latest # was: ubuntu-latest. Mapped standard GitHub runner to Depot equivalent.
+    runs-on: depot-ubuntu-latest
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
