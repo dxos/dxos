@@ -102,6 +102,30 @@ after a buf round-trip and in the reverse direction, and both codecs produce byt
 `getCredentialProofPayload` output. `#9d`'s remaining work is therefore the type sweep at the 94
 declaration sites, not the signature question.
 
+## The `preserveAny` caller option, and what it unblocked
+
+`anySubstitutions` preserves an `Any` when **either** the field carries `[(preserve_any) = true]` **or**
+the caller passes `{ preserveAny: true }`. The first revision of `#3` implemented only the field half,
+which silently excluded the two production sites relying on the caller half -- neither `dxos/rpc.proto`
+nor `dxos/mesh/messaging.proto` marks its `Any` fields, so the option is the only thing keeping those
+payloads packed:
+
+| Site                              | Message                               | Why it stays packed                                                                        |
+| --------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `mesh/rpc/src/rpc.ts`             | `dxos.rpc.RpcMessage`                 | Frames every RPC between peers; the payload is the callee's business, not the transport's. |
+| `mesh/messaging/src/messenger.ts` | `dxos.mesh.messaging.ReliablePayload` | Rides the signalling network; the peer resolves it, not the relay.                         |
+
+`encodeCompat` / `decodeCompat` / `compatCodec` now take a `CompatOptions` argument and both sites are
+on the compat codec. These are the highest-traffic wire formats in the repo -- a byte mismatch breaks
+all peer communication rather than one call -- so both carry byte-equality fixtures against the legacy
+codec, plus a negative test proving the option actually gates (without it, a registered payload
+resolves).
+
+Two notes for `#8`. `createProtoRpcPeer` threads `encodingOptions` down to the codec, so this argument
+is the prerequisite that path needed. And `rpc.ts` keeps its lazy-codec comment ("breaks in workerd");
+`#9b` retired the same workaround once its type moved to buf, so re-test whether this one still earns
+its keep.
+
 ## `#9c`: the stores are on buf; the feed codec is not
 
 All three `#9c` types now have byte-equality fixtures, including the two `Any` had blocked:
@@ -120,6 +144,10 @@ materialises an unset non-optional message field as an empty submessage and writ
 explicitly, where buf omits both (18 bytes against 10 on a minimal record). Its fixture asserts
 cross-codec round-trips rather than byte equality. That qualification stands for merely _persisted_
 data; assert byte equality for anything _signed_.
+
+Re-scope both of these against `DX_AUTOMERGE_CREDENTIALS` (landed separately): moving credentials into
+an automerge document changes how much of `#9d` is a feed problem at all, so plan against the flag's
+end state rather than the feed one.
 
 `pipeline/codec.ts` -- the `FeedMessage` codec -- is deliberately **not** swapped. Its fixture now
 passes byte-identically, so nothing technical blocks it, but it is the value encoding for
@@ -158,8 +186,36 @@ Everything above landed behind an interface that hides which codec carried a val
 could go in one change. `#8` cannot: `schema.getService()` and `createProtoRpcPeer` are the RPC
 _transport_ for mesh/teleport, the iframe bridge and agentmanager, so migrating them changes what
 goes on the wire between peers -- a mismatch breaks replication between released versions rather than
-failing a local call. It needs its own change with cross-version fixtures, and the 49 test sites on
-`example.testing.*` protos should go first to prove the pattern without wire risk.
+failing a local call. The test sites on `example.testing.*` protos should go first to prove the pattern
+without wire risk.
+
+Measured, the 17 production files fall into three independent clusters, which is how to slice it:
+4 teleport extensions (control, gossip, replicator, automerge-replicator); 7 in
+client-services/client-protocol (invitations x2, auth, admission-discovery, notarization,
+`service.ts`, agent-hosting-provider); 4 `rpc-tunnel-e2e` demos carrying no wire risk; plus
+`gen-service-rpcs.ts`, the generator itself.
+
+### There is no drop-in buf RPC, but the descriptors are already here
+
+`buf.gen.yaml` runs only `protoc-gen-es`, and `@connectrpc/*` is absent from the repo, so nothing
+buf-native is wired up today. But `protoc-gen-es` emits a `DescService` for each of the 18 `service {}`
+blocks, and `bufRegistry` is a `Registry`, which exposes `getService(typeName)` -- the buf-side
+equivalent of `schema.getService()` already exists.
+
+Three directions, in preference order:
+
+1. **Re-point `@dxos/rpc` at buf descriptors.** Reimplement `ServiceBundle`/`ServiceDescriptor` over
+   `DescService` and encode payloads through the compat layer, keeping `RpcPeer`'s framing and the
+   `dxos.rpc.RpcMessage` envelope byte-identical. No cross-version risk; the surface is `service.ts`
+   (~190 lines) plus `rpc.ts`. Recommended.
+2. **effect-rpc** (`effect/unstable/rpc`) -- where the repo is already heading, and right for anything
+   whose wire may change or that is already an `RpcGroup`. A rewrite per service, so it carries the
+   same cross-version caution as (3).
+3. **Connect** (`@connectrpc/connect` + `protoc-gen-connect-es`) -- buf's official answer, and the
+   wrong shape here. It is built on HTTP semantics (fetch `Request`/`Response`), unary plus
+   server-streaming, bidi only over HTTP/2 gRPC. DXOS's transports are teleport-muxed channels,
+   MessagePorts and WebSockets, none of them HTTP. Adopting it changes the peer wire, which is the one
+   thing `#8` exists to avoid.
 
 Before starting any thread, read **Findings** at the bottom: the five generator divergences are
 what make the mechanical-looking parts non-mechanical, and two of them (`Any`, nested enums) are
@@ -191,9 +247,9 @@ generators run side by side and both outputs are consumed today.
 
 | Surface                                                                  | Count                        |
 | ------------------------------------------------------------------------ | ---------------------------- |
-| `.ts`/`.tsx` files importing `@dxos/protocols/proto/*` (protobuf.js gen) | 248 files / 367 declarations |
+| `.ts`/`.tsx` files importing `@dxos/protocols/proto/*` (protobuf.js gen) | 252 files / 372 declarations |
 | Files importing `@dxos/protocols/buf/*` (already migrated)               | 25 (dxos) + 85 (edge)        |
-| Files importing `@dxos/codec-protobuf`                                   | 39                           |
+| Files importing `@dxos/codec-protobuf`                                   | 22 (10 of them type-only)    |
 | `schema.getCodecForType(...)` call sites                                 | 51 (2 production sites left) |
 | `Stream` imports from `@dxos/codec-protobuf`                             | 26                           |
 

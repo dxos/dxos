@@ -9,6 +9,8 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { TimeoutError as ProtocolTimeoutError } from '@dxos/protocols';
+import { compatCodec } from '@dxos/protocols/buf-shape-compat';
+import { ReliablePayloadSchema } from '@dxos/protocols/buf/dxos/mesh/messaging_pb';
 import { schema } from '@dxos/protocols/proto';
 import { type ReliablePayload } from '@dxos/protocols/proto/dxos/mesh/messaging';
 import { ComplexMap, ComplexSet } from '@dxos/util';
@@ -25,7 +27,7 @@ export interface MessengerOptions {
   retryDelay?: number;
 }
 
-const ReliablePayload = schema.getCodecForType('dxos.mesh.messaging.ReliablePayload');
+const ReliablePayload = compatCodec<ReliablePayload>(ReliablePayloadSchema);
 const Acknowledgement = schema.getCodecForType('dxos.mesh.messaging.Acknowledgement');
 
 const RECEIVED_MESSAGES_GC_INTERVAL = 120_000;
