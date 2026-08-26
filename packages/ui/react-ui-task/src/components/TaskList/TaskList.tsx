@@ -37,7 +37,7 @@ export type TaskPatch = Partial<Pick<Task.Task, 'title' | 'status' | 'priority' 
  * container, so without it the grid shrinks to its content and the trailing actions float
  * mid-row.
  */
-const ROW_GRID = 'grid grid-cols-[2rem_1fr_2rem] items-center gap-2 w-full min-w-0 h-8';
+const ROW_GRID = 'grid grid-cols-[2rem_1fr_auto_2rem] items-center gap-2 w-full min-w-0 h-8';
 
 //
 // Context — plain Radix context (un-scoped); nesting task lists has no meaning today.

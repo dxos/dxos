@@ -38,11 +38,13 @@ const UNDECLARED_OUTPUT = JsonSchema.toJsonSchema(Schema.Void);
 
 // Accepts any JSON value, unlike `Schema.Any`, without serializing to the empty `{}` subschema
 // the Anthropic API rejects ("Empty schema that accepts any JSON value is not supported").
+// `ObjectKeyword` rather than `Record(String, Any)`: the provider's structured-output codec
+// rewrites records into [key, value] tuples whose value member is again the empty schema.
 const JsonPayload = Schema.Union([
   Schema.String,
   Schema.Number,
   Schema.Boolean,
-  Schema.Record(Schema.String, Schema.Any),
+  Schema.ObjectKeyword,
   Schema.Array(Schema.Any),
 ]);
 

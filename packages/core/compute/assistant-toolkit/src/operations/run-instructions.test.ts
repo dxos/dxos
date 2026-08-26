@@ -7,6 +7,7 @@ import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
+import { toCodecAnthropic } from 'effect/unstable/ai/AnthropicStructuredOutput';
 import * as Tool from 'effect/unstable/ai/Tool';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
@@ -159,10 +160,13 @@ describe('RunInstructions', () => {
 
   it('serializes completeJob without empty subschemas for an undeclared output', ({ expect }) => {
     // The Anthropic API rejects any `{}` subschema ("Empty schema that accepts any JSON value"),
-    // so the undeclared-output stand-in must serialize to concrete types.
+    // so the undeclared-output stand-in must serialize to concrete types — including through the
+    // provider's structured-output transformer, which rewrites records into tuples of `Any`.
     const output = routineOutputSchema(JsonSchema.toJsonSchema(Schema.Void));
-    const json = Tool.getJsonSchema(makeCompleteJobTool(output));
-    expect(JSON.stringify(json)).not.toContain('{}');
+    const tool = makeCompleteJobTool(output);
+    for (const options of [undefined, { transformer: toCodecAnthropic }]) {
+      expect(JSON.stringify(Tool.getJsonSchema(tool, options))).not.toContain('{}');
+    }
 
     // The stand-in still accepts an arbitrary JSON success payload.
     const parameters = Schema.Struct({ success: Schema.optional(Schema.NullOr(output)) });

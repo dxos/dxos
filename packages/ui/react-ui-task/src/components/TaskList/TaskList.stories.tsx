@@ -90,11 +90,14 @@ export const Default: Story = {
     await expect(
       Math.abs(row.children[1].getBoundingClientRect().left - create.children[1].getBoundingClientRect().left),
     ).toBeLessThan(1);
+
     // The row spans the full width, so trailing actions sit at the far edge.
     await expect(row.getBoundingClientRect().width).toBeGreaterThan(create.getBoundingClientRect().width * 0.9);
   },
 };
 
 export const Readonly: Story = {
-  args: { readonly: true },
+  args: {
+    readonly: true,
+  },
 };
