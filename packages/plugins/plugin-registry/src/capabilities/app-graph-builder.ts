@@ -17,8 +17,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 import { Position } from '@dxos/util';
 
-import { LOAD_PLUGIN_DIALOG } from '#containers';
 import { REGISTRY_ID, meta } from '#meta';
+import { LOAD_PLUGIN_DIALOG } from '#types';
 
 import { getCategoryPredicate, getRemotePluginIds } from '../categories';
 

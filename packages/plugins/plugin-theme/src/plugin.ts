@@ -2,32 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Capabilities from '@dxos/app-framework/Capabilities';
-import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
+import { ReactContext, Settings, Translator } from '#capabilities';
 import { meta } from '#meta';
-import { ThemeCapabilities } from '#types';
 
 import { type ThemePluginOptions } from './react-context';
 
-const ReactContext = AppCapability.reactContext(() => import('./react-context'), {
-  requires: [Capabilities.AtomRegistry, ThemeCapabilities.Settings],
-});
-const Translator = Capability.lazyModule(
-  'Translator',
-  { requires: [Capabilities.AtomRegistry, AppCapabilities.Translations], provides: [AppCapabilities.Translator] },
-  () => import('./translator'),
-);
-const Settings = AppCapability.settings(() => import('./settings'), {
-  provides: [ThemeCapabilities.Settings],
-});
-
 export const ThemePlugin = Plugin.define<ThemePluginOptions>(meta).pipe(
-  Plugin.addModule(Settings),
   Plugin.addModule(ReactContext),
+  Plugin.addModule(Settings),
   Plugin.addModule(Translator),
   Plugin.make,
 );

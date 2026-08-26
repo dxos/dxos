@@ -3,29 +3,17 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { CreateObject, ReactSurface, Schema, SpacetimeSettings } from '#capabilities';
+import { CreateObject, PluginAsset, ReactSurface, Schema, SpacetimeSettings, Translations } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
-
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SpacetimePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CreateObject),
+  Plugin.addModule(PluginAsset),
+  Plugin.addModule(ReactSurface),
   Plugin.addModule(Schema),
   Plugin.addModule(SpacetimeSettings),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(
-    AppCapability.pluginAsset({
-      pluginId: meta.profile.key,
-      path: 'PLUGIN.mdl',
-      content: pluginSpec,
-      mimeType: 'application/x-mdl',
-    }),
-  ),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

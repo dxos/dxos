@@ -11,7 +11,7 @@ import * as Graph from '@dxos/app-graph/Graph';
 import * as Node from '@dxos/app-graph/Node';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
-import { Path } from '@dxos/react-ui-list';
+import { Path } from '@dxos/react-ui-list/util';
 
 import { NavTreeCapabilities } from '#types';
 

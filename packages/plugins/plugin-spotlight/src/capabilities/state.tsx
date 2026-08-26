@@ -8,7 +8,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Node from '@dxos/app-graph/Node';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { COMMANDS_DIALOG } from '@dxos/plugin-navtree';
+import { COMMANDS_DIALOG } from '@dxos/plugin-navtree/meta';
 
 import { SpotlightCapabilities } from '#types';
 

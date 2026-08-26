@@ -3,33 +3,29 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { AppGraphBuilder, MarkdownExtension, OperationHandler, PresenterSettings, ReactSurface } from '#capabilities';
+import {
+  AppGraphBuilder,
+  MarkdownExtension,
+  OperationHandler,
+  PluginAsset,
+  PresenterSettings,
+  ReactSurface,
+  Translations,
+} from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
-
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../PLUGIN.mdl?raw';
 
 // TODO(burdon): Only scale markdown content.
 // TODO(burdon): Map stack content; Slide content type (e.g., markdown, sketch, IPFS image, table, etc.)
 
 export const PresenterPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(MarkdownExtension),
   Plugin.addModule(OperationHandler),
+  Plugin.addModule(PluginAsset),
   Plugin.addModule(PresenterSettings),
   Plugin.addModule(ReactSurface),
-  Plugin.addModule(MarkdownExtension),
-  Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(
-    AppCapability.pluginAsset({
-      pluginId: meta.profile.key,
-      path: 'PLUGIN.mdl',
-      content: pluginSpec,
-      mimeType: 'application/x-mdl',
-    }),
-  ),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 
