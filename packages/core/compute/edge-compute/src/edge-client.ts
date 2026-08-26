@@ -14,6 +14,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
+import { EdgeProcessHttpClient } from '@dxos/edge-client/process';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -39,6 +40,18 @@ export const createEdgeClient = (client: Client): EdgeHttpClient => {
   const edgeClient = new EdgeHttpClient(edgeUrl);
   const edgeIdentity = createEdgeIdentity(client);
   edgeClient.setIdentity(edgeIdentity);
+  return edgeClient;
+};
+
+/**
+ * Like {@link createEdgeClient}, but for the process-control routes, which live on a subclass so they
+ * stay out of Composer's eager boot graph (see `EdgeProcessHttpClient`).
+ */
+export const createEdgeProcessClient = (client: Client): EdgeProcessHttpClient => {
+  const edgeUrl = client.config.values.runtime?.services?.edge?.url;
+  invariant(edgeUrl, 'Edge is not configured.');
+  const edgeClient = new EdgeProcessHttpClient(edgeUrl);
+  edgeClient.setIdentity(createEdgeIdentity(client));
   return edgeClient;
 };
 

@@ -20,11 +20,11 @@ import { type Client } from '@dxos/client';
 import { type ProcessManager, type RemoteProcessManager, RemoteProcessManagerAdapter } from '@dxos/compute-runtime';
 import type * as Process from '@dxos/compute/Process';
 import { Context as DxosContext } from '@dxos/context';
-import type { EdgeHttpClient } from '@dxos/edge-client';
+import type { EdgeProcessHttpClient } from '@dxos/edge-client/process';
 import type { SpaceId } from '@dxos/keys';
 import type { ProcessProtocol } from '@dxos/protocols';
 
-import { createEdgeClient } from './edge-client';
+import { createEdgeProcessClient } from './edge-client';
 
 /**
  * EDGE implementation of {@link RemoteProcessManager.Control}: the seven compute-service process
@@ -35,7 +35,7 @@ import { createEdgeClient } from './edge-client';
  * deliberately unlike `EdgeTriggerManager`'s polls, which swallow failures: a spawn or an input that
  * silently did nothing would leave the caller waiting on a process that does not exist.
  */
-export const make = (getEdgeClient: () => EdgeHttpClient, spaceId: SpaceId): RemoteProcessManager.Control => ({
+export const make = (getEdgeClient: () => EdgeProcessHttpClient, spaceId: SpaceId): RemoteProcessManager.Control => ({
   spawn: (request: ProcessProtocol.SpawnProcessRequest) =>
     Effect.tryPromise(() => getEdgeClient().spawnProcess(DxosContext.default(), spaceId, request)).pipe(
       Effect.map((response) => response.info),
@@ -99,7 +99,7 @@ export const make = (getEdgeClient: () => EdgeHttpClient, spaceId: SpaceId): Rem
  * is why this is scoped where the monitor above is not.
  */
 export const processManagerFromEdgeClient = (
-  edgeClient: EdgeHttpClient,
+  edgeClient: EdgeProcessHttpClient,
   spaceId: SpaceId,
 ): Layer.Layer<ProcessManager.Service, never, Registry.AtomRegistry> =>
   RemoteProcessManagerAdapter.layer(make(() => edgeClient, spaceId));
@@ -112,6 +112,6 @@ export const processManagerFromClient = (
   client: Client,
   spaceId: SpaceId,
 ): Layer.Layer<ProcessManager.Service, never, Registry.AtomRegistry> => {
-  let cached: EdgeHttpClient | undefined;
-  return RemoteProcessManagerAdapter.layer(make(() => (cached ??= createEdgeClient(client)), spaceId));
+  let cached: EdgeProcessHttpClient | undefined;
+  return RemoteProcessManagerAdapter.layer(make(() => (cached ??= createEdgeProcessClient(client)), spaceId));
 };
