@@ -1,6 +1,6 @@
 # Composer Memory Usage — Tasks
 
-_Resume: Phase 4 idle-churn sites S1-S4 fixed/investigated (see below). S1 landed in #12561 (trigger-list subscription); S3 upgraded from backoff to a real streaming RPC in #12580; S2 likewise upgraded from backoff to a real streaming RPC in this pass. Sequencing still open — verify decommit with `scripts/memory/soak.mjs` once this lands. Phase 3 continues opportunistically. Uncommitted: none._
+_Resume: Phase 7 W3 (attention/view-state containers) is the next action; push the branch first, since PR #12601 reads CONFLICTING until the merge below reaches it. Uncommitted: none. Last: merged `main` into `claude/atoms-keepalive-memory-audit-7lzyb3` on 2026-08-26 — three conflicts resolved, `app-graph`/`app-framework`/`echo` green afterwards (131 / 256 / 583 passing). Phases 1-4 and W1-W2 are done; Phase 3 continues opportunistically and Phase 4 sequencing still wants a `scripts/memory/soak.mjs` decommit run._
 
 **Target: 300–400 MB resting footprint for an idle tab, 500 MB ceiling.**
 Composition model and measurement rules: DESIGN.md. Industry comparison:
@@ -243,8 +243,11 @@ ATOMS-AUDIT.md): ECHO atoms become **proxy-bounded** — `WeakMap<proxy, atom>`
 families, atom lifetime = entity-proxy lifetime, no atom-level TTL, so ECHO's
 future object-residency policy is the single lifetime knob (decided
 2026-08-14). Everything else becomes subscriber-bounded plus a short idle TTL,
-with per-key state in owner-controlled containers. **App-graph (`graph.ts`
-`_node`/`_edges`) is excluded — being handled independently.**
+with per-key state in owner-controlled containers. **App-graph's `_node`/`_edges`
+are excluded — handled independently, and that work has since landed on `main`
+as #12594**, which rebuilt the package (`graph.ts` → `AppGraph.ts` +
+`AppGraphBuilder.ts`) and replaced their `keepAlive` with revocable per-node
+registry mounts (`_pin`/`_unpin`, covered by `retention.test.ts`).
 
 - [x] **W1. TTL groundwork.** `DEFAULT_ATOM_IDLE_TTL` (5 s) lives with the
       manager's other defaults in `manager-types.ts` and is applied where the
@@ -262,6 +265,9 @@ with per-key state in owner-controlled containers. **App-graph (`graph.ts`
       dirty-flush batch rebuilds every stale node regardless of `lazy`, so a
       node retained past its last reader throws after `removeNode` empties it,
       where no caller can catch it. Caught by plugin-navtree's storybook run.
+      Both atoms moved to `AppGraph.ts` in #12594 and carry the same TTL there;
+      the per-node mounts that PR added pin `_node`, not these two derived
+      atoms, so the grace period still reaches them.
 - [x] **W2. ECHO families → proxy-bounded.** `memoizePerEntity` /
       `memoizePerEntityKey` (`internal/common/atom-memo.ts`) replace
       `Atom.family` for the 8 entity-keyed families across `Obj/atoms.ts` and
