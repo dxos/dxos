@@ -23,8 +23,17 @@ const withoutInstructions = (input: Record<string, unknown> | undefined): Record
  * trigger's `runnable` to RunInstructions with the owned instructions bound into `input`; an operation action
  * binds the operation directly and drops any stale instructions binding. Call after the action (`spec`) changes
  * so a trigger never keeps a binding for the previous action.
+ *
+ * A routine with no action wires nothing. Deriving a `runnable` from an absent `spec` yields `undefined`, which
+ * would leave the trigger enabled and pointing at nothing — the dispatcher then treats every firing as a defect,
+ * so a timer trigger fails on its whole schedule. The guard lives here rather than at the call sites because
+ * one unguarded caller is enough to strand a trigger.
  */
 export const wireTriggers = (routine: Routine.Routine): void => {
+  if (!routine.spec) {
+    return;
+  }
+
   const instructions = Routine.instructionsRef(routine);
   const fn = instructions ? runInstructionsRef() : Routine.runnableRef(routine);
   for (const ref of routine.triggers) {
@@ -71,9 +80,7 @@ export const makeRoutine = ({
     Obj.setParent(trigger, routine);
   }
   // Wire every attached trigger (singular or `triggers`) from the action; preserves template-provided
-  // input. Gated on `spec`: with no action yet, wiring would null out pre-set trigger runnables.
-  if (routine.spec) {
-    wireTriggers(routine);
-  }
+  // input. A routine with no action yet is a no-op, guarded inside `wireTriggers`.
+  wireTriggers(routine);
   return routine;
 };
