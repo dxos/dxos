@@ -64,7 +64,9 @@ const ChatModuleContainer = ({ space }: { space: Space }) => {
         <Panel.Content asChild>
           <Chat.Content>
             <Chat.Thread viewType={view} />
-            <Chat.TaskList classNames='max-h-[120px] border-t border-separator rounded-sm text-description' />
+            <div className='px-3 border'>
+              <Chat.TaskList classNames='max-h-[6lh] border-t border-separator rounded-sm text-description' />
+            </div>
             <Chat.Prompt {...chatProps} classNames='border-none rounded-none' outline preset={preset?.id} />
           </Chat.Content>
         </Panel.Content>

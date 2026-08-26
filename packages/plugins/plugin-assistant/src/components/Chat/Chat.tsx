@@ -568,7 +568,7 @@ const ChatTaskList = composable<HTMLDivElement, ChatTaskListProps>(
     return (
       <TaskList.Root tasks={tasks} showGroupLabels={false}>
         <TaskList.Viewport {...composableProps(props, { classNames: 'dx-container' })} ref={forwardedRef}>
-          <TaskList.Content classNames='h-full max-h-[6lh]' />
+          <TaskList.Content />
         </TaskList.Viewport>
       </TaskList.Root>
     );
