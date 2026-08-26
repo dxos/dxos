@@ -21,13 +21,17 @@ Goals:
 > migration (removing the hard-coded strings) follows.
 >
 > **Host update.** Every EDGE service now resolves against one host per environment —
-> `edge.network`, `preview.dxos.network`, `dev.dxos.network` — with the service selected by path
-> prefix (`/ai`, `/hub`, `/image`, `/calls`, `/cors`, `/discord`, `/transcription`, `/introspect`,
-> `/api/sandbox`). `EDGE_URLS` and `EDGE_SERVICE_PATHS` in [`edge-services.ts`](src/edge-services.ts)
-> are the source of truth; the per-worker `*.dxos.network` and `*.dxos.workers.dev` hostnames in the
-> tables below are the pre-normalization state, kept because the **Source** column (config vs.
-> HARDCODED) is what this audit tracks and that has not changed. Host inventory and retirement
-> order: `dxos/edge` → `docs/audits/edge-hosts.md`.
+> `edge.network`, `preview.dxos.network`, `dev.dxos.network` — with the service selected by a path
+> prefix beneath it. `EDGE_URLS` in [`edge-services.ts`](src/edge-services.ts) is the source of
+> truth for those hosts, and `EDGE_SERVICE_PATHS` for the prefixes of the six services a client
+> holds an endpoint for (`/calls`, `/image`, `/discord`, `/cors`, `/introspect/mcp`, and
+> transcription, which shares calls-service's `/calls`). The prefixes edge serves itself — `/ai`,
+> `/hub`, `/db`, `/api/sandbox` and the rest — are not in that map; `dxos/edge` →
+> `docs/audits/edge-hosts.md` is the full prefix inventory and retirement order.
+>
+> The per-worker `*.dxos.network` and `*.dxos.workers.dev` hostnames in the tables below are the
+> pre-normalization state, kept because the **Source** column (config vs. HARDCODED) is what this
+> audit tracks and that has not changed.
 
 ---
 
