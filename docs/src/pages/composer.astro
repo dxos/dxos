@@ -812,7 +812,7 @@ import IconX from '../components/svg/IconX.astro';
         block.querySelector('.w-form-done').style.display = 'none';
         block.querySelector('.w-form-fail').style.display = 'none';
         try {
-          const res = await fetch('https://hub.dxos.network/account/request-access', {
+          const res = await fetch('https://dxos.network/hub/account/request-access', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: email }),

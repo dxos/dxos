@@ -42,7 +42,6 @@ export const FeedbackPanel = () => {
   );
 
   const hidden = useMemo(() => ({ version }), [version]);
-  const excludeImage = useMemo(() => !settings?.enableGitHubIssues, [settings?.enableGitHubIssues]);
 
   useAsyncEffect(
     async (controller) => {
@@ -64,7 +63,7 @@ export const FeedbackPanel = () => {
         <FeedbackForm.Root hidden={hidden} plugins={plugins}>
           <Form.Viewport>
             <Form.Content>
-              <Form.FieldSet filter={excludeImage ? (props) => props.filter((p) => p.name !== 'image') : undefined} />
+              <Form.FieldSet />
               <DownloadLogsAction />
               {/* GH only opens a prefilled URL — independent of PostHog feedback availability. */}
               {/* PostHog + Discord both call `CaptureUserFeedback`, so they share the gate. */}
