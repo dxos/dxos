@@ -13,6 +13,7 @@ import { DEFAULT_HUB_URL, DX_CONFIG, DX_DATA, getProfileConfigPath, getProfilePa
 import { invariant } from '@dxos/invariant';
 
 import { Config } from './config';
+import { EDGE_URLS } from './edge-services';
 import { type ConfigInit } from './types';
 
 export const memoryConfig = new Config({
@@ -43,11 +44,11 @@ export const defaultConfig = new Config({
     },
     services: {
       edge: {
-        url: 'https://dxos.network/',
+        url: `${EDGE_URLS.production}/`,
       },
       iceProviders: [
         {
-          urls: 'https://dxos.network/ice',
+          urls: `${EDGE_URLS.production}/ice`,
         },
       ],
       ipfs: {
@@ -60,7 +61,7 @@ export const defaultConfig = new Config({
 
 /** Aligns a fresh monorepo CLI profile with the backend Composer's local dev server talks to. */
 export const localDevConfig = new Config(
-  { runtime: { services: { edge: { url: 'https://preview.dxos.network' } } } },
+  { runtime: { services: { edge: { url: EDGE_URLS.preview } } } },
   defaultConfig.values,
 );
 
