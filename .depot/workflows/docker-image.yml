@@ -31,7 +31,7 @@ jobs:
         with:
           registry: ghcr.io
           username: dxos-bot
-          password: ${{ secrets.GH_DXOS_BOT_PAT }} # confirmed working: "Login Succeeded!" on a real depot ci run.
+          password: ${{ secrets.GH_DXOS_BOT_PAT }}
       - name: Set suffix if on branch
         run: |
           if [[ "${GITHUB_REF}" != "refs/heads/main" ]]; then
