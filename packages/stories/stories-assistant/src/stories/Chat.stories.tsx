@@ -126,16 +126,19 @@ const EXECUTABLE_TASKS = [
     title: 'Compute 10! using the calculator',
     expression: '10!',
     result: '3628800',
+    dependencies: [],
   },
   {
     title: 'Compute 12^2 using the calculator',
     expression: '12^2',
     result: '144',
+    dependencies: [1],
   },
   {
     title: 'Compute (1+2+3+4)! using the calculator',
     expression: '(1+2+3+4)!',
     result: '3628800',
+    dependencies: [],
   },
 ];
 
@@ -154,10 +157,12 @@ const seedExecutableTasks = async ({ space, chat }: { space: Space; chat: Assist
   Obj.update(chat, (chat) => {
     chat.taskSet = Ref.make(taskSet);
   });
-  let previous: Task.Task | undefined;
+  let tasks: Task.Task[] = [];
   for (const { title } of EXECUTABLE_TASKS) {
-    previous = Outline.addTask(space.db, taskSet, title, previous ? { dependsOn: [Ref.make(previous)] } : {});
+    const task = Outline.addTask(space.db, taskSet, title, previous ? { dependsOn: [Ref.make(previous)] } : {});
+    tasks.push(task);
   }
+
   await space.db.flush();
 };
 
