@@ -1209,7 +1209,10 @@ export class AutomergeHost extends Resource {
     const passes = (this._nonConvergingSyncPasses.get(syncKey) ?? 0) + 1;
     this._nonConvergingSyncPasses.set(syncKey, passes);
     const overThreshold = passes - NON_CONVERGENCE_WARN_THRESHOLD;
-    if (overThreshold >= 0 && overThreshold % NON_CONVERGENCE_WARN_INTERVAL === 0) {
+    // A diff on its own is the normal state while sync settles, so both warnings below wait for
+    // the pair to stay unconverged across `NON_CONVERGENCE_WARN_THRESHOLD` passes.
+    const warnNonConvergence = overThreshold >= 0 && overThreshold % NON_CONVERGENCE_WARN_INTERVAL === 0;
+    if (warnNonConvergence) {
       log.warn('collection sync not converging', {
         collectionId,
         peerId,
@@ -1286,7 +1289,12 @@ export class AutomergeHost extends Resource {
       // `findWithProgress` resolves from the existing query for an already-`ready` document and
       // `_documentsToSync` feeds a share policy Subduction does not consult, so a diverged
       // document reaching here gets no retry from either — the diff simply repeats next pass.
-      if (this._useSubduction && getHandleState(this._repo, documentId) === 'ready' && different.includes(documentId)) {
+      if (
+        warnNonConvergence &&
+        this._useSubduction &&
+        getHandleState(this._repo, documentId) === 'ready' &&
+        different.includes(documentId)
+      ) {
         log.warn('diverged document has no subduction retry path', {
           collectionId,
           peerId,
