@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Extension } from '@codemirror/state';
 import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -21,7 +22,10 @@ import { Journal } from '#types';
  * outline's own — a project's inline outline promotes into the project's task set.
  */
 const OutlineSection: Role.Role<
-  AppSurface.SectionData<Outline.Outline, { taskSet?: TaskSetType.TaskSet; onSelectTask?: (task: Task.Task) => void }>
+  AppSurface.SectionData<
+    Outline.Outline,
+    { taskSet?: TaskSetType.TaskSet; onSelectTask?: (task: Task.Task) => void; extensions?: Extension[] }
+  >
 > = Role.make('org.dxos.role.section');
 
 export default Capability.makeModule(() =>
@@ -51,12 +55,13 @@ export default Capability.makeModule(() =>
         component: OutlineArticle,
         // No toolbar when embedded: the host surface (e.g. `ProjectArticle`) owns the toolbar, and a
         // second one inside its section reads as a nested editor.
-        props: ({ role, data: { subject, attendableId, taskSet, onSelectTask } }) => ({
+        props: ({ role, data: { subject, attendableId, taskSet, onSelectTask, extensions } }) => ({
           role,
           subject,
           attendableId,
           taskSet,
           onSelectTask,
+          extensions,
           toolbar: false,
         }),
       }),

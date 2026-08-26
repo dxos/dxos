@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type Extension } from '@codemirror/state';
 import * as Schema from 'effect/Schema';
 import React, { memo, useCallback, useMemo, useState } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -15,6 +16,7 @@ import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { SchemaAST } from '@dxos/effect';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Flex, Icon, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -79,6 +81,19 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   // their own tab — so follow the link there rather than letting the outline swap itself for a
   // task form inside the Overview.
   const handleSelectTask = useCallback(() => setTab('tasks'), []);
+
+  // Editor extensions other plugins contribute (e.g. plugin-github's `#123` decoration). The
+  // outline builds its own editor, so the host collects them and hands them down — the same
+  // contract `MarkdownArticle` honours for markdown documents.
+  const extensionProviders = useCapabilities(MarkdownCapabilities.ExtensionProvider);
+  const outlineExtensions = useMemo(
+    () =>
+      (extensionProviders ?? [])
+        .flat()
+        .map((provider) => (typeof provider === 'function' ? provider({}) : provider))
+        .filter((extension): extension is Extension => !!extension),
+    [extensionProviders],
+  );
 
   const handleOpen = useCallback(
     (object: Obj.Unknown) => {
@@ -183,7 +198,13 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                       <Form.Section title={t('outline.label')}>
                         <Surface.Surface
                           type={AppSurface.Section}
-                          data={{ subject: outline, attendableId, taskSet, onSelectTask: handleSelectTask }}
+                          data={{
+                            subject: outline,
+                            attendableId,
+                            taskSet,
+                            onSelectTask: handleSelectTask,
+                            extensions: outlineExtensions,
+                          }}
                           limit={1}
                         />
                       </Form.Section>

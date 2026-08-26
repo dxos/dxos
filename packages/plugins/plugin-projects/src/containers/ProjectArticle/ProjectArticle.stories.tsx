@@ -48,53 +48,37 @@ const OUTLINE_ITEM = 'Draft the launch checklist';
  * *referenced* object (a task's title, a new member of `taskSet.tasks`, a new artifact ref) reaches
  * the DOM is the only way to catch a section that resolved once and then went inert.
  */
-let seeded: { space: Space; project: Project.Project; taskSet: TaskSet.TaskSet } | undefined;
+let seeded: { space: Space; project: Project.Project; taskSet: TaskSet.TaskSet; task: Task.Task } | undefined;
 
-/** A project exactly as `Project.make` leaves it: an owned task set and outline, nothing else. */
+/**
+ * The project as the create-object capability leaves it, then filled with the graph a used project
+ * has: an owned Instructions document, checklist content on the outline, one referenced artifact,
+ * tasks in the owned set, and the repository the project's work lands in. Seeded at client init so
+ * EVERY story shows a populated project, including the one with no play function.
+ */
 const createProject = (space: Space) => {
   const project = space.db.add(Project.make({ name: PROJECT_NAME }));
   const taskSet = project.taskSet?.target;
   if (!taskSet) {
     throw new Error('Expected the project to own a task set.');
   }
-  seeded = { space, project, taskSet };
-};
-
-/**
- * Fills the default project with the graph the create-object capability builds: an owned
- * Instructions document, checklist content on the owned outline, one referenced artifact, and a
- * task in the owned set. Only the stories that assert on content call this — the default story
- * shows an empty project.
- */
-const seedContent = async () => {
-  // Called from `play`, which runs once the story has mounted but not necessarily once the client
-  // has finished initializing — the project is created by the plugin's `onClientInitialized`.
-  await waitFor(() => expect(seeded).toBeTruthy(), { timeout: 10_000 });
-  const context = seeded;
-  if (!context) {
-    throw new Error('The story did not create a project.');
+  const outline = project.outline?.target;
+  if (!outline?.content.target) {
+    throw new Error('Expected the project to own an outline.');
   }
-  const { space, project, taskSet } = context;
 
   // The project names its repository, which is what makes a `#nnn` reference in its documents
   // resolve (plugin-github reads `project.repo`).
   const repo = space.db.add(Repo.make({ name: 'dxos', owner: 'dxos', url: 'https://github.com/dxos/dxos' }));
-  Obj.update(project, (project) => {
-    project.repo = Ref.make(repo);
-  });
-
   const instructions = Instructions.make({ text: 'You are an assistant focused on this project.' });
   const artifact = space.db.add(Text.make({ name: ARTIFACT_TITLE, content: 'Notes.' }));
   Obj.update(project, (project) => {
+    project.repo = Ref.make(repo);
     project.instructions = Ref.make(instructions);
     project.artifacts = [Ref.make(artifact)];
   });
   Obj.setParent(instructions, project);
 
-  const outline = project.outline?.target;
-  if (!outline?.content.target) {
-    throw new Error('Expected the project to own an outline.');
-  }
   const task = space.db.add(Task.make({ title: TASK_TITLE, status: 'todo' }));
   Obj.setParent(task, taskSet);
   const linkTask = space.db.add(
@@ -107,10 +91,22 @@ const seedContent = async () => {
 
   // The third item is what promotion leaves behind: a link to the task in the project's set.
   Obj.update(outline.content.target, (text) => {
-    text.content = `- [ ] ${OUTLINE_ITEM}\n- [ ] Book the launch review\n- [ ] [${TASK_TITLE}](${Obj.getURI(task)})\n`;
+    text.content = `- [ ] ${OUTLINE_ITEM}\n- [ ] Review #12752 before the release\n- [ ] [${TASK_TITLE}](${Obj.getURI(task)})\n`;
   });
 
-  await space.db.flush({ indexes: true });
+  seeded = { space, project, taskSet, task };
+};
+
+/** Waits for the seeded graph a play function asserts against; the writes happen at client init. */
+const seedContent = async () => {
+  // `play` runs once the story has mounted but not necessarily once the client has finished
+  // initializing — the project is created by the plugin's `onClientInitialized`.
+  await waitFor(() => expect(seeded).toBeTruthy(), { timeout: 10_000 });
+  const context = seeded;
+  if (!context) {
+    throw new Error('The story did not create a project.');
+  }
+  await context.space.db.flush({ indexes: true });
   return context;
 };
 

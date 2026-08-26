@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Extension } from '@codemirror/state';
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
@@ -34,6 +35,8 @@ export type OutlineArticleProps = AppSurface.ObjectArticleProps<OutlineType.Outl
    * (a project shows the task on its Tasks tab). Unset, the outline swaps itself for the task form.
    */
   onSelectTask?: (task: Task.Task) => void;
+  /** Editor extensions contributed by the host (e.g. plugin-github's `#123` decoration). */
+  extensions?: Extension[];
 };
 
 export const OutlineArticle = ({
@@ -43,6 +46,7 @@ export const OutlineArticle = ({
   taskSet,
   toolbar = true,
   onSelectTask,
+  extensions,
 }: OutlineArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const db = Obj.getDatabase(outline);
@@ -174,6 +178,7 @@ export const OutlineArticle = ({
       onConvertibleChange={setConvertible}
       onSelectLink={handleSelectLink}
       resolveLinkLabel={resolveLinkLabel}
+      extensions={extensions}
     >
       <Menu.Root {...outlineActions} attendableId={attendableId}>
         <Panel.Root role={role}>

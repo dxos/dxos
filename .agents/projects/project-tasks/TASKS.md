@@ -155,6 +155,13 @@ Each is independent of the others; none is started.
       GitHub extension can add a PRs tab to a project. Needs a surface/capability
       for tab registration (label, icon, order) alongside the panel surface each
       tab renders.
+- [ ] **`#nnn` needs plugin-github mounted to resolve in ProjectArticle** — the
+      wiring is done (the article collects `MarkdownCapabilities.ExtensionProvider`
+      and passes it into the outline, which now takes host extensions), and the
+      story seeds a `dxos/dxos` Repo on the project. Its story does NOT mount
+      `GitHubPlugin`: adding it lengthened the mount enough to turn the client
+      teardown flake below from intermittent into consistent. Demonstrated
+      meanwhile by `plugins/plugin-tasks/components/Outline` → `WithReferences`.
 - [ ] **ProjectArticle `Sections` story is flaky (~1 run in 4)** — the article
       renders with EVERY ref-gated section missing (no instructions, outline,
       or artifact card), which is the previous story's client being torn down

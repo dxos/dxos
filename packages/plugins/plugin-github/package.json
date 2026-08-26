@@ -78,6 +78,11 @@
       "source": "./src/GitHubPlugin.ts",
       "types": "./dist/types/src/GitHubPlugin.d.ts",
       "import": "./dist/lib/GitHubPlugin.mjs"
+    },
+    "./extensions": {
+      "source": "./src/extensions/index.ts",
+      "types": "./dist/types/src/extensions/index.d.ts",
+      "import": "./dist/lib/extensions.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
