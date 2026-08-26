@@ -398,3 +398,66 @@ describe('Graph', () => {
     expect(graph.nodes.map((node) => node.id)).to.deep.eq(['node-2']);
   });
 });
+
+describe('subgraph', () => {
+  /** `root` fans out to two branches; `type` distinguishes the two kinds of edge. */
+  const build = () => {
+    const model = new GraphModel.GraphModel();
+    model.addNodes([{ id: 'root' }, { id: 'a' }, { id: 'a1' }, { id: 'a2' }, { id: 'b' }, { id: 'b1' }]);
+    model.addEdges([
+      { id: 'e1', type: 'child', source: 'root', target: 'a' },
+      { id: 'e2', type: 'child', source: 'a', target: 'a1' },
+      { id: 'e3', type: 'action', source: 'a', target: 'a2' },
+      { id: 'e4', type: 'child', source: 'root', target: 'b' },
+      { id: 'e5', type: 'child', source: 'b', target: 'b1' },
+    ]);
+    return model;
+  };
+
+  test('collects every edge type by default', ({ expect }) => {
+    expect(build().subgraph('a').sort()).to.deep.eq(['a1', 'a2']);
+  });
+
+  test('narrows to the given types', ({ expect }) => {
+    const model = build();
+    expect(model.subgraph('a', 'child')).to.deep.eq(['a1']);
+    expect(model.subgraph('a', ['child', 'action']).sort()).to.deep.eq(['a1', 'a2']);
+  });
+
+  test('excludes the root, including through a cycle back to it', ({ expect }) => {
+    const model = build();
+    model.addEdge({ id: 'e6', type: 'child', source: 'a1', target: 'a' });
+    expect(model.subgraph('a').sort()).to.deep.eq(['a1', 'a2']);
+  });
+
+  test('excludes a node an outside parent also holds, and what hangs below it', ({ expect }) => {
+    const model = build();
+    // `b` reaches into `a`'s branch, so unloading `a` would pull the ground out from under `b`.
+    model.addEdge({ id: 'e6', type: 'child', source: 'b', target: 'a1' });
+    expect(model.subgraph('a')).to.deep.eq(['a2']);
+
+    // And the exclusion carries down: a1's own child is now reachable from `b` too.
+    model.addNode({ id: 'a1x' });
+    model.addEdge({ id: 'e7', type: 'child', source: 'a1', target: 'a1x' });
+    expect(model.subgraph('a')).to.deep.eq(['a2']);
+  });
+
+  test('an inbound edge of any type retains the node', ({ expect }) => {
+    const model = build();
+    model.addEdge({ id: 'e6', type: 'action', source: 'b', target: 'a1' });
+    // Narrowing the walk to `child` does not narrow the question of whether anything still holds it.
+    expect(model.subgraph('a', 'child')).to.deep.eq([]);
+  });
+
+  test('collects a placeholder slot the subgraph pulled in', ({ expect }) => {
+    const model = build();
+    model.addEdge({ id: 'e6', type: 'child', source: 'a1', target: 'pending' });
+    expect(model.findNode('pending')).to.be.undefined;
+    expect(model.subgraph('a').sort()).to.deep.eq(['a1', 'a2', 'pending']);
+  });
+
+  test('a node with no edges yields nothing', ({ expect }) => {
+    expect(build().subgraph('b1')).to.deep.eq([]);
+    expect(build().subgraph('absent')).to.deep.eq([]);
+  });
+});

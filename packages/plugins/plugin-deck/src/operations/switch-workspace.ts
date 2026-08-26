@@ -14,7 +14,7 @@ import { invariant } from '@dxos/invariant';
 
 import { DeckCapabilities, DeckSchema } from '#types';
 
-import { openableChildren } from '../util';
+import { openableChildren, touchWorkspace } from '../util';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = LayoutOperation.SwitchWorkspace.pipe(
   Operation.withHandler(
@@ -42,10 +42,13 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
           };
         });
 
-        // Fullscreen is transient and scoped to the workspace it was entered in.
+        // Fullscreen is transient and scoped to the workspace it was entered in. `recentWorkspaces`
+        // is the only thing driving graph retention: the builder asks the deck what it may unload
+        // (see `capabilities/graph-retention.ts`), so this write is the whole trigger.
         yield* Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (state) => ({
           ...state,
           fullscreen: undefined,
+          recentWorkspaces: touchWorkspace(state.recentWorkspaces, input.subject),
         }));
       }
 

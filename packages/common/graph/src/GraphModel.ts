@@ -583,8 +583,10 @@ export abstract class AbstractGraphModel<
   }
 
   /**
-   * Ids reachable from `id` along `type` edges, excluding `id` itself — the subgraph a caller
-   * unloading a branch wants to hand to {@link AbstractGraphModel.release}.
+   * Ids reachable from `id` along `type` edges, excluding `id` itself.
+   *
+   * Plain reachability. A caller unloading a branch wants {@link AbstractGraphModel.subgraph}
+   * instead, which is the same walk narrowed to what is safe to release.
    */
   descendants(id: string, type?: string): string[] {
     const seen = new Set<string>();
@@ -600,6 +602,54 @@ export abstract class AbstractGraphModel<
 
     seen.delete(id);
     return [...seen];
+  }
+
+  /**
+   * Ids reachable from `id` that nothing outside the set holds, excluding `id` itself.
+   *
+   * {@link AbstractGraphModel.descendants} answers what is reachable; this answers what can be
+   * released, which is a smaller set. A node an outside parent also points at stays, along with
+   * everything reachable only through it: releasing it would tear down that parent's view of it
+   * too, and whatever renders the node blanks until it is rebuilt. The inbound check is not
+   * narrowed by `type` — the question is whether anything still holds the node, which no choice of
+   * traversal edge changes.
+   *
+   * Every edge type by default, so a node's secondary relations are collected with it rather than
+   * orphaned beside it. Walks edges rather than {@link AbstractGraphModel.neighbors}, so a
+   * placeholder slot inside the subgraph is reclaimed along with the rest of it.
+   */
+  subgraph(id: string, type?: string | readonly string[]): string[] {
+    const types = type === undefined ? undefined : new Set(typeof type === 'string' ? [type] : type);
+    const collected = new Set<string>();
+    const queue = [id];
+    while (queue.length > 0) {
+      for (const edge of this.outgoing(queue.shift()!)) {
+        // An untyped edge is excluded by any filter, matching how `outgoing(id, type)` reads one.
+        if (types !== undefined && (edge.type === undefined || !types.has(edge.type))) {
+          continue;
+        }
+        if (edge.target === id || collected.has(edge.target)) {
+          continue;
+        }
+
+        collected.add(edge.target);
+        queue.push(edge.target);
+      }
+    }
+
+    // Dropping a node puts whatever hangs below it back within reach of something retained, so this
+    // runs to a fixpoint rather than once; a single pass unless subgraphs interleave.
+    for (let changed = true; changed;) {
+      changed = false;
+      for (const candidate of collected) {
+        if (this.incoming(candidate).some(({ source }) => source !== id && !collected.has(source))) {
+          collected.delete(candidate);
+          changed = true;
+        }
+      }
+    }
+
+    return [...collected];
   }
 
   removeNodes(ids: string[], options?: { detachEdges?: boolean }): Model {

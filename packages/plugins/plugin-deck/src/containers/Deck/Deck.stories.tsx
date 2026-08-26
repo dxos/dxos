@@ -182,6 +182,7 @@ const storyDeckState = Capability.makeModule(() =>
     }).pipe(Atom.keepAlive);
 
     const ephemeralAtom = Atom.make<DeckSchema.EphemeralDeckState>({
+      recentWorkspaces: [],
       fullscreen: undefined,
       dialogContent: null,
       dialogOpen: false,

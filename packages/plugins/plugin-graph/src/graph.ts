@@ -56,6 +56,15 @@ export default Capability.makeModule(
       { immediate: true },
     );
 
+    // Retention is contributed by whichever plugin knows what a releasable unit is, which loads
+    // after this one; without a port the builder never releases anything.
+    const retentionAtom = yield* Capability.atom(AppCapabilities.AppGraphRetention);
+    const unsubscribeRetention = registry.subscribe(
+      retentionAtom,
+      ([retention]) => AppGraphBuilder.setRetention(builder, retention),
+      { immediate: true },
+    );
+
     // await builder.initialize();
     void AppGraph.expandSync(builder.graph, GraphNode.RootId, 'child');
 
@@ -65,6 +74,7 @@ export default Capability.makeModule(
       Effect.sync(() => {
         // clearInterval(interval);
         unsubscribe();
+        unsubscribeRetention();
       }),
     );
     return Capability.contribute(AppCapabilities.AppGraph, builder);

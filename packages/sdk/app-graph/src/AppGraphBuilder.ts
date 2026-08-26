@@ -315,6 +315,7 @@ const makeStore = (
     setNode: (id, node) => graph._setNode(id, node),
     batch: (fn) => Graph.batch(graph, fn),
     release: (ids) => void Graph.release(graph, ids),
+    subgraph: (root, relation) => Graph.getInternal(graph)._model.subgraph(root, relation),
     constructNode: (node) => graph._constructNode(node),
   };
 };
@@ -337,7 +338,17 @@ export const from = (pickle?: string, registry?: Registry.AtomRegistry, urlGramm
 };
 
 // The expansion lifecycle is the generic engine's; the app layer only specializes the vocabulary.
-export { addExtension, destroy, explore, flush, release, removeExtension } from '@dxos/graph/GraphBuilder';
+export {
+  type Retention,
+  addExtension,
+  collect,
+  destroy,
+  explore,
+  flush,
+  release,
+  removeExtension,
+  setRetention,
+} from '@dxos/graph/GraphBuilder';
 
 /**
  * Flatten arbitrarily nested extension groups into a single list. Pinned to the app extension type,

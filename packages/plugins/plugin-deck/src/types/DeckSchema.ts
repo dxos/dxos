@@ -138,6 +138,12 @@ export const getCompanionSelection = (
 
 // Transient/ephemeral plugin state (not persisted).
 export const EphemeralDeckState = Schema.Struct({
+  /**
+   * Workspaces by last visit, most recent first, which is what {@link Settings.loadedWorkspaces}
+   * counts off to decide which subtrees the graph may unload. Transient: it orders unloading within
+   * a session, and a reload has nothing loaded to unload.
+   */
+  recentWorkspaces: Schema.mutable(Schema.Array(Schema.String)),
   /** Item ID of the plank currently displayed fullscreen (headless); transient, never in the URL. */
   fullscreen: Schema.optional(Schema.String),
   /**

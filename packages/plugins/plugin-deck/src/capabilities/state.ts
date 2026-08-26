@@ -31,6 +31,7 @@ const defaultDeckState: DeckSchema.StoredDeckState = {
 
 /** Default ephemeral state. */
 const defaultDeckEphemeralState: DeckSchema.EphemeralDeckState = {
+  recentWorkspaces: [],
   fullscreen: undefined,
   dialogContent: null,
   dialogOpen: false,

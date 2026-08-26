@@ -158,6 +158,20 @@ export const AppGraphBuilder = Capability$.make<BuilderExtensions>()(
   'org.dxos.app-framework.capability.appGraphBuilder',
 );
 
+/**
+ * Which subgraphs the builder may unload. Contributed by whichever plugin knows what a releasable
+ * unit is; the builder holds no policy state of its own, so the implementor answers from state it
+ * already keeps. Without one the graph grows with everything the session has ever visited.
+ */
+export type AppGraphRetention = AppGraphBuilder$.Retention;
+
+/**
+ * @category Capability
+ */
+export const AppGraphRetention = Capability$.makeSingleton<AppGraphRetention>()(
+  'org.dxos.app-framework.capability.appGraphRetention',
+);
+
 export type Settings = {
   prefix: string;
   // Settings are persisted as plain atoms, so the schema is always context-free

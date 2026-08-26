@@ -276,14 +276,16 @@ ids — via the new `_onReleaseRelation` hook, so the relation re-expands on nex
 - [x] **Scope call — policy is a FOLLOW-UP, not part of #12594** (jdw, 2026-08-25). The mechanism
       lands dormant: `GraphModel.release` / `GraphBuilder.release` / the `Store.release` port are in
       and tested, wired at `GraphBuilder.ts:677`, with no production caller. That is deliberate.
-- [ ] **Follow-up: evaluate the policies** — explicit unload, LRU over subgraph roots, and
-      mount-driven release are all still open, and the choice is a product decision about
-      workspace-switch behaviour rather than a graph one. Note that mount-driven is already
-      half-served for _view_ atoms above the graph; with pinning, the graph's own atoms now stay
-      until an explicit release, so a policy has real memory to manage.
-- [ ] **Follow-up: decide where the policy lives** — `@dxos/graph` (generic, e.g. `evict(policy)`),
-      app-graph, or the app/plugin layer that knows what a workspace is. Recommendation on record:
-      LRU over workspace roots, in plugin-space, since only that layer knows what a workspace is.
+- [x] **Follow-up: where the policy lives** (jdw, 2026-08-26). A `Retention` port on the builder,
+      beside `Store`: the builder owns the mechanism and the cadence, the implementor owns the
+      policy and the state behind it, and the builder stores neither. See `RELEASE-POLICY.md`.
+- [x] **Follow-up: the first policy** (jdw, 2026-08-26). LRU over workspace roots, implemented in
+      plugin-deck against its own ephemeral state, keeping the two most recent. Explicit unload is
+      still reachable through `GraphBuilder.collect`; mount-driven release stays ruled out, since
+      the graph pins every node atom deliberately.
+- [ ] **Tune the limit** — two is the aggressive end of safe (positions 0 and 1 are the workspace
+      being entered and the one being left, which are still mounted). Worth measuring on a real
+      profile before treating the number as settled.
 
 ## Phase 10: dissolve the Graph wrapper
 

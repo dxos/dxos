@@ -63,6 +63,7 @@ const storyDeckState = Capability.makeModule(() =>
     const stateAtom = Atom.make<DeckSchema.StoredDeckState>({ ...defaultStoredDeckState }).pipe(Atom.keepAlive);
 
     const defaultEphemeralDeckState: DeckSchema.EphemeralDeckState = {
+      recentWorkspaces: [],
       fullscreen: undefined,
       dialogContent: null,
       dialogOpen: false,

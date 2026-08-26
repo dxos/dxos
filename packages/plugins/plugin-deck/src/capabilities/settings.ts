@@ -11,6 +11,8 @@ import { createKvsStore } from '@dxos/effect';
 import { meta } from '#meta';
 import { DeckCapabilities, Settings } from '#types';
 
+import { DEFAULT_LOADED_WORKSPACES } from '../util';
+
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     const settingsAtom = createKvsStore({
@@ -20,6 +22,7 @@ export default Capability.makeModule(() =>
         showHints: false,
         enableNativeRedirect: false,
         flatten: true,
+        loadedWorkspaces: DEFAULT_LOADED_WORKSPACES,
       }),
     });
 

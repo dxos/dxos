@@ -337,3 +337,106 @@ describe('GraphBuilder', () => {
     expect(children(GraphNode.RootId)).to.deep.equal(['root/a']);
   });
 });
+
+describe('retention', () => {
+  /** Root fans out to workspaces, each of which fans out to its own items. */
+  const workspaces = () => {
+    const harness = setup();
+    GraphBuilder.addExtension(harness.builder, {
+      id: 'children',
+      connector: (node) =>
+        Atom.make((get) =>
+          Option.match(get(node), {
+            onNone: (): GraphBuilder.ModelNodeArg[] => [],
+            onSome: (source) =>
+              source.id === GraphNode.RootId ? [{ id: 'w0' }, { id: 'w1' }] : [{ id: 'c0' }, { id: 'c1' }],
+          }),
+        ),
+    });
+    return harness;
+  };
+
+  /** Expand a node and let the flush settle. */
+  const visit = async ({ builder, children }: ReturnType<typeof setup>, id: string) => {
+    children(id);
+    await GraphBuilder.flush(builder);
+  };
+
+  test('nothing is released without a port', async () => {
+    const harness = workspaces();
+    await visit(harness, GraphNode.RootId);
+    await visit(harness, 'root/w0');
+
+    expect(GraphBuilder.collect(harness.builder)).to.deep.equal([]);
+    expect(harness.children('root/w0')).to.deep.equal(['root/w0/c0', 'root/w0/c1']);
+  });
+
+  test('the port names roots and the builder unloads their subgraphs', async () => {
+    const harness = workspaces();
+    const { builder, model, children } = harness;
+    await visit(harness, GraphNode.RootId);
+    await visit(harness, 'root/w0');
+    await visit(harness, 'root/w1');
+    const loaded = model.nodes.length;
+
+    let evictable: string[] = [];
+    GraphBuilder.setRetention(builder, { evictable: () => evictable });
+
+    // Asked on every settled flush, and answering with nothing leaves the graph alone.
+    await GraphBuilder.flush(builder);
+    expect(model.nodes.length).to.equal(loaded);
+
+    evictable = ['root/w0'];
+    expect(GraphBuilder.collect(builder).sort()).to.deep.equal(['root/w0/c0', 'root/w0/c1']);
+
+    // The root itself stays, so the node a caller returns to is still there to expand.
+    expect(model.findNode('root/w0')?.id).to.equal('root/w0');
+    expect(children('root/w0')).to.deep.equal([]);
+    // And the workspace beside it is untouched.
+    expect(children('root/w1')).to.deep.equal(['root/w1/c0', 'root/w1/c1']);
+  });
+
+  test('a released subgraph re-expands on the next read', async () => {
+    const harness = workspaces();
+    const { builder, children } = harness;
+    await visit(harness, GraphNode.RootId);
+    await visit(harness, 'root/w0');
+    const before = children('root/w0');
+
+    GraphBuilder.setRetention(builder, { evictable: () => ['root/w0'] });
+    GraphBuilder.collect(builder);
+    expect(children('root/w0')).to.deep.equal([]);
+
+    // Release is an unload, not a deletion: the root forgot it ever expanded.
+    GraphBuilder.setRetention(builder, undefined);
+    await visit(harness, 'root/w0');
+    expect(children('root/w0')).to.deep.equal(before);
+  });
+
+  test('a settled flush runs a collection pass', async () => {
+    const harness = workspaces();
+    const { builder, children } = harness;
+    await visit(harness, GraphNode.RootId);
+    await visit(harness, 'root/w0');
+
+    // Nothing triggers this but the flush the second expansion schedules.
+    GraphBuilder.setRetention(builder, { evictable: () => ['root/w0'] });
+    await visit(harness, 'root/w1');
+
+    expect(children('root/w0')).to.deep.equal([]);
+    expect(children('root/w1')).to.deep.equal(['root/w1/c0', 'root/w1/c1']);
+  });
+
+  test('a store that cannot enumerate a subgraph is left alone', async () => {
+    const harness = workspaces();
+    const { builder, children } = harness;
+    await visit(harness, GraphNode.RootId);
+    await visit(harness, 'root/w0');
+
+    delete builder._store.subgraph;
+    GraphBuilder.setRetention(builder, { evictable: () => ['root/w0'] });
+
+    expect(GraphBuilder.collect(builder)).to.deep.equal([]);
+    expect(children('root/w0')).to.deep.equal(['root/w0/c0', 'root/w0/c1']);
+  });
+});

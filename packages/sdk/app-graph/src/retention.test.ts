@@ -123,7 +123,7 @@ describe('retention', () => {
 
     // Releasing the subgraph cancels the mounts; the registry drops the atoms.
     const internal = Graph.getInternal(graph);
-    GraphBuilder.release(builder, [root, ...internal._model.descendants(root, Graph.relationKey('child'))]);
+    GraphBuilder.release(builder, [root, ...internal._model.subgraph(root)]);
     await settle();
     expect(registry.getNodes().has(graph.node(child))).to.be.false;
     expect(registry.getNodes().size).to.be.lessThan(pinned);
@@ -159,7 +159,7 @@ describe('retention', () => {
     const internal = Graph.getInternal(graph);
     for (const id of workspaceIds()) {
       const root = `${GraphNode.RootId}/${id}`;
-      GraphBuilder.release(builder, internal._model.descendants(root, Graph.relationKey('child')));
+      GraphBuilder.release(builder, internal._model.subgraph(root));
     }
     await settle();
 
@@ -181,7 +181,7 @@ describe('retention', () => {
     expect(before).to.have.length(CHILDREN);
 
     const internal = Graph.getInternal(graph);
-    GraphBuilder.release(builder, [root, ...internal._model.descendants(root, Graph.relationKey('child'))]);
+    GraphBuilder.release(builder, [root, ...internal._model.subgraph(root)]);
     await settle();
     expect(registry.get(graph.connections(root, 'child'))).to.deep.equal([]);
 
@@ -209,11 +209,64 @@ describe('retention', () => {
 
     const internal = Graph.getInternal(graph);
     const released = `${GraphNode.RootId}/w0`;
-    GraphBuilder.release(builder, [released, ...internal._model.descendants(released, Graph.relationKey('child'))]);
+    GraphBuilder.release(builder, [released, ...internal._model.subgraph(released)]);
     await settle();
 
     expect(notifications).to.equal(0);
     expect(registry.get(graph.connections(retained, 'child'))).to.have.length(CHILDREN);
     cancel();
+  });
+});
+
+describe('retention port', () => {
+  test('the builder unloads what the port names, and a revisit rebuilds it', async () => {
+    const harness = setup();
+    const { builder, graph } = harness;
+    await visit(harness, GraphNode.RootId);
+    const baseline = counts(harness);
+
+    // A workspace-switch policy in miniature: keep the two most recent, unload the rest. The dedupe
+    // is load-bearing — leave a revisited root further down the list and the flush that re-expands
+    // it evicts it again in the same pass.
+    let recent: string[] = [];
+    const touch = (root: string) => {
+      recent = [root, ...recent.filter((id) => id !== root)];
+    };
+    GraphBuilder.setRetention(builder, { evictable: () => recent.slice(2) });
+
+    for (const id of workspaceIds()) {
+      const root = `${GraphNode.RootId}/${id}`;
+      touch(root);
+      await visit(harness, root);
+    }
+
+    // Ten visited, two loaded. Nothing called release: the flush each expansion schedules asked.
+    const after = counts(harness);
+    expect(after.modelNodes).to.equal(baseline.modelNodes + 2 * CHILDREN);
+    expect(after.provenance).to.equal(baseline.provenance + 2 * CHILDREN);
+
+    // The workspace roots themselves are all still there, so the nav list is intact.
+    for (const id of workspaceIds()) {
+      expect(Option.isSome(Graph.getNode(graph, `${GraphNode.RootId}/${id}`))).to.be.true;
+    }
+
+    // Revisiting an unloaded workspace rebuilds it from its connectors.
+    const stale = `${GraphNode.RootId}/w0`;
+    expect(harness.registry.get(graph.connections(stale, 'child'))).to.deep.equal([]);
+    touch(stale);
+    await visit(harness, stale);
+    expect(harness.registry.get(graph.connections(stale, 'child'))).to.have.length(CHILDREN);
+  });
+
+  test('the port sees an empty answer as leave everything alone', async () => {
+    const harness = setup();
+    const { builder } = harness;
+    GraphBuilder.setRetention(builder, { evictable: () => [] });
+    await visit(harness, GraphNode.RootId);
+    for (const id of workspaceIds()) {
+      await visit(harness, `${GraphNode.RootId}/${id}`);
+    }
+
+    expect(counts(harness).modelNodes).to.be.greaterThan(WORKSPACES * CHILDREN);
   });
 });
