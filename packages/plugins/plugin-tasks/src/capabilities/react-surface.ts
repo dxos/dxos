@@ -9,7 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Role from '@dxos/app-framework/Role';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Outline, TaskSet, type TaskSet as TaskSetType } from '@dxos/types';
+import { Outline, type Task, TaskSet, type TaskSet as TaskSetType } from '@dxos/types';
 
 import { JournalArticle, OutlineArticle, OutlineCard, QuickEntryDialog, TaskSetArticle } from '#containers';
 import { QUICK_ENTRY_DIALOG } from '#meta';
@@ -20,8 +20,9 @@ import { Journal } from '#types';
  * optional `taskSet` an embedder passes so promoted items are filed into ITS ledger rather than the
  * outline's own — a project's inline outline promotes into the project's task set.
  */
-const OutlineSection: Role.Role<AppSurface.SectionData<Outline.Outline, { taskSet?: TaskSetType.TaskSet }>> =
-  Role.make('org.dxos.role.section');
+const OutlineSection: Role.Role<
+  AppSurface.SectionData<Outline.Outline, { taskSet?: TaskSetType.TaskSet; onSelectTask?: (task: Task.Task) => void }>
+> = Role.make('org.dxos.role.section');
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -50,11 +51,12 @@ export default Capability.makeModule(() =>
         component: OutlineArticle,
         // No toolbar when embedded: the host surface (e.g. `ProjectArticle`) owns the toolbar, and a
         // second one inside its section reads as a nested editor.
-        props: ({ role, data: { subject, attendableId, taskSet } }) => ({
+        props: ({ role, data: { subject, attendableId, taskSet, onSelectTask } }) => ({
           role,
           subject,
           attendableId,
           taskSet,
+          onSelectTask,
           toolbar: false,
         }),
       }),

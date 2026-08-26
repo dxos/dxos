@@ -83,14 +83,15 @@ const seedContent = async () => {
   if (!outline?.content.target) {
     throw new Error('Expected the project to own an outline.');
   }
-  Obj.update(outline.content.target, (text) => {
-    text.content = `- [ ] ${OUTLINE_ITEM}\n- [ ] Book the launch review\n`;
-  });
-
   const task = space.db.add(Task.make({ title: TASK_TITLE, status: 'todo' }));
   Obj.setParent(task, taskSet);
   Obj.update(taskSet, (taskSet) => {
     taskSet.tasks = [Ref.make(task)];
+  });
+
+  // The third item is what promotion leaves behind: a link to the task in the project's set.
+  Obj.update(outline.content.target, (text) => {
+    text.content = `- [ ] ${OUTLINE_ITEM}\n- [ ] Book the launch review\n- [ ] [${TASK_TITLE}](${Obj.getURI(task)})\n`;
   });
 
   await space.db.flush({ indexes: true });
@@ -245,6 +246,33 @@ export const Sections: Story = {
     // assertion — an invalid surface id is dropped silently, leaving an empty panel.
     await showTab(canvas, 'tasks');
     await expect(canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+  },
+};
+
+/**
+ * A promoted item's link belongs to the project's own ledger, so following it shows the task where
+ * the project keeps its tasks — the Tasks tab — rather than swapping the outline for a task form
+ * inside the Overview.
+ */
+export const TaskLink: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+
+    // Overview owns the outline, so the link is followed from a tab that is not the Tasks one.
+    await expect(canvas.getByTestId('projectsPlugin.tab.tasks')).toHaveAttribute('data-state', 'inactive');
+
+    const link = await canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 });
+    await userEvent.click(link);
+
+    await waitFor(
+      () => expect(canvas.getByTestId('projectsPlugin.tab.tasks')).toHaveAttribute('data-state', 'active'),
+      { timeout: 10_000 },
+    );
+    // The task is on the tab it navigated to, and the outline it came from is no longer shown.
+    await expect(canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await waitFor(() => expect(canvas.queryByText(OUTLINE_ITEM)).toBeNull(), { timeout: 10_000 });
   },
 };
 

@@ -29,6 +29,11 @@ export type OutlineArticleProps = AppSurface.ObjectArticleProps<OutlineType.Outl
    * toolbar, and a second one inside its section reads as a nested editor.
    */
   toolbar?: boolean;
+  /**
+   * Where a click on a promoted item's link goes when the embedder owns a task surface of its own
+   * (a project shows the task on its Tasks tab). Unset, the outline swaps itself for the task form.
+   */
+  onSelectTask?: (task: Task.Task) => void;
 };
 
 export const OutlineArticle = ({
@@ -37,6 +42,7 @@ export const OutlineArticle = ({
   subject: outline,
   taskSet,
   toolbar = true,
+  onSelectTask,
 }: OutlineArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const db = Obj.getDatabase(outline);
@@ -67,6 +73,15 @@ export const OutlineArticle = ({
   );
 
   const handleSelectLink = useCallback((url: string) => setSelected(URI.make(url)), []);
+
+  // The link resolves asynchronously, so the hand-off waits for the target rather than the click,
+  // and clears the selection so the outline stays put instead of swapping to the task form.
+  useEffect(() => {
+    if (task && onSelectTask) {
+      setSelected(undefined);
+      onSelectTask(task);
+    }
+  }, [task, onSelectTask]);
   const handleBack = useCallback(() => setSelected(undefined), []);
 
   const outlineRef = useRef<OutlineController>(null);
@@ -127,7 +142,9 @@ export const OutlineArticle = ({
     return builder.build();
   }, [t, handleConvertCurrent, taskSet, convertible]);
 
-  if (task) {
+  // `!onSelectTask`: with an embedder taking the task, the form must not paint for the frame
+  // between the target resolving and the effect above clearing the selection.
+  if (task && !onSelectTask) {
     return (
       <Menu.Root {...taskActions} attendableId={attendableId}>
         <Panel.Root role={role}>

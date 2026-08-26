@@ -75,6 +75,11 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     [subject],
   );
 
+  // A promoted item's link points at a task this project owns, and the project shows its tasks on
+  // their own tab — so follow the link there rather than letting the outline swap itself for a
+  // task form inside the Overview.
+  const handleSelectTask = useCallback(() => setTab('tasks'), []);
+
   const handleOpen = useCallback(
     (object: Obj.Unknown) => {
       void invokePromise(LayoutOperation.Open, {
@@ -178,7 +183,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                       <Form.Section title={t('outline.label')}>
                         <Surface.Surface
                           type={AppSurface.Section}
-                          data={{ subject: outline, attendableId, taskSet }}
+                          data={{ subject: outline, attendableId, taskSet, onSelectTask: handleSelectTask }}
                           limit={1}
                         />
                       </Form.Section>
