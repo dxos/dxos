@@ -1,5 +1,10 @@
-name: PR Deploy
+# Depot CI Migration
+# Source: .github/workflows/pr-deploy.yml
+#
+# Changes made:
+# - Changed GitHub runs-on labels to their Depot equivalents
 
+name: PR Deploy
 # Deploys the composer-app bundle built by pr-build.yml as a Cloudflare Worker preview Version
 # (0% traffic, stable per-PR URL via `--preview-alias`) against composer-app's `dev` env — same EDGE
 # instance the build already targets (DX_EDGE_BASE_URL in pr-build.yml) and its dev-tier bindings, so PR
@@ -7,21 +12,18 @@ name: PR Deploy
 # (preview.composer.space) serves dogfooders against EDGE production. Uses workflow_run so this workflow
 # executes from the BASE branch (trusted), which means secrets are safe to use here. The untrusted PR code
 # never runs in this workflow — we only download the pre-built artifact.
-
 on:
   workflow_run:
     workflows: ['PR Build']
     types: [completed]
-
 permissions:
   contents: read
   pull-requests: write
   actions: read
-
 jobs:
   deploy:
     if: github.event.workflow_run.conclusion == 'success'
-    runs-on: ubuntu-24.04
+    runs-on: depot-ubuntu-24.04 # was: ubuntu-24.04. Mapped standard GitHub runner to Depot equivalent.
     timeout-minutes: 15
     steps:
       # Only the config is needed (not a full checkout) to resolve the `dev` env's Worker name + bindings.
@@ -31,7 +33,6 @@ jobs:
           sparse-checkout: |
             packages/apps/composer-app/wrangler.jsonc
           sparse-checkout-cone-mode: false
-
       - name: Download preview bundle
         uses: actions/download-artifact@v5
         with:
@@ -39,7 +40,6 @@ jobs:
           path: preview
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
-
       - name: Read deploy metadata
         id: meta
         run: |
@@ -57,13 +57,10 @@ jobs:
           echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
           echo "head_sha=$HEAD_SHA" >> $GITHUB_OUTPUT
           echo "preview_alias=pr-$PR_NUMBER" >> $GITHUB_OUTPUT
-
       - name: Install wrangler
         run: npm install --global wrangler@^4.59.1
-
       - name: Exclude Worker script from asset upload
         run: echo '_worker.js' > preview/packages/apps/composer-app/out/composer/.assetsignore
-
       - name: Deploy preview version
         id: deploy
         env:
@@ -86,7 +83,6 @@ jobs:
             exit 1
           fi
           echo "url=$URL" >> $GITHUB_OUTPUT
-
       - name: Comment preview URL on PR
         uses: marocchino/sticky-pull-request-comment@v2
         with:

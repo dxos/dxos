@@ -1,3 +1,9 @@
+# Depot CI Migration
+# Source: .github/workflows/introspect-cache.yml
+#
+# Changes made:
+# - Rewrote .github/ path references to .depot/
+
 # Builds the @dxos/introspect symbol cache on every commit to main and uploads
 # it as a GitHub Actions artifact named `dxos-introspect-cache`.
 #
@@ -12,30 +18,25 @@
 # See packages/reflect/introspect-mcp/README.md for details.
 
 name: Introspect Cache
-
 on:
   push:
     branches:
       - main
   workflow_dispatch:
-
 permissions:
   contents: read
   packages: read
-
 # A second main commit cancels the in-flight build — only the latest matters
 # because newer commits invalidate the cache anyway.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-
 env:
   # Bound once here rather than at every setup call site: a composite action cannot read the
   # `secrets` context, but it does inherit the process environment.
   MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
   MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
   MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
-
 jobs:
   build:
     runs-on: depot-ubuntu-24.04-8
@@ -52,20 +53,16 @@ jobs:
           # Full history so the tree-SHA computation in the cache has the
           # commit's tree object available (`git ls-tree -r -d HEAD`).
           fetch-depth: 0
-
       - name: Setup
-        uses: ./.github/actions/setup
-
+        uses: ./.depot/actions/setup
       # The index task imports @dxos/introspect compiled output via the
       # `source` export condition, so building first isn't strictly required —
       # but doing it keeps any compile errors from manifesting as runtime
       # errors during indexing.
       - name: Build introspect
         run: moon run introspect:build
-
       - name: Build symbol cache
         run: moon run introspect:index
-
       - name: Show cache stats
         run: |
           ls -lh \
@@ -73,7 +70,6 @@ jobs:
             node_modules/.cache/dxos-introspect/plugins.json
           echo "Packages indexed: $(jq '.entries | length' node_modules/.cache/dxos-introspect/core.json)"
           echo "Plugins indexed:  $(jq '.plugins | length' node_modules/.cache/dxos-introspect/plugins.json)"
-
       - name: Upload cache artifact
         uses: actions/upload-artifact@v4
         with:

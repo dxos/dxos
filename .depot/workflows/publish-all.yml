@@ -1,5 +1,11 @@
-name: Publish
+# Depot CI Migration
+# Source: .github/workflows/publish-all.yml
+#
+# Changes made:
+# - Rewrote .github/ path references to .depot/
+# - Changed runs-on from "ubuntu-24.04-4" to "depot-ubuntu-latest" in job "publish"
 
+name: Publish
 # npm publishing for Group A (core/SDK) and Group B (plugins + cli). This filename is load-bearing: npm's
 # OIDC trusted publisher is configured against `publish-all.yml`, so every `changeset publish` MUST run from
 # here (a different filename fails OIDC). Two flows, by trigger:
@@ -13,29 +19,25 @@ name: Publish
 #     then `changeset publish --tag next`. Ephemeral versions, no commit, no git tags, no `pre` mode.
 #
 # Apps deploy via deploy-apps.yml (which also cuts the versioned Composer production release), never here.
-
 on:
   push:
     branches:
       - main
   workflow_dispatch: {} # Manual dispatch = a @next snapshot pre-release (pick the commit via the ref selector).
-
 concurrency:
   group: publish-${{ github.ref }}
   cancel-in-progress: false
-
 permissions:
   # Both write scopes are dormant — the @latest flow writes as GH_DXOS_BOT_PAT — but are kept so reverting
   # the changesets step to GITHUB_TOKEN stays a one-line change.
   contents: write # Version Packages branch + git tags (@latest flow).
   pull-requests: write # Maintain the Version Packages PR.
   id-token: write # npm trusted-publisher OIDC + provenance.
-
 jobs:
   publish:
     if: github.repository == 'dxos/dxos'
     # GitHub-hosted runner required for npm provenance (sigstore attestation).
-    runs-on: ubuntu-24.04-4
+    runs-on: depot-ubuntu-latest # was: ubuntu-24.04-4. Nonstandard GitHub runner label detected, changed to default Depot runner.
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
       credentials:
@@ -51,7 +53,6 @@ jobs:
           # checkout credential outranks netrc (`http.extraheader` is an explicit Authorization header),
           # which would silently put the Version PR's commits back on GITHUB_TOKEN.
           persist-credentials: false
-
       # This repo does not use Changesets `pre` mode — the @next channel uses snapshot releases instead.
       # A stray `.changeset/pre.json` would silently turn a stable publish into a pre-release, so fail fast.
       - name: Guard against pre-release state on main
@@ -60,9 +61,8 @@ jobs:
             echo "::error::.changeset/pre.json present — @next uses snapshot releases, not pre mode. Remove it (changeset pre exit)."
             exit 1
           fi
-
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
         with:
           # Published artifacts are built from source, never trusted from a cache any CI job can
           # write to — the same reasoning as the isolated pnpm scope below.
@@ -70,7 +70,6 @@ jobs:
           # Isolate publish cache from PR caches (cache-poisoning defense).
           cache-scope: publish
           verify-integrity: 'true'
-
       # @next (dispatch): stamp ephemeral snapshot versions for packages with pending changesets, then
       # mirror them into version.ts / tauri.conf.json — before the build, so it builds the snapshot version.
       # No commit, no lockfile rewrite; the bump is throwaway.
@@ -85,18 +84,15 @@ jobs:
           else
             echo 'No pending changesets — skipping snapshot version.'
           fi
-
       - name: Build
         run: moon run :build
         env:
           NODE_ENV: production
-
       # Shell must be bundled before npm publish.
       - name: Bundle Shell
         run: moon run shell:bundle
         env:
           NODE_ENV: production
-
       # @latest (push): when changesets exist, maintains/updates the "Version Packages" PR; when that PR is
       # merged (versions bumped, no changesets remain), runs the publish command instead.
       - name: Version PR or publish (@latest)
@@ -122,7 +118,6 @@ jobs:
           title: 'Version packages'
         env:
           NPM_CONFIG_PROVENANCE: 'true' # provenance via OIDC; trusted publisher means no NPM_TOKEN.
-
       # `changeset publish` cannot ship the CLI: `@dxos/cli` is `private`, and what it actually ships is one
       # prebuilt binary per platform generated into `dist/`, so neither is a workspace member Changesets can
       # see. Runs before the tag step so a failed CLI publish is not tagged as a complete release.
@@ -132,14 +127,12 @@ jobs:
         env:
           NODE_ENV: production
           NPM_CONFIG_PROVENANCE: 'true' # provenance via OIDC; trusted publisher means no NPM_TOKEN.
-
       - name: Publish the CLI (@next snapshot)
         if: github.event_name == 'workflow_dispatch'
         run: moon run cli:publish -- --tag next
         env:
           NODE_ENV: production
           NPM_CONFIG_PROVENANCE: 'true'
-
       # One tag + one GitHub Release per lockstep group (`v<version>` for core/SDK, `plugins-v<version>` for
       # plugins + CLI), both refs in a single push.
       #
@@ -157,7 +150,6 @@ jobs:
         env:
           # Carries both the tag push (the checkout persists no credentials) and the Releases API calls.
           GH_TOKEN: ${{ secrets.GH_DXOS_BOT_PAT }}
-
       # @next (dispatch): publish the snapshot versions under the `next` dist-tag. --no-git-tag: snapshots
       # are ephemeral and never tagged. No-op when no changesets are pending.
       - name: Publish @next (snapshot)
