@@ -227,10 +227,7 @@ const uncheckedTask = Decoration.replace({ widget: new CheckboxWidget(false) });
 /**
  * Checks if cursor is inside text.
  */
-/**
- * Resolves an autolinked run of text to a navigable href.
- * GFM autolinks match schemeless hosts and bare email addresses, which are not usable as `href`.
- */
+/** GFM autolinks match schemeless hosts and bare email addresses, which are not usable as `href`. */
 const normalizeUrl = (text: string): string | undefined => {
   if (/^[a-z][a-z0-9+.-]*:/i.test(text)) {
     return text;
