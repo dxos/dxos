@@ -27,13 +27,16 @@ space key ->  credential chain (hypercore control feed)
 
 ## Target
 
+Opt-in behind `DX_AUTOMERGE_CREDENTIALS` (`runtime.client.automergeCredentials`, default OFF).
+With the flag off a space is created and read exactly as in "Today".
+
 ```text
-space id  =  hash(space root doc id)
-space root doc (immutable, tiny)
-   ├─ directory  -> automerge url   (rotatable)
-   └─ credentials -> automerge url  (rotatable)
-                       └─ array of credential bytes (today's feed payloads)
-   directory -> leaf docs
+space id  =  SHA-256(space key)[0..20]        (UNCHANGED — both paths)
+space key ->  space root doc (immutable, tiny)
+                 ├─ directory   -> automerge url   (rotatable)
+                 └─ credentials -> automerge url   (rotatable)
+                                     └─ credentials keyed by credential id
+              directory -> leaf docs
 ```
 
 Space root layout:
@@ -42,7 +45,6 @@ Space root layout:
 {
   "type": "dxn:org.dxos.document.spaceRoot:0.1.0",
   "spaceId": "<space id>",
-  "idDerivation": "rootDoc",
   "directory": "automerge:<url>",
   "credentials": "automerge:<documentId>"
 }
@@ -52,16 +54,12 @@ Both references are plain automerge URLs. The original sketch wrote `credentials
 `dxn:<automerge url>`; a DXN wrapping an automerge URL is a second encoding of the same pointer
 and nothing dereferences it, so both fields use the `automerge:` form the directory already had.
 
-`idDerivation` is `"rootDoc"` for new spaces and `"spaceKey"` for migrated ones. It is load-bearing, not decoration: a space migrated from the legacy world has a
-root doc whose id does NOT derive its space id, so a reader cannot tell the two cases apart
-from the id alone. `"rootDoc"` means the reader MUST recompute and reject a mismatch;
-`"spaceKey"` means the id is only checkable against the space key, exactly as today.
-
-**Derivation contract (`rootDoc`)** — mirrors `createIdFromSpaceKey` so both schemes produce
-the same shape: `SpaceId.encode(SHA-256(utf8(documentId))[0..20])`, i.e. SHA-256 over the
-document id string as it appears in the `automerge:` URL, truncated to `SpaceId.byteLength`
-(20) and multibase RFC4648 base-32 encoded with the `B` prefix
-(`packages/common/keys/src/space-id.ts`). Test vectors land with the implementation.
+**The space id is always derived from the space genesis key**, and the HALO's from the identity
+key — the root anchors the credentials document but does not identify the space. An earlier
+revision derived the id from the root document id and carried an `idDerivation` discriminator to
+tell the two schemes apart; both were removed. Deriving from the key means a peer that has never
+seen the root computes the same id, which is what recovery depends on: it reconstructs the HALO
+from `haloSpaceKey` alone.
 
 The type is a versioned DXN in ECHO's own form — `dxn:<nsid>:<semver>`, final segment
 camelCase (`DXN_SPEC_REGEXP` in `keys/src/DXN.ts`), the same shape `EntitySystem.type`
