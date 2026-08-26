@@ -67,7 +67,7 @@ export const UpdateTask = Operation.make({
     task: Ref.Ref(Task.Task),
     title: Schema.optional(Schema.String),
     description: Schema.optional(Schema.String),
-    status: Schema.optional(Schema.Literals(['todo', 'in-progress', 'done', 'failed', 'cancelled'])),
+    status: Schema.optional(Schema.Literals(['todo', 'started', 'done', 'failed', 'cancelled'])),
     priority: Schema.optional(Schema.Literals(['none', 'low', 'medium', 'high', 'urgent'])),
     estimate: Schema.optional(Schema.Number),
     assignee: Schema.optional(Actor.Actor),
@@ -176,7 +176,7 @@ export const ListTasks = Operation.make({
     project: Schema.optional(Ref.Ref(Obj.Unknown)).annotate({
       description: 'Project whose task set is listed (org.dxos.type.project).',
     }),
-    status: Schema.optional(Schema.Literals(['todo', 'in-progress', 'done', 'failed', 'cancelled'])),
+    status: Schema.optional(Schema.Literals(['todo', 'started', 'done', 'failed', 'cancelled'])),
     /** Matches the assignee by DID, email, or display name — whichever the actor carries. */
     assignee: Schema.optional(Schema.String),
     /** Only tasks under this milestone (inherited by sub-tasks from their nearest ancestor). */

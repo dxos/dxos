@@ -119,7 +119,7 @@ export const WithTasks: Story = {
       // More than six rows, so the story also demonstrates the task strip's height cap.
       const seed: { title: string; status: NonNullable<Task.Task['status']> }[] = [
         { title: 'Source the beans', status: 'done' },
-        { title: 'Dial in the roast', status: 'in-progress' },
+        { title: 'Dial in the roast', status: 'started' },
         { title: 'Print the labels', status: 'todo' },
         { title: 'Design the bag', status: 'todo' },
         { title: 'Photograph the pour', status: 'todo' },
@@ -141,7 +141,7 @@ export const WithTasks: Story = {
 /**
  * Two surfaces over a shared space: the conversational ChatModule (left) and the activity
  * TraceModule (right). Prompt the supervisor to delegate work to a sub-agent; DelegateTask records
- * it as an in-progress plan task and the sub-agent process surfaces as a nested lane in the trace.
+ * it as a started plan task and the sub-agent process surfaces as a nested lane in the trace.
  */
 export const WithSubAgents: Story = {
   decorators: createDecorators({
@@ -253,7 +253,7 @@ export const WithPlanningScripted: Story = {
               text('Here is the plan.'),
               toolCall(Operation.toolName(PlanningOperations.UpdateTasks), {
                 tasks: [
-                  { title: 'Source the beans', status: 'in-progress' },
+                  { title: 'Source the beans', status: 'started' },
                   { title: 'Dial in the roast', status: 'todo' },
                   { title: 'Print the labels', status: 'todo' },
                 ],

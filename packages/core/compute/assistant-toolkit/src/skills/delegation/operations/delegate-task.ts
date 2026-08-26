@@ -29,13 +29,13 @@ const handler: Operation.WithHandler<typeof DelegateTask> = DelegateTask.pipe(
       const { db } = yield* Database.Service;
 
       const task = Outline.addTask(db, taskSet, title, {
-        status: 'in-progress',
+        status: 'started',
         assignee: { role: 'assistant' },
       });
       yield* Database.flush();
 
       return trim`
-        Delegated "${task.title}" as an in-progress agent task (id: ${task.id}).
+        Delegated "${task.title}" as a started agent task (id: ${task.id}).
         Current checklist:
         <checklist>
           ${yield* Chat.formatChecklist(chat)}

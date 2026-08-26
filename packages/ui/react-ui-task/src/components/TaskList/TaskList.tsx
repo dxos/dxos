@@ -26,15 +26,15 @@ import { translationKey } from '#translations';
 const TASK_LIST_NAME = 'TaskList.Root';
 
 /** Linear-style status groups, most active first. */
-export const STATUS_ORDER: Task.Status[] = ['in-progress', 'todo', 'done', 'failed', 'cancelled'];
+export const STATUS_ORDER: Task.Status[] = ['started', 'todo', 'done', 'failed', 'cancelled'];
 
 /** Fallback status labels. */
 const DEFAULT_STATUS_LABELS: Record<Task.Status, string> = {
-  'in-progress': 'In progress',
-  'todo': 'To Do',
-  'done': 'Done',
-  'failed': 'Failed',
-  'cancelled': 'Cancelled',
+  started: 'Started',
+  todo: 'To Do',
+  done: 'Done',
+  failed: 'Failed',
+  cancelled: 'Cancelled',
 };
 
 export type TaskPatch = Partial<Pick<Task.Task, 'title' | 'status' | 'priority' | 'estimate' | 'assignee'>>;
@@ -193,25 +193,29 @@ TaskListGroupLabel.displayName = 'TaskList.GroupLabel';
 // Item — one row. Exported so a host can render its own selection of tasks.
 //
 
-const STATUS_ICONS: Record<Task.Status, string> = {
-  'todo': 'ph--square--regular',
-  'in-progress': 'ph--clock--regular',
-  'done': 'ph--check--regular',
-  'failed': 'ph--x--regular',
-  'cancelled': 'ph--x--regular',
+const STATUS_ICONS: Record<Task.Status, { icon: string; classNames?: string }> = {
+  todo: { icon: 'ph--square--regular', classNames: 'text-subdued' },
+  started: { icon: 'ph--hourglass--regular', classNames: 'text-info-text' },
+  done: { icon: 'ph--check--regular', classNames: 'text-success-text' },
+  failed: { icon: 'ph--x--regular', classNames: 'text-error-text' },
+  cancelled: { icon: 'ph--x--regular', classNames: 'text-error-text' },
 };
 
 type TaskListItemProps = ComposableProps<{ task: Task.Task }>;
 
 const TaskListItem = composable<HTMLLIElement, { task: Task.Task }>(({ task, ...props }, forwardedRef) => {
+  const { t } = useTranslation(translationKey);
   const { onTaskUpdate, onTaskDelete, onTaskSelect } = useTaskListContext('TaskList.Item');
   const { className, ...rest } = composableProps(props);
-  const { t } = useTranslation(translationKey);
+
   // Subscribe per row: a query re-emits when membership changes, not when a task's own fields do,
   // so a rename elsewhere (task form, agent, sync) would otherwise leave the row stale.
   const [snapshot] = useObject(task);
   const current = snapshot ?? task;
+
   const done = current.status === 'done';
+  const { icon, classNames: iconClassNames } = STATUS_ICONS[current.status ?? 'todo'];
+
   const handleToggle = useCallback(
     () => onTaskUpdate?.(task, { status: done ? 'todo' : 'done' }),
     [onTaskUpdate, task, done],
@@ -226,10 +230,10 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task }>(({ task, ...
       ref={forwardedRef}
     >
       <IconButton
-        classNames={mx('justify-self-center text-subdued', done && 'text-success-text')}
+        classNames={mx('justify-self-center', iconClassNames)}
         variant='ghost'
         density='sm'
-        icon={STATUS_ICONS[current.status ?? 'todo']}
+        icon={icon}
         iconOnly
         label={
           // TODO(burdon): Map to status label.

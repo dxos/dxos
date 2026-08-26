@@ -43,7 +43,7 @@ export const translations = [
         'backlog.label': 'Backlog',
         'milestone-progress.label': '{{done}}/{{total}}',
         'task-status.todo.label': 'To Do',
-        'task-status.in-progress.label': 'In progress',
+        'task-status.started.label': 'Started',
         'task-status.done.label': 'Done',
         'task-status.failed.label': 'Failed',
         'task-status.cancelled.label': 'Cancelled',

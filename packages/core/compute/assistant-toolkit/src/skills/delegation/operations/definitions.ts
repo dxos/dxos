@@ -16,7 +16,7 @@ export const DelegateTask = Operation.make({
     name: 'Delegate task',
     description: trim`
       Delegate a unit of work to a sub-agent.
-      Promotes the titled checklist item to a durable in-progress task assigned to an agent, so
+      Promotes the titled checklist item to a durable started task assigned to an agent, so
       the supervisor spawns a background sub-agent. Creates the checklist item if absent.
     `,
     icon: 'ph--share-network--regular',

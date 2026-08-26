@@ -18,7 +18,7 @@ export const Priority = Schema.Literals(['none', 'low', 'medium', 'high', 'urgen
 export type Priority = Schema.Schema.Type<typeof Priority>;
 
 // `failed`/`cancelled` exist so delegated agent tasks and human tasks share one status vocabulary.
-export const Status = Schema.Literals(['todo', 'in-progress', 'done', 'failed', 'cancelled']);
+export const Status = Schema.Literals(['todo', 'started', 'done', 'failed', 'cancelled']);
 export type Status = Schema.Schema.Type<typeof Status>;
 
 export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '0.3.0'))(
@@ -56,7 +56,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
       GeneratorAnnotation.set({
         generator: 'helpers.arrayElement',
-        args: [['todo', 'in-progress', 'done']],
+        args: [['todo', 'started', 'done']],
       }),
       Schema.annotate({
         title: 'Status',
@@ -64,7 +64,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
           singleSelect: {
             options: [
               { id: 'todo', title: 'Todo', color: 'indigo' },
-              { id: 'in-progress', title: 'In Progress', color: 'purple' },
+              { id: 'started', title: 'Started', color: 'purple' },
               { id: 'done', title: 'Done', color: 'amber' },
               { id: 'failed', title: 'Failed', color: 'red' },
               { id: 'cancelled', title: 'Cancelled', color: 'gray' },

@@ -61,7 +61,7 @@ const invokeDelegateTask = (input: { title: string }, chatFeed: Feed.Feed) =>
 
 describe('DelegateTask', () => {
   it.effect(
-    'promotes delegated work to a durable in-progress agent task',
+    'promotes delegated work to a durable started agent task',
     Effect.fnUntraced(
       function* ({ expect }) {
         const { agent, project } = yield* makeProjectAgent;
@@ -78,7 +78,7 @@ describe('DelegateTask', () => {
         expect(tasks).toHaveLength(1);
         expect(tasks[0]).toMatchObject({
           title: 'Research widgets',
-          status: 'in-progress',
+          status: 'started',
           assignee: { role: 'assistant' },
         });
       },

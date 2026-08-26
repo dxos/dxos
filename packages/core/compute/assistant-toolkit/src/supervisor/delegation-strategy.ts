@@ -89,7 +89,7 @@ const extractArtifactIds = (value: unknown): string[] => {
 };
 
 /**
- * The durable agent tasks awaiting a sub-agent for this conversation: in-progress tasks of the
+ * The durable agent tasks awaiting a sub-agent for this conversation: started tasks of the
  * working outline's task set whose assignee is an agent. Ordinary checklist items (markdown) are
  * never spawned — delegation happens only through the promotion the delegation-delegate-task tool performs.
  */
@@ -109,12 +109,12 @@ const findPendingTasks = (
     }
     // The set's `tasks` array is flat, so a delegated sub-task is found without descending.
     return TaskSet.resolveTasks(taskSet).filter(
-      (task) => task.assignee?.role === 'assistant' && task.status === 'in-progress' && !activeIds.has(task.id),
+      (task) => task.assignee?.role === 'assistant' && task.status === 'started' && !activeIds.has(task.id),
     );
   });
 
 /**
- * Supervisor behaviour for the conversational agent: after each turn, every in-progress agent
+ * Supervisor behaviour for the conversational agent: after each turn, every started agent
  * task not already running is run by a sub-agent (a synthesized minimal `Routine` executed via
  * `RunInstructions`); on completion the task status is updated, the checklist line is checked
  * off, and a templated message is posted back to the conversation.

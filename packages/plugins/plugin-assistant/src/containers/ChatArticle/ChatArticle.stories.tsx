@@ -208,7 +208,7 @@ export const Tasks: Story = {
     tasks: [
       { title: 'Gather the requirements', status: 'done' },
       { title: 'Draft the plan', status: 'done' },
-      { title: 'Implement the change', status: 'in-progress' },
+      { title: 'Implement the change', status: 'started' },
       { title: 'Verify and ship', status: 'todo' },
     ],
   },

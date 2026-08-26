@@ -71,7 +71,7 @@ describe('UpdateTasks', () => {
         yield* Operation.invoke(UpdateTasks, {
           tasks: [
             { title: 'Hello', status: 'todo' },
-            { title: 'World', status: 'in-progress' },
+            { title: 'World', status: 'started' },
           ],
         }).pipe(Effect.provide(Operation.withInvocationOptions({ conversation: Obj.getURI(feed) })));
 
@@ -82,7 +82,7 @@ describe('UpdateTasks', () => {
         const tasks = yield* Chat.loadTasks(chat);
         expect(tasks.map(({ title, status }) => ({ title, status }))).toEqual([
           { title: 'Hello', status: 'done' },
-          { title: 'World', status: 'in-progress' },
+          { title: 'World', status: 'started' },
         ]);
       },
       Effect.provide(TestLayer),

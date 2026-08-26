@@ -22,12 +22,12 @@ const seed = (): Task.Task[] => [
   }),
   Task.make({
     title: 'Finalize roast curve',
-    status: 'in-progress',
+    status: 'started',
     priority: 'high',
   }),
   Task.make({
     title: 'Draft launch email',
-    status: 'in-progress',
+    status: 'started',
     priority: 'high',
     assignee: { role: 'assistant', name: 'Scout' },
   }),

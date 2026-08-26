@@ -158,8 +158,7 @@ export const loadTasks = (chat: Chat): Effect.Effect<Task.Task[], never, Databas
   });
 
 /** A task is open until it reaches a terminal status. */
-export const isOpenTask = (task: Task.Task): boolean =>
-  (task.status ?? 'todo') === 'todo' || task.status === 'in-progress';
+export const isOpenTask = (task: Task.Task): boolean => (task.status ?? 'todo') === 'todo' || task.status === 'started';
 
 /**
  * The conversation's tasks rendered as checklist markdown (the format the planning prompts speak),

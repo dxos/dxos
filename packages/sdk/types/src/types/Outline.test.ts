@@ -61,11 +61,11 @@ describe('Outline', () => {
       await db.flush();
 
       const task = Outline.addTask(db, taskSet, 'Delegated', {
-        status: 'in-progress',
+        status: 'started',
         assignee: { role: 'assistant' },
       });
 
-      expect(task.status).to.eq('in-progress');
+      expect(task.status).to.eq('started');
       expect(task.assignee?.role).to.eq('assistant');
     });
   });
