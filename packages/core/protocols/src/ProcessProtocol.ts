@@ -42,12 +42,12 @@ export interface ProcessInfo {
   environment: ProcessEnvironment;
   state: ProcessState;
   /**
-   * True while the process has an alarm scheduled. Distinguishes hybernation waiting on more queued
-   * turn work from hybernation waiting only on background children — the difference between the
-   * local `runToCompletion` and `runUntilSettled` predicates, which cannot be told apart remotely
-   * without it.
+   * Absolute due-time (epoch ms) of the process's pending alarm, or `null` when none is scheduled.
+   * Distinguishes hybernation waiting on more queued turn work from hybernation waiting only on
+   * background children — the difference between the local `runToCompletion` and `runUntilSettled`
+   * predicates, which cannot be told apart remotely without it.
    */
-  alarmPending: boolean;
+  alarmDueAt: number | null;
   error: SerializedError | null;
   startedAt: number;
   /** Absent unless the process has reached a terminal state. */

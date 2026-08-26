@@ -128,6 +128,13 @@ export interface Handle<_Input, _Output, _Rpcs extends Rpc.Any> {
 
   terminate(): Effect.Effect<void>;
   readonly status: Status;
+
+  /**
+   * Absolute due-time (epoch ms) of the process's pending alarm, or `null` when none is scheduled.
+   * A host that suspends the process between turns (a Durable Object) mirrors this onto its own
+   * scheduler, since the runtime's alarm is an in-memory timer.
+   */
+  readonly alarmDueAt: number | null;
   statusAtom: Atom.Atom<Status>;
 
   /**
@@ -1031,6 +1038,8 @@ class DormantHandle<I, O> implements Handle<I, O, any> {
   readonly environment: Process.Environment;
   readonly status: Status;
   readonly statusAtom: Atom.Atom<Status>;
+  /** Carried on the persisted record, so a dormant handle still reports a pending alarm. */
+  readonly alarmDueAt: number | null;
   // Dormant handles expose no live RPC surface; the empty client serves no requests. Stored untyped
   // (`RpcClient<any>`) so the dormant handle is assignable to `Handle.Any` (see design spec §4.4).
   readonly rpc: RpcClient.RpcClient<any> = EMPTY_RPC_CLIENT;
@@ -1059,6 +1068,7 @@ class DormantHandle<I, O> implements Handle<I, O, any> {
       completedAt: Option.none(),
     };
     this.statusAtom = Atom.make(this.status);
+    this.alarmDueAt = record.alarmDueAt;
   }
 
   hydrate = (definition: Process.Process<I, O, any, any>): Effect.Effect<Handle<I, O, any>> =>

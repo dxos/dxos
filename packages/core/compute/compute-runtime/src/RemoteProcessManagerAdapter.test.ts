@@ -47,7 +47,7 @@ const makeFakeHost = (): RemoteProcessManager.Control & { readonly inputs: unkno
     params: { name: 'test', annotations: {} },
     environment: {},
     state,
-    alarmPending: false,
+    alarmDueAt: null,
     error: null,
     startedAt: 0,
     metrics: { wallTime: 0, inputCount: inputs.length, outputCount: events.length },

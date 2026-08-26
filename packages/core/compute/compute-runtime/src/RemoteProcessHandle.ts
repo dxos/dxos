@@ -107,6 +107,10 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
     return toEnvironment(this.#info.environment);
   }
 
+  get alarmDueAt(): number | null {
+    return this.#info.alarmDueAt;
+  }
+
   get status(): ProcessManager.Status {
     return this.#registry.get(this.#statusAtom);
   }
@@ -175,7 +179,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
       (state, info) =>
         state === Process.State.IDLE ||
         isTerminal(state) ||
-        (state === Process.State.HYBERNATING && !info.alarmPending),
+        (state === Process.State.HYBERNATING && info.alarmDueAt === null),
     );
   }
 

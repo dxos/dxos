@@ -530,6 +530,17 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       yield* Deferred.await(deferred);
     }).pipe(Effect.scoped);
   }
+  /**
+   * Absolute due-time (epoch ms) of the process's pending alarm, or `null` when none is scheduled.
+   *
+   * Exposed for hosts that mirror the process's alarm onto their own scheduler — a Durable Object
+   * whose isolate is reclaimed between turns cannot rely on the in-memory timer, so it needs the
+   * due-time to re-arm a platform alarm.
+   */
+  get alarmDueAt(): number | null {
+    return this.#alarmDueAt;
+  }
+
   get status(): ProcessManager.Status {
     return this.#currentStatus;
   }
