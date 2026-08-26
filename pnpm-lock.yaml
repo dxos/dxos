@@ -4527,6 +4527,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../../../plugins/plugin-markdown
+      '@dxos/plugin-projects':
+        specifier: workspace:*
+        version: link:../../../plugins/plugin-projects
       '@dxos/plugin-routine':
         specifier: workspace:*
         version: link:../../../plugins/plugin-routine
@@ -4536,6 +4539,9 @@ importers:
       '@dxos/plugin-table':
         specifier: workspace:*
         version: link:../../../plugins/plugin-table
+      '@dxos/plugin-tasks':
+        specifier: workspace:*
+        version: link:../../../plugins/plugin-tasks
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../../../plugins/plugin-testing
@@ -4627,9 +4633,6 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
-      '@dxos/echo-client':
-        specifier: workspace:*
-        version: link:../../echo/echo-client
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../../../plugins/plugin-markdown
@@ -13590,6 +13593,15 @@ importers:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
     devDependencies:
+      '@dxos/agent-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute/agent-runtime
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../core/compute/assistant
+      '@dxos/compute-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute/compute-runtime
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client

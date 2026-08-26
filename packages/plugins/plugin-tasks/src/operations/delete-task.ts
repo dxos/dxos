@@ -11,11 +11,6 @@ import { TaskOperation } from '#types';
 
 import { collectSubtree, findTaskSet, removeTasksFromSet } from './task-set-membership';
 
-/**
- * Deletes a task and its sub-tasks. `db.remove` cascades along the parent edge, but the set's
- * `tasks` array is the membership record and has to be swept explicitly — for the whole subtree,
- * not just the task named, since the cascade takes the descendants with it.
- */
 const handler: Operation.WithHandler<typeof TaskOperation.DeleteTask> = TaskOperation.DeleteTask.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ task: taskRef }) {
