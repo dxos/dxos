@@ -335,6 +335,11 @@ Investigated 2026-08-13 (spike-verified) — full findings in DESIGN.md §app-gr
       pinches: incremental index maintenance; fallback: per-workspace partitioning.
 - [ ] **Upstream ask** — propose a single-clone `Graph.snapshot(mutable)` (today: `endMutation`
       kills the handle, so snapshot+continue costs two clones).
+- [x] **`@dxos/graph` in the boot graph is BY DESIGN** — traced 2026-08-26:
+      `main.tsx → app-framework → plugin-manager → activation-scheduler → activation-graph.ts →
+    GraphModel → effect/Graph`. The plugin activation scheduler builds its ordering graph on
+      `GraphModel`, so the model (and Effect's `Graph` under it) is boot-critical and not a leak.
+      Only the untree-shaken remainder is waste — see the upstream ask below.
 - [ ] **Upstream ask: split `effect/Graph` by subpath** — `Graph.js` is one 131 KB module holding
       the algorithms (`dijkstra`, `astar`, `bellmanFord`, `floydWarshall`, `stronglyConnectedComponents`)
       and the exporters (`toGraphViz`, `toMermaid`) alongside the data structure, so whatever keeps
@@ -344,13 +349,21 @@ Investigated 2026-08-13 (spike-verified) — full findings in DESIGN.md §app-gr
       pays 23.5 KB where the API `GraphModel` actually calls shakes to 6.7 KB. Standalone rolldown
       1.2.4 and a plain `vite build` 8.2.1 both shake it clean (groups configured or not), so this
       is our packaging and not a rolldown bug; subpaths would cap what a strict wrapper can pin.
-- [ ] **Why is the app graph boot-reachable at all?** — 26.7 KB of `@dxos/app-graph` + `@dxos/graph`
-      ships in the eager boot graph, and it PREDATES #12594 (measured at its parent), so it is not
-      the rebuild's doing. `@dxos/app-framework` has no runtime import of `@dxos/app-graph` and the
-      heavy consumers (plugin-navtree/-deck/-space) are lazy, so the edge is not obvious.
-      `computeBootPartition` walks the PARSE graph, so a barrel-only re-export is enough to group a
-      package into boot even when only lazy code calls it — and the import-map wrapper's strict
-      signature then stops tree-shaking from emptying it. Trace with
-      `DX_TRACE_BOOT_LEAK=1 moon run composer-app:bundle` (targets already added) and cut the edge.
+- [ ] **Cut the app-graph boot edge** — ~26 KB of `@dxos/app-graph` (18.5 KB) plus the
+      `@dxos/graph/GraphBuilder` (7.6 KB) it drags behind it ships eagerly for ONE pure string
+      helper. Traced 2026-08-26 with `DX_TRACE_BOOT_LEAK=1`:
+      `main.tsx → plugin-defs.core.tsx → plugin-registry/RegistryPlugin.ts → plugin-registry/meta.ts
+    → app-toolkit/GraphPath.ts → app-graph/AppGraph.ts`, then
+      `AppGraph → path-resolution → AppGraphBuilder → GraphBuilder`. `meta.ts` wants only
+      `GraphPath.pinnedWorkspaceId`, but `GraphPath.ts` has a module-scope value import of
+      `AppGraph` that only `tryGetEid`/`tryGetEidCandidates` use (the other two refs are types), and
+      a plugin's meta is exactly the file that must stay light — every meta loads eagerly to build
+      the registry. Tree-shaking cannot save it: `@dxos/app-graph` is an import-map shared package,
+      so its wrapper's `preserveSignature: 'strict'` pins every export while `computeBootPartition`
+      groups the module into boot off the parse graph. Fix candidates: split the two graph-probing
+      functions out of `GraphPath`, or move the pure path helpers to `@dxos/graph/GraphNode` where
+      the other node-id path helpers already live. No other plugin meta, `XPlugin` entrypoint or
+      `@dxos/app-framework` module imports `@dxos/app-graph`, so this is likely the only edge —
+      confirm by cutting it and re-measuring, since the trace reports shortest paths only.
 - [ ] **Adopt shared view helpers (C)** — swap app-graph's local family/equality patterns onto
       the Phase-1 primitives.
