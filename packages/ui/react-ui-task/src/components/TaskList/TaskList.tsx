@@ -48,6 +48,7 @@ type TaskListContextValue = {
   groupByStatus: boolean;
   showGroupLabels: boolean;
   showOrdinals: boolean;
+  showDescriptions: boolean;
   statusLabel: (status: Task.Status) => string;
   onTaskCreate?: (title: string) => void;
   onTaskUpdate?: (task: Task.Task, patch: TaskPatch) => void;
@@ -69,6 +70,9 @@ type TaskListRootProps = PropsWithChildren<{
   showGroupLabels?: boolean;
   /** Number rows by their position in `tasks` (set order), so tasks can be referenced by ordinal. */
   showOrdinals?: boolean;
+  /** Render each task's description under its title; rows grow to fit. Off by default, so a
+   * single-line list (e.g. the chat strip) keeps one row per task. */
+  showDescriptions?: boolean;
   /** i18n hook for group headings; defaults to English labels. */
   statusLabel?: (status: Task.Status) => string;
   /** Enables `Create`; called with the trimmed title. */
@@ -87,6 +91,7 @@ const TaskListRoot = ({
   groupByStatus = true,
   showGroupLabels = true,
   showOrdinals = false,
+  showDescriptions = false,
   statusLabel = (status) => DEFAULT_STATUS_LABELS[status],
   onTaskCreate,
   onTaskUpdate,
@@ -98,6 +103,7 @@ const TaskListRoot = ({
     groupByStatus={groupByStatus}
     showGroupLabels={showGroupLabels}
     showOrdinals={showOrdinals}
+    showDescriptions={showDescriptions}
     statusLabel={statusLabel}
     onTaskCreate={onTaskCreate}
     onTaskUpdate={onTaskUpdate}
@@ -151,7 +157,8 @@ const GRID_COLS = {
 type TaskListContentProps = ComposableProps;
 
 const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
-  const { tasks, groupByStatus, showGroupLabels, showOrdinals, statusLabel } = useTaskListContext('TaskList.Content');
+  const { tasks, groupByStatus, showGroupLabels, showOrdinals, showDescriptions, statusLabel } =
+    useTaskListContext('TaskList.Content');
   // Ordinals follow the set's canonical order, not the grouped display order, so a task keeps its
   // number as it moves between status groups.
   const ordinals = useMemo(() => new Map(tasks.map((task, index) => [task.id, index + 1])), [tasks]);
@@ -170,9 +177,12 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
     <Listbox.Content
       {...composableProps(props, {
         // Row height lives on the auto rows — an `h-8` on the grid itself would size the whole
-        // list to one row and let the rest overflow invisibly.
+        // list to one row and let the rest overflow invisibly. A described row is taller than one
+        // line, so the tracks size to content and the cells align to the first line rather than to
+        // the middle of a two-line row.
         classNames: mx(
-          'group grid auto-rows-[2rem] gap-x-2 items-center w-full min-w-0',
+          'group grid gap-x-2 w-full min-w-0',
+          showDescriptions ? 'auto-rows-min items-start' : 'auto-rows-[2rem] items-center',
           showOrdinals ? GRID_COLS.contentWithOrdinals : GRID_COLS.content,
         ),
       })}
@@ -231,7 +241,7 @@ type TaskListItemProps = ComposableProps<{ task: Task.Task; ordinal?: number }>;
 const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: number }>(
   ({ task, ordinal, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
-    const { tasks, onTaskUpdate, onTaskDelete, onTaskSelect } = useTaskListContext('TaskList.Item');
+    const { tasks, showDescriptions, onTaskUpdate, onTaskDelete, onTaskSelect } = useTaskListContext('TaskList.Item');
     const { className, ...rest } = composableProps(props);
 
     // Subscribe per row: a query re-emits when membership changes, not when a task's own fields do,
@@ -241,6 +251,10 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
 
     const done = current.status === 'done';
     const error = current.status === 'failed';
+
+    // Only when the list asks for it, and only when there is something to show — an empty second
+    // line would make every row taller for nothing.
+    const description = showDescriptions ? current.description?.trim() || undefined : undefined;
 
     // Virtual: an open task whose dependencies (resolved within the set) are not all done.
     const blocked = (current.status ?? 'todo') === 'todo' && !TaskSet.isTaskReady(tasks, task);
@@ -264,11 +278,11 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
         // `px-0`: a subgrid's own inline padding shrinks its first and last tracks, so the listbox
         // item's default inset would push the status control off the column the create row's `+`
         // sits in. The list's inset belongs to the host, not the row.
-        classNames={mx('group/row col-span-full grid grid-cols-subgrid px-0', className)}
+        classNames={mx('group/row col-span-full grid grid-cols-subgrid px-0 items-start', className)}
         ref={forwardedRef}
       >
         {ordinal !== undefined && (
-          <div className='flex items-center justify-center'>
+          <div className='flex h-8 items-center justify-center'>
             <Tag hue={done ? 'green' : error ? 'rose' : 'neutral'} classNames='tabular-nums'>
               {ordinal}
             </Tag>
@@ -276,7 +290,7 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
         )}
         {onTaskUpdate ? (
           <IconButton
-            classNames={mx('justify-self-center', iconClassNames)}
+            classNames={mx('justify-self-center my-1', iconClassNames)}
             variant='ghost'
             density='sm'
             icon={icon}
@@ -285,19 +299,28 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
             onClick={handleToggle}
           />
         ) : (
-          <span className='grid place-items-center justify-self-center'>
+          <span className='grid h-8 place-items-center justify-self-center'>
             <Icon icon={icon} classNames={iconClassNames} size={4} />
             <span className='sr-only'>{t(`status-${current.status ?? 'todo'}.label`)}</span>
           </span>
         )}
         <span
-          className={mx('flex items-center gap-1 min-w-0', onTaskSelect && 'cursor-pointer')}
+          className={mx('flex flex-col justify-center gap-0.5 min-w-0', onTaskSelect && 'cursor-pointer')}
           onClick={onTaskSelect ? () => onTaskSelect(task) : undefined}
         >
-          <span className='truncate'>{current.title}</span>
+          <span className='flex h-8 items-center gap-1 min-w-0'>
+            <span className='truncate'>{current.title}</span>
+          </span>
+          {description && <span className='pb-1 text-sm text-subdued line-clamp-3'>{description}</span>}
         </span>
-        {current.assignee ? <TaskListAssignee assignee={current.assignee} /> : <div />}
-        <div className='flex items-center gap-1'>
+        {current.assignee ? (
+          <span className='flex h-8 items-center'>
+            <TaskListAssignee assignee={current.assignee} />
+          </span>
+        ) : (
+          <div />
+        )}
+        <div className='flex h-8 items-center gap-1'>
           {blocked && <Tag hue='indigo'>{t('task-blocked.label')}</Tag>}
           {current.priority && current.priority !== 'none' && <Tag hue='neutral'>{current.priority}</Tag>}
         </div>

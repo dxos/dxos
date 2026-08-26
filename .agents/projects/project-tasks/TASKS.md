@@ -135,9 +135,11 @@ Each is independent of the others; none is started.
       Phase 1 (project chats adopting the project's ledger): this is the manual
       override, and it needs to say what happens to tasks already in the chat's
       own set.
-- [ ] **Option to show the task description in the list** — a `TaskList.Root`
-      prop rendering `Task.description` beneath the title (secondary line,
-      truncated), off by default so the chat strip stays one row per task.
+- [x] **Option to show the task description in the list** — `TaskList.Root`
+      gains `showDescriptions`; a described row grows (`auto-rows-min`) and every
+      other cell is pinned to the title's line, since a row is its own subgrid
+      and the listbox item centres its cells by default. Off by default, so the
+      chat strip stays one row per task. `WithDescriptions` story added.
 - [ ] **ProjectArticle tabs** — tabbed surface for the project article
       (plugin-projects) instead of the current stacked sections.
 - [ ] **`#foo` renders as a heading in chat markdown** — a `#` inside a message

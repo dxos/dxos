@@ -19,11 +19,14 @@ const seed = (): Task.Task[] => [
     title: 'Source green coffee',
     status: 'done',
     priority: 'high',
+    description: 'Two Ethiopian lots and one Colombian, sampled before committing to a full bag.',
   }),
   Task.make({
     title: 'Finalize roast curve',
     status: 'started',
     priority: 'high',
+    description:
+      'Target a 12 minute development window; log every profile so the next batch can be reproduced from the notes rather than from memory.',
   }),
   Task.make({
     title: 'Draft launch email',
@@ -46,10 +49,12 @@ const DefaultStory = ({
   readonly,
   showGroupLabels,
   showOrdinals,
+  showDescriptions,
 }: {
   readonly?: boolean;
   showGroupLabels?: boolean;
   showOrdinals?: boolean;
+  showDescriptions?: boolean;
 }) => {
   const [tasks, setTasks] = useState<Task.Task[]>(seed);
 
@@ -73,6 +78,7 @@ const DefaultStory = ({
       tasks={tasks}
       showGroupLabels={showGroupLabels}
       showOrdinals={showOrdinals}
+      showDescriptions={showDescriptions}
       onTaskCreate={readonly ? undefined : handleCreate}
       onTaskUpdate={readonly ? undefined : handleUpdate}
       onTaskDelete={readonly ? undefined : handleDelete}
@@ -114,6 +120,14 @@ export const WithOrdinals: Story = {
   args: {
     showGroupLabels: false,
     showOrdinals: true,
+  },
+};
+
+export const WithDescriptions: Story = {
+  args: {
+    showGroupLabels: false,
+    showOrdinals: true,
+    showDescriptions: true,
   },
 };
 
