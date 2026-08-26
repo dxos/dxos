@@ -1,0 +1,81 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import React, { useCallback, useMemo, useState } from 'react';
+
+import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { RegistryOperation } from '@dxos/plugin-registry/operations';
+import { Button, Flex, Icon, useTranslation } from '@dxos/react-ui';
+
+import { meta } from '#meta';
+
+export type PluginPromptProps = {
+  /** Id of the plugin the agent needs, e.g. `org.dxos.plugin.markdown`. */
+  plugin?: string;
+};
+
+/**
+ * Agent-facing plugin prompt: rendered when the assistant needs a capability that an installed but
+ * disabled plugin provides. Enabling changes the user's workspace, so the agent may only ask —
+ * the button here is the only path that turns the plugin on.
+ */
+export const PluginPrompt = ({ plugin: pluginId }: PluginPromptProps) => {
+  const { t } = useTranslation(meta.profile.key);
+  const manager = usePluginManager();
+  const { invokePromise } = useOperationInvoker();
+  const enabled = useAtomValue(manager.enabled);
+  const [pending, setPending] = useState(false);
+
+  const plugin = useMemo(
+    () => (pluginId ? manager.getPlugins().find(({ meta }) => meta.profile.key === pluginId) : undefined),
+    [manager, pluginId],
+  );
+
+  const handleEnable = useCallback(async () => {
+    if (!pluginId) {
+      return;
+    }
+    setPending(true);
+    try {
+      await invokePromise(RegistryOperation.EnablePlugins, { ids: [pluginId] });
+    } finally {
+      setPending(false);
+    }
+  }, [invokePromise, pluginId]);
+
+  if (!pluginId) {
+    return null;
+  }
+
+  const label = plugin?.meta.profile.name ?? pluginId;
+  const isEnabled = enabled.includes(pluginId);
+
+  return (
+    <Flex role='group' column gap='sm' classNames='my-2 p-3 border border-subdued-separator rounded-sm'>
+      <Flex gap='sm' align='center'>
+        <Icon icon='ph--plugs--regular' size={5} classNames='shrink-0 text-subdued' />
+        <Flex column classNames='min-w-0'>
+          <p className='text-sm font-medium truncate'>{t('plugin-prompt.title', { plugin: label })}</p>
+          <p className='text-sm text-subdued'>
+            {!plugin
+              ? t('plugin-prompt.unavailable', { plugin: label })
+              : isEnabled
+                ? t('plugin-prompt.enabled', { plugin: label })
+                : (plugin.meta.profile.description ?? t('plugin-prompt.description', { plugin: label }))}
+          </p>
+        </Flex>
+      </Flex>
+      {plugin && !isEnabled && (
+        <Flex justify='end'>
+          <Button variant='primary' disabled={pending} onClick={handleEnable}>
+            {t('plugin-prompt.button')}
+          </Button>
+        </Flex>
+      )}
+    </Flex>
+  );
+};
+
+PluginPrompt.displayName = 'PluginPrompt';

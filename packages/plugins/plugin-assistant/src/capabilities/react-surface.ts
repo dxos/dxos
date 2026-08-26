@@ -23,6 +23,7 @@ import {
   ChatCompanion,
   ChatDialog,
   IntegrationPrompt,
+  PluginPrompt,
   SpaceHomePrompt,
 } from '#containers';
 import { ASSISTANT_COMPANION_VARIANT, ASSISTANT_DIALOG, meta } from '#meta';
@@ -125,6 +126,13 @@ export default Capability.makeModule(() =>
         component: IntegrationPrompt,
         // `data.data` is model-supplied JSON (untyped); narrow `service` before use.
         props: ({ data }) => ({ service: typeof data.data?.service === 'string' ? data.data.service : undefined }),
+      }),
+      Surface.create({
+        id: 'pluginPrompt',
+        filter: Surface.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'plugin-prompt'),
+        component: PluginPrompt,
+        // `data.data` is model-supplied JSON (untyped); narrow `plugin` before use.
+        props: ({ data }) => ({ plugin: typeof data.data?.plugin === 'string' ? data.data.plugin : undefined }),
       }),
       Surface.create({
         id: 'triggerStatus',

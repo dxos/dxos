@@ -10,17 +10,18 @@ import { trim } from '@dxos/util';
 export const key = 'org.dxos.skill.pluginManager';
 
 /**
- * The verbs the skill projects as tools. Their handlers live in the registry plugin, so both are
- * absent unless it is active — which is also why the skill reads the host rather than a fixed list.
+ * Read-only: the skill may inspect the host but never change it. Enabling a plugin reshapes the
+ * user's workspace, so it is offered as a `plugin-prompt` surface the user clicks instead of a tool
+ * the agent can call.
  */
-export const operations = [RegistryOperation.QueryPlugins, RegistryOperation.EnablePlugins];
+export const operations = [RegistryOperation.QueryPlugins];
 
-/** The Plugin Manager skill: discover what this host has installed and turn plugins on. */
+/** The Plugin Manager skill: discover installed plugins and offer the disabled ones to the user. */
 export const make = (): Skill.Skill =>
   Skill.make({
     key,
     name: 'Plugin Manager',
-    description: 'Discover installed plugins — enabled or not — and enable the ones a task needs.',
+    description: 'Discover installed plugins — enabled or not — and offer to enable the ones a task needs.',
     agentCanEnable: true,
     tools: Skill.toolDefinitions({ operations }),
     instructions: Template.make({
@@ -32,14 +33,20 @@ export const make = (): Skill.Skill =>
         # Working with plugins
         - Call [query-plugins] to read the installed set. Omit the filter to see disabled plugins
           too — those are exactly the ones a missing capability is usually hiding behind.
-        - When a task needs a capability this host is not currently offering, look for a disabled
-          plugin that provides it and call [enable-plugins] with its id.
-        - Tell the user which plugin you are turning on and why before you enable it; enabling
-          changes their workspace, and its dependencies come on with it.
-        - Enabling reports the ids that came on, plus anything rejected with a reason. An id the host
-          does not have installed cannot be enabled from here — say so rather than retrying.
-        - A plugin's tools do not appear until it activates. Re-read [query-plugins] to confirm
-          \`active\`, and do not promise a capability whose plugin is enabled but not yet active.
+        - You CANNOT enable a plugin yourself. Enabling changes the user's workspace, so it is
+          always their decision, taken by clicking the prompt described below.
+        - When a task needs a capability an installed-but-disabled plugin provides, DO NOT fail,
+          refuse, or apologize. Render a plugin prompt so the user can enable it inline. Emit a
+          self-closing surface tag with the 'plugin-prompt' role and the plugin's id:
+
+          <surface role='plugin-prompt' data='{"plugin":"org.dxos.plugin.markdown"}' />
+
+          Use the id exactly as [query-plugins] reported it. Emit the surface once per plugin, then
+          briefly say what enabling it would let you do.
+        - A plugin the host does not have installed cannot be enabled at all — say so instead of
+          prompting for it.
+        - A plugin's tools do not appear until it activates, so after the user enables one, re-read
+          [query-plugins] to confirm \`active\` rather than assuming the capability is ready.
         - Core plugins are always on and cannot be disabled, so never offer to turn one off.
       `,
     }),

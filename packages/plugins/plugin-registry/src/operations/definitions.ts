@@ -46,6 +46,10 @@ export const QueryPlugins = Operation.make({
   }),
 }).pipe(Operation.mutation('none'));
 
+/**
+ * User-initiated: enabling reshapes the workspace, so the assistant asks via its `plugin-prompt`
+ * surface and this runs on the click, rather than being projected as an agent tool.
+ */
 export const EnablePlugins = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.registry.enablePlugins'),

@@ -142,6 +142,12 @@ export const translations: Resource[] = [
         'integration-prompt.description': 'This action needs access to {{service}}. Connect it to continue.',
         'integration-prompt.unavailable': 'No connector is available for {{service}}.',
 
+        'plugin-prompt.title': 'Enable {{plugin}}',
+        'plugin-prompt.description': 'This action needs the {{plugin}} plugin. Enable it to continue.',
+        'plugin-prompt.enabled': '{{plugin}} is enabled.',
+        'plugin-prompt.unavailable': '{{plugin}} is not installed on this device.',
+        'plugin-prompt.button': 'Enable',
+
         'search.placeholder': 'Search...',
         'prompt.placeholder': 'Enter question or command...',
         'context-objects.button': 'Add to context',
