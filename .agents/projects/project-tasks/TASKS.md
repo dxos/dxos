@@ -144,6 +144,12 @@ Each is independent of the others; none is started.
       at full height) in the toolbar; the story also wraps the article in an
       `AttendableContainer`, without which nothing ever attends the article and
       the toolbar renders permanently unattended.
+- [ ] **Record when a task reached a terminal status** — `Task` carries no date
+      at all today, so nothing can show when work finished or say how long it
+      took. Stamp the transition into `done`/`failed`/`cancelled` wherever status
+      is written (the TaskOperation verbs, the delegation strategy's fold-back,
+      and the list's own toggle), and decide whether one `completed` field or a
+      status-change timestamp is the right shape.
 - [ ] **A plugin extension contributes a tab** — the Overview/Tasks tablist is
       hard-coded in `ProjectArticle`; make it a contribution point so e.g. a
       GitHub extension can add a PRs tab to a project. Needs a surface/capability
