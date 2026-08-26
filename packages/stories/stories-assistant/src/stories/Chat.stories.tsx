@@ -116,10 +116,16 @@ export const WithTasks: Story = {
       Obj.update(chat, (chat) => {
         chat.taskSet = Ref.make(taskSet);
       });
+      // More than six rows, so the story also demonstrates the task strip's height cap.
       const seed: { title: string; status: NonNullable<Task.Task['status']> }[] = [
         { title: 'Source the beans', status: 'done' },
         { title: 'Dial in the roast', status: 'in-progress' },
         { title: 'Print the labels', status: 'todo' },
+        { title: 'Design the bag', status: 'todo' },
+        { title: 'Photograph the pour', status: 'todo' },
+        { title: 'Draft the launch email', status: 'todo' },
+        { title: 'Schedule the tasting', status: 'todo' },
+        { title: 'Update the price list', status: 'todo' },
       ];
       for (const { title, status } of seed) {
         Outline.addTask(space.db, taskSet, title, { status });

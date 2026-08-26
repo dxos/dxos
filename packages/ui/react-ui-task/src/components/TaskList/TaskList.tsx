@@ -137,7 +137,10 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
   return (
     <Listbox.Content
       {...composableProps(props, {
-        classNames: 'grid grid-cols-[2rem_1fr_min-content_min-content_2rem] gap-x-2 items-center w-full min-w-0 h-8',
+        // Row height lives on the auto rows — an `h-8` on the grid itself would size the whole
+        // list to one row and let the rest overflow invisibly.
+        classNames:
+          'grid grid-cols-[2rem_1fr_min-content_min-content_2rem] auto-rows-[2rem] gap-x-2 items-center w-full min-w-0',
       })}
       aria-label='Tasks'
       ref={forwardedRef}

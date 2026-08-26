@@ -65,7 +65,9 @@ const ChatModuleContainer = ({ space }: { space: Space }) => {
           <Chat.Content>
             <Chat.Thread viewType={view} />
             <div className='px-3 border'>
-              <Chat.TaskList classNames='max-h-[6lh] border-t border-separator rounded-sm text-description' />
+              {/* Rows are h-8, so the six-row cap is 6 * 2rem (+1px for the border in the same box);
+                  shrink-0 keeps the flex column from compressing the strip below its content. */}
+              <Chat.TaskList classNames='shrink-0 max-h-[calc(6*2rem+1px)] border-t border-separator rounded-sm text-description' />
             </div>
             <Chat.Prompt {...chatProps} classNames='border-none rounded-none' outline preset={preset?.id} />
           </Chat.Content>
