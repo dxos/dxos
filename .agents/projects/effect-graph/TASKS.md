@@ -1,16 +1,22 @@
 # effect-graph — Tasks
 
-_Resume: Phases 1-6 IMPLEMENTED and green — `GraphModel` rebuilt on a long-lived Effect
-`MutableGraph` + version atom, consumers migrated, `topoLevels`/`findCycle` landed and consumed by
-activation-graph. graph 17/17, app-framework 231/231, schema 48/50 (2 skipped), conductor 31/31,
-react-ui-graph 19/19 on the consolidated core. Phase 7 (GraphBuilder split) is DONE: the generic
-engine lives in `@dxos/graph/GraphBuilder` with `ModelGraphBuilder` as its default specialization,
-`AppGraphBuilder` is a subclass, and the suites are split (graph 49/49, app-graph 111/111). The
-whole dependent closure is green (2113 passed / 0 failed across 52 suites).
-**Phase 8 is the current gate** — repo-wide dependent test sweep + composer e2e + before/after
-benchmarks kept as skipped tests — before Phase 9 (node atom release/eviction). Also remaining:
-app-graph algorithm upgrades (dijkstra/pathAtom), the `explore` isolation decision, ECHO
-undo/concurrency tests, and the upstream proposals._
+_Resume: Phases 1-10 IMPLEMENTED. PR #12594 is open, out of draft, CI green and mergeable/CLEAN
+at `bb555a1b09`. `graph.ts` is dissolved into a single `AppGraph.ts`; the public namespaces are
+renamed (`@dxos/app-graph/{Graph,GraphBuilder,Node}` -> `/{AppGraph,AppGraphBuilder,AppGraphNode}`)
+and `NodeMatcher` is split by dependency across `@dxos/graph/GraphNodeMatcher` and
+`@dxos/app-toolkit/AppNodeMatcher`, with node-id path helpers on `@dxos/graph/GraphNode`. 147
+consumer files swept. 1,507 tests pass across the dependent closure, plus conductor 31, schema 51,
+react-ui-graph 19. Perf beats the pre-refactor bar across expansion, updates and removal.
+**Release policy is an explicit follow-up** (jdw, 2026-08-25): the mechanism lands dormant with no
+production caller. Remaining, none of it blocking: the Phase 3 ECHO adapter ports, algorithm
+upgrades (dijkstra/pathAtom), the `explore` isolation decision, and the two upstream Effect
+proposals._
+
+_Merge hazard, expect it on every update from main: main adds code against the retired app-graph API
+in files that merge WITHOUT conflict and fail only at compile time. Three merges in a row hit it.
+After any merge, grep for retired subpaths, for `qualifyId` imported by NAME (invisible to a
+namespace-shaped sweep, bit twice), and for packages importing `@dxos/graph` without declaring it —
+then run `moon run :lint`, not just build and test._
 
 ## Phase 1: Core (`packages/common/graph`)
 
@@ -168,8 +174,11 @@ Gate before Phase 9. Requested 2026-08-13.
       multi-paragraph `- [ ]` entry in this file: oxfmt indents each follow-on paragraph four more
       spaces per format pass (minimal repro verified), so the file never reaches a fixed point and
       CI's format-check fails on it — one paragraph per entry.
-- [ ] **Composer e2e** — run the Composer e2e suite; the builder/expansion path is only exercised
-      end-to-end there (navtree expansion, URL resolution, deck routing).
+- [x] **Composer e2e** — green across all three browsers and both shards on `ce8d3a67c` via
+      `gh workflow run check.yml --ref <branch> -f e2e=true`; e2e never runs on a PR, so a dispatch
+      is the only way to exercise it. Judge any failure against a SECOND run of the same SHA first:
+      one dispatch showed composer 43% slower with six red shards and an identical-SHA rerun came
+      back at +2% fully green, so the first was a slow runner, not a regression.
 - [x] **Benchmarks as skipped tests** — `packages/sdk/app-graph/src/bench.test.ts`, 10 timings
       behind `describe.skip`: wide expansion, two-level tree expansion, repeated connector updates
       (bare and with 200 mounted atoms), `connections`/`node`/`getNode` reads, `traverse`,
@@ -264,13 +273,17 @@ emitted, so it never re-emits and the node never comes back. `release` therefore
 connector whose previous output intersects the released set — not just connectors rooted at released
 ids — via the new `_onReleaseRelation` hook, so the relation re-expands on next read.
 
-- [ ] **Evaluate the policies** — the mechanism is in; _when_ to call it is not decided. Explicit
-      unload, LRU over subgraph roots, and mount-driven release are still open, and the choice is a
-      product decision about workspace-switch behaviour rather than a graph one. Note that
-      mount-driven is already half-served for _view_ atoms above the graph; with pinning, the
-      graph's own atoms now stay until an explicit release, so a policy has real memory to manage.
-- [ ] **Decide where the policy lives** — `@dxos/graph` (generic, e.g. `evict(policy)`), app-graph,
-      or the app/plugin layer that knows what a workspace is.
+- [x] **Scope call — policy is a FOLLOW-UP, not part of #12594** (jdw, 2026-08-25). The mechanism
+      lands dormant: `GraphModel.release` / `GraphBuilder.release` / the `Store.release` port are in
+      and tested, wired at `GraphBuilder.ts:677`, with no production caller. That is deliberate.
+- [ ] **Follow-up: evaluate the policies** — explicit unload, LRU over subgraph roots, and
+      mount-driven release are all still open, and the choice is a product decision about
+      workspace-switch behaviour rather than a graph one. Note that mount-driven is already
+      half-served for _view_ atoms above the graph; with pinning, the graph's own atoms now stay
+      until an explicit release, so a policy has real memory to manage.
+- [ ] **Follow-up: decide where the policy lives** — `@dxos/graph` (generic, e.g. `evict(policy)`),
+      app-graph, or the app/plugin layer that knows what a workspace is. Recommendation on record:
+      LRU over workspace roots, in plugin-space, since only that layer knows what a workspace is.
 
 ## Phase 10: dissolve the Graph wrapper
 
