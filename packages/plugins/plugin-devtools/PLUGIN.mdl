@@ -348,9 +348,12 @@ flow QA-1: Open the Devtools node and inspect an object
 
 ```mdl
 flow QA-2: Generate synthetic objects into a collection
-  desc: The Space Data Generator — the one devtools surface that writes to the database, via the shared space.addObject operation.
+  desc: |
+    The write path behind the Space Data Generator — the agent binding invokes the shared
+    space.addObject operation directly rather than driving the SpaceGenerator surface, so this
+    exercises F-5.2 (object creation) only, not F-5.1 (the surface rendering).
   actors: agent
-  covers: [F-5.1, F-5.2, T-4]
+  covers: [F-5.2, T-4]
   status: unverified
   given:
     - an identity exists

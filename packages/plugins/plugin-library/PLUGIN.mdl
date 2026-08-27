@@ -102,6 +102,8 @@ flow QA-1: Create a book via BookHive autocomplete, then delete it
     - plugin-library is enabled — it is OFF by default (isDev-only default). Enabling is a UI
       action (Settings -> plugin registry).
     - no Book titled "Dune" exists in the space — ABORT rather than deleting one this flow did not create
+    - book: the Book "Dune" this flow creates — no create op exists (human-only step), so the
+      runner binds this once that step completes
   test:
     - name: Search and create from a BookHive result
       do: In the navtree, click + on a collection and choose Book. Type "dune" into the create
