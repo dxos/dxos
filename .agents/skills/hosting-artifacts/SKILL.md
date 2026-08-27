@@ -190,6 +190,15 @@ handoff is explicit and it belongs in the PR conversation, not around it:
 | `github.com/<o>/<r>/raw/…webm`, `media.githubusercontent.com/…webm`                                  | no player                                                                                              |
 | a well-formed `user-attachments` or legacy `user-images.githubusercontent.com` URL with a made-up id | no player                                                                                              |
 
+Two workarounds circulate for this and both are worse than R2 at the only thing they achieve. **Release
+assets** (`gh release create _attachments --draft` + `gh release upload`) do upload fine, but the URL is
+not rewritten — the table above is measured — so the payoff is a link R2 already gives you, bought with a
+junk release tag and an asset store nobody prunes. **An orphan `media` branch** is worse still: pushed
+blobs are reachable from a ref, so they land in every full clone and fetch of the repo permanently, for
+everyone, and cannot be removed without a history rewrite. It does not slow a `checkout` of `main` — no
+file enters the working tree — but it grows `.git` for every contributor forever, which is the whole
+reason [[recording-demos]] says never to commit the video.
+
 That last row is the informative one: the rewrite is **not** a URL-pattern transform you can imitate.
 GitHub resolves the id against a real asset record, so an invented URL of exactly the right shape renders
 as a plain link. Only an upload that creates the record produces a player.
