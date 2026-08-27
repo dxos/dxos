@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { syntaxTree, syntaxTreeAvailable } from '@codemirror/language';
+import { ensureSyntaxTree, syntaxTree, syntaxTreeAvailable } from '@codemirror/language';
 import { type EditorState, type Extension, Prec, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
 import {
   Decoration,
@@ -510,7 +510,10 @@ const createWidgetDecorationsField = (registry: XmlWidgetRegistry = {}, notifier
 
   return StateField.define<WidgetDecorationSet>({
     create: (state) => {
-      return buildDecorations(state, { from: 0, to: state.doc.length }, registry, notifier, urlSchemeMap);
+      // The only build that can read a half-parsed tree: every later one follows a transaction, by
+      // which time the parse has advanced or `xmlTagRebuildEffect` has fired. Forcing it here keeps
+      // the cost at mount instead of charging it to every streamed chunk.
+      return buildDecorations(state, { from: 0, to: state.doc.length }, registry, notifier, urlSchemeMap, true);
     },
     update: ({ from, streamingFrom, decorations }, tr) => {
       // Check for reset effect.
@@ -573,6 +576,13 @@ const createWidgetDecorationsField = (registry: XmlWidgetRegistry = {}, notifier
 };
 
 /**
+ * Time the initial decoration build may spend parsing ahead of the background parser. One feed row
+ * is a small document, so this is a ceiling rather than a cost: past it the raw markup shows for a
+ * frame, exactly as before, and `createParseCompletionPlugin` still rebuilds.
+ */
+const PARSE_BUDGET = 50;
+
+/**
  * Creates widget decorations for XML tags in the document using the syntax tree.
  * After the tree walk, scans for unclosed streaming tags and creates provisional decorations.
  */
@@ -582,12 +592,19 @@ const buildDecorations = (
   registry: XmlWidgetRegistry,
   notifier: XmlWidgetNotifier,
   urlSchemeMap: Map<string, [string, XmlWidgetDef][]>,
+  /** Parse ahead of the background parser rather than reading a partial tree — see {@link PARSE_BUDGET}. */
+  forceParse = false,
 ): WidgetDecorationSet => {
   const context = state.field(widgetContextStateField, false);
   const widgetStateMap = state.field(widgetStateMapStateField, false) ?? {};
   const builder = new RangeSetBuilder<Decoration>();
 
-  const tree = syntaxTree(state);
+  // Parse to the end of the range rather than reading whatever the background parse has reached.
+  // A fresh view parses about a viewport's worth synchronously and the rest in idle time, so a
+  // large payload's `Element` is not in the tree at first paint: the walk below matches nothing
+  // and the raw markup renders until `createParseCompletionPlugin` rebuilds — the flash a reader
+  // sees when the virtualizer remounts a row. Budgeted, and the rebuild still covers a timeout.
+  const tree = (forceParse ? ensureSyntaxTree(state, range.to, PARSE_BUDGET) : null) ?? syntaxTree(state);
   if (!tree || (tree.type.name === 'Program' && tree.length === 0)) {
     return { from: range.from, decorations: Decoration.none };
   }
