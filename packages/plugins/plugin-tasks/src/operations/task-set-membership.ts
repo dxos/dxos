@@ -62,8 +62,7 @@ export const addMilestoneToSet = (taskSet: TaskSet.TaskSet, milestone: Milestone
 
 /**
  * Every task in `tasks` transitively under `task`, including `task` itself. Cycle-safe. Takes the
- * already-loaded member list (`TaskSet.loadTasks`) — resolving refs synchronously here would read
- * an unloaded set as empty on a fresh session.
+ * member list pre-loaded via `TaskSet.loadTasks`, which a fresh session requires.
  */
 export const collectSubtree = (tasks: readonly Task.Task[], task: Task.Task): Task.Task[] => {
   const subtree: Task.Task[] = [];

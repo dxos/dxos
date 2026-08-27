@@ -70,8 +70,8 @@ describe('list-tasks', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
-  // The MCP-worker scenario (DX-1217): the session that reads a set is not the one that wrote it,
-  // so no member ref has its target in the working set — the refs must be loaded, not resolved.
+  // A fresh session has no ref targets in its working set, so the reader must load them and skip
+  // any dangling entry (DX-1217).
   it.effect(
     'lists tasks written by a previous session, skipping a dangling ref',
     Effect.fnUntraced(function* () {
@@ -80,8 +80,7 @@ describe('list-tasks', () => {
       const sessionLayer = () =>
         TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet], spaceKey, storagePath });
 
-      // First session: a populated set plus one dangling member ref — the residue a crash between
-      // persisting a task and filing it can leave behind.
+      // The dangling ref is the residue a crash between persisting a task and filing it leaves.
       yield* Effect.gen(function* () {
         const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
         yield* Database.flush();
@@ -95,7 +94,6 @@ describe('list-tasks', () => {
         yield* Database.flush();
       }).pipe(Effect.provide(sessionLayer()));
 
-      // Second session over the same storage: nothing is in the working set until loaded.
       yield* Effect.gen(function* () {
         const sets = yield* Database.query(Query.select(Filter.type(TaskSet.TaskSet))).run;
         expect(sets).toHaveLength(1);

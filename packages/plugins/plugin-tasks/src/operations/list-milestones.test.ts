@@ -45,8 +45,7 @@ describe('list-milestones', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
-  // The MCP-worker scenario (DX-1217): the reading session did not write the set, so milestone and
-  // task refs alike have no targets in the working set — both must be loaded, not resolved.
+  // A fresh session has no ref targets in its working set, so the reader must load them (DX-1217).
   it.effect(
     'sequences milestones written by a previous session, with progress',
     Effect.fnUntraced(function* () {
