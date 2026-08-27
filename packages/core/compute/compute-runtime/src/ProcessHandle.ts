@@ -368,7 +368,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     const delay = Math.max(0, dueAt - Date.now());
     this.#alarmDueAt = dueAt;
     log('lifecycle: alarm rearmed', { dueAt, delayMs: delay });
-    this.#alarmFiber = Effect.runFork(this.#makeAlarmSleepEffect(delay));
+    this.#alarmFiber = Effect.runFork(this.#withClock(this.#makeAlarmSleepEffect(delay)));
   }
   /**
    * Re-deliver a persisted event that never settled before shutdown.
@@ -556,7 +556,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     log('lifecycle: alarm scheduled', { delayMs: delay, dueAt });
     // Schedule via `Effect.sleep` on the captured ambient clock instead of `setTimeout` so the alarm
     // is driven by the Effect runtime's `Clock` (a `TestClock` in tests, the live clock in prod).
-    this.#alarmFiber = Effect.runFork(this.#makeAlarmSleepEffect(delay));
+    this.#alarmFiber = Effect.runFork(this.#withClock(this.#makeAlarmSleepEffect(delay)));
   }
 
   #makeAlarmSleepEffect(delay: number): Effect.Effect<void> {
@@ -564,7 +564,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       // 0ms delays must not block on the TestClock — use yieldNow() so they complete in the
       // current event loop without requiring a TestClock.adjust call from the test.
       if (delay > 0) {
-        yield* Effect.sleep(Duration.millis(delay)).pipe(Effect.provideService(Clock.Clock, this.#clock));
+        yield* Effect.sleep(Duration.millis(delay));
       } else {
         yield* Effect.yieldNow;
       }
@@ -616,10 +616,24 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       return;
     }
     Effect.runFork(
-      this.#persistence
-        .appendEvent({ _tag: 'childEvent', event: toPersistedChildEvent(event) })
-        .pipe(Effect.flatMap((seq) => this.#runHandler('childEvent', () => this.#callbacks.onChildEvent(event), seq))),
+      this.#withClock(
+        this.#persistence
+          .appendEvent({ _tag: 'childEvent', event: toPersistedChildEvent(event) })
+          .pipe(
+            Effect.flatMap((seq) => this.#runHandler('childEvent', () => this.#callbacks.onChildEvent(event), seq)),
+          ),
+      ),
     );
+  }
+
+  /**
+   * Runs an effect forked off the default runtime under the process's captured ambient clock, so
+   * every handler measures time the same way the alarms do — a `TestClock` under tests, the live
+   * clock in production. Without it a forked handler silently reverts to the default runtime's
+   * live clock and no `TestClock.adjust` can reach a timeout inside it.
+   */
+  #withClock<A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> {
+    return Effect.provideService(effect, Clock.Clock, this.#clock);
   }
 
   #runHandler(

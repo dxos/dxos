@@ -6,7 +6,6 @@ import { describe, it } from '@effect/vitest';
 import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
-import * as Fiber from 'effect/Fiber';
 import * as Schema from 'effect/Schema';
 import * as TestClock from 'effect/testing/TestClock';
 
@@ -15,7 +14,6 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
 import { TestHelpers } from '@dxos/effect/testing';
-import { invariant } from '@dxos/invariant';
 import { DXN, EntityId } from '@dxos/keys';
 
 import { AssistantTestLayer } from '../testing';
@@ -29,11 +27,17 @@ EntityId.dangerouslyDisableRandomness();
 const BACKGROUND_THRESHOLD = Duration.seconds(1);
 
 /**
- * Bound on `advanceUntilModelCalled`. The threshold timeout is armed a few fibers after the tool
- * handler starts running, so more than one advance may be needed; a low ceiling keeps a regression
- * failing on an assertion rather than hanging until the suite timeout.
+ * Bound on {@link waitForModelCalls}. A low ceiling keeps a regression failing on an assertion
+ * rather than hanging until the suite timeout.
  */
-const MAX_CLOCK_ADVANCES = 8;
+const MAX_ATTEMPTS = 20;
+
+/**
+ * One macrotask turn. Needed despite the virtual clock: a woken continuation crosses promise
+ * boundaries (the model call and its stream) that a fiber-level `yieldNow` does not drain. It
+ * costs no wall time — the delay is 0 and nothing waits on real duration.
+ */
+const macrotask = Effect.promise(() => new Promise((resolve) => setTimeout(resolve, 0)));
 
 /**
  * Latches the test uses to hold a tool call open for as long as it likes without any real time
@@ -65,7 +69,9 @@ const handlers = OperationHandlerSet.make(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ label }) {
         const { started, release } = slowWorkHarness;
-        invariant(started != null && release != null, 'Slow work harness not armed.');
+        if (started == null || release == null) {
+          return yield* Effect.die(new Error('Slow work harness not armed.'));
+        }
         yield* Deferred.succeed(started, undefined);
         // Dies rather than declaring an error channel: the executor reads the child's `Exit`, so a
         // defect exercises the same failure path a thrown tool error would.
@@ -76,7 +82,7 @@ const handlers = OperationHandlerSet.make(
 );
 
 const SlowWorkSkill = Skill.make({
-  key: 'org.dxos.skill.slow-work',
+  key: 'org.dxos.skill.slowWork',
   name: 'Slow work',
   tools: Skill.toolDefinitions({ operations: [SlowWork] }),
 });
@@ -100,7 +106,9 @@ const makeTestLayer = (turns: readonly ScriptedLanguageModel.ScriptedTurn[]) => 
         {
           name: 'agent',
           match: (request) => {
-            prompts.push(request.text);
+            // The whole prompt, not `request.text`: the backgrounding marker comes back as a
+            // tool-result part, which `text` (text parts only) does not see.
+            prompts.push(JSON.stringify(request.prompt.content));
             return true;
           },
           turns,
@@ -118,18 +126,27 @@ const armHarness = Effect.gen(function* () {
 });
 
 /**
- * Advances virtual time until the model has been called more than `calls` times. Deterministic —
- * no real time passes — but repeated, because the threshold timeout is armed concurrently with the
- * handler that signals it started; a single advance can land before the sleep exists and be lost.
- * Over-advancing is harmless: the tool parks on a `Deferred`, not on a sleep.
+ * Drives the agent until the model has been called `count` times, advancing virtual time so a
+ * pending backgrounding threshold elapses. Deterministic: no real time passes, the tool parks on a
+ * `Deferred` rather than a sleep, and over-advancing is harmless.
+ *
+ * `Session.waitForCompletion` cannot stand in for this: it settles on the *turn*, so it returns
+ * while a backgrounded call is still outstanding (the same gap `waitForMessage` exists to cover).
  */
-const advanceUntilModelCalled = (prompts: readonly string[], calls: number) =>
+const waitForModelCalls = (prompts: readonly string[], count: number) =>
   Effect.gen(function* () {
-    for (let attempt = 0; attempt < MAX_CLOCK_ADVANCES && prompts.length <= calls; attempt++) {
+    for (let attempt = 0; attempt < MAX_ATTEMPTS && prompts.length < count; attempt++) {
       yield* TestClock.adjust(BACKGROUND_THRESHOLD);
-      yield* Effect.yieldNow;
+      yield* macrotask;
     }
   });
+
+/** Gives any further model call a chance to land, without advancing the clock. */
+const drain = Effect.gen(function* () {
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    yield* macrotask;
+  }
+});
 
 const backgrounded = makeTestLayer([
   { parts: [toolCall(Operation.toolName(SlowWork), { label: 'alpha' })] },
@@ -160,19 +177,15 @@ describe('tool backgrounding', () => {
         const session = yield* AgentService.createSession({ skills: [SlowWorkSkill] });
 
         yield* session.submitPrompt('Do the slow work.');
-        // Forked: the agent is not settled while a tool result is outstanding, so the test fiber
-        // has to stay free to drive the clock and release the call.
-        const settled = yield* session.waitForCompletion().pipe(Effect.forkChild);
-
         yield* Deferred.await(started);
-        yield* advanceUntilModelCalled(prompts, 1);
+        yield* waitForModelCalls(prompts, 2);
 
         // The turn continued without the tool: the model was told the call went to the background.
-        expect(prompts.length).toBeGreaterThan(1);
+        expect(prompts).toHaveLength(2);
         expect(prompts[1]).toContain('running in the background');
 
         yield* Deferred.succeed(release, 'done');
-        yield* Fiber.join(settled);
+        yield* waitForModelCalls(prompts, 3);
 
         // ...and the real result arrived as a turn of its own, not as a result of the first turn.
         expect(prompts).toHaveLength(3);
@@ -194,17 +207,17 @@ describe('tool backgrounding', () => {
         const session = yield* AgentService.createSession({ skills: [SlowWorkSkill] });
 
         yield* session.submitPrompt('Do the slow work.');
-        const settled = yield* session.waitForCompletion().pipe(Effect.forkChild);
-
         // Released without advancing the clock, so the threshold never elapses.
         yield* Deferred.await(started);
         yield* Deferred.succeed(release, 'done');
-        yield* Fiber.join(settled);
+        yield* session.waitForCompletion();
+        yield* drain;
 
         // Two calls: the tool call and the continuation. A third would mean the synchronously
         // reported result was redelivered as a notification turn as well.
         expect(prompts).toHaveLength(2);
         expect(prompts.join('\n')).not.toContain('running in the background');
+        expect(prompts[1]).toContain('beta: done');
       },
       Effect.provide(synchronous.layer),
       TestHelpers.provideTestContext,
@@ -221,14 +234,12 @@ describe('tool backgrounding', () => {
         const session = yield* AgentService.createSession({ skills: [SlowWorkSkill] });
 
         yield* session.submitPrompt('Do the slow work.');
-        const settled = yield* session.waitForCompletion().pipe(Effect.forkChild);
-
         yield* Deferred.await(started);
-        yield* advanceUntilModelCalled(prompts, 1);
+        yield* waitForModelCalls(prompts, 2);
         expect(prompts[1]).toContain('running in the background');
 
         yield* Deferred.fail(release, new Error('slow work exploded'));
-        yield* Fiber.join(settled);
+        yield* waitForModelCalls(prompts, 3);
 
         expect(prompts).toHaveLength(3);
         expect(prompts[2]).toContain('<error pid=');
