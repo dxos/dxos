@@ -24,8 +24,9 @@ The following extension dialects are used in this document.
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
 | `test`      | `org.dxos.mdl.test@1.0`        |
 | `component` | `org.dxos.mdl.component@1.0`   |
-| `op`        | `org.dxos.mdl.op@1.0`          |
+| `op`        | `org.dxos.mdl.op@1.1`          |
 | `service`   | `org.dxos.mdl.service@1.0`     |
+| `flow`      | `org.dxos.mdl.flow@1.0`        |
 
 ## Types
 
@@ -209,6 +210,7 @@ service AnalyzeProviderSkill
 
 ```mdl
 op AnalyzeProvider
+  key: org.dxos.operation.commerce.analyzeProvider
   desc: >
     Fetches the provider's vendor site via the edge proxy and returns the
     page HTML/JSON source. Pure read — does not mutate the Provider. Used by
@@ -221,6 +223,7 @@ op AnalyzeProvider
 
 ```mdl
 op SetProviderTemplate
+  key: org.dxos.operation.commerce.setProviderTemplate
   desc: >
     Persists a derived template onto a Provider: sets searchSchema, request
     mapping, and result mapping in one atomic write.
@@ -235,6 +238,7 @@ op SetProviderTemplate
 
 ```mdl
 op RunProviderSearch
+  key: org.dxos.operation.commerce.runProviderSearch
   desc: >
     Executes one provider template against a Search's criteria. Binds the
     criteria values to the request mapping, fetches the endpoint via the edge
@@ -252,6 +256,7 @@ op RunProviderSearch
 
 ```mdl
 op RunSearch
+  key: org.dxos.operation.commerce.runSearch
   desc: >
     Fan-out orchestrator. Clears the Search's existing results, then invokes
     RunProviderSearch in parallel for each enabled provider reference. Writes
@@ -449,3 +454,61 @@ runs (dedup by URL is an optional future extension).
 - Authenticated vendor requests (would require credential storage in Provider).
 - Pagination — first page only per provider per run.
 - Saved result snapshots / history (results are replaced on each run).
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Configure a provider by hand and run a search
+  desc: |
+    The core round-trip without the LLM-derivation path (F-2) — a manually authored 'api'
+    Provider, a Search against it, and a run that produces Results. Uses a public, stable JSON
+    test API (dummyjson.com/products/search) as the vendor so the flow does not depend on a
+    real, changeable retail site.
+  actors: both
+  covers: [F-1.1, F-1.2, F-1.3, F-1.4, F-1.5, F-3.1, F-3.3, F-3.4, F-3.5, T-4]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - no Provider named "QA Provider" or Search named "QA Search" exists — ABORT rather than
+      deleting ones this flow did not create
+  test:
+    - name: Create the provider
+      do: In the navtree, click + on a collection and choose Commerce Provider. Name it
+        "QA Provider", set kind "api", and set url "https://dummyjson.com".
+      capture: provider
+      expect: a Provider named "QA Provider" exists, kind "api", enabled === true
+      note: |
+        NO `invoke` — Provider creation is a navtree action (F-1.1); this step is human-only.
+    - name: Set its search template
+      do: In ProviderArticle, fill the request/result mapping form for a GET to
+        `/products/search?q={q}` returning `.products[]` with `title` and `url` fields.
+      invoke: [op:SetProviderTemplate] { provider: $provider.id, searchSchema: { type: "object", properties: { q: { type: "string" } } }, request: { method: "GET", urlTemplate: "https://dummyjson.com/products/search?q={q}" }, result: { path: "products", fields: { title: { selector: "title" }, url: { selector: "id" } } } }
+      capture: templated
+      expect: the Provider is now ready for RunProviderSearch — its searchSchema, request and
+        result mappings are all set
+      assert: return !!$result;
+    - name: Create the search
+      do: In the navtree, click + on a collection and choose Commerce Search. Name it
+        "QA Search", select "QA Provider", and enter criteria q="phone".
+      capture: search
+      expect: a Search named "QA Search" exists, referencing "QA Provider"
+      note: NO `invoke` — Search creation is a navtree action; this step is human-only.
+    - name: Run the search
+      do: Click "Run Search" in the SearchArticle toolbar.
+      invoke: [op:RunSearch] { search: $search.id }
+      expect: the button disables while running, then Search.status returns to "idle",
+        Search.lastRunAt is set, and results from dummyjson appear in the results list
+      assert: |
+        return (await space.db.query(dxos.Filter.type($types.Search)).run())
+          .find((o) => o.id === $search.id)?.status === 'idle';
+  after:
+    - name: Delete the search and provider
+      do: Right-click "QA Search" and "QA Provider" in the navtree and choose Delete for each.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$search.id, $provider.id], target: $given.collection }
+      expect: both rows leave the navtree
+```
