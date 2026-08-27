@@ -17,6 +17,18 @@ import { image } from './image';
 import { bulletListIndentationWidth, formattingStyles, orderedListIndentationWidth } from './styles';
 import { table } from './table';
 
+/** The anchor every link form renders as, so a bare address is styled like a bracketed one. */
+const linkMark = (url: string, withButton = false) =>
+  Decoration.mark({
+    tagName: 'a',
+    attributes: {
+      class: withButton ? 'cm-link cm-link-with-button' : 'cm-link',
+      href: url,
+      rel: 'noreferrer',
+      target: '_blank',
+    },
+  });
+
 export type NodeData = { name: 'Link'; url: string } | { name: 'Image'; url: string };
 
 export interface DecorateOptions {
@@ -546,15 +558,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           decoRanges.push({
             from: marks[0].to,
             to: !editing && options.renderLinkButton ? node.to : marks[1].from,
-            deco: Decoration.mark({
-              tagName: 'a',
-              attributes: {
-                class: options.renderLinkButton ? 'cm-link cm-link-with-button' : 'cm-link',
-                href: url,
-                rel: 'noreferrer',
-                target: '_blank',
-              },
-            }),
+            deco: linkMark(url, !!options.renderLinkButton),
           });
 
           if (!editing) {

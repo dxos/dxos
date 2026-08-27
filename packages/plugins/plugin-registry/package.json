@@ -65,6 +65,11 @@
       "source": "./src/RegistryPlugin.ts",
       "types": "./dist/types/src/RegistryPlugin.d.ts",
       "import": "./dist/lib/RegistryPlugin.mjs"
+    },
+    "./operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "import": "./dist/lib/operations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

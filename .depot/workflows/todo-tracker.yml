@@ -45,10 +45,10 @@ jobs:
 
       - name: Extract branch
         id: extract_branch
-        uses: ./.github/actions/branch
+        uses: ./.depot/actions/branch
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
 
       - name: Track TODOs
         run: node scripts/find-todos.mjs --github

@@ -32,12 +32,16 @@
     "src"
   ],
   "dependencies": {
+    "@atlaskit/pragmatic-drag-and-drop": "catalog:",
+    "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
     "@dxos/echo-react": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-markdown": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",
+    "@radix-ui/react-compose-refs": "catalog:",
     "@radix-ui/react-context": "catalog:"
   },
   "devDependencies": {
