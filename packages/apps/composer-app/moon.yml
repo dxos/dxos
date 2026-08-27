@@ -37,10 +37,10 @@ tasks:
   # it gates every PR; `check-startup-budget` is still manual — its timings cannot gate without a
   # fixed runner.
   #
-  # `boot-budget.json` is declared as an output so the measurement is cacheable on its own: the CI
-  # job measures a PR's base commit by running this task there, where a remote-cache hit from main's
-  # own run restores the JSON in seconds rather than rebuilding the bundle to re-derive it. Never
-  # invoke it with passthrough args — moon folds those into the hash and the hit is lost.
+  # `out/boot-budget.json` is declared as an output so the measurement is cacheable on its own: the
+  # CI job measures a PR's base commit by running this task there, where a remote-cache hit from
+  # main's own run restores the JSON in seconds rather than rebuilding the bundle to re-derive it.
+  # Never invoke it with passthrough args — moon folds those into the hash and the hit is lost.
   check-boot-budget:
     command: node scripts/check-boot-budget.mjs
     deps:
@@ -49,7 +49,7 @@ tasks:
       - scripts/check-boot-budget.mjs
       - out/composer/index.html
     outputs:
-      - boot-budget.json
+      - out/boot-budget.json
   # Structural guardrail on the curated set: fails when a plugin `plugin-defs.production.tsx` does not
   # name reached the bundle anyway. Read off the build's own sourcemaps rather than the UI — a plugin
   # absent from the registry can still be in the bundle, which is the whole failure this catches.

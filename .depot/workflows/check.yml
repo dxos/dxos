@@ -263,7 +263,7 @@ jobs:
         continue-on-error: true
         run: moon run composer-app:check-boot-budget
 
-      # The step above already wrote `boot-budget.json`; stash it, plus the comparison script, outside
+      # The step above already wrote `out/boot-budget.json`; stash it, plus the comparison script, outside
       # the tree, which the base checkout below replaces.
       - name: Record this PR's measurement
         id: head
@@ -274,7 +274,7 @@ jobs:
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
-          cp packages/apps/composer-app/boot-budget.json "$RUNNER_TEMP/boot-budget.head.json"
+          cp packages/apps/composer-app/out/boot-budget.json "$RUNNER_TEMP/boot-budget.head.json"
           cp packages/apps/composer-app/scripts/compare-boot-budget.mjs "$RUNNER_TEMP/compare.mjs"
           # Two numbers only compare if one script produced both, and the base's necessarily comes
           # from the base's own copy — so a PR that edits the measurement gets no comparison rather
@@ -305,11 +305,11 @@ jobs:
           pnpm install --prefer-offline
           # Deleting first is what keeps this honest: if the cache ever stops restoring the report, the
           # copy below fails loudly instead of measuring the head's leftover file as if it were the base.
-          rm -f packages/apps/composer-app/boot-budget.json
+          rm -f packages/apps/composer-app/out/boot-budget.json
           # A base already over budget writes its report and then exits non-zero, which is still a
           # usable number; the copy is what decides whether the measurement actually happened.
           moon run composer-app:check-boot-budget || true
-          cp packages/apps/composer-app/boot-budget.json "$RUNNER_TEMP/boot-budget.base.json"
+          cp packages/apps/composer-app/out/boot-budget.json "$RUNNER_TEMP/boot-budget.base.json"
 
       - name: Compare with the base
         id: compare

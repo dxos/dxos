@@ -31,8 +31,9 @@
  * Raise a budget only for growth you have looked at and accepted — that is the review point
  * this check exists to create.
  *
- * Every run also writes the measurement to `boot-budget.json`, which `moon.yml` declares as this
- * task's `outputs`. That is what lets the `boot-budget` CI job measure a PR's base commit from the
+ * Every run also writes the measurement to `out/boot-budget.json` — beside the bundle it measures,
+ * inside the already-ignored build-output directory — which `moon.yml` declares as this task's
+ * `outputs`. That is what lets the `boot-budget` CI job measure a PR's base commit from the
  * remote cache — a few KB of JSON restored in seconds — instead of rebuilding its bundle. The
  * report is written before the budget is applied, so an over-budget commit still yields a number.
  * Taking no arguments is load-bearing: moon folds passthrough args into the task hash, and any
@@ -91,7 +92,7 @@ console.log(
 );
 
 writeFileSync(
-  'boot-budget.json',
+  path.join(outDir, '..', 'boot-budget.json'),
   JSON.stringify(
     {
       count: entries.length,
