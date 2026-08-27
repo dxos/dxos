@@ -15,6 +15,9 @@ import type { Plugin, ViteDevServer } from 'vite';
 import { type IconAssets, iconAssetsPlugin } from './icon-assets.ts';
 import { normalizeSprite } from './normalize-sprite.ts';
 import { resolveSymbols } from './resolve-symbols.ts';
+import { type SymbolPatternParams, WEIGHTS, iconSymbolPattern } from './symbol-pattern.ts';
+
+export { type SymbolPatternParams, WEIGHTS, iconSymbolPattern };
 
 export type { IconAssets };
 
@@ -254,11 +257,16 @@ export const IconsPlugin = ({
         // Rebuild when a glyph already in the sprite is redrawn. The sprite is served as a static
         // file, and the icon registry ingests it once per document, so the write alone changes
         // nothing on screen — hence the full reload.
-        const rebuild = () =>
+        const rebuild = () => {
+          // The watcher has told us the file changed, which is better evidence than the fingerprint:
+          // mtime and size can both survive an edit (a same-length change written within the same
+          // millisecond), and skipping here would reload the page against the old sprite.
+          lastFingerprint = null;
           void flushSprite().then(
             () => server?.hot.send({ type: 'full-reload' }),
             (err) => console.error('[icons] Failed to rebuild the sprite:', err),
           );
+        };
         const onAssetChange = (file: string) => watchedAssets.has(file) && rebuild();
         // An `add` under a watched directory is the asset a reported-missing symbol was waiting for.
         const onAssetAdd = (file: string) => watchedDirs.has(dirname(file)) && rebuild();

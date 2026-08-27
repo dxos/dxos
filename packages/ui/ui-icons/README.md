@@ -56,10 +56,11 @@ Add the missing file and the sprite picks it up in place, still without a restar
 2. Add `<name>: 'px--<name>--regular'` to `PxIcons` in [`src/index.ts`](./src/index.ts).
 3. Check it in the gallery above at 16px, in both themes.
 
-The SVG must be `viewBox="0 0 256 256"` with `fill="currentColor"` and no hardcoded colors, or the
-glyph will not scale or take the theme. Phosphor's regular weight is a 16-unit stroke rendered as
-filled geometry with 8-unit round caps, inset to x ∈ [40, 216] — match that and the icon sits
-beside `ph` glyphs without looking grafted on.
+The SVG must be `viewBox="0 0 256 256"` and must not hardcode a color, or the glyph will not scale or
+take the theme. A source `fill` is optional — the sprite build stamps `fill="currentColor"` onto
+every symbol (see below), so an export that omits it still follows the theme. Phosphor's regular
+weight is a 16-unit stroke rendered as filled geometry with 8-unit round caps, inset to x ∈
+[40, 216] — match that and the icon sits beside `ph` glyphs without looking grafted on.
 
 Phosphor publishes no template (their CONTRIBUTING declines icon contributions); the numbers above
 were measured off `@phosphor-icons/core/assets/regular`. To draw against the real thing, the
@@ -102,8 +103,9 @@ Two consequences worth knowing:
   missing `ph` glyph at runtime from `/phosphor`, but no such route is configured for `px`, so this
   set is sprite-only. Hosts therefore list `src/index.ts` in `scanPaths`, which puts every entry of
   `PxIcons` in the sprite whether or not anything imports it.
-- **A name with no SVG behind it fails the build.** `makeSprite` reads each scanned symbol's file
-  and rejects if it is missing, so keep `PxIcons` and `assets/` in step.
+- **A name with no SVG behind it renders blank, in dev and in production alike.** The plugin drops
+  unresolvable symbols and names them in a warning rather than failing, so keep `PxIcons` and
+  `assets/` in step — a production build will not stop you shipping a blank icon.
 
 Hosts wiring the set: [composer-app](../../apps/composer-app/vite.config.ts),
 [composer-crx](../../apps/composer-crx/vite.config.ts),

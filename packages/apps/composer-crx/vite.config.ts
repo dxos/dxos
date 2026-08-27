@@ -14,7 +14,7 @@ import wasm from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
-import { IconsPlugin } from '@dxos/vite-plugin-icons';
+import { IconsPlugin, iconSymbolPattern } from '@dxos/vite-plugin-icons';
 import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 // import { createConfig as createTestConfig } from '../../../vitest.base.config';
 
@@ -97,14 +97,9 @@ export default defineConfig({
     }),
     ThemePlugin({}),
     IconsPlugin({
-      // The lookbehind rejects a symbol glued to a preceding word character: the scanner is
-      // unanchored, so without it a set name that is a suffix of another token (`4px--x--regular`,
-      // or the `x` in `dx--x--bold` once the lookahead below has declined position 0) is scanned as
-      // a real icon, and the missing SVG fails the sprite build.
-      // The negative lookahead restricts the custom `dx` and `px` sets to the `regular` weight only
-      // (their SVGs have no weight variants); the `ph` set retains all Phosphor weights.
-      symbolPattern:
-        '(?<![a-z0-9])(?!(?:dx|px)--[a-z]+[a-z-]*--(?:bold|duotone|fill|light|thin))(ph|dx|px)--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+      // `dx` (brand) and `px` (extended) are drawn at one weight only; `ph` carries all of
+      // Phosphor's. The pattern's boundary rules are subtle, so it is built rather than written out.
+      symbolPattern: iconSymbolPattern({ sets: ['ph', 'dx', 'px'], regularOnly: ['dx', 'px'] }),
       assetPath: (iconSet, name, variant) => {
         switch (iconSet) {
           case 'dx':
