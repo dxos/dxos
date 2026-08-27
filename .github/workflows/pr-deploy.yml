@@ -106,13 +106,30 @@ jobs:
       # footer in place instead of appending a duplicate.
       - name: Update preview footer in PR body
         uses: actions/github-script@v7
+        env:
+          # Passed as env rather than interpolated into the script body so untrusted artifact-derived
+          # values can never be expanded as code.
+          PREVIEW_URL: ${{ steps.deploy.outputs.url }}
+          PR_NUMBER: ${{ steps.meta.outputs.pr_number }}
         with:
           script: |
             const BEGIN = '<!-- composer-preview:begin -->';
             const END = '<!-- composer-preview:end -->';
-            const url = ${{ toJSON(steps.deploy.outputs.url) }};
-            const prNumber = Number(${{ toJSON(steps.meta.outputs.pr_number) }});
-            const footer = [BEGIN, '---', `🚀 Composer preview: ${url}`, END].join('\n');
+            const url = process.env.PREVIEW_URL;
+            const prNumber = Number(process.env.PR_NUMBER);
+
+            // The PR number comes from the artifact, which untrusted PR code produced — a PR could build
+            // an artifact naming someone else's PR and redirect this trusted write. Only the commit that
+            // triggered this run is trustworthy, so require the PR to actually be associated with it.
+            const { data: associated } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.payload.workflow_run.head_sha,
+            });
+            if (!associated.some((pr) => pr.number === prNumber)) {
+              core.setFailed(`PR #${prNumber} is not associated with ${context.payload.workflow_run.head_sha}.`);
+              return;
+            }
 
             const { data: pr } = await github.rest.pulls.get({
               owner: context.repo.owner,
@@ -120,14 +137,13 @@ jobs:
               pull_number: prNumber,
             });
             const body = pr.body ?? '';
-            const begin = body.indexOf(BEGIN);
-            const end = body.indexOf(END);
-            let next;
-            if (begin !== -1 && end !== -1 && end > begin) {
-              next = body.slice(0, begin) + footer + body.slice(end + END.length);
-            } else {
-              next = body.trimEnd() + (body.trim() ? '\n\n' : '') + footer + '\n';
-            }
+            const footer = [BEGIN, '---', `🚀 Composer preview: ${url}`, END].join('\n');
+            // Strip every marked block, including duplicates left by an earlier malformed body, then
+            // re-append one — the strip-and-append is idempotent where an in-place splice would not be.
+            const stripped = body
+              .replaceAll(new RegExp(`${BEGIN}[\\s\\S]*?${END}`, 'g'), '')
+              .trimEnd();
+            const next = (stripped ? `${stripped}\n\n` : '') + footer + '\n';
             if (next === body) {
               core.info('Preview footer already up to date.');
               return;
