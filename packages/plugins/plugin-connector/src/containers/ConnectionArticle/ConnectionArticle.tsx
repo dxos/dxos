@@ -91,7 +91,10 @@ export const ConnectionArticle = ({ subject, role }: ConnectionArticleProps) => 
   );
 
   const connectorLabel = connector?.label ?? connector?.id ?? connection?.connectorId;
-  const account = accessToken?.account;
+  // `account` reads as an account only for connectors that put one there — OAuth stores an email.
+  // Where the connector publishes its own details it holds an opaque identifier instead (an S3
+  // access key id), which belongs in that listing rather than in the subtitle.
+  const account = details.length > 0 ? undefined : accessToken?.account;
   const title = connection?.name ?? account ?? connectorLabel ?? '';
   const source = connectorLabel
     ? `${connectorLabel}${account ? ` · ${account}` : ''}`
