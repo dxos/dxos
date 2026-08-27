@@ -12,6 +12,7 @@ import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-d
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import React, {
+  type CSSProperties,
   Fragment,
   type KeyboardEvent,
   type PropsWithChildren,
@@ -79,6 +80,8 @@ type TaskListContextValue = {
   showOrdinals: boolean;
   showDescriptions: boolean;
   hierarchical: boolean;
+  /** Whether the leading gutter is rendered at all — it holds the ordinal and the drag handle. */
+  showGutter: boolean;
   statusLabel: (status: Task.Status) => string;
   selected?: string;
   /** Whether a branch's sub-tasks are hidden, and the toggle that flips it. */
@@ -195,6 +198,9 @@ const TaskListRoot = ({
       showOrdinals={showOrdinals}
       showDescriptions={showDescriptions}
       hierarchical={hierarchical}
+      // The handle lives in the ordinal's gutter, so a movable list reserves the track even when it
+      // shows no numbers.
+      showGutter={showOrdinals || !!onTaskMove}
       statusLabel={statusLabel}
       isCollapsed={isCollapsed}
       onCollapseToggle={onCollapseToggle}
@@ -262,6 +268,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
     showOrdinals,
     showDescriptions,
     hierarchical,
+    showGutter,
     statusLabel,
     isCollapsed,
   } = useTaskListContext('TaskList.Content');
@@ -298,7 +305,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
         classNames: mx(
           'group grid gap-x-2 w-full min-w-0',
           showDescriptions ? 'auto-rows-min items-start' : 'auto-rows-[2rem] items-center',
-          showOrdinals ? GRID_COLS.contentWithOrdinals : GRID_COLS.content,
+          showGutter ? GRID_COLS.contentWithOrdinals : GRID_COLS.content,
         ),
       })}
       aria-label='Tasks'
@@ -357,6 +364,13 @@ TaskListGroupLabel.displayName = 'TaskList.GroupLabel';
 /** How long the cursor must rest on a collapsed branch before it opens, so crossing one does not. */
 const EXPAND_DWELL = 600;
 
+/**
+ * Distance from the title cell's own inline start to the title text: the disclosure toggle (`w-6`)
+ * plus the cell's `gap-1`. The description sits in a different grid row and has to clear the same
+ * distance to line up under the title.
+ */
+const TOGGLE_INSET = '1.75rem';
+
 const useTaskDrag = ({
   task,
   row,
@@ -373,6 +387,7 @@ const useTaskDrag = ({
   onCollapseToggle: (id: string) => void;
 }) => {
   const rowRef = useRef<HTMLLIElement | null>(null);
+  const dragHandleRef = useRef<HTMLSpanElement | null>(null);
   const [instruction, setInstruction] = useState<Instruction | null>(null);
   const expandTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -392,7 +407,8 @@ const useTaskDrag = ({
 
   useEffect(() => {
     const element = rowRef.current;
-    if (!enabled || !element) {
+    const handle = dragHandleRef.current;
+    if (!enabled || !element || !handle) {
       return;
     }
 
@@ -410,7 +426,9 @@ const useTaskDrag = ({
 
     return combine(
       draggable({
-        element,
+        // Dragging is started from the handle alone: a whole-row drag would fight text selection and
+        // the row's own click-to-select.
+        element: handle,
         getInitialData: () => data,
         onDragStart: () => {
           draggingId.current = task.id;
@@ -482,7 +500,7 @@ const useTaskDrag = ({
 
   useEffect(() => cancelExpand, [cancelExpand]);
 
-  return { instruction, rowRef };
+  return { instruction, rowRef, dragHandleRef, dragHandle: enabled };
 };
 
 /**
@@ -517,6 +535,7 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
     const {
       tasks,
       showDescriptions,
+      showGutter,
       onTaskUpdate,
       onTaskDelete,
       onTaskSelect,
@@ -525,7 +544,14 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
       onCollapseToggle,
     } = useTaskListContext('TaskList.Item');
     const { className, ...rest } = composableProps(props);
-    const { instruction, rowRef } = useTaskDrag({ task, row, tasks, onTaskMove, onCollapseToggle, isCollapsed });
+    const { instruction, rowRef, dragHandleRef, dragHandle } = useTaskDrag({
+      task,
+      row,
+      tasks,
+      onTaskMove,
+      onCollapseToggle,
+      isCollapsed,
+    });
     const open = row ? !isCollapsed(task.id) : undefined;
 
     // Subscribe per row: a query re-emits when membership changes, not when a task's own fields do,
@@ -600,14 +626,50 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
         aria-posinset={row && row.position}
         aria-setsize={row && row.setSize}
         aria-expanded={row?.branch ? open : undefined}
+        // Depth is published once as variables: the title cell and the description sit in different
+        // grid rows and both step in by it, and the description additionally clears the toggle so it
+        // starts under the title text rather than under the toggle.
+        style={
+          row
+            ? ({
+                '--task-indent': paddingIndentation(row.level, INDENT_PER_LEVEL).paddingInlineStart,
+                '--task-title-inset': `calc(var(--task-indent) + ${TOGGLE_INSET})`,
+              } as CSSProperties)
+            : undefined
+        }
         onKeyDown={handleKeyDown}
         ref={useComposedRefs(rowRef, forwardedRef)}
       >
-        {ordinal !== undefined && (
-          <div className='flex h-8 items-center justify-center'>
-            <Tag hue={done ? 'green' : error ? 'rose' : 'neutral'} classNames='tabular-nums'>
-              {ordinal}
-            </Tag>
+        {showGutter && (
+          // Handle and ordinal share one cell: the handle takes the ordinal's place on hover rather
+          // than claiming a column of its own, so no row shifts when the cursor crosses it.
+          <div className='relative flex h-8 items-center justify-center'>
+            {ordinal !== undefined && (
+              <Tag
+                hue={done ? 'green' : error ? 'rose' : 'neutral'}
+                classNames={mx(
+                  'tabular-nums',
+                  dragHandle && 'group-hover/row:invisible group-has-[:focus-visible]/row:invisible',
+                )}
+              >
+                {ordinal}
+              </Tag>
+            )}
+            {dragHandle && (
+              <span
+                data-testid='taskList.dragHandle'
+                aria-hidden
+                className={mx(
+                  'absolute inset-0 grid place-items-center text-subdued cursor-grab active:cursor-grabbing',
+                  // A handle with no ordinal beneath it is the cell's only content, so it stays put;
+                  // otherwise it appears only while the row is under the cursor or holds focus.
+                  ordinal !== undefined && 'invisible group-hover/row:visible group-has-[:focus-visible]/row:visible',
+                )}
+                ref={dragHandleRef}
+              >
+                <Icon icon='ph--dots-six-vertical--regular' size={4} />
+              </span>
+            )}
           </div>
         )}
         {onTaskUpdate ? (
@@ -627,10 +689,13 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
           </span>
         )}
         <span
-          className={mx('flex h-8 items-center gap-1 min-w-0', onTaskSelect && 'cursor-pointer')}
           // Depth pads the title cell alone, so the status control and every trailing cell stay in
           // their subgrid columns and the rows keep one geometry however deep the tree goes.
-          style={row ? paddingIndentation(row.level, INDENT_PER_LEVEL) : undefined}
+          className={mx(
+            'flex h-8 items-center gap-1 min-w-0',
+            row && 'ps-(--task-indent)',
+            onTaskSelect && 'cursor-pointer',
+          )}
         >
           {row && (
             <TreeItemToggle
@@ -671,7 +736,10 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
           <MarkdownView
             content={description}
             classNames={mx(
-              ordinal !== undefined ? 'col-start-3' : 'col-start-2',
+              showGutter ? 'col-start-3' : 'col-start-2',
+              // Aligned under its own title — which sits past the disclosure toggle — so a
+              // sub-task's description does not read as belonging to the row above it.
+              row && 'ps-(--task-title-inset)',
               'col-span-3 pb-1 text-sm text-description line-clamp-3',
             )}
             // The row supplies the type scale and the clamp, so the description renders as one
@@ -703,7 +771,7 @@ type TaskListCreateProps = ComposableProps<{ placeholder?: string }>;
 
 const TaskListCreate = composable<HTMLDivElement, { placeholder?: string }>(
   ({ placeholder = 'Add task', ...props }, forwardedRef) => {
-    const { onTaskCreate, showOrdinals } = useTaskListContext('TaskList.Create');
+    const { onTaskCreate, showGutter } = useTaskListContext('TaskList.Create');
     const { className, ...rest } = composableProps(props);
     const [title, setTitle] = useState('');
     const handleKeyDown = useCallback(
@@ -727,12 +795,12 @@ const TaskListCreate = composable<HTMLDivElement, { placeholder?: string }>(
         data-testid='taskList.create'
         className={mx(
           'grid gap-x-2 items-center w-full min-w-0 h-8 shrink-0',
-          showOrdinals ? GRID_COLS.createWithOrdinals : GRID_COLS.create,
+          showGutter ? GRID_COLS.createWithOrdinals : GRID_COLS.create,
           className,
         )}
         ref={forwardedRef}
       >
-        {showOrdinals && <span />}
+        {showGutter && <span />}
         <Icon icon='ph--plus--regular' size={4} classNames='justify-self-center text-subdued' />
         <Input.Root>
           <Input.TextInput

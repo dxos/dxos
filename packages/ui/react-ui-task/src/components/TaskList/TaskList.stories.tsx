@@ -191,7 +191,8 @@ export const Hierarchical: Story = {
 };
 
 export const TestHierarchy: Story = {
-  args: { hierarchical: true, showOrdinals: true },
+  // Descriptions on, so the alignment between a sub-task's description and its title is asserted.
+  args: { hierarchical: true, showOrdinals: true, showDescriptions: true },
   // The tree is what the walk produces, not what the array holds; and restructuring is driven from
   // the keyboard, which is the half of the gesture set that CAN be synthesized (a native HTML5 drag
   // cannot).
@@ -267,9 +268,24 @@ export const TestHierarchy: Story = {
       ]),
     );
 
-    // Every row is a drag source; the drop itself needs a real pointer (native HTML5 drag events
-    // cannot be synthesized), so the manual script covers the gesture.
-    await expect(canvasElement.querySelectorAll('[draggable="true"]').length).toEqual(7);
+    // Every row carries a handle in the ordinal's own gutter — the ordinal and the handle share one
+    // cell, so nothing shifts when the cursor crosses a row. The drop itself needs a real pointer
+    // (native HTML5 drag events cannot be synthesized), so the manual script covers the gesture.
+    const handles = canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.dragHandle"]');
+    await expect(handles).toHaveLength(7);
+    await expect(canvasElement.querySelectorAll('[draggable="true"]')).toHaveLength(7);
+    const gutter = (element: Element) => Math.round(element.getBoundingClientRect().left);
+    await expect(gutter(handles[0])).toEqual(gutter(rows()[0].row.querySelector('.tabular-nums')!.parentElement!));
+
+    // A description lines up under its own title, not under the column — it is indented with the
+    // row and clears the disclosure toggle.
+    const described = rows().find(({ row }) => row.querySelector('.line-clamp-3'))!;
+    const description = described.row.querySelector<HTMLElement>('.line-clamp-3')!;
+    const textStart = (element: HTMLElement) =>
+      Math.round(element.getBoundingClientRect().left + parseFloat(getComputedStyle(element).paddingInlineStart));
+    await expect(textStart(description)).toEqual(
+      Math.round(described.row.querySelector('.truncate')!.getBoundingClientRect().left),
+    );
   },
 };
 
