@@ -18,8 +18,8 @@ import { openBrowser } from '#platform';
 
 import { CommandConfig } from '../services';
 
-/** Default timeout for a full OAuth browser round-trip. */
-export const OAUTH_TIMEOUT_MS = 5 * 60 * 1000;
+/** Default timeout for a full browser round-trip. */
+export const CALLBACK_TIMEOUT_MS = 5 * 60 * 1000;
 
 /**
  * Relay page that performs a top-level redirect to Edge's `authUrl`. Edge finalizes the flow
@@ -42,12 +42,12 @@ const getRelayPageHtml = (authUrl: string) => `
 type CallbackOutcome = { success: true; params: Record<string, string> } | { success: false; reason: string };
 
 /**
- * A running local OAuth callback server.
+ * A running local callback server.
  */
-export type OAuthCallbackServer = {
+export type LocalCallbackServer = {
   /** Port the server is listening on. */
   readonly port: number;
-  /** Origin (e.g. `http://localhost:1234`) to advertise to Edge as the redirect target. */
+  /** Origin (e.g. `http://localhost:1234`) to advertise as the redirect target. */
   readonly origin: string;
   /** Opens `authUrl` in the browser via the local relay page. */
   readonly open: (authUrl: string) => Effect.Effect<void, Error>;
@@ -57,15 +57,25 @@ export type OAuthCallbackServer = {
   readonly stop: () => Effect.Effect<void>;
 };
 
+export type LocalCallbackServerOptions = {
+  /** Heading shown on the page the browser lands on. Defaults to an authentication wording. */
+  readonly successMessage?: string;
+};
+
 /**
- * Starts a local Bun HTTP server that relays the browser to Edge's auth URL and captures Edge's
- * eventual top-level redirect back to `callbackPath`. Generic over the callback shape: all query
- * params are captured and returned; an `error` query param fails the wait.
+ * Starts a local Bun HTTP server that captures a browser redirect back to `callbackPath`. Generic
+ * over the callback shape: all query params are captured and returned; an `error` query param
+ * fails the wait. `open` additionally relays the browser to a remote auth URL, for flows that
+ * start from the CLI rather than from a link the user clicks.
  *
- * Used by both the integration-connect flow (`/redirect/oauth`) and the identity-recovery login
- * flow (`/redirect/oauth-recovery`).
+ * Used by the integration-connect flow (`/redirect/oauth`), the identity-recovery login flow
+ * (`/redirect/oauth-recovery`), and the email login link, which lands on `/` after the hub's
+ * activation route redirects.
  */
-export const startOAuthCallbackServer = (callbackPath: `/${string}`): Effect.Effect<OAuthCallbackServer, Error> =>
+export const startLocalCallbackServer = (
+  callbackPath: `/${string}`,
+  { successMessage = 'Authentication successful! You can close this window.' }: LocalCallbackServerOptions = {},
+): Effect.Effect<LocalCallbackServer, Error> =>
   Effect.gen(function* () {
     const port = yield* Effect.promise(() => getPort({ random: true }));
     const origin = `http://localhost:${port}`;
@@ -118,10 +128,9 @@ export const startOAuthCallbackServer = (callbackPath: `/${string}`): Effect.Eff
           }
           yield* Ref.set(outcome, Option.some({ success: true, params: captured }));
           yield* Ref.set(received, true);
-          return HttpServerResponse.text(
-            '<html><body><h1>Authentication successful! You can close this window.</h1></body></html>',
-            { headers: { 'Content-Type': 'text/html' } },
-          );
+          return HttpServerResponse.text(`<html><body><h1>${successMessage}</h1></body></html>`, {
+            headers: { 'Content-Type': 'text/html' },
+          });
         }),
       ),
     ]);
@@ -138,7 +147,7 @@ export const startOAuthCallbackServer = (callbackPath: `/${string}`): Effect.Eff
     const scope = yield* Scope.make();
     yield* Layer.build(serverLayer).pipe(Scope.provide(scope));
 
-    const waitForResult = (timeoutMs: number = OAUTH_TIMEOUT_MS) =>
+    const waitForResult = (timeoutMs: number = CALLBACK_TIMEOUT_MS) =>
       Effect.race(
         Effect.gen(function* () {
           while (true) {
@@ -149,14 +158,16 @@ export const startOAuthCallbackServer = (callbackPath: `/${string}`): Effect.Eff
           }
           const result = yield* Ref.get(outcome);
           return yield* Option.match(result, {
-            onNone: () => Effect.fail(new Error('OAuth callback received but no result')),
+            onNone: () => Effect.fail(new Error('Callback received but no result.')),
             onSome: (value) =>
               value.success
                 ? Effect.succeed(value.params)
-                : Effect.fail(new Error(`OAuth flow failed: ${value.reason}`)),
+                : Effect.fail(new Error(`Callback reported a failure: ${value.reason}`)),
           });
         }),
-        Effect.sleep(`${timeoutMs} millis`).pipe(Effect.flatMap(() => Effect.fail(new Error('OAuth flow timed out')))),
+        Effect.sleep(`${timeoutMs} millis`).pipe(
+          Effect.flatMap(() => Effect.fail(new Error('Timed out waiting for the browser callback.'))),
+        ),
       );
 
     return {
@@ -165,5 +176,5 @@ export const startOAuthCallbackServer = (callbackPath: `/${string}`): Effect.Eff
       open: (authUrl: string) => openBrowser(`${origin}/oauth-relay?authUrl=${encodeURIComponent(authUrl)}`),
       waitForResult,
       stop: () => Scope.close(scope, Exit.void).pipe(Effect.catch(() => Effect.void)),
-    } satisfies OAuthCallbackServer;
+    } satisfies LocalCallbackServer;
   });
