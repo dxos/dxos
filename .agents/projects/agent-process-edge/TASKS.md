@@ -81,7 +81,10 @@ Unblocking `AgentProcess` needs #12765 merged, or a maintainer dispatching `pkg.
       request to a DO with nothing spawned hung. Both wrappers now memoize around a shared
       `_initImpl`.
 - [ ] `agent-process.node.test.ts` — `AgentService` spawns and controls a remote agent on edge.
-- [ ] `pnpm format`, lint, and the touched test suites green in both repos; PRs opened.
+      Blocked: `@dxos/agent-runtime` is in no pinned `pkg.pr.new` build.
+- [x] `pnpm format`, lint, and the touched test suites green in both repos; PRs opened (#12765,
+      dxos/edge#971). Edge CI green; the edge trigger-dispatcher suite (17 tests) still passes with
+      the dispatcher's new process index.
 
 ## Boot budget (do not re-investigate)
 

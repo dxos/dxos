@@ -54,7 +54,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
 
       # The index task imports @dxos/introspect compiled output via the
       # `source` export condition, so building first isn't strictly required —

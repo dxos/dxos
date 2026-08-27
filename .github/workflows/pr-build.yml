@@ -4,6 +4,9 @@ name: PR Build
 # NO secrets are exposed here — this workflow runs untrusted PR code safely.
 # The artifact is picked up by pr-deploy.yml (workflow_run) which runs
 # from the base branch with secrets and performs the Cloudflare deploy.
+#
+# TODO(wittjosiah): stays on GitHub Actions, see the TODO on pr-deploy.yml - its artifact download
+# failed once this workflow ran on Depot CI instead.
 # Named for the trigger, not the output: `preview` is a deploy ENVIRONMENT
 # (preview.composer.space), while these are Worker preview versions of `dev`.
 
@@ -42,10 +45,10 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
 
       - name: Bundle composer-app
         run: moon run composer-app:bundle

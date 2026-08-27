@@ -134,7 +134,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           ref: ${{ inputs.ref || github.sha }}
 
       - name: Install Linux dependencies
@@ -355,7 +355,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           ref: ${{ inputs.ref || github.sha }}
 
       - uses: tecolicom/actions-use-homebrew-tools@v1
