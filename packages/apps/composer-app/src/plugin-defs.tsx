@@ -20,6 +20,7 @@ import * as ConductorPlugin from '@dxos/plugin-conductor/ConductorPlugin';
 import * as CrmPlugin from '@dxos/plugin-crm/CrmPlugin';
 import * as CrxPlugin from '@dxos/plugin-crx/CrxPlugin';
 import * as DebugPlugin from '@dxos/plugin-debug/DebugPlugin';
+import * as DeepSeekPlugin from '@dxos/plugin-deepseek/DeepSeekPlugin';
 import * as DevtoolsPlugin from '@dxos/plugin-devtools/DevtoolsPlugin';
 import * as DiscordPlugin from '@dxos/plugin-discord/DiscordPlugin';
 import * as DoctorPlugin from '@dxos/plugin-doctor/DoctorPlugin';
@@ -128,6 +129,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       CommercePlugin.meta.profile.key,
       CrmPlugin.meta.profile.key,
       DebugPlugin.meta.profile.key,
+      DeepSeekPlugin.meta.profile.key,
       DevtoolsPlugin.meta.profile.key,
       DuffelPlugin.meta.profile.key,
       GamePlugin.meta.profile.key,
@@ -186,6 +188,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     CrmPlugin.make(),
     !isTauri && CrxPlugin.make(),
     DebugPlugin.make({ logStore }),
+    DeepSeekPlugin.make(),
     DevtoolsPlugin.make(),
     DiscordPlugin.make(),
     DoctorPlugin.make(),

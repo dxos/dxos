@@ -1,0 +1,65 @@
+---
+id: org.dxos.plugin.deepseek
+name: DeepSeekPlugin
+version: 0.1.0
+---
+
+A **headless** Composer plugin that makes [DeepSeek](https://platform.deepseek.com)
+connectable. It has no React/UI surfaces and contributes one thing: a
+**Connector** entry (`source: "deepseek.com"`) with an API-key credential form,
+so the user connects DeepSeek through the generic `plugin-connector` UI. On
+submit the key is stored as an `AccessToken` (source `deepseek.com`) plus a
+`Connection` in ECHO, resolvable later via `CredentialsService`.
+
+## Extensions
+
+| Term   | URI                     |
+| ------ | ----------------------- |
+| `feat` | `org.dxos.mdl.feat@1.0` |
+| `test` | `org.dxos.mdl.test@1.0` |
+
+## Connector
+
+```mdl
+feat DeepSeekConnector
+  desc: >
+    Contributes a ConnectorEntry via Capability.contribute(Connector,
+    [entry]) on the connector Start activation event (mirrors
+    plugin-ideogram's non-OAuth credentialForm connector).
+  id: org.dxos.plugin.deepseek.connector
+  source: deepseek.com
+  label: DeepSeek
+  credentialForm:
+    schema: DeepSeekTokenForm { token: string }   # the API key, Password format
+    onSubmit: >
+      Trim the token; if empty, throw. Build
+      Obj.make(AccessToken, { source: "deepseek.com", token }) and
+      Obj.make(Connection, { name: "DeepSeek", connectorId: <id>,
+      accessToken: Ref.make(accessToken) }); return
+      { kind: "complete", accessToken, connection }.
+```
+
+## Acceptance
+
+```mdl
+test T-1: Connector builds AccessToken + Connection
+  given: the DeepSeek ConnectorEntry
+  when: credentialForm.onSubmit runs with { token: "sk-…" }
+  then:
+    - returns kind "complete"
+    - accessToken.source === "deepseek.com" and accessToken.token === "sk-…"
+    - connection.connectorId === the entry id and references the accessToken
+```
+
+```mdl
+test T-2: Empty token rejected
+  given: the DeepSeek ConnectorEntry
+  when: credentialForm.onSubmit runs with { token: "  " }
+  then: it throws (no AccessToken / Connection created)
+```
+
+## Out of scope (v1)
+
+- Any DeepSeek API client / model provider; this version only stores the credential.
+- OAuth (DeepSeek uses a static API key).
+- Multi-account configuration.
