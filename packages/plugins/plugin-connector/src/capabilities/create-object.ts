@@ -9,9 +9,8 @@ import { Type } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
+import { CreateConnectionPanel } from '#create-panel';
 import { ConnectorCoordination } from '#types';
-
-import { CreateConnectionPanel } from '../components/CreateConnectionPanel';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

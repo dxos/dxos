@@ -33,6 +33,15 @@
       "node": "./dist/lib/commands.mjs",
       "default": "./dist/lib/commands.browser.mjs"
     },
+    "#create-panel": {
+      "source": {
+        "node": "./src/capabilities/create-panel.ts",
+        "default": "./src/capabilities/create-panel.browser.ts"
+      },
+      "types": "./dist/types/src/capabilities/create-panel.d.ts",
+      "node": "./dist/lib/create-panel.mjs",
+      "default": "./dist/lib/create-panel.browser.mjs"
+    },
     "#components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
