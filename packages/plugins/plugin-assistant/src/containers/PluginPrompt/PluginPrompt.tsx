@@ -64,8 +64,7 @@ export const PluginPrompt = ({ plugin: pluginId }: PluginPromptProps) => {
         <Icon icon='ph--plugs--regular' size={5} classNames='shrink-0 text-subdued' />
         <Flex column classNames='min-w-0'>
           <p className='text-sm font-medium truncate'>{t('plugin-prompt.title', { plugin: label })}</p>
-          {/* The plugin's own description is a multi-paragraph blurb that would dwarf the chat, so
-              the prompt states the ask in one line and leaves the detail to the registry. */}
+          {/* A plugin's own description runs to paragraphs and would dwarf the chat. */}
           <p className='text-sm text-subdued'>
             {!plugin
               ? t('plugin-prompt.unavailable', { plugin: label })
