@@ -35,10 +35,8 @@ a connector, which gives you the tools without the command.
 Three steps, in order. Skip all of them if you are staying on `file`.
 
 **1. Authenticate the connector.** The plugin ships it, so there is nothing to
-add. Run `/mcp`, pick `composer`, choose Authenticate, and approve with your
-passkey. This needs a passkey registered in Composer at `composer.space` on an
-identity that has an account, and Chrome 128+ or Safari 18+ (see
-[the connector](#the-bundled-connector) for why Firefox cannot).
+add. Run `/mcp`, pick `composer`, choose Authenticate, and approve in the browser
+with the passkey you created in Composer under Settings.
 
 **2. Select the backend.** `DX_PROJECT_BACKEND` is read by the hook process, so
 it has to be in that process's environment. A desktop session is not launched
@@ -201,10 +199,8 @@ The plugin ships the deployed server, so there is nothing to add:
 ```
 
 Authenticating is step 1 of [Setup](#setup-for-the-mcp-backend). Nothing is typed
-during it, because the identity is derived from the passkey signature rather than
-from anything you paste. The ceremony is served from `auth.dxos.network` while the
-passkey's relying party is `composer.space`, so it leans on Related Origin
-Requests, which Firefox has not shipped.
+during it: the identity is derived from the passkey signature rather than from
+anything you paste.
 
 `dx mcp serve` remains the local alternative, and the directive handles both host
 shapes. The deployed host projects each verb as its own tool and adds the generic
