@@ -319,7 +319,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
         // line, so the tracks size to content and the cells align to the first line rather than to
         // the middle of a two-line row.
         classNames: mx(
-          'group grid gap-x-2 w-full min-w-0',
+          'group grid gap-x-1 w-full min-w-0',
           showDescriptions ? 'auto-rows-min items-start' : 'auto-rows-[2rem] items-center',
           showGutter ? GRID_COLS.contentWithOrdinals : GRID_COLS.content,
         ),
@@ -902,7 +902,7 @@ const TaskListCreate = composable<HTMLDivElement, { placeholder?: string }>(
         {...rest}
         data-testid='taskList.create'
         className={mx(
-          'grid gap-x-2 items-center w-full min-w-0 h-8 shrink-0',
+          'grid gap-x-1 items-center w-full min-w-0 h-8 shrink-0',
           showGutter ? GRID_COLS.createWithOrdinals : GRID_COLS.create,
           className,
         )}
