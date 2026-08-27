@@ -221,11 +221,6 @@ jobs:
   # one. Split out of `check`, where its ~41s of bundling (nothing else in the workflow builds
   # `bundle`) sat behind that job's whole stage 1+2 sequence; the library builds it needs come from the
   # remote cache instead.
-  #
-  # On a PR the job also measures the BASE commit and posts a sticky comment when the graph grew.
-  # That is advisory, not a second gate: growth that stays under the ceiling is otherwise invisible
-  # until the ceiling is hit, and the 2026-08-26 re-baseline absorbed ~400 KB accumulated across
-  # many changes that each passed on their own.
   boot-budget:
     permissions:
       contents: read
@@ -241,9 +236,8 @@ jobs:
       COMPARE: >-
         ${{ github.event_name == 'pull_request' &&
         github.event.pull_request.head.repo.full_name == github.repository }}
-    # Handed to `boot-budget-comment`, which holds the write token this job deliberately does not.
     outputs:
-      increased: ${{ steps.compare.outputs.increased }}
+      status: ${{ steps.compare.outputs.status || 'skipped' }}
       body: ${{ steps.compare.outputs.body }}
     steps:
       - name: Checkout
@@ -257,29 +251,20 @@ jobs:
       - name: Setup
         uses: ./.depot/actions/setup
 
-      # `continue-on-error` so a PR that blows the budget still gets the comment below saying by how
-      # much and where; the final step turns the outcome back into a job failure.
       - name: Check boot budget
         id: budget
         continue-on-error: true
         run: moon run composer-app:check-boot-budget
 
-      # The step above already wrote `out/boot-budget.json`; stash it, plus the comparison script, outside
-      # the tree, which the base checkout below replaces.
       - name: Record this PR's measurement
         id: head
         if: env.COMPARE == 'true'
-        # The comparison is advisory, so a measurement that did not land degrades to no comment
-        # rather than to a red job on a PR that is otherwise fine.
         continue-on-error: true
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           cp packages/apps/composer-app/out/boot-budget.json "$RUNNER_TEMP/boot-budget.head.json"
           cp packages/apps/composer-app/scripts/compare-boot-budget.mjs "$RUNNER_TEMP/compare.mjs"
-          # Two numbers only compare if one script produced both, and the base's necessarily comes
-          # from the base's own copy — so a PR that edits the measurement gets no comparison rather
-          # than a misleading one.
           if git diff --quiet "$BASE_SHA" HEAD -- packages/apps/composer-app/scripts/check-boot-budget.mjs; then
             echo 'comparable=true' >> "$GITHUB_OUTPUT"
           else
@@ -287,11 +272,6 @@ jobs:
             echo '::notice::boot budget measurement changed in this PR — skipping the base comparison.'
           fi
 
-      # Measuring the base commit itself rather than trending a stored number: the comparison is then
-      # exact for this pair of commits and depends on no artifact retention. It is cheap because
-      # `check-boot-budget` declares the report as its `outputs` — main's own run of this job put the
-      # base's JSON in the remote cache, so this restores it instead of rebuilding the bundle.
-      # `continue-on-error` because a base that will not measure is not this PR's failure.
       - name: Measure the base commit's boot graph
         id: base
         if: env.COMPARE == 'true' && steps.head.outputs.comparable == 'true'
@@ -302,18 +282,13 @@ jobs:
         run: |
           trap 'git checkout --detach "$HEAD_SHA" >/dev/null 2>&1 || true' EXIT
           git checkout --detach "$BASE_SHA"
-          # The base lockfile can differ from the head one, so the tree has to be re-installed against it.
           pnpm install --prefer-offline
-          # Deleting first is what keeps this honest: if the cache ever stops restoring the report, the
-          # copy below fails loudly instead of measuring the head's leftover file as if it were the base.
+          # moon owns this path, so head and base measurements land on the same file: deleting first
+          # is what makes the copy below fail loudly instead of measuring the head's leftover report.
           rm -f packages/apps/composer-app/out/boot-budget.json
-          # A base already over budget writes its report and then exits non-zero, which is still a
-          # usable number; the copy is what decides whether the measurement actually happened.
           moon run composer-app:check-boot-budget || true
           cp packages/apps/composer-app/out/boot-budget.json "$RUNNER_TEMP/boot-budget.base.json"
 
-      # Advisory, so it must not redden a job whose budget passed: `outcome` still reports the real
-      # result to the step below, which skips rather than commenting on a comparison that failed.
       - name: Compare with the base
         id: compare
         if: steps.base.outcome == 'success'
@@ -323,29 +298,20 @@ jobs:
             --base "$RUNNER_TEMP/boot-budget.base.json" \
             --head "$RUNNER_TEMP/boot-budget.head.json"
 
-      # `!cancelled()` rather than the implicit `success()`: the gate has to be reported even if an
-      # advisory step above went red, which would otherwise skip this and lose the failure entirely.
       - name: Report boot budget failure
         if: ${{ !cancelled() && steps.budget.outcome == 'failure' }}
         run: |
           echo '::error::boot budget exceeded — see the "Check boot budget" step.'
           exit 1
 
-  # The write token lives here rather than in `boot-budget`, and nothing in this job comes from the
-  # PR: no checkout, no local action, no build. A job-level `permissions` block applies to every step
-  # of its job, so holding `pull-requests: write` next to `moon run` and `./.depot/actions/setup` —
-  # both of which the branch under test controls — would put the token within reach of the code being
-  # measured. It only ever sees the two strings the comparison produced.
-  #
-  # `!cancelled()` so a boot-budget job that failed its gate still gets its comment, and an empty
-  # `increased` so a comparison that never ran (fork PR, base unmeasurable, measurement script edited
-  # in this PR) is not mistaken for one that found no growth.
+  # A separate job because `permissions` is job-scoped: holding `pull-requests: write` in
+  # `boot-budget` would put the token in reach of the branch code that job checks out and builds.
   boot-budget-comment:
     needs: boot-budget
     if: >-
       ${{ !cancelled() && github.event_name == 'pull_request' &&
       github.event.pull_request.head.repo.full_name == github.repository &&
-      needs.boot-budget.outputs.increased != '' }}
+      needs.boot-budget.outputs.status != 'skipped' }}
     runs-on: depot-ubuntu-latest
     permissions:
       contents: read
@@ -354,7 +320,7 @@ jobs:
       - name: Post or remove boot graph comment
         uses: actions/github-script@v7
         env:
-          INCREASED: ${{ needs.boot-budget.outputs.increased }}
+          STATUS: ${{ needs.boot-budget.outputs.status }}
           BODY: ${{ needs.boot-budget.outputs.body }}
         with:
           script: |
@@ -362,12 +328,10 @@ jobs:
             const { owner, repo } = context.repo;
             const issue_number = context.payload.pull_request.number;
             const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
-            // Author-gated as well as marker-gated: a person quoting the marker in the thread would
-            // otherwise have their comment edited or deleted out from under them.
             const existing = comments.find(
               (comment) => comment.user?.type === 'Bot' && comment.body && comment.body.includes(marker),
             );
-            if (process.env.INCREASED === 'true') {
+            if (process.env.STATUS === 'grew') {
               const body = `${marker}\n${process.env.BODY}`;
               if (existing) {
                 await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });

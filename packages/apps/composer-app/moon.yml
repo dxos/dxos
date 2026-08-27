@@ -37,10 +37,8 @@ tasks:
   # it gates every PR; `check-startup-budget` is still manual — its timings cannot gate without a
   # fixed runner.
   #
-  # `out/boot-budget.json` is declared as an output so the measurement is cacheable on its own: the
-  # CI job measures a PR's base commit by running this task there, where a remote-cache hit from
-  # main's own run restores the JSON in seconds rather than rebuilding the bundle to re-derive it.
-  # Never invoke it with passthrough args — moon folds those into the hash and the hit is lost.
+  # `outputs` is declared so a remote-cache hit restores the measurement without rebuilding the
+  # bundle, which is how CI measures a PR's base commit.
   check-boot-budget:
     command: node scripts/check-boot-budget.mjs
     deps:

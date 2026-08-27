@@ -2,30 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-/**
- * Diffs two `check-boot-budget.mjs --report` measurements and renders the PR comment for a boot
- * graph that grew against its base. Advisory, never a gate — `check-boot-budget.mjs` is the gate,
- * and this exists because growth that stays under the ceiling is otherwise invisible until the
- * ceiling is hit: the 2026-08-26 re-baseline absorbed ~400 KB accumulated across many changes that
- * each passed on their own.
- *
- * Each side is measured by its own commit's copy of the measurement script, so the CI job skips the
- * comparison outright when a PR edits that script rather than reporting a change of ruler as a
- * change of size.
- *
- * Writes `increased` and `body` to `$GITHUB_OUTPUT` when set, otherwise prints the body.
- */
-
 import { appendFileSync, readFileSync } from 'node:fs';
 
-/**
- * Below this a byte delta is not worth a comment — chunk content hashes are fixed-width, so a
- * sub-kilobyte move is minifier jitter rather than code anyone added. Any change in the entry
- * count is reported regardless: that axis moves only when the chunk partition reshapes.
- */
 const MIN_REPORTED_BYTES = 1024;
 
-/** Chunks named `assets/<name>-<hash>.js`, so the hash has to go before the two sides can be paired. */
 const stripHash = (name) => name.replace(/-[A-Za-z0-9_-]{8}(\.[a-z]+)$/, '$1');
 
 const argValue = (flag) => {
@@ -52,7 +32,6 @@ const bytesDelta = head.bytes - base.bytes;
 const countDelta = head.count - base.count;
 const increased = bytesDelta >= MIN_REPORTED_BYTES || countDelta > 0;
 
-/** Per-chunk deltas, so the comment names what grew rather than only that something did. */
 const sizeByName = (report) => new Map(report.entries.map((entry) => [stripHash(entry.name), entry.bytes]));
 const baseSizes = sizeByName(base);
 const headSizes = sizeByName(head);
@@ -106,7 +85,7 @@ console.log(
 if (process.env.GITHUB_OUTPUT) {
   appendFileSync(
     process.env.GITHUB_OUTPUT,
-    `increased=${increased}\nbody<<BOOT_BUDGET_EOF\n${body}\nBOOT_BUDGET_EOF\n`,
+    `status=${increased ? 'grew' : 'unchanged'}\nbody<<BOOT_BUDGET_EOF\n${body}\nBOOT_BUDGET_EOF\n`,
   );
 } else if (increased) {
   console.log(`\n${body}`);
