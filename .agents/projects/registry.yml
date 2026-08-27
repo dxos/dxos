@@ -14,8 +14,9 @@ projects:
     summary: 'Agent delegation and task management over the two-forms model — make the delegation loop (supervisor -> durable Task in a TaskSet -> sub-agent -> fold-back) work live and be visible in the UI.'
     tasks: .agents/projects/project-tasks/TASKS.md
     design: .agents/projects/project-tasks/DESIGN.md
-    prs: [12752]
-    resume: "PR #12752 is open on branch claude/agent-delegation-task-management-8bdbbe and carries the whole stream: the delegation fix (completeJob is a Tool.dynamic so its schema reaches Anthropic verbatim — the structured-output transformer rewrites Record/ObjectKeyword into typeless subschemas the API rejects, which killed EVERY live delegation at the sub-agent's first model call), Chat.taskSet replacing Chat.outline, Task.dependsOn + the delegate-tasks verb, the scripted + live drain stories, and the /task:create|run|delete slash commands. All review threads are resolved. NEXT: land it once Check is green, then the joined story (delegation chat beside a TaskSet surface), the promote-task verb, and binding slash commands to real operation invocations."
+    prs: [12752, 12784]
+    resume: "#12752 MERGED 2026-08-26 (delegation fix, Chat.taskSet, Task.dependsOn, delegate-tasks, drain stories, slash commands). Follow-on #12784 is OPEN, MERGEABLE, all 11 checks green, every review thread resolved — it carries the Repo type + Project.repo (0.6.0), plugin-github's `#nnn` decoration, autolinks, the task-list work (markdown descriptions, selection, create-row visibility, hover-only delete), ProjectArticle tabs + outline-link navigation, the Popover.Arrow clipping fix, and DX_STORIES. Slash commands now invoke the task verbs (no harness bridge was needed: the verbs declare only Database.Service). NEXT: land #12784, then implement the hierarchical-tasks design in DESIGN.md (build on react-ui-list's Tree hitbox/TreeDropIndicator/useListDisclosure; MoveTask needs an optional parentTask so a drop is one mutation). KNOWN: `#nnn` stays plain text in the ProjectArticle story because corePlugins() mounts no MarkdownPlugin, so plugin-github's module never activates on MarkdownEvents.Start."
+
   - name: hardware-devices
     status: active
     user: burdon

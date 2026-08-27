@@ -1,6 +1,6 @@
 # Project Tasks — Tasks
 
-_Resume: push, CI, PR comments, DESIGN.md (assistant-toolkit/docs). Uncommitted: none. Last: Phase 2 complete — live drain verified 3/3 done, no duplicates, no JSON failures._
+_Resume: land #12784 (green, review closed). Uncommitted: none. Last: slash commands invoke the task verbs; Repo type + `#nnn` decoration; hierarchical-tasks design written._
 
 ## Phase 1: Agent delegation over durable tasks
 
@@ -152,13 +152,18 @@ Each is independent of the others; the checked items shipped in #12784.
       GitHub extension can add a PRs tab to a project. Needs a surface/capability
       for tab registration (label, icon, order) alongside the panel surface each
       tab renders.
-- [ ] **`#nnn` needs plugin-github mounted to resolve in ProjectArticle** — the
-      wiring is done (the article collects `MarkdownCapabilities.ExtensionProvider`
-      and passes it into the outline, which now takes host extensions), and the
-      story seeds a `dxos/dxos` Repo on the project. Its story does NOT mount
-      `GitHubPlugin`: adding it lengthened the mount enough to turn the client
-      teardown flake below from intermittent into consistent. Demonstrated
-      meanwhile by `plugins/plugin-tasks/components/Outline` → `WithReferences`.
+- [ ] **`#nnn` does not resolve in the ProjectArticle story** — diagnosed
+      2026-08-27, not yet fixed. The wiring is complete (the article collects
+      `MarkdownCapabilities.ExtensionProvider` and passes it to the outline,
+      which takes host extensions), `GitHubPlugin` IS mounted in the story now,
+      and the project seeds a `dxos/dxos` Repo — but the outline still renders
+      `#12752` as plain text. Cause: plugin-github's `MarkdownExtension` module
+      activates on `MarkdownEvents.Start`, and the story's `corePlugins()` is
+      attention/graph/process-manager/settings/theme only — no `MarkdownPlugin`,
+      so the event never fires and no provider is ever contributed. Fix is to
+      mount `MarkdownPlugin` in the story, or to activate the module on an event
+      the story reaches. Works elsewhere: `plugins/plugin-tasks/components/
+    Outline` → `WithReferences` passes the extension directly.
 - [x] **ProjectArticle `Sections` story was flaky (~1 run in 4)** — the seeding
       ran from `play`, racing the previous story's client teardown, and the
       article rendered with every ref-gated section missing. Seeding moved into
