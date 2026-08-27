@@ -18,7 +18,8 @@ import * as Task from './Task';
 export class Outline extends Type.makeObject<Outline>(DXN.make('org.dxos.type.outline', '0.2.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
-    content: Ref.Ref(Text.Text),
+    /** Owned body: `SetParent` cascades it with the outline. */
+    content: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set(true)),
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--tree-structure--regular', hue: 'indigo' }),
     CollectionItemAnnotation.set(true),

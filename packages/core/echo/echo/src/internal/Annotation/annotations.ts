@@ -557,6 +557,25 @@ export const IconFromRefAnnotation = makeUserAnnotation<string>({
 });
 
 /**
+ * Marks a `Ref` field (or an array-of-`Ref` field) as owning its targets: writing a ref into the
+ * field, or creating the holder with one, sets the target's parent to the holding object.
+ *
+ * Removing a ref does NOT clear the target's parent — a move between holders would otherwise
+ * lose the edge depending on write order; call `Obj.setParent(child, undefined)` explicitly.
+ *
+ * @example
+ * ```ts
+ * Schema.Struct({
+ *   body: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set(true)),
+ * })
+ * ```
+ */
+export const SetParentAnnotation = makeUserAnnotation<boolean>({
+  id: 'org.dxos.annotation.setParent',
+  schema: Schema.Boolean,
+});
+
+/**
  * Options for {@link getLabel}.
  */
 export type GetLabelOptions = {

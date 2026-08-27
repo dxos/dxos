@@ -28,7 +28,6 @@ export default ChessComOperation.ClearSyncedGames.pipe(
       const states = yield* Feed.query(oldFeed, Filter.type(Chess.State)).run;
 
       const newFeed = yield* Database.add(Feed.make());
-      Obj.setParent(newFeed, account);
       Obj.update(account, (account) => {
         account.games = Ref.make(newFeed);
       });

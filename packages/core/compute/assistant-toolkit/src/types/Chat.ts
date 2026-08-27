@@ -27,9 +27,9 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
     viewType: Schema.String.pipe(Schema.optional),
 
     /**
-     * Message feed.
+     * Message feed. Owned by the chat: `SetParent` cascades it.
      */
-    feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
+    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
 
     /**
      * Instructions steering this conversation, rendered into the system prompt at request time.

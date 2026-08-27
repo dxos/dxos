@@ -16,7 +16,8 @@ import { meta } from '#meta';
 export class Spec extends Type.makeObject<Spec>(DXN.make('org.dxos.type.spec', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
-    content: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
+    /** Owned body: `SetParent` cascades it with the spec. */
+    content: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
   }).pipe(
     Annotation.IconAnnotation.set({ icon: meta.profile.icon?.key ?? 'ph--code--regular', hue: meta.profile.icon?.hue }),
   ),
@@ -26,9 +27,7 @@ export const isSpec = (object: unknown): object is Spec =>
   Schema.is(Type.getSchema(Spec) as Schema.Schema<Spec>)(object);
 
 export const make = ({ content = DEFAULT_SPEC_CONTENT, ...props }: Partial<{ name: string; content: string }> = {}) => {
-  const spec = Obj.make(Spec, { ...props, content: Ref.make(Text.make({ content })) });
-  Obj.setParent(spec.content.target!, spec);
-  return spec;
+  return Obj.make(Spec, { ...props, content: Ref.make(Text.make({ content })) });
 };
 
 const DEFAULT_SPEC_CONTENT = trim`

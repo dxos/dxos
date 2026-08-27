@@ -161,6 +161,26 @@ export const make = (props: Obj.MakeProps<typeof Person>): Person => Obj.make(Pe
 export const make = (props: Obj.MakeProps<typeof Person>): Type.InstanceType<typeof Person> => Obj.make(Person, props);
 ```
 
+## Owned children — `Annotation.SetParent`
+
+Declare ownership on the ref field rather than calling `Obj.setParent` next to every write. Writing a
+ref into an annotated field (or creating the holder with one) sets the target's parent, so the child
+cascade-deletes and deep-clones with its holder.
+
+```ts
+Schema.Struct({
+  // Single ref, array of refs, a field nested in a struct, and a member of a union field all work.
+  content: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set(true)),
+  sections: Schema.Array(Ref.Ref(Section)).pipe(Annotation.SetParent.set(true)),
+});
+```
+
+Do NOT annotate a field whose targets may be parented elsewhere (e.g. `TaskSet.tasks`, where a
+sub-task's parent is its parent task) — every write to the holder would re-parent them to it.
+Removing a ref does not clear the target's parent; call `Obj.setParent(child, undefined)` for that.
+Reverse edges (child holds the ref) and ref-in-annotation edges (e.g. `Chat.CompanionChatAnnotation`)
+still need `Obj.setParent`.
+
 ## Related docs in-repo
 
 - Effect runtime patterns: [.cursor/skills/effect/SKILL.md](../effect/SKILL.md).
