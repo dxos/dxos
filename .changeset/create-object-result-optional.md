@@ -1,4 +1,8 @@
 ---
+# multiple-changesets: a create-object contract change and a new storage backend land together only
+# because building the latter exposed the former. They touch different packages and different
+# readers — someone upgrading plugin-space needs the optional-object note whether or not they have
+# ever heard of S3.
 '@dxos/plugin-space': minor
 '@dxos/react-ui-form': minor
 ---
