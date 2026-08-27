@@ -9,8 +9,8 @@ bucket, linked from the PR body.
 
 ## Phase 0 — environment
 
-- [ ] proto/moon toolchain + `pnpm install` (`.config/claude-code-setup.sh`)
-- [ ] `moon run composer-app:build`
+- [x] proto/moon toolchain + `pnpm install` (`.config/claude-code-setup.sh`)
+- [~] `moon run composer-app:build` (running)
 - [ ] Chromium driver smoke test (`.agents/skills/recording-demos/scripts/driver.mjs`)
 
 ## Phase 1 — author QA flows (one subagent per batch, Sonnet)
@@ -19,112 +19,112 @@ Already had flows before this branch: plugin-chess, plugin-deepseek, plugin-mark
 
 ### Batch 00
 
-- [ ] `plugin-assistant`
-- [ ] `plugin-atproto`
-- [ ] `plugin-blogger`
-- [ ] `plugin-bluesky`
-- [ ] `plugin-board`
-- [ ] `plugin-bookmarks`
-- [ ] `plugin-brain`
-- [ ] `plugin-calls`
+- [x] `plugin-assistant`
+- [x] `plugin-atproto`
+- [x] `plugin-blogger`
+- [x] `plugin-bluesky`
+- [x] `plugin-board`
+- [x] `plugin-bookmarks`
+- [x] `plugin-brain`
+- [x] `plugin-calls`
 
 ### Batch 01
 
-- [ ] `plugin-chess-com`
-- [ ] `plugin-claude-agents`
-- [ ] `plugin-code`
-- [ ] `plugin-commerce`
-- [ ] `plugin-computer`
-- [ ] `plugin-conductor`
-- [ ] `plugin-connector`
+- [x] `plugin-chess-com`
+- [x] `plugin-claude-agents`
+- [x] `plugin-code`
+- [x] `plugin-commerce`
+- [x] `plugin-computer`
+- [x] `plugin-conductor`
+- [x] `plugin-connector`
 
 ### Batch 02
 
-- [ ] `plugin-crm`
-- [ ] `plugin-crx`
-- [ ] `plugin-debug`
-- [ ] `plugin-deck`
-- [ ] `plugin-devtools`
-- [ ] `plugin-discord`
-- [ ] `plugin-doctor`
-- [ ] `plugin-explorer`
-- [ ] `plugin-file`
+- [x] `plugin-crm`
+- [x] `plugin-crx`
+- [x] `plugin-debug`
+- [x] `plugin-deck`
+- [x] `plugin-devtools`
+- [x] `plugin-discord`
+- [x] `plugin-doctor`
+- [x] `plugin-explorer`
+- [x] `plugin-file`
 
 ### Batch 03
 
-- [ ] `plugin-file-system`
-- [ ] `plugin-freeq`
-- [ ] `plugin-game`
-- [ ] `plugin-github`
-- [ ] `plugin-heygen`
-- [ ] `plugin-ibkr`
-- [ ] `plugin-ideogram`
-- [ ] `plugin-illustrator`
+- [x] `plugin-file-system`
+- [x] `plugin-freeq`
+- [x] `plugin-game`
+- [x] `plugin-github`
+- [x] `plugin-heygen`
+- [x] `plugin-ibkr`
+- [x] `plugin-ideogram`
+- [x] `plugin-illustrator`
 
 ### Batch 04
 
-- [ ] `plugin-inbox`
-- [ ] `plugin-kanban`
-- [ ] `plugin-lametric`
-- [ ] `plugin-library`
-- [ ] `plugin-linear`
-- [ ] `plugin-lingo`
-- [ ] `plugin-magazine`
-- [ ] `plugin-map`
+- [x] `plugin-inbox`
+- [x] `plugin-kanban`
+- [x] `plugin-lametric`
+- [x] `plugin-library`
+- [x] `plugin-linear`
+- [x] `plugin-lingo`
+- [x] `plugin-magazine`
+- [x] `plugin-map`
 
 ### Batch 05
 
-- [ ] `plugin-map-solid`
-- [ ] `plugin-meeting`
-- [ ] `plugin-mermaid`
-- [ ] `plugin-native`
-- [ ] `plugin-navtree`
-- [ ] `plugin-osrm`
-- [ ] `plugin-pipeline`
-- [ ] `plugin-presenter`
+- [x] `plugin-map-solid`
+- [x] `plugin-meeting`
+- [x] `plugin-mermaid`
+- [x] `plugin-native`
+- [x] `plugin-navtree`
+- [x] `plugin-osrm`
+- [x] `plugin-pipeline`
+- [x] `plugin-presenter`
 
 ### Batch 06
 
-- [ ] `plugin-review`
-- [ ] `plugin-routine`
-- [ ] `plugin-sample`
-- [ ] `plugin-sandbox`
-- [ ] `plugin-script`
-- [ ] `plugin-search`
-- [ ] `plugin-sequencer`
-- [ ] `plugin-sheet`
+- [x] `plugin-review`
+- [x] `plugin-routine`
+- [x] `plugin-sample`
+- [x] `plugin-sandbox`
+- [x] `plugin-script`
+- [x] `plugin-search`
+- [x] `plugin-sequencer`
+- [x] `plugin-sheet`
 
 ### Batch 07
 
-- [ ] `plugin-sidekick`
-- [ ] `plugin-slack`
-- [ ] `plugin-space`
-- [ ] `plugin-spacetime`
-- [ ] `plugin-spotlight`
-- [ ] `plugin-stack`
-- [ ] `plugin-stream-deck`
+- [x] `plugin-sidekick`
+- [x] `plugin-slack`
+- [x] `plugin-space`
+- [x] `plugin-spacetime`
+- [x] `plugin-spotlight`
+- [x] `plugin-stack`
+- [x] `plugin-stream-deck`
 
 ### Batch 08
 
-- [ ] `plugin-studio`
-- [ ] `plugin-support`
-- [ ] `plugin-table`
-- [ ] `plugin-tasks`
-- [ ] `plugin-terra`
-- [ ] `plugin-thread`
-- [ ] `plugin-tldraw`
-- [ ] `plugin-transcription`
+- [x] `plugin-studio`
+- [x] `plugin-support`
+- [x] `plugin-table`
+- [x] `plugin-tasks`
+- [x] `plugin-terra`
+- [x] `plugin-thread`
+- [x] `plugin-tldraw`
+- [x] `plugin-transcription`
 
 ### Batch 09
 
-- [ ] `plugin-transformer`
-- [ ] `plugin-trello`
-- [ ] `plugin-trip`
-- [ ] `plugin-typefully`
-- [ ] `plugin-video`
-- [ ] `plugin-voxel`
-- [ ] `plugin-wnfs`
-- [ ] `plugin-zen`
+- [x] `plugin-transformer`
+- [x] `plugin-trello`
+- [x] `plugin-trip`
+- [x] `plugin-typefully`
+- [x] `plugin-video`
+- [x] `plugin-voxel`
+- [x] `plugin-wnfs`
+- [x] `plugin-zen`
 
 ## Phase 2 — record + upload
 
@@ -132,3 +132,18 @@ Already had flows before this branch: plugin-chess, plugin-deepseek, plugin-mark
 - [ ] Record each as a captioned `.webm` via the `recording-demos` driver
 - [ ] Upload to R2 under `demos/<date>-qa-flows/` (`hosting-artifacts`)
 - [ ] List every video URL in the PR body
+
+## Verification of the authoring pass
+
+Automated sweep (`## QA` present, one heading per file, balanced fences, every step
+carries `do:` + `expect:`, and every `org.dxos.operation.*` key referenced resolves to
+a real `DXN.make(...)` in source):
+
+- 82/82 files carry a `## QA` section with at least one `flow QA-n`.
+- 213 distinct operation keys referenced; all resolve to source after the fixes below.
+- Defects found and fixed: `plugin-code` (9 fabricated `org.dxos.function.code.*`
+  keys), `plugin-space` / `plugin-spotlight` / `plugin-stream-deck` / `plugin-debug`
+  (a step each missing the required `expect:`), `plugin-script` (notes narrating a
+  correction rather than stating the key).
+- Pre-existing on `main`, not introduced here: unbalanced code fences in
+  `plugin-studio` and `plugin-devtools`.
