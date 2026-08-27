@@ -11,8 +11,8 @@ import { TestHelpers } from '@dxos/effect/testing';
 
 import { SpaceOperation } from '#types';
 
-import UpdateObjectHandler from './update-object';
 import { TestContainer, TestObject, decodeNamed, makeTestLayer } from './testing';
+import UpdateObjectHandler from './update-object';
 
 const TestLayer = makeTestLayer(UpdateObjectHandler);
 
