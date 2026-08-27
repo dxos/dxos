@@ -196,6 +196,9 @@
       "path": "../plugin-preview"
     },
     {
+      "path": "../plugin-registry"
+    },
+    {
       "path": "../plugin-routine"
     },
     {

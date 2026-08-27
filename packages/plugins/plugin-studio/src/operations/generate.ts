@@ -103,7 +103,6 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
             config,
             generation: makeGeneration(data),
           });
-          Obj.setParent(created, artifactObj);
           yield* Database.add(created);
           Obj.update(artifactObj, (artifactObj) => {
             artifactObj.variants = [...(artifactObj.variants ?? []), Ref.make(created)];
@@ -126,7 +125,6 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
             const enqueued = yield* Effect.tryPromise({ try: () => enqueue(request, options), catch: toError });
             jobId = enqueued.jobId;
             const created = Variant.make({ name, config, jobId });
-            Obj.setParent(created, artifactObj);
             yield* Database.add(created);
             Obj.update(artifactObj, (artifactObj) => {
               artifactObj.variants = [...(artifactObj.variants ?? []), Ref.make(created)];

@@ -94,13 +94,17 @@ export class Magazine extends Type.makeObject<Magazine>(DXN.make('org.dxos.type.
      * own fields), so the brief is edited there without a custom surface.
      * Optional for backward compatibility; {@link CurateMagazine} and the toolbar require it.
      */
-    instructions: Ref.Ref(Instructions.Instructions).pipe(FormInlineAnnotation.set(true), Schema.optional),
+    instructions: Ref.Ref(Instructions.Instructions).pipe(
+      Annotation.SetParent.set(true),
+      FormInlineAnnotation.set(true),
+      Schema.optional,
+    ),
     /**
      * Per-Post magazine-scoped curation state, keyed by Post id. Shared per-Post state (readAt,
      * star/archive tags) lives on `Subscription`; snippet/imageUrl here are agent-written at
      * curation time and take precedence over the RSS-derived defaults in display.
      */
-    postState: Ref.Ref(StateMap.StateMap).pipe(FormInputAnnotation.set(false)),
+    postState: Ref.Ref(StateMap.StateMap).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
     /**
      * Maximum number of (non-starred) curated Posts retained on the magazine after curation.
      * Older posts beyond this bound are dropped; starred posts are preserved regardless.
@@ -159,12 +163,6 @@ export const make = (props: MakeProps = {}): Magazine => {
     magazine.instructions = Ref.make(instructions);
   });
 
-  // Cascade-delete the Instructions object (and its Text) and the per-Post state with the magazine.
-  Obj.setParent(instructions, magazine);
-  if (instructions.text.target) {
-    Obj.setParent(instructions.text.target, instructions);
-  }
-  Obj.setParent(postState, magazine);
   return magazine;
 };
 
