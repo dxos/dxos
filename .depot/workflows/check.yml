@@ -311,9 +311,12 @@ jobs:
           moon run composer-app:check-boot-budget || true
           cp packages/apps/composer-app/out/boot-budget.json "$RUNNER_TEMP/boot-budget.base.json"
 
+      # Advisory, so it must not redden a job whose budget passed: `outcome` still reports the real
+      # result to the step below, which skips rather than commenting on a comparison that failed.
       - name: Compare with the base
         id: compare
         if: steps.base.outcome == 'success'
+        continue-on-error: true
         run: |
           node "$RUNNER_TEMP/compare.mjs" \
             --base "$RUNNER_TEMP/boot-budget.base.json" \
@@ -321,6 +324,7 @@ jobs:
 
       - name: Post or remove boot graph comment
         if: steps.compare.outcome == 'success'
+        continue-on-error: true
         uses: actions/github-script@v7
         env:
           INCREASED: ${{ steps.compare.outputs.increased }}
@@ -347,8 +351,10 @@ jobs:
               await github.rest.issues.deleteComment({ owner, repo, comment_id: existing.id });
             }
 
+      # `!cancelled()` rather than the implicit `success()`: the gate has to be reported even if an
+      # advisory step above went red, which would otherwise skip this and lose the failure entirely.
       - name: Report boot budget failure
-        if: steps.budget.outcome == 'failure'
+        if: ${{ !cancelled() && steps.budget.outcome == 'failure' }}
         run: |
           echo '::error::boot budget exceeded — see the "Check boot budget" step.'
           exit 1
