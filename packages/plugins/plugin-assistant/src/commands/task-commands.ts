@@ -35,14 +35,14 @@ export const TaskSlashCommands: SlashCommand[] = [
   },
   {
     command: '/task:delete',
-    description: 'Delete task(s) by number or title',
+    description: 'Delete task(s) by number or quoted title',
     execute: async (args, { db, chat, invoke }) => {
       const resolved = resolveTasks(args, db, chat);
       if (resolved instanceof Error) {
         return resolved;
       }
       if (resolved.length === 0) {
-        return new Error('Usage: /task:delete <task number or title> [...]');
+        return new Error('Usage: /task:delete <number | "exact title"> [...]');
       }
 
       for (const task of resolved) {
@@ -56,14 +56,14 @@ export const TaskSlashCommands: SlashCommand[] = [
   },
   {
     command: '/task:run',
-    description: 'Delegate task(s) by number or title',
+    description: 'Delegate task(s) by number or quoted title',
     execute: async (args, { db, chat, invoke }) => {
       const resolved = resolveTasks(args, db, chat);
       if (resolved instanceof Error) {
         return resolved;
       }
       if (resolved.length === 0) {
-        return new Error('Usage: /task:run <task number or title> [...]');
+        return new Error('Usage: /task:run <number | "exact title"> [...]');
       }
 
       // A terminal task has nothing left to run, and delegating a running one would fork it.
@@ -134,11 +134,12 @@ const resolveTasks = (args: string, db: Database.Database, chat: Chat.Chat) => {
   const resolved: Task.Task[] = [];
   for (const selector of selectors) {
     const task =
-      typeof selector === 'number'
-        ? tasks[selector - 1]
-        : tasks.find((candidate) => candidate.title === selector.trim());
+      'ordinal' in selector
+        ? tasks[selector.ordinal - 1]
+        : tasks.find((candidate) => candidate.title === selector.title.trim());
     if (!task) {
-      return new Error(`No matching task for: ${selector}. Select by 1-based number or exact title.`);
+      const named = 'ordinal' in selector ? selector.ordinal : `"${selector.title}"`;
+      return new Error(`No matching task for: ${named}. Select by 1-based number, or by exact title in quotes.`);
     }
     resolved.push(task);
   }

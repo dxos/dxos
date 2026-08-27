@@ -42,12 +42,30 @@ export type SlashCommandResult = {
   followUp?: string;
 };
 
-/** `"1 3"`, `"1,3"`, or titles — numeric tokens become 1-based ordinals. */
-export const parseTaskSelectors = (args: string): (number | string)[] =>
-  args
-    .split(/[\s,]+/)
-    .filter(Boolean)
-    .map((token) => (/^\d+$/.test(token) ? Number(token) : token));
+/** A task named by its 1-based position in the set, or by its exact title. */
+export type TaskSelector = { ordinal: number } | { title: string };
+
+/**
+ * `1 3`, `1,3`, or titles. Quoting is what makes a title unambiguous — a title is often several
+ * words (`"Draft release notes"`) and may itself be a number (`"123"`), neither of which a bare
+ * whitespace split can express.
+ */
+export const parseTaskSelectors = (args: string): TaskSelector[] => {
+  const selectors: TaskSelector[] = [];
+  // Quoted run, or a bare run of anything but whitespace and commas.
+  const tokens = args.matchAll(/"([^"]*)"|'([^']*)'|([^\s,]+)/g);
+  for (const [, doubleQuoted, singleQuoted, bare] of tokens) {
+    const quoted = doubleQuoted ?? singleQuoted;
+    if (quoted !== undefined) {
+      if (quoted.length > 0) {
+        selectors.push({ title: quoted });
+      }
+    } else if (bare !== undefined) {
+      selectors.push(/^\d+$/.test(bare) ? { ordinal: Number(bare) } : { title: bare });
+    }
+  }
+  return selectors;
+};
 
 /**
  * Resolves a prompt into one of `commands`: `undefined` when the text is not a known command (it

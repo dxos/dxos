@@ -150,11 +150,18 @@ const ChatRoot = ({
               // `appendToFeed` can reject, and either would otherwise be lost with no error shown.
               void (async () => {
                 await Promise.resolve(onSubmit?.(text));
-                if (!chat || !db) {
+                // Re-read after `onSubmit`: that is what persists a transient chat, so a chat that
+                // began without a database has one only now.
+                const currentDb = (chat && Obj.getDatabase(chat)) || db;
+                if (!chat || !currentDb) {
                   throw new Error('Command requires a persisted chat.');
                 }
 
-                const result = await resolved.command.execute(resolved.args, { db, chat, invoke: invokePromise });
+                const result = await resolved.command.execute(resolved.args, {
+                  db: currentDb,
+                  chat,
+                  invoke: invokePromise,
+                });
                 if (result instanceof Error) {
                   throw result;
                 }
@@ -164,7 +171,7 @@ const ChatRoot = ({
                 // because `onSubmit` is what persists a transient chat, creating it.
                 const currentFeed = feed ?? chat.feed?.target;
                 if (currentFeed && result.summary) {
-                  await db.appendToFeed(currentFeed, [
+                  await currentDb.appendToFeed(currentFeed, [
                     Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text }] }),
                     Message.make({ sender: { role: 'assistant' }, blocks: [{ _tag: 'text', text: result.summary }] }),
                   ]);
