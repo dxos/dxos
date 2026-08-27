@@ -344,7 +344,7 @@ flow QA-1: Upload an image and preview it
       do: In the navtree, click + on a collection and choose File. Drop a small PNG (e.g. 10 KB) named "qa-image.png".
       invoke: |
         org.dxos.operation.file.create {
-          file: new File([new Uint8Array([137, 80, 78, 71])], "qa-image.png", { type: "image/png" }),
+          file: new File([Uint8Array.from(atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="), (c) => c.charCodeAt(0))], "qa-image.png", { type: "image/png" }),
           db: $given.space.db
         }
       capture: created
@@ -367,7 +367,8 @@ flow QA-1: Upload an image and preview it
       invoke: org.dxos.operation.appToolkit.open { subject: ["root/$given.space.id/content/collections/$created.object.id"] }
       expect: FileArticle renders an <img> element showing the uploaded image, resolved via a data: URL
       assert: |
-        return !!document.querySelector('img[src^="data:"]');
+        const img = document.querySelector('img[src^="data:"]');
+        return !!img && img.complete && img.naturalWidth > 0;
   after:
     - name: Delete the File
       do: Right-click "qa-image.png" in the navtree and choose Delete.

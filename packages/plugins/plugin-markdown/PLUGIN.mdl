@@ -470,7 +470,7 @@ flow QA-2: Link one page to another
       invoke: [op:createDraft] { name: "Page 1", content: "# Page 1\n\nThe first page.\n" }
       capture: page1
       expect: a Document named "Page 1" is returned, its body reading "The first page."
-      assert: return !!$created.object
+      assert: return !!$page1.object
       note: Coalesce with the placement step — `object` is live and cannot cross a snippet boundary.
     - name: Place Page 1
       do: (the navtree create action places it for you)

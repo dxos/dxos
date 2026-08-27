@@ -316,12 +316,15 @@ flow QA-1: Create an outline and edit it
   after:
     - name: Delete the outline
       do: Right-click "QA Outline" in the navtree and choose Delete.
-      invoke: org.dxos.operation.space.removeObjects { objects: [], target: $given.space }
+      invoke: |
+        org.dxos.operation.space.removeObjects {
+          objects: [(await space.db.query(dxos.Filter.type(Outline)).run()).objects.find((o) => o.name === 'QA Outline')],
+          target: $given.space
+        }
       expect: the row leaves the navtree and its plank closes if it was open
       note: |
         `objects` cannot be filled from an `invoke` result — step 1 had none — so the agent path
-        resolves the Outline live, by name, immediately before this call:
-        `(await space.db.query(dxos.Filter.type(Outline)).run()).objects.find((o) => o.name === 'QA Outline')`.
+        resolves the Outline live, by name, immediately before this call.
 ```
 
 ```mdl
@@ -344,12 +347,13 @@ flow QA-2: Quick-add a journal bullet from anywhere
         were created if either was missing
       assert: |
         const journal = (await space.db.query(dxos.Filter.type(Journal)).run()).objects[0];
-        return journal?.entries !== undefined;
+        const entries = await Promise.all(Object.values(journal?.entries ?? {}).map((e) => e.load()));
+        const texts = await Promise.all(entries.map((e) => e.content.load()));
+        return texts.some((t) => t.content.includes('QA quick entry'));
       note: |
-        `output: void` — Rule 3 applies: the assert checks the effect (the Journal now exists),
-        not the (empty) return value. A stronger assert would read today's JournalEntry content
-        directly, but that requires resolving today's date key, which is out of scope for a
-        deterministic snippet.
+        `output: void` — Rule 3 applies: the assert checks the effect (the entry's own text
+        content, not just that some Journal exists), so it stays falsifiable against a fixture
+        left dirty by a previous run (Execution Rule 5).
   after:
     - name: Remove the bullet
       do: Open today's journal entry and delete the "QA quick entry" line.
@@ -409,11 +413,12 @@ ext component
 
 ```mdl
 ext op
-  uri: org.dxos.mdl.op@1.0
+  uri: org.dxos.mdl.op@1.1
   desc: |
     A named operation with typed inputs, outputs, and declared errors.
     Pure ops have no effects or requires. Effectful ops declare both.
   fields:
+    key?: NSID                  # runtime operation key — what the invoker receives
     desc?: Prose
     input?: FieldMap
     output?: TypeExpr
