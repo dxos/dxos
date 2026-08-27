@@ -48,9 +48,8 @@ which Claude Code passes to every session and its subprocesses:
 ```
 
 `.claude/settings.local.json` in the repo keeps it to you. `.claude/settings.json`
-commits it for everyone. `~/.claude/settings.json` applies it to every repo you
-open, which is wrong here, since the store is per-repo. Precedence is local, then
-project, then user.
+commits it for everyone working in the repo. `~/.claude/settings.json` turns it on
+for every repo you open.
 
 **3. Bind the space.** Run `/project setup`. The connector brings that command
 with it, so it appears once step 1 succeeds. It lists the spaces you own by name,
