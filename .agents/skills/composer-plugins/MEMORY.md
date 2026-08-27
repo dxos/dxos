@@ -542,7 +542,7 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 - `tsconfig.json` (extends `../../../tsconfig.base.json`, `references` per dep) — without it `:build` fails "No tsconfig.json found". References are auto-extended into `composer-app/tsconfig.json` + `release-please-config.json` by the postinstall sync.
 - `src/vite-env.d.ts` declaring `*.mdl?raw` (copy from plugin-chess) — needed for `import pluginSpec from '../PLUGIN.mdl?raw'`.
 - `vitest.config.ts` (`createConfig({ node: true, storybook: true })`) + a `.storybook/` dir (`main.mts`, `preview.mts`, and symlinks `manager-head.html`/`preview-head.html` → `tools/storybook/.storybook/*`) — without these `:test` fails "No projects matched filter 'node'" then storybook `MainFileMissingError`.
-- Register in `composer-app/src/plugin-defs.tsx`: import from `@dxos/plugin-foo/plugin`, add `FooPlugin()` to the instance list and `FooPlugin.meta.id` to a `getDefaults` list (Labs for experimental); add `@dxos/plugin-foo: workspace:*` to composer-app `package.json`.
+- Register in `composer-app/src/plugin-defs.tsx`: import from `@dxos/plugin-foo/plugin`, add `FooPlugin.make()` to `getPlugins` and `FooPlugin.meta.profile.key` to the `isDev` block of `getDefaults` (omit it if the plugin hits a permission-gated API on activation); add `@dxos/plugin-foo: workspace:*` to composer-app `package.json`.
 
 ### Operations import from `@dxos/compute`, not `@dxos/operation`
 
