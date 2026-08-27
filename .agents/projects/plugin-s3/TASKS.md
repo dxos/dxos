@@ -155,6 +155,14 @@ outbound `fetch` to the customer's own endpoint. `operation-service` sets no
 
 ## Phase 6: Deferred
 
+- [ ] **Blob storage naming migration** — `edge` → `blob` (storage name) and `ni:` → `blob:///`
+      (scheme), decided during review of this PR. Scheme names the backend, matching `s3:`/`wnfs:`;
+      the current `ni:` names an addressing style instead, which is what made a hypothetical IPFS
+      backend look like a scheme collision. Nine source files, dual-read migration.
+      Written up in
+      [echo-client/src/blob/AUDIT.md](../../../packages/core/echo/echo-client/src/blob/AUDIT.md);
+      no code changed for it yet.
+
 - [ ] **EDGE blob-store target** — a `BLOB_SERVICE` binding on `operation-service` plus a backend
       speaking `POST /file/:key` (not `PUT`). This one IS an edge-repo change, since a service
       binding is Cloudflare config. Only buys the managed store, which browsers can already reach.
