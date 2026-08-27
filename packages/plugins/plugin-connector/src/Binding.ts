@@ -800,9 +800,9 @@ export const reportAccountMismatch: Effect.Effect<void, never, Operation.Service
 
 /**
  * Bind `target` to an existing `connection` as a sync target: an external cursor authenticated by
- * the connection's access token, plus the recurring sync trigger the connector declares. Shared by
- * the connector-auth menu's reuse entry and {@link autoBind} so a binding made
- * either way is identical.
+ * the connection's access token, plus the recurring sync trigger the connector declares. Binding is
+ * always a deliberate act — the connector-auth menu's reuse entry, or the coordinator completing a
+ * sign-in — so nothing calls this on a user's behalf.
  */
 export const bind = ({
   connection,
@@ -831,85 +831,5 @@ export const bind = ({
     }
     const cursor = yield* Database.add(Cursor.makeExternal({ source: connection.accessToken, target }));
     invariant(Cursor.isExternal(cursor));
-    return cursor;
-  });
-
-/**
- * Bind `target` to the one remote target its type can be bound to, when exactly one exists.
- *
- * A freshly created bindable object (a Mailbox, a Calendar) is inert until something binds it, so a
- * binding whose outcome is forced is made here rather than through a Connect menu with one possible
- * answer. Forced means all three: exactly one authorized {@link Connection}, a single-target connector
- * (one remote target per account), and no cursor on that connection yet. Anything else is a genuine
- * choice and falls through to the Connect action — no connection leaves nothing to bind, several
- * connections is a pick between accounts, several remote targets is a pick within one (the
- * sync-targets dialog, which `bind` cannot express: it records no `externalId`), and a connection
- * already syncing an object means this object mirrors something else.
- *
- * Returns the cursor when it binds, `undefined` otherwise.
- */
-export const autoBind = ({
-  target,
-}: {
-  target: Obj.Unknown;
-}): Effect.Effect<Cursor.ExternalCursor | undefined, never, Database.Service | Capability.Service> =>
-  Effect.gen(function* () {
-    const capabilities = yield* Capability.Service;
-    const connectorIds = ConnectorSpec.idsForTarget(target, capabilities);
-    if (connectorIds.length === 0) {
-      return undefined;
-    }
-
-    const connections = (yield* Database.query(Filter.type(Connection.Connection)).run).filter(
-      (connection) => connection.connectorId !== undefined && connectorIds.includes(connection.connectorId),
-    );
-    if (connections.length !== 1) {
-      log.info('not auto-binding', { typename: Obj.getTypename(target), candidates: connections.length });
-      return undefined;
-    }
-
-    const [connection] = connections;
-    const connector = capabilities
-      .getAll(ConnectorSpec.Connector)
-      .flat()
-      .find((entry) => entry.id === connection.connectorId);
-    // A multi-target connector (calendars, boards, channels) reaches many remote targets per account,
-    // so which one this object mirrors is a real choice no count of connections settles — and `bind`
-    // has no `externalId` to record the answer, leaving a cursor `reconcileCursors` cannot match to
-    // any remote target. Those pick theirs through the sync-targets dialog.
-    if (connector?.sync?.getTargets) {
-      log.info('not auto-binding: connector reaches several remote targets', {
-        typename: Obj.getTypename(target),
-        connectorId: connection.connectorId,
-      });
-      return undefined;
-    }
-    // Single-target, so the account has exactly one remote target and a connection already carrying a
-    // cursor has it taken — auto-binding a second object would point both at the one inbox without the
-    // user asking. Reusing it stays available, as a deliberate pick from the Connect menu.
-    const cursors = yield* Database.query(Filter.type(Cursor.Cursor)).run;
-    if (cursors.some((cursor) => isForConnection(cursor, connection))) {
-      log.info('not auto-binding: the only authorized connection is already bound', {
-        typename: Obj.getTypename(target),
-        connectorId: connection.connectorId,
-      });
-      return undefined;
-    }
-    // Automatic, so a target already synced from another account is skipped silently rather than
-    // reported — there was no user action to explain a toast.
-    const cursor = yield* bind({ connection, connector, target: Ref.make(target) }).pipe(
-      Effect.catchTag('TargetAccountMismatchError', (error) =>
-        Effect.sync(() => {
-          log.info('not auto-binding: target syncs another account', { context: error.context });
-          return undefined;
-        }),
-      ),
-    );
-    if (cursor) {
-      log.info('auto-bound to the only authorized connection', {
-        typename: Obj.getTypename(target),
-        connectorId: connection.connectorId,
-      });
-    }
     return cursor;
   });
