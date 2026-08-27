@@ -188,8 +188,6 @@ describe('Annotation.SetParent', () => {
     }),
   ) {}
 
-  const makeBody = (text: string) => Obj.make(Body, { text });
-
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
@@ -201,10 +199,10 @@ describe('Annotation.SetParent', () => {
   });
 
   test('parent is set on creation', async () => {
-    const body = makeBody('body');
-    const section = makeBody('section');
-    const config = makeBody('config');
-    const linked = makeBody('linked');
+    const body = Obj.make(Body, { text: 'body' });
+    const section = Obj.make(Body, { text: 'section' });
+    const config = Obj.make(Body, { text: 'config' });
+    const linked = Obj.make(Body, { text: 'linked' });
     const container = Obj.make(Container, {
       body: Ref.make(body),
       sections: [Ref.make(section)],
@@ -220,8 +218,8 @@ describe('Annotation.SetParent', () => {
 
   test('parent is set on write', async () => {
     const container = Obj.make(Container, { sections: [] });
-    const body = makeBody('body');
-    const section = makeBody('section');
+    const body = Obj.make(Body, { text: 'body' });
+    const section = Obj.make(Body, { text: 'section' });
     expect(Obj.getParent(body)).toBeUndefined();
 
     Obj.update(container, (container) => {
@@ -238,7 +236,7 @@ describe('Annotation.SetParent', () => {
     await using db = await peer.createDatabase();
 
     const container = db.add(Obj.make(Container, { sections: [] }));
-    const body = db.add(makeBody('body'));
+    const body = db.add(Obj.make(Body, { text: 'body' }));
     Obj.update(container, (container) => {
       container.body = Ref.make(body);
     });
@@ -249,7 +247,7 @@ describe('Annotation.SetParent', () => {
   test('re-parents when the ref is replaced', async () => {
     const container = Obj.make(Container, { sections: [] });
     const other = Obj.make(Container, { sections: [] });
-    const body = makeBody('body');
+    const body = Obj.make(Body, { text: 'body' });
 
     Obj.update(container, (container) => {
       container.body = Ref.make(body);
@@ -266,7 +264,7 @@ describe('Annotation.SetParent', () => {
     await using peer = await builder.createPeer({ types: [Body, Container] });
     await using db = await peer.createDatabase();
 
-    const body = db.add(makeBody('body'));
+    const body = db.add(Obj.make(Body, { text: 'body' }));
     const container = db.add(Obj.make(Container, { sections: [], body: Ref.make(body) }));
     await db.flush();
 

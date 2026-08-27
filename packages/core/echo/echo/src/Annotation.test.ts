@@ -698,13 +698,11 @@ describe('Annotation', () => {
       }),
     ) {}
 
-    const makeBody = (text: string) => Obj.make(Body, { text });
-
     test('parents the targets of annotated fields on creation', ({ expect }) => {
-      const body = makeBody('body');
-      const section = makeBody('section');
-      const config = makeBody('config');
-      const linked = makeBody('linked');
+      const body = Obj.make(Body, { text: 'body' });
+      const section = Obj.make(Body, { text: 'section' });
+      const config = Obj.make(Body, { text: 'config' });
+      const linked = Obj.make(Body, { text: 'linked' });
       const holder = Obj.make(Holder, {
         body: Ref.make(body),
         sections: [Ref.make(section)],
@@ -722,7 +720,7 @@ describe('Annotation', () => {
     test('parents the target on write, and re-parents when the ref moves', ({ expect }) => {
       const holder = Obj.make(Holder, { sections: [] });
       const other = Obj.make(Holder, { sections: [] });
-      const body = makeBody('body');
+      const body = Obj.make(Body, { text: 'body' });
       expect(Obj.getParent(body)).toBeUndefined();
 
       Obj.update(holder, (holder) => {
@@ -738,7 +736,7 @@ describe('Annotation', () => {
 
     test('appending to an annotated array field parents the appended target', ({ expect }) => {
       const holder = Obj.make(Holder, { sections: [] });
-      const section = makeBody('section');
+      const section = Obj.make(Body, { text: 'section' });
 
       Obj.update(holder, (holder) => {
         holder.sections.push(Ref.make(section));
