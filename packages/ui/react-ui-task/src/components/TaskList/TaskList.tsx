@@ -430,6 +430,16 @@ const useTaskDrag = ({
         // the row's own click-to-select.
         element: handle,
         getInitialData: () => data,
+        // ...but what is dragged is the task, so the preview is the whole row. The browser's default
+        // drag image is the dragged element, which here would be the grip alone. The live row is
+        // used rather than a clone: the row is a subgrid whose tracks come from its parent, so a
+        // detached copy would collapse to its content width.
+        onGenerateDragPreview: ({ location, nativeSetDragImage }) => {
+          const { left, top } = element.getBoundingClientRect();
+          const { clientX, clientY } = location.initial.input;
+          // Offset by where the grip was grabbed, so the row does not jump under the cursor.
+          nativeSetDragImage?.(element, clientX - left, clientY - top);
+        },
         onDragStart: () => {
           draggingId.current = task.id;
         },
