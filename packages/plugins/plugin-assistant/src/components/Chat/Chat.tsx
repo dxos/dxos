@@ -80,6 +80,8 @@ const ChatRoot = ({
   const active = useAtomValue(processor.active);
   const requestTiming = useRequestTiming({ active });
   const lastPrompt = useRef<string | undefined>(undefined);
+  // A slash command runs outside the processor, so `streaming` does not cover it.
+  const commandPending = useRef(false);
   // Transient chats have no database of their own; fall back to the supplied space db so
   // the message query and context controls operate before the chat is persisted.
   const db = (chat && Obj.getDatabase(chat)) || dbFallback;
@@ -138,25 +140,31 @@ const ChatRoot = ({
             // the loop; an unknown command falls through to the model as plain text.
             const resolved = resolveSlashCommand(text, TaskSlashCommands);
             if (resolved) {
-              void Promise.resolve(onSubmit?.(text)).then(async () => {
+              // One command at a time: `invokePromise` does not queue, so two quick submissions
+              // would interleave their operations and land their summaries out of order.
+              if (commandPending.current) {
+                break;
+              }
+              commandPending.current = true;
+              // One rejection handler for the whole chain: `onSubmit` can throw synchronously and
+              // `appendToFeed` can reject, and either would otherwise be lost with no error shown.
+              void (async () => {
+                await Promise.resolve(onSubmit?.(text));
                 if (!chat || !db) {
-                  event.emit({ type: 'error', error: new Error('Command requires a persisted chat.') });
-                  return;
+                  throw new Error('Command requires a persisted chat.');
                 }
-                // The command runs its operation; a rejected invocation is reported like a usage
-                // error rather than escaping as an unhandled rejection.
-                const result = await resolved.command
-                  .execute(resolved.args, { db, chat, invoke: invokePromise })
-                  .catch((error) => (error instanceof Error ? error : new Error(String(error))));
+
+                const result = await resolved.command.execute(resolved.args, { db, chat, invoke: invokePromise });
                 if (result instanceof Error) {
-                  event.emit({ type: 'error', error: result });
-                  return;
+                  throw result;
                 }
 
                 // The command's effect is otherwise invisible in the conversation: the prompt was
-                // never sent, so nothing records that the user ran it.
-                if (feed && result.summary) {
-                  await db.appendToFeed(feed, [
+                // never sent, so nothing records that the user ran it. The feed is re-read here
+                // because `onSubmit` is what persists a transient chat, creating it.
+                const currentFeed = feed ?? chat.feed?.target;
+                if (currentFeed && result.summary) {
+                  await db.appendToFeed(currentFeed, [
                     Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text }] }),
                     Message.make({ sender: { role: 'assistant' }, blocks: [{ _tag: 'text', text: result.summary }] }),
                   ]);
@@ -167,7 +175,13 @@ const ChatRoot = ({
                   // command wakes the conversation with a short synthetic prompt.
                   void processor.request({ message: result.followUp });
                 }
-              });
+              })()
+                .catch((error) => {
+                  event.emit({ type: 'error', error: error instanceof Error ? error : new Error(String(error)) });
+                })
+                .finally(() => {
+                  commandPending.current = false;
+                });
               break;
             }
             lastPrompt.current = ev.text;

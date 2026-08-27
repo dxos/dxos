@@ -2,17 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Operation from '@dxos/compute/Operation';
 import { type Database } from '@dxos/echo';
 
 import * as Chat from './types/Chat';
 
 /**
- * A deterministic prompt shortcut: a leading `/command args` line runs an operation directly — no
- * model in the loop.
- *
- * The commands themselves live with the operations they invoke (a plugin), not here: this module
- * owns only the shape and the parse, so the prompt editor can list commands and the chat can
- * dispatch one without depending on any particular verb.
+ * A deterministic prompt shortcut: a leading `/command args` line runs an operation directly, with
+ * no model in the loop. The commands live with the verbs they invoke, so this module stays
+ * operation-agnostic — the parse and the shape are all a prompt editor or a chat needs.
  */
 export type SlashCommand = {
   /** Including the leading slash, e.g. `/task:run`. */
@@ -23,19 +21,15 @@ export type SlashCommand = {
   execute: (args: string, context: SlashCommandContext) => Promise<SlashCommandResult | Error>;
 };
 
-/**
- * What a command runs against: the conversation, and the invoker that reaches its operations.
- * `invoke` is the UI's operation invoker, so a command's effect goes through the same verb the
- * agent and the MCP surface call rather than a second implementation of it.
- */
+/** `invoke` is the caller's own invoker, so a command's effect goes through the verb itself. */
 export type SlashCommandContext = {
   db: Database.Database;
   chat: Chat.Chat;
   invoke: OperationInvoke;
 };
 
-/** Structurally the app framework's `invokePromise`, so a caller passes it straight through. */
-export type OperationInvoke = (operation: any, input: any, options?: any) => Promise<any>;
+/** `OperationService['invokePromise']`, so the operation's input and output types survive the call. */
+export type OperationInvoke = Operation.OperationService['invokePromise'];
 
 export type SlashCommandResult = {
   /** One line for the transcript, so a command's effect is visible in the conversation. */

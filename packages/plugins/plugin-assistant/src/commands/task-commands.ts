@@ -2,18 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Chat, type SlashCommand, parseTaskSelectors } from '@dxos/assistant-toolkit';
+import { Chat, type OperationInvoke, type SlashCommand, parseTaskSelectors } from '@dxos/assistant-toolkit';
+import * as Operation from '@dxos/compute/Operation';
 import { type Database, Ref } from '@dxos/echo';
+import { type SpaceId } from '@dxos/keys';
 import * as TaskOperation from '@dxos/plugin-tasks/TaskOperation';
 import { type Task, TaskSet } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 /**
- * The task shortcuts, bound to the task verbs.
- *
- * Each command invokes the operation the agent and the MCP surface call, rather than writing to
- * ECHO itself — `DeleteTask` sweeps a task's sub-tasks out of the set's membership array, and a
- * second implementation here would be the one that forgets to.
+ * The task shortcuts. Each invokes the verb rather than writing to ECHO itself, because the verbs
+ * carry semantics a second implementation would drop — `DeleteTask` sweeps a task's sub-tasks out
+ * of the set's membership array.
  */
 export const TaskSlashCommands: SlashCommand[] = [
   {
@@ -29,8 +29,8 @@ export const TaskSlashCommands: SlashCommand[] = [
         return new Error('The task set is not loaded yet.');
       }
 
-      await invoke(TaskOperation.CreateTask, { taskSet: Ref.make(taskSet), title }, { spaceId: db.spaceId });
-      return { summary: `Created task “${title}”.` };
+      const failure = await run(invoke, TaskOperation.CreateTask, { taskSet: Ref.make(taskSet), title }, db.spaceId);
+      return failure ?? { summary: `Created task “${title}”.` };
     },
   },
   {
@@ -46,7 +46,10 @@ export const TaskSlashCommands: SlashCommand[] = [
       }
 
       for (const task of resolved) {
-        await invoke(TaskOperation.DeleteTask, { task: Ref.make(task) }, { spaceId: db.spaceId });
+        const failure = await run(invoke, TaskOperation.DeleteTask, { task: Ref.make(task) }, db.spaceId);
+        if (failure) {
+          return failure;
+        }
       }
       return { summary: summarize('Deleted', resolved) };
     },
@@ -71,14 +74,21 @@ export const TaskSlashCommands: SlashCommand[] = [
         return { summary: 'Nothing to run: every named task is already done, cancelled, or running.' };
       }
 
-      // Queue for the supervisor's reconcile — an agent assignee on a `todo` task is what it picks
-      // up; `started` is stamped at spawn. `UpdateTask` is the only writer allowed to move these.
+      // An agent assignee on a `todo` task is what the supervisor's reconcile picks up.
       for (const task of runnable) {
-        await invoke(
+        const failure = await run(
+          invoke,
           TaskOperation.UpdateTask,
-          { task: Ref.make(task), assignee: { role: 'assistant' as const }, status: 'todo' as const },
-          { spaceId: db.spaceId },
+          {
+            task: Ref.make(task),
+            assignee: { role: 'assistant' as const },
+            status: 'todo' as const,
+          },
+          db.spaceId,
         );
+        if (failure) {
+          return failure;
+        }
       }
 
       return {
@@ -94,6 +104,20 @@ export const TaskSlashCommands: SlashCommand[] = [
     },
   },
 ];
+
+/**
+ * `invokePromise` reports a handler failure in its result rather than by rejecting, so an
+ * unexamined call reads as success and the command would claim an effect it never had.
+ */
+const run = async <I, O>(
+  invoke: OperationInvoke,
+  operation: Operation.Definition<I, O>,
+  input: I,
+  spaceId: SpaceId | undefined,
+): Promise<Error | undefined> => {
+  const { error } = await invoke(operation, input as never, { spaceId });
+  return error;
+};
 
 /** Resolves selectors against the conversation's task set, in the order the user named them. */
 const resolveTasks = (args: string, db: Database.Database, chat: Chat.Chat) => {

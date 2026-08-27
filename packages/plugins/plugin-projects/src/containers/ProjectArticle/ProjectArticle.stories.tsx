@@ -53,12 +53,7 @@ let seeded:
   | { generation: number; space: Space; project: Project.Project; taskSet: TaskSet.TaskSet; task: Task.Task }
   | undefined;
 
-/**
- * The project as the create-object capability leaves it, then filled with the graph a used project
- * has: an owned Instructions document, checklist content on the outline, one referenced artifact,
- * tasks in the owned set, and the repository the project's work lands in. Seeded at client init so
- * EVERY story shows a populated project, including the one with no play function.
- */
+/** Seeded at client init so every story starts populated, including the ones with no play function. */
 const createProject = (space: Space, storyGeneration: number) => {
   const project = space.db.add(Project.make({ name: PROJECT_NAME }));
   const taskSet = project.taskSet?.target;
