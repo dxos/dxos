@@ -14,8 +14,11 @@ export const key = 'org.dxos.skill.pluginManager';
  * Read-only: the skill may inspect the host but never change it. Enabling a plugin reshapes the
  * user's workspace, so it is offered as a `plugin-prompt` surface the user clicks instead of a tool
  * the agent can call.
+ *
+ * `QueryDisabledPlugins` is deliberately absent: it reaches the agent as a template input, so
+ * projecting it as a tool as well would offer a call the instructions go on to prohibit.
  */
-export const operations = [RegistryOperation.QueryPlugins, RegistryOperation.QueryDisabledPlugins];
+export const operations = [RegistryOperation.QueryPlugins];
 
 /** The Plugin Manager skill: discover installed plugins and offer the disabled ones to the user. */
 export const make = (): Skill.Skill =>
