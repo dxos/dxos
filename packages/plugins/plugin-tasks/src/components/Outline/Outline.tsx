@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { EditorSelection } from '@codemirror/state';
+import { EditorSelection, type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
@@ -100,6 +100,8 @@ type OutlineContextValue = {
   onConvertToTask?: (text: string) => Promise<OutlineLink | undefined>;
   onSelectLink?: (url: string) => void;
   resolveLinkLabel?: (url: string) => string | undefined;
+  /** Editor extensions contributed by the host (e.g. a plugin's reference decoration). */
+  extensions?: Extension[];
   /** Mutable ref populated by Content so Root can expose the view via the controller. */
   viewRef: RefObject<EditorView | null | undefined>;
 };
@@ -130,6 +132,11 @@ type OutlineRootProps = PropsWithChildren<
     onSelectLink?: (url: string) => void;
     /** Current label of a link's target; the document text is reconciled against it. */
     resolveLinkLabel?: (url: string) => string | undefined;
+    /**
+     * Editor extensions the host contributes. The outline owns its own core (outliner, markdown,
+     * links); a host adds what only it knows about — e.g. plugin-github decorating `#123`.
+     */
+    extensions?: Extension[];
   } & Pick<UseTextEditorProps, 'autoFocus'>
 >;
 
@@ -147,6 +154,7 @@ const OutlineRoot = forwardRef<OutlineController, OutlineRootProps>(
       onConvertibleChange,
       onSelectLink,
       resolveLinkLabel,
+      extensions,
     },
     forwardedRef,
   ) => {
@@ -178,6 +186,7 @@ const OutlineRoot = forwardRef<OutlineController, OutlineRootProps>(
         onConvertToTask={onConvertToTask}
         onSelectLink={onSelectLink}
         resolveLinkLabel={resolveLinkLabel}
+        extensions={extensions}
         viewRef={viewRef}
       >
         {children}
@@ -208,6 +217,7 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, f
     onConvertToTask,
     onSelectLink,
     resolveLinkLabel,
+    extensions,
     viewRef,
   } = useOutlineContext(OUTLINE_CONTENT_NAME);
   const { t } = useTranslation(meta.profile.key);
@@ -247,9 +257,11 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, f
           },
         }),
         hashtag(),
+        // Last, so a host's decoration sees the document the outline's own extensions produced.
+        extensions ?? [],
       ],
     }),
-    [id, text, autoFocus, themeMode, readonly],
+    [id, text, autoFocus, themeMode, readonly, extensions],
   );
 
   // Publish view to Root so the controller can access it.

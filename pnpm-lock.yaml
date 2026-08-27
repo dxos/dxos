@@ -7629,6 +7629,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
+      '@dxos/plugin-registry':
+        specifier: workspace:*
+        version: link:../plugin-registry
       '@dxos/plugin-routine':
         specifier: workspace:*
         version: link:../plugin-routine
@@ -7638,6 +7641,9 @@ importers:
       '@dxos/plugin-status-bar':
         specifier: workspace:*
         version: link:../plugin-status-bar
+      '@dxos/plugin-tasks':
+        specifier: workspace:*
+        version: link:../plugin-tasks
       '@dxos/plugin-transcription':
         specifier: workspace:*
         version: link:../plugin-transcription
@@ -8738,6 +8744,9 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -10721,6 +10730,15 @@ importers:
 
   packages/plugins/plugin-github:
     dependencies:
+      '@codemirror/language':
+        specifier: 'catalog:'
+        version: 6.12.4
+      '@codemirror/state':
+        specifier: 'catalog:'
+        version: 6.7.1
+      '@codemirror/view':
+        specifier: 'catalog:'
+        version: 6.43.9
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -10748,6 +10766,9 @@ importers:
       '@dxos/plugin-connector':
         specifier: workspace:*
         version: link:../plugin-connector
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../plugin-markdown
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
@@ -10773,6 +10794,9 @@ importers:
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
+      '@dxos/ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/ui-editor
 
   packages/plugins/plugin-google:
     dependencies:
@@ -13577,6 +13601,9 @@ importers:
 
   packages/plugins/plugin-projects:
     dependencies:
+      '@codemirror/state':
+        specifier: 'catalog:'
+        version: 6.7.1
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai
@@ -13655,6 +13682,9 @@ importers:
       '@dxos/react-ui-search':
         specifier: workspace:*
         version: link:../../ui/react-ui-search
+      '@dxos/react-ui-tabs':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-tabs
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -13680,12 +13710,18 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
+      '@dxos/plugin-github':
+        specifier: workspace:*
+        version: link:../plugin-github
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-attention
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -16124,6 +16160,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/plugin-github':
+        specifier: workspace:*
+        version: link:../plugin-github
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
@@ -22696,6 +22735,12 @@ importers:
 
   packages/ui/react-ui-task:
     dependencies:
+      '@atlaskit/pragmatic-drag-and-drop':
+        specifier: 'catalog:'
+        version: 1.7.7
+      '@atlaskit/pragmatic-drag-and-drop-hitbox':
+        specifier: 'catalog:'
+        version: 1.1.0
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
@@ -22705,6 +22750,9 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../react-ui-list
+      '@dxos/react-ui-markdown':
+        specifier: workspace:*
+        version: link:../react-ui-markdown
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -22714,6 +22762,9 @@ importers:
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../ui-types
+      '@radix-ui/react-compose-refs':
+        specifier: 'catalog:'
+        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.17)(react@19.2.7)

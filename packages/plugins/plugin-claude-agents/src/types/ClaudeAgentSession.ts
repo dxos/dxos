@@ -28,6 +28,11 @@ export class ClaudeAgentSession extends Type.makeObject<ClaudeAgentSession>(
     ),
     environmentId: Schema.String.annotate({ title: 'Environment id' }),
     /**
+     * Vault (`vlt_…`) holding the credentials bound to this run. Recorded because `vault_ids` is
+     * fixed at session creation: editing a live session's credentials means editing this vault.
+     */
+    vaultId: Schema.optional(Schema.String.annotate({ title: 'Vault id' })),
+    /**
      * Last observed session status, as reported by the API (`running`, `idle`, `terminated`, …).
      * Held as a plain string so a status added server-side does not fail decoding.
      */

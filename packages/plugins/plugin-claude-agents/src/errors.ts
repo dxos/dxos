@@ -32,3 +32,24 @@ export class MissingCredentialError extends BaseError.extend(
   'MissingCredentialError',
   'No Anthropic API credential is connected in this space.',
 ) {}
+
+/**
+ * The session predates per-session vaults (or was created elsewhere), so there is nowhere to bind a
+ * credential: `vault_ids` is fixed at session creation and cannot be added to a live session.
+ */
+export class SessionVaultMissingError extends BaseError.extend(
+  'SessionVaultMissingError',
+  'Session has no credential vault; start a new session to attach credentials.',
+) {}
+
+/** The named credential is not bound to the session, so there is nothing to rotate or revoke. */
+export class CredentialNotBoundError extends BaseError.extend(
+  'CredentialNotBoundError',
+  'No credential with that name is bound to the session.',
+) {}
+
+/** A referenced AccessToken is gone, or its server-custodied value could not be exchanged. */
+export class CredentialResolutionError extends BaseError.extend(
+  'CredentialResolutionError',
+  'Referenced credential could not be resolved.',
+) {}

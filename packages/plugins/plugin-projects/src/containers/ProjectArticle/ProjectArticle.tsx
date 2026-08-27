@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type Extension } from '@codemirror/state';
 import * as Schema from 'effect/Schema';
-import React, { memo, useCallback, useMemo } from 'react';
+import React, { memo, useCallback, useMemo, useState } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -15,12 +16,14 @@ import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { SchemaAST } from '@dxos/effect';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Flex, Icon, Panel, useTranslation } from '@dxos/react-ui';
+import { Flex, Icon, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { Tabs } from '@dxos/react-ui-tabs';
 import { type Milestone } from '@dxos/types';
 
 import { ObjectCard } from '#components';
@@ -39,6 +42,9 @@ const CONTEXT_FIELDS: readonly string[] = ['objects'];
 
 export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>;
 
+/** Overview is everything the project owns; Tasks gives the ledger the whole panel. */
+type Tab = 'overview' | 'tasks';
+
 /**
  * Article surface for a {@link Project}: one form-styled body (header fields, the owned instructions
  * sub-form, the task-set section, and a card gallery of the project's artifacts). `Form.Viewport`
@@ -46,6 +52,7 @@ export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>
  */
 export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const [tab, setTab] = useState<Tab>('overview');
   const { invokePromise } = useOperationInvoker();
   const actions = useToolbarActions(subject, () => void handleAddArtifact());
   const [project, updateProject] = useObject(subject);
@@ -68,6 +75,24 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   const defaultValues = useMemo<Partial<HeaderValues>>(
     () => ({ name: project.name, description: project.description }),
     [subject],
+  );
+
+  // A promoted item's link points at a task this project owns, and the project shows its tasks on
+  // their own tab — so follow the link there rather than letting the outline swap itself for a
+  // task form inside the Overview.
+  const handleSelectTask = useCallback(() => setTab('tasks'), []);
+
+  // Editor extensions other plugins contribute (e.g. plugin-github's `#123` decoration). The
+  // outline builds its own editor, so the host collects them and hands them down — the same
+  // contract `MarkdownArticle` honours for markdown documents.
+  const extensionProviders = useCapabilities(MarkdownCapabilities.ExtensionProvider);
+  const outlineExtensions = useMemo(
+    () =>
+      (extensionProviders ?? [])
+        .flat()
+        .map((provider) => (typeof provider === 'function' ? provider({}) : provider))
+        .filter((extension): extension is Extension => !!extension),
+    [extensionProviders],
   );
 
   const handleOpen = useCallback(
@@ -130,61 +155,90 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
 
   return (
     <Menu.Root {...actions} attendableId={attendableId}>
-      <Panel.Root role={role}>
-        <Panel.Toolbar>
-          <Menu.Toolbar classNames='dx-document'>
-            <Menu.Items />
-          </Menu.Toolbar>
-        </Panel.Toolbar>
-        <Panel.Content>
-          <Form.Root schema={HeaderValues} defaultValues={defaultValues} onValuesChanged={handleValuesChanged}>
-            <Form.Viewport scroll>
-              <Form.Content>
-                <Form.FieldSet />
+      <Tabs.Root asChild orientation='horizontal' value={tab} onValueChange={(value) => setTab(value as Tab)}>
+        <Panel.Root role={role}>
+          <Panel.Toolbar>
+            <Menu.Toolbar classNames='dx-document'>
+              <Tabs.Tablist classNames='w-auto p-0'>
+                <Tabs.Button value='overview' data-testid='projectsPlugin.tab.overview'>
+                  {t('overview.label')}
+                </Tabs.Button>
+                <Tabs.Button value='tasks' data-testid='projectsPlugin.tab.tasks'>
+                  {t('tasks.label')}
+                </Tabs.Button>
+              </Tabs.Tablist>
+              <Toolbar.Separator />
+              <Menu.Items />
+            </Menu.Toolbar>
+          </Panel.Toolbar>
+          {/* A column: the tasks tab's list scrolls while its create row stays on screen, which a
+              plain block would push past the panel's bottom edge. */}
+          <Panel.Content classNames='flex flex-col min-h-0'>
+            {/* Rendered by hand rather than through `Tabs.Panel`: Radix mounts its content
+                hidden for a frame, and the artifact gallery's masonry measures zero there and
+                never recovers. The tablist still owns the switching. */}
+            {tab === 'overview' && (
+              <Form.Root schema={HeaderValues} defaultValues={defaultValues} onValuesChanged={handleValuesChanged}>
+                <Form.Viewport scroll>
+                  <Form.Content>
+                    <Form.FieldSet />
 
-                {instructions && <InstructionsEditor db={db} instructions={instructions} />}
+                    {instructions && <InstructionsEditor db={db} instructions={instructions} />}
 
-                {/* Standing context (inputs bound into every project session) — deliberately a
+                    {/* Standing context (inputs bound into every project session) — deliberately a
                     separate labeled section from Artifacts (outputs the project owns). */}
-                {instructions && (
-                  <Form.Section title={t('context.label')}>
-                    <InstructionsEditor db={db} instructions={instructions} fields={CONTEXT_FIELDS} />
-                  </Form.Section>
-                )}
+                    {instructions && (
+                      <Form.Section title={t('context.label')}>
+                        <InstructionsEditor db={db} instructions={instructions} fields={CONTEXT_FIELDS} />
+                      </Form.Section>
+                    )}
 
-                {/* Above Tasks: the outline is where work is drafted, the task set where it lands.
+                    {/* Above Tasks: the outline is where work is drafted, the task set where it lands.
                     `taskSet` rides along so promoting an item files it into THIS project's ledger
                     rather than into a set owned by the outline. */}
-                {outline && (
-                  <Form.Section title={t('outline.label')}>
-                    <Surface.Surface
-                      type={AppSurface.Section}
-                      data={{ subject: outline, attendableId, taskSet }}
-                      limit={1}
-                    />
-                  </Form.Section>
-                )}
+                    {outline && (
+                      <Form.Section title={t('outline.label')}>
+                        <Surface.Surface
+                          type={AppSurface.Section}
+                          data={{
+                            subject: outline,
+                            attendableId,
+                            taskSet,
+                            onSelectTask: handleSelectTask,
+                            extensions: outlineExtensions,
+                          }}
+                          limit={1}
+                        />
+                      </Form.Section>
+                    )}
 
-                {taskSet && (
-                  <Form.Section title={t('tasks.label')}>
-                    <Surface.Surface type={AppSurface.Section} data={{ subject: taskSet, attendableId }} limit={1} />
-                  </Form.Section>
-                )}
+                    {milestoneRefs.length > 0 && (
+                      <Form.Section title={t('milestones.label')}>
+                        <MilestoneList refs={milestoneRefs} />
+                      </Form.Section>
+                    )}
 
-                {milestoneRefs.length > 0 && (
-                  <Form.Section title={t('milestones.label')}>
-                    <MilestoneList refs={milestoneRefs} />
-                  </Form.Section>
-                )}
+                    <Form.Section title={t('artifacts.label')}>
+                      <ObjectGallery refs={project.artifacts} onOpen={handleOpen} onDelete={handleDeleteArtifact} />
+                    </Form.Section>
+                  </Form.Content>
+                </Form.Viewport>
+              </Form.Root>
+            )}
 
-                <Form.Section title={t('artifacts.label')}>
-                  <ObjectGallery refs={project.artifacts} onOpen={handleOpen} onDelete={handleDeleteArtifact} />
-                </Form.Section>
-              </Form.Content>
-            </Form.Viewport>
-          </Form.Root>
-        </Panel.Content>
-      </Panel.Root>
+            {/* The ledger gets the whole panel here, so the list scrolls on its own rather than
+                inside the form's viewport. */}
+            {tab === 'tasks' &&
+              (taskSet ? (
+                <Surface.Surface type={AppSurface.Section} data={{ subject: taskSet, attendableId }} limit={1} />
+              ) : (
+                <Flex justify='center' classNames='p-4 text-subdued'>
+                  {t('no-task-set.message')}
+                </Flex>
+              ))}
+          </Panel.Content>
+        </Panel.Root>
+      </Tabs.Root>
     </Menu.Root>
   );
 };
