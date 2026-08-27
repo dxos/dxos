@@ -9,6 +9,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiModelResolver, AiService, OpaqueToolkit } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
+import { S3_BACKEND, createS3BlobBackend } from '@dxos/blob-s3';
 import { FunctionError, InvalidOperationInputError, InvalidOperationOutputError } from '@dxos/compute';
 import * as Credential from '@dxos/compute/Credential';
 import * as Header from '@dxos/compute/Header';
@@ -25,7 +26,12 @@ import { log } from '@dxos/log';
 import { EdgeFunctionEnv, ErrorCodec, type FunctionProtocol, type TraceProtocol } from '@dxos/protocols';
 
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
-import { accessTokenResolverFromService, configuredCredentialsLayer, credentialsLayerFromDatabase } from './services';
+import {
+  accessTokenResolverFromService,
+  configuredCredentialsLayer,
+  createS3Host,
+  credentialsLayerFromDatabase,
+} from './services';
 
 /**
  * Services provided to invoked function handlers in the EDGE runtime.
@@ -191,6 +197,18 @@ class FunctionContext extends Resource {
 
     await this.db?.setSpaceRoot(this.context.spaceRootUrl ?? failedInvariant('spaceRootUrl missing in context'));
     await this.db?.open();
+
+    // Register the S3 backend so a handler running here can write to a bucket the space is
+    // connected to. Without it this host has inline storage only (4 MiB), and an upload would land
+    // there silently rather than in the configured bucket. Nothing Cloudflare-specific is needed —
+    // it is an outbound fetch to the customer's own endpoint — so this works on edge unchanged.
+    if (this.client && this.db) {
+      const db = this.db;
+      this.client.graph.registerBlobBackend(
+        S3_BACKEND,
+        createS3BlobBackend(createS3Host({ getDatabase: (spaceId) => (spaceId === db.spaceId ? db : undefined) })),
+      );
+    }
   }
 
   override async _close() {

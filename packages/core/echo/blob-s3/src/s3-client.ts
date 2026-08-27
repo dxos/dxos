@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { PRESIGN_EXPIRY_SECONDS, S3_TIMEOUT_MS } from '../constants';
+import { PRESIGN_EXPIRY_SECONDS, S3_TIMEOUT_MS } from './constants';
 import { type S3Uri, regionFromHost, toHttpsUrl } from './s3-uri';
 import { type SigningCredentials, presignUrl, signRequest, toArrayBufferView } from './sigv4';
 

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { DEFAULT_REGION, S3_SCHEME } from '../constants';
+import { DEFAULT_REGION, S3_SCHEME } from './constants';
 
 /**
  * A stored blob's address: `s3://<host>/<key>`, where `host` is the virtual-hosted-style bucket

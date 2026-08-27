@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { DEFAULT_REGION } from '../constants';
+import { DEFAULT_REGION } from './constants';
 import { formatUri, objectKey, parseUri, regionFromHost, toHttpsUrl } from './s3-uri';
 
 describe('s3 uri', () => {
