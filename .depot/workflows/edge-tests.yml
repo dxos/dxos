@@ -25,7 +25,7 @@ concurrency:
 # https://nx.dev/ci/intro/tutorials/github-actions
 jobs:
   edge-test:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3

@@ -7,7 +7,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
-import { type Chat, SlashCommands } from '@dxos/assistant-toolkit';
+import { type Chat } from '@dxos/assistant-toolkit';
 import { type Event } from '@dxos/async';
 import * as Project from '@dxos/compute/Project';
 import { type Database, Obj } from '@dxos/echo';
@@ -28,6 +28,7 @@ import { useChatKeymapExtensions, usePlatform } from '#hooks';
 import { meta } from '#meta';
 import { AssistantPreset } from '#types';
 
+import { TaskSlashCommands } from '../../commands';
 import { type AiChatProcessor } from '../../processor';
 import { type ChatEvent } from '../Chat';
 import { ChatActions, type ChatActionsProps } from './ChatActions';
@@ -104,7 +105,7 @@ export const ChatPrompt = ({
       commands({
         getCommands: () => [
           ...commandsRef.current.map(({ sentinel, description }) => ({ sentinel, description })),
-          ...SlashCommands.map(({ command, description }) => ({ sentinel: command, description })),
+          ...TaskSlashCommands.map(({ command, description }) => ({ sentinel: command, description })),
         ],
       }),
     [commandsRef],

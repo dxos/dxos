@@ -250,6 +250,7 @@
     "@dxos/plugin-routine": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",
+    "@dxos/plugin-tasks": "workspace:*",
     "@dxos/plugin-transcription": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-list": "workspace:*",

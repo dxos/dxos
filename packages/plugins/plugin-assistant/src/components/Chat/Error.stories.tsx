@@ -75,7 +75,7 @@ type Story = StoryObj<typeof meta>;
 export const QuotaExceeded: Story = {
   args: {
     rawError:
-      'HttpResponseError: StatusCode: An HTTP response error occurred. (429 POST https://edge.dxos.workers.dev/ai/v1/messages)\nResponse Body: {"error":{"message":"You have exceeded your usage quota."}}',
+      'HttpResponseError: StatusCode: An HTTP response error occurred. (429 POST https://dev.dxos.network/ai/v1/messages)\nResponse Body: {"error":{"message":"You have exceeded your usage quota."}}',
   },
 };
 
