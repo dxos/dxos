@@ -119,8 +119,9 @@ export default defineConfig({
       // Page-action descriptor icons are contributed by Composer plugins at
       // runtime; those sources are never imported by the extension bundle, so
       // they are scanned eagerly by convention (capabilities/page-action*.ts).
-      // The `px` catalog is scanned for the same reason — it is sprite-only, with no runtime
-      // `IconSource` to fetch a glyph the scanner missed (see `@dxos/ui-icons`).
+      // The `px` catalog is scanned for the same reason. It is sprite-only here by choice: the
+      // extension serves no asset routes, so `@dxos/react-ui`'s runtime fallback has nothing to
+      // fetch and every glyph has to be in the sprite (see `@dxos/ui-icons`).
       scanPaths: [
         path.join(rootDir, '/packages/plugins/*/src/capabilities/page-action*.ts'),
         path.join(rootDir, '/packages/ui/ui-icons/src/index.ts'),

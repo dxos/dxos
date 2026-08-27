@@ -654,12 +654,17 @@ export default defineConfig((env) => ({
         path.join(rootDir, '/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
         path.join(rootDir, '/{packages,tools}/**/dx.config.{ts,tsx,js,jsx}'),
       ],
-      // The `px` set is sprite-only (no runtime `IconSource`), so its catalog is scanned eagerly
+      // Keeps every `PxIcons` entry in the sprite so the app paints without a round trip; the
+      // runtime resolver below is the fallback for a name the scanner never saw. Scanned eagerly
       // rather than relying on a host importing each glyph — see `@dxos/ui-icons`.
       scanPaths: [path.join(rootDir, '/packages/ui/ui-icons/src/index.ts')],
-      // Serves /phosphor/ for the runtime icon resolver in @dxos/react-ui; assets are copied
-      // into the build output and cached at runtime by sw.ts (excluded from the precache).
-      assets: [{ route: '/phosphor', dir: phosphorIconsCore }],
+      // Serves /phosphor/ and /px-icons/ for the runtime icon resolver in @dxos/react-ui; assets are
+      // copied into the build output and cached at runtime by sw.ts (phosphor is excluded from the
+      // precache — see globIgnores above; the `px` catalog is small enough not to need excluding).
+      assets: [
+        { route: '/phosphor', dir: phosphorIconsCore },
+        { route: '/px-icons', dir: extendedIcons },
+      ],
       // verbose: true,
     }),
 

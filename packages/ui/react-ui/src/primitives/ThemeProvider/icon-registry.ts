@@ -33,7 +33,15 @@ export const phosphorIconSource = (route = '/phosphor'): IconSource => ({
   url: (name, variant) => `${route}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
 });
 
-export const defaultSources: IconSource[] = [phosphorIconSource()];
+/**
+ * `@dxos/ui-icons`' layout: a flat `{name}.svg`, since the set is drawn at the `regular` weight only.
+ */
+export const extendedIconSource = (route = '/px-icons'): IconSource => ({
+  iconSet: 'px',
+  url: (name) => `${route}/${name}.svg`,
+});
+
+export const defaultSources: IconSource[] = [phosphorIconSource(), extendedIconSource()];
 
 export type IconRegistry = {
   hasIcon(name: string): boolean;

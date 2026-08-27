@@ -97,16 +97,23 @@ rejects `px--*--bold` and friends.
 `@dxos/vite-plugin-icons` scans host sources for `px--*--regular` literals and compiles the matching
 `assets/*.svg` into `public/icons.svg`, which `<Icon>` renders via `<use href='#px--…--regular'>`.
 
-Two consequences worth knowing:
+Two layers, so a glyph does not depend on the scanner having seen it:
 
-- **A name the scanner never sees renders blank.** `@dxos/react-ui`'s icon registry can fetch a
-  missing `ph` glyph at runtime from `/phosphor`, but no such route is configured for `px`, so this
-  set is sprite-only. Hosts therefore list `src/index.ts` in `scanPaths`, which puts every entry of
-  `PxIcons` in the sprite whether or not anything imports it.
-- **A name with no SVG behind it renders blank, in dev and in production alike.** The plugin drops
-  unresolvable symbols and names them in a warning rather than failing, so keep `PxIcons` and
-  `assets/` in step — a production build will not stop you shipping a blank icon.
+- **The sprite is the fast path.** Hosts list `src/index.ts` in `scanPaths`, so every entry of
+  `PxIcons` is compiled in whether or not anything imports it — no round trip, and it works offline.
+- **The `/px-icons/` route is the fallback.** `@dxos/react-ui`'s registry resolves a `px` symbol it
+  does not find in the sprite by fetching `{route}/{name}.svg` (`extendedIconSource`), then ingesting
+  it as a symbol with `fill="currentColor"` — the same normalization the sprite build applies. So an
+  asset that exists but is not in `PxIcons` still renders.
 
-Hosts wiring the set: [composer-app](../../apps/composer-app/vite.config.ts),
-[composer-crx](../../apps/composer-crx/vite.config.ts),
-[storybook-react](../../../tools/storybook-react/.storybook/main.ts).
+A name with **no SVG at all** renders blank, in dev and in production alike: the plugin drops
+unresolvable symbols and names them in a warning rather than failing, so keep `PxIcons` and `assets/`
+in step — a production build will not stop you shipping a blank icon.
+
+Hosts wiring the set:
+
+| Host | Sprite | `/px-icons/` fallback |
+| --- | --- | --- |
+| [composer-app](../../apps/composer-app/vite.config.ts) | yes | yes (cached by `sw.ts` for offline) |
+| [storybook-react](../../../tools/storybook-react/.storybook/main.ts) | yes | yes |
+| [composer-crx](../../apps/composer-crx/vite.config.ts) | yes | no — the extension serves no asset routes, so every glyph must be in the sprite |

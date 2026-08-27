@@ -104,15 +104,18 @@ cleanupOutdatedCaches();
 // resolves the route client-side.
 registerRoute(new NavigationRoute(createHandlerBoundToURL('/index.html')));
 
-// Cache-first for the on-demand Phosphor catalog served under /phosphor/ (see
-// phosphorAssetsPlugin in vite.config.ts). The catalog is ~9,000 immutable SVGs — far too
+// Cache-first for the on-demand icon catalogs served under /phosphor/ and /px-icons/ (see the
+// `assets` option in vite.config.ts). Phosphor is ~9,000 immutable SVGs — far too
 // many to precache without an install-time request per file — so each icon is cached on
 // first fetch, making every icon the app has actually rendered available offline. The
 // entry bound is far above any plausible per-install icon footprint; no age bound since
-// the assets are immutable.
+// the assets are immutable. `/px-icons/` is handled the same way for uniformity, though its
+// glyphs are normally in the sprite already and reach this path only when unregistered.
 registerRoute(
   ({ url, request }) =>
-    request.method === 'GET' && url.origin === self.location.origin && url.pathname.startsWith('/phosphor/'),
+    request.method === 'GET' &&
+    url.origin === self.location.origin &&
+    (url.pathname.startsWith('/phosphor/') || url.pathname.startsWith('/px-icons/')),
   new CacheFirst({
     cacheName: 'dxos-phosphor-icons-v1',
     plugins: [new ExpirationPlugin({ maxEntries: 2000 })],

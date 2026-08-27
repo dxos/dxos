@@ -488,9 +488,13 @@ export const createConfig = ({
               }
             },
             contentPaths: content,
-            // The `px` set is sprite-only (no runtime `IconSource`), so its catalog is scanned
-            // eagerly rather than relying on a story importing each glyph — see `@dxos/ui-icons`.
+            // Keeps every `PxIcons` entry in the sprite rather than relying on a story to reference
+            // each glyph, so stories paint without a round trip — see `@dxos/ui-icons`.
             scanPaths: [resolve(rootDir, 'packages/ui/ui-icons/src/index.ts')],
+            // Serves the catalogs the runtime resolver in `@dxos/react-ui` falls back to. Only `px`
+            // is served: the Phosphor catalog is ~9,000 files, and a story referencing a `ph` glyph
+            // the scanner did not see is a story bug rather than something to paper over here.
+            assets: [{ route: '/px-icons', dir: extendedIconsDir }],
             spriteFile: 'icons.svg',
           }),
 
