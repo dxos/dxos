@@ -318,6 +318,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Post or remove boot graph comment
+        continue-on-error: true
         uses: actions/github-script@v7
         env:
           STATUS: ${{ needs.boot-budget.outputs.status }}
