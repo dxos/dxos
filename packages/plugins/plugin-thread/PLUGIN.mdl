@@ -18,7 +18,8 @@ The following extension dialects are used in this document.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`        |
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
-| `op`        | `org.dxos.mdl.op@1.0`          |
+| `op`        | `org.dxos.mdl.op@1.1`          |
+| `flow`      | `org.dxos.mdl.flow@1.0`        |
 
 ## Types
 

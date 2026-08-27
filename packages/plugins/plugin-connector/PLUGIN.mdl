@@ -24,7 +24,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
-| `op`        | `org.dxos.mdl.op@1.0`         |
+| `op`        | `org.dxos.mdl.op@1.1`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
 
 ## Types
 
@@ -202,13 +203,18 @@ component CustomTokenDialog
 
 ```mdl
 op CreateIntegration
+  key: org.dxos.operation.connector.createConnection
   desc: Creates a new Integration bound to an existing AccessToken.
   input:
     accessToken: Ref<AccessToken>
     name?: string
   output: Integration
   effects: [echo:write]
-  note: Derives the target Database from the accessToken ref's object graph.
+  note: |
+    Derives the target Database from the accessToken ref's object graph. The runtime operation
+    and its Effect types are named `Connection` (`@dxos/link`), while this document's types and
+    coordinator flow still say `Integration` — the key is real, the class-name drift is not this
+    change's to fix.
 ```
 
 ```mdl

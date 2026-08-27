@@ -214,6 +214,7 @@ service PublisherService
 
 ```mdl
 op AddPublication
+  key: org.dxos.operation.blogger.addPublication
   desc: >
     Creates a new Publication (with an empty instructions document and no
     posts) and files it under `target`.
@@ -226,6 +227,7 @@ op AddPublication
 
 ```mdl
 op AddPost
+  key: org.dxos.operation.blogger.addPost
   desc: >
     Creates a new Post (an outline plus a single empty body document, status =
     draft) and appends it to `publication.posts`, also filing it under
@@ -240,6 +242,7 @@ op AddPost
 
 ```mdl
 op SyncPosts
+  key: org.dxos.operation.blogger.syncPosts
   desc: >
     Bidirectionally reconciles a Publication's posts with an external publisher,
     keyed by the remote id stored as a foreign key on each post's meta (source =

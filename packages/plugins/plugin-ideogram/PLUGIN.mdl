@@ -29,6 +29,7 @@ credentials — the Connector + `CredentialsService` are the seam.
 | `type` | `org.dxos.mdl.type@1.0` |
 | `feat` | `org.dxos.mdl.feat@1.0` |
 | `test` | `org.dxos.mdl.test@1.0` |
+| `flow` | `org.dxos.mdl.flow@1.0` |
 
 ## Connector
 
