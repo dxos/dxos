@@ -10,7 +10,7 @@ import { NumericTabs, TogglePanel, type TogglePanelRootProps } from '@dxos/react
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type ContentBlock } from '@dxos/types';
 import { type XmlWidgetProps, getXmlTextChild } from '@dxos/ui-editor';
-import { isNonNullable, safeParseJson } from '@dxos/util';
+import { safeParseJson } from '@dxos/util';
 
 import { translationKey } from '../translations';
 
@@ -31,66 +31,77 @@ export const ToolWidget = ({ view, children }: ToolWidgetProps) => {
   const items = useMemo<ToolPanelProps['items']>(() => {
     let lastToolCall: { tool: Tool.Any | undefined; block: ContentBlock.ToolCall } | undefined;
     const tools: Tool.Any[] = [];
-    return blocks
-      .filter((block) => block._tag === 'toolCall' || block._tag === 'toolResult' || block._tag === 'stats')
-      .map((block) => {
-        switch (block._tag) {
-          case 'toolCall': {
-            if (block.pending && lastToolCall?.block.toolCallId === block.toolCallId) {
-              return null;
-            }
+    const items: ToolPanelItem[] = [];
+    // Index of the panel for each call, so a streamed pending call is replaced by its completed
+    // form rather than shown twice.
+    const indexByToolCallId = new Map<string, number>();
 
-            const tool = tools.find((tool) => tool.name === block.name);
-            lastToolCall = { tool, block };
-            return {
-              title: tool?.description ?? [t('tool-call.label'), block.name].filter(Boolean).join(' '),
-              icon: block.operationIcon,
-              content: {
-                ...block,
-                input: safeParseJson(block.input),
-              },
-            };
-          }
-
-          case 'toolResult': {
-            // TODO(burdon): Parse error type.
-            if (block.error) {
-              return {
-                title: t('tool-error.label'),
-                icon: lastToolCall?.block.operationIcon,
-                content: block,
-              };
-            }
-
-            const title =
-              lastToolCall?.tool?.description ??
-              [t('tool-result.label'), lastToolCall?.block.name].filter(Boolean).join(' ');
-            const icon = lastToolCall?.block.operationIcon;
-            lastToolCall = undefined;
-            return {
-              title,
-              icon,
-              content: {
-                ...block,
-                result: typeof block.result === 'string' ? safeParseJson(block.result) : block.result,
-              },
-            };
-          }
-
-          case 'stats': {
-            if (!lastToolCall) {
-              return null;
-            }
-
-            return {
-              title: t('stats.label'),
-              icon: lastToolCall.block.operationIcon,
-              content: block,
-            };
-          }
+    const push = (id: string | undefined, item: ToolPanelItem) => {
+      const existing = id !== undefined ? indexByToolCallId.get(id) : undefined;
+      if (existing !== undefined) {
+        items[existing] = item;
+      } else {
+        if (id !== undefined) {
+          indexByToolCallId.set(id, items.length);
         }
-      })
-      .filter(isNonNullable);
+        items.push(item);
+      }
+    };
+
+    for (const block of blocks) {
+      switch (block._tag) {
+        case 'toolCall': {
+          const tool = tools.find((tool) => tool.name === block.name);
+          lastToolCall = { tool, block };
+          push(block.toolCallId, {
+            title: tool?.description ?? [t('tool-call.label'), block.name].filter(Boolean).join(' '),
+            icon: block.operationIcon,
+            // Show the call's params rather than the block's transport metadata.
+            content: safeParseJson(block.input) ?? (block.input || {}),
+          });
+          break;
+        }
+
+        case 'toolResult': {
+          // TODO(burdon): Parse error type.
+          if (block.error) {
+            push(undefined, {
+              title: t('tool-error.label'),
+              icon: lastToolCall?.block.operationIcon,
+              content: block.error,
+            });
+            break;
+          }
+
+          const title =
+            lastToolCall?.tool?.description ??
+            [t('tool-result.label'), lastToolCall?.block.name].filter(Boolean).join(' ');
+          const icon = lastToolCall?.block.operationIcon;
+          lastToolCall = undefined;
+          push(undefined, {
+            title,
+            icon,
+            content: typeof block.result === 'string' ? (safeParseJson(block.result) ?? block.result) : block.result,
+          });
+          break;
+        }
+
+        case 'stats': {
+          if (!lastToolCall) {
+            break;
+          }
+
+          push(undefined, {
+            title: t('stats.label'),
+            icon: lastToolCall.block.operationIcon,
+            content: block,
+          });
+          break;
+        }
+      }
+    }
+
+    return items;
   }, [blocks, t]);
 
   const handleChangeOpen = useCallback(() => {

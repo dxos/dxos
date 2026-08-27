@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInlineAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
-import { Outline, TaskSet } from '@dxos/types';
+import { Outline, Repo, TaskSet } from '@dxos/types';
 
 import * as Instructions from './Instructions';
 import * as Routine from './Routine';
@@ -25,7 +25,7 @@ export type ProjectStatus = Schema.Schema.Type<typeof ProjectStatus>;
  * Fields are the refs the project owns and orders; everything that merely accumulates around it is
  * a query — chats by the ECHO parent edge, agents via chats.
  */
-export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.project', '0.5.0'))(
+export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.project', '0.6.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
     description: Schema.optional(Schema.String),
@@ -47,6 +47,13 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
 
     /** Owned (or adopted synced) task container, holding the project's tasks and milestones. */
     taskSet: Schema.optional(Ref.Ref(TaskSet.TaskSet)),
+
+    /**
+     * Source repository this project's work lands in. Independent of `taskSet`: a project that
+     * mirrors a repository adopts its synced task set AND names it here, while a project whose
+     * tasks are local can still reference the repository its issues are filed against.
+     */
+    repo: Schema.optional(Ref.Ref(Repo.Repo).annotate({ title: 'Repository' })),
   }).pipe(
     Schema.annotate({ title: 'Project' }),
     LabelAnnotation.set(['name']),
