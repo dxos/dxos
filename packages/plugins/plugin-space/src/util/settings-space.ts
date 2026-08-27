@@ -2,16 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
+import * as Queue from 'effect/Queue';
+import * as Schema from 'effect/Schema';
 
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Client } from '@dxos/client';
-import { type Space, SpaceState } from '@dxos/client/echo';
+import { type Space, SpaceProperties, SpaceState } from '@dxos/client/echo';
+import { Annotation, Filter, Obj, Query } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { mergeSpacesOrder } from '../migrations/settings-space';
+import { isSpacesOrder, mergeSpacesOrder } from '../migrations/settings-space';
 
 /**
  * Resolve the settings space, creating one only for legacy profiles that predate it.
@@ -26,7 +30,7 @@ import { mergeSpacesOrder } from '../migrations/settings-space';
  * immutable and outlives the migration, and spaces replicate to a device in creation order, so on
  * a freshly joined or recovered device the legacy space lands before the settings space and this
  * creates a duplicate. Absence is unprovable in an eventually-consistent system, so rather than
- * guard the create, {@link healDuplicateSettingsSpaces} converges the profile back to one.
+ * guard the create, {@link runSettingsSpaceHealing} converges the profile back to one.
  */
 export const resolveSettingsSpace = Effect.fnUntraced(function* (client: Client) {
   // The space list replays on subscribe, so the current state is checked with no gap in which an
@@ -73,46 +77,119 @@ export const ensureSettingsSpace = Effect.fnUntraced(function* (client: Client) 
 });
 
 /**
- * Converge duplicate settings spaces onto the canonical one.
+ * Converge duplicate settings spaces for the life of the session.
  *
  * The duplicate-creation race left profiles carrying several tagged spaces, one per device boot
- * that concluded "legacy profile" before the real settings space replicated in. Every device
- * resolves the same canonical space ({@link AppSpace.getSettingsSpace} orders candidates by id),
- * folds each duplicate's cross-space ordering into it, and tombstones the duplicate; the deletion
- * replicates through the HALO, so the profile converges to one settings space everywhere.
+ * that concluded "legacy profile" before the real settings space replicated in; each pass folds
+ * every duplicate into the survivor and tombstones it, and the deletion replicates through the
+ * HALO so the profile converges everywhere.
  *
- * Runs only once the canonical space is ready and carries the default-space designation — an
- * undesignated winner may still be the stand-in for an unopened rival — and consumes only
- * duplicates that are themselves ready, since an unopened duplicate cannot be salvaged; later
- * passes pick those up as they open.
+ * Passes are driven by a sliding(1) queue fed by the space-list subscription — subscribed before
+ * the first pass and held for the loop's lifetime — so a change landing mid-pass (a duplicate
+ * opening, the survivor arriving, the pass's own deletions) is consumed by the next pass rather
+ * than lost to a re-subscribe window. Never returns; the caller interrupts the fiber on teardown.
+ */
+export const runSettingsSpaceHealing = Effect.fnUntraced(function* (client: Client) {
+  const wake = yield* Queue.sliding<void>(1);
+  const sub = client.spaces.subscribe(() => void Queue.offerUnsafe(wake, undefined));
+  return yield* Effect.gen(function* () {
+    while (true) {
+      yield* Queue.take(wake);
+      yield* healDuplicateSettingsSpaces(client).pipe(
+        catchNonInterrupt('settings space healing pass failed', () => ({})),
+      );
+    }
+  }).pipe(Effect.ensuring(Effect.sync(() => sub.unsubscribe())));
+});
+
+/**
+ * One healing pass: salvage every ready duplicate's content into the survivor, then tombstone it.
+ *
+ * The survivor is the lowest-id tagged space in view — a pure function of monotone replicated
+ * state: the global minimum is minimal in every view that contains it, so no device can ever
+ * tombstone it and exactly one space outlives healing everywhere. Readiness and designation must
+ * not influence the choice: both are device-local and time-varying, and two devices disagreeing
+ * mid-sync would tombstone each other's pick, leaving none.
  */
 export const healDuplicateSettingsSpaces = Effect.fnUntraced(function* (client: Client) {
-  const canonical = AppSpace.getSettingsSpace(client);
-  if (
-    !canonical ||
-    canonical.state.get() !== SpaceState.SPACE_READY ||
-    AppSpace.getDefaultSpaceId(canonical) === undefined
-  ) {
+  const [survivor, ...duplicates] = AppSpace.getSettingsSpaces(client);
+  // Salvage writes into the survivor, so nothing can be removed until it is readable.
+  if (!survivor || duplicates.length === 0 || survivor.state.get() !== SpaceState.SPACE_READY) {
     return;
   }
 
-  const duplicates = client.spaces
-    .get()
-    .filter(
-      (space) =>
-        AppSpace.isSettingsSpace(space) && space.id !== canonical.id && space.state.get() === SpaceState.SPACE_READY,
-    );
   for (const duplicate of duplicates) {
+    // An unopened duplicate cannot be salvaged; a later pass picks it up as it opens.
+    if (duplicate.state.get() !== SpaceState.SPACE_READY) {
+      continue;
+    }
+
     // A failure on one duplicate (e.g. it is closing) must not strand the rest; it stays tagged
     // and a later pass retries it.
     yield* Effect.gen(function* () {
-      yield* mergeSpacesOrder(canonical, duplicate);
+      const salvaged = yield* salvageSettingsContent(survivor, duplicate);
+      if (!salvaged) {
+        log.warn('keeping duplicate settings space: content could not be salvaged', {
+          duplicate: duplicate.id,
+          survivor: survivor.id,
+        });
+        return;
+      }
+
+      // The tombstone persists immediately while `delete()` flushes only the duplicate's own db,
+      // so the salvaged content must be durable first — after the delete the source is gone.
+      yield* Effect.promise(() => survivor.db.flush());
       yield* Effect.promise(() => duplicate.delete());
-      log.info('removed duplicate settings space', { duplicate: duplicate.id, canonical: canonical.id });
-    }).pipe(
-      Effect.catchCause((cause) =>
-        Effect.sync(() => log.warn('failed to remove duplicate settings space', { duplicate: duplicate.id, cause })),
-      ),
-    );
+      log.info('removed duplicate settings space', { duplicate: duplicate.id, survivor: survivor.id });
+    }).pipe(catchNonInterrupt('failed to remove duplicate settings space', () => ({ duplicate: duplicate.id })));
   }
 });
+
+/**
+ * Copy everything a duplicate settings space holds into the survivor: every properties annotation
+ * the survivor lacks (the survivor wins conflicts) and the cross-space ordering.
+ *
+ * @returns Whether the duplicate is now fully carried by the survivor and safe to delete. False
+ * when it holds content this pass does not know how to salvage — deletion is irreversible, so
+ * unknown content keeps the duplicate alive rather than being silently destroyed.
+ */
+const salvageSettingsContent = Effect.fnUntraced(function* (survivor: Space, duplicate: Space) {
+  const objects = yield* Effect.promise(() => duplicate.db.query(Query.select(Filter.everything())).run());
+  const unknown = objects.filter((object) => !Obj.instanceOf(SpaceProperties, object) && !isSpacesOrder(object));
+  if (unknown.length > 0) {
+    return false;
+  }
+
+  // Snapshot detaches the values from the duplicate's document so they can be assigned into the
+  // survivor's. Copied by raw key rather than per known annotation, so configuration written by
+  // any plugin — including annotations this code has never heard of — survives the healing;
+  // the values were validated when they were written on the duplicate.
+  const duplicateAnnotations = Obj.getMeta(Obj.getSnapshot(duplicate.properties)).annotations;
+  Obj.update(survivor.properties, (properties) => {
+    const annotations = Obj.getMeta(properties).annotations;
+    for (const [rawKey, value] of Object.entries(duplicateAnnotations)) {
+      // `Object.entries` erases the key brand; decoding restores it without a cast.
+      const key = Schema.decodeSync(Annotation.Key)(rawKey);
+      if (!(key in annotations)) {
+        annotations[key] = value;
+      }
+    }
+  });
+
+  return yield* mergeSpacesOrder(survivor, duplicate);
+});
+
+/**
+ * Log a failure and continue, but let interruption through: `catchCause` also traps interrupts,
+ * and swallowing them here would resist fiber teardown and log spurious failures on shutdown.
+ */
+const catchNonInterrupt =
+  (message: string, context: () => Record<string, unknown>) =>
+  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A | void, E, R> =>
+    effect.pipe(
+      Effect.catchCause((cause) =>
+        Cause.hasInterruptsOnly(cause)
+          ? Effect.failCause(cause)
+          : Effect.sync(() => log.warn(message, { ...context(), cause })),
+      ),
+    );

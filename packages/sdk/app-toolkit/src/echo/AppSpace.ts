@@ -48,18 +48,28 @@ export const isExemplarSpace = (space: Space): boolean => hasTag(space, EXEMPLAR
 export const isSettingsSpace = (space: Space): boolean => hasTag(space, SETTINGS_SPACE_TAG);
 
 /**
- * Find the settings space.
+ * All settings-tagged spaces, ordered by id.
  *
- * Profiles that hit the duplicate-creation race carry several tagged spaces; the one holding the
- * default-space designation is canonical. Candidates are ordered by id rather than list order so
- * every device resolves the same canonical space and duplicate healing converges instead of
- * devices tombstoning each other's pick.
+ * Code-unit comparison, never locale collation: duplicate healing deletes every space but the
+ * lowest-id one, so the order must be byte-identical on every device or two devices tombstone
+ * each other's pick.
  */
-export const getSettingsSpace = (client: { spaces: { get(): Space[] } }): Space | undefined => {
-  const tagged = client.spaces
+export const getSettingsSpaces = (client: { spaces: { get(): Space[] } }): Space[] =>
+  client.spaces
     .get()
     .filter((space) => isSettingsSpace(space))
-    .sort((a, b) => a.id.localeCompare(b.id));
+    .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+
+/**
+ * Find the settings space to read app configuration from.
+ *
+ * Profiles that hit the duplicate-creation race carry several tagged spaces; for reading, the one
+ * holding the default-space designation is preferred while healing converges. This is a device-local
+ * heuristic (readiness and designation visibility vary mid-sync) — deletion decisions must instead
+ * use the {@link getSettingsSpaces} order, which is a pure function of replicated state.
+ */
+export const getSettingsSpace = (client: { spaces: { get(): Space[] } }): Space | undefined => {
+  const tagged = getSettingsSpaces(client);
   if (tagged.length <= 1) {
     return tagged[0];
   }

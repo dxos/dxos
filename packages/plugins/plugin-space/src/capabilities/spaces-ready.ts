@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
@@ -31,7 +32,7 @@ import { ComplexMap, reduceGroupBy } from '@dxos/util';
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
 import { migrateToSettingsSpace } from '../migrations/settings-space';
-import { healDuplicateSettingsSpaces, resolveSettingsSpace } from '../util/settings-space';
+import { resolveSettingsSpace, runSettingsSpaceHealing } from '../util/settings-space';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const WAIT_FOR_OBJECT_TIMEOUT = 5_000;
@@ -46,13 +47,20 @@ const isEchoRef = (id: string) => id.startsWith('echo:/');
  * is already published to the space list, and a legacy space is only readable once it opens, which
  * can be after the settings space resolves. Migration is idempotent, so retrying on each change is
  * what recovers the ordering that would otherwise be lost.
+ *
+ * The settings space is re-resolved on every pass rather than pinned: healing — this device's or
+ * another's — can tombstone the space a previous pass used, and a destroyed proxy throws on
+ * property access.
  */
-const resolveDefaultSpace = Effect.fnUntraced(function* (client: Client, settingsSpace: Space) {
+const resolveDefaultSpace = Effect.fnUntraced(function* (client: Client) {
   while (true) {
-    yield* migrateToSettingsSpace({ settingsSpace, legacySpace: AppSpace.resolveLegacyDefaultSpace(client) });
-    const defaultSpace = AppSpace.getDefaultSpace(client);
-    if (defaultSpace) {
-      return defaultSpace;
+    const settingsSpace = AppSpace.getSettingsSpace(client);
+    if (settingsSpace?.state.get() === SpaceState.SPACE_READY) {
+      yield* migrateToSettingsSpace({ settingsSpace, legacySpace: AppSpace.resolveLegacyDefaultSpace(client) });
+      const defaultSpace = AppSpace.getDefaultSpace(client);
+      if (defaultSpace) {
+        return defaultSpace;
+      }
     }
 
     yield* awaitChange(client, settingsSpace);
@@ -62,9 +70,10 @@ const resolveDefaultSpace = Effect.fnUntraced(function* (client: Client, setting
 /**
  * The next space-list change or settings-space property write, the two events that can supply a
  * default space. The space list replays on subscribe, which would resolve this before anything has
- * changed, so the replay is skipped.
+ * changed, so the replay is skipped. Properties are only subscribable on a ready space; when it is
+ * absent or unready, the transition that changes that arrives through the space list instead.
  */
-const awaitChange = (client: Client, settingsSpace: Space): Effect.Effect<void> =>
+const awaitChange = (client: Client, settingsSpace: Space | undefined): Effect.Effect<void> =>
   Effect.callback<void>((resume) => {
     let replayed = false;
     const spacesSub = client.spaces.subscribe(() => {
@@ -73,28 +82,14 @@ const awaitChange = (client: Client, settingsSpace: Space): Effect.Effect<void> 
       }
       replayed = true;
     });
-    const unsubscribe = Obj.subscribe(settingsSpace.properties, () => resume(Effect.void));
+    const unsubscribe =
+      settingsSpace?.state.get() === SpaceState.SPACE_READY
+        ? Obj.subscribe(settingsSpace.properties, () => resume(Effect.void))
+        : undefined;
     return Effect.sync(() => {
       spacesSub.unsubscribe();
-      unsubscribe();
+      unsubscribe?.();
     });
-  });
-
-/**
- * The next space-list change (spaces added, removed, or changing state), replay skipped as in
- * {@link awaitChange}. The healing loop cannot reuse `awaitChange`: its property subscription is
- * anchored to one space object, which healing may itself tombstone.
- */
-const awaitSpacesUpdate = (client: Client): Effect.Effect<void> =>
-  Effect.callback<void>((resume) => {
-    let replayed = false;
-    const spacesSub = client.spaces.subscribe(() => {
-      if (replayed) {
-        resume(Effect.void);
-      }
-      replayed = true;
-    });
-    return Effect.sync(() => spacesSub.unsubscribe());
   });
 
 export default Capability.makeModule(
@@ -116,25 +111,45 @@ export default Capability.makeModule(
     // Settings space bootstrap — one-shot, deferred until there is something to bootstrap from.
     //
 
-    // Interrupted in cleanup so it cannot touch the db after client.destroy() closes the repo.
+    // Interrupted in cleanup so they cannot touch the db after client.destroy() closes the repo.
     let initFiber: Fiber.Fiber<void, unknown> | undefined;
 
     const initSettingsSpace = Effect.gen(function* () {
-      const settingsSpace = yield* resolveSettingsSpace(client);
-      const defaultSpace = yield* resolveDefaultSpace(client, settingsSpace);
+      yield* resolveSettingsSpace(client);
+      const defaultSpace = yield* resolveDefaultSpace(client);
 
       // Only relevant on a cold boot with no workspace in the deck state.
       if (registry.get(layoutAtom).workspace === 'default') {
         yield* invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(defaultSpace.id) });
       }
+    });
 
-      // Duplicates surface whenever a space opens or replicates in, so healing re-runs on every
-      // list change for the life of the session (the fiber is interrupted in cleanup).
+    // Concurrent healing can tombstone a space a pass is mid-write on; the raced state is gone, so
+    // rerunning converges. Interruption passes through so cleanup still stops the fiber.
+    const initSettingsSpaceSupervised = Effect.gen(function* () {
       while (true) {
-        yield* healDuplicateSettingsSpaces(client);
-        yield* awaitSpacesUpdate(client);
+        const done = yield* initSettingsSpace.pipe(
+          Effect.as(true),
+          Effect.catchCause((cause) =>
+            Cause.hasInterruptsOnly(cause)
+              ? Effect.failCause(cause)
+              : Effect.sync(() => {
+                  log.warn('settings space bootstrap failed, retrying', { cause });
+                  return false;
+                }),
+          ),
+        );
+        if (done) {
+          return;
+        }
+        yield* Effect.sleep('1 second');
       }
     });
+
+    // Converges duplicate settings spaces; self-gated (no-ops without tagged spaces), so it does
+    // not wait on the bootstrap — welding it to that fiber's fate would silently disable healing
+    // whenever bootstrap stalls or dies.
+    const healFiber = Effect.runFork(runSettingsSpaceHealing(client));
 
     // Deferred until a space exists to bootstrap from, so a client with no identity does not get a
     // settings space created for it. `subscribe` replays, so this covers the initial pass too.
@@ -142,7 +157,7 @@ export default Capability.makeModule(
       if (initFiber || client.spaces.get().length === 0) {
         return;
       }
-      initFiber = Effect.runFork(initSettingsSpace);
+      initFiber = Effect.runFork(initSettingsSpaceSupervised);
     });
     subscriptions.add(() => spacesSub.unsubscribe());
 
@@ -383,6 +398,7 @@ export default Capability.makeModule(
 
     yield* Effect.addFinalizer(() =>
       Effect.gen(function* () {
+        yield* Fiber.interrupt(healFiber);
         if (initFiber) {
           yield* Fiber.interrupt(initFiber);
         }

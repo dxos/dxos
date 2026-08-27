@@ -51,13 +51,21 @@ describe('space visibility', () => {
 });
 
 describe('settings space resolution', () => {
-  test('duplicates resolve deterministically by id, not list order', ({ expect }) => {
-    // Neither duplicate is ready, so neither can prove canonical; the id order decides, the same
-    // way on every device, so healing converges on one winner.
+  test('tagged spaces order by id, not list order', ({ expect }) => {
+    // Healing deletes everything but the first entry, so the order must be identical on every
+    // device regardless of how the local list happens to be arranged.
     const second = makeClosedSpace('B00000000000000000000000000000002', [AppSpace.SETTINGS_SPACE_TAG]);
     const first = makeClosedSpace('B00000000000000000000000000000001', [AppSpace.SETTINGS_SPACE_TAG]);
+    expect(AppSpace.getSettingsSpaces({ spaces: { get: () => [second, first] } }).map((space) => space.id)).toEqual([
+      first.id,
+      second.id,
+    ]);
+    expect(AppSpace.getSettingsSpaces({ spaces: { get: () => [first, second] } }).map((space) => space.id)).toEqual([
+      first.id,
+      second.id,
+    ]);
+    // With no readable designation the read-side resolution falls back to the same order.
     expect(AppSpace.getSettingsSpace({ spaces: { get: () => [second, first] } })?.id).toBe(first.id);
-    expect(AppSpace.getSettingsSpace({ spaces: { get: () => [first, second] } })?.id).toBe(first.id);
   });
 });
 

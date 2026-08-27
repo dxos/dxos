@@ -15,7 +15,7 @@ import { Expando } from '@dxos/schema';
 import { SpaceSchema } from '#types';
 
 import { migrateToSettingsSpace, readSpacesOrder } from '../migrations/settings-space';
-import { healDuplicateSettingsSpaces, resolveSettingsSpace } from './settings-space';
+import { healDuplicateSettingsSpaces, resolveSettingsSpace, runSettingsSpaceHealing } from './settings-space';
 
 describe('resolveSettingsSpace', () => {
   it.effect('waits out identity genesis instead of racing it into a duplicate', () =>
@@ -65,33 +65,6 @@ describe('resolveSettingsSpace', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('heals duplicate settings spaces onto the canonical one', () =>
-    Effect.gen(function* () {
-      const client = yield* ClientService;
-      yield* Effect.tryPromise(() => client.halo.createIdentity());
-      yield* Effect.tryPromise(() => client.addTypes([Expando.Expando]));
-
-      const canonical = yield* Effect.promise(() => client.spaces.create({}, { tags: [AppSpace.SETTINGS_SPACE_TAG] }));
-      yield* Effect.promise(() => canonical.waitUntilReady());
-      const duplicate = yield* Effect.promise(() => client.spaces.create({}, { tags: [AppSpace.SETTINGS_SPACE_TAG] }));
-      yield* Effect.promise(() => duplicate.waitUntilReady());
-      const defaultSpace = yield* Effect.promise(() => client.spaces.create({ name: AppSpace.DEFAULT_SPACE_NAME }));
-      yield* Effect.promise(() => defaultSpace.waitUntilReady());
-      AppSpace.setDefaultSpaceId(canonical, defaultSpace.id);
-
-      // Ordering that accumulated on the losing copy must survive the healing.
-      duplicate.db.add(Obj.make(Expando.Expando, { key: SpaceSchema.SHARED, order: [defaultSpace.id] }));
-      yield* Effect.promise(() => duplicate.db.flush());
-
-      yield* healDuplicateSettingsSpaces(client);
-      yield* awaitCondition(client, () => client.spaces.get().filter(AppSpace.isSettingsSpace).length === 1);
-
-      expect(AppSpace.getSettingsSpace(client)?.id).toBe(canonical.id);
-      expect(AppSpace.getDefaultSpaceId(canonical)).toBe(defaultSpace.id);
-      expect(yield* readSpacesOrder(canonical)).toEqual([defaultSpace.id]);
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
   it.effect('resolves the annotated settings space on a profile carrying a duplicate', () =>
     Effect.gen(function* () {
       const client = yield* ClientService;
@@ -112,6 +85,111 @@ describe('resolveSettingsSpace', () => {
       expect(AppSpace.getDefaultSpace(client)?.id).toBe(defaultSpace.id);
     }).pipe(Effect.provide(TestLayer)),
   );
+});
+
+describe('settings space healing', () => {
+  it.effect('the lowest-id space survives when both duplicates are designated, keeping its own designation', () =>
+    Effect.gen(function* () {
+      const { client, survivor, loser } = yield* setupDuplicates;
+      const defaultA = yield* createSpace(client, { name: 'A' });
+      const defaultB = yield* createSpace(client, { name: 'B' });
+
+      // The realistic post-race shape: the migration designates every duplicate it resolves.
+      AppSpace.setDefaultSpaceId(survivor, defaultA.id);
+      AppSpace.setDefaultSpaceId(loser, defaultB.id);
+      loser.db.add(Obj.make(Expando.Expando, { key: SpaceSchema.SHARED, order: [defaultB.id] }));
+      yield* Effect.promise(() => loser.db.flush());
+
+      yield* healDuplicateSettingsSpaces(client);
+      yield* awaitCondition(client, () => AppSpace.getSettingsSpaces(client).length === 1);
+
+      expect(AppSpace.getSettingsSpace(client)?.id).toBe(survivor.id);
+      expect(AppSpace.getDefaultSpaceId(survivor)).toBe(defaultA.id);
+      expect(yield* readSpacesOrder(survivor)).toEqual([defaultB.id]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('configuration held only by the duplicate moves to the survivor', () =>
+    Effect.gen(function* () {
+      const { client, survivor, loser } = yield* setupDuplicates;
+      const defaultSpace = yield* createSpace(client, { name: AppSpace.DEFAULT_SPACE_NAME });
+
+      // The previously fatal shape: only the higher-id duplicate is designated, so a
+      // designation-first winner rule would tombstone the undesignated survivor.
+      AppSpace.setDefaultSpaceId(loser, defaultSpace.id);
+      loser.db.add(Obj.make(Expando.Expando, { key: SpaceSchema.SHARED, order: [defaultSpace.id] }));
+      yield* Effect.promise(() => loser.db.flush());
+
+      yield* healDuplicateSettingsSpaces(client);
+      yield* awaitCondition(client, () => AppSpace.getSettingsSpaces(client).length === 1);
+
+      expect(AppSpace.getSettingsSpace(client)?.id).toBe(survivor.id);
+      expect(AppSpace.getDefaultSpaceId(survivor)).toBe(defaultSpace.id);
+      expect(yield* readSpacesOrder(survivor)).toEqual([defaultSpace.id]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('a duplicate holding unrecognized content is kept', () =>
+    Effect.gen(function* () {
+      const { client, loser } = yield* setupDuplicates;
+
+      // Deletion is irreversible, so content the salvage does not understand blocks it.
+      loser.db.add(Obj.make(Expando.Expando, { key: 'unrelated-content' }));
+      yield* Effect.promise(() => loser.db.flush());
+
+      yield* healDuplicateSettingsSpaces(client);
+
+      expect(AppSpace.getSettingsSpaces(client)).toHaveLength(2);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('the healing loop converges duplicates as they appear, keeping their configuration', () =>
+    Effect.gen(function* () {
+      const client = yield* ClientService;
+      yield* Effect.tryPromise(() => client.halo.createIdentity());
+      yield* Effect.tryPromise(() => client.addTypes([Expando.Expando]));
+
+      const healing = yield* Effect.forkChild(runSettingsSpaceHealing(client));
+
+      const defaultSpace = yield* createSpace(client, { name: AppSpace.DEFAULT_SPACE_NAME });
+      // Content lands while this is the only tagged space, so healing cannot race the writes.
+      const first = yield* createSpace(client, {}, { tags: [AppSpace.SETTINGS_SPACE_TAG] });
+      AppSpace.setDefaultSpaceId(first, defaultSpace.id);
+      first.db.add(Obj.make(Expando.Expando, { key: SpaceSchema.SHARED, order: [defaultSpace.id] }));
+      yield* Effect.promise(() => first.db.flush());
+      yield* createSpace(client, {}, { tags: [AppSpace.SETTINGS_SPACE_TAG] });
+
+      yield* awaitCondition(client, () => AppSpace.getSettingsSpaces(client).length === 1);
+
+      // Which copy wins is decided by random ids; the configuration must survive either way.
+      const [surviving] = AppSpace.getSettingsSpaces(client);
+      expect(AppSpace.getDefaultSpaceId(surviving)).toBe(defaultSpace.id);
+      expect(yield* readSpacesOrder(surviving)).toEqual([defaultSpace.id]);
+
+      yield* Fiber.interrupt(healing);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+});
+
+/** Two ready settings-space duplicates, identified by the id order healing uses. */
+const setupDuplicates = Effect.gen(function* () {
+  const client = yield* ClientService;
+  yield* Effect.tryPromise(() => client.halo.createIdentity());
+  yield* Effect.tryPromise(() => client.addTypes([Expando.Expando]));
+  yield* createSpace(client, {}, { tags: [AppSpace.SETTINGS_SPACE_TAG] });
+  yield* createSpace(client, {}, { tags: [AppSpace.SETTINGS_SPACE_TAG] });
+  const [survivor, loser] = AppSpace.getSettingsSpaces(client);
+  return { client, survivor, loser };
+});
+
+const createSpace = Effect.fnUntraced(function* (
+  client: Client,
+  meta: Parameters<Client['spaces']['create']>[0],
+  options?: Parameters<Client['spaces']['create']>[1],
+) {
+  const space = yield* Effect.promise(() => client.spaces.create(meta, options));
+  yield* Effect.promise(() => space.waitUntilReady());
+  return space;
 });
 
 /** The space list replays on subscribe, so the current state is checked before any wait. */
