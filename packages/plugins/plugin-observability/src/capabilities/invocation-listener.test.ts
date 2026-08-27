@@ -67,7 +67,10 @@ const makeCounterWaiter = () =>
 
 /** Runs the listener over an invoker and collects what it sends. */
 const setup = (mappings: ObservabilityMapping.ObservabilityMapping[]) => {
-  const runtime = ManagedRuntime.make(Layer.empty);
+  // ManagedRuntime's requirements parameter is contravariant, so `<never, never>` doesn't bridge to
+  // `AnyManagedRuntime`'s `<any, any>` without `unknown` first — matches the same pattern in
+  // `@dxos/operation`'s `invoker.test.ts`/`scheduler.test.ts`.
+  const runtime = ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntime.ManagedRuntime<any, any>;
   const invoker = OperationInvoker.make(() => Effect.succeed([renameHandler, untrackedHandler]), runtime);
   const sent: MappedEvent[] = [];
   const waiter = makeCounterWaiter();
@@ -127,7 +130,10 @@ describe('invocation listener', () => {
   });
 
   test('a failing send does not escape the listener', async ({ expect }) => {
-    const runtime = ManagedRuntime.make(Layer.empty);
+    // ManagedRuntime's requirements parameter is contravariant, so `<never, never>` doesn't bridge to
+    // `AnyManagedRuntime`'s `<any, any>` without `unknown` first — matches the same pattern in
+    // `@dxos/operation`'s `invoker.test.ts`/`scheduler.test.ts`.
+    const runtime = ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntime.ManagedRuntime<any, any>;
     const invoker = OperationInvoker.make(() => Effect.succeed([renameHandler]), runtime);
     let attempts = 0;
     const waiter = makeCounterWaiter();
@@ -139,7 +145,7 @@ describe('invocation listener', () => {
           Effect.gen(function* () {
             attempts++;
             yield* waiter.checkWaiter(attempts);
-            yield* Effect.fail(new Error('sink down'));
+            return yield* Effect.fail(new Error('sink down'));
           }),
       ),
     );

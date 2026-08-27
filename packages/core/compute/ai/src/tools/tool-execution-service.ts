@@ -19,12 +19,19 @@ export class ToolExecutionService extends Context.Service<
   {
     readonly handlersFor: <Tools extends Record<string, Tool.Any>>(
       toolkit: Toolkit.Toolkit<Tools>,
-    ) => Toolkit.WithHandler<Tools>;
+    ) => Toolkit.HandlersFrom<Tools>;
   }
 >()('@dxos/ai/ToolExecutionService') {
   static layerEmpty = Layer.succeed(ToolExecutionService, {
-    handlersFor: (toolkit) =>
-      toolkit.of(Record.map(toolkit.tools, (tool, name) => Effect.fail(new AiToolNotFoundError(name))) as any) as any,
+    // `toolkit.tools` covers every tool, while `HandlersFrom<Tools>` only requires entries for
+    // tools that need a handler — a filtered mapped type `toolkit.of`'s generic `Tools` can't
+    // verify against a runtime-built record, so the shape is asserted once at its source.
+    handlersFor: <Tools extends Record<string, Tool.Any>>(toolkit: Toolkit.Toolkit<Tools>) =>
+      toolkit.of(
+        Record.map(toolkit.tools, (tool, name) =>
+          Effect.fail(new AiToolNotFoundError(name)),
+        ) as unknown as Toolkit.HandlersFrom<Tools>,
+      ),
   });
 
   static handlersFor = <Tools extends Record<string, Tool.Any>>(toolkit: Toolkit.Toolkit<Tools>) =>
