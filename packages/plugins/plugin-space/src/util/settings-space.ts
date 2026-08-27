@@ -26,11 +26,9 @@ import { isSpacesOrder, mergeSpacesOrder } from '../migrations/settings-space';
  * (which publishes the default space before the settings space) and loses, leaving the profile
  * with a duplicate settings space.
  *
- * A visible legacy space is NOT proof the profile predates the settings space: the legacy tag is
- * immutable and outlives the migration, and spaces replicate to a device in creation order, so on
- * a freshly joined or recovered device the legacy space lands before the settings space and this
- * creates a duplicate. Absence is unprovable in an eventually-consistent system, so rather than
- * guard the create, {@link runSettingsSpaceHealing} converges the profile back to one.
+ * A visible legacy space is not proof the profile predates it (the immutable legacy tag outlives
+ * migration, and replication delivers the legacy space first), so the create can still duplicate;
+ * {@link runSettingsSpaceHealing} converges the profile rather than this guarding harder.
  */
 export const resolveSettingsSpace = Effect.fnUntraced(function* (client: Client) {
   // The space list replays on subscribe, so the current state is checked with no gap in which an
@@ -77,17 +75,10 @@ export const ensureSettingsSpace = Effect.fnUntraced(function* (client: Client) 
 });
 
 /**
- * Converge duplicate settings spaces for the life of the session.
- *
- * The duplicate-creation race left profiles carrying several tagged spaces, one per device boot
- * that concluded "legacy profile" before the real settings space replicated in; each pass folds
- * every duplicate into the survivor and tombstones it, and the deletion replicates through the
- * HALO so the profile converges everywhere.
- *
- * Passes are driven by a sliding(1) queue fed by the space-list subscription — subscribed before
- * the first pass and held for the loop's lifetime — so a change landing mid-pass (a duplicate
- * opening, the survivor arriving, the pass's own deletions) is consumed by the next pass rather
- * than lost to a re-subscribe window. Never returns; the caller interrupts the fiber on teardown.
+ * Converge duplicate settings spaces. Passes are driven by a sliding(1) queue subscribed before
+ * the first pass, so a list change landing mid-pass is consumed by the next pass rather than lost
+ * to a re-subscribe window. Exits once every known space has settled — duplicates only surface
+ * while spaces are opening or replicating in, and one that arrives after that is healed next boot.
  */
 export const runSettingsSpaceHealing = Effect.fnUntraced(function* (client: Client) {
   const wake = yield* Queue.sliding<void>(1);
@@ -95,21 +86,26 @@ export const runSettingsSpaceHealing = Effect.fnUntraced(function* (client: Clie
   return yield* Effect.gen(function* () {
     while (true) {
       yield* Queue.take(wake);
-      yield* healDuplicateSettingsSpaces(client).pipe(
-        catchNonInterrupt('settings space healing pass failed', () => ({})),
-      );
+      yield* healDuplicateSettingsSpaces(client).pipe(catchNonInterrupt('settings space healing pass failed'));
+      const spaces = client.spaces.get();
+      if (spaces.length > 0 && spaces.every((space) => isSettledSpaceState(space.state.get()))) {
+        return;
+      }
     }
   }).pipe(Effect.ensuring(Effect.sync(() => sub.unsubscribe())));
 });
 
+/** States a space rests in, as opposed to the transitional states of a space still opening. */
+const isSettledSpaceState = (state: SpaceState): boolean =>
+  state !== SpaceState.SPACE_CLOSED &&
+  state !== SpaceState.SPACE_INITIALIZING &&
+  state !== SpaceState.SPACE_CONTROL_ONLY;
+
 /**
  * One healing pass: salvage every ready duplicate's content into the survivor, then tombstone it.
- *
- * The survivor is the lowest-id tagged space in view — a pure function of monotone replicated
- * state: the global minimum is minimal in every view that contains it, so no device can ever
- * tombstone it and exactly one space outlives healing everywhere. Readiness and designation must
- * not influence the choice: both are device-local and time-varying, and two devices disagreeing
- * mid-sync would tombstone each other's pick, leaving none.
+ * The survivor is the lowest-id tagged space — a pure function of replicated state, so the global
+ * minimum survives every partial view; device-local readiness and designation must not influence
+ * the pick, or two mid-sync devices would tombstone each other's.
  */
 export const healDuplicateSettingsSpaces = Effect.fnUntraced(function* (client: Client) {
   const [survivor, ...duplicates] = AppSpace.getSettingsSpaces(client);
@@ -160,10 +156,8 @@ const salvageSettingsContent = Effect.fnUntraced(function* (survivor: Space, dup
     return false;
   }
 
-  // Snapshot detaches the values from the duplicate's document so they can be assigned into the
-  // survivor's. Copied by raw key rather than per known annotation, so configuration written by
-  // any plugin — including annotations this code has never heard of — survives the healing;
-  // the values were validated when they were written on the duplicate.
+  // Snapshot detaches the values from the duplicate's document; copied by raw key so annotations
+  // this code has never heard of survive too (values were validated when written on the duplicate).
   const duplicateAnnotations = Obj.getMeta(Obj.getSnapshot(duplicate.properties)).annotations;
   Obj.update(survivor.properties, (properties) => {
     const annotations = Obj.getMeta(properties).annotations;
@@ -183,13 +177,13 @@ const salvageSettingsContent = Effect.fnUntraced(function* (survivor: Space, dup
  * Log a failure and continue, but let interruption through: `catchCause` also traps interrupts,
  * and swallowing them here would resist fiber teardown and log spurious failures on shutdown.
  */
-const catchNonInterrupt =
-  (message: string, context: () => Record<string, unknown>) =>
+export const catchNonInterrupt =
+  (message: string, context?: () => Record<string, unknown>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A | void, E, R> =>
     effect.pipe(
       Effect.catchCause((cause) =>
         Cause.hasInterruptsOnly(cause)
           ? Effect.failCause(cause)
-          : Effect.sync(() => log.warn(message, { ...context(), cause })),
+          : Effect.sync(() => log.warn(message, { ...context?.(), cause })),
       ),
     );

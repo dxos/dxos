@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
@@ -32,7 +31,7 @@ import { ComplexMap, reduceGroupBy } from '@dxos/util';
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
 import { migrateToSettingsSpace } from '../migrations/settings-space';
-import { resolveSettingsSpace, runSettingsSpaceHealing } from '../util/settings-space';
+import { catchNonInterrupt, resolveSettingsSpace, runSettingsSpaceHealing } from '../util/settings-space';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const WAIT_FOR_OBJECT_TIMEOUT = 5_000;
@@ -130,14 +129,7 @@ export default Capability.makeModule(
       while (true) {
         const done = yield* initSettingsSpace.pipe(
           Effect.as(true),
-          Effect.catchCause((cause) =>
-            Cause.hasInterruptsOnly(cause)
-              ? Effect.failCause(cause)
-              : Effect.sync(() => {
-                  log.warn('settings space bootstrap failed, retrying', { cause });
-                  return false;
-                }),
-          ),
+          catchNonInterrupt('settings space bootstrap failed, retrying'),
         );
         if (done) {
           return;
@@ -149,7 +141,9 @@ export default Capability.makeModule(
     // Converges duplicate settings spaces; self-gated (no-ops without tagged spaces), so it does
     // not wait on the bootstrap — welding it to that fiber's fate would silently disable healing
     // whenever bootstrap stalls or dies.
-    const healFiber = Effect.runFork(runSettingsSpaceHealing(client));
+    const healFiber = Effect.runFork(
+      runSettingsSpaceHealing(client).pipe(catchNonInterrupt('settings space healing stopped')),
+    );
 
     // Deferred until a space exists to bootstrap from, so a client with no identity does not get a
     // settings space created for it. `subscribe` replays, so this covers the initial pass too.

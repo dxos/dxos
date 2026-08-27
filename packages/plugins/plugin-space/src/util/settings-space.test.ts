@@ -143,30 +143,29 @@ describe('settings space healing', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('the healing loop converges duplicates as they appear, keeping their configuration', () =>
+  it.effect('the healing loop heals the settled boot snapshot and then exits on its own', () =>
     Effect.gen(function* () {
       const client = yield* ClientService;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
       yield* Effect.tryPromise(() => client.addTypes([Expando.Expando]));
 
-      const healing = yield* Effect.forkChild(runSettingsSpaceHealing(client));
-
+      // The boot shape: the duplicates already exist and settle as they open.
       const defaultSpace = yield* createSpace(client, { name: AppSpace.DEFAULT_SPACE_NAME });
-      // Content lands while this is the only tagged space, so healing cannot race the writes.
       const first = yield* createSpace(client, {}, { tags: [AppSpace.SETTINGS_SPACE_TAG] });
       AppSpace.setDefaultSpaceId(first, defaultSpace.id);
       first.db.add(Obj.make(Expando.Expando, { key: SpaceSchema.SHARED, order: [defaultSpace.id] }));
       yield* Effect.promise(() => first.db.flush());
       yield* createSpace(client, {}, { tags: [AppSpace.SETTINGS_SPACE_TAG] });
 
+      const healing = yield* Effect.forkChild(runSettingsSpaceHealing(client));
+      // Exits without interruption once every known space has settled and the pass has run.
+      yield* Fiber.join(healing);
       yield* awaitCondition(client, () => AppSpace.getSettingsSpaces(client).length === 1);
 
       // Which copy wins is decided by random ids; the configuration must survive either way.
       const [surviving] = AppSpace.getSettingsSpaces(client);
       expect(AppSpace.getDefaultSpaceId(surviving)).toBe(defaultSpace.id);
       expect(yield* readSpacesOrder(surviving)).toEqual([defaultSpace.id]);
-
-      yield* Fiber.interrupt(healing);
     }).pipe(Effect.provide(TestLayer)),
   );
 });
