@@ -17,15 +17,7 @@
 // The `html-to-image` import is dynamic on purpose — pays the ~30 KB only when
 // the user actually clicks "Create GitHub Issue", not on every panel mount.
 
-import { EDGE_SERVICE_DEFAULTS, EdgeServiceName } from '@dxos/config';
 import { log } from '@dxos/log';
-
-/**
- * Default Composer image-service base URL — the Cloudflare Worker that `composer-crx`
- * uses in production. Override per-environment via `runtime.services.edgeServices.image`
- * or the `DX_IMAGE_SERVICE_URL` env var.
- */
-const DEFAULT_IMAGE_SERVICE_URL = EDGE_SERVICE_DEFAULTS[EdgeServiceName.Image];
 
 /** Hard ceiling on the captured PNG — matches the CRM caller's cap. */
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
@@ -144,15 +136,17 @@ export const captureScreenshot = async (target: HTMLElement = document.body): Pr
 
 /**
  * Upload an image blob (PNG or JPEG) to the Composer image service. Returns the resulting public
- * URL on success, or `undefined` on transport / service error so the caller can
- * proceed without an image rather than block the report.
+ * URL on success, or `undefined` when the service is unconfigured or on transport / service error
+ * so the caller can proceed without an image rather than block the report.
  *
  * Service contract: POST multipart/form-data `file=<blob>` → `{ url }`
  */
-export const uploadScreenshot = async (
-  blob: Blob,
-  serviceUrl: string = DEFAULT_IMAGE_SERVICE_URL,
-): Promise<string | undefined> => {
+export const uploadScreenshot = async (blob: Blob, serviceUrl: string | undefined): Promise<string | undefined> => {
+  if (!serviceUrl) {
+    log('image service is not configured (runtime.services.edgeServices: image); skipping screenshot upload');
+    return undefined;
+  }
+
   const form = new FormData();
   // Filename extension matches the blob mime so the worker can pick the right
   // codec; falls back to `.png` for any non-jpeg blob (e.g. legacy callers).

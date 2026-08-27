@@ -5473,9 +5473,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
-      '@dxos/config':
-        specifier: workspace:*
-        version: link:../../../sdk/config
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
@@ -5485,6 +5482,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../../common/errors
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -7578,6 +7578,9 @@ importers:
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/compute/conductor
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../sdk/config
       '@dxos/devtools':
         specifier: workspace:*
         version: link:../../devtools/devtools
@@ -9402,6 +9405,9 @@ importers:
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/extractor':
         specifier: workspace:*
         version: link:../../core/compute/extractor
@@ -9423,6 +9429,9 @@ importers:
       '@dxos/pipeline':
         specifier: workspace:*
         version: link:../../core/compute/pipeline
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../plugin-inbox
@@ -9475,9 +9484,6 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
-      '@dxos/plugin-client':
-        specifier: workspace:*
-        version: link:../plugin-client
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
@@ -16494,6 +16500,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/plugin-calls':
         specifier: workspace:*
         version: link:../plugin-calls
@@ -16712,6 +16721,9 @@ importers:
       '@dxos/compute-runtime':
         specifier: workspace:*
         version: link:../../core/compute/compute-runtime
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../sdk/config
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -16745,9 +16757,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
-      '@dxos/react-edge-client':
+      '@dxos/react-client':
         specifier: workspace:*
-        version: link:../../sdk/react-edge-client
+        version: link:../../sdk/react-client
       '@dxos/react-ui-audio':
         specifier: workspace:*
         version: link:../../ui/react-ui-audio
@@ -16788,9 +16800,6 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-client
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
