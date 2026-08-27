@@ -253,6 +253,7 @@
       "@dxos/plugin-crx",
       "@dxos/plugin-debug",
       "@dxos/plugin-deck",
+      "@dxos/plugin-deepseek",
       "@dxos/plugin-devtools",
       "@dxos/plugin-discord",
       "@dxos/plugin-doctor",

@@ -12,7 +12,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { TaskList, type TaskPatch } from '@dxos/react-ui-task';
+import { TaskList, type TaskPatch, type TaskPlacement } from '@dxos/react-ui-task';
 import { type Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -21,9 +21,9 @@ import { TaskOperation } from '#types';
 export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>;
 
 /**
- * Status-grouped list of every task in a set, in the `tasks` array's canonical order. Milestone
- * grouping and the sub-task tree are deliberately not rendered yet (see TASKS.md) — the flat array
- * holds both, so this is a complete list rather than a partial view. CRUD flows through the
+ * Every task in a set, rendered as the sub-task tree the flat `tasks` array plus `parentTask`
+ * describe, and restructurable by dragging a row or with `Alt`+arrow. Milestone grouping is
+ * deliberately not rendered yet (see TASKS.md). CRUD flows through the
  * {@link TaskOperation} verbs so the article and external agents share one write path: the verbs
  * are what keep the array, the refs and the lifecycle parent edges consistent.
  */
@@ -55,6 +55,22 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
     [invokePromise, spaceId],
   );
 
+  // One verb per gesture: `MoveTask` re-parents and repositions together, so a drop cannot leave the
+  // task hanging at the end of its new parent while a second call lands.
+  const handleMove = useCallback(
+    (task: Task.Task, { parentTask, before }: TaskPlacement) =>
+      void invokePromise(
+        TaskOperation.MoveTask,
+        {
+          task: Ref.make(task),
+          parentTask: parentTask ? Ref.make(parentTask) : null,
+          ...(before ? { before: Ref.make(before) } : {}),
+        },
+        { spaceId },
+      ),
+    [invokePromise, spaceId],
+  );
+
   const [selected, setSelected] = useState<string>();
   const handleSelect = useCallback((task: Task.Task) => setSelected(task.id), []);
 
@@ -62,10 +78,12 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
     <TaskList.Root
       tasks={tasks}
       showDescriptions
+      hierarchical
       statusLabel={statusLabel}
       onTaskCreate={handleCreate}
       onTaskUpdate={handleUpdate}
       onTaskDelete={handleDelete}
+      onTaskMove={handleMove}
       // Selection is local to the list today (it styles the row); opening the task is a separate
       // affordance, so this only makes the row report which task the reader is looking at.
       onTaskSelect={handleSelect}

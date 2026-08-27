@@ -172,6 +172,9 @@ list. Caption the step, perform it, verify it, then caption the next.
 `SendUserFile` with the `.webm` and any stills worth calling out. Say what was driven, which steps
 passed, and what the trim did — a video with no claim attached is not evidence of anything.
 
+`SendUserFile` reaches the human in this conversation and nobody else. When a reviewer on GitHub has to
+see it too, publish it as well — see [[hosting-artifacts]] and §5b.
+
 The trimmer also writes a self-contained `<name>.html` viewer: the video plus a clickable step list
 that seeks. That is for local review — browsers implement neither half of what is muxed into the file
 (no browser has a chapter UI for Matroska, and `<video>` populates `textTracks` only from `<track>`
@@ -179,6 +182,12 @@ elements in the page, never from an in-container WebVTT track), so a page is the
 through steps in a browser. It is **not** a route into a PR.
 
 ## 5b. Attaching a demo to a PR
+
+**Publish the artifact; do not commit it.** [[hosting-artifacts]] puts a `.webm`, a still, or a
+contact sheet in the shared `agent-artifacts` R2 bucket, verifies it over the public URL, and prints the
+link to paste here — one command, no commit, and it works in the cloud sandbox. Prefer it over both of
+the git-based tricks below, which remain documented because the pinned-URL one is still the only way to
+get an image that lives in the repo's own history.
 
 **A still can be embedded; a video cannot.** Use the SHA-pinned hosting technique from
 [[composer-ui]] ("Hosting"): commit the PNG, take
@@ -203,17 +212,22 @@ Pick times just _after_ each chapter start so the frame lands past the transitio
 
 What survives this session's API proxy, measured rather than assumed:
 
-| in a PR body                                      | survives                                           |
-| ------------------------------------------------- | -------------------------------------------------- |
-| `![x](https://raw.githubusercontent.com/…)`       | **yes** — GitHub-hosted absolute URLs keep the `!` |
-| `![x](relative/path.png)`                         | no — the `!` is stripped, leaving a link           |
-| `<video src>`, `<source>`, `<track>`, `<img src>` | no — escaped and wrapped in backticks              |
-| bare URL, `[text](url)`                           | yes, verbatim                                      |
+| in a PR body                                                           | survives                                                                               |
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `![x](https://raw.githubusercontent.com/…)`                            | **yes** — GitHub-hosted absolute URLs keep the `!`                                     |
+| `![x](relative/path.png)`                                              | no — the `!` is stripped, leaving a link                                               |
+| `<video src>`, `<source>`, `<track>`, `<img src>`                      | no — escaped by the proxy, and stripped by GitHub even when written with `--body-file` |
+| `[x](github.com/user-attachments/assets/…)` alone in its own paragraph | a player — but only a human can create that URL; see [[hosting-artifacts]]             |
+| bare URL, `[text](url)`                                                | yes, verbatim                                                                          |
 
-So there is no route to an inline player: `<video>` is escaped, and GitHub's attachment upload (the only
-thing that yields a player) is a web-UI endpoint — `POST /upload/policies/assets` answers `403` here.
-For the video itself, either attach it to the conversation with `SendUserFile` and let a human drag it
-into a comment, or host it outside git (R2/S3, credentials via `.secrets/` per `AGENTS.md`) and link it.
+`<video>` never survives — the proxy escapes it and GitHub's sanitiser strips it besides — and the
+attachment upload that does yield a player is a web-UI endpoint: `POST /upload/policies/assets` needs a
+browser CSRF token and answers `422`/`403` to a PAT. So a player is reachable, but only through a human.
+
+Upload the video per [[hosting-artifacts]] and link it with its **duration and size** in the link text.
+That is the convention — a labelled R2 link for the video, an R2 image embed for the stills. A player
+needs a human drag-and-drop to mint a GitHub attachment; it is deliberately not part of the flow, and the
+measured reasons not to chase it are in [[hosting-artifacts]].
 
 ### Before/after, when the demo is a fix
 

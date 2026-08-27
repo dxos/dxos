@@ -11,11 +11,6 @@ export const DEFAULT_SHELL_CHANNEL = 'dxos:shell';
 /**
  * @deprecated
  */
-export const DEFAULT_VAULT_URL = 'https://halo.dxos.org/vault.html';
-
-/**
- * @deprecated
- */
 // TODO(burdon): Remove need (i.e., make undefined do the right thing).
 export const DEFAULT_PROFILE = 'default';
 

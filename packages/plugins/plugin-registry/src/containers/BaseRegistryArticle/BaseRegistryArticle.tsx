@@ -17,9 +17,10 @@ import { Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-u
 import { composable, composableProps } from '@dxos/react-ui';
 
 import { PluginList, type PluginListProps } from '#components';
-import { getPluginPath, meta } from '#meta';
+import { meta } from '#meta';
 
 import { useDisableConfirmation } from '../../hooks';
+import { getPluginPath } from '../../paths';
 
 const matchesFilter = (plugin: Plugin.Plugin, query: string) => {
   const haystack = `${plugin.meta.profile.name ?? ''} ${plugin.meta.profile.key}`.toLowerCase();

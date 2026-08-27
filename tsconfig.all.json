@@ -415,6 +415,9 @@
       "path": "packages/plugins/plugin-deck/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-deepseek/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-devtools/tsconfig.json"
     },
     {

@@ -160,6 +160,9 @@
       "path": "../../plugins/plugin-deck"
     },
     {
+      "path": "../../plugins/plugin-deepseek"
+    },
+    {
       "path": "../../plugins/plugin-devtools"
     },
     {

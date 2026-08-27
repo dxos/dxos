@@ -97,6 +97,9 @@
       "path": "../../sdk/client"
     },
     {
+      "path": "../../sdk/config"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
@@ -191,6 +194,9 @@
     },
     {
       "path": "../plugin-preview"
+    },
+    {
+      "path": "../plugin-registry"
     },
     {
       "path": "../plugin-routine"

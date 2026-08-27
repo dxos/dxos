@@ -91,8 +91,10 @@ regrouped by status is no longer a tree). Each row carries:
 
 - `depth`, applied as inline-start padding on the title cell only, so the status control and the
   trailing cells stay in their subgrid columns and the rows keep one geometry.
-- a disclosure toggle in the ordinal gutter when the task has children, replacing the ordinal for
-  that row; a leaf keeps its ordinal.
+- a disclosure toggle at the head of the title cell when the task has children (**implemented
+  there, not in the ordinal gutter**: the gutter only exists when `showOrdinals` is set, and
+  hierarchy has to work either way; at the head of the title cell the toggle also indents with the
+  row, which is what makes the depth legible). Ordinals stay flat in their own gutter.
 - `aria-level`, `aria-expanded`, and `aria-setsize`/`aria-posinset`, which is what makes the
   listbox's roving focus legible to a screen reader once rows nest.
 
@@ -150,10 +152,15 @@ drop silently failing:
 - any drop while the row is being edited.
 
 **Keyboard parity is required, not optional.** A tree that can only be restructured by dragging is
-unusable for anyone who does not drag, and the outliner already taught these keys: `Tab` /
-`Shift-Tab` indent and outdent (making the task a child of its previous sibling, or a sibling of its
-parent), `Alt-ArrowUp` / `Alt-ArrowDown` move within the current parent. Reusing them means one
-muscle memory across the outline and the list.
+unusable for anyone who does not drag.
+
+**Implemented as `Alt`+arrow throughout, not the outliner's `Tab` / `Shift-Tab`.** `Alt-ArrowRight`
+/ `Alt-ArrowLeft` indent and outdent (making the task a child of its previous sibling, or the next
+sibling of its parent); `Alt-ArrowUp` / `Alt-ArrowDown` move within the current parent. The outliner
+can claim `Tab` because its row is a text editor with no other use for it; a task row is a listbox
+option, and consuming `Tab` there would remove the only way to move focus out of the list — an
+accessibility regression traded for muscle memory. One modifier family covers all four moves
+instead.
 
 ### The verb gap
 
@@ -174,7 +181,8 @@ Playwright's synthetic dispatch does not produce. So the split is:
 
 - **Unit** — the placement calculation (`(source, target, instruction) → { parentTask, before }`) is a pure
   function tested directly, including every rejected case. This is where the real logic lives, and
-  it is the part a regression would break.
+  it is the part a regression would break. (`hierarchy.ts` / `hierarchy.test.ts`, 18 tests: the
+  walk, the three drop intents, both keyboard moves, and every rejection.)
 - **Story** — a `Hierarchical` story renders a seeded three-level set; play asserts the walk
   (`aria-level`, order, disclosure state) and drives **keyboard** restructuring, which is fully
   synthesizable and exercises the same placement function and the same verb.
@@ -189,3 +197,21 @@ Playwright's synthetic dispatch does not produce. So the split is:
   revisiting if a third tree surface appears; not worth re-expressing this row for two.
 - Multi-select drag.
 - Auto-scroll while dragging near the viewport edge.
+
+### What shipped (2026-08-26)
+
+- **`MoveTask` takes an optional `parentTask`** and performs the re-parent and the reposition in one
+  mutation, rejecting the same cycles and cross-set parents `UpdateTask` does — the validation and
+  the parent-edge write moved to `task-set-membership` so both verbs cannot drift. The parent is
+  resolved before either write, so a rejected drop leaves the order untouched.
+- **`TaskList` gains `hierarchical`, `onTaskMove`, and `collapsed`/`onCollapsedChange`.** The
+  disclosure set holds COLLAPSED ids, not expanded ones: a branch is open by default, and tracking
+  the expanded set would hide a task's first sub-task at the moment adding it made its parent a
+  branch. `useListDisclosure` (multi) owns the controlled/uncontrolled state machine; its
+  trigger/panel ids are unused, because a sub-task is a sibling row in the same grid rather than a
+  region `aria-controls` could point at.
+- **`Listbox.Item` gained `onKeyDown`**, composed ahead of its own Enter/Space activation so a
+  consumer binding can claim the event.
+- **`TaskSetArticle` renders hierarchically** and calls `MoveTask` once per gesture.
+- Not yet done: the manual drag script, and the ProjectArticle Tasks tab inherits the tree through
+  `TaskSetArticle` but has no story of its own asserting it.

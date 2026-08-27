@@ -69,7 +69,7 @@ jobs:
           fi
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
         with:
           # Published artifacts are built from source, never trusted from a cache any CI job can
           # write to — the same reasoning as the isolated pnpm scope below.

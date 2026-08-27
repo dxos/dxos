@@ -2448,6 +2448,9 @@ importers:
       '@dxos/plugin-deck':
         specifier: workspace:*
         version: link:../../plugins/plugin-deck
+      '@dxos/plugin-deepseek':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-deepseek
       '@dxos/plugin-devtools':
         specifier: workspace:*
         version: link:../../plugins/plugin-devtools
@@ -5473,9 +5476,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
-      '@dxos/config':
-        specifier: workspace:*
-        version: link:../../../sdk/config
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
@@ -5485,6 +5485,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../../common/errors
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -7578,6 +7581,9 @@ importers:
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/compute/conductor
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../sdk/config
       '@dxos/devtools':
         specifier: workspace:*
         version: link:../../devtools/devtools
@@ -7632,6 +7638,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
+      '@dxos/plugin-registry':
+        specifier: workspace:*
+        version: link:../plugin-registry
       '@dxos/plugin-routine':
         specifier: workspace:*
         version: link:../plugin-routine
@@ -8744,6 +8753,9 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -9402,6 +9414,9 @@ importers:
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/extractor':
         specifier: workspace:*
         version: link:../../core/compute/extractor
@@ -9423,6 +9438,9 @@ importers:
       '@dxos/pipeline':
         specifier: workspace:*
         version: link:../../core/compute/pipeline
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../plugin-inbox
@@ -9475,9 +9493,6 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
-      '@dxos/plugin-client':
-        specifier: workspace:*
-        version: link:../plugin-client
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
@@ -9892,6 +9907,30 @@ importers:
       vite:
         specifier: '>=8.2.1'
         version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
+
+  packages/plugins/plugin-deepseek:
+    dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
+      '@dxos/plugin-connector':
+        specifier: workspace:*
+        version: link:../plugin-connector
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      effect:
+        specifier: 4.0.0-rc.108
+        version: 4.0.0-rc.108
 
   packages/plugins/plugin-devtools:
     dependencies:
@@ -16509,6 +16548,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/plugin-calls':
         specifier: workspace:*
         version: link:../plugin-calls
@@ -16727,6 +16769,9 @@ importers:
       '@dxos/compute-runtime':
         specifier: workspace:*
         version: link:../../core/compute/compute-runtime
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../sdk/config
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -16760,9 +16805,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
-      '@dxos/react-edge-client':
+      '@dxos/react-client':
         specifier: workspace:*
-        version: link:../../sdk/react-edge-client
+        version: link:../../sdk/react-client
       '@dxos/react-ui-audio':
         specifier: workspace:*
         version: link:../../ui/react-ui-audio
@@ -16803,9 +16848,6 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-client
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -18200,6 +18242,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
@@ -22777,6 +22822,12 @@ importers:
 
   packages/ui/react-ui-task:
     dependencies:
+      '@atlaskit/pragmatic-drag-and-drop':
+        specifier: 'catalog:'
+        version: 1.7.7
+      '@atlaskit/pragmatic-drag-and-drop-hitbox':
+        specifier: 'catalog:'
+        version: 1.1.0
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
@@ -22798,6 +22849,9 @@ importers:
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../ui-types
+      '@radix-ui/react-compose-refs':
+        specifier: 'catalog:'
+        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
