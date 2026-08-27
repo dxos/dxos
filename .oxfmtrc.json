@@ -29,6 +29,7 @@
     "**/tsconfig.json",
     "**/vendor/**",
     ".moon/cache",
+    ".pnpm-store/**",
     "coverage",
     "dist",
     "docs/design/refs/example.yml",

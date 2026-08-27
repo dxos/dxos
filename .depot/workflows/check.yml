@@ -87,10 +87,10 @@ jobs:
 
       - name: Extract branch
         id: extract_branch
-        uses: ./.github/actions/branch
+        uses: ./.depot/actions/branch
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
 
       # ─── Stage 1: gates that need no build ──────────────────────────────────────────────────────
       # Ordered by measured cost, cheapest first, so the common failure lands in seconds instead of
@@ -163,10 +163,10 @@ jobs:
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
         run: moon run :check-module-structure
 
-      # ─── Stage 3: the two slow checks ───────────────────────────────────────────────────────────
-      # ~2m30s and ~1m against ~30 s for all of stage 1, so these run last. Both are
+      # ─── Stage 3: the three slow checks ─────────────────────────────────────────────────────────
+      # ~2m30s, ~1m and ~1m against ~30 s for all of stage 1, so these run last. All three are
       # `continue-on-error` with a gate step below: fail-fast is free when steps are cheap, but here
-      # it would hide one failure behind the other at the cost of a whole further run of the job.
+      # it would hide one failure behind the others at the cost of a whole further run of the job.
       #
       # Unused/undeclared dependencies and unreferenced files. Analyses the source tree — the knip
       # config resolves workspace packages through their `source` export condition — so it needs no
@@ -191,14 +191,24 @@ jobs:
         continue-on-error: true
         run: moon run composer-app:check-plugin-set
 
+      # `starlight-links-validator` runs as the last phase of `astro build`, so bundling the site IS
+      # the link check.
+      - name: Check docs links
+        id: docs
+        continue-on-error: true
+        run: moon run docs:bundle
+
       - name: Report slow-check failures
-        if: ${{ steps.knip.outcome == 'failure' || steps.plugin_set.outcome == 'failure' }}
+        if: ${{ steps.knip.outcome == 'failure' || steps.plugin_set.outcome == 'failure' || steps.docs.outcome == 'failure' }}
         run: |
           if [ "${{ steps.knip.outcome }}" = failure ]; then
             echo '::error::knip failed — see the "Check dependencies" step.'
           fi
           if [ "${{ steps.plugin_set.outcome }}" = failure ]; then
             echo '::error::production plugin set check failed — see the "Check production plugin set" step.'
+          fi
+          if [ "${{ steps.docs.outcome }}" = failure ]; then
+            echo '::error::docs link validation failed — see the "Check docs links" step.'
           fi
           exit 1
 
@@ -232,7 +242,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
 
       - name: Check boot budget
         run: moon run composer-app:check-boot-budget
@@ -269,7 +279,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
 
       # `DX_DEBUG_LEAKS_DIR` keeps the heap snapshots the probe writes out of the workspace. It is
       # set per step, not on the job: `runner` is not among the contexts available to job-level `env`
@@ -344,10 +354,10 @@ jobs:
 
       - name: Extract branch
         id: extract_branch
-        uses: ./.github/actions/branch
+        uses: ./.depot/actions/branch
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
 
       # Unconditional: moon owns cell assignment, so which flavours a shard draws is not known here.
       - name: Install Playwright
@@ -440,15 +450,15 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           persist-credentials: false
 
       - name: Extract branch
         id: extract_branch
-        uses: ./.github/actions/branch
+        uses: ./.depot/actions/branch
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
 
       # `:bundle-e2e`, not a project list and not `:bundle`. Only a project that serves a production
       # bundle to Playwright (`vite preview`) defines `bundle-e2e`, so the glob is already exactly the
@@ -521,10 +531,10 @@ jobs:
 
       - name: Extract branch
         id: extract_branch
-        uses: ./.github/actions/branch
+        uses: ./.depot/actions/branch
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
 
       # Only this cell's browser — the other two engines' downloads are dead weight here.
       - name: Install Playwright
@@ -622,7 +632,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
 
       # `@dxos/cli` ships as prebuilt platform binaries, so its failure modes live in the packed tarball
       # rather than the source tree. Depends on `bundle`, so this compiles the binaries too.
@@ -652,7 +662,7 @@ jobs:
   cli-foreign:
     needs: cli
     if: ${{ !cancelled() && needs.cli.result == 'success' }}
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     timeout-minutes: 10
     steps:
       - name: Download packed CLI
@@ -700,13 +710,13 @@ jobs:
       # step still fails the job.
       - name: Send test report
         if: always()
-        uses: ./.github/actions/test-report
+        uses: ./.depot/actions/test-report
         with:
           name: test-24.11.1
           result: ${{ needs.test.result }}
       - name: Send e2e report
         if: always()
-        uses: ./.github/actions/test-report
+        uses: ./.depot/actions/test-report
         with:
           name: e2e
           result: ${{ needs.e2e.result }}
@@ -719,7 +729,7 @@ jobs:
     if: >-
       github.event_name == 'pull_request' &&
       github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     permissions:
       contents: read
       pull-requests: write

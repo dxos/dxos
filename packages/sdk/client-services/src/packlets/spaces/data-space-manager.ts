@@ -28,6 +28,7 @@ import {
   EdgeAutomergeReplicatorService,
   type MeshEchoReplicator,
   MeshEchoReplicatorService,
+  type SpaceRootRefs,
   findInlineObjectOfType,
 } from '@dxos/echo-host';
 import { type DatabaseDirectory, createIdFromSpaceKey } from '@dxos/echo-protocol';
@@ -73,6 +74,7 @@ import {
   type SpaceProtocol,
   type SpaceProtocolSession,
 } from '../space';
+import { openCredentialsDocument } from './credentials-document-store';
 import { DataSpace } from './data-space';
 import { spaceGenesis } from './genesis';
 
@@ -134,6 +136,9 @@ export type AcceptSpaceOptions = {
   spaceKey: PublicKey;
   genesisFeedKey: PublicKey;
 
+  /** From the admitting `SpaceMember` credential; absent for a space still on its control feed. */
+  spaceRootUrl?: string;
+
   /**
    * Latest known timeframe for the control pipeline.
    * We will try to catch up to this timeframe before starting the data pipeline.
@@ -157,6 +162,9 @@ export type AdmitMemberOptions = {
   profile?: ProfileDocument;
   delegationCredentialId?: PublicKey;
   tags?: string[];
+
+  /** Successor to `genesisFeedKey`: what lets the admitted member replicate from this credential alone. */
+  spaceRootUrl?: string;
 };
 
 export type DataSpaceManagerProps = {
@@ -185,9 +193,22 @@ export type DataSpaceManagerRuntimeProps = {
    * This is used in dedicated worker mode to restore space state after leader changeover.
    */
   autoActivateSpaces?: boolean;
+
+  /**
+   * Anchor spaces on a space root document and mirror credentials into a credentials document.
+   * Off by default — a space then keeps its key-derived id and its control feed, as before.
+   */
+  automergeCredentials?: boolean;
 };
 
 export type CreateSpaceOptions = {
+  /**
+   * Anchor the space on a space root document, taking its id from that document instead of from the
+   * space key. Defaults to the `automergeCredentials` runtime flag, which is off — so a space is
+   * key-derived unless the flag opts in. Ignored for an imported space, which brings its own root.
+   */
+  useSpaceRootDocument?: boolean;
+
   rootUrl?: AutomergeUrl;
   documents?: Record<DocumentId, Uint8Array>;
   tags?: string[];
@@ -199,6 +220,9 @@ export class DataSpaceManager extends Resource {
   public readonly updated = new Event();
 
   private readonly _spaces = new ComplexMap<PublicKey, DataSpace>(PublicKey.hash);
+
+  /** Spaces created legacy in this session; see {@link _anchorSpaceOnRootDocument}. */
+  private readonly _legacyCreatedSpaces = new Set<SpaceId>();
 
   private readonly _spaceManager: SpaceManager;
   private readonly _metadataStore: IMetadataStore;
@@ -213,6 +237,11 @@ export class DataSpaceManager extends Resource {
   private readonly _meshReplicator?: MeshEchoReplicator = undefined;
   private readonly _echoEdgeReplicator?: EdgeAutomergeReplicator = undefined;
   private readonly _runtimeProps?: DataSpaceManagerRuntimeProps = undefined;
+
+  /** Opt-in to the automerge-backed credential scheme; see {@link DataSpaceManagerRuntimeProps}. */
+  private get _automergeCredentials(): boolean {
+    return this._runtimeProps?.automergeCredentials ?? false;
+  }
 
   constructor(params: DataSpaceManagerProps) {
     super();
@@ -338,10 +367,20 @@ export class DataSpaceManager extends Resource {
     const controlFeedKey = await this._keyring.createKey();
     const dataFeedKey = await this._keyring.createKey();
 
-    const spaceId = await createIdFromSpaceKey(spaceKey);
+    // An imported space brings its own root document, so it keeps the key-derived id.
+    const anchorOnRootDocument =
+      (options.useSpaceRootDocument ?? this._automergeCredentials) && !options.rootUrl && !options.documents;
+    const createdSpace = anchorOnRootDocument
+      ? await this._echoHost.createSpaceWithRootDocument(ctx, spaceKey)
+      : undefined;
+    const spaceId = createdSpace?.spaceId ?? (await createIdFromSpaceKey(spaceKey));
+    if (!createdSpace) {
+      this._legacyCreatedSpaces.add(spaceId);
+    }
 
     const metadata: SpaceMetadata = {
       key: spaceKey,
+      spaceId,
       genesisFeedKey: controlFeedKey,
       controlFeedKey,
       dataFeedKey,
@@ -382,7 +421,9 @@ export class DataSpaceManager extends Resource {
     log('opening space...', { spaceKey });
 
     let root: DatabaseRoot;
-    if (options.rootUrl) {
+    if (createdSpace) {
+      root = createdSpace.directory;
+    } else if (options.rootUrl) {
       const newRootDocId = documentIdMapping[interpretAsDocumentId(options.rootUrl)] ?? failedInvariant();
       const rootDocHandle = await this._echoHost.loadDoc<DatabaseDirectory>(ctx, newRootDocId);
       invariant(rootDocHandle, 'Root document must be available after import.');
@@ -408,6 +449,7 @@ export class DataSpaceManager extends Resource {
       root.url,
       tags,
       options.membershipPolicy,
+      createdSpace?.spaceRootUrl,
     );
     await this._metadataStore.addSpace(metadata);
 
@@ -440,6 +482,7 @@ export class DataSpaceManager extends Resource {
     const tags = opts.tags ? Array.from(opts.tags) : [];
     const metadata: SpaceMetadata = {
       key: opts.spaceKey,
+      spaceId: await createIdFromSpaceKey(opts.spaceKey),
       genesisFeedKey: opts.genesisFeedKey,
       controlTimeframe: opts.controlTimeframe,
       dataTimeframe: opts.dataTimeframe,
@@ -457,6 +500,78 @@ export class DataSpaceManager extends Resource {
 
     this.updated.emit();
     return space;
+  }
+
+  /**
+   * Mints a space root over a legacy space, transparently and idempotently, keeping its space id. Never
+   * blocks opening the space: a space without an anchor still works, it just has not migrated yet.
+   */
+  /**
+   * @returns Whether the space needs no further anchoring attempt — either because it is now anchored
+   * or because it never will be. False means the attempt no-oped and the caller should retry, which a
+   * space whose directory is not assigned yet depends on.
+   */
+  private async _anchorSpaceOnRootDocument(ctx: Context, space: DataSpace, force = false): Promise<boolean> {
+    // Migrating a space is the opt-in behaviour, so without the flag a space keeps its control feed
+    // and never grows a root. An explicit `migrateSpaceToRootDocument` call still forces it.
+    if (!force && !this._automergeCredentials) {
+      return true;
+    }
+
+    // A space created legacy stays unanchored for this session, or there would be no way to produce
+    // the pre-migration state the migration path starts from. It anchors on the next load, which is
+    // exactly the migration this project is for.
+    if (!force && this._legacyCreatedSpaces.has(space.id)) {
+      return true;
+    }
+
+    try {
+      if (!this._echoHost.getSpaceRootRefs(space.id)) {
+        const refs = await this._echoHost.migrateSpaceToRootDocument(ctx, space.id);
+        if (!refs) {
+          return false;
+        }
+
+        log('migrated space to root document', { spaceId: space.id, refs });
+      }
+
+      await this._mirrorCredentialsToDocument(ctx, space);
+      return true;
+    } catch (err) {
+      log.warn('failed to anchor space on a root document', { spaceId: space.id, err });
+      return false;
+    }
+  }
+
+  /**
+   * Mirrors the space's credentials into its credentials document. Subscribing to processed
+   * credentials backfills the existing chain and dual-writes new ones through one path, since the
+   * control pipeline replays the whole feed on open.
+   */
+  private async _mirrorCredentialsToDocument(ctx: Context, space: DataSpace): Promise<void> {
+    {
+      const store = await openCredentialsDocument(ctx, this._echoHost, space.id);
+      for (const credential of space.inner.spaceState.credentials) {
+        store.append(credential);
+      }
+
+      ctx.onDispose(space.inner.credentialProcessed.on((credential) => store.append(credential)));
+
+      // Read side: the document feeds the same state machine the feed does. Processing is idempotent
+      // by credential id, so during the migration window both sources can run without conflict — a
+      // space that has flipped simply stops gaining feed credentials.
+      store.subscribe(ctx, (credential) => space.inner.processDocumentCredential(credential));
+    }
+  }
+
+  /**
+   * Migrates a legacy space onto a space root document, keeping its id, and starts mirroring its
+   * credentials into the document. Idempotent.
+   */
+  async migrateSpaceToRootDocument(ctx: Context, spaceKey: PublicKey): Promise<SpaceRootRefs> {
+    const space = this._spaces.get(spaceKey) ?? failedInvariant();
+    await this._anchorSpaceOnRootDocument(ctx, space, true);
+    return this._echoHost.getSpaceRootRefs(space.id) ?? failedInvariant();
   }
 
   /**
@@ -538,18 +653,23 @@ export class DataSpaceManager extends Resource {
       throw new AlreadyJoinedError();
     }
 
+    // Resolved here rather than at each call site: a caller that forgets it emits a credential the
+    // admitted member cannot find the root from.
+    const spaceRootUrl = options.spaceRootUrl ?? this._echoHost.getSpaceRootRefs(space.id)?.spaceRootDocUrl;
+
     // TODO(burdon): Check if already admitted.
-    const credentials: FeedMessage.Payload[] = await createAdmissionCredentials(
-      this.signingContext.credentialSigner,
-      options.identityKey,
-      space.key,
-      space.genesisFeedKey,
-      options.role,
-      space.spaceState.membershipChainHeads,
-      options.profile,
-      options.delegationCredentialId,
-      space.spaceState.tags,
-    );
+    const credentials: FeedMessage.Payload[] = await createAdmissionCredentials({
+      signer: this.signingContext.credentialSigner,
+      identityKey: options.identityKey,
+      spaceKey: space.key,
+      genesisFeedKey: space.genesisFeedKey,
+      role: options.role,
+      membershipChainHeads: space.spaceState.membershipChainHeads,
+      profile: options.profile,
+      invitationCredentialId: options.delegationCredentialId,
+      tags: space.spaceState.tags,
+      spaceRootUrl,
+    });
 
     // TODO(dmaretskyi): Refactor.
     invariant(credentials[0].credential);
@@ -734,6 +854,30 @@ export class DataSpaceManager extends Resource {
       dataSpace.inner.controlPipeline.state.setTargetTimeframe(metadata.controlTimeframe);
     }
 
+    // Anchoring materializes credential state, so it waits for the space to be open: a closed space
+    // must stay unmaterialized or lazy loading is defeated. Every path that opens a space — load and
+    // activate, create, accept — arrives here.
+    // Latch only once the anchor has actually settled: migration no-ops while the space's directory is
+    // unassigned, and latching on the attempt would strand the space unanchored for the whole session.
+    let anchored = false;
+    let anchoring = false;
+    ctx.onDispose(
+      dataSpace.stateUpdate.on(() => {
+        if (anchored || anchoring || !dataSpace.isOpen) {
+          return;
+        }
+
+        anchoring = true;
+        void this._anchorSpaceOnRootDocument(ctx, dataSpace)
+          .then((settled) => {
+            anchored = settled;
+          })
+          .finally(() => {
+            anchoring = false;
+          });
+      }),
+    );
+
     this._spaces.set(metadata.key, dataSpace);
     return dataSpace;
   }
@@ -744,7 +888,7 @@ export class DataSpaceManager extends Resource {
       log.warn('p2p automerge replication disabled', { space: space.key });
       return;
     }
-    await replicator.authorizeDevice(space.key, session.remotePeerId);
+    await replicator.authorizeDevice(space.id, session.remotePeerId);
     // session ended during device authorization
     if (session.isOpen) {
       session.addExtension('dxos.mesh.teleport.automerge', replicator.createExtension());

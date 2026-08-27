@@ -15,6 +15,7 @@ import {
   brokenAutomergeReplicatorFactory,
   testAutomergeReplicatorFactory,
 } from '@dxos/echo-host/testing';
+import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { Ref, getTypeAnnotation } from '@dxos/echo/internal';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN, type EntityId, PublicKey, type URI } from '@dxos/keys';
@@ -363,8 +364,8 @@ describe('Integration tests', () => {
     teleportConnections[0].teleport.addExtension('replicator', replicator1.createExtension());
     teleportConnections[1].teleport.addExtension('replicator', replicator2.createExtension());
 
-    await replicator1.authorizeDevice(spaceKey, teleportPeer2.peerId);
-    await replicator2.authorizeDevice(spaceKey, teleportPeer1.peerId);
+    await replicator1.authorizeDevice(await createIdFromSpaceKey(spaceKey), teleportPeer2.peerId);
+    await replicator2.authorizeDevice(await createIdFromSpaceKey(spaceKey), teleportPeer1.peerId);
 
     // TODO(dmaretskyi): No need to call `peer1.host.replicateDocument`.
 
@@ -404,8 +405,8 @@ describe('Integration tests', () => {
       replicator2.createExtension(testAutomergeReplicatorFactory),
     );
 
-    await replicator1.authorizeDevice(spaceKey, teleportPeer2.peerId);
-    await replicator2.authorizeDevice(spaceKey, teleportPeer1.peerId);
+    await replicator1.authorizeDevice(await createIdFromSpaceKey(spaceKey), teleportPeer2.peerId);
+    await replicator2.authorizeDevice(await createIdFromSpaceKey(spaceKey), teleportPeer1.peerId);
 
     await teleportConnections[0].whenOpen(true);
     await using db1 = await peer1.createDatabase(spaceKey);
