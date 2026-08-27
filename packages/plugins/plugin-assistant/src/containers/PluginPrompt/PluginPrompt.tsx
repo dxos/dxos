@@ -27,6 +27,7 @@ export const PluginPrompt = ({ plugin: pluginId }: PluginPromptProps) => {
   const { invokePromise } = useOperationInvoker();
   const enabled = useAtomValue(manager.enabled);
   const [pending, setPending] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   const plugin = useMemo(
     () => (pluginId ? manager.getPlugins().find(({ meta }) => meta.profile.key === pluginId) : undefined),
@@ -38,8 +39,13 @@ export const PluginPrompt = ({ plugin: pluginId }: PluginPromptProps) => {
       return;
     }
     setPending(true);
+    setFailed(false);
     try {
       await invokePromise(RegistryOperation.EnablePlugins, { ids: [pluginId] });
+    } catch {
+      // `onClick` does not await this, so an escaping rejection would surface only as an unhandled
+      // one and leave the button clickable with no explanation.
+      setFailed(true);
     } finally {
       setPending(false);
     }
@@ -69,6 +75,7 @@ export const PluginPrompt = ({ plugin: pluginId }: PluginPromptProps) => {
           </p>
         </Flex>
       </Flex>
+      {failed && <p className='text-sm text-error-text'>{t('plugin-prompt.failed', { plugin: label })}</p>}
       {plugin && !isEnabled && (
         <Flex justify='end'>
           <Button variant='primary' disabled={pending} onClick={handleEnable}>

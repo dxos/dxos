@@ -146,6 +146,7 @@ export const translations: Resource[] = [
         'plugin-prompt.description': 'This action needs the {{plugin}} plugin. Enable it to continue.',
         'plugin-prompt.enabled': '{{plugin}} is enabled.',
         'plugin-prompt.unavailable': '{{plugin}} is not installed on this device.',
+        'plugin-prompt.failed': 'Could not enable {{plugin}}. Try again from the plugin registry.',
         'plugin-prompt.button': 'Enable',
 
         'search.placeholder': 'Search...',
