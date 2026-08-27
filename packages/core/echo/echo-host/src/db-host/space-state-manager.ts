@@ -193,7 +193,9 @@ export class SpaceStateManager extends Resource {
 
     const prevRootId = this._rootBySpace.get(spaceId);
     if (prevRootId) {
-      void this._perRootContext.get(prevRootId)?.dispose();
+      // Awaited: the context detaches the root's `change` listener, which needs the lease disposed
+      // below to still be live.
+      await this._perRootContext.get(prevRootId)?.dispose();
       this._perRootContext.delete(prevRootId);
     }
 

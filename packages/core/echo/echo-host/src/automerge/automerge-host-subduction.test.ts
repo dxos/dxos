@@ -62,6 +62,80 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     await host2.flush(Context.default());
   });
 
+  test('a write after eviction and re-lease is persisted', async ({ expect }) => {
+    // Eviction unloads a document that may be leased again later: the fork's subduction source has
+    // to re-attach to the new handle, or every subsequent write is dropped on the floor.
+    const { runtime, dispose } = createRuntime();
+    onTestFinished(() => dispose());
+    const host = await setupAutomergeHost({ runtime });
+
+    const created = await host.createDoc<any>({ text: 'first' });
+    const documentId = created.documentId;
+    const url = created.url;
+    await host.flush(Context.default());
+    await waitForSubductionSave();
+
+    created[Symbol.dispose]();
+    await host.drainEvictions();
+    expect(host.loadedDocumentIds).not.toContain(documentId);
+
+    using reacquired = host.acquireDoc<any>(documentId);
+    await reacquired.waitUntilReady();
+    reacquired.change((doc: any) => {
+      doc.text = 'second';
+    });
+    await host.flush(Context.default());
+    await waitForSubductionSave();
+    await host.close();
+
+    const reopened = await setupAutomergeHost({ runtime });
+    using loaded = (await reopened.loadDoc<any>(Context.default(), url))!;
+    await loaded.waitUntilReady();
+    expect(loaded.doc()!.text).toEqual('second');
+  });
+
+  test('a write after eviction and re-lease reaches a peer', { timeout: 20_000 }, async ({ expect }) => {
+    // The subduction source keeps a per-document record bound to the handle it attached to; if
+    // eviction leaves that record in place, writes through the re-leased document are never synced.
+    const rt1 = createRuntime();
+    onTestFinished(() => rt1.dispose());
+    const host1 = await setupAutomergeHost({ runtime: rt1.runtime });
+    const rt2 = createRuntime();
+    onTestFinished(() => rt2.dispose());
+    const host2 = await setupAutomergeHost({ runtime: rt2.runtime });
+
+    const created = await host1.createDoc<any>({ text: 'first' });
+    const documentId = created.documentId;
+    await host1.flush(Context.default());
+    await waitForSubductionSave();
+
+    const network = await new TestReplicationNetwork().open();
+    try {
+      await host1.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
+      await host2.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
+
+      using mirrored = (await host2.loadDoc<any>(Context.default(), documentId))!;
+      await expect.poll(() => mirrored.doc()?.text, { timeout: 10_000 }).toEqual('first');
+
+      created[Symbol.dispose]();
+      await host1.drainEvictions();
+      expect(host1.loadedDocumentIds).not.toContain(documentId);
+
+      using reacquired = host1.acquireDoc<any>(documentId);
+      await reacquired.waitUntilReady();
+      reacquired.change((doc: any) => {
+        doc.text = 'second';
+      });
+      await host1.flush(Context.default());
+
+      await expect.poll(() => mirrored.doc()?.text, { timeout: 10_000 }).toEqual('second');
+    } finally {
+      await host1.close();
+      await host2.close();
+      await network.close();
+    }
+  });
+
   test('load resolves when document is created from binary', async ({ expect }) => {
     const { runtime, dispose } = createRuntime();
     onTestFinished(() => dispose());

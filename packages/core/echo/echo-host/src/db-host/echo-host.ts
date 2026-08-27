@@ -41,6 +41,7 @@ import {
   AutomergeHost,
   type AutomergeReplicator,
   type CreateDocOptions,
+  type DocumentLease,
   EchoDataMonitor,
   type EchoDataStats,
   type LoadDocOptions,
@@ -48,7 +49,6 @@ import {
   type RootDocumentSpaceKeyProvider,
   deriveCollectionIdFromSpaceId,
 } from '../automerge';
-import { type DocumentLease } from '../automerge/document-lease';
 import { AutomergeDataSource } from './automerge-data-source';
 import { DataServiceImpl } from './data-service';
 import { type DatabaseRoot } from './database-root';

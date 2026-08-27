@@ -13,8 +13,7 @@ import { log } from '@dxos/log';
 import { type DataService } from '@dxos/protocols/rpc';
 import { retry } from '@dxos/util';
 
-import type { AutomergeHost } from '../automerge';
-import { type DocumentLease } from '../automerge/document-lease';
+import { type AutomergeHost, type DocumentLease } from '../automerge';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
 
@@ -95,6 +94,11 @@ export class DocumentsSynchronizer extends Resource {
               try {
                 log('loading document', { documentId });
                 const lease = this._params.automergeHost.acquireDoc<DatabaseDirectory>(documentId as DocumentId);
+                if (this._lifecycleState === LifecycleState.CLOSED) {
+                  // `_close` has already cleared `_syncStates`, so nothing would ever release this.
+                  lease[Symbol.dispose]();
+                  return;
+                }
                 this._startSync(lease);
                 this._pendingUpdates.add(lease.documentId);
                 this._sendUpdatesJob!.trigger();

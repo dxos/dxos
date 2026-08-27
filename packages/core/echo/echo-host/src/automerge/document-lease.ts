@@ -10,6 +10,7 @@ import {
   type DocumentId,
   type DocumentProgress,
   type Heads,
+  type QueryState,
   type UrlHeads,
 } from '@automerge/automerge-repo';
 
@@ -17,6 +18,18 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { type HandleQueryState } from './handle-state';
+
+/** One loaded document as the repo holds it now. */
+export type DocumentPair<T> = { query: DocumentProgress<T>; handle: DocHandle<T> };
+
+/**
+ * How a lease reaches its document: `open` faults it in if it is not loaded, `peek` never does —
+ * teardown has to be able to detach a listener without resurrecting an evicted document.
+ */
+export type DocumentResolver<T> = {
+  open: () => DocumentPair<T>;
+  peek: () => DocumentPair<T> | undefined;
+};
 
 /** What a subscriber learns about a leased document — never the handle. */
 export type DocumentLeaseState = {
@@ -48,13 +61,13 @@ export class DocumentLease<T = any> implements Disposable {
   #release: (() => void) | undefined;
 
   /**
-   * The handle and query are resolved per access rather than captured, because an eviction of the
-   * same document may still be draining: a lease taken during that window must operate on the pair
-   * the repo holds after it, not the pair being torn down.
+   * The pair is resolved through the registry rather than captured, because an eviction of the same
+   * document may still be draining: a lease taken during that window must operate on the pair the
+   * repo holds after it, not the pair being torn down.
    */
   constructor(
     private readonly _documentId: DocumentId,
-    private readonly _open: () => { query: DocumentProgress<T>; handle: DocHandle<T> },
+    private readonly _resolve: DocumentResolver<T>,
     release: () => void,
   ) {
     this.#release = release;
@@ -87,10 +100,12 @@ export class DocumentLease<T = any> implements Disposable {
     return this.#handle.doc();
   }
 
+  /** Heads of the document as loaded now — an empty document while it is still loading. */
   heads(): UrlHeads {
     return this.#handle.heads();
   }
 
+  /** Mutates the document; the change is saved and synced by the repo's own listeners. */
   change(callback: A.ChangeFn<T>, options?: A.ChangeOptions<T>): void {
     this.#handle.change(callback, options);
   }
@@ -99,19 +114,55 @@ export class DocumentLease<T = any> implements Disposable {
     return this.#handle.changeAt(heads, callback, options);
   }
 
-  /** Resolves once the document is loaded, rejects if the query fails. */
+  /**
+   * Resolves once the document is loaded, rejects if the query fails.
+   *
+   * `'unavailable'` is transient rather than terminal — the query routinely reports it while no peer
+   * serves the document yet — so this waits through it, unlike `DocumentQuery.whenReady`.
+   */
   async waitUntilReady(): Promise<void> {
-    await this.#query.whenReady();
+    await new Promise<void>((resolve, reject) => {
+      let unsubscribe: (() => void) | undefined;
+      let settled = false;
+      const settle = (state: QueryState<T>) => {
+        if (settled) {
+          return;
+        }
+        if (state.state === 'ready') {
+          settled = true;
+          unsubscribe?.();
+          resolve();
+        } else if (state.state === 'failed') {
+          settled = true;
+          unsubscribe?.();
+          reject(state.error);
+        }
+      };
+      const query = this.#query;
+      unsubscribe = query.subscribe(settle);
+      // Re-read after subscribing: the document may have become ready between the two, and the
+      // subscription only reports transitions.
+      settle(query.peek());
+      if (settled) {
+        unsubscribe();
+      }
+    });
   }
 
+  /** Registers a listener on the document as loaded now; a later eviction detaches it. */
   on<K extends keyof DocumentLeaseEvents<T>>(event: K, listener: (payload: DocumentLeaseEvents<T>[K]) => void): void {
     this.#handle.on(event as any, listener as any);
   }
 
+  /**
+   * Removes a listener from the document it was registered on, which is why this never faults one
+   * in: teardown running after an eviction (or after the repo closed) must not resurrect a document.
+   */
   off<K extends keyof DocumentLeaseEvents<T>>(event: K, listener: (payload: DocumentLeaseEvents<T>[K]) => void): void {
-    this.#handle.off(event as any, listener as any);
+    this._resolve.peek()?.handle.off(event as any, listener as any);
   }
 
+  /** Registers a one-shot listener; see {@link on} for what an eviction does to it. */
   once<K extends keyof DocumentLeaseEvents<T>>(event: K, listener: (payload: DocumentLeaseEvents<T>[K]) => void): void {
     this.#handle.once(event as any, listener as any);
   }
@@ -134,12 +185,12 @@ export class DocumentLease<T = any> implements Disposable {
 
   get #handle(): DocHandle<T> {
     this.#assertLive();
-    return this._open().handle;
+    return this._resolve.open().handle;
   }
 
   get #query(): DocumentProgress<T> {
     this.#assertLive();
-    return this._open().query;
+    return this._resolve.open().query;
   }
 
   #assertLive(): void {
@@ -152,7 +203,7 @@ export type DocumentLeaseRegistryParams = {
    * Opens (or returns the cached) query and its attached handle for a document — the one place the
    * repo is consulted.
    */
-  open: (documentId: DocumentId) => { query: DocumentProgress<any>; handle: DocHandle<any> };
+  open: (documentId: DocumentId) => DocumentPair<any>;
 
   /**
    * Drops the document from the repo cache once nothing holds it. Runs after the last lease is
@@ -194,6 +245,12 @@ const DEFAULT_MIN_RESIDENT_DOCUMENTS = 0;
 export class DocumentLeaseRegistry {
   readonly #counts = new Map<DocumentId, number>();
 
+  /**
+   * The pair each document currently resolves to. Cached so a lease can detach a listener from the
+   * handle it attached to, and dropped whenever the document leaves the repo.
+   */
+  readonly #resolved = new Map<DocumentId, DocumentPair<any>>();
+
   /** Released documents by release time, in release order — the eviction queue. */
   readonly #idle = new Map<DocumentId, number>();
 
@@ -234,14 +291,27 @@ export class DocumentLeaseRegistry {
     invariant(!this.#closed, 'Document lease registry is closed.');
     this.#idle.delete(documentId);
     this.#counts.set(documentId, (this.#counts.get(documentId) ?? 0) + 1);
-    // Faulted in now so the document starts loading, and again on each access — see the lease's
-    // constructor for why the pair cannot be captured here.
-    this.#params.open(documentId);
+    // Faulted in now so the document starts loading, and re-resolved on each access — see the
+    // lease's constructor for why the pair cannot be captured here.
+    this.#open(documentId);
     return new DocumentLease<T>(
       documentId,
-      () => this.#params.open(documentId),
+      {
+        open: () => this.#open(documentId),
+        peek: () => this.#resolved.get(documentId),
+      },
       () => this.#release(documentId),
     );
+  }
+
+  /**
+   * Drops all bookkeeping for a document without evicting it — for a caller that removed the
+   * document itself, where a later eviction would re-create the query it just deleted.
+   */
+  forget(documentId: DocumentId): void {
+    this.#counts.delete(documentId);
+    this.#idle.delete(documentId);
+    this.#resolved.delete(documentId);
   }
 
   /**
@@ -252,7 +322,23 @@ export class DocumentLeaseRegistry {
     this.#closed = true;
     this.#counts.clear();
     this.#idle.clear();
+    this.#resolved.clear();
     this.#clearTimer();
+  }
+
+  /**
+   * Closes, then waits for an eviction that is already draining — it holds the repo's storage and
+   * would otherwise flush into an adapter the caller is about to shut down.
+   */
+  async closeAndSettle(): Promise<void> {
+    this.close();
+    await this.#draining?.catch(() => {});
+  }
+
+  #open(documentId: DocumentId): DocumentPair<any> {
+    const pair = this.#params.open(documentId);
+    this.#resolved.set(documentId, pair);
+    return pair;
   }
 
   /**
@@ -363,7 +449,18 @@ export class DocumentLeaseRegistry {
         let evicted = false;
         try {
           evicted = await this.#params.evict(documentId, () => this.#closed || this.#counts.has(documentId));
+          if (evicted) {
+            // The pair a lease resolves to left the repo with the document.
+            this.#resolved.delete(documentId);
+          }
+          if (!this.#closed && this.#counts.has(documentId)) {
+            // Re-leased while the eviction was draining, so the document is faulted back in here
+            // rather than on the holder's next access, which may be its first.
+            this.#open(documentId);
+          }
         } catch (err) {
+          // Inside the try with the eviction: a throw from either leaves the document resident, and
+          // an unhandled one would reject the drain chain and stop every later eviction.
           log.warn('failed to evict document', { documentId, err });
         }
 
@@ -371,9 +468,6 @@ export class DocumentLeaseRegistry {
           return;
         }
         if (this.#counts.has(documentId)) {
-          // Re-leased while the eviction was draining, so the document is faulted back in here
-          // rather than on the holder's next access, which may be its first.
-          this.#params.open(documentId);
           continue;
         }
         if (!evicted) {
