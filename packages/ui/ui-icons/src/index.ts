@@ -12,9 +12,9 @@
  * Hosts add this module to `scanPaths` so the whole set ships whether or not anything imports it.
  */
 export const PxIcons = {
+  circle: 'px--circle--regular', // Reference icon
   anthropic: 'px--anthropic--regular',
   deepseek: 'px--deepseek--regular',
-  circle: 'px--circle--regular',
 } as const;
 
 export type PxIconName = keyof typeof PxIcons;

@@ -20,18 +20,23 @@ import { PxIcons } from './index';
 const sizes = [16, 12, 8, 6, 5, 4] as const;
 
 /** Phosphor glyphs shown beside the set, to catch weight or inset drift by eye. */
-const reference = ['ph--circle--regular', 'ph--google-logo--regular'];
+const reference = ['ph--circle--regular', 'ph--github-logo--regular', 'ph--google-logo--regular'];
 
 /**
- * One row per symbol. The dashed cell is deliberate: a symbol missing from the sprite renders
- * nothing at all, which is indistinguishable from an empty cell without a boundary to see.
+ * One row per symbol, each size wrapped in a box that hugs the icon so the dashes show that size's
+ * bounds. Two things read off it: whether the glyph fills its box like its Phosphor neighbours, and
+ * whether it is there at all — a symbol missing from the sprite renders nothing, indistinguishable
+ * from an empty cell without a boundary to see.
  */
 const Row = ({ symbol }: { symbol: string }) => (
   <div className='flex items-center gap-4'>
     <div className='w-56 shrink-0 font-mono text-xs text-subdued'>{symbol}</div>
     {sizes.map((size) => (
-      <div key={size} className='grid size-16 place-items-center border border-dashed border-separator'>
-        <Icon icon={symbol} classNames={getSize(size)} />
+      // The slot keeps columns aligned across rows; the inner box takes its size from the icon.
+      <div key={size} className='grid w-20 place-items-center'>
+        <div className='inline-flex border border-dashed border-separator'>
+          <Icon icon={symbol} classNames={getSize(size)} />
+        </div>
       </div>
     ))}
   </div>
