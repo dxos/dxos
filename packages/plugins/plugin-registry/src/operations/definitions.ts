@@ -50,6 +50,27 @@ export const QueryPlugins = Operation.make({
  * User-initiated: enabling reshapes the workspace, so the assistant asks via its `plugin-prompt`
  * surface and this runs on the click, rather than being projected as an agent tool.
  */
+/**
+ * Void input so it can back a skill template's input, which invokes with no arguments: the
+ * disabled set is rendered into the agent's prompt rather than fetched by a tool call it has to
+ * think to make.
+ */
+export const QueryDisabledPlugins = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.registry.queryDisabledPlugins'),
+    name: 'Query Disabled Plugins',
+    description:
+      'List the plugins installed on this host but not enabled. Their operations, types and skills ' +
+      'are absent until the user enables them.',
+    icon: 'ph--plugs--regular',
+  },
+  services: [Plugin.Service],
+  input: Schema.Struct({}),
+  output: Schema.Struct({
+    plugins: Schema.Array(PluginSummary),
+  }),
+}).pipe(Operation.mutation('none'));
+
 export const EnablePlugins = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.registry.enablePlugins'),

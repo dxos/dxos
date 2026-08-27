@@ -14,6 +14,38 @@ import { RegistryPlugin } from '#plugin';
 
 const graphKey = GraphPlugin.make().meta.profile.key;
 
+describe('RegistryOperation.QueryDisabledPlugins', () => {
+  test('lists installed minus enabled, and nothing else', async ({ expect }) => {
+    await using harness = await createComposerTestApp({
+      plugins: [RegistryPlugin(), GraphPlugin.make()],
+      enabled: [meta.profile.key],
+    });
+
+    const { plugins } = await harness.runPromise(Operation.invoke(RegistryOperation.QueryDisabledPlugins, {}));
+
+    // Derived from the manager rather than named: a system-tagged plugin is force-enabled, so which
+    // ids land here is the host's business, not this test's.
+    const enabled = new Set(harness.manager.getEnabled());
+    const expected = harness.manager
+      .getPlugins()
+      .map(({ meta: pluginMeta }) => pluginMeta.profile.key)
+      .filter((id) => !enabled.has(id));
+    expect(plugins.map(({ id }) => id).sort()).toEqual([...expected].sort());
+    expect(plugins.map(({ id }) => id)).not.toContain(meta.profile.key);
+  });
+
+  // Void input: the skill template invokes it with no arguments to render the list into the prompt.
+  test('accepts a void invocation', async ({ expect }) => {
+    await using harness = await createComposerTestApp({ plugins: [RegistryPlugin()] });
+
+    const { plugins } = await harness.runPromise(
+      Operation.invoke(RegistryOperation.QueryDisabledPlugins, undefined as any),
+    );
+
+    expect(Array.isArray(plugins)).toBe(true);
+  });
+});
+
 describe('RegistryOperation.EnablePlugins', () => {
   test('enables an installed but disabled plugin', async ({ expect }) => {
     await using harness = await createComposerTestApp({
