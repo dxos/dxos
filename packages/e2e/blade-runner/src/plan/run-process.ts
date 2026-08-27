@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 
 import { spawn } from 'node:child_process';
+import { createWriteStream } from 'node:fs';
 import { mkdir, readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { type AddressInfo } from 'node:net';
@@ -50,6 +51,12 @@ export const runNode = (params: RunProps): ProcessHandle => {
   const childProcess = spawn(process.execPath, [...execArgv, process.argv[1]], {
     env: { ...process.env, DX_RUN_PARAMS: JSON.stringify(params) },
   });
+
+  // Without this the child's stdout/stderr go nowhere, so a replicant that throws before its log
+  // processor flushes leaves no trace at all.
+  const output = createWriteStream(join(params.replicantProps.outDir, 'replicant.out.log'), { flags: 'a' });
+  childProcess.stdout?.pipe(output);
+  childProcess.stderr?.pipe(output);
   childProcess.on('error', (err) => {
     log.info('child process error', { err });
   });
