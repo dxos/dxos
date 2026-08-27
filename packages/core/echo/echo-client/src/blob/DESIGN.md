@@ -87,7 +87,7 @@ The dotted edge is the point: nothing in the blob layer depends on `@dxos/edge-c
 adapts its `EdgeHttpClient` to `BlobTransport` at the one registration site.
 
 `EdgeHttpClient`'s blob methods take a leading `Context`, so the fit is not quite structural. That
-is deliberate — threading `Context` into `BlobTransport` would make `@dxos/echo-protocol` depend on
+is deliberate — threading `Context` into `BlobTransport` would make `@dxos/blob` depend on
 `@dxos/context` to carry a value the blob layer never reads, which is a worse trade than four lines
 of adapter at a single call site.
 
@@ -171,14 +171,14 @@ Not started; no code in this repository has been changed for it yet.
 
 ## Implementation status
 
-- [x] **`BlobTransport`** ([echo-protocol/src/blob.ts](../../../echo-protocol/src/blob.ts)) — the
-      hosted backend takes four operations instead of a 33-method client. `client.ts` adapts
-      `EdgeHttpClient` at the registration site. Side benefit: the backend's tests no longer need
-      `as unknown as EdgeHttpClient` to assert a whole class from a one-method stub.
-- [ ] **`@dxos/blob` package** — blocked on the name being published to npm with trusted publishing
-      configured; `@dxos/blob` currently 404s, so a public package fails `check-packages-published`
-      and a private one fails `check-public-dependencies` (`echo-client` is public).
-- [ ] **Move the contract, registry, URI encoding and backends into it**, backends as subpaths.
+- [x] **`BlobTransport`** — the hosted backend takes four operations instead of a 33-method client.
+      `client.ts` adapts `EdgeHttpClient` at the registration site. Side benefit: the backend's tests
+      no longer need `as unknown as EdgeHttpClient` to assert a whole class from a one-method stub.
+- [x] **`@dxos/blob` package** ([packages/core/echo/blob](../../../blob)) — holds the contract
+      (`BlobBackend`, `BlobTransport`, `BlobPutRequest`/`Response`), moved out of `@dxos/echo-protocol`
+      with every call site repointed and no compatibility re-export. Depends only on `@dxos/keys`.
+- [ ] **Move the registry, URI encoding and backends into it**, backends as subpaths
+      (`@dxos/blob/s3`, `@dxos/blob/hosted`).
 - [ ] **`edge-client` subpath split** by the six method groups; measure boot budget before and after.
 - [ ] **The `edge`/`ni:` → `blob` rename**, per the migration above. Do it in the same pass as the
       package move — both touch the same files and both need one compatibility window, not two.

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type BlobBackend } from '@dxos/echo-protocol';
+import { type BlobBackend } from '@dxos/blob';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 

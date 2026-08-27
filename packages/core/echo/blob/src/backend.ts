@@ -28,8 +28,8 @@ export interface BlobPutResponse {
  * blob backend needs these four, and taking the class would drag in the other twenty-nine.
  *
  * Deliberately carries no `Context`: that is an edge-client concern, and threading it through here
- * would make `@dxos/echo-protocol` depend on `@dxos/context` to pass a value the blob layer never
- * reads. The registration site adapts.
+ * would make this package depend on `@dxos/context` to pass a value the blob layer never reads. The
+ * registration site adapts.
  */
 export interface BlobTransport {
   /** Direct URL for the stored bytes, for `<img>`/`<video>` and other non-programmatic reads. */
@@ -43,6 +43,10 @@ export interface BlobTransport {
 /**
  * Implemented by pluggable blob storage backends and registered on the Hypergraph via
  * `registerBlobBackend`.
+ *
+ * A backend takes the capabilities it needs rather than a client — see `BlobTransport` for the
+ * hosted store and `S3Host` for S3 — so it can be registered in a browser, in a headless worker, or
+ * in a test without a client graph behind it.
  */
 export interface BlobBackend {
   /** URI schemes this backend resolves at read time. */

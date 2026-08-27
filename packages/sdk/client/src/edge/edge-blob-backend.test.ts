@@ -4,8 +4,8 @@
 
 import { describe, test, vi } from 'vitest';
 
+import { type BlobTransport } from '@dxos/blob';
 import { fromDigestHex } from '@dxos/echo-client/internal';
-import { type BlobTransport } from '@dxos/echo-protocol';
 import { SpaceId } from '@dxos/keys';
 
 import { createEdgeBlobBackend } from './edge-blob-backend';

@@ -46,6 +46,9 @@
       "path": "tools/beast/tsconfig.json"
     },
     {
+      "path": "packages/core/echo/blob/tsconfig.json"
+    },
+    {
       "path": "packages/ui/brand/tsconfig.json"
     },
     {

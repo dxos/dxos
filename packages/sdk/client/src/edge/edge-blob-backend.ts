@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type BlobBackend, type BlobTransport } from '@dxos/blob';
 import { Blob } from '@dxos/echo';
 import { digestHex, fromDigestHex } from '@dxos/echo-client/internal';
-import { type BlobBackend, type BlobTransport } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 
 export interface CreateEdgeBlobBackendOptions {
