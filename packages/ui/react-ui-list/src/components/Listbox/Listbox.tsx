@@ -227,10 +227,15 @@ type ItemProps = PropsWithChildren<{
    * click-to-toggle without the focus-then-click double count.
    */
   onMouseDown?: (event: MouseEvent<HTMLLIElement>) => void;
+  /**
+   * Optional key handler, run before the row's own Enter/Space activation so a consumer key binding
+   * can claim the event (`preventDefault`) rather than firing alongside it.
+   */
+  onKeyDown?: (event: KeyboardEvent<HTMLLIElement>) => void;
 }>;
 
 const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
-  const { id, disabled, onClick, onFocus, onMouseDown, children, ...rest } = props as ItemProps &
+  const { id, disabled, onClick, onFocus, onMouseDown, onKeyDown, children, ...rest } = props as ItemProps &
     Record<string, unknown>;
   const { selectable, selection } = useListboxContext(LISTBOX_ITEM_NAME);
   const binding: SelectionItemBinding = selection.bind(id, { disabled });
@@ -272,13 +277,14 @@ const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
   // `MouseEvent` type — matches the same `.click()` pattern `MessageStack`'s row navigation uses.
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLLIElement>) => {
-      if (!interactive || disabled || (event.key !== 'Enter' && event.key !== ' ')) {
+      onKeyDown?.(event);
+      if (event.defaultPrevented || !interactive || disabled || (event.key !== 'Enter' && event.key !== ' ')) {
         return;
       }
       event.preventDefault();
       event.currentTarget.click();
     },
-    [interactive, disabled],
+    [onKeyDown, interactive, disabled],
   );
 
   const composed = composableProps<HTMLLIElement>(rest, {

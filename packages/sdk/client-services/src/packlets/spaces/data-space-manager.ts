@@ -1044,7 +1044,7 @@ export class DataSpaceManager extends Resource {
         invitationId: invitation.invitationId,
         swarmKey: invitation.swarmKey,
         guestKeypair: invitation.guestKey ? { publicKey: invitation.guestKey } : undefined,
-        lifetime: invitation.expiresOn ? (invitation.expiresOn.getTime() - Date.now()) / 1000 : undefined,
+        lifetime: invitation.expiresOn ? remainingLifetimeSeconds(invitation.expiresOn) : undefined,
         multiUse: invitation.multiUse,
         delegationCredentialId: credentialId,
         persistent: false,
@@ -1053,6 +1053,15 @@ export class DataSpaceManager extends Resource {
     await Promise.all(tasks);
   }
 }
+
+/**
+ * Seconds left until `expiresOn`, as `Invitation.lifetime` requires: a whole number, because the
+ * field is a protobuf `int32` and a fractional value fails to encode — which silently killed the
+ * `queryInvitations` stream and hung client initialization. Floors to at least 1 since 0 means
+ * "never expires", so an already-expired invitation must not become immortal.
+ */
+export const remainingLifetimeSeconds = (expiresOn: Date): number =>
+  Math.max(1, Math.floor((expiresOn.getTime() - Date.now()) / 1000));
 
 export class DataSpaceManagerService extends EffectContext.Service<DataSpaceManagerService, DataSpaceManager>()(
   '@dxos/client-services/DataSpaceManager',

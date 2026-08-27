@@ -24,6 +24,22 @@ import { openAndClose } from '@dxos/test-utils';
 import { AuthStatus } from '../space';
 import { TestBuilder, type TestPeer } from '../testing';
 import { openCredentialsDocument } from './credentials-document-store';
+import { remainingLifetimeSeconds } from './data-space-manager';
+
+describe('remainingLifetimeSeconds', () => {
+  // `Invitation.lifetime` is a protobuf int32; a fractional value fails to encode, which killed the
+  // `queryInvitations` stream and hung client initialization.
+  test('is always a whole number', () => {
+    for (const offset of [604_799_123, 1, 999, 86_400_000, 1_500]) {
+      expect(Number.isInteger(remainingLifetimeSeconds(new Date(Date.now() + offset)))).toBe(true);
+    }
+  });
+
+  // 0 means "never expires", so an expired invitation must not clamp to it.
+  test('an already-expired invitation stays expired', () => {
+    expect(remainingLifetimeSeconds(new Date(Date.now() - 86_400_000))).toBe(1);
+  });
+});
 
 describe('DataSpaceManager', () => {
   test('create space', async () => {

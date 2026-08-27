@@ -7,6 +7,12 @@ name: PR Deploy
 # (preview.composer.space) serves dogfooders against EDGE production. Uses workflow_run so this workflow
 # executes from the BASE branch (trusted), which means secrets are safe to use here. The untrusted PR code
 # never runs in this workflow — we only download the pre-built artifact.
+#
+# TODO(wittjosiah): stays on GitHub Actions, along with pr-build.yml. This workflow's
+# actions/download-artifact step (run-id: github.event.workflow_run.id) failed "Unable to download
+# artifact(s): Not Found" on every attempt once pr-build.yml moved to Depot CI (#12779) - a
+# Depot-executed run's synthesized workflow_run.id apparently doesn't resolve through GitHub's real
+# artifact API. Revisit once Depot CI's workflow_run + cross-run artifact handoff is confirmed working.
 
 on:
   workflow_run:

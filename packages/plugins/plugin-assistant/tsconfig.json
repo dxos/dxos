@@ -193,6 +193,9 @@
       "path": "../plugin-preview"
     },
     {
+      "path": "../plugin-registry"
+    },
+    {
       "path": "../plugin-routine"
     },
     {
@@ -203,6 +206,9 @@
     },
     {
       "path": "../plugin-table"
+    },
+    {
+      "path": "../plugin-tasks"
     },
     {
       "path": "../plugin-testing"

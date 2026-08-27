@@ -92,7 +92,10 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       this._setupSpacesStream();
     });
 
-    await this._setupInvitationProxy();
+    // Not awaited: the proxy is assigned synchronously (so `share`/`join` work immediately) and
+    // its own initial snapshot is not needed to use spaces. Awaiting it put the whole app boot
+    // behind the invitations stream, so a stalled snapshot made the app unbootable.
+    void this._setupInvitationProxy().catch((error) => log.warn('failed to open invitation proxy', { error }));
 
     // Subscribe to spaces and create proxies.
     const gotInitialUpdate = new Trigger();

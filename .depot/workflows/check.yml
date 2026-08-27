@@ -87,10 +87,10 @@ jobs:
 
       - name: Extract branch
         id: extract_branch
-        uses: ./.github/actions/branch
+        uses: ./.depot/actions/branch
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
 
       # ─── Stage 1: gates that need no build ──────────────────────────────────────────────────────
       # Ordered by measured cost, cheapest first, so the common failure lands in seconds instead of
@@ -232,6 +232,13 @@ jobs:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 30
+    env:
+      COMPARE: >-
+        ${{ github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository }}
+    outputs:
+      status: ${{ steps.compare.outputs.status || 'skipped' }}
+      body: ${{ steps.compare.outputs.body }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -242,10 +249,99 @@ jobs:
           persist-credentials: false
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
 
       - name: Check boot budget
+        id: budget
+        continue-on-error: true
         run: moon run composer-app:check-boot-budget
+
+      - name: Record this PR's measurement
+        id: head
+        if: env.COMPARE == 'true'
+        continue-on-error: true
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          cp packages/apps/composer-app/out/boot-budget.json "$RUNNER_TEMP/boot-budget.head.json"
+          cp packages/apps/composer-app/scripts/compare-boot-budget.mjs "$RUNNER_TEMP/compare.mjs"
+          if git diff --quiet "$BASE_SHA" HEAD -- packages/apps/composer-app/scripts/check-boot-budget.mjs; then
+            echo 'comparable=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'comparable=false' >> "$GITHUB_OUTPUT"
+            echo '::notice::boot budget measurement changed in this PR — skipping the base comparison.'
+          fi
+
+      - name: Measure the base commit's boot graph
+        id: base
+        if: env.COMPARE == 'true' && steps.head.outputs.comparable == 'true'
+        continue-on-error: true
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          trap 'git checkout --detach "$HEAD_SHA" >/dev/null 2>&1 || true' EXIT
+          git checkout --detach "$BASE_SHA"
+          pnpm install --prefer-offline
+          # moon owns this path, so head and base measurements land on the same file: deleting first
+          # is what makes the copy below fail loudly instead of measuring the head's leftover report.
+          rm -f packages/apps/composer-app/out/boot-budget.json
+          moon run composer-app:check-boot-budget || true
+          cp packages/apps/composer-app/out/boot-budget.json "$RUNNER_TEMP/boot-budget.base.json"
+
+      - name: Compare with the base
+        id: compare
+        if: steps.base.outcome == 'success'
+        continue-on-error: true
+        run: |
+          node "$RUNNER_TEMP/compare.mjs" \
+            --base "$RUNNER_TEMP/boot-budget.base.json" \
+            --head "$RUNNER_TEMP/boot-budget.head.json"
+
+      - name: Report boot budget failure
+        if: ${{ !cancelled() && steps.budget.outcome == 'failure' }}
+        run: |
+          echo '::error::boot budget exceeded — see the "Check boot budget" step.'
+          exit 1
+
+  # A separate job because `permissions` is job-scoped: holding `pull-requests: write` in
+  # `boot-budget` would put the token in reach of the branch code that job checks out and builds.
+  boot-budget-comment:
+    needs: boot-budget
+    if: >-
+      ${{ !cancelled() && github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      needs.boot-budget.outputs.status != 'skipped' }}
+    runs-on: depot-ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Post or remove boot graph comment
+        continue-on-error: true
+        uses: actions/github-script@v7
+        env:
+          STATUS: ${{ needs.boot-budget.outputs.status }}
+          BODY: ${{ needs.boot-budget.outputs.body }}
+        with:
+          script: |
+            const marker = '<!-- boot-budget -->';
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const existing = comments.find(
+              (comment) => comment.user?.type === 'Bot' && comment.body && comment.body.includes(marker),
+            );
+            if (process.env.STATUS === 'grew') {
+              const body = `${marker}\n${process.env.BODY}`;
+              if (existing) {
+                await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+              } else {
+                await github.rest.issues.createComment({ owner, repo, issue_number, body });
+              }
+            } else if (existing) {
+              await github.rest.issues.deleteComment({ owner, repo, comment_id: existing.id });
+            }
 
   # Retention suites (the `memory` tag), which the normal `test` job skips: they need `--expose-gc`
   # and force a single non-isolated fork, neither of which the sharded matrix can provide. Gated on
@@ -279,7 +375,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
 
       # `DX_DEBUG_LEAKS_DIR` keeps the heap snapshots the probe writes out of the workspace. It is
       # set per step, not on the job: `runner` is not among the contexts available to job-level `env`
@@ -354,10 +450,10 @@ jobs:
 
       - name: Extract branch
         id: extract_branch
-        uses: ./.github/actions/branch
+        uses: ./.depot/actions/branch
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
 
       # Unconditional: moon owns cell assignment, so which flavours a shard draws is not known here.
       - name: Install Playwright
@@ -455,10 +551,10 @@ jobs:
 
       - name: Extract branch
         id: extract_branch
-        uses: ./.github/actions/branch
+        uses: ./.depot/actions/branch
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
 
       # `:bundle-e2e`, not a project list and not `:bundle`. Only a project that serves a production
       # bundle to Playwright (`vite preview`) defines `bundle-e2e`, so the glob is already exactly the
@@ -531,10 +627,10 @@ jobs:
 
       - name: Extract branch
         id: extract_branch
-        uses: ./.github/actions/branch
+        uses: ./.depot/actions/branch
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
 
       # Only this cell's browser — the other two engines' downloads are dead weight here.
       - name: Install Playwright
@@ -632,7 +728,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
 
       # `@dxos/cli` ships as prebuilt platform binaries, so its failure modes live in the packed tarball
       # rather than the source tree. Depends on `bundle`, so this compiles the binaries too.
@@ -662,7 +758,7 @@ jobs:
   cli-foreign:
     needs: cli
     if: ${{ !cancelled() && needs.cli.result == 'success' }}
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     timeout-minutes: 10
     steps:
       - name: Download packed CLI
@@ -710,13 +806,13 @@ jobs:
       # step still fails the job.
       - name: Send test report
         if: always()
-        uses: ./.github/actions/test-report
+        uses: ./.depot/actions/test-report
         with:
           name: test-24.11.1
           result: ${{ needs.test.result }}
       - name: Send e2e report
         if: always()
-        uses: ./.github/actions/test-report
+        uses: ./.depot/actions/test-report
         with:
           name: e2e
           result: ${{ needs.e2e.result }}
@@ -729,7 +825,7 @@ jobs:
     if: >-
       github.event_name == 'pull_request' &&
       github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     permissions:
       contents: read
       pull-requests: write

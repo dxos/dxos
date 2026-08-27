@@ -11,9 +11,12 @@ export type PopoverStyleProps = Partial<{
   elevation: Elevation;
 }>;
 
+// No `overflow-hidden` here: Radix positions `Popover.Arrow` as a child of the content, straddling
+// its edge, so clipping the content clipped every arrow in the app. Clipping belongs to the
+// viewport, which is the box that scrolls and carries the rounded corners.
 const content: ComponentFunction<PopoverStyleProps> = ({ elevation }, ...etc) =>
   mx(
-    'dx-popover-surface overflow-hidden border-2 border-separator rounded-sm',
+    'dx-popover-surface border-2 border-separator rounded-sm',
     surfaceShadow({ elevation: 'positioned' }),
     surfaceZIndex({ elevation, level: 'menu' }),
     'dx-focus-ring',
@@ -22,8 +25,9 @@ const content: ComponentFunction<PopoverStyleProps> = ({ elevation }, ...etc) =>
 
 const viewport: ComponentFunction<PopoverStyleProps> = ({ constrainBlock, constrainInline }, ...etc) =>
   mx(
-    'grid grid-rows-[1fr] min-h-0 min-w-popover-min-width',
-    (constrainBlock || constrainInline) && 'overflow-hidden',
+    // Always clipped: with the content no longer clipping (see above), the viewport is what keeps a
+    // square-cornered child inside the surface's rounded corners.
+    'grid grid-rows-[1fr] min-h-0 min-w-popover-min-width overflow-hidden',
     constrainBlock && 'max-h-(--radix-popover-content-available-height)',
     constrainBlock &&
       'max-h-[min(var(--radix-popover-content-available-height),calc(100dvh-var(--spacing-screen-border)*2))]',
