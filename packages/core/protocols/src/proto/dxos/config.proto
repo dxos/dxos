@@ -469,7 +469,12 @@ message Runtime {
 
     message Ai { optional string server = 1; }
 
-    message Hub { optional string url = 1; }
+    message Hub {
+      optional string url = 1;
+      /// Origin serving the passkey prompt. Must be covered by the WebAuthn relying party the
+      /// credential was registered against; the API host is not.
+      optional string auth_url = 2;
+    }
 
     /// Canonical descriptor for an EDGE (Cloudflare Worker) service.
     /// Entries in `Services.edge_services` consolidate the per-service URL
