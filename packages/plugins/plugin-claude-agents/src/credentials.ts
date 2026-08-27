@@ -38,9 +38,8 @@ export const getApiKey: Effect.Effect<string, MissingCredentialError, Credential
  * time and handed straight to the control plane, so it never passes through a message, a transcript
  * or an operation result — the reference is what the model sees and passes around.
  *
- * `scope` defaults to the token's own source, because a credential minted for one service has no
- * business being substituted into a request to another. A name repeated in one request keeps its
- * last entry: names are unique within a vault, so binding both would be rejected as a conflict.
+ * An omitted `scope` defaults to the token's own source, and a name repeated in one request keeps
+ * its last entry, since names are unique within a vault.
  */
 export const toVaultCredentials = Effect.fn('toVaultCredentials')(function* (
   credentials: readonly ClaudeAgentOperation.SessionCredential[],
@@ -49,8 +48,7 @@ export const toVaultCredentials = Effect.fn('toVaultCredentials')(function* (
   return yield* Effect.forEach(deduped, ({ token, as, scope }) =>
     Effect.gen(function* () {
       const tokenObj = yield* Database.load(token);
-      // Resolved through the credentials service rather than read off the object: a server-custodied
-      // token stores a placeholder locally and only the service can exchange it for a value.
+      // A server-custodied token stores a placeholder locally, so only the service can exchange it.
       const secret = yield* Credential.getApiKeyValue({ accessTokenId: tokenObj.id }).pipe(
         Effect.catchCause((cause) => Effect.fail(new CredentialResolutionError({ cause, context: { as } }))),
       );

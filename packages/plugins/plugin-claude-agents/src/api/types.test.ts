@@ -46,7 +46,6 @@ describe('response schemas', () => {
     });
     expect(decoded._tag).toBe('Some');
     expect(decodeCredentials({ data: [{ auth: { secret_name: 'GH_TOKEN' } }] })._tag).toBe('None');
-    // A page cursor is what the listing follows; a null one ends it.
     expect(decodeCredentials({ data: [], next_page: 'cursor' })._tag).toBe('Some');
     expect(decodeCredentials({ data: [], next_page: null })._tag).toBe('Some');
   });

@@ -123,9 +123,7 @@ export default Capability.makeModule(() =>
         id: 'integrationPrompt',
         filter: Surface.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'integration-prompt'),
         component: IntegrationPrompt,
-        // `data.data` is model-supplied JSON (untyped); narrow every field before use. A blank
-        // string is dropped rather than passed on: it would render an empty service name, and an
-        // empty reason would suppress the prompt's own fallback text.
+        // `data.data` is model-supplied JSON, so every field is narrowed and blanks dropped.
         props: ({ data }) => ({
           service: nonBlank(data.data?.service),
           scopes: Array.isArray(data.data?.scopes)

@@ -30,8 +30,7 @@ const handler: Operation.WithHandler<typeof ClaudeAgentOperation.SetSessionCrede
         const apiKey = yield* getApiKey;
         const resolved = yield* toVaultCredentials(credentials);
 
-        // A credential's name is immutable and unique within the vault, so a rebind of a name already
-        // present has to rotate the stored secret rather than create a second entry (which is a 409).
+        // A name is unique within the vault, so rebinding one already present must rotate it.
         const existing = yield* listVaultCredentials(apiKey, vaultId);
         const byName = new Map(
           existing.flatMap((credential) =>
