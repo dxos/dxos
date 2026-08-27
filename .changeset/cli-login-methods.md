@@ -1,8 +1,6 @@
 ---
 '@dxos/cli-util': minor
 '@dxos/plugin-client': minor
-'@dxos/plugin-connector': minor
-'@dxos/protocols': minor
 ---
 
 Finish `dx account login` from the browser, for both email and passkey.
