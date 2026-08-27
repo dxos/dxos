@@ -136,11 +136,7 @@ export const dedupeById = <T extends Obj.Unknown>(objects: ReadonlyArray<T | und
   return result;
 };
 
-/**
- * Entity id of a task's parent, or undefined for a root task. Exported because a caller walking the
- * tree outside this module (a renderer, a drop calculation) needs the same ref-uri parse — a
- * hand-rolled one would disagree the moment a ref is space-qualified rather than local.
- */
+/** Entity id of a task's parent, exported so a caller walking the tree shares this module's ref-uri parse. */
 export const parentTaskId = (task: Task.Task): string | undefined => refId(task.parentTask);
 
 /** Tasks with no parent present in the set — a dangling `parentTask` reads as a root, not a ghost. */

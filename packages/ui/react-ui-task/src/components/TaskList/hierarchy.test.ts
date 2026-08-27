@@ -16,24 +16,6 @@ import {
   walkTaskTree,
 } from './hierarchy';
 
-/**
- * `a` and `b` are roots; `a1`/`a2` are children of `a`, `a1x` a child of `a1`. Array order is
- * sibling order only, so the fixture deliberately does NOT store a pre-order traversal — `b` sits
- * between `a`'s children, which is exactly the divergence the walk has to absorb.
- */
-const fixture = () => {
-  const a = Task.make({ title: 'a', status: 'todo' });
-  const a1 = Task.make({ title: 'a1', status: 'todo', parentTask: Ref.make(a) });
-  const b = Task.make({ title: 'b', status: 'todo' });
-  const a2 = Task.make({ title: 'a2', status: 'todo', parentTask: Ref.make(a) });
-  const a1x = Task.make({ title: 'a1x', status: 'todo', parentTask: Ref.make(a1) });
-  return { a, a1, a1x, a2, b, tasks: [a, a1, b, a2, a1x] };
-};
-
-/** A placement reads as `<parent title or root>/<before title or end>`. */
-const format = (placement: TaskPlacement | undefined): string =>
-  placement === undefined ? 'rejected' : `${placement.parentTask?.title ?? 'root'}/${placement.before?.title ?? 'end'}`;
-
 describe('walkTaskTree', () => {
   test('walks the tree, not the array', ({ expect }) => {
     const { tasks } = fixture();
@@ -153,3 +135,21 @@ describe('keyboard placements', () => {
     expect(resolveNudge(tasks, b, 'down')).to.be.undefined;
   });
 });
+
+/**
+ * `a` and `b` are roots; `a1`/`a2` are children of `a`, `a1x` a child of `a1`. Array order is
+ * sibling order only, so the fixture deliberately does NOT store a pre-order traversal — `b` sits
+ * between `a`'s children, which is exactly the divergence the walk has to absorb.
+ */
+const fixture = () => {
+  const a = Task.make({ title: 'a', status: 'todo' });
+  const a1 = Task.make({ title: 'a1', status: 'todo', parentTask: Ref.make(a) });
+  const b = Task.make({ title: 'b', status: 'todo' });
+  const a2 = Task.make({ title: 'a2', status: 'todo', parentTask: Ref.make(a) });
+  const a1x = Task.make({ title: 'a1x', status: 'todo', parentTask: Ref.make(a1) });
+  return { a, a1, a1x, a2, b, tasks: [a, a1, b, a2, a1x] };
+};
+
+/** A placement reads as `<parent title or root>/<before title or end>`. */
+const format = (placement: TaskPlacement | undefined): string =>
+  placement === undefined ? 'rejected' : `${placement.parentTask?.title ?? 'root'}/${placement.before?.title ?? 'end'}`;

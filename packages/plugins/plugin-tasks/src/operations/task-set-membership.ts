@@ -131,12 +131,7 @@ export const reorder = <T extends Obj.Unknown>(
   return [...rest.slice(0, anchor), moved, ...rest.slice(anchor)];
 };
 
-/**
- * Validates and loads a re-parent target: the task must stay in its own set (a cross-set parent
- * would hand its lifecycle to the other set's cascade while this set still holds the ref) and must
- * not land inside its own subtree (which would orphan the branch from the set's roots). Shared by
- * the two verbs allowed to re-parent, so both reject the same shapes.
- */
+/** Rejects a parent outside the task's own set or inside its own subtree, either of which would orphan it. */
 export const resolveParentTask = (
   taskSet: TaskSet.TaskSet | undefined,
   task: Task.Task,
@@ -159,12 +154,7 @@ export const resolveParentTask = (
     return candidate;
   });
 
-/**
- * Writes a task's `parentTask` and moves the lifecycle edge with it: a sub-task hangs off its
- * parent so it cascades with it, a promoted task off the set. Cleared with `delete` rather than by
- * assigning undefined — the property is optional rather than nullable, and the self-referential
- * `Schema.suspend` rejects the assignment outright.
- */
+/** Moves the lifecycle edge with the hierarchy, so a sub-task still cascades with whatever now holds it. */
 export const applyParentTask = (
   taskSet: TaskSet.TaskSet | undefined,
   task: Task.Task,
@@ -174,11 +164,12 @@ export const applyParentTask = (
     if (newParent) {
       task.parentTask = Ref.make(newParent);
     } else {
+      // `delete` rather than assigning undefined: the property is optional rather than nullable, and
+      // the self-referential `Schema.suspend` rejects the assignment outright.
       delete task.parentTask;
     }
   });
-  const lifecycleParent = newParent ?? taskSet;
-  if (lifecycleParent) {
-    Obj.setParent(task, lifecycleParent);
-  }
+  // Set unconditionally, `undefined` included: a task promoted out of a set that no longer holds it
+  // would otherwise keep a stale edge and be cascade-deleted with its former parent.
+  Obj.setParent(task, newParent ?? taskSet);
 };

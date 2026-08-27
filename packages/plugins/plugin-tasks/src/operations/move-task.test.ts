@@ -81,7 +81,7 @@ describe('move-task', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
-  it.effect("rejects a parent inside the task's own subtree, leaving the order untouched", () =>
+  it.effect('rejects a parent inside its own subtree, leaving the order untouched', () =>
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
       yield* Database.flush();

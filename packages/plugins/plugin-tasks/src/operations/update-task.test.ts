@@ -34,6 +34,46 @@ describe('update-task', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
+  it.effect('clearing parentTask clears the lifecycle edge, not just the ref', () =>
+    Effect.gen(function* () {
+      const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
+      yield* Database.flush();
+      const { task: parent } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Parent' });
+      const { task: child } = yield* createTask.handler({
+        taskSet: Ref.make(taskSet),
+        title: 'Child',
+        parentTask: Ref.make(parent),
+      });
+      expect(Obj.getParent(child)?.id).toBe(parent.id);
+
+      yield* updateTask.handler({ task: Ref.make(child), parentTask: null });
+
+      // A promoted task falls back to the set; leaving the old edge would cascade-delete it with
+      // the parent it no longer belongs to.
+      expect(child.parentTask).toBeUndefined();
+      expect(Obj.getParent(child)?.id).toBe(taskSet.id);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('clears the lifecycle edge for a task belonging to no set', () =>
+    Effect.gen(function* () {
+      // No set to fall back to, which is the case that used to leave the edge behind: with neither a
+      // new parent nor a set, the write was skipped entirely.
+      const parent = yield* Database.add(Task.make({ title: 'Parent', status: 'todo' }));
+      const child = yield* Database.add(Task.make({ title: 'Child', status: 'todo' }));
+      Obj.update(child, (child) => {
+        child.parentTask = Ref.make(parent);
+      });
+      Obj.setParent(child, parent);
+      yield* Database.flush();
+
+      yield* updateTask.handler({ task: Ref.make(child), parentTask: null });
+
+      expect(child.parentTask).toBeUndefined();
+      expect(Obj.getParent(child)).toBeUndefined();
+    }).pipe(Effect.provide(testLayer())),
+  );
+
   it.effect('refuses to re-parent a task under its own sub-task', () =>
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
