@@ -89,6 +89,9 @@ type TaskListContextValue = {
   /** Whether a branch's sub-tasks are hidden, and the toggle that flips it. */
   isCollapsed: (id: string) => boolean;
   onCollapseToggle: (id: string) => void;
+  /** Ids of the task being dragged and its sub-tasks — lifted out of the list for the drag's duration. */
+  dragging: ReadonlySet<string>;
+  onDraggingChange: (task: Task.Task | undefined) => void;
   onTaskCreate?: (title: string) => void;
   onTaskUpdate?: (task: Task.Task, patch: TaskPatch) => void;
   onTaskDelete?: (task: Task.Task) => void;
@@ -97,6 +100,9 @@ type TaskListContextValue = {
 };
 
 const [TaskListProvider, useTaskListContext] = createContext<TaskListContextValue>(TASK_LIST_NAME);
+
+/** Shared empty set, so a list with nothing in flight does not allocate one per render. */
+const EMPTY_IDS: ReadonlySet<string> = new Set<string>();
 
 //
 // Root — headless context provider. Renders no DOM.
@@ -192,6 +198,12 @@ const TaskListRoot = ({
   const isCollapsed = useCallback((id: string) => disclosure.bind(id).expanded, [disclosure]);
   const onCollapseToggle = useCallback((id: string) => disclosure.bind(id).toggle(), [disclosure]);
 
+  // A dragged task leaves the list while it is in flight — it is in the reader's hand, shown in the
+  // drag preview — so the rows close up over the gap it came from. Its sub-tasks go with it: they
+  // travel with their parent and are part of the same preview.
+  const [draggingTask, setDraggingTask] = useState<Task.Task>();
+  const dragging = useMemo(() => (draggingTask ? subtreeIds(tasks, draggingTask) : EMPTY_IDS), [tasks, draggingTask]);
+
   return (
     <TaskListProvider
       tasks={tasks}
@@ -206,6 +218,8 @@ const TaskListRoot = ({
       statusLabel={statusLabel}
       isCollapsed={isCollapsed}
       onCollapseToggle={onCollapseToggle}
+      dragging={dragging}
+      onDraggingChange={setDraggingTask}
       onTaskCreate={onTaskCreate}
       onTaskUpdate={onTaskUpdate}
       onTaskDelete={onTaskDelete}
@@ -380,6 +394,7 @@ const useTaskDrag = ({
   onTaskMove,
   isCollapsed,
   onCollapseToggle,
+  onDraggingChange,
 }: {
   task: Task.Task;
   row?: TaskTreeRow;
@@ -387,16 +402,25 @@ const useTaskDrag = ({
   onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
   isCollapsed: (id: string) => boolean;
   onCollapseToggle: (id: string) => void;
+  onDraggingChange: (task: Task.Task | undefined) => void;
 }) => {
   const rowRef = useRef<HTMLLIElement | null>(null);
   const dragHandleRef = useRef<HTMLSpanElement | null>(null);
   const [instruction, setInstruction] = useState<Instruction | null>(null);
   const expandTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const liftFrame = useRef<number | null>(null);
 
   // Read through a ref so the listeners are registered once per row rather than re-registered on
   // every keystroke elsewhere in the list; a drag in flight must not lose its target.
-  const latest = useRef({ tasks, onTaskMove, isCollapsed, onCollapseToggle, row });
-  latest.current = { tasks, onTaskMove, isCollapsed, onCollapseToggle, row };
+  const latest = useRef({ tasks, onTaskMove, isCollapsed, onCollapseToggle, onDraggingChange, row });
+  latest.current = { tasks, onTaskMove, isCollapsed, onCollapseToggle, onDraggingChange, row };
+
+  const cancelLift = useCallback(() => {
+    if (liftFrame.current !== null) {
+      cancelAnimationFrame(liftFrame.current);
+      liftFrame.current = null;
+    }
+  }, []);
 
   const cancelExpand = useCallback(() => {
     if (expandTimeout.current) {
@@ -455,9 +479,15 @@ const useTaskDrag = ({
         },
         onDragStart: () => {
           draggingId.current = task.id;
+          // Deferred a frame: the browser snapshots the drag image as it finishes dispatching
+          // `dragstart`, and hiding the rows before that would hand it an empty picture.
+          liftFrame.current = requestAnimationFrame(() => latest.current.onDraggingChange(task));
         },
+        // Also fires when the drag is cancelled, so the rows always come back.
         onDrop: () => {
           draggingId.current = undefined;
+          cancelLift();
+          latest.current.onDraggingChange(undefined);
         },
       }),
       dropTargetForElements({
@@ -519,9 +549,15 @@ const useTaskDrag = ({
         },
       }),
     );
-  }, [enabled, task.id, cancelExpand]);
+  }, [enabled, task.id, cancelExpand, cancelLift]);
 
-  useEffect(() => cancelExpand, [cancelExpand]);
+  useEffect(
+    () => () => {
+      cancelExpand();
+      cancelLift();
+    },
+    [cancelExpand, cancelLift],
+  );
 
   return { instruction, rowRef, dragHandleRef, dragHandle: enabled };
 };
@@ -602,6 +638,8 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
       onTaskMove,
       isCollapsed,
       onCollapseToggle,
+      dragging,
+      onDraggingChange,
     } = useTaskListContext('TaskList.Item');
     const { className, ...rest } = composableProps(props);
     const { instruction, rowRef, dragHandleRef, dragHandle } = useTaskDrag({
@@ -611,6 +649,7 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
       onTaskMove,
       onCollapseToggle,
       isCollapsed,
+      onDraggingChange,
     });
     const open = row ? !isCollapsed(task.id) : undefined;
 
@@ -682,7 +721,13 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
         // `px-0`: a subgrid's own inline padding shrinks its first and last tracks, so the listbox
         // item's default inset would push the status control off the column the create row's `+`
         // sits in. The list's inset belongs to the host, not the row.
-        classNames={mx('group/row col-span-full grid grid-cols-subgrid px-0 items-start relative', className)}
+        classNames={mx(
+          'group/row col-span-full grid grid-cols-subgrid px-0 items-start relative',
+          // Hidden rather than unmounted: the drag is anchored to this row's handle, and removing it
+          // from the DOM mid-flight would cancel the gesture in some browsers.
+          dragging.has(task.id) && 'hidden',
+          className,
+        )}
         // A row stays `role=option` (that is what carries selection and roving focus), so nesting is
         // announced by these rather than by treegrid semantics.
         aria-level={row?.level}
