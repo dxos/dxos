@@ -201,6 +201,7 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*"
   },

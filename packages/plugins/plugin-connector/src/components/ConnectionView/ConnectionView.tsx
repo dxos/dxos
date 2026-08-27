@@ -11,6 +11,7 @@ import { Cursor } from '@dxos/link';
 import { Button, Input, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Empty } from '@dxos/react-ui-list';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { type TestConnectionStatus } from '#hooks';
 import { meta } from '#meta';
@@ -129,14 +130,20 @@ export const ConnectionView = ({
                       </Form.Row>
                     )}
 
-                    {/* Non-secret metadata, above the status so a failure reads against it. */}
-                    {details.map(({ label, value }) => (
-                      <Form.Row key={label} label={label}>
-                        <span className='truncate text-description' title={value}>
-                          {value}
-                        </span>
+                    {/*
+                      One JSON block rather than a labelled row per field: none of it is editable,
+                      and a stack of read-only rows competes visually with the two rows that ARE
+                      actionable. Sits above the status so a failure reads against it.
+                    */}
+                    {details.length > 0 && (
+                      <Form.Row label={t('connection-details.label')}>
+                        <JsonHighlighter
+                          data={Object.fromEntries(details.map(({ label, value }) => [label, value]))}
+                          classNames='text-xs overflow-auto'
+                          testId='connection.details'
+                        />
                       </Form.Row>
-                    ))}
+                    )}
 
                     {/* Hide Sync now entirely when the connector has no `sync` op. */}
                     {canSync && (
@@ -189,7 +196,9 @@ export const ConnectionView = ({
                     )}
 
                     <Form.Row label={t('delete-connection.label')} description={t('delete-connection.description')}>
-                      <Button onClick={onDelete}>{t('delete-connection.label')}</Button>
+                      <Button variant='destructive' onClick={onDelete}>
+                        {t('delete-connection.label')}
+                      </Button>
                     </Form.Row>
                   </Form.Section>
 

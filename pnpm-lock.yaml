@@ -9290,6 +9290,9 @@ importers:
       '@dxos/react-ui-search':
         specifier: workspace:*
         version: link:../../ui/react-ui-search
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-syntax-highlighter
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
