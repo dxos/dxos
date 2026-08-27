@@ -58,9 +58,12 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
 
     /**
      * Instructions for the agent — the preset payload (text, skills, objects, commands) a chat
-     * receives when the agent is applied to it.
+     * receives when the agent is applied to it. Owned: `SetParent` cascades it with the agent.
      */
-    instructions: Ref.Ref(Instructions.Instructions).pipe(Schema.annotate({ title: 'Instructions' })),
+    instructions: Ref.Ref(Instructions.Instructions).pipe(
+      Annotation.SetParent.set(true),
+      Schema.annotate({ title: 'Instructions' }),
+    ),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--drone--regular', hue: 'amber' }),
@@ -157,7 +160,6 @@ export const makeInitialized = (
         enabled: props.enabled ?? true,
       }),
     );
-    Obj.setParent(instructions, agent);
     const feed = yield* Database.add(Feed.make());
     const runtime = yield* Effect.context<Database.Service>();
     const contextBinder = yield* EffectEx.acquireReleaseResource(() => new AiContextRuntime.Binder({ feed, runtime }));
@@ -173,7 +175,6 @@ export const makeInitialized = (
       }),
     );
     Chat.linkCompanion({ chat, subject: agent });
-    Obj.setParent(feed, chat);
     yield* Effect.promise(() =>
       contextBinder.bind({
         skills: [Ref.make(agentSkill), ...persistedPropsSkills],
@@ -223,7 +224,6 @@ export const resetChatHistory = (agent: Agent): Effect.Effect<void, EntityNotFou
       }),
     );
     Chat.linkCompanion({ chat, subject: agent });
-    Obj.setParent(feed, chat);
     yield* Effect.promise(() =>
       contextBinder.bind({
         skills,
