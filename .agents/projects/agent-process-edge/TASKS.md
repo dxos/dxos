@@ -84,7 +84,7 @@ Unblocking `AgentProcess` needs #12765 merged, or a maintainer dispatching `pkg.
       in the `_initPromise` memo and then awaited `_init`, which handed the same promise back — every
       request to a DO with nothing spawned hung. Both wrappers now memoize around a shared
       `_initImpl`.
-- [ ] `agent-process.node.test.ts` — see Phase 5, which lays the requirement out in full.
+- [x] `agent-process.node.test.ts` — see Phase 5; written and green (edge `54e5fba`).
 - [x] `pnpm format`, lint, and the touched test suites green in both repos; PRs opened (#12765,
       dxos/edge#971). Edge CI green; the edge trigger-dispatcher suite (17 tests) still passes with
       the dispatcher's new process index.
@@ -105,9 +105,11 @@ all the host half needs.
 ### 5a — host half (edge). Needs only the `AgentProcess` export.
 
 - [ ] Bump edge's catalog for `@dxos/agent-runtime` to a commit that exports `AgentProcess`.
-- [ ] Add `AGENT_PROCESS_KEY -> { make: AgentProcess, input: … }` to the edge process registry
+      Not needed to iterate: `pnpm link-packages` carries the unpublished export, which is how the
+      host half was built and tested. Still required before landing.
+- [x] Add `AGENT_PROCESS_KEY -> { make: AgentProcess, input: … }` to the edge process registry
       (`compute-service/src/processes/registry.ts`), keeping the registry closed.
-- [ ] Assemble `AgentProcess`'s eight services inside `ProcessObject`, using the now-exported
+- [x] Assemble `AgentProcess`'s eight services inside `ProcessObject`, using the now-exported
       `FunctionContext` (`@dxos/compute-runtime`). It declares `Database.Service`,
       `OpaqueToolkit.OpaqueToolkitProvider`, `Operation.Service`, `Registry.Service`,
       `StorageService.StorageService`, `ProcessManager.ProcessOperationInvoker.Service`,
@@ -123,6 +125,12 @@ all the host half needs.
       `DataServiceFetcher`/`QueueServiceFetcher`/`AiServiceFetcher` bindings, then overlays a local
       `functionsService` and the forwarded `accessTokenService`. The process host wants that same
       shape against compute-service's own bindings — read that method first.
+      Done in `ProcessObject._resolveServices`, exactly that shape. One thing the plan had wrong:
+      `ProcessManagerImpl` provides `ProcessOperationInvoker.Service` **only when constructed with a
+      handler set**, and it filters that tag out of external services, so the resolver can never
+      supply it — the host now passes `OperationHandlerSet.empty`. Hosting the real handler set (so an
+      agent's tool operations execute on EDGE rather than only dispatching to the functions service)
+      is a follow-up.
 - [ ] `AgentProcess` requires `spawn` options `target` (a queue DXN) and optionally
       `Process.InstructionsAnnotation`; both arrive as annotations, so the spawn route already
       carries them — cover a missing `target` (the definition dies) in the test.
@@ -130,7 +138,7 @@ all the host half needs.
       (`MEMOIZED_AI_INFERENCE_SERVICE`); the e2e must use that, not a live model, or it cannot run in
       CI. See the `regenerate-model-fixture` skill for the cache.
 
-### 5b — client half (dxos + edge). Needs #12765 published.
+### 5b — client half (dxos + edge). Written and green against a linked dxos workspace.
 
 **Requirement (from the PR author): the edge e2e suites drive the official `@dxos/compute` APIs —
 `AgentService` and `Process.ProcessMonitorService` — not HTTP routes and not the transport.** The
@@ -151,13 +159,24 @@ calling the manager, so the adapter now refreshes that atom on spawn. Without it
 would have caught.
 
 - [ ] Bump edge's catalog for `@dxos/compute-runtime` + `@dxos/edge-compute` to a commit carrying
-      `RemoteProcessManagerAdapter` and `EdgeProcessControl`.
-- [ ] `agent-process.node.test.ts`: build `AgentService.layer` over
+      `RemoteProcessManagerAdapter` and `EdgeProcessControl`, and drop the `file:` link overrides.
+- [x] `agent-process.node.test.ts`: build `AgentService.layer` over
       `processManagerFromEdgeClient(client, spaceId)` and assert, against the real worker — 1. spawn: `AgentService` starts an agent on EDGE, and the space process index lists it under
       `AGENT_PROCESS_KEY`; 2. control: a submitted prompt reaches the hosted agent and its reply reaches the client as
       outputs read by cursor (proving D7's cursor reads across a reconnect: read once, drop the
       handle, re-attach by pid, resume from the cursor); 3. rpc: the `HarnessControl` surface answers over the remote transport; 4. lifecycle: `runUntilSettled` returns on the agent's own idle, and `terminate` ends it and
       drops it from the index.
+
+**What the suite asserts today** (`packages/services/edge/test/agent-process.node.test.ts`, 1 test,
+green): `AgentService.getSession(feed)` spawns `AgentProcess` on EDGE; `ProcessManager.list` reports
+it under `AGENT_PROCESS_KEY`; `Process.ProcessMonitorService.processTree` contains it (the aggregate
+monitor, which is what Composer renders); the handle's `terminate` ends it and drops it from the
+space index. Prompt/reply (2) and the `HarnessControl` rpc (3) still need the memoized Anthropic
+fixture — the model round trip is the remaining gap, not the lifecycle.
+
+One host requirement the run surfaced: the agent's target `Feed` must have replicated to EDGE before
+the spawn, because `Database.resolve` runs on the host. The test creates it client-side, flushes,
+`syncToEdge`s and waits on a query before asking for a session.
 
 ### 5d — the compute-API e2e is written and passing; it lands with the catalog bump
 
@@ -165,12 +184,12 @@ would have caught.
 `ProcessManager`, `Process.Handle` and `Process.ProcessMonitorService` only. Verified by linking the
 dxos workspace into edge (`pnpm link-packages`), not by publishing.
 
-It is **not on the edge branch**: it imports `@dxos/compute-runtime/remote-process`,
+It is now **on the edge branch** (the user authorised pushing link-dependent code, to be resolved
+before landing). It imports `@dxos/compute-runtime/remote-process`,
 `@dxos/edge-compute/process-control` and `@dxos/edge-client/process`, which the pinned catalog build
-does not carry, so committing it would make edge CI resolve imports that are not there. Recover it
-from dxos/edge commit `de870fa` when the pin moves.
+does not carry, so **edge CI will fail to resolve them until the pin moves**.
 
-- [ ] After #12765 lands and publishes, bump edge's catalog and restore the suite.
+- [ ] After #12765 lands and publishes, bump edge's catalog and drop the link overrides.
 
 Three client defects it found, all fixed in #12765 and none reachable from the route-level suite:
 
@@ -183,7 +202,8 @@ Three client defects it found, all fixed in #12765 and none reachable from the r
 
 ### 5c — verification bar
 
-- [ ] Both suites green locally and in edge CI; no raised teardown budgets (the suite terminates
+- [x] All three suites green locally (9 + 6 + 1); edge CI blocked on the catalog bump above.
+- [ ] Both suites green in edge CI; no raised teardown budgets (the suite terminates
       what it spawns); `pnpm format`, lint clean in both repos.
 
 ## Boot budget (do not re-investigate)
