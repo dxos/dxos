@@ -3,17 +3,15 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { AiContext } from '@dxos/assistant';
 import { AgentWizardSkill, AlarmSkill, Chat, ChatContextSkill } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
-import * as RegistryPlugin from '@dxos/plugin-registry/RegistryPlugin';
 import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 
 import { AssistantSkill, PluginManagerSkill } from '#skills';
@@ -36,15 +34,10 @@ const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = Ass
       // Dynamic import to avoid circular dependency with the barrel that also exports SkillManagerHandlers.
       const { SkillManagerSkill } = yield* Effect.promise(() => import('@dxos/assistant-toolkit'));
 
-      // Only an extensible host contributes the plugin-manager skill's handlers, so binding it
-      // elsewhere would bind a skill whose tools cannot run. Read the manager from the ambient
-      // context: a host that binds none (a test, the edge operation service) simply skips it.
-      const pluginManager = yield* Effect.serviceOption(Plugin.Service);
-      const registryPresent = Option.match(pluginManager, {
-        onNone: () => false,
-        onSome: (manager) =>
-          manager.getPlugins().some((plugin) => plugin.meta.profile.key === RegistryPlugin.meta.profile.key),
-      });
+      // Only an extensible host contributes the plugin-manager skill, since its tools resolve to the
+      // registry plugin's handlers; binding it elsewhere would bind a skill that cannot run.
+      const contributed = yield* Capability.getAll(AppCapabilities.SkillDefinition);
+      const pluginManagerContributed = contributed.some(({ key }) => key === PluginManagerSkill.key);
 
       const runtime = yield* Effect.context<Database.Service>();
       const binder = new AiContext.Binder({ feed, runtime, registry });
@@ -61,7 +54,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = Ass
               AgentWizardSkill,
               SkillManagerSkill,
               AlarmSkill,
-              ...(registryPresent ? [PluginManagerSkill] : []),
+              ...(pluginManagerContributed ? [PluginManagerSkill] : []),
             ].map(({ key }) => Ref.fromURI(Skill.registryURI(key))),
             objects: [Ref.make(chat)],
           }),
