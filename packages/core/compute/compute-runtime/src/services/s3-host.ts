@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { type S3Host } from '@dxos/blob-s3';
 import * as Credential from '@dxos/compute/Credential';
 import { Database, Query } from '@dxos/echo';
+import { type S3Host } from '@dxos/echo-client/blob-s3';
 import { EffectEx } from '@dxos/effect';
 import { type SpaceId } from '@dxos/keys';
 import { Connection } from '@dxos/link';
@@ -30,7 +30,7 @@ export type S3HostOptions = {
 };
 
 /**
- * Binds `@dxos/blob-s3` to a space's database.
+ * Binds `@dxos/echo-client/blob-s3` to a space's database.
  *
  * Lives here rather than in `blob-s3` because it needs `credentialsLayerFromDatabase`, which lives
  * here — reusing it rather than reading `AccessToken` objects directly is what keeps a

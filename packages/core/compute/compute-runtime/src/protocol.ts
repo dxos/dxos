@@ -9,7 +9,6 @@ import * as Schema from 'effect/Schema';
 
 import { AiModelResolver, AiService, OpaqueToolkit } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
-import { S3_BACKEND, createS3BlobBackend } from '@dxos/blob-s3';
 import { FunctionError, InvalidOperationInputError, InvalidOperationOutputError } from '@dxos/compute';
 import * as Credential from '@dxos/compute/Credential';
 import * as Header from '@dxos/compute/Header';
@@ -18,6 +17,7 @@ import * as Trace from '@dxos/compute/Trace';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
 import { type DatabaseImpl, EchoClient, makeRegistry } from '@dxos/echo-client';
+import { S3_BACKEND, createS3BlobBackend } from '@dxos/echo-client/blob-s3';
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import { EffectEx, SchemaAST } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';

@@ -29,9 +29,6 @@
       "path": "../../../sdk/types"
     },
     {
-      "path": "../../echo/blob-s3"
-    },
-    {
       "path": "../../echo/echo"
     },
     {

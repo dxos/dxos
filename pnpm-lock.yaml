@@ -4758,9 +4758,6 @@ importers:
       '@dxos/ai':
         specifier: workspace:*
         version: link:../ai
-      '@dxos/blob-s3':
-        specifier: workspace:*
-        version: link:../../echo/blob-s3
       '@dxos/compute':
         specifier: workspace:*
         version: link:../compute
@@ -5516,18 +5513,6 @@ importers:
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
-
-  packages/core/echo/blob-s3:
-    dependencies:
-      '@dxos/echo-protocol':
-        specifier: workspace:*
-        version: link:../echo-protocol
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../../common/keys
 
   packages/core/echo/echo:
     dependencies:
@@ -14251,9 +14236,6 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/blob-s3':
-        specifier: workspace:*
-        version: link:../../core/echo/blob-s3
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -14263,6 +14245,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-client
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys

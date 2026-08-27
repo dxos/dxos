@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { objectKey, probeAccess, regionFromHost } from '@dxos/blob-s3';
 import { Format, Obj, Ref } from '@dxos/echo';
+import { objectKey, probeAccess, regionFromHost } from '@dxos/echo-client/blob-s3';
 import { AccessToken, Connection } from '@dxos/link';
 import { ConnectionTestError } from '@dxos/plugin-connector';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';

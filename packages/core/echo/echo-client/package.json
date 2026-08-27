@@ -18,15 +18,20 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./testing": {
-      "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
-      "import": "./dist/lib/testing.mjs"
+    "./blob-s3": {
+      "source": "./src/blob/s3/index.ts",
+      "types": "./dist/types/src/blob/s3/index.d.ts",
+      "import": "./dist/lib/blob-s3.mjs"
     },
     "./internal": {
       "source": "./src/internal/index.ts",
       "types": "./dist/types/src/internal/index.d.ts",
       "import": "./dist/lib/internal.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
