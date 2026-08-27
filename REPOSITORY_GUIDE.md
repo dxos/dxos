@@ -225,7 +225,7 @@ broken, because neither is tracked by the lockfile:
 
 - A dependency version bump leaves per-package `node_modules/.bin/*` shims pointing at a store
   path pnpm has since removed — the build fails with `MODULE_NOT_FOUND` on a path containing the
-  *old* version.
+  _old_ version.
 - Generated sources (e.g. `packages/core/protocols/src/proto/gen`) go stale while moon's cache
   hash still matches, so every run restores the stale output rather than regenerating it.
 
