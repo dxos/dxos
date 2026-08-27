@@ -114,7 +114,9 @@ const SkillsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'registry
   return (
     <SearchList.Root onSearch={handleSearch}>
       <SearchList.Content classNames='flex flex-col'>
-        <SearchList.Viewport>
+        {/* Flush to the popover edge, like the sibling `Listbox` panels: this is a menu, not a
+            centered search surface, so the scroll strip is not reserved on both sides. */}
+        <SearchList.Viewport padding={false}>
           {results.map((skill) => {
             const skillKey = Obj.getMeta(skill).key ?? skill.id;
             const isActive = activeSkills.has(skillKey);
