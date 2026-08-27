@@ -38,7 +38,7 @@ export const runEpochMigration = async (ctx: Context, context: MigrationContext)
     case SpacesService.Migration.enums.INIT_AUTOMERGE: {
       using document = await context.echoHost.createDoc();
       await context.echoHost.flush(ctx);
-      return { newRoot: document.handle.url };
+      return { newRoot: document.url };
     }
     case SpacesService.Migration.enums.PRUNE_AUTOMERGE_ROOT_HISTORY: {
       if (!context.currentRoot) {
@@ -49,9 +49,9 @@ export const runEpochMigration = async (ctx: Context, context: MigrationContext)
       });
       invariant(rootLease, 'Automerge root document must load for history prune migration.');
 
-      using newRoot = await context.echoHost.createDoc(rootLease.handle.doc());
+      using newRoot = await context.echoHost.createDoc(rootLease.doc());
       await context.echoHost.flush(ctx);
-      return { newRoot: newRoot.handle.url };
+      return { newRoot: newRoot.url };
     }
     case SpacesService.Migration.enums.FRAGMENT_AUTOMERGE_ROOT: {
       throw new Error('Migration not available');

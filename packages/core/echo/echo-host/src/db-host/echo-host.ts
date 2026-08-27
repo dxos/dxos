@@ -468,7 +468,7 @@ export class EchoHost extends Resource {
 
     await this._automergeHost.flush(ctx, { documentIds: [automergeRoot.documentId] });
 
-    return await this.updateSpaceRoot(ctx, spaceId, automergeRoot.handle.url);
+    return await this.updateSpaceRoot(ctx, spaceId, automergeRoot.url);
   }
 
   /**
@@ -494,20 +494,20 @@ export class EchoHost extends Resource {
       links: {},
     });
 
-    rootHandle.handle.change((doc: Partial<SpaceRoot>) => {
+    rootHandle.change((doc: Partial<SpaceRoot>) => {
       doc.type = SPACE_ROOT_TYPE;
       doc.spaceId = spaceId;
-      doc.directory = directoryHandle.handle.url;
+      doc.directory = directoryHandle.url;
     });
 
     await this._automergeHost.flush(ctx, { documentIds: [rootHandle.documentId, directoryHandle.documentId] });
 
-    const directory = await this.updateSpaceRoot(ctx, spaceId, directoryHandle.handle.url);
+    const directory = await this.updateSpaceRoot(ctx, spaceId, directoryHandle.url);
     await this._spaceStateManager.setSpaceRootRefs(spaceId, {
-      spaceRootDocUrl: rootHandle.handle.url,
+      spaceRootDocUrl: rootHandle.url,
     });
 
-    return { spaceId, spaceRootUrl: rootHandle.handle.url, directory };
+    return { spaceId, spaceRootUrl: rootHandle.url, directory };
   }
 
   /**
@@ -531,7 +531,7 @@ export class EchoHost extends Resource {
     }
 
     using rootHandle = await this._automergeHost.createDoc<Partial<SpaceRoot>>({});
-    rootHandle.handle.change((doc: Partial<SpaceRoot>) => {
+    rootHandle.change((doc: Partial<SpaceRoot>) => {
       doc.type = SPACE_ROOT_TYPE;
       doc.spaceId = spaceId;
       doc.directory = directory.url;
@@ -539,7 +539,7 @@ export class EchoHost extends Resource {
 
     await this._automergeHost.flush(ctx, { documentIds: [rootHandle.documentId] });
 
-    const refs: SpaceRootRefs = { spaceRootDocUrl: rootHandle.handle.url };
+    const refs: SpaceRootRefs = { spaceRootDocUrl: rootHandle.url };
     await this._spaceStateManager.setSpaceRootRefs(spaceId, refs);
     return refs;
   }
@@ -564,7 +564,7 @@ export class EchoHost extends Resource {
 
     // Local-only: a caller adopting a root it was merely told about must not block on the network.
     using rootHandle = await this._automergeHost.loadDoc<SpaceRoot>(ctx, spaceRootUrl, { fetchFromNetwork: false });
-    const root = rootHandle?.handle.doc();
+    const root = rootHandle?.doc();
     invariant(root && isSpaceRoot(root), 'Space root document must load.');
     invariant(root.spaceId === spaceId, `Space root names another space: ${root.spaceId}`);
 
@@ -592,7 +592,7 @@ export class EchoHost extends Resource {
 
     using rootHandle = await this._automergeHost.loadDoc<SpaceRoot>(ctx, refs.spaceRootDocUrl);
     invariant(rootHandle, 'Space root document must load before linking credentials.');
-    rootHandle.handle.change((doc: SpaceRoot) => {
+    rootHandle.change((doc: SpaceRoot) => {
       doc.credentials = credentialsDocUrl;
     });
 
@@ -892,7 +892,7 @@ export class EchoHost extends Resource {
       using lease = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, documentId, {
         fetchFromNetwork: false,
       });
-      return lease?.handle.doc() ?? null;
+      return lease?.doc() ?? null;
     } catch (err) {
       log.warn('reclamation: document failed to load, treating as opaque', { documentId, err });
       return null;
@@ -949,7 +949,7 @@ export class EchoHost extends Resource {
       using lease = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, documentId, {
         fetchFromNetwork: false,
       });
-      const doc = lease?.handle.doc();
+      const doc = lease?.doc();
       if (doc) {
         addCounts(doc);
       }
@@ -983,7 +983,7 @@ export class EchoHost extends Resource {
       using lease = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, documentId, {
         fetchFromNetwork: false,
       });
-      const doc = lease?.handle.doc();
+      const doc = lease?.doc();
       if (!doc) {
         // A storage-only miss is ambiguous: the document may be genuinely gone, or it may be live
         // data this host has not replicated yet. Retain the link — unlinking here would sync the
@@ -1008,7 +1008,7 @@ export class EchoHost extends Resource {
       return { unlinkedObjects: 0, removedInlineObjects: [] };
     }
 
-    root.handle.change((draft: DatabaseDirectory) => {
+    root.change((draft: DatabaseDirectory) => {
       for (const id of deletedInlineIds) {
         if (draft.objects) {
           delete draft.objects[id];
@@ -1043,7 +1043,7 @@ export class EchoHost extends Resource {
       using lease = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, documentId, {
         fetchFromNetwork: false,
       });
-      const doc = lease?.handle.doc();
+      const doc = lease?.doc();
       if (!doc) {
         continue;
       }

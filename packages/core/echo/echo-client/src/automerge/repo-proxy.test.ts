@@ -40,18 +40,18 @@ describe('RepoProxy', () => {
     const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), clientHandle.url!);
     invariant(hostHandle);
     log.break();
-    await hostHandle.handle.whenReady();
+    await hostHandle.waitUntilReady();
 
     log.break();
     const receivedChange = new Trigger();
-    hostHandle.handle.once('change', () => receivedChange.wake());
+    hostHandle.once('change', () => receivedChange.wake());
     const text = 'Hello World!';
     clientHandle.change((doc: any) => {
       doc.text = text;
     });
     await receivedChange.wait();
 
-    expect(hostHandle.handle.doc()?.text).to.equal(text);
+    expect(hostHandle.doc()?.text).to.equal(text);
 
     log.break();
 
@@ -60,7 +60,7 @@ describe('RepoProxy', () => {
       const receivedChange = new Trigger();
       clientHandle.once('change', () => receivedChange.wake());
       const text = 'Hello World 2!';
-      hostHandle.handle.change((doc: any) => {
+      hostHandle.change((doc: any) => {
         doc.text = text;
       });
       await receivedChange.wait();
@@ -75,7 +75,7 @@ describe('RepoProxy', () => {
 
     const text = 'Hello World!';
     const hostHandle = await host.createDoc<{ text: string }>({ text });
-    const clientHandle = clientRepo.find<{ text: string }>(hostHandle.handle.url);
+    const clientHandle = clientRepo.find<{ text: string }>(hostHandle.url);
     await asyncTimeout(clientHandle.whenReady(), 1000);
     expect(clientHandle.doc()?.text).to.equal(text);
   });
@@ -167,7 +167,7 @@ describe('RepoProxy', () => {
     // unreachable from the test peer.
     const sourcePeer = await setup();
     const sourceHandle = await sourcePeer.host.createDoc<{ text: string }>({ text: 'unreachable' });
-    const unreachableUrl = sourceHandle.handle.url;
+    const unreachableUrl = sourceHandle.url;
 
     // Test peer: separate kv store (no chunks for `unreachableUrl` on disk),
     // no replication network configured.
@@ -209,7 +209,7 @@ describe('RepoProxy', () => {
     const [clientRepo] = createProxyRepos(dataService);
     await openAndClose(clientRepo);
 
-    const handle = clientRepo.find<{ text: string }>(sourceHandle.handle.url);
+    const handle = clientRepo.find<{ text: string }>(sourceHandle.url);
     const settledOnDisk = await asyncTimeout(handle.whenSettledOnDisk(), 1000);
     expect(settledOnDisk).toBe(true);
     await asyncTimeout(handle.whenReady(), 1000);
@@ -302,22 +302,22 @@ describe('RepoProxy', () => {
         doc.client = i;
       });
 
-      hostHandle.handle.change((doc: any) => {
+      hostHandle.change((doc: any) => {
         doc.host = i;
       });
     }
 
     expect(handle.doc()?.host).to.equal(undefined);
-    expect(hostHandle.handle.doc()?.client).to.equal(undefined);
+    expect(hostHandle.doc()?.client).to.equal(undefined);
 
     const [receiveChanges, inc] = latch({ count: 2, timeout: 1000 });
     handle.once('change', inc);
-    hostHandle.handle.once('change', inc);
+    hostHandle.once('change', inc);
 
     await receiveChanges();
     await handle.whenReady();
     expect(handle.doc()?.host).to.equal(numberOfUpdates);
-    await hostHandle.handle.whenReady();
+    await hostHandle.waitUntilReady();
     expect(handle.doc()?.client).to.equal(numberOfUpdates);
   });
 
@@ -335,8 +335,8 @@ describe('RepoProxy', () => {
 
     const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), cloneHandle.url!);
     invariant(hostHandle);
-    await hostHandle.handle.whenReady();
-    await expect.poll(() => hostHandle.handle.doc()?.text).toEqual(text);
+    await hostHandle.waitUntilReady();
+    await expect.poll(() => hostHandle.doc()?.text).toEqual(text);
   });
 
   test('create N documents', async () => {
@@ -376,8 +376,8 @@ describe('RepoProxy', () => {
     );
 
     for (const lease of hostHandles) {
-      await lease.handle.whenReady();
-      await expect.poll(() => lease.handle.doc()?.text, { timeout: 1000 }).toEqual(text);
+      await lease.waitUntilReady();
+      await expect.poll(() => lease.doc()?.text, { timeout: 1000 }).toEqual(text);
     }
   });
 

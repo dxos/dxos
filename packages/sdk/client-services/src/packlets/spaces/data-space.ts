@@ -7,7 +7,7 @@ import { type AutomergeUrl } from '@automerge/automerge-repo';
 
 import { Event, Mutex, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
-import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
+import { Context, ContextDisposedError } from '@dxos/context';
 import type { SpecificCredential } from '@dxos/credentials';
 import { timed, warnAfterTimeout } from '@dxos/debug';
 import { type DatabaseRoot, type DocumentLease, type EchoHost } from '@dxos/echo-host';
@@ -490,12 +490,9 @@ export class DataSpace {
     queueMicrotask(async () => {
       try {
         await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', async () => {
-          lease = await cancelWithContext(
-            this._ctx,
-            this._echoHost.loadDoc<DatabaseDirectory>(this._ctx, rootUrl as AutomergeUrl, {
-              fetchFromNetwork: true,
-            }),
-          );
+          lease = await this._echoHost.loadDoc<DatabaseDirectory>(this._ctx, rootUrl as AutomergeUrl, {
+            fetchFromNetwork: true,
+          });
         });
         if (this._ctx.disposed) {
           return;
@@ -509,9 +506,9 @@ export class DataSpace {
         using _guard = await this._epochProcessingMutex.acquire();
 
         // Attaching space identifiers to legacy documents.
-        const doc = lease.handle.doc();
+        const doc = lease.doc();
         if (!doc.access?.spaceId || !doc.access?.spaceKey) {
-          lease.handle.change((doc: DatabaseDirectory) => {
+          lease.change((doc: DatabaseDirectory) => {
             doc.access ??= {};
             doc.access.spaceId ??= this.id;
             // spaceKey is deprecated but still written so older clients can resolve the owning space.
@@ -522,7 +519,7 @@ export class DataSpace {
         // TODO(dmaretskyi): Close roots.
         // TODO(dmaretskyi): How do we handle changing to the next EPOCH?
         // `updateSpaceRoot` takes its own lease on the root, so this one is released either way.
-        const rootUrlToAssign = lease.handle.url;
+        const rootUrlToAssign = lease.url;
         lease[Symbol.dispose]();
         lease = null;
         const root = await this._echoHost.updateSpaceRoot(this._ctx, this.id, rootUrlToAssign);

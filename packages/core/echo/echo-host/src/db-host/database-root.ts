@@ -18,7 +18,7 @@ import { type DocumentLease } from '../automerge/document-lease';
 import { type DocMetrics, measureDocMetrics } from './automerge-metrics';
 
 export class DatabaseRoot implements Disposable {
-  static mapLinks(doc: DocHandle<DatabaseDirectory>, mapping: Record<DocumentId, DocumentId>): void {
+  static mapLinks(document: DocumentLease<DatabaseDirectory>, mapping: Record<DocumentId, DocumentId>): void {
     const remap = (url: string): string | undefined => {
       if (!isValidAutomergeUrl(url)) {
         return undefined;
@@ -26,7 +26,7 @@ export class DatabaseRoot implements Disposable {
       const documentId = interpretAsDocumentId(url);
       return mapping[documentId] ? `automerge:${mapping[documentId]}` : undefined;
     };
-    doc.change((draft) => {
+    document.change((draft) => {
       for (const [key, value] of Object.entries(draft.links ?? {})) {
         const mapped = remap(value.toString());
         if (mapped && draft.links) {
@@ -68,8 +68,20 @@ export class DatabaseRoot implements Disposable {
     return !this._lease.disposed && this._lease.state === 'ready';
   }
 
-  get handle(): DocHandle<DatabaseDirectory> {
-    return this._lease.handle;
+  /**
+   * The `DocHandle` stays inside the lease — a caller holding one would read and write a document the
+   * host had evicted, so the operations the root needs are proxied instead.
+   */
+  change(callback: Parameters<DocumentLease<DatabaseDirectory>['change']>[0]): void {
+    this._lease.change(callback);
+  }
+
+  on(...args: Parameters<DocumentLease<DatabaseDirectory>['on']>): void {
+    this._lease.on(...args);
+  }
+
+  off(...args: Parameters<DocumentLease<DatabaseDirectory>['off']>): void {
+    this._lease.off(...args);
   }
 
   /** Releases the root document, which is the last thing keeping the space's directory resident. */
@@ -78,7 +90,7 @@ export class DatabaseRoot implements Disposable {
   }
 
   doc(): A.Doc<DatabaseDirectory> | null {
-    return this.isLoaded ? this._lease.handle.doc() : null;
+    return this.isLoaded ? this._lease.doc() : null;
   }
 
   getVersion(): SpaceDocVersion | null {

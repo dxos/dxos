@@ -76,7 +76,7 @@ describe('Query pipeline strong-dependency stalls', () => {
         },
       },
     });
-    const unreachableUrl = orphanDepHandle.handle.url;
+    const unreachableUrl = orphanDepHandle.url;
 
     // 3. Wire both objects into the local space root. Main is reachable on
     //    disk via `links[mainObjectId]`; dep is *advertised* via
@@ -84,7 +84,7 @@ describe('Query pipeline strong-dependency stalls', () => {
     const spaceRootHandle = db.getSpaceRootDocHandle();
     spaceRootHandle.change((newDoc: DatabaseDirectory) => {
       newDoc.links ??= {};
-      newDoc.links[mainObjectId] = new A.RawString(mainDocHandle.handle.url);
+      newDoc.links[mainObjectId] = new A.RawString(mainDocHandle.url);
       newDoc.links[depObjectId] = new A.RawString(unreachableUrl);
     });
 
@@ -156,12 +156,12 @@ describe('Query pipeline strong-dependency stalls', () => {
         },
       },
     });
-    const unreachableUrl = orphanDepHandle.handle.url;
+    const unreachableUrl = orphanDepHandle.url;
 
     const spaceRootHandle = db.getSpaceRootDocHandle();
     spaceRootHandle.change((newDoc: DatabaseDirectory) => {
       newDoc.links ??= {};
-      newDoc.links[mainObjectId] = new A.RawString(mainDocHandle.handle.url);
+      newDoc.links[mainObjectId] = new A.RawString(mainDocHandle.url);
       newDoc.links[depObjectId] = new A.RawString(unreachableUrl);
     });
 
@@ -223,9 +223,9 @@ describe('Query pipeline strong-dependency stalls', () => {
     const spaceRootHandle = db.getSpaceRootDocHandle();
     spaceRootHandle.change((newDoc: DatabaseDirectory) => {
       newDoc.links ??= {};
-      newDoc.links[aId] = new A.RawString(aHandle.handle.url);
-      newDoc.links[bId] = new A.RawString(bHandle.handle.url);
-      newDoc.links[cId] = new A.RawString(orphanCHandle.handle.url);
+      newDoc.links[aId] = new A.RawString(aHandle.url);
+      newDoc.links[bId] = new A.RawString(bHandle.url);
+      newDoc.links[cId] = new A.RawString(orphanCHandle.url);
     });
 
     await sleep(200);
@@ -275,8 +275,8 @@ describe('Query pipeline strong-dependency stalls', () => {
     const spaceRootHandle = db.getSpaceRootDocHandle();
     spaceRootHandle.change((newDoc: DatabaseDirectory) => {
       newDoc.links ??= {};
-      newDoc.links[mainObjectId] = new A.RawString(mainDocHandle.handle.url);
-      newDoc.links[depObjectId] = new A.RawString(orphanDepHandle.handle.url);
+      newDoc.links[mainObjectId] = new A.RawString(mainDocHandle.url);
+      newDoc.links[depObjectId] = new A.RawString(orphanDepHandle.url);
     });
 
     await sleep(200);
@@ -346,7 +346,7 @@ describe('Query pipeline strong-dependency stalls', () => {
     const spaceRootHandle = db.getSpaceRootDocHandle();
     spaceRootHandle.change((newDoc: DatabaseDirectory) => {
       newDoc.links ??= {};
-      newDoc.links[mainObjectId] = new A.RawString(mainDocHandle.handle.url);
+      newDoc.links[mainObjectId] = new A.RawString(mainDocHandle.url);
     });
 
     await sleep(200);
@@ -393,7 +393,7 @@ describe('Query pipeline strong-dependency stalls', () => {
     const spaceRootHandle = db._entityManager.getSpaceRootDocHandle();
     spaceRootHandle.change((newDoc: DatabaseDirectory) => {
       newDoc.links ??= {};
-      newDoc.links[mainObjectId] = new A.RawString(mainDocHandle.handle.url);
+      newDoc.links[mainObjectId] = new A.RawString(mainDocHandle.url);
     });
     await sleep(200);
 
@@ -410,7 +410,7 @@ describe('Query pipeline strong-dependency stalls', () => {
       },
     });
     spaceRootHandle.change((newDoc: DatabaseDirectory) => {
-      newDoc.links![depObjectId] = new A.RawString(depDocHandle.handle.url);
+      newDoc.links![depObjectId] = new A.RawString(depDocHandle.url);
     });
 
     // The local materialization heals the cached resolution, so main now surfaces.

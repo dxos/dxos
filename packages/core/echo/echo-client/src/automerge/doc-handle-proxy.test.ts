@@ -33,7 +33,7 @@ describe('DocHandleProxy', () => {
 
     const mutation = clientHandle._getPendingChanges()!;
     await docsSynchronizer.update(Context.default(), [{ documentId, mutation }]);
-    expect(workerHandle.handle.doc()?.text).to.equal(text);
+    expect(workerHandle.doc()?.text).to.equal(text);
   });
 
   test('update handle with foreign mutation', async () => {
@@ -55,7 +55,7 @@ describe('DocHandleProxy', () => {
     });
     await openAndClose(docsSynchronizer);
     await docsSynchronizer.addDocuments([workerHandle.documentId]);
-    workerHandle.handle.change((doc: { text: string }) => {
+    workerHandle.change((doc: { text: string }) => {
       doc.text = text;
     });
 
@@ -74,7 +74,7 @@ describe('DocHandleProxy', () => {
       sendUpdates: ({ updates }) => updates?.forEach((update) => clientHandle._integrateHostUpdate(update.mutation)),
     });
     await openAndClose(synchronizer);
-    workerHandle.handle.change((doc: DocType) => {
+    workerHandle.change((doc: DocType) => {
       doc.foreignPeerText = foreignPeerText;
     });
 
@@ -96,7 +96,7 @@ describe('DocHandleProxy', () => {
     const clientUpdate = clientHandle._getPendingChanges()!;
     await synchronizer.update(Context.default(), [{ documentId: workerHandle.documentId, mutation: clientUpdate }]);
 
-    for (const handle of [clientHandle, workerHandle.handle] as const) {
+    for (const handle of [clientHandle, workerHandle] as const) {
       expect(handle.doc()?.clientText).to.equal(clientText);
       expect(handle.doc()?.foreignPeerText).to.equal(foreignPeerText);
     }

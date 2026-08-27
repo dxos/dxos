@@ -2,7 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type DocHandle, type DocumentId, type DocumentProgress } from '@automerge/automerge-repo';
+import type * as A from '@automerge/automerge';
+import {
+  type AutomergeUrl,
+  type DocHandle,
+  type DocHandleChangePayload,
+  type DocumentId,
+  type DocumentProgress,
+  type Heads,
+  type QueryState,
+  type UrlHeads,
+} from '@automerge/automerge-repo';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -10,12 +20,21 @@ import { log } from '@dxos/log';
 import { type HandleQueryState } from './handle-state';
 
 /**
+ * Events a holder can observe on the leased document.
+ */
+export type DocumentLeaseEvents<T> = {
+  'change': DocHandleChangePayload<T>;
+  'heads-changed': { doc: A.Doc<T>; heads: Heads };
+};
+
+/**
  * A borrowed reference to one loaded document, held for as long as the holder needs it.
  *
  * The repo caches a document forever once anything faults it in, so residency has to be decided by
- * the host rather than by the repo: a lease records that decision. Holding one is the only way to
- * reach a `DocHandle` — nothing outside {@link DocumentLeaseRegistry} may take the repo route,
- * because a handle obtained behind the registry's back would be evicted while still in use.
+ * the host rather than by the repo: a lease records that decision. The underlying `DocHandle` is
+ * never handed out — a holder that captured one would keep reading (and writing) a document the host
+ * has since evicted, and no reference count could see it — so every operation goes through the lease
+ * and stops working the moment it is disposed.
  *
  * Disposal is idempotent and, being `Symbol.dispose`, is usually written as `using lease = ...`.
  * A holder that outlives its scope (a subscription, a space root) keeps the lease in a field and
@@ -25,9 +44,9 @@ export class DocumentLease<T = any> implements Disposable {
   #release: (() => void) | undefined;
 
   /**
-   * Resolved on access rather than at construction, because an eviction of the same document may
-   * still be draining: the query and handle a lease taken during that window must be the ones the
-   * repo holds after it, not the pair being torn down.
+   * The handle and query are resolved per access rather than captured, because an eviction of the
+   * same document may still be draining: a lease taken during that window must operate on the pair
+   * the repo holds after it, not the pair being torn down.
    */
   constructor(
     private readonly _documentId: DocumentId,
@@ -42,31 +61,76 @@ export class DocumentLease<T = any> implements Disposable {
     return this._documentId;
   }
 
-  /** The always-attached handle. Its own state predicates lie — read {@link state} instead. */
-  get handle(): DocHandle<T> {
-    this.#assertLive();
-    return this._open().handle;
+  /** Derived from the id, so it reads the same whether or not the document is loaded. */
+  get url(): AutomergeUrl {
+    return `automerge:${this._documentId}` as AutomergeUrl;
   }
 
-  /** The live query, for observing readiness and sync transitions. */
-  get query(): DocumentProgress<T> {
-    this.#assertLive();
-    return this._open().query;
-  }
-
+  /** Readiness of the document — the `DocHandle`'s own predicates lie, see `getHandleState`. */
   get state(): HandleQueryState {
-    this.#assertLive();
-    return this._open().query.peek().state;
+    return this.#query.peek().state;
   }
 
   get disposed(): boolean {
     return this.#release === undefined;
   }
 
+  /**
+   * The document, or the empty initial document while it is still loading — check {@link state}
+   * (or await {@link waitUntilReady}) when the difference matters.
+   */
+  doc(): A.Doc<T> {
+    return this.#handle.doc();
+  }
+
+  heads(): UrlHeads {
+    return this.#handle.heads();
+  }
+
+  change(callback: A.ChangeFn<T>, options?: A.ChangeOptions<T>): void {
+    this.#handle.change(callback, options);
+  }
+
+  changeAt(heads: UrlHeads, callback: A.ChangeFn<T>, options?: A.ChangeOptions<T>): UrlHeads | undefined {
+    return this.#handle.changeAt(heads, callback, options);
+  }
+
+  /** Resolves once the document is loaded, rejects if the query fails. */
+  async waitUntilReady(): Promise<void> {
+    await this.#query.whenReady();
+  }
+
+  on<K extends keyof DocumentLeaseEvents<T>>(event: K, listener: (payload: DocumentLeaseEvents<T>[K]) => void): void {
+    this.#handle.on(event as any, listener as any);
+  }
+
+  off<K extends keyof DocumentLeaseEvents<T>>(event: K, listener: (payload: DocumentLeaseEvents<T>[K]) => void): void {
+    this.#handle.off(event as any, listener as any);
+  }
+
+  once<K extends keyof DocumentLeaseEvents<T>>(event: K, listener: (payload: DocumentLeaseEvents<T>[K]) => void): void {
+    this.#handle.once(event as any, listener as any);
+  }
+
+  /** Observes readiness and sync transitions. Returns an unsubscribe function. */
+  subscribe(callback: (state: QueryState<T>) => void): () => void {
+    return this.#query.subscribe(callback);
+  }
+
   [Symbol.dispose](): void {
     const release = this.#release;
     this.#release = undefined;
     release?.();
+  }
+
+  get #handle(): DocHandle<T> {
+    this.#assertLive();
+    return this._open().handle;
+  }
+
+  get #query(): DocumentProgress<T> {
+    this.#assertLive();
+    return this._open().query;
   }
 
   #assertLive(): void {

@@ -14,7 +14,6 @@ import {
 import {
   type AnyDocumentId,
   type DocHandle,
-  type DocHandleChangePayload,
   type DocumentId,
   type DocumentProgress,
   type PeerCandidatePayload,
@@ -629,10 +628,10 @@ export class AutomergeHost extends Resource {
     lease: DocumentLease<T>,
     opts?: LoadDocOptions,
   ): Promise<DocumentLease<T> | null> {
-    // Readiness lives on the `DocumentQuery`, not the `DocHandle` — see
-    // {@link getHandleState}.
-    const progress = lease.query;
-    if (progress.peek().state === 'ready') {
+    // Readiness lives on the `DocumentQuery`, not the `DocHandle` — see {@link getHandleState}. The
+    // query is read from the repo rather than through the lease, which does not hand it out.
+    const progress = this._repo.findWithProgress<T>(lease.documentId);
+    if (lease.state === 'ready') {
       return lease;
     }
 
@@ -679,7 +678,7 @@ export class AutomergeHost extends Resource {
     }
     // Re-read through the lease: an eviction of the same document may have completed during the wait,
     // in which case the query that just reported ready is not the one the lease now resolves.
-    if (lease.state !== 'ready') {
+    if (getHandleState(this._repo, lease.documentId) !== 'ready') {
       return await this._loadLeasedDoc(ctx, lease, opts);
     }
     return lease;
@@ -845,7 +844,7 @@ export class AutomergeHost extends Resource {
         headsToWait.map(async (entry) => {
           using lease = await this.loadDoc<DatabaseDirectory>(ctx, entry.documentId as DocumentId);
           invariant(lease, 'Document handle must be available when waiting for heads replication.');
-          await waitForHeads(lease.handle, entry.heads!);
+          await waitForHeads(lease, entry.heads!);
         }),
       );
     }
@@ -872,7 +871,7 @@ export class AutomergeHost extends Resource {
       }
       using _lease = lease;
 
-      const heads = lease.handle.heads();
+      const heads = lease.heads();
       if (!heads) {
         continue;
       }
@@ -1452,7 +1451,7 @@ export class AutomergeHost extends Resource {
       release();
       return;
     }
-    const unsubscribe = lease.query.subscribe((state) => {
+    const unsubscribe = lease.subscribe((state) => {
       if (state.state === 'ready' || state.state === 'failed') {
         unsubscribe();
         release();
@@ -1607,15 +1606,15 @@ export class AutomergeHost extends Resource {
   }
 }
 
-const waitForHeads = async (handle: DocHandle<DatabaseDirectory>, heads: Heads) => {
+const waitForHeads = async (lease: DocumentLease<DatabaseDirectory>, heads: Heads) => {
   const unavailableHeads = new Set(heads);
 
   // Check the current doc first, then subscribe to `change` to catch later
-  // updates. (We can't use `handle.whenReady()` to gate the subscription —
+  // updates. (We can't use the handle's readiness to gate the subscription —
   // see {@link getHandleState} for why `DocHandle.*` state is unusable in
   // this fork.)
   const checkPresentHeads = () => {
-    const doc = handle.doc();
+    const doc = lease.doc();
     if (!doc) {
       return;
     }
@@ -1631,9 +1630,15 @@ const waitForHeads = async (handle: DocHandle<DatabaseDirectory>, heads: Heads) 
     return;
   }
 
-  await Event.wrap<DocHandleChangePayload<DatabaseDirectory>>(handle, 'change').waitForCondition(() => {
-    checkPresentHeads();
-    return unavailableHeads.size === 0;
+  await new Promise<void>((resolve) => {
+    const onChange = () => {
+      checkPresentHeads();
+      if (unavailableHeads.size === 0) {
+        lease.off('change', onChange);
+        resolve();
+      }
+    };
+    lease.on('change', onChange);
   });
 };
 

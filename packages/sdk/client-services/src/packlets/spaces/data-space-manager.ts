@@ -270,7 +270,7 @@ export class DataSpaceManager extends Resource {
             using rootLease = rootUrl
               ? await this._echoHost.loadDoc<Doc<DatabaseDirectory>>(this._ctx, rootUrl as AutomergeUrl)
               : undefined;
-            const rootDoc = rootLease?.handle.doc();
+            const rootDoc = rootLease?.doc();
 
             const properties = rootDoc && findInlineObjectOfType(rootDoc, Type.getTypename(SpaceProperties));
 
@@ -407,8 +407,8 @@ export class DataSpaceManager extends Resource {
           });
 
           // The archived documents might have the spaceKey from the space they were expored from, we need to update it to the new spaceKey.
-          if (newDoc.handle.doc().access !== undefined && newDoc.handle.doc().access!.spaceKey !== spaceKey.toHex()) {
-            newDoc.handle.change((doc) => {
+          if (newDoc.doc().access !== undefined && newDoc.doc().access!.spaceKey !== spaceKey.toHex()) {
+            newDoc.change((doc) => {
               doc.access!.spaceKey = spaceKey.toHex();
             });
           }
@@ -427,7 +427,7 @@ export class DataSpaceManager extends Resource {
       const newRootDocId = documentIdMapping[interpretAsDocumentId(options.rootUrl)] ?? failedInvariant();
       using rootDocLease = await this._echoHost.loadDoc<DatabaseDirectory>(ctx, newRootDocId);
       invariant(rootDocLease, 'Root document must be available after import.');
-      DatabaseRoot.mapLinks(rootDocLease.handle, documentIdMapping);
+      DatabaseRoot.mapLinks(rootDocLease, documentIdMapping);
 
       root = await this._echoHost.updateSpaceRoot(ctx, spaceId, `automerge:${newRootDocId}` as AutomergeUrl);
     } else {

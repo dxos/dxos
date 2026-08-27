@@ -1937,7 +1937,7 @@ export class QueryExecutor extends Resource {
     if (!lease) {
       return null;
     }
-    const object = DatabaseDirectory.getInlineObject(lease.handle.doc(), meta.objectId);
+    const object = DatabaseDirectory.getInlineObject(lease.doc(), meta.objectId);
     if (!object) {
       return null;
     }
@@ -2044,7 +2044,7 @@ export class QueryExecutor extends Resource {
       return null;
     }
 
-    const object = DatabaseDirectory.getInlineObject(lease.handle.doc(), objectId);
+    const object = DatabaseDirectory.getInlineObject(lease.doc(), objectId);
     if (!object) {
       return null;
     }

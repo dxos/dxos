@@ -36,7 +36,7 @@ describe('document leases', () => {
 
     // Evicting unloads, never deletes: the document reads back from disk with its content.
     using reloaded = await host.loadDoc<{ text: string }>(Context.default(), documentId);
-    expect(reloaded!.handle.doc()!.text).toBe('hello');
+    expect(reloaded!.doc()!.text).toBe('hello');
   });
 
   test('a document with a second lease outstanding stays resident', async ({ expect }) => {
@@ -63,7 +63,7 @@ describe('document leases', () => {
     await host.drainEvictions();
 
     expect(host.loadedDocumentIds).toContain(documentId);
-    expect(reacquired.handle.doc()!.text).toBe('hello');
+    expect(reacquired.doc()!.text).toBe('hello');
   });
 
   test('evicting a document that was never flushed persists it first', async ({ expect }) => {
@@ -79,7 +79,7 @@ describe('document leases', () => {
     using reloaded = await host.loadDoc<{ text: string }>(Context.default(), documentId, {
       fetchFromNetwork: false,
     });
-    expect(reloaded!.handle.doc()!.text).toBe('unflushed');
+    expect(reloaded!.doc()!.text).toBe('unflushed');
   });
 
   test('disposal is idempotent, and the document is unreachable afterwards', async ({ expect }) => {
@@ -92,7 +92,7 @@ describe('document leases', () => {
     expect(lease.disposed).toBe(true);
     // The id still reads: it names a document rather than claiming one.
     expect(lease.documentId).toBeTypeOf('string');
-    expect(() => lease.handle).toThrow();
+    expect(() => lease.doc()).toThrow();
   });
 
   test('a write through one lease is visible through another', async ({ expect }) => {
@@ -100,11 +100,12 @@ describe('document leases', () => {
     using first = await host.createDoc<{ text: string }>({ text: 'hello' });
     using second = host.acquireDoc<{ text: string }>(first.documentId);
 
-    first.handle.change((doc) => {
+    first.change((doc) => {
       doc.text = 'written';
     });
-    // One handle per document, so the second lease is a second reference to it, not a second copy.
-    expect(second.handle.doc()!.text).toBe('written');
-    expect(second.handle).toBe(first.handle);
+    // One document per id, so the second lease reads the write made through the first rather than
+    // its own copy.
+    expect(second.doc()!.text).toBe('written');
+    expect(second.heads()).toEqual(first.heads());
   });
 });

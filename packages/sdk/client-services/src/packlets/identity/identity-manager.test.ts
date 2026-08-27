@@ -99,8 +99,8 @@ describe('identity/identity-manager', () => {
     expect(spaceId).to.equal(await createIdFromSpaceKey(identity.haloSpaceKey));
 
     const root = await peer.echoHost.loadDoc<SpaceRoot>(new Context(), refs!.spaceRootDocUrl);
-    expect(isSpaceRoot(root?.handle.doc())).to.be.true;
-    expect(root!.handle.doc()!.spaceId).to.equal(spaceId);
+    expect(isSpaceRoot(root?.doc())).to.be.true;
+    expect(root!.doc()!.spaceId).to.equal(spaceId);
 
     // Every credential the control feed carries is mirrored into the credentials document.
     const store = await openCredentialsDocument(new Context(), peer.echoHost, spaceId);

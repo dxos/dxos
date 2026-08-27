@@ -113,7 +113,7 @@ export const writeSerializedSpaceArchive = async (
       log.warn('linked document handle not available; skipping', { url: linkedUrl });
       continue;
     }
-    collectObjectsFromDoc(lease.handle.doc(), objects);
+    collectObjectsFromDoc(lease.doc(), objects);
   }
 
   // Export queue/feed messages for every Feed object in the space.

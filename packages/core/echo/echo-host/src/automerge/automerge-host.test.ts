@@ -25,11 +25,11 @@ describe('AutomergeHost', () => {
     onTestFinished(() => dispose());
     const host = await setupAutomergeHost(runtime);
     const handle = await host.createDoc<any>();
-    handle.handle.change((doc: any) => {
+    handle.change((doc: any) => {
       doc.text = 'Hello world';
     });
     await host.flush(Context.default());
-    expect(handle.handle.doc()!.text).toEqual('Hello world');
+    expect(handle.doc()!.text).toEqual('Hello world');
   });
 
   test('resolves a document space from collection membership without a loaded handle', async ({ expect }) => {
@@ -80,10 +80,10 @@ describe('AutomergeHost', () => {
     const { runtime: runtime1, dispose: dispose1 } = createTestSqliteRuntime(tmpPath);
     const host = await setupAutomergeHost(runtime1);
     const handle = await host.createDoc<any>();
-    handle.handle.change((doc: any) => {
+    handle.change((doc: any) => {
       doc.text = 'Hello world';
     });
-    const url = handle.handle.url;
+    const url = handle.url;
 
     await host.flush(Context.default());
     await host.close();
@@ -94,8 +94,8 @@ describe('AutomergeHost', () => {
     const host2 = await setupAutomergeHost(runtime2);
     const handle2 = await host2.loadDoc<any>(Context.default(), url);
     invariant(handle2);
-    await handle2.handle.whenReady();
-    expect(handle2.handle.doc()!.text).toEqual('Hello world');
+    await handle2.waitUntilReady();
+    expect(handle2.doc()!.text).toEqual('Hello world');
     await host2.flush(Context.default());
   });
 
@@ -118,7 +118,7 @@ describe('AutomergeHost', () => {
     // The load should now resolve
     const loadedHandle = await loadPromise;
     invariant(loadedHandle);
-    expect(loadedHandle.handle.doc()).toEqual(createdHandle.handle.doc());
+    expect(loadedHandle.doc()).toEqual(createdHandle.doc());
   });
 
   test('query single document heads', async () => {
@@ -127,7 +127,7 @@ describe('AutomergeHost', () => {
     const { runtime: runtime1, dispose: dispose1 } = createTestSqliteRuntime(tmpPath);
     const host = await setupAutomergeHost(runtime1);
     const handle = await host.createDoc({ text: 'Hello world' });
-    const expectedHeads = A.getHeads(handle.handle.doc()!);
+    const expectedHeads = A.getHeads(handle.doc()!);
     await host.flush(Context.default());
 
     expect(await host.getHeads([handle.documentId])).toEqual([expectedHeads]);
@@ -149,7 +149,7 @@ describe('AutomergeHost', () => {
     const { runtime: runtime1, dispose: dispose1 } = createTestSqliteRuntime(tmpPath);
     const host = await setupAutomergeHost(runtime1);
     const handles = await Promise.all(range(2, () => host.createDoc({ text: 'Hello world' })));
-    const expectedHeads: (Heads | undefined)[] = handles.map((handle) => A.getHeads(handle.handle.doc()!));
+    const expectedHeads: (Heads | undefined)[] = handles.map((handle) => A.getHeads(handle.doc()!));
     await host.flush(Context.default());
 
     const ids = handles.map((handle) => handle.documentId);
@@ -196,7 +196,7 @@ describe('AutomergeHost', () => {
       timeout: 5_000,
     });
     invariant(loaded);
-    expect(loaded.handle.doc()!.text).toEqual('Hello world');
+    expect(loaded.doc()!.text).toEqual('Hello world');
 
     // (3) Now that host1 has the doc on disk, fetchFromNetwork=false succeeds.
     await host1.flush(Context.default());
@@ -204,7 +204,7 @@ describe('AutomergeHost', () => {
       fetchFromNetwork: false,
     });
     invariant(localOnly);
-    expect(localOnly.handle.doc()!.text).toEqual('Hello world');
+    expect(localOnly.doc()!.text).toEqual('Hello world');
 
     await host1.close();
     await host2.close();
@@ -253,7 +253,7 @@ describe('AutomergeHost', () => {
       fetchFromNetwork: false,
     });
     invariant(loaded);
-    expect(loaded.handle.doc()!.text).toEqual('Hello world');
+    expect(loaded.doc()!.text).toEqual('Hello world');
 
     // Give any in-flight share-policy debounce a chance to fire.
     await sleep(100);

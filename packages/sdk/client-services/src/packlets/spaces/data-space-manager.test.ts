@@ -169,9 +169,9 @@ describe('DataSpaceManager', () => {
     expect(refs.spaceRootDocUrl).to.not.equal(directoryUrl);
 
     const root = await peer.echoHost.loadDoc<SpaceRoot>(new Context(), refs.spaceRootDocUrl);
-    expect(isSpaceRoot(root?.handle.doc())).to.be.true;
-    expect(root!.handle.doc()!.spaceId).to.equal(legacyId);
-    expect(root!.handle.doc()!.directory).to.equal(directoryUrl);
+    expect(isSpaceRoot(root?.doc())).to.be.true;
+    expect(root!.doc()!.spaceId).to.equal(legacyId);
+    expect(root!.doc()!.directory).to.equal(directoryUrl);
 
     // The control feed keeps working: migration adds the anchor, it does not move credentials yet.
     expect(space.inner.spaceState.genesisCredential).to.exist;
@@ -194,9 +194,9 @@ describe('DataSpaceManager', () => {
 
     // Data the application wrote while the space was still hypercore-backed.
     const objectId = PublicKey.random().toHex();
-    const objectUrl = (await peer.echoHost.createDoc({})).handle.url;
+    const objectUrl = (await peer.echoHost.createDoc({})).url;
     const before = await peer.echoHost.openSpaceRoot(new Context(), space.id);
-    before.handle.change((draft: DatabaseDirectory) => {
+    before.change((draft: DatabaseDirectory) => {
       draft.links ??= {};
       draft.links[objectId] = objectUrl;
     });
@@ -259,10 +259,10 @@ describe('DataSpaceManager', () => {
     );
 
     // A member with write access revokes another by deleting their credential.
-    handle!.handle.change((doc: CredentialsDocument) => {
+    handle!.change((doc: CredentialsDocument) => {
       delete doc.credentials[before[0]];
     });
-    expect(Object.keys(handle!.handle.doc()!.credentials)).to.not.contain(before[0]);
+    expect(Object.keys(handle!.doc()!.credentials)).to.not.contain(before[0]);
 
     expect(store.read().map(({ id }) => id)).to.deep.equal(before);
   });

@@ -130,7 +130,7 @@ export class AutomergeDataSource implements IndexDataSource {
           if (!lease) {
             continue;
           }
-          const doc: DatabaseDirectory = lease.handle.doc();
+          const doc: DatabaseDirectory = lease.doc();
 
           // Skip outdated docs.
           if (doc.version !== SpaceDocVersion.CURRENT) {

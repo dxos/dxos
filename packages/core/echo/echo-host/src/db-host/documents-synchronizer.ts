@@ -212,8 +212,8 @@ export class DocumentsSynchronizer extends Resource {
       this._pendingUpdates.add(syncState.lease.documentId);
       this._sendUpdatesJob!.trigger();
     };
-    syncState.lease.handle.on('heads-changed', handler);
-    syncState.clearSubscriptions = () => syncState.lease.handle.off('heads-changed', handler);
+    syncState.lease.on('heads-changed', handler);
+    syncState.clearSubscriptions = () => syncState.lease.off('heads-changed', handler);
   }
 
   private async _checkAndSendUpdates(): Promise<void> {
@@ -260,11 +260,10 @@ export class DocumentsSynchronizer extends Resource {
   private _getPendingChanges(documentId: DocumentId): Uint8Array | void {
     const syncState = this._syncStates.get(documentId);
     invariant(syncState, 'Sync state for document not found');
-    const handle = syncState.lease.handle;
-    if (!handle || syncState.lease.state !== 'ready') {
+    if (syncState.lease.state !== 'ready') {
       return;
     }
-    const doc = handle.doc();
+    const doc = syncState.lease.doc();
     if (!doc) {
       return;
     }
@@ -284,14 +283,14 @@ export class DocumentsSynchronizer extends Resource {
 
     const syncState = this._syncStates.get(documentId);
     invariant(syncState, 'Sync state for document not found');
-    const headsBefore = A.getHeads(syncState.lease.handle.doc());
+    const headsBefore = A.getHeads(syncState.lease.doc());
     // This will update corresponding handle in the repo. The import's own lease is surplus —
     // `syncState.lease` is what keeps the document resident while the client subscribes.
     using _imported = await this._params.automergeHost.createDoc(mutation, { documentId, preserveHistory: true });
 
     if (A.equals(headsBefore, syncState.lastSentHead)) {
       // No new mutations were discovered on network, so we do not need to send updates from worker to client.
-      syncState.lastSentHead = A.getHeads(syncState.lease.handle.doc());
+      syncState.lastSentHead = A.getHeads(syncState.lease.doc());
     }
   }
 }

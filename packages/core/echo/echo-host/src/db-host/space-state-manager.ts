@@ -187,7 +187,7 @@ export class SpaceStateManager extends Resource {
       this._roots.set(lease.documentId, root);
     }
 
-    if (this._rootBySpace.get(spaceId) === root.handle.documentId && this._perRootContext.has(root.handle.documentId)) {
+    if (this._rootBySpace.get(spaceId) === root.documentId && this._perRootContext.has(root.documentId)) {
       return root;
     }
 
@@ -197,7 +197,7 @@ export class SpaceStateManager extends Resource {
       this._perRootContext.delete(prevRootId);
     }
 
-    this._rootBySpace.set(spaceId, root.handle.documentId);
+    this._rootBySpace.set(spaceId, root.documentId);
 
     // The replaced root is released here rather than at `removeSpace`, which only ever sees the
     // current one — its lease would otherwise keep the retired directory resident for the session.
@@ -211,7 +211,7 @@ export class SpaceStateManager extends Resource {
 
     const ctx = new Context();
 
-    this._perRootContext.set(root.handle.documentId, ctx);
+    this._perRootContext.set(root.documentId, ctx);
 
     const documentListCheckScheduler = new UpdateScheduler(
       ctx,
@@ -227,8 +227,8 @@ export class SpaceStateManager extends Resource {
       { maxFrequency: 50 },
     );
     const triggerCheckOnChange = () => documentListCheckScheduler.trigger();
-    root.handle.addListener('change', triggerCheckOnChange);
-    ctx.onDispose(() => root.handle.removeListener('change', triggerCheckOnChange));
+    root.on('change', triggerCheckOnChange);
+    ctx.onDispose(() => root.off('change', triggerCheckOnChange));
 
     documentListCheckScheduler.trigger();
 

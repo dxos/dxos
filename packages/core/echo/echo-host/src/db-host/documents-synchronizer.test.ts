@@ -77,7 +77,7 @@ describe('DocumentsSynchronizer', () => {
     ]);
 
     // Apply the actual change to the handle (simulates what happens when client sends mutation).
-    handle.handle.change((doc: any) => {
+    handle.change((doc: any) => {
       doc.text = 'modified by client 1';
     });
 
@@ -155,9 +155,9 @@ describe('DocumentsSynchronizer', () => {
 
         const handle = await host.loadDoc<{ text: string }>(Context.default(), documentId);
         invariant(handle);
-        await handle.handle.whenReady();
+        await handle.waitUntilReady();
 
-        expect(handle.handle.doc().text).to.equal(text);
+        expect(handle.doc().text).to.equal(text);
 
         await host.close();
       }

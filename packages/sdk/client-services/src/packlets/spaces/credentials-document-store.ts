@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type AutomergeUrl, type DocHandle } from '@automerge/automerge-repo';
+import { type AutomergeUrl } from '@automerge/automerge-repo';
 
 import { scheduleMicroTask } from '@dxos/async';
 import { type Context } from '@dxos/context';
@@ -34,16 +34,12 @@ export class CredentialsDocumentStore implements Disposable {
   }
 
   get url(): AutomergeUrl {
-    return this.#handle.url;
+    return this.#lease.url;
   }
 
   /** Releases the credentials document; the store cannot be read or written after this. */
   [Symbol.dispose](): void {
     this.#lease[Symbol.dispose]();
-  }
-
-  get #handle(): DocHandle<CredentialsDocument> {
-    return this.#lease.handle;
   }
 
   /**
@@ -53,7 +49,7 @@ export class CredentialsDocumentStore implements Disposable {
    * document must not be able to revoke another by deleting their credential.
    */
   read(): OrderedCredential[] {
-    const doc = this.#handle.doc();
+    const doc = this.#lease.doc();
     return doc ? orderCredentials(AddOnlySet.read(doc, CREDENTIALS_PATH)) : [];
   }
 
@@ -70,8 +66,8 @@ export class CredentialsDocumentStore implements Disposable {
       });
     };
 
-    this.#handle.addListener('change', replay);
-    ctx.onDispose(() => this.#handle.removeListener('change', replay));
+    this.#lease.on('change', replay);
+    ctx.onDispose(() => this.#lease.off('change', replay));
     replay();
   }
 
@@ -82,11 +78,11 @@ export class CredentialsDocumentStore implements Disposable {
   append(credential: Credential): void {
     const id = credential.id?.toHex();
     invariant(id, 'Credential has no id.');
-    if (this.#handle.doc()?.credentials?.[id]) {
+    if (this.#lease.doc()?.credentials?.[id]) {
       return;
     }
 
-    this.#handle.change((doc: CredentialsDocument) => {
+    this.#lease.change((doc: CredentialsDocument) => {
       doc.credentials ??= {};
       AddOnlySet.add(doc.credentials, id, credentialCodec.encode(credential));
     });
@@ -130,8 +126,8 @@ export const openCredentialsDocument = async (
   });
   // The link is what the space root records, and a concurrent call may have won it: the store must
   // follow the linked document, since writes to an unlinked one would never be read back.
-  const linked = await echoHost.setCredentialsDocument(ctx, spaceId, created.handle.url);
-  if (linked !== created.handle.url) {
+  const linked = await echoHost.setCredentialsDocument(ctx, spaceId, created.url);
+  if (linked !== created.url) {
     created[Symbol.dispose]();
     return open(linked);
   }
