@@ -32,24 +32,22 @@ The gallery reads `PxIcons`, so a new icon appears without editing the story. Ea
 because a symbol missing from the sprite renders *nothing* — without a boundary that is
 indistinguishable from a blank cell.
 
-### Editing an SVG shows no change — restart the dev server
+### Editing an SVG
 
-**Redrawing an existing icon never refreshes the sprite; only *adding* a symbol name does.** The
-plugin skips the write when the symbol set has not grown:
+Redraw an icon and the page reloads with it — no restart. `@dxos/vite-plugin-icons` hands every
+resolved asset to Vite's watcher and fingerprints the sprite by each file's mtime and size, so a
+redraw (which changes no symbol *count*) still produces a fresh sprite, and the plugin then asks the
+client to reload. The reload is needed because the icon registry ingests `icons.svg` once per
+document.
 
-```ts
-if (detectedSymbols.size === lastWrittenSize) {
-  return;
-}
+A name with no SVG behind it is reported and omitted rather than fatal:
+
+```
+[icons] No asset for symbol: px--typo--regular — omitted from the sprite, so the icon
+renders blank. Check the name against the icon set.
 ```
 
-`assets/*.svg` is also outside `contentPaths`, so Vite does not watch these files at all — there is
-no HMR event to react to. `lastWrittenSize` lives in process memory, so restarting the dev server is
-the fix; a hard browser reload alone will not do it, because the stale sprite is what is on disk.
-
-**Do not delete `icons.svg` while the server is running.** The `/icons.svg` middleware rewrites it
-only when a write is actually due, and the size guard above says it is not — so you get a 404 and
-every icon in the app disappears until you restart anyway.
+Add the missing file and the sprite picks it up in place, still without a restart.
 
 ## Adding an icon
 
