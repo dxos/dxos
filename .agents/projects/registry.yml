@@ -15,7 +15,7 @@ projects:
     tasks: .agents/projects/blade-runner-pbt/TASKS.md
     design: .agents/projects/blade-runner-pbt/DESIGN.md
     prs: []
-    resume: 'Phase 0: DESIGN.md drafted (architecture, model, command vocabulary, assertions, soak-vs-shrink, cleanup, CI). NEXT: collect answers to DESIGN.md §14 open questions Q1-Q14 (identity topology, late-join, edit encoding, edit-vs-delete semantics, disconnect semantics, edge-only sync, shrinking, local-edge-in-CI, preview cleanup mechanism, edge agents, nightly scale, failure routing, checkpoints), record in §15, then Phase 1 (ClientReplicant + EdgePbt skeleton vs local edge).'
+    resume: 'Phase 0 DONE — design approved, decisions D1-D14 recorded in DESIGN.md §17, blade-runner architecture documented in §3 (RPC is JSON-only + reflected over public prototype methods; no RPC timeout; cleanup must live in plan.run try/finally). Edge cleanup API CONFIRMED in the edge repo (packages/services/edge/src/data-management/api.ts): self-serve VP-auth DELETE /data/space/:spaceId + /data/identity/:identity, and admin-key DELETE /admin/spaces|identities/:id + GET /admin/spaces + POST /admin/selective-purge. NEXT: Phase 1 — ClientReplicant + EdgePbt skeleton against local edge; first verify the offline toggle, since EdgeClient._close never resets _networkingStarted so close()->open() will not re-dial (DESIGN.md §15.1).'
   - name: client-edge-audit
     status: active
     user: mykola
