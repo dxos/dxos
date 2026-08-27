@@ -105,27 +105,44 @@ numbers; the numbers simply skip.
 same project have no reason to share it, and a collapsed branch is not a property of the work. It
 lives in `TaskList.Root` state, keyed by task id, with the host free to lift it.
 
-### Drag and drop
+### Drag and drop — reuse `react-ui-list`, do not rebuild
 
-Built on `@dxos/react-ui-dnd` (`Dnd.Root` + `useDndRootContext().addContainer`), the same primitive
-the board uses, so a task can later be dragged between a list and another surface without a second
-mechanism. The list registers one container; each row is a tile whose `location` is the tree
-position it currently occupies.
+`react-ui-list` already implements hierarchical drag-and-drop, and `react-ui-task` already depends
+on it (its rows are `Listbox`). Rebuilding this on `react-ui-dnd` would be a second implementation
+of a solved problem, and the two would drift.
 
-Three drop targets per row, because a tree needs to express three different intents:
+Reused as-is:
 
-| Target   | Zone                   | Result                                             |
-| -------- | ---------------------- | -------------------------------------------------- |
-| `before` | top quarter of the row | sibling of the row, immediately above it           |
-| `after`  | bottom quarter         | sibling of the row, immediately below it           |
-| `into`   | middle half            | last child of the row (which expands if collapsed) |
+- **The hitbox and its instructions.** `TreeItem` drives `attachInstruction`
+  (`@atlaskit/pragmatic-drag-and-drop-hitbox`), which yields `reorder-above` / `reorder-below` /
+  `make-child` from the pointer's position in the row — the three intents a tree needs, with the
+  band geometry already tuned.
+- **`TreeDropIndicator`** for the insertion line, so a task list looks like every other tree here.
+- **`useListDisclosure`** for open/closed state (controlled or uncontrolled), rather than a private
+  `Set` in `TaskList.Root`.
+- **`paddingIndentation`** for depth, so indentation matches the navtree pixel for pixel.
 
-The middle band is the largest because nesting is the gesture that is hard to hit and easy to want;
-the sibling bands sit at the edges where a person aims when they mean "between these two". A drag
-that dwells over a collapsed parent expands it after ~600ms, so a branch can be entered mid-drag —
-the same settle-delay idea the board uses to stop tiles scattering under a moving cursor.
+`NavTreeContainer` is the worked example of the drop side: extract the instruction, compare source
+and target parents, and map `make-child` / `reorder-*` onto a rearrange or a re-parent.
 
-Rejected drops, decided in `canDrop` so the cursor says no rather than the drop silently failing:
+**Not reused: `TreeModel`.** It is an atom-family interface (`item`, `itemOpen`, `itemCurrent`,
+`itemProps`, `childIds`), and `Tree` renders through `Treegrid` rows with a `renderColumns` hook.
+`TaskList`'s row is the component's substance — a six-column subgrid carrying the status control,
+ordinal, assignee, priority tags, delete affordance, and a markdown description on its own row —
+and its rows are listbox options, which is what gives selection and roving focus. Adopting `Tree`
+wholesale would mean re-expressing all of that as treegrid columns plus an atom adapter over the
+task set (navtree's is 124 lines), and trading `role=option` selection for treegrid semantics. The
+row stays; only the tree mechanics come across.
+
+One deliberate inconsistency to accept: task rows keep `role=option` while the navtree uses
+`role=treegrid`, so a screen reader announces them differently. `aria-level` / `aria-expanded` /
+`aria-posinset` on the option rows is what keeps the nesting legible.
+
+A drag that dwells over a collapsed parent expands it after ~600ms, so a branch can be entered
+mid-drag — the settle-delay idea the board uses to stop tiles scattering under a moving cursor.
+
+Rejected drops, decided in `canDrop`/`blockInstruction` so the cursor says no rather than the
+drop silently failing:
 
 - a task onto itself or onto any of its own descendants (the cycle `UpdateTask` already rejects);
 - a task from another set — cross-set moves are a different operation (membership changes hands),
@@ -155,7 +172,7 @@ capability for free — "move task 4 under task 2" stops being two steps it can 
 Drops cannot be driven synthetically: pragmatic-drag-and-drop uses native HTML5 drag events, which
 Playwright's synthetic dispatch does not produce. So the split is:
 
-- **Unit** — the placement calculation (`(source, target, zone) → { parentTask, before }`) is a pure
+- **Unit** — the placement calculation (`(source, target, instruction) → { parentTask, before }`) is a pure
   function tested directly, including every rejected case. This is where the real logic lives, and
   it is the part a regression would break.
 - **Story** — a `Hierarchical` story renders a seeded three-level set; play asserts the walk
@@ -166,7 +183,9 @@ Playwright's synthetic dispatch does not produce. So the split is:
 
 ### Deferred
 
-- Cross-set drags (a task dragged into another project's list) — a membership transfer, and the
-  `onTake` half of the DnD contract exists for exactly that.
+- Cross-set drags (a task dragged into another project's list) — a membership transfer rather than a
+  reorder, and the one case that may still want `react-ui-dnd`'s `onTake` contract.
+- Unifying the task row onto `Treegrid` so tasks and the navtree share one row substrate. Worth
+  revisiting if a third tree surface appears; not worth re-expressing this row for two.
 - Multi-select drag.
 - Auto-scroll while dragging near the viewport edge.
