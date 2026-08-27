@@ -18,6 +18,7 @@ import * as FileCapabilities from '@dxos/plugin-file/FileCapabilities';
 import {
   type CredentialResolver,
   createCredentialResolver,
+  edgeAccessTokenResolver,
   formatUri,
   getObject,
   getObjectUrl,
@@ -125,7 +126,10 @@ export const createS3BlobBackend = ({
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
-    const resolveCredentials = createCredentialResolver({ client });
+    const resolveCredentials = createCredentialResolver({
+      getDatabase: (spaceId) => client.spaces.get(spaceId)?.db,
+      accessTokenResolver: edgeAccessTokenResolver(() => client.edge.http),
+    });
 
     const cleanup = client.graph.registerBlobBackend(S3_BACKEND, createS3BlobBackend({ client, resolveCredentials }));
     yield* Effect.addFinalizer(() => Effect.sync(() => cleanup()));

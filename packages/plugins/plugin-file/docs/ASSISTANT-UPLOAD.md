@@ -347,20 +347,45 @@ Three separate questions, three different answers:
   (`core/echo/echo/src/Obj.ts:671`), there is no find-or-create helper in the repo, and two
   concurrent uploads into a fresh space must not each mint a tag object.
 
+## 6. Two products, and why that settles the service question
+
+The managed store and the customer bucket are **different products**, and conflating them produced a
+wrong recommendation earlier in this document's history, worth recording so it is not reached again:
+
+- **`blob-service` is "we store your files."** DXOS's own R2 buckets, DXOS's own credentials.
+- **The S3/R2 backend is bring-your-own-bucket**, for users who already have an endpoint.
+
+An earlier draft argued for a new file service on **auth** grounds: today the secret access key is
+replicated into the space, so every space member can read and write the bucket. That argument
+**inverts** once the two products are separated. For a BYO bucket:
+
+1. The credential is the user's own key to the user's own bucket, held in the user's own space. The
+   members who can read it are the ones who can already read every object in that bucket.
+2. The alternative is worse. A service that mints presigned URLs must **hold customer bucket
+   credentials server-side**, making DXOS custodian of keys to infrastructure it does not own — a
+   larger liability than the current arrangement, and one some customers would simply refuse.
+
+So the credential stays client-side for BYO, and a credential-holding service makes sense only for
+the managed product, where the buckets are DXOS's already. What remains for BYO is **purely
+headless reachability**, which needs no new service — see step 5 below.
+
 ## Build order
 
 Each step is usable on its own, and each unblocks the next.
 
-1. **Extract the SSRF guard** from `attach-image.ts` into a shared module; `plugin-crm` imports it.
-2. **`FileOperation.CreateFromSource`** + the widened MIME allowlist + the skill entry. Works on the
-   CLI host immediately, and on edge at inline sizes.
+1. ~~**Extract the SSRF guard**~~ — **done.** `@dxos/util`'s `safe-fetch`: `validateExternalUrl`,
+   `isBlockedHost`, and `safeFetchBytes` with the cap enforced while streaming. `plugin-crm` imports
+   it rather than keeping its copy, and it now has the tests it never had.
+2. ~~**`FileOperation.CreateFromSource`** + the widened MIME allowlist + the skill entry~~ —
+   **done.** Works on the CLI host, and on edge at inline sizes.
 3. **The headless backend seam** — register a `BlobBackend` on the `EchoClient` that
    `FunctionContext` builds (`compute-runtime/src/protocol.ts:171-177`). Nothing above 4 MiB works on
    edge until this exists, and both storage targets depend on it.
 4. **EDGE store target** — `BLOB_SERVICE` binding on `operation-service`, backend speaking
-   `POST /file/:key`.
-5. **R2 target** — decouple the S3 backend from `Client`, move it somewhere any host can register,
-   and register it on both.
+   `POST /file/:key`. Lives in the edge repo, so it is a separate change by necessity.
+5. **R2 target** — decouple the S3 backend from `Client` (it needs only `Database.Service`, which
+   `operation-service` has) and register it wherever step 3 lands. Per §6 this is a reachability
+   change, not a re-architecture.
 
 ## Open questions
 
