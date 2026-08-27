@@ -1,5 +1,12 @@
 name: pkg.pr.new
 
+# TODO(wittjosiah): stays on GitHub Actions. pkg.pr.new's own publish CLI verifies the calling CI
+# run against GitHub's real Actions run tracking - on Depot CI (#12779) it failed every run with
+# `Check failed (404): There is no workflow defined for <id>`, since a Depot-executed run isn't a
+# real GitHub Actions run from pkg.pr.new's backend's perspective. Same underlying issue as
+# pr-deploy.yml's artifact-download failure: third-party tools that verify against GitHub's own
+# run identity don't work once the workflow actually executes on Depot's infrastructure.
+
 on:
   workflow_dispatch:
   push:
