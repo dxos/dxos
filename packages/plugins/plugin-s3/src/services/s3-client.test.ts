@@ -78,24 +78,22 @@ describe('probeAccess diagnosis', () => {
 
   test('names a wrong access key id', async ({ expect }) => {
     respondWithCode(403, 'InvalidAccessKeyId');
-    await expect(probeAccess({ uri: URI, credentials: CREDENTIALS })).rejects.toThrow(
-      /access key ID is not recognized/,
-    );
+    await expect(probeAccess({ uri: URI, credentials: CREDENTIALS })).rejects.toThrow('Unknown access key ID.');
   });
 
   test('names a wrong secret rather than blaming the key id', async ({ expect }) => {
     respondWithCode(403, 'SignatureDoesNotMatch');
-    await expect(probeAccess({ uri: URI, credentials: CREDENTIALS })).rejects.toThrow(/secret access key is wrong/);
+    await expect(probeAccess({ uri: URI, credentials: CREDENTIALS })).rejects.toThrow('Wrong secret access key.');
   });
 
   test('distinguishes a valid key without permission', async ({ expect }) => {
     respondWithCode(403, 'AccessDenied');
-    await expect(probeAccess({ uri: URI, credentials: CREDENTIALS })).rejects.toThrow(/not permitted on bucket/);
+    await expect(probeAccess({ uri: URI, credentials: CREDENTIALS })).rejects.toThrow('Key not permitted on "bucket".');
   });
 
   test('names a bad bucket, which is the likeliest typo', async ({ expect }) => {
     respondWithCode(400, 'InvalidBucketName');
-    await expect(probeAccess({ uri: URI, credentials: CREDENTIALS })).rejects.toThrow(/No bucket "bucket"/);
+    await expect(probeAccess({ uri: URI, credentials: CREDENTIALS })).rejects.toThrow('No such bucket: "bucket".');
   });
 
   // The case that actually bit: a blocked CORS preflight rejects `fetch` itself, so there is no
@@ -108,7 +106,23 @@ describe('probeAccess diagnosis', () => {
       }),
     );
     await expect(probeAccess({ uri: URI, credentials: CREDENTIALS })).rejects.toThrow(
-      /CORS policy.*GET, HEAD and PUT/s,
+      /^Blocked by CORS: the bucket must allow .* for GET, HEAD and PUT\.$/,
     );
+  });
+
+  // These render as a one-line status, so length is part of the contract rather than a nicety.
+  test('every diagnosis stays short enough to read at a glance', async ({ expect }) => {
+    for (const [status, code] of [
+      [403, 'InvalidAccessKeyId'],
+      [403, 'SignatureDoesNotMatch'],
+      [403, 'AccessDenied'],
+      [400, 'InvalidBucketName'],
+    ] as const) {
+      respondWithCode(status, code);
+      await probeAccess({ uri: URI, credentials: CREDENTIALS }).then(
+        () => expect.fail(`expected ${code} to be reported as a failure`),
+        (error) => expect(error.message.length).toBeLessThanOrEqual(60),
+      );
+    }
   });
 });

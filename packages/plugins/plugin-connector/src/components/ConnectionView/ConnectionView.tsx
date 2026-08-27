@@ -49,6 +49,8 @@ export type ConnectionViewProps = {
   testError?: string;
   /** Whether a probe is in flight; `testStatus` continues to show the previous verdict meanwhile. */
   testing?: boolean;
+  /** Non-secret connection metadata from the connector's `describeConnection`. */
+  details?: ReadonlyArray<{ label: string; value: string }>;
   /** True when the connector supports in-place reauthentication (OAuth connectors). */
   canReauthenticate: boolean;
   /** True while a reauthentication popup/redirect is being initiated. */
@@ -84,6 +86,7 @@ export const ConnectionView = ({
   testStatus,
   testError,
   testing = false,
+  details = [],
   canReauthenticate,
   reauthenticating,
   onSync,
@@ -105,6 +108,15 @@ export const ConnectionView = ({
                 <Form.Content>
                   <Form.Section title={title} description={source}>
                     {!hasConnector && <p className='px-trim-md text-description'>{t('no-connector.message')}</p>}
+
+                    {/* Non-secret metadata, above the status so a failure reads against it. */}
+                    {details.map(({ label, value }) => (
+                      <Form.Row key={label} label={label}>
+                        <span className='truncate text-description' title={value}>
+                          {value}
+                        </span>
+                      </Form.Row>
+                    ))}
 
                     {/* Hide Sync now entirely when the connector has no `sync` op. */}
                     {canSync && (

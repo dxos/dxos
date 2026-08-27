@@ -68,6 +68,17 @@ export const ConnectionArticle = ({ subject, role }: ConnectionArticleProps) => 
     [invokePromise],
   );
 
+  // Reads the live entity, as `describeConnection` is typed for, but is keyed on the snapshot so an
+  // edited credential recomputes the listing rather than leaving stale values on screen.
+  const liveAccessToken = subject.accessToken?.target;
+  const details = useMemo(
+    () =>
+      connector?.describeConnection && liveAccessToken
+        ? connector.describeConnection({ accessToken: liveAccessToken, connection: subject })
+        : [],
+    [connector, liveAccessToken, accessToken, subject],
+  );
+
   const connectorLabel = connector?.label ?? connector?.id ?? connection?.connectorId;
   const account = accessToken?.account;
   const title = connection?.name ?? account ?? connectorLabel ?? '';
@@ -91,6 +102,7 @@ export const ConnectionArticle = ({ subject, role }: ConnectionArticleProps) => 
       testStatus={testStatus}
       testError={testError}
       testing={testing}
+      details={details}
       canReauthenticate={canReauthenticate}
       reauthenticating={reauthenticating}
       onSync={() => void sync()}

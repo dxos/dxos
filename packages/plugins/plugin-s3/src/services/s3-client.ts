@@ -42,20 +42,25 @@ const currentOrigin = (): string =>
  * A request the browser refused to send, or whose response it refused to expose. Almost always a
  * missing bucket CORS policy: `fetch` reports that as an opaque `TypeError` and confines the real
  * reason to the devtools console, so a blocked preflight would otherwise reach the user as
- * "Failed to fetch". The message names the origin to allow and the exact grants needed, because
- * that is the whole of the fix and nothing in the UI can apply it.
+ * "Failed to fetch".
+ *
+ * The message names the origin and the methods only. The required headers are in the README and in
+ * `details` — a status line has to be readable at a glance, and nobody writes a CORS policy from
+ * memory of a sentence anyway.
  */
 export class S3NetworkError extends Error {
+  /** The full policy requirement, for logs and docs rather than the status line. */
+  readonly details: string;
+
   constructor(
     readonly host: string,
     override readonly cause: unknown,
   ) {
-    super(
-      `Could not reach ${host}. This is almost always the bucket's CORS policy: it must allow ` +
-        `${currentOrigin()} for GET, HEAD and PUT, with the authorization, content-type, ` +
-        `x-amz-content-sha256 and x-amz-date headers. Add that policy on the bucket and retry.`,
-    );
+    super(`Blocked by CORS: the bucket must allow ${currentOrigin()} for GET, HEAD and PUT.`);
     this.name = 'S3NetworkError';
+    this.details =
+      `${host} must allow origin ${currentOrigin()} for GET, HEAD and PUT, with the ` +
+      'authorization, content-type, x-amz-content-sha256 and x-amz-date headers.';
   }
 }
 
@@ -95,16 +100,19 @@ export const probeAccess = async ({ uri, credentials }: { uri: S3Uri; credential
     .then((res) => res.text())
     .catch(() => '');
 
+  // Kept to one short clause each: this renders as a status line, and the endpoint and key id are
+  // already on screen beside it as connection metadata, so repeating them here is noise.
+  const bucket = uri.host.split('.')[0];
   switch (errorCode(body) ?? String(response.status)) {
     case 'InvalidAccessKeyId':
-      throw new Error(`The access key ID is not recognized by ${uri.host}.`);
+      throw new Error('Unknown access key ID.');
     case 'SignatureDoesNotMatch':
-      throw new Error('The secret access key is wrong — the request signature was rejected.');
+      throw new Error('Wrong secret access key.');
     case 'AccessDenied':
-      throw new Error(`The key is valid but not permitted on bucket "${uri.host.split('.')[0]}".`);
+      throw new Error(`Key not permitted on "${bucket}".`);
     case 'NoSuchBucket':
     case 'InvalidBucketName':
-      throw new Error(`No bucket "${uri.host.split('.')[0]}" at ${uri.host.split('.').slice(1).join('.')}.`);
+      throw new Error(`No such bucket: "${bucket}".`);
     default:
       throw new S3RequestError(response.status, response.statusText, body);
   }

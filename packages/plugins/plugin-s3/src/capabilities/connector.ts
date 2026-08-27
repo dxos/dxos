@@ -11,7 +11,7 @@ import { AccessToken, Connection } from '@dxos/link';
 import { ConnectionTestError } from '@dxos/plugin-connector';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
-import { objectKey, probeAccess } from '#services';
+import { objectKey, probeAccess, regionFromHost } from '#services';
 
 import { S3_CONNECTOR_ID, S3_SOURCE } from '../constants';
 
@@ -136,6 +136,21 @@ export const createS3ConnectorEntry = (): ConnectorSpec.ConnectorEntry => ({
         });
         return { kind: 'complete' as const, accessToken, connection };
       }),
+  },
+
+  /**
+   * Bucket, endpoint, key id and signing region — every non-secret half of the credential. The
+   * secret is deliberately absent; `AccessToken.account` holds the key id precisely because it is
+   * the identifier rather than the secret.
+   */
+  describeConnection: ({ accessToken }) => {
+    const [bucket, ...rest] = accessToken.source.split('.');
+    return [
+      { label: 'Bucket', value: bucket },
+      { label: 'Endpoint', value: rest.join('.') },
+      { label: 'Access key ID', value: accessToken.account ?? '—' },
+      { label: 'Region', value: regionFromHost(accessToken.source) },
+    ];
   },
 
   /**
