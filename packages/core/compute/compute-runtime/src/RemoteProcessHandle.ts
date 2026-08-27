@@ -44,6 +44,13 @@ export interface Options<_Input, _Output, _Rpcs extends Rpc.Any> {
   readonly registry: Registry.AtomRegistry;
 
   readonly pollInterval?: Duration.Duration;
+
+  /**
+   * Ran after a lifecycle change this handle causes, so the manager's process tree — which the
+   * aggregate `Process.Monitor` reads rather than recomputes — does not keep reporting a process
+   * this handle has terminated.
+   */
+  readonly onLifecycleChange?: Effect.Effect<void>;
 }
 
 const TERMINAL_STATES: readonly Process.State[] = [
@@ -74,6 +81,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
   readonly #definition: Process.Process<_Input, _Output, any, _Rpcs> | undefined;
   readonly #registry: Registry.AtomRegistry;
   readonly #pollInterval: Duration.Duration;
+  readonly #onLifecycleChange: Effect.Effect<void>;
   readonly #statusAtom: Atom.Writable<ProcessManager.Status>;
   #info: ProcessProtocol.ProcessInfo;
   #decoded: DecodedInfo;
@@ -92,6 +100,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
     this.#definition = options.definition;
     this.#registry = options.registry;
     this.#pollInterval = options.pollInterval ?? DEFAULT_POLL_INTERVAL;
+    this.#onLifecycleChange = options.onLifecycleChange ?? Effect.void;
     this.#info = options.info;
     this.#decoded = decoded;
     this.#statusAtom = Atom.make(toStatus(options.info));
@@ -176,7 +185,9 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
   }
 
   terminate(): Effect.Effect<void> {
-    return this.#control.terminate(this.pid).pipe(Effect.andThen(this.#refresh), Effect.asVoid);
+    return this.#control
+      .terminate(this.pid)
+      .pipe(Effect.andThen(this.#refresh), Effect.andThen(this.#onLifecycleChange), Effect.asVoid);
   }
 
   runToCompletion(): Effect.Effect<void> {

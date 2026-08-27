@@ -20,7 +20,7 @@ import type { ProcessProtocol } from '@dxos/protocols';
 
 import { ProcessManagerService } from './process-manager-service';
 import type * as ProcessManager from './ProcessManager';
-import { toInfo } from './remote-process-info';
+import { toInfo, toProcessId } from './remote-process-info';
 import * as RemoteProcessHandle from './RemoteProcessHandle';
 import type * as RemoteProcessManager from './RemoteProcessManager';
 
@@ -92,10 +92,15 @@ export class RemoteProcessManagerAdapter implements ProcessManager.Manager {
         annotations,
       });
       log('remote process spawned', { pid: info.pid, key: info.key });
-      const handle = yield* this.#makeHandle<I, O, Rpcs>(info, definition);
+      // The process now exists on the host, so a later failure here would strand it: a caller that
+      // retries would spawn a second one and never hold the first.
+      const handle = yield* this.#makeHandle<I, O, Rpcs>(info, definition).pipe(
+        Effect.onError(() => this.#control.terminate(toProcessId(info.pid)).pipe(Effect.ignore)),
+      );
       // The aggregate `Process.Monitor` reads the tree atom rather than calling this manager, so the
-      // atom has to be current by the time spawn returns or the official monitor API reports nothing.
-      yield* this.#refreshProcessTree;
+      // atom has to be current by the time spawn returns. Failing to read it back does not
+      // invalidate the spawn.
+      yield* this.#refreshProcessTree.pipe(Effect.ignore);
       return handle;
     });
   }
@@ -140,7 +145,9 @@ export class RemoteProcessManagerAdapter implements ProcessManager.Manager {
   }
 
   startup(): Effect.Effect<void> {
-    return Effect.void;
+    // The host's processes outlive the client, so a fresh adapter has to read them rather than start
+    // from an empty tree — otherwise the aggregate monitor reports nothing until the next spawn.
+    return this.#refreshProcessTree.pipe(Effect.asVoid);
   }
 
   #makeHandle<I, O, Rpcs extends Rpc.Any>(
@@ -152,6 +159,7 @@ export class RemoteProcessManagerAdapter implements ProcessManager.Manager {
       control: this.#control,
       ...(definition !== undefined ? { definition } : {}),
       registry: this.#registry,
+      onLifecycleChange: this.#refreshProcessTree.pipe(Effect.ignore, Effect.asVoid),
     });
   }
 
