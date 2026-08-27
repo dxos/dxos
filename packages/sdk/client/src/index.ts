@@ -9,11 +9,11 @@ export {
   Defaults,
   Dynamics,
   Envs,
-  fromConfig,
-  layerMemory,
   Local,
   Remote,
   Storage,
+  fromConfig,
+  layerMemory,
 } from '@dxos/config';
 export { PublicKey, type PublicKeyLike } from '@dxos/keys';
 export {

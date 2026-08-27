@@ -18,7 +18,7 @@ import { createTestServices } from '@dxos/edge-compute/testing';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
-import { layerNoop as computeNodeContextLayerNoop, ValueBag } from '../../types';
+import { ValueBag, layerNoop as computeNodeContextLayerNoop } from '../../types';
 import { type GptInput, gptNode } from './gpt';
 
 const ENABLE_LOGGING = true;

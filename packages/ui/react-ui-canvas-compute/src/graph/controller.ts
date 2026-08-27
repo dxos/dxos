@@ -28,8 +28,8 @@ import {
   type GraphDiagnostic,
   GraphExecutor,
   ValueBag,
-  isNotExecuted,
   layerNoop as computeNodeContextLayerNoop,
+  isNotExecuted,
 } from '@dxos/conductor';
 import { Resource } from '@dxos/context';
 import type { Database, Registry } from '@dxos/echo';

@@ -27,8 +27,8 @@ import {
   type ComputeNode,
   type ComputeResult,
   type Executable,
-  layerNoop as computeNodeContextLayerNoop,
   ValueBag,
+  layerNoop as computeNodeContextLayerNoop,
   synchronizedComputeFunction,
 } from '../types';
 import { WorkflowLoader, type WorkflowLoaderProps } from './loader';

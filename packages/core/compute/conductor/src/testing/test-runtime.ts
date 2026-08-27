@@ -16,9 +16,9 @@ import {
   type ComputeRequirements,
   type ConductorError,
   type Executable,
-  layerNoop as computeNodeContextLayerNoop,
   type ValueBag,
   type ValueRecord,
+  layerNoop as computeNodeContextLayerNoop,
 } from '../types';
 import { WorkflowLoader } from '../workflow';
 

@@ -85,7 +85,7 @@ const setup = (mappings: ObservabilityMapping.ObservabilityMapping[]) => {
         }),
     ),
   );
-  const waitForSent = (count: number) => Effect.runPromise(waiter.waitFor(count, () => sent.length));
+  const waitForSent = (count: number) => EffectEx.runPromise(waiter.waitFor(count, () => sent.length));
   return { invoker, sent, waitForSent };
 };
 
@@ -153,7 +153,7 @@ describe('invocation listener', () => {
     // Telemetry must not fail the action it observes: the second invocation is still reported.
     await EffectEx.runPromise(invoker.invoke(Rename, { name: 'alpha' }));
     await EffectEx.runPromise(invoker.invoke(Rename, { name: 'beta' }));
-    await Effect.runPromise(waiter.waitFor(2, () => attempts));
+    await EffectEx.runPromise(waiter.waitFor(2, () => attempts));
 
     expect(attempts).toBe(2);
   });

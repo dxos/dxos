@@ -29,14 +29,13 @@ import {
 import {
   DATA_NAMESPACE,
   type DatabaseDirectory,
-  type EntityMeta as ProtocolEntityMeta,
   EncodedReference,
+  type EntityMeta as ProtocolEntityMeta,
   isEdgePeerId,
 } from '@dxos/echo-protocol';
 import {
   type AnyProperties,
   EntityKind,
-  type EntityMeta,
   MetaId,
   TypeSchema as PersistentSchema,
   type TypeAnnotation,
