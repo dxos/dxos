@@ -1,6 +1,6 @@
 # Project Tasks — Tasks
 
-_Resume: land #12787 — green (11/11 checks pass, all 5 review threads resolved), mergeable, awaiting merge. Uncommitted: none. Last: review round fixed a real stale-lifecycle-edge bug in `applyParentTask`._
+_Resume: #12787 MERGED 2026-08-27 — the hierarchical TaskList with drag-and-drop. Uncommitted: none. Next: pick from the Phase 3 backlog._
 
 ## Phase 1: Agent delegation over durable tasks
 

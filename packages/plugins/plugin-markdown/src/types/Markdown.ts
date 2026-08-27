@@ -27,7 +27,8 @@ export class Document extends Type.makeObject<Document>(DXN.make('org.dxos.type.
     name: Schema.optional(Schema.String),
     description: Schema.optional(Schema.String),
     fallbackName: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
-    content: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
+    /** Owned body: `SetParent` cascades it with the document. */
+    content: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
     history: History.History.pipe(FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
     LabelAnnotation.set(['name', 'fallbackName']),
@@ -47,8 +48,5 @@ export const make = ({
   content = '',
   ...props
 }: Partial<{ name: string; fallbackName: string; content: string }> = {}) => {
-  const doc = Obj.make(Document, { ...props, content: Ref.make(Text.make({ content })) });
-  // TODO(dmaretskyi): We need a better way to set parents when creating hierarchies.
-  Obj.setParent(doc.content.target!, doc);
-  return doc;
+  return Obj.make(Document, { ...props, content: Ref.make(Text.make({ content })) });
 };

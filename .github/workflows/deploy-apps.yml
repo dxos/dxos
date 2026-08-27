@@ -277,7 +277,7 @@ jobs:
           IPFS_API_SECRET: ${{ secrets.IPFS_API_SECRET }}
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
         with:
           remote-cache: 'false'
 
@@ -335,7 +335,7 @@ jobs:
 
       # Needed before "Check app targets this environment" — apps.mjs imports json5 from node_modules.
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
         with:
           remote-cache: 'false'
 
