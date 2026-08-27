@@ -260,7 +260,11 @@ export class ClientReplicant {
   }
 
   async listSpaces(): Promise<{ spaceIds: string[] }> {
-    return { spaceIds: this.#getClient().spaces.get().map((space) => space.id) };
+    return {
+      spaceIds: this.#getClient()
+        .spaces.get()
+        .map((space) => space.id),
+    };
   }
 
   //
