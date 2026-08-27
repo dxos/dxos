@@ -274,21 +274,98 @@ worker holds an OAuth-derived identity, not a HALO verifiable presentation.
    is a browser capability and the `Connection` holding the bucket credential is an ECHO object the
    host would have to read. See §5 and open question 5 — these are now the same question.
 
-## Parked
+4. **The storage backend is decoupled from `Client` and reachable headless — but it is not
+   "plugin-s3's backend".** The right framing is a general-purpose file service, either extending
+   `blob-service` or sitting beside it, of which an S3/R2 target is one implementation. `plugin-s3`
+   happens to hold the working S3 code today; that code should move to where any host can register
+   it rather than remaining a browser plugin capability.
 
-- **Whether the fetch should go through `proxyFetchLegacy` on a headless host.** CRM proxies because
-  it runs in a browser and needs CORS; an MCP host has no such constraint and could fetch directly,
-  but the proxy keeps one egress point to reason about. Revisit once the questions below are settled.
+   The blocker is one dependency: `createCredentialResolver` takes a `Client` purely to build
+   `credentialsLayerFromDatabase` per space. `operation-service` has no `Client` but does have
+   `Database.Service`, which is all the lookup needs. Swap the parameter and the backend is
+   host-agnostic; `sigv4.ts` already needs nothing beyond WebCrypto and `fetch`.
 
-3. **Answered by reading the edge repo: no backend is registered anywhere in it.** Operations run in
+5. **The fetch on a headless host does NOT go through the CORS proxy.** See below — the proxy exists
+   for browsers, and `operation-service` has no CORS constraint to solve.
+
+## The edge CORS proxy — where it does and does not apply
+
+`proxyFetchLegacy` (`core/mesh/edge-client/src/cors-proxy.ts`) routes through
+`cors.dxos.network`, implemented at `edge/packages/services/cors-proxy/src/main.ts`. It strips
+`host` from the forwarded request (`main.ts:23`) and supports overriding browser-privileged headers
+via an `x-cors-proxy-` prefix, which is how the client relocates `Authorization`
+(`cors-proxy.ts:15-22`).
+
+**It would technically work for SigV4.** Because the proxy strips `Host` and `fetch` sets it from
+the target URL, a request signed for the bucket host arrives at the bucket with a matching `host`
+header, and the signature verifies. Header-auth requests are safe; **presigned URLs are not** —
+`parseTargetUrl` re-serializes the query string (`main.ts:113-118`), and re-encoding
+`X-Amz-Signature` and friends can invalidate them.
+
+Three separate questions, three different answers:
+
+1. **The upload operation's `http` arm — do not proxy.** It runs in `operation-service`, which is
+   not a browser and has no CORS constraint. `plugin-crm` proxies only because it runs in the page.
+   Direct `fetch` behind the extracted SSRF guard.
+2. **`plugin-s3`'s browser data path — do not proxy either, despite the temptation.** It would
+   remove the bucket-CORS requirement entirely, which is the single biggest operational friction in
+   the plugin. But `cors.dxos.network` is an **open** proxy (`origin: '*'`, any target host), so
+   every signed request and every uploaded byte of a customer's file would pass through it. The
+   client comment marks it TEMPORARY pending an authenticated `/proxy/*` route on edge — and no such
+   route exists yet (no `/proxy` in `edge/src/api.ts`). Revisit if that route ships; routing
+   credentialed traffic through an open proxy is not a trade to make in the meantime.
+3. **Bucket CORS is needed for less than it appears.** `getUrl` returns a presigned URL that
+   `FilePreview` puts in a plain `<img src>` / `<video src>` / `<iframe src>` with no `crossorigin`
+   attribute — **those loads are not CORS-gated at all**. Only `fetch` is, which means the bucket
+   policy is required for uploads and programmatic reads, and _not_ for rendering. A read-only
+   viewer of a shared object needs no bucket CORS policy whatsoever. This is worth stating in the
+   plugin README, which currently implies the policy is needed for everything.
+
+4. **Answered by reading the edge repo: no backend is registered anywhere in it.** Operations run in
    `operation-service`, not in the MCP worker, and get inline-only 4 MiB storage. Both storage
    targets therefore depend on one prerequisite — registering a `BlobBackend` on the `EchoClient`
    that `FunctionContext` builds — with a `BLOB_SERVICE` binding for the EDGE store and a
    `Client`-free `plugin-s3` backend for the R2 bucket. Detail in §5.
 
+5. **Assistant uploads are tagged**, rather than carrying a new field on `File`. The question anyone
+   asks after an agent writes to a space is "what did it put here?", and a tag answers it with a
+   query. The trace feed technically records the invocation, but that is unusable when you are
+   holding a file and want to know where it came from. A tag also leaves a released type unchanged
+   for a concern that is not intrinsic to files.
+
+   Implementation detail that is not free: `Obj.addTag` takes a `Ref.Ref<Tag.Tag>`, not a string
+   (`core/echo/echo/src/Obj.ts:671`), so the tag is an object needing stable identity per space — and
+   there is **no find-or-create helper in the repo** (nothing matches `findOrCreateTag`/`ensureTag`).
+   The operation must resolve or create it, and two concurrent uploads into a fresh space must not
+   each mint one. Worth a small shared helper rather than an inline query, since the next feature
+   that tags something will need the same thing.
+
+## Tracked, not decided in this pass
+
+- **Attribution of assistant uploads** (was question 4). Deferred deliberately, not dropped. When it
+  is picked up, note that `Obj.addTag` takes a `Ref.Ref<Tag.Tag>` rather than a string
+  (`core/echo/echo/src/Obj.ts:671`), there is no find-or-create helper in the repo, and two
+  concurrent uploads into a fresh space must not each mint a tag object.
+
+## Build order
+
+Each step is usable on its own, and each unblocks the next.
+
+1. **Extract the SSRF guard** from `attach-image.ts` into a shared module; `plugin-crm` imports it.
+2. **`FileOperation.CreateFromSource`** + the widened MIME allowlist + the skill entry. Works on the
+   CLI host immediately, and on edge at inline sizes.
+3. **The headless backend seam** — register a `BlobBackend` on the `EchoClient` that
+   `FunctionContext` builds (`compute-runtime/src/protocol.ts:171-177`). Nothing above 4 MiB works on
+   edge until this exists, and both storage targets depend on it.
+4. **EDGE store target** — `BLOB_SERVICE` binding on `operation-service`, backend speaking
+   `POST /file/:key`.
+5. **R2 target** — decouple the S3 backend from `Client`, move it somewhere any host can register,
+   and register it on both.
+
 ## Open questions
 
-4. Should assistant uploads be attributed — a tag or field recording that an agent created it — so
-   they are distinguishable from user uploads after the fact?
-5. Should `plugin-s3`'s backend be reachable from headless hosts, so an assistant upload lands in
-   the same bucket the app writes to?
+- **Is `blob-service`'s `skipAuth: true` intentional?** Flagged in §5. Not a blocker for this work,
+  but it should be answered before a second writer is pointed at that store.
+- **Should the general-purpose file service extend `blob-service` or sit beside it?** Decision 5
+  settles that an S3/R2 target must be one implementation among several; it does not settle whether
+  the seam lives in the existing worker or a new one.
