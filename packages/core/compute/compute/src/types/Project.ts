@@ -41,7 +41,7 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
     /** Artifacts (documents, outliners, tables, ...) the project owns, in order. */
     artifacts: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(Annotation.FormInputAnnotation.set(false)),
 
-    /** Routines the project owns, in order. Parented, so they cascade-delete with the project. */
+    /** Routines the project owns, in order, parented so they cascade-delete with it. */
     routines: Schema.Array(Ref.Ref(Routine.Routine)).pipe(
       Annotation.SetParent.set(true),
       Annotation.FormInputAnnotation.set(false),

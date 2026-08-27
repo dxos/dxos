@@ -164,8 +164,9 @@ export const make = (props: Obj.MakeProps<typeof Person>): Type.InstanceType<typ
 ## Owned children — `Annotation.SetParent`
 
 Declare ownership on the ref field rather than calling `Obj.setParent` next to every write. Writing a
-ref into an annotated field (or creating the holder with one) sets the target's parent, so the child
-cascade-deletes and deep-clones with its holder.
+ref into an annotated field (or creating the holder with one) sets an object-kind target's parent, so
+that child cascade-deletes and deep-clones with its holder. A ref to anything else (a relation) is
+left alone — only objects can have a parent.
 
 ```ts
 Schema.Struct({

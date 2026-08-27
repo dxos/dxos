@@ -710,9 +710,9 @@ describe('Annotation', () => {
         linked: Ref.make(linked),
       });
 
-      expect(Obj.getParent(body)).toBe(holder);
-      expect(Obj.getParent(section)).toBe(holder);
-      expect(Obj.getParent(config)).toBe(holder);
+      expect(Obj.getParent(body)?.id).toBe(holder.id);
+      expect(Obj.getParent(section)?.id).toBe(holder.id);
+      expect(Obj.getParent(config)?.id).toBe(holder.id);
       // An un-annotated ref field is a plain reference, not ownership.
       expect(Obj.getParent(linked)).toBeUndefined();
     });
@@ -726,12 +726,12 @@ describe('Annotation', () => {
       Obj.update(holder, (holder) => {
         holder.body = Ref.make(body);
       });
-      expect(Obj.getParent(body)).toBe(holder);
+      expect(Obj.getParent(body)?.id).toBe(holder.id);
 
       Obj.update(other, (other) => {
         other.body = Ref.make(body);
       });
-      expect(Obj.getParent(body)).toBe(other);
+      expect(Obj.getParent(body)?.id).toBe(other.id);
     });
 
     test('appending to an annotated array field parents the appended target', ({ expect }) => {
@@ -742,7 +742,7 @@ describe('Annotation', () => {
         holder.sections.push(Ref.make(section));
       });
 
-      expect(Obj.getParent(section)).toBe(holder);
+      expect(Obj.getParent(section)?.id).toBe(holder.id);
     });
   });
 });

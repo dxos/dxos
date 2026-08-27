@@ -70,7 +70,13 @@ const setParent = (value: unknown, parent: unknown): void => {
   // object whose parent edge is either already written or not this holder's to write. `.target`
   // throws on a ref with neither an inlined target nor a resolver, so gate on `isAvailable`.
   const target: any = value.isAvailable ? value.target : undefined;
-  if (target == null || target[KindId] !== EntityKind.Object || target[ParentId] === parent) {
+  if (target == null || target[KindId] !== EntityKind.Object) {
+    return;
+  }
+  // By id, not identity: the database resolves a parent edge through the working set, which may
+  // hand back a different proxy for the same entity — an identity compare would miss the
+  // short-circuit and re-write the unchanged edge on every update of the holder.
+  if (target[ParentId]?.id === (parent as any)?.id) {
     return;
   }
   target[ParentId] = parent;

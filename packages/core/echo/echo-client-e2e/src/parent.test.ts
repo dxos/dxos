@@ -210,9 +210,9 @@ describe('Annotation.SetParent', () => {
       linked: Ref.make(linked),
     });
 
-    expect(Obj.getParent(body)).toBe(container);
-    expect(Obj.getParent(section)).toBe(container);
-    expect(Obj.getParent(config)).toBe(container);
+    expect(Obj.getParent(body)?.id).toBe(container.id);
+    expect(Obj.getParent(section)?.id).toBe(container.id);
+    expect(Obj.getParent(config)?.id).toBe(container.id);
     expect(Obj.getParent(linked)).toBeUndefined();
   });
 
@@ -227,8 +227,8 @@ describe('Annotation.SetParent', () => {
       container.sections = [Ref.make(section)];
     });
 
-    expect(Obj.getParent(body)).toBe(container);
-    expect(Obj.getParent(section)).toBe(container);
+    expect(Obj.getParent(body)?.id).toBe(container.id);
+    expect(Obj.getParent(section)?.id).toBe(container.id);
   });
 
   test('parent is set on write to a database object', async () => {
@@ -252,12 +252,12 @@ describe('Annotation.SetParent', () => {
     Obj.update(container, (container) => {
       container.body = Ref.make(body);
     });
-    expect(Obj.getParent(body)).toBe(container);
+    expect(Obj.getParent(body)?.id).toBe(container.id);
 
     Obj.update(other, (other) => {
       other.body = Ref.make(body);
     });
-    expect(Obj.getParent(body)).toBe(other);
+    expect(Obj.getParent(body)?.id).toBe(other.id);
   });
 
   test('owned child cascade-deletes with its holder', { timeout: 30_000 }, async () => {
