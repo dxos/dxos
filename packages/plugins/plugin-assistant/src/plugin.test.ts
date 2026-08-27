@@ -10,6 +10,7 @@ import { describe, test } from 'vitest';
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import { AiService } from '@dxos/ai';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { AgentWizardSkill, ChatContextSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
@@ -22,6 +23,7 @@ import { DXN, EntityId } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
+import * as RegistryPlugin from '@dxos/plugin-registry/RegistryPlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
@@ -30,6 +32,7 @@ import { AssistantPlugin } from '#plugin';
 import { AssistantEvents } from '#types';
 
 import { AssistantSkill } from './skills/assistant';
+import { PluginManagerSkill } from './skills/plugin-manager';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -70,6 +73,27 @@ describe('AssistantPlugin', () => {
         expect(aiService).toBeDefined();
       }).pipe(Effect.provide(ServiceResolver.provide({ space: defaultSpace.id }, AiService.AiService))),
     );
+  });
+
+  test('offers the plugin-manager skill only where the registry plugin is present', async ({ expect }) => {
+    const skillKeys = (harness: { getAll: (capability: any) => any[] }) =>
+      harness.getAll(AppCapabilities.SkillDefinition).map((definition: { key: string }) => definition.key);
+
+    {
+      // The curated production and mobile sets ship no registry, so the skill's verbs would have no
+      // handlers there.
+      await using harness = await createComposerTestApp({
+        plugins: [ClientPlugin.make({}), AssistantPlugin()],
+      });
+      expect(skillKeys(harness)).not.toContain(PluginManagerSkill.key);
+    }
+
+    {
+      await using harness = await createComposerTestApp({
+        plugins: [ClientPlugin.make({}), AssistantPlugin(), RegistryPlugin.make()],
+      });
+      expect(skillKeys(harness)).toContain(PluginManagerSkill.key);
+    }
   });
 
   test('resolves a language model through the plugin AI service', async ({ expect }) => {
