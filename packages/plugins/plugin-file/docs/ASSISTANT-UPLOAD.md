@@ -161,54 +161,133 @@ So an agent uploads by calling `invokeOperation` with the new operation's key. N
 — once against the registry's JSON-Schema reconstruction, once against the live definition at the
 host (`cli/src/commands/mcp/local-server.ts:158`).
 
-### Which host, and whether it can store anything — the decisive question
+### Where the operation actually runs — not the MCP worker
 
-The two MCP hosts are **not equivalent for this operation**:
+`mcp-space-service` (the EDGE MCP host, `composer.dxos.network` / `mcp.dxos.network`) does **not**
+execute operations. `invokeOperation` is a pass-through RPC to the `OPERATION_SERVICE` binding
+(`edge/packages/services/mcp-space-service/src/mcp/gateway.ts:58-61`); the MCP worker only attaches a
+trace sink and re-qualifies refs. It constructs no `Client` at all.
 
-|                | `dx mcp serve` (CLI)                                                      | EDGE worker                         |
-| -------------- | ------------------------------------------------------------------------- | ----------------------------------- |
-| Has a `Client` | yes                                                                       | **no** (`space-tools.ts:35-38`)     |
-| Blob backend   | `edge`, registered as default (`sdk/client/src/client/client.ts:540-544`) | **no evidence of one in this repo** |
-| Session spaces | every visible space (`local-server.ts:87-90`)                             | the OAuth grant's spaces            |
+Operations execute in **`operation-service`**
+(`edge/packages/services/operation-service/src/entrypoint.ts`). That is the host that matters, and
+its situation is:
 
-**On the CLI host this works today.** A `dx mcp serve` process configured with an edge URL
-(`cli/config/config-dev.yml:18-19`) registers the edge blob backend as default, so
-`File.fromBytes` with no explicit storage writes to edge over plain `fetch` — nothing about it is
-browser-specific. Two caveats: it **requires a HALO identity**, since the blob endpoint is
-authenticated (`client.ts:514-530`), and it is **online-only with no local cache**
-(`edge-blob-backend.ts:27-29`).
+|                    | `dx mcp serve` (CLI)                                                      | `operation-service` (EDGE)                                                                                               |
+| ------------------ | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `Database.Service` | yes, via `Client`                                                         | **yes** — `EchoClient` built in `FunctionContext` (`compute-runtime/src/protocol.ts:171-177`), requires `contextSpaceId` |
+| Blob backend       | `edge`, registered as default (`sdk/client/src/client/client.ts:540-544`) | **none — zero `registerBlobBackend` calls in the entire edge repo**                                                      |
+| Effective storage  | edge, 50 MiB                                                              | **inline only, 4 MiB** (`blob-manager.ts:37`)                                                                            |
+| R2 / blob bindings | n/a                                                                       | **none** — `operation-service/wrangler.jsonc:36-54` has only `DATA_SERVICE`, `QUEUE_SERVICE`, `AI_SERVICE`               |
 
-**On the EDGE host it is unproven and probably absent.** That worker has no `Client` at all, and
-this repo shows no blob backend registered in it. Before promising a cloud agent can upload,
-someone must confirm what storage exists inside the EDGE MCP worker — otherwise the operation will
-be listed by `queryOperations` and fail at `Blob.fromBytes`.
+So the answer to "can a cloud agent upload today?" is **yes, but only inline and only under 4 MiB**.
+Asking for `storage: 'edge'` throws `BlobNotAvailableError{reason:'backend-not-registered'}`
+(`blob-manager.ts:127`). This is better than "it fails" and worse than it looks: an assistant would
+silently get inline blobs, which is exactly what the whole S3/R2 effort exists to avoid.
 
-### So the recommended cloud shape
+### The blob service that already exists
 
-A Claude cloud session reaches DXOS through the **EDGE** MCP host, which is exactly the host whose
-storage is unproven. Two options, in order of preference:
+`edge/packages/services/blob-service` — an R2-backed store, binding `BLOB_STORE` →
+`blob-store` / `-main` / `-labs` / `-staging` / `-production`
+(`blob-service/wrangler.jsonc:46-157`).
 
-1. **Confirm or add a blob backend in the EDGE MCP worker.** That worker already sits next to EDGE
-   blob storage, so this is likely a small wiring change in the edge repo — but it is out of tree
-   and cannot be verified from here. This is the prerequisite for a genuine cloud upload.
-2. **Route through a CLI host instead.** A cloud sandbox that runs `dx mcp serve` locally (with a
-   HALO identity) gets a working `edge` backend immediately, with no cross-repo change. Suitable for
-   a developer sandbox; not for a hosted Claude connector.
+Three properties worth knowing before wiring anything to it:
 
-Note the interaction with `plugin-s3`: the S3 backend is contributed by a **browser plugin**
-capability and is not present in a CLI or EDGE process. An assistant upload will therefore land in
-**edge** storage, not in the S3 bucket, even when the browser app has S3 selected. Making
-assistant uploads honour the S3 backend is a separate piece of work — the backend registration would
-have to move somewhere a headless host can reach.
+- **`POST /file/:key`, not `PUT`** (`blob-service/src/worker.ts:86`). The dxos-side
+  `edge-blob-backend` already speaks this; a new writer must not assume S3 semantics.
+- **Path-addressed, content-addressed only by convention.** The worker does
+  `BlobStore.get().put(key, body)` and verifies nothing (`worker.ts:91`). The `ni:`/SHA-256
+  discipline lives entirely in the client. Nothing server-side rejects a key that does not match its
+  bytes.
+- **No ingress of its own** (`wrangler.jsonc:29-30`) — reached only through the `edge` worker's
+  `/blob/*` route (`edge/src/api.ts:97-105`), which strips the prefix.
+
+### Wiring the two targets
+
+Both requirements — EDGE's own store, and a customer R2 bucket — reduce to the same missing piece:
+**`operation-service` needs a `BlobBackend` registered on the `EchoClient` that `FunctionContext`
+builds**, the edge-side analogue of `client.ts:540-544`. Once that seam exists, which backend is
+selected is the routing decision §2 already describes.
+
+**Target 1 — EDGE blob store.** Add `services: [{ binding: 'BLOB_SERVICE', service: 'blob-service' }]`
+to `operation-service/wrangler.jsonc` and register a backend that speaks `POST /file/:key` over that
+binding. Preferred over giving `operation-service` its own `r2_buckets` entry for `blob-store*`:
+one writer keeps the `ni:` convention in one place, and blob-service is binding-only by design.
+
+**Target 2 — customer R2 bucket.** This is `plugin-s3`'s backend, and it is closer to portable than
+it looks. Its bucket credential is an `AccessToken` in the space, and `operation-service` **has**
+`Database.Service` — so the credential is reachable there. What blocks it is a dependency, not a
+capability: `createCredentialResolver` currently takes a `Client` in order to build
+`credentialsLayerFromDatabase` per space, and no `Client` exists on edge. Refactoring it to accept a
+`Database.Service` directly (the browser path can supply one just as easily) makes the S3 backend
+host-agnostic, and is the single change that would let an assistant upload land in the same bucket
+the app writes to.
+
+Note the signing code needs nothing: `sigv4.ts` is WebCrypto and `fetch`, both of which Workers
+provide.
+
+### Security finding, incidental but worth raising
+
+Every blob-service route passes `skipAuth: true`
+(`blob-service/src/worker.ts:32, 46, 63, 88, 98`), which short-circuits `edgeAuth` before any
+credential check and emits `reportAuthSkipped`
+(`edge/packages/sdk/hub-protocol/src/middleware.ts:315-328`). The dxos client dutifully pre-fetches
+`/auth` and sends a verifiable presentation (`edge-http-client.ts:356-412`) — and blob-service
+discards it. There is no identity check, no space scoping, and `DELETE /file/:key` is exposed on the
+same terms.
+
+Whether this is reachable by an untrusted caller depends on whether the `edge` worker's `/blob/*`
+route authenticates in front of it, which I did not verify. **Worth confirming before this design
+adds a second writer to that store** — not a blocker for the upload work, but it should not be
+discovered later.
+
+Convenient consequence for this design either way: an upload originating inside `operation-service`
+needs no credentials to reach the blob endpoints. It could not present any if it had to — the MCP
+worker holds an OAuth-derived identity, not a HALO verifiable presentation.
+
+## Decisions
+
+1. **Both arms ship, and the SSRF guard is extracted before either does.** The guard in
+   `attach-image.ts` is already sound — https-only, blocked-host list, a streaming size cap that
+   does not trust `content-length`, and a timeout — but `validateExternalUrl` and `isBlockedHost`
+   are module-private, so reuse means extraction, not import. A copied guard is how the two
+   drift and one of them silently stops blocking something. Prerequisite work item: lift them into a
+   shared module, have `plugin-crm` import it, then build on it here.
+
+2. **Widen `isAcceptedMimeType` to a small explicit allowlist**: add `text/plain`, `text/csv`,
+   `text/markdown`, `application/json`. Nothing downstream blocks this — `FilePreview` already falls
+   back to a download link for unrecognized types — so the gate is policy, not capability. It keeps
+   its deny-by-default shape, and **`text/html` stays excluded on purpose**: a presigned URL serving
+   stored HTML is an XSS vector on whatever origin serves it. That exclusion needs a comment saying
+   so, or it gets "simplified" away later.
+
+   Related but not settled by this: an assistant writing prose should arguably create a Document
+   rather than a `text/markdown` blob. Widening the list does not decide where text belongs.
+
+3. **Two storage targets, not one.** An assistant upload must be able to land either in EDGE's own
+   blob store or in a customer R2 bucket. That makes storage a _routing_ decision rather than a
+   default, and it is the same decision `resolveActiveStorage` already makes for the UI — so the
+   operation should not take a storage argument from the model. Which bucket a space writes to is
+   configuration, not something a caller chooses per upload; letting the model name a target would
+   make it possible to write one space's file into another space's bucket.
+
+   The open part is where that configuration lives for a headless host, since `plugin-s3`'s backend
+   is a browser capability and the `Connection` holding the bucket credential is an ECHO object the
+   host would have to read. See §5 and open question 5 — these are now the same question.
+
+## Parked
+
+- **Whether the fetch should go through `proxyFetchLegacy` on a headless host.** CRM proxies because
+  it runs in a browser and needs CORS; an MCP host has no such constraint and could fetch directly,
+  but the proxy keeps one egress point to reason about. Revisit once the questions below are settled.
+
+3. **Answered by reading the edge repo: no backend is registered anywhere in it.** Operations run in
+   `operation-service`, not in the MCP worker, and get inline-only 4 MiB storage. Both storage
+   targets therefore depend on one prerequisite — registering a `BlobBackend` on the `EchoClient`
+   that `FunctionContext` builds — with a `BLOB_SERVICE` binding for the EDGE store and a
+   `Client`-free `plugin-s3` backend for the R2 bucket. Detail in §5.
 
 ## Open questions
 
-1. Ship `http` in v1, or start base64-only with a small cap until the SSRF guard is reviewed?
-   Base64-only is strictly safer and covers the generated-image case, which is the likeliest first
-   use.
-2. Does `isAcceptedMimeType` need widening for assistant use (text, CSV, JSON)?
-3. **Does the EDGE MCP worker have any blob backend?** Blocking for the cloud path; answerable only
-   in the edge repo.
 4. Should assistant uploads be attributed — a tag or field recording that an agent created it — so
    they are distinguishable from user uploads after the fact?
 5. Should `plugin-s3`'s backend be reachable from headless hosts, so an assistant upload lands in
