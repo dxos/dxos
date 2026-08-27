@@ -120,8 +120,11 @@ flow QA-1: Connect DeepSeek with an API key
   after:
     - name: Delete the connection
       do: Open the DeepSeek connection and click "Delete connection".
-      invoke: org.dxos.operation.space.removeObjects { objects: [$given.connection] }
-      expect: the row leaves the navtree and its plank closes
+      expect: the row leaves the navtree, its plank closes, and a "Connection deleted" toast appears
+      note: >
+        NO `invoke` — the connection is created by a UI gesture in step 6, which has no operation to
+        `capture` from, so there is no `$connection` for `space.removeObjects` to name. The delete
+        action in the connection's own panel routes through that operation anyway.
 ```
 
 ## Out of scope (v1)
