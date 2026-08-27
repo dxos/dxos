@@ -12,7 +12,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 import { Selection } from '@dxos/react-ui-attention/types';
 
-import { Translations } from '../app';
+import * as Translations from '../app/Translations';
 
 const LAYOUT_PLUGIN = 'org.dxos.plugin.layout';
 
