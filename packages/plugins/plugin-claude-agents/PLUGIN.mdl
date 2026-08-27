@@ -280,12 +280,13 @@ test T-3: Transcript keeps prose only
 ```
 
 ```mdl
-test T-4: Retryable statuses
-  given: ClaudeAgentApiError values with statuses 0, 429, 503, 400, 401 and 404
+test T-4: Method-specific retryable statuses
+  given: GET and POST requests with ClaudeAgentApiError values
   when: isRetryable is applied
   then:
-    - 0, 429 and 503 are retryable
-    - 400, 401 and 404 are not
+    - a GET retries 0, 429 and 503
+    - a POST retries only 429
+    - neither retries 400, 401 or 404
 ```
 
 ---
