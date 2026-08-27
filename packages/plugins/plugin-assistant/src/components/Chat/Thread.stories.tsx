@@ -86,7 +86,7 @@ const DefaultStory = ({ generator = [], delay = 0, wait, remountable, viewType }
         }
 
         setDone(true);
-      }).pipe(Effect.provide(Layer.mergeAll(Database.layer(space.db), Feed.ContextFeedService.layer(feed)))),
+      }).pipe(Effect.provide(Layer.mergeAll(Database.layer(space.db), Feed.layer(feed)))),
     );
 
     return () => {
