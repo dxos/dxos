@@ -133,7 +133,13 @@ export const CreateConnectionPanel = ({ onCreateObject, connectors: connectorsPr
           {t('connect-service.label', { service: connector.label ?? connector.id })}
         </Button>
       )}
-      {error && <span className='text-sm text-error-text'>{error}</span>}
+      {/* `role='alert'` because this appears after an async failure, which a screen reader would
+          otherwise not announce. */}
+      {error && (
+        <span role='alert' className='text-sm text-error-text'>
+          {error}
+        </span>
+      )}
     </>
   );
 };

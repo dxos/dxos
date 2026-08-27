@@ -29,20 +29,38 @@ export const parseUri = (uri: string): S3Uri | undefined => {
   return { host, key };
 };
 
-/** The HTTPS URL the object is served from. Public buckets resolve this without a signature. */
-export const toHttpsUrl = ({ host, key }: S3Uri): URL =>
-  new URL(
-    `https://${host}/${key
-      .split('/')
-      .map((segment) => encodeURIComponent(segment))
-      .join('/')}`,
-  );
+/**
+ * The HTTPS URL the object is served from. Public buckets resolve this without a signature.
+ *
+ * Rejects `.` and `..` segments rather than trying to carry them. WHATWG URL parsing resolves them
+ * away, and percent-encoding does not help — it decodes `%2E` and normalizes anyway — so such a key
+ * would silently be requested at a different path than the one it was stored under. Nothing this
+ * package writes produces one (`objectKey` is a space id and a hex digest), so a key that reaches
+ * here with a dot segment is a corrupted or hand-authored URI, and failing is better than reading
+ * the wrong object.
+ */
+export const toHttpsUrl = ({ host, key }: S3Uri): URL => {
+  const segments = key.split('/');
+  if (segments.some((segment) => segment === '.' || segment === '..')) {
+    throw new Error(`Refusing to address an S3 key with a relative path segment: ${key}`);
+  }
+
+  return new URL(`https://${host}/${segments.map((segment) => encodeURIComponent(segment)).join('/')}`);
+};
 
 /**
  * SigV4 signing region for an endpoint. AWS encodes it in the hostname; R2 and most self-hosted
  * S3 implementations do not, and take {@link DEFAULT_REGION}.
+ *
+ * The legacy global endpoint (`bucket.s3.amazonaws.com`, no region segment) is the exception: it
+ * routes to us-east-1 and must be signed for that region, since signing it `auto` yields
+ * `SignatureDoesNotMatch` rather than anything that names the real problem.
  */
 export const regionFromHost = (host: string): string => {
+  if (/(?:^|\.)s3\.amazonaws\.com$/.test(host)) {
+    return 'us-east-1';
+  }
+
   const match = /(?:^|\.)s3[.-]([a-z0-9-]+)\.amazonaws\.com$/.exec(host);
   return match ? match[1] : DEFAULT_REGION;
 };

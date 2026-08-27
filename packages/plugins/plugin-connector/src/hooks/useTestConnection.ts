@@ -88,12 +88,17 @@ export const useTestConnection = (connection: Connection.Connection | undefined)
 
   useAsyncEffect(
     async (controller) => {
+      // Every early exit clears `testing`, including these: a probe may already have been in flight
+      // when its subject went away, and the superseding run returns here without ever reaching the
+      // code that would clear the flag — leaving the button disabled on "Testing…" for good.
       if (!connection || !connector) {
+        setTesting(false);
         return;
       }
       if (!testConnection) {
         setStatus('unsupported');
         setError(undefined);
+        setTesting(false);
         return;
       }
       if (!accessToken || !db) {

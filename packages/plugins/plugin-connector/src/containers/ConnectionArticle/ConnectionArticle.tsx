@@ -117,6 +117,7 @@ export const ConnectionArticle = ({ subject, role }: ConnectionArticleProps) => 
       testError={testError}
       testing={testing}
       details={details}
+      name={connection?.name}
       onRename={handleRename}
       canReauthenticate={canReauthenticate}
       reauthenticating={reauthenticating}

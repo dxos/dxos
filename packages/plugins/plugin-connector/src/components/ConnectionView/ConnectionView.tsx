@@ -54,6 +54,13 @@ export type ConnectionViewProps = {
   details?: ReadonlyArray<{ label: string; value: string }>;
   /** Rename the connection. Omitted when the type carries no `name`, which hides the field. */
   onRename?: (name: string) => void;
+  /**
+   * The stored name, which is absent for a connection that has never been renamed. Distinct from
+   * `title`, which falls back to the account or connector label — seeding the field with that
+   * fallback would persist it on the first focus-and-blur and freeze a label that should keep
+   * tracking the account.
+   */
+  name?: string;
   /** True when the connector supports in-place reauthentication (OAuth connectors). */
   canReauthenticate: boolean;
   /** True while a reauthentication popup/redirect is being initiated. */
@@ -91,6 +98,7 @@ export const ConnectionView = ({
   testing = false,
   details = [],
   onRename,
+  name,
   canReauthenticate,
   reauthenticating,
   onSync,
@@ -117,13 +125,22 @@ export const ConnectionView = ({
                       <Form.Row label={t('connection-name.label')}>
                         <Input.Root>
                           <Input.TextInput
-                            defaultValue={title}
-                            placeholder={t('connection-name.placeholder')}
+                            // The stored name, not `title`: an unnamed connection shows the account
+                            // or connector label there, and seeding it here would persist that
+                            // fallback the first time the field is focused and blurred.
+                            defaultValue={name ?? ''}
+                            placeholder={title || t('connection-name.placeholder')}
                             data-testid='connection.name-input'
                             // Committed on blur and Enter rather than per keystroke: this writes
                             // straight to a replicated object, and the label is echoed in the
-                            // sidebar as you type.
-                            onBlur={(event) => onRename(event.target.value.trim())}
+                            // sidebar as you type. Unchanged input writes nothing, so merely
+                            // tabbing through the field cannot pin the derived label.
+                            onBlur={(event) => {
+                              const next = event.target.value.trim();
+                              if (next !== (name ?? '')) {
+                                onRename(next);
+                              }
+                            }}
                             onKeyDown={(event) => event.key === 'Enter' && event.currentTarget.blur()}
                           />
                         </Input.Root>

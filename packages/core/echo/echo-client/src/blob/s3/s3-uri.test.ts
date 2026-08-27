@@ -34,6 +34,25 @@ describe('s3 uri', () => {
     expect(regionFromHost('s3.us-east-2.amazonaws.com')).toBe('us-east-2');
   });
 
+  // The legacy global endpoint carries no region but routes to us-east-1; signing it `auto` fails
+  // with SignatureDoesNotMatch, which names nothing useful.
+  test('signs the legacy global endpoint as us-east-1', ({ expect }) => {
+    expect(regionFromHost('media.s3.amazonaws.com')).toBe('us-east-1');
+    expect(regionFromHost('s3.amazonaws.com')).toBe('us-east-1');
+  });
+
+  // WHATWG URL parsing resolves these away — and decodes %2E first, so encoding cannot save them.
+  // Reading the wrong object silently is worse than refusing to address it.
+  test('refuses a key with a relative path segment', ({ expect }) => {
+    expect(() => toHttpsUrl({ host: 'bucket.example.com', key: './file' })).toThrow(/relative path segment/);
+    expect(() => toHttpsUrl({ host: 'bucket.example.com', key: 'folder/../file' })).toThrow(/relative path segment/);
+  });
+
+  test('a dot inside a segment is untouched', ({ expect }) => {
+    expect(toHttpsUrl({ host: 'bucket.example.com', key: 'a/file.png' }).pathname).toBe('/a/file.png');
+    expect(toHttpsUrl({ host: 'bucket.example.com', key: 'a/...b' }).pathname).toBe('/a/...b');
+  });
+
   test('falls back to the default region for endpoints that encode none', ({ expect }) => {
     expect(regionFromHost('media.abc123.r2.cloudflarestorage.com')).toBe(DEFAULT_REGION);
     expect(regionFromHost('minio.internal:9000')).toBe(DEFAULT_REGION);
