@@ -38,6 +38,30 @@ rule namespace-service-layers: Layer constructors are module-level exports, neve
   severity: warn
 ```
 
+```mdl
+rule no-trivial-wrappers-over-official-apis: Do not extract a helper that only forwards to an official API
+  A one-line local helper whose body is a single call to a public API
+  (`const makeBody = (text: string) => Obj.make(Body, { text })`, and then
+  `makeBody('x')` at four call sites) does not remove duplication — it renames
+  the API. The reader now has to jump to the definition to learn which API is
+  under test and what it was passed, and a file with several of these grows an
+  ad-hoc DSL that only its author can read. Inline it: `Obj.make(Body, { text:
+  'x' })` at the call site is longer and clearer, and it keeps the API being
+  exercised visible in the assertion's own scope. This is most acute in tests,
+  where the call being made IS the thing under test, but it applies anywhere.
+  Flag a module- or describe-local arrow/function whose body is one expression
+  wrapping a single call, adding no branching, no error handling, no derived
+  values, and no non-trivial defaults. A helper that composes several calls,
+  encodes a non-obvious setup sequence, or is exported for reuse across files
+  is NOT a violation, and neither is a named factory that a package publishes
+  as its own API (`Obj.make` wrappers such as `File.make`).
+  scope: repo
+  files:
+    - packages/**/*.ts
+    - packages/**/*.tsx
+  severity: warn
+```
+
 ## Appendix
 
 ```mdl

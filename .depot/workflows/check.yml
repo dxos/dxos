@@ -232,6 +232,13 @@ jobs:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 30
+    env:
+      COMPARE: >-
+        ${{ github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository }}
+    outputs:
+      status: ${{ steps.compare.outputs.status || 'skipped' }}
+      body: ${{ steps.compare.outputs.body }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -245,7 +252,96 @@ jobs:
         uses: ./.depot/actions/setup
 
       - name: Check boot budget
+        id: budget
+        continue-on-error: true
         run: moon run composer-app:check-boot-budget
+
+      - name: Record this PR's measurement
+        id: head
+        if: env.COMPARE == 'true'
+        continue-on-error: true
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          cp packages/apps/composer-app/out/boot-budget.json "$RUNNER_TEMP/boot-budget.head.json"
+          cp packages/apps/composer-app/scripts/compare-boot-budget.mjs "$RUNNER_TEMP/compare.mjs"
+          if git diff --quiet "$BASE_SHA" HEAD -- packages/apps/composer-app/scripts/check-boot-budget.mjs; then
+            echo 'comparable=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'comparable=false' >> "$GITHUB_OUTPUT"
+            echo '::notice::boot budget measurement changed in this PR — skipping the base comparison.'
+          fi
+
+      - name: Measure the base commit's boot graph
+        id: base
+        if: env.COMPARE == 'true' && steps.head.outputs.comparable == 'true'
+        continue-on-error: true
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          trap 'git checkout --detach "$HEAD_SHA" >/dev/null 2>&1 || true' EXIT
+          git checkout --detach "$BASE_SHA"
+          pnpm install --prefer-offline
+          # moon owns this path, so head and base measurements land on the same file: deleting first
+          # is what makes the copy below fail loudly instead of measuring the head's leftover report.
+          rm -f packages/apps/composer-app/out/boot-budget.json
+          moon run composer-app:check-boot-budget || true
+          cp packages/apps/composer-app/out/boot-budget.json "$RUNNER_TEMP/boot-budget.base.json"
+
+      - name: Compare with the base
+        id: compare
+        if: steps.base.outcome == 'success'
+        continue-on-error: true
+        run: |
+          node "$RUNNER_TEMP/compare.mjs" \
+            --base "$RUNNER_TEMP/boot-budget.base.json" \
+            --head "$RUNNER_TEMP/boot-budget.head.json"
+
+      - name: Report boot budget failure
+        if: ${{ !cancelled() && steps.budget.outcome == 'failure' }}
+        run: |
+          echo '::error::boot budget exceeded — see the "Check boot budget" step.'
+          exit 1
+
+  # A separate job because `permissions` is job-scoped: holding `pull-requests: write` in
+  # `boot-budget` would put the token in reach of the branch code that job checks out and builds.
+  boot-budget-comment:
+    needs: boot-budget
+    if: >-
+      ${{ !cancelled() && github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      needs.boot-budget.outputs.status != 'skipped' }}
+    runs-on: depot-ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Post or remove boot graph comment
+        continue-on-error: true
+        uses: actions/github-script@v7
+        env:
+          STATUS: ${{ needs.boot-budget.outputs.status }}
+          BODY: ${{ needs.boot-budget.outputs.body }}
+        with:
+          script: |
+            const marker = '<!-- boot-budget -->';
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const existing = comments.find(
+              (comment) => comment.user?.type === 'Bot' && comment.body && comment.body.includes(marker),
+            );
+            if (process.env.STATUS === 'grew') {
+              const body = `${marker}\n${process.env.BODY}`;
+              if (existing) {
+                await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+              } else {
+                await github.rest.issues.createComment({ owner, repo, issue_number, body });
+              }
+            } else if (existing) {
+              await github.rest.issues.deleteComment({ owner, repo, comment_id: existing.id });
+            }
 
   # Retention suites (the `memory` tag), which the normal `test` job skips: they need `--expose-gc`
   # and force a single non-isolated fork, neither of which the sharded matrix can provide. Gated on

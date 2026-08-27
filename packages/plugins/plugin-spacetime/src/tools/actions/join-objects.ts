@@ -67,7 +67,6 @@ export class JoinObjectsAction implements ActionHandler {
       }
       scene.objects.push(Ref.make(newObject));
     });
-    Obj.setParent(newObject, scene);
 
     for (const objId of objectsToDelete) {
       disposeSceneObject(ctx, objId);
