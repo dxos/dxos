@@ -70,13 +70,19 @@ carries every glyph in editable form.
 
 ### Exporting from a vector editor
 
-An Affinity or Illustrator export needs two fixes before it will render — the source of both is
-that these editors emit a *stroked* path with a literal color:
+`fill="currentColor"` is **not** something to add by hand: the sprite build stamps it onto every
+symbol (`normalizeSprite` in `@dxos/vite-plugin-icons`), so an export that declares no fill still
+follows the theme. Editors drop the attribute on every re-export, which is exactly why patching the
+file does not hold.
 
-- `stroke:black` → `stroke:currentColor`. A hardcoded color survives the sprite build and then
-  renders black-on-black in dark mode.
-- `stroke-width:1px` → `stroke-width:16px`. Phosphor's stroke is 16 units at this viewBox, so an
-  editor's default hairline is invisible at icon sizes.
+Two things the build cannot fix for you:
+
+- **A literal color in an inline `style`** — `stroke:black`, `fill:#000`. A style declaration
+  overrides the symbol's fill attribute, so the glyph stays that color in both themes. The build
+  prints `[icons] Hardcoded color in symbol: …` and names the symbol; replace the literal with
+  `currentColor` in the source SVG.
+- **Stroke weight** — `stroke-width:1px` → `16px`. Phosphor's stroke is 16 units at this viewBox,
+  so an editor's default hairline is invisible at icon sizes.
 
 A stroked circle of radius 96 with a 16 stroke is exactly `ph--circle--regular`'s ring (outer 104,
 inner 88) — matching a Phosphor glyph's geometry is the quickest way to confirm the weight is right.

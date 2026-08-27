@@ -13,6 +13,7 @@
  */
 export const PxIcons = {
   anthropic: 'px--anthropic--regular',
+  deepseek: 'px--deepseek--regular',
   circle: 'px--circle--regular',
 } as const;
 

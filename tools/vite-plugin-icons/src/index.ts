@@ -13,6 +13,7 @@ import picomatch from 'picomatch';
 import type { Plugin, ViteDevServer } from 'vite';
 
 import { type IconAssets, iconAssetsPlugin } from './icon-assets.ts';
+import { normalizeSprite } from './normalize-sprite.ts';
 
 export type { IconAssets };
 
@@ -86,6 +87,27 @@ export const IconsPlugin = ({
   let lastWrittenSize = 0;
   const writeDebounceMs = Number(process.env.DX_ICONS_DEBOUNCE_MS) || 200;
 
+  // Symbols already reported as pinning a color, so a rewrite doesn't repeat the warning.
+  const warnedHardcoded = new Set<string>();
+
+  // Forces `fill="currentColor"` onto every symbol `makeSprite` just wrote. A glyph that declares
+  // no fill defaults to black and disappears against a dark surface, and vector editors drop the
+  // attribute on every re-export — patching the source SVG loses that race. Runs here rather than
+  // via svg-sprite's `shape.transform` so it also applies to a caller-supplied `config`.
+  const normalizeSpriteFile = () => {
+    const { svg, hardcoded } = normalizeSprite(fs.readFileSync(spritePath, 'utf8'));
+    fs.writeFileSync(spritePath, svg);
+    const fresh = hardcoded.filter((id) => !warnedHardcoded.has(id));
+    if (fresh.length > 0) {
+      fresh.forEach((id) => warnedHardcoded.add(id));
+      console.warn(
+        `[icons] Hardcoded color in ${fresh.length === 1 ? 'symbol' : 'symbols'}: ${fresh.join(', ')} — ` +
+          'an inline style overrides the symbol fill, so the glyph will not follow the theme. ' +
+          'Replace the literal with `currentColor` in the source SVG.',
+      );
+    }
+  };
+
   // Single source of truth for writing the sprite to disk. Skips the write
   // when the symbol set hasn't grown since the last write.
   const writeSprite = async () => {
@@ -98,6 +120,7 @@ export const IconsPlugin = ({
     // symbols added during the await leave size > lastWrittenSize and re-fire.)
     const writtenSize = detectedSymbols.size;
     await makeSprite({ assetPath, symbolPattern, spritePath, contentPaths, config }, detectedSymbols);
+    normalizeSpriteFile();
     lastWrittenSize = writtenSize;
     if (verbose) {
       const symbols = Array.from(detectedSymbols.values());
