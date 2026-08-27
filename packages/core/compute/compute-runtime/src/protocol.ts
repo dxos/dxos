@@ -17,7 +17,6 @@ import * as Trace from '@dxos/compute/Trace';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
 import { type DatabaseImpl, EchoClient, makeRegistry } from '@dxos/echo-client';
-import { S3_BACKEND, createS3BlobBackend } from '@dxos/echo-client/blob-s3';
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import { EffectEx, SchemaAST } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
@@ -204,8 +203,13 @@ class FunctionContext extends Resource {
     // connected to. Without it this host has inline storage only (4 MiB), and an upload would land
     // there silently rather than in the configured bucket. Nothing Cloudflare-specific is needed —
     // it is an outbound fetch to the customer's own endpoint — so this works on edge unchanged.
+    //
+    // Imported dynamically: `plugin-client` pulls this package into the app's eager boot graph, and
+    // a static import would put the SigV4 signer there with it — for code that only ever runs
+    // inside a function invocation.
     if (this.client && this.db) {
       const db = this.db;
+      const { S3_BACKEND, createS3BlobBackend } = await import('@dxos/echo-client/blob-s3');
       this.#unregisterBlobBackend = this.client.graph.registerBlobBackend(
         S3_BACKEND,
         createS3BlobBackend(createS3Host({ getDatabase: (spaceId) => (spaceId === db.spaceId ? db : undefined) })),

@@ -50,9 +50,19 @@ export const isBlockedHost = (host: string): boolean => {
     if (normalized.startsWith('fc') || normalized.startsWith('fd')) {
       return true;
     }
-    // IPv4-mapped IPv6 (::ffff:a.b.c.d) — check the embedded dotted-quad.
-    const mapped = /::ffff:([\d.]+)$/.exec(normalized);
-    return mapped ? isBlockedIPv4(mapped[1]) : false;
+    // IPv4-mapped IPv6, in either spelling. The dotted form (`::ffff:127.0.0.1`) is the obvious one;
+    // the hex form (`::ffff:7f00:1`) is the same address and would otherwise sail through.
+    const dotted = /::ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(normalized);
+    if (dotted) {
+      return isBlockedIPv4(dotted[1]);
+    }
+    const hex = /::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/.exec(normalized);
+    if (hex) {
+      const high = Number.parseInt(hex[1], 16);
+      const low = Number.parseInt(hex[2], 16);
+      return isBlockedIPv4(`${high >> 8}.${high & 0xff}.${low >> 8}.${low & 0xff}`);
+    }
+    return false;
   }
 
   return isBlockedIPv4(normalized);
@@ -99,13 +109,22 @@ export type SafeFetchOptions = {
  * The cap is enforced **while streaming**, not from `content-length`: a server that omits the
  * header or lies about it could otherwise feed bytes bounded only by the timeout. The declared
  * `content-length` is still checked first, since rejecting before the transfer is cheaper.
+ *
+ * **Redirects are refused, not followed.** `validateExternalUrl` vets the host the caller asked
+ * for; following a redirect would land on a host nobody vetted, which turns a public URL into a
+ * path to a private one. A caller that legitimately needs to follow one should re-validate the
+ * `Location` itself and call again.
  */
 export const safeFetchBytes = async (
   url: URL,
   { maxBytes, timeoutMs, fetch: fetchImpl = (target, init) => fetch(target, init) }: SafeFetchOptions,
 ): Promise<{ bytes: Uint8Array; contentType: string | undefined }> => {
-  const response = await fetchImpl(url, { signal: AbortSignal.timeout(timeoutMs) });
+  const response = await fetchImpl(url, { signal: AbortSignal.timeout(timeoutMs), redirect: 'error' });
   if (!response.ok) {
+    // A proxy may surface a redirect as a 3xx rather than rejecting; treat it the same way.
+    if (response.status >= 300 && response.status < 400) {
+      throw new Error(`Refusing to follow a redirect from ${url.host} to an unvalidated host`);
+    }
     throw new Error(`Failed to download: ${response.status} ${response.statusText}`);
   }
 

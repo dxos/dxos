@@ -45,6 +45,15 @@ const resolveSource = (source: typeof FileOperation.FileSource.Type) =>
   Effect.gen(function* () {
     switch (source.type) {
       case 'base64': {
+        // Checked before `atob`, not after: the decoded length is knowable from the encoded one, so
+        // there is no reason to materialize an oversized buffer just to reject it.
+        const encodedLength = source.data.replace(/\s/g, '').length;
+        if (Math.floor((encodedLength * 3) / 4) > MAX_INLINE_SOURCE_BYTES) {
+          return yield* Effect.fail(
+            new FileTooLargeError(Math.floor((encodedLength * 3) / 4), MAX_INLINE_SOURCE_BYTES),
+          );
+        }
+
         const bytes = yield* Effect.try({
           try: () => decodeBase64(source.data),
           catch: (error) => new FileReadError(error),

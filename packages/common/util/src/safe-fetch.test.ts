@@ -39,6 +39,14 @@ describe('isBlockedHost', () => {
     expect(isBlockedHost('::ffff:8.8.8.8')).toBe(false);
   });
 
+  // The same addresses spelled in hex, which the dotted-quad check alone does not see.
+  test('unwraps the hex spelling of IPv4-mapped IPv6', ({ expect }) => {
+    expect(isBlockedHost('::ffff:7f00:1')).toBe(true); // 127.0.0.1
+    expect(isBlockedHost('::ffff:a9fe:a9fe')).toBe(true); // 169.254.169.254
+    expect(isBlockedHost('::ffff:c0a8:101')).toBe(true); // 192.168.1.1
+    expect(isBlockedHost('::ffff:808:808')).toBe(false); // 8.8.8.8
+  });
+
   test('allows ordinary hostnames', ({ expect }) => {
     for (const host of ['example.com', 'cdn.example.co.uk', 'localhost.example.com']) {
       expect(isBlockedHost(host), host).toBe(false);
@@ -104,6 +112,22 @@ describe('safeFetchBytes', () => {
         fetch: async () => new Response(stream, { headers: { 'content-length': '2' } }),
       }),
     ).rejects.toThrow(/Exceeds size cap \(>10/);
+  });
+
+  // A public host redirecting to a private one is the way an origin check gets bypassed.
+  test('refuses to follow a redirect', async ({ expect }) => {
+    const seen: RequestInit[] = [];
+    await expect(
+      safeFetchBytes(new URL('https://example.com/a'), {
+        maxBytes: 1024,
+        timeoutMs: 1000,
+        fetch: async (_target, init) => {
+          seen.push(init);
+          return new Response('', { status: 302, headers: { location: 'https://127.0.0.1/' } });
+        },
+      }),
+    ).rejects.toThrow(/Refusing to follow a redirect/);
+    expect(seen[0]?.redirect).toBe('error');
   });
 
   test('raises a non-ok response', async ({ expect }) => {

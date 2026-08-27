@@ -22,12 +22,17 @@ export const ACCEPTED_MIME: Record<string, string[]> = {
  */
 const ACCEPTED_TEXT_TYPES = new Set(['text/plain', 'text/csv', 'text/markdown', 'application/json']);
 
+/**
+ * Whether a media type may be stored. Case-insensitive: RFC 2045 defines the type and subtype as
+ * case-insensitive, and a server that answers `Text/Plain` is within its rights.
+ */
 export const isAcceptedMimeType = (type: string): boolean => {
-  if (type === 'application/pdf') {
+  const normalized = type.trim().toLowerCase();
+  if (normalized === 'application/pdf') {
     return true;
   }
-  if (type.startsWith('image/') || type.startsWith('video/')) {
+  if (normalized.startsWith('image/') || normalized.startsWith('video/')) {
     return true;
   }
-  return ACCEPTED_TEXT_TYPES.has(type);
+  return ACCEPTED_TEXT_TYPES.has(normalized);
 };
