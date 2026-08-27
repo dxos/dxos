@@ -441,12 +441,13 @@ const mapSchemaTypeForLLM = (
   return SchemaEx.mapAst(ast, (child) => mapSchemaTypeForLLM(child, expansions));
 };
 
-const isHandlerLike = (value: unknown): value is Toolkit.WithHandler<Record<string, Tool.Any>> => {
+export const isHandlerLike = (value: unknown): value is Toolkit.WithHandler<Record<string, Tool.Any>> => {
   return (
     typeof value === 'object' &&
     value !== null &&
     'tools' in value &&
     typeof value.tools === 'object' &&
+    value.tools !== null &&
     'handle' in value &&
     typeof value.handle === 'function'
   );

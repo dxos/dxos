@@ -213,7 +213,7 @@ describe('client services effect-rpc', () => {
 
     const proxy = await setup(() => ({
       InvitationsService: mockService<InvitationsService.Handlers>({
-        ['InvitationsService.queryInvitations']: (): Stream.Stream<QueryInvitationsResponse, Error> =>
+        ['InvitationsService.queryInvitations']: (): Stream.Stream<QueryInvitationsResponse, never> =>
           Stream.fromIterable([snapshot]),
       }),
     }));

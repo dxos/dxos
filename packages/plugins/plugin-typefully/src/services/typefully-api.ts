@@ -45,6 +45,7 @@ export class TypefullyCredentials extends Context.Service<TypefullyCredentials, 
   '@dxos/plugin-typefully/TypefullyCredentials',
 ) {}
 
+/** Loads the connection's access token into a {@link TypefullyCredentials} layer. */
 export const fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
   Layer.effect(
     TypefullyCredentials,

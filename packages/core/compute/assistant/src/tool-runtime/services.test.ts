@@ -16,7 +16,12 @@ import { makeRegistry } from '@dxos/echo-client';
 import { EffectEx } from '@dxos/effect';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
-import { createStructFieldsFromSchema, makeToolResolverFromOperations, projectFunctionToTool } from './services';
+import {
+  createStructFieldsFromSchema,
+  isHandlerLike,
+  makeToolResolverFromOperations,
+  projectFunctionToTool,
+} from './services';
 
 describe('createStructFieldsFromSchema', () => {
   const SPACE = SpaceId.random();
@@ -307,4 +312,24 @@ describe('makeToolResolverFromOperations', () => {
     };
     return collect(document);
   };
+});
+
+describe('isHandlerLike', () => {
+  test('accepts a value with a tools object and a handle function', ({ expect }) => {
+    expect(isHandlerLike({ tools: {}, handle: () => {} })).toBe(true);
+  });
+
+  test('rejects a value whose tools is null', ({ expect }) => {
+    expect(isHandlerLike({ tools: null, handle: () => {} })).toBe(false);
+  });
+
+  test('rejects a value with no handle function', ({ expect }) => {
+    expect(isHandlerLike({ tools: {} })).toBe(false);
+  });
+
+  test('rejects primitives', ({ expect }) => {
+    expect(isHandlerLike(null)).toBe(false);
+    expect(isHandlerLike(undefined)).toBe(false);
+    expect(isHandlerLike('toolkit')).toBe(false);
+  });
 });

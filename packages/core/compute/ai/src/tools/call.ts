@@ -53,6 +53,9 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
   log('toolCall', { toolCall: toolCall.name, input });
   const toolResult = yield* toolkit
     .handle(
+      // `toolCall.name`/`input` are untrusted runtime data from the model response, so nothing
+      // statically ties them to one tool's key and parameters; a mismatch surfaces as a normal
+      // `handle` failure below rather than corrupting state.
       toolCall.name as keyof Toolkit.WithHandlerTools<typeof toolkit>,
       input as Tool.Parameters<
         Toolkit.WithHandlerTools<typeof toolkit>[keyof Toolkit.WithHandlerTools<typeof toolkit>]

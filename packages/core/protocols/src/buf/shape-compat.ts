@@ -49,9 +49,9 @@ const NO_OPTIONS: CompatOptions = {};
 
 /**
  * A field substitution, generic over the JS type (`T`) substituted in on the protobuf.js side.
- * Declared with method syntax (rather than arrow-typed properties) so entries with different
- * `T`s stay assignable to the shared `Record<string, Substitution>` registry below — method
- * signatures compare their parameters bivariantly, arrow-typed properties do not.
+ * Declared with method syntax, not arrow-typed properties, so entries with different `T`s stay
+ * assignable to the shared `Record<string, Substitution>` registry below (method parameters
+ * compare bivariantly; arrow-typed ones don't).
  */
 type Substitution<T = unknown> = {
   /** Substituted JS value -> plain object accepted by the buf message constructor. */
@@ -380,10 +380,9 @@ export const encodeCompat = <V>(schema: DescMessage, value: V, options: CompatOp
 /**
  * Decodes protobuf wire bytes via buf, returning protobuf.js-shaped fields.
  *
- * `V` is the caller's expected protobuf.js-generated message type. It can't be derived from
- * `schema` alone — substitutions (see {@link substitutions}) change field types in a way the
- * descriptor doesn't capture — so the caller supplies it explicitly, the way every call site
- * already imports the legacy protobuf.js type it expects back.
+ * `V`, the caller's expected protobuf.js-generated message type, can't be derived from `schema`
+ * alone since substitutions (see {@link substitutions}) change field types the descriptor doesn't
+ * capture, so the caller supplies it explicitly.
  */
 export const decodeCompat = <V = unknown>(
   schema: DescMessage,

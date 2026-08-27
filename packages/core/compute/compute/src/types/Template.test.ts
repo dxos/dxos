@@ -54,7 +54,7 @@ describe('Template', () => {
     });
 
     test('InputKind rejects unknown kinds', () => {
-      expect(() => Schema.decodeSync(Template.InputKind)('nonsense' as Template.InputKind)).toThrow();
+      expect(() => Schema.decodeUnknownSync(Template.InputKind)('nonsense')).toThrow();
     });
   });
 
@@ -108,10 +108,7 @@ describe('Template', () => {
         const handler = handlersByKey[key];
         // The map is keyed by string, so the per-operation O is recovered here via the call's own
         // generic rather than tracked through the map's (necessarily erased) value type.
-        return (handler ? handler(args[0]) : Effect.die(`no handler for key: ${key}`)) as Effect.Effect<
-          O,
-          NoHandlerError
-        >;
+        return (handler ? handler(args[0]) : Effect.fail(new NoHandlerError(key))) as Effect.Effect<O, NoHandlerError>;
       },
       schedule: () => Effect.succeed(undefined),
       invokePromise: () => Promise.resolve({}),

@@ -623,21 +623,24 @@ describe('TriggerDispatcher', () => {
             yield* Database.flush();
 
             // The poll interval is an hour, so observing an invocation here confirms the feed
-            // subscription (not the poll) fired the trigger. Subscribe to the dispatcher's state
-            // atom and resolve on the first matching update instead of polling on a timer.
+            // subscription (not the poll) fired the trigger.
             const registry = yield* Registry.AtomRegistry;
             const fired = yield* Effect.callback<void>((resume) => {
-              const unsubscribe = registry.subscribe(
+              // `{ immediate: true }` can invoke this callback synchronously, before `subscribe`
+              // returns and assigns `currentUnsubscribe` — so the match handler cannot close over
+              // `unsubscribe` directly without reading it in the temporal dead zone.
+              let currentUnsubscribe: (() => void) | undefined;
+              currentUnsubscribe = registry.subscribe(
                 dispatcher.state,
                 (state) => {
                   if (state.invocations.some((_) => _.trigger.id === trigger.id)) {
-                    unsubscribe();
+                    currentUnsubscribe?.();
                     resume(Effect.void);
                   }
                 },
                 { immediate: true },
               );
-              return Effect.sync(unsubscribe);
+              return Effect.sync(() => currentUnsubscribe?.());
             }).pipe(Effect.timeoutOption(Duration.seconds(2)), Effect.map(Option.isSome));
             expect(fired).toBe(true);
           }).pipe(Effect.ensuring(dispatcher.stop()));

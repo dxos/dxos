@@ -356,7 +356,7 @@ describe('buf shape-compat', () => {
     expect(decoded.payload.credential.credential.subject.assertion['@type']).toBe('dxos.halo.credentials.SpaceGenesis');
   });
 
-  test('the RPC envelope round-trips byte-identically with preserveAny', ({ expect }) => {
+  test('the RPC envelope preserves Any with wire-compatible encoding', ({ expect }) => {
     // `RpcMessage` frames every RPC between peers and its protos carry no `preserve_any`, so the
     // caller option is the only thing keeping the payload packed. Byte equality is NOT asserted:
     // protobuf.js writes the non-optional `stream: false` explicitly (`20 00`) where buf omits the

@@ -460,9 +460,7 @@ describe('ManagerImpl', () => {
     Effect.fn(function* ({ expect }) {
       const manager = yield* ProcessManager.Service;
       const handle = yield* manager.spawn(makeSumAggregator());
-      // Forked before either input is submitted, so `Stream.take(2)` collects exactly the two
-      // outputs produced below; joining the fiber synchronizes on both having arrived instead of
-      // polling for them.
+      // Forked before either input is submitted, so `Stream.take(2)` collects exactly the two outputs produced below.
       const outputsFiber = yield* handle.subscribeOutputs().pipe(Stream.take(2), Stream.runCollect, Effect.forkChild);
       {
         yield* handle.runToCompletion();
@@ -1407,11 +1405,9 @@ describe('durability', () => {
       const dormant = yield* managerB.list({ key: blockingParent.key });
       expect(dormant).toHaveLength(1);
 
-      // `hydrate` returns immediately; the unsettled alarm is redelivered on the process scope.
-      // `alarmResume` may be succeeded before the redelivered `onAlarm` ever awaits it — a
-      // `Deferred` remembers its outcome, so a later `await` on it resolves immediately either
-      // way — and `runToCompletion` synchronizes on the process's real status instead of racing
-      // a hand-rolled signal against the runtime's own state transition.
+      // A `Deferred` remembers its outcome, so succeeding `alarmResume` before the redelivered
+      // `onAlarm` ever awaits it is safe, and `runToCompletion` synchronizes on the process's
+      // real status instead of racing a hand-rolled signal.
       const restored = yield* dormant[0].hydrate(blockingParent);
       yield* Deferred.succeed(alarmResume, undefined);
       yield* restored.runToCompletion();
@@ -1507,10 +1503,8 @@ describe('durability', () => {
       );
       const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
       const handle = yield* managerA.spawn(blocking);
-      // `submitInput` persists the event and forks the handler body onto the process scope, then
-      // returns — it does not itself wait on the handler settling — so awaiting it plainly already
-      // guarantees the input is durably pending before shutdown, with no need to detect the fork's
-      // own progress into `Effect.never`.
+      // `submitInput` returns once the input is durably persisted, without waiting on the handler,
+      // so awaiting it already guarantees the input is pending before shutdown.
       yield* handle.submitInput('hello');
       yield* managerA.shutdown();
 
@@ -1556,10 +1550,8 @@ describe('durability', () => {
       const opProcess = Process.fromOperation(SlowOp, opHandlers);
       const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
       const handle = yield* managerA.spawn(opProcess);
-      // `submitInput` persists the event and forks the handler body onto the process scope, then
-      // returns — it does not itself wait on the handler settling — so awaiting it plainly already
-      // guarantees the input (and the operation's durable "started" marker, persisted before the
-      // handler runs) is captured before shutdown.
+      // `submitInput` returns once the input and the operation's durable "started" marker are
+      // persisted, without waiting on the handler, so awaiting it already captures both before shutdown.
       yield* handle.submitInput({ value: 1 });
       yield* managerA.shutdown();
 
