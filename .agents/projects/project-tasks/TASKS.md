@@ -163,7 +163,7 @@ Each is independent of the others; the checked items shipped in #12784.
       so the event never fires and no provider is ever contributed. Fix is to
       mount `MarkdownPlugin` in the story, or to activate the module on an event
       the story reaches. Works elsewhere: `plugins/plugin-tasks/components/
-    Outline` → `WithReferences` passes the extension directly.
+Outline` → `WithReferences` passes the extension directly.
 - [x] **ProjectArticle `Sections` story was flaky (~1 run in 4)** — the seeding
       ran from `play`, racing the previous story's client teardown, and the
       article rendered with every ref-gated section missing. Seeding moved into

@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Database, EID, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, EID, type Error, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { type EntityId } from '@dxos/keys';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
@@ -141,7 +141,7 @@ export const resolveParentTask = (
   taskSet: TaskSet.TaskSet | undefined,
   task: Task.Task,
   parentTask: Ref.Ref<Task.Task>,
-): Effect.Effect<Task.Task, InvalidOperationInput, Database.Service> =>
+): Effect.Effect<Task.Task, InvalidOperationInput | Error.EntityNotFoundError, Database.Service> =>
   Effect.gen(function* () {
     const candidate = yield* Database.load(parentTask);
     const subtree = taskSet ? collectSubtree(taskSet, task) : [task];

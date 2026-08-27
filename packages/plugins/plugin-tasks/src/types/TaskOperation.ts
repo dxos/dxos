@@ -126,8 +126,7 @@ export const MoveTask = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.move'),
     name: 'Move Task',
-    description:
-      'Reposition a task within its task set, optionally re-parenting it — array order is the task order.',
+    description: 'Reposition a task within its task set, optionally re-parenting it — array order is the task order.',
     icon: 'ph--arrows-down-up--regular',
   },
   services: [Database.Service],
