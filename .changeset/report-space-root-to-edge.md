@@ -1,6 +1,7 @@
 ---
 '@dxos/edge-client': patch
 '@dxos/client-services': patch
+'@dxos/echo-host': patch
 ---
 
 Report a space's root document to edge once the space is anchored.
@@ -14,3 +15,7 @@ local and already complete by then.
 
 The record is write-once on the edge side, so re-anchoring an existing space returns the root
 already in force rather than replacing it.
+
+`EchoHost` also enrols the space root and credentials documents in the space's replicated set. They
+hang off the space rather than the directory's links, so nothing replicated them and edge could not
+read the documents it was being asked to validate.
