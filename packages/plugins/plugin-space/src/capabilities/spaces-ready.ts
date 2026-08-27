@@ -47,9 +47,8 @@ const isEchoRef = (id: string) => id.startsWith('echo:/');
  * can be after the settings space resolves. Migration is idempotent, so retrying on each change is
  * what recovers the ordering that would otherwise be lost.
  *
- * The settings space is re-resolved on every pass rather than pinned: healing — this device's or
- * another's — can tombstone the space a previous pass used, and a destroyed proxy throws on
- * property access.
+ * The settings space is re-resolved each pass: healing can tombstone the previous one, and a
+ * destroyed proxy throws on property access.
  */
 const resolveDefaultSpace = Effect.fnUntraced(function* (client: Client) {
   while (true) {

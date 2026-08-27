@@ -5,6 +5,8 @@
 import { describe, test } from 'vitest';
 
 import { type Space, SpaceState } from '@dxos/client/echo';
+import { Obj } from '@dxos/echo';
+import { Expando } from '@dxos/schema';
 
 import * as AppSpace from './AppSpace';
 
@@ -67,6 +69,13 @@ describe('settings space resolution', () => {
     // With no readable designation the read-side resolution falls back to the same order.
     expect(AppSpace.getSettingsSpace({ spaces: { get: () => [second, first] } })?.id).toBe(first.id);
   });
+
+  test('a readable duplicate beats an unopened lower-id one for reading', ({ expect }) => {
+    // Waiting on an unopened space would stall the bootstrap while a readable copy already exists.
+    const closed = makeClosedSpace('B00000000000000000000000000000001', [AppSpace.SETTINGS_SPACE_TAG]);
+    const ready = makeReadySpace('B00000000000000000000000000000002', [AppSpace.SETTINGS_SPACE_TAG]);
+    expect(AppSpace.getSettingsSpace({ spaces: { get: () => [closed, ready] } })?.id).toBe(ready.id);
+  });
 });
 
 /**
@@ -78,3 +87,12 @@ const makeSpace = (tags: string[]): Space => ({ tags, properties: {} }) as unkno
 /** As {@link makeSpace}, adding the id and closed state the settings-space resolution reads. */
 const makeClosedSpace = (id: string, tags: string[]): Space =>
   ({ id, tags, properties: {}, state: { get: () => SpaceState.SPACE_CLOSED } }) as unknown as Space;
+
+/** As {@link makeClosedSpace}, ready and with real (annotation-readable) properties. */
+const makeReadySpace = (id: string, tags: string[]): Space =>
+  ({
+    id,
+    tags,
+    properties: Obj.make(Expando.Expando, {}),
+    state: { get: () => SpaceState.SPACE_READY },
+  }) as unknown as Space;
