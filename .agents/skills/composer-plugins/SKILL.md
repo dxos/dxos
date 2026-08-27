@@ -133,6 +133,12 @@ in a design doc under the plugin's `docs/` (indexed from `agents/superpowers/spe
 ## Workflow
 
 - Use `/superpowers:writing-plans` (Subagent-Driven) for non-trivial plugin work.
+- **Show the change running, in the PR.** A plugin PR is a change to what the app renders, so a
+  reviewer should not have to build it to see it. Record the flow or take the stills with
+  **recording-demos**, then publish them per **hosting-artifacts**
+  (`.agents/skills/hosting-artifacts/SKILL.md`) and link them from the PR body — never commit a video
+  or a screenshot to make it visible. For a fix to rendered output, a before/after pair from one build
+  (see **composer-ui**) beats a clip.
 
 ## Creating a New Plugin
 
