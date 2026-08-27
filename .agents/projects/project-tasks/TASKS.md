@@ -1,6 +1,6 @@
 # Project Tasks — Tasks
 
-_Resume: land the hierarchical-task-list PR. Uncommitted: none. Last: #12784 merged; hierarchical TaskList with drag-and-drop implemented on react-ui-list._
+_Resume: land #12787 (hierarchical task list). Uncommitted: none. Last: #12784 merged; hierarchical TaskList with drag-and-drop implemented on react-ui-list._
 
 ## Phase 1: Agent delegation over durable tasks
 
