@@ -159,6 +159,28 @@ would have caught.
       handle, re-attach by pid, resume from the cursor); 3. rpc: the `HarnessControl` surface answers over the remote transport; 4. lifecycle: `runUntilSettled` returns on the agent's own idle, and `terminate` ends it and
       drops it from the index.
 
+### 5d — the compute-API e2e is written and passing; it lands with the catalog bump
+
+`packages/services/edge/test/process-api.node.test.ts` — 6/6 against the real worker, driving
+`ProcessManager`, `Process.Handle` and `Process.ProcessMonitorService` only. Verified by linking the
+dxos workspace into edge (`pnpm link-packages`), not by publishing.
+
+It is **not on the edge branch**: it imports `@dxos/compute-runtime/remote-process`,
+`@dxos/edge-compute/process-control` and `@dxos/edge-client/process`, which the pinned catalog build
+does not carry, so committing it would make edge CI resolve imports that are not there. Recover it
+from dxos/edge commit `de870fa` when the pin moves.
+
+- [ ] After #12765 lands and publishes, bump edge's catalog and restore the suite.
+
+Three client defects it found, all fixed in #12765 and none reachable from the route-level suite:
+
+1. `hydrate(definition)` discarded its argument, so a handle from `attach`/`list` could never acquire
+   codecs — a reattached client could not submit input or read output at all.
+2. `GET /processes/:spaceId` answered the dispatcher's index entries rather than `ProcessInfo`, which
+   `ProcessManager.list` and the monitor tree decode.
+3. A root process reported `parentPid: undefined`; JSON drops the key, so the client decoded an absent
+   parent as a pid.
+
 ### 5c — verification bar
 
 - [ ] Both suites green locally and in edge CI; no raised teardown budgets (the suite terminates

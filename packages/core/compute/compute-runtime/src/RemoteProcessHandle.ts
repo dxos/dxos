@@ -95,7 +95,10 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
     return decodeInfo(options.info).pipe(Effect.map((decoded) => new RemoteProcessHandle(options, decoded)));
   }
 
+  readonly #options: Options<_Input, _Output, _Rpcs>;
+
   private constructor(options: Options<_Input, _Output, _Rpcs>, decoded: DecodedInfo) {
+    this.#options = options;
     this.#control = options.control;
     this.#definition = options.definition;
     this.#registry = options.registry;
@@ -227,10 +230,17 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
     );
   }
 
-  hydrate(): Effect.Effect<ProcessManager.Handle<_Input, _Output, _Rpcs>> {
-    // The remote host hydrates its own processes from its own storage; a client handle has no
-    // dormant state to revive, so this is a refresh.
-    return this.#refresh.pipe(Effect.as(this));
+  hydrate(
+    definition: Process.Process<_Input, _Output, any, _Rpcs>,
+  ): Effect.Effect<ProcessManager.Handle<_Input, _Output, _Rpcs>> {
+    // The host revives its own processes from its own storage, so there is no dormant state to
+    // restore here. What a caller does need is the definition: a handle from `attach` or `list` has
+    // no codecs, and this is the only place it can acquire them.
+    return this.#refresh.pipe(
+      Effect.andThen(() =>
+        RemoteProcessHandle.make<_Input, _Output, _Rpcs>({ ...this.#options, info: this.#info, definition }),
+      ),
+    );
   }
 
   #requireDefinition(): Process.Process<_Input, _Output, any, _Rpcs> {

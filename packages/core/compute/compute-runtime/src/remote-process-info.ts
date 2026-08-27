@@ -79,7 +79,9 @@ export const decodeInfo = (info: ProcessProtocol.ProcessInfo): Effect.Effect<Dec
   Effect.try({
     try: (): DecodedInfo => ({
       pid: toProcessId(info.pid),
-      parentId: info.parentPid === null ? null : toProcessId(info.parentPid),
+      // `== null`, not `=== null`: a JSON wire cannot carry `undefined`, so a host that omits the
+      // field is reporting no parent rather than a pid.
+      parentId: info.parentPid == null ? null : toProcessId(info.parentPid),
       state: toState(info.state),
       params: toParams(info.params),
       environment: toEnvironment(info.environment),
@@ -89,7 +91,7 @@ export const decodeInfo = (info: ProcessProtocol.ProcessInfo): Effect.Effect<Dec
 
 export const toInfo = (info: ProcessProtocol.ProcessInfo): Process.Info => ({
   pid: toProcessId(info.pid),
-  parentPid: info.parentPid === null ? null : toProcessId(info.parentPid),
+  parentPid: info.parentPid == null ? null : toProcessId(info.parentPid),
   key: info.key,
   params: toParams(info.params),
   environment: toEnvironment(info.environment),
