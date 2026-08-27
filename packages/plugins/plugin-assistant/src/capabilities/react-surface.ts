@@ -124,8 +124,14 @@ export default Capability.makeModule(() =>
         id: 'integrationPrompt',
         filter: Surface.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'integration-prompt'),
         component: IntegrationPrompt,
-        // `data.data` is model-supplied JSON (untyped); narrow `service` before use.
-        props: ({ data }) => ({ service: typeof data.data?.service === 'string' ? data.data.service : undefined }),
+        // `data.data` is model-supplied JSON, so every field is narrowed and blanks dropped.
+        props: ({ data }) => ({
+          service: nonBlank(data.data?.service),
+          scopes: Array.isArray(data.data?.scopes)
+            ? data.data.scopes.map(nonBlank).filter((scope): scope is string => scope !== undefined)
+            : undefined,
+          reason: nonBlank(data.data?.reason),
+        }),
       }),
       Surface.create({
         id: 'pluginPrompt',
@@ -142,3 +148,7 @@ export default Capability.makeModule(() =>
     ]),
   ),
 );
+
+/** A model-supplied string, or undefined when it is absent or blank. */
+const nonBlank = (value: unknown): string | undefined =>
+  typeof value === 'string' && value.trim() !== '' ? value.trim() : undefined;
