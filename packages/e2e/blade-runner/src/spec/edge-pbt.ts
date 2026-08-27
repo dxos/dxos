@@ -32,12 +32,15 @@ export type EdgePbtSpec = {
   maxSpaces: number;
   maxDocumentsPerSpace: number;
   maxCommands: number;
-  numRuns: number;
-  /** Wall-clock budget; exhausting it ends the run green rather than failing (soak semantics). */
+  /**
+   * How many command lists to draw from the seed; the longest is executed. `fc.assert` biases its
+   * first run toward tiny inputs (measured: 2 commands), so drawing and picking is what actually
+   * yields a long sequence — deterministically, since the seed fixes every draw.
+   */
+  sampleDraws: number;
+  /** Wall-clock budget; exhausting it stops issuing commands and proceeds to the final assertion. */
   maxRuntimeMs: number;
   quiescenceTimeoutMs: number;
-  /** Shrinking replays the whole sequence against a live edge — only worth it locally. */
-  shrink: boolean;
   /** Mid-run quiesce-and-assert over the online members. */
   checkpoints: boolean;
 };
@@ -77,8 +80,12 @@ type Model = {
   limits: { maxSpaces: number; maxDocumentsPerSpace: number; agents: boolean };
 };
 
+/** Sentinel: the time budget ran out, which ends the sequence normally rather than failing it. */
+class BudgetExhausted extends Error {}
+
 type Real = {
   spec: EdgePbtSpec;
+  deadline: number;
   replicants: ReplicantBrain<ClientReplicant>[];
   /** Real space ids by slot (creation order); the model only ever names slots. */
   spaceIds: string[];
@@ -147,6 +154,10 @@ abstract class PbtCommand implements fc.AsyncCommand<Model, Real> {
 
   /** Every executed command is recorded in logical terms, which is what makes a seed reproducible. */
   protected record(real: Real, fields: Record<string, unknown>): void {
+    // Thrown before any model or system mutation, so the two never diverge on a budget stop.
+    if (Date.now() > real.deadline) {
+      throw new BudgetExhausted();
+    }
     real.counters.commands++;
     real.trace({ seq: real.counters.commands, command: this.toString(), ...fields });
   }
@@ -230,7 +241,9 @@ class CreateSpaceCommand extends PbtCommand {
 
     // Every other identity that can join right now does; the rest stay pending (D2).
     for (const identity of [...space.pending]) {
-      const device = model.identities[identity].devices.find((candidate) => model.clients[candidate].state === 'online');
+      const device = model.identities[identity].devices.find(
+        (candidate) => model.clients[candidate].state === 'online',
+      );
       if (device !== undefined) {
         await joinSpace(model, real, device, slot);
       }
@@ -407,7 +420,7 @@ class CheckpointCommand extends PbtCommand {
   run = async (model: Model, real: Real) => {
     this.record(real, {});
     for (let slot = 0; slot < model.spaces.length; slot++) {
-      const devices = onlineMemberDevices(model, slot);
+      const devices = await devicesHoldingSpace(real, slot, onlineMemberDevices(model, slot));
       if (devices.length === 0) {
         continue;
       }
@@ -437,6 +450,36 @@ const onlineMemberDevices = (model: Model, spaceSlot: number): ClientIndex[] =>
     .map((client, index) => ({ client, index }))
     .filter(({ client, index }) => client.state === 'online' && isMember(model, index, spaceSlot))
     .map(({ index }) => index);
+
+/**
+ * Membership is per identity, but a sibling device only receives the space through HALO
+ * replication, which takes time. Mid-run assertions therefore cover the devices that actually hold
+ * it; the final assertion is where every member device is required to.
+ */
+const devicesHoldingSpace = async (real: Real, spaceSlot: number, clients: ClientIndex[]): Promise<ClientIndex[]> => {
+  const held = await Promise.all(
+    clients.map(async (client) => ({
+      client,
+      has: await real.replicants[client].brain.hasSpace({ spaceId: real.spaceIds[spaceSlot] }),
+    })),
+  );
+  return held.filter(({ has }) => has).map(({ client }) => client);
+};
+
+/** Wait for every member device to receive the space, which is itself part of "fully replicated". */
+const awaitSpaceOnAllDevices = async (real: Real, spaceSlot: number, clients: ClientIndex[]): Promise<void> => {
+  const deadline = Date.now() + real.spec.quiescenceTimeoutMs;
+  while (Date.now() < deadline) {
+    const holding = await devicesHoldingSpace(real, spaceSlot, clients);
+    if (holding.length === clients.length) {
+      return;
+    }
+    await sleep(500);
+  }
+  const holding = await devicesHoldingSpace(real, spaceSlot, clients);
+  const missing = clients.filter((client) => !holding.includes(client));
+  throw new Error(`space ${spaceSlot} never reached member devices ${missing.join(', ')}`);
+};
 
 const joinSpace = async (model: Model, real: Real, client: ClientIndex, spaceSlot: number): Promise<void> => {
   const identity = identityOf(model, client);
@@ -556,7 +599,9 @@ const assertEqualsModel = (model: Model, spaceSlot: number, client: ClientIndex,
   const expected = canonical(expectedDigest(model, spaceSlot));
   const actual = canonical(digest);
   if (expected !== actual) {
-    throw new Error(`client ${client} diverged from the model on space ${spaceSlot}:\n  model:  ${expected}\n  client: ${actual}`);
+    throw new Error(
+      `client ${client} diverged from the model on space ${spaceSlot}:\n  model:  ${expected}\n  client: ${actual}`,
+    );
   }
 };
 
@@ -581,6 +626,7 @@ const assertFullyReplicated = async (model: Model, real: Real): Promise<void> =>
   for (let slot = 0; slot < model.spaces.length; slot++) {
     const devices = onlineMemberDevices(model, slot);
     log.info('final assertion', { space: slot, devices });
+    await awaitSpaceOnAllDevices(real, slot, devices);
     await quiesce(real, slot, devices);
     for (const client of devices) {
       const digest = await real.replicants[client].brain.digest({ spaceId: real.spaceIds[slot] });
@@ -604,10 +650,9 @@ export class EdgePbt implements TestPlan<EdgePbtSpec, EdgePbtResult> {
       maxSpaces: 2,
       maxDocumentsPerSpace: 4,
       maxCommands: 25,
-      numRuns: 1,
+      sampleDraws: 12,
       maxRuntimeMs: 10 * 60_000,
       quiescenceTimeoutMs: 60_000,
-      shrink: false,
       checkpoints: true,
     };
   }
@@ -621,12 +666,6 @@ export class EdgePbt implements TestPlan<EdgePbtSpec, EdgePbtResult> {
       traceStream.write(`${JSON.stringify(entry)}\n`);
     };
 
-    // One fleet is built for the whole plan, so a second property run would start from a dirty
-    // system against a fresh model. Until the fleet is rebuilt per run, refuse rather than lie.
-    if (spec.numRuns !== 1 || spec.shrink) {
-      throw new Error('edgePbt currently supports numRuns: 1 and shrink: false (one fleet per plan run)');
-    }
-
     log.info('edge-pbt starting', { seed: params.randomSeed, clientCount, spec });
     trace({ event: 'run', seed: params.randomSeed, spec });
 
@@ -638,6 +677,7 @@ export class EdgePbt implements TestPlan<EdgePbtSpec, EdgePbtResult> {
     const real: Real = {
       spec,
       replicants,
+      deadline: Number.MAX_SAFE_INTEGER,
       spaceIds: [],
       invitationCodes: [],
       trace,
@@ -668,20 +708,36 @@ export class EdgePbt implements TestPlan<EdgePbtSpec, EdgePbtResult> {
     ];
 
     const runBegin = Date.now();
+    real.deadline = runBegin + spec.maxRuntimeMs;
+
+    // Draw every candidate sequence from the seed and execute the longest.
+    const draws = fc.sample(fc.commands(commands, { maxCommands: spec.maxCommands, size: 'large' }), {
+      seed: hashSeed(params.randomSeed ?? ''),
+      numRuns: spec.sampleDraws,
+    });
+    const generated = draws.reduce((longest, candidate) =>
+      [...candidate].length > [...longest].length ? candidate : longest,
+    );
+    // Recorded before execution so the seed's sequence is provable independently of how far the
+    // run gets: same seed, same `plan` line.
+    const planned = [...generated].map((command) => command.toString());
+    trace({ event: 'plan', seed: params.randomSeed, commands: planned });
+    log.info('command sequence drawn', {
+      draws: draws.length,
+      lengths: draws.map((candidate) => [...candidate].length),
+      chosen: planned.length,
+    });
+
     try {
-      await fc.assert(
-        fc.asyncProperty(fc.commands(commands, { maxCommands: spec.maxCommands }), async (generated) => {
-          await fc.asyncModelRun(() => ({ model, real }), generated);
-          await assertFullyReplicated(model, real);
-        }),
-        {
-          seed: params.randomSeed === undefined ? undefined : hashSeed(params.randomSeed),
-          numRuns: spec.numRuns,
-          endOnFailure: !spec.shrink,
-          interruptAfterTimeLimit: spec.maxRuntimeMs,
-          markInterruptAsFailure: false,
-        },
-      );
+      try {
+        await fc.asyncModelRun(() => ({ model, real }), generated);
+      } catch (err) {
+        if (!(err instanceof BudgetExhausted)) {
+          throw err;
+        }
+        log.warn('time budget exhausted; proceeding to the final assertion', { spent: Date.now() - runBegin });
+      }
+      await assertFullyReplicated(model, real);
     } finally {
       trace({ event: 'done', commands: real.counters.commands });
       traceStream.end();
@@ -771,4 +827,3 @@ const hashSeed = (seed: string): number => {
   }
   return hash;
 };
-
