@@ -125,6 +125,10 @@ export const ConnectionView = ({
                       <Form.Row label={t('connection-name.label')}>
                         <Input.Root>
                           <Input.TextInput
+                            // Remounted when the stored name changes. The input is uncontrolled, so
+                            // React would otherwise keep the old text after a replicated rename
+                            // arrives — and the next blur would write that stale value back over it.
+                            key={name ?? ''}
                             // The stored name, not `title`: an unnamed connection shows the account
                             // or connector label there, and seeding it here would persist that
                             // fallback the first time the field is focused and blurred.

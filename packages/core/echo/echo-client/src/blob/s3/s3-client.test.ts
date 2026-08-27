@@ -51,6 +51,23 @@ describe('s3 client read semantics', () => {
     await expect(getObject({ uri: URI })).rejects.toThrow(/S3 request failed/);
   });
 
+  // A rejection during the body read that is NOT our timeout must pass through unchanged, rather
+  // than being relabelled. The timeout half of that branch has no test: driving it needs the real
+  // S3_TIMEOUT_MS deadline to elapse, and a fake-timer version did not reliably intercept the
+  // already-scheduled timer. Left untested rather than covered by something slow and flaky.
+  test('a non-timeout body-read failure is not relabelled', async ({ expect }) => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        const body = new ReadableStream({
+          start: (controller) => controller.error(new Error('connection reset')),
+        });
+        return new Response(body, { status: 200 });
+      }),
+    );
+    await expect(getObject({ uri: URI, credentials: CREDENTIALS })).rejects.toThrow(/connection reset/);
+  });
+
   test('a successful read returns the bytes', async ({ expect }) => {
     respondWith(200);
     await expect(getObject({ uri: URI, credentials: CREDENTIALS })).resolves.toEqual(new Uint8Array([1, 2, 3]));

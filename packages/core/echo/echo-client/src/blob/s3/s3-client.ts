@@ -113,9 +113,9 @@ export const probeAccess = async ({ uri, credentials }: { uri: S3Uri; credential
     date: new Date(),
   });
   const body = await request(url, { method: 'GET', headers: getHeaders })
-    .then(async ({ response: errorResponse, done: doneReadingError }) => {
+    .then(async ({ response: errorResponse, done: doneReadingError, read }) => {
       try {
-        return await errorResponse.text();
+        return await read(() => errorResponse.text());
       } finally {
         doneReadingError();
       }
@@ -140,6 +140,14 @@ export const probeAccess = async ({ uri, credentials }: { uri: S3Uri; credential
   }
 };
 
+type TimedRequest = {
+  response: Response;
+  /** Cancels the deadline; call once the body has been consumed. */
+  done: () => void;
+  /** Runs a body read under the same timeout classification as the header phase. */
+  read: <T>(consume: () => Promise<T>) => Promise<T>;
+};
+
 /**
  * A timed request whose deadline covers the body as well as the headers.
  *
@@ -148,10 +156,7 @@ export const probeAccess = async ({ uri, credentials }: { uri: S3Uri; credential
  * {@link S3_TIMEOUT_MS} to transfer is aborted mid-read, after the caller already has a `Response`
  * in hand. Callers signal completion by calling the returned `done`.
  */
-const request = async (
-  input: URL,
-  init: RequestInit & { headers?: Record<string, string> },
-): Promise<{ response: Response; done: () => void }> => {
+const request = async (input: URL, init: RequestInit & { headers?: Record<string, string> }): Promise<TimedRequest> => {
   const controller = new AbortController();
   let timedOut = false;
   const timeout = setTimeout(() => {
@@ -160,7 +165,20 @@ const request = async (
   }, S3_TIMEOUT_MS);
   try {
     const response = await fetch(input, { ...init, signal: controller.signal });
-    return { response, done: () => clearTimeout(timeout) };
+    return {
+      response,
+      done: () => clearTimeout(timeout),
+      // Body reads happen after `fetch` resolves, so an abort during one lands outside this
+      // try/catch and would surface as a native `AbortError`. Route them through here to get the
+      // same classification the header phase gets.
+      read: async <T>(consume: () => Promise<T>): Promise<T> => {
+        try {
+          return await consume();
+        } catch (cause) {
+          throw timedOut ? new S3TimeoutError(input.host, S3_TIMEOUT_MS) : cause;
+        }
+      },
+    };
   } catch (cause) {
     clearTimeout(timeout);
     // A slow endpoint must not be reported as a CORS problem: `S3NetworkError` tells the user to fix
@@ -203,10 +221,10 @@ export const putObject = async ({
     date: now(),
   });
 
-  const { response, done } = await request(url, { method: 'PUT', headers, body: toArrayBufferView(data) });
+  const { response, done, read } = await request(url, { method: 'PUT', headers, body: toArrayBufferView(data) });
   try {
     if (!response.ok) {
-      throw new S3RequestError(response.status, response.statusText, await response.text().catch(() => ''));
+      throw new S3RequestError(response.status, response.statusText, await read(() => response.text()).catch(() => ''));
     }
   } finally {
     done();
@@ -223,7 +241,7 @@ export type ReadOptions = {
 const readRequest = async (
   method: 'GET' | 'HEAD',
   { uri, credentials, now = () => new Date() }: ReadOptions,
-): Promise<{ response: Response; done: () => void }> => {
+): Promise<TimedRequest> => {
   const url = toHttpsUrl(uri);
   const headers = credentials
     ? await signRequest({
@@ -257,16 +275,16 @@ const isMiss = (status: number, signed: boolean): boolean =>
  * status, since neither is evidence the object is missing.
  */
 export const getObject = async (options: ReadOptions): Promise<Uint8Array | undefined> => {
-  const { response, done } = await readRequest('GET', options);
+  const { response, done, read } = await readRequest('GET', options);
   try {
     if (!response.ok) {
       if (isMiss(response.status, !!options.credentials)) {
         return undefined;
       }
-      throw new S3RequestError(response.status, response.statusText, await response.text().catch(() => ''));
+      throw new S3RequestError(response.status, response.statusText, await read(() => response.text()).catch(() => ''));
     }
 
-    return new Uint8Array(await response.arrayBuffer());
+    return new Uint8Array(await read(() => response.arrayBuffer()));
   } finally {
     done();
   }
@@ -277,14 +295,18 @@ export const getObject = async (options: ReadOptions): Promise<Uint8Array | unde
  * {@link getObject}, and the same rejection on anything that is not evidence of absence.
  */
 export const headObject = async (options: ReadOptions): Promise<boolean> => {
-  const { response, done } = await readRequest('HEAD', options);
-  done();
+  const { response, done, read } = await readRequest('HEAD', options);
   if (!response.ok) {
-    if (isMiss(response.status, !!options.credentials)) {
-      return false;
+    try {
+      if (isMiss(response.status, !!options.credentials)) {
+        return false;
+      }
+      throw new S3RequestError(response.status, response.statusText, await read(() => response.text()).catch(() => ''));
+    } finally {
+      done();
     }
-    throw new S3RequestError(response.status, response.statusText, await response.text().catch(() => ''));
   }
+  done();
 
   return true;
 };

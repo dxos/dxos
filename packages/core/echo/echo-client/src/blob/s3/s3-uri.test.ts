@@ -56,6 +56,15 @@ describe('s3 uri', () => {
     }
   });
 
+  // Userinfo makes the authority lie: everything before the `@` is credentials, so a string check
+  // on the leading text sees an allowed bucket while the request goes to the address after it.
+  test('refuses an authority carrying userinfo', ({ expect }) => {
+    expect(() => toHttpsUrl({ host: 'bucket.s3.amazonaws.com:443@169.254.169.254', key: 'a/b' })).toThrow(
+      /userinfo|private or loopback/,
+    );
+    expect(() => toHttpsUrl({ host: 'user:pass@127.0.0.1', key: 'a/b' })).toThrow(/userinfo|private or loopback/);
+  });
+
   test('a dot inside a segment is untouched', ({ expect }) => {
     expect(toHttpsUrl({ host: 'bucket.example.com', key: 'a/file.png' }).pathname).toBe('/a/file.png');
     expect(toHttpsUrl({ host: 'bucket.example.com', key: 'a/...b' }).pathname).toBe('/a/...b');
