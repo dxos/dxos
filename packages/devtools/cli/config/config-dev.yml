@@ -16,6 +16,9 @@ runtime:
     # to -- a hub from another environment mints magic links no redemption can resolve.
     hub:
       url: https://dev.dxos.network/hub/
+      # Where a passkey prompt is served. Not the hub's API host: a passkey is bound to the
+      # relying party it was registered against, and only an origin under it can present one.
+      authUrl: https://account.dev.composer.space
     edge:
       url: https://dev.dxos.network/
     iceProviders:

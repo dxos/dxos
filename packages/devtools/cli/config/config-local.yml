@@ -15,6 +15,9 @@ runtime:
     # Deployed: hub-service is not part of the local edge dev setup.
     hub:
       url: https://dev.dxos.network/hub/
+      # Where a passkey prompt is served. Not the hub's API host: a passkey is bound to the
+      # relying party it was registered against, and only an origin under it can present one.
+      authUrl: https://account.dev.composer.space
     edge:
       url: http://localhost:8787/
     # Production even though `edge` is localhost: a local edge has no TURN token to mint with.

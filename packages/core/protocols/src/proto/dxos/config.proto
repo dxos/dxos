@@ -469,7 +469,13 @@ message Runtime {
 
     message Ai { optional string server = 1; }
 
-    message Hub { optional string url = 1; }
+    /// `url` is the API host. `auth_url` is where a browser is sent for a passkey prompt, which
+    /// must be an origin covered by the WebAuthn relying party the credential was registered
+    /// against — a page on any other host cannot use the passkey, whatever it serves.
+    message Hub {
+      optional string url = 1;
+      optional string auth_url = 2;
+    }
 
     /// Canonical descriptor for an EDGE (Cloudflare Worker) service.
     /// Entries in `Services.edge_services` consolidate the per-service URL

@@ -25,6 +25,17 @@ export const defaultConfig = { version: 1 };
  */
 export const DEFAULT_HUB_URL = 'https://dxos.network/hub/';
 
+/**
+ * Where a browser is sent for a passkey prompt, used when neither `runtime.app.env.DX_AUTH_URL` nor
+ * `runtime.services.hub.authUrl` is configured.
+ *
+ * Distinct from {@link DEFAULT_HUB_URL} rather than derived from it. WebAuthn resolves a credential
+ * by relying party, and Composer registers passkeys against `composer.space` rather than the page
+ * host, so only an origin under that domain can present one. The hub answers on its API host too,
+ * where the same page renders and then fails in the browser with `SecurityError`.
+ */
+export const DEFAULT_AUTH_URL = 'https://account.composer.space';
+
 // TODO(burdon): Allow override via env? Generalize since currently NodeJS only.
 const HOME = typeof process !== 'undefined' ? (process?.env?.HOME ?? '') : '';
 

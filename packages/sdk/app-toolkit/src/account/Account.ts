@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { type Client } from '@dxos/client';
-import { DEFAULT_HUB_URL } from '@dxos/client-protocol';
+import { DEFAULT_AUTH_URL, DEFAULT_HUB_URL } from '@dxos/client-protocol';
 import { type Identity } from '@dxos/client/halo';
 import { getEnvString } from '@dxos/config';
 import { Context as DxContext } from '@dxos/context';
@@ -113,6 +113,20 @@ export const accountErrorType = (error: unknown): AccountErrorType | undefined =
  */
 export const getHubUrl = (client: Pick<Client, 'config'>): string =>
   getEnvString(client.config, 'DX_HUB_URL') ?? client.config.values?.runtime?.services?.hub?.url ?? DEFAULT_HUB_URL;
+
+/**
+ * Origin to send a browser to for a passkey prompt. Resolved like {@link getHubUrl}, and separate
+ * from it because the two are different hosts in every deployed environment.
+ *
+ * A passkey is bound to the relying party it was registered against, and Composer pins that to
+ * `composer.space` rather than the page host, so only an origin under that domain can present one.
+ * The hub serves the prompt on its API host as well, where it renders, returns 200, and then fails
+ * in the browser with `SecurityError` — which is why this cannot be derived from the hub URL.
+ */
+export const getAuthUrl = (client: Pick<Client, 'config'>): string =>
+  getEnvString(client.config, 'DX_AUTH_URL') ??
+  client.config.values?.runtime?.services?.hub?.authUrl ??
+  DEFAULT_AUTH_URL;
 
 /** Client for the configured hub-service (accounts, invitations, email verification). */
 export const createHubClient = (clientOrUrl: Client | string): HubHttpClient =>
