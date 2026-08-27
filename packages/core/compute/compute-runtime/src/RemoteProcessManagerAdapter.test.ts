@@ -126,6 +126,37 @@ describe('RemoteProcessManagerAdapter', () => {
     expect(Exit.isFailure(exit)).toBe(true);
   });
 
+  test('startup hydrates the monitor from processes the client did not spawn', async ({ expect }) => {
+    // The host outlives the client, so a reattaching manager has to read the tree rather than wait
+    // for its own next spawn.
+    const host = makeFakeHost({ existing: true });
+    const tree = await runWithMonitor(
+      Effect.gen(function* () {
+        const manager = yield* ProcessManager.Service;
+        yield* manager.startup();
+        const monitor = yield* Process.ProcessMonitorService;
+        return yield* monitor.processTree;
+      }),
+      host,
+    );
+    expect(tree.map((info) => info.key)).toEqual([TEST_KEY]);
+  });
+
+  test('terminate drops the process from the monitor tree', async ({ expect }) => {
+    const host = makeFakeHost();
+    const tree = await runWithMonitor(
+      Effect.gen(function* () {
+        const manager = yield* ProcessManager.Service;
+        const handle = yield* manager.spawn(EchoProcess);
+        yield* handle.terminate();
+        const monitor = yield* Process.ProcessMonitorService;
+        return yield* monitor.processTree;
+      }),
+      host,
+    );
+    expect(tree).toEqual([]);
+  });
+
   test('spawn rejects an annotation that JSON would change', async ({ expect }) => {
     for (const value of [new Date(0), new Map([['a', 1]]), Number.NaN, { nested: undefined }, () => 0]) {
       const exit = await runExit(
@@ -146,13 +177,14 @@ describe('RemoteProcessManagerAdapter', () => {
     // The shape an EDGE e2e drives: the aggregate `Process.ProcessMonitorService` over this adapter
     // in the manager slot, so a caller reads remote processes through `Process.Monitor` rather than
     // through the transport.
-    const tree = await EffectEx.runPromise(
+    const tree = await runWithMonitor(
       Effect.gen(function* () {
         const manager = yield* ProcessManager.Service;
         yield* manager.spawn(EchoProcess, { name: 'test' });
         const monitor = yield* Process.ProcessMonitorService;
         return yield* monitor.processTree;
-      }).pipe(Effect.provide(monitorStack(host))),
+      }),
+      host,
     );
     expect(tree.map((info) => info.key)).toEqual([TEST_KEY]);
   });
@@ -216,6 +248,8 @@ const makeFakeHost = (
     readonly settleAfterStatusCalls?: number;
     /** State the host moves to once an input has been submitted. */
     readonly stateAfterInput?: ProcessProtocol.ProcessState;
+    /** Host already has a process running, as it would after a client restart. */
+    readonly existing?: boolean;
   } = {},
 ): RemoteProcessManager.Control & { readonly inputs: unknown[]; statusCalls: () => number } => {
   const inputs: unknown[] = [];
@@ -223,6 +257,8 @@ const makeFakeHost = (
   let state: ProcessProtocol.ProcessState = options.initialState ?? 'IDLE';
   let statusCalls = 0;
   let seq = 0;
+  let spawnedHere = false;
+  let terminated = false;
 
   const info = (): ProcessProtocol.ProcessInfo => ({
     pid: 'pid-1',
@@ -240,8 +276,12 @@ const makeFakeHost = (
   return {
     inputs,
     statusCalls: () => statusCalls,
-    spawn: () => Effect.sync(info),
-    list: () => Effect.sync(() => [info()]),
+    spawn: () =>
+      Effect.sync(() => {
+        spawnedHere = true;
+        return info();
+      }),
+    list: () => Effect.sync(() => (terminated || !(spawnedHere || options.existing) ? [] : [info()])),
     status: () =>
       Effect.sync(() => {
         // Settles on the Nth read, so a predicate that returns too early — or a poll loop that never
@@ -262,6 +302,7 @@ const makeFakeHost = (
     terminate: () =>
       Effect.sync(() => {
         state = 'TERMINATED';
+        terminated = true;
       }),
     readEvents: (_pid, cursor) =>
       Effect.sync(() => ({ events: events.slice(cursor), cursor: events.length, truncated: false, info: info() })),
@@ -271,6 +312,12 @@ const makeFakeHost = (
 
 const run = <A>(effect: Effect.Effect<A, never, ProcessManager.Service>, control: RemoteProcessManager.Control) =>
   EffectEx.runPromise(provide(effect, control));
+
+/** Runs against the aggregate monitor as well as the manager, over one shared adapter. */
+const runWithMonitor = <A>(
+  effect: Effect.Effect<A, never, ProcessManager.Service | Process.ProcessMonitorService>,
+  control: RemoteProcessManager.Control,
+) => EffectEx.runPromise(effect.pipe(Effect.provide(monitorStack(control))));
 
 /** Runs to an `Exit`, so a defect the adapter raises can be asserted instead of failing the test. */
 const runExit = <A>(effect: Effect.Effect<A, never, ProcessManager.Service>, control: RemoteProcessManager.Control) =>
