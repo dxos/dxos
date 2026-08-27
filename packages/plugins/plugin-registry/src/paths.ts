@@ -17,13 +17,7 @@ export const REGISTRY_ID = GraphPath.pinnedWorkspaceId('dxos:plugin-registry');
 export const getPluginPath = (pluginId: string): string => `root/${REGISTRY_ID}/${pluginId}`;
 
 /**
- * Qualified graph path to the bundled MDL spec child node for a plugin.
- *
- * The child is contributed by whichever plugin can render MDL (today:
- * `plugin-code`). plugin-registry only knows the path convention so it can:
- *  - dispatch `LayoutOperation.Open` to open the spec viewer, and
- *  - probe the app graph for the child's existence to gate the "View
- *    specification" button. If no plugin contributes a renderer for the
- *    child, the node is absent and the button stays hidden.
+ * Qualified graph path to a plugin's MDL spec child, which is absent unless some plugin contributes
+ * an MDL renderer — hence a path convention rather than a lookup.
  */
 export const getPluginSpecPath = (pluginId: string): string => `${getPluginPath(pluginId)}/spec`;

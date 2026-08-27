@@ -32,9 +32,7 @@ const TARGETS: Array<[string, RegExp]> = [
   ['fast-check', /node_modules\/\.pnpm\/fast-check@/],
   ['effect/Arbitrary', /node_modules\/effect\/dist\/esm\/Arbitrary\.js$/],
   ['react-aria', /node_modules\/\.pnpm\/@react-aria\+/],
-  // Under investigation rather than settled policy (2026-08-26): ~26 KB of app-graph +
-  // @dxos/graph ships eagerly and no obvious boot caller explains the edge, and `effect/Graph`
-  // arrived with #12594 at its full 23.5 KB because the import-map wrapper pins every export.
+  // The graph packages are import-map shared, so a stray boot edge ships them whole.
   ['app-graph', /packages\/sdk\/app-graph\//],
   ['dxos-graph', /packages\/common\/graph\//],
   ['effect/Graph', /node_modules\/effect\/dist\/Graph\.js$/],
