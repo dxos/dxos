@@ -29,7 +29,7 @@ import { Annotation, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
-import { Message, Organization } from '@dxos/types';
+import { ContentBlock, Message, Organization } from '@dxos/types';
 
 import { AssistantTestLayer, waitForMessage } from '../testing';
 import * as ResearchService from '../testing/ResearchService';
@@ -546,7 +546,11 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         const target = Obj.getURI(session.feed);
         // `list` erases the RPC group to `any`, which Effect 4 resolves to an `unknown` requirement
         // on every call; naming the group restores it.
-        const handles: readonly ProcessManager.Handle<any, any, HarnessControlRpcs>[] = yield* processManager.list({
+        const handles: readonly ProcessManager.Handle<
+          string | readonly ContentBlock.Any[],
+          void,
+          HarnessControlRpcs
+        >[] = yield* processManager.list({
           target,
           key: AGENT_PROCESS_KEY,
         });

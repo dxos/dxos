@@ -26,7 +26,13 @@ import {
   type Registry,
   Type,
 } from '@dxos/echo';
-import { DATA_NAMESPACE, type DatabaseDirectory, EncodedReference, isEdgePeerId } from '@dxos/echo-protocol';
+import {
+  DATA_NAMESPACE,
+  type DatabaseDirectory,
+  type EntityMeta as ProtocolEntityMeta,
+  EncodedReference,
+  isEdgePeerId,
+} from '@dxos/echo-protocol';
 import {
   type AnyProperties,
   EntityKind,
@@ -52,7 +58,7 @@ import { defaultMap } from '@dxos/util';
 
 import type { SaveStateChangedEvent } from '../automerge';
 import { type DocHandleProxy, type RepoProxy } from '../automerge';
-import { type BranchStore, EntityManager } from '../core-db';
+import { type BranchStore, EntityManager, type LoadObjectOptions, type ObjectCore } from '../core-db';
 import {
   EchoReactiveHandler,
   type ProxyTarget,
@@ -119,7 +125,7 @@ export interface EchoDatabase extends Database.Database {
   /**
    * Returns the loaded automerge document handles.
    */
-  getLoadedDocumentHandles(): DocHandleProxy<any>[];
+  getLoadedDocumentHandles(): DocHandleProxy<unknown>[];
 
   /**
    * Migration-scoped accessor to the automerge repo.
@@ -259,6 +265,13 @@ const combineSyncState = (
     ...feeds,
   };
 };
+
+/**
+ * The properties `#runObjectMigration` reads/deletes off a migration's `transform` result —
+ * `Migration.ObjectMigration.transform` is declared as `(from: unknown, ...) => Promise<unknown>`
+ * on the type-erased interface, but its actual shape always matches `Migration.TransformResult<To>`.
+ */
+type MigrationOutput = { id?: unknown; [MetaId]?: Partial<ProtocolEntityMeta> };
 
 /**
  * User-facing API for the space database.
@@ -422,8 +435,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return schema;
   }
 
-  private _addPersistentSchema(schemaInput: Schema.Codec<any, any> | Type.AnyEntity): Type.AnyEntity {
-    let schema: Schema.Codec<any, any>;
+  private _addPersistentSchema(schemaInput: Schema.Codec<unknown, unknown> | Type.AnyEntity): Type.AnyEntity {
+    let schema: Schema.Codec<unknown, unknown>;
     let meta: TypeAnnotation | undefined;
     if (Type.isType(schemaInput)) {
       const entity = schemaInput;
@@ -539,10 +552,15 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
         (Type.getMeta(candidate).version ?? Type.getVersion(candidate)) === version,
     );
     if (match) {
-      return match as unknown as T;
+      // `existing` is only known to hold `Type.Type` instances at the type level; the runtime
+      // match is for the caller's own `T`, which the query API cannot express generically.
+      return match as T;
     }
 
-    return this._addPersistentSchema(type) as unknown as T;
+    // `_addPersistentSchema` reconstructs the entity from a JSON schema at runtime, so its result
+    // can only be typed as `Type.AnyEntity`; the caller's `T` is verified by the `Type.isType`
+    // invariant inside `_addPersistentSchema`, not by the compiler.
+    return this._addPersistentSchema(type) as T;
   }
 
   private _addObject<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
@@ -758,18 +776,18 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     for (const object of objects) {
       const before = JSON.parse(JSON.stringify(object));
 
-      const output = (await migration.transform(object, { db: this })) as any;
-      const metaPatch = output?.[MetaId] as Partial<EntityMeta> | undefined;
+      const output = (await migration.transform(object, { db: this })) as MigrationOutput | undefined;
+      const metaPatch = output?.[MetaId];
       if (metaPatch !== undefined && output != null) {
         delete output[MetaId];
       }
 
-      delete (output as any).id;
+      delete output?.id;
 
       await this._entityManager.atomicReplaceObject(object.id, {
         data: output,
         type: migration.toType,
-        meta: metaPatch as any,
+        meta: metaPatch,
       });
       const postMigrationType = Obj.getTypeURI(object);
       invariant(postMigrationType != null && postMigrationType.toString() === migration.toType.toString());
@@ -925,7 +943,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._entityManager.getTotalNumberOfObjects();
   }
 
-  getLoadedDocumentHandles(): DocHandleProxy<any>[] {
+  getLoadedDocumentHandles(): DocHandleProxy<unknown>[] {
     return this._entityManager.getLoadedDocumentHandles();
   }
 
@@ -1082,7 +1100,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   /**
    * @internal
    */
-  async _loadObjectById(objectId: string, options: any = {}): Promise<Entity.Unknown | undefined> {
+  async _loadObjectById(objectId: string, options: LoadObjectOptions = {}): Promise<Entity.Unknown | undefined> {
     const core = await this._entityManager.loadObjectCoreById(objectId, options);
     if (!core || (core?.isDeleted() && !options.allowDeleted)) {
       return undefined;
@@ -1103,11 +1121,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   readonly pendingBatch = new Event<unknown>();
 
   /** @internal */
-  private readonly _rootProxies = new Map<any, Entity.Unknown>();
+  private readonly _rootProxies = new Map<ObjectCore, Entity.Unknown>();
 }
 
 // TODO(burdon): Create APIError class.
-const createSchemaNotRegisteredError = (schema?: any) => {
+const createSchemaNotRegisteredError = (schema?: Type.AnyEntity) => {
   const message = 'Schema not registered';
   if (schema != null) {
     try {

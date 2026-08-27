@@ -281,12 +281,15 @@ export default Capability.makeModule(
 /** Graph-facing subset of FileSystemManager used to resolve markdown nodes. */
 type MarkdownResolver = Pick<FileSystemManager.FileSystemManager, 'markdownBindingAtom' | 'getByFileId'>;
 
+/** The node's `data`: a directory/file entry, its resolved markdown text, or `null` while pending. */
+type EntryNodeData = FileSystemCapabilities.FileSystemEntry | Text.Text | null;
+
 const constructEntryNode = (
   entry: FileSystemCapabilities.FileSystemEntry,
   fileSystemManager: MarkdownResolver,
   workspaceId: string,
   get: Atom.AtomContext,
-): Node.NodeArg<any> | null => {
+): Node.NodeArg<EntryNodeData> | null => {
   if (FileSystemCapabilities.isFileSystemDirectory(entry)) {
     return Node.make({
       id: entry.id,

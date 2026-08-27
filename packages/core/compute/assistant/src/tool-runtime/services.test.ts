@@ -23,7 +23,7 @@ describe('createStructFieldsFromSchema', () => {
   const OBJECT = EntityId.random();
 
   // Projects a tool input schema for the LLM and decodes the given `in` value the way a tool call would.
-  const decodeIn = (schema: Schema.Codec<any, any>, value: unknown): any[] => {
+  const decodeIn = (schema: Schema.Codec<unknown, unknown>, value: unknown) => {
     const fields = createStructFieldsFromSchema(schema);
     const decoded: any = Schema.decodeUnknownSync(Schema.Struct(fields))({ in: value });
     return decoded.in;
@@ -197,7 +197,7 @@ describe('makeToolResolverFromOperations', () => {
   const op = (key: string) =>
     Operation.serialize(
       Operation.make({
-        meta: { key: DXN.make(key as any), name: 'Display Copy' },
+        meta: { key: DXN.make(key), name: 'Display Copy' },
         input: Schema.Struct({ value: Schema.String }),
         output: Schema.Struct({ ok: Schema.Boolean }),
       }),
@@ -230,7 +230,7 @@ describe('makeToolResolverFromOperations', () => {
     // Fires the registration inside the first query, after the snapshot is taken but before it is cached.
     let pending: (() => void) | undefined = () => registry.add([op('org.dxos.operation.web-search.fetch')]);
     const query = registry.query.bind(registry);
-    (registry as any).query = (...args: Parameters<typeof query>) => {
+    registry.query = (...args: Parameters<typeof query>) => {
       const result = query(...args);
       const run = result.run.bind(result);
       result.run = async () => {

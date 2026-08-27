@@ -5,14 +5,14 @@
 import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 
-import { ClientService, ConfigService } from '@dxos/client';
+import { layer as clientServiceLayer, layerMemory as configServiceLayerMemory } from '@dxos/client';
 
 import { CommandConfig } from '../services';
 import { TestConsole } from './test-console';
 
 export const TestLayer = Function.pipe(
-  ClientService.layer,
-  Layer.provideMerge(ConfigService.layerMemory),
+  clientServiceLayer,
+  Layer.provideMerge(configServiceLayerMemory),
   Layer.provideMerge(TestConsole.layer),
   Layer.provideMerge(CommandConfig.layerTest),
 );

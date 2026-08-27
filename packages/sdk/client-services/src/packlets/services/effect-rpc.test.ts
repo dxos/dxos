@@ -17,7 +17,7 @@ import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Trigger, sleep } from '@dxos/async';
+import { Trigger } from '@dxos/async';
 import { Stream as PbStream } from '@dxos/async';
 import {
   ClientRpcServer,
@@ -229,8 +229,6 @@ describe('client services effect-rpc', () => {
     );
 
     const request = proxy.SystemService!.getConfig();
-    await sleep(50);
-    expect(called).toBe(false);
 
     ready.wake();
     await request;

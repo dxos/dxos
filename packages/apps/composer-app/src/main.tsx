@@ -47,6 +47,7 @@ import {
   initializeObservability,
   isFalse,
   isTrue,
+  type Profiler,
   runStorageResetMigration,
   setSafeModeUrl,
   setupConfig,
@@ -86,9 +87,25 @@ declare const __DX_DEV_SERVER_BOOT_ID__: string;
 // Always '' in production builds, so the port cannot be auto-started on a deployed origin.
 declare const __DX_DEBUG_PORT_SESSION__: string;
 
+// Merged onto `@dxos/app-framework`'s `ComposerDevtools` (the type behind `globalThis.composer`)
+// rather than declared fresh — a second `declare global { var composer }` here would collide with
+// its declaration and resolve every member to `{}` (see `playwright/globals.d.ts`).
+declare module '@dxos/app-framework' {
+  interface ComposerDevtools {
+    profiler?: Profiler;
+    otel?: {
+      enableDebugLogs: () => void;
+      disableDebugLogs: () => void;
+      getLogLevel: () => Promise<string | null>;
+    };
+  }
+}
+
 declare global {
   interface ImportMeta {
     env: ImportMetaEnv;
+    /** Vite HMR API — present only in dev, `undefined` in production bundles. */
+    hot?: { dispose(cb: () => void): void };
   }
 
   interface ImportMetaEnv {
@@ -116,9 +133,8 @@ const BOOT_ID = import.meta.env?.DEV ? Math.random().toString(36).slice(2, 10) :
 const MODULE_EVAL_TIME = Date.now();
 if (import.meta.env?.DEV) {
   log('composer main: module evaluated', { bootId: BOOT_ID, t: MODULE_EVAL_TIME });
-  const importMeta = import.meta as any;
-  if (importMeta.hot) {
-    importMeta.hot.dispose(() => {
+  if (import.meta.hot) {
+    import.meta.hot.dispose(() => {
       log('composer main: hmr dispose', { bootId: BOOT_ID, ageMs: Date.now() - MODULE_EVAL_TIME });
     });
   }
@@ -240,7 +256,7 @@ const main = async () => {
       return level;
     },
   };
-  (window as any).composer = { profiler, otel };
+  globalThis.composer = { profiler, otel };
 
   AppMigrations.define();
 
@@ -610,7 +626,12 @@ const main = async () => {
     return fatalError ? <Fallback error={fatalError} /> : <App />;
   };
 
-  const root = document.getElementById('root')!;
+  const root = document.getElementById('root');
+  if (!root) {
+    // `index.html` always ships a `#root` element — its absence means the document itself
+    // failed to load correctly, which no in-tree fallback can recover from.
+    throw new Error('composer main: #root element not found');
+  }
   log('composer main: rendering App', { bootId: BOOT_ID, strict: conf.isStrict });
   if (conf.isStrict) {
     createRoot(root).render(

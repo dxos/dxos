@@ -189,9 +189,9 @@ export class ContextFeedService extends Context.Service<
   {
     readonly feed: Feed;
   }
->()('@dxos/echo/Feed/ContextFeedService') {
-  static layer = (feed: Feed) => Layer.succeed(ContextFeedService, { feed });
-}
+>()('@dxos/echo/Feed/ContextFeedService') {}
+
+export const layer = (feed: Feed) => Layer.succeed(ContextFeedService, { feed });
 
 //
 // Factory

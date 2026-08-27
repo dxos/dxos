@@ -65,10 +65,6 @@ export const localDevConfig = new Config(
 );
 
 export class ConfigService extends Context.Service<ConfigService, Config>()('ConfigService') {
-  static layerMemory = Layer.effect(ConfigService, Effect.succeed(memoryConfig));
-
-  static fromConfig = (config: Config) => Layer.succeed(ConfigService, config);
-
   static load = (args: { config: Option.Option<string>; profile: string }) => {
     const defaultConfigPath = getProfileConfigPath(DX_CONFIG, args.profile);
     return Effect.gen(function* () {
@@ -108,6 +104,10 @@ export class ConfigService extends Context.Service<ConfigService, Config>()('Con
     );
   };
 }
+
+export const layerMemory = Layer.effect(ConfigService, Effect.succeed(memoryConfig));
+
+export const fromConfig = (config: Config) => Layer.succeed(ConfigService, config);
 
 /**
  * `DX_*` process env projected onto `runtime.app.env`, mirroring what the bundler config plugin does

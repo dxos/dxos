@@ -19,7 +19,7 @@ export type AiServiceLayer = Layer.Layer<AiService.AiService, ConfigError.Config
 
 // TODO(burdon): Adapt Config to @dxos/config.
 
-export const TestRouter = AiModelResolver.AiModelResolver.buildAiService.pipe(
+export const TestRouter = AiModelResolver.buildAiService.pipe(
   Layer.provide(AnthropicResolver.make()),
   Layer.provide(LMStudioResolver.make()),
   // Layer.provide(OpenAiResolver.OpenAiResolver),
@@ -73,7 +73,7 @@ export const RemoteEdgeAiServiceLayer: AiServiceLayer = TestRouter.pipe(
  * OLLAMA_ORIGINS="*" ollama serve
  * ```
  */
-export const OllamaAiServiceLayer: AiServiceLayer = AiModelResolver.AiModelResolver.buildAiService.pipe(
+export const OllamaAiServiceLayer: AiServiceLayer = AiModelResolver.buildAiService.pipe(
   Layer.provide(OllamaResolver.make()),
   Layer.provide(FetchHttpClient.layer),
 );

@@ -21,7 +21,6 @@ import {
   type ComputeGraphModel,
   ComputeInputEvent,
   type ComputeNode,
-  ComputeNodeContext,
   type ComputeNodeMeta,
   ComputeOutputEvent,
   type GptInput,
@@ -30,6 +29,7 @@ import {
   GraphExecutor,
   ValueBag,
   isNotExecuted,
+  layerNoop as computeNodeContextLayerNoop,
 } from '@dxos/conductor';
 import { Resource } from '@dxos/context';
 import type { Database, Registry } from '@dxos/echo';
@@ -282,10 +282,7 @@ export class ComputeGraphController extends Resource {
             Effect.withSpan('runGraph'),
             Scope.provide(scope),
             Effect.provide(
-              Layer.mergeAll(
-                Layer.succeed(Trace.TraceService, this._createTraceWriter()),
-                ComputeNodeContext.layerNoop,
-              ),
+              Layer.mergeAll(Layer.succeed(Trace.TraceService, this._createTraceWriter()), computeNodeContextLayerNoop),
             ),
             Effect.flatMap(computeValueBag),
             Effect.withSpan('test'),
@@ -355,7 +352,7 @@ export class ComputeGraphController extends Resource {
               Effect.provide(
                 Layer.mergeAll(
                   Layer.succeed(Trace.TraceService, this._createTraceWriter()),
-                  ComputeNodeContext.layerNoop,
+                  computeNodeContextLayerNoop,
                 ),
               ),
 

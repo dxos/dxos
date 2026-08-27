@@ -14,6 +14,7 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { ProjectOperation } from '#types';
@@ -53,12 +54,12 @@ describe('project app graph builder', () => {
     const nodes = await getSubjectChildren(project, await EffectEx.runPromise(createProjectArtifactsExtension()));
 
     const artifacts = nodes.find((node) => node.type === ARTIFACTS_SECTION_TYPE);
-    expect(artifacts).toBeDefined();
-    expect(artifacts!.id).toEqual(qualifyId(qualifyId(Node.RootId, SUBJECT_ID), ARTIFACTS_SEGMENT));
+    invariant(artifacts);
+    expect(artifacts.id).toEqual(qualifyId(qualifyId(Node.RootId, SUBJECT_ID), ARTIFACTS_SEGMENT));
     // Virtual, but it carries the project so the action extension can link what the dialog creates —
     // wrapped, so the Project-matching extensions do not claim the branch and nest it inside itself.
-    expect(artifacts!.data).toEqual({ project });
-    expect(Obj.instanceOf(Project.Project, artifacts!.data)).toBe(false);
+    expect(artifacts.data).toEqual({ project });
+    expect(Obj.instanceOf(Project.Project, artifacts.data)).toBe(false);
   });
 
   test('contributes an add-artifact action to the Artifacts branch', async ({ expect }) => {

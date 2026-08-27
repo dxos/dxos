@@ -34,6 +34,9 @@ export interface Service {
 
 export class AgentService extends Context.Service<AgentService, Service>()('@dxos/functions-runtime/AgentService') {}
 
+/** Re-exported so callers importing this module as a namespace avoid `AgentService.AgentService.key`. */
+export const key = AgentService.key;
+
 /**
  * Handle to an agent session.
  */

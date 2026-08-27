@@ -45,7 +45,7 @@ describe('Chat', () => {
         // Asserted on the schema, not the instance: `in` reports false for any declared-but-unset
         // optional field. The agent a chat runs as is reached through the ECHO parent edge, never a
         // field — a field was the edge that made Agent and Chat mutually dependent.
-        expect(Object.keys(Chat.Chat.fields).sort()).toEqual(['feed', 'instructions', 'name', 'outline', 'viewType']);
+        expect(Object.keys(Chat.fields).sort()).toEqual(['feed', 'instructions', 'name', 'outline', 'viewType']);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
