@@ -48,7 +48,7 @@ jobs:
           filter: blob:none
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
 
       - name: Bundle composer-app
         run: moon run composer-app:bundle
