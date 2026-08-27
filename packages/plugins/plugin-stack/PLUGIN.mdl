@@ -18,6 +18,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
 
 ## Types
 

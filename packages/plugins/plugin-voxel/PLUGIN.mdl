@@ -494,9 +494,9 @@ flow QA-1: Build and query a shape agent-only
       expect: a World named "QA World" appears under the collection with an empty voxel map
       note: |
         NO `invoke` — there is no create operation, only the navtree factory
-        (`capabilities/create-object.ts`). This is the one non-agent step, but it does not
-        prevent `actors: agent` for the rest, since a fixture World can equally be stood up by an
-        existing one already in the space.
+        (`capabilities/create-object.ts`). This one human-only step is why the flow is
+        `actors: both` rather than `agent`, even though every remaining step invokes a real
+        operation.
     - name: Confirm the world starts empty
       do: (implicit — no UI gesture; this validates the create step)
       invoke: [op:queryWorld] { world: $created.object }

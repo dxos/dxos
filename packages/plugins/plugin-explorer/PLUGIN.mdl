@@ -314,11 +314,13 @@ flow QA-1: Create a Graph and switch layout variants
   after:
     - name: Delete the Graph
       do: Right-click "QA Graph" in the navtree and choose Delete.
-      invoke: org.dxos.operation.space.removeObjects { objects: [$given.graph], target: $given.space }
       expect: the row leaves the navtree and its plank closes
       note: |
-        `removeObjects` IS a real operation, so cleanup can run through the invoker even though
-        creation cannot — see Rule 7: `after` steps go through operations like any other.
+        NO `invoke` here either — the flow never captured a live reference to the Graph (its
+        creation had no `invoke`/`capture`), so a runner must resolve it by querying
+        `space.db.query(dxos.Filter.everything())` for the object named "QA Graph" and call
+        `org.dxos.operation.space.removeObjects` with that reference, rather than the flow
+        guessing an id it was never given.
 ```
 
 ---

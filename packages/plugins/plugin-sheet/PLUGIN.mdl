@@ -334,6 +334,56 @@ test T-6: Scroll to anchor
 
 ---
 
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Create a sheet, set values, evaluate a formula, read back
+  desc: The core spreadsheet round-trip — create, set cells (including a formula), read the
+    evaluated result back.
+  actors: agent
+  covers: [F-1.1, F-1.2, F-2.1, F-2.3, T-1, T-2]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - no Sheet named "QA Sheet" exists — ABORT rather than reusing one this flow did not create
+  test:
+    - name: Create the sheet
+      do: In the navtree, click + on a collection and choose Sheet. Name it "QA Sheet".
+      invoke: [op:create] { name: "QA Sheet" }
+      capture: created
+      expect: a Sheet named "QA Sheet" now exists
+      assert: return !!$created.id
+
+    - name: Place it in the collection
+      do: (no separate gesture — the navtree create action places it)
+      invoke: org.dxos.operation.space.addObject { object: $created.id, target: $given.collection }
+      expect: "QA Sheet" appears as a row under the collection
+
+    - name: Set values and a formula
+      do: Click cell A1 and type "10", Enter. Click A2 and type "20", Enter. Click A3 and type
+        "=A1+A2", Enter.
+      invoke: [op:setRange] { sheet: $created.id, cells: { A1: 10, A2: 20, A3: "=A1+A2" } }
+      expect: A1 shows 10, A2 shows 20, and A3 shows 30 (evaluated by HyperFormula)
+
+    - name: Read the range back
+      do: (agent-only — confirm the evaluated values)
+      invoke: [op:getRange] { sheet: $created.id, range: "A1:A3" }
+      expect: the returned 2D array reads [[10], [20], [30]]
+      assert: return $result.values.flat().join(',') === '10,20,30'
+  after:
+    - name: Delete the sheet
+      do: Right-click "QA Sheet" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.id], target: $given.collection }
+      expect: the row leaves the navtree and its plank closes if it was open
+```
+
+---
+
 ## Appendix: Extension Definitions
 
 ```mdl
