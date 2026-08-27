@@ -957,7 +957,10 @@ flow QA-1: Connect, sync, and read the portfolio
   after:
     - name: Remove the report feed
       do: Right-click the Portfolio and choose "Clear synced data", or delete the Portfolio object entirely.
-      invoke: org.dxos.operation.space.removeObjects { objects: [$given.space] }
+      invoke: |
+        org.dxos.operation.space.removeObjects {
+          objects: [(await space.db.query(dxos.Filter.type(Portfolio)).run()).objects[0]]
+        }
       note: |
         The hidden feed is a child of the Portfolio (feat F-2.6's cascade-delete via
         `Obj.setParent`); deleting the Portfolio is the operation that actually removes it — there

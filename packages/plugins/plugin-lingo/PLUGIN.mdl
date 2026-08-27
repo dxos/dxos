@@ -510,13 +510,20 @@ flow QA-1: Add a word to a deck and drill it to box 3
       capture: added
       expect: "gato" appears in the word list, due immediately (box 0)
       assert: return !$added.existing;
-    - name: Answer it correctly three times
-      do: Open FlashcardsArticle for "QA Deck" and answer "gato" correctly three times in a row.
+    - name: Answer it correctly (1st)
+      do: Open FlashcardsArticle for "QA Deck" and answer "gato" correctly.
+      invoke: [op:RecordReview] { word: $added.word, correct: true }
+      expect: the word's box advances and its streak is 1
+    - name: Answer it correctly (2nd)
+      do: Answer "gato" correctly again.
+      invoke: [op:RecordReview] { word: $added.word, correct: true }
+      expect: the word's box advances again and its streak is 2
+    - name: Answer it correctly (3rd)
+      do: Answer "gato" correctly a third time in a row.
       invoke: [op:RecordReview] { word: $added.word, correct: true }
       expect: after the third correct answer, the word's box is 3, streak is 3, and it is due 7
         days out
       assert: return $result.progress.box === 3 && $result.progress.streak === 3;
-      note: Coalesced — three RecordReview invocations in sequence, one per correct answer.
   after:
     - name: Delete the deck
       do: Right-click "QA Deck" in the navtree and choose Delete.
@@ -534,7 +541,10 @@ flow QA-2: Translate and analyze a passage in the reading companion
   given:
     - an identity exists
     - space: a space is open
-    - a Markdown document with a short non-English passage is open (e.g. "Hola, ¿cómo estás?")
+    - document: a Markdown document with a short non-English passage is open (e.g. "Hola, ¿cómo
+        estás?")
+    - text: the passage text, as it appears in the open document
+    - language: the target language selected in the reading companion (e.g. "English")
     - plugin-lingo is enabled — it is OFF by default (isDev-only default)
   test:
     - name: Open the reading companion and run analysis

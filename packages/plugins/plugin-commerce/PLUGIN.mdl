@@ -487,7 +487,7 @@ flow QA-1: Configure a provider by hand and run a search
     - name: Set its search template
       do: In ProviderArticle, fill the request/result mapping form for a GET to
         `/products/search?q={q}` returning `.products[]` with `title` and `url` fields.
-      invoke: [op:SetProviderTemplate] { provider: $provider.id, searchSchema: { type: "object", properties: { q: { type: "string" } } }, request: { method: "GET", urlTemplate: "https://dummyjson.com/products/search?q={q}" }, result: { path: "products", fields: { title: { selector: "title" }, url: { selector: "id" } } } }
+      invoke: [op:SetProviderTemplate] { provider: $provider.id, searchSchema: { type: "object", properties: { q: { type: "string" } } }, request: { method: "GET", urlTemplate: "https://dummyjson.com/products/search?q={q}" }, result: { responseType: "json", itemLocator: "products", fields: { title: { path: "title" }, url: { path: "id" } } } }
       capture: templated
       expect: the Provider is now ready for RunProviderSearch — its searchSchema, request and
         result mappings are all set
@@ -504,7 +504,7 @@ flow QA-1: Configure a provider by hand and run a search
       expect: the button disables while running, then Search.status returns to "idle",
         Search.lastRunAt is set, and results from dummyjson appear in the results list
       assert: |
-        return (await space.db.query(dxos.Filter.type($types.Search)).run())
+        return (await space.db.query(dxos.Filter.type(Search)).run())
           .find((o) => o.id === $search.id)?.status === 'idle';
   after:
     - name: Delete the search and provider

@@ -17,7 +17,10 @@ for (const file of files) {
       continue;
     }
     if (cur) {
-      if (/^```/.test(lines[i])) { cur = null; continue; }
+      if (/^```/.test(lines[i])) {
+        cur = null;
+        continue;
+      }
       cur.body.push({ n: i + 1, text: lines[i] });
     }
   }
@@ -29,7 +32,10 @@ for (const file of files) {
     const givens = new Set();
     let inGiven = false;
     for (const { text: l } of flow.body) {
-      if (/^\s{2}given:/.test(l)) { inGiven = true; continue; }
+      if (/^\s{2}given:/.test(l)) {
+        inGiven = true;
+        continue;
+      }
       if (/^\s{2}\w+[?]?:/.test(l)) inGiven = false;
       if (inGiven) {
         const m = l.match(/^\s*-\s+([A-Za-z_][A-Za-z0-9_]*):\s/);
@@ -59,6 +65,9 @@ for (const file of files) {
 let total = 0;
 for (const r of report) {
   console.log(`${r.file}  ${r.flow}`);
-  for (const [name, line] of r.unbound) { console.log(`    L${line}  ${name}`); total++; }
+  for (const [name, line] of r.unbound) {
+    console.log(`    L${line}  ${name}`);
+    total++;
+  }
 }
 console.log(`\n${report.length} flows with unbound references; ${total} references total`);
