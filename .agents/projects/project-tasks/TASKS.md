@@ -1,6 +1,6 @@
 # Project Tasks — Tasks
 
-_Resume: land #12787 — the hierarchical TaskList with drag-and-drop, built on react-ui-list. Uncommitted: none. Last: #12784 (Repo type, `#nnn` references, task-list UX) merged 2026-08-26._
+_Resume: land #12787 — green (11/11 checks pass, all 5 review threads resolved), mergeable, awaiting merge. Uncommitted: none. Last: review round fixed a real stale-lifecycle-edge bug in `applyParentTask`._
 
 ## Phase 1: Agent delegation over durable tasks
 
