@@ -21,6 +21,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
+import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { Config } from '@dxos/react-client';
@@ -176,6 +177,8 @@ const meta = {
               messages.length > 0 ? scriptedAiServiceMiddleware(messages.map(({ reply }) => reply)) : undefined,
           }),
           PreviewPlugin.make(),
+          // Contributes the task verbs the `/task:*` commands invoke.
+          TasksPlugin.make(),
           StorybookPlugin.make({}),
         ],
         // Contributed directly rather than by loading the deck plugin: the prompt reads only this

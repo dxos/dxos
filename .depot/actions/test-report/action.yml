@@ -12,5 +12,5 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - run: ./.github/actions/test-report/send-test-report.sh "${{ inputs.name }}" "${{ inputs.result }}"
+    - run: ./.depot/actions/test-report/send-test-report.sh "${{ inputs.name }}" "${{ inputs.result }}"
       shell: bash

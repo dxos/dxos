@@ -141,6 +141,7 @@ export const translations: Resource[] = [
         'integration-prompt.title': 'Connect {{service}}',
         'integration-prompt.description': 'This action needs access to {{service}}. Connect it to continue.',
         'integration-prompt.unavailable': 'No connector is available for {{service}}.',
+        'integration-prompt.scopes': 'Permissions needed:',
 
         'search.placeholder': 'Search...',
         'prompt.placeholder': 'Enter question or command...',

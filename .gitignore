@@ -67,6 +67,10 @@ build/Release
 node_modules/
 jspm_packages/
 
+# pnpm store, when it resolves inside the checkout instead of a global cache dir (observed on Depot
+# CI's sandbox — see .oxfmtrc.json's ignorePatterns for why this also needs to be there).
+.pnpm-store/
+
 # Optional npm cache directory
 .npm
 

@@ -87,10 +87,10 @@ jobs:
 
       - name: Extract branch
         id: extract_branch
-        uses: ./.github/actions/branch
+        uses: ./.depot/actions/branch
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
 
       # ─── Stage 1: gates that need no build ──────────────────────────────────────────────────────
       # Ordered by measured cost, cheapest first, so the common failure lands in seconds instead of
@@ -254,7 +254,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
 
       # `continue-on-error` so a PR that blows the budget still gets the comment below saying by how
       # much and where; the final step turns the outcome back into a job failure.
@@ -381,7 +381,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
 
       # `DX_DEBUG_LEAKS_DIR` keeps the heap snapshots the probe writes out of the workspace. It is
       # set per step, not on the job: `runner` is not among the contexts available to job-level `env`
@@ -456,10 +456,10 @@ jobs:
 
       - name: Extract branch
         id: extract_branch
-        uses: ./.github/actions/branch
+        uses: ./.depot/actions/branch
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
 
       # Unconditional: moon owns cell assignment, so which flavours a shard draws is not known here.
       - name: Install Playwright
@@ -557,10 +557,10 @@ jobs:
 
       - name: Extract branch
         id: extract_branch
-        uses: ./.github/actions/branch
+        uses: ./.depot/actions/branch
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
 
       # `:bundle-e2e`, not a project list and not `:bundle`. Only a project that serves a production
       # bundle to Playwright (`vite preview`) defines `bundle-e2e`, so the glob is already exactly the
@@ -633,10 +633,10 @@ jobs:
 
       - name: Extract branch
         id: extract_branch
-        uses: ./.github/actions/branch
+        uses: ./.depot/actions/branch
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
 
       # Only this cell's browser — the other two engines' downloads are dead weight here.
       - name: Install Playwright
@@ -734,7 +734,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
 
       # `@dxos/cli` ships as prebuilt platform binaries, so its failure modes live in the packed tarball
       # rather than the source tree. Depends on `bundle`, so this compiles the binaries too.
@@ -764,7 +764,7 @@ jobs:
   cli-foreign:
     needs: cli
     if: ${{ !cancelled() && needs.cli.result == 'success' }}
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     timeout-minutes: 10
     steps:
       - name: Download packed CLI
@@ -812,13 +812,13 @@ jobs:
       # step still fails the job.
       - name: Send test report
         if: always()
-        uses: ./.github/actions/test-report
+        uses: ./.depot/actions/test-report
         with:
           name: test-24.11.1
           result: ${{ needs.test.result }}
       - name: Send e2e report
         if: always()
-        uses: ./.github/actions/test-report
+        uses: ./.depot/actions/test-report
         with:
           name: e2e
           result: ${{ needs.e2e.result }}
@@ -831,7 +831,7 @@ jobs:
     if: >-
       github.event_name == 'pull_request' &&
       github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
