@@ -81,6 +81,31 @@ warnings/errors.
   - composer-app `dx.yml`: gained the `introspect` edgeServices entry so
     Composer keeps its behavior via app config (the acceptable channel).
 
+## Live QA against the deployed preview (2026-08-27)
+
+Driven headless against `pr-12598-composer-dev.dxos.workers.dev` (head `87c2d21461`, EDGE preview)
+from the cloud sandbox. Boot, identity auto-create, default+exemplar spaces, document create /
+flush / reload-persistence, and EDGE replication (wss to `preview.dxos.network`, frames both ways)
+all work out of the box; zero `module did not contribute` warnings with the full config; Discord
+`/presence` 200 and the cors-proxy relay work from the app origin. Environment defects found, none
+in this PR's code:
+
+- [ ] **image.dxos.network CORS excludes preview origins** — preflight echoes no
+      `access-control-allow-origin` for `*.dxos.workers.dev` (composer.space is allowed), so
+      screenshot upload and CRM image re-host fail by CORS on every PR preview. The worker itself
+      is alive (`POST /upload` answers). Edge-repo allowlist fix.
+- [ ] **introspect.dxos.network/mcp 403s every request carrying an `Origin` header** — even
+      `https://composer.space` — while its CORS preflight approves the same origin; a plain curl
+      (no Origin) gets a 200 MCP initialize. Browser MCP clients therefore can never connect, so
+      ToolsExplorer renders its connection-error state on every deployed origin. Likely the MCP
+      server's DNS-rebinding/origin protection with an empty allowlist. Edge-repo fix.
+- [ ] **Fresh anonymous boot logs an operation failure** — `client.createAgent` auto-invokes and
+      fails `Identity is not associated with an account` (plus a 401 resource load) on every new
+      profile; pre-existing, but it is the loudest console error a new user sees.
+- Untestable from the sandbox (egress blocks calls.dxos.network, UDP/TURN): live calls,
+  transcription audio, multi-device invitation. Calls/meeting/transcription/CRM plugins are
+  default-disabled, so their absent-endpoint gating states do not arise out of the box.
+
 ## Phase 4: Follow-ups (recorded, not started)
 
 - [ ] **Route `proxyFetchLegacy` through config** — `cors-proxy.ts:9` hard-codes
