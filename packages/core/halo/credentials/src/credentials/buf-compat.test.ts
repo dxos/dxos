@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { decodeCompat, encodeCompat } from '@dxos/protocols/buf-shape-compat';
 import { CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { schema } from '@dxos/protocols/proto';
-import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { createCredential } from './credential-factory';
 import { canonicalStringify, getCredentialProofPayload } from './signing';
@@ -24,7 +24,7 @@ describe('buf shape-compat carries credentials', () => {
   test('a credential signed on protobuf.js still verifies after a buf round-trip', async ({ expect }) => {
     const credential = await createTestCredential();
 
-    const decoded = decodeCompat(CredentialSchema, legacyCodec.encode(credential));
+    const decoded = decodeCompat<Credential>(CredentialSchema, legacyCodec.encode(credential));
     expect(await verifyCredential(decoded)).toEqual({ kind: 'pass' });
 
     // And the other direction: bytes buf wrote, read back by the legacy codec.
