@@ -2,13 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type DocumentId } from '@automerge/automerge-repo';
 import { describe, onTestFinished, test } from 'vitest';
 
+import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { openAndClose } from '@dxos/test-utils';
 
 import { createTestSqliteRuntime } from '../testing';
 import { AutomergeHost } from './automerge-host';
+import { DocumentLeaseRegistry } from './document-lease';
 
 /**
  * The repo caches a document forever once anything faults it in, so residency is the host's to
@@ -107,5 +110,85 @@ describe('document leases', () => {
     // its own copy.
     expect(second.doc()!.text).toBe('written');
     expect(second.heads()).toEqual(first.heads());
+  });
+});
+
+/**
+ * Residency policy in isolation: a released document waits out an idle delay, and the most recently
+ * released ones are held by a floor regardless of age.
+ */
+describe('document lease eviction policy', () => {
+  const createRegistry = (params: { evictionDelay?: number; minResidentDocuments?: number }) => {
+    const evicted: DocumentId[] = [];
+    const registry = new DocumentLeaseRegistry({
+      open: () => ({}) as any,
+      evict: async (documentId) => {
+        evicted.push(documentId);
+      },
+      ...params,
+    });
+    onTestFinished(() => registry.close());
+    return { registry, evicted };
+  };
+
+  const documentId = (index: number) => `document-${index}` as DocumentId;
+
+  /** Polls rather than sleeping past the delay, so a slow machine does not turn into a flake. */
+  const waitFor = async (condition: () => boolean) => {
+    for (let attempt = 0; attempt < 100 && !condition(); ++attempt) {
+      await sleep(10);
+    }
+  };
+
+  test('a released document is not evicted until the delay has elapsed', async ({ expect }) => {
+    const { registry, evicted } = createRegistry({ evictionDelay: 100 });
+    registry.acquire(documentId(0))[Symbol.dispose]();
+
+    await sleep(20);
+    expect(evicted).toEqual([]);
+    expect(registry.idleCount).toBe(1);
+
+    await waitFor(() => evicted.length > 0);
+    expect(evicted).toEqual([documentId(0)]);
+    expect(registry.idleCount).toBe(0);
+  });
+
+  test('the most recently released documents are held by the floor', async ({ expect }) => {
+    const { registry, evicted } = createRegistry({ evictionDelay: 1, minResidentDocuments: 2 });
+    for (let index = 0; index < 4; ++index) {
+      registry.acquire(documentId(index))[Symbol.dispose]();
+    }
+
+    // Oldest release first, and the two newest stay resident however long they idle.
+    await waitFor(() => evicted.length >= 2);
+    expect(evicted).toEqual([documentId(0), documentId(1)]);
+    await sleep(20);
+    expect(evicted).toEqual([documentId(0), documentId(1)]);
+    expect(registry.idleCount).toBe(2);
+  });
+
+  test('draining ignores both the delay and the floor', async ({ expect }) => {
+    const { registry, evicted } = createRegistry({ evictionDelay: 60_000, minResidentDocuments: 8 });
+    for (let index = 0; index < 3; ++index) {
+      registry.acquire(documentId(index))[Symbol.dispose]();
+    }
+
+    await registry.drain();
+    expect(evicted).toEqual([documentId(0), documentId(1), documentId(2)]);
+    expect(registry.idleCount).toBe(0);
+  });
+
+  test('re-acquiring during the delay leaves the document alone', async ({ expect }) => {
+    const { registry, evicted } = createRegistry({ evictionDelay: 50 });
+    registry.acquire(documentId(0))[Symbol.dispose]();
+    const reacquired = registry.acquire(documentId(0));
+
+    await sleep(100);
+    expect(evicted).toEqual([]);
+    expect(registry.isLeased(documentId(0))).toBe(true);
+
+    reacquired[Symbol.dispose]();
+    await waitFor(() => evicted.length > 0);
+    expect(evicted).toEqual([documentId(0)]);
   });
 });

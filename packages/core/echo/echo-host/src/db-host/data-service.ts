@@ -86,7 +86,11 @@ export class DataServiceImpl implements DataService.Handlers {
           void emit.fail(err);
         });
       return Effect.sync(() => {
-        this._subscriptions.delete(request.subscriptionId);
+        // Guarded by identity: a reconnect re-subscribes under the same id before this finalizer
+        // runs, and an unconditional delete would drop the replacement.
+        if (this._subscriptions.get(request.subscriptionId) === synchronizer) {
+          this._subscriptions.delete(request.subscriptionId);
+        }
         // Nothing is left to subscribe to a created document once the last client is gone, so its
         // creation lease would otherwise outlive every reader.
         if (this._subscriptions.size === 0) {

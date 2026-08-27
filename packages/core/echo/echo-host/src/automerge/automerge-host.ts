@@ -164,6 +164,19 @@ const CLOSE_TIMEOUT = 2_000;
 const EVICT_SETTLE_TIMEOUT = 2_000;
 
 /**
+ * How long a document stays resident after its last lease is disposed. Long enough to span the gap
+ * between two passes over the same working set (indexing then querying it), because re-faulting a
+ * document allocates automerge memory the runtime never gives back.
+ */
+const EVICT_IDLE_DELAY = 30_000;
+
+/**
+ * How many released documents stay resident regardless of age. Keeps the hot working set loaded on a
+ * host whose whole session is shorter than {@link EVICT_IDLE_DELAY}.
+ */
+const MIN_RESIDENT_DOCUMENTS = 256;
+
+/**
  * Abstracts over the AutomergeRepo.
  *
  * Runs Subduction as the document byte transport ({@link Repo.subductionAdapters}), while
@@ -247,6 +260,8 @@ export class AutomergeHost extends Resource {
       return { query, handle };
     },
     evict: (documentId, isCancelled) => this._evictDocument(documentId, isCancelled),
+    evictionDelay: EVICT_IDLE_DELAY,
+    minResidentDocuments: MIN_RESIDENT_DOCUMENTS,
   });
 
   /**
@@ -674,7 +689,12 @@ export class AutomergeHost extends Resource {
         abort.abort();
       }
     } else {
-      await cancelWithContext(ctx, this._waitForReady(progress));
+      const abort = new AbortController();
+      try {
+        await cancelWithContext(ctx, this._waitForReady(progress, abort.signal));
+      } finally {
+        abort.abort();
+      }
     }
     // Re-read through the lease: an eviction of the same document may have completed during the wait,
     // in which case the query that just reported ready is not the one the lease now resolves.

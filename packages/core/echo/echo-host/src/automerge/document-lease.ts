@@ -151,26 +151,52 @@ export type DocumentLeaseRegistryParams = {
    * consulted after every await, and the document left alone once it reads true.
    */
   evict: (documentId: DocumentId, isCancelled: () => boolean) => Promise<void>;
+
+  /**
+   * How long a document stays resident after its last lease is disposed. Faulting a document back in
+   * costs a fresh automerge document whose WASM memory is never returned, so a document released
+   * between two passes of the same workload has to survive the gap rather than be evicted into it.
+   */
+  evictionDelay?: number;
+
+  /**
+   * How many released documents stay resident regardless of age — the most recently released ones.
+   * A floor keeps the hot working set loaded on a host whose whole workload is shorter than the
+   * delay, and bounds nothing else: leased documents are never counted against it.
+   */
+  minResidentDocuments?: number;
 };
 
+const DEFAULT_EVICTION_DELAY = 0;
+const DEFAULT_MIN_RESIDENT_DOCUMENTS = 0;
+
 /**
- * Reference counts the documents the host holds loaded, and evicts each one when its last lease is
- * disposed.
+ * Reference counts the documents the host holds loaded, and evicts each one once its last lease has
+ * been disposed for {@link DocumentLeaseRegistryParams.evictionDelay}, oldest release first, keeping
+ * the {@link DocumentLeaseRegistryParams.minResidentDocuments} most recently released.
  *
- * Eviction is deferred rather than immediate: it has to drain the document's pending save, which is
- * asynchronous, while disposal is not. Deferring also absorbs the common acquire-release-acquire of
- * a query pass that reads the same document twice in consecutive turns.
+ * Eviction is never immediate: it has to drain the document's pending save, which is asynchronous
+ * while disposal is not, and evicting on the last dispose would thrash a workload that releases and
+ * re-reads the same document across passes.
  */
 export class DocumentLeaseRegistry {
   readonly #counts = new Map<DocumentId, number>();
-  readonly #pendingEviction = new Set<DocumentId>();
-  readonly #params: DocumentLeaseRegistryParams;
 
+  /** Released documents by release time, in release order — the eviction queue. */
+  readonly #idle = new Map<DocumentId, number>();
+
+  readonly #params: DocumentLeaseRegistryParams;
+  readonly #evictionDelay: number;
+  readonly #minResidentDocuments: number;
+
+  #timer: ReturnType<typeof setTimeout> | undefined = undefined;
   #draining: Promise<void> | undefined = undefined;
   #closed = false;
 
   constructor(params: DocumentLeaseRegistryParams) {
     this.#params = params;
+    this.#evictionDelay = params.evictionDelay ?? DEFAULT_EVICTION_DELAY;
+    this.#minResidentDocuments = params.minResidentDocuments ?? DEFAULT_MIN_RESIDENT_DOCUMENTS;
   }
 
   /** Documents currently leased — the host's document residency. */
@@ -182,13 +208,18 @@ export class DocumentLeaseRegistry {
     return [...this.#counts.keys()];
   }
 
+  /** Released documents still resident, waiting out the delay or held by the floor. */
+  get idleCount(): number {
+    return this.#idle.size;
+  }
+
   isLeased(documentId: DocumentId): boolean {
     return this.#counts.has(documentId);
   }
 
   acquire<T>(documentId: DocumentId): DocumentLease<T> {
     invariant(!this.#closed, 'Document lease registry is closed.');
-    this.#pendingEviction.delete(documentId);
+    this.#idle.delete(documentId);
     this.#counts.set(documentId, (this.#counts.get(documentId) ?? 0) + 1);
     // Faulted in now so the document starts loading, and again on each access — see the lease's
     // constructor for why the pair cannot be captured here.
@@ -207,12 +238,18 @@ export class DocumentLeaseRegistry {
   close(): void {
     this.#closed = true;
     this.#counts.clear();
-    this.#pendingEviction.clear();
+    this.#idle.clear();
+    this.#clearTimer();
   }
 
-  /** Runs the pending evictions, for a caller that needs residency settled before it measures it. */
+  /**
+   * Evicts every released document now, ignoring the delay and the floor — for a caller that needs
+   * residency settled before it measures it.
+   */
   async drain(): Promise<void> {
+    this.#clearTimer();
     await this.#draining;
+    await this.#run(true);
   }
 
   #release(documentId: DocumentId): void {
@@ -227,40 +264,98 @@ export class DocumentLeaseRegistry {
     }
 
     this.#counts.delete(documentId);
-    this.#pendingEviction.add(documentId);
+    this.#idle.set(documentId, Date.now());
     this.#scheduleDrain();
   }
 
+  /** Documents due for eviction now, oldest release first. */
+  #evictable(force: boolean): DocumentId[] {
+    const excess = force ? this.#idle.size : this.#idle.size - this.#minResidentDocuments;
+    if (excess <= 0) {
+      return [];
+    }
+
+    const now = Date.now();
+    const evictable: DocumentId[] = [];
+    for (const [documentId, releasedAt] of this.#idle) {
+      if (evictable.length >= excess) {
+        break;
+      }
+      if (!force && now - releasedAt < this.#evictionDelay) {
+        // Release order, so nothing after this one has waited longer.
+        break;
+      }
+      evictable.push(documentId);
+    }
+    return evictable;
+  }
+
   #scheduleDrain(): void {
-    if (this.#draining !== undefined) {
+    if (this.#timer !== undefined || this.#closed) {
       return;
     }
-    this.#draining = Promise.resolve().then(async () => {
-      try {
-        // Drained in a loop: an eviction awaits a flush, and a lease released during that await
-        // would otherwise wait for the next release to schedule a drain of its own.
-        while (this.#pendingEviction.size > 0 && !this.#closed) {
-          const documentIds = [...this.#pendingEviction];
-          this.#pendingEviction.clear();
-          for (const documentId of documentIds) {
-            if (this.#counts.has(documentId)) {
-              continue;
-            }
-            try {
-              await this.#params.evict(documentId, () => this.#closed || this.#counts.has(documentId));
-            } catch (err) {
-              log.warn('failed to evict document', { documentId, err });
-            }
-            if (this.#counts.has(documentId) && !this.#closed) {
-              // Re-leased while the eviction was draining, so the document is faulted back in here
-              // rather than on the holder's next access, which may be its first.
-              this.#params.open(documentId);
-            }
-          }
-        }
-      } finally {
+
+    const excess = this.#idle.size - this.#minResidentDocuments;
+    if (excess <= 0) {
+      return;
+    }
+    const oldest = this.#idle.values().next();
+    const wait = oldest.done ? 0 : Math.max(0, this.#evictionDelay - (Date.now() - oldest.value));
+    this.#timer = setTimeout(() => {
+      this.#timer = undefined;
+      void this.#run(false);
+    }, wait);
+  }
+
+  #clearTimer(): void {
+    if (this.#timer !== undefined) {
+      clearTimeout(this.#timer);
+      this.#timer = undefined;
+    }
+  }
+
+  /** Serializes drains: a forced drain must not interleave with a scheduled one. */
+  #run(force: boolean): Promise<void> {
+    const running = (this.#draining ?? Promise.resolve()).then(() => this.#drain(force));
+    this.#draining = running;
+    const settled = running.finally(() => {
+      if (this.#draining === settled) {
         this.#draining = undefined;
       }
     });
+    this.#draining = settled;
+    return settled;
+  }
+
+  async #drain(force: boolean): Promise<void> {
+    // Drained in a loop: an eviction awaits a flush, and a document released during that await would
+    // otherwise wait for the next release to schedule a drain of its own.
+    while (!this.#closed) {
+      const documentIds = this.#evictable(force);
+      if (documentIds.length === 0) {
+        break;
+      }
+      for (const documentId of documentIds) {
+        this.#idle.delete(documentId);
+        if (this.#counts.has(documentId)) {
+          continue;
+        }
+        try {
+          await this.#params.evict(documentId, () => this.#closed || this.#counts.has(documentId));
+        } catch (err) {
+          log.warn('failed to evict document', { documentId, err });
+        }
+        if (this.#counts.has(documentId) && !this.#closed) {
+          // Re-leased while the eviction was draining, so the document is faulted back in here
+          // rather than on the holder's next access, which may be its first.
+          this.#params.open(documentId);
+        }
+      }
+    }
+
+    if (!force) {
+      // Whatever the delay or the floor still holds needs a timer of its own.
+      this.#scheduleDrain();
+    }
   }
 }
