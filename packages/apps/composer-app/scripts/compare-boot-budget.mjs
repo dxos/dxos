@@ -9,8 +9,9 @@
  * ceiling is hit: the 2026-08-26 re-baseline absorbed ~400 KB accumulated across many changes that
  * each passed on their own.
  *
- * Both sides must be measured by the SAME copy of the measurement script (the CI job stashes the
- * head copy before checking the base out), or a change to the measurement reads as a size change.
+ * Each side is measured by its own commit's copy of the measurement script, so the CI job skips the
+ * comparison outright when a PR edits that script rather than reporting a change of ruler as a
+ * change of size.
  *
  * Writes `increased` and `body` to `$GITHUB_OUTPUT` when set, otherwise prints the body.
  */
