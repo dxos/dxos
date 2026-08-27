@@ -12,6 +12,7 @@
  * Hosts add this module to `scanPaths` so the whole set ships whether or not anything imports it.
  */
 export const PxIcons = {
+  circle: 'px--circle--regular',
   outliner: 'px--outliner--regular',
 } as const;
 

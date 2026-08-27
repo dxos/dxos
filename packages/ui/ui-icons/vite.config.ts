@@ -4,4 +4,7 @@
 
 import { defineConfig } from '../../../vite.base.config.ts';
 
-export default defineConfig({});
+export default defineConfig({
+  jsx: 'react',
+  test: { storybook: true },
+});

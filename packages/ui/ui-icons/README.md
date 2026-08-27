@@ -17,16 +17,53 @@ import { Icon } from '@dxos/react-ui';
 string literal rather than importing `PxIcons`; the exported map is for in-repo code and for
 pinning the catalog (see below).
 
+## Previewing
+
+```bash
+DX_STORIES=ui/ui-icons moon run ui-icons:storybook
+```
+
+Serves [`src/Icons.stories.tsx`](./src/Icons.stories.tsx) on port 9009 (pass `-- --port=<n>` when
+9009 is taken): every entry of `PxIcons` at six sizes from 64px down to 16px, beside the nearest
+Phosphor glyphs, with the storybook theme toggle for light/dark. `DX_STORIES` narrows the story
+crawl to this package, which is what makes the boot quick.
+
+The gallery reads `PxIcons`, so a new icon appears without editing the story. Each cell is outlined
+because a symbol missing from the sprite renders *nothing* — without a boundary that is
+indistinguishable from a blank cell.
+
 ## Adding an icon
 
 1. Add `assets/<name>.svg`, kebab-case, letters and `-` only — the build's symbol pattern is
    `[a-z]+[a-z-]*`, so digits will not match.
 2. Add `<name>: 'px--<name>--regular'` to `PxIcons` in [`src/index.ts`](./src/index.ts).
+3. Check it in the gallery above at 16px, in both themes.
 
 The SVG must be `viewBox="0 0 256 256"` with `fill="currentColor"` and no hardcoded colors, or the
 glyph will not scale or take the theme. Phosphor's regular weight is a 16-unit stroke rendered as
 filled geometry with 8-unit round caps, inset to x ∈ [40, 216] — match that and the icon sits
 beside `ph` glyphs without looking grafted on.
+
+Phosphor publishes no template (their CONTRIBUTING declines icon contributions); the numbers above
+were measured off `@phosphor-icons/core/assets/regular`. To draw against the real thing, the
+[Figma community file](https://www.figma.com/community/file/903830135544202908/phosphor-icons)
+carries every glyph in editable form.
+
+### Exporting from a vector editor
+
+An Affinity or Illustrator export needs two fixes before it will render — the source of both is
+that these editors emit a *stroked* path with a literal color:
+
+- `stroke:black` → `stroke:currentColor`. A hardcoded color survives the sprite build and then
+  renders black-on-black in dark mode.
+- `stroke-width:1px` → `stroke-width:16px`. Phosphor's stroke is 16 units at this viewBox, so an
+  editor's default hairline is invisible at icon sizes.
+
+A stroked circle of radius 96 with a 16 stroke is exactly `ph--circle--regular`'s ring (outer 104,
+inner 88) — matching a Phosphor glyph's geometry is the quickest way to confirm the weight is right.
+Keeping the drawing stroked is fine here; Phosphor itself converts strokes to filled paths, which
+matters only if a glyph needs non-uniform weight. Editor sources belong in `resources/`, not
+`assets/`.
 
 Only the `regular` weight exists: these are single-weight drawings, and the hosts' symbol pattern
 rejects `px--*--bold` and friends.

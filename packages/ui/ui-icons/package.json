@@ -25,5 +25,12 @@
     "assets",
     "dist",
     "src"
-  ]
+  ],
+  "devDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@storybook/react-vite": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  }
 }
