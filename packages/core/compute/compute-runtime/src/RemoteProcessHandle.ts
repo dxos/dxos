@@ -208,7 +208,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
         yield* Effect.forEach(options.inputs, (input) => this.submitInput(input), { discard: true });
         // Ends on IDLE or SUCCEEDED as the local `runAndExit` does — a remote process that goes idle
         // has finished this call's work, and waiting for a terminal state would never return.
-        return this.#readEvents(start, (state) => state === Process.State.IDLE || isTerminal(state)).pipe(
+        return this.#readEvents(start, (state) => state === Process.State.IDLE || isTerminal(state), true).pipe(
           Stream.filter((event) => event._tag === 'output'),
           Stream.map((event) => decode(event.data)),
         );
@@ -249,6 +249,8 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
   #readEvents(
     start: number,
     isDone: (state: Process.State) => boolean = isTerminal,
+    /** Fails the stream on FAILED or TERMINATED, which `runAndExit`'s contract requires. */
+    failOnAbnormalExit = false,
   ): Stream.Stream<ProcessProtocol.ProcessEvent> {
     return Stream.paginate(start, (cursor: number) =>
       Effect.gen({ self: this }, function* () {
@@ -260,7 +262,14 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
           log.warn('remote process event history truncated', { pid: page.info.pid, cursor });
         }
         if (page.events.length === 0) {
-          if (isDone(toState(page.info.state))) {
+          const state = toState(page.info.state);
+          if (isDone(state)) {
+            if (failOnAbnormalExit && state === Process.State.FAILED) {
+              return yield* Effect.die(toError(page.info.error));
+            }
+            if (failOnAbnormalExit && state === Process.State.TERMINATED) {
+              return yield* Effect.die(new Error(`Process '${this.pid}' was terminated`));
+            }
             return [[], Option.none<number>()] as const;
           }
           yield* Effect.sleep(this.#pollInterval);

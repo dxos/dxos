@@ -71,14 +71,15 @@ export const make = (getEdgeClient: () => EdgeProcessHttpClient, spaceId: SpaceI
     group: RpcGroup.RpcGroup<Rpcs>,
   ): Effect.Effect<RpcClient.RpcClient<Rpcs>, never, Scope.Scope> =>
     Effect.gen(function* () {
-      const client = getEdgeClient();
-      const url = client.processRpcUrl(spaceId, pid).toString();
+      const url = getEdgeClient().processRpcUrl(spaceId, pid).toString();
       // The endpoint is served by an `RpcServer` in the process's host, so this is effect's own
       // rpc-over-HTTP rather than a hand-rolled envelope: request and response schemas are encoded
       // by the group itself. Auth is minted per request, since the header expires.
       const httpClient = (yield* HttpClient.HttpClient).pipe(
         HttpClient.mapRequestEffect((request) =>
-          Effect.promise(() => client.getAuthHeader()).pipe(
+          // The client is resolved per request, not captured: an RPC client outlives an identity
+          // change, and a captured one would keep presenting the previous identity's header.
+          Effect.promise(() => getEdgeClient().getAuthHeader()).pipe(
             Effect.map((authHeader) =>
               HttpClientRequest.setUrl(
                 authHeader ? HttpClientRequest.setHeader(request, 'Authorization', authHeader) : request,
@@ -118,9 +119,8 @@ export const processManagerFromClient = (
   return RemoteProcessManagerAdapter.layer(
     make(() => {
       cached ??= createEdgeProcessClient(client);
-      // Re-applied on every access, not just at construction: the cached client would otherwise keep
-      // presenting a header minted for a previous identity until it expired or a 401 replaced it.
-      // `setIdentity` compares the did/peerKey and only drops the cached header when they differ.
+      // Re-applied on every access: the cached client would otherwise keep presenting a header
+      // minted for a previous identity.
       cached.setIdentity(createEdgeIdentity(client));
       return cached;
     }, spaceId),

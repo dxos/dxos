@@ -81,9 +81,7 @@ export class RemoteProcessManagerAdapter implements ProcessManager.Manager {
         }
         Object.assign(dictionary, options?.annotations ?? {});
       });
-      // The dictionary's values are `unknown`, but they cross the wire through `JSON.stringify`, so a
-      // value that is not JSON-representable would be dropped or mangled silently. Reject it here,
-      // where the caller's stack still says which annotation it was.
+      // Rejected here, where the caller's stack still names the annotation.
       assertJsonSafe(annotations);
 
       const info = yield* this.#control.spawn({
@@ -177,27 +175,53 @@ export const layer = (
   );
 
 /**
- * Fails when a value cannot survive `JSON.stringify` unchanged. Annotation values are typed
- * `unknown`, and the wire protocol requires JSON — a `Date`, a `Map`, a function or a cycle would
- * otherwise reach the host as something else, or not at all.
+ * Fails when an annotation is not already a JSON value: the wire protocol carries them as JSON, and a
+ * `Date`, `Map`, `NaN`, class instance or nested `undefined` would silently reach the host as
+ * something else.
  */
 const assertJsonSafe = (annotations: Annotation.Dictionary): void => {
   for (const [key, value] of Object.entries(annotations)) {
-    let encoded: string;
-    try {
-      encoded = JSON.stringify(value);
-    } catch (cause) {
-      throw new TypeError(`Process annotation '${key}' is not JSON-serializable`, { cause });
-    }
-    if (encoded === undefined) {
-      throw new TypeError(`Process annotation '${key}' has no JSON representation`);
-    }
-    if (JSON.stringify(JSON.parse(encoded)) !== encoded || !isJsonEquivalent(value, JSON.parse(encoded))) {
-      throw new TypeError(`Process annotation '${key}' does not survive JSON encoding unchanged`);
+    if (!isJsonValue(value, new Set())) {
+      throw new TypeError(`Process annotation '${key}' is not a JSON value`);
     }
   }
 };
 
-/** Structural equality against a value's own JSON round trip, so a lossy encoding is caught. */
-const isJsonEquivalent = (value: unknown, roundTripped: unknown): boolean =>
-  JSON.stringify(value) === JSON.stringify(roundTripped);
+/**
+ * Whether a value is what `JSON.parse` could have produced. Checked structurally rather than by
+ * comparing a value against its own round trip: both sides of such a comparison are serialized, so
+ * every lossy encoding matches itself and the check passes everything.
+ */
+const isJsonValue = (value: unknown, seen: Set<object>): boolean => {
+  switch (typeof value) {
+    case 'boolean':
+    case 'string':
+      return true;
+    case 'number':
+      // `NaN` and the infinities encode as `null`.
+      return Number.isFinite(value);
+    case 'object': {
+      if (value === null) {
+        return true;
+      }
+      if (seen.has(value)) {
+        // A cycle throws in `JSON.stringify`.
+        return false;
+      }
+      seen.add(value);
+      if (Array.isArray(value)) {
+        return value.every((entry) => isJsonValue(entry, seen));
+      }
+      // Anything with a prototype of its own (a `Date`, a `Map`, a class instance) encodes as
+      // something other than itself.
+      const prototype = Object.getPrototypeOf(value);
+      if (prototype !== Object.prototype && prototype !== null) {
+        return false;
+      }
+      return Object.values(value).every((entry) => isJsonValue(entry, seen));
+    }
+    default:
+      // `undefined`, functions and symbols are dropped; a `bigint` throws.
+      return false;
+  }
+};

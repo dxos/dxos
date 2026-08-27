@@ -32,10 +32,8 @@ import { type DelegationStrategy } from './delegation-strategy';
 import { type MakeTurnProducer } from './turn-producer';
 
 /**
- * Live handle to a spawned {@link AgentProcess}, carrying its input, output and `HarnessControl` RPC
- * surface. Every parameter is recovered from the process definition rather than restated here: the
- * input type is derived from the definition's schema, so writing it out by hand drifts (the schema's
- * block array is `readonly`).
+ * Live handle to a spawned {@link AgentProcess}. Parameters are recovered from the definition rather
+ * than restated, so a schema change cannot drift from them.
  */
 type AgentHandle =
   ReturnType<typeof AgentProcess> extends Process.Process<infer Input, infer Output, any, infer Rpcs>

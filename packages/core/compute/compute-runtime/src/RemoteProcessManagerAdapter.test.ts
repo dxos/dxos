@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
@@ -10,6 +11,7 @@ import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import * as Process from '@dxos/compute/Process';
+import { Annotation } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import type { ProcessProtocol } from '@dxos/protocols';
 
@@ -94,7 +96,66 @@ describe('RemoteProcessManagerAdapter', () => {
     expect(host.inputs).toEqual(['hello']);
     expect(host.statusCalls()).toEqual(3);
   });
+
+  test('runAndExit fails when the host reports the process failed', async ({ expect }) => {
+    const host = makeFakeHost({ stateAfterInput: 'FAILED' });
+    const exit = await runExit(
+      Effect.gen(function* () {
+        const manager = yield* ProcessManager.Service;
+        const handle = yield* manager.spawn(EchoProcess);
+        return yield* Stream.runCollect(handle.runAndExit({ inputs: ['hello'] }));
+      }),
+      host,
+    );
+    // A failed process must not read as a successful stream completion, per the local contract.
+    expect(Exit.isFailure(exit)).toBe(true);
+  });
+
+  test('runAndExit fails when the host reports the process terminated', async ({ expect }) => {
+    const host = makeFakeHost({ stateAfterInput: 'TERMINATED' });
+    const exit = await runExit(
+      Effect.gen(function* () {
+        const manager = yield* ProcessManager.Service;
+        const handle = yield* manager.spawn(EchoProcess);
+        return yield* Stream.runCollect(handle.runAndExit({ inputs: ['hello'] }));
+      }),
+      host,
+    );
+    expect(Exit.isFailure(exit)).toBe(true);
+  });
+
+  test('spawn rejects an annotation that JSON would change', async ({ expect }) => {
+    for (const value of [new Date(0), new Map([['a', 1]]), Number.NaN, { nested: undefined }, () => 0]) {
+      const exit = await runExit(
+        Effect.gen(function* () {
+          const manager = yield* ProcessManager.Service;
+          return yield* manager.spawn(EchoProcess, { annotations: annotations(value) });
+        }),
+        makeFakeHost(),
+      );
+      // Each of these survives `JSON.stringify(JSON.parse(...))` unchanged while being something
+      // other than what the caller passed, so a round-trip comparison would let it through.
+      expect(Exit.isFailure(exit)).toBe(true);
+    }
+  });
+
+  test('spawn accepts an annotation that is already a JSON value', async ({ expect }) => {
+    const exit = await runExit(
+      Effect.gen(function* () {
+        const manager = yield* ProcessManager.Service;
+        return yield* manager.spawn(EchoProcess, {
+          annotations: annotations({ list: [1, 'two', null], nested: { flag: true } }),
+        });
+      }),
+      makeFakeHost(),
+    );
+    expect(Exit.isSuccess(exit)).toBe(true);
+  });
 });
+
+/** One annotation under a valid key, decoded rather than asserted since keys are branded. */
+const annotations = (value: unknown): Annotation.Dictionary =>
+  Schema.decodeUnknownSync(Annotation.Dictionary)({ 'example.com/test': value });
 
 const TEST_KEY = 'dxos.org/process/echo-test';
 
@@ -114,7 +175,12 @@ const EchoProcess = Process.make(
  * client half (adapter + handle + cursor reads) can be exercised without EDGE.
  */
 const makeFakeHost = (
-  options: { readonly initialState?: ProcessProtocol.ProcessState; readonly settleAfterStatusCalls?: number } = {},
+  options: {
+    readonly initialState?: ProcessProtocol.ProcessState;
+    readonly settleAfterStatusCalls?: number;
+    /** State the host moves to once an input has been submitted. */
+    readonly stateAfterInput?: ProcessProtocol.ProcessState;
+  } = {},
 ): RemoteProcessManager.Control & { readonly inputs: unknown[]; statusCalls: () => number } => {
   const inputs: unknown[] = [];
   const events: ProcessProtocol.ProcessEvent[] = [];
@@ -153,6 +219,9 @@ const makeFakeHost = (
       Effect.sync(() => {
         inputs.push(input);
         events.push({ _tag: 'output', seq: seq++, data: `echo:${String(input)}` });
+        if (options.stateAfterInput !== undefined) {
+          state = options.stateAfterInput;
+        }
       }),
     terminate: () =>
       Effect.sync(() => {
@@ -165,9 +234,14 @@ const makeFakeHost = (
 };
 
 const run = <A>(effect: Effect.Effect<A, never, ProcessManager.Service>, control: RemoteProcessManager.Control) =>
-  EffectEx.runPromise(
-    effect.pipe(
-      Effect.provide(RemoteProcessManagerAdapter.layer(control)),
-      Effect.provide(Layer.succeed(Registry.AtomRegistry, Registry.make())),
-    ),
+  EffectEx.runPromise(provide(effect, control));
+
+/** Runs to an `Exit`, so a defect the adapter raises can be asserted instead of failing the test. */
+const runExit = <A>(effect: Effect.Effect<A, never, ProcessManager.Service>, control: RemoteProcessManager.Control) =>
+  Effect.runPromiseExit(provide(effect, control));
+
+const provide = <A>(effect: Effect.Effect<A, never, ProcessManager.Service>, control: RemoteProcessManager.Control) =>
+  effect.pipe(
+    Effect.provide(RemoteProcessManagerAdapter.layer(control)),
+    Effect.provide(Layer.succeed(Registry.AtomRegistry, Registry.make())),
   );
