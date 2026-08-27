@@ -19,15 +19,16 @@ Design: [DESIGN.md](./DESIGN.md). Branch (both repos): `claude/agent-process-edg
       mirror the alarm onto the platform scheduler, and it is the wire signal that separates
       `runToCompletion` from `runUntilSettled`).
 
-## Phase 2 — process host (edge) — IN PROGRESS
+## Phase 2 — process host (edge) — DONE except `AgentProcess`, PR dxos/edge#971
 
-**Blocked on publication, which needs #12765 MERGED.** The edge repo consumes `@dxos/*` from pinned
-`pkg.pr.new` builds, and `.github/workflows/pkg-pr-new.yml` in dxos/dxos triggers only on push to
-`main` (plus `workflow_dispatch`) — a green PR publishes nothing. So nothing here compiles until
-#12765 lands and this repo's `dxos` catalog is bumped to that commit. Write-ahead is fine;
-verification is not.
+**Only the `AgentProcess` half is blocked on publication.** The pinned `dxos` catalog already carries
+`ProcessManagerImpl`, `Process`, `StorageService` and `Trace`, so the host, the registry, the routes
+and the whole `TestProcess` surface build and run against it today — the earlier claim that nothing
+here compiled was wrong. What is genuinely missing from the pinned packages is `@dxos/agent-runtime`
+(hence `AgentProcess`) and `Handle.alarmDueAt`; the latter is worked around by intercepting
+`ctx.setAlarm` in the host and mirroring the due-time onto the platform alarm.
 
-The one way to unblock earlier: a maintainer dispatches the `pkg.pr.new` workflow manually against
+Unblocking `AgentProcess` needs #12765 merged, or a maintainer dispatching `pkg.pr.new` against
 `claude/agent-process-edge-g21cil`, which publishes commit-pinned packages without merging.
 
 - [x] `DurableObjectKeyValueStore`: `effect` `KeyValueStore` over `ctx.storage` — this is what lets
@@ -35,9 +36,10 @@ The one way to unblock earlier: a maintainer dispatches the `pkg.pr.new` workflo
 - [x] `TestProcess` in the edge source tree — inputs→outputs, one RPC that reads state accumulated
       from previous inputs (so a pass proves the call reached _that_ instance), one alarm, explicit
       succeed/fail. Declares no services, so a test on it can only fail on the protocol or the host.
-- [ ] Bump the `dxos` catalog to PR #12765's published commit.
-- [ ] Built-in process registry keyed by `Process.key` (`TestProcess` + `AgentProcess`).
-- [ ] `ProcessObject` DO: memoized `_init`, hosts one process via `ProcessManagerImpl`, DO alarm
+- [ ] Bump the `dxos` catalog to PR #12765's published commit (needed only for `AgentProcess`).
+- [x] Built-in process registry keyed by `Process.key` (`TestProcess`; `AgentProcess` pending the
+      catalog bump).
+- [x] `ProcessObject` DO: memoized `_init`, hosts one process via `ProcessManagerImpl`, DO alarm
       mirrors `Handle.alarmDueAt`, bounded output/trace ring with a monotonic cursor (outputs
       captured by wrapping the definition's `create` to intercept `submitOutput`; trace via the
       manager's `traceSink`). Register every public method in `durable-objects.ts` `rpcMethods`.
@@ -45,12 +47,15 @@ The one way to unblock earlier: a maintainer dispatches the `pkg.pr.new` workflo
       from the EDGE bindings. `FunctionContext` in `@dxos/compute-runtime`'s `protocol.ts` already
       assembles exactly this set for invoked functions but does not export it; either export it or
       lift the layer builder. This is the largest remaining unknown.
-- [ ] `ProcessObject` class in `compute-service/wrangler.jsonc`: a sqlite-storage entry in the
+- [x] `ProcessObject` class in `compute-service/wrangler.jsonc`: a sqlite-storage entry in the
       `exports` map and a binding in the top-level plus all four env blocks, per
       `scripts/check-wrangler-bindings.mjs`.
-- [ ] `TriggersDispatcher`: own the per-space process index (spawn/list/terminate/reap) and expose
-      it over RPC; add the new methods to `rpcMethods`.
-- [ ] compute-service HTTP routes per §3, with the same `edgeAuth` posture as the trigger routes.
+- [x] `TriggersDispatcher`: owns the per-space process index (`registerProcess` /
+      `unregisterProcess` / `listProcesses`), all three in `rpcMethods`. A DO namespace cannot be
+      enumerated, so membership is recorded as processes are spawned.
+- [x] compute-service HTTP routes per §3 (spawn, list, status, input, events, rpc, terminate), same
+      `edgeAuth` posture as the trigger routes. RPC is served by `ProcessObject.rpcFetch` via
+      `RpcServer.toHttpEffect` over the handlers captured while instrumenting `create`.
 - [ ] `@dxos/agent-runtime` dependency on compute-service (catalog entry already exists).
 
 ## Phase 3 — client implementation (dxos) — DONE, PR #12765
@@ -69,8 +74,12 @@ The one way to unblock earlier: a maintainer dispatches the `pkg.pr.new` workflo
 
 ## Phase 4 — verification (edge)
 
-- [ ] `processes.node.test.ts` — full process surface on `TestProcess` (spawn, query, inputs,
-      outputs, rpc, alarm, terminate, status).
+- [x] `processes.node.test.ts` — full process surface on `TestProcess` (spawn, list, query, inputs,
+      outputs, rpc, alarm, terminate, status, unknown-key rejection). 9 tests, green.
+      Found and fixed a real self-deadlock in the host: `_initFromStorage` installed its own promise
+      in the `_initPromise` memo and then awaited `_init`, which handed the same promise back — every
+      request to a DO with nothing spawned hung. Both wrappers now memoize around a shared
+      `_initImpl`.
 - [ ] `agent-process.node.test.ts` — `AgentService` spawns and controls a remote agent on edge.
 - [ ] `pnpm format`, lint, and the touched test suites green in both repos; PRs opened.
 
