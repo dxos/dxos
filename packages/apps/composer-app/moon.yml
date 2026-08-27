@@ -36,6 +36,9 @@ tasks:
   # order to measure the very thing it is budgeting. `check-boot-budget` runs in the `check` job, so
   # it gates every PR; `check-startup-budget` is still manual — its timings cannot gate without a
   # fixed runner.
+  #
+  # `outputs` is declared so a remote-cache hit restores the measurement without rebuilding the
+  # bundle, which is how CI measures a PR's base commit.
   check-boot-budget:
     command: node scripts/check-boot-budget.mjs
     deps:
@@ -43,6 +46,8 @@ tasks:
     inputs:
       - scripts/check-boot-budget.mjs
       - out/composer/index.html
+    outputs:
+      - out/boot-budget.json
   # Structural guardrail on the curated set: fails when a plugin `plugin-defs.production.tsx` does not
   # name reached the bundle anyway. Read off the build's own sourcemaps rather than the UI — a plugin
   # absent from the registry can still be in the bundle, which is the whole failure this catches.

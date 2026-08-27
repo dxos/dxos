@@ -2448,6 +2448,9 @@ importers:
       '@dxos/plugin-deck':
         specifier: workspace:*
         version: link:../../plugins/plugin-deck
+      '@dxos/plugin-deepseek':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-deepseek
       '@dxos/plugin-devtools':
         specifier: workspace:*
         version: link:../../plugins/plugin-devtools
@@ -7629,6 +7632,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
+      '@dxos/plugin-registry':
+        specifier: workspace:*
+        version: link:../plugin-registry
       '@dxos/plugin-routine':
         specifier: workspace:*
         version: link:../plugin-routine
@@ -9886,6 +9892,30 @@ importers:
       vite:
         specifier: '>=8.2.1'
         version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
+
+  packages/plugins/plugin-deepseek:
+    dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
+      '@dxos/plugin-connector':
+        specifier: workspace:*
+        version: link:../plugin-connector
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      effect:
+        specifier: 4.0.0-rc.108
+        version: 4.0.0-rc.108
 
   packages/plugins/plugin-devtools:
     dependencies:
@@ -18155,6 +18185,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std

@@ -32,7 +32,7 @@
  * this check exists to create.
  */
 
-import { readFileSync, statSync } from 'node:fs';
+import { readFileSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 /** Entry + modulepreload links. 20 today; sized to survive a partition reshuffle, not to track it. */
@@ -57,7 +57,8 @@ const MAX_PRELOAD_ENTRIES = 25;
  */
 const MAX_PRELOAD_BYTES = 4.45 * 1024 * 1024;
 
-const outDir = path.join(process.cwd(), 'out/composer');
+const buildDir = path.join(process.cwd(), 'out');
+const outDir = path.join(buildDir, 'composer');
 const html = readFileSync(path.join(outDir, 'index.html'), 'utf8');
 
 const hrefs = [
@@ -81,6 +82,20 @@ const asMb = (value) => (value / 1024 / 1024).toFixed(2);
 console.log(
   `boot graph: ${entries.length} preload entries, ${asMb(bytes)} MB ` +
     `(budget: ${MAX_PRELOAD_ENTRIES} entries, ${asMb(MAX_PRELOAD_BYTES)} MB)`,
+);
+
+writeFileSync(
+  path.join(buildDir, 'boot-budget.json'),
+  JSON.stringify(
+    {
+      count: entries.length,
+      bytes,
+      budget: { count: MAX_PRELOAD_ENTRIES, bytes: MAX_PRELOAD_BYTES },
+      entries: entries.map((entry) => ({ name: path.basename(entry.href), bytes: entry.bytes })),
+    },
+    null,
+    2,
+  ),
 );
 
 const overCount = entries.length > MAX_PRELOAD_ENTRIES;
