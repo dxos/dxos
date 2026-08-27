@@ -333,21 +333,7 @@ export class AiChatProcessor {
           provider: this._options.provider,
           instructions: this._options.chat?.target?.instructions,
         });
-        const ephemeralStream = session.subscribeEphemeral();
-        yield* ephemeralStream.pipe(
-          Stream.runForEach((message) =>
-            Effect.sync(() => {
-              for (const event of message.events) {
-                if (Trace.isOfType(PartialBlock, event)) {
-                  this.#handleEphemeralMessage(event.data);
-                } else if (Trace.isOfType(McpServerError, event)) {
-                  this.#handleMcpError(event.data);
-                }
-              }
-            }),
-          ),
-          Effect.forkChild,
-        );
+        yield* this.#forkEphemeralCollector(session);
 
         log('chat processor submitting prompt', { length: requestProp.message.length });
         yield* session.submitPrompt(createPromptContent(requestProp));
@@ -392,6 +378,84 @@ export class AiChatProcessor {
       this.#registry.set(this.active, false);
       this.#requestFiber = undefined;
     }
+  }
+
+  /**
+   * Re-attaches to an agent process that is still working on a turn.
+   *
+   * Streaming and active state live on the processor, and a processor is created per mount
+   * ({@link useChatProcessor}), so a chat remounted mid-turn — the user navigated to another page
+   * and back — renders as idle while the agent keeps running. The process outlives the mount
+   * (`AgentService` reuses it), so it is adopted here instead.
+   *
+   * A no-op when this processor is already driving a request, or when no agent is running for the
+   * feed.
+   */
+  async adopt(): Promise<void> {
+    if (this.#requestFiber || this.#registry.get(this.active)) {
+      return;
+    }
+
+    // Probed before forking so a processor that finds nothing to adopt never claims
+    // `#requestFiber` — a concurrent `request` would otherwise cancel (terminate) the agent.
+    const session = await this._runtime.runPromise(
+      Effect.gen({ self: this }, function* () {
+        const session = yield* AgentService.findSession(this._feed);
+        if (Option.isNone(session) || !(yield* session.value.isRunning())) {
+          return undefined;
+        }
+
+        return session.value;
+      }).pipe(Effect.provide(this._spaceLayer)),
+    );
+    if (!session || this.#requestFiber || this.#registry.get(this.active)) {
+      return;
+    }
+
+    log.info('adopting running agent session', { feed: Obj.getURI(this._feed) });
+    try {
+      this.#registry.set(this.active, true);
+      const effect = Effect.gen({ self: this }, function* () {
+        yield* this.#forkEphemeralCollector(session);
+        yield* session.waitForCompletion();
+        this.#flushStreaming();
+      });
+
+      this.#requestFiber = this._runtime.runFork(effect.pipe(Effect.provide(this._spaceLayer)));
+      const exit = await this._runtime.runPromise(Fiber.await(this.#requestFiber));
+      if (Exit.isFailure(exit) && !Cause.hasInterruptsOnly(exit.cause)) {
+        throw EffectEx.causeToError(exit.cause);
+      }
+    } catch (err) {
+      // An adopted turn was not initiated here, so its failure is reported but not surfaced as this
+      // chat's error: the mount that started it owns that.
+      log.warn('failed to observe adopted agent session', { error: err });
+    } finally {
+      this.#registry.set(this.active, false);
+      this.#requestFiber = undefined;
+    }
+  }
+
+  /**
+   * Forks the collector for the session's ephemeral trace events (streaming blocks and MCP
+   * failures) as a child of the calling fiber.
+   */
+  #forkEphemeralCollector(session: AgentService.Session): Effect.Effect<void> {
+    return session.subscribeEphemeral().pipe(
+      Stream.runForEach((message) =>
+        Effect.sync(() => {
+          for (const event of message.events) {
+            if (Trace.isOfType(PartialBlock, event)) {
+              this.#handleEphemeralMessage(event.data);
+            } else if (Trace.isOfType(McpServerError, event)) {
+              this.#handleMcpError(event.data);
+            }
+          }
+        }),
+      ),
+      Effect.forkChild,
+      Effect.asVoid,
+    );
   }
 
   /**

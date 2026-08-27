@@ -8,6 +8,7 @@ import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
@@ -57,6 +58,7 @@ const traceMessage = (events: Trace.Event[]): Trace.Message =>
 const makeStubSession = (
   feed: Feed.Feed,
   batches: Trace.Message[],
+  options: { running?: boolean } = {},
 ): Effect.Effect<AgentService.Session, never, never> =>
   Effect.gen(function* () {
     const done = yield* Deferred.make<void>();
@@ -65,10 +67,35 @@ const makeStubSession = (
       getContext: () => Effect.succeed([]),
       addContext: () => Effect.void,
       submitPrompt: () => Effect.void,
+      isRunning: () => Effect.succeed(options.running ?? false),
       waitForCompletion: () => Deferred.await(done),
       terminate: () => Effect.void,
       subscribeEphemeral: () => Stream.fromIterable(batches).pipe(Stream.ensuring(Deferred.succeed(done, undefined))),
     };
+  });
+
+/** The processor's space layer: the test layer's real services with the stub agent service swapped in. */
+const makeSpaceLayer = (agentService: AgentService.Service) =>
+  Effect.gen(function* () {
+    const services = yield* Effect.context<
+      | Database.Service
+      | Credential.CredentialsService
+      | AiService.AiService
+      | Registry.Service
+      | OpaqueToolkit.OpaqueToolkitProvider
+    >();
+    return Layer.mergeAll(
+      Layer.succeedContext(
+        Context.pick(
+          Database.Service,
+          Credential.CredentialsService,
+          AiService.AiService,
+          Registry.Service,
+          OpaqueToolkit.OpaqueToolkitProvider,
+        )(services),
+      ),
+      Layer.succeed(AgentService.AgentService, agentService),
+    );
   });
 
 /**
@@ -123,30 +150,10 @@ describe('AiChatProcessor streaming', () => {
         const stubSession = yield* makeStubSession(feed, batches);
         const stubAgentService: AgentService.Service = {
           getSession: () => Effect.succeed(stubSession),
+          findSession: () => Effect.succeed(Option.none()),
           hydrate: () => Effect.void,
         };
-
-        // The processor's space layer: the test layer's real services with the stub agent service
-        // swapped in.
-        const services = yield* Effect.context<
-          | Database.Service
-          | Credential.CredentialsService
-          | AiService.AiService
-          | Registry.Service
-          | OpaqueToolkit.OpaqueToolkitProvider
-        >();
-        const spaceLayer = Layer.mergeAll(
-          Layer.succeedContext(
-            Context.pick(
-              Database.Service,
-              Credential.CredentialsService,
-              AiService.AiService,
-              Registry.Service,
-              OpaqueToolkit.OpaqueToolkitProvider,
-            )(services),
-          ),
-          Layer.succeed(AgentService.AgentService, stubAgentService),
-        );
+        const spaceLayer = yield* makeSpaceLayer(stubAgentService);
 
         const observableRegistry = AtomRegistry.make();
         const processorRuntime = yield* makeTestRuntime;
@@ -195,6 +202,82 @@ describe('AiChatProcessor streaming', () => {
         // The request settled cleanly: nothing left streaming, no error, inactive.
         expect(observableRegistry.get(processor.streaming)).toBe(false);
         expect(observableRegistry.get(processor.active)).toBe(false);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  // Regression (DX-1198): navigating to another page mid-turn remounts the chat with a fresh
+  // processor, whose `active` starts false while the agent process keeps running — the UI showed
+  // the agent as idle.
+  it.effect(
+    'adopts an agent still running after a remount, and ignores an idle one',
+    Effect.fn(
+      function* ({ expect }) {
+        const feed = yield* Database.add(Feed.make());
+        const runtime = yield* Effect.context<Database.Service>();
+        const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
+
+        const messageId = Obj.ID.random();
+        const batches = [
+          traceMessage([partialBlockEvent(messageId, 'Still', true)]),
+          traceMessage([partialBlockEvent(messageId, 'Still working…', false)]),
+        ];
+
+        const idleSession = yield* makeStubSession(feed, batches, { running: false });
+        const idleRegistry = AtomRegistry.make();
+        const idleProcessor = new AiChatProcessor(
+          session,
+          yield* makeTestRuntime,
+          feed,
+          yield* makeSpaceLayer({
+            getSession: () => Effect.succeed(idleSession),
+            findSession: () => Effect.succeed(Option.some(idleSession)),
+            hydrate: () => Effect.void,
+          }),
+          { observableRegistry: idleRegistry },
+        );
+        const idleUnsubscribe = idleRegistry.subscribe(idleProcessor.messages, () => {}, { immediate: true });
+        yield* Effect.addFinalizer(() => Effect.sync(() => idleUnsubscribe()));
+        yield* Effect.promise(() => idleProcessor.adopt());
+        // A live-but-idle agent (awaiting input) is not adopted: no indicator, nothing streamed.
+        expect(idleRegistry.get(idleProcessor.active)).toBe(false);
+        expect(idleRegistry.get(idleProcessor.messages)).toEqual([]);
+
+        const runningSession = yield* makeStubSession(feed, batches, { running: true });
+        const observableRegistry = AtomRegistry.make();
+        const processor = new AiChatProcessor(
+          session,
+          yield* makeTestRuntime,
+          feed,
+          yield* makeSpaceLayer({
+            getSession: () => Effect.succeed(runningSession),
+            findSession: () => Effect.succeed(Option.some(runningSession)),
+            hydrate: () => Effect.void,
+          }),
+          { observableRegistry },
+        );
+
+        const activeSnapshots: boolean[] = [];
+        const unsubscribers = [
+          observableRegistry.subscribe(processor.messages, () => {}, { immediate: true }),
+          observableRegistry.subscribe(processor.active, (active) => activeSnapshots.push(active), {
+            immediate: true,
+          }),
+        ];
+        yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribers.forEach((unsubscribe) => unsubscribe())));
+
+        yield* Effect.promise(() => processor.adopt());
+
+        // The turn was observed to completion: the indicator went active and the agent's blocks
+        // landed in the thread even though this processor never issued the request.
+        expect(activeSnapshots).toContain(true);
+        expect(observableRegistry.get(processor.active)).toBe(false);
+        const texts = observableRegistry
+          .get(processor.messages)
+          .map(({ blocks }) => blocks.map((block) => (block as ContentBlock.Text).text).join(''));
+        expect(texts).toEqual(['Still working…']);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

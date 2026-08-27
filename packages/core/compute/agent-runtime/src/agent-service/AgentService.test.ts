@@ -17,7 +17,7 @@ import { expect } from 'vitest';
 import { LanguageModelFixture } from '@dxos/ai/testing';
 import { type HarnessControlRpcs, PartialBlock, SessionLink } from '@dxos/assistant';
 import { ProcessManager } from '@dxos/compute-runtime';
-import { getSession, hydrate } from '@dxos/compute/AgentService';
+import { findSession, getSession, hydrate } from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -598,6 +598,39 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
 
 // Control-plane coverage (no LLM turn), so it runs ungated in CI unlike the replay suite above.
 describe('Agent Service (control plane)', () => {
+  // Regression (DX-1198): a chat remounted mid-turn built a fresh processor with no way to tell
+  // whether the agent it had spawned was still working, so the UI reported it as idle.
+  it.effect(
+    'finds an existing session without spawning, and reports whether it is working',
+    Effect.fnUntraced(
+      function* (_) {
+        const processManager = yield* ProcessManager.ProcessManagerService;
+        const feed = yield* Database.add(Feed.make());
+        yield* Database.flush();
+        const target = Obj.getURI(feed);
+
+        // No agent has run for this feed: resolves to nothing, and nothing is spawned.
+        expect(Option.isNone(yield* findSession(feed))).toBe(true);
+        expect(yield* processManager.list({ target, key: AGENT_PROCESS_KEY })).toEqual([]);
+
+        yield* getSession(feed);
+
+        // The spawned process is found on the cached path and (after the cache is cleared by
+        // `hydrate`) on the remount path, without spawning a second one.
+        for (const _pass of [0, 1]) {
+          const found = yield* findSession(feed);
+          expect(Option.isSome(found)).toBe(true);
+          // Spawned but not prompted: live, awaiting input, so not working on a turn.
+          expect(yield* Option.getOrThrow(found).isRunning()).toBe(false);
+          expect((yield* processManager.list({ target, key: AGENT_PROCESS_KEY })).length).toBe(1);
+          yield* hydrate();
+        }
+      },
+      Effect.provide(TestLayer()),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
   // Exercises the instruction-aware reuse identity on both paths — the session cache and the
   // remount (rediscovered process) path.
   it.effect(

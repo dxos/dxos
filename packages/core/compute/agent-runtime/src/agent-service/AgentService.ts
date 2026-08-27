@@ -243,6 +243,24 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
             sessionCache.set(feed.id, { model, provider, instructions, handle, session });
             return session;
           }),
+        findSession: (feed: Feed.Feed) =>
+          Effect.gen(function* () {
+            const cached = sessionCache.get(feed.id);
+            if (cached && !isTerminalProcess(cached.handle.status.state)) {
+              return Option.some(cached.session);
+            }
+
+            // Not cached in the session map: the requesting UI mounted after the process was
+            // spawned. Reuse the live handle without hydrating or caching it — the caller only
+            // observes the turn, so the process keeps the model/instructions it was spawned with.
+            const processes = yield* processManager.list({ target: Obj.getURI(feed), key: AGENT_PROCESS_KEY });
+            const activeProcess = processes.find((process) => !isTerminalProcess(process.status.state));
+            if (!activeProcess) {
+              return Option.none();
+            }
+
+            return Option.some(makeSession(activeProcess, feed, () => {}));
+          }),
         hydrate: hydrateAgents,
       };
 
@@ -270,6 +288,10 @@ const makeSession = (process: AgentHandle, feed: Feed.Feed, releaseSession: () =
       );
     }).pipe(Effect.scoped),
   submitPrompt: (prompt: string | ContentBlock.Any[]) => process.submitInput(prompt),
+  isRunning: () =>
+    Effect.sync(
+      () => process.status.state === Process.State.RUNNING || process.status.state === Process.State.HYBERNATING,
+    ),
   // Settle when the turn's reply is complete; do NOT block on background sub-agents
   // (a supervisor delegates work that runs after the turn and reports back out of band).
   waitForCompletion: () => process.runUntilSettled(),
