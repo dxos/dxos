@@ -294,7 +294,6 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
 
   const handleAddRandomObject = useCallback(() => {
     const definition = Terra.makeRandomObject(terra, performance.now());
-    Obj.setParent(definition, terra);
     Obj.update(terra, (terra) => {
       terra.objects.push(Ref.make(definition));
     });
