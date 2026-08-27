@@ -494,7 +494,7 @@ flow QA-2: Link one page to another
       invoke: [op:createDraft] { name: "Page 2", content: "# Page 2\n\nThe second page.\n" }
       capture: page2
       expect: a Document named "Page 2" is returned, its body reading "The second page."
-      assert: return !!$created.object
+      assert: return !!$page2.object
     - name: Place Page 2
       do: (as above)
       invoke: org.dxos.operation.space.addObject { object: $page2.object, target: $given.collection }
@@ -537,7 +537,8 @@ flow QA-3: A contributed slash-command runs
   given:
     - a space is open and contains at least one collection
     - plugin-debug is enabled
-    - an empty document is open in the editor
+    - attendableId: the id of an empty document already open in the editor, the attention target
+      `insertLoremIpsum` inserts into
   test:
     - name: Open the command menu
       do: With the caret on an empty line, type `/`.

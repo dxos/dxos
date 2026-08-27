@@ -498,7 +498,8 @@ flow QA-2: Local edit pushes back to GitHub
   covers: [F-6.2, T-5]
   status: unverified
   given:
-    - QA-1 has run through "Sync the connection" and left a synced Project with at least one open (non-PR) Task
+    - connection: QA-1 has run through "Sync the connection" and left a synced Connection,
+      with a Project holding at least one open (non-PR) Task
     - the connected GitHub account has write access to the repo
   test:
     - name: Edit the task title

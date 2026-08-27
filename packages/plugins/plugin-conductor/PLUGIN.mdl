@@ -180,15 +180,6 @@ op ifElseSelect
 Effectful operations — mutate persistent state or call external services.
 
 ```mdl
-op createComputeGraph
-  desc: Creates a new CanvasBoard with an empty ComputeGraph and adds it to the target space.
-  input:
-    target?: Space | Collection
-  output: string                     # DXN of created CanvasBoard
-  effects: [echo:write]
-```
-
-```mdl
 op appendToQueue
   desc: Appends items to an ECHO queue or collection identified by DXN.
   input:

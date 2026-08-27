@@ -123,8 +123,8 @@ flow QA-1: Connect DeepSeek with an API key
       expect: the row leaves the navtree, its plank closes, and a "Connection deleted" toast appears
       note: >
         NO `invoke` — the connection is created by a UI gesture in step 6, which has no operation to
-        `capture` from, so there is no `$connection` for `space.removeObjects` to name. The delete
-        action in the connection's own panel routes through that operation anyway.
+        `capture` from, so there is no captured connection value for `space.removeObjects` to name.
+        The delete action in the connection's own panel routes through that operation anyway.
 ```
 
 ## Out of scope (v1)
