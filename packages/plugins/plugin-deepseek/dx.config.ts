@@ -11,7 +11,7 @@ export default Config2.make({
     name: 'DeepSeek',
     author: 'DXOS',
     description: trim`
-      DeepSeek registers a Connector for api.deepseek.com so the user can paste their DeepSeek API key.
+      DeepSeek registers a Connector for deepseek.com so the user can paste their DeepSeek API key.
       The key is stored as an AccessToken (source deepseek.com) plus a Connection in ECHO, resolvable by
       other plugins via CredentialsService. This plugin is headless — it contributes the connector only
       and has no UI surfaces.

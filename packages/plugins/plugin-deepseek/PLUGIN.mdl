@@ -17,6 +17,7 @@ submit the key is stored as an `AccessToken` (source `deepseek.com`) plus a
 | ------ | ----------------------- |
 | `feat` | `org.dxos.mdl.feat@1.0` |
 | `test` | `org.dxos.mdl.test@1.0` |
+| `flow` | `org.dxos.mdl.flow@1.0` |
 
 ## Connector
 
@@ -56,6 +57,71 @@ test T-2: Empty token rejected
   given: the DeepSeek ConnectorEntry
   when: credentialForm.onSubmit runs with { token: "  " }
   then: it throws (no AccessToken / Connection created)
+```
+
+## QA
+
+Executable flows against the running app. Each step carries a human instruction (`do`) and, where
+the step maps to an invocable operation, an agent binding (`invoke`). Report failures by flow and
+step number.
+
+```mdl
+flow QA-1: Connect DeepSeek with an API key
+  desc: >
+    The whole plugin, end to end — enable it, create a Connection choosing DeepSeek, paste a key,
+    and see the connection listed under the space's Connections.
+  actors: human
+  covers: [DeepSeekConnector, T-1, T-2]
+  status: passing            # 2026-08-27; recorded against the PR preview deployment
+  given:
+    - an identity exists
+    - space: a space is open (the default "My Space" is fine)
+    - plugin-deepseek is OFF — it is a `labs` plugin and off by default; enabling is step 1
+    - no connection named "DeepSeek" exists in that space — ABORT rather than deleting one this
+      flow did not create
+  test:
+    - name: Enable the plugin
+      do: Open Plugins from the sidebar, filter for "deep", and toggle DeepSeek on.
+      expect: the DeepSeek card shows the LABS tag and its toggle reads on
+      note: >
+        NO `invoke` — enabling is a UI action; `manager.enable()` from the debug port does not
+        perform it (same finding as plugin-chess QA-1).
+    - name: Open the space's Connections panel
+      do: Return to the space, expand Settings in the navtree and click Connections.
+      expect: the Connections panel opens, listing no DeepSeek connection yet
+    - name: Create a Connection and choose DeepSeek
+      do: Click + on the space, choose Connection, pick DeepSeek in the Service dropdown, Save.
+      expect: >
+        DeepSeek is offered in the Service dropdown alongside the other connectors, and choosing it
+        opens a "Connect DeepSeek" dialog with a single required "API key" field
+      note: |
+        DeepSeek appears in that dropdown only because the plugin was enabled in step 1 — the
+        connector entry is contributed on the connector Start event.
+
+        The Connections panel's own "Connect" button does NOT reach this dialog — it is inert
+        (plugin-connector's `handleAdd` invokes `OpenObjectForm` with a `typename` and nothing
+        opens, no error). Reproduced on a fresh profile, and unrelated to this plugin; the `+`
+        path in `do:` is the working gesture. Reported, not fixed here.
+    - name: Reject an empty key
+      do: With the API key field left empty, click Save.
+      expect: >
+        no connection is created — the credential form's onSubmit refuses an all-whitespace key
+        (T-2). The dialog closes without a message, which is the generic dialog's behaviour for
+        every credential-form connector, not this plugin's.
+    - name: Paste the API key
+      do: Reopen the dialog as in step 3 and type a key into the API key field.
+      expect: the field masks its input (Password format), so the key is never shown in the clear
+    - name: Save the connection
+      do: Click Save.
+      expect: >
+        a DeepSeek row appears under Settings -> Connections in the navtree and opens as its own
+        plank titled "DeepSeek" (T-1 — an AccessToken with source `deepseek.com` plus a Connection
+        referencing it)
+  after:
+    - name: Delete the connection
+      do: Open the DeepSeek connection and click "Delete connection".
+      invoke: org.dxos.operation.space.removeObjects { objects: [$given.connection] }
+      expect: the row leaves the navtree and its plank closes
 ```
 
 ## Out of scope (v1)
