@@ -25,7 +25,8 @@ export const make = (): Skill.Skill =>
   Skill.make({
     key,
     name: 'Plugin Manager',
-    description: 'Discover installed plugins — enabled or not — and offer to enable the ones a task needs.',
+    description:
+      'Search the installed plugins — enabled or not — for the ones best suited to a task, and offer to enable them.',
     agentCanEnable: true,
     tools: Skill.toolDefinitions({ operations }),
     instructions: Template.make({
@@ -44,6 +45,11 @@ export const make = (): Skill.Skill =>
         </disabled_plugins>
 
         # Working with plugins
+        - When a request implies a capability — a board, a spreadsheet, a diagram, a mailbox — look
+          for the plugin that provides it BEFORE reaching for a generic tool. Read the list above,
+          and call [query-plugins] when the request does not obviously match one of its entries:
+          the installed set is the catalogue of what this app could do for the task, and the best
+          plugin for the job is often one the user has never turned on.
         - You CANNOT enable a plugin yourself. Enabling changes the user's workspace, so it is always
           their decision, taken by clicking the prompt described below.
         - Before creating an object whose editor comes from a plugin in that list, STOP. Creating it
@@ -57,7 +63,7 @@ export const make = (): Skill.Skill =>
 
           Use the id exactly as the list above spells it. Emit the surface once per plugin, then
           briefly say what enabling it would let you do.
-        - Call [query-plugins] when you need the whole installed set, or to re-read state after the
+        - Call [query-plugins] to search the whole installed set, or to re-read state after the
           user has enabled something. A plugin's tools appear only once it activates, so confirm
           \`active\` there rather than assuming the capability is ready.
         - A plugin the host does not have installed at all cannot be enabled — say so instead of

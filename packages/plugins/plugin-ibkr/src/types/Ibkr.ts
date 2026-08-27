@@ -229,7 +229,8 @@ export type Report = Type.InstanceType<typeof Report>;
  */
 export const Portfolio = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  feed: Ref.Ref(Feed.Feed),
+  /** Owned feed: `SetParent` cascades it with the portfolio. */
+  feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(true)),
 }).pipe(
   Annotation.IconAnnotation.set({ icon: 'ph--chart-line--regular', hue: 'green' }),
   // Offer "Connect Interactive Brokers" in the portfolio toolbar. IBKR has no external-sync Cursor, so
@@ -251,9 +252,7 @@ type PortfolioProps = Omit<Obj.MakeProps<typeof Portfolio>, 'feed'>;
  */
 export const makePortfolio = (props: PortfolioProps = {}): Portfolio => {
   const feed = Feed.make({ name: 'Interactive Brokers', kind: IBKR_FEED_KIND });
-  const portfolio = Obj.make(Portfolio, { feed: Ref.make(feed), ...props });
-  Obj.setParent(feed, portfolio);
-  return portfolio;
+  return Obj.make(Portfolio, { feed: Ref.make(feed), ...props });
 };
 
 /**

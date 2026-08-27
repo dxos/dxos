@@ -1,0 +1,134 @@
+---
+id: org.dxos.plugin.deepseek
+name: DeepSeekPlugin
+version: 0.1.0
+---
+
+A **headless** Composer plugin that makes [DeepSeek](https://platform.deepseek.com)
+connectable. It has no React/UI surfaces and contributes one thing: a
+**Connector** entry (`source: "deepseek.com"`) with an API-key credential form,
+so the user connects DeepSeek through the generic `plugin-connector` UI. On
+submit the key is stored as an `AccessToken` (source `deepseek.com`) plus a
+`Connection` in ECHO, resolvable later via `CredentialsService`.
+
+## Extensions
+
+| Term   | URI                     |
+| ------ | ----------------------- |
+| `feat` | `org.dxos.mdl.feat@1.0` |
+| `test` | `org.dxos.mdl.test@1.0` |
+| `flow` | `org.dxos.mdl.flow@1.0` |
+
+## Connector
+
+```mdl
+feat DeepSeekConnector
+  desc: >
+    Contributes a ConnectorEntry via Capability.contribute(Connector,
+    [entry]) on the connector Start activation event (mirrors
+    plugin-ideogram's non-OAuth credentialForm connector).
+  id: org.dxos.plugin.deepseek.connector
+  source: deepseek.com
+  label: DeepSeek
+  credentialForm:
+    schema: DeepSeekTokenForm { token: string }   # the API key, Password format
+    onSubmit: >
+      Trim the token; if empty, throw. Build
+      Obj.make(AccessToken, { source: "deepseek.com", token }) and
+      Obj.make(Connection, { name: "DeepSeek", connectorId: <id>,
+      accessToken: Ref.make(accessToken) }); return
+      { kind: "complete", accessToken, connection }.
+```
+
+## Acceptance
+
+```mdl
+test T-1: Connector builds AccessToken + Connection
+  given: the DeepSeek ConnectorEntry
+  when: credentialForm.onSubmit runs with { token: "sk-…" }
+  then:
+    - returns kind "complete"
+    - accessToken.source === "deepseek.com" and accessToken.token === "sk-…"
+    - connection.connectorId === the entry id and references the accessToken
+```
+
+```mdl
+test T-2: Empty token rejected
+  given: the DeepSeek ConnectorEntry
+  when: credentialForm.onSubmit runs with { token: "  " }
+  then: it throws (no AccessToken / Connection created)
+```
+
+## QA
+
+Executable flows against the running app. Each step carries a human instruction (`do`) and, where
+the step maps to an invocable operation, an agent binding (`invoke`). Report failures by flow and
+step number.
+
+```mdl
+flow QA-1: Connect DeepSeek with an API key
+  desc: >
+    The whole plugin, end to end — enable it, create a Connection choosing DeepSeek, paste a key,
+    and see the connection listed under the space's Connections.
+  actors: human
+  covers: [DeepSeekConnector, T-1, T-2]
+  status: passing            # 2026-08-27; recorded against the PR preview deployment
+  given:
+    - an identity exists
+    - space: a space is open (the default "My Space" is fine)
+    - plugin-deepseek is OFF — it is a `labs` plugin and off by default; enabling is step 1
+    - no connection named "DeepSeek" exists in that space — ABORT rather than deleting one this
+      flow did not create
+  test:
+    - name: Enable the plugin
+      do: Open Plugins from the sidebar, filter for "deep", and toggle DeepSeek on.
+      expect: the DeepSeek card shows the LABS tag and its toggle reads on
+      note: >
+        NO `invoke` — enabling is a UI action; `manager.enable()` from the debug port does not
+        perform it (same finding as plugin-chess QA-1).
+    - name: Open the space's Connections panel
+      do: Return to the space, expand Settings in the navtree and click Connections.
+      expect: the Connections panel opens, listing no DeepSeek connection yet
+    - name: Create a Connection and choose DeepSeek
+      do: Click + on the space, choose Connection, pick DeepSeek in the Service dropdown, Save.
+      expect: >
+        DeepSeek is offered in the Service dropdown alongside the other connectors, and choosing it
+        opens a "Connect DeepSeek" dialog with a single required "API key" field
+      note: |
+        DeepSeek appears in that dropdown only because the plugin was enabled in step 1 — the
+        connector entry is contributed on the connector Start event.
+
+        The Connections panel's own "Connect" button does NOT reach this dialog — it is inert
+        (plugin-connector's `handleAdd` invokes `OpenObjectForm` with a `typename` and nothing
+        opens, no error). Reproduced on a fresh profile, and unrelated to this plugin; the `+`
+        path in `do:` is the working gesture. Reported, not fixed here.
+    - name: Reject an empty key
+      do: With the API key field left empty, click Save.
+      expect: >
+        no connection is created — the credential form's onSubmit refuses an all-whitespace key
+        (T-2). The dialog closes without a message, which is the generic dialog's behaviour for
+        every credential-form connector, not this plugin's.
+    - name: Paste the API key
+      do: Reopen the dialog as in step 3 and type a key into the API key field.
+      expect: the field masks its input (Password format), so the key is never shown in the clear
+    - name: Save the connection
+      do: Click Save.
+      expect: >
+        a DeepSeek row appears under Settings -> Connections in the navtree and opens as its own
+        plank titled "DeepSeek" (T-1 — an AccessToken with source `deepseek.com` plus a Connection
+        referencing it)
+  after:
+    - name: Delete the connection
+      do: Open the DeepSeek connection and click "Delete connection".
+      expect: the row leaves the navtree, its plank closes, and a "Connection deleted" toast appears
+      note: >
+        NO `invoke` — the connection is created by a UI gesture in step 6, which has no operation to
+        `capture` from, so there is no `$connection` for `space.removeObjects` to name. The delete
+        action in the connection's own panel routes through that operation anyway.
+```
+
+## Out of scope (v1)
+
+- Any DeepSeek API client / model provider; this version only stores the credential.
+- OAuth (DeepSeek uses a static API key).
+- Multi-account configuration.

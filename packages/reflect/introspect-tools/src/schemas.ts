@@ -34,7 +34,8 @@ export const PickerAnnotationId = '@dxos/introspect-tools/picker';
 export type PickerKind = 'plugin-id' | 'package-name';
 
 export const getPicker = (ast: SchemaAST.AST): PickerKind | undefined =>
-  (ast.annotations as Record<string, unknown>)[PickerAnnotationId] as PickerKind | undefined;
+  // Optional-wrapper ASTs reach here without an `annotations` bag.
+  (ast.annotations as Record<string, unknown> | undefined)?.[PickerAnnotationId] as PickerKind | undefined;
 
 /**
  * Pagination + projection options shared by every list-style tool. Spread its

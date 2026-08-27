@@ -20,6 +20,7 @@ import * as ConductorPlugin from '@dxos/plugin-conductor/ConductorPlugin';
 import * as CrmPlugin from '@dxos/plugin-crm/CrmPlugin';
 import * as CrxPlugin from '@dxos/plugin-crx/CrxPlugin';
 import * as DebugPlugin from '@dxos/plugin-debug/DebugPlugin';
+import * as DeepSeekPlugin from '@dxos/plugin-deepseek/DeepSeekPlugin';
 import * as DevtoolsPlugin from '@dxos/plugin-devtools/DevtoolsPlugin';
 import * as DiscordPlugin from '@dxos/plugin-discord/DiscordPlugin';
 import * as DoctorPlugin from '@dxos/plugin-doctor/DoctorPlugin';
@@ -89,6 +90,9 @@ export type { PluginConfig, State } from './plugin-defs.core';
 /**
  * Plugin keys enabled by default for new users, per environment (dev/local).
  *
+ * New keys go in the `isDev` block, and only for plugins that hit no permission-gated API on
+ * activation: a `fetch` or `WebSocket` to localhost raises Chrome's local network prompt at boot.
+ *
  * NOTE: Keep alphabetically sorted.
  */
 export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[] =>
@@ -109,6 +113,9 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
     ExcalidrawPlugin.meta.profile.key,
     TablePlugin.meta.profile.key,
     ThreadPlugin.meta.profile.key,
+    // Connector-only, so defaulting it on adds no surface — it just puts DeepSeek in the
+    // Connections service list for anyone who has a key.
+    DeepSeekPlugin.meta.profile.key,
 
     // Local
     isLocal && SamplePlugin.meta.profile.key,
@@ -145,7 +152,6 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       SandboxPlugin.meta.profile.key,
       SequencerPlugin.meta.profile.key,
       SidekickPlugin.meta.profile.key,
-      StreamDeckPlugin.meta.profile.key,
       StudioPlugin.meta.profile.key,
       TasksPlugin.meta.profile.key,
       TranscriptionPlugin.meta.profile.key,
@@ -186,6 +192,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     CrmPlugin.make(),
     !isTauri && CrxPlugin.make(),
     DebugPlugin.make({ logStore }),
+    DeepSeekPlugin.make(),
     DevtoolsPlugin.make(),
     DiscordPlugin.make(),
     DoctorPlugin.make(),

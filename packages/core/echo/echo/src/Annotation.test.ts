@@ -683,4 +683,66 @@ describe('Annotation', () => {
       });
     });
   });
+
+  describe('SetParent', () => {
+    class Body extends Type.makeObject<Body>(DXN.make('com.example.type.setParentBody', '0.1.0'))(
+      Schema.Struct({ text: Schema.String }),
+    ) {}
+
+    class Holder extends Type.makeObject<Holder>(DXN.make('com.example.type.setParentHolder', '0.1.0'))(
+      Schema.Struct({
+        body: Schema.optional(Ref.Ref(Body).pipe(Annotation.SetParent.set(true))),
+        sections: Schema.Array(Ref.Ref(Body)).pipe(Annotation.SetParent.set(true)),
+        nested: Schema.optional(Schema.Struct({ config: Ref.Ref(Body).pipe(Annotation.SetParent.set(true)) })),
+        linked: Schema.optional(Ref.Ref(Body)),
+      }),
+    ) {}
+
+    test('parents the targets of annotated fields on creation', ({ expect }) => {
+      const body = Obj.make(Body, { text: 'body' });
+      const section = Obj.make(Body, { text: 'section' });
+      const config = Obj.make(Body, { text: 'config' });
+      const linked = Obj.make(Body, { text: 'linked' });
+      const holder = Obj.make(Holder, {
+        body: Ref.make(body),
+        sections: [Ref.make(section)],
+        nested: { config: Ref.make(config) },
+        linked: Ref.make(linked),
+      });
+
+      expect(Obj.getParent(body)?.id).toBe(holder.id);
+      expect(Obj.getParent(section)?.id).toBe(holder.id);
+      expect(Obj.getParent(config)?.id).toBe(holder.id);
+      // An un-annotated ref field is a plain reference, not ownership.
+      expect(Obj.getParent(linked)).toBeUndefined();
+    });
+
+    test('parents the target on write, and re-parents when the ref moves', ({ expect }) => {
+      const holder = Obj.make(Holder, { sections: [] });
+      const other = Obj.make(Holder, { sections: [] });
+      const body = Obj.make(Body, { text: 'body' });
+      expect(Obj.getParent(body)).toBeUndefined();
+
+      Obj.update(holder, (holder) => {
+        holder.body = Ref.make(body);
+      });
+      expect(Obj.getParent(body)?.id).toBe(holder.id);
+
+      Obj.update(other, (other) => {
+        other.body = Ref.make(body);
+      });
+      expect(Obj.getParent(body)?.id).toBe(other.id);
+    });
+
+    test('appending to an annotated array field parents the appended target', ({ expect }) => {
+      const holder = Obj.make(Holder, { sections: [] });
+      const section = Obj.make(Body, { text: 'section' });
+
+      Obj.update(holder, (holder) => {
+        holder.sections.push(Ref.make(section));
+      });
+
+      expect(Obj.getParent(section)?.id).toBe(holder.id);
+    });
+  });
 });
