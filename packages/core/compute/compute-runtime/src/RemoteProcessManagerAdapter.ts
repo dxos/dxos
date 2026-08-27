@@ -188,9 +188,8 @@ const assertJsonSafe = (annotations: Annotation.Dictionary): void => {
 };
 
 /**
- * Whether a value is what `JSON.parse` could have produced. Checked structurally rather than by
- * comparing a value against its own round trip: both sides of such a comparison are serialized, so
- * every lossy encoding matches itself and the check passes everything.
+ * Whether a value is what `JSON.parse` could have produced — checked structurally, since a value
+ * compared against its own round trip matches however lossy its encoding was.
  */
 const isJsonValue = (value: unknown, seen: Set<object>): boolean => {
   switch (typeof value) {

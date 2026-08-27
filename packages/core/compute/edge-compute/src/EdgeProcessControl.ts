@@ -72,9 +72,8 @@ export const make = (getEdgeClient: () => EdgeProcessHttpClient, spaceId: SpaceI
   ): Effect.Effect<RpcClient.RpcClient<Rpcs>, never, Scope.Scope> =>
     Effect.gen(function* () {
       const url = getEdgeClient().processRpcUrl(spaceId, pid).toString();
-      // The endpoint is served by an `RpcServer` in the process's host, so this is effect's own
-      // rpc-over-HTTP rather than a hand-rolled envelope: request and response schemas are encoded
-      // by the group itself. Auth is minted per request, since the header expires.
+      // The host serves the endpoint with an `RpcServer`, so the group's own schemas encode the
+      // payloads rather than a hand-rolled envelope.
       const httpClient = (yield* HttpClient.HttpClient).pipe(
         HttpClient.mapRequestEffect((request) =>
           // The client is resolved per request, not captured: an RPC client outlives an identity
