@@ -53,8 +53,9 @@ Unblocking `AgentProcess` needs #12765 merged, or a maintainer dispatching `pkg.
 - [x] `TriggersDispatcher`: owns the per-space process index (`registerProcess` /
       `unregisterProcess` / `listProcesses`), all three in `rpcMethods`. A DO namespace cannot be
       enumerated, so membership is recorded as processes are spawned.
-- [x] compute-service HTTP routes per §3 (spawn, list, status, input, events, rpc, terminate), same
-      `edgeAuth` posture as the trigger routes. RPC is served by `ProcessObject.rpcFetch` via
+- [x] compute-service HTTP routes per §3 (spawn, list, status, input, events, rpc, terminate),
+      requiring a verifiable presentation outside dev-like environments (verified: 401 without the
+      `functions.noAuth` flag, 200 with it). RPC is served by `ProcessObject.rpcFetch` via
       `RpcServer.toHttpEffect` over the handlers captured while instrumenting `create`.
 - [ ] `@dxos/agent-runtime` dependency on compute-service (catalog entry already exists).
 
@@ -108,6 +109,12 @@ Consequences for the rest of this project:
 
 ## Tracked follow-ups
 
+- [ ] **Space-membership authorization on the EDGE process routes.** The routes now require a
+      verifiable presentation outside dev-like environments (`functions.noAuth`, thunked so the
+      binding is read per request), but nothing checks that the presenter belongs to the space whose
+      processes it addresses — any authenticated identity can drive any space's agents. Needs a
+      member check the host does not have; the function-deploy route's `ownerUri === presenterDid`
+      comparison is the nearest precedent.
 - [ ] WS push for outputs/trace instead of cursor polling (D7).
 - [ ] `Process`/`ProcessHandle`: an explicit `onAlarmScheduled` hook so the DO need not read
       `alarmDueAt` out of the store (D5).
