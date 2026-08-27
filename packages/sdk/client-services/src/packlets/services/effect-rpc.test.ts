@@ -31,9 +31,16 @@ import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { IdentityNotInitializedError, TimeoutError } from '@dxos/protocols';
 import { ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
-import { SpaceState, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+import {
+  Invitation,
+  QueryInvitationsResponse,
+  SpaceState,
+  SystemStatus,
+} from '@dxos/protocols/proto/dxos/client/services';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { SpacesService, SystemService } from '@dxos/protocols/rpc';
+import { InvitationsService, SpacesService, SystemService } from '@dxos/protocols/rpc';
+
+import { remainingLifetimeSeconds } from '../spaces/data-space-manager';
 
 //
 // Helpers & Schema for test suite 2
@@ -177,6 +184,45 @@ describe('client services effect-rpc', () => {
     );
     expect(error).toBeInstanceOf(IdentityNotInitializedError);
     expect(error.message).toContain('no identity');
+  });
+
+  // Regression: a delegated space invitation carried a fractional `lifetime`, which the int32 field
+  // could not encode. The response failed to serialize, so the stream died before delivering the
+  // initial snapshot that `InvitationsProxy.open()` (and therefore the whole app boot) waited on.
+  test('an existing-invitations snapshot with a delegated invitation reaches the client', async ({ expect }) => {
+    const delegated: Invitation = {
+      invitationId: 'delegated-invitation',
+      type: Invitation.Type.DELEGATED,
+      kind: Invitation.Kind.SPACE,
+      authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+      state: Invitation.State.INIT,
+      swarmKey: PublicKey.random(),
+      spaceKey: PublicKey.random(),
+      delegationCredentialId: PublicKey.random(),
+      lifetime: remainingLifetimeSeconds(new Date(Date.now() + 604_799_123)),
+      multiUse: true,
+      persistent: false,
+    };
+
+    const snapshot: QueryInvitationsResponse = {
+      action: QueryInvitationsResponse.Action.ADDED,
+      type: QueryInvitationsResponse.Type.CREATED,
+      invitations: [delegated],
+      existing: true,
+    };
+
+    const proxy = await setup(() => ({
+      InvitationsService: mockService<InvitationsService.Handlers>({
+        ['InvitationsService.queryInvitations']: (): Stream.Stream<QueryInvitationsResponse, Error> =>
+          Stream.fromIterable([snapshot]),
+      }),
+    }));
+
+    const messages = await PbStream.consumeData(proxy.InvitationsService!.queryInvitations());
+    expect(messages).toHaveLength(1);
+    expect(messages[0].existing).toBe(true);
+    expect(messages[0].invitations?.[0].invitationId).toEqual('delegated-invitation');
+    expect(messages[0].invitations?.[0].lifetime).toEqual(delegated.lifetime);
   });
 
   test('calls fail when the service is not available', async ({ expect }) => {

@@ -3,13 +3,15 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { EdgeServiceName } from '@dxos/config';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
+import { useEdgeServiceEndpoint } from '@dxos/react-client';
 import { useAudioTrack, useTranscriber } from '@dxos/react-ui-transcription';
 import { Message, type Transcript } from '@dxos/types';
 
@@ -31,9 +33,13 @@ export const useTranscriptionRecording = (transcript: Transcript.Transcript): Tr
   const feed = transcript.feed.target;
 
   const [recording, setRecording] = useState(false);
-  const track = useAudioTrack(recording);
   const { invokePromise } = useOperationInvoker();
   const settings = useAtomCapability(TranscriptionCapabilities.Settings);
+  const endpoint = useEdgeServiceEndpoint(EdgeServiceName.Transcription);
+  // Gate the mic on the endpoint: `useAudioTrack` calls `getUserMedia` as soon as its flag is
+  // true, so without this the permission prompt and recording indicator appear before `open()`
+  // rejects for a transcription service that was never configured.
+  const track = useAudioTrack(recording && !!endpoint);
 
   // Append a transcribed message batch to the transcript's feed, enriching it first (when entity
   // extraction is enabled) with references to known entities mentioned in the transcript.
@@ -70,7 +76,9 @@ export const useTranscriptionRecording = (transcript: Transcript.Transcript): Tr
   );
 
   // Drive the transcriber lifecycle off the recording flag + audio track.
-  const transcriber = useTranscriber({ audioStreamTrack: track, onSegments: handleSegments });
+  // Stable identity: a fresh object every render would recreate (and reopen) the transcriber.
+  const transcriberConfig = useMemo(() => ({ endpoint }), [endpoint]);
+  const transcriber = useTranscriber({ audioStreamTrack: track, onSegments: handleSegments, transcriberConfig });
   useEffect(() => {
     if (!transcriber) {
       return;

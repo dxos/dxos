@@ -8,7 +8,8 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Message, type PeerInfo } from '@dxos/messaging';
 import { TimeoutError } from '@dxos/protocols';
-import { schema } from '@dxos/protocols/proto';
+import { compatCodec } from '@dxos/protocols/buf-shape-compat';
+import { SwarmMessageSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { type Answer, type SwarmMessage } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, type MakeOptional } from '@dxos/util';
 
@@ -25,7 +26,7 @@ export type SwarmMessengerOptions = {
   topic: PublicKey;
 };
 
-const SwarmMessage = schema.getCodecForType('dxos.mesh.swarm.SwarmMessage');
+const SwarmMessage = compatCodec<SwarmMessage>(SwarmMessageSchema);
 
 /**
  * Adds offer/answer and signal interfaces.
