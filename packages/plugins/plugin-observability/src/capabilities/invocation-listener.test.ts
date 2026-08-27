@@ -106,11 +106,22 @@ describe('invocation listener', () => {
   });
 
   test('an operation with no mapping sends nothing', async ({ expect }) => {
-    const { invoker, sent } = setup([]);
+    const { invoker, sent, waitForSent } = setup([
+      ObservabilityMapping.make({
+        operation: Rename,
+        event: 'test.rename',
+        properties: (input, output) => ({ name: input.name, id: output.id }),
+      }),
+    ]);
 
     await EffectEx.runPromise(invoker.invoke(Untracked, { name: 'alpha' }));
+    // The listener consumes an unbounded PubSub on its own fiber, so nothing signals completion for
+    // an invocation that maps to no event; invoking a mapped operation afterward and waiting for its
+    // event proves the untracked one was already processed, since the listener preserves order.
+    await EffectEx.runPromise(invoker.invoke(Rename, { name: 'beta' }));
+    await waitForSent(1);
 
-    expect(sent).toEqual([]);
+    expect(sent).toEqual([{ name: 'test.rename', properties: { name: 'beta', id: 'id-beta' } }]);
   });
 
   test('a mapping declines an invocation by deriving no properties', async ({ expect }) => {

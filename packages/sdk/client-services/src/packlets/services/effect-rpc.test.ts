@@ -18,7 +18,7 @@ import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Trigger, sleep } from '@dxos/async';
+import { Trigger } from '@dxos/async';
 import { Stream as PbStream } from '@dxos/async';
 import {
   ClientRpcServer,
@@ -262,6 +262,7 @@ describe('client services effect-rpc', () => {
 
   test('onRequest gates dispatch until ready', async ({ expect }) => {
     const ready = new Trigger();
+    const arrived = new Trigger();
     let called = false;
     const proxy = await setup(
       () => ({
@@ -273,13 +274,18 @@ describe('client services effect-rpc', () => {
             }),
         }),
       }),
-      { onRequest: () => ready.wait() },
+      {
+        onRequest: () => {
+          arrived.wake();
+          return ready.wait();
+        },
+      },
     );
 
     const request = proxy.SystemService!.getConfig();
-    // Dispatch crosses a real MessageChannel with no completion signal available before `ready`
-    // resolves, so this proves the gate blocks dispatch the same way the pre-wake state does below.
-    await sleep(50);
+    // `onRequest` runs before the gated handler, so waiting on `arrived` proves the request
+    // reached the gate without depending on how long dispatch across the MessageChannel takes.
+    await arrived.wait();
     expect(called).toBe(false);
 
     ready.wake();

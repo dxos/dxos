@@ -635,7 +635,7 @@ describe('TriggerDispatcher', () => {
               unsubscribe = registry.subscribe(
                 dispatcher.state,
                 (state) => {
-                  if (state.invocations.some((_) => _.trigger.id === trigger.id)) {
+                  if (state.invocations.some((invocation) => invocation.trigger.id === trigger.id)) {
                     if (unsubscribe) {
                       unsubscribe();
                     } else {
