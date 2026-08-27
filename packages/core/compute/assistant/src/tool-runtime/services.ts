@@ -441,6 +441,7 @@ const mapSchemaTypeForLLM = (
   return SchemaEx.mapAst(ast, (child) => mapSchemaTypeForLLM(child, expansions));
 };
 
+/** Narrows `value` to {@link Toolkit.WithHandler} when it carries a non-null `tools` object and a `handle` function. */
 export const isHandlerLike = (value: unknown): value is Toolkit.WithHandler<Record<string, Tool.Any>> => {
   return (
     typeof value === 'object' &&

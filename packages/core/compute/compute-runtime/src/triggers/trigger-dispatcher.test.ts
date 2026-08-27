@@ -627,20 +627,30 @@ describe('TriggerDispatcher', () => {
             const registry = yield* Registry.AtomRegistry;
             const fired = yield* Effect.callback<void>((resume) => {
               // `{ immediate: true }` can invoke this callback synchronously, before `subscribe`
-              // returns and assigns `currentUnsubscribe` — so the match handler cannot close over
-              // `unsubscribe` directly without reading it in the temporal dead zone.
-              let currentUnsubscribe: (() => void) | undefined;
-              currentUnsubscribe = registry.subscribe(
+              // returns — reading `unsubscribe` there would hit the temporal dead zone, and a
+              // synchronous `resume` skips Effect's returned-finalizer path entirely (it only runs
+              // on interruption), so an immediate match unsubscribes directly instead of relying on it.
+              let unsubscribe: (() => void) | undefined;
+              let matchedBeforeSubscribeReturned = false;
+              unsubscribe = registry.subscribe(
                 dispatcher.state,
                 (state) => {
                   if (state.invocations.some((_) => _.trigger.id === trigger.id)) {
-                    currentUnsubscribe?.();
+                    if (unsubscribe) {
+                      unsubscribe();
+                    } else {
+                      matchedBeforeSubscribeReturned = true;
+                    }
                     resume(Effect.void);
                   }
                 },
                 { immediate: true },
               );
-              return Effect.sync(() => currentUnsubscribe?.());
+              if (matchedBeforeSubscribeReturned) {
+                unsubscribe();
+                return;
+              }
+              return Effect.sync(() => unsubscribe?.());
             }).pipe(Effect.timeoutOption(Duration.seconds(2)), Effect.map(Option.isSome));
             expect(fired).toBe(true);
           }).pipe(Effect.ensuring(dispatcher.stop()));
