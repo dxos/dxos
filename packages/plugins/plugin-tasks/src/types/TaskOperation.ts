@@ -117,12 +117,17 @@ export const DeleteTask = Operation.make({
 /**
  * Repositions a task within its set's `tasks` array. There is no sort key to patch — the array
  * order is the order — so ordering is unreachable from a generic object update.
+ *
+ * Re-parenting is part of the same verb because a drop in the tree is both at once: doing it as
+ * `UpdateTask` then `MoveTask` leaves a window where the task hangs at the end of its new parent
+ * before the position lands, and costs two undo entries for one gesture.
  */
 export const MoveTask = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.move'),
     name: 'Move Task',
-    description: 'Reposition a task within its task set — array order is the task order.',
+    description:
+      'Reposition a task within its task set, optionally re-parenting it — array order is the task order.',
     icon: 'ph--arrows-down-up--regular',
   },
   services: [Database.Service],
@@ -130,6 +135,8 @@ export const MoveTask = Operation.make({
     task: Ref.Ref(Task.Task),
     /** Insert immediately before this task; omit to move to the end. */
     before: Schema.optional(Ref.Ref(Task.Task)),
+    /** Re-parent as a sub-task; `null` promotes the task to a root of its set (as `UpdateTask`). */
+    parentTask: Schema.optional(Schema.NullOr(Ref.Ref(Task.Task))),
   }),
   output: Schema.Struct({
     task: Type.getSchema(Task.Task),
