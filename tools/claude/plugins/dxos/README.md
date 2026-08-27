@@ -32,11 +32,20 @@ a connector, which gives you the tools without the command.
 
 ## Setup for the `mcp` backend
 
-Three steps, in order. Skip all of them if you are staying on `file`.
+Skip this whole section if you are staying on `file`.
+
+### Prerequisites
+
+1. An account on [composer.space](https://composer.space).
+2. A passkey saved to it — **Settings → create passkey**.
+
+Authentication is the passkey, so both have to exist before step 1 can finish.
+
+### Steps
 
 **1. Authenticate the connector.** The plugin ships it, so there is nothing to
-add. Run `/mcp`, pick `composer`, choose Authenticate, and approve in the browser
-with the passkey you created in Composer under Settings.
+add. Run `/mcp`, pick `composer`, choose Authenticate, and approve in the
+browser.
 
 **2. Select the backend.** `DX_PROJECT_BACKEND` is read by the hook process, so
 it has to be in that process's environment. A desktop session is not launched
