@@ -1,9 +1,8 @@
 # plugin-s3 — Tasks
 
-_Resume: exercise the connector + upload path through the browser UI — the wire protocol is proven
-against real R2 but CORS is still entirely unverified, since the live test ran in Node. Uncommitted:
-none. Last: full R2 round trip passed and turned up a real bug (R2 returns 400, not 403, for an
-unsigned read of a private bucket)._
+_Resume: upload a file through the app with S3 selected as the backend, and render it — the last
+untested link. Everything under it is proven: signing against real R2, the credential, and the CORS
+preflight for both HEAD and PUT against the `media` bucket. Uncommitted: none._
 
 ## Phase 1: S3 blob backend + connector
 
@@ -68,9 +67,13 @@ on the hypergraph plus a `FileCapabilities.Backend` descriptor, with credentials
 - [ ] **Upload a file** with S3 selected as the backend; confirm the object lands at
       `<spaceId>/<contentHash>` and the ECHO `Blob` records the `s3://` URI.
 - [ ] **Render an image** from the bucket — exercises `getUrl`'s presigned path in an `<img>`.
-- [ ] **Confirm the CORS failure mode** with the policy absent, and check the README's policy is
-      sufficient (particularly the `AllowedHeaders` list against a real signed PUT). Note the live
-      test ran in Node, where CORS does not apply — this is still entirely unverified in a browser.
+- [x] **CORS confirmed in both directions.** The failure mode was observed live (no policy → the
+      connection test reports the blocked request and names the origin to allow), and the fix was
+      verified by issuing the real `OPTIONS` preflights against the `media` bucket: `HEAD` and `PUT`
+      both answer `204` with `access-control-allow-origin: http://localhost:5183`, and `probeAccess`
+      then succeeds. The README's header list is correct as written.
+      Gotcha for whoever configures a bucket next: `PutBucketCors` **replaces** the entire
+      configuration, so an existing production rule must be re-sent alongside any new one.
 - [ ] **A non-R2 endpoint** (MinIO or real AWS S3) to confirm the region-from-host parsing is right
       where the region actually matters. R2 ignores the region, so today's pass does not exercise it.
 
