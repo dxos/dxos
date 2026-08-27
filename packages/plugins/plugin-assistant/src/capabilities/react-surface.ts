@@ -129,7 +129,7 @@ export default Capability.makeModule(() =>
         props: ({ data }) => ({
           service: nonBlank(data.data?.service),
           scopes: Array.isArray(data.data?.scopes)
-            ? data.data.scopes.filter((scope): scope is string => typeof scope === 'string')
+            ? data.data.scopes.map(nonBlank).filter((scope): scope is string => scope !== undefined)
             : undefined,
           reason: nonBlank(data.data?.reason),
         }),

@@ -58,7 +58,9 @@ export const toVaultCredentials = Effect.fn('toVaultCredentials')(function* (
       if (secret.length === 0) {
         return yield* Effect.fail(new CredentialResolutionError({ context: { as } }));
       }
-      const hosts = scope?.length ? [...scope] : [tokenObj.source];
+      // Only an omitted scope defaults; the schema rejects an empty one, so no listed scope can be
+      // silently widened to a host the caller left out.
+      const hosts = scope === undefined ? [tokenObj.source] : [...scope];
       return {
         display_name: `${as} (${tokenObj.source})`,
         auth: {

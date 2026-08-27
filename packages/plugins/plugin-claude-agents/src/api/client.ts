@@ -31,9 +31,12 @@ import {
   VaultResponse,
 } from './types';
 
-/** Only a transport, throttling or server-side failure can succeed on a later attempt. */
-export const isRetryable = (error: ClaudeAgentApiError): boolean =>
-  error.status === 0 || error.status === 429 || error.status >= 500;
+/**
+ * A retry is safe on a GET, which changes nothing; on a POST it is safe only where the server says
+ * it did not act, since a lost response would otherwise create the session or credential twice.
+ */
+export const isRetryable = (method: 'GET' | 'POST', error: ClaudeAgentApiError): boolean =>
+  method === 'GET' ? error.status === 0 || error.status === 429 || error.status >= 500 : error.status === 429;
 
 type Request<A> = {
   apiKey: string;
@@ -79,7 +82,7 @@ export const request = <A>({ apiKey, method, path, schema, body }: Request<A>): 
     // bounded delay.
     Effect.retry({
       schedule: Schedule.fixed(REQUEST_RETRY_DELAY).pipe(Schedule.upTo({ times: REQUEST_RETRIES })),
-      while: isRetryable,
+      while: (error) => isRetryable(method, error),
     }),
     Effect.flatMap((json) =>
       Schema.decodeUnknownEffect(schema)(json).pipe(

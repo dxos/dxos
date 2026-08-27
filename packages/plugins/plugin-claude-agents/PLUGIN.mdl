@@ -185,10 +185,17 @@ feat F-6: Credentials
     then: the operation fails with ClaudeAgentApiError carrying the status and body
 
   req F-6.4:
-    when: a request fails on transport, 429 or 5xx
+    when: a GET fails on transport, 429 or 5xx
     then: |
       it is retried up to three times with a fixed one-second delay; a 4xx other
       than 429 fails immediately, since the request itself is what was rejected
+
+  req F-6.5:
+    when: a POST fails on transport or 5xx
+    then: |
+      it is NOT retried — a lost response is indistinguishable from one never
+      sent, and a retry would create the session, vault or credential twice; only
+      429, where the server says it did not act, is retried
 ```
 
 ```mdl
@@ -221,6 +228,13 @@ feat F-7: Session credentials
     when: a referenced token resolves to an empty value
     then: the operation fails with CredentialResolutionError naming the variable,
           rather than binding a blank secret the agent only discovers as a 401
+
+  req F-7.7:
+    when: `scope` is given as an empty list
+    then: |
+      input validation rejects it, rather than reading it as an omitted scope and
+      widening the credential to the token's own source — a host the caller did
+      not list
 
   req F-7.3:
     when: Set or Revoke Claude Agent Session Credentials is invoked for a session

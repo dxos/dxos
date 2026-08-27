@@ -40,9 +40,9 @@ export const SessionCredential = Schema.Struct({
     description: 'Environment variable the agent reads the secret as, e.g. "GH_TOKEN".',
   }),
   scope: Schema.optional(
-    Schema.Array(Schema.NonEmptyString).annotate({
+    Schema.NonEmptyArray(Schema.NonEmptyString).annotate({
       description:
-        'Hosts the secret may be sent to, e.g. ["github.com"]. Defaults to the token\'s own source; the platform refuses to substitute it anywhere else.',
+        'Hosts the secret may be sent to, e.g. ["github.com"]. Omit to default to the token\'s own source; the platform refuses to substitute it anywhere else. An empty list is rejected rather than read as the default.',
     }),
   ),
 });
