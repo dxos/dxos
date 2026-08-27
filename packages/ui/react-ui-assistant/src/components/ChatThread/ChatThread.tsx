@@ -13,11 +13,19 @@ import React, {
   useState,
 } from 'react';
 
-import { type FeedModel, MessageList, type MessageListController, type MessageRange } from '@dxos/react-ui-feed';
+import { IconButton, useTranslation } from '@dxos/react-ui';
+import {
+  type FeedModel,
+  MessageList,
+  type MessageListController,
+  type MessageRange,
+  useMessageList,
+} from '@dxos/react-ui-feed';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 
 import { assistantRegistry } from '../../registry';
 import { type CreateRendererOptions, createRenderer, estimateRow } from '../../renderer';
+import { translationKey } from '../../translations';
 import { type ChatThreadEvent, type ChatView } from '../../types';
 import { MessageChrome, MessageChromeProvider } from '../MessageChrome';
 
@@ -165,7 +173,7 @@ const ChatThreadViewport = ({ children, classNames, ...props }: ChatThreadViewpo
     <div className='contents' data-testid='assistant.thread' data-hue={userHue} onClickCapture={handleClick}>
       {/* Every chat host is a flex column with a composer below: the scroll-container pair is the
           default, and a caller's classNames extend or override it. */}
-      <MessageList.Viewport {...props} classNames={['grow min-h-0', classNames]}>
+      <MessageList.Viewport {...props} classNames={['grow min-h-0', classNames]} overlay={<ScrollToBottom />}>
         {children}
       </MessageList.Viewport>
     </div>
@@ -175,12 +183,48 @@ const ChatThreadViewport = ({ children, classNames, ...props }: ChatThreadViewpo
 ChatThreadViewport.displayName = CHAT_THREAD_VIEWPORT_NAME;
 
 //
+// ScrollToBottom
+//
+
+const CHAT_THREAD_SCROLL_TO_BOTTOM_NAME = 'ChatThread.ScrollToBottom';
+
+/**
+ * Returns the reader to the tail, and re-arms the follow with it (`scrollToBottom` does both).
+ *
+ * Hidden by opacity rather than unmounted: a button that appears and disappears from the layout
+ * would move the scroller's own box, and the placement measures that box.
+ */
+const ScrollToBottom = () => {
+  const { t } = useTranslation(translationKey);
+  const { atEnd, scrollToBottom } = useMessageList(CHAT_THREAD_SCROLL_TO_BOTTOM_NAME);
+
+  return (
+    <IconButton
+      icon='ph--arrow-down--regular'
+      iconOnly
+      label={t('scroll-to-bottom.label')}
+      variant='primary'
+      size={4}
+      classNames={[
+        'absolute bottom-2 right-4 z-10 transition-opacity duration-300',
+        atEnd && 'opacity-0 pointer-events-none',
+      ]}
+      data-testid='assistant.thread.scroll-to-bottom'
+      onClick={() => scrollToBottom({ behavior: 'smooth' })}
+    />
+  );
+};
+
+ScrollToBottom.displayName = CHAT_THREAD_SCROLL_TO_BOTTOM_NAME;
+
+//
 // ChatThread
 //
 
 export const ChatThread = {
   Root: ChatThreadRoot,
   Viewport: ChatThreadViewport,
+  ScrollToBottom,
 };
 
 export type { ChatThreadRootProps, ChatThreadViewportProps };

@@ -23,6 +23,7 @@ export const translations = [
         'nav-previous.label': 'Previous message',
         'nav-next.label': 'Next message',
         'nav-last.label': 'Last message',
+        'scroll-to-bottom.label': 'Scroll to bottom',
       },
     },
   },

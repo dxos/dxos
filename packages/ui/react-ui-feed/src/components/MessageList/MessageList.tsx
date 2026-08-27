@@ -6,6 +6,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, {
   type ComponentType,
   type PropsWithChildren,
+  type ReactNode,
   type Ref,
   useCallback,
   useEffect,
@@ -83,6 +84,8 @@ type MessageListContextValue = {
   range?: MessageRange;
   /** Index the reader is on: moved by the arrow keys and by any navigation, tracked while scrolling. */
   currentIndex: number;
+  /** Whether the reader is resting on the tail — what a scroll-to-bottom affordance hides against. */
+  atEnd: boolean;
   /** The one seam every navigation driver calls: toolbar, arrows, outline, minimap (SPEC F-3.2). */
   navigation: FeedNavigation;
   /** Rows mounted right now: the window the reader is paying for. */
@@ -125,6 +128,7 @@ export const useMessageList = (consumerName = 'useMessageList') => {
   const {
     range,
     currentIndex,
+    atEnd,
     navigation,
     mountedRows,
     mountedWidgets,
@@ -139,6 +143,7 @@ export const useMessageList = (consumerName = 'useMessageList') => {
   return {
     range,
     currentIndex,
+    atEnd,
     navigation,
     mountedRows,
     mountedWidgets,
@@ -503,6 +508,7 @@ const MessageListRoot = ({
           debug={debug}
           range={range}
           currentIndex={currentIndex}
+          atEnd={follow.atEnd}
           navigation={navigation}
           mountedRows={mounted}
           mountedWidgets={mountedWidgets}
@@ -539,7 +545,16 @@ type MessageListViewportExtra = Pick<
   ScrollAreaRootProps,
   'autoHide' | 'centered' | 'native' | 'padding' | 'scrollbars' | 'thin'
 > &
-  Pick<ColumnRootProps, 'gutter'>;
+  Pick<ColumnRootProps, 'gutter'> & {
+    /**
+     * Chrome pinned over the scroller — a scroll-to-bottom pill, a "new messages" badge.
+     *
+     * Mounted inside `ScrollArea.Root`, which is positioned and does not scroll: a child of the
+     * viewport would scroll away with the rows, and a sibling of the whole part would need a
+     * positioned box inserted into the flex-height chain the placement measures.
+     */
+    overlay?: ReactNode;
+  };
 
 /**
  * The scroll container and the mounted window of rows.
@@ -559,7 +574,7 @@ const isEmptyContent = (content: ItemContent, hasCustomRenderer: boolean): boole
   (content.kind === 'custom' && !hasCustomRenderer);
 
 const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>(
-  ({ autoHide, centered, native, padding, scrollbars, thin, gutter = 'md', ...props }, forwardedRef) => {
+  ({ autoHide, centered, native, padding, scrollbars, thin, gutter = 'md', overlay, ...props }, forwardedRef) => {
     const { model, renderer, Chrome, Custom, windowRef, offset, sizerExtent, first, last, setViewport } =
       useMessageListContext(MESSAGE_LIST_VIEWPORT_NAME);
     // The value once, per-row state derived: hooks do not run in loops, and the row loop below is
@@ -637,6 +652,7 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
             {rows}
           </div>
         </ScrollArea.Viewport>
+        {overlay}
       </ScrollArea.Root>
     );
   },
