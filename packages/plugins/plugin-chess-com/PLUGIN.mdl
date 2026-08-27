@@ -162,20 +162,20 @@ flow QA-1: Link a Chess.com account and sync games
         plugin-chess's own game-creation gap. That is the finding, not an omission.
     - name: Sync games
       do: Click "Sync games" in the account's toolbar.
-      invoke: [op:SyncGames] { account: $given.account }
+      invoke: [op:SyncGames] { account: Ref.make($given.account) }
       capture: synced
       expect: the masonry gallery fills with game cards, one per archived game, and the account's
         profile fields (followers, country, joined, ...) populate
       assert: return $result.appended > 0;
     - name: Re-sync does not duplicate
       do: Click "Sync games" again.
-      invoke: [op:SyncGames] { account: $given.account }
+      invoke: [op:SyncGames] { account: Ref.make($given.account) }
       expect: the gallery is unchanged — no duplicate tiles appear
       assert: return $result.appended === 0;
   after:
     - name: Clear synced games
       do: Use the account's "Clear synced games" action.
-      invoke: [op:ClearSyncedGames] { account: $given.account }
+      invoke: [op:ClearSyncedGames] { account: Ref.make($given.account) }
       expect: the gallery is empty
       assert: return $result.removed > 0;
     - name: Delete the account

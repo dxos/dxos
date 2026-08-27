@@ -551,13 +551,13 @@ flow QA-2: Translate and analyze a passage in the reading companion
     - name: Open the reading companion and run analysis
       do: Open the reading companion beside the document, pick "English" as the target language,
         and click the run action.
-      invoke: [op:TranslatePassage] { text: $given.text, language: $given.language }
+      invoke: [op:TranslatePassage] { text: $given.text, language: Ref.make($given.language) }
       capture: translated
       expect: a translated passage renders in the companion pane
       assert: return !!$translated.text;
     - name: Analyze the pair
       do: (the run action chains straight into analysis)
-      invoke: [op:AnalyzeText] { subject: $given.document, text: $given.text, language: $given.language, translation: $translated.text }
+      invoke: [op:AnalyzeText] { subject: $given.document, text: $given.text, language: Ref.make($given.language), translation: $translated.text }
       capture: analyzed
       expect: the source pane shows decorated paragraph/sentence/clause/vocab regions; hovering
         one outlines the most specific region and reveals a gloss
@@ -566,7 +566,7 @@ flow QA-2: Translate and analyze a passage in the reading companion
         snippet boundary.
     - name: Re-run and confirm the cache is used
       do: Click the run action again without editing the document.
-      invoke: [op:AnalyzeText] { subject: $given.document, text: $given.text, language: $given.language, translation: $translated.text }
+      invoke: [op:AnalyzeText] { subject: $given.document, text: $given.text, language: Ref.make($given.language), translation: $translated.text }
       expect: the same Analysis is reused; no second model call is made
       assert: return $result.cached === true;
   after:

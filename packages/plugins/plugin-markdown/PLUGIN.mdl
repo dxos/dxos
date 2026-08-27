@@ -504,7 +504,7 @@ flow QA-2: Link one page to another
       do: |
         With Page 1 open (previous steps), put the caret at the end, then type `/` and choose
         "Inline link" (or type `@Page 2` directly) and pick Page 2 from the query.
-      invoke: [op:update] { doc: $page1.object, edits: [{ newString: "\nSee [Page 2]($page2.uri).\n" }] }
+      invoke: [op:update] { doc: Ref.make($page1.object), edits: [{ newString: "\nSee [Page 2]($page2.uri).\n" }] }
       expect: the end of Page 1 shows an internal reference to Page 2, not a plain web hyperlink
       assert: |
         return /\]\(echo:\/\//.test($result.newContent);

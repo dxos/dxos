@@ -215,8 +215,8 @@ op SyncFeed
   key: org.dxos.operation.magazine.syncFeed
   desc: Existing operation. Pulls new Posts from a Feed's source URL.
   input:
-    feedId: DXN
-  output: number                   # number of Posts added
+    feed: Ref<Feed>
+  output: void
   effects: [http, echo:write]
   note: Documented here for context; unchanged by this revision.
 ```
@@ -287,9 +287,10 @@ op CurateMagazine
     existing `description` (no HTTP) and appends the enriched Post ref to
     `magazine.posts`. Skips Posts with empty descriptions.
   input:
-    magazineId: DXN
+    magazine: Ref<Magazine>
   output:
-    added: number
+    synced: number                 # number of feeds successfully synced
+    curated: number                # number of posts added to the magazine
   effects: [echo:write]
   note: >
     Exists alongside the skill. The deterministic path gives the button
