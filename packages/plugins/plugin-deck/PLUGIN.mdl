@@ -788,14 +788,15 @@ flow QA-1: Open, resize, and close a second plank
       expect: "QA Deck Doc 2" appears as a row under the collection
     - name: Open it beside the first plank
       do: Click "QA Deck Doc 2" in the navtree while holding Shift.
-      invoke: [op:Open] { subject: ["root/$given.space.id/content/collections/$created.object.id"], disposition: "add", pivotId: $given.doc1.id }
+      invoke: [op:Open] { subject: ["root/$given.space.id/content/collections/$created.object.id"], modifiers: { shift: true }, pivotId: $given.doc1.id }
       capture: opened
       expect: the deck now shows two planks, tiling side by side, "QA Deck Doc 2" alongside the first
       assert: return $opened.length > 0
       note: |
-        `disposition: add` (F-1.6, F-1.8) forwards the Shift modifier — the default `solo` open
-        (a plain click, no modifier) would replace the first plank instead of growing the deck,
-        which is not what this step is testing (see `open.ts`).
+        No explicit `disposition` — the step exercises Shift forwarding (F-1.6, F-1.8): `open.ts`
+        reads `input.modifiers?.shift` and forces an add regardless of disposition, so leaving
+        disposition at its `solo` default and setting `modifiers: { shift: true }` is what actually
+        tests the shift-forces-add rule, not a hard-coded `disposition: "add"`.
     - name: Resize the tiling split
       do: Drag the hairline divider between the two planks.
       invoke: [op:UpdateTilingSize] { size: 40 }

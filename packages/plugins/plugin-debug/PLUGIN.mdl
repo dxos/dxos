@@ -105,7 +105,6 @@ flow QA-2: Generate synthetic objects into a collection
   given:
     - an identity exists
     - space: a space is open
-    - attendableId: the id of the open document's attendable surface, which `insertLoremIpsum` targets
     - collection: a collection in that space, empty of synthetic objects
     - plugin-debug is enabled (dev-only default; see above)
   test:

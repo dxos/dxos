@@ -364,10 +364,10 @@ flow QA-2: Generate synthetic objects into a collection
       not create
   test:
     - name: Generate one object
-      do: Navigate to the debug node under the space, set count=1 and type=Person, and click Generate.
+      do: (agent-only — invokes space.addObject directly, bypassing the SpaceGenerator surface)
       invoke: org.dxos.operation.space.addObject { object: { "@type": "org.dxos.type.person", fullName: "QA Devtools Object" }, target: $given.collection }
       capture: created
-      expect: one new Person appears in the active collection, and DebugStatus briefly shows "running"
+      expect: one new Person named "QA Devtools Object" appears in the active collection
       assert: return !!$created.object
   after:
     - name: Delete the generated object
