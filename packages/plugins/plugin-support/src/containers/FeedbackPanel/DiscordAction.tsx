@@ -16,6 +16,7 @@ import { meta } from '#meta';
 import { SupportOperation } from '#types';
 
 import { formatRequestMessage } from './request';
+import { useScreenshotAttachment } from './useScreenshotAttachment';
 
 /** Build a direct PostHog event permalink (±15s search window via timestamp). */
 const makePostHogEventUrl = (projectId: string, eventUuid: string): string =>
@@ -40,6 +41,7 @@ export const DiscordAction = ({ disabled }: DiscordActionProps) => {
     getEdgeServiceEndpoint(config, EdgeServiceName.Discord);
 
   const discordPresence = useDiscordPresence(discordServiceUrl);
+  const attachScreenshot = useScreenshotAttachment();
 
   const handleDiscord = useCallback<FeedbackSubmitHandler>(
     async (values) => {
@@ -47,7 +49,9 @@ export const DiscordAction = ({ disabled }: DiscordActionProps) => {
         return;
       }
 
-      const message = formatRequestMessage(values);
+      // Capture before submitting, while the reported screen is still on-screen.
+      const screenshot = await attachScreenshot(values);
+      const message = formatRequestMessage(values, screenshot.url);
 
       // PostHog submission is the primary path — if it fails the error propagates
       // and no misleading toast is shown.
@@ -106,7 +110,7 @@ export const DiscordAction = ({ disabled }: DiscordActionProps) => {
         });
       }
     },
-    [invokePromise, discordServiceUrl, posthogProjectId],
+    [invokePromise, discordServiceUrl, posthogProjectId, attachScreenshot],
   );
 
   return (

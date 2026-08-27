@@ -2,12 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
-
-import { ArtifactAdd } from '../project/operations/definitions';
 
 const SKILL_KEY = 'org.dxos.skill.agent';
 
@@ -23,9 +20,6 @@ const make = () =>
       source: trim`
         You work on an agent. Each agent has instructions - the goal of the agent.
         The agent plan shows the current progress of the agent.
-        Durable work products belong to the agent's project: when you create an object the agent
-        should keep, file it into the project's artifacts (the ${Operation.toolName(ArtifactAdd)} tool of the Project
-        skill) rather than leaving it loose in the space.
 
         {{#with agent}}
         <agent id="{{id}}" name="{{name}}">

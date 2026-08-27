@@ -336,6 +336,19 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 const exit = yield* fiber.await;
                 if (Option.isSome(strategy)) {
                   yield* strategy.value.onComplete(feed, delegation.id, exit);
+                  // Re-reconcile: work that was waiting on this delegation (e.g. a dependent task)
+                  // spawns now rather than on the next conversational turn — this is what lets a
+                  // batch of delegated tasks drain without further prompting.
+                  const activeIds = new Set(delegations.map((delegation) => delegation.id));
+                  const pending = yield* strategy.value.reconcile(feed, activeIds);
+                  for (const next of pending) {
+                    const pid = yield* next.spawn;
+                    delegations.push({ pid, id: next.id });
+                    log('delegated work', { pid, id: next.id });
+                  }
+                  if (pending.length > 0) {
+                    yield* DelegationsCell.set(delegations);
+                  }
                 }
                 log('delegated work completed', { pid: event.pid, id: delegation.id, success: Exit.isSuccess(exit) });
                 yield* maybeComplete;

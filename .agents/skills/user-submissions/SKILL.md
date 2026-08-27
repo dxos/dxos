@@ -112,6 +112,39 @@ A root cause is a claim the log lines prove. Hold yourself to:
   say which statement produces the behaviour. Stop only when you can point at
   it — a subsystem name is not a root cause.
 
+### Traps that have cost real time
+
+- **A clean level histogram means nothing.** A bundle with zero `E` lines and two
+  unrelated `W` lines held a fault that had persisted three days. When a report is
+  "X is stuck", the signature is not an error — it is a **loop that repeats
+  without its payload changing**. Bucket activity per second and look for a
+  cadence that never converges; a steady poll returning "0 items" is idle, the
+  same non-empty diff every N seconds is stuck.
+- **Translate identifiers before concluding "no activity".** Layers name the same
+  object differently (ECHO `DocumentId` vs subduction `SedimentreeId`, space id vs
+  space key, peer key vs DID). A grep that finds nothing may prove only that you
+  searched in the wrong encoding. Derive the other form and re-search before
+  writing "the subsystem never touched it".
+- **`log` context values are strings.** `c` holds JSON-stringified metadata, so
+  `len(record['c']['different'])` measures characters, not array length —
+  `"[]"` is 2 and a one-element list is 32. Parse the field before counting.
+- **Any single-instance signal needs a control.** Before "this document is stuck
+  because it has no X", count X across all comparable objects in the same bundle.
+  A signal present in 19 of 404 documents — including ones that synced fine — is a
+  lead, not a cause. State the control in the writeup.
+- **Correlate service logs on attributes, not body text.** Full-text search for an
+  id matches only lines whose message embeds it, silently missing every structured
+  line that carries it as an attribute. Filter on the attribute
+  (`attribute.ctx.spaceId = '…'`).
+- **Check whether the session is still live.** Service-side logs often run past the
+  bundle's export timestamp, which tells you whether the fault is ongoing, and
+  whether later failures are the same one or a second one layered on top. Compare
+  timestamps before merging two symptoms into one story.
+- **Suppressed logging is a finding.** If a subsystem deliberately silences its own
+  warnings (console flooding is the usual reason), a bundle cannot exonerate it.
+  Record at startup that suppression is active and how to lift it, so the next
+  bundle says whether it was on.
+
 ## 4. Then one of two outcomes
 
 **A. The logs explain it.** Fix the root cause. Keep the diff minimal, add a

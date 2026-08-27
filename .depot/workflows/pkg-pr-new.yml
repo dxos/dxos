@@ -1,0 +1,66 @@
+name: pkg.pr.new
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Queue rather than cancel: a cancelled run uploads nothing, so the commit it was building stays
+  # permanently un-installable for anything pinning pkg.pr.new — which is how the composer plugins
+  # repo tracks the SDK, and its nightly 404s when it lands on such a commit.
+  cancel-in-progress: false
+
+env:
+  # Bound once here rather than at every setup call site: a composite action cannot read the
+  # `secrets` context, but it does inherit the process environment.
+  MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
+  MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+  MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
+
+jobs:
+  publish:
+    runs-on: depot-ubuntu-24.04-4
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    # The CLI's five platform binaries add ~330 MB of multipart upload (5 MB parts) on top of the
+    # workspace packages, which does not fit the previous 30.
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+
+      - name: Setup
+        uses: ./.depot/actions/setup
+
+      - name: Build
+        run: moon run :build
+        env:
+          NODE_ENV: production
+
+      - name: Bundle Shell
+        run: moon run shell:bundle
+        env:
+          NODE_ENV: production
+
+      # The CLI publishes prebuilt binaries generated into dist/, so without this the publish script
+      # has nothing to attach. Deliberately no `NODE_ENV: production` — that would diverge the preview
+      # binary from the one `cli:publish` produces.
+      - name: Bundle CLI
+        run: moon run cli:bundle
+
+      # Gate the preview on the same check as `cli:publish`. Without it this workflow published a binary
+      # compiled by the CI image's bun rather than the pinned one, which rejected its own arguments.
+      - name: Smoke test CLI
+        run: moon run cli:smoke
+
+      - name: Publish to pkg.pr.new
+        run: .github/workflows/scripts/pkg-pr-new-publish.sh

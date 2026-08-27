@@ -17,15 +17,11 @@ describe('SpotlightPlugin', () => {
       plugins: [SpotlightPlugin()],
     });
 
-    // State, SpotlightDismiss, ReactRoot, and OperationHandler are all dependency-mode roots, so they
-    // all activate immediately.
+    // These are dependency-mode roots, so they all activate immediately. `#plugin` resolves the node
+    // barrel here, which stubs `ReactRoot` — there is no React tree to mount headlessly.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([
-        moduleId('State'),
-        moduleId('SpotlightDismiss'),
-        moduleId('ReactRoot'),
-        moduleId('OperationHandler'),
-      ]),
+      expect.arrayContaining([moduleId('State'), moduleId('SpotlightDismiss'), moduleId('OperationHandler')]),
     );
+    expect(harness.manager.getActive()).not.toContain(moduleId('ReactRoot'));
   });
 });

@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 
-import type * as Node from '@dxos/app-graph/Node';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import type * as Operation from '@dxos/compute/Operation';
 import { Annotation, Filter, Obj, Type } from '@dxos/echo';
@@ -49,7 +49,7 @@ export const spaceActionsCache = new Map<
     state: SpaceState;
     hasPendingMigration: boolean;
     migrating: boolean;
-    actions: Node.NodeArg<Node.ActionData<Operation.Service>>[];
+    actions: AppGraphNode.NodeArg<AppGraphNode.ActionData<Operation.Service>>[];
   }
 >();
 export const spaceRearrangeCache = new Map<string, (nextOrder: Space[]) => void>();

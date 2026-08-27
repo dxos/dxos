@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
-import * as Node from '@dxos/app-graph/Node';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { Position } from '@dxos/util';
 
 import { Home, NavBranch } from '#components';
@@ -25,7 +25,7 @@ export default Capability.makeModule(
     return Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'home',
-        filter: Surface.makeFilter(AppSurface.Article, (data) => data.attendableId === Node.RootId),
+        filter: Surface.makeFilter(AppSurface.Article, (data) => data.attendableId === GraphNode.RootId),
         component: Home,
       }),
       Surface.create({

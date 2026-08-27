@@ -9,6 +9,7 @@ export default defineConfig({
     index: 'src/index.ts',
     PwaPlugin: 'src/PwaPlugin.ts',
     plugin: 'src/plugin.tsx',
+    capabilities: 'src/capabilities/index.ts',
     meta: 'src/meta.ts',
     translations: 'src/translations.ts',
   },

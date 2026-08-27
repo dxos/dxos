@@ -12,11 +12,10 @@ import { StreamDeckCapabilities } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 
-// Headless: the device has to stay live with no surface rendered, so this is gated on spaces being
-// ready rather than on the plugin's own UI appearing.
 export const BridgeDriver = Capability.lazyModule(
   'BridgeDriver',
   {
+    environments: [],
     requires: [Capabilities.AtomRegistry, Capabilities.OperationInvoker, SpaceCapabilities.Dashboard],
     provides: [StreamDeckCapabilities.BridgeStatus],
     activatesOn: ClientEvents.SpacesReady,

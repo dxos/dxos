@@ -28,6 +28,7 @@ import { useChatKeymapExtensions, usePlatform } from '#hooks';
 import { meta } from '#meta';
 import { AssistantPreset } from '#types';
 
+import { TaskSlashCommands } from '../../commands';
 import { type AiChatProcessor } from '../../processor';
 import { type ChatEvent } from '../Chat';
 import { ChatActions, type ChatActionsProps } from './ChatActions';
@@ -94,14 +95,18 @@ export const ChatPrompt = ({
 
   const keymapExtensions = useChatKeymapExtensions({ event });
 
-  // Sentinel-command completion is sourced from the bound project's instructions, if any.
+  // Command completion: `$` sentinels come from the bound project's instructions; `/` commands
+  // are the deterministic operation shortcuts (see assistant-toolkit `SlashCommands`).
   const [companion] = useObject(companionTo);
   const [instructions] = useObject(Obj.instanceOf(Project.Project, companion) ? companion.instructions : undefined);
   const commandsRef = useDynamicRef(instructions?.commands ?? []);
   const commandsExtension = useMemo(
     () =>
       commands({
-        getCommands: () => commandsRef.current.map(({ sentinel, description }) => ({ sentinel, description })),
+        getCommands: () => [
+          ...commandsRef.current.map(({ sentinel, description }) => ({ sentinel, description })),
+          ...TaskSlashCommands.map(({ command, description }) => ({ sentinel: command, description })),
+        ],
       }),
     [commandsRef],
   );

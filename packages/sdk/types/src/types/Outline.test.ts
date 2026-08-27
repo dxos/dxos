@@ -35,7 +35,7 @@ describe('Outline', () => {
       const taskSet = db.add(TaskSet.make({ name: 'Roadmap' }));
       await db.flush();
 
-      const task = Outline.addTask(db, taskSet, '  Buy milk  ');
+      const task = TaskSet.addTask(db, taskSet, '  Buy milk  ');
 
       expect(task.title).to.eq('Buy milk');
       expect(task.status).to.eq('todo');
@@ -50,8 +50,8 @@ describe('Outline', () => {
       const taskSet = db.add(TaskSet.make());
       await db.flush();
 
-      const first = Outline.addTask(db, taskSet, 'First');
-      const second = Outline.addTask(db, taskSet, 'Second');
+      const first = TaskSet.addTask(db, taskSet, 'First');
+      const second = TaskSet.addTask(db, taskSet, 'Second');
 
       expect(taskSet.tasks.map((ref) => ref.target?.id)).to.deep.eq([first.id, second.id]);
     });
@@ -60,12 +60,12 @@ describe('Outline', () => {
       const taskSet = db.add(TaskSet.make());
       await db.flush();
 
-      const task = Outline.addTask(db, taskSet, 'Delegated', {
-        status: 'in-progress',
+      const task = TaskSet.addTask(db, taskSet, 'Delegated', {
+        status: 'started',
         assignee: { role: 'assistant' },
       });
 
-      expect(task.status).to.eq('in-progress');
+      expect(task.status).to.eq('started');
       expect(task.assignee?.role).to.eq('assistant');
     });
   });

@@ -16,6 +16,11 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./util": {
+      "source": "./src/util/index.ts",
+      "types": "./dist/types/src/util/index.d.ts",
+      "import": "./dist/lib/util.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

@@ -5,8 +5,8 @@
 import { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import * as Node from '@dxos/app-graph/Node';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import { useDeckState } from '@dxos/plugin-deck/hooks';
 
@@ -30,7 +30,7 @@ export const useMobileStack = (): MobileStack => {
   const { state, deck } = useDeckState();
   const { invokePromise } = useOperationInvoker();
 
-  const rootId = state.activeDeck === DeckSchema.DEFAULT_DECK_ID ? Node.RootId : state.activeDeck;
+  const rootId = state.activeDeck === DeckSchema.DEFAULT_DECK_ID ? GraphNode.RootId : state.activeDeck;
   const stack = useMemo(() => [rootId, ...deck.active], [rootId, deck.active]);
   const topId = stack[stack.length - 1] ?? rootId;
 
@@ -38,8 +38,8 @@ export const useMobileStack = (): MobileStack => {
     const top = deck.active[deck.active.length - 1];
     if (top) {
       void invokePromise(LayoutOperation.Close, { subject: [top] });
-    } else if (rootId !== Node.RootId) {
-      void invokePromise(LayoutOperation.SwitchWorkspace, { subject: Node.RootId });
+    } else if (rootId !== GraphNode.RootId) {
+      void invokePromise(LayoutOperation.SwitchWorkspace, { subject: GraphNode.RootId });
     }
   }, [invokePromise, deck.active, rootId]);
 

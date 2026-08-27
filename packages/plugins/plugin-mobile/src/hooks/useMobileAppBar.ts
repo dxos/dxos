@@ -6,8 +6,8 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useCallback, useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
-import * as Node from '@dxos/app-graph/Node';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { invariant } from '@dxos/invariant';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
@@ -64,9 +64,9 @@ export const useMobileAppBar = (): MobileAppBar => {
         invariant(deck, `Deck not found: ${state.activeDeck}`);
         const activeId =
           deck.active[deck.active.length - 1] ??
-          (state.activeDeck === DeckSchema.DEFAULT_DECK_ID ? Node.RootId : state.activeDeck);
+          (state.activeDeck === DeckSchema.DEFAULT_DECK_ID ? GraphNode.RootId : state.activeDeck);
         // `graphActions` returns typed `ActionGraphProps` directly, so no cast is needed to bridge
-        // `@dxos/app-graph`'s `Node.ActionLike[]` into `@dxos/react-ui-menu`'s node/edge shape.
+        // `@dxos/app-graph`'s `AppGraphNode.ActionLike[]` into `@dxos/react-ui-menu`'s node/edge shape.
         return graphActions(graph, get, activeId, {
           filter: (action) => ACTION_DISPOSITIONS.includes(action.properties.disposition),
         });
@@ -74,7 +74,7 @@ export const useMobileAppBar = (): MobileAppBar => {
     [graph, stateAtom],
   );
 
-  const showBackButton = stack.length > 1 || rootId !== Node.RootId;
+  const showBackButton = stack.length > 1 || rootId !== GraphNode.RootId;
   const onBack = useCallback(() => pop(), [pop]);
 
   // `Menu` would hand the action its menu group as `parent`, but the graph extensions compose a

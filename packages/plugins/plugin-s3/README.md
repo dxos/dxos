@@ -22,9 +22,10 @@ its own credential from the URI alone.
 
 1. Create the bucket, then create an API token scoped to it (dashboard → R2 → Manage API tokens).
    Keep the access key id and secret; the secret is shown only once.
-2. Add a CORS policy allowing your app's origin. **Without this nothing works** — the browser blocks
-   the request before it is sent, and the failure looks like an opaque network error rather than a
-   permissions problem:
+2. Add a CORS policy allowing your app's origin. Required to **upload**, and to read a private
+   object programmatically — the browser blocks the request before it is sent, and the failure looks
+   like an opaque network error rather than a permissions problem. **Viewing an already-stored file
+   does not need it** (see below):
 
    ```json
    [
@@ -38,8 +39,25 @@ its own credential from the URI alone.
    ]
    ```
 
+   If you are editing a bucket that already has a policy, **add a rule rather than replacing the
+   configuration** — `PutBucketCors` overwrites the whole thing, so a careless write drops whatever
+   was serving your production origins.
+
 3. In Composer, connect the bucket: the endpoint is `<bucket>.<account-id>.r2.cloudflarestorage.com`.
 4. Select **S3** as the storage backend in the file plugin's settings.
+
+### What CORS is and is not needed for
+
+| Action | Needs a bucket CORS policy |
+| --- | --- |
+| Uploading a file | yes |
+| Testing the connection | yes |
+| Rendering a stored image, video or PDF | **no** |
+
+Rendering goes through `getUrl`, which returns a presigned URL that the file plugin puts in a plain
+`<img src>` / `<video src>` / `<iframe src>`. Those loads carry no `crossorigin` attribute and are
+not CORS-gated — only `fetch` is. So someone who only ever *views* files in a space needs nothing
+configured on the bucket.
 
 ## Trust model
 

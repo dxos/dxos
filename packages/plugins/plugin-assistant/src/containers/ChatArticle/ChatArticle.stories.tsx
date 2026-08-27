@@ -21,17 +21,18 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
+import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { Config } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
-import { Message, Outline } from '@dxos/types';
+import { Message, Outline, Task, TaskSet } from '@dxos/types';
 
+import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
 
-import { AssistantPlugin } from '../../plugin';
 import { ChatArticle, ChatArticleProps } from './ChatArticle';
 
 /**
@@ -115,8 +116,8 @@ const desktopOnlyChrome = (canvasElement: HTMLElement) => ({
 type StoryArgs = {
   /** Turns the story drives: each prompt is submitted, and its reply is what the scripted model returns. */
   messages?: { prompt: string; reply: string }[];
-  /** Seed the chat's working outline, so the article renders its `Chat.TaskList`. */
-  tasks?: Outline.ChecklistItem[];
+  /** Seed the chat's working task set, so the article renders its `Chat.TaskList`. */
+  tasks?: { title: string; status?: Task.Task['status'] }[];
   /** Contributes the deck's platform capability, which the prompt reads to drop desktop-only affordances. */
   platform?: DeckCapabilities.Platform;
 } & Pick<ChatArticleProps, 'debug'>;
@@ -141,7 +142,7 @@ const meta = {
         plugins: [
           ...corePlugins(),
           ClientPlugin.make({
-            types: [Chat.Chat, Feed.Feed, Message.Message, Outline.Outline, Text.Text],
+            types: [Chat.Chat, Feed.Feed, Message.Message, Outline.Outline, TaskSet.TaskSet, Task.Task, Text.Text],
             config: new Config({ runtime: { services: SERVICES_CONFIG.REMOTE } }),
             onClientInitialized: ({ client }) =>
               Effect.gen(function* () {
@@ -149,16 +150,20 @@ const meta = {
                 const [space] = client.spaces.get();
                 yield* Effect.promise(() => space.waitUntilReady());
                 const feed = space.db.add(Feed.make());
-                const outline = tasks.length
-                  ? space.db.add(Outline.make({ content: tasks.map(Outline.renderChecklistItem).join('\n') }))
-                  : undefined;
+                const taskSet = tasks.length ? space.db.add(TaskSet.make({ name: 'Test' })) : undefined;
+                if (taskSet) {
+                  for (const { title, status } of tasks) {
+                    TaskSet.addTask(space.db, taskSet, title, { status });
+                  }
+                }
                 const chat = space.db.add(
-                  Chat.make({ name: 'Test', feed: Ref.make(feed), outline: outline && Ref.make(outline) }),
+                  Chat.make({ name: 'Test', feed: Ref.make(feed), taskSet: taskSet && Ref.make(taskSet) }),
                 );
-                if (chat.outline) {
-                  // The task list reads the outline through the ref's resolve-once atom; load it so
-                  // the story renders without waiting on a lazy resolution that nothing triggers.
-                  yield* Effect.promise(() => chat.outline!.load());
+                if (chat.taskSet) {
+                  // The task list reads the set and its rows through resolve-once ref atoms; load
+                  // them so the story renders without waiting on a lazy resolution nothing triggers.
+                  const set = yield* Effect.promise(() => chat.taskSet!.load());
+                  yield* Effect.promise(() => Promise.all(set.tasks.map((task) => task.load())));
                 }
 
                 yield* Effect.promise(() => space.db.flush({ indexes: true }));
@@ -172,6 +177,8 @@ const meta = {
               messages.length > 0 ? scriptedAiServiceMiddleware(messages.map(({ reply }) => reply)) : undefined,
           }),
           PreviewPlugin.make(),
+          // Contributes the task verbs the `/task:*` commands invoke.
+          TasksPlugin.make(),
           StorybookPlugin.make({}),
         ],
         // Contributed directly rather than by loading the deck plugin: the prompt reads only this
@@ -198,14 +205,14 @@ export const Default: Story = {
   },
 };
 
-/** The article's working checklist: `Chat.TaskList` reading the chat's outline through context. */
+/** The article's working tasks: `Chat.TaskList` reading the chat's task set through context. */
 export const Tasks: Story = {
   args: {
     tasks: [
-      { title: 'Gather the requirements', done: true },
-      { title: 'Draft the plan', done: true },
-      { title: 'Implement the change', done: false },
-      { title: 'Verify and ship', done: false },
+      { title: 'Gather the requirements', status: 'done' },
+      { title: 'Draft the plan', status: 'done' },
+      { title: 'Implement the change', status: 'started' },
+      { title: 'Verify and ship', status: 'todo' },
     ],
   },
   play: async ({ canvasElement }) => {

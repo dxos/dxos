@@ -25,6 +25,7 @@
     "src"
   ],
   "dependencies": {
+    "@automerge/automerge-repo": "catalog:",
     "@dxos/crypto": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",

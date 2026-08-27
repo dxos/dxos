@@ -12,6 +12,7 @@ import { DEFAULT_HUB_URL } from '@dxos/client-protocol';
 import { EffectEx } from '@dxos/effect';
 
 import { ConfigService } from './config-service';
+import { EDGE_URLS } from './edge-services';
 
 const HUB_SERVICE_URL = 'runtime.services.hub.url';
 const HUB_ENV_URL = 'runtime.app.env.DX_HUB_URL';
@@ -65,7 +66,7 @@ describe('ConfigService.load', () => {
   test('bootstraps against production when a config file is missing', async ({ expect }) => {
     restoreEnv = withEnv({ DX_LOCAL_DEV: undefined });
     const { config } = await createMissing('production');
-    expect(config.get(EDGE_URL)).toEqual('https://dxos.network/');
+    expect(config.get(EDGE_URL)).toEqual(`${EDGE_URLS.production}/`);
   });
 
   test('bootstraps against the main/staging edge under DX_LOCAL_DEV, matching Composer local dev', async ({
@@ -73,13 +74,13 @@ describe('ConfigService.load', () => {
   }) => {
     restoreEnv = withEnv({ DX_LOCAL_DEV: '1' });
     const { config } = await createMissing('local-dev');
-    expect(config.get(EDGE_URL)).toEqual('https://preview.dxos.network');
+    expect(config.get(EDGE_URL)).toEqual(EDGE_URLS.preview);
   });
 
   test('DX_LOCAL_DEV=0 opts back out to production', async ({ expect }) => {
     restoreEnv = withEnv({ DX_LOCAL_DEV: '0' });
     const { config } = await createMissing('opt-out');
-    expect(config.get(EDGE_URL)).toEqual('https://dxos.network/');
+    expect(config.get(EDGE_URL)).toEqual(`${EDGE_URLS.production}/`);
   });
 });
 

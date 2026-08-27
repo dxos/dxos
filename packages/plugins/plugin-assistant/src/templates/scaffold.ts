@@ -9,7 +9,7 @@ import type * as Routine from '@dxos/compute/Routine';
 import * as Skill from '@dxos/compute/Skill';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Ref } from '@dxos/echo';
-import { makeRoutine } from '@dxos/plugin-routine';
+import { makeRoutine } from '@dxos/plugin-routine/util';
 
 export type ScheduledRoutineOptions = {
   name: string;

@@ -9,7 +9,7 @@ import { Database, Feed, Filter } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
-import { ProjectOperation } from '#types';
+import { ProjectMailboxOperation } from '#types';
 
 import { findOrCreateDocumentArtifact, messagesAscending, setDocumentContent } from './helpers';
 
@@ -41,7 +41,7 @@ const row = (message: Message.Message): string => {
  * "Travel Bookings" document as a chronological table. Wholesale regeneration makes the operation
  * idempotent without a cursor — the document always reflects the current feed.
  */
-const handler = ProjectOperation.UpdateTravelLog.pipe(
+const handler = ProjectMailboxOperation.UpdateTravelLog.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ project: projectRef, mailbox: mailboxRef }) {
       const project = yield* Database.load(projectRef);

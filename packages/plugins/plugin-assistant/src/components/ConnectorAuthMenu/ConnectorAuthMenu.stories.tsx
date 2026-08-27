@@ -11,7 +11,7 @@ import React, { useContext, useMemo } from 'react';
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapabilities } from '@dxos/app-framework/ui';
-import * as Graph from '@dxos/app-graph/Graph';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
@@ -104,10 +104,10 @@ const ToolbarStory = () => {
       allConnectors,
       allConnections,
     });
-    const nextGraph = Graph.make({ registry });
-    nextGraph.pipe(
-      Graph.addNodes([{ id: TOOLBAR_NODE_ID, type: 'story/toolbar-target', data: null, properties: {}, actions }]),
-    );
+    const nextGraph = AppGraph.make({ registry });
+    AppGraph.addNodes(nextGraph, [
+      { id: TOOLBAR_NODE_ID, type: 'story/toolbar-target', data: null, properties: {}, actions },
+    ]);
     return nextGraph;
   }, [registry, space, target, allConnectors, allConnections]);
 
