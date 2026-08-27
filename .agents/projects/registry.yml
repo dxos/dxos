@@ -6,16 +6,6 @@
 # status: active | paused | blocked | ended
 
 projects:
-  - name: hypercore-removal
-    status: active
-    user: dmaretskyi
-    host: cloud-sandbox
-    created: 2026-08-24
-    summary: 'Delete hypercore: replicate the space credential chain as an Automerge document instead of a control feed, and re-anchor spaces on a small immutable space-root doc (space id = hash(root doc id)) that points at a rotatable directory doc and a rotatable credentials doc.'
-    tasks: .agents/projects/hypercore-removal/TASKS.md
-    design: .agents/projects/hypercore-removal/DESIGN.md
-    prs: []
-    resume: 'PR #12726 open and green; edge PR dxos/edge#945 green. THE NEW SCHEME IS OPT-IN BEHIND DX_AUTOMERGE_CREDENTIALS (config runtime.client.automergeCredentials, default FALSE) — with the flag off a space keeps its key-derived id and its hypercore control feed, nothing is mirrored, and the document never feeds the state machine. Space ids are ALWAYS derived from the space genesis key (and the halo from the identity key); the root-document derivation and the idDerivation discriminator were removed, so the root anchors the credentials document but does not identify the space. SpaceMetadata.space_id is the primary carried id. Landed: space root doc, echo_spaces migration 0002 (space_root_doc_url + credentials_doc_url), the credentials document with AddOnlySet history reads on both client and edge (a delete cannot revoke a member), SpaceMember.space_root_url, halo anchoring, transparent migration on load, and the edge-side doc-backed reader. Client tests default to the hypercore path; the automerge path has explicit opt-in tests. NEXT: the CredentialSource split inside ControlPipeline (the doc-backed reader is still not authoritative on the client), then Phase 3 dual-write and the per-space flip — which is BLOCKED on choosing between EDGE-executed migration (preferred) and client-creates/EDGE-records. Also blocked: halo documents have no replication between devices.'
   - name: project-tasks
     status: active
     user: burdon

@@ -169,6 +169,7 @@
   },
   "devDependencies": {
     "@dxos/invariant": "workspace:*",
+    "@dxos/plugin-github": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

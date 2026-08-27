@@ -58,8 +58,30 @@ export const modules = [
   'ui/react-primitives/*/src/**',
 ];
 
+/**
+ * Comma-separated package directories (relative to `packages/`, e.g.
+ * `ui/react-ui-task,plugins/plugin-projects`) to serve stories from; unset serves every package.
+ *
+ * Serving the whole monorepo from source is what makes a long editing session brittle: each newly
+ * crawled dependency makes Vite re-optimize and force a reload, which is what fails an in-flight
+ * story with "Failed to fetch dynamically imported module". Narrowing the set while working in one
+ * or two packages keeps source HMR (unlike `serve-fast`, which resolves `@dxos/**` from dist).
+ */
+const storyDirs = process.env.DX_STORIES?.split(',')
+  .map((entry) =>
+    entry
+      .trim()
+      .replace(/^packages\//, '')
+      .replace(/\/+$/, ''),
+  )
+  .filter(Boolean);
+
 // NOTE: Storybook test depends on relative paths.
-export const stories = modules.map((dir) => join('../../../packages', dir, storyFiles));
+export const stories = (storyDirs?.length ? storyDirs.map((dir) => `${dir}/src/**`) : modules).map((dir) =>
+  join('../../../packages', dir, storyFiles),
+);
+// Not narrowed by `DX_STORIES`: a served story renders components from packages outside the filter,
+// and every icon they reference has to be in the sprite.
 export const content = [
   ...modules.map((dir) => join(packages, dir, contentFiles)),
   join(packages, '**/dx.config.{ts,tsx,js,jsx}'),

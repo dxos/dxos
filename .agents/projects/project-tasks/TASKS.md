@@ -34,8 +34,8 @@ be visible in the UI, closing the gaps the storybook audit surfaced.
       conversation's set (standalone chats now delegate into their own);
       the delegation strategy no longer mirrors to markdown; ChatTaskList and
       the ChatArticle story read/seed the task set.
-- [ ] **Open PR** — delegation fix + shared TaskList consolidation +
-      Chat.taskSet pivot; add an assistant-toolkit changeset.
+- [x] **Open PR** — #12752 (delegation fix, shared TaskList, Chat.taskSet pivot)
+      merged 2026-08-26; the follow-on work is #12784.
 - [ ] **Joined story: delegation beside a TaskSet surface** — chat delegating
       while a `TaskSetArticle` (or ChatTaskList over the durable TaskSet) shows
       the agent task appear, run, and complete.
@@ -47,10 +47,10 @@ be visible in the UI, closing the gaps the storybook audit surfaced.
       of resolving through the parent walk at read time (`peekProject`), so the
       ref is durable and the UI needs no reactive parent lookup (closes the
       TODO on `ChatTaskList`).
-- [ ] **Show task status, dependencies, and trigger sub-agents from task list**
-      — surface per-task run state (started/failed, active sub-agent) and
-      inter-task dependencies in the TaskList UI, and let a task row launch a
-      sub-agent directly (the delegation loop without going through chat).
+- [ ] **Trigger sub-agents from the task row** — status, dependencies and the
+      spinner all render; what is left is starting a delegation from the row
+      itself rather than through `/task:run` — the delegation loop without going
+      through chat. (Was: "show status, dependencies, and trigger sub-agents".)
 - [ ] **Atomic task-set initialization** — `ensureTaskSet` creates the set and
       writes the owner ref in separate operations, so concurrent peers can race
       and orphan a set (CodeRabbit on #12752); needs a create-if-absent
@@ -65,11 +65,14 @@ be visible in the UI, closing the gaps the storybook audit surfaced.
       ensureTaskSetSync), `/` completion (non-cycling, mono command column,
       grid popover) + atomic dx-tag decoration in the prompt editor; /task:run
       wakes the conversation with a scoped follow-up. Live-verified.
-- [ ] **Bind slash commands to operation invocations** — needs a client-side
-      harness bridge: harness-scoped operations (HarnessService) resolve their
-      services only inside the agent session, so the UI invoker's
-      DynamicRuntime cannot invoke them; also record command + result as feed
-      messages so the transcript reflects command activity.
+- [x] **Bind slash commands to operation invocations** — no harness bridge was
+      needed: the task verbs declare only `Database.Service`, so the UI invoker
+      can call them (as `TaskSetArticle` already did). The commands moved to
+      plugin-assistant (a core package cannot reference a plugin's operations)
+      and now invoke `CreateTask`/`DeleteTask`/`UpdateTask`; `/task:run` queues
+      through `UpdateTask` and the supervisor's reconcile still spawns. Both the
+      command and its result are appended to the feed, so the transcript records
+      what ran. `assistant-toolkit` keeps the contract and the parse only.
 - [ ] **Cancel/delete tasks** — cancel a started (possibly delegated) task from
       the UI and the agent surface, and delete via the TaskOperation verb so
       the set's refs and lifecycle parent edges stay consistent; a cancelled
@@ -113,5 +116,86 @@ the drain loop; this PR (#12752).
       checklist notes moved off the title line (models pasted them back into
       title-keyed upserts, duplicating tasks). Live drain verified: 3/3 done,
       3 fold-backs, no duplicates, no failures.
-- [ ] **Finish** — fixtures regen, suites, lint/format, live verify, changeset,
-      push, PR comments (at end), DESIGN.md in assistant-toolkit/docs.
+- [x] **Finish** — fixtures regen, suites, lint/format, live verify, changeset,
+      PR comments, DESIGN.md in assistant-toolkit/docs; shipped in #12752.
+
+## Phase 3: Task UX backlog
+
+Follow-ups raised while reviewing the TaskList and chat surfaces (2026-08-26).
+Each is independent of the others; the checked items shipped in #12784.
+
+### Tasks
+
+- [ ] **Hierarchical tasks in the list** — render sub-tasks under their parent.
+      The model already carries it (`Task.parentTask`, `TaskSet.rootTasks` /
+      `subTasks` derive the tree from the flat `tasks` array), so this is a
+      `TaskList` concern: indentation, collapse/expand, and what an ordinal
+      means for a child. Decide whether the agent may nest (an `UpdateTasks`
+      field) or only the UI can.
+- [x] **Option to show the task description in the list** — `TaskList.Root`
+      gains `showDescriptions`; a described row grows (`auto-rows-min`) and every
+      other cell is pinned to the title's line, since a row is its own subgrid
+      and the listbox item centres its cells by default. Off by default, so the
+      chat strip stays one row per task. `WithDescriptions` story added.
+- [x] **ProjectArticle tabs** — Overview (the form body) and Tasks (the ledger
+      at full height) in the toolbar; the story also wraps the article in an
+      `AttendableContainer`, without which nothing ever attends the article and
+      the toolbar renders permanently unattended.
+- [ ] **Record when a task reached a terminal status** — `Task` carries no date
+      at all today, so nothing can show when work finished or say how long it
+      took. Stamp the transition into `done`/`failed`/`cancelled` wherever status
+      is written (the TaskOperation verbs, the delegation strategy's fold-back,
+      and the list's own toggle), and decide whether one `completed` field or a
+      status-change timestamp is the right shape.
+- [ ] **A plugin extension contributes a tab** — the Overview/Tasks tablist is
+      hard-coded in `ProjectArticle`; make it a contribution point so e.g. a
+      GitHub extension can add a PRs tab to a project. Needs a surface/capability
+      for tab registration (label, icon, order) alongside the panel surface each
+      tab renders.
+- [ ] **`#nnn` needs plugin-github mounted to resolve in ProjectArticle** — the
+      wiring is done (the article collects `MarkdownCapabilities.ExtensionProvider`
+      and passes it into the outline, which now takes host extensions), and the
+      story seeds a `dxos/dxos` Repo on the project. Its story does NOT mount
+      `GitHubPlugin`: adding it lengthened the mount enough to turn the client
+      teardown flake below from intermittent into consistent. Demonstrated
+      meanwhile by `plugins/plugin-tasks/components/Outline` → `WithReferences`.
+- [x] **ProjectArticle `Sections` story was flaky (~1 run in 4)** — the seeding
+      ran from `play`, racing the previous story's client teardown, and the
+      article rendered with every ref-gated section missing. Seeding moved into
+      `onClientInitialized`, so the graph exists before any story mounts: 7
+      consecutive `--retry=0` runs green. The play functions now only wait for
+      the seeded context.
+- [ ] **`#foo` renders as a heading in chat markdown** — a `#` inside a message
+      is parsed as an ATX heading, so `#foo` comes out as a title. The thread
+      renders through CodeMirror (`MarkdownBlock` → `decorateMarkdown`), so the
+      fix belongs there rather than in `MarkdownView`.
+- [x] **`Repo` type + `Project.repo`** — a host-agnostic repository type in
+      `@dxos/types` (`owner`, `name`, `url`, `defaultBranch`, optional
+      `organization`; which host it lives on stays provenance on `Obj.getMeta`
+      keys) and an optional `Project.repo` ref naming the repository a project's
+      work lands in, independent of whether its tasks are mirrored. Project
+      bumped to `0.6.0`.
+- [x] **plugin-github contributes a `#nnn` decoration** — `githubReferences()`
+      decorates `#nnn` as a link to `…/issues/<n>` (GitHub redirects to the PR
+      when the number is one), contributed through
+      `MarkdownCapabilities.ExtensionProvider`. The repo comes from the space:
+      the TaskSet `sync` mirrors a repository into, matched by its `github.com`
+      foreign key and `owner/repo` name; a space mirroring none or several
+      declines rather than guessing. Code, code fences, and link targets are
+      skipped. NOT covered: the task list renders descriptions through
+      react-markdown, so `#nnn` there is inert (see the plain-text item).
+- [x] **Outliner menu popover has no arrow** — not the outliner's: `Popover`'s
+      content carried `overflow-hidden`, and Radix positions the arrow as a
+      child of the content straddling its edge, so EVERY `Popover.Arrow` in the
+      app was clipped. Clipping moved to `Popover.Viewport` (the box that
+      scrolls and holds the rounded corners); verified live on the outliner menu
+      and the react-ui popover story.
+- [x] **Autolink bare URLs in chat markdown** — the chat renders messages through
+      CodeMirror (`MarkdownBlock` → `decorateMarkdown`), not react-markdown. The
+      GFM parser already emitted `URL` (bare) and `Autolink` (`<…>`) nodes, but
+      `decorateMarkdown` only decorated the bracketed `Link` form, so neither
+      rendered as an anchor. Both cases added, sharing one anchor decoration.
+- [x] **Task descriptions in the list are plain text** — rendered through
+      `MarkdownView` now, so a URL in a description is a link. `#nnn` there is
+      still inert: that decoration is a CodeMirror extension and this path is
+      react-markdown (tracked with the `#nnn` item above).
