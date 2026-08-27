@@ -616,7 +616,7 @@ flow QA-1: Research a Person end to end
       invoke: org.dxos.operation.space.removeObjects { objects: [$created.object, $researched.profile] }
       expect: neither the Person nor its Profile document exists in the space any more
       assert: |
-        return !(await space.db.query(dxos.Filter.everything()).run())
+        return !(await space.db.query(dxos.Filter.everything()).run()).objects
           .some((o) => o.id === $created.object.id || o.id === $researched.profile.id);
 ```
 

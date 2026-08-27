@@ -444,7 +444,7 @@ flow QA-1: Create, place, open and edit a document
       invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
       expect: the row leaves the navtree AND the open plank closes
       assert: |
-        return !(await space.db.query(dxos.Filter.everything()).run()).some((o) => o.id === $created.object.id) &&
+        return !(await space.db.query(dxos.Filter.everything()).run()).objects.some((o) => o.id === $created.object.id) &&
           !document.body.innerText.includes('QA Notes');
       note: |
         NOT `space.db.remove` — that unlinks nothing and leaves a plank pointing at a deleted

@@ -504,7 +504,7 @@ flow QA-1: Configure a provider by hand and run a search
       expect: the button disables while running, then Search.status returns to "idle",
         Search.lastRunAt is set, and results from dummyjson appear in the results list
       assert: |
-        return (await space.db.query(dxos.Filter.type(Search)).run())
+        return (await space.db.query(dxos.Filter.type(Search)).run()).objects
           .find((o) => o.id === $search.id)?.status === 'idle';
   after:
     - name: Delete the search and provider

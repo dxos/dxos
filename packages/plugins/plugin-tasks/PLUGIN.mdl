@@ -318,7 +318,7 @@ flow QA-1: Create an outline and edit it
       do: Right-click "QA Outline" in the navtree and choose Delete.
       invoke: |
         org.dxos.operation.space.removeObjects {
-          objects: [(await space.db.query(dxos.Filter.type(Outline)).run()).objects.find((o) => o.name === 'QA Outline')],
+          objects: [(await space.db.query(dxos.Filter.type(Outline)).run()).objects.find((o) => o.name === 'QA Outline') ?? (() => { throw new Error("Outline QA Outline not found — refusing to remove an unrelated object"); })()],
           target: $given.space
         }
       expect: the row leaves the navtree and its plank closes if it was open
