@@ -8,7 +8,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Cursor } from '@dxos/link';
-import { Button, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Button, Input, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Empty } from '@dxos/react-ui-list';
 
@@ -51,6 +51,8 @@ export type ConnectionViewProps = {
   testing?: boolean;
   /** Non-secret connection metadata from the connector's `describeConnection`. */
   details?: ReadonlyArray<{ label: string; value: string }>;
+  /** Rename the connection. Omitted when the type carries no `name`, which hides the field. */
+  onRename?: (name: string) => void;
   /** True when the connector supports in-place reauthentication (OAuth connectors). */
   canReauthenticate: boolean;
   /** True while a reauthentication popup/redirect is being initiated. */
@@ -87,6 +89,7 @@ export const ConnectionView = ({
   testError,
   testing = false,
   details = [],
+  onRename,
   canReauthenticate,
   reauthenticating,
   onSync,
@@ -108,6 +111,23 @@ export const ConnectionView = ({
                 <Form.Content>
                   <Form.Section title={title} description={source}>
                     {!hasConnector && <p className='px-trim-md text-description'>{t('no-connector.message')}</p>}
+
+                    {onRename && (
+                      <Form.Row label={t('connection-name.label')}>
+                        <Input.Root>
+                          <Input.TextInput
+                            defaultValue={title}
+                            placeholder={t('connection-name.placeholder')}
+                            data-testid='connection.name-input'
+                            // Committed on blur and Enter rather than per keystroke: this writes
+                            // straight to a replicated object, and the label is echoed in the
+                            // sidebar as you type.
+                            onBlur={(event) => onRename(event.target.value.trim())}
+                            onKeyDown={(event) => event.key === 'Enter' && event.currentTarget.blur()}
+                          />
+                        </Input.Root>
+                      </Form.Row>
+                    )}
 
                     {/* Non-secret metadata, above the status so a failure reads against it. */}
                     {details.map(({ label, value }) => (

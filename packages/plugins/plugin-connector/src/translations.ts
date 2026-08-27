@@ -48,6 +48,8 @@ export const translations = [
         'connection-invalid.message': 'This connection is no longer authorized.',
         'test-connection.label': 'Test connection',
         'testing-connection.label': 'Testing…',
+        'connection-name.label': 'Name',
+        'connection-name.placeholder': 'Name this connection',
         'reauthenticate.label': 'Reauthenticate',
         'reauthenticate.description': 'Sign in again to refresh this connection without losing its sync targets.',
         'reauthenticating.label': 'Reauthenticating…',

@@ -79,6 +79,17 @@ export const ConnectionArticle = ({ subject, role }: ConnectionArticleProps) => 
     [connector, liveAccessToken, accessToken, subject],
   );
 
+  // `Connection` declares `name`, and this container only ever renders one, so the rename field is
+  // unconditional here rather than probed off the schema.
+  const handleRename = useCallback(
+    (name: string) => {
+      Obj.update(subject, (subject) => {
+        subject.name = name || undefined;
+      });
+    },
+    [subject],
+  );
+
   const connectorLabel = connector?.label ?? connector?.id ?? connection?.connectorId;
   const account = accessToken?.account;
   const title = connection?.name ?? account ?? connectorLabel ?? '';
@@ -103,6 +114,7 @@ export const ConnectionArticle = ({ subject, role }: ConnectionArticleProps) => 
       testError={testError}
       testing={testing}
       details={details}
+      onRename={handleRename}
       canReauthenticate={canReauthenticate}
       reauthenticating={reauthenticating}
       onSync={() => void sync()}
