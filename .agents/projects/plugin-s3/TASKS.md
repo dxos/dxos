@@ -1,8 +1,10 @@
 # plugin-s3 — Tasks
 
-_Resume: upload a file through the app with S3 selected as the backend, and render it — the last
-untested link. Everything under it is proven: signing against real R2, the credential, and the CORS
-preflight for both HEAD and PUT against the `media` bucket. Uncommitted: none._
+_Resume: the S3 code needs extracting out of this plugin into a core package so headless hosts can
+register it — that is the only thing left between here and a cloud agent writing to a customer
+bucket, and it needs NO edge-repo change (see Phase 4). Everything under it is proven: signing
+against real R2, the credential, and the CORS preflight for both HEAD and PUT against `media`. Open
+in PR #12789. Uncommitted: none._
 
 ## Phase 1: S3 blob backend + connector
 
@@ -77,10 +79,51 @@ on the hypergraph plus a `FileCapabilities.Backend` descriptor, with credentials
 - [ ] **A non-R2 endpoint** (MinIO or real AWS S3) to confirm the region-from-host parsing is right
       where the region actually matters. R2 ignores the region, so today's pass does not exercise it.
 
-## Phase 3: Deferred
+## Phase 3: Assistant-callable upload
 
-- [ ] **EDGE-minted presigned URLs** so the secret never reaches the client. The right model for
-      shared spaces; see DESIGN.md §6.
+Design and the decisions behind it: `packages/plugins/plugin-file/docs/ASSISTANT-UPLOAD.md`.
+
+- [x] **Shared SSRF guard** — `@dxos/util`'s `safe-fetch` (`validateExternalUrl`, `isBlockedHost`,
+      `safeFetchBytes` with the cap enforced while streaming). Extracted from `plugin-crm`'s
+      `attachImage`, which now imports it instead of keeping a copy, and given the 14 tests it never
+      had — cloud metadata, ranges adjacent to the private blocks, IPv4-mapped IPv6, and a server
+      that under-declares `content-length` then streams past the cap.
+- [x] **`FileOperation.CreateFromSource`** — the serializable sibling of `Create`, whose live
+      browser `File` input made it unreachable from any tool call. Base64 arm capped at 1 MB (the
+      payload occupies the conversation); http arm fetched host-side through the guard, direct
+      rather than proxied since it runs headless. Media type always from the source's declaration.
+      Wired into the File skill. 9 tests.
+- [x] **Widened the MIME allowlist** — `text/plain`, `text/csv`, `text/markdown`,
+      `application/json`. `text/html` stays excluded: a stored HTML file served back from the blob
+      origin executes. An existing test used `text/plain` as its unsupported case and now uses
+      `text/html`, which pins the exclusion that matters.
+
+## Phase 4: Make the backend reachable headlessly
+
+The last piece before a cloud agent can write to a customer bucket. **Needs no edge-repo change**:
+operations run in `operation-service`, whose `EchoClient` is built by `FunctionContext` in
+`compute-runtime` (this repo), and the S3 backend needs no Cloudflare binding — it is a plain
+outbound `fetch` to the customer's own endpoint. `operation-service` sets no
+`global_fetch_strictly_public`, so that egress is allowed.
+
+- [x] **Decouple the credential resolver from `Client`** — `createCredentialResolver` takes
+      `getDatabase` plus an optional `accessTokenResolver`. `operation-service` has
+      `Database.Service` and no client, so the parameter's shape was the only browser confinement.
+      Defaults to `notAvailable`, so a managed token resolves to no credential rather than handing
+      the signer an opaque placeholder.
+- [ ] **Extract the S3 code into a core package.** `sigv4.ts`, `s3-client.ts`, `s3-uri.ts` and the
+      `createS3BlobBackend` factory depend on nothing above `echo-protocol`. `plugin-s3` keeps only
+      the capability wrapper and the connector.
+      **Layering constraint:** the registration call site must be in `functions-runtime-cloudflare`,
+      NOT `compute-runtime` — `s3-credentials.ts` imports `credentialsLayerFromDatabase` _from_
+      `compute-runtime`, so a call site there would be a dependency cycle.
+- [ ] **Register it in the function runtime** so an operation running on edge can select it.
+
+## Phase 5: Deferred
+
+- [ ] **EDGE blob-store target** — a `BLOB_SERVICE` binding on `operation-service` plus a backend
+      speaking `POST /file/:key` (not `PUT`). This one IS an edge-repo change, since a service
+      binding is Cloudflare config. Only buys the managed store, which browsers can already reach.
 - [ ] **Multipart upload** if anything ever needs to exceed a single 5 GB `PUT`.
 
 ### References
