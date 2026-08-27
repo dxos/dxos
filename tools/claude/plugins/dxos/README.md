@@ -51,10 +51,9 @@ which Claude Code passes to every session and its subprocesses:
 commits it for everyone working in the repo. `~/.claude/settings.json` turns it on
 for every repo you open.
 
-**3. Bind the space.** Run `/project setup`. The connector brings that command
-with it, so it appears once step 1 succeeds. It lists the spaces you own by name,
-asks which one this repo's projects belong in, confirms the session can write to
-it, and records the answer:
+**3. Bind the space.** Run `/dxos:project setup`. It lists the spaces you own by
+name, asks which one this repo's projects belong in, confirms the session can
+write to it, and records the answer:
 
 ```yaml
 # .agents/projects/space.yml — the ECHO space this repo's projects live in.
@@ -63,13 +62,17 @@ spaceId: <id>
 
 Commit that file. It binds every future session in the repo, on any machine and
 for anyone who clones it. Pass a name to skip the question when it is
-unambiguous: `/project setup Acme Product`.
+unambiguous: `/dxos:project setup Acme Product`.
+
+The procedure itself belongs to the `project` skill the server serves, so the
+verb loads that skill and follows it rather than carrying its own copy.
 
 ## Use
 
 | Command                          | Does                                                                     |
 | -------------------------------- | ------------------------------------------------------------------------ |
 | `/dxos:project`                  | Status of the current project — worktree, branch, docs, uncommitted work |
+| `/dxos:project setup [space]`    | Bind this repo to the space its projects live in (`mcp` only)           |
 | `/dxos:project list [all]`       | Numbered table of active projects; reply with a row number to resume     |
 | `/dxos:project tasks [all]`      | Open `- [ ]` items from the current project's `TASKS.md`                 |
 | `/dxos:project spawn <N...>` | Spin the numbered open tasks out into background task chips              |
