@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Instructions from '@dxos/compute/Instructions';
+import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Obj, Ref } from '@dxos/echo';
@@ -93,10 +94,7 @@ export const crmProject: ProjectCapabilities.Template = {
           concurrency: 1,
         }),
       });
-      // Persisted here rather than reached through the returned project: the routine connects to its
-      // project only through its own `instructions.objects`, so nothing in the project's ref graph
-      // would carry it into the database.
-      yield* Database.add(routine);
+      Project.addRoutine(project, routine);
 
       return project;
     }),

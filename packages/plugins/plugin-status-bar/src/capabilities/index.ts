@@ -4,6 +4,8 @@
 
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
+import { translations } from '#translations';
+
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: [
     'org.dxos.plugin.statusBar.role.footer',
@@ -11,3 +13,4 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
     'org.dxos.plugin.statusBar.role.versionInfo',
   ],
 });
+export const Translations = AppCapability.translations(translations);

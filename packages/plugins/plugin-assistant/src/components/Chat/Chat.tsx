@@ -7,6 +7,8 @@ import * as Option from 'effect/Option';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { resolveSlashCommand } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
@@ -22,20 +24,20 @@ import {
 } from '@dxos/react-ui-assistant';
 import { type MessageRange, type OutlineMarker, Outline as OutlineRail, useFeedModel } from '@dxos/react-ui-feed';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
-import { Outline } from '@dxos/types';
-import { Message } from '@dxos/types';
+import { TaskList } from '@dxos/react-ui-task';
+import { Message, TaskSet } from '@dxos/types';
 import { keyToFallback } from '@dxos/util';
 
 import { useChatToolbarActions, useDebug } from '#hooks';
 import { meta } from '#meta';
 
+import { TaskSlashCommands } from '../../commands';
 import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor';
 import {
   ChatStatus,
   ChatPrompt as NaturalChatPrompt,
   type ChatPromptProps as NaturalChatPromptProps,
 } from '../ChatPrompt';
-import { TaskList } from '../TaskList';
 import { ChatContextProvider, type ChatContextValue, type ChatRequestTiming, useChatContext } from './context';
 import { type ChatEvent } from './events';
 import { SurfaceWidget } from './SurfaceWidget';
@@ -72,10 +74,14 @@ const ChatRoot = ({
   ...props
 }: ChatRootProps) => {
   const [debug, setDebug] = useState(debugProp ?? false);
+  // Slash commands run their operations through the same invoker the rest of the UI uses.
+  const { invokePromise } = useOperationInvoker();
   const streaming = useAtomValue(processor.streaming);
   const active = useAtomValue(processor.active);
   const requestTiming = useRequestTiming({ active });
   const lastPrompt = useRef<string | undefined>(undefined);
+  // A slash command runs outside the processor, so `streaming` does not cover it.
+  const commandPending = useRef(false);
   // Transient chats have no database of their own; fall back to the supplied space db so
   // the message query and context controls operate before the chat is persisted.
   const db = (chat && Obj.getDatabase(chat)) || dbFallback;
@@ -130,6 +136,61 @@ const ChatRoot = ({
         case 'submit': {
           const text = ev.text.trim();
           if (!streaming && text.length) {
+            // A leading /command is a deterministic shortcut — executed directly, no model in
+            // the loop; an unknown command falls through to the model as plain text.
+            const resolved = resolveSlashCommand(text, TaskSlashCommands);
+            if (resolved) {
+              // One command at a time: `invokePromise` does not queue, so two quick submissions
+              // would interleave their operations and land their summaries out of order.
+              if (commandPending.current) {
+                break;
+              }
+              commandPending.current = true;
+              // One rejection handler for the whole chain: `onSubmit` can throw synchronously and
+              // `appendToFeed` can reject, and either would otherwise be lost with no error shown.
+              void (async () => {
+                await Promise.resolve(onSubmit?.(text));
+                // Re-read after `onSubmit`: that is what persists a transient chat, so a chat that
+                // began without a database has one only now.
+                const currentDb = (chat && Obj.getDatabase(chat)) || db;
+                if (!chat || !currentDb) {
+                  throw new Error('Command requires a persisted chat.');
+                }
+
+                const result = await resolved.command.execute(resolved.args, {
+                  db: currentDb,
+                  chat,
+                  invoke: invokePromise,
+                });
+                if (result instanceof Error) {
+                  throw result;
+                }
+
+                // The command's effect is otherwise invisible in the conversation: the prompt was
+                // never sent, so nothing records that the user ran it. The feed is re-read here
+                // because `onSubmit` is what persists a transient chat, creating it.
+                const currentFeed = feed ?? chat.feed?.target;
+                if (currentFeed && result.summary) {
+                  await currentDb.appendToFeed(currentFeed, [
+                    Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text }] }),
+                    Message.make({ sender: { role: 'assistant' }, blocks: [{ _tag: 'text', text: result.summary }] }),
+                  ]);
+                }
+
+                if (result.followUp) {
+                  // Some effects run on the supervisor loop (delegation spawns post-turn), so the
+                  // command wakes the conversation with a short synthetic prompt.
+                  void processor.request({ message: result.followUp });
+                }
+              })()
+                .catch((error) => {
+                  event.emit({ type: 'error', error: error instanceof Error ? error : new Error(String(error)) });
+                })
+                .finally(() => {
+                  commandPending.current = false;
+                });
+              break;
+            }
             lastPrompt.current = ev.text;
             const context = getContext?.();
             // Await persistence (transient chat) before requesting so the agent resolves the
@@ -176,7 +237,7 @@ const ChatRoot = ({
     });
     // `feed` and `messages` are dependencies because the rewind branch reads and writes them: without
     // them the handler would keep resolving rewinds against whatever was mounted first.
-  }, [event, dump, processor, streaming, onEvent, onSubmit, getContext, feed, messages]);
+  }, [event, dump, processor, streaming, onEvent, onSubmit, getContext, feed, messages, chat, db]);
 
   return (
     <ChatContextProvider
@@ -528,36 +589,65 @@ ChatPrompt.displayName = CHAT_PROMPT_NAME;
 const CHAT_TASK_LIST_NAME = 'Chat.TaskList';
 
 type ChatTaskListProps = {
-  outline?: Outline.Outline;
+  taskSet?: TaskSet.TaskSet;
 };
 
-// TODO(burdon): Project chats keep their working checklist on the parent project's outline —
-//  resolve via the parent edge (needs a reactive parent lookup), not only `chat.outline`.
+// TODO(burdon): Project chats keep their working tasks on the parent project's task set —
+//  resolve via the parent edge (needs a reactive parent lookup), not only `chat.taskSet`.
 const ChatTaskList = composable<HTMLDivElement, ChatTaskListProps>(
-  ({ outline: outlineProp, ...props }, forwardedRef) => {
+  ({ taskSet: taskSetProp, ...props }, forwardedRef) => {
     const { chat } = useChatContext(CHAT_TASK_LIST_NAME);
 
-    const outline = useAtomValue(
+    const taskSet = useAtomValue(
       useMemo(
         () =>
           Atom.make(
             (get) =>
-              outlineProp ??
+              taskSetProp ??
               Option.fromNullishOr(chat).pipe(
                 Option.map((_) => get(Obj.atom(_))),
-                Option.flatMapNullishOr((_) => _?.outline?.atom),
+                Option.flatMapNullishOr((_) => _?.taskSet?.atom),
                 Option.map(get),
                 Option.getOrUndefined,
               ),
           ),
-        [chat, outlineProp],
+        [chat, taskSetProp],
       ),
     );
-    if (!outline) {
+
+    // Subscribe to the set (membership) and to each ref (row objects) — a query would only
+    // re-emit on membership changes, leaving row edits stale.
+    const [taskSetSnapshot] = useObject(taskSet);
+    const taskRefs = taskSetSnapshot?.tasks;
+    const tasks = useAtomValue(
+      useMemo(() => Atom.make((get) => TaskSet.dedupeById((taskRefs ?? []).map((ref) => get(ref.atom)))), [taskRefs]),
+    );
+
+    // `TaskSet.addTask` is the shared primitive the task verbs use, so the parent edge and the
+    // set's refs stay consistent without a cross-plugin operation dependency.
+    const handleCreate = useCallback(
+      (title: string) => {
+        const db = taskSet && Obj.getDatabase(taskSet);
+        if (taskSet && db) {
+          TaskSet.addTask(db, taskSet, title);
+        }
+      },
+      [taskSet],
+    );
+    if (!taskSet || tasks.length === 0) {
       return null;
     }
 
-    return <TaskList {...composableProps(props)} outline={outline} ref={forwardedRef} />;
+    return (
+      <TaskList.Root tasks={tasks} showGroupLabels={false} showOrdinals onTaskCreate={handleCreate}>
+        <div {...composableProps(props, { classNames: 'flex flex-col min-h-0' })} ref={forwardedRef}>
+          <TaskList.Viewport classNames='min-h-0'>
+            <TaskList.Content />
+          </TaskList.Viewport>
+          <TaskList.Create classNames='shrink-0' />
+        </div>
+      </TaskList.Root>
+    );
   },
 );
 

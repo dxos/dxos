@@ -6,8 +6,8 @@ import React, { useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { Obj } from '@dxos/echo';
 import { type AccessToken } from '@dxos/link';
-import { getSpace } from '@dxos/react-client/echo';
 import { Button, Dialog, useTranslation } from '@dxos/react-ui';
 
 import { useCreateAndDeployScriptTemplates } from '#hooks';
@@ -27,11 +27,11 @@ export type DeploymentDialogProps = {
 
 export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDialogProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const space = useMemo(() => getSpace(accessToken), [accessToken]);
+  const db = useMemo(() => Obj.getDatabase(accessToken), [accessToken]);
 
   // TODO(ZaymonFC): Thinking further. All of this should get moved to intents to run async in the background.
   //   Deployment shouldn't be tied to the lifecycle of the dialogue component.
-  const { handleCreateAndDeployScripts, status } = useCreateAndDeployScriptTemplates(space, scriptTemplates);
+  const { handleCreateAndDeployScripts, status } = useCreateAndDeployScriptTemplates(db, scriptTemplates);
   const { invokePromise } = useOperationInvoker();
 
   useEffect(() => {

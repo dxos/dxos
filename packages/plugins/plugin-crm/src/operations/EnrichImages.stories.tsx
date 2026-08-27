@@ -25,7 +25,7 @@ import { CrmOperation } from '#types';
  * Drives {@link CrmOperation.EnrichImages} against seeded objects that deliberately start with no
  * `image`, so the enrichment is observable: each card shows its current image URL, or "none".
  *
- * The operation reaches a REAL image service (`image.main.dxos.network` by default; override with
+ * The operation reaches a REAL image service (EDGE's `/image` prefix by default; override with
  * `DX_CRM_IMAGE_SERVICE_URL`), so a run here makes live requests and can legitimately fail — the story
  * reports whatever comes back rather than pretending it succeeded.
  */

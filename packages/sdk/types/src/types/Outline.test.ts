@@ -29,85 +29,43 @@ describe('Outline', () => {
     await builder.close();
   });
 
-  describe('getOrCreateTaskSet', () => {
-    test('creates and links a task set named after the outline', async ({ expect }) => {
+  describe('addTask', () => {
+    test('files the task into the given set, parented for cascade', async ({ expect }) => {
       const outline = db.add(Outline.make({ name: 'Roadmap' }));
+      const taskSet = db.add(TaskSet.make({ name: 'Roadmap' }));
       await db.flush();
 
-      const taskSet = await Outline.getOrCreateTaskSet(outline, db);
-
-      expect(taskSet.name).to.eq('Roadmap');
-      expect(outline.taskSet?.target?.id).to.eq(taskSet.id);
-    });
-
-    test('falls back to a default name for an unnamed outline', async ({ expect }) => {
-      const outline = db.add(Outline.make());
-      await db.flush();
-
-      const taskSet = await Outline.getOrCreateTaskSet(outline, db);
-
-      expect(taskSet.name).to.eq(Outline.DEFAULT_TASK_SET_NAME);
-    });
-
-    test('links a single task set when conversions race', async ({ expect }) => {
-      const outline = db.add(Outline.make({ name: 'Roadmap' }));
-      await db.flush();
-
-      const taskSets = await Promise.all([
-        Outline.getOrCreateTaskSet(outline, db),
-        Outline.getOrCreateTaskSet(outline, db),
-      ]);
-
-      expect(taskSets[1].id).to.eq(taskSets[0].id);
-      expect(outline.taskSet?.target?.id).to.eq(taskSets[0].id);
-    });
-
-    test('reuses the linked task set', async ({ expect }) => {
-      const outline = db.add(Outline.make({ name: 'Roadmap' }));
-      await db.flush();
-
-      const first = await Outline.getOrCreateTaskSet(outline, db);
-      const second = await Outline.getOrCreateTaskSet(outline, db);
-
-      expect(second.id).to.eq(first.id);
-    });
-  });
-
-  describe('createTask', () => {
-    test('parents the task to the outline task set', async ({ expect }) => {
-      const outline = db.add(Outline.make({ name: 'Roadmap' }));
-      await db.flush();
-
-      const task = await Outline.createTask(outline, db, '  Buy milk  ');
+      const task = TaskSet.addTask(db, taskSet, '  Buy milk  ');
 
       expect(task.title).to.eq('Buy milk');
       expect(task.status).to.eq('todo');
       // Membership is the set's array; the parent edge rides along so the task cascades with it.
-      const taskSet = outline.taskSet?.target;
-      expect(taskSet?.tasks.map((ref) => ref.target?.id)).to.deep.eq([task.id]);
-      expect(Obj.getParent(task)?.id).to.eq(taskSet?.id);
+      expect(taskSet.tasks.map((ref) => ref.target?.id)).to.deep.eq([task.id]);
+      expect(Obj.getParent(task)?.id).to.eq(taskSet.id);
+      // The outline itself owns nothing: promotion is the embedder's ledger, not the outline's.
+      expect(Object.keys(outline)).to.not.contain('taskSet');
     });
 
-    test('files every task into the same lazily created task set', async ({ expect }) => {
-      const outline = db.add(Outline.make());
+    test('files every task into the same set, in order', async ({ expect }) => {
+      const taskSet = db.add(TaskSet.make());
       await db.flush();
 
-      const first = await Outline.createTask(outline, db, 'First');
-      const second = await Outline.createTask(outline, db, 'Second');
+      const first = TaskSet.addTask(db, taskSet, 'First');
+      const second = TaskSet.addTask(db, taskSet, 'Second');
 
-      expect(outline.taskSet?.target?.tasks.map((ref) => ref.target?.id)).to.deep.eq([first.id, second.id]);
+      expect(taskSet.tasks.map((ref) => ref.target?.id)).to.deep.eq([first.id, second.id]);
     });
 
     test('extra props reach the task', async ({ expect }) => {
-      const outline = db.add(Outline.make());
+      const taskSet = db.add(TaskSet.make());
       await db.flush();
 
-      const task = await Outline.createTask(outline, db, 'Delegated', {
-        status: 'in-progress',
+      const task = TaskSet.addTask(db, taskSet, 'Delegated', {
+        status: 'started',
         assignee: { role: 'assistant' },
       });
 
-      expect(task.status).to.eq('in-progress');
+      expect(task.status).to.eq('started');
       expect(task.assignee?.role).to.eq('assistant');
     });
   });

@@ -6,9 +6,7 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
 import { log } from '@dxos/log';
-import { useConfig } from '@dxos/react-client';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { FeedbackForm, type FeedbackSubmitHandler } from '#components';
@@ -16,7 +14,7 @@ import { meta } from '#meta';
 import { SupportOperation } from '#types';
 
 import { GITHUB_NEW_ISSUE_URL } from '../../constants';
-import { captureScreenshot, uploadScreenshot } from './screenshot';
+import { useScreenshotAttachment } from './useScreenshotAttachment';
 
 const CUSTOM_LABEL = 'Composer';
 
@@ -83,11 +81,7 @@ const buildGitHubIssueUrl = (values: SupportOperation.SupportRequest, screenshot
  */
 export const GitHubAction = () => {
   const { invokePromise } = useOperationInvoker();
-  const config = useConfig();
-  // Shared with @dxos/plugin-crm (same Edge service, same multipart contract).
-  const imageServiceUrl =
-    (config.values.runtime?.app?.env?.DX_IMAGE_SERVICE_URL as string | undefined) ??
-    getEdgeServiceEndpoint(config, EdgeServiceName.Image);
+  const attachScreenshot = useScreenshotAttachment();
 
   const handleGitHub = useCallback<FeedbackSubmitHandler>(
     async (values) => {
@@ -110,44 +104,16 @@ export const GitHubAction = () => {
         bodyLength: values.body.length,
       });
 
-      // Collapse the help companion before capture so the screenshot reflects
-      // what the user is reporting (the screen behind the form), not the form
-      // itself. A short layout tick lets the deck animation settle before
-      // html-to-image walks the DOM.
-      await invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
-      await new Promise((resolve) => setTimeout(resolve, 150));
-
-      // Best-effort screenshot — only when the user opts in via the `image`
-      // toggle in the form. Failures (capture or upload) drop through to the
-      // no-image flow rather than blocking the report — filing the issue
-      // matters more than the attachment, but we toast the failure so the
-      // user knows the screenshot didn't make it.
-      let screenshotUrl: string | undefined;
-      let imageRequestedButFailed = false;
-      if (values.image) {
-        log.info('github-issue: capturing screenshot');
-        const blob = await captureScreenshot();
-        if (!blob) {
-          log.warn('github-issue: capture returned no blob');
-          imageRequestedButFailed = true;
-        } else {
-          log.info('github-issue: capture ok, uploading', { bytes: blob.size });
-          screenshotUrl = await uploadScreenshot(blob, imageServiceUrl);
-          if (!screenshotUrl) {
-            log.warn('github-issue: upload returned no url');
-            imageRequestedButFailed = true;
-          } else {
-            // URL is public but still identifies the user's screenshot; log a flag, not the URL.
-            log.info('github-issue: upload ok');
-          }
-        }
-      }
+      // Best-effort screenshot — only when the user opts in via the `image` toggle. Failures drop
+      // through to the no-image flow rather than blocking the report, but we toast the failure so
+      // the user knows the screenshot didn't make it.
+      const screenshot = await attachScreenshot(values);
 
       // Phase 1: prefilled URL only. Authenticated submission via plugin-connector
       // is a follow-up — when present, POST to /repos/dxos/dxos/issues using the
       // stored AccessToken and open the resulting `html_url` instead.
-      const url = buildGitHubIssueUrl(values, screenshotUrl);
-      log.info('github-issue: opening', { hasScreenshot: !!screenshotUrl, urlLength: url.length });
+      const url = buildGitHubIssueUrl(values, screenshot.url);
+      log.info('github-issue: opening', { hasScreenshot: !!screenshot.url, urlLength: url.length });
       // If the synchronous open was blocked, `popup` is null; show a distinct toast so the user
       // knows the tab didn't appear rather than leaving them with a misleading success message.
       if (!popup) {
@@ -172,13 +138,13 @@ export const GitHubAction = () => {
         icon: 'ph--github-logo--regular',
         duration: 5000,
         title: ['github-issue-toast.label', { ns: meta.profile.key }],
-        description: imageRequestedButFailed
+        description: screenshot.failed
           ? ['github-issue-toast-no-screenshot.description', { ns: meta.profile.key }]
           : ['github-issue-toast.description', { ns: meta.profile.key }],
         closeLabel: ['close.label', { ns: osTranslations }],
       });
     },
-    [invokePromise, imageServiceUrl],
+    [invokePromise, attachScreenshot],
   );
 
   return <FeedbackForm.SubmitGitHub onSubmit={handleGitHub} />;

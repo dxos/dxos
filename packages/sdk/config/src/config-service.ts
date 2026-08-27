@@ -11,9 +11,10 @@ import { dirname } from 'node:path';
 
 import { DEFAULT_HUB_URL, DX_CONFIG, DX_DATA, getProfileConfigPath, getProfilePath } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
-import { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 
 import { Config } from './config';
+import { EDGE_URLS } from './edge-services';
+import { type ConfigInit } from './types';
 
 export const memoryConfig = new Config({
   runtime: {
@@ -43,11 +44,11 @@ export const defaultConfig = new Config({
     },
     services: {
       edge: {
-        url: 'https://dxos.network/',
+        url: `${EDGE_URLS.production}/`,
       },
       iceProviders: [
         {
-          urls: 'https://dxos.network/ice',
+          urls: `${EDGE_URLS.production}/ice`,
         },
       ],
       ipfs: {
@@ -60,7 +61,7 @@ export const defaultConfig = new Config({
 
 /** Aligns a fresh monorepo CLI profile with the backend Composer's local dev server talks to. */
 export const localDevConfig = new Config(
-  { runtime: { services: { edge: { url: 'https://main.dxos.network' } } } },
+  { runtime: { services: { edge: { url: EDGE_URLS.preview } } } },
   defaultConfig.values,
 );
 
@@ -114,10 +115,13 @@ export const fromConfig = (config: Config) => Layer.succeed(ConfigService, confi
  * for browser builds — without it those keys are unreachable on node, where nothing bundles the app.
  * Takes precedence over the profile config file, so `DX_HUB_URL=… dx …` overrides for one command.
  */
-const processEnvDefaults = (): ConfigProto => {
-  const env = Object.fromEntries(
-    Object.entries(process.env).filter(([key, value]) => key.startsWith('DX_') && value !== undefined),
-  );
+const processEnvDefaults = (): ConfigInit => {
+  const env: Record<string, string> = {};
+  for (const [key, value] of Object.entries(process.env)) {
+    if (key.startsWith('DX_') && value !== undefined) {
+      env[key] = value;
+    }
+  }
   return Object.keys(env).length > 0 ? { runtime: { app: { env } } } : {};
 };
 

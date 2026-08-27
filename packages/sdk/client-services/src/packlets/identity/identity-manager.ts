@@ -1,24 +1,26 @@
+//
+// Copyright 2022 DXOS.org
+//
+import { isValidAutomergeUrl } from '@automerge/automerge-repo';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-//
-// Copyright 2022 DXOS.org
-//
 import platform from 'platform';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { CredentialGenerator, createCredentialSignerWithKey, createDidFromIdentityKey } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
+import { type EchoHost } from '@dxos/echo-host';
 import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
 import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { Device, DeviceKind } from '@dxos/protocols/proto/dxos/client/services';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type IdentityRecord, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import {
@@ -35,6 +37,7 @@ import { deferFunction, isNode, isTauri } from '@dxos/util';
 
 import { type IMetadataStore, IMetadataStoreService } from '../metadata';
 import { type SpaceManager, SpaceManagerService, type SwarmIdentity } from '../space';
+import { openCredentialsDocument } from '../spaces/credentials-document-store';
 import { createAuthProvider } from './authenticator';
 import { Identity } from './identity';
 
@@ -56,6 +59,11 @@ export type JoinIdentityProps = {
   controlFeedKey: PublicKey;
   dataFeedKey: PublicKey;
   authorizedDeviceCredential: Credential;
+  /**
+   * Automerge URL of the host's halo space root, when it has one. The joining device adopts it rather
+   * than minting a second root over the same space.
+   */
+  haloSpaceRootUrl?: string;
 
   /**
    * Latest known timeframe for the control pipeline.
@@ -78,9 +86,11 @@ export type IdentityManagerProps = {
   feedStore: FeedStore<FeedMessage>;
   spaceManager: SpaceManager;
   edgeConnection?: EdgeConnection;
-  edgeFeatures?: Runtime.Client.EdgeFeatures;
+  edgeFeatures?: Runtime_Client_EdgeFeatures;
   devicePresenceAnnounceInterval?: number;
   devicePresenceOfflineTimeout?: number;
+  /** See {@link DataSpaceManagerRuntimeProps.automergeCredentials}. Off by default. */
+  automergeCredentials?: boolean;
 };
 
 /**
@@ -118,12 +128,23 @@ export class IdentityManager {
   private readonly _keyring: KeyringApi;
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _spaceManager: SpaceManager;
+  /**
+   * Set late by the service stack: `EchoHostLayer` already depends on this manager for its peer id,
+   * so taking the host as a constructor dependency would make the layer graph circular. Anchoring is
+   * driven by whichever of the two arrives last.
+   */
+  private _echoHost: EchoHost | undefined;
+  /** Root the inviting device named, adopted once the identity is accepted. */
+  private _pendingHaloSpaceRootUrl: string | undefined;
   private readonly _devicePresenceAnnounceInterval: number;
   private readonly _devicePresenceOfflineTimeout: number;
+  private readonly _automergeCredentials: boolean;
   private readonly _edgeConnection: EdgeConnection | undefined;
-  private readonly _edgeFeatures: Runtime.Client.EdgeFeatures | undefined;
+  private readonly _edgeFeatures: Runtime_Client_EdgeFeatures | undefined;
 
   private _identity?: Identity;
+  /** Owns the HALO anchoring subscriptions, which outlive any single open() call. */
+  private readonly _ctx = new Context();
 
   // TODO(dmaretskyi): Perhaps this should take/generate the peerKey outside of an initialized identity.
   constructor(params: IdentityManagerProps) {
@@ -135,10 +156,22 @@ export class IdentityManager {
     this._edgeFeatures = params.edgeFeatures;
     this._devicePresenceAnnounceInterval = params.devicePresenceAnnounceInterval ?? DEVICE_PRESENCE_ANNOUNCE_INTERVAL;
     this._devicePresenceOfflineTimeout = params.devicePresenceOfflineTimeout ?? DEVICE_PRESENCE_OFFLINE_TIMEOUT;
+    this._automergeCredentials = params.automergeCredentials ?? false;
   }
 
   get identity() {
     return this._identity;
+  }
+
+  /**
+   * Supplies the echo host used to anchor the HALO space on a root document. Anchors immediately when
+   * an identity is already open, since the two are wired in either order.
+   */
+  async setEchoHost(echoHost: EchoHost): Promise<void> {
+    this._echoHost = echoHost;
+    if (this._identity) {
+      await this._anchorHaloOnRootDocument(this._ctx, this._identity);
+    }
   }
 
   @Trace.span({ showInBrowserTimeline: true })
@@ -151,6 +184,7 @@ export class IdentityManager {
       this._identity = await this._constructIdentity(identityRecord);
       await this._identity.open(ctx);
       await this._identity.ready();
+      await this._anchorHaloOnRootDocument(this._ctx, this._identity);
       log.trace('dxos.halo.identity', {
         identityKey: identityRecord.identityKey,
         displayName: this._identity.profileDocument?.displayName,
@@ -162,6 +196,7 @@ export class IdentityManager {
   }
 
   async close(ctx: Context): Promise<void> {
+    await this._ctx.dispose();
     await this._identity?.close(ctx);
   }
 
@@ -225,6 +260,7 @@ export class IdentityManager {
     await this._metadataStore.setIdentityRecord(identityRecord);
     this._identity = identity;
     await this._identity.ready();
+    await this._anchorHaloOnRootDocument(this._ctx, this._identity);
     log.trace('dxos.halo.identity', {
       identityKey: identityRecord.identityKey,
       displayName: this._identity.profileDocument?.displayName,
@@ -274,6 +310,7 @@ export class IdentityManager {
    * Prepare an identity object as the first step of acceptIdentity flow.
    */
   async prepareIdentity(params: JoinIdentityProps, ctx?: Context) {
+    this._pendingHaloSpaceRootUrl = params.haloSpaceRootUrl;
     log('accepting identity', { params });
     invariant(!this._identity, 'Identity already exists.');
 
@@ -316,6 +353,7 @@ export class IdentityManager {
       ...this.createDefaultDeviceProfile(),
       ...profile,
     });
+    await this._anchorHaloOnRootDocument(this._ctx, this._identity);
     this.stateUpdate.emit();
 
     log('accepted identity', { identityKey: identity.identityKey, deviceKey: identity.deviceKey });
@@ -428,6 +466,70 @@ export class IdentityManager {
     return identity;
   }
 
+  /**
+   * Gives the HALO space a space root document and mirrors its credential chain into a credentials
+   * document, so the chain replicates as automerge rather than only as a control feed.
+   *
+   * The space keeps its key-derived id, exactly as a data space does. That is not a
+   * migration compromise here as it is for data spaces: recovery reconstructs the HALO space from
+   * `haloSpaceKey` alone (the only identifier EDGE returns), so a root-derived id would leave a
+   * recovering device computing an id no replicated document belongs to.
+   */
+  private async _anchorHaloOnRootDocument(ctx: Context, identity: Identity): Promise<void> {
+    // Opt-in: without the flag the HALO keeps its control feed and grows no documents.
+    if (!this._echoHost || !this._automergeCredentials) {
+      return;
+    }
+    const echoHost = this._echoHost;
+
+    const spaceId = identity.haloSpaceId;
+    try {
+      if (!echoHost.getSpaceRootRefs(spaceId)) {
+        const adopted = this._pendingHaloSpaceRootUrl;
+        if (adopted !== undefined && isValidAutomergeUrl(adopted)) {
+          // A second root over the same space would leave the two devices disagreeing about which
+          // document carries the chain, so the joining device takes the one the inviter named — and
+          // mints nothing when it cannot, since halo documents have no replication path between
+          // devices yet and the root may simply never arrive.
+          await echoHost.adoptSpaceRoot(ctx, spaceId, adopted).catch((err) => {
+            log.warn('halo space root named by the inviting device is not available', { spaceId, adopted, err });
+          });
+          return;
+        } else {
+          // HALO has never had a directory — its data has always lived in the control feed — so one
+          // is created here to give the root something to point at.
+          if (!echoHost.spaceIds.includes(spaceId)) {
+            await echoHost.createSpaceRoot(ctx, identity.haloSpaceKey);
+          }
+
+          const refs = await echoHost.migrateSpaceToRootDocument(ctx, spaceId);
+          if (!refs) {
+            return;
+          }
+
+          log('anchored halo space on a root document', { spaceId, refs });
+        }
+      }
+
+      const refs = echoHost.getSpaceRootRefs(spaceId);
+      if (refs) {
+        identity.setHaloSpaceRootUrl(refs.spaceRootDocUrl);
+      }
+
+      const store = await openCredentialsDocument(ctx, echoHost, spaceId);
+      for (const credential of identity.space.spaceState.credentials) {
+        store.append(credential);
+      }
+      ctx.onDispose(identity.space.credentialProcessed.on((credential) => store.append(credential)));
+
+      // The document feeds the same state machine the feed does; processing is idempotent by
+      // credential id, so both sources can run during the migration window.
+      store.subscribe(ctx, (credential) => identity.space.processDocumentCredential(credential));
+    } catch (err) {
+      log.warn('failed to anchor the halo space on a root document', { spaceId, err });
+    }
+  }
+
   private async _constructSpace({ spaceRecord, swarmIdentity, identityKey, gossip }: ConstructSpaceProps) {
     return this._spaceManager.constructSpace({
       metadata: {
@@ -453,7 +555,7 @@ export class IdentityManager {
 
 export type IdentityManagerLayerOptions = Pick<
   IdentityManagerProps,
-  'devicePresenceAnnounceInterval' | 'devicePresenceOfflineTimeout' | 'edgeFeatures'
+  'devicePresenceAnnounceInterval' | 'devicePresenceOfflineTimeout' | 'edgeFeatures' | 'automergeCredentials'
 >;
 
 /**

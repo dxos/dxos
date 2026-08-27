@@ -7,13 +7,14 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj, View } from '@dxos/echo';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
 import { meta } from '#meta';
 import { Map, MapCapabilities, MapOperation } from '#types';
@@ -24,9 +25,9 @@ export default Capability.makeModule(
     // `Capability.getAll` snapshot, which would never heal once the capability lands.
     const markerProvidersAtom = yield* Capability.atom(MapCapabilities.MarkerProvider);
 
-    const extensions = yield* GraphBuilder.createExtension({
+    const extensions = yield* AppGraphBuilder.createExtension({
       id: MapOperation.SetControlType.meta.key,
-      match: (node, get) => Option.map(NodeMatcher.whenEchoType(View.View)(node, get), (view) => ({ view, node })),
+      match: (node, get) => Option.map(AppNodeMatcher.whenEchoType(View.View)(node, get), (view) => ({ view, node })),
       actions: ({ view, node }, get) => {
         const presentationRef = (node.properties as any).presentation;
         const target = presentationRef ? get(Obj.atom(presentationRef)) : undefined;
@@ -34,7 +35,7 @@ export default Capability.makeModule(
           return Effect.succeed([]);
         }
         return Effect.succeed([
-          Node.makeAction({
+          AppGraphNode.makeAction({
             id: `${view.id}.toggle-map`,
             // The menu item flips, so it reads the current view and states the one it wants.
             data: () =>
@@ -56,12 +57,12 @@ export default Capability.makeModule(
     // whose primary article is already a map). Gating lives here (capability-aware) rather than in
     // the surface filter; refining it to require non-empty markers is a follow-up.
     // Any ECHO object that is not a Map.Map itself (whose primary article is already a map surface).
-    const whenPlottable = NodeMatcher.whenAll(
-      NodeMatcher.whenEchoObject,
-      NodeMatcher.whenNot(NodeMatcher.whenEchoTypeMatches(Map.Map)),
+    const whenPlottable = GraphNodeMatcher.whenAll(
+      AppNodeMatcher.whenEchoObject,
+      GraphNodeMatcher.whenNot(AppNodeMatcher.whenEchoTypeMatches(Map.Map)),
     );
 
-    const companion = yield* GraphBuilder.createExtension({
+    const companion = yield* AppGraphBuilder.createExtension({
       id: 'mapCompanion',
       match: whenPlottable,
       connector: (object, get) =>

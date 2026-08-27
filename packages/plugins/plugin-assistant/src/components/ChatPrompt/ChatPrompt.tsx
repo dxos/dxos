@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import { EditorView } from '@codemirror/view';
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
-import React, { useCallback, useEffect, useId, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Event } from '@dxos/async';
@@ -23,10 +24,11 @@ import { pendingText } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { type Merge } from '@dxos/util';
 
-import { useChatKeymapExtensions } from '#hooks';
+import { useChatKeymapExtensions, usePlatform } from '#hooks';
 import { meta } from '#meta';
 import { AssistantPreset } from '#types';
 
+import { TaskSlashCommands } from '../../commands';
 import { type AiChatProcessor } from '../../processor';
 import { type ChatEvent } from '../Chat';
 import { ChatActions, type ChatActionsProps } from './ChatActions';
@@ -70,6 +72,8 @@ export const ChatPrompt = ({
 }: ChatPromptProps) => {
   const { t } = useTranslation(meta.profile.key);
 
+  const platform = usePlatform();
+
   const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
   const streaming = useAtomValue(processor.streaming);
   const active = useAtomValue(processor.active);
@@ -91,21 +95,45 @@ export const ChatPrompt = ({
 
   const keymapExtensions = useChatKeymapExtensions({ event });
 
-  // Sentinel-command completion is sourced from the bound project's instructions, if any.
+  // Command completion: `$` sentinels come from the bound project's instructions; `/` commands
+  // are the deterministic operation shortcuts (see assistant-toolkit `SlashCommands`).
   const [companion] = useObject(companionTo);
   const [instructions] = useObject(Obj.instanceOf(Project.Project, companion) ? companion.instructions : undefined);
   const commandsRef = useDynamicRef(instructions?.commands ?? []);
   const commandsExtension = useMemo(
     () =>
       commands({
-        getCommands: () => commandsRef.current.map(({ sentinel, description }) => ({ sentinel, description })),
+        getCommands: () => [
+          ...commandsRef.current.map(({ sentinel, description }) => ({ sentinel, description })),
+          ...TaskSlashCommands.map(({ command, description }) => ({ sentinel: command, description })),
+        ],
       }),
     [commandsRef],
   );
 
+  // The editor owns the prompt text; only its emptiness is mirrored into React so the send control
+  // can disable itself without re-rendering the prompt on every keystroke's content. Dictation is
+  // deliberately not counted: pending text lives in a StateField and reaches the document only when
+  // the user confirms it, which is the same point at which Enter would stop committing and start
+  // submitting.
+  const [hasText, setHasText] = useState(false);
+  const emptinessExtension = useMemo(
+    () =>
+      EditorView.updateListener.of((update) => {
+        if (update.docChanged) {
+          setHasText(update.state.doc.toString().trim().length > 0);
+        }
+      }),
+    [],
+  );
+
+  // Keyed to `active`, the same signal `handleSubmit` guards on — `streaming` only flips on the
+  // first agent token, so gating on it would leave the control enabled but inert until then.
+  const canSend = hasText && !active;
+
   const extensions = useMemo(
-    () => [keymapExtensions, pendingText(), commandsExtension],
-    [keymapExtensions, commandsExtension],
+    () => [keymapExtensions, pendingText(), commandsExtension, emptinessExtension],
+    [keymapExtensions, commandsExtension, emptinessExtension],
   );
 
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
@@ -117,6 +145,18 @@ export const ChatPrompt = ({
     },
     [event],
   );
+
+  // Routed through `handleSubmit` so the button and the Enter keybinding share one submit path;
+  // the reset and refocus mirror what the `submit()` extension does for Enter.
+  const handleSend = useCallback(() => {
+    const text = editorRef.current?.getText().trim();
+    if (!text?.length) {
+      return;
+    }
+    if (handleSubmit(text)) {
+      editorRef.current?.setText('', true);
+    }
+  }, [handleSubmit]);
 
   const handleEvent = useCallback<NonNullable<ChatActionsProps['onEvent']>>(
     (ev) => {
@@ -173,9 +213,11 @@ export const ChatPrompt = ({
             microphone={true}
             docId={docId}
             processing={streaming}
+            canSend={canSend}
+            onSend={handleSend}
             onEvent={handleEvent}
           >
-            {online !== undefined && (
+            {online !== undefined && platform !== 'mobile' && (
               <Input.Root>
                 <Input.Label srOnly>{t('online-switch.label')}</Input.Label>
                 {/* Read-only: the provider is configured in Assistant settings, not toggled here. */}

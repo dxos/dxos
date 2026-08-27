@@ -235,6 +235,12 @@ export type RecoverIdentityResponseBody = {
   haloSpaceKey: string;
   genesisFeedKey: string;
   deviceAuthCredential: string;
+  /**
+   * Automerge URL of the halo space root, when EDGE knows one. A recovering device has only
+   * `haloSpaceKey` to rebuild the space from, so without this it cannot find the document the
+   * credential chain lives in. Optional while EDGE has not been taught to record it.
+   */
+  haloSpaceRootUrl?: string;
 };
 
 export type CreateAgentRequestBody = {
@@ -820,6 +826,11 @@ export const LoginRequestSchema = Schema.Struct({
   email: Schema.String,
   identityDid: Schema.optional(Schema.String),
   identityKey: Schema.optional(Schema.String),
+  /**
+   * Where the emailed link hands the token back, defaulting to the hub's configured app URL. The
+   * hub honors only origins it owns, so a CLI can name its local callback server here.
+   */
+  redirectUrl: Schema.optional(Schema.String),
 });
 export type LoginRequest = Schema.Schema.Type<typeof LoginRequestSchema>;
 

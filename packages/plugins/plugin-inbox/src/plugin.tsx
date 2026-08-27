@@ -3,7 +3,6 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import {
   AppGraphBuilder,
@@ -19,25 +18,25 @@ import {
   Schema,
   SkillDefinition,
   SummarizeExtractor,
+  Translations,
 } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
 
 export const InboxPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(SkillDefinition),
-  Plugin.addModule(CreateObject),
-  Plugin.addModule(NavigationTargetResolver),
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(Schema),
-  Plugin.addModule(IdentitySpecs),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(InboxSettings),
   Plugin.addModule(AutomationTemplates),
   Plugin.addModule(ContactExtractor),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(IdentitySpecs),
+  Plugin.addModule(InboxSettings),
   Plugin.addModule(MailboxProcessors),
+  Plugin.addModule(NavigationTargetResolver),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
+  Plugin.addModule(SkillDefinition),
   Plugin.addModule(SummarizeExtractor),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

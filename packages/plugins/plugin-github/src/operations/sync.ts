@@ -120,7 +120,7 @@ const findByForeignId = <T>(type: Type.AnyEntity, id: string | number) =>
 const issueStateToTaskStatus = (state: string): 'todo' | 'done' => (state === 'closed' ? 'done' : 'todo');
 
 /**
- * Reverse of {@link issueStateToTaskStatus}. `'in-progress'` is collapsed to
+ * Reverse of {@link issueStateToTaskStatus}. `'started'` is collapsed to
  * `open` since GitHub has no equivalent state. Returns undefined when the
  * status is unrecognised so the caller can skip the push instead of failing.
  */
@@ -129,7 +129,7 @@ const taskStatusToIssueState = (status: string | undefined): 'open' | 'closed' |
     case 'done':
       return 'closed';
     case 'todo':
-    case 'in-progress':
+    case 'started':
       return 'open';
     default:
       return undefined;
@@ -514,7 +514,7 @@ export const pushRepoUpdates: <E, R>(
       const localDescription = local.description ?? '';
       const localStatus = local.status;
       const desiredStatusForSnapshot: 'todo' | 'done' | undefined =
-        localStatus === 'done' ? 'done' : localStatus === 'todo' || localStatus === 'in-progress' ? 'todo' : undefined;
+        localStatus === 'done' ? 'done' : localStatus === 'todo' || localStatus === 'started' ? 'todo' : undefined;
 
       const input: GitHubApi.IssueUpdateInput = {};
       let diverged = false;

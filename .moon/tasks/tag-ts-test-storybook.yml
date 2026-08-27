@@ -10,6 +10,10 @@ tasks:
       - vite-plugin-import-source:build
       - vite-plugin-log:build
       - ^:build
+      # Dependency packages' generated sources (e.g. the plugin capability barrels) must exist
+      # before tests resolve them under the source condition. Addressed by the `prebuild` task tag
+      # rather than a task name, since the generating task is named per what it generates.
+      - '^:#prebuild'
     inputs:
       - '@group(sources)'
       - /tools/storybook-react/.storybook/main.ts

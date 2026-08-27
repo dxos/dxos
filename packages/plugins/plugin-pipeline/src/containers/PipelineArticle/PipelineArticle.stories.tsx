@@ -121,7 +121,7 @@ const meta = {
               const feedTasks = Array.from({ length: 10 }).map(() =>
                 Obj.make(Task.Task, {
                   title: random.lorem.sentence(),
-                  status: random.helpers.arrayElement(['todo', 'in-progress', 'done']) as any,
+                  status: random.helpers.arrayElement(['todo', 'started', 'done']) as any,
                   priority: random.helpers.arrayElement(['low', 'medium', 'high']) as any,
                 }),
               );
@@ -182,7 +182,7 @@ const meta = {
                       tags: random.datatype.boolean() ? [tagUri] : [],
                     },
                     title: random.lorem.sentence(),
-                    status: random.helpers.arrayElement(['todo', 'in-progress', 'done']) as any,
+                    status: random.helpers.arrayElement(['todo', 'started', 'done']) as any,
                     priority: random.helpers.arrayElement(['low', 'medium', 'high']) as any,
                   }),
                 );

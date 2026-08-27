@@ -13,14 +13,23 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { Text } from '@dxos/schema';
-import { Message, Outline } from '@dxos/types';
+import { Message, Outline, Task, TaskSet } from '@dxos/types';
 
 import { Chat } from '../types';
 
 EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  types: [Chat.Chat, Outline.Outline, Feed.Feed, Text.Text, Instructions.Instructions, Message.Message],
+  types: [
+    Chat.Chat,
+    Outline.Outline,
+    TaskSet.TaskSet,
+    Task.Task,
+    Feed.Feed,
+    Text.Text,
+    Instructions.Instructions,
+    Message.Message,
+  ],
   disableLlmMemoization: true,
 });
 
@@ -45,7 +54,7 @@ describe('Chat', () => {
         // Asserted on the schema, not the instance: `in` reports false for any declared-but-unset
         // optional field. The agent a chat runs as is reached through the ECHO parent edge, never a
         // field — a field was the edge that made Agent and Chat mutually dependent.
-        expect(Object.keys(Chat.fields).sort()).toEqual(['feed', 'instructions', 'name', 'outline', 'viewType']);
+        expect(Object.keys(Chat.fields).sort()).toEqual(['feed', 'instructions', 'name', 'taskSet', 'viewType']);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -53,18 +62,18 @@ describe('Chat', () => {
   );
 
   it.effect(
-    'ensureOutline attaches an outline lazily and returns the same one thereafter',
+    'ensureTaskSet attaches a task set lazily and returns the same one thereafter',
     Effect.fnUntraced(
       function* (_) {
         const chat = yield* makeChat;
-        expect(chat.outline).toBeUndefined();
+        expect(chat.taskSet).toBeUndefined();
 
-        const outline = yield* Chat.ensureOutline(chat);
-        expect(chat.outline?.uri).toBe(Ref.make(outline).uri);
+        const taskSet = yield* Chat.ensureTaskSet(chat);
+        expect(chat.taskSet?.uri).toBe(Ref.make(taskSet).uri);
 
-        // Second call reuses the attached outline rather than replacing it.
-        const again = yield* Chat.ensureOutline(chat);
-        expect(again.id).toBe(outline.id);
+        // Second call reuses the attached set rather than replacing it.
+        const again = yield* Chat.ensureTaskSet(chat);
+        expect(again.id).toBe(taskSet.id);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

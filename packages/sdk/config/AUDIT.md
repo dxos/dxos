@@ -19,6 +19,17 @@ Goals:
 > [§6 Cleanup plan](#6-cleanup-plan). Phase 1 (this change) consolidates the
 > definitions into `config.proto` and deprecates dead fields; the call-site
 > migration (removing the hard-coded strings) follows.
+>
+> **Host update.** EDGE's own entrypoint is one host per environment — `dxos.network`,
+> `preview.dxos.network`, `dev.dxos.network` — with the services bundled behind it selected by a
+> path prefix (`/ai`, `/hub`, `/db`, …). `EDGE_URLS` in [`edge-services.ts`](src/edge-services.ts)
+> is the source of truth for those hosts. The standalone workers in the tables below are NOT behind
+> edge: each keeps its own hostname, and `EDGE_SERVICE_DEFAULTS` still holds those hostnames.
+> `dxos/edge` → `docs/audits/edge-hosts.md` is the full inventory.
+>
+> The per-worker `*.dxos.network` and `*.dxos.workers.dev` hostnames in the tables below are the
+> pre-normalization state, kept because the **Source** column (config vs. HARDCODED) is what this
+> audit tracks and that has not changed.
 
 ---
 

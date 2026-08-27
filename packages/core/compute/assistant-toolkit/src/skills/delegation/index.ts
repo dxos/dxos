@@ -3,4 +3,4 @@
 //
 
 export { default as DelegationSkill } from './skill';
-export { DelegationHandlers, DelegationOperations } from './operations';
+export { DelegationSkillHandlers, DelegationSkillOperations } from './operations';

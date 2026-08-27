@@ -192,7 +192,7 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
           {description && (
             <section className='flex flex-col gap-2 rounded-lg border border-separator p-4'>
               <h2 className='text-base font-semibold'>{t('description.label')}</h2>
-              <div ref={descriptionRef} role='none' className={expanded ? '' : 'max-h-52 overflow-hidden'}>
+              <div ref={descriptionRef} className={expanded ? '' : 'max-h-52 overflow-hidden'}>
                 <MarkdownView content={description} classNames='text-sm' />
               </div>
               {showDescriptionToggle && (

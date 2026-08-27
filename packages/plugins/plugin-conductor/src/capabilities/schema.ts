@@ -3,7 +3,7 @@
 //
 
 import { ComputeGraph } from '@dxos/conductor';
-import { CanvasBoard } from '@dxos/react-ui-canvas-editor';
+import { CanvasBoard } from '@dxos/react-ui-canvas-editor/types';
 
 /**
  * Schemas this plugin registers, loaded on demand: the capability activates at idle,

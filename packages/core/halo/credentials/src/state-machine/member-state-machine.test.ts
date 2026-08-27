@@ -527,14 +527,14 @@ describe('MemberStateMachine', () => {
     role?: SpaceMember.Role,
   ): Promise<PublicKey> => {
     const signer = createCredentialSignerWithKey(keyring, host);
-    const feedMessage = await createAdmissionCredentials(
+    const feedMessage = await createAdmissionCredentials({
       signer,
-      guest,
+      identityKey: guest,
       spaceKey,
       genesisFeedKey,
-      role ?? SpaceMember.Role.ADMIN,
-      parents,
-    );
+      role: role ?? SpaceMember.Role.ADMIN,
+      membershipChainHeads: parents,
+    });
     const credential = feedMessage[0].credential!.credential;
     await stateMachine.process(credential);
     return feedMessage[0].credential!.credential.id!;
@@ -547,14 +547,14 @@ describe('MemberStateMachine', () => {
     parents?: PublicKey[],
   ): Promise<PublicKey> => {
     const signer = createCredentialSignerWithKey(keyring, remover);
-    const feedMessage = await createAdmissionCredentials(
+    const feedMessage = await createAdmissionCredentials({
       signer,
-      removed,
+      identityKey: removed,
       spaceKey,
       genesisFeedKey,
-      SpaceMember.Role.REMOVED,
-      parents,
-    );
+      role: SpaceMember.Role.REMOVED,
+      membershipChainHeads: parents,
+    });
     const credential = feedMessage[0].credential!.credential;
     await stateMachine.process(credential);
     return feedMessage[0].credential!.credential.id!;

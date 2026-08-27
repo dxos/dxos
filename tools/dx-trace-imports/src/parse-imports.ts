@@ -7,6 +7,10 @@ import path from 'node:path';
 
 const TS_EXTENSIONS = new Set(['.ts', '.tsx', '.mts', '.cts']);
 
+const SCRIPT_EXTENSIONS = new Set([...TS_EXTENSIONS, '.js', '.jsx', '.mjs', '.cjs']);
+
+const isScript = (filePath: string): boolean => SCRIPT_EXTENSIONS.has(path.extname(filePath).toLowerCase());
+
 const parseOptionsFor = (filePath: string): TsParserConfig | EsParserConfig => {
   const extension = path.extname(filePath).toLowerCase();
   if (TS_EXTENSIONS.has(extension)) {
@@ -104,11 +108,14 @@ const collectSpecifiers = (value: unknown, out: Set<string>): void => {
  * the SWC parser. Type-only imports/exports are skipped since they carry no runtime edge.
  */
 export const parseImportSpecifiers = (source: string, filePath: string): string[] => {
+  if (!isScript(filePath)) {
+    return [];
+  }
   let ast: ReturnType<typeof parseSync>;
   try {
     ast = parseSync(source, parseOptionsFor(filePath));
-  } catch {
-    return [];
+  } catch (err) {
+    throw new Error(`failed to parse ${filePath}: ${err instanceof Error ? err.message : String(err)}`);
   }
   const specifiers = new Set<string>();
   collectSpecifiers(ast.body, specifiers);

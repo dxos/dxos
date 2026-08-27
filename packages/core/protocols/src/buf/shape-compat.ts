@@ -4,11 +4,26 @@
 
 // Preserves protobuf.js object shapes so call sites can migrate to buf one at a time.
 
-import { type DescField, type DescMessage, ScalarType, create, fromBinary, toBinary } from '@bufbuild/protobuf';
+import {
+  type DescField,
+  type DescMessage,
+  ScalarType,
+  create,
+  fromBinary,
+  fromJson,
+  getExtension,
+  hasExtension,
+  toBinary,
+  toJson,
+} from '@bufbuild/protobuf';
+import { StructSchema } from '@bufbuild/protobuf/wkt';
 
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { Timeframe } from '@dxos/timeframe';
+
+import { preserve_any } from './proto/gen/dxos/field_options_pb.ts';
+import { bufRegistry } from './registry.ts';
 
 /**
  * Thrown when a message reaches the compat layer carrying a field whose protobuf.js shape cannot
@@ -20,6 +35,9 @@ export class UnsupportedSubstitutionError extends Error {
     super(`No buf shape-compat substitution for ${typeName}.`);
   }
 }
+
+/** Thrown when a `google.protobuf.Any` value cannot be packed or unpacked in the legacy shape. */
+export class AnyEncodingError extends Error {}
 
 /**
  * A field substitution, generic over the JS type (`T`) substituted in on the protobuf.js side.
@@ -76,9 +94,11 @@ const substitutions: Record<string, Substitution> = {
     },
   },
 
+  // `protoc-gen-es` presents a Struct field as the same plain `JsonObject` the legacy substitution
+  // produces, so re-encoding it would emit a Struct whose one key is `fields`.
   'google.protobuf.Struct': {
-    toProto: (value: Record<string, unknown>) => encodeStruct(value),
-    fromProto: (value) => decodeStruct(value),
+    toProto: (value: Record<string, unknown>) => value,
+    fromProto: (value) => value,
   },
 
   // Nanos are derived from the floored-seconds boundary so they stay in proto's required
@@ -100,76 +120,74 @@ const substitutions: Record<string, Substitution> = {
   },
 };
 
-// google.protobuf.Struct.
-
-const encodeStructValue = (structValue: unknown, visited: WeakSet<object>): unknown => {
-  switch (typeof structValue) {
-    case 'undefined':
-      return { kind: { case: 'nullValue', value: 0 } };
-    case 'number':
-      return { kind: { case: 'numberValue', value: structValue } };
-    case 'string':
-      return { kind: { case: 'stringValue', value: structValue } };
-    case 'boolean':
-      return { kind: { case: 'boolValue', value: structValue } };
-    case 'object': {
-      if (structValue === null || visited.has(structValue)) {
-        return { kind: { case: 'nullValue', value: 0 } };
-      }
-      visited.add(structValue);
-      try {
-        if (Array.isArray(structValue)) {
-          return {
-            kind: {
-              case: 'listValue',
-              value: { values: structValue.map((value) => encodeStructValue(value, visited)) },
-            },
-          };
-        }
-        return { kind: { case: 'structValue', value: encodeStruct(structValue as Record<string, unknown>, visited) } };
-      } finally {
-        visited.delete(structValue);
-      }
-    }
-    default:
-      return { kind: { case: 'nullValue', value: 0 } };
-  }
-};
-
-const encodeStruct = (struct: Record<string, unknown>, visited = new WeakSet<object>()): unknown => ({
-  fields: Object.fromEntries(Object.entries(struct).map(([key, value]) => [key, encodeStructValue(value, visited)])),
-});
-
-const decodeStructValue = (structValue: unknown): unknown => {
-  const kind = asRecord(structValue).kind;
-  const { case: kindCase, value: kindValue } =
-    kind === undefined ? { case: undefined, value: undefined } : asRecord(kind);
-  switch (kindCase) {
-    case 'nullValue':
-      return null;
-    case 'numberValue':
-    case 'stringValue':
-    case 'boolValue':
-      return kindValue;
-    case 'structValue':
-      return decodeStruct(kindValue);
-    case 'listValue': {
-      const values = asRecord(kindValue).values;
-      return Array.isArray(values) ? values.map(decodeStructValue) : [];
-    }
-    default:
-      throw new Error(`Unsupported struct value: ${String(kindCase)}`);
-  }
-};
-
-const decodeStruct = (struct: unknown): Record<string, unknown> => {
-  const fields = asRecord(struct).fields;
-  return Object.fromEntries(Object.entries(fields ?? {}).map(([key, value]) => [key, decodeStructValue(value)]));
-};
-
-// Field traversal.
+// `google.protobuf.Any`.
 
 const ANY_TYPE_NAME = 'google.protobuf.Any';
+const STRUCT_TYPE_NAME = 'google.protobuf.Struct';
+
+/** The legacy shape for an `Any` whose payload stays packed. */
+const packedAny = (typeUrl: string, value: Uint8Array) => ({
+  '@type': ANY_TYPE_NAME,
+  'type_url': typeUrl,
+  'value': value,
+});
+
+// The legacy codec resolves `Any` payloads unless the field opts out, so the option decides.
+const isPreservedAny = (field: DescField): boolean =>
+  field.proto.options !== undefined &&
+  hasExtension(field.proto.options, preserve_any) &&
+  getExtension(field.proto.options, preserve_any) === true;
+
+const anyToProto = (field: DescField, value: any): unknown => {
+  const packed = { typeUrl: value.type_url ?? '', value: value.value ?? new Uint8Array() };
+  if (isPreservedAny(field)) {
+    if (value['@type'] !== undefined && value['@type'] !== ANY_TYPE_NAME) {
+      throw new AnyEncodingError(`Field ${field.name} preserves Any, so its payload cannot be packed here.`);
+    }
+    return packed;
+  }
+  const typeName = value['@type'];
+  if (typeof typeName !== 'string') {
+    throw new AnyEncodingError(`Cannot pack ${field.name} without an '@type' string.`);
+  }
+  if (typeName === ANY_TYPE_NAME) {
+    return packed;
+  }
+  const { '@type': _type, ...payload } = value;
+  if (typeName === STRUCT_TYPE_NAME) {
+    return { typeUrl: typeName, value: toBinary(StructSchema, fromJson(StructSchema, payload)) };
+  }
+  const desc = bufRegistry.getMessage(typeName);
+  if (desc === undefined) {
+    throw new UnsupportedSubstitutionError(typeName);
+  }
+  return { typeUrl: typeName, value: encodeCompat(desc, payload) };
+};
+
+const anyFromProto = (field: DescField, value: any): unknown => {
+  // The legacy shape keys the packed payload `type_url`, where buf's message uses `typeUrl`.
+  const typeUrl: string = value.typeUrl ?? '';
+  const bytes = asBytes(normalizeBytes(value.value ?? new Uint8Array()));
+  if (isPreservedAny(field)) {
+    return packedAny(typeUrl, bytes);
+  }
+  if (typeUrl === STRUCT_TYPE_NAME) {
+    return { ...(toJson(StructSchema, fromBinary(StructSchema, bytes)) as object), '@type': typeUrl };
+  }
+  const desc = bufRegistry.getMessage(typeUrl);
+  if (desc === undefined) {
+    // An unresolvable type stays packed rather than failing, matching the legacy codec.
+    return packedAny(typeUrl, bytes);
+  }
+  return { ...decodeCompat<Record<string, unknown>>(desc, bytes), '@type': typeUrl };
+};
+
+const anySubstitution = (field: DescField): Substitution => ({
+  toProto: (value) => anyToProto(field, value),
+  fromProto: (value) => anyFromProto(field, value),
+});
+
+// Field traversal.
 
 const substitutionFor = (field: DescField): Substitution | undefined => {
   const typeName = messageTypeName(field);
@@ -177,7 +195,7 @@ const substitutionFor = (field: DescField): Substitution | undefined => {
     return undefined;
   }
   if (typeName === ANY_TYPE_NAME) {
-    throw new UnsupportedSubstitutionError(typeName);
+    return anySubstitution(field);
   }
   return substitutions[typeName];
 };
@@ -312,7 +330,7 @@ const convert = (schema: DescMessage, value: unknown, direction: keyof Substitut
   // `record` stays untouched (unlike `result`, aliased to `rest`) so `convertOneofs` can still read
   // a field it is about to delete from `result` — reading and deleting the same object raced.
   const record = asRecord(value);
-  const { $typeName: _typeName, ...rest } = record;
+  const { $typeName: _typeName, $unknown: _unknown, '@type': _type, ...rest } = record;
   const result: Record<string, unknown> = rest;
   for (const field of schema.fields) {
     if (field.oneof !== undefined) {
@@ -346,3 +364,17 @@ export const encodeCompat = <V>(schema: DescMessage, value: V): Uint8Array => {
  */
 export const decodeCompat = <V = unknown>(schema: DescMessage, bytes: Uint8Array): V =>
   convert(schema, fromBinary(schema, bytes), 'fromProto') as V;
+
+/** A codec over protobuf.js-shaped values, matching the surface a persisted store needs. */
+export type CompatCodec<T> = {
+  encode: (value: T) => Uint8Array;
+  decode: (bytes: Uint8Array) => T;
+};
+
+/**
+ * Codec adapter so a store can move its on-disk records to buf without changing its own plumbing.
+ */
+export const compatCodec = <T>(messageSchema: DescMessage): CompatCodec<T> => ({
+  encode: (value) => encodeCompat(messageSchema, value),
+  decode: (bytes) => decodeCompat<T>(messageSchema, bytes),
+});

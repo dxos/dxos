@@ -164,7 +164,7 @@ component PostArticle
     Independent article surface for a single Post. Registered as a React
     surface matching `object(Article, Subscription.Post)` so it can render
     in any article/companion context — the complementary sidebar in
-    'simple' mode, a sibling plank in 'multi' mode, or the deck companion
+    'mobile' mode, a sibling plank in 'multi' mode, or the deck companion
     in the default 'deck' mode.
 
     Panel-based layout with a toolbar; the "Open original" link lives in
@@ -391,7 +391,7 @@ feat F-6: Post Article Detail (master-detail via layout dispatch)
           companion = linkedSegment('post')
           path = getObjectPathFromObject(post)
   req F-6.4:
-    when: useShowItem is invoked in 'simple' layout mode
+    when: useShowItem is invoked in 'mobile' layout mode
     then: the complementary sidebar opens on linkedSegment('post')
   req F-6.5:
     when: useShowItem is invoked in 'multi' layout mode

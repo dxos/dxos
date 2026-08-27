@@ -11,25 +11,28 @@ import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { type AiService } from '@dxos/ai';
 import { ScriptedLanguageModel, SERVICES_CONFIG } from '@dxos/ai/testing';
+import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Chat } from '@dxos/assistant-toolkit';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { Feed, Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
+import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { Config } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
-import { Message, Outline } from '@dxos/types';
+import { Message, Outline, Task, TaskSet } from '@dxos/types';
 
+import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
 
-import { AssistantPlugin } from '../../plugin';
 import { ChatArticle, ChatArticleProps } from './ChatArticle';
 
 /**
@@ -55,12 +58,12 @@ const scriptedAiServiceMiddleware = (replies: readonly string[]) => {
 };
 
 /**
- * Types into the chat prompt and submits.
+ * Types into the chat prompt, leaving it unsubmitted.
  *
  * The thread renders its own CodeMirror instance (read-only, but still `contenteditable`), so an
  * unscoped `.cm-content` lookup is ambiguous; `ChatPrompt` wraps the real editor in a `role="group"`.
  */
-const submitPrompt = async (canvasElement: HTMLElement, text: string) => {
+const typePrompt = async (canvasElement: HTMLElement, text: string) => {
   const content = await waitFor(
     () => {
       const element = canvasElement.querySelector<HTMLElement>('[role="group"] .cm-content');
@@ -74,14 +77,49 @@ const submitPrompt = async (canvasElement: HTMLElement, text: string) => {
 
   await userEvent.click(content);
   await userEvent.type(content, text);
+};
+
+/** Types into the chat prompt and submits it the way a hardware keyboard would. */
+const submitPrompt = async (canvasElement: HTMLElement, text: string) => {
+  await typePrompt(canvasElement, text);
   await userEvent.keyboard('{Enter}');
 };
+
+const sendButton = (canvasElement: HTMLElement) => {
+  const button = canvasElement.querySelector<HTMLButtonElement>('[data-testid="assistant.send"]');
+  if (!button) {
+    throw new Error('Send button not found.');
+  }
+  return button;
+};
+
+/** Two turns: the marker rail needs two prompts to appear, and the status pill needs one to finish. */
+const TWO_TURNS = [
+  { prompt: 'Hello', reply: 'Hi — how can I help?' },
+  { prompt: 'What is a feed?', reply: 'A feed is an append-only log.' },
+];
+
+const driveTurns = async (canvasElement: HTMLElement, messages: { prompt: string; reply: string }[]) => {
+  for (const { prompt, reply } of messages) {
+    await submitPrompt(canvasElement, prompt);
+    await waitFor(() => void expect(threadText(canvasElement)).toContain(reply), { timeout: 15_000, interval: 200 });
+  }
+};
+
+/** The chrome the desktop shell wraps the thread in, all of which the mobile app drops. */
+const desktopOnlyChrome = (canvasElement: HTMLElement) => ({
+  onlineSwitch: canvasElement.querySelector('input.dx-checkbox--switch'),
+  outlineRail: canvasElement.querySelector('[role="navigation"]'),
+  statusPill: canvasElement.querySelector('[data-testid="assistant.chat-status"]'),
+});
 
 type StoryArgs = {
   /** Turns the story drives: each prompt is submitted, and its reply is what the scripted model returns. */
   messages?: { prompt: string; reply: string }[];
-  /** Seed the chat's working outline, so the article renders its `Chat.TaskList`. */
-  tasks?: Outline.ChecklistItem[];
+  /** Seed the chat's working task set, so the article renders its `Chat.TaskList`. */
+  tasks?: { title: string; status?: Task.Task['status'] }[];
+  /** Contributes the deck's platform capability, which the prompt reads to drop desktop-only affordances. */
+  platform?: DeckCapabilities.Platform;
 } & Pick<ChatArticleProps, 'debug'>;
 
 const DefaultStory = ({ debug }: StoryArgs) => {
@@ -99,12 +137,12 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme(),
-    withPluginManager<StoryArgs>(({ args: { messages = [], tasks = [] } }) => {
+    withPluginManager<StoryArgs>(({ args: { messages = [], tasks = [], platform } }) => {
       return {
         plugins: [
           ...corePlugins(),
           ClientPlugin.make({
-            types: [Chat.Chat, Feed.Feed, Message.Message, Outline.Outline, Text.Text],
+            types: [Chat.Chat, Feed.Feed, Message.Message, Outline.Outline, TaskSet.TaskSet, Task.Task, Text.Text],
             config: new Config({ runtime: { services: SERVICES_CONFIG.REMOTE } }),
             onClientInitialized: ({ client }) =>
               Effect.gen(function* () {
@@ -112,16 +150,20 @@ const meta = {
                 const [space] = client.spaces.get();
                 yield* Effect.promise(() => space.waitUntilReady());
                 const feed = space.db.add(Feed.make());
-                const outline = tasks.length
-                  ? space.db.add(Outline.make({ content: tasks.map(Outline.renderChecklistItem).join('\n') }))
-                  : undefined;
+                const taskSet = tasks.length ? space.db.add(TaskSet.make({ name: 'Test' })) : undefined;
+                if (taskSet) {
+                  for (const { title, status } of tasks) {
+                    TaskSet.addTask(space.db, taskSet, title, { status });
+                  }
+                }
                 const chat = space.db.add(
-                  Chat.make({ name: 'Test', feed: Ref.make(feed), outline: outline && Ref.make(outline) }),
+                  Chat.make({ name: 'Test', feed: Ref.make(feed), taskSet: taskSet && Ref.make(taskSet) }),
                 );
-                if (chat.outline) {
-                  // The task list reads the outline through the ref's resolve-once atom; load it so
-                  // the story renders without waiting on a lazy resolution that nothing triggers.
-                  yield* Effect.promise(() => chat.outline!.load());
+                if (chat.taskSet) {
+                  // The task list reads the set and its rows through resolve-once ref atoms; load
+                  // them so the story renders without waiting on a lazy resolution nothing triggers.
+                  const set = yield* Effect.promise(() => chat.taskSet!.load());
+                  yield* Effect.promise(() => Promise.all(set.tasks.map((task) => task.load())));
                 }
 
                 yield* Effect.promise(() => space.db.flush({ indexes: true }));
@@ -135,9 +177,15 @@ const meta = {
               messages.length > 0 ? scriptedAiServiceMiddleware(messages.map(({ reply }) => reply)) : undefined,
           }),
           PreviewPlugin.make(),
+          // Contributes the task verbs the `/task:*` commands invoke.
+          TasksPlugin.make(),
           StorybookPlugin.make({}),
         ],
-        capabilities,
+        // Contributed directly rather than by loading the deck plugin: the prompt reads only this
+        // one value, so a story can stand in for the mobile shell without its layout.
+        capabilities: platform
+          ? [...capabilities, Capability.contribute(DeckCapabilities.Platform, platform)]
+          : capabilities,
       };
     }),
   ],
@@ -157,14 +205,14 @@ export const Default: Story = {
   },
 };
 
-/** The article's working checklist: `Chat.TaskList` reading the chat's outline through context. */
+/** The article's working tasks: `Chat.TaskList` reading the chat's task set through context. */
 export const Tasks: Story = {
   args: {
     tasks: [
-      { title: 'Gather the requirements', done: true },
-      { title: 'Draft the plan', done: true },
-      { title: 'Implement the change', done: false },
-      { title: 'Verify and ship', done: false },
+      { title: 'Gather the requirements', status: 'done' },
+      { title: 'Draft the plan', status: 'done' },
+      { title: 'Implement the change', status: 'started' },
+      { title: 'Verify and ship', status: 'todo' },
     ],
   },
   play: async ({ canvasElement }) => {
@@ -196,6 +244,97 @@ export const Scripted: Story = {
       timeout: 20_000,
       interval: 300,
     });
+  },
+};
+
+/**
+ * The send control, which is the only way to submit where Enter is not an affordance (a touch
+ * keyboard). Driven through the real request loop so a regression that leaves the button inert fails
+ * here rather than only on device.
+ */
+export const Send: Story = {
+  args: {
+    messages: [{ prompt: 'What is a feed?', reply: 'A feed is an append-only log.' }],
+  },
+  play: async ({ canvasElement, args: { messages = [] } }) => {
+    const { prompt, reply } = messages[0];
+
+    // Nothing to send yet.
+    await waitFor(() => void expect(sendButton(canvasElement).disabled).toBe(true), {
+      timeout: 15_000,
+      interval: 300,
+    });
+
+    // No deck plugin here, so the platform capability is absent and the prompt takes the desktop
+    // fallback — which is what keeps the online indicator. Pins the fallback against a regression
+    // that would blank the switch everywhere the deck is not loaded.
+    await expect(canvasElement.querySelector('input.dx-checkbox--switch')).not.toBeNull();
+
+    await typePrompt(canvasElement, prompt);
+    await waitFor(() => void expect(sendButton(canvasElement).disabled).toBe(false), {
+      timeout: 5_000,
+      interval: 100,
+    });
+
+    await userEvent.click(sendButton(canvasElement));
+
+    await waitFor(() => void expect(threadText(canvasElement)).toContain(reply), { timeout: 20_000, interval: 300 });
+    await expect(threadText(canvasElement)).toContain(prompt);
+
+    // The composer resets, so the control returns to its empty state (the placeholder is all that is
+    // left in the editor, hence a negative assertion rather than an emptiness one).
+    await expect(composerText(canvasElement)).not.toContain(prompt);
+    await waitFor(() => void expect(sendButton(canvasElement).disabled).toBe(true), { timeout: 5_000, interval: 100 });
+  },
+};
+
+/**
+ * The desktop baseline for the platform-gated chrome: after two turns the marker rail, the floating
+ * status pill and the online indicator are all present. Without this, `MobilePlatform`'s absence
+ * assertions would pass against a thread that never rendered them in the first place.
+ */
+export const DesktopPlatform: Story = {
+  args: {
+    platform: 'desktop',
+    messages: TWO_TURNS,
+  },
+  play: async ({ canvasElement, args: { messages = [] } }) => {
+    await driveTurns(canvasElement, messages);
+    await waitFor(
+      () => {
+        const { onlineSwitch, outlineRail, statusPill } = desktopOnlyChrome(canvasElement);
+        void expect(onlineSwitch).not.toBeNull();
+        void expect(outlineRail).not.toBeNull();
+        // Non-empty, not merely present: the wrapper renders whether or not the pill has anything
+        // to report, so its text is what proves the pill itself rendered.
+        void expect(statusPill?.textContent ?? '').not.toBe('');
+      },
+      { timeout: 10_000, interval: 200 },
+    );
+  },
+};
+
+/**
+ * The mobile app's treatment of the same thread. The marker rail (a precision target pinned outside
+ * the text column), the floating status pill (which would cover the reply it reports on) and the
+ * read-only online indicator are all dropped; the send control stays, being the only submit
+ * affordance a touch keyboard has. Keyed to the platform, not the viewport, so a narrowed desktop
+ * window is unaffected.
+ */
+export const MobilePlatform: Story = {
+  args: {
+    platform: 'mobile',
+    messages: TWO_TURNS,
+  },
+  play: async ({ canvasElement, args: { messages = [] } }) => {
+    await driveTurns(canvasElement, messages);
+
+    const { onlineSwitch, outlineRail, statusPill } = desktopOnlyChrome(canvasElement);
+    await expect(onlineSwitch).toBeNull();
+    await expect(outlineRail).toBeNull();
+    await expect(statusPill).toBeNull();
+
+    await expect(sendButton(canvasElement)).toBeTruthy();
   },
 };
 

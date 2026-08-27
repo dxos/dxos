@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
-import { Dimension, Point } from '@dxos/react-ui-canvas';
+import { Dimension, Point } from '@dxos/react-ui-canvas/types';
 
 import { Shape } from './schema';
 

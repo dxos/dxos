@@ -18,7 +18,15 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { DeferredTask, scheduleTask, sleep } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
-import { DatabaseDirectory, EntityStructure, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
+import {
+  DatabaseDirectory,
+  EntityStructure,
+  SPACE_ROOT_TYPE,
+  SpaceDocVersion,
+  type SpaceRoot,
+  createIdFromSpaceKey,
+  isSpaceRoot,
+} from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
 import { IndexEngine, type IndexingResult } from '@dxos/index-core';
@@ -49,7 +57,7 @@ import { FeedDataSource } from './feed-data-source';
 import { hintFromIndexingResult } from './invalidation-hint';
 import { LocalFeedServiceImpl } from './local-feed-service';
 import { QueryServiceImpl } from './query-service';
-import { type SpaceDocumentListUpdatedEvent, SpaceStateManager } from './space-state-manager';
+import { type SpaceDocumentListUpdatedEvent, type SpaceRootRefs, SpaceStateManager } from './space-state-manager';
 
 /**
  * Documents walked between event-loop yields during a reachability traversal. Bounds how long one
@@ -457,6 +465,139 @@ export class EchoHost extends Resource {
     return await this.updateSpaceRoot(ctx, spaceId, automergeRoot.url);
   }
 
+  /**
+   * Creates a space anchored on an immutable space root document, which carries the credentials
+   * document. The id still derives from the space genesis key, exactly as a feed-backed space's
+   * does — the root changes where credentials live, not how the space is identified.
+   *
+   * NOTE: `createSpaceRoot` above creates the DIRECTORY, which predates this naming.
+   */
+  async createSpaceWithRootDocument(ctx: Context, spaceKey: PublicKey): Promise<CreatedSpace> {
+    invariant(this._lifecycleState === LifecycleState.OPEN);
+
+    const spaceId = await createIdFromSpaceKey(spaceKey);
+    const rootHandle = await this._automergeHost.createDoc<Partial<SpaceRoot>>({});
+
+    const directoryHandle = await this._automergeHost.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      // spaceKey is deprecated but still written so older clients can resolve the owning space.
+      access: { spaceId, spaceKey: spaceKey.toHex() },
+      objects: {},
+      links: {},
+    });
+
+    rootHandle.change((doc: Partial<SpaceRoot>) => {
+      doc.type = SPACE_ROOT_TYPE;
+      doc.spaceId = spaceId;
+      doc.directory = directoryHandle.url;
+    });
+
+    await this._automergeHost.flush(ctx, { documentIds: [rootHandle.documentId, directoryHandle.documentId] });
+
+    const directory = await this.updateSpaceRoot(ctx, spaceId, directoryHandle.url);
+    await this._spaceStateManager.setSpaceRootRefs(spaceId, {
+      spaceRootDocUrl: rootHandle.url,
+    });
+
+    return { spaceId, spaceRootUrl: rootHandle.url, directory };
+  }
+
+  /**
+   * Mints a space root over a legacy space's existing directory, keeping the space id: it was derived
+   * from the space key and cannot be reproduced from a document, which is what `spaceKey` derivation
+   * records. Idempotent — a space that already has a root keeps it, so a re-run cannot fork the anchor.
+   */
+  async migrateSpaceToRootDocument(ctx: Context, spaceId: SpaceId): Promise<SpaceRootRefs | undefined> {
+    invariant(this._lifecycleState === LifecycleState.OPEN);
+
+    const existing = this._spaceStateManager.getSpaceRootRefs(spaceId);
+    if (existing) {
+      return existing;
+    }
+
+    // A space whose directory is not assigned yet (an accepted space still catching up) has nothing to
+    // anchor; it migrates on a later load rather than failing here.
+    const directory = this._spaceStateManager.getRootBySpaceId(spaceId);
+    if (!directory) {
+      return undefined;
+    }
+
+    const rootHandle = await this._automergeHost.createDoc<Partial<SpaceRoot>>({});
+    rootHandle.change((doc: Partial<SpaceRoot>) => {
+      doc.type = SPACE_ROOT_TYPE;
+      doc.spaceId = spaceId;
+      doc.directory = directory.url;
+    });
+
+    await this._automergeHost.flush(ctx, { documentIds: [rootHandle.documentId] });
+
+    const refs: SpaceRootRefs = { spaceRootDocUrl: rootHandle.url };
+    await this._spaceStateManager.setSpaceRootRefs(spaceId, refs);
+    return refs;
+  }
+
+  /**
+   * Links an already-created credentials document from the space root, once. Idempotent — the link is
+   * what the per-space source flip keys off, so a second document would fork the chain. The document
+   * itself is built a layer up, where credential encoding lives.
+   */
+  /**
+   * Adopts a space root minted elsewhere, so a joining peer records the root the space already has
+   * rather than minting a second one over it. Idempotent; the root must name this space.
+   */
+  async adoptSpaceRoot(ctx: Context, spaceId: SpaceId, spaceRootUrl: AutomergeUrl): Promise<SpaceRootRefs> {
+    invariant(this._lifecycleState === LifecycleState.OPEN);
+
+    const existing = this._spaceStateManager.getSpaceRootRefs(spaceId);
+    if (existing) {
+      invariant(existing.spaceRootDocUrl === spaceRootUrl, `Space already anchored on another root: ${spaceId}`);
+      return existing;
+    }
+
+    // Local-only: a caller adopting a root it was merely told about must not block on the network.
+    const rootHandle = await this._automergeHost.loadDoc<SpaceRoot>(ctx, spaceRootUrl, { fetchFromNetwork: false });
+    const root = rootHandle?.doc();
+    invariant(root && isSpaceRoot(root), 'Space root document must load.');
+    invariant(root.spaceId === spaceId, `Space root names another space: ${root.spaceId}`);
+
+    // The directory travels with the root, so a peer that has never opened the space gets one here.
+    if (!this._spaceStateManager.getRootBySpaceId(spaceId)) {
+      await this.updateSpaceRoot(ctx, spaceId, root.directory);
+    }
+
+    const refs: SpaceRootRefs = {
+      spaceRootDocUrl: spaceRootUrl,
+      credentialsDocUrl: root.credentials,
+    };
+    await this._spaceStateManager.setSpaceRootRefs(spaceId, refs);
+    return refs;
+  }
+
+  async setCredentialsDocument(ctx: Context, spaceId: SpaceId, credentialsDocUrl: AutomergeUrl): Promise<AutomergeUrl> {
+    invariant(this._lifecycleState === LifecycleState.OPEN);
+
+    const refs = this._spaceStateManager.getSpaceRootRefs(spaceId);
+    invariant(refs, `Space has no root document: ${spaceId}`);
+    if (refs.credentialsDocUrl) {
+      return refs.credentialsDocUrl;
+    }
+
+    const rootHandle = await this._automergeHost.loadDoc<SpaceRoot>(ctx, refs.spaceRootDocUrl);
+    invariant(rootHandle, 'Space root document must load before linking credentials.');
+    rootHandle.change((doc: SpaceRoot) => {
+      doc.credentials = credentialsDocUrl;
+    });
+
+    await this._automergeHost.flush(ctx, { documentIds: [rootHandle.documentId] });
+    await this._spaceStateManager.setSpaceRootRefs(spaceId, { ...refs, credentialsDocUrl });
+    return credentialsDocUrl;
+  }
+
+  /** References carried by the space root document, or undefined for a space that predates it. */
+  getSpaceRootRefs(spaceId: SpaceId): SpaceRootRefs | undefined {
+    return this._spaceStateManager.getSpaceRootRefs(spaceId);
+  }
+
   get spaces(): ReadonlyArray<{ spaceId: SpaceId; rootDocUrl: AutomergeUrl }> {
     return this._spaceStateManager.getPersistedSpaces();
   }
@@ -540,8 +681,8 @@ export class EchoHost extends Resource {
   }
 
   /**
-   * Per-space storage metrics: objects (alive/deleted), automerge documents, feeds, feed blocks.
-   * See `docs/GARBAGE_COLLECTION.md`.
+   * Per-space storage metrics: objects (alive/deleted), automerge documents, feeds, feed blocks,
+   * plus what the host is holding in memory. See `docs/GARBAGE_COLLECTION.md`.
    */
   async getSpaceStats(spaceId: SpaceId): Promise<DataService.DatabaseStats> {
     const root = await this.#ensureSpaceRootLoaded(spaceId);
@@ -555,6 +696,13 @@ export class EchoHost extends Resource {
       documents: this.#allSpaceDocumentIds(documents).size,
       feeds: feeds.length,
       feedBlocks,
+      // Sampled after the walk above, which loads the space root: reading it first would report a
+      // residency the call itself then changes.
+      loaded: {
+        documents: this._automergeHost.loadedDocsCountForSpace(spaceId),
+        documentsTotal: this._automergeHost.loadedDocsCount,
+        queriesTotal: this._queryService.activeQueryCount,
+      },
     };
   }
 
@@ -1071,6 +1219,16 @@ const _mergeInto = (acc: MutableIndexingAccumulator, r: IndexingResult): void =>
 export type EchoStatsDiagnostic = {
   loadedDocsCount: number;
   dataStats: EchoDataStats;
+};
+
+/** A space created from a space root document, before any credentials exist for it. */
+export type CreatedSpace = {
+  spaceId: SpaceId;
+
+  /** Automerge URL of the immutable root; goes into the `SpaceMember` credential as `spaceRootUrl`. */
+  spaceRootUrl: AutomergeUrl;
+
+  directory: DatabaseRoot;
 };
 
 export type EchoHostLayerOptions = Pick<
