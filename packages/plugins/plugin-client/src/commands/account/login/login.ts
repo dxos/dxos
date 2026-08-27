@@ -158,9 +158,7 @@ const loginWithPasskey = (client: Client) =>
     });
 
     return yield* Effect.gen(function* () {
-      // Addressed to the hub itself: it redirects the browser on to whichever origin its relying
-      // party covers, so the CLI needs no knowledge of that hostname.
-      const url = new URL('/auth/verify', Account.getHubUrl(client));
+      const url = new URL('/auth/verify', Account.getAuthUrl(client));
       url.searchParams.set('purpose', 'device');
       url.searchParams.set('callback', server.origin);
 
