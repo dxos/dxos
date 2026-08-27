@@ -4,18 +4,17 @@
 
 import { next as A } from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
+import net from 'node:net';
 
-import { Trigger } from '@dxos/async';
+import { Trigger, waitForCondition } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
+import { type CancellableInvitation, InvitationEncoder } from '@dxos/client-protocol';
 import { LocalClientServices } from '@dxos/client/local';
 import { waitForSpace } from '@dxos/client/testing';
-import { type CancellableInvitation, InvitationEncoder } from '@dxos/client-protocol';
-import { Context } from '@dxos/context';
 import { DXN, Filter, Obj, Query, Type } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { isEdgePeerId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createRtcTransportFactory } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
@@ -59,6 +58,7 @@ export type SpaceDigest = {
 };
 
 const INVITATION_TIMEOUT = 60_000;
+const SPACE_READY_TIMEOUT = 60_000;
 
 /**
  * One real `@dxos/client` peer, driven entirely over RPC by the `edgePbt` plan.
@@ -74,6 +74,14 @@ export class ClientReplicant {
   #config?: { edgeUrl: string; agents: boolean } = undefined;
   /** Held open so late guests can still redeem a multi-use invitation. */
   #hostedInvitations = new Map<string, CancellableInvitation>();
+  /**
+   * Every connection to EDGE is routed through this loopback TCP proxy so the test can cut the wire
+   * without touching the client. Closing the client's own `EdgeConnection` instead does not work:
+   * it is built with `deferConnect`, and a reopened one never dials again.
+   */
+  #proxy?: net.Server = undefined;
+  #proxyLive = true;
+  #sockets = new Set<net.Socket>();
 
   constructor(env: ReplicantEnv) {
     this.#env = env;
@@ -87,13 +95,14 @@ export class ClientReplicant {
   async init({ edgeUrl, agents }: { edgeUrl: string; agents: boolean }): Promise<void> {
     invariant(!this.#client, 'client already initialized');
     this.#config = { edgeUrl, agents };
+    const proxiedUrl = await this.#startProxy(edgeUrl);
 
     // Storage lives under the replicant's own out dir so a destroy/init cycle recovers from disk
     // rather than starting empty — that is what makes `Restart` a crash-recovery test.
     const fullConfig = new Config({
       version: 1,
       runtime: {
-        services: { edge: { url: edgeUrl } },
+        services: { edge: { url: proxiedUrl } },
         client: {
           storage: { persistent: true, dataRoot: `${this.#env.params.outDir}/storage` },
           // Edge-only data replication (D7): signaling carries invitations, no client-to-client data path.
@@ -124,15 +133,21 @@ export class ClientReplicant {
     this.#client = undefined;
     this.#services = undefined;
     this.#hostedInvitations.clear();
+    await this.#stopProxy();
   }
 
   /**
-   * Re-create the client from persistent storage, as a crash/reload would.
+   * Re-create the client from persistent storage, as a reload would.
+   *
+   * The link is restored first: `client.destroy()` leaves its swarms over EDGE and throws when the
+   * connection is gone, so restarting an offline client is a reconnect-and-restart, matching the
+   * model's `online` post-state.
    */
   @trace.span()
   async restart(): Promise<void> {
     invariant(this.#config, 'never initialized');
     const config = this.#config;
+    this.#proxyLive = true;
     await this.destroy();
     await this.init(config);
   }
@@ -142,16 +157,22 @@ export class ClientReplicant {
    */
   @trace.span()
   async goOffline(): Promise<void> {
-    await this.#edgeConnection().close();
+    this.#proxyLive = false;
+    for (const socket of this.#sockets) {
+      socket.destroy();
+    }
+    this.#sockets.clear();
   }
 
   @trace.span()
   async goOnline(): Promise<void> {
-    await this.#edgeConnection().open(new Context());
+    // The client's own reconnect loop dials again; nothing else has to be told.
+    this.#proxyLive = true;
   }
 
   async isEdgeConnected(): Promise<boolean> {
-    return this.#edgeConnection().isOpen;
+    const connection = this.#services?.host?.edgeConnection;
+    return connection?.status?.state === 1;
   }
 
   //
@@ -210,7 +231,7 @@ export class ClientReplicant {
    */
   @trace.span()
   async shareSpace({ spaceId }: { spaceId: string }): Promise<{ invitationCode: string }> {
-    const observable = this.#getSpace(spaceId).share({
+    const observable = (await this.#getSpace(spaceId)).share({
       authMethod: Invitation.AuthMethod.NONE,
       multiUse: true,
     });
@@ -231,6 +252,13 @@ export class ClientReplicant {
     return { spaceId: space.id };
   }
 
+  /** Whether this device currently holds the space — no waiting, so callers can poll. */
+  async hasSpace({ spaceId }: { spaceId: string }): Promise<boolean> {
+    return this.#getClient()
+      .spaces.get()
+      .some((candidate) => candidate.id === spaceId);
+  }
+
   async listSpaces(): Promise<{ spaceIds: string[] }> {
     return { spaceIds: this.#getClient().spaces.get().map((space) => space.id) };
   }
@@ -249,7 +277,7 @@ export class ClientReplicant {
     docId: string;
     counterSlots: number;
   }): Promise<void> {
-    const db = this.#getSpace(spaceId).db;
+    const db = (await this.#getSpace(spaceId)).db;
     db.add(Obj.make(PbtDocument, { docId, content: '', counters: new Array(counterSlots).fill(0) }));
     await db.flush();
   }
@@ -270,7 +298,7 @@ export class ClientReplicant {
     token: string;
     positionRatio: number;
   }): Promise<void> {
-    const db = this.#getSpace(spaceId).db;
+    const db = (await this.#getSpace(spaceId)).db;
     const doc = await this.#findDocument(spaceId, docId);
     const accessor = Doc.createAccessor(doc, ['content']);
     const position = Math.floor(positionRatio * (doc.content?.length ?? 0));
@@ -290,7 +318,7 @@ export class ClientReplicant {
     docId: string;
     slot: number;
   }): Promise<number> {
-    const db = this.#getSpace(spaceId).db;
+    const db = (await this.#getSpace(spaceId)).db;
     const doc = await this.#findDocument(spaceId, docId);
     const next = (doc.counters[slot] ?? 0) + 1;
     doc.counters[slot] = next;
@@ -300,14 +328,14 @@ export class ClientReplicant {
 
   @trace.span()
   async deleteDocument({ spaceId, docId }: { spaceId: string; docId: string }): Promise<void> {
-    const db = this.#getSpace(spaceId).db;
+    const db = (await this.#getSpace(spaceId)).db;
     const doc = await this.#findDocument(spaceId, docId);
     db.remove(doc);
     await db.flush();
   }
 
   async flush({ spaceId }: { spaceId: string }): Promise<void> {
-    await this.#getSpace(spaceId).db.flush();
+    await (await this.#getSpace(spaceId)).db.flush();
   }
 
   //
@@ -319,7 +347,7 @@ export class ClientReplicant {
    * quiescence means "everything I have reached the hub".
    */
   async getSyncState({ spaceId }: { spaceId: string }): Promise<SyncSummary> {
-    const space = this.#getSpace(spaceId);
+    const space = await this.#getSpace(spaceId);
     const state = await space.db.getAutomergeSyncState();
     const peer = state.peers?.find((candidate) => isEdgePeerId(candidate.peerId, space.id));
     if (!peer) {
@@ -345,7 +373,7 @@ export class ClientReplicant {
    * The observable state of a space, reduced to exactly what the model can predict.
    */
   async digest({ spaceId }: { spaceId: string }): Promise<SpaceDigest> {
-    const objects = await this.#getSpace(spaceId).db.query(Query.select(Filter.type(PbtDocument))).run();
+    const objects = await (await this.#getSpace(spaceId)).db.query(Query.select(Filter.type(PbtDocument))).run();
     const docs: Record<string, DocumentDigest> = {};
     for (const object of objects) {
       docs[object.docId] = {
@@ -360,29 +388,79 @@ export class ClientReplicant {
   // Internal.
   //
 
+  /**
+   * Listen on loopback and pipe each connection to the real EDGE endpoint, so `goOffline` can drop
+   * every socket and refuse new ones — indistinguishable from the network going away.
+   */
+  async #startProxy(edgeUrl: string): Promise<string> {
+    const target = new URL(edgeUrl);
+    const port = Number(target.port !== '' ? target.port : 80);
+    this.#proxyLive = true;
+
+    const server = net.createServer((downstream) => {
+      if (!this.#proxyLive) {
+        downstream.destroy();
+        return;
+      }
+      const upstream = net.connect({ host: target.hostname, port });
+      const pair = [downstream, upstream];
+      const drop = () => {
+        for (const socket of pair) {
+          this.#sockets.delete(socket);
+          socket.destroy();
+        }
+      };
+      for (const socket of pair) {
+        this.#sockets.add(socket);
+        socket.on('error', drop);
+        socket.on('close', drop);
+      }
+      downstream.pipe(upstream);
+      upstream.pipe(downstream);
+    });
+
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+    const address = server.address();
+    invariant(address !== null && typeof address === 'object', 'proxy did not bind');
+    this.#proxy = server;
+    return `http://127.0.0.1:${address.port}`;
+  }
+
+  async #stopProxy(): Promise<void> {
+    for (const socket of this.#sockets) {
+      socket.destroy();
+    }
+    this.#sockets.clear();
+    const server = this.#proxy;
+    this.#proxy = undefined;
+    if (server) {
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    }
+  }
+
   #getClient(): Client {
     invariant(this.#client, 'client not initialized');
     return this.#client;
   }
 
-  #edgeConnection() {
-    const connection = this.#services?.host?.edgeConnection;
-    invariant(connection, 'no edge connection');
-    return connection;
-  }
-
-  #getSpace(spaceId: string) {
-    const space = this.#getClient()
-      .spaces.get()
-      .find((candidate) => candidate.id === spaceId);
-    invariant(space, `space not found: ${spaceId}`);
+  /**
+   * A restarted client rehydrates its spaces from storage asynchronously, and a just-joined one
+   * receives them over the network, so every accessor waits rather than asserting on a race.
+   */
+  async #getSpace(spaceId: string) {
+    const client = this.#getClient();
+    const space = await waitForCondition({
+      condition: () => client.spaces.get().find((candidate) => candidate.id === spaceId),
+      timeout: SPACE_READY_TIMEOUT,
+      interval: 100,
+      error: new Error(`space not found: ${spaceId}`),
+    });
+    await space.waitUntilReady();
     return space;
   }
 
   async #findDocument(spaceId: string, docId: string): Promise<PbtDocument> {
-    const objects = await this.#getSpace(spaceId)
-      .db.query(Query.select(Filter.type(PbtDocument)))
-      .run();
+    const objects = await (await this.#getSpace(spaceId)).db.query(Query.select(Filter.type(PbtDocument))).run();
     const doc = objects.find((object: PbtDocument) => object.docId === docId);
     invariant(doc, `document not found: ${docId}`);
     return doc;
