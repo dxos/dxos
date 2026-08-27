@@ -178,6 +178,44 @@ handoff is explicit and it belongs in the PR conversation, not around it:
 4. Put that URL alone in its own paragraph, per rule 2, and keep the R2 link beside it as the copy that
    does not depend on GitHub's signed, expiring asset URLs.
 
+### Can the agent make the attachment itself?
+
+**Not from a terminal session.** Every API route is closed, measured:
+
+| route                                                                                                | result                                                                                                 |
+| ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `POST github.com/upload/policies/assets` with a PAT                                                  | `422` + an HTML error page, with and without `repository_id` — it wants a browser session's CSRF token |
+| any REST/GraphQL equivalent                                                                          | none exists                                                                                            |
+| `github.com/<o>/<r>/releases/download/…webm`                                                         | no player — release assets are not rewritten                                                           |
+| `github.com/<o>/<r>/raw/…webm`, `media.githubusercontent.com/…webm`                                  | no player                                                                                              |
+| a well-formed `user-attachments` or legacy `user-images.githubusercontent.com` URL with a made-up id | no player                                                                                              |
+
+That last row is the informative one: the rewrite is **not** a URL-pattern transform you can imitate.
+GitHub resolves the id against a real asset record, so an invented URL of exactly the right shape renders
+as a plain link. Only an upload that creates the record produces a player.
+
+**With a browser holding the user's GitHub session, it is reachable.** The `claude-in-chrome` tools can
+drive the user's own Chrome: `find` the comment box's `input[type=file]`, `file_upload` onto it, let
+GitHub insert the `user-attachments` markdown, read the URL out of the textarea, and leave without
+posting the comment. Two hard prerequisites:
+
+- **The Chrome extension must be connected** — `list_connected_browsers` returning `[]` means this route
+  is unavailable, and the in-app browser pane is not a substitute (no GitHub session, and signing in
+  means handling a password, which is out of bounds).
+- **`file_upload` caps at 10 MB per call.** A screen recording usually needs a re-encode first, which is
+  cheap and barely visible at demo scale — 19.2 MB → 2.7 MB:
+
+  ```bash
+  ffmpeg -i demo.webm -c:v libvpx-vp9 -crf 40 -b:v 0 -vf scale=1280:-2 -an -row-mt 1 -cpu-used 5 out.webm
+  ```
+
+  Publish the **full-quality** file to R2 and attach the small one, so the player is convenient and the
+  link is the real artifact.
+
+This route is documented but **not yet verified end to end** — no extension was connected when it was
+written. Treat the human handoff above as the default and this as the optimisation to try first when a
+browser is available.
+
 Until step 3 lands, write the video as a labelled link with its duration and size, so a reviewer
 deciding whether to spend 19 MB knows what they are clicking:
 
