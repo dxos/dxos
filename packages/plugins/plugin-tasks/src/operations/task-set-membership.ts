@@ -60,9 +60,12 @@ export const addMilestoneToSet = (taskSet: TaskSet.TaskSet, milestone: Milestone
   Obj.setParent(milestone, taskSet);
 };
 
-/** Every task in `taskSet` transitively under `task`, including `task` itself. Cycle-safe. */
-export const collectSubtree = (taskSet: TaskSet.TaskSet, task: Task.Task): Task.Task[] => {
-  const tasks = TaskSet.resolveTasks(taskSet);
+/**
+ * Every task in `tasks` transitively under `task`, including `task` itself. Cycle-safe. Takes the
+ * already-loaded member list (`TaskSet.loadTasks`) — resolving refs synchronously here would read
+ * an unloaded set as empty on a fresh session.
+ */
+export const collectSubtree = (tasks: readonly Task.Task[], task: Task.Task): Task.Task[] => {
   const subtree: Task.Task[] = [];
   const seen = new Set<string>();
   const visit = (current: Task.Task): void => {
@@ -139,13 +142,13 @@ export const resolveParentTask = (
 ): Effect.Effect<Task.Task, InvalidOperationInput | Error.EntityNotFoundError, Database.Service> =>
   Effect.gen(function* () {
     const candidate = yield* Database.load(parentTask);
-    const subtree = taskSet ? collectSubtree(taskSet, task) : [task];
+    const members = taskSet ? yield* TaskSet.loadTasks(taskSet) : [];
+    const subtree = taskSet ? collectSubtree(members, task) : [task];
     if (subtree.some((member) => member.id === candidate.id)) {
       return yield* Effect.fail(
         new InvalidOperationInput({ message: 'A task cannot be re-parented under itself or its own sub-tasks.' }),
       );
     }
-    const members = taskSet ? TaskSet.resolveTasks(taskSet) : [];
     if (!members.some((member) => member.id === candidate.id)) {
       return yield* Effect.fail(
         new InvalidOperationInput({ message: 'The parent task does not belong to this task set.' }),

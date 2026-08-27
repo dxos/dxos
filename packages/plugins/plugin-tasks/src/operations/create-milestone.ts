@@ -17,6 +17,9 @@ const handler: Operation.WithHandler<typeof TaskOperation.CreateMilestone> = Tas
     Effect.fnUntraced(function* ({ taskSet: taskSetRef, name, description, targetDate }) {
       const taskSet = yield* Database.load(taskSetRef);
       const milestone = yield* Database.add(Milestone.make({ name: name.trim(), description, targetDate }));
+      // Flushed before the set gains the ref (see `create-task`): a crash between the writes must
+      // strand an unfiled milestone, never a set entry pointing at nothing.
+      yield* Database.flush();
       addMilestoneToSet(taskSet, milestone);
       yield* Database.flush();
       return { milestone: milestone };
