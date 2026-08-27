@@ -81,11 +81,58 @@ Unblocking `AgentProcess` needs #12765 merged, or a maintainer dispatching `pkg.
       in the `_initPromise` memo and then awaited `_init`, which handed the same promise back — every
       request to a DO with nothing spawned hung. Both wrappers now memoize around a shared
       `_initImpl`.
-- [ ] `agent-process.node.test.ts` — `AgentService` spawns and controls a remote agent on edge.
-      Blocked: `@dxos/agent-runtime` is in no pinned `pkg.pr.new` build.
+- [ ] `agent-process.node.test.ts` — see Phase 5, which lays the requirement out in full.
 - [x] `pnpm format`, lint, and the touched test suites green in both repos; PRs opened (#12765,
       dxos/edge#971). Edge CI green; the edge trigger-dispatcher suite (17 tests) still passes with
       the dispatcher's new process index.
+
+## Phase 5 — `AgentProcess` on EDGE and its e2e suite
+
+The requirement, stated in full: **`dxos/compute`'s `AgentService` must be able to spawn and control
+a remote agent hosted on EDGE**, verified by the edge harness rather than by unit stand-ins. That
+splits into a host half and a client half, and only the client half needs anything published.
+
+**Correction to an earlier note in this ledger:** `@dxos/agent-runtime` _is_ in edge's catalog,
+pinned at `8db69c61` (`pnpm-workspace.yaml:125`) — the claim that it was in no pinned build was
+wrong. What actually blocked the host half is narrower: the package exported `AGENT_PROCESS_KEY` but
+not `AgentProcess`, so the edge registry could not name the definition. #12765 now exports
+`AgentProcess` and `AgentProcessOptions`; a pinned-catalog bump to a commit carrying that export is
+all the host half needs.
+
+### 5a — host half (edge). Needs only the `AgentProcess` export.
+
+- [ ] Bump edge's catalog for `@dxos/agent-runtime` to a commit that exports `AgentProcess`.
+- [ ] Add `AGENT_PROCESS_KEY -> { make: AgentProcess, input: … }` to the edge process registry
+      (`compute-service/src/processes/registry.ts`), keeping the registry closed.
+- [ ] Assemble `AgentProcess`'s eight services inside `ProcessObject`. It declares:
+      `Database.Service`, `OpaqueToolkit.OpaqueToolkitProvider`, `Operation.Service`,
+      `Registry.Service`, `StorageService.StorageService`,
+      `ProcessManager.ProcessOperationInvoker.Service`, `AiService.AiService`, and
+      `Credential.CredentialsService`. `FunctionContext` in `compute-runtime`'s `protocol.ts` already
+      assembles exactly this set for invoked functions but does not export it — export it or lift the
+      layer builder rather than rebuilding it here. This is the largest remaining unknown.
+- [ ] `AgentProcess` requires `spawn` options `target` (a queue DXN) and optionally
+      `Process.InstructionsAnnotation`; both arrive as annotations, so the spawn route already
+      carries them — cover a missing `target` (the definition dies) in the test.
+- [ ] The agent needs a model. The harness memoizes Anthropic conversations
+      (`MEMOIZED_AI_INFERENCE_SERVICE`); the e2e must use that, not a live model, or it cannot run in
+      CI. See the `regenerate-model-fixture` skill for the cache.
+
+### 5b — client half (dxos + edge). Needs #12765 published.
+
+- [ ] Bump edge's catalog for `@dxos/compute-runtime` + `@dxos/edge-compute` to a commit carrying
+      `RemoteProcessManagerAdapter` and `EdgeProcessControl`.
+- [ ] `agent-process.node.test.ts`: build `AgentService.layer` over
+      `processManagerFromEdgeClient(client, spaceId)` and assert, against the real worker — 1. spawn: `AgentService` starts an agent on EDGE, and the space process index lists it under
+      `AGENT_PROCESS_KEY`; 2. control: a submitted prompt reaches the hosted agent and its reply reaches the client as
+      outputs read by cursor (proving D7's cursor reads across a reconnect: read once, drop the
+      handle, re-attach by pid, resume from the cursor); 3. rpc: the `HarnessControl` surface answers over the remote transport; 4. lifecycle: `runUntilSettled` returns on the agent's own idle, and `terminate` ends it and
+      drops it from the index.
+
+### 5c — verification bar
+
+- [ ] Both suites green locally and in edge CI; no raised teardown budgets (the suite terminates
+      what it spawns); `pnpm format`, lint clean in both repos.
 
 ## Boot budget (do not re-investigate)
 
