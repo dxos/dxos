@@ -213,19 +213,29 @@ equivalent of `schema.getService()` already exists.
 Measured against `dxos.mesh.teleport.control.ControlService`: the service name matches once the
 legacy `.slice(1)` strips its leading dot, `method.name` is identical (`RegisterExtension`), and
 `method.localName` is already the camelCase handler key `mapRpcMethodName` computes by hand.
-`methodKind === 'unary'` replaces `responseStream`. But the request/response type names diverge:
+Stream kind needs care rather than a one-to-one swap: buf carries a single `methodKind`
+(`unary`, `server_streaming`, `client_streaming`, `bidi_streaming`) where protobuf.js carries two
+independent flags, and `service.ts` asserts `!method.requestStream`, so only the first two kinds
+are reachable here -- `methodKind === 'unary'` stands in for `!responseStream` across the services
+DXOS actually declares, not in general. But the request/response type names diverge:
 protobuf.js reports `.dxos.mesh.teleport.control.RegisterExtensionRequest` with a leading dot and
 buf reports it without, and that string is what `ServiceHandler` writes into `Any.type_url` on every
-call and response. Receivers decode `request.value` and never read `type_url`, so this is probably
-inert -- but "probably" is not a wire contract, so `#8` needs a fixture pairing a legacy client with
-a buf server and the reverse before anything switches.
+call and response. Two conventions coexist and must not be conflated: `Codec.encode` writes
+`fullName.slice(1)`, dot-free, and the messaging and swarm paths dispatch on exactly that
+(`swarm-messenger` compares against `dxos.mesh.swarm.SwarmMessage`, `messenger` against
+`dxos.mesh.messaging.{ReliablePayload,Acknowledgement}`) -- buf's `typeName` is dot-free too, so
+those comparisons keep matching. The service path is the one that differs, and nothing in it reads
+`type_url`, so dropping the dot there should be inert. "Should be" is not a wire contract, so `#8`
+needs a fixture pairing a legacy client with a buf server and the reverse before anything switches.
 
 Three directions, in preference order:
 
 1. **Re-point `@dxos/rpc` at buf descriptors.** Reimplement `ServiceBundle`/`ServiceDescriptor` over
    `DescService` and encode payloads through the compat layer, keeping `RpcPeer`'s framing and the
-   `dxos.rpc.RpcMessage` envelope byte-identical. No cross-version risk; the surface is `service.ts`
-   (~190 lines) plus `rpc.ts`. Recommended.
+   `dxos.rpc.RpcMessage` envelope byte-identical. The surface is `service.ts` (~190 lines) plus
+   `rpc.ts`. Recommended -- but not risk-free: `ServiceHandler` writes the protobuf.js type name
+   into `Any.type_url` and `DescService` supplies it without the leading dot, so this direction is
+   gated on the bidirectional fixture described above (or on normalising the name explicitly).
 2. **effect-rpc** (`effect/unstable/rpc`) -- where the repo is already heading, and right for anything
    whose wire may change or that is already an `RpcGroup`. A rewrite per service, so it carries the
    same cross-version caution as (3).
