@@ -115,13 +115,13 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
 TaskSetArticle.displayName = 'TaskSetArticle';
 
 /**
- * The set's tasks, subscribed to membership and order only. Refs resolve through `ref.atom`, which
- * tracks loading without tracking mutations, so a title or status edit re-renders just the row that
- * owns it — `TaskList` rows subscribe themselves.
+ * The set's tasks, subscribed to membership and order only (a property atom on `tasks`, not the
+ * whole set). Refs resolve through `ref.atom`, which tracks loading without tracking mutations, so
+ * a title or status edit re-renders just the row that owns it — `TaskList` rows subscribe
+ * themselves.
  */
 const useSetTasks = (taskSet: TaskSet.TaskSet): Task.Task[] => {
-  const [taskSetSnapshot] = useObject(taskSet);
-  const taskRefs = taskSetSnapshot?.tasks;
+  const [taskRefs] = useObject(taskSet, 'tasks');
   const atom = useMemo(
     () => Atom.make((get) => TaskSet.dedupeById((taskRefs ?? []).map((ref) => get(ref.atom)))),
     [taskRefs],
