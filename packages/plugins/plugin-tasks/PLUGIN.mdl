@@ -347,13 +347,16 @@ flow QA-2: Quick-add a journal bullet from anywhere
         were created if either was missing
       assert: |
         const journal = (await space.db.query(dxos.Filter.type(Journal)).run()).objects[0];
-        const entries = await Promise.all(Object.values(journal?.entries ?? {}).map((e) => e.load()));
-        const texts = await Promise.all(entries.map((e) => e.content.load()));
-        return texts.some((t) => t.content.includes('QA quick entry'));
+        const todayKey = new Date().toISOString().slice(0, 10);
+        const todayRef = journal?.entries?.[todayKey];
+        if (!todayRef) return false;
+        const entry = await todayRef.load();
+        const text = await entry.content.load();
+        return text.content.includes('QA quick entry');
       note: |
-        `output: void` — Rule 3 applies: the assert checks the effect (the entry's own text
-        content, not just that some Journal exists), so it stays falsifiable against a fixture
-        left dirty by a previous run (Execution Rule 5).
+        `output: void` — Rule 3 applies: the assert checks the effect on TODAY's date-keyed
+        entry specifically, not any entry in the Journal, so a stale entry from a prior run
+        under a different date key cannot satisfy it (Execution Rule 5).
   after:
     - name: Remove the bullet
       do: Open today's journal entry and delete the "QA quick entry" line.

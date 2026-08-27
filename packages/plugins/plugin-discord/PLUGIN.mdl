@@ -106,7 +106,7 @@ op MaterializeDiscordTarget
     channel, keyed by the Discord channel id, so a sync cursor can reference it.
   input:
     connection: Ref<Connection>
-    remoteTarget?: RemoteTarget
+    remoteTarget: RemoteTarget
   output: { target: Ref<Channel> }
   effects: [echo:write]
 ```

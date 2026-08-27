@@ -482,7 +482,6 @@ flow QA-1: Create a scene, add an object, and export it
   test:
     - name: Create the scene
       do: In the navtree, click + on the space and choose Spacetime (Scene). Name it "QA Scene".
-      capture: scene
       expect: a Scene article opens showing a single default cube Object
       note: NO invoke — see the flow desc.
     - name: Add a second object
@@ -500,8 +499,8 @@ flow QA-1: Create a scene, add an object, and export it
   after:
     - name: Delete the scene
       do: Right-click "QA Scene" in the navtree and choose Delete.
-      invoke: org.dxos.operation.space.removeObjects { objects: [$scene], target: $given.space }
       expect: the row leaves the navtree and its plank closes
+      note: NO invoke — no step captures a Scene reference to bind, per the flow desc.
 ```
 
 ---

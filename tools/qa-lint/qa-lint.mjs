@@ -71,3 +71,8 @@ for (const r of report) {
   }
 }
 console.log(`\n${report.length} flows with unbound references; ${total} references total`);
+
+// Non-zero exit so CI and hooks fail on a bad manifest without parsing stdout.
+if (total > 0) {
+  process.exitCode = 1;
+}

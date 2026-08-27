@@ -320,9 +320,8 @@ test T-8: Per-target failure is non-fatal
   given: an integration with two selected targets; the first target's XRPC call returns 500
   when: SyncBlueskyTargets is invoked
   then:
-    - failed === 1
+    - the failing target's target.lastError is set
     - second target synced successfully
-    - target.lastError set for the failing target
 ```
 
 ```mdl

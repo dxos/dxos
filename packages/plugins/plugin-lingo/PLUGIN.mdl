@@ -544,7 +544,8 @@ flow QA-2: Translate and analyze a passage in the reading companion
     - document: a Markdown document with a short non-English passage is open (e.g. "Hola, ¿cómo
         estás?")
     - text: the passage text, as it appears in the open document
-    - language: the target language selected in the reading companion (e.g. "English")
+    - language: an existing Language ("English", code "en") selected as the target in the
+        reading companion
     - plugin-lingo is enabled — it is OFF by default (isDev-only default)
   test:
     - name: Open the reading companion and run analysis

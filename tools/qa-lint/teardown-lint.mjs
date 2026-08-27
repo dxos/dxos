@@ -45,3 +45,8 @@ for (const file of globSync('packages/plugins/*/PLUGIN.mdl').sort()) {
   }
 }
 console.log(`\n${unsafe} teardown step(s) that could remove an object the run did not create`);
+
+// Non-zero exit so CI and hooks fail on a bad manifest without parsing stdout.
+if (unsafe > 0) {
+  process.exitCode = 1;
+}
