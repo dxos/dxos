@@ -145,34 +145,81 @@ curl -s -r 0-99 "$URL" -o /dev/null -w '%{http_code}\n'   # expect 206
 
 ## Link it in a PR body
 
-**An R2 link is a link, not an inline player.** GitHub only renders a video player for its own
-attachment host, and that upload endpoint (`POST /upload/policies/assets`) is web-UI only and answers
-`403` from here. So write the video as a labelled link and say what it shows:
+**Two rules, and both are load-bearing:**
+
+1. **A player comes only from a GitHub attachment.** GitHub rewrites exactly one host into a
+   `<video>`: `github.com/user-attachments/assets/<uuid>`. An R2 link — or an LFS
+   `media.githubusercontent.com` link, or a raw `<video>` tag — renders as a plain link, whatever you do
+   to it.
+2. **The attachment link must stand alone in its own paragraph**, blank line above and below. Wrapped in
+   a sentence, or given link text on the same line as other prose, it stays a link. This is the rule
+   that most often turns a working player back into a link, so isolate it.
+
+```markdown
+Some prose about the change.
+
+[demo.webm](https://github.com/user-attachments/assets/7df5952b-44c0-41d2-b898-2e6d7f684348)
+
+More prose.
+```
+
+That renders as `<details><summary>demo.webm</summary><video src="https://private-user-images.githubusercontent.com/…?jwt=…" controls>` — an inline player.
+
+### Getting the attachment URL
+
+**An agent cannot create one.** The upload is a web-UI endpoint,
+`POST https://github.com/upload/policies/assets`, and it needs a browser session's CSRF token — a PAT
+gets `422` with an HTML error page, with or without `repository_id`. There is no REST equivalent. So the
+handoff is explicit and it belongs in the PR conversation, not around it:
+
+1. Publish the artifact to R2 as above. That link is durable, seekable, and reviewable **now**.
+2. `SendUserFile` the `.webm` and ask the human to drag it into the PR body or a comment.
+3. They paste back the `github.com/user-attachments/assets/<uuid>` URL.
+4. Put that URL alone in its own paragraph, per rule 2, and keep the R2 link beside it as the copy that
+   does not depend on GitHub's signed, expiring asset URLs.
+
+Until step 3 lands, write the video as a labelled link with its duration and size, so a reviewer
+deciding whether to spend 19 MB knows what they are clicking:
 
 ```markdown
 [Demo — plugin-foo toolbar (0:43, 19 MB webm)](https://pub-…r2.dev/demos/2026-08-27-plugin-foo/demo.webm)
 ```
 
-Give the duration and size in the link text. A reviewer deciding whether to click deserves to know it
-is a 19 MB download.
+### Stills need none of this
 
-Stills are different — an image embed works from any absolute HTTPS URL:
+An image embed works from any absolute HTTPS URL, R2 included, and needs no attachment and no paragraph
+isolation:
 
 ```markdown
 ![Toolbar after the fix](https://pub-…r2.dev/demos/2026-08-27-plugin-foo/after.png)
 ```
 
-What survives this session's API proxy into a PR body, measured rather than assumed:
+So for anything that is a _state_ rather than a _sequence_, publish a still and embed it — it renders
+inline for everyone with no human in the loop. That is the reason [[recording-demos]] tells you to
+prefer a still or a contact sheet in the first place.
 
-| in a PR body                               | survives                                         |
-| ------------------------------------------ | ------------------------------------------------ |
-| `![x](https://pub-….r2.dev/…)`             | **yes** — absolute HTTPS image URLs keep the `!` |
-| `[text](https://pub-….r2.dev/…)`, bare URL | yes, verbatim                                    |
-| `![x](relative/path.png)`                  | no — the `!` is stripped, leaving a link         |
-| `<video>`, `<source>`, `<img src>`         | no — escaped and wrapped in backticks            |
+### What survives into a PR body
 
-Write the body with `gh pr create --body-file <file>` rather than an inline `--body` string, so the
-markdown you verified is the markdown that lands.
+Measured on a real PR, not assumed:
+
+| in a PR body                                                                  | result                                                                          |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `[x](https://github.com/user-attachments/assets/<uuid>)` alone in a paragraph | **inline player**                                                               |
+| the same link inside a sentence or a list item                                | plain link                                                                      |
+| `![x](https://pub-….r2.dev/….png)`                                            | **inline image** — absolute HTTPS keeps the `!`                                 |
+| `[x](https://pub-….r2.dev/….webm)`, or the bare URL                           | plain link, never a player                                                      |
+| `[x](https://media.githubusercontent.com/….webm)` (LFS)                       | plain link, never a player                                                      |
+| `<video src="…">` authored in the body                                        | **stripped entirely** — GitHub's sanitiser drops it, leaving an empty paragraph |
+| `![x](relative/path.png)`                                                     | the `!` is dropped, leaving a link                                              |
+
+Write the body with `gh pr create --body-file <file>` / `gh pr edit --body-file <file>`, never an inline
+`--body` string: the string form is what mangles `!` and escapes tags before GitHub ever sees them.
+Then read it back and check the shape actually landed:
+
+```bash
+gh api repos/<owner>/<repo>/pulls/<n> -H "Accept: application/vnd.github.html+json" -q .body_html \
+  | grep -c '<video'
+```
 
 ## What must never go in
 

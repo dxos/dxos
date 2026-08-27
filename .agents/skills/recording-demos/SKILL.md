@@ -212,18 +212,22 @@ Pick times just _after_ each chapter start so the frame lands past the transitio
 
 What survives this session's API proxy, measured rather than assumed:
 
-| in a PR body                                      | survives                                           |
-| ------------------------------------------------- | -------------------------------------------------- |
-| `![x](https://raw.githubusercontent.com/…)`       | **yes** — GitHub-hosted absolute URLs keep the `!` |
-| `![x](relative/path.png)`                         | no — the `!` is stripped, leaving a link           |
-| `<video src>`, `<source>`, `<track>`, `<img src>` | no — escaped and wrapped in backticks              |
-| bare URL, `[text](url)`                           | yes, verbatim                                      |
+| in a PR body                                                           | survives                                                                               |
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `![x](https://raw.githubusercontent.com/…)`                            | **yes** — GitHub-hosted absolute URLs keep the `!`                                     |
+| `![x](relative/path.png)`                                              | no — the `!` is stripped, leaving a link                                               |
+| `<video src>`, `<source>`, `<track>`, `<img src>`                      | no — escaped by the proxy, and stripped by GitHub even when written with `--body-file` |
+| `[x](github.com/user-attachments/assets/…)` alone in its own paragraph | **yes — the one route to an inline player**; see [[hosting-artifacts]]                 |
+| bare URL, `[text](url)`                                                | yes, verbatim                                                                          |
 
-So there is no route to an inline player: `<video>` is escaped, and GitHub's attachment upload (the only
-thing that yields a player) is a web-UI endpoint — `POST /upload/policies/assets` answers `403` here.
-For the video itself, upload it per [[hosting-artifacts]] and link the URL with its duration and size in
-the link text. Attaching it to the conversation with `SendUserFile` and letting a human drag it into a
-comment is the only way to get a real player, and is worth doing as well when the motion is the point.
+`<video>` never survives — the proxy escapes it and GitHub's sanitiser strips it besides — and the
+attachment upload that does yield a player is a web-UI endpoint: `POST /upload/policies/assets` needs a
+browser CSRF token and answers `422`/`403` to a PAT. So a player is reachable, but only through a human.
+
+Upload the video per [[hosting-artifacts]] and link it with its duration and size in the link text; that
+link is durable and reviewable immediately. Then, for the player: `SendUserFile` the `.webm`, ask them to
+drag it into the PR, and put the `github.com/user-attachments/assets/<uuid>` URL they paste back **alone
+in its own paragraph** — that host, isolated that way, is the only thing GitHub renders as a `<video>`.
 
 ### Before/after, when the demo is a fix
 
