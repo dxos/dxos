@@ -12,7 +12,7 @@
 
 set -euo pipefail
 
-cd "$(dirname "$0")/.."
+cd "$(git rev-parse --show-toplevel)"
 
 DEEP=false
 [[ "${1:-}" == "--deep" ]] && DEEP=true

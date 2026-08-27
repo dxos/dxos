@@ -218,6 +218,24 @@ pnpm i
 
 NOTE: Do not use `pnpm up` since it will update more than the targeted dependencies.
 
+## Resetting stale build state
+
+`pnpm install` reports "Already up to date" in two situations where the workspace is in fact
+broken, because neither is tracked by the lockfile:
+
+- A dependency version bump leaves per-package `node_modules/.bin/*` shims pointing at a store
+  path pnpm has since removed — the build fails with `MODULE_NOT_FOUND` on a path containing the
+  *old* version.
+- Generated sources (e.g. `packages/core/protocols/src/proto/gen`) go stale while moon's cache
+  hash still matches, so every run restores the stale output rather than regenerating it.
+
+```bash
+pnpm reset          # prune dead .bin shims, reinstall, clear .moon/cache, regenerate protobuf
+pnpm reset --deep   # also delete every package dist and reinstall node_modules from scratch
+```
+
+Stop any running dev server first — `reset` reinstalls `node_modules` underneath it.
+
 ## Folders
 
 | Folder                  | Description                                                                                    |
