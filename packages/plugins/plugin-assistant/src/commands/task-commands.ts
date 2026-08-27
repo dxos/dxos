@@ -4,40 +4,36 @@
 
 import { Chat, type OperationInvoke, type SlashCommand, parseTaskSelectors } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
-import { type Database, Ref } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import * as TaskOperation from '@dxos/plugin-tasks/TaskOperation';
-import { type Task, TaskSet } from '@dxos/types';
+import { type Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 /**
- * The task shortcuts. Each invokes the verb rather than writing to ECHO itself, because the verbs
- * carry semantics a second implementation would drop — `DeleteTask` sweeps a task's sub-tasks out
- * of the set's membership array.
+ * The task shortcuts. Membership writes go through the `Chat` primitives — the chat's `tasks`
+ * array is the container, and the task verbs speak `TaskSet` — while `/task:run`, which only
+ * patches fields, invokes `UpdateTask` so the assignment rules stay in one place.
  */
 export const TaskSlashCommands: SlashCommand[] = [
   {
     command: '/task:create',
     description: 'Create a task',
-    execute: async (args, { db, chat, invoke }) => {
+    execute: async (args, { db, chat }) => {
       const title = args.trim();
       if (title.length === 0) {
         return new Error('Usage: /task:create <description>');
       }
-      const taskSet = Chat.ensureTaskSetSync(db, chat);
-      if (!taskSet) {
-        return new Error('The task set is not loaded yet.');
-      }
-
-      const failure = await run(invoke, TaskOperation.CreateTask, { taskSet: Ref.make(taskSet), title }, db.spaceId);
-      return failure ?? { summary: `Created task “${title}”.` };
+      Chat.addTask(db, chat, title);
+      await db.flush();
+      return { summary: `Created task “${title}”.` };
     },
   },
   {
     command: '/task:delete',
     description: 'Delete task(s) by number or quoted title',
-    execute: async (args, { db, chat, invoke }) => {
-      const resolved = resolveTasks(args, db, chat);
+    execute: async (args, { db, chat }) => {
+      const resolved = resolveSelectors(args, chat);
       if (resolved instanceof Error) {
         return resolved;
       }
@@ -45,20 +41,27 @@ export const TaskSlashCommands: SlashCommand[] = [
         return new Error('Usage: /task:delete <number | "exact title"> [...]');
       }
 
+      // Sub-tasks go with their parent, so a later selector may already have been swept.
+      const deleted: Task.Task[] = [];
+      const seen = new Set<string>();
       for (const task of resolved) {
-        const failure = await run(invoke, TaskOperation.DeleteTask, { task: Ref.make(task) }, db.spaceId);
-        if (failure) {
-          return failure;
+        if (seen.has(task.id)) {
+          continue;
         }
+        for (const member of Chat.deleteTask(db, chat, task)) {
+          seen.add(member.id);
+        }
+        deleted.push(task);
       }
-      return { summary: summarize('Deleted', resolved) };
+      await db.flush();
+      return { summary: summarize('Deleted', deleted) };
     },
   },
   {
     command: '/task:run',
     description: 'Delegate task(s) by number or quoted title',
     execute: async (args, { db, chat, invoke }) => {
-      const resolved = resolveTasks(args, db, chat);
+      const resolved = resolveSelectors(args, chat);
       if (resolved instanceof Error) {
         return resolved;
       }
@@ -119,18 +122,14 @@ const run = async <I, O>(
   return error;
 };
 
-/** Resolves selectors against the conversation's task set, in the order the user named them. */
-const resolveTasks = (args: string, db: Database.Database, chat: Chat.Chat) => {
+/** Resolves selectors against the conversation's checklist, in the order the user named them. */
+const resolveSelectors = (args: string, chat: Chat.Chat) => {
   const selectors = parseTaskSelectors(args);
   if (selectors.length === 0) {
     return [];
   }
-  const taskSet = Chat.ensureTaskSetSync(db, chat);
-  if (!taskSet) {
-    return new Error('The task set is not loaded yet.');
-  }
 
-  const tasks = TaskSet.resolveTasks(taskSet);
+  const tasks = Chat.resolveTasks(chat);
   const resolved: Task.Task[] = [];
   for (const selector of selectors) {
     const task =

@@ -95,9 +95,10 @@ export const deleteTask = (db: Database.Database, taskSet: TaskSet, task: Task.T
 /**
  * Entity id a ref points at, read off the URI rather than the target: a ref may address the same
  * object locally (`echo:///<id>`) or space-qualified (`echo://<space>/<id>`), and dereferencing is
- * exactly what these helpers must not require.
+ * exactly what these helpers must not require. Exported so any holder of an ordered task-ref array
+ * (a `TaskSet`, a `Chat`) sweeps its membership through this one parse.
  */
-const refId = <T extends Obj.Unknown>(ref: Ref.Ref<T> | undefined): string | undefined => {
+export const refId = <T extends Obj.Unknown>(ref: Ref.Ref<T> | undefined): string | undefined => {
   if (!ref) {
     return undefined;
   }
@@ -152,6 +153,27 @@ export const rootTasks = (tasks: readonly Task.Task[]): Task.Task[] => {
 export const subTasks = (tasks: readonly Task.Task[], task: Task.Task): Task.Task[] => {
   const parent = task.id;
   return tasks.filter((candidate) => refId(candidate.parentTask) === parent);
+};
+
+/**
+ * Every task transitively under `task` within `tasks`, including `task` itself — what a delete has
+ * to sweep out of a membership array. Cycle-safe against a malformed `parentTask` loop.
+ */
+export const subtree = (tasks: readonly Task.Task[], task: Task.Task): Task.Task[] => {
+  const collected: Task.Task[] = [];
+  const seen = new Set<string>();
+  const visit = (current: Task.Task): void => {
+    if (seen.has(current.id)) {
+      return;
+    }
+    seen.add(current.id);
+    collected.push(current);
+    for (const child of subTasks(tasks, current)) {
+      visit(child);
+    }
+  };
+  visit(task);
+  return collected;
 };
 
 /**

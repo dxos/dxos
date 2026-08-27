@@ -90,7 +90,7 @@ const extractArtifactIds = (value: unknown): string[] => {
 
 /**
  * The durable agent tasks awaiting a sub-agent for this conversation: queued (`todo`) tasks of
- * the working task set whose assignee is an agent, all of whose dependencies are done. Ordinary
+ * the chat's checklist whose assignee is an agent, all of whose dependencies are done. Ordinary
  * (unassigned) tasks are never spawned — delegation happens only through the delegation verbs.
  * `started` always means a live process (set at spawn), so a started agent task with no process
  * is an orphan — {@link sweepOrphanedTasks}.
@@ -101,7 +101,7 @@ const findPendingTasks = (
 ): Effect.Effect<Task.Task[], never, Database.Service> =>
   Effect.gen(function* () {
     const tasks = yield* Chat.loadTasks(chat);
-    // The set's `tasks` array is flat, so a delegated sub-task is found without descending.
+    // The chat's `tasks` array is flat, so a delegated sub-task is found without descending.
     return tasks.filter(
       (task) =>
         task.assignee?.role === 'assistant' &&

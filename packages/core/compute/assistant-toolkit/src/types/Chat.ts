@@ -13,8 +13,7 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Annotation, Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
-import { type EntityNotFoundError } from '@dxos/echo/Error';
-import { type Task, TaskSet } from '@dxos/types';
+import { Task, TaskSet } from '@dxos/types';
 
 import { HarnessContextError } from '../errors';
 
@@ -36,11 +35,12 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
     instructions: Schema.optional(Ref.Ref(Instructions.Instructions).pipe(FormInputAnnotation.set(false))),
 
     /**
-     * Working task set for a standalone chat, created lazily when the first task is recorded.
-     * A project chat leaves this unset and files into the project's task set instead — see
-     * {@link ensureTaskSet}.
+     * The conversation's working checklist: every task, flat and ordered — sub-tasks included, so
+     * enumeration is one array read (the shape `TaskSet.tasks` has). This array IS the membership
+     * record; hierarchy is `Task.parentTask` and `SetParent` gives every member the chat as its
+     * lifecycle edge, so the tasks cascade with the conversation that produced them.
      */
-    taskSet: Schema.optional(Ref.Ref(TaskSet.TaskSet).pipe(FormInputAnnotation.set(false))),
+    tasks: Schema.Array(Ref.Ref(Task.Task)).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
   }).pipe(
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({
@@ -50,7 +50,9 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
   ),
 ) {}
 
-export const make = (props: Obj.MakeProps<typeof Chat>) => Obj.make(Chat, props);
+export const make = (
+  props: Omit<Obj.MakeProps<typeof Chat>, 'tasks'> & { tasks?: ReadonlyArray<Ref.Ref<Task.Task>> },
+): Chat => Obj.make(Chat, { ...props, tasks: props.tasks ?? [] });
 
 /**
  * Refs to the chats accompanying an object, stored on the subject itself (replaces the former
@@ -80,60 +82,44 @@ export const linkCompanion = ({ chat, subject }: { chat: Chat; subject: Obj.Unkn
 };
 
 /**
- * Returns the conversation's working task set, creating one lazily: a project chat (parented to a
- * project, directly or through its agent) resolves — and if needed creates — the PROJECT's task
- * set, so all of a project's chats file into one ledger; a standalone chat owns its own.
+ * Create a task on the conversation's checklist, appended in order. Membership is the chat's
+ * `tasks` array; the lifecycle parent edge follows from the field's `SetParent` annotation.
  */
-export const ensureTaskSet = (chat: Chat): Effect.Effect<TaskSet.TaskSet, EntityNotFoundError, Database.Service> =>
-  Effect.gen(function* () {
-    const project = peekProject(chat);
-    if (project) {
-      if (project.taskSet) {
-        return yield* Database.load(project.taskSet);
-      }
-      const taskSet = yield* Database.add(TaskSet.make({ name: project.name }));
-      Obj.update(project, (project) => {
-        project.taskSet = Ref.make(taskSet);
-      });
-      yield* Database.flush();
-      return taskSet;
-    }
-
-    if (chat.taskSet) {
-      return yield* Database.load(chat.taskSet);
-    }
-
-    const taskSet = yield* Database.add(TaskSet.make({ name: chat.name }));
-    Obj.update(chat, (chat) => {
-      chat.taskSet = Ref.make(taskSet);
-    });
-
-    yield* Database.flush();
-    return taskSet;
+export const addTask = (
+  db: Database.Database,
+  chat: Chat,
+  title: string,
+  props: Partial<Omit<Obj.MakeProps<typeof Task.Task>, 'title'>> = {},
+): Task.Task => {
+  const task = db.add(Task.make({ title: title.trim(), status: 'todo', ...props }));
+  Obj.update(chat, (chat) => {
+    chat.tasks = [...chat.tasks, Ref.make(task)];
   });
+  return task;
+};
 
 /**
- * Client-side (non-Effect) twin of {@link ensureTaskSet} for UI affordances that already hold the
- * database. Returns undefined when the owner's ref exists but is not loaded yet, rather than
- * risking a duplicate set.
+ * Delete a task and its sub-tasks: the whole subtree leaves the chat's `tasks` array and the
+ * database. Collected here rather than left to the cascade, because every member's parent edge is
+ * the chat itself, so removing a parent task would not reach its children. `dependsOn` refs
+ * pointing at the removed tasks are left dangling by design — {@link TaskSet.isTaskReady} reads a
+ * dangling dependency as satisfied.
  */
-export const ensureTaskSetSync = (db: Database.Database, chat: Chat): TaskSet.TaskSet | undefined => {
-  const project = peekProject(chat);
-  const ref = project ? project.taskSet : chat.taskSet;
-  if (ref) {
-    return ref.target;
-  }
-  const taskSet = db.add(TaskSet.make({ name: project ? project.name : chat.name }));
-  if (project) {
-    Obj.update(project, (project) => {
-      project.taskSet = Ref.make(taskSet);
+export const deleteTask = (db: Database.Database, chat: Chat, task: Task.Task): Task.Task[] => {
+  const subtree = TaskSet.subtree(resolveTasks(chat), task);
+  const ids = new Set(subtree.map((member) => member.id));
+  Obj.update(chat, (chat) => {
+    // Matched on the ref's own entity id rather than its target, so an entry whose object is not
+    // loaded is still swept.
+    chat.tasks = chat.tasks.filter((ref) => {
+      const id = TaskSet.refId(ref);
+      return id === undefined || !ids.has(id);
     });
-  } else {
-    Obj.update(chat, (chat) => {
-      chat.taskSet = Ref.make(taskSet);
-    });
+  });
+  for (const member of subtree) {
+    db.remove(member);
   }
-  return taskSet;
+  return subtree;
 };
 
 /** Bound on the parent walk below; a conversation sits one or two edges under its project. */
@@ -157,27 +143,23 @@ export const peekProject = (chat: Chat): Project.Project | undefined => {
 };
 
 /**
- * The conversation's working-task-set ref if one already exists (the parent project's, else the
- * chat's own) — never creates. See {@link ensureTaskSet} for the creating variant.
+ * The conversation's tasks in canonical order, dropping refs that fail to resolve and
+ * de-duplicating by id — a concurrent merge can land the same ref twice.
  */
-export const peekTaskSetRef = (chat: Chat): Ref.Ref<TaskSet.TaskSet> | undefined => {
-  const project = peekProject(chat);
-  return project ? project.taskSet : chat.taskSet;
-};
-
-/** The conversation's tasks in the set's canonical order, or empty when no set exists. Never creates. */
 export const loadTasks = (chat: Chat): Effect.Effect<Task.Task[], never, Database.Service> =>
   Effect.gen(function* () {
-    const ref = peekTaskSetRef(chat);
-    const taskSet = ref ? yield* Database.load(ref).pipe(Effect.orElseSucceed(() => undefined)) : undefined;
-    if (!taskSet) {
-      return [];
-    }
-    const tasks = yield* Effect.forEach(taskSet.tasks, (task) =>
+    const tasks = yield* Effect.forEach(chat.tasks, (task) =>
       Database.load(task).pipe(Effect.orElseSucceed(() => undefined)),
     );
     return TaskSet.dedupeById(tasks);
   });
+
+/**
+ * Non-Effect twin of {@link loadTasks} for a caller that already holds resolved refs (a UI
+ * affordance, a slash command). Unresolved refs contribute nothing rather than throwing.
+ */
+export const resolveTasks = (chat: Chat): Task.Task[] =>
+  TaskSet.dedupeById(chat.tasks.filter((ref) => ref.isAvailable).map((ref) => ref.target));
 
 /** A task is open until it reaches a terminal status. */
 export const isOpenTask = (task: Task.Task): boolean => (task.status ?? 'todo') === 'todo' || task.status === 'started';
@@ -185,7 +167,7 @@ export const isOpenTask = (task: Task.Task): boolean => (task.status ?? 'todo') 
 /**
  * The conversation's tasks rendered as a numbered checklist (the format the planning prompts
  * speak), or a placeholder when none exist. Ordinals match the task list UI, and non-default
- * status/dependencies are noted so the model can reason about readiness. Never creates.
+ * status/dependencies are noted so the model can reason about readiness.
  */
 export const formatChecklist = (chat: Chat): Effect.Effect<string, never, Database.Service> =>
   Effect.gen(function* () {
@@ -197,7 +179,7 @@ export const formatChecklist = (chat: Chat): Effect.Effect<string, never, Databa
   });
 
 /**
- * Renders tasks as `1. [ ] Title` lines, ordinals in set order. Status/dependency notes go on
+ * Renders tasks as `1. [ ] Title` lines, ordinals in checklist order. Status/dependency notes go on
  * their own indented line — appended to the title, models paste them back through title-keyed
  * upserts and duplicate the task.
  */
