@@ -279,6 +279,7 @@ flow QA-2: Real hardware round-trip
   after:
     - name: No teardown
       do: No ECHO state is created by a key press; nothing to undo.
+      expect: the deck returns to its idle page with the favorite still bound
 ```
 
 ---

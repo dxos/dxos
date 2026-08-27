@@ -191,7 +191,7 @@ sandbox is involved.
 
 ```mdl
 op verifySpec
-  key: org.dxos.function.code.verify-spec
+  key: org.dxos.operation.code.verifySpec
   desc: |
     Static verification of a DEUS spec — lint + structural checks. Phase-1
     stub returns `{ ok: true, messages: [] }`. Will eventually delegate to
@@ -202,13 +202,13 @@ op verifySpec
   effects: [echo:read]
   requires: [Database]
   note: |
-    Operation key: `org.dxos.function.code.verify-spec`.
+    Operation key: `org.dxos.operation.code.verifySpec`.
     Exposed as a skill tool on CoderSkill.
 ```
 
 ```mdl
 op runBuildAgent
-  key: org.dxos.function.code.run-build-agent
+  key: org.dxos.operation.code.runBuildAgent
   desc: |
     Dispatches a build of the project via the EDGE BuildAgent. Phase-1 stub
     returns `{ status: "queued" }` without performing any work.
@@ -218,37 +218,37 @@ op runBuildAgent
   effects: [echo:read, http]
   requires: [Database, Credentials]
   note: |
-    Operation key: `org.dxos.function.code.run-build-agent`.
+    Operation key: `org.dxos.operation.code.runBuildAgent`.
     Phase-2: reads the Anthropic API key via Credentials and POSTs to the
     EDGE BuildAgent endpoint configured in Settings.endpoint.
 ```
 
 ```mdl
 op listFiles
-  key: org.dxos.function.code.list-files
+  key: org.dxos.operation.code.listFiles
   desc: List the source files in a CodeProject (path + size).
   input:  { project: Ref<CodeProject> }
   output: { files: { path: string, size: number }[] }   # sorted ascending by path
   effects: [echo:read]
   requires: [Database]
-  note:   Operation key `org.dxos.function.code.list-files`.
+  note:   Operation key `org.dxos.operation.code.listFiles`.
 ```
 
 ```mdl
 op readFile
-  key: org.dxos.function.code.read-file
+  key: org.dxos.operation.code.readFile
   desc: Read the content of a single file in a CodeProject.
   input:  { project: Ref<CodeProject>, path: string }
   output: { path: string, content: string }
   errors: [FileNotFound]
   effects: [echo:read]
   requires: [Database]
-  note:   Operation key `org.dxos.function.code.read-file`.
+  note:   Operation key `org.dxos.operation.code.readFile`.
 ```
 
 ```mdl
 op writeFile
-  key: org.dxos.function.code.write-file
+  key: org.dxos.operation.code.writeFile
   desc: |
     Create or overwrite a file in a CodeProject. Whole-file write — for
     targeted edits, prefer reading first and writing back the new content.
@@ -257,18 +257,18 @@ op writeFile
   output: { path: string, created: boolean }
   effects: [echo:read, echo:write]
   requires: [Database]
-  note:   Operation key `org.dxos.function.code.write-file`.
+  note:   Operation key `org.dxos.operation.code.writeFile`.
 ```
 
 ```mdl
 op deleteFile
-  key: org.dxos.function.code.delete-file
+  key: org.dxos.operation.code.deleteFile
   desc: Remove a file from a CodeProject by path.
   input:  { project: Ref<CodeProject>, path: string }
   output: { path: string, deleted: boolean }
   effects: [echo:read, echo:write]
   requires: [Database]
-  note:   Operation key `org.dxos.function.code.delete-file`.
+  note:   Operation key `org.dxos.operation.code.deleteFile`.
 ```
 
 ```mdl
@@ -287,7 +287,7 @@ op scaffoldProject
 
 ```mdl
 op helloWorld
-  key: org.dxos.function.code.hello-world
+  key: org.dxos.operation.code.writeHelloWorld
   desc: |
     Sanity-check operation. Writes (or overwrites) a single `src/hello.ts`
     file containing a Hello World program. Used to verify end-to-end that
@@ -297,7 +297,7 @@ op helloWorld
   output: { path: string, created: boolean }
   effects: [echo:read, echo:write]
   requires: [Database]
-  note:   Operation key `org.dxos.function.code.hello-world`.
+  note:   Operation key `org.dxos.operation.code.writeHelloWorld`.
 ```
 
 ```mdl
@@ -317,7 +317,7 @@ op resetProject
 
 ```mdl
 op buildProject
-  key: org.dxos.function.code.build-project
+  key: org.dxos.operation.code.buildProject
   desc: |
     Compile the project's TypeScript sources in-browser. F-12a transpiles a
     single entry file (`src/hello.ts` if present, else `src/plugin.ts`) with
@@ -334,12 +334,12 @@ op buildProject
   }
   effects: [echo:read]
   requires: [Database]
-  note:   Operation key `org.dxos.function.code.build-project`.
+  note:   Operation key `org.dxos.operation.code.buildProject`.
 ```
 
 ```mdl
 op runBuild
-  key: org.dxos.function.code.run-build
+  key: org.dxos.operation.code.runBuild
   desc: |
     Build the project and, on a clean build, execute the entry source on the
     main thread inside a `console`-capturing wrapper. Captures `console.log`
@@ -355,7 +355,7 @@ op runBuild
   }
   effects: [echo:read]
   requires: [Database]
-  note:   Operation key `org.dxos.function.code.run-build`.
+  note:   Operation key `org.dxos.operation.code.runBuild`.
 ```
 
 ## Skills

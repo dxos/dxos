@@ -681,6 +681,7 @@ flow QA-2: Register a schema and add a typed relation
     - name: No teardown
       do: Schema registrations are not removed by this flow — they are lightweight and harmless
         to leave in a scratch space.
+      expect: the space still opens cleanly and the registered schemas remain listed
 ```
 
 ---

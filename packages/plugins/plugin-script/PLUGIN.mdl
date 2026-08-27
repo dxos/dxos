@@ -245,7 +245,7 @@ op inspectInvocations
     limit?: number              # default 20
   output: { invocations: InvocationSpan[], total: number }
   effects: [echo:read]
-  note: Operation key `org.dxos.operation.script.inspectInvocations` — corrected from `org.dxos.function.script.inspect-invocations`, which does not exist in source.
+  note: Operation key `org.dxos.operation.script.inspectInvocations`.
 ```
 
 ```mdl
@@ -256,7 +256,7 @@ op queryDeployedFunctions
     (none)
   output: { functions: DeployedFunction[] }
   effects: [http]
-  note: Operation key `org.dxos.operation.script.queryDeployed` — corrected from `org.dxos.function.script.query-deployed`, which does not exist in source.
+  note: Operation key `org.dxos.operation.script.queryDeployed`.
 ```
 
 ```mdl

@@ -94,6 +94,7 @@ flow QA-1: Insert Lorem ipsum from the slash menu
   after:
     - name: Clear the document
       do: Select all and delete.
+      expect: the editor is empty and the document body is an empty string
 ```
 
 ```mdl

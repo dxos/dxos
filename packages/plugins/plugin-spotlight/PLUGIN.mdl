@@ -293,6 +293,7 @@ flow QA-1: Invoke spotlight, navigate, and dismiss
     - name: No teardown
       do: Spotlight has no persistent state to remove — it forwards navigation to the main
         window's existing plugins, which own their own cleanup.
+      expect: closing the popover leaves the main window in the state the flow navigated it to
 ```
 
 ---
