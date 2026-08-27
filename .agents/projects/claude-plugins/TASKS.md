@@ -260,6 +260,15 @@ toolkit is deleted; `Gateway`/`Server` became `McpRegistry`/`McpServer`).
       the whole setup. Inline in the manifest rather than a sibling `.mcp.json`, which keeps one
       file to read. Named `composer` because the name is carried in every tool
       (`mcp__plugin_dxos_composer__whoami`).
+- [ ] **`/dxos:project setup` verb** — the space binding is a repo file
+      (`.agents/projects/space.yml`) and the guided flow that writes it lives in the server's
+      `project` skill, so today the plugin's own README has to say "ask for the skill's setup
+      flow". `setup` hits the hook's unrecognised-verb branch. A verb that defers to the skill
+      would close it.
+- [ ] **Directive's deployed-host shape may be stale** — `resolve_backend` still says the deployed
+      host "projects each verb as its own tool", but #12692 replaced per-operation tools with the
+      generic `queryOperations`/`invokeOperation`/`loadSkill` surface. Confirm against the live
+      worker before trusting either branch of that sentence.
 - [ ] **Bundle the stdio host too** — the deployed server is the one that ships; `dx mcp serve`
       still has to be wired by hand. Blocked on a way to express both without a second plugin, or
       on deciding that overriding the entry's `url` is the whole answer.

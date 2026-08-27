@@ -10,6 +10,8 @@ both you and the agent can read it weeks later.
 
 ## Install
 
+In a terminal:
+
 ```bash
 claude plugin marketplace add dxos/dxos
 ```
@@ -17,6 +19,61 @@ claude plugin marketplace add dxos/dxos
 ```bash
 claude plugin install dxos@dxos
 ```
+
+In the Claude Code desktop app, run the same two as slash commands in any session:
+`/plugin marketplace add dxos/dxos`, then `/plugin install dxos@dxos`.
+
+That is the whole install for the default `file` backend. `/dxos:project` works
+immediately, against a committed `registry.yml`.
+
+The Claude **Desktop** app is a different product and does not run plugins at all:
+no hooks, so no `/dxos:project`. You can still add the MCP server there by URL as
+a connector, which gives you the tools without the command.
+
+## Setup for the `mcp` backend
+
+Three steps, in order. Skip all of them if you are staying on `file`.
+
+**1. Authenticate the connector.** The plugin ships it, so there is nothing to
+add. Run `/mcp`, pick `composer`, choose Authenticate, and approve with your
+passkey. This needs a passkey registered in Composer at `composer.space` on an
+identity that has an account, and Chrome 128+ or Safari 18+ (see
+[the connector](#the-bundled-connector) for why Firefox cannot).
+
+**2. Select the backend.** `DX_PROJECT_BACKEND` is read by the hook process, so
+it has to be in that process's environment. A desktop session is not launched
+from your shell and inherits nothing from `.zshrc`, so set it in `settings.json`,
+which Claude Code passes to every session and its subprocesses:
+
+```json
+{ "env": { "DX_PROJECT_BACKEND": "mcp" } }
+```
+
+`.claude/settings.local.json` in the repo keeps it to you. `.claude/settings.json`
+commits it for everyone. `~/.claude/settings.json` applies it to every repo you
+open, which is wrong here, since the store is per-repo. Precedence is local, then
+project, then user.
+
+**3. Bind the space.** This one is **not** an environment variable: the space is a
+property of the repo, so it lives in a committed file that binds every future
+session in that repo.
+
+```yaml
+# .agents/projects/space.yml — the ECHO space this repo's projects live in.
+spaceId: <id>
+```
+
+Two lines, so writing it by hand is fine. For the guided version, ask for the
+project skill's setup flow once the connector is authenticated. It lists the
+spaces you own by name, asks which one, cross-checks that the session can actually
+write to it, and writes the file. Picking is always a question, so it will not
+infer a space from a name resembling the repo, and one space existing is not
+taken as consent. There is no `/dxos:project setup` verb yet, so this arrives
+through the server's skill rather than through the command.
+
+An unbound repo is a hard stop, not a fallback. Nothing writes to a session
+default space, because a project system split across two spaces is worse than an
+agent that refuses and asks you to fix the binding.
 
 ## Use
 
@@ -109,7 +166,14 @@ merely mentioned it — including the message asking for it to be replaced.
 | --------------------- | -------------------------------- | ----------------------------------------------- |
 | `DX_PROJECT_REGISTRY` | `.agents/projects/registry.yml`  | Registry location, relative to the project root (`file` only) |
 | `DX_PROJECT_BACKEND`  | `file`                           | Where projects are stored — `file` or `mcp`     |
-| `DX_PROJECT_SPACE`    | resolved via `listSpaces`        | Space holding the projects (`mcp` only)         |
+| `DX_PROJECT_SPACE`    | unset                            | Cross-check only, NOT how you pick a space (`mcp` only) |
+
+The space is **not** configured by environment variable. It is bound per repo in
+the committed `.agents/projects/space.yml` (see [Setup](#setup-for-the-mcp-backend)),
+because a repo's projects belong to one space regardless of who opens it or on
+which machine. `DX_PROJECT_SPACE` survives only as a guard: set it, and if it
+disagrees with the committed binding the agent stops and says so rather than
+writing to either.
 
 Every directive ends with a `BACKEND:` line naming the store and how to read or
 write it. The verbs, the command file and the skill are all backend-agnostic —
@@ -130,22 +194,17 @@ from any machine, without a committed file.
 
 #### The bundled connector
 
-The plugin ships the deployed server, so enabling the plugin is the whole setup:
+The plugin ships the deployed server, so there is nothing to add:
 
 ```json
 "mcpServers": { "composer": { "type": "http", "url": "https://composer.dxos.network/mcp" } }
 ```
 
-Run `/mcp`, pick `composer`, and choose Authenticate. The browser walks the
-passkey ceremony and hands back. Nothing is typed, because the identity is
-derived from the passkey signature rather than from anything you paste.
-
-Two prerequisites the install cannot create for you. You need a passkey
-registered in Composer at `composer.space` (Settings → create passkey) on an
-identity that has an account. And you need Chrome 128+ or Safari 18+: the
-ceremony is served from `auth.dxos.network` while the passkey's relying party is
-`composer.space`, so it depends on Related Origin Requests, which Firefox has not
-shipped.
+Authenticating is step 1 of [Setup](#setup-for-the-mcp-backend). Nothing is typed
+during it, because the identity is derived from the passkey signature rather than
+from anything you paste. The ceremony is served from `auth.dxos.network` while the
+passkey's relying party is `composer.space`, so it leans on Related Origin
+Requests, which Firefox has not shipped.
 
 `dx mcp serve` remains the local alternative, and the directive handles both host
 shapes. The deployed host projects each verb as its own tool and adds the generic
