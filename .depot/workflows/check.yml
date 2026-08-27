@@ -230,9 +230,6 @@ jobs:
     permissions:
       contents: read
       packages: read
-      # For the base-vs-head comment below. Fork PRs get a read-only token regardless, which is why
-      # the comparison steps also require the head repo to be this one.
-      pull-requests: write
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -244,6 +241,10 @@ jobs:
       COMPARE: >-
         ${{ github.event_name == 'pull_request' &&
         github.event.pull_request.head.repo.full_name == github.repository }}
+    # Handed to `boot-budget-comment`, which holds the write token this job deliberately does not.
+    outputs:
+      increased: ${{ steps.compare.outputs.increased }}
+      body: ${{ steps.compare.outputs.body }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -322,13 +323,39 @@ jobs:
             --base "$RUNNER_TEMP/boot-budget.base.json" \
             --head "$RUNNER_TEMP/boot-budget.head.json"
 
+      # `!cancelled()` rather than the implicit `success()`: the gate has to be reported even if an
+      # advisory step above went red, which would otherwise skip this and lose the failure entirely.
+      - name: Report boot budget failure
+        if: ${{ !cancelled() && steps.budget.outcome == 'failure' }}
+        run: |
+          echo '::error::boot budget exceeded — see the "Check boot budget" step.'
+          exit 1
+
+  # The write token lives here rather than in `boot-budget`, and nothing in this job comes from the
+  # PR: no checkout, no local action, no build. A job-level `permissions` block applies to every step
+  # of its job, so holding `pull-requests: write` next to `moon run` and `./.depot/actions/setup` —
+  # both of which the branch under test controls — would put the token within reach of the code being
+  # measured. It only ever sees the two strings the comparison produced.
+  #
+  # `!cancelled()` so a boot-budget job that failed its gate still gets its comment, and an empty
+  # `increased` so a comparison that never ran (fork PR, base unmeasurable, measurement script edited
+  # in this PR) is not mistaken for one that found no growth.
+  boot-budget-comment:
+    needs: boot-budget
+    if: >-
+      ${{ !cancelled() && github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      needs.boot-budget.outputs.increased != '' }}
+    runs-on: depot-ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
       - name: Post or remove boot graph comment
-        if: steps.compare.outcome == 'success'
-        continue-on-error: true
         uses: actions/github-script@v7
         env:
-          INCREASED: ${{ steps.compare.outputs.increased }}
-          BODY: ${{ steps.compare.outputs.body }}
+          INCREASED: ${{ needs.boot-budget.outputs.increased }}
+          BODY: ${{ needs.boot-budget.outputs.body }}
         with:
           script: |
             const marker = '<!-- boot-budget -->';
@@ -350,14 +377,6 @@ jobs:
             } else if (existing) {
               await github.rest.issues.deleteComment({ owner, repo, comment_id: existing.id });
             }
-
-      # `!cancelled()` rather than the implicit `success()`: the gate has to be reported even if an
-      # advisory step above went red, which would otherwise skip this and lose the failure entirely.
-      - name: Report boot budget failure
-        if: ${{ !cancelled() && steps.budget.outcome == 'failure' }}
-        run: |
-          echo '::error::boot budget exceeded — see the "Check boot budget" step.'
-          exit 1
 
   # Retention suites (the `memory` tag), which the normal `test` job skips: they need `--expose-gc`
   # and force a single non-isolated fork, neither of which the sharded matrix can provide. Gated on
