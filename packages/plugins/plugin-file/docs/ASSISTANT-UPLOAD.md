@@ -383,15 +383,23 @@ Each step is usable on its own, and each unblocks the next.
 4. **EDGE store target** — `BLOB_SERVICE` binding on `operation-service`, backend speaking
    `POST /file/:key`. Lives in the edge repo, so it is a separate change by necessity. Only buys the
    managed store, which browser clients can already reach.
-5. ~~**R2 target**~~ — **done.** The protocol code is `@dxos/blob-s3` (nothing above
-   `echo-protocol`), its database bindings are `createS3Host` in `compute-runtime`, and `plugin-s3`
-   keeps only the capability wrapper and the connector.
+5. ~~**R2 target**~~ — **done.** The protocol code is `@dxos/echo-client` under its `./blob-s3`
+   export, its database bindings are `createS3Host` in `compute-runtime`, and `plugin-s3` keeps only
+   the capability wrapper and the connector.
 
-   **Where the registration landed, and why not where this document first said.** It is in
-   `compute-runtime`, not `functions-runtime-cloudflare`: the latter does not import the former at
-   all, so a call site there would have registered on nothing. The cycle that motivated the original
-   suggestion is avoided differently — the bindings live beside `credentialsLayerFromDatabase`,
-   which they need, so `blob-s3` never imports upward.
+   **Two corrections to what this document first proposed**, both worth knowing before attempting
+   anything similar:
+
+   - **It is not a new package.** A new package must be `private: true`, and a public package may
+     not depend on a private one — `compute-runtime`, which imports the backend to register it, is
+     published. Publishing the new package instead fails the never-published gate, which needs npm
+     trusted publishing configured. `echo-client` is the right home regardless: it already owns the
+     blob manager and the registry the backend registers into. Its own export subpath keeps the
+     signer out of anything that does not use S3.
+   - **The registration is in `compute-runtime`, not `functions-runtime-cloudflare`.** The latter
+     does not import the former at all, so a call site there would have registered on nothing. The
+     cycle that motivated the original suggestion is avoided differently: the bindings live beside
+     `credentialsLayerFromDatabase`, which they need, so the storage code never imports upward.
 
 ## Open questions
 

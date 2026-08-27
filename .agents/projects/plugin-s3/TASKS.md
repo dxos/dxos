@@ -1,6 +1,6 @@
 # plugin-s3 — Tasks
 
-_Resume: nothing is blocked. The headless path is complete — `@dxos/blob-s3` is registered by
+_Resume: nothing is blocked. The headless path is complete — `@dxos/echo-client/blob-s3` is registered by
 `FunctionContext`, so an operation on edge writes to its space's bucket, reaching edge on the next
 pin bump with no edge-repo change. What remains is verification through the running app (connector
 UI, an upload, a render) and a non-R2 endpoint to exercise region parsing. Open in PR #12789,
@@ -111,7 +111,7 @@ outbound `fetch` to the customer's own endpoint. `operation-service` sets no
       `Database.Service` and no client, so the parameter's shape was the only browser confinement.
       Defaults to `notAvailable`, so a managed token resolves to no credential rather than handing
       the signer an opaque placeholder.
-- [x] **Extracted the S3 code into `@dxos/blob-s3`** — sigv4, the client, URI addressing and the
+- [x] **Extracted the S3 code into `@dxos/echo-client/blob-s3`** — sigv4, the client, URI addressing and the
       `createS3BlobBackend` factory, depending on nothing above `echo-protocol`. It takes its two
       host-specific answers (a bucket's credentials, and which bucket a space writes to) as
       parameters, which is what keeps `Client` out of it. `plugin-s3` keeps the capability wrapper
@@ -122,8 +122,14 @@ outbound `fetch` to the customer's own endpoint. `operation-service` sets no
       **Correction to the plan recorded above:** the call site is in `compute-runtime`, NOT
       `functions-runtime-cloudflare` — the latter does not import the former at all, so a call site
       there would have registered on nothing. The cycle is avoided a different way: the database
-      bindings (`createS3Host`) sit beside `credentialsLayerFromDatabase`, which they need, so
-      `blob-s3` never imports upward.
+      bindings (`createS3Host`) sit beside `credentialsLayerFromDatabase`, which they need, so the
+      storage code never imports upward.
+      **Second correction, found by CI:** it is NOT a standalone package. A new package must be
+      `private: true`, and a public package may not depend on a private one — `compute-runtime`
+      imports the backend and is published. Making the package public instead fails the
+      never-published gate (needs npm trusted publishing). `echo-client` is the right home anyway:
+      it owns `blob/blob-manager.ts`, the registry the backend registers into. Run
+      `check-public-dependencies` and `check-packages-published` locally before adding any package.
       Knip flagged six dependencies the extraction made unused; removed from both packages.
 
 ## Phase 5: Deferred
