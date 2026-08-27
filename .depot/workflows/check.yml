@@ -331,7 +331,11 @@ jobs:
             const { owner, repo } = context.repo;
             const issue_number = context.payload.pull_request.number;
             const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
-            const existing = comments.find((comment) => comment.body && comment.body.includes(marker));
+            // Author-gated as well as marker-gated: a person quoting the marker in the thread would
+            // otherwise have their comment edited or deleted out from under them.
+            const existing = comments.find(
+              (comment) => comment.user?.type === 'Bot' && comment.body && comment.body.includes(marker),
+            );
             if (process.env.INCREASED === 'true') {
               const body = `${marker}\n${process.env.BODY}`;
               if (existing) {
