@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: blade-runner-pbt
+    status: active
+    user: mykola
+    host: cloud-sandbox
+    created: 2026-08-27
+    summary: 'Property-based (fast-check) end-to-end test in blade-runner: a fleet of real clients replicating through EDGE, driven by seeded random connect/disconnect/space/document commands against an in-memory model; main assertion is full convergence (all peers equal the model). Goals: design -> local edge -> preview env with post-run cleanup -> nightly CI.'
+    tasks: .agents/projects/blade-runner-pbt/TASKS.md
+    design: .agents/projects/blade-runner-pbt/DESIGN.md
+    prs: []
+    resume: 'Phase 0 DONE — design approved, decisions D1-D14 recorded in DESIGN.md §17, blade-runner architecture documented in §3 (RPC is JSON-only + reflected over public prototype methods; no RPC timeout; cleanup must live in plan.run try/finally). Edge cleanup API CONFIRMED in the edge repo (packages/services/edge/src/data-management/api.ts): self-serve VP-auth DELETE /data/space/:spaceId + /data/identity/:identity, and admin-key DELETE /admin/spaces|identities/:id + GET /admin/spaces + POST /admin/selective-purge. NEXT: Phase 1 — ClientReplicant + EdgePbt skeleton against local edge; first verify the offline toggle, since EdgeClient._close never resets _networkingStarted so close()->open() will not re-dial (DESIGN.md §15.1).'
   - name: client-edge-audit
     status: active
     user: mykola

@@ -7259,6 +7259,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../../sdk/client-protocol
       '@dxos/codec-protobuf':
         specifier: workspace:*
         version: link:../../common/codec-protobuf
@@ -7286,6 +7289,9 @@ importers:
       '@dxos/echo-host':
         specifier: workspace:*
         version: link:../../core/echo/echo-host
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-protocol
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
