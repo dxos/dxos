@@ -82,4 +82,23 @@ describe('TaskSet', () => {
 
     expect(TaskSet.milestoneProgress([], milestone)).toEqual({ total: 0, done: 0, ratio: 0 });
   });
+
+  test('orderTasks follows the array, appending tasks the array does not list', ({ expect }) => {
+    const first = Task.make({ title: 'First' });
+    const second = Task.make({ title: 'Second' });
+    const unlisted = Task.make({ title: 'Unlisted' });
+    const refs = [Ref.make(second), Ref.make(first)];
+
+    const ordered = TaskSet.orderTasks([first, unlisted, second], refs);
+    expect(ordered.map((task) => task.title)).toEqual(['Second', 'First', 'Unlisted']);
+  });
+
+  test('orderTasks keeps the first array position for a duplicated ref', ({ expect }) => {
+    const task = Task.make({ title: 'Task' });
+    const other = Task.make({ title: 'Other' });
+    const refs = [Ref.make(task), Ref.make(other), Ref.make(task)];
+
+    const ordered = TaskSet.orderTasks([other, task], refs);
+    expect(ordered.map((entry) => entry.title)).toEqual(['Task', 'Other']);
+  });
 });

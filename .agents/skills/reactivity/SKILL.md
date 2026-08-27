@@ -161,12 +161,19 @@ const MessageTile = ({ message: messageOrRef }: { message: MessageOrRef }) => {
 ```
 
 `useQuery` at the list level is already granular: query subscriptions fire on membership and order
-changes only, not on item property changes. Model example: `ConversationStack`'s `MessageTile`
+changes only, not on item property changes. So when membership is queryable — the members carry an
+ECHO parent edge to the container, or a back-ref — prefer sourcing the list from a **scoped query**
+over walking a ref array at all: `useQuery(db, Filter.and(Filter.type(Task.Task),
+Filter.childOf(taskSet)))` hands the list loaded members with no per-ref load tracking anywhere
+(order, where a container array is canonical, applies as a client-side sort — see
+`TaskSet.orderTasks` / `useSetTasks` in `plugin-tasks/TaskSetArticle.tsx`). Model example for the
+ref-array case: `ConversationStack`'s `MessageTile`
 (`plugin-inbox/src/components/ConversationStack/ConversationStack.tsx`) — "owns its own
 subscription (via `useObject`) so reactivity stays granular." `useObjects` is deprecated for
-exactly this reason; treat any new call site as a defect. A tile that needs list-level context
-(column templates, shared handlers) gets it through context or scalar props — the ECHO data still
-enters at the leaf.
+exactly this reason; treat any new call site as a defect. Resolving a ref array at the list level
+with load-only `ref.atom` is a stopgap for a child component whose structure derives from target
+fields; a tile that needs list-level context (column templates, shared handlers) gets it through
+context or scalar props — the ECHO data still enters at the leaf.
 
 **7. Hook pileup where a derived atom belongs.** N `useObject` calls plus a `useMemo` to compute
 one value subscribes the component N times and re-renders it on every input change. An aggregate

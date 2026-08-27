@@ -95,7 +95,9 @@ export const OutlineArticle = ({
   const outlineRef = useRef<OutlineController>(null);
   const handleConvertCurrent = useCallback(() => outlineRef.current?.convertToTask(), []);
 
-  const tasks = useQuery(db, taskSet ? Filter.type(Task.Task) : Filter.nothing());
+  // `childOf` (transitive) scopes to the set's tasks through their ECHO parent edges, so no
+  // membership check against the ref array — which read `.target` and missed cold-unloaded refs.
+  const tasks = useQuery(db, taskSet ? Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)) : Filter.nothing());
   // `useQuery` re-emits only when result membership changes, never on a member's property change,
   // so renames are observed by subscribing to each task; the bump rebuilds the resolver, whose new
   // identity re-runs the editor's label sync.
@@ -109,12 +111,9 @@ export const OutlineArticle = ({
   const [convertible, setConvertible] = useState(true);
 
   const resolveLinkLabel = useMemo(() => {
-    const members = new Set(taskSet?.tasks.map((ref) => ref.target?.id));
-    const labels = new Map(
-      tasks.filter((task) => members.has(task.id)).map((task) => [Obj.getURI(task).toString(), task.title]),
-    );
+    const labels = new Map(tasks.map((task) => [Obj.getURI(task).toString(), task.title]));
     return (url: string) => labels.get(url);
-  }, [taskSet, tasks, tick]);
+  }, [tasks, tick]);
 
   const taskActions = useMenuBuilder(
     (): ActionGraphProps =>

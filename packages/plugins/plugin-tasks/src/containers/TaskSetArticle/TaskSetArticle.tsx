@@ -2,18 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect/atom-react/Hooks';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj, Ref } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
+import { Filter, Obj, Ref } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { TaskList, type TaskPatch, type TaskPlacement } from '@dxos/react-ui-task';
-import { type Task, TaskSet } from '@dxos/types';
+import { Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
 import { TaskOperation } from '#types';
@@ -115,16 +113,15 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
 TaskSetArticle.displayName = 'TaskSetArticle';
 
 /**
- * The set's tasks, subscribed to membership and order only (a property atom on `tasks`, not the
- * whole set). Refs resolve through `ref.atom`, which tracks loading without tracking mutations, so
- * a title or status edit re-renders just the row that owns it — `TaskList` rows subscribe
- * themselves.
+ * The set's tasks via the space index rather than the ref array: `childOf` (transitive — a
+ * sub-task's ECHO parent is its parent task, a root task's is the set) scopes the query to this
+ * set, and a query re-emits on membership changes only, never on a member's edit — `TaskList` rows
+ * subscribe themselves. Order is the set's `tasks` array (canonical there), subscribed as a
+ * property atom and applied as a sort.
  */
 const useSetTasks = (taskSet: TaskSet.TaskSet): Task.Task[] => {
+  const db = Obj.getDatabase(taskSet);
+  const tasks = useQuery(db, Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)));
   const [taskRefs] = useObject(taskSet, 'tasks');
-  const atom = useMemo(
-    () => Atom.make((get) => TaskSet.dedupeById((taskRefs ?? []).map((ref) => get(ref.atom)))),
-    [taskRefs],
-  );
-  return useAtomValue(atom);
+  return useMemo(() => TaskSet.orderTasks(tasks, taskRefs ?? []), [tasks, taskRefs]);
 };

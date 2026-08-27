@@ -139,6 +139,24 @@ export const dedupeById = <T extends Obj.Unknown>(objects: ReadonlyArray<T | und
 /** Entity id of a task's parent, exported so a caller walking the tree shares this module's ref-uri parse. */
 export const parentTaskId = (task: Task.Task): string | undefined => refId(task.parentTask);
 
+/**
+ * Order query-loaded tasks by the set's `tasks` array — membership order is canonical there, and a
+ * query returns no order of its own. A task the array does not list yet (e.g. a concurrent add
+ * observed mid-write) keeps its incoming position at the end.
+ */
+export const orderTasks = (tasks: ReadonlyArray<Task.Task>, refs: ReadonlyArray<Ref.Ref<Task.Task>>): Task.Task[] => {
+  const position = new Map<string, number>();
+  refs.forEach((ref, index) => {
+    const id = refId(ref);
+    if (id !== undefined && !position.has(id)) {
+      position.set(id, index);
+    }
+  });
+  return [...tasks].sort(
+    (a, b) => (position.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (position.get(b.id) ?? Number.MAX_SAFE_INTEGER),
+  );
+};
+
 /** Tasks with no parent present in the set — a dangling `parentTask` reads as a root, not a ghost. */
 export const rootTasks = (tasks: readonly Task.Task[]): Task.Task[] => {
   const present = new Set(tasks.map((task) => task.id));
