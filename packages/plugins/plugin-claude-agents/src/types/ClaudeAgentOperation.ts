@@ -9,6 +9,7 @@ import * as Schema from 'effect/Schema';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
+import { AccessToken } from '@dxos/link';
 
 import * as ClaudeAgentSession from './ClaudeAgentSession';
 import * as ClaudeManagedAgent from './ClaudeManagedAgent';
@@ -25,6 +26,27 @@ export const AgentSummary = Schema.Struct({
   environmentId: Schema.optional(Schema.String),
 });
 export interface AgentSummary extends Schema.Schema.Type<typeof AgentSummary> {}
+
+/**
+ * A credential bound to a session, by reference rather than by value: the secret is resolved from
+ * the space when it is injected and delivered to the container's environment over the control plane,
+ * so it never appears in a message, a transcript or an operation result.
+ */
+export const SessionCredential = Schema.Struct({
+  token: Ref.Ref(AccessToken.AccessToken).annotate({
+    description: 'The AccessToken object in this space holding the secret.',
+  }),
+  as: Schema.NonEmptyString.annotate({
+    description: 'Environment variable the agent reads the secret as, e.g. "GH_TOKEN".',
+  }),
+  scope: Schema.optional(
+    Schema.NonEmptyArray(Schema.NonEmptyString).annotate({
+      description:
+        'Hosts the secret may be sent to, e.g. ["github.com"]. Omit to default to the token\'s own source; the platform refuses to substitute it anywhere else. An empty list is rejected rather than read as the default.',
+    }),
+  ),
+});
+export interface SessionCredential extends Schema.Schema.Type<typeof SessionCredential> {}
 
 /** One turn of a session transcript. */
 export const TranscriptMessage = Schema.Struct({
@@ -124,6 +146,11 @@ export const StartSession = Operation.make({
           "Overrides the agent's configured environment id. Omit to reuse the agent's, or to have one provisioned.",
       }),
     ),
+    credentials: Schema.optional(
+      Schema.Array(SessionCredential).annotate({
+        description: 'Credentials to bind to the run, referenced by AccessToken rather than inlined.',
+      }),
+    ),
   }),
   output: Schema.Struct({
     id: Schema.String.annotate({ description: 'Object id of the created session.' }),
@@ -132,9 +159,12 @@ export const StartSession = Operation.make({
     provisionedEnvironment: Schema.Boolean.annotate({
       description: 'Whether an environment was created for this run because the agent had none.',
     }),
+    boundCredentials: Schema.Array(Schema.String).annotate({
+      description: 'Environment variable names bound to the run. Never the values.',
+    }),
   }),
   services: [Database.Service, Credential.CredentialsService],
-  types: [ClaudeManagedAgent.ClaudeManagedAgent, ClaudeAgentSession.ClaudeAgentSession],
+  types: [ClaudeManagedAgent.ClaudeManagedAgent, ClaudeAgentSession.ClaudeAgentSession, AccessToken.AccessToken],
 });
 
 /** Sends a follow-up message into a running session. */
@@ -176,6 +206,54 @@ export const GetTranscript = Operation.make({
     status: Schema.optional(Schema.String),
     stopReason: Schema.optional(Schema.String),
     messages: Schema.Array(TranscriptMessage),
+  }),
+  services: [Database.Service, Credential.CredentialsService],
+  types: [ClaudeAgentSession.ClaudeAgentSession],
+});
+
+/**
+ * Binds or rotates credentials on a session that is already running. The counterpart to passing
+ * `credentials` at start: an agent that hits a 401 mid-run can be given the credential it needs
+ * without restarting the run, and without the secret passing through a message.
+ */
+export const SetSessionCredentials = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.claudeAgents.setSessionCredentials'),
+    name: 'Set Claude Agent Session Credentials',
+    description: 'Binds or rotates credentials on a running Claude managed agent session.',
+    icon: 'ph--key--regular',
+  },
+  input: Schema.Struct({
+    session: Ref.Ref(ClaudeAgentSession.ClaudeAgentSession).annotate({ description: 'The session to bind to.' }),
+    credentials: Schema.NonEmptyArray(SessionCredential).annotate({
+      description: 'Credentials to upsert, matched by their environment variable name.',
+    }),
+  }),
+  output: Schema.Struct({
+    sessionId: Schema.String,
+    bound: Schema.Array(Schema.String).annotate({ description: 'Environment variable names now bound.' }),
+  }),
+  services: [Database.Service, Credential.CredentialsService],
+  types: [ClaudeAgentSession.ClaudeAgentSession, AccessToken.AccessToken],
+});
+
+/** Removes credentials from a running session, containing exposure after the work that needed them. */
+export const RevokeSessionCredentials = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.claudeAgents.revokeSessionCredentials'),
+    name: 'Revoke Claude Agent Session Credentials',
+    description: 'Removes credentials from a running Claude managed agent session.',
+    icon: 'ph--key--bold',
+  },
+  input: Schema.Struct({
+    session: Ref.Ref(ClaudeAgentSession.ClaudeAgentSession).annotate({ description: 'The session to revoke from.' }),
+    names: Schema.NonEmptyArray(Schema.NonEmptyString).annotate({
+      description: 'Environment variable names to revoke, e.g. ["GH_TOKEN"].',
+    }),
+  }),
+  output: Schema.Struct({
+    sessionId: Schema.String,
+    revoked: Schema.Array(Schema.String).annotate({ description: 'Environment variable names revoked.' }),
   }),
   services: [Database.Service, Credential.CredentialsService],
   types: [ClaudeAgentSession.ClaudeAgentSession],
