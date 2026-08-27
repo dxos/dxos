@@ -20,6 +20,7 @@ import {
 } from './plan';
 import {
   AutomergeTestPlan,
+  EdgePbt,
   EdgeSync,
   EdgeWs,
   EmptyTestPlan,
@@ -30,6 +31,7 @@ import {
 } from './spec';
 
 const plans: { [key: string]: () => TestPlan<any, any> } = {
+  edgePbt: () => new EdgePbt(),
   edgeSync: () => new EdgeSync(),
   edgeWs: () => new EdgeWs(),
   automerge: () => new AutomergeTestPlan(),
@@ -76,6 +78,7 @@ const start = async () => {
       profile: { type: 'boolean', default: false, describe: 'run the node profile for agents' },
       headless: { type: 'boolean', default: true, describe: 'run browser agents in headless browsers' },
       browser: { type: 'boolean', default: true, describe: 'build the browser bundle', alias: 'b' },
+      seed: { type: 'string', describe: 'random seed; fixes the generated command sequence' },
     })
     .demandCommand(1, `need to provide name of test to run\navailable tests: ${Object.keys(plans).join(', ')}`)
     .help().argv;
@@ -92,7 +95,7 @@ const start = async () => {
   }
 
   const options: GlobalOptions = {
-    randomSeed: PublicKey.random().toHex(),
+    randomSeed: argv.seed ?? PublicKey.random().toHex(),
     repeatAnalysis: argv.repeatAnalysis,
     profile: argv.profile,
     headless: argv.headless,
