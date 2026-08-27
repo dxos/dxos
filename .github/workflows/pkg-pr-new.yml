@@ -45,8 +45,16 @@ jobs:
           fetch-depth: 0
           filter: blob:none
 
+      # Publish trust boundary: this job's output is published to pkg.pr.new and consumed by
+      # dxos/edge, so it is built from source and its pnpm store is neither shared with the
+      # general CI pool nor trusted without an integrity check. Same reasoning already applied to
+      # dxos/edge's copy of this workflow.
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          cache-scope: 'publish'
+          verify-integrity: 'true'
+          remote-cache: 'false'
 
       - name: Build
         run: moon run :build
