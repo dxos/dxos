@@ -49,5 +49,12 @@ export const logProcessor: LogProcessor = (config: LogConfig, entry: LogEntry) =
     }
   }
 
-  posthog.captureException(capturedError, additionalProperties);
+  try {
+    posthog.captureException(capturedError, additionalProperties);
+  } catch (err) {
+    // A processor throws back into `log.error`'s caller: posthog's error coercion has thrown on
+    // exotic error shapes (e.g. an Effect `TimeoutError`), which crashed the fatal-dialog render
+    // and hid the very error it was reporting. Telemetry must never break the reporting path.
+    console.warn('posthog.captureException failed', err);
+  }
 };
