@@ -835,13 +835,15 @@ export const bind = ({
   });
 
 /**
- * Bind `target` to the one connection already authorized for its type, if there is exactly one.
+ * Bind `target` to the one connection already authorized for its type, if there is exactly one and
+ * nothing is bound to it yet.
  *
  * A freshly created bindable object (a Mailbox, a Calendar) is inert until something binds it, and
- * when the user has a single account authorized for that type there is nothing to choose — making
- * them pick it from the Connect menu is a step with one possible outcome. Ambiguity is left to the
- * user: with no connection there is nothing to bind, and with several the choice is real, so both
- * fall through to the Connect action.
+ * when the user has a single unused account authorized for that type there is nothing to choose —
+ * making them pick it from the Connect menu is a step with one possible outcome. Every other case is
+ * a real choice left to the user: no connection means nothing to bind, several means a pick, and one
+ * that already syncs an object means the second object is a new sync target rather than the obvious
+ * home for the account.
  *
  * Returns the cursor when it binds, `undefined` otherwise.
  */
@@ -866,6 +868,19 @@ export const autoBind = ({
     }
 
     const [connection] = connections;
+    // A connection binds a single target type (its connector's `targetTypename`), so one that already
+    // carries a cursor has nothing left to claim automatically — binding a second object to it would
+    // point two mailboxes at one account without the user asking. Reusing it stays available, as a
+    // deliberate pick from the Connect menu.
+    const cursors = yield* Database.query(Filter.type(Cursor.Cursor)).run;
+    if (cursors.some((cursor) => isForConnection(cursor, connection))) {
+      log.info('not auto-binding: the only authorized connection is already bound', {
+        typename: Obj.getTypename(target),
+        connectorId: connection.connectorId,
+      });
+      return undefined;
+    }
+
     const connector = capabilities
       .getAll(ConnectorSpec.Connector)
       .flat()

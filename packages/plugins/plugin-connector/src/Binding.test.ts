@@ -19,7 +19,7 @@ import * as Routine from '@dxos/compute/Routine';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { operationServiceLayerNoop } from '@dxos/compute/testing';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Database, DXN, Filter, Obj, Ref, URI } from '@dxos/echo';
+import { Database, DXN, Filter, Obj, Ref, Type, URI } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -632,6 +632,140 @@ describe('binding lifecycle', () => {
     expect(rebound.max).toBeUndefined();
     expect((await cursors()).map((cursor) => cursor.id)).toContain(rebound.id);
     expect((await cursors()).length).toBe(2);
+  });
+});
+
+describe('Binding.autoBind', () => {
+  const SOURCE = 'gmail.example';
+
+  const TestSync = Operation.make({
+    meta: { key: DXN.make('com.example.operation.test.autoBind.sync'), name: 'Test Sync' },
+    input: Schema.Struct({ connection: Ref.Ref(Connection.Connection), priority: Schema.optional(Schema.String) }),
+    output: Schema.Any,
+  });
+
+  /**
+   * Auto-binding is the shortcut for the one case with a single possible answer: a lone authorized
+   * account that nothing is synced from yet. Once that account syncs a mailbox, a second mailbox is a
+   * new sync target rather than the same inbox again — silently pointing both at one account is the
+   * bug these cover.
+   */
+
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  const capabilities = () => {
+    const manager = CapabilityManager.make({ registry: Registry.make() });
+    manager.contribute({
+      module: 'test',
+      interface: ConnectorSpec.Connector,
+      implementation: [
+        {
+          id: 'gmail',
+          source: SOURCE,
+          sync: {
+            operation: TestSync,
+            trigger: Trigger.specTimer('*/10 * * * *'),
+            targetTypename: Type.getTypename(Expando.Expando),
+          },
+        } satisfies ConnectorSpec.ConnectorEntry,
+      ],
+    });
+    return manager;
+  };
+
+  const setup = async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([
+      Connection.Connection,
+      AccessToken.AccessToken,
+      Cursor.Cursor,
+      Trigger.Trigger,
+      Routine.Routine,
+      Expando.Expando,
+    ]);
+
+    const addConnection = (account = 'me@example.com', connectorId = 'gmail') => {
+      const token = db.add(Obj.make(AccessToken.AccessToken, { source: SOURCE, token: 'tok', account }));
+      return db.add(Obj.make(Connection.Connection, { connectorId, accessToken: Ref.make(token) }));
+    };
+
+    const addTarget = (name: string) => db.add(Obj.make(Expando.Expando, { name }));
+
+    const autoBind = (target: Obj.Unknown) =>
+      Binding.autoBind({ target }).pipe(
+        Effect.provide(Database.layer(db)),
+        Effect.provideService(Capability.Service, capabilities()),
+        EffectEx.runPromise,
+      );
+
+    return { db, addConnection, addTarget, autoBind };
+  };
+
+  test('binds the only authorized connection when nothing is synced from it yet', async ({ expect }) => {
+    const { db, addConnection, addTarget, autoBind } = await setup();
+    const connection = addConnection();
+    const target = addTarget('Inbox');
+    await db.flush({ indexes: true });
+
+    const cursor = await autoBind(target);
+
+    expect(cursor?.spec.source.uri).toBe(connection.accessToken.uri);
+    expect(Binding.readAccount(target, SOURCE)).toBe('me@example.com');
+  });
+
+  test('leaves a second target unbound when the connection already syncs one', async ({ expect }) => {
+    const { db, addConnection, addTarget, autoBind } = await setup();
+    addConnection();
+    const first = addTarget('Inbox');
+    await db.flush({ indexes: true });
+    expect(await autoBind(first)).toBeDefined();
+    await db.flush({ indexes: true });
+
+    // The account has a mailbox already, so the new one is a choice the user makes from Connect —
+    // auto-binding it would leave two mailboxes syncing the same inbox.
+    const second = addTarget('Second');
+    await db.flush({ indexes: true });
+
+    expect(await autoBind(second)).toBeUndefined();
+    expect(Binding.readAccount(second, SOURCE)).toBeUndefined();
+    expect(Obj.getLabel(second)).not.toBe('me@example.com');
+  });
+
+  test('binds again once the connection that held the binding is deleted and replaced', async ({ expect }) => {
+    const { db, addConnection, addTarget, autoBind } = await setup();
+    const stale = addConnection();
+    const first = addTarget('Inbox');
+    await db.flush({ indexes: true });
+    await autoBind(first);
+    await db.flush({ indexes: true });
+
+    // The dormant cursor `first` keeps is authenticated by a deleted token, so it no longer claims the
+    // fresh connection: the next target created is the only one that account syncs.
+    db.remove(stale);
+    await db.flush({ indexes: true });
+    addConnection();
+    const second = addTarget('Second');
+    await db.flush({ indexes: true });
+
+    expect(await autoBind(second)).toBeDefined();
+  });
+
+  test('does not bind when several connections are authorized', async ({ expect }) => {
+    const { db, addConnection, addTarget, autoBind } = await setup();
+    addConnection('me@example.com');
+    addConnection('someone-else@example.com');
+    const target = addTarget('Inbox');
+    await db.flush({ indexes: true });
+
+    expect(await autoBind(target)).toBeUndefined();
   });
 });
 
