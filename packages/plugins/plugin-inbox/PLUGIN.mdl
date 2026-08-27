@@ -18,7 +18,9 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `test`      | `org.dxos.mdl.test@1.0`        |
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `service`   | `org.dxos.mdl.service@1.0`     |
-| `op`        | `org.dxos.mdl.op@1.0`          |
+| `op`        | `org.dxos.mdl.op@1.1`          |
+| `flow`      | `org.dxos.mdl.flow@1.0`        |
+| `step`      | `org.dxos.mdl.step@1.0`        |
 
 ## External types
 
@@ -296,6 +298,7 @@ operations source credentials from a `Connection`.
 
 ```mdl
 op addMailbox
+  key: org.dxos.operation.inbox.addMailbox
   desc: Adds a Mailbox to the active space or collection.
   input:
     object: Mailbox
@@ -306,6 +309,7 @@ op addMailbox
 
 ```mdl
 op draftEmail
+  key: org.dxos.operation.inbox.draftEmail
   desc: Creates a new draft email scoped to a mailbox.
   input:
     subject: string
@@ -350,6 +354,7 @@ op generateReply
 
 ```mdl
 op readEmail
+  key: org.dxos.operation.inbox.readEmail
   desc: Reads recent messages from a mailbox as a single text payload.
   input:
     mailbox: Ref<Mailbox>
@@ -929,6 +934,87 @@ test T-13: Idempotent sync
   then:
     - no message is duplicated in the mailbox feed
   tags: [correctness, unit, live]
+```
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Add a mailbox, compose a draft, read it back
+  desc: The core inbox round-trip — add a Mailbox, compose a local draft into it, then read the
+    feed back. plugin-inbox is ON by default; no enabling step is required.
+  actors: agent
+  covers: [F-1.1, F-1.2, F-4.1]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - no Mailbox named "QA Mailbox" exists — ABORT rather than deleting one this flow did not create
+  test:
+    - name: Add the mailbox
+      do: In the navtree, click + on a collection and choose Mailbox. Name it "QA Mailbox".
+      invoke: [op:addMailbox] { object: { name: "QA Mailbox" }, target: $given.collection }
+      capture: created
+      expect: a Mailbox named "QA Mailbox" appears under the collection, with an empty message list
+      assert: return !!$created.object
+    - name: Compose a draft into it
+      do: Click Compose from the mailbox toolbar, address it to "qa@example.com", subject "QA Draft", and a short body.
+      invoke: [op:draftEmail] { subject: "QA Draft", to: "qa@example.com", body: "A QA round-trip.", mailbox: $created.object }
+      capture: drafted
+      expect: "QA Draft" appears at the top of the message list (newest-first) as a draft
+      assert: return !!$drafted.newMessageDXN
+    - name: Read the mailbox back
+      do: Select "QA Draft" in the message list and confirm the reading pane shows the body.
+      invoke: [op:readEmail] { mailbox: $created.object, limit: 5 }
+      expect: the returned payload includes the "QA Draft" subject and its body text
+      assert: return $result.content.includes('QA Draft') && $result.content.includes('A QA round-trip.');
+  after:
+    - name: Delete the mailbox
+      do: Right-click "QA Mailbox" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
+      expect: the row leaves the navtree
+```
+
+```mdl
+flow QA-2: Create a draft calendar event and save it to Google
+  desc: The two-way calendar round-trip. Blocked end-to-end without a live Google Connection —
+    op:syncDraftEvents makes a real Google Calendar API call, which no fixture in this repo can
+    stand up. Steps that only touch local ECHO state still run.
+  actors: human
+  covers: [F-2.1, F-8.1, F-8.4]
+  status: blocked
+  given:
+    - an identity exists
+    - space: a space is open
+    - a Calendar exists in the space (added the same way a Mailbox is, via the collection + create menu)
+    - no draft event named "QA Event" exists — ABORT rather than deleting one this flow did not create
+  test:
+    - name: Create a draft event
+      do: On the CalendarArticle toolbar, click "Create event", name it "QA Event", set a start/end time.
+      expect: a draft Event named "QA Event" appears on the grid, editable in EventArticle, with a Save action shown
+      note: |
+        NO `invoke` — createEvent is a component action (db-local, parented to the Calendar), not a
+        declared op; describing it via `[op:...]` would name something that does not exist.
+    - name: Save it to Google Calendar
+      do: Click Save in EventArticle (or "Save events to calendar" on the toolbar).
+      expect: the event round-trips to Google Calendar and the local draft is replaced by the synced feed copy
+      blocked: |
+        Requires a live Google Connection with the calendar.events scope and reachable Google
+        Calendar API — no such fixture exists in this repo's QA harness, and op:syncDraftEvents has
+        no registered `key:` to invoke through the debug port even if one did. Running this step
+        against a real account is a manual, human-only exercise; do not fabricate a Connection to
+        "unblock" it.
+  after:
+    - name: Delete the event
+      do: Right-click "QA Event" (or its synced copy) and choose Delete.
+      expect: the event leaves the grid and, if synced, is removed from Google Calendar
+      note: |
+        NO `invoke` — op:deleteEvent and op:syncDraftEvents are documented in this spec but have no
+        `key:` yet: no `org.dxos.operation.inbox.deleteEvent` / `.syncDraftEvents` was found registered
+        in `src/types/InboxOperation.ts`. Guessing one would violate Execution Rule 6.
 ```
 
 ---
