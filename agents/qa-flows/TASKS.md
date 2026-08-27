@@ -147,3 +147,46 @@ a real `DXN.make(...)` in source):
   correction rather than stating the key).
 - Pre-existing on `main`, not introduced here: unbalanced code fences in
   `plugin-studio` and `plugin-devtools`.
+
+## Phase 2 — recording (done)
+
+Recorded against a real Composer dev server (`composer-app:serve`, fresh disposable
+profile, 205 operations live in the registry) driven through the `recording-demos`
+driver. One continuous session, captioned per step from each flow's `do:` text, trimmed
+79% (9m21s → 1m57s, 23 chapters) and cut into per-plugin clips.
+
+Bucket prefix: `demos/2026-08-27-qa-flows/` in `agent-artifacts`.
+
+- [x] `plugin-markdown` QA-1 — create, place, open, fix a typo
+- [x] `plugin-sheet` QA-1 — create, set A1:A3, read back
+- [x] `plugin-thread` QA-1 — create a channel, send a message
+- [x] `plugin-illustrator` QA-1 — create a drawing, read the scene DSL
+- [x] `plugin-support` QA-1 — file a ticket, move it to in-progress
+- [x] `plugin-search` QA-1 — open the search surface
+
+### Findings from executing the flows
+
+These are defects in the specs or in the operations, found by running them:
+
+1. `markdown.update` takes `doc: Ref.Ref(...)`. Passing the live object (as the
+   pre-existing QA-1 spec's `$created.object` implies) fails with
+   `ref.tryLoad is not a function`; the invoker does not decode input through the
+   operation schema, so the caller must pass a real `Ref`.
+2. `sheet.create` returns `{ id: <DXN string> }` and places the sheet itself — it does
+   not return `{ object }`, so the usual create → `space.addObject` pairing does not
+   apply.
+3. `sheet.setRange` takes `cells: Record<A1, value>`, not `range` + `values`.
+4. `sheet.getRange` returns the stored formula (`=SUM(A1:A2)`), not the computed value,
+   so an `assert` on the evaluated result has to read the UI rather than the op output.
+5. `thread.appendChannelMessage` takes `{ channel, sender: Actor, text }` — a live
+   object and an actor, not a `Ref` and a `message`.
+6. `table.create` needs a schema-registry service the plain invoker path does not
+   provide (`Cannot read properties of undefined (reading 'addType')`) — not runnable
+   from the debug port as written.
+
+### Not recorded, and why
+
+Most plugins cannot yield a video from a default profile: they are off by default,
+hardware-bound (LaMetric, Stream Deck, Tauri-only file-system), or gated behind real
+third-party credentials (Slack, Linear, Trello, Discord, GitHub, Typefully, IBKR).
+Their specs mark those steps `blocked:` per the language's Rule 9.
