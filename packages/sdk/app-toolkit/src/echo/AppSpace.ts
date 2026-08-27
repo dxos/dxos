@@ -72,25 +72,6 @@ export const getSettingsSpace = (client: { spaces: { get(): Space[] } }): Space 
   );
 };
 
-/** The slice of a HALO `SpaceMember` credential the settings-space evidence check reads. */
-type SpaceMemberCredential = { subject?: { assertion?: { tags?: unknown } } };
-
-/**
- * Whether the HALO records membership of a settings-tagged space.
- *
- * Evidence that the profile already has a settings space even when none is in the space list yet:
- * spaces replicate to a device in creation order, so on a freshly joined or recovered device the
- * years-old legacy space always lands before the settings space. The membership credential proves
- * the space exists and will arrive, so callers wait for it instead of creating a duplicate.
- */
-export const hasSettingsSpaceCredential = (client: {
-  halo: { queryCredentials(options: { type: string }): SpaceMemberCredential[] };
-}): boolean =>
-  client.halo.queryCredentials({ type: 'dxos.halo.credentials.SpaceMember' }).some((credential) => {
-    const tags: unknown = credential.subject?.assertion?.tags;
-    return Array.isArray(tags) && tags.includes(SETTINGS_SPACE_TAG);
-  });
-
 /**
  * Whether a space belongs in the user-facing space lists (navtree, settings, create-object target).
  *

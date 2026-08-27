@@ -65,60 +65,6 @@ describe('resolveSettingsSpace', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('waits for a replicating settings space instead of creating a duplicate', () =>
-    Effect.gen(function* () {
-      // A freshly joined or recovered device replays the profile in creation order: the legacy
-      // space is visible while the settings space is still in flight, but its HALO membership
-      // credential proves it exists. A real client cannot hold that state on demand, so a scripted
-      // stand-in drives the resolver; the cast is contained to the test.
-      const spaceSubscribers = new Set<() => void>();
-      const settingsSpace = {
-        id: 'B00000000000000000000000000000002',
-        tags: [AppSpace.SETTINGS_SPACE_TAG],
-        properties: {},
-        waitUntilReady: () => Promise.resolve(),
-      };
-      const legacySpace = { id: 'B00000000000000000000000000000001', tags: [AppSpace.PERSONAL_SPACE_TAG] };
-      const spaces: unknown[] = [legacySpace];
-      let createCalls = 0;
-      const client = {
-        spaces: {
-          get: () => spaces,
-          subscribe: (callback: () => void) => {
-            spaceSubscribers.add(callback);
-            callback();
-            return { unsubscribe: () => spaceSubscribers.delete(callback) };
-          },
-          create: () => {
-            createCalls++;
-            return Promise.resolve(settingsSpace);
-          },
-        },
-        halo: {
-          queryCredentials: ({ type }: { type: string }) =>
-            type === 'dxos.halo.credentials.SpaceMember'
-              ? [{ subject: { assertion: { tags: [AppSpace.SETTINGS_SPACE_TAG] } } }]
-              : [],
-          credentials: {
-            subscribe: (callback: () => void) => {
-              callback();
-              return { unsubscribe: () => {} };
-            },
-          },
-        },
-      } as unknown as Client;
-
-      const resolver = yield* Effect.forkChild(resolveSettingsSpace(client));
-      // The settings space lands, as replication eventually delivers it.
-      spaces.push(settingsSpace);
-      spaceSubscribers.forEach((callback) => callback());
-      const resolved = yield* Fiber.join(resolver);
-
-      expect(resolved.id).toBe(settingsSpace.id);
-      expect(createCalls).toBe(0);
-    }),
-  );
-
   it.effect('heals duplicate settings spaces onto the canonical one', () =>
     Effect.gen(function* () {
       const client = yield* ClientService;

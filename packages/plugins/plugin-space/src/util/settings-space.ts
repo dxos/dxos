@@ -22,30 +22,25 @@ import { mergeSpacesOrder } from '../migrations/settings-space';
  * (which publishes the default space before the settings space) and loses, leaving the profile
  * with a duplicate settings space.
  *
- * A visible legacy space alone is NOT proof the profile predates the settings space: the legacy
- * tag is immutable and outlives the migration, and spaces replicate to a device in creation order,
- * so on a freshly joined or recovered device the legacy space always lands before the settings
- * space. Only a legacy profile whose HALO carries no settings-space membership credential is
- * treated as unmigrated.
+ * A visible legacy space is NOT proof the profile predates the settings space: the legacy tag is
+ * immutable and outlives the migration, and spaces replicate to a device in creation order, so on
+ * a freshly joined or recovered device the legacy space lands before the settings space and this
+ * creates a duplicate. Absence is unprovable in an eventually-consistent system, so rather than
+ * guard the create, {@link healDuplicateSettingsSpaces} converges the profile back to one.
  */
 export const resolveSettingsSpace = Effect.fnUntraced(function* (client: Client) {
-  // Both observables replay on subscribe, so the current state is checked with no gap in which an
-  // arriving settings space or membership credential could be missed.
+  // The space list replays on subscribe, so the current state is checked with no gap in which an
+  // arriving settings space could be missed.
   const existing = yield* Effect.callback<Space | undefined>((resume) => {
-    const check = () => {
+    const sub = client.spaces.subscribe(() => {
       const settingsSpace = AppSpace.getSettingsSpace(client);
       if (settingsSpace) {
         resume(Effect.succeed(settingsSpace));
-      } else if (AppSpace.resolveLegacyDefaultSpace(client) && !AppSpace.hasSettingsSpaceCredential(client)) {
+      } else if (AppSpace.resolveLegacyDefaultSpace(client)) {
         resume(Effect.succeed(undefined));
       }
-    };
-    const spacesSub = client.spaces.subscribe(check);
-    const credentialsSub = client.halo.credentials.subscribe(check);
-    return Effect.sync(() => {
-      spacesSub.unsubscribe();
-      credentialsSub.unsubscribe();
     });
+    return Effect.sync(() => sub.unsubscribe());
   });
   if (!existing) {
     return yield* ensureSettingsSpace(client);

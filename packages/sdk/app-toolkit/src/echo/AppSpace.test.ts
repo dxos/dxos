@@ -61,22 +61,6 @@ describe('settings space resolution', () => {
   });
 });
 
-describe('settings space evidence', () => {
-  test('a settings-tagged membership credential counts as evidence', ({ expect }) => {
-    const client = makeCredentialClient([{ subject: { assertion: { tags: [AppSpace.SETTINGS_SPACE_TAG] } } }]);
-    expect(AppSpace.hasSettingsSpaceCredential(client)).toBe(true);
-  });
-
-  test('memberships of other spaces are not evidence', ({ expect }) => {
-    const client = makeCredentialClient([
-      { subject: { assertion: { tags: [] } } },
-      { subject: { assertion: {} } },
-      { subject: { assertion: { tags: [AppSpace.PERSONAL_SPACE_TAG] } } },
-    ]);
-    expect(AppSpace.hasSettingsSpaceCredential(client)).toBe(false);
-  });
-});
-
 /**
  * A stand-in carrying only the fields the tag predicates read. Cast here rather than widening the
  * predicates, so production code sees a real `Space` and the fake stays contained to the test.
@@ -86,10 +70,3 @@ const makeSpace = (tags: string[]): Space => ({ tags, properties: {} }) as unkno
 /** As {@link makeSpace}, adding the id and closed state the settings-space resolution reads. */
 const makeClosedSpace = (id: string, tags: string[]): Space =>
   ({ id, tags, properties: {}, state: { get: () => SpaceState.SPACE_CLOSED } }) as unknown as Space;
-
-/** The slice of `Client` the credential evidence check reads. */
-const makeCredentialClient = (credentials: { subject?: { assertion?: { tags?: unknown } } }[]) => ({
-  halo: {
-    queryCredentials: () => credentials,
-  },
-});
