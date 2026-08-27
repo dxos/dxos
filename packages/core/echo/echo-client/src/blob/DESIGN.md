@@ -1,4 +1,4 @@
-# Audit: blob storage naming (`edge`/`ni:` → `blob`)
+# Blob storage naming (`edge`/`ni:` → `blob`)
 
 The DXOS-hosted blob store is registered under the storage name `edge` and emits `ni:` URIs. Both
 names are wrong in a way that has cost real design time, and both are persisted on existing `Blob`
