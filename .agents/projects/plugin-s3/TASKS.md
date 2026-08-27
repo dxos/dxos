@@ -1,10 +1,10 @@
 # plugin-s3 — Tasks
 
-_Resume: the S3 code needs extracting out of this plugin into a core package so headless hosts can
-register it — that is the only thing left between here and a cloud agent writing to a customer
-bucket, and it needs NO edge-repo change (see Phase 4). Everything under it is proven: signing
-against real R2, the credential, and the CORS preflight for both HEAD and PUT against `media`. Open
-in PR #12789. Uncommitted: none._
+_Resume: nothing is blocked. The headless path is complete — `@dxos/blob-s3` is registered by
+`FunctionContext`, so an operation on edge writes to its space's bucket, reaching edge on the next
+pin bump with no edge-repo change. What remains is verification through the running app (connector
+UI, an upload, a render) and a non-R2 endpoint to exercise region parsing. Open in PR #12789,
+reviewer dmaretskyi. Uncommitted: none._
 
 ## Phase 1: S3 blob backend + connector
 
@@ -111,13 +111,20 @@ outbound `fetch` to the customer's own endpoint. `operation-service` sets no
       `Database.Service` and no client, so the parameter's shape was the only browser confinement.
       Defaults to `notAvailable`, so a managed token resolves to no credential rather than handing
       the signer an opaque placeholder.
-- [ ] **Extract the S3 code into a core package.** `sigv4.ts`, `s3-client.ts`, `s3-uri.ts` and the
-      `createS3BlobBackend` factory depend on nothing above `echo-protocol`. `plugin-s3` keeps only
-      the capability wrapper and the connector.
-      **Layering constraint:** the registration call site must be in `functions-runtime-cloudflare`,
-      NOT `compute-runtime` — `s3-credentials.ts` imports `credentialsLayerFromDatabase` _from_
-      `compute-runtime`, so a call site there would be a dependency cycle.
-- [ ] **Register it in the function runtime** so an operation running on edge can select it.
+- [x] **Extracted the S3 code into `@dxos/blob-s3`** — sigv4, the client, URI addressing and the
+      `createS3BlobBackend` factory, depending on nothing above `echo-protocol`. It takes its two
+      host-specific answers (a bucket's credentials, and which bucket a space writes to) as
+      parameters, which is what keeps `Client` out of it. `plugin-s3` keeps the capability wrapper
+      and the connector. The 27 tests moved with the code, AWS vectors included.
+- [x] **Registered it in `FunctionContext`** (`compute-runtime/src/protocol.ts`), so an operation
+      running on edge writes to the bucket its space is connected to rather than falling back to
+      inline storage and its 4 MiB cap.
+      **Correction to the plan recorded above:** the call site is in `compute-runtime`, NOT
+      `functions-runtime-cloudflare` — the latter does not import the former at all, so a call site
+      there would have registered on nothing. The cycle is avoided a different way: the database
+      bindings (`createS3Host`) sit beside `credentialsLayerFromDatabase`, which they need, so
+      `blob-s3` never imports upward.
+      Knip flagged six dependencies the extraction made unused; removed from both packages.
 
 ## Phase 5: Deferred
 

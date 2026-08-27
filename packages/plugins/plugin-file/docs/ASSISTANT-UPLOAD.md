@@ -378,14 +378,20 @@ Each step is usable on its own, and each unblocks the next.
    it rather than keeping its copy, and it now has the tests it never had.
 2. ~~**`FileOperation.CreateFromSource`** + the widened MIME allowlist + the skill entry~~ —
    **done.** Works on the CLI host, and on edge at inline sizes.
-3. **The headless backend seam** — register a `BlobBackend` on the `EchoClient` that
-   `FunctionContext` builds (`compute-runtime/src/protocol.ts:171-177`). Nothing above 4 MiB works on
-   edge until this exists, and both storage targets depend on it.
+3. ~~**The headless backend seam**~~ — **done.** `FunctionContext` registers a `BlobBackend` on the
+   `EchoClient` it builds, so a handler running on edge is no longer limited to inline storage.
 4. **EDGE store target** — `BLOB_SERVICE` binding on `operation-service`, backend speaking
-   `POST /file/:key`. Lives in the edge repo, so it is a separate change by necessity.
-5. **R2 target** — decouple the S3 backend from `Client` (it needs only `Database.Service`, which
-   `operation-service` has) and register it wherever step 3 lands. Per §6 this is a reachability
-   change, not a re-architecture.
+   `POST /file/:key`. Lives in the edge repo, so it is a separate change by necessity. Only buys the
+   managed store, which browser clients can already reach.
+5. ~~**R2 target**~~ — **done.** The protocol code is `@dxos/blob-s3` (nothing above
+   `echo-protocol`), its database bindings are `createS3Host` in `compute-runtime`, and `plugin-s3`
+   keeps only the capability wrapper and the connector.
+
+   **Where the registration landed, and why not where this document first said.** It is in
+   `compute-runtime`, not `functions-runtime-cloudflare`: the latter does not import the former at
+   all, so a call site there would have registered on nothing. The cycle that motivated the original
+   suggestion is avoided differently — the bindings live beside `credentialsLayerFromDatabase`,
+   which they need, so `blob-s3` never imports upward.
 
 ## Open questions
 
