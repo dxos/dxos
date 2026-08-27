@@ -605,10 +605,13 @@ export class AutomergeHost extends Resource {
     await this._leases.drain();
   }
 
-  /** Drops a document from the repo cache, draining its pending save so it cannot re-persist. */
-  private async _evictDocument(documentId: DocumentId, isCancelled: () => boolean): Promise<void> {
+  /**
+   * Drops a document from the repo cache, draining its pending save so it cannot re-persist.
+   * Resolves `false` when the document was left resident, so the registry retries it later.
+   */
+  private async _evictDocument(documentId: DocumentId, isCancelled: () => boolean): Promise<boolean> {
     if (!this.isOpen) {
-      return;
+      return false;
     }
     // Only a loaded document is evicted: `_repo.flush` persists ready handles, so dropping one that
     // is still loading would discard data that is only in memory.
@@ -621,8 +624,8 @@ export class AutomergeHost extends Resource {
         .catch((err) => log('document did not settle before eviction', { documentId, err }))
         .finally(() => abort.abort());
       if (getHandleState(this._repo, documentId) !== 'ready') {
-        log('skipped eviction of a document that is not loaded', { documentId });
-        return;
+        log('deferred eviction of a document that is not loaded', { documentId });
+        return false;
       }
     }
     await this._repo.flush([documentId]);
@@ -630,12 +633,13 @@ export class AutomergeHost extends Resource {
     // document to read.
     if (isCancelled()) {
       log('cancelled eviction of a re-leased document', { documentId });
-      return;
+      return false;
     }
     if (this._repo.handles[documentId]) {
       await this._repo.removeFromCache(documentId);
     }
     log('evicted document', { documentId });
+    return true;
   }
 
   private async _loadLeasedDoc<T>(

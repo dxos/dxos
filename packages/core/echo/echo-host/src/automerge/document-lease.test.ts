@@ -118,17 +118,28 @@ describe('document leases', () => {
  * released ones are held by a floor regardless of age.
  */
 describe('document lease eviction policy', () => {
-  const createRegistry = (params: { evictionDelay?: number; minResidentDocuments?: number }) => {
+  const createRegistry = (
+    params: { evictionDelay?: number; minResidentDocuments?: number },
+    /** Resolves `false` to leave the document resident, as a real deferred eviction does. */
+    outcome: (documentId: DocumentId, attempt: number) => boolean = () => true,
+  ) => {
     const evicted: DocumentId[] = [];
+    const attempts = new Map<DocumentId, number>();
     const registry = new DocumentLeaseRegistry({
       open: () => ({}) as any,
       evict: async (documentId) => {
-        evicted.push(documentId);
+        const attempt = (attempts.get(documentId) ?? 0) + 1;
+        attempts.set(documentId, attempt);
+        const dropped = outcome(documentId, attempt);
+        if (dropped) {
+          evicted.push(documentId);
+        }
+        return dropped;
       },
       ...params,
     });
     onTestFinished(() => registry.close());
-    return { registry, evicted };
+    return { registry, evicted, attempts };
   };
 
   const documentId = (index: number) => `document-${index}` as DocumentId;
@@ -165,6 +176,18 @@ describe('document lease eviction policy', () => {
     await sleep(20);
     expect(evicted).toEqual([documentId(0), documentId(1)]);
     expect(registry.idleCount).toBe(2);
+  });
+
+  test('a document left resident is retried rather than forgotten', async ({ expect }) => {
+    // A document that is still loading cannot be dropped, and the registry has already taken it off
+    // the queue — without a requeue it would stay resident with nothing tracking it.
+    const { registry, evicted, attempts } = createRegistry({ evictionDelay: 1 }, (_id, attempt) => attempt > 1);
+    registry.acquire(documentId(0))[Symbol.dispose]();
+
+    await waitFor(() => evicted.length > 0);
+    expect(evicted).toEqual([documentId(0)]);
+    expect(attempts.get(documentId(0))).toBe(2);
+    expect(registry.idleCount).toBe(0);
   });
 
   test('draining ignores both the delay and the floor', async ({ expect }) => {
