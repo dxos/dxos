@@ -268,6 +268,27 @@ export const TestHierarchy: Story = {
       ]),
     );
 
+    // Moving a parent carries its sub-tasks: only the parent's own parentTask is written, so the
+    // descendants' refs still point at it wherever it lands.
+    const release = rows().find(({ title }) => title === 'Ship the spring release')!;
+    press(release.row, 'ArrowDown');
+    await waitFor(async () =>
+      expect(shape()).toEqual([
+        'Dial in the roast:1',
+        'Sample the Ethiopian lots:2',
+        'Log every profile:2',
+        'Ship the spring release:1',
+        'Approve the label art:2',
+        'Proofread the back label:3',
+        'Write the tasting notes:2',
+      ]),
+    );
+    press(rows().find(({ title }) => title === 'Ship the spring release')!.row, 'ArrowUp');
+    await waitFor(async () => expect(rows()[0].title).toEqual('Ship the spring release'));
+
+    // Each row is findable by task id, which is how the drag preview collects a subtree to clone.
+    await expect(canvasElement.querySelectorAll('[data-task-id]')).toHaveLength(7);
+
     // Every row carries a handle in the ordinal's own gutter — the ordinal and the handle share one
     // cell, so nothing shifts when the cursor crosses a row. The drop itself needs a real pointer
     // (native HTML5 drag events cannot be synthesized), so the manual script covers the gesture.

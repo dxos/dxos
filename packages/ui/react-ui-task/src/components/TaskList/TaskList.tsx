@@ -9,6 +9,7 @@ import {
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import React, {
@@ -50,6 +51,7 @@ import {
   resolveNudge,
   resolveOutdent,
   resolveTaskPlacement,
+  subtreeIds,
   walkTaskTree,
 } from './hierarchy';
 
@@ -430,15 +432,26 @@ const useTaskDrag = ({
         // the row's own click-to-select.
         element: handle,
         getInitialData: () => data,
-        // ...but what is dragged is the task, so the preview is the whole row. The browser's default
-        // drag image is the dragged element, which here would be the grip alone. The live row is
-        // used rather than a clone: the row is a subgrid whose tracks come from its parent, so a
-        // detached copy would collapse to its content width.
+        // ...but what is dragged is the task AND its sub-tasks, which travel with it, so the preview
+        // is the whole subtree. The browser's default drag image is the dragged element, which here
+        // would be the grip alone.
         onGenerateDragPreview: ({ location, nativeSetDragImage }) => {
+          const rows = subtreeRows(element, latest.current.tasks, task);
           const { left, top } = element.getBoundingClientRect();
           const { clientX, clientY } = location.initial.input;
-          // Offset by where the grip was grabbed, so the row does not jump under the cursor.
-          nativeSetDragImage?.(element, clientX - left, clientY - top);
+          // Offset by where the grip was grabbed, so the preview does not jump under the cursor.
+          const offset = { x: clientX - left, y: clientY - top };
+          if (rows.length < 2) {
+            // A leaf (or a collapsed branch) is one row: the live element is a better image than a
+            // clone, since it keeps the subgrid tracks it inherits from the list.
+            nativeSetDragImage?.(element, offset.x, offset.y);
+            return;
+          }
+          setCustomNativeDragPreview({
+            nativeSetDragImage,
+            getOffset: () => offset,
+            render: ({ container }) => renderSubtreePreview(container, element, rows),
+          });
         },
         onDragStart: () => {
           draggingId.current = task.id;
@@ -511,6 +524,43 @@ const useTaskDrag = ({
   useEffect(() => cancelExpand, [cancelExpand]);
 
   return { instruction, rowRef, dragHandleRef, dragHandle: enabled };
+};
+
+/**
+ * The rendered rows of `task`'s subtree, in document order: the row itself plus every visible
+ * descendant. A collapsed branch contributes only its own row, which is what the reader sees.
+ */
+const subtreeRows = (element: HTMLElement, tasks: readonly Task.Task[], task: Task.Task): HTMLElement[] => {
+  const list = element.parentElement;
+  const ids = subtreeIds(tasks, task);
+  return list
+    ? Array.from(list.querySelectorAll<HTMLElement>('[data-task-id]')).filter((row) =>
+        ids.has(row.dataset.taskId ?? ''),
+      )
+    : [element];
+};
+
+/**
+ * Clones the subtree into the drag preview. The container is made a grid carrying the list's own
+ * track sizes: the rows are `grid-cols-subgrid`, so without them a detached copy collapses to its
+ * content width and the columns no longer line up.
+ */
+const renderSubtreePreview = (container: HTMLElement, element: HTMLElement, rows: HTMLElement[]): void => {
+  const list = element.parentElement;
+  const listStyle = list && getComputedStyle(list);
+  container.style.display = 'grid';
+  container.style.width = `${element.getBoundingClientRect().width}px`;
+  if (listStyle) {
+    container.style.gridTemplateColumns = listStyle.gridTemplateColumns;
+    container.style.columnGap = listStyle.columnGap;
+    container.style.gridAutoRows = listStyle.gridAutoRows;
+    container.style.alignItems = listStyle.alignItems;
+  }
+  // The preview is torn off the page, so it needs its own ground to sit on.
+  container.classList.add('bg-base-surface');
+  for (const row of rows) {
+    container.appendChild(row.cloneNode(true));
+  }
 };
 
 /**
@@ -626,6 +676,9 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
         {...rest}
         id={task.id}
         data-testid='taskList.item'
+        // The drag preview has to find this row's descendants in the DOM, and `Listbox.Item`'s `id`
+        // is its selection key rather than a DOM id.
+        data-task-id={task.id}
         // `px-0`: a subgrid's own inline padding shrinks its first and last tracks, so the listbox
         // item's default inset would push the status control off the column the create row's `+`
         // sits in. The list's inset belongs to the host, not the row.

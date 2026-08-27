@@ -56,6 +56,31 @@ describe('move-task', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
+  it.effect('a moved task keeps its sub-tasks: the subtree travels with it', () =>
+    Effect.gen(function* () {
+      const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
+      yield* Database.flush();
+      const [parent, child, grandchild, other] = yield* seedTasks(taskSet, ['a', 'b', 'c', 'd']);
+      yield* moveTask.handler({ task: Ref.make(child), parentTask: Ref.make(parent) });
+      yield* moveTask.handler({ task: Ref.make(grandchild), parentTask: Ref.make(child) });
+
+      // `a` (holding b -> c) becomes a child of `d`. Only `a`'s own entry and parent ref are written;
+      // the descendants' `parentTask` refs are untouched, which is what carries them along.
+      yield* moveTask.handler({ task: Ref.make(parent), parentTask: Ref.make(other) });
+
+      const tasks = TaskSet.resolveTasks(taskSet);
+      expect(titles(TaskSet.rootTasks(tasks))).toEqual(['d']);
+      const [movedParent] = TaskSet.subTasks(
+        tasks,
+        tasks.find(({ title }) => title === 'd')!,
+      );
+      expect(movedParent.title).toEqual('a');
+      const [movedChild] = TaskSet.subTasks(tasks, movedParent);
+      expect(movedChild.title).toEqual('b');
+      expect(titles(TaskSet.subTasks(tasks, movedChild))).toEqual(['c']);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
   it.effect("rejects a parent inside the task's own subtree, leaving the order untouched", () =>
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
