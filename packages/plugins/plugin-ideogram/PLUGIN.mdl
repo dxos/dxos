@@ -29,6 +29,7 @@ credentials — the Connector + `CredentialsService` are the seam.
 | `type` | `org.dxos.mdl.type@1.0` |
 | `feat` | `org.dxos.mdl.feat@1.0` |
 | `test` | `org.dxos.mdl.test@1.0` |
+| `flow` | `org.dxos.mdl.flow@1.0` |
 
 ## Connector
 
@@ -170,3 +171,56 @@ test T-4: Missing key
 - Multi-account and per-artifact provider configuration.
 - A server-side (edge function) transport that keeps the API key off the client
   entirely; v1 resolves the key client-side and proxies the call.
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Connect an Ideogram key and generate an image
+  desc: |
+    Headless like plugin-heygen — Ideogram contributes only a Connector credential form and a
+    GenerationService; generation runs through plugin-studio's generic `Generate` operation with
+    `provider: "ideogram"`. There is no plugin-ideogram-local operation to invoke.
+  actors: both
+  covers: [IdeogramConnector, IdeogramImageGenerationService, T-1, T-3]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - a valid Ideogram API key
+    - no Artifact named "QA Ideogram Image" exists — ABORT rather than reusing one this flow did not create
+  test:
+    - name: Connect Ideogram
+      do: Open Settings -> Connectors -> Ideogram, paste the API key, and submit.
+      expect: an AccessToken (source "ideogram.ai") and a Connection referencing it now exist
+      note: |
+        NO `invoke` — credential submission goes through the Connector's `onSubmit` UI callback
+        (`IdeogramTokenForm`), not an operation with a runtime key.
+    - name: Create an image Artifact
+      do: In the navtree, click + on a collection and choose Studio Artifact, kind Image. Name it "QA Ideogram Image" and enter a prompt.
+      capture: created
+      expect: an Artifact of kind "image" named "QA Ideogram Image" exists with the prompt set
+      note: |
+        NO `invoke` — Artifact creation is wired through `CreateObjectEntry`, a UI-only factory;
+        there is no operation key behind object creation itself (same pattern as plugin-heygen and
+        plugin-game).
+    - name: Generate with Ideogram
+      do: In the Artifact's generate panel, pick "Ideogram" as the provider and click Generate.
+      invoke: org.dxos.operation.studio.generate { artifact: $created.object, provider: "ideogram", config: { aspectRatio: "1:1" } }
+      capture: generated
+      expect: |
+        the request is routed through the DXOS edge CORS proxy to `POST /generate`, and a Variant
+        holding the returned image URL, resolution, and seed is appended to the Artifact
+      assert: return $generated.count === 1
+  after:
+    - name: Delete the Artifact
+      do: Right-click "QA Ideogram Image" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
+      expect: the row leaves the navtree and its plank closes if it was open
+    - name: Disconnect Ideogram
+      do: In Settings -> Connectors -> Ideogram, remove the connection.
+      expect: the Connection and its AccessToken are removed
+```

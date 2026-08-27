@@ -15,7 +15,7 @@ at the bottom — read those before picking up a thread.
 | 5   | devtools                                | **part** | Enums, `JsonView`, and two mis-annotated imports moved; 14 left.         |
 | 6   | `Stream` extraction                     | **done** | Moved to `@dxos/async`; generator emits it from there.                   |
 | 7   | `protoMessage()` / `serviceError` → buf | **done** | All 45 types route through buf, once `#3` learned to resolve `Any`.      |
-| 8   | Remaining `ServiceDescriptor` RPC       | todo     | 21 production sites / 10 services, all cross-peer; 49 more are tests.    |
+| 8   | Remaining `ServiceDescriptor` RPC       | todo     | 21 production sites / 11 services, all cross-peer; 36 more are tests.    |
 | 9a  | keyring `KeyRecord`                     | **done** | No substituted fields; wire format unchanged, asserted byte-for-byte.    |
 | 9b  | `echo.query.Heads`                      | **done** | Same; also dropped the workerd lazy-codec workaround.                    |
 | 9c  | `echo/metadata` + `echo/feed`           | **part** | Both metadata stores swapped; `pipeline/codec` held back for `#9d`.      |
@@ -102,6 +102,35 @@ after a buf round-trip and in the reverse direction, and both codecs produce byt
 `getCredentialProofPayload` output. `#9d`'s remaining work is therefore the type sweep at the 94
 declaration sites, not the signature question.
 
+## The `preserveAny` caller option, and what it unblocked
+
+`anySubstitutions` preserves an `Any` when **either** the field carries `[(preserve_any) = true]` **or**
+the caller passes `{ preserveAny: true }`. The first revision of `#3` implemented only the field half,
+which silently excluded the two production sites relying on the caller half -- neither `dxos/rpc.proto`
+nor `dxos/mesh/messaging.proto` marks its `Any` fields, so the option is the only thing keeping those
+payloads packed:
+
+| Site                              | Message                               | Why it stays packed                                                                        |
+| --------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `mesh/rpc/src/rpc.ts`             | `dxos.rpc.RpcMessage`                 | Frames every RPC between peers; the payload is the callee's business, not the transport's. |
+| `mesh/messaging/src/messenger.ts` | `dxos.mesh.messaging.ReliablePayload` | Rides the signalling network; the peer resolves it, not the relay.                         |
+
+`encodeCompat` / `decodeCompat` / `compatCodec` now take a `CompatOptions` argument and both sites are
+on the compat codec. These are the highest-traffic wire formats in the repo -- a byte mismatch breaks
+all peer communication rather than one call -- so both carry fixtures against the legacy codec, plus a
+negative test proving the option actually gates (without it, a registered payload resolves).
+
+`ReliablePayload` asserts byte equality. `RpcMessage` deliberately does not, and cannot:
+protobuf.js writes its non-optional `stream: false` explicitly (`20 00`) where buf omits the proto3
+default, so the two differ by two bytes. Its fixture asserts cross-codec round-trips and the packed
+`Buffer` shape instead -- the rule this plan already states for data that is neither signed nor
+persisted.
+
+Two notes for `#8`. `createProtoRpcPeer` threads `encodingOptions` down to the codec, so this argument
+is the prerequisite that path needed. And `rpc.ts` keeps its lazy-codec comment ("breaks in workerd");
+`#9b` retired the same workaround once its type moved to buf, so re-test whether this one still earns
+its keep.
+
 ## `#9c`: the stores are on buf; the feed codec is not
 
 All three `#9c` types now have byte-equality fixtures, including the two `Any` had blocked:
@@ -120,6 +149,10 @@ materialises an unset non-optional message field as an empty submessage and writ
 explicitly, where buf omits both (18 bytes against 10 on a minimal record). Its fixture asserts
 cross-codec round-trips rather than byte equality. That qualification stands for merely _persisted_
 data; assert byte equality for anything _signed_.
+
+Re-scope both of these against `DX_AUTOMERGE_CREDENTIALS` (landed separately): moving credentials into
+an automerge document changes how much of `#9d` is a feed problem at all, so plan against the flag's
+end state rather than the feed one.
 
 `pipeline/codec.ts` -- the `FeedMessage` codec -- is deliberately **not** swapped. Its fixture now
 passes byte-identically, so nothing technical blocks it, but it is the value encoding for
@@ -158,8 +191,49 @@ Everything above landed behind an interface that hides which codec carried a val
 could go in one change. `#8` cannot: `schema.getService()` and `createProtoRpcPeer` are the RPC
 _transport_ for mesh/teleport, the iframe bridge and agentmanager, so migrating them changes what
 goes on the wire between peers -- a mismatch breaks replication between released versions rather than
-failing a local call. It needs its own change with cross-version fixtures, and the 49 test sites on
-`example.testing.*` protos should go first to prove the pattern without wire risk.
+failing a local call. The test sites on `example.testing.*` protos should go first to prove the pattern
+without wire risk.
+
+Measured, the 16 non-test files fall into clusters, which is how to slice it: 4 teleport
+extensions (control, gossip, replicator, automerge-replicator); 7 in
+client-services/client-protocol (invitations x2, auth, admission-discovery, notarization,
+`service.ts`, agent-hosting-provider); 3 in-repo `testing/` helpers (`network-manager`'s
+`test-builder`, teleport's `test-extension` and `test-extension-with-streams`); one
+`rpc-tunnel-e2e` demo (`test-worker.ts`); plus `gen-service-rpcs.ts`, the generator itself. Only
+the first two clusters carry cross-peer wire risk.
+
+### There is no drop-in buf RPC, but the descriptors are already here
+
+`buf.gen.yaml` runs only `protoc-gen-es`, and `@connectrpc/*` is absent from the repo, so nothing
+buf-native is wired up today. But `protoc-gen-es` emits a `DescService` for each of the 18 `service {}`
+blocks, and `bufRegistry` is a `Registry`, which exposes `getService(typeName)` -- the buf-side
+equivalent of `schema.getService()` already exists.
+
+`DescService` carries everything `ServiceDescriptor` reads, and one thing differs on the wire.
+Measured against `dxos.mesh.teleport.control.ControlService`: the service name matches once the
+legacy `.slice(1)` strips its leading dot, `method.name` is identical (`RegisterExtension`), and
+`method.localName` is already the camelCase handler key `mapRpcMethodName` computes by hand.
+`methodKind === 'unary'` replaces `responseStream`. But the request/response type names diverge:
+protobuf.js reports `.dxos.mesh.teleport.control.RegisterExtensionRequest` with a leading dot and
+buf reports it without, and that string is what `ServiceHandler` writes into `Any.type_url` on every
+call and response. Receivers decode `request.value` and never read `type_url`, so this is probably
+inert -- but "probably" is not a wire contract, so `#8` needs a fixture pairing a legacy client with
+a buf server and the reverse before anything switches.
+
+Three directions, in preference order:
+
+1. **Re-point `@dxos/rpc` at buf descriptors.** Reimplement `ServiceBundle`/`ServiceDescriptor` over
+   `DescService` and encode payloads through the compat layer, keeping `RpcPeer`'s framing and the
+   `dxos.rpc.RpcMessage` envelope byte-identical. No cross-version risk; the surface is `service.ts`
+   (~190 lines) plus `rpc.ts`. Recommended.
+2. **effect-rpc** (`effect/unstable/rpc`) -- where the repo is already heading, and right for anything
+   whose wire may change or that is already an `RpcGroup`. A rewrite per service, so it carries the
+   same cross-version caution as (3).
+3. **Connect** (`@connectrpc/connect` + `protoc-gen-connect-es`) -- buf's official answer, and the
+   wrong shape here. It is built on HTTP semantics (fetch `Request`/`Response`), unary plus
+   server-streaming, bidi only over HTTP/2 gRPC. DXOS's transports are teleport-muxed channels,
+   MessagePorts and WebSockets, none of them HTTP. Adopting it changes the peer wire, which is the one
+   thing `#8` exists to avoid.
 
 Before starting any thread, read **Findings** at the bottom: the five generator divergences are
 what make the mechanical-looking parts non-mechanical, and two of them (`Any`, nested enums) are
@@ -191,9 +265,9 @@ generators run side by side and both outputs are consumed today.
 
 | Surface                                                                  | Count                        |
 | ------------------------------------------------------------------------ | ---------------------------- |
-| `.ts`/`.tsx` files importing `@dxos/protocols/proto/*` (protobuf.js gen) | 248 files / 367 declarations |
+| `.ts`/`.tsx` files importing `@dxos/protocols/proto/*` (protobuf.js gen) | 252 files / 372 declarations |
 | Files importing `@dxos/protocols/buf/*` (already migrated)               | 25 (dxos) + 85 (edge)        |
-| Files importing `@dxos/codec-protobuf`                                   | 39                           |
+| Files importing `@dxos/codec-protobuf`                                   | 22 (10 of them type-only)    |
 | `schema.getCodecForType(...)` call sites                                 | 51 (2 production sites left) |
 | `Stream` imports from `@dxos/codec-protobuf`                             | 26                           |
 
@@ -285,20 +359,20 @@ Independently landable threads, lowest → highest risk×complexity. Six have a 
 groups: `#7` and `#9a`–`#9d` on the shape-compat layer (`#3`), and `#8` on the `Stream` extraction
 (`#6`). Within `#9`, each slice is ordered by blast radius: 9a → 9b → 9c → 9d.
 
-| #   | Thread                                  | Scope                                                                                                             | Risk        | Complexity | Notes                                                                                                                                                                                                                                                                                                                                              |
-| --- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | `@dxos/effect-proto` removal            | 2 files                                                                                                           | very low    | very low   | The only real consumer is `react-ui-form`'s `ObjectTree.stories.tsx` (`parseProto`) — a storybook. Deletes an entire protobuf.js dependent.                                                                                                                                                                                                        |
-| 2   | Test/example protos                     | `tools/protobuf-test`, `codec-protobuf/test`, `protobuf-compiler/test`, `example/testing/*`                       | very low    | low        | No persisted data, no signatures. Doubles as the conformance harness for #3.                                                                                                                                                                                                                                                                       |
-| 3   | Shape-compat layer                      | new module in `@dxos/protocols`                                                                                   | low         | high       | Buf encode/decode reproducing the substituted shapes (PublicKey, PrivateKey, TimeframeVector, Any, Struct, Timestamp) plus byte/JSON-equality tests against protobuf.js. Nothing switches over, so risk stays low; gates #7 and #9.                                                                                                                |
-| 4   | `dxos.config`                           | 55 files                                                                                                          | low         | medium     | Read-mostly, not persisted, not signed — but a public API change, since `@dxos/config` re-exported the generated namespace. Landed natively; see findings.                                                                                                                                                                                         |
-| 5   | devtools                                | 20 files                                                                                                          | low         | low–medium | Diagnostic-only; regressions are visible and harmless. Already on effect-rpc (verified — see below), so this is a type-import sweep that rides on #7, not an RPC-seam exercise.                                                                                                                                                                    |
-| 6   | `Stream` extraction                     | 26 import sites                                                                                                   | low         | medium     | Move `Stream` out of `codec-protobuf` into its own package; unblocks deleting that package.                                                                                                                                                                                                                                                        |
-| 7   | `protoMessage()` / `serviceError` → buf | One file: registry + shape-compat routing behind the existing API                                                 | medium      | low        | The chokepoint, as first rated: shapes are preserved so no call site changes. Blocked only on `Any` for 14 of 45 types. Surfaced the Struct double-encoding bug in `#3` — see above.                                                                                                                                                               |
-| 8   | Remaining `ServiceDescriptor` RPC       | 21 production `schema.getService()` sites / 10 services; 49 further sites are tests on `example.testing.*` protos | medium–high | high       | Cross-peer wire compatibility: a mismatch breaks replication between versions, not just a local call. Sequence after #6. `ServiceDescriptor` itself is only 8 references, all plumbing — the surface to migrate is `getService()` + `createProtoRpcPeer` (21 files). The test two-thirds carry no wire risk and can go first to prove the pattern. |
-| 9a  | keyring `KeyRecord`                     | `halo/keyring/src/{keyring,sqlite-keyring}.ts`                                                                    | medium      | low        | One message, two codec sites, local SQLite only. Smallest persisted slice — do it first to validate #3 against real on-disk rows.                                                                                                                                                                                                                  |
-| 9b  | `echo.query.Heads`                      | `echo-host/src/automerge/sqlite-heads-store.ts`                                                                   | medium      | low        | One message, one codec site. Rebuildable from Automerge if a migration goes wrong, which caps the downside.                                                                                                                                                                                                                                        |
-| 9c  | `echo/metadata` + `echo/feed`           | 3 codec sites (`metadata-store`, `sqlite-metadata-store`, `pipeline/codec`); 46 files touch the types             | medium–high | medium     | Broad on-disk state with no cheap rebuild path. `LargeSpaceMetadata` and `FeedMessage` are `Any`-blocked; `EchoMetadata` is safe but cannot be byte-identical — see below.                                                                                                                                                                         |
-| 9d  | credentials signing/verification        | `halo/credentials/src/credentials/*`, 94 declarations                                                             | highest     | high       | `signing.ts` stringifies the _substituted object_, so any shape drift invalidates every existing credential. Do last, behind 9a–9c, with fixtures of real signed credentials from released versions.                                                                                                                                               |
+| #   | Thread                                  | Scope                                                                                                             | Risk        | Complexity | Notes                                                                                                                                                                                                                                                                                                                                                   |
+| --- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `@dxos/effect-proto` removal            | 2 files                                                                                                           | very low    | very low   | The only real consumer is `react-ui-form`'s `ObjectTree.stories.tsx` (`parseProto`) — a storybook. Deletes an entire protobuf.js dependent.                                                                                                                                                                                                             |
+| 2   | Test/example protos                     | `tools/protobuf-test`, `codec-protobuf/test`, `protobuf-compiler/test`, `example/testing/*`                       | very low    | low        | No persisted data, no signatures. Doubles as the conformance harness for #3.                                                                                                                                                                                                                                                                            |
+| 3   | Shape-compat layer                      | new module in `@dxos/protocols`                                                                                   | low         | high       | Buf encode/decode reproducing the substituted shapes (PublicKey, PrivateKey, TimeframeVector, Any, Struct, Timestamp) plus byte/JSON-equality tests against protobuf.js. Nothing switches over, so risk stays low; gates #7 and #9.                                                                                                                     |
+| 4   | `dxos.config`                           | 55 files                                                                                                          | low         | medium     | Read-mostly, not persisted, not signed — but a public API change, since `@dxos/config` re-exported the generated namespace. Landed natively; see findings.                                                                                                                                                                                              |
+| 5   | devtools                                | 20 files                                                                                                          | low         | low–medium | Diagnostic-only; regressions are visible and harmless. Already on effect-rpc (verified — see below), so this is a type-import sweep that rides on #7, not an RPC-seam exercise.                                                                                                                                                                         |
+| 6   | `Stream` extraction                     | 26 import sites                                                                                                   | low         | medium     | Move `Stream` out of `codec-protobuf` into its own package; unblocks deleting that package.                                                                                                                                                                                                                                                             |
+| 7   | `protoMessage()` / `serviceError` → buf | One file: registry + shape-compat routing behind the existing API                                                 | medium      | low        | The chokepoint, as first rated: shapes are preserved so no call site changes. Blocked only on `Any` for 14 of 45 types. Surfaced the Struct double-encoding bug in `#3` — see above.                                                                                                                                                                    |
+| 8   | Remaining `ServiceDescriptor` RPC       | 21 production `schema.getService()` sites / 11 services; 36 further sites are tests on `example.testing.*` protos | medium–high | high       | Cross-peer wire compatibility: a mismatch breaks replication between versions, not just a local call. Sequence after #6. `ServiceDescriptor` itself is only 8 references, all plumbing — the surface to migrate is `getService()` + `createProtoRpcPeer` (11 files, 21 sites). The test sites carry no wire risk and can go first to prove the pattern. |
+| 9a  | keyring `KeyRecord`                     | `halo/keyring/src/{keyring,sqlite-keyring}.ts`                                                                    | medium      | low        | One message, two codec sites, local SQLite only. Smallest persisted slice — do it first to validate #3 against real on-disk rows.                                                                                                                                                                                                                       |
+| 9b  | `echo.query.Heads`                      | `echo-host/src/automerge/sqlite-heads-store.ts`                                                                   | medium      | low        | One message, one codec site. Rebuildable from Automerge if a migration goes wrong, which caps the downside.                                                                                                                                                                                                                                             |
+| 9c  | `echo/metadata` + `echo/feed`           | 3 codec sites (`metadata-store`, `sqlite-metadata-store`, `pipeline/codec`); 46 files touch the types             | medium–high | medium     | Broad on-disk state with no cheap rebuild path. `LargeSpaceMetadata` and `FeedMessage` are `Any`-blocked; `EchoMetadata` is safe but cannot be byte-identical — see below.                                                                                                                                                                              |
+| 9d  | credentials signing/verification        | `halo/credentials/src/credentials/*`, 94 declarations                                                             | highest     | high       | `signing.ts` stringifies the _substituted object_, so any shape drift invalidates every existing credential. Do last, behind 9a–9c, with fixtures of real signed credentials from released versions.                                                                                                                                                    |
 
 ## Findings
 

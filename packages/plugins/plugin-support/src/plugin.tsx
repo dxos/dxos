@@ -20,7 +20,11 @@ import {
 import { meta } from '#meta';
 import { Tour } from '#types';
 
-export type SupportPluginOptions = { helpSteps?: Tour.Step[] };
+/**
+ * `helpSteps` is a loader rather than an array so the tour's step definitions — and the operations
+ * their `before` hooks invoke — stay out of the host's eager boot graph.
+ */
+export type SupportPluginOptions = { helpSteps?: () => Promise<Tour.Step[]> };
 
 export const SupportPlugin = Plugin.define<SupportPluginOptions>(meta).pipe(
   Plugin.addModule(AppGraphBuilder),

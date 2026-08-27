@@ -826,6 +826,11 @@ export const LoginRequestSchema = Schema.Struct({
   email: Schema.String,
   identityDid: Schema.optional(Schema.String),
   identityKey: Schema.optional(Schema.String),
+  /**
+   * Where the emailed link hands the token back, defaulting to the hub's configured app URL. The
+   * hub honors only origins it owns, so a CLI can name its local callback server here.
+   */
+  redirectUrl: Schema.optional(Schema.String),
 });
 export type LoginRequest = Schema.Schema.Type<typeof LoginRequestSchema>;
 

@@ -4,9 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Database, EID, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, EID, type Error, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { type EntityId } from '@dxos/keys';
 import { Milestone, Task, TaskSet } from '@dxos/types';
+
+import { InvalidOperationInput } from '../errors';
 
 /**
  * Membership helpers shared by the task verbs. The set's `tasks`/`milestones` arrays are the data
@@ -127,4 +129,47 @@ export const reorder = <T extends Obj.Unknown>(
     return [...rest, moved];
   }
   return [...rest.slice(0, anchor), moved, ...rest.slice(anchor)];
+};
+
+/** Rejects a parent outside the task's own set or inside its own subtree, either of which would orphan it. */
+export const resolveParentTask = (
+  taskSet: TaskSet.TaskSet | undefined,
+  task: Task.Task,
+  parentTask: Ref.Ref<Task.Task>,
+): Effect.Effect<Task.Task, InvalidOperationInput | Error.EntityNotFoundError, Database.Service> =>
+  Effect.gen(function* () {
+    const candidate = yield* Database.load(parentTask);
+    const subtree = taskSet ? collectSubtree(taskSet, task) : [task];
+    if (subtree.some((member) => member.id === candidate.id)) {
+      return yield* Effect.fail(
+        new InvalidOperationInput({ message: 'A task cannot be re-parented under itself or its own sub-tasks.' }),
+      );
+    }
+    const members = taskSet ? TaskSet.resolveTasks(taskSet) : [];
+    if (!members.some((member) => member.id === candidate.id)) {
+      return yield* Effect.fail(
+        new InvalidOperationInput({ message: 'The parent task does not belong to this task set.' }),
+      );
+    }
+    return candidate;
+  });
+
+/** Moves the lifecycle edge with the hierarchy, so a sub-task still cascades with whatever now holds it. */
+export const applyParentTask = (
+  taskSet: TaskSet.TaskSet | undefined,
+  task: Task.Task,
+  newParent: Task.Task | undefined,
+): void => {
+  Obj.update(task, (task) => {
+    if (newParent) {
+      task.parentTask = Ref.make(newParent);
+    } else {
+      // `delete` rather than assigning undefined: the property is optional rather than nullable, and
+      // the self-referential `Schema.suspend` rejects the assignment outright.
+      delete task.parentTask;
+    }
+  });
+  // Set unconditionally, `undefined` included: a task promoted out of a set that no longer holds it
+  // would otherwise keep a stale edge and be cascade-deleted with its former parent.
+  Obj.setParent(task, newParent ?? taskSet);
 };
