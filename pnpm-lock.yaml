@@ -7635,12 +7635,12 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
-      '@dxos/plugin-tasks':
-        specifier: workspace:*
-        version: link:../plugin-tasks
       '@dxos/plugin-status-bar':
         specifier: workspace:*
         version: link:../plugin-status-bar
+      '@dxos/plugin-tasks':
+        specifier: workspace:*
+        version: link:../plugin-tasks
       '@dxos/plugin-transcription':
         specifier: workspace:*
         version: link:../plugin-transcription
@@ -8741,6 +8741,9 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
