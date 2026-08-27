@@ -16,8 +16,10 @@ import { EffectEx } from '@dxos/effect';
 import type { ProcessProtocol } from '@dxos/protocols';
 
 import * as ProcessManager from './ProcessManager';
-import type * as RemoteProcessManager from './RemoteProcessManager';
+import * as ProcessMonitor from './ProcessMonitor';
+import * as RemoteProcessManager from './RemoteProcessManager';
 import * as RemoteProcessManagerAdapter from './RemoteProcessManagerAdapter';
+import * as RemoteTraceMonitor from './RemoteTraceMonitor';
 
 describe('RemoteProcessManagerAdapter', () => {
   test('spawns by key and reports the host state', async ({ expect }) => {
@@ -139,6 +141,22 @@ describe('RemoteProcessManagerAdapter', () => {
     }
   });
 
+  test('ProcessMonitor reports the remote processes through the official API', async ({ expect }) => {
+    const host = makeFakeHost();
+    // The shape an EDGE e2e drives: the aggregate `Process.ProcessMonitorService` over this adapter
+    // in the manager slot, so a caller reads remote processes through `Process.Monitor` rather than
+    // through the transport.
+    const tree = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const manager = yield* ProcessManager.Service;
+        yield* manager.spawn(EchoProcess, { name: 'test' });
+        const monitor = yield* Process.ProcessMonitorService;
+        return yield* monitor.processTree;
+      }).pipe(Effect.provide(monitorStack(host))),
+    );
+    expect(tree.map((info) => info.key)).toEqual([TEST_KEY]);
+  });
+
   test('spawn accepts an annotation that is already a JSON value', async ({ expect }) => {
     const exit = await runExit(
       Effect.gen(function* () {
@@ -152,6 +170,24 @@ describe('RemoteProcessManagerAdapter', () => {
     expect(Exit.isSuccess(exit)).toBe(true);
   });
 });
+
+/**
+ * The layer stack an EDGE e2e assembles: one adapter instance shared by `ProcessManager.Service` and
+ * the aggregate monitor, so both read the same process tree.
+ */
+const monitorStack = (control: RemoteProcessManager.Control) => {
+  const registry = Layer.succeed(Registry.AtomRegistry, Registry.make());
+  const manager = RemoteProcessManagerAdapter.layer(control).pipe(Layer.provide(registry));
+  return Layer.mergeAll(
+    manager,
+    ProcessMonitor.layer.pipe(
+      Layer.provide(manager),
+      Layer.provide(RemoteProcessManager.layerNoop.pipe(Layer.provide(registry))),
+      Layer.provide(RemoteTraceMonitor.layerNoop),
+      Layer.provide(registry),
+    ),
+  );
+};
 
 /** One annotation under a valid key, decoded rather than asserted since keys are branded. */
 const annotations = (value: unknown): Annotation.Dictionary =>

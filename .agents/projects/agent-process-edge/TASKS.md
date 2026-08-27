@@ -70,8 +70,11 @@ Unblocking `AgentProcess` needs #12765 merged, or a maintainer dispatching `pkg.
       transport and the layer that swaps an agent stack onto it.
 - [x] `RemoteProcessManagerAdapter.test.ts` — spawn/list/status, input encoding + output streaming,
       terminate, `runUntilSettled` against an in-memory stand-in host.
-- [ ] Populate the space-agnostic monitor `processTree` from the list endpoint (still the pre-existing
-      D3 TODO; the control path does not need it).
+- [x] Populate the monitor `processTree` (the pre-existing D3 TODO). Done for the path that matters:
+      the adapter refreshes its tree atom on spawn, so `Process.ProcessMonitorService` — the official
+      read API — reports remote processes. A monitor-only `RemoteProcessManager.Service` backed by
+      `Control.list` (for a stack that keeps a local manager alongside a remote monitor) is still
+      open; nothing needs it yet.
 
 ## Phase 4 — verification (edge)
 
@@ -104,13 +107,22 @@ all the host half needs.
 - [ ] Bump edge's catalog for `@dxos/agent-runtime` to a commit that exports `AgentProcess`.
 - [ ] Add `AGENT_PROCESS_KEY -> { make: AgentProcess, input: … }` to the edge process registry
       (`compute-service/src/processes/registry.ts`), keeping the registry closed.
-- [ ] Assemble `AgentProcess`'s eight services inside `ProcessObject`. It declares:
-      `Database.Service`, `OpaqueToolkit.OpaqueToolkitProvider`, `Operation.Service`,
-      `Registry.Service`, `StorageService.StorageService`,
-      `ProcessManager.ProcessOperationInvoker.Service`, `AiService.AiService`, and
-      `Credential.CredentialsService`. `FunctionContext` in `compute-runtime`'s `protocol.ts` already
-      assembles exactly this set for invoked functions but does not export it — export it or lift the
-      layer builder rather than rebuilding it here. This is the largest remaining unknown.
+- [ ] Assemble `AgentProcess`'s eight services inside `ProcessObject`, using the now-exported
+      `FunctionContext` (`@dxos/compute-runtime`). It declares `Database.Service`,
+      `OpaqueToolkit.OpaqueToolkitProvider`, `Operation.Service`, `Registry.Service`,
+      `StorageService.StorageService`, `ProcessManager.ProcessOperationInvoker.Service`,
+      `AiService.AiService` and `Credential.CredentialsService`; `FunctionContext.createLayer()`
+      supplies six of them plus the trace writer, and `ProcessManagerImpl` already provides
+      `StorageService` and `ProcessOperationInvoker` — so nothing has to be rebuilt. #12765 exports
+      the class and widens `EdgeFunctionServices` to declare `OpaqueToolkitProvider`, which
+      `createLayer` provided but did not name (a consumer requiring it could not otherwise be
+      satisfied). What remains is supplying the `FunctionProtocol.Context`, and it should not be
+      hand-rolled: `operation-service` already builds one per invocation
+      (`operation-service/src/entrypoint.ts`, `_buildFunctionContext`) via `createFunctionContext` +
+      `ServiceContainer` from `@dxos/functions-runtime-cloudflare` over the
+      `DataServiceFetcher`/`QueueServiceFetcher`/`AiServiceFetcher` bindings, then overlays a local
+      `functionsService` and the forwarded `accessTokenService`. The process host wants that same
+      shape against compute-service's own bindings — read that method first.
 - [ ] `AgentProcess` requires `spawn` options `target` (a queue DXN) and optionally
       `Process.InstructionsAnnotation`; both arrive as annotations, so the spawn route already
       carries them — cover a missing `target` (the definition dies) in the test.
@@ -119,6 +131,24 @@ all the host half needs.
       CI. See the `regenerate-model-fixture` skill for the cache.
 
 ### 5b — client half (dxos + edge). Needs #12765 published.
+
+**Requirement (from the PR author): the edge e2e suites drive the official `@dxos/compute` APIs —
+`AgentService` and `Process.ProcessMonitorService` — not HTTP routes and not the transport.** The
+HTTP-level `processes.node.test.ts` is the interim host-surface test (it also covers the
+status/rejection codes an official-API test cannot reach); once the packages are published it should
+be joined by, and where it overlaps replaced with, official-API coverage.
+
+The layer stack, verified in `RemoteProcessManagerAdapter.test.ts` ("ProcessMonitor reports the
+remote processes through the official API") so the e2e can assemble it directly: one
+`RemoteProcessManagerAdapter.layer(control)` instance shared by `ProcessManager.Service` **and** by
+`ProcessMonitor.layer` (with `RemoteProcessManager.layerNoop` + `RemoteTraceMonitor.layerNoop` in the
+remote slots, one `Registry.AtomRegistry` throughout). Two adapter instances, or two registries, give
+the monitor a different atom from the manager and it reports an empty tree.
+
+Closes the old D3 TODO the wrong way round: the aggregate monitor reads the tree _atom_ rather than
+calling the manager, so the adapter now refreshes that atom on spawn. Without it,
+`monitor.processTree` was empty however many processes were running — which is what the new test
+would have caught.
 
 - [ ] Bump edge's catalog for `@dxos/compute-runtime` + `@dxos/edge-compute` to a commit carrying
       `RemoteProcessManagerAdapter` and `EdgeProcessControl`.

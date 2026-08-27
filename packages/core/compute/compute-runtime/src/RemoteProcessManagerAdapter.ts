@@ -92,7 +92,11 @@ export class RemoteProcessManagerAdapter implements ProcessManager.Manager {
         annotations,
       });
       log('remote process spawned', { pid: info.pid, key: info.key });
-      return yield* this.#makeHandle<I, O, Rpcs>(info, definition);
+      const handle = yield* this.#makeHandle<I, O, Rpcs>(info, definition);
+      // The aggregate `Process.Monitor` reads the tree atom rather than calling this manager, so the
+      // atom has to be current by the time spawn returns or the official monitor API reports nothing.
+      yield* this.#refreshProcessTree;
+      return handle;
     });
   }
 
