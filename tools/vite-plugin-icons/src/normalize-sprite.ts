@@ -7,10 +7,40 @@ const SYMBOL = /<symbol\b([^>]*)>([\s\S]*?)<\/symbol>/g;
 const FILL_ATTR = /\s+fill\s*=\s*(?:"[^"]*"|'[^']*')/g;
 const ID_ATTR = /\bid\s*=\s*(?:"([^"]*)"|'([^']*)')/;
 
-// Colors an editor emits when it does not know the glyph has to inherit. Deliberately narrow —
-// `none`, `currentColor` and `inherit` are all legitimate, and a false positive here is a warning
-// on a working icon.
-const HARDCODED_COLOR = /(?:fill|stroke)\s*[:=]\s*["']?\s*(#[0-9a-fA-F]{3,8}|rgba?\(|hsla?\(|black\b|white\b)/;
+// Any `fill`/`stroke` declaration on the glyph's own elements, as an attribute or inside a `style`.
+// `fill-rule` and `stroke-width` do not match: the `-` sits where the separator has to be.
+const PAINT = /(?:^|[\s;"'{])(?:fill|stroke)\s*[:=]\s*["']?\s*([^;"'}\s>]+)/g;
+
+// Values that either inherit or paint nothing, so they cannot fight the symbol's fill. Anything else
+// is a pinned paint — classified this way round rather than by listing colors, since CSS has ~150
+// named ones and the interesting case is always "not inheriting", never a specific hue. `var()` is
+// allowed through because its value is unknowable here and flagging it would be noise.
+const INHERITING = new Set([
+  'currentcolor',
+  'none',
+  'inherit',
+  'initial',
+  'revert',
+  'revert-layer',
+  'transparent',
+  'unset',
+  'context-fill',
+  'context-stroke',
+]);
+
+const isPinnedPaint = (value: string) => {
+  const normalized = value.toLowerCase();
+  return !INHERITING.has(normalized) && !normalized.startsWith('var(');
+};
+
+const hasPinnedPaint = (body: string) => {
+  for (const [, value] of body.matchAll(PAINT)) {
+    if (isPinnedPaint(value)) {
+      return true;
+    }
+  }
+  return false;
+};
 
 export type NormalizeSpriteResult = {
   svg: string;
@@ -36,7 +66,7 @@ export type NormalizeSpriteResult = {
 export const normalizeSprite = (svg: string): NormalizeSpriteResult => {
   const hardcoded: string[] = [];
   const normalized = svg.replace(SYMBOL, (_match, attrs: string, body: string) => {
-    if (HARDCODED_COLOR.test(body)) {
+    if (hasPinnedPaint(body)) {
       const id = attrs.match(ID_ATTR);
       hardcoded.push(id?.[1] ?? id?.[2] ?? '<unnamed symbol>');
     }

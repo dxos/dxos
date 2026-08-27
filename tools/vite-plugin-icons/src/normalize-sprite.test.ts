@@ -59,13 +59,35 @@ describe('normalizeSprite', () => {
       expect(hardcoded).toEqual(['px--a--regular']);
     });
 
-    test.for(['fill:none', 'fill:currentColor', 'stroke:currentColor', 'fill-rule:nonzero'])(
-      'does not report %s',
+    test.for(['stroke:red', 'stroke: red', 'fill:rebeccapurple', 'fill:rgb(1 2 3)', 'fill:url(#gradient)'] as const)(
+      'reports the non-inheriting paint %s',
       (style) => {
         const { hardcoded } = normalizeSprite(sprite(`<symbol id="px--a--regular"><path style="${style}"/></symbol>`));
-        expect(hardcoded).toEqual([]);
+        expect(hardcoded).toEqual(['px--a--regular']);
       },
     );
+
+    test('reports a pinned paint set as an attribute rather than a style', () => {
+      const { hardcoded } = normalizeSprite(sprite('<symbol id="px--a--regular"><path fill="red" d="M0 0"/></symbol>'));
+      expect(hardcoded).toEqual(['px--a--regular']);
+    });
+
+    test.for([
+      'fill:none',
+      'fill:currentColor',
+      'stroke:currentColor',
+      'fill:transparent',
+      'fill:inherit',
+      // Unknowable here, so not worth a warning.
+      'fill:var(--dx-icon-color)',
+      // Not paint properties at all — the `-` sits where the separator would be.
+      'fill-rule:nonzero',
+      'stroke-width:16px',
+      'stroke-linecap:round',
+    ] as const)('does not report %s', (style) => {
+      const { hardcoded } = normalizeSprite(sprite(`<symbol id="px--a--regular"><path style="${style}"/></symbol>`));
+      expect(hardcoded).toEqual([]);
+    });
 
     test('does not report a clean Phosphor symbol', () => {
       const { hardcoded } = normalizeSprite(
