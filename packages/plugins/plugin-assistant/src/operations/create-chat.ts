@@ -10,7 +10,7 @@ import { AiContext } from '@dxos/assistant';
 import { AgentWizardSkill, AlarmSkill, Chat, ChatContextSkill } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Ref } from '@dxos/echo';
 import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 
 import { AssistantSkill } from '#skills';
@@ -28,7 +28,6 @@ const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = Ass
       //  memory too — nothing needs to write to a feed before its chat is in the database.
       const feed = db.add(Feed.make());
       const chat = Chat.make({ name, feed: Ref.make(feed), instructions });
-      Obj.setParent(feed, chat);
 
       // Dynamic import to avoid circular dependency with the barrel that also exports SkillManagerHandlers.
       const { SkillManagerSkill } = yield* Effect.promise(() => import('@dxos/assistant-toolkit'));

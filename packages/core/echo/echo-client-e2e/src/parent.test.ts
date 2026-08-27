@@ -2,13 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Filter, Obj } from '@dxos/echo';
+import { Annotation, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { DXN, PublicKey } from '@dxos/keys';
 
 describe('Parent Hierarchy', () => {
   let builder: EchoTestBuilder;
@@ -166,5 +167,108 @@ describe('Parent Hierarchy', () => {
       const queryResult = await db.query(Filter.id(childId)).run();
       expect(queryResult.length).to.eq(0);
     }
+  });
+});
+
+describe('Annotation.SetParent', () => {
+  class Body extends Type.makeObject<Body>(DXN.make('com.example.type.body', '0.1.0'))(
+    Schema.Struct({ text: Schema.String }),
+  ) {}
+
+  class Container extends Type.makeObject<Container>(DXN.make('com.example.type.container', '0.1.0'))(
+    Schema.Struct({
+      /** Owned. */
+      body: Schema.optional(Ref.Ref(Body).pipe(Annotation.SetParent.set(true))),
+      /** Owned, ordered. */
+      sections: Schema.Array(Ref.Ref(Body)).pipe(Annotation.SetParent.set(true)),
+      /** Owned, nested inside a plain struct. */
+      backend: Schema.optional(Schema.Struct({ config: Ref.Ref(Body).pipe(Annotation.SetParent.set(true)) })),
+      /** NOT owned — a plain reference. */
+      linked: Schema.optional(Ref.Ref(Body)),
+    }),
+  ) {}
+
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  test('parent is set on creation', async () => {
+    const body = Obj.make(Body, { text: 'body' });
+    const section = Obj.make(Body, { text: 'section' });
+    const config = Obj.make(Body, { text: 'config' });
+    const linked = Obj.make(Body, { text: 'linked' });
+    const container = Obj.make(Container, {
+      body: Ref.make(body),
+      sections: [Ref.make(section)],
+      backend: { config: Ref.make(config) },
+      linked: Ref.make(linked),
+    });
+
+    expect(Obj.getParent(body)?.id).toBe(container.id);
+    expect(Obj.getParent(section)?.id).toBe(container.id);
+    expect(Obj.getParent(config)?.id).toBe(container.id);
+    expect(Obj.getParent(linked)).toBeUndefined();
+  });
+
+  test('parent is set on write', async () => {
+    const container = Obj.make(Container, { sections: [] });
+    const body = Obj.make(Body, { text: 'body' });
+    const section = Obj.make(Body, { text: 'section' });
+    expect(Obj.getParent(body)).toBeUndefined();
+
+    Obj.update(container, (container) => {
+      container.body = Ref.make(body);
+      container.sections = [Ref.make(section)];
+    });
+
+    expect(Obj.getParent(body)?.id).toBe(container.id);
+    expect(Obj.getParent(section)?.id).toBe(container.id);
+  });
+
+  test('parent is set on write to a database object', async () => {
+    await using peer = await builder.createPeer({ types: [Body, Container] });
+    await using db = await peer.createDatabase();
+
+    const container = db.add(Obj.make(Container, { sections: [] }));
+    const body = db.add(Obj.make(Body, { text: 'body' }));
+    Obj.update(container, (container) => {
+      container.body = Ref.make(body);
+    });
+
+    expect(Obj.getParent(body)?.id).toBe(container.id);
+  });
+
+  test('re-parents when the ref is replaced', async () => {
+    const container = Obj.make(Container, { sections: [] });
+    const other = Obj.make(Container, { sections: [] });
+    const body = Obj.make(Body, { text: 'body' });
+
+    Obj.update(container, (container) => {
+      container.body = Ref.make(body);
+    });
+    expect(Obj.getParent(body)?.id).toBe(container.id);
+
+    Obj.update(other, (other) => {
+      other.body = Ref.make(body);
+    });
+    expect(Obj.getParent(body)?.id).toBe(other.id);
+  });
+
+  test('owned child cascade-deletes with its holder', { timeout: 30_000 }, async () => {
+    await using peer = await builder.createPeer({ types: [Body, Container] });
+    await using db = await peer.createDatabase();
+
+    const body = db.add(Obj.make(Body, { text: 'body' }));
+    const container = db.add(Obj.make(Container, { sections: [], body: Ref.make(body) }));
+    await db.flush();
+
+    db.remove(container);
+    expect(Obj.isDeleted(body)).to.be.true;
   });
 });
