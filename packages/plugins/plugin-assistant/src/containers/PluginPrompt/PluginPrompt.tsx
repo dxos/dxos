@@ -41,10 +41,14 @@ export const PluginPrompt = ({ plugin: pluginId }: PluginPromptProps) => {
     setPending(true);
     setFailed(false);
     try {
-      await invokePromise(RegistryOperation.EnablePlugins, { ids: [pluginId] });
+      // `invokePromise` turns a handler failure into `{ error }` rather than rejecting, and the
+      // operation itself reports a plugin it could not enable in `rejected` — neither reaches a
+      // `catch`, so both are read here.
+      const { data, error } = await invokePromise(RegistryOperation.EnablePlugins, { ids: [pluginId] });
+      if (error || data?.rejected.some(({ id }) => id === pluginId)) {
+        setFailed(true);
+      }
     } catch {
-      // `onClick` does not await this, so an escaping rejection would surface only as an unhandled
-      // one and leave the button clickable with no explanation.
       setFailed(true);
     } finally {
       setPending(false);
