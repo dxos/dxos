@@ -1,6 +1,6 @@
 # Project Tasks — Tasks
 
-_Resume: land #12784 (green, review closed). Uncommitted: none. Last: slash commands invoke the task verbs; Repo type + `#nnn` decoration; hierarchical-tasks design written._
+_Resume: land the hierarchical-task-list PR. Uncommitted: none. Last: #12784 merged; hierarchical TaskList with drag-and-drop implemented on react-ui-list._
 
 ## Phase 1: Agent delegation over durable tasks
 
@@ -126,12 +126,19 @@ Each is independent of the others; the checked items shipped in #12784.
 
 ### Tasks
 
-- [ ] **Hierarchical tasks in the list** — render sub-tasks under their parent.
-      The model already carries it (`Task.parentTask`, `TaskSet.rootTasks` /
-      `subTasks` derive the tree from the flat `tasks` array), so this is a
-      `TaskList` concern: indentation, collapse/expand, and what an ordinal
-      means for a child. Decide whether the agent may nest (an `UpdateTasks`
-      field) or only the UI can.
+- [x] **Hierarchical tasks in the list** — `TaskList` gains `hierarchical`,
+      `onTaskMove` and controlled `collapsed` state; rows walk the tree
+      (`walkTaskTree`), indent the title cell only, and carry `aria-level` /
+      `aria-posinset` / `aria-expanded` while staying listbox options. Drag and
+      drop reuses react-ui-list's tree-item hitbox, `TreeDropIndicator`,
+      `useListDisclosure` and `paddingIndentation`; the grip lives in the
+      ordinal's gutter, the preview clones the whole subtree, and the dragged
+      rows are hidden for the drag's duration. `MoveTask` gained an optional
+      `parentTask` so a drop is one mutation. Keyboard parity is `Alt`+arrow
+      (not the outliner's `Tab`, which a listbox row cannot consume without
+      trapping focus). The agent may nest: `CreateTask`/`UpdateTask` already
+      take `parentTask`. NOT verified: the pointer drag itself — pragmatic-dnd
+      uses native HTML5 drag events, which cannot be synthesized.
 - [x] **Option to show the task description in the list** — `TaskList.Root`
       gains `showDescriptions`; a described row grows (`auto-rows-min`) and every
       other cell is pinned to the title's line, since a row is its own subgrid
