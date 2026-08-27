@@ -1,6 +1,6 @@
 # Project Tasks — Tasks
 
-_Resume: push, CI, PR comments, DESIGN.md (assistant-toolkit/docs). Uncommitted: none. Last: Phase 2 complete — live drain verified 3/3 done, no duplicates, no JSON failures._
+_Resume: land #12787 — the hierarchical TaskList with drag-and-drop, built on react-ui-list. Uncommitted: none. Last: #12784 (Repo type, `#nnn` references, task-list UX) merged 2026-08-26._
 
 ## Phase 1: Agent delegation over durable tasks
 
@@ -122,16 +122,24 @@ the drain loop; this PR (#12752).
 ## Phase 3: Task UX backlog
 
 Follow-ups raised while reviewing the TaskList and chat surfaces (2026-08-26).
-Each is independent of the others; the checked items shipped in #12784.
+Each is independent of the others. The checked items shipped in #12784, except
+the hierarchical list, which is #12787.
 
 ### Tasks
 
-- [ ] **Hierarchical tasks in the list** — render sub-tasks under their parent.
-      The model already carries it (`Task.parentTask`, `TaskSet.rootTasks` /
-      `subTasks` derive the tree from the flat `tasks` array), so this is a
-      `TaskList` concern: indentation, collapse/expand, and what an ordinal
-      means for a child. Decide whether the agent may nest (an `UpdateTasks`
-      field) or only the UI can.
+- [x] **Hierarchical tasks in the list** — `TaskList` gains `hierarchical`,
+      `onTaskMove` and controlled `collapsed` state; rows walk the tree
+      (`walkTaskTree`), indent the title cell only, and carry `aria-level` /
+      `aria-posinset` / `aria-expanded` while staying listbox options. Drag and
+      drop reuses react-ui-list's tree-item hitbox, `TreeDropIndicator`,
+      `useListDisclosure` and `paddingIndentation`; the grip lives in the
+      ordinal's gutter, the preview clones the whole subtree, and the dragged
+      rows are hidden for the drag's duration. `MoveTask` gained an optional
+      `parentTask` so a drop is one mutation. Keyboard parity is `Alt`+arrow
+      (not the outliner's `Tab`, which a listbox row cannot consume without
+      trapping focus). The agent may nest: `CreateTask`/`UpdateTask` already
+      take `parentTask`. NOT verified: the pointer drag itself — pragmatic-dnd
+      uses native HTML5 drag events, which cannot be synthesized.
 - [x] **Option to show the task description in the list** — `TaskList.Root`
       gains `showDescriptions`; a described row grows (`auto-rows-min`) and every
       other cell is pinned to the title's line, since a row is its own subgrid
@@ -152,13 +160,18 @@ Each is independent of the others; the checked items shipped in #12784.
       GitHub extension can add a PRs tab to a project. Needs a surface/capability
       for tab registration (label, icon, order) alongside the panel surface each
       tab renders.
-- [ ] **`#nnn` needs plugin-github mounted to resolve in ProjectArticle** — the
-      wiring is done (the article collects `MarkdownCapabilities.ExtensionProvider`
-      and passes it into the outline, which now takes host extensions), and the
-      story seeds a `dxos/dxos` Repo on the project. Its story does NOT mount
-      `GitHubPlugin`: adding it lengthened the mount enough to turn the client
-      teardown flake below from intermittent into consistent. Demonstrated
-      meanwhile by `plugins/plugin-tasks/components/Outline` → `WithReferences`.
+- [ ] **`#nnn` does not resolve in the ProjectArticle story** — diagnosed
+      2026-08-27, not yet fixed. The wiring is complete (the article collects
+      `MarkdownCapabilities.ExtensionProvider` and passes it to the outline,
+      which takes host extensions), `GitHubPlugin` IS mounted in the story now,
+      and the project seeds a `dxos/dxos` Repo — but the outline still renders
+      `#12752` as plain text. Cause: plugin-github's `MarkdownExtension` module
+      activates on `MarkdownEvents.Start`, and the story's `corePlugins()` is
+      attention/graph/process-manager/settings/theme only — no `MarkdownPlugin`,
+      so the event never fires and no provider is ever contributed. Fix is to
+      mount `MarkdownPlugin` in the story, or to activate the module on an event
+      the story reaches. Works elsewhere: `plugins/plugin-tasks/components/
+Outline` → `WithReferences` passes the extension directly.
 - [x] **ProjectArticle `Sections` story was flaky (~1 run in 4)** — the seeding
       ran from `play`, racing the previous story's client teardown, and the
       article rendered with every ref-gated section missing. Seeding moved into
