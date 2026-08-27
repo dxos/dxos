@@ -57,8 +57,7 @@ describe('update-task', () => {
 
   it.effect('clears the lifecycle edge for a task belonging to no set', () =>
     Effect.gen(function* () {
-      // No set to fall back to, which is the case that used to leave the edge behind: with neither a
-      // new parent nor a set, the write was skipped entirely.
+      // A task outside a task set has no parent to fall back to, so the edge must be cleared outright.
       const parent = yield* Database.add(Task.make({ title: 'Parent', status: 'todo' }));
       const child = yield* Database.add(Task.make({ title: 'Child', status: 'todo' }));
       Obj.update(child, (child) => {
