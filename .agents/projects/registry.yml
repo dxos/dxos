@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: blade-runner-pbt
+    status: active
+    user: mykola
+    host: cloud-sandbox
+    created: 2026-08-27
+    summary: 'Property-based (fast-check) end-to-end test in blade-runner: a fleet of real clients replicating through EDGE, driven by seeded random connect/disconnect/space/document commands against an in-memory model; main assertion is full convergence (all peers equal the model). Goals: design -> local edge -> preview env with post-run cleanup -> nightly CI.'
+    tasks: .agents/projects/blade-runner-pbt/TASKS.md
+    design: .agents/projects/blade-runner-pbt/DESIGN.md
+    prs: []
+    resume: 'Phase 0: DESIGN.md drafted (architecture, model, command vocabulary, assertions, soak-vs-shrink, cleanup, CI). NEXT: collect answers to DESIGN.md §14 open questions Q1-Q14 (identity topology, late-join, edit encoding, edit-vs-delete semantics, disconnect semantics, edge-only sync, shrinking, local-edge-in-CI, preview cleanup mechanism, edge agents, nightly scale, failure routing, checkpoints), record in §15, then Phase 1 (ClientReplicant + EdgePbt skeleton vs local edge).'
   - name: client-edge-audit
     status: active
     user: mykola
