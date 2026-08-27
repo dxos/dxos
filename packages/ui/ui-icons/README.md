@@ -10,7 +10,7 @@ Brand marks (DXOS, ECHO, HALO, …) do not belong here — those are the `dx` se
 ```tsx
 import { Icon } from '@dxos/react-ui';
 
-<Icon icon='px--outliner--regular' />;
+<Icon icon='px--anthropic--regular' />;
 ```
 
 `@dxos/ui-icons` is private, so consumers of published packages reference the symbol name as a
@@ -31,6 +31,25 @@ crawl to this package, which is what makes the boot quick.
 The gallery reads `PxIcons`, so a new icon appears without editing the story. Each cell is outlined
 because a symbol missing from the sprite renders *nothing* — without a boundary that is
 indistinguishable from a blank cell.
+
+### Editing an SVG shows no change — restart the dev server
+
+**Redrawing an existing icon never refreshes the sprite; only *adding* a symbol name does.** The
+plugin skips the write when the symbol set has not grown:
+
+```ts
+if (detectedSymbols.size === lastWrittenSize) {
+  return;
+}
+```
+
+`assets/*.svg` is also outside `contentPaths`, so Vite does not watch these files at all — there is
+no HMR event to react to. `lastWrittenSize` lives in process memory, so restarting the dev server is
+the fix; a hard browser reload alone will not do it, because the stale sprite is what is on disk.
+
+**Do not delete `icons.svg` while the server is running.** The `/icons.svg` middleware rewrites it
+only when a write is actually due, and the size guard above says it is not — so you get a 404 and
+every icon in the app disappears until you restart anyway.
 
 ## Adding an icon
 

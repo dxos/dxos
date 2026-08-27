@@ -105,14 +105,14 @@ export const Brand: Story = {
  */
 export const Extended: Story = {
   args: {
-    icon: 'px--outliner--regular',
+    icon: 'px--anthropic--regular',
   },
   render: () => (
     <div className='flex items-end gap-8'>
-      <Icon icon='px--outliner--regular' classNames={getSize(12)} />
-      <Icon icon='px--outliner--regular' classNames={getSize(8)} />
-      <Icon icon='px--outliner--regular' classNames={getSize(5)} />
-      <Icon icon='ph--list-bullets--regular' classNames={getSize(5)} />
+      <Icon icon='px--anthropic--regular' classNames={getSize(12)} />
+      <Icon icon='px--anthropic--regular' classNames={getSize(8)} />
+      <Icon icon='px--anthropic--regular' classNames={getSize(5)} />
+      <Icon icon='ph--circle--regular' classNames={getSize(5)} />
     </div>
   ),
 };

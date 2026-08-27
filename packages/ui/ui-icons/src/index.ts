@@ -12,8 +12,8 @@
  * Hosts add this module to `scanPaths` so the whole set ships whether or not anything imports it.
  */
 export const PxIcons = {
+  anthropic: 'px--anthropic--regular',
   circle: 'px--circle--regular',
-  outliner: 'px--outliner--regular',
 } as const;
 
 export type PxIconName = keyof typeof PxIcons;

@@ -20,7 +20,7 @@ import { PxIcons } from './index';
 const sizes = [16, 12, 8, 6, 5, 4] as const;
 
 /** Phosphor glyphs shown beside the set, to catch weight or inset drift by eye. */
-const reference = ['ph--list-bullets--regular', 'ph--circle--regular', 'ph--tree-structure--regular'];
+const reference = ['ph--circle--regular', 'ph--google-logo--regular'];
 
 /**
  * One row per symbol. The dashed cell is deliberate: a symbol missing from the sprite renders
