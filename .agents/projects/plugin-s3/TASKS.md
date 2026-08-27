@@ -2,9 +2,10 @@
 
 _Resume: nothing is blocked. The headless path is complete — `@dxos/echo-client/blob-s3` is registered by
 `FunctionContext`, so an operation on edge writes to its space's bucket, reaching edge on the next
-pin bump with no edge-repo change. What remains is verification through the running app (connector
-UI, an upload, a render) and a non-R2 endpoint to exercise region parsing. Open in PR #12789,
-reviewer dmaretskyi. Uncommitted: none._
+pin bump with no edge-repo change. All review threads on PR #12789 are answered and resolved, and
+dmaretskyi's question about the relationship to the existing blobs API is answered on the PR. What
+remains is verification through the running app (connector UI, an upload, a render) and a non-R2
+endpoint to exercise region parsing. Uncommitted: none._
 
 ## Phase 1: S3 blob backend + connector
 
@@ -132,7 +133,27 @@ outbound `fetch` to the customer's own endpoint. `operation-service` sets no
       `check-public-dependencies` and `check-packages-published` locally before adding any package.
       Knip flagged six dependencies the extraction made unused; removed from both packages.
 
-## Phase 5: Deferred
+## Phase 5: Review
+
+- [x] **Body-read timeout classification** — the request deadline stays attached to the response
+      body, so an abort during the body phase landed outside the `fetch` try/catch and surfaced as a
+      native `AbortError`. `request()` now returns a `read` wrapper alongside `response`/`done` that
+      re-labels it as `S3TimeoutError`. The timeout branch itself has no test: a fake-timer version
+      did not reliably intercept the already-scheduled timer and hung on the real 15s deadline, so
+      the gap is documented in a comment beside the test that covers the other half.
+- [x] **Userinfo authority bypass** — `bucket.s3.amazonaws.com:443@169.254.169.254` passed a
+      string-based host check while `fetch` connected to the address after the `@`. `toHttpsUrl`
+      builds the `URL` first and validates the parsed authority: `username`/`password` are rejected
+      outright and `isBlockedHost` runs against `url.hostname`. Regression test added; the old
+      `hostnameOf` helper is gone.
+- [x] **Rename input held stale text** — `key={name ?? ''}` remounts the field on a replicated
+      rename, so the next blur no longer writes the old value back.
+- [x] **Declined: a tagged validation error in `onValidate`** — the contract is
+      `Effect.Effect<void, Error>`, both consumers only read `.message`, and all four other
+      connectors use a plain `Error`. Narrowing it is a `plugin-connector` change across all five,
+      not a `plugin-s3` one.
+
+## Phase 6: Deferred
 
 - [ ] **EDGE blob-store target** — a `BLOB_SERVICE` binding on `operation-service` plus a backend
       speaking `POST /file/:key` (not `PUT`). This one IS an edge-repo change, since a service
