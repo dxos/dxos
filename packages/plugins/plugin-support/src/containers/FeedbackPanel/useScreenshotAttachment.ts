@@ -6,7 +6,7 @@ import { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { EdgeServiceName } from '@dxos/config';
+import { EdgeServiceName, getEnvString } from '@dxos/config';
 import { log } from '@dxos/log';
 import { useConfig, useEdgeServiceEndpoint } from '@dxos/react-client';
 
@@ -36,12 +36,14 @@ export const useScreenshotAttachment = () => {
   const config = useConfig();
   // Shared with @dxos/plugin-crm (same Edge service, same multipart contract).
   const imageEndpoint = useEdgeServiceEndpoint(EdgeServiceName.Image);
-  const imageServiceUrl =
-    (config.values.runtime?.app?.env?.DX_IMAGE_SERVICE_URL as string | undefined) ?? imageEndpoint;
+  const imageServiceUrl = getEnvString(config, 'DX_IMAGE_SERVICE_URL') ?? imageEndpoint;
 
   return useCallback(
     async (values: SupportOperation.SupportRequest): Promise<ScreenshotAttachment> => {
-      if (!values.image) {
+      // Not opted in, or nowhere to upload to: either way there is nothing to capture, and
+      // rasterizing the DOM only to report a failure would read as a broken feature rather than an
+      // unconfigured one.
+      if (!values.image || !imageServiceUrl) {
         return { failed: false };
       }
 

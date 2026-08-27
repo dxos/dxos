@@ -120,7 +120,10 @@ export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditor
     [settings?.audioDeviceId],
   );
 
-  const track = useAudioTrack(active, audioConstraints);
+  // Gate the mic on the endpoint: `useAudioTrack` calls `getUserMedia` as soon as its flag is
+  // true, so without this the permission prompt and recording indicator appear before `open()`
+  // rejects for a transcription service that was never configured.
+  const track = useAudioTrack(active && !!endpoint, audioConstraints);
 
   const transcriber = useTranscriber({
     audioStreamTrack: track,

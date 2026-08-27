@@ -9384,6 +9384,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../sdk/config
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -9414,6 +9417,9 @@ importers:
       '@dxos/pipeline':
         specifier: workspace:*
         version: link:../../core/compute/pipeline
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../plugin-inbox
@@ -9466,9 +9472,6 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
-      '@dxos/plugin-client':
-        specifier: workspace:*
-        version: link:../plugin-client
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing

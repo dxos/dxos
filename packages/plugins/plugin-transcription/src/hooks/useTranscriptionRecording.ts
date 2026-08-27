@@ -33,10 +33,13 @@ export const useTranscriptionRecording = (transcript: Transcript.Transcript): Tr
   const feed = transcript.feed.target;
 
   const [recording, setRecording] = useState(false);
-  const track = useAudioTrack(recording);
   const { invokePromise } = useOperationInvoker();
   const settings = useAtomCapability(TranscriptionCapabilities.Settings);
   const endpoint = useEdgeServiceEndpoint(EdgeServiceName.Transcription);
+  // Gate the mic on the endpoint: `useAudioTrack` calls `getUserMedia` as soon as its flag is
+  // true, so without this the permission prompt and recording indicator appear before `open()`
+  // rejects for a transcription service that was never configured.
+  const track = useAudioTrack(recording && !!endpoint);
 
   // Append a transcribed message batch to the transcript's feed, enriching it first (when entity
   // extraction is enabled) with references to known entities mentioned in the transcript.

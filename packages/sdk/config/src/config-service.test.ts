@@ -26,11 +26,11 @@ describe('ConfigService.load', () => {
     restoreEnv = undefined;
   });
 
-  test('leaves the hub unset for a profile that configures none', async ({ expect }) => {
+  test('falls back to the built-in hub for a profile that configures none', async ({ expect }) => {
     restoreEnv = withEnv({ DX_HUB_URL: undefined });
     const config = await load('version: 1\n');
-    // No code-level substitute: a profile without a hub is a state the caller has to report.
-    expect(config.get(HUB_SERVICE_URL)).toBeUndefined();
+    // Profiles created before the endpoints moved into the file have no `hub` key.
+    expect(config.get(HUB_SERVICE_URL)).toEqual(DEFAULT_HUB_URL);
     expect(config.get(HUB_ENV_URL)).toBeUndefined();
   });
 

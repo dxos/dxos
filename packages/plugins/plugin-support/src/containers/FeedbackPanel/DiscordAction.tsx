@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { EdgeServiceName } from '@dxos/config';
+import { EdgeServiceName, getEnvString } from '@dxos/config';
 import { useConfig, useEdgeServiceEndpoint } from '@dxos/react-client';
 import { osTranslations } from '@dxos/ui-theme';
 
@@ -35,10 +35,9 @@ export const DiscordAction = ({ disabled }: DiscordActionProps) => {
   const { invokePromise } = useOperationInvoker();
   const config = useConfig();
 
-  const posthogProjectId = config.values.runtime?.app?.env?.DX_POSTHOG_PROJECT_ID as string | undefined;
+  const posthogProjectId = getEnvString(config, 'DX_POSTHOG_PROJECT_ID');
   const discordEndpoint = useEdgeServiceEndpoint(EdgeServiceName.Discord);
-  const discordServiceUrl =
-    (config.values.runtime?.app?.env?.DX_DISCORD_SERVICE_URL as string | undefined) ?? discordEndpoint;
+  const discordServiceUrl = getEnvString(config, 'DX_DISCORD_SERVICE_URL') ?? discordEndpoint;
 
   const discordPresence = useDiscordPresence(discordServiceUrl);
   const attachScreenshot = useScreenshotAttachment();

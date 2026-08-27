@@ -90,7 +90,10 @@ const TranscriptionDriver = () => {
   // Keep the track (and thus the transcriber) alive across the whole active session — including the
   // drain — so the transcriber can flush its buffered audio before teardown. Released at idle. The
   // mic indicator therefore lingers for the brief drain after stop.
-  const track = useAudioTrack(active, audioConstraints);
+  // Gate the mic on the endpoint: `useAudioTrack` calls `getUserMedia` as soon as its flag is
+  // true, so without this the permission prompt and recording indicator appear before `open()`
+  // rejects for a transcription service that was never configured.
+  const track = useAudioTrack(active && !!endpoint, audioConstraints);
 
   // Refs so `handleSegments` stays stable (changing it would recreate the transcriber).
   const sessionIdRef = useRef(sessionId);

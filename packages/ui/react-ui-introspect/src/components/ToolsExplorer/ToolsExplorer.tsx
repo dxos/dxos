@@ -32,28 +32,38 @@ export const ToolsExplorer = composable<HTMLDivElement, ToolsExplorerProps>(({ s
   const [callError, setCallError] = useState<Error | null>(null);
   const [pickerOptions, setPickerOptions] = useState<Partial<Record<PickerKind, ReadonlyArray<string>>>>({});
 
-  // Parsed once for the whole component: the effect needs the URL object and the render needs to
-  // tell an absent endpoint (unconfigured) from a malformed one, which the config can now carry.
-  const [url, urlError] = useMemo<[URL | undefined, Error | undefined]>(() => {
+  // Render-side only: tells an absent endpoint (unconfigured) from a malformed one, which the config
+  // can now carry. The effect re-parses rather than sharing a `URL` object, whose identity is not a
+  // sound effect key.
+  const urlError = useMemo<Error | undefined>(() => {
     if (!serverUrl) {
-      return [undefined, undefined];
+      return undefined;
     }
     try {
-      return [new URL(serverUrl), undefined];
+      void new URL(serverUrl);
+      return undefined;
     } catch (err) {
-      return [undefined, err instanceof Error ? err : new Error(String(err))];
+      return err instanceof Error ? err : new Error(String(err));
     }
   }, [serverUrl]);
 
-  // One client per server URL. Re-running on URL change is rare in dev
-  // (Storybook control flick) but the cleanup keeps it from leaking.
+  // One client per server URL, keyed on the string: a memoized `URL` is a fresh identity whenever
+  // React discards the memo cache, which would tear down and reopen the MCP session against an
+  // unchanged endpoint.
   useEffect(() => {
-    if (!url) {
+    if (!serverUrl) {
+      return;
+    }
+    let parsed: URL;
+    try {
+      parsed = new URL(serverUrl);
+    } catch {
+      // Reported through `urlError`; there is nothing to connect to.
       return;
     }
     let cancelled = false;
     const next = new Client({ name: 'react-ui-introspect', version: '0.0.0' }, { capabilities: {} });
-    const transport = new StreamableHTTPClientTransport(url);
+    const transport = new StreamableHTTPClientTransport(parsed);
     next.connect(transport).then(
       async () => {
         if (cancelled) {
@@ -102,9 +112,13 @@ export const ToolsExplorer = composable<HTMLDivElement, ToolsExplorerProps>(({ s
 
     return () => {
       cancelled = true;
+      // Clear both: without this a URL change renders the tool list against the closed previous
+      // client and can attribute the old error to the new endpoint.
+      setClient(null);
+      setConnectError(null);
       void next.close().catch(() => undefined);
     };
-  }, [url]);
+  }, [serverUrl]);
 
   const handleSelect = useCallback((name: string) => {
     setSelected(name);

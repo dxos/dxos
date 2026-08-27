@@ -135,6 +135,15 @@ const profileBuiltinDefaults = (profile: string) => {
 
   return new Config({
     runtime: {
+      // Kept as a load-time default, not written per profile: profiles created before the endpoints
+      // moved into the file have no `hub` key, and without this every `dx hub` command breaks on
+      // upgrade. Under the service key rather than `runtime.app.env`, which outranks it in the
+      // resolver and would shadow a hub a profile configures for itself.
+      services: {
+        hub: {
+          url: DEFAULT_HUB_URL,
+        },
+      },
       client: {
         edgeFeatures: {
           subductionReplicator: true,

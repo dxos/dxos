@@ -126,8 +126,9 @@ const filenameFromUrl = (url: string): string => {
   return 'image.jpg';
 };
 
-// No built-in endpoint: comes from the `imageServiceUrl` input or the `DX_CRM_IMAGE_SERVICE_URL`
-// env var; a per-space `CrmSettings` object is planned (see PLUGIN.mdl feature F-8).
+// No built-in endpoint: the `imageServiceUrl` input carries it, resolved from
+// `runtime.services.edgeServices: image` by the contributing capability, since an operation handler
+// has no config of its own. `DX_CRM_IMAGE_SERVICE_URL` covers node callers (tests, CLI) only.
 const getImageServiceUrl = (override?: string): string | undefined => {
   if (override && override.length > 0) {
     return override;
@@ -193,12 +194,12 @@ export const attachImageToSubject = ({
 
     const validatedSource = yield* Effect.try({
       try: () => validateExternalUrl(url),
-      catch: (cause) => new AttachImageError({ message: `Rejected source URL: ${String(cause)}` }),
+      catch: AttachImageError.wrap({ message: 'Rejected source URL' }),
     });
 
     const downloaded = yield* Effect.tryPromise({
       try: () => proxyFetchLegacy(validatedSource, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) }),
-      catch: (cause) => new AttachImageError({ message: `Failed to download image: ${String(cause)}` }),
+      catch: AttachImageError.wrap({ message: 'Failed to download image' }),
     });
     if (!downloaded.ok) {
       return yield* Effect.fail(
@@ -252,7 +253,7 @@ export const attachImageToSubject = ({
         }
         return new Blob(chunks as BlobPart[]);
       },
-      catch: (cause) => new AttachImageError({ message: cause instanceof Error ? cause.message : String(cause) }),
+      catch: AttachImageError.wrap({ message: 'Failed to read the downloaded image' }),
     });
 
     const responseType = downloaded.headers.get('content-type')?.split(';')[0]?.trim().toLowerCase();
@@ -277,9 +278,7 @@ export const attachImageToSubject = ({
     const client = new EdgeServiceClient({ baseUrl: serviceUrl, timeout: FETCH_TIMEOUT_MS });
     const { url: uploadedUrl } = yield* Image.thumbnail(client, blob, {
       filename: filenameFromUrl(validatedSource.toString()),
-    }).pipe(
-      Effect.mapError((cause) => new AttachImageError({ message: `Image service upload failed: ${cause.message}` })),
-    );
+    }).pipe(Effect.mapError(AttachImageError.wrap({ message: 'Image service upload failed' })));
     if (!isAbsoluteHttpUrl(uploadedUrl)) {
       return yield* Effect.fail(
         new AttachImageError({ message: 'Image service returned an invalid or non-absolute URL' }),
