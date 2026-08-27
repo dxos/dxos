@@ -260,11 +260,10 @@ toolkit is deleted; `Gateway`/`Server` became `McpRegistry`/`McpServer`).
       the whole setup. Inline in the manifest rather than a sibling `.mcp.json`, which keeps one
       file to read. Named `composer` because the name is carried in every tool
       (`mcp__plugin_dxos_composer__whoami`).
-- [ ] **`/dxos:project setup` verb** — the space binding is a repo file
-      (`.agents/projects/space.yml`) and the guided flow that writes it lives in the server's
-      `project` skill, so today the plugin's own README has to say "ask for the skill's setup
-      flow". `setup` hits the hook's unrecognised-verb branch. A verb that defers to the skill
-      would close it.
+- [ ] **Two names for one setup** — binding is `/project setup`, the MCP prompt the skill projects
+      (`ProjectSkill`, `mcpPrompt: true`, key's final segment). The plugin's own verb is
+      `/dxos:project`, and `setup` there hits the unrecognised-verb branch. Harmless while the
+      README says which to type, but two prefixes for one workflow will confuse someone.
 - [ ] **Directive's deployed-host shape may be stale** — `resolve_backend` still says the deployed
       host "projects each verb as its own tool", but #12692 replaced per-operation tools with the
       generic `queryOperations`/`invokeOperation`/`loadSkill` surface. Confirm against the live

@@ -52,26 +52,19 @@ commits it for everyone. `~/.claude/settings.json` applies it to every repo you
 open, which is wrong here, since the store is per-repo. Precedence is local, then
 project, then user.
 
-**3. Bind the space.** This one is **not** an environment variable: the space is a
-property of the repo, so it lives in a committed file that binds every future
-session in that repo.
+**3. Bind the space.** Run `/project setup`. The connector brings that command
+with it, so it appears once step 1 succeeds. It lists the spaces you own by name,
+asks which one this repo's projects belong in, confirms the session can write to
+it, and records the answer:
 
 ```yaml
 # .agents/projects/space.yml — the ECHO space this repo's projects live in.
 spaceId: <id>
 ```
 
-Two lines, so writing it by hand is fine. For the guided version, ask for the
-project skill's setup flow once the connector is authenticated. It lists the
-spaces you own by name, asks which one, cross-checks that the session can actually
-write to it, and writes the file. Picking is always a question, so it will not
-infer a space from a name resembling the repo, and one space existing is not
-taken as consent. There is no `/dxos:project setup` verb yet, so this arrives
-through the server's skill rather than through the command.
-
-An unbound repo is a hard stop, not a fallback. Nothing writes to a session
-default space, because a project system split across two spaces is worse than an
-agent that refuses and asks you to fix the binding.
+Commit that file. It binds every future session in the repo, on any machine and
+for anyone who clones it. Pass a name to skip the question when it is
+unambiguous: `/project setup Acme Product`.
 
 ## Use
 
@@ -164,14 +157,13 @@ merely mentioned it — including the message asking for it to be replaced.
 | --------------------- | -------------------------------- | ----------------------------------------------- |
 | `DX_PROJECT_REGISTRY` | `.agents/projects/registry.yml`  | Registry location, relative to the project root (`file` only) |
 | `DX_PROJECT_BACKEND`  | `file`                           | Where projects are stored — `file` or `mcp`     |
-| `DX_PROJECT_SPACE`    | unset                            | Cross-check only, NOT how you pick a space (`mcp` only) |
+| `DX_PROJECT_SPACE`    | unset                            | Guard against a stale binding (`mcp` only)      |
 
-The space is **not** configured by environment variable. It is bound per repo in
-the committed `.agents/projects/space.yml` (see [Setup](#setup-for-the-mcp-backend)),
-because a repo's projects belong to one space regardless of who opens it or on
-which machine. `DX_PROJECT_SPACE` survives only as a guard: set it, and if it
-disagrees with the committed binding the agent stops and says so rather than
-writing to either.
+The space itself is bound per repo in the committed `.agents/projects/space.yml`,
+written by `/project setup` (see [Setup](#setup-for-the-mcp-backend)), because a
+repo's projects belong to one space whoever opens it. `DX_PROJECT_SPACE` is a
+guard on top of that: set it, and the agent stops if it disagrees with the
+committed binding.
 
 Every directive ends with a `BACKEND:` line naming the store and how to read or
 write it. The verbs, the command file and the skill are all backend-agnostic —
