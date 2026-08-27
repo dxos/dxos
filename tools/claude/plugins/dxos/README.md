@@ -162,7 +162,7 @@ merely mentioned it — including the message asking for it to be replaced.
 | `DX_PROJECT_SPACE`    | unset                            | Guard against a stale binding (`mcp` only)      |
 
 The space itself is bound per repo in the committed `.agents/projects/space.yml`,
-written by `/project setup` (see [Setup](#setup-for-the-mcp-backend)), because a
+written by `/dxos:project setup` (see [Setup](#setup-for-the-mcp-backend)), because a
 repo's projects belong to one space whoever opens it. `DX_PROJECT_SPACE` is a
 guard on top of that: set it, and the agent stops if it disagrees with the
 committed binding.
@@ -191,19 +191,6 @@ The plugin ships the deployed server, so there is nothing to add:
 ```json
 "mcpServers": { "composer": { "type": "http", "url": "https://composer.dxos.network/mcp" } }
 ```
-
-Authenticating is step 1 of [Setup](#setup-for-the-mcp-backend). Nothing is typed
-during it: the identity is derived from the passkey signature rather than from
-anything you paste.
-
-`dx mcp serve` remains the local alternative, and the directive handles both host
-shapes. The deployed host projects each verb as its own tool and adds the generic
-object tools; the local one exposes `queryOperations` / `invokeOperation` /
-`loadSkill` instead. Point the plugin at a local worker by overriding the `url`
-in your own settings.
-
-Tools from a bundled server are namespaced by plugin, so they read
-`mcp__plugin_dxos_composer__whoami`, not `mcp__composer__whoami`.
 
 Two rules the directive enforces:
 
