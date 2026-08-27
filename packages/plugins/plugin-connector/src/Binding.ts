@@ -835,15 +835,16 @@ export const bind = ({
   });
 
 /**
- * Bind `target` to the one connection already authorized for its type, if there is exactly one and
- * nothing is bound to it yet.
+ * Bind `target` to the one remote target its type can be bound to, when exactly one exists.
  *
- * A freshly created bindable object (a Mailbox, a Calendar) is inert until something binds it, and
- * when the user has a single unused account authorized for that type there is nothing to choose —
- * making them pick it from the Connect menu is a step with one possible outcome. Every other case is
- * a real choice left to the user: no connection means nothing to bind, several means a pick, and one
- * that already syncs an object means the second object is a new sync target rather than the obvious
- * home for the account.
+ * A freshly created bindable object (a Mailbox, a Calendar) is inert until something binds it, so a
+ * binding whose outcome is forced is made here rather than through a Connect menu with one possible
+ * answer. Forced means all three: exactly one authorized {@link Connection}, a single-target connector
+ * (one remote target per account), and no cursor on that connection yet. Anything else is a genuine
+ * choice and falls through to the Connect action — no connection leaves nothing to bind, several
+ * connections is a pick between accounts, several remote targets is a pick within one (the
+ * sync-targets dialog, which `bind` cannot express: it records no `externalId`), and a connection
+ * already syncing an object means this object mirrors something else.
  *
  * Returns the cursor when it binds, `undefined` otherwise.
  */
@@ -868,10 +869,24 @@ export const autoBind = ({
     }
 
     const [connection] = connections;
-    // A connection binds a single target type (its connector's `targetTypename`), so one that already
-    // carries a cursor has nothing left to claim automatically — binding a second object to it would
-    // point two mailboxes at one account without the user asking. Reusing it stays available, as a
-    // deliberate pick from the Connect menu.
+    const connector = capabilities
+      .getAll(ConnectorSpec.Connector)
+      .flat()
+      .find((entry) => entry.id === connection.connectorId);
+    // A multi-target connector (calendars, boards, channels) reaches many remote targets per account,
+    // so which one this object mirrors is a real choice no count of connections settles — and `bind`
+    // has no `externalId` to record the answer, leaving a cursor `reconcileCursors` cannot match to
+    // any remote target. Those pick theirs through the sync-targets dialog.
+    if (connector?.sync?.getTargets) {
+      log.info('not auto-binding: connector reaches several remote targets', {
+        typename: Obj.getTypename(target),
+        connectorId: connection.connectorId,
+      });
+      return undefined;
+    }
+    // Single-target, so the account has exactly one remote target and a connection already carrying a
+    // cursor has it taken — auto-binding a second object would point both at the one inbox without the
+    // user asking. Reusing it stays available, as a deliberate pick from the Connect menu.
     const cursors = yield* Database.query(Filter.type(Cursor.Cursor)).run;
     if (cursors.some((cursor) => isForConnection(cursor, connection))) {
       log.info('not auto-binding: the only authorized connection is already bound', {
@@ -880,11 +895,6 @@ export const autoBind = ({
       });
       return undefined;
     }
-
-    const connector = capabilities
-      .getAll(ConnectorSpec.Connector)
-      .flat()
-      .find((entry) => entry.id === connection.connectorId);
     // Automatic, so a target already synced from another account is skipped silently rather than
     // reported — there was no user action to explain a toast.
     const cursor = yield* bind({ connection, connector, target: Ref.make(target) }).pipe(

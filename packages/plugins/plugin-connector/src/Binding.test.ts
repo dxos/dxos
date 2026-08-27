@@ -644,6 +644,12 @@ describe('Binding.autoBind', () => {
     output: Schema.Any,
   });
 
+  const TestGetTargets = Operation.make({
+    meta: { key: DXN.make('com.example.operation.test.autoBind.getTargets'), name: 'Test Get Targets' },
+    input: Schema.Struct({ connection: Ref.Ref(Connection.Connection) }),
+    output: Schema.Any,
+  });
+
   /**
    * Auto-binding is the shortcut for the one case with a single possible answer: a lone authorized
    * account that nothing is synced from yet. Once that account syncs a mailbox, a second mailbox is a
@@ -661,7 +667,7 @@ describe('Binding.autoBind', () => {
     await builder.close();
   });
 
-  const capabilities = () => {
+  const capabilities = ({ multiTarget = false }: { multiTarget?: boolean } = {}) => {
     const manager = CapabilityManager.make({ registry: Registry.make() });
     manager.contribute({
       module: 'test',
@@ -674,6 +680,8 @@ describe('Binding.autoBind', () => {
             operation: TestSync,
             trigger: Trigger.specTimer('*/10 * * * *'),
             targetTypename: Type.getTypename(Expando.Expando),
+            // Declaring `getTargets` is what makes a connector multi-target (calendars, boards).
+            ...(multiTarget ? { getTargets: TestGetTargets } : {}),
           },
         } satisfies ConnectorSpec.ConnectorEntry,
       ],
@@ -681,7 +689,7 @@ describe('Binding.autoBind', () => {
     return manager;
   };
 
-  const setup = async () => {
+  const setup = async ({ multiTarget = false }: { multiTarget?: boolean } = {}) => {
     const { db, graph } = await builder.createDatabase();
     graph.registry.add([
       Connection.Connection,
@@ -702,7 +710,7 @@ describe('Binding.autoBind', () => {
     const autoBind = (target: Obj.Unknown) =>
       Binding.autoBind({ target }).pipe(
         Effect.provide(Database.layer(db)),
-        Effect.provideService(Capability.Service, capabilities()),
+        Effect.provideService(Capability.Service, capabilities({ multiTarget })),
         EffectEx.runPromise,
       );
 
@@ -756,6 +764,18 @@ describe('Binding.autoBind', () => {
     await db.flush({ indexes: true });
 
     expect(await autoBind(second)).toBeDefined();
+  });
+
+  test('does not bind a multi-target connector, whose remote target is a real choice', async ({ expect }) => {
+    const { db, addConnection, addTarget, autoBind } = await setup({ multiTarget: true });
+    addConnection();
+    const target = addTarget('Calendar');
+    await db.flush({ indexes: true });
+
+    // One account still reaches many calendars/boards, and `bind` records no `externalId` — the cursor
+    // it would write names no remote target. The sync-targets dialog is where this is answered.
+    expect(await autoBind(target)).toBeUndefined();
+    expect(Binding.readAccount(target, SOURCE)).toBeUndefined();
   });
 
   test('does not bind when several connections are authorized', async ({ expect }) => {
