@@ -26,12 +26,8 @@ export const defaultConfig = { version: 1 };
 export const DEFAULT_HUB_URL = 'https://dxos.network/hub/';
 
 /**
- * Where a browser is sent for a passkey prompt, used when neither `runtime.app.env.DX_AUTH_URL` nor
- * `runtime.services.hub.authUrl` is configured.
- *
- * Not derived from {@link DEFAULT_HUB_URL}: Composer registers passkeys against `composer.space`, so
- * only an origin under that relying party can present one — the hub's API host serves the same page
- * and then fails in the browser with `SecurityError`.
+ * Passkey prompt origin, not derived from {@link DEFAULT_HUB_URL} because only an origin under the
+ * `composer.space` relying party can present a passkey.
  */
 export const DEFAULT_AUTH_URL = 'https://account.composer.space';
 

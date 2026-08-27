@@ -114,7 +114,7 @@ export const accountErrorType = (error: unknown): AccountErrorType | undefined =
 export const getHubUrl = (client: Pick<Client, 'config'>): string =>
   getEnvString(client.config, 'DX_HUB_URL') ?? client.config.values?.runtime?.services?.hub?.url ?? DEFAULT_HUB_URL;
 
-/** Origin to send a browser to for a passkey prompt. Resolved like {@link getHubUrl}. */
+/** Origin to send a browser to for a passkey prompt. */
 export const getAuthUrl = (client: Pick<Client, 'config'>): string =>
   getEnvString(client.config, 'DX_AUTH_URL') ??
   client.config.values?.runtime?.services?.hub?.authUrl ??
