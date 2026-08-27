@@ -50,11 +50,16 @@ export const isSettingsSpace = (space: Space): boolean => hasTag(space, SETTINGS
 /**
  * Find the settings space.
  *
- * Profiles that hit the duplicate-creation race carry two tagged spaces; the one holding the
- * default-space designation is canonical, so it wins over list order.
+ * Profiles that hit the duplicate-creation race carry several tagged spaces; the one holding the
+ * default-space designation is canonical. Candidates are ordered by id rather than list order so
+ * every device resolves the same canonical space and duplicate healing converges instead of
+ * devices tombstoning each other's pick.
  */
 export const getSettingsSpace = (client: { spaces: { get(): Space[] } }): Space | undefined => {
-  const tagged = client.spaces.get().filter((space) => isSettingsSpace(space));
+  const tagged = client.spaces
+    .get()
+    .filter((space) => isSettingsSpace(space))
+    .sort((a, b) => a.id.localeCompare(b.id));
   if (tagged.length <= 1) {
     return tagged[0];
   }
@@ -66,6 +71,25 @@ export const getSettingsSpace = (client: { spaces: { get(): Space[] } }): Space 
     tagged[0]
   );
 };
+
+/** The slice of a HALO `SpaceMember` credential the settings-space evidence check reads. */
+type SpaceMemberCredential = { subject?: { assertion?: { tags?: unknown } } };
+
+/**
+ * Whether the HALO records membership of a settings-tagged space.
+ *
+ * Evidence that the profile already has a settings space even when none is in the space list yet:
+ * spaces replicate to a device in creation order, so on a freshly joined or recovered device the
+ * years-old legacy space always lands before the settings space. The membership credential proves
+ * the space exists and will arrive, so callers wait for it instead of creating a duplicate.
+ */
+export const hasSettingsSpaceCredential = (client: {
+  halo: { queryCredentials(options: { type: string }): SpaceMemberCredential[] };
+}): boolean =>
+  client.halo.queryCredentials({ type: 'dxos.halo.credentials.SpaceMember' }).some((credential) => {
+    const tags: unknown = credential.subject?.assertion?.tags;
+    return Array.isArray(tags) && tags.includes(SETTINGS_SPACE_TAG);
+  });
 
 /**
  * Whether a space belongs in the user-facing space lists (navtree, settings, create-object target).

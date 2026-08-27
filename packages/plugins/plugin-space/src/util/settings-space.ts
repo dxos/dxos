@@ -6,9 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Client } from '@dxos/client';
-import { type Space } from '@dxos/client/echo';
+import { type Space, SpaceState } from '@dxos/client/echo';
+import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+
+import { mergeSpacesOrder } from '../migrations/settings-space';
 
 /**
  * Resolve the settings space, creating one only for legacy profiles that predate it.
@@ -18,20 +21,31 @@ import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
  * for it rather than creating: an eager create here races {@link AppSpace.setupIdentitySpaces}
  * (which publishes the default space before the settings space) and loses, leaving the profile
  * with a duplicate settings space.
+ *
+ * A visible legacy space alone is NOT proof the profile predates the settings space: the legacy
+ * tag is immutable and outlives the migration, and spaces replicate to a device in creation order,
+ * so on a freshly joined or recovered device the legacy space always lands before the settings
+ * space. Only a legacy profile whose HALO carries no settings-space membership credential is
+ * treated as unmigrated.
  */
 export const resolveSettingsSpace = Effect.fnUntraced(function* (client: Client) {
-  // The space list replays on subscribe, so the current state is checked with no gap in which an
-  // arriving settings space could be missed.
+  // Both observables replay on subscribe, so the current state is checked with no gap in which an
+  // arriving settings space or membership credential could be missed.
   const existing = yield* Effect.callback<Space | undefined>((resume) => {
-    const sub = client.spaces.subscribe(() => {
+    const check = () => {
       const settingsSpace = AppSpace.getSettingsSpace(client);
       if (settingsSpace) {
         resume(Effect.succeed(settingsSpace));
-      } else if (AppSpace.resolveLegacyDefaultSpace(client)) {
+      } else if (AppSpace.resolveLegacyDefaultSpace(client) && !AppSpace.hasSettingsSpaceCredential(client)) {
         resume(Effect.succeed(undefined));
       }
+    };
+    const spacesSub = client.spaces.subscribe(check);
+    const credentialsSub = client.halo.credentials.subscribe(check);
+    return Effect.sync(() => {
+      spacesSub.unsubscribe();
+      credentialsSub.unsubscribe();
     });
-    return Effect.sync(() => sub.unsubscribe());
   });
   if (!existing) {
     return yield* ensureSettingsSpace(client);
@@ -61,4 +75,49 @@ export const ensureSettingsSpace = Effect.fnUntraced(function* (client: Client) 
   yield* Effect.promise(() => space.waitUntilReady());
   yield* Effect.promise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
   return space;
+});
+
+/**
+ * Converge duplicate settings spaces onto the canonical one.
+ *
+ * The duplicate-creation race left profiles carrying several tagged spaces, one per device boot
+ * that concluded "legacy profile" before the real settings space replicated in. Every device
+ * resolves the same canonical space ({@link AppSpace.getSettingsSpace} orders candidates by id),
+ * folds each duplicate's cross-space ordering into it, and tombstones the duplicate; the deletion
+ * replicates through the HALO, so the profile converges to one settings space everywhere.
+ *
+ * Runs only once the canonical space is ready and carries the default-space designation — an
+ * undesignated winner may still be the stand-in for an unopened rival — and consumes only
+ * duplicates that are themselves ready, since an unopened duplicate cannot be salvaged; later
+ * passes pick those up as they open.
+ */
+export const healDuplicateSettingsSpaces = Effect.fnUntraced(function* (client: Client) {
+  const canonical = AppSpace.getSettingsSpace(client);
+  if (
+    !canonical ||
+    canonical.state.get() !== SpaceState.SPACE_READY ||
+    AppSpace.getDefaultSpaceId(canonical) === undefined
+  ) {
+    return;
+  }
+
+  const duplicates = client.spaces
+    .get()
+    .filter(
+      (space) =>
+        AppSpace.isSettingsSpace(space) && space.id !== canonical.id && space.state.get() === SpaceState.SPACE_READY,
+    );
+  for (const duplicate of duplicates) {
+    // A failure on one duplicate (e.g. it is closing) must not strand the rest; it stays tagged
+    // and a later pass retries it.
+    yield* Effect.gen(function* () {
+      yield* mergeSpacesOrder(canonical, duplicate);
+      yield* Effect.promise(() => duplicate.delete());
+      log.info('removed duplicate settings space', { duplicate: duplicate.id, canonical: canonical.id });
+    }).pipe(
+      Effect.catchCause((cause) =>
+        Effect.sync(() => log.warn('failed to remove duplicate settings space', { duplicate: duplicate.id, cause })),
+      ),
+    );
+  }
 });

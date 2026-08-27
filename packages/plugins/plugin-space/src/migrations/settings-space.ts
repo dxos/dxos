@@ -101,6 +101,30 @@ const writeSpacesOrder = (ordering: Expando.Expando, order: readonly string[]): 
   });
 };
 
+/**
+ * Fold a duplicate settings space's cross-space ordering into the canonical one before the
+ * duplicate is removed: ids the canonical ordering already carries keep their position, ids only
+ * the duplicate knows are appended, so no space drops out of the navtree when its entry lived in
+ * the losing copy.
+ */
+export const mergeSpacesOrder = Effect.fnUntraced(function* (canonical: Space, duplicate: Space) {
+  const duplicateOrder = yield* readSpacesOrder(duplicate);
+  if (duplicateOrder.length === 0) {
+    return;
+  }
+
+  const ordering = yield* ensureSpacesOrder(canonical);
+  if (!ordering) {
+    return;
+  }
+
+  const canonicalOrder = yield* readSpacesOrder(canonical);
+  const missing = duplicateOrder.filter((id) => !canonicalOrder.includes(id));
+  if (missing.length > 0) {
+    writeSpacesOrder(ordering, [...canonicalOrder, ...missing]);
+  }
+});
+
 /** A destroyed or closing space rejects writes; anything else is a real database failure. */
 const isSpaceClosingError = (err: unknown): boolean =>
   /clos|destroy/i.test(err instanceof Error ? err.message : String(err));

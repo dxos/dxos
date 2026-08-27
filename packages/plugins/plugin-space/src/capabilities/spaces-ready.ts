@@ -31,7 +31,7 @@ import { ComplexMap, reduceGroupBy } from '@dxos/util';
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
 import { migrateToSettingsSpace } from '../migrations/settings-space';
-import { resolveSettingsSpace } from '../util/settings-space';
+import { healDuplicateSettingsSpaces, resolveSettingsSpace } from '../util/settings-space';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const WAIT_FOR_OBJECT_TIMEOUT = 5_000;
@@ -80,6 +80,23 @@ const awaitChange = (client: Client, settingsSpace: Space): Effect.Effect<void> 
     });
   });
 
+/**
+ * The next space-list change (spaces added, removed, or changing state), replay skipped as in
+ * {@link awaitChange}. The healing loop cannot reuse `awaitChange`: its property subscription is
+ * anchored to one space object, which healing may itself tombstone.
+ */
+const awaitSpacesUpdate = (client: Client): Effect.Effect<void> =>
+  Effect.callback<void>((resume) => {
+    let replayed = false;
+    const spacesSub = client.spaces.subscribe(() => {
+      if (replayed) {
+        resume(Effect.void);
+      }
+      replayed = true;
+    });
+    return Effect.sync(() => spacesSub.unsubscribe());
+  });
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const subscriptions = new SubscriptionList();
@@ -109,6 +126,13 @@ export default Capability.makeModule(
       // Only relevant on a cold boot with no workspace in the deck state.
       if (registry.get(layoutAtom).workspace === 'default') {
         yield* invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(defaultSpace.id) });
+      }
+
+      // Duplicates surface whenever a space opens or replicates in, so healing re-runs on every
+      // list change for the life of the session (the fiber is interrupted in cleanup).
+      while (true) {
+        yield* healDuplicateSettingsSpaces(client);
+        yield* awaitSpacesUpdate(client);
       }
     });
 

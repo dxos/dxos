@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type Space } from '@dxos/client/echo';
+import { type Space, SpaceState } from '@dxos/client/echo';
 
 import * as AppSpace from './AppSpace';
 
@@ -50,8 +50,46 @@ describe('space visibility', () => {
   });
 });
 
+describe('settings space resolution', () => {
+  test('duplicates resolve deterministically by id, not list order', ({ expect }) => {
+    // Neither duplicate is ready, so neither can prove canonical; the id order decides, the same
+    // way on every device, so healing converges on one winner.
+    const second = makeClosedSpace('B00000000000000000000000000000002', [AppSpace.SETTINGS_SPACE_TAG]);
+    const first = makeClosedSpace('B00000000000000000000000000000001', [AppSpace.SETTINGS_SPACE_TAG]);
+    expect(AppSpace.getSettingsSpace({ spaces: { get: () => [second, first] } })?.id).toBe(first.id);
+    expect(AppSpace.getSettingsSpace({ spaces: { get: () => [first, second] } })?.id).toBe(first.id);
+  });
+});
+
+describe('settings space evidence', () => {
+  test('a settings-tagged membership credential counts as evidence', ({ expect }) => {
+    const client = makeCredentialClient([{ subject: { assertion: { tags: [AppSpace.SETTINGS_SPACE_TAG] } } }]);
+    expect(AppSpace.hasSettingsSpaceCredential(client)).toBe(true);
+  });
+
+  test('memberships of other spaces are not evidence', ({ expect }) => {
+    const client = makeCredentialClient([
+      { subject: { assertion: { tags: [] } } },
+      { subject: { assertion: {} } },
+      { subject: { assertion: { tags: [AppSpace.PERSONAL_SPACE_TAG] } } },
+    ]);
+    expect(AppSpace.hasSettingsSpaceCredential(client)).toBe(false);
+  });
+});
+
 /**
  * A stand-in carrying only the fields the tag predicates read. Cast here rather than widening the
  * predicates, so production code sees a real `Space` and the fake stays contained to the test.
  */
 const makeSpace = (tags: string[]): Space => ({ tags, properties: {} }) as unknown as Space;
+
+/** As {@link makeSpace}, adding the id and closed state the settings-space resolution reads. */
+const makeClosedSpace = (id: string, tags: string[]): Space =>
+  ({ id, tags, properties: {}, state: { get: () => SpaceState.SPACE_CLOSED } }) as unknown as Space;
+
+/** The slice of `Client` the credential evidence check reads. */
+const makeCredentialClient = (credentials: { subject?: { assertion?: { tags?: unknown } } }[]) => ({
+  halo: {
+    queryCredentials: () => credentials,
+  },
+});
