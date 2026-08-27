@@ -361,24 +361,34 @@ flow QA-1: Create a sheet, set values, evaluate a formula, read back
 
     - name: Place it in the collection
       do: (no separate gesture — the navtree create action places it)
-      invoke: org.dxos.operation.space.addObject { object: $created.id, target: $given.collection }
       expect: "QA Sheet" appears as a row under the collection
+      note: |
+        NO `invoke` — [op:create] places the sheet in the space itself, so a following
+        `space.addObject` is redundant. `$created.id` is a DXN string, not an object;
+        resolve it (`db.getObjectById` on the DXN's last segment) before any step that
+        needs the live Sheet.
 
     - name: Set values and a formula
       do: Click cell A1 and type "10", Enter. Click A2 and type "20", Enter. Click A3 and type
         "=A1+A2", Enter.
-      invoke: [op:setRange] { sheet: $created.id, cells: { A1: 10, A2: 20, A3: "=A1+A2" } }
+      invoke: [op:setRange] { sheet: $created.ref, cells: { A1: 10, A2: 20, A3: "=A1+A2" } }
       expect: A1 shows 10, A2 shows 20, and A3 shows 30 (evaluated by HyperFormula)
+      note: |
+        `sheet` is a `Ref`, so pass `Ref.make(<resolved Sheet>)` — the invoker does not decode
+        input through the operation schema, and a DXN string or a live object both fail.
 
     - name: Read the range back
       do: (agent-only — confirm the evaluated values)
-      invoke: [op:getRange] { sheet: $created.id, range: "A1:A3" }
-      expect: the returned 2D array reads [[10], [20], [30]]
-      assert: return $result.values.flat().join(',') === '10,20,30'
+      invoke: [op:getRange] { sheet: $created.ref, range: "A1:A3" }
+      expect: A3 renders 30 in the grid
+      assert: |
+        // getRange returns STORED cell content, not the evaluated result — A3 comes back as
+        // the formula string. Judge the evaluated value in the UI (`expect`), not here.
+        return $result.values.flat().slice(0, 2).join(',') === '10,20';
   after:
     - name: Delete the sheet
       do: Right-click "QA Sheet" in the navtree and choose Delete.
-      invoke: org.dxos.operation.space.removeObjects { objects: [$created.id], target: $given.collection }
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
       expect: the row leaves the navtree and its plank closes if it was open
 ```
 
