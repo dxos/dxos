@@ -169,6 +169,8 @@ class FunctionContext extends Resource {
   readonly client: EchoClient | undefined;
   db: DatabaseImpl | undefined;
   readonly opts: FunctionWrappingOptions;
+  /** Released in `_close`: this is a `Resource`, so a reopen would otherwise stack registrations. */
+  #unregisterBlobBackend: (() => void) | undefined;
 
   constructor(context: FunctionProtocol.Context, opts: FunctionWrappingOptions) {
     super();
@@ -204,7 +206,7 @@ class FunctionContext extends Resource {
     // it is an outbound fetch to the customer's own endpoint — so this works on edge unchanged.
     if (this.client && this.db) {
       const db = this.db;
-      this.client.graph.registerBlobBackend(
+      this.#unregisterBlobBackend = this.client.graph.registerBlobBackend(
         S3_BACKEND,
         createS3BlobBackend(createS3Host({ getDatabase: (spaceId) => (spaceId === db.spaceId ? db : undefined) })),
       );
@@ -212,6 +214,8 @@ class FunctionContext extends Resource {
   }
 
   override async _close() {
+    this.#unregisterBlobBackend?.();
+    this.#unregisterBlobBackend = undefined;
     await this.db?.close();
     await this.client?.close();
   }

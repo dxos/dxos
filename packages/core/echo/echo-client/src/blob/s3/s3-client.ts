@@ -64,6 +64,21 @@ export class S3NetworkError extends Error {
   }
 }
 
+/**
+ * The request exceeded its deadline. Distinct from {@link S3NetworkError} because the remedies have
+ * nothing in common — a timeout says the endpoint is slow or unreachable, not that a bucket policy
+ * is wrong, and conflating them sends the user to edit configuration that is already correct.
+ */
+export class S3TimeoutError extends Error {
+  constructor(
+    readonly host: string,
+    readonly timeoutMs: number,
+  ) {
+    super(`${host} did not respond within ${Math.round(timeoutMs / 1000)}s.`);
+    this.name = 'S3TimeoutError';
+  }
+}
+
 /** The S3 `<Code>` from an error body, which says far more than the HTTP status alone. */
 const errorCode = (body: string): string | undefined => /<Code>([^<]+)<\/Code>/.exec(body)?.[1];
 
@@ -138,12 +153,21 @@ const request = async (
   init: RequestInit & { headers?: Record<string, string> },
 ): Promise<{ response: Response; done: () => void }> => {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), S3_TIMEOUT_MS);
+  let timedOut = false;
+  const timeout = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, S3_TIMEOUT_MS);
   try {
     const response = await fetch(input, { ...init, signal: controller.signal });
     return { response, done: () => clearTimeout(timeout) };
   } catch (cause) {
     clearTimeout(timeout);
+    // A slow endpoint must not be reported as a CORS problem: `S3NetworkError` tells the user to fix
+    // a bucket policy, which for a timeout is advice about something that is already correct.
+    if (timedOut) {
+      throw new S3TimeoutError(input.host, S3_TIMEOUT_MS);
+    }
     throw new S3NetworkError(input.host, cause);
   }
 };

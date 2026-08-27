@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { isBlockedHost } from '@dxos/util';
+
 import { DEFAULT_REGION, S3_SCHEME } from './constants';
 
 /**
@@ -39,7 +41,22 @@ export const parseUri = (uri: string): S3Uri | undefined => {
  * here with a dot segment is a corrupted or hand-authored URI, and failing is better than reading
  * the wrong object.
  */
+/**
+ * The hostname without any port. Splitting on `:` is not enough — a bracketed IPv6 literal is full
+ * of them, and taking the first field would yield `[`, which no host check recognizes.
+ */
+const hostnameOf = (host: string): string =>
+  host.startsWith('[') ? host.slice(0, host.indexOf(']') + 1) : host.split(':')[0];
+
 export const toHttpsUrl = ({ host, key }: S3Uri): URL => {
+  // The host comes from a stored `Blob` URI, which is replicated data — so on a headless host it is
+  // attacker-influenced input to a server-side fetch. A browser is bounded by CORS; EDGE's function
+  // runtime is not, and the unsigned read path means no credential is needed to reach an internal
+  // address. Reject the private ranges before any request is built.
+  if (isBlockedHost(hostnameOf(host))) {
+    throw new Error(`Refusing to address an S3 endpoint on a private or loopback host: ${host}`);
+  }
+
   const segments = key.split('/');
   if (segments.some((segment) => segment === '.' || segment === '..')) {
     throw new Error(`Refusing to address an S3 key with a relative path segment: ${key}`);

@@ -48,6 +48,14 @@ describe('s3 uri', () => {
     expect(() => toHttpsUrl({ host: 'bucket.example.com', key: 'folder/../file' })).toThrow(/relative path segment/);
   });
 
+  // A blob URI is replicated data, so on a headless host its endpoint is attacker-influenced input
+  // to a server-side fetch — and the unsigned read path needs no credential to reach one.
+  test('refuses a private or loopback endpoint', ({ expect }) => {
+    for (const host of ['127.0.0.1', 'localhost', '169.254.169.254', '10.0.0.1', '192.168.1.1', '[::1]']) {
+      expect(() => toHttpsUrl({ host, key: 'a/b' }), host).toThrow(/private or loopback host/);
+    }
+  });
+
   test('a dot inside a segment is untouched', ({ expect }) => {
     expect(toHttpsUrl({ host: 'bucket.example.com', key: 'a/file.png' }).pathname).toBe('/a/file.png');
     expect(toHttpsUrl({ host: 'bucket.example.com', key: 'a/...b' }).pathname).toBe('/a/...b');
