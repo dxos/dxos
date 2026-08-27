@@ -29,10 +29,9 @@ export const DEFAULT_HUB_URL = 'https://dxos.network/hub/';
  * Where a browser is sent for a passkey prompt, used when neither `runtime.app.env.DX_AUTH_URL` nor
  * `runtime.services.hub.authUrl` is configured.
  *
- * Distinct from {@link DEFAULT_HUB_URL} rather than derived from it. WebAuthn resolves a credential
- * by relying party, and Composer registers passkeys against `composer.space` rather than the page
- * host, so only an origin under that domain can present one. The hub answers on its API host too,
- * where the same page renders and then fails in the browser with `SecurityError`.
+ * Not derived from {@link DEFAULT_HUB_URL}: Composer registers passkeys against `composer.space`, so
+ * only an origin under that relying party can present one — the hub's API host serves the same page
+ * and then fails in the browser with `SecurityError`.
  */
 export const DEFAULT_AUTH_URL = 'https://account.composer.space';
 

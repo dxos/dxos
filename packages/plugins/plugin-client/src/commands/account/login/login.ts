@@ -158,8 +158,6 @@ const loginWithPasskey = (client: Client) =>
     });
 
     return yield* Effect.gen(function* () {
-      // The auth origin, not the hub's API host. Both serve this page, but a passkey is bound to the
-      // relying party it was registered against, so only the former can present one.
       const url = new URL('/auth/verify', Account.getAuthUrl(client));
       url.searchParams.set('purpose', 'device');
       url.searchParams.set('callback', server.origin);

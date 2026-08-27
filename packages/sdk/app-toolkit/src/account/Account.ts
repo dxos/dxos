@@ -114,15 +114,7 @@ export const accountErrorType = (error: unknown): AccountErrorType | undefined =
 export const getHubUrl = (client: Pick<Client, 'config'>): string =>
   getEnvString(client.config, 'DX_HUB_URL') ?? client.config.values?.runtime?.services?.hub?.url ?? DEFAULT_HUB_URL;
 
-/**
- * Origin to send a browser to for a passkey prompt. Resolved like {@link getHubUrl}, and separate
- * from it because the two are different hosts in every deployed environment.
- *
- * A passkey is bound to the relying party it was registered against, and Composer pins that to
- * `composer.space` rather than the page host, so only an origin under that domain can present one.
- * The hub serves the prompt on its API host as well, where it renders, returns 200, and then fails
- * in the browser with `SecurityError` — which is why this cannot be derived from the hub URL.
- */
+/** Origin to send a browser to for a passkey prompt. Resolved like {@link getHubUrl}. */
 export const getAuthUrl = (client: Pick<Client, 'config'>): string =>
   getEnvString(client.config, 'DX_AUTH_URL') ??
   client.config.values?.runtime?.services?.hub?.authUrl ??

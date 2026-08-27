@@ -469,11 +469,10 @@ message Runtime {
 
     message Ai { optional string server = 1; }
 
-    /// `url` is the API host. `auth_url` is where a browser is sent for a passkey prompt, which
-    /// must be an origin covered by the WebAuthn relying party the credential was registered
-    /// against — a page on any other host cannot use the passkey, whatever it serves.
     message Hub {
       optional string url = 1;
+      /// Origin serving the passkey prompt. Must be covered by the WebAuthn relying party the
+      /// credential was registered against; the API host is not.
       optional string auth_url = 2;
     }
 
