@@ -137,7 +137,7 @@ op GetLinearTeams
     Read-only: NEVER materializes local objects. Materialization happens lazily
     in SyncLinearTeams on first sync of a target.
   input:
-    integration: Ref<Integration>
+    connection: Ref<Connection>
   output: GetSyncTargetsOutput
   effects: [http]
 ```
@@ -156,7 +156,7 @@ op SyncLinearTeams
     Per-target failures record lastError on that target and continue.
     A toast is emitted on completion regardless of per-target outcomes.
   input:
-    integration: Ref<Integration>
+    connection: Ref<Connection>
     team?: Ref<Project>
   output: SyncLinearTeamsOutput
   effects: [echo:read, echo:write, http]

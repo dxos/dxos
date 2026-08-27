@@ -73,7 +73,7 @@ op GetSlackChannels
     without creating any local ECHO objects.  Returns one RemoteTarget per
     conversation for the integration UI's target-selection list.
   input:
-    integration: Ref<Integration>
+    connection: Ref<Connection>
   output: { targets: RemoteTarget[] }
   effects: [http]
   note: |
@@ -96,7 +96,7 @@ op SyncSlackChannel
     Updates the cursor after a successful pull so subsequent runs are
     incremental.
   input:
-    integration: Ref<Integration>
+    connection: Ref<Connection>
     channel?: Ref<Channel>          # optional: narrow to a single target
   output: { pulled: PullResult }
   effects: [http, echo:write]
