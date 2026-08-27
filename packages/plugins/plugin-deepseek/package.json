@@ -52,6 +52,7 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/util": "workspace:*",

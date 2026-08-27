@@ -110,6 +110,9 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
     ExcalidrawPlugin.meta.profile.key,
     TablePlugin.meta.profile.key,
     ThreadPlugin.meta.profile.key,
+    // Connector-only, so defaulting it on adds no surface — it just puts DeepSeek in the
+    // Connections service list for anyone who has a key.
+    DeepSeekPlugin.meta.profile.key,
 
     // Local
     isLocal && SamplePlugin.meta.profile.key,
@@ -129,7 +132,6 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       CommercePlugin.meta.profile.key,
       CrmPlugin.meta.profile.key,
       DebugPlugin.meta.profile.key,
-      DeepSeekPlugin.meta.profile.key,
       DevtoolsPlugin.meta.profile.key,
       DuffelPlugin.meta.profile.key,
       GamePlugin.meta.profile.key,

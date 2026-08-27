@@ -1,5 +1,7 @@
 # @dxos/plugin-deepseek
 
+License: [FSL-1.1-Apache-2.0](./LICENSE) Copyright 2022 © DXOS
+
 Headless DXOS Composer plugin that lets the user connect their
 [DeepSeek](https://platform.deepseek.com) account by pasting an API key.
 
