@@ -23284,6 +23284,8 @@ importers:
         specifier: 'catalog:'
         version: 3.6.0(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
 
+  packages/ui/ui-icons: {}
+
   packages/ui/ui-theme:
     dependencies:
       '@dxos/node-std':

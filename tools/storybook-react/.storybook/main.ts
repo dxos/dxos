@@ -38,6 +38,7 @@ const staticDir = resolve(baseDir, './static');
 const agentCwd = process.env.DX_AGENT_CWD;
 const iconsDir = resolve(rootDir, 'node_modules/@phosphor-icons/core/assets');
 const dxosIconsDir = resolve(rootDir, 'packages/ui/brand/assets/icons');
+const extendedIconsDir = resolve(rootDir, 'packages/ui/ui-icons/assets');
 // tldraw self-hosts its fonts/icons; plugin-tldraw points tldraw at `/assets/plugin-tldraw` and the
 // app serves them via a copy step (see composer-app `copy:assets`). Mirror that here so sketch
 // surfaces render (tldraw blocks the editor behind an asset preload).
@@ -473,19 +474,28 @@ export const createConfig = ({
           },
 
           IconsPlugin({
-            // The leading negative lookahead restricts the `dx` set to the `regular` weight only
-            // (custom brand SVGs have no weight variants); the `ph` set retains all Phosphor weights.
+            // The lookbehind rejects a symbol glued to a preceding word character: the scanner is
+            // unanchored, so without it a set name that is a suffix of another token
+            // (`4px--x--regular`, or the `x` in `dx--x--bold` once the lookahead below has declined
+            // position 0) is scanned as a real icon, and the missing SVG fails the sprite build.
+            // The negative lookahead restricts the custom `dx` and `px` sets to the `regular` weight
+            // only (their SVGs have no weight variants); `ph` retains all Phosphor weights.
             symbolPattern:
-              '(?!dx--[a-z]+[a-z-]*--(?:bold|duotone|fill|light|thin))(ph|dx)--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+              '(?<![a-z0-9])(?!(?:dx|px)--[a-z]+[a-z-]*--(?:bold|duotone|fill|light|thin))(ph|dx|px)--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
             assetPath: (iconSet, name, variant) => {
               switch (iconSet) {
                 case 'dx':
                   return `${dxosIconsDir}/${name}.svg`;
+                case 'px':
+                  return `${extendedIconsDir}/${name}.svg`;
                 default:
                   return `${iconsDir}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`;
               }
             },
             contentPaths: content,
+            // The `px` set is sprite-only (no runtime `IconSource`), so its catalog is scanned
+            // eagerly rather than relying on a story importing each glyph — see `@dxos/ui-icons`.
+            scanPaths: [resolve(rootDir, 'packages/ui/ui-icons/src/index.ts')],
             spriteFile: 'icons.svg',
           }),
 

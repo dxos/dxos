@@ -28,6 +28,7 @@ const { prepareCanonicalDist } = await import(pathToFileURL(path.join(dirname, '
 const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
 const dxosIcons = path.join(rootDir, '/packages/ui/brand/assets/icons');
+const extendedIcons = path.join(rootDir, '/packages/ui/ui-icons/assets');
 const outDir = prepareCanonicalDist(dirname);
 
 /**
@@ -96,14 +97,20 @@ export default defineConfig({
     }),
     ThemePlugin({}),
     IconsPlugin({
-      // The leading negative lookahead restricts the `dx` set to the `regular` weight only (custom
-      // brand SVGs have no weight variants); the `ph` set retains all Phosphor weights.
+      // The lookbehind rejects a symbol glued to a preceding word character: the scanner is
+      // unanchored, so without it a set name that is a suffix of another token (`4px--x--regular`,
+      // or the `x` in `dx--x--bold` once the lookahead below has declined position 0) is scanned as
+      // a real icon, and the missing SVG fails the sprite build.
+      // The negative lookahead restricts the custom `dx` and `px` sets to the `regular` weight only
+      // (their SVGs have no weight variants); the `ph` set retains all Phosphor weights.
       symbolPattern:
-        '(?!dx--[a-z]+[a-z-]*--(?:bold|duotone|fill|light|thin))(ph|dx)--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+        '(?<![a-z0-9])(?!(?:dx|px)--[a-z]+[a-z-]*--(?:bold|duotone|fill|light|thin))(ph|dx|px)--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
       assetPath: (iconSet, name, variant) => {
         switch (iconSet) {
           case 'dx':
             return `${dxosIcons}/${name}.svg`;
+          case 'px':
+            return `${extendedIcons}/${name}.svg`;
           default:
             return `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`;
         }
@@ -117,7 +124,12 @@ export default defineConfig({
       // Page-action descriptor icons are contributed by Composer plugins at
       // runtime; those sources are never imported by the extension bundle, so
       // they are scanned eagerly by convention (capabilities/page-action*.ts).
-      scanPaths: [path.join(rootDir, '/packages/plugins/*/src/capabilities/page-action*.ts')],
+      // The `px` catalog is scanned for the same reason — it is sprite-only, with no runtime
+      // `IconSource` to fetch a glyph the scanner missed (see `@dxos/ui-icons`).
+      scanPaths: [
+        path.join(rootDir, '/packages/plugins/*/src/capabilities/page-action*.ts'),
+        path.join(rootDir, '/packages/ui/ui-icons/src/index.ts'),
+      ],
     }),
 
     // TODO(burdon): Document.

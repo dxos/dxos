@@ -48,6 +48,7 @@ const isReducedPluginSet = pluginSetFile !== 'src/plugin-defs.tsx';
 const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
 const dxosIcons = path.join(rootDir, '/packages/ui/brand/assets/icons');
+const extendedIcons = path.join(rootDir, '/packages/ui/ui-icons/assets');
 
 const dirname = import.meta.dirname;
 
@@ -634,14 +635,20 @@ export default defineConfig((env) => ({
     }),
 
     IconsPlugin({
-      // The leading negative lookahead restricts the `dx` set to the `regular` weight only (custom
-      // brand SVGs have no weight variants); the `ph` set retains all Phosphor weights.
+      // The lookbehind rejects a symbol glued to a preceding word character: the scanner is
+      // unanchored, so without it a set name that is a suffix of another token (`4px--x--regular`,
+      // or the `x` in `dx--x--bold` once the lookahead below has declined position 0) is scanned as
+      // a real icon, and the missing SVG fails the sprite build.
+      // The negative lookahead restricts the custom `dx` and `px` sets to the `regular` weight only
+      // (their SVGs have no weight variants); the `ph` set retains all Phosphor weights.
       symbolPattern:
-        '(?!dx--[a-z]+[a-z-]*--(?:bold|duotone|fill|light|thin))(ph|dx)--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+        '(?<![a-z0-9])(?!(?:dx|px)--[a-z]+[a-z-]*--(?:bold|duotone|fill|light|thin))(ph|dx|px)--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
       assetPath: (iconSet, name, variant) => {
         switch (iconSet) {
           case 'dx':
             return `${dxosIcons}/${name}.svg`;
+          case 'px':
+            return `${extendedIcons}/${name}.svg`;
           default:
             return `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`;
         }
@@ -652,6 +659,9 @@ export default defineConfig((env) => ({
         path.join(rootDir, '/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
         path.join(rootDir, '/{packages,tools}/**/dx.config.{ts,tsx,js,jsx}'),
       ],
+      // The `px` set is sprite-only (no runtime `IconSource`), so its catalog is scanned eagerly
+      // rather than relying on a host importing each glyph — see `@dxos/ui-icons`.
+      scanPaths: [path.join(rootDir, '/packages/ui/ui-icons/src/index.ts')],
       // Serves /phosphor/ for the runtime icon resolver in @dxos/react-ui; assets are copied
       // into the build output and cached at runtime by sw.ts (excluded from the precache).
       assets: [{ route: '/phosphor', dir: phosphorIconsCore }],
