@@ -14,14 +14,17 @@ import { meta } from '#meta';
 import { HelpCapabilities, Tour } from '#types';
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* (steps?: Tour.Step[]) {
+  Effect.fnUntraced(function* (helpSteps?: () => Promise<Tour.Step[]>) {
+    // Resolved here rather than taken as a value: this module is already dynamically imported, so
+    // the steps ride its chunk instead of the host's preload closure.
+    const steps = helpSteps ? yield* Effect.promise(helpSteps) : [];
     return Capability.contribute(Capabilities.ReactRoot, {
       id: meta.profile.key,
       root: () => {
         const [state, updateState] = useAtomCapabilityState(HelpCapabilities.State);
         return (
           <WelcomeTour
-            steps={steps ?? []}
+            steps={steps}
             running={state.running}
             onRunningChanged={(newState) => {
               updateState((s) => ({ ...s, running: newState }));
