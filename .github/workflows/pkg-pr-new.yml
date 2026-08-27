@@ -39,7 +39,7 @@ jobs:
           filter: blob:none
 
       - name: Setup
-        uses: ./.depot/actions/setup
+        uses: ./.github/actions/setup
 
       - name: Build
         run: moon run :build
