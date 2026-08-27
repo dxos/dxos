@@ -539,7 +539,16 @@ export class Client {
 
       this._edgeBlobBackendCleanup = this._echoClient.graph.registerBlobBackend(
         Blob.Storage.edge,
-        createEdgeBlobBackend({ edgeClient: edgeHttpClient }),
+        // Adapted rather than passed: the backend takes the four operations it needs, so it does not
+        // depend on the other twenty-nine methods of `EdgeHttpClient`, and `Context` stays here.
+        createEdgeBlobBackend({
+          transport: {
+            url: (key) => edgeHttpClient.getBlobUrl(key),
+            put: (key, data, options) => edgeHttpClient.putBlob(Context.default(), key, data, options),
+            get: (key) => edgeHttpClient.getBlob(Context.default(), key),
+            has: (key) => edgeHttpClient.hasBlob(Context.default(), key),
+          },
+        }),
         { default: true },
       );
     }

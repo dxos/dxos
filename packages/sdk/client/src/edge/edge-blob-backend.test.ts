@@ -5,46 +5,62 @@
 import { describe, test, vi } from 'vitest';
 
 import { fromDigestHex } from '@dxos/echo-client/internal';
-import { type EdgeHttpClient } from '@dxos/edge-client';
+import { type BlobTransport } from '@dxos/echo-protocol';
 import { SpaceId } from '@dxos/keys';
 
 import { createEdgeBlobBackend } from './edge-blob-backend';
 
+/**
+ * A transport whose unused operations reject. Before the backend took a `BlobTransport` these tests
+ * built partial `EdgeHttpClient`s behind `as unknown as`, which asserted a 33-method class from a
+ * one-method object; the narrow interface makes each stub honest.
+ */
+const transportWith = (overrides: Partial<BlobTransport>): BlobTransport => ({
+  url: () => {
+    throw new Error('url not stubbed');
+  },
+  put: async () => {
+    throw new Error('put not stubbed');
+  },
+  get: async () => {
+    throw new Error('get not stubbed');
+  },
+  has: async () => {
+    throw new Error('has not stubbed');
+  },
+  ...overrides,
+});
+
 describe('createEdgeBlobBackend', () => {
   const niUri = fromDigestHex('deadbeef');
 
-  test('put uploads via putBlob and returns an ni: URI', async ({ expect }) => {
-    const putBlob = vi.fn(async () => undefined);
-    // Only `putBlob`/`getBlob`/`hasBlob` are exercised by the backend; the rest of the class is
-    // irrelevant to this test.
-    const edgeClient = { putBlob } as unknown as EdgeHttpClient;
-    const backend = createEdgeBlobBackend({ edgeClient });
+  test('put uploads via the transport and returns an ni: URI', async ({ expect }) => {
+    const put = vi.fn(async () => undefined);
+    const backend = createEdgeBlobBackend({ transport: transportWith({ put }) });
 
     const spaceId = SpaceId.random();
     const data = new Uint8Array([1, 2, 3]);
     const response = await backend.put({ spaceId, data, contentType: 'image/png', contentHash: 'deadbeef' });
 
     expect(response.uri).toBe(niUri);
-    expect(putBlob).toHaveBeenCalledWith(expect.anything(), 'deadbeef', data, { contentType: 'image/png' });
+    expect(put).toHaveBeenCalledWith('deadbeef', data, { contentType: 'image/png' });
   });
 
-  test('get downloads via getBlob using the digest encoded in the URI', async ({ expect }) => {
+  test('get downloads using the digest encoded in the URI', async ({ expect }) => {
     const bytes = new Uint8Array([9, 8, 7]);
-    const getBlob = vi.fn(async () => bytes);
-    const edgeClient = { getBlob } as unknown as EdgeHttpClient;
-    const backend = createEdgeBlobBackend({ edgeClient });
+    const get = vi.fn(async () => bytes);
+    const backend = createEdgeBlobBackend({ transport: transportWith({ get }) });
 
     const spaceId = SpaceId.random();
     const result = await backend.get({ spaceId, uri: niUri });
 
     expect(result).toBe(bytes);
-    expect(getBlob).toHaveBeenCalledWith(expect.anything(), 'deadbeef');
+    expect(get).toHaveBeenCalledWith('deadbeef');
   });
 
-  test('get returns undefined when getBlob returns undefined', async ({ expect }) => {
-    const getBlob = vi.fn(async () => undefined);
-    const edgeClient = { getBlob } as unknown as EdgeHttpClient;
-    const backend = createEdgeBlobBackend({ edgeClient });
+  test('get returns undefined when the transport reports a miss', async ({ expect }) => {
+    const get = vi.fn(async () => undefined);
+    const backend = createEdgeBlobBackend({ transport: transportWith({ get }) });
 
     const spaceId = SpaceId.random();
     const result = await backend.get({ spaceId, uri: fromDigestHex('c0ffee') });
@@ -52,27 +68,25 @@ describe('createEdgeBlobBackend', () => {
     expect(result).toBeUndefined();
   });
 
-  test('has checks via hasBlob using the digest encoded in the URI', async ({ expect }) => {
-    const hasBlob = vi.fn(async () => true);
-    const edgeClient = { hasBlob } as unknown as EdgeHttpClient;
-    const backend = createEdgeBlobBackend({ edgeClient });
+  test('has checks using the digest encoded in the URI', async ({ expect }) => {
+    const has = vi.fn(async () => true);
+    const backend = createEdgeBlobBackend({ transport: transportWith({ has }) });
 
     const spaceId = SpaceId.random();
     const result = await backend.has({ spaceId, uri: niUri });
 
     expect(result).toBe(true);
-    expect(hasBlob).toHaveBeenCalledWith(expect.anything(), 'deadbeef');
+    expect(has).toHaveBeenCalledWith('deadbeef');
   });
 
-  test('getUrl builds a direct edge URL from the digest encoded in the URI', async ({ expect }) => {
-    const getBlobUrl = vi.fn((key: string) => new URL(`/blob/file/${key}`, 'https://edge.example.com'));
-    const edgeClient = { getBlobUrl } as unknown as EdgeHttpClient;
-    const backend = createEdgeBlobBackend({ edgeClient });
+  test('getUrl builds a direct URL from the digest encoded in the URI', async ({ expect }) => {
+    const url = vi.fn((key: string) => new URL(`/blob/file/${key}`, 'https://edge.example.com'));
+    const backend = createEdgeBlobBackend({ transport: transportWith({ url }) });
 
     const spaceId = SpaceId.random();
     const result = await backend.getUrl?.({ spaceId, uri: niUri });
 
     expect(result).toBe('https://edge.example.com/blob/file/deadbeef');
-    expect(getBlobUrl).toHaveBeenCalledWith('deadbeef');
+    expect(url).toHaveBeenCalledWith('deadbeef');
   });
 });

@@ -51,6 +51,75 @@ location.
 The algorithm field is carried over from RFC 6920 deliberately — it costs nothing and means a future
 digest change does not need a new scheme.
 
+## Packaging
+
+Blob functionality is currently spread across five packages — the contract in `echo-protocol`, the
+registry in `echo-client`, the `ni:` encoding in `echo-client`, the hosted backend in `sdk/client`,
+and backends in two plugins. "Which package owns blobs?" has no answer.
+
+Target: a `@dxos/blob` package holding the contract, the registry, the URI encoding, and the
+backends as subpaths.
+
+```mermaid
+graph TD
+  echo["@dxos/echo<br/>Blob.Blob · Blob.Storage · Blob.Scheme"]
+  blob["@dxos/blob<br/>BlobBackend · BlobManager<br/>BlobTransport · blobUri"]
+  s3["@dxos/blob/s3<br/>S3Host · createS3BlobBackend<br/>signRequest · presignUrl"]
+  hosted["@dxos/blob/hosted<br/>createHostedBlobBackend"]
+  echoClient["@dxos/echo-client<br/>Hypergraph · registerBlobBackend"]
+  edgeClient["@dxos/edge-client<br/>EdgeHttpClient"]
+  client["@dxos/client"]
+  compute["@dxos/compute-runtime<br/>FunctionContext"]
+
+  blob --> echo
+  s3 --> blob
+  hosted --> blob
+  echoClient --> blob
+  client --> echoClient
+  client --> hosted
+  client --> edgeClient
+  compute --> echoClient
+  compute --> s3
+  client -. adapts EdgeHttpClient to BlobTransport .-> hosted
+```
+
+The dotted edge is the point: nothing in the blob layer depends on `@dxos/edge-client`. The client
+adapts its `EdgeHttpClient` to `BlobTransport` at the one registration site.
+
+`EdgeHttpClient`'s blob methods take a leading `Context`, so the fit is not quite structural. That
+is deliberate — threading `Context` into `BlobTransport` would make `@dxos/echo-protocol` depend on
+`@dxos/context` to carry a value the blob layer never reads, which is a worse trade than four lines
+of adapter at a single call site.
+
+`Blob.Blob` and friends stay in `@dxos/echo` — they are ECHO schema, so `@dxos/blob` gets the
+machinery, not the types.
+
+### Backends take capabilities, not clients
+
+`EdgeHttpClient` is a 727-line class with 33 public methods spanning identity, notarization,
+invitations, OAuth, queues, blobs, functions, workflows, cron triggers, the plugin registry, and AI
+proxying. The hosted blob backend needs four of them. Depending on the class drags in the other 29.
+
+So each backend declares the narrow interface it actually needs:
+
+| Backend | Capability it takes                                     | Status                               |
+| ------- | ------------------------------------------------------- | ------------------------------------ |
+| hosted  | `BlobTransport` — `url`, `put`, `get`, `has`            | done                                 |
+| s3      | `S3Host` — `resolveCredentials`, `resolveWriteEndpoint` | done                                 |
+| wnfs    | a blockstore accessor                                   | not started — still takes a `Client` |
+
+The S3 backend already works this way, because the headless path forced it: `operation-service` has
+`Database.Service` and no `Client`, so taking a client was not an option. That constraint produced
+the right shape for all of them — a backend that takes capabilities is registrable in a browser, a
+worker, or a test without a client graph behind it.
+
+`edge-client` itself wants the same treatment. Its 33 methods cluster into identity, queue, blob,
+compute, registry, and gateway groups. Split those as **subpath exports first**
+(`@dxos/edge-client/blob`), not packages: it gives the tree-shaking and the ownership boundary with
+none of the publishing overhead, it is reversible, and the package already has precedent for
+internal layering (`base-http-client.ts` → `http-client.ts` → `hub-http-client.ts`). Promote a group
+to its own package only where a boot-budget measurement or an ownership boundary justifies it.
+
 ## Known limitation
 
 This decision entrenches scheme = backend identity. The digest stays _semantically_
@@ -99,3 +168,18 @@ the storage name `edge`. Neither can be rewritten in place across peers that may
    separately from the wire format.
 
 Not started; no code in this repository has been changed for it yet.
+
+## Implementation status
+
+- [x] **`BlobTransport`** ([echo-protocol/src/blob.ts](../../../echo-protocol/src/blob.ts)) — the
+      hosted backend takes four operations instead of a 33-method client. `client.ts` adapts
+      `EdgeHttpClient` at the registration site. Side benefit: the backend's tests no longer need
+      `as unknown as EdgeHttpClient` to assert a whole class from a one-method stub.
+- [ ] **`@dxos/blob` package** — blocked on the name being published to npm with trusted publishing
+      configured; `@dxos/blob` currently 404s, so a public package fails `check-packages-published`
+      and a private one fails `check-public-dependencies` (`echo-client` is public).
+- [ ] **Move the contract, registry, URI encoding and backends into it**, backends as subpaths.
+- [ ] **`edge-client` subpath split** by the six method groups; measure boot budget before and after.
+- [ ] **The `edge`/`ni:` → `blob` rename**, per the migration above. Do it in the same pass as the
+      package move — both touch the same files and both need one compatibility window, not two.
+- [ ] **wnfs backend takes a blockstore accessor** rather than a `Client`.

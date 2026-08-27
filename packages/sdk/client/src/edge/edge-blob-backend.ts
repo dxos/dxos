@@ -2,15 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Context } from '@dxos/context';
 import { Blob } from '@dxos/echo';
 import { digestHex, fromDigestHex } from '@dxos/echo-client/internal';
-import { type BlobBackend } from '@dxos/echo-protocol';
-import { type EdgeHttpClient } from '@dxos/edge-client/http';
+import { type BlobBackend, type BlobTransport } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 
 export interface CreateEdgeBlobBackendOptions {
-  edgeClient: EdgeHttpClient;
+  transport: BlobTransport;
 }
 
 const parseNiUri = (uri: string): string => {
@@ -34,18 +32,18 @@ export const MAX_EDGE_BLOB_SIZE = 50 * 1024 * 1024;
  * `remove` and GC/refcounting for content-addressed blobs — without that, a local cache has no way
  * to know when a cached entry is safe to evict once its owning Blob object is deleted.
  */
-export const createEdgeBlobBackend = ({ edgeClient }: CreateEdgeBlobBackendOptions): BlobBackend => ({
+export const createEdgeBlobBackend = ({ transport }: CreateEdgeBlobBackendOptions): BlobBackend => ({
   schemes: [Blob.Scheme.ni],
   maxSize: MAX_EDGE_BLOB_SIZE,
 
   put: async ({ data, contentType, contentHash }) => {
-    await edgeClient.putBlob(Context.default(), contentHash, data, { contentType });
+    await transport.put(contentHash, data, { contentType });
     return { uri: fromDigestHex(contentHash) };
   },
 
-  get: async ({ uri }) => edgeClient.getBlob(Context.default(), parseNiUri(uri)),
+  get: async ({ uri }) => transport.get(parseNiUri(uri)),
 
-  has: async ({ uri }) => edgeClient.hasBlob(Context.default(), parseNiUri(uri)),
+  has: async ({ uri }) => transport.has(parseNiUri(uri)),
 
-  getUrl: async ({ uri }) => edgeClient.getBlobUrl(parseNiUri(uri)).toString(),
+  getUrl: async ({ uri }) => transport.url(parseNiUri(uri)).toString(),
 });
