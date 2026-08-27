@@ -145,127 +145,56 @@ curl -s -r 0-99 "$URL" -o /dev/null -w '%{http_code}\n'   # expect 206
 
 ## Link it in a PR body
 
-**Two rules, and both are load-bearing:**
-
-1. **A player comes only from a GitHub attachment.** GitHub rewrites exactly one host into a
-   `<video>`: `github.com/user-attachments/assets/<uuid>`. An R2 link — or an LFS
-   `media.githubusercontent.com` link, or a raw `<video>` tag — renders as a plain link, whatever you do
-   to it.
-2. **The attachment link must stand alone in its own paragraph**, blank line above and below. Wrapped in
-   a sentence, or given link text on the same line as other prose, it stays a link. This is the rule
-   that most often turns a working player back into a link, so isolate it.
+**The rule, settled: a video is a labelled R2 link, a still is an R2 image embed.** No attachments, no
+commits, no human in the loop.
 
 ```markdown
 Some prose about the change.
 
-[demo.webm](https://github.com/user-attachments/assets/7df5952b-44c0-41d2-b898-2e6d7f684348)
+![Toolbar after the fix](https://pub-…r2.dev/demos/2026-08-27-plugin-foo/after.png)
 
-More prose.
-```
-
-That renders as `<details><summary>demo.webm</summary><video src="https://private-user-images.githubusercontent.com/…?jwt=…" controls>` — an inline player.
-
-### Getting the attachment URL
-
-**An agent cannot create one.** The upload is a web-UI endpoint,
-`POST https://github.com/upload/policies/assets`, and it needs a browser session's CSRF token — a PAT
-gets `422` with an HTML error page, with or without `repository_id`. There is no REST equivalent. So the
-handoff is explicit and it belongs in the PR conversation, not around it:
-
-1. Publish the artifact to R2 as above. That link is durable, seekable, and reviewable **now**.
-2. `SendUserFile` the `.webm` and ask the human to drag it into the PR body or a comment.
-3. They paste back the `github.com/user-attachments/assets/<uuid>` URL.
-4. Put that URL alone in its own paragraph, per rule 2, and keep the R2 link beside it as the copy that
-   does not depend on GitHub's signed, expiring asset URLs.
-
-### Can the agent make the attachment itself?
-
-**Not from a terminal session.** Every API route is closed, measured:
-
-| route                                                                                                | result                                                                                                 |
-| ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `POST github.com/upload/policies/assets` with a PAT                                                  | `422` + an HTML error page, with and without `repository_id` — it wants a browser session's CSRF token |
-| any REST/GraphQL equivalent                                                                          | none exists                                                                                            |
-| `github.com/<o>/<r>/releases/download/…webm`                                                         | no player — release assets are not rewritten                                                           |
-| `github.com/<o>/<r>/raw/…webm`, `media.githubusercontent.com/…webm`                                  | no player                                                                                              |
-| a well-formed `user-attachments` or legacy `user-images.githubusercontent.com` URL with a made-up id | no player                                                                                              |
-
-Two workarounds circulate for this and both are worse than R2 at the only thing they achieve. **Release
-assets** (`gh release create _attachments --draft` + `gh release upload`) do upload fine, but the URL is
-not rewritten — the table above is measured — so the payoff is a link R2 already gives you, bought with a
-junk release tag and an asset store nobody prunes. **An orphan `media` branch** is worse still: pushed
-blobs are reachable from a ref, so they land in every full clone and fetch of the repo permanently, for
-everyone, and cannot be removed without a history rewrite. It does not slow a `checkout` of `main` — no
-file enters the working tree — but it grows `.git` for every contributor forever, which is the whole
-reason [[recording-demos]] says never to commit the video.
-
-That last row is the informative one: the rewrite is **not** a URL-pattern transform you can imitate.
-GitHub resolves the id against a real asset record, so an invented URL of exactly the right shape renders
-as a plain link. Only an upload that creates the record produces a player.
-
-**With a browser holding the user's GitHub session, it is reachable.** The `claude-in-chrome` tools can
-drive the user's own Chrome: `find` the comment box's `input[type=file]`, `file_upload` onto it, let
-GitHub insert the `user-attachments` markdown, read the URL out of the textarea, and leave without
-posting the comment. Two hard prerequisites:
-
-- **The Chrome extension must be connected** — `list_connected_browsers` returning `[]` means this route
-  is unavailable, and the in-app browser pane is not a substitute (no GitHub session, and signing in
-  means handling a password, which is out of bounds).
-- **`file_upload` caps at 10 MB per call.** A screen recording usually needs a re-encode first, which is
-  cheap and barely visible at demo scale — 19.2 MB → 2.7 MB:
-
-  ```bash
-  ffmpeg -i demo.webm -c:v libvpx-vp9 -crf 40 -b:v 0 -vf scale=1280:-2 -an -row-mt 1 -cpu-used 5 out.webm
-  ```
-
-  Publish the **full-quality** file to R2 and attach the small one, so the player is convenient and the
-  link is the real artifact.
-
-This route is documented but **not yet verified end to end** — no extension was connected when it was
-written. Treat the human handoff above as the default and this as the optimisation to try first when a
-browser is available.
-
-Until step 3 lands, write the video as a labelled link with its duration and size, so a reviewer
-deciding whether to spend 19 MB knows what they are clicking:
-
-```markdown
 [Demo — plugin-foo toolbar (0:43, 19 MB webm)](https://pub-…r2.dev/demos/2026-08-27-plugin-foo/demo.webm)
 ```
 
-### Stills need none of this
+Always give a video's **duration and size** in the link text. A reviewer deciding whether to spend 19 MB
+deserves to know what they are clicking; a bare URL tells them nothing.
 
-An image embed works from any absolute HTTPS URL, R2 included, and needs no attachment and no paragraph
-isolation:
+The image embed works from any absolute HTTPS URL and needs nothing special. So when the thing being
+shown is a _state_ rather than a _sequence_, publish a still or a contact sheet and embed it — it renders
+inline for everyone with no click at all. That is the reason [[recording-demos]] tells you to prefer a
+still in the first place, and it is the closest thing to an inline demo you can actually automate.
 
-```markdown
-![Toolbar after the fix](https://pub-…r2.dev/demos/2026-08-27-plugin-foo/after.png)
-```
+### There is no inline player, and it is not worth chasing
 
-So for anything that is a _state_ rather than a _sequence_, publish a still and embed it — it renders
-inline for everyone with no human in the loop. That is the reason [[recording-demos]] tells you to
-prefer a still or a contact sheet in the first place.
+GitHub rewrites exactly one host into a `<video>`: `github.com/user-attachments/assets/<uuid>`, and only
+when that link stands alone in its own paragraph. **An agent cannot mint one.** All of this is measured,
+by reading `.body_html` back off a real PR:
 
-### What survives into a PR body
+| in a PR body                                                          | result                                                                                   |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `![x](https://pub-….r2.dev/….png)`                                    | **inline image** — absolute HTTPS keeps the `!`                                          |
+| `[x](https://pub-….r2.dev/….webm)`, or the bare URL                   | plain link. This is the convention                                                       |
+| `[x](github.com/user-attachments/assets/<uuid>)` alone in a paragraph | inline player — but only a human drag-and-drop creates the uuid                          |
+| the same attachment link inside a sentence or list item               | plain link                                                                               |
+| the same URL shape with an **invented** uuid                          | plain link — the rewrite resolves a real asset record, so there is no pattern to imitate |
+| `github.com/<o>/<r>/releases/download/….webm` (release asset)         | plain link                                                                               |
+| `github.com/<o>/<r>/raw/….webm`, `media.githubusercontent.com/….webm` | plain link                                                                               |
+| `<video src="…">` authored via `--body-file`                          | **stripped** — GitHub's sanitiser drops it, leaving an empty paragraph                   |
+| `![x](relative/path.png)`                                             | the `!` is dropped, leaving a link                                                       |
 
-Measured on a real PR, not assumed:
-
-| in a PR body                                                                  | result                                                                          |
-| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `[x](https://github.com/user-attachments/assets/<uuid>)` alone in a paragraph | **inline player**                                                               |
-| the same link inside a sentence or a list item                                | plain link                                                                      |
-| `![x](https://pub-….r2.dev/….png)`                                            | **inline image** — absolute HTTPS keeps the `!`                                 |
-| `[x](https://pub-….r2.dev/….webm)`, or the bare URL                           | plain link, never a player                                                      |
-| `[x](https://media.githubusercontent.com/….webm)` (LFS)                       | plain link, never a player                                                      |
-| `<video src="…">` authored in the body                                        | **stripped entirely** — GitHub's sanitiser drops it, leaving an empty paragraph |
-| `![x](relative/path.png)`                                                     | the `!` is dropped, leaving a link                                              |
+`POST github.com/upload/policies/assets` answers `422` to a PAT with or without `repository_id` — it wants
+a browser session's CSRF token — and there is no REST or GraphQL equivalent. Do not spend a cycle on the
+workarounds that circulate for this: **release assets** upload fine but are not rewritten, and an **orphan
+`media` branch** puts blobs in every full clone of the repo permanently, for every contributor, removable
+only by a history rewrite — an unbounded tax for a link R2 already gives you.
 
 Write the body with `gh pr create --body-file <file>` / `gh pr edit --body-file <file>`, never an inline
-`--body` string: the string form is what mangles `!` and escapes tags before GitHub ever sees them.
-Then read it back and check the shape actually landed:
+`--body` string: the string form mangles `!` and escapes tags before GitHub ever sees them. Then read it
+back and check the shape landed:
 
 ```bash
 gh api repos/<owner>/<repo>/pulls/<n> -H "Accept: application/vnd.github.html+json" -q .body_html \
-  | grep -c '<video'
+  | grep -o '<img[^>]*r2\.dev[^>]*>' | wc -l
 ```
 
 ## What must never go in

@@ -217,17 +217,17 @@ What survives this session's API proxy, measured rather than assumed:
 | `![x](https://raw.githubusercontent.com/…)`                            | **yes** — GitHub-hosted absolute URLs keep the `!`                                     |
 | `![x](relative/path.png)`                                              | no — the `!` is stripped, leaving a link                                               |
 | `<video src>`, `<source>`, `<track>`, `<img src>`                      | no — escaped by the proxy, and stripped by GitHub even when written with `--body-file` |
-| `[x](github.com/user-attachments/assets/…)` alone in its own paragraph | **yes — the one route to an inline player**; see [[hosting-artifacts]]                 |
+| `[x](github.com/user-attachments/assets/…)` alone in its own paragraph | a player — but only a human can create that URL; see [[hosting-artifacts]]             |
 | bare URL, `[text](url)`                                                | yes, verbatim                                                                          |
 
 `<video>` never survives — the proxy escapes it and GitHub's sanitiser strips it besides — and the
 attachment upload that does yield a player is a web-UI endpoint: `POST /upload/policies/assets` needs a
 browser CSRF token and answers `422`/`403` to a PAT. So a player is reachable, but only through a human.
 
-Upload the video per [[hosting-artifacts]] and link it with its duration and size in the link text; that
-link is durable and reviewable immediately. Then, for the player: `SendUserFile` the `.webm`, ask them to
-drag it into the PR, and put the `github.com/user-attachments/assets/<uuid>` URL they paste back **alone
-in its own paragraph** — that host, isolated that way, is the only thing GitHub renders as a `<video>`.
+Upload the video per [[hosting-artifacts]] and link it with its **duration and size** in the link text.
+That is the convention — a labelled R2 link for the video, an R2 image embed for the stills. A player
+needs a human drag-and-drop to mint a GitHub attachment; it is deliberately not part of the flow, and the
+measured reasons not to chase it are in [[hosting-artifacts]].
 
 ### Before/after, when the demo is a fix
 
