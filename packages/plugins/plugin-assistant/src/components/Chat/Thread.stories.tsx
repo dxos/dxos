@@ -127,7 +127,7 @@ const RemountableThread = (props: { messages: MessageType.Message[]; viewType?: 
 };
 
 const meta = {
-  title: 'plugins/plugin-assistant/components/ChatThread',
+  title: 'plugins/plugin-assistant/components/Thread',
   render: DefaultStory,
   decorators: [
     withTheme(),

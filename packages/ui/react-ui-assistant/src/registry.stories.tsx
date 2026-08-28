@@ -89,7 +89,7 @@ export const Reference: Story = {
 export const Suggestion: Story = {
   args: {
     content:
-      '<suggestion>Show me the layout rules</suggestion> <suggestion>Explain min-h-0</suggestion> <suggestion>Draft a fix</suggestion>',
+      '<suggestion>Show me the layout rules (this is a very very long suggestion that should truncate)</suggestion> <suggestion>Explain min-h-0</suggestion> <suggestion>Draft a fix</suggestion>',
   },
 };
 

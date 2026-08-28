@@ -606,7 +606,11 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
         <div key={message.id} data-index={index} data-object-id={message.id}>
           {!empty && (
             <Column.Root gutter={gutter}>
-              <Column.Center>
+              {/* Inline-size query container so a widget caps itself against the column it renders
+                  in (`max-w-[100cqi]`); with no container `cqi` resolves against the viewport and a
+                  suggestion chip overflows the thread. Not on the editor's content: a prompt's
+                  bubble is shrink-to-fit, and containing the text's contribution collapses it. */}
+              <Column.Center classNames='dx-inline-size-container'>
                 <Chrome
                   message={message}
                   index={index}
