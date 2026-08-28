@@ -105,6 +105,8 @@ export const make = (): Skill.Skill =>
           waiting on something, \`budget_reached\` means it hit its spending cap.
         - Send Message To Claude Agent queues a message at any time; it does not wait for a reply.
           After sending, poll the transcript rather than reporting the message as answered.
+        - The transcript returns the most recent \`limit\` events, oldest-first within that window;
+          pass \`order: first\` to read the opening of a long session instead.
         - The transcript returns only user and agent prose. Tool calls, thinking signals and status
           events are omitted, so a quiet transcript on a running session is normal.
 

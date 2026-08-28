@@ -20,7 +20,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.DeleteMilestone> = Tas
 
       let releasedTasks = 0;
       if (taskSet) {
-        for (const task of TaskSet.resolveTasks(taskSet)) {
+        for (const task of yield* TaskSet.loadTasks(taskSet)) {
           if (task.milestone && refEntityId(task.milestone) === milestone.id) {
             Obj.update(task, (task) => {
               delete task.milestone;

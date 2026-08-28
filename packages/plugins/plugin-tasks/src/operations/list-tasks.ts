@@ -49,7 +49,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.ListTasks> = TaskOpera
           : undefined;
       }
 
-      const all = taskSet ? TaskSet.resolveTasks(taskSet) : [];
+      const all = taskSet ? yield* TaskSet.loadTasks(taskSet) : [];
       const scoped = includeSubtasks ? all : TaskSet.rootTasks(all);
       // Resolved against the whole set, not `scoped`: a root task's milestone can only be its own,
       // but the inheritance walk still has to see every ancestor.
