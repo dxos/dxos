@@ -244,7 +244,7 @@
       "@dxos/plugin-calls",
       "@dxos/plugin-chess",
       "@dxos/plugin-chess-com",
-      "@dxos/plugin-claude-agents",
+      "@dxos/plugin-claude",
       "@dxos/plugin-client",
       "@dxos/plugin-code",
       "@dxos/plugin-commerce",

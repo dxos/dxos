@@ -25,6 +25,7 @@ import {
   CredentialResponse,
   EnvironmentResponse,
   type EnvironmentVariableCredential,
+  type EventOrder,
   EventPage,
   Ignored,
   SessionResponse,
@@ -34,9 +35,11 @@ import {
 /**
  * A retry is safe on a GET, which changes nothing; on a POST it is safe only where the server says
  * it did not act, since a lost response would otherwise create the session or credential twice.
+ * A 403 from the edge proxy is transient often enough to be worth retrying, and rejects the request
+ * before it reaches the control plane, so it did not act either.
  */
 export const isRetryable = (method: 'GET' | 'POST', error: ClaudeAgentApiError): boolean =>
-  method === 'GET' ? error.status === 0 || error.status === 429 || error.status >= 500 : error.status === 429;
+  error.status === 403 || error.status === 429 || (method === 'GET' && (error.status === 0 || error.status >= 500));
 
 type Request<A> = {
   apiKey: string;
@@ -165,13 +168,19 @@ export const sendUserMessage = (
     body: { events: [{ type: 'user.message', content: [{ type: 'text', text: message }] }] },
   });
 
-/** Reads one page of session events, newest last. */
+/** Returns events chronologically, defaulting to the last `limit`: the API's own default opens at the first, which on a long session is not what a caller wants. */
 export const listEvents = (
   apiKey: string,
   sessionId: string,
   limit: number,
+  order: EventOrder = 'last',
 ): Effect.Effect<EventPage, ClaudeAgentApiError> =>
-  request({ apiKey, method: 'GET', path: `/v1/sessions/${sessionId}/events?limit=${limit}`, schema: EventPage });
+  request({
+    apiKey,
+    method: 'GET',
+    path: `/v1/sessions/${sessionId}/events?limit=${limit}&order=${order === 'last' ? 'desc' : 'asc'}`,
+    schema: EventPage,
+  }).pipe(Effect.map((page) => (order === 'last' && page.data ? { ...page, data: [...page.data].reverse() } : page)));
 
 /** One vault per session, so archiving it retires every secret that session was given. */
 export const createVault = (apiKey: string, displayName: string): Effect.Effect<VaultResponse, ClaudeAgentApiError> =>

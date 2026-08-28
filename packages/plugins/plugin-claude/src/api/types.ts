@@ -54,6 +54,10 @@ export const SessionEvent = Schema.Struct({
 });
 export interface SessionEvent extends Schema.Schema.Type<typeof SessionEvent> {}
 
+/** Which end of a session's event stream to read: the opening events, or the most recent ones. */
+export const EventOrder = Schema.Literals(['first', 'last']);
+export type EventOrder = Schema.Schema.Type<typeof EventOrder>;
+
 export const EventPage = Schema.Struct({
   data: Schema.optional(Schema.Array(SessionEvent)),
   next_page: Schema.optional(Schema.NullOr(Schema.String)),

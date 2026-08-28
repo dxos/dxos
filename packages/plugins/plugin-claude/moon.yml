@@ -11,7 +11,7 @@ tasks:
     # UI-free: fail if React ever becomes reachable from it under either condition.
     command: >-
       pnpm exec dx-trace-imports
-      --export ./ClaudeAgentsPlugin
+      --export ./ClaudePlugin
       --to "{react,react-dom}"
       --conditions workerd,worker
       --conditions node

@@ -17,7 +17,7 @@ import { SessionNotLinkedError } from '../errors';
 const handler: Operation.WithHandler<typeof ClaudeAgentOperation.GetTranscript> =
   ClaudeAgentOperation.GetTranscript.pipe(
     Operation.withHandler(
-      Effect.fn(function* ({ session, limit }) {
+      Effect.fn(function* ({ session, limit, order }) {
         const sessionObj = yield* Database.load(session);
         const sessionId = ClaudeAgentSession.getSessionId(sessionObj);
         if (!sessionId) {
@@ -27,7 +27,7 @@ const handler: Operation.WithHandler<typeof ClaudeAgentOperation.GetTranscript> 
         const apiKey = yield* getApiKey;
 
         const [state, events] = yield* Effect.all(
-          [getSession(apiKey, sessionId), listEvents(apiKey, sessionId, limit ?? DEFAULT_TRANSCRIPT_LIMIT)],
+          [getSession(apiKey, sessionId), listEvents(apiKey, sessionId, limit ?? DEFAULT_TRANSCRIPT_LIMIT, order)],
           { concurrency: 2 },
         );
 

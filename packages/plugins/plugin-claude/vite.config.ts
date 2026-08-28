@@ -7,7 +7,7 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    ClaudeAgentsPlugin: 'src/ClaudeAgentsPlugin.ts',
+    ClaudePlugin: 'src/ClaudePlugin.ts',
     plugin: 'src/plugin.tsx',
     api: 'src/api/index.ts',
     capabilities: 'src/capabilities/index.ts',
