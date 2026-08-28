@@ -35,138 +35,6 @@ import { AiChatProcessor } from './processor';
 
 const TestLayer = AssistantTestLayer({ tracing: 'noop', types: [Chat.Chat, Feed.Feed] });
 
-/** Builds a trace event carrying an assistant text block (the payload `#handleEphemeralMessage` consumes). */
-const partialBlockEvent = (messageId: string, text: string, pending: boolean): Trace.Event => ({
-  timestamp: 0,
-  type: PartialBlock.key,
-  data: {
-    messageId,
-    role: 'assistant',
-    block: { _tag: 'text', text, ...(pending ? { pending } : {}) } satisfies ContentBlock.Text,
-  },
-});
-
-const texts = (messages: readonly Message.Message[]): string[] =>
-  messages.map(({ blocks }) => blocks.map((block) => (block as ContentBlock.Text).text).join(''));
-
-/** Wraps events in the trace envelope `subscribeEphemeral` delivers. */
-const traceMessage = (events: Trace.Event[]): Trace.Message =>
-  Obj.make(Trace.Message, { meta: {}, isEphemeral: true, events });
-
-/** Awaits real macrotask turns until `predicate` holds: the test context virtualizes `Effect.sleep`. */
-const settle = (predicate: () => boolean = () => false) =>
-  Effect.promise(async () => {
-    for (let turn = 0; turn < 100 && !predicate(); ++turn) {
-      await new Promise((resolve) => setTimeout(resolve, 5));
-    }
-  });
-
-/**
- * Stub {@link AgentService.Session} whose ephemeral stream replays a scripted batch sequence.
- * `waitForCompletion` resolves only after the stream has been fully delivered, mirroring the real
- * session's turn-settles-after-streaming ordering.
- */
-const makeStubSession = (
-  feed: Feed.Feed,
-  batches: Trace.Message[],
-  options: { running?: boolean } = {},
-): Effect.Effect<AgentService.Session, never, never> =>
-  Effect.gen(function* () {
-    const done = yield* Deferred.make<void>();
-    return {
-      feed,
-      getContext: () => Effect.succeed([]),
-      addContext: () => Effect.void,
-      submitPrompt: () => Effect.void,
-      running: Atom.make(options.running ?? false),
-      waitForCompletion: () => Deferred.await(done),
-      terminate: () => Effect.void,
-      subscribeEphemeral: () => Stream.fromIterable(batches).pipe(Stream.ensuring(Deferred.succeed(done, undefined))),
-    };
-  });
-
-/**
- * Stub session whose stream pauses between the two batches, so a test can dispose the observer
- * mid-turn and see whether the collector kept consuming. `release` resumes delivery.
- */
-const makeGatedSession = (
-  feed: Feed.Feed,
-  before: Trace.Message[],
-  after: Trace.Message[],
-): Effect.Effect<{ session: AgentService.Session; release: Effect.Effect<void> }, never, never> =>
-  Effect.gen(function* () {
-    const gate = yield* Deferred.make<void>();
-    const done = yield* Deferred.make<void>();
-    const session: AgentService.Session = {
-      feed,
-      getContext: () => Effect.succeed([]),
-      addContext: () => Effect.void,
-      submitPrompt: () => Effect.void,
-      running: Atom.make(true),
-      waitForCompletion: () => Deferred.await(done),
-      terminate: () => Effect.void,
-      subscribeEphemeral: () =>
-        Stream.fromIterable(before).pipe(
-          Stream.concat(Stream.fromEffect(Deferred.await(gate)).pipe(Stream.flatMap(() => Stream.fromIterable(after)))),
-          Stream.ensuring(Deferred.succeed(done, undefined)),
-        ),
-    };
-    return { session, release: Deferred.succeed(gate, undefined).pipe(Effect.asVoid) };
-  });
-
-/** The processor's space layer: the test layer's real services with the stub agent service swapped in. */
-const makeSpaceLayer = (agentService: AgentService.Service) =>
-  Effect.gen(function* () {
-    const services = yield* Effect.context<
-      | Database.Service
-      | Credential.CredentialsService
-      | AiService.AiService
-      | Registry.Service
-      | OpaqueToolkit.OpaqueToolkitProvider
-    >();
-    return Layer.mergeAll(
-      Layer.succeedContext(
-        Context.pick(
-          Database.Service,
-          Credential.CredentialsService,
-          AiService.AiService,
-          Registry.Service,
-          OpaqueToolkit.OpaqueToolkitProvider,
-        )(services),
-      ),
-      Layer.succeed(AgentService.AgentService, agentService),
-    );
-  });
-
-/**
- * A sound {@link Capabilities.ProcessManagerRuntime} for tests: a `ManagedRuntime` over the
- * assistant test layer's process services plus a bare `PluginManager` for the capability/plugin
- * tags. Scoped so the runtime is disposed with the test.
- */
-const makeTestRuntime = Effect.gen(function* () {
-  const services = yield* Effect.context<
-    | ProcessManager.Service
-    | Operation.Service
-    | ProcessManager.ProcessOperationInvoker.Service
-    | ServiceResolver.ServiceResolver
-  >();
-  const manager = PluginManager.make({
-    pluginLoader: (id: string) => Effect.die(new Error(`No plugins in test runtime: ${id}`)),
-    plugins: [],
-  });
-  const runtime: Capabilities.ProcessManagerRuntime = ManagedRuntime.make(
-    Layer.mergeAll(
-      Layer.succeedContext(services),
-      Layer.succeed(Capability.Service, manager.capabilities),
-      Layer.succeed(Plugin.Service, manager),
-    ),
-  );
-  yield* Effect.addFinalizer(() =>
-    Effect.promise(() => (runtime as ManagedRuntime.ManagedRuntime<never, never>).dispose()),
-  );
-  return runtime;
-});
-
 describe('AiChatProcessor streaming', () => {
   it.effect(
     'upserts partials, finalizes complete blocks, ignores late partials, and flushes on completion',
@@ -246,8 +114,6 @@ describe('AiChatProcessor streaming', () => {
     ),
   );
 
-  // A processor built by a remount starts with no state of its own, while the agent process for
-  // the feed keeps working.
   it.effect(
     'adopts an agent still running after a remount, and ignores an idle one',
     Effect.fn(
@@ -279,8 +145,7 @@ describe('AiChatProcessor streaming', () => {
           idleProcessor.adopt(),
         ];
         yield* Effect.addFinalizer(() => Effect.sync(() => idleUnsubscribers.forEach((dispose) => dispose())));
-        // Adoption resolves the session through a promise.
-        yield* settle();
+        yield* quiesce;
         // A live-but-idle agent (awaiting input) is not adopted.
         expect(idleRegistry.get(idleProcessor.active)).toBe(false);
         expect(idleRegistry.get(idleProcessor.messages)).toEqual([]);
@@ -308,7 +173,7 @@ describe('AiChatProcessor streaming', () => {
         yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribers.forEach((unsubscribe) => unsubscribe())));
 
         unsubscribers.push(processor.adopt());
-        yield* settle(() => activeSnapshots.includes(true) && !observableRegistry.get(processor.active));
+        yield* whenAtom(observableRegistry, processor.active, (active) => !active && activeSnapshots.includes(true));
 
         expect(activeSnapshots).toContain(true);
         expect(observableRegistry.get(processor.active)).toBe(false);
@@ -319,8 +184,6 @@ describe('AiChatProcessor streaming', () => {
     ),
   );
 
-  // Disposal must stop the collector: a remount otherwise leaves the previous mount's consumer on
-  // the session's ephemeral stream for the rest of the turn.
   it.effect(
     'stops consuming the stream when the observer is disposed mid-turn',
     Effect.fn(
@@ -352,12 +215,12 @@ describe('AiChatProcessor streaming', () => {
         yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
 
         const dispose = processor.adopt();
-        yield* settle(() => observableRegistry.get(processor.messages).length > 0);
+        yield* whenAtom(observableRegistry, processor.messages, (messages) => messages.length > 0);
         expect(texts(observableRegistry.get(processor.messages))).toEqual(['Still']);
 
         dispose();
         yield* release;
-        yield* settle();
+        yield* quiesce;
 
         expect(texts(observableRegistry.get(processor.messages))).toEqual(['Still']);
         expect(observableRegistry.get(processor.active)).toBe(false);
@@ -369,4 +232,165 @@ describe('AiChatProcessor streaming', () => {
       TestHelpers.provideTestContext,
     ),
   );
+});
+
+//
+// Helpers.
+//
+
+/** Builds a trace event carrying an assistant text block (the payload `#handleEphemeralMessage` consumes). */
+const partialBlockEvent = (messageId: string, text: string, pending: boolean): Trace.Event => ({
+  timestamp: 0,
+  type: PartialBlock.key,
+  data: {
+    messageId,
+    role: 'assistant',
+    block: { _tag: 'text', text, ...(pending ? { pending } : {}) } satisfies ContentBlock.Text,
+  },
+});
+
+const texts = (messages: readonly Message.Message[]): string[] =>
+  messages.map(({ blocks }) => blocks.map((block) => (block as ContentBlock.Text).text).join(''));
+
+/** Wraps events in the trace envelope `subscribeEphemeral` delivers. */
+const traceMessage = (events: Trace.Event[]): Trace.Message =>
+  Obj.make(Trace.Message, { meta: {}, isEphemeral: true, events });
+
+/** Empty tail that settles `done` on normal delivery only, so interruption leaves the turn running. */
+const completeWhenDrained = (done: Deferred.Deferred<void>): Stream.Stream<Trace.Message> =>
+  Stream.fromEffect(Deferred.succeed(done, undefined)).pipe(Stream.drain);
+
+/** Resolves when `atom` first satisfies `predicate`. */
+const whenAtom = <T>(
+  registry: AtomRegistry.AtomRegistry,
+  atom: Atom.Atom<T>,
+  predicate: (value: T) => boolean,
+): Effect.Effect<void> =>
+  Effect.callback<void>((resume) => {
+    const unsubscribe = registry.subscribe(
+      atom,
+      (value) => {
+        if (predicate(value)) {
+          resume(Effect.void);
+        }
+      },
+      { immediate: true },
+    );
+    return Effect.sync(() => unsubscribe());
+  });
+
+/**
+ * Bounded real-time window for the assertions that something did NOT happen, which no event can
+ * signal. Real macrotasks because the test context virtualizes `Effect.sleep`.
+ */
+const quiesce = Effect.promise(
+  () =>
+    new Promise((resolve) => {
+      setTimeout(resolve, 100);
+    }),
+);
+
+/**
+ * Stub {@link AgentService.Session} whose ephemeral stream replays a scripted batch sequence.
+ * `waitForCompletion` resolves only after the stream has been fully delivered, mirroring the real
+ * session's turn-settles-after-streaming ordering.
+ */
+const makeStubSession = (
+  feed: Feed.Feed,
+  batches: Trace.Message[],
+  options: { running?: boolean } = {},
+): Effect.Effect<AgentService.Session, never, never> =>
+  Effect.gen(function* () {
+    const done = yield* Deferred.make<void>();
+    return {
+      feed,
+      getContext: () => Effect.succeed([]),
+      addContext: () => Effect.void,
+      submitPrompt: () => Effect.void,
+      running: Atom.make(options.running ?? false),
+      waitForCompletion: () => Deferred.await(done),
+      terminate: () => Effect.void,
+      // The completion signal rides the end of the stream rather than `Stream.ensuring`, which also
+      // runs on interruption and would settle the turn when a collector is merely disposed.
+      subscribeEphemeral: () => Stream.fromIterable(batches).pipe(Stream.concat(completeWhenDrained(done))),
+    };
+  });
+
+/** Stub session whose stream pauses between the two batches; `release` resumes delivery. */
+const makeGatedSession = (
+  feed: Feed.Feed,
+  before: Trace.Message[],
+  after: Trace.Message[],
+): Effect.Effect<{ session: AgentService.Session; release: Effect.Effect<void> }, never, never> =>
+  Effect.gen(function* () {
+    const gate = yield* Deferred.make<void>();
+    const done = yield* Deferred.make<void>();
+    const session: AgentService.Session = {
+      feed,
+      getContext: () => Effect.succeed([]),
+      addContext: () => Effect.void,
+      submitPrompt: () => Effect.void,
+      running: Atom.make(true),
+      waitForCompletion: () => Deferred.await(done),
+      terminate: () => Effect.void,
+      subscribeEphemeral: () =>
+        Stream.fromIterable(before).pipe(
+          Stream.concat(Stream.fromEffect(Deferred.await(gate)).pipe(Stream.flatMap(() => Stream.fromIterable(after)))),
+          Stream.concat(completeWhenDrained(done)),
+        ),
+    };
+    return { session, release: Deferred.succeed(gate, undefined).pipe(Effect.asVoid) };
+  });
+
+/** The processor's space layer: the test layer's real services with the stub agent service swapped in. */
+const makeSpaceLayer = (agentService: AgentService.Service) =>
+  Effect.gen(function* () {
+    const services = yield* Effect.context<
+      | Database.Service
+      | Credential.CredentialsService
+      | AiService.AiService
+      | Registry.Service
+      | OpaqueToolkit.OpaqueToolkitProvider
+    >();
+    return Layer.mergeAll(
+      Layer.succeedContext(
+        Context.pick(
+          Database.Service,
+          Credential.CredentialsService,
+          AiService.AiService,
+          Registry.Service,
+          OpaqueToolkit.OpaqueToolkitProvider,
+        )(services),
+      ),
+      Layer.succeed(AgentService.AgentService, agentService),
+    );
+  });
+
+/**
+ * A sound {@link Capabilities.ProcessManagerRuntime} for tests: a `ManagedRuntime` over the
+ * assistant test layer's process services plus a bare `PluginManager` for the capability/plugin
+ * tags. Scoped so the runtime is disposed with the test.
+ */
+const makeTestRuntime = Effect.gen(function* () {
+  const services = yield* Effect.context<
+    | ProcessManager.Service
+    | Operation.Service
+    | ProcessManager.ProcessOperationInvoker.Service
+    | ServiceResolver.ServiceResolver
+  >();
+  const manager = PluginManager.make({
+    pluginLoader: (id: string) => Effect.die(new Error(`No plugins in test runtime: ${id}`)),
+    plugins: [],
+  });
+  const runtime: Capabilities.ProcessManagerRuntime = ManagedRuntime.make(
+    Layer.mergeAll(
+      Layer.succeedContext(services),
+      Layer.succeed(Capability.Service, manager.capabilities),
+      Layer.succeed(Plugin.Service, manager),
+    ),
+  );
+  yield* Effect.addFinalizer(() =>
+    Effect.promise(() => (runtime as ManagedRuntime.ManagedRuntime<never, never>).dispose()),
+  );
+  return runtime;
 });
