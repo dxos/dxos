@@ -31,10 +31,10 @@
       "path": "../../core/compute/link"
     },
     {
-      "path": "../../core/echo/echo"
+      "path": "../../core/echo/blob"
     },
     {
-      "path": "../../core/echo/echo-client"
+      "path": "../../core/echo/echo"
     },
     {
       "path": "../../sdk/app-framework"

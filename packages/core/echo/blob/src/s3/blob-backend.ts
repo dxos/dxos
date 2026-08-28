@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type BlobBackend } from '@dxos/blob';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 
+import { type BlobBackend } from '../backend';
 import { S3_SCHEME } from './constants';
 import { type S3Credentials, getObject, getObjectUrl, headObject, putObject } from './s3-client';
 import { formatUri, objectKey, parseUri } from './s3-uri';

@@ -21,8 +21,17 @@ store takes a `BlobTransport` (four operations), S3 takes an `S3Host` (credentia
 resolution). This is what lets the same backend register in a browser, in a headless worker with no
 `Client`, or in a test with a plain object.
 
-## Status
+## Layout
 
-This package currently holds the contract. The registry, URI encoding, and the backends themselves
-still live in `@dxos/echo-client` and `@dxos/client`; moving them here is tracked in
-[the design doc](../echo-client/src/blob/DESIGN.md), along with the `edge`/`ni:` → `blob` rename.
+| Entry point | Contents |
+| --- | --- |
+| `@dxos/blob` | `BlobBackend`, `BlobTransport`, the `ni:` URI encoding |
+| `@dxos/blob/s3` | S3/R2 backend — SigV4 over WebCrypto, no AWS SDK |
+| `@dxos/blob/hosted` | the DXOS-hosted store, over a `BlobTransport` |
+
+Each backend is its own entry point so nothing that does not use S3 carries the signer.
+
+`BlobManager` — the registry itself — lives in `@dxos/echo-client`, not here. This package sits
+*below* `@dxos/echo` (which imports `BlobBackend` for `Hypergraph.registerBlobBackend`), while the
+manager creates `Blob.Blob` objects and throws `EchoError`, so it must sit above. See
+[the design doc](./docs/DESIGN.md), which also covers the pending `edge`/`ni:` → `blob` rename.

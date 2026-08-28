@@ -160,7 +160,7 @@ outbound `fetch` to the customer's own endpoint. `operation-service` sets no
       the current `ni:` names an addressing style instead, which is what made a hypothetical IPFS
       backend look like a scheme collision. Nine source files, dual-read migration.
       Written up in
-      [echo-client/src/blob/DESIGN.md](../../../packages/core/echo/echo-client/src/blob/DESIGN.md);
+      [blob/docs/DESIGN.md](../../../packages/core/echo/blob/docs/DESIGN.md);
       no code changed for it yet.
 
 - [ ] **EDGE blob-store target** — a `BLOB_SERVICE` binding on `operation-service` plus a backend

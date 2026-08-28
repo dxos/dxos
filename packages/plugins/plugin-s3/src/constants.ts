@@ -2,15 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-// The storage name, URI scheme, region default and timeouts live in `@dxos/echo-client/blob-s3` alongside the
+// The storage name, URI scheme, region default and timeouts live in `@dxos/blob/s3` alongside the
 // code that uses them, so a headless host gets them without depending on this plugin.
-export {
-  DEFAULT_REGION,
-  PRESIGN_EXPIRY_SECONDS,
-  S3_BACKEND,
-  S3_SCHEME,
-  S3_TIMEOUT_MS,
-} from '@dxos/echo-client/blob-s3';
+export { DEFAULT_REGION, PRESIGN_EXPIRY_SECONDS, S3_BACKEND, S3_SCHEME, S3_TIMEOUT_MS } from '@dxos/blob/s3';
 export { S3_CONNECTOR_ID } from '@dxos/compute-runtime';
 
 /**

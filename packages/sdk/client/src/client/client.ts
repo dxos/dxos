@@ -6,6 +6,7 @@ import * as EffectContext from 'effect/Context';
 import { inspect } from 'node:util';
 
 import { type CleanupFn, Event, MulticastObservable, Trigger, synchronized } from '@dxos/async';
+import { createEdgeBlobBackend } from '@dxos/blob/hosted';
 import {
   type ClientServicesProvider,
   type Echo,
@@ -37,7 +38,7 @@ import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { trace } from '@dxos/tracing';
 import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
-import { type ClientEdgeAPI, createClientEdgeAPI, createEdgeBlobBackend, createEdgeIdentity } from '../edge';
+import { type ClientEdgeAPI, createClientEdgeAPI, createEdgeIdentity } from '../edge';
 import { type MeshProxy } from '../mesh/mesh-proxy';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';

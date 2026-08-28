@@ -12,7 +12,7 @@ blob service is one worker inside it. `Blob.Storage.edge` reads as "the EDGE bac
 no better — it would go stale the moment the service is re-implemented.
 
 **`ni:` names an addressing style, not a backend.** `BlobManager` dispatches reads on a
-`Map<scheme, backend>` ([blob-manager.ts](./blob-manager.ts)), so a scheme is functionally a backend
+`Map<scheme, backend>` ([blob-manager.ts](../../echo-client/src/blob/blob-manager.ts)), so a scheme is functionally a backend
 selector. Every other scheme behaves that way — `s3:`, `wnfs:` — and `ni:` is the one entry that
 describes a property instead of an owner. That is the entire reason a hypothetical IPFS backend
 raises a collision question: IPFS is also content-addressed, so it has a claim on `ni:` that it
@@ -53,27 +53,28 @@ digest change does not need a new scheme.
 
 ## Packaging
 
-Blob functionality is currently spread across five packages — the contract in `echo-protocol`, the
-registry in `echo-client`, the `ni:` encoding in `echo-client`, the hosted backend in `sdk/client`,
-and backends in two plugins. "Which package owns blobs?" has no answer.
+Blob functionality used to be spread across five packages — the contract in `echo-protocol`, the
+registry and `ni:` encoding in `echo-client`, the hosted backend in `sdk/client`, and backends in two
+plugins. "Which package owns blobs?" had no answer.
 
-Target: a `@dxos/blob` package holding the contract, the registry, the URI encoding, and the
-backends as subpaths.
+`@dxos/blob` now holds the contract, the URI encoding, and both non-plugin backends as subpaths. The
+registry stays in `@dxos/echo-client` — not an omission, see below.
 
 ```mermaid
 graph TD
-  echo["@dxos/echo<br/>Blob.Blob · Blob.Storage · Blob.Scheme"]
-  blob["@dxos/blob<br/>BlobBackend · BlobManager<br/>BlobTransport · blobUri"]
+  blob["@dxos/blob<br/>BlobBackend · BlobTransport<br/>ni-uri (SCHEME · digestHex)"]
   s3["@dxos/blob/s3<br/>S3Host · createS3BlobBackend<br/>signRequest · presignUrl"]
-  hosted["@dxos/blob/hosted<br/>createHostedBlobBackend"]
-  echoClient["@dxos/echo-client<br/>Hypergraph · registerBlobBackend"]
+  hosted["@dxos/blob/hosted<br/>createEdgeBlobBackend"]
+  echo["@dxos/echo<br/>Blob.Blob · Blob.Storage · Blob.Scheme<br/>Hypergraph.registerBlobBackend"]
+  echoClient["@dxos/echo-client<br/>HypergraphImpl · BlobManager"]
   edgeClient["@dxos/edge-client<br/>EdgeHttpClient"]
   client["@dxos/client"]
   compute["@dxos/compute-runtime<br/>FunctionContext"]
 
-  blob --> echo
   s3 --> blob
   hosted --> blob
+  echo --> blob
+  echoClient --> echo
   echoClient --> blob
   client --> echoClient
   client --> hosted
@@ -83,16 +84,28 @@ graph TD
   client -. adapts EdgeHttpClient to BlobTransport .-> hosted
 ```
 
-The dotted edge is the point: nothing in the blob layer depends on `@dxos/edge-client`. The client
-adapts its `EdgeHttpClient` to `BlobTransport` at the one registration site.
+Two things the arrows are carrying. `echo --> blob`, not the reverse — an earlier draft of this
+diagram had it backwards, which is what the next section is about. And the dotted edge: nothing in
+the blob layer depends on `@dxos/edge-client`; `@dxos/client` adapts its `EdgeHttpClient` to
+`BlobTransport` at the one registration site.
 
-`EdgeHttpClient`'s blob methods take a leading `Context`, so the fit is not quite structural. That
-is deliberate — threading `Context` into `BlobTransport` would make `@dxos/blob` depend on
-`@dxos/context` to carry a value the blob layer never reads, which is a worse trade than four lines
-of adapter at a single call site.
+### Why `BlobManager` is not in this package
 
-`Blob.Blob` and friends stay in `@dxos/echo` — they are ECHO schema, so `@dxos/blob` gets the
-machinery, not the types.
+`@dxos/blob` sits **below** `@dxos/echo`, not above it. `Hypergraph` exposes
+`registerBlobBackend(name, backend: BlobBackend, …)`, so `@dxos/echo` imports the contract — and
+anything the contract's package imports cannot import `@dxos/echo` back.
+
+`BlobManager` does: it creates `Blob.Blob` objects, reads `Blob.Storage.inline`, and throws
+`EchoError.BlobTooLargeError`. So it stays in `@dxos/echo-client`, which is above echo. An attempt
+to move it here failed with moon's `project_graph::would_cycle`, which is the graph stating the same
+constraint.
+
+The blob _schema_ cannot come down to meet it either: `Blob.ts` is built on echo's `Obj`, `Type`,
+`Annotation` and `Database` modules — it is ECHO schema in the full sense, not a plain struct.
+
+Both backends live here because neither needs echo. The hosted one reads its scheme from `ni-uri`'s
+`SCHEME` rather than `Blob.Scheme.ni`; the two are the same string `'ni'`, and taking it from the
+lower package is what keeps the edge out of the graph.
 
 ### Backends take capabilities, not clients
 
@@ -113,6 +126,11 @@ The S3 backend already works this way, because the headless path forced it: `ope
 the right shape for all of them — a backend that takes capabilities is registrable in a browser, a
 worker, or a test without a client graph behind it.
 
+`EdgeHttpClient`'s blob methods take a leading `Context`, so `BlobTransport` is not a structural
+match for it. That is deliberate: threading `Context` into the interface would make `@dxos/blob`
+depend on `@dxos/context` to carry a value the blob layer never reads, a worse trade than four lines
+of adapter at a single call site.
+
 `edge-client` itself wants the same treatment. Its 33 methods cluster into identity, queue, blob,
 compute, registry, and gateway groups. Split those as **subpath exports first**
 (`@dxos/edge-client/blob`), not packages: it gives the tree-shaking and the ownership boundary with
@@ -126,8 +144,8 @@ This decision entrenches scheme = backend identity. The digest stays _semantical
 location-independent while becoming _syntactically_ owned, so one reference resolvable from several
 stores is no longer expressible in the URI alone. Two features want that:
 
-- the local cache blocked in [edge-blob-backend.ts](../../../../sdk/client/src/edge/edge-blob-backend.ts),
-  which needs to serve a `blob:` reference from disk before reaching the network;
+- the local cache blocked in [hosted/blob-backend.ts](../src/hosted/blob-backend.ts), which needs to
+  serve a `blob:` reference from disk before reaching the network;
 - an IPFS mirror of DXOS-hosted content.
 
 Both would need a resolution-order mechanism — several backends expressing interest in one
@@ -140,17 +158,15 @@ either feature becomes real.
 
 Contained — nine source files.
 
-| File                                                                                                                                                                                                       | Kind         | Notes                                                                                                                              |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| [Blob.ts](../../../echo/src/Blob.ts)                                                                                                                                                                       | API          | `Storage = { inline, edge }` and `Scheme = { ni }`. Both constants change; `Scheme.ni` is retained read-side.                      |
-| [ni-uri.ts](./ni-uri.ts)                                                                                                                                                                                   | Encoding     | `fromDigest`/`fromDigestHex` emit `ni:///${ALG};…`; `decode` rejects non-`ni:`. Becomes the dual-read boundary.                    |
-| [blob-manager.ts](./blob-manager.ts)                                                                                                                                                                       | Registry     | `#defaultStorage` initialises to `Storage.inline`; no `ni:` knowledge of its own.                                                  |
-| [edge-blob-backend.ts](../../../../sdk/client/src/edge/edge-blob-backend.ts)                                                                                                                               | Backend      | Declares `schemes: [Blob.Scheme.ni]`, calls `fromDigestHex`/`parseNiUri`. Must accept both schemes on read, emit `blob:` on write. |
-| [client.ts](../../../../sdk/client/src/client/client.ts)                                                                                                                                                   | Registration | Registers under `Blob.Storage.edge` with `{ default: true }`.                                                                      |
-| [edge-backend.ts](../../../../../plugins/plugin-file/src/capabilities/edge-backend.ts)                                                                                                                     | Descriptor   | Settings-UI entry naming the backend. User-visible label.                                                                          |
-| [ni-uri.test.ts](./ni-uri.test.ts), [blob.test.ts](./blob.test.ts), [Blob.test.ts](../../../echo/src/Blob.test.ts), [edge-blob-backend.test.ts](../../../../sdk/client/src/edge/edge-blob-backend.test.ts) | Tests        | Pin the literal strings `'edge'`, `'ni'`, and `ni:///sha-256;3q2-7w`.                                                              |
-
-`packages/apps/composer-app/out/` hits are build output, not sources.
+| File                                                                                                                  | Kind         | Notes                                                                                                                      |
+| --------------------------------------------------------------------------------------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| [echo/src/Blob.ts](../../echo/src/Blob.ts)                                                                            | API          | `Storage = { inline, edge }` and `Scheme = { ni }`. Both constants change; `Scheme.ni` is retained read-side.              |
+| [src/ni-uri.ts](../src/ni-uri.ts)                                                                                     | Encoding     | `fromDigest`/`fromDigestHex` emit `ni:///${ALG};…`; `decode` rejects non-`ni:`. Becomes the dual-read boundary.            |
+| [src/hosted/blob-backend.ts](../src/hosted/blob-backend.ts)                                                           | Backend      | Declares `schemes: [SCHEME]`, calls `fromDigestHex`/`parseNiUri`. Must accept both schemes on read, emit `blob:` on write. |
+| [echo-client/src/blob/blob-manager.ts](../../echo-client/src/blob/blob-manager.ts)                                    | Registry     | `#defaultStorage` initialises to `Storage.inline`; no `ni:` knowledge of its own.                                          |
+| [client/src/client/client.ts](../../../../sdk/client/src/client/client.ts)                                            | Registration | Registers under `Blob.Storage.edge` with `{ default: true }`.                                                              |
+| [plugin-file/…/edge-backend.ts](../../../../plugins/plugin-file/src/capabilities/edge-backend.ts)                     | Descriptor   | Settings-UI entry naming the backend. User-visible label.                                                                  |
+| `src/ni-uri.test.ts`, `src/hosted/blob-backend.test.ts`, `echo-client/src/blob/blob.test.ts`, `echo/src/Blob.test.ts` | Tests        | Pin the literal strings `'edge'`, `'ni'`, and `ni:///sha-256;3q2-7w`.                                                      |
 
 ## Migration
 
@@ -174,11 +190,14 @@ Not started; no code in this repository has been changed for it yet.
 - [x] **`BlobTransport`** — the hosted backend takes four operations instead of a 33-method client.
       `client.ts` adapts `EdgeHttpClient` at the registration site. Side benefit: the backend's tests
       no longer need `as unknown as EdgeHttpClient` to assert a whole class from a one-method stub.
-- [x] **`@dxos/blob` package** ([packages/core/echo/blob](../../../blob)) — holds the contract
-      (`BlobBackend`, `BlobTransport`, `BlobPutRequest`/`Response`), moved out of `@dxos/echo-protocol`
-      with every call site repointed and no compatibility re-export. Depends only on `@dxos/keys`.
-- [ ] **Move the registry, URI encoding and backends into it**, backends as subpaths
-      (`@dxos/blob/s3`, `@dxos/blob/hosted`).
+- [x] **`@dxos/blob` package** — holds the contract (`BlobBackend`, `BlobTransport`,
+      `BlobPutRequest`/`Response`), moved out of `@dxos/echo-protocol` with every call site repointed
+      and no compatibility re-export.
+- [x] **URI encoding and both backends moved in** — `ni-uri` at the root, S3 under `./s3`, the hosted
+      store under `./hosted`. `@dxos/echo-client`'s `./blob-s3` subpath is gone; consumers import
+      `@dxos/blob/s3`. Package deps: `@dxos/keys`, `@dxos/invariant`, `@dxos/util` — no `@dxos/echo`.
+- [x] **`BlobManager` deliberately left in `@dxos/echo-client`** — see "Why `BlobManager` is not in
+      this package" above. This is a constraint, not an omission.
 - [ ] **`edge-client` subpath split** by the six method groups; measure boot budget before and after.
 - [ ] **The `edge`/`ni:` → `blob` rename**, per the migration above. Do it in the same pass as the
       package move — both touch the same files and both need one compatibility window, not two.

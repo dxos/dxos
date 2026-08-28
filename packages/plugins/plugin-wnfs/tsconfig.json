@@ -44,9 +44,6 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-protocol"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {

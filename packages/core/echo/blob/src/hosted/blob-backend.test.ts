@@ -4,11 +4,11 @@
 
 import { describe, test, vi } from 'vitest';
 
-import { type BlobTransport } from '@dxos/blob';
-import { fromDigestHex } from '@dxos/echo-client/internal';
 import { SpaceId } from '@dxos/keys';
 
-import { createEdgeBlobBackend } from './edge-blob-backend';
+import { type BlobTransport } from '../backend';
+import { fromDigestHex } from '../ni-uri';
+import { createEdgeBlobBackend } from './blob-backend';
 
 /**
  * A transport whose unused operations reject. Before the backend took a `BlobTransport` these tests

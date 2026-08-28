@@ -2,17 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type BlobBackend, type BlobTransport } from '@dxos/blob';
-import { Blob } from '@dxos/echo';
-import { digestHex, fromDigestHex } from '@dxos/echo-client/internal';
 import { invariant } from '@dxos/invariant';
+
+import { type BlobBackend, type BlobTransport } from '../backend';
+import { SCHEME, digestHex, fromDigestHex } from '../ni-uri';
 
 export interface CreateEdgeBlobBackendOptions {
   transport: BlobTransport;
 }
 
+// `SCHEME` from `ni-uri` rather than `Blob.Scheme.ni` from `@dxos/echo`: both are the string `ni`,
+// and taking it from here is what keeps this package below `@dxos/echo` in the graph. `@dxos/echo`
+// exposes `registerBlobBackend(…: BlobBackend)`, so anything it depends on cannot depend back on it.
 const parseNiUri = (uri: string): string => {
-  invariant(uri.startsWith(`${Blob.Scheme.ni}:///`), `Invalid ni: URI: ${uri}`);
+  invariant(uri.startsWith(`${SCHEME}:///`), `Invalid ni: URI: ${uri}`);
   return digestHex(uri);
 };
 
@@ -33,7 +36,7 @@ export const MAX_EDGE_BLOB_SIZE = 50 * 1024 * 1024;
  * to know when a cached entry is safe to evict once its owning Blob object is deleted.
  */
 export const createEdgeBlobBackend = ({ transport }: CreateEdgeBlobBackendOptions): BlobBackend => ({
-  schemes: [Blob.Scheme.ni],
+  schemes: [SCHEME],
   maxSize: MAX_EDGE_BLOB_SIZE,
 
   put: async ({ data, contentType, contentHash }) => {

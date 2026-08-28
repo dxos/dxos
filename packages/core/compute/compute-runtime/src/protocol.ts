@@ -209,7 +209,7 @@ class FunctionContext extends Resource {
     // inside a function invocation.
     if (this.client && this.db) {
       const db = this.db;
-      const { S3_BACKEND, createS3BlobBackend } = await import('@dxos/echo-client/blob-s3');
+      const { S3_BACKEND, createS3BlobBackend } = await import('@dxos/blob/s3');
       this.#unregisterBlobBackend = this.client.graph.registerBlobBackend(
         S3_BACKEND,
         createS3BlobBackend(createS3Host({ getDatabase: (spaceId) => (spaceId === db.spaceId ? db : undefined) })),

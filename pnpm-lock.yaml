@@ -4761,6 +4761,9 @@ importers:
       '@dxos/ai':
         specifier: workspace:*
         version: link:../ai
+      '@dxos/blob':
+        specifier: workspace:*
+        version: link:../../echo/blob
       '@dxos/compute':
         specifier: workspace:*
         version: link:../compute
@@ -5519,9 +5522,15 @@ importers:
 
   packages/core/echo/blob:
     dependencies:
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
     devDependencies:
       vitest:
         specifier: 'catalog:'
@@ -14291,6 +14300,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/blob':
+        specifier: workspace:*
+        version: link:../../core/echo/blob
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -14300,9 +14312,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-client':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-client
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
