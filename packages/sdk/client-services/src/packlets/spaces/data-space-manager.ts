@@ -282,10 +282,10 @@ export class DataSpaceManager extends Resource {
         return Promise.all(
           Array.from(this._spaces.values()).map(async (space) => {
             const rootUrl = space.automergeSpaceState.rootUrl;
-            const rootHandle = rootUrl
+            using rootLease = rootUrl
               ? await this._echoHost.loadDoc<Doc<DatabaseDirectory>>(this._ctx, rootUrl as AutomergeUrl)
               : undefined;
-            const rootDoc = rootHandle?.doc();
+            const rootDoc = rootLease?.doc();
 
             const properties = rootDoc && findInlineObjectOfType(rootDoc, Type.getTypename(SpaceProperties));
 
@@ -417,7 +417,7 @@ export class DataSpaceManager extends Resource {
         Object.entries(options.documents).map(async ([documentId, data]) => {
           log('creating document...', { documentId });
           // TODO(dmaretskyi): Broken types -- the bytes get interpreted as CRDT data.
-          const newDoc = await this._echoHost.createDoc(data as any as DatabaseDirectory, {
+          using newDoc = await this._echoHost.createDoc(data as any as DatabaseDirectory, {
             preserveHistory: true,
           });
 
@@ -440,9 +440,9 @@ export class DataSpaceManager extends Resource {
       root = createdSpace.directory;
     } else if (options.rootUrl) {
       const newRootDocId = documentIdMapping[interpretAsDocumentId(options.rootUrl)] ?? failedInvariant();
-      const rootDocHandle = await this._echoHost.loadDoc<DatabaseDirectory>(ctx, newRootDocId);
-      invariant(rootDocHandle, 'Root document must be available after import.');
-      DatabaseRoot.mapLinks(rootDocHandle, documentIdMapping);
+      using rootDocLease = await this._echoHost.loadDoc<DatabaseDirectory>(ctx, newRootDocId);
+      invariant(rootDocLease, 'Root document must be available after import.');
+      DatabaseRoot.mapLinks(rootDocLease, documentIdMapping);
 
       root = await this._echoHost.updateSpaceRoot(ctx, spaceId, `automerge:${newRootDocId}` as AutomergeUrl);
     } else {
@@ -570,7 +570,7 @@ export class DataSpaceManager extends Resource {
         }
       }
 
-      await this._mirrorCredentialsToDocument(ctx, space);
+      await this._mirrorCredentialsToDocument(space);
       this._reportSpaceRootToEdge(space);
       return true;
     } catch (err) {
@@ -619,8 +619,12 @@ export class DataSpaceManager extends Resource {
    * credentials backfills the existing chain and dual-writes new ones through one path, since the
    * control pipeline replays the whole feed on open.
    */
-  private async _mirrorCredentialsToDocument(ctx: Context, space: DataSpace): Promise<void> {
+  private async _mirrorCredentialsToDocument(space: DataSpace): Promise<void> {
     {
+      // The manager's own context, not the caller's: the invitation flow disposes its context as
+      // soon as `acceptSpace` returns, and a store bound to it would be released before its first
+      // write — the same reason `initializeDataPipelineAsync` is parented here.
+      const ctx = this._ctx;
       const store = await openCredentialsDocument(ctx, this._echoHost, space.id);
       for (const credential of space.inner.spaceState.credentials) {
         store.append(credential);
