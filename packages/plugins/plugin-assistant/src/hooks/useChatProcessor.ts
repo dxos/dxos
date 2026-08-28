@@ -103,9 +103,7 @@ export const useChatProcessor = ({
   // A remount (e.g. the user navigated to another page mid-turn) gets a fresh processor whose
   // active/streaming state starts empty, while the agent process for the feed keeps running;
   // adopting it restores the running indicator and the streamed blocks.
-  useEffect(() => {
-    void processor?.adopt();
-  }, [processor]);
+  useEffect(() => processor?.adopt(), [processor]);
 
   return processor;
 };

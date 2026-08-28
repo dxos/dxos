@@ -12,12 +12,13 @@ import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { expect } from 'vitest';
 
 import { LanguageModelFixture } from '@dxos/ai/testing';
 import { type HarnessControlRpcs, PartialBlock, SessionLink } from '@dxos/assistant';
 import { ProcessManager } from '@dxos/compute-runtime';
-import { findSession, getSession, hydrate } from '@dxos/compute/AgentService';
+import { getSession, hydrate } from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -598,33 +599,35 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
 
 // Control-plane coverage (no LLM turn), so it runs ungated in CI unlike the replay suite above.
 describe('Agent Service (control plane)', () => {
-  // Regression (DX-1198): a chat remounted mid-turn built a fresh processor with no way to tell
-  // whether the agent it had spawned was still working, so the UI reported it as idle.
+  // Regression (DX-1198): a chat remounted mid-turn had no way to tell whether the agent it had
+  // spawned was still working, so the UI reported it as idle.
   it.effect(
-    'finds an existing session without spawning, and reports whether it is working',
+    'reports whether the session is working on a turn',
     Effect.fnUntraced(
       function* (_) {
+        const registry = yield* Registry.AtomRegistry;
         const processManager = yield* ProcessManager.ProcessManagerService;
         const feed = yield* Database.add(Feed.make());
         yield* Database.flush();
         const target = Obj.getURI(feed);
 
-        // No agent has run for this feed: resolves to nothing, and nothing is spawned.
-        expect(Option.isNone(yield* findSession(feed))).toBe(true);
-        expect(yield* processManager.list({ target, key: AGENT_PROCESS_KEY })).toEqual([]);
+        const session = yield* getSession(feed);
+        const [handle] = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
 
-        yield* getSession(feed);
+        // Spawned but not prompted: live, awaiting input, so not working on a turn.
+        expect(handle.status.state).toBe(Process.State.IDLE);
+        expect(registry.get(session.running)).toBe(false);
 
-        // The spawned process is found on the cached path and (after the cache is cleared by
-        // `hydrate`) on the remount path, without spawning a second one.
-        for (const _pass of [0, 1]) {
-          const found = yield* findSession(feed);
-          expect(Option.isSome(found)).toBe(true);
-          // Spawned but not prompted: live, awaiting input, so not working on a turn.
-          expect(yield* Option.getOrThrow(found).isRunning()).toBe(false);
-          expect((yield* processManager.list({ target, key: AGENT_PROCESS_KEY })).length).toBe(1);
-          yield* hydrate();
-        }
+        // Reactive: derived from the process's status atom, so it follows the process rather than
+        // reporting whatever was true when the session was resolved.
+        const observed: boolean[] = [];
+        const unsubscribe = registry.subscribe(session.running, (running) => observed.push(running), {
+          immediate: true,
+        });
+        yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
+        yield* handle.terminate();
+        expect(registry.get(session.running)).toBe(false);
+        expect(observed).toEqual([false]);
       },
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,

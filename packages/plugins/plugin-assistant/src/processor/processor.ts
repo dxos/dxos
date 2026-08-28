@@ -328,11 +328,7 @@ export class AiChatProcessor {
           model: this._options.model,
           provider: this._options.provider,
         });
-        const session = yield* AgentService.getSession(this._feed, {
-          model: this._options.model,
-          provider: this._options.provider,
-          instructions: this._options.chat?.target?.instructions,
-        });
+        const session = yield* this.#getSession();
         yield* this.#forkEphemeralCollector(session);
 
         log('chat processor submitting prompt', { length: requestProp.message.length });
@@ -381,38 +377,56 @@ export class AiChatProcessor {
   }
 
   /**
-   * Re-attaches to an agent process that is still working on a turn.
+   * Mirrors turns this processor did not initiate into its own state.
    *
    * Streaming and active state live on the processor, and a processor is created per mount
    * ({@link useChatProcessor}), so a chat remounted mid-turn — the user navigated to another page
-   * and back — renders as idle while the agent keeps running. The process outlives the mount
-   * (`AgentService` reuses it), so it is adopted here instead.
+   * and back — renders as idle while the agent keeps running. The agent process outlives the mount
+   * ({@link AgentService.getSession} returns the running one), and its `running` atom is reactive,
+   * so the turn is followed from wherever it was started.
    *
-   * A no-op when this processor is already driving a request, or when no agent is running for the
-   * feed.
+   * Returns a disposer that stops observing.
    */
-  async adopt(): Promise<void> {
+  adopt(): () => void {
+    let disposed = false;
+    let unsubscribe: (() => void) | undefined;
+    void this._runtime
+      .runPromise(this.#getSession().pipe(Effect.provide(this._spaceLayer)))
+      .then((session) => {
+        if (disposed) {
+          return;
+        }
+
+        unsubscribe = this.#registry.subscribe(
+          session.running,
+          (running) => {
+            if (running) {
+              void this.#observe(session);
+            }
+          },
+          // The turn is normally already in flight when a remounted chat gets here, so the current
+          // value matters as much as subsequent transitions.
+          { immediate: true },
+        );
+      })
+      .catch((err) => log.warn('failed to attach to agent session', { error: err }));
+
+    return () => {
+      disposed = true;
+      unsubscribe?.();
+    };
+  }
+
+  /**
+   * Follows a turn started elsewhere to completion, surfacing its streamed blocks here.
+   * A turn this processor issued is owned by {@link request}, which reports its own errors.
+   */
+  async #observe(session: AgentService.Session): Promise<void> {
     if (this.#requestFiber || this.#registry.get(this.active)) {
       return;
     }
 
-    // Probed before forking so a processor that finds nothing to adopt never claims
-    // `#requestFiber` — a concurrent `request` would otherwise cancel (terminate) the agent.
-    const session = await this._runtime.runPromise(
-      Effect.gen({ self: this }, function* () {
-        const session = yield* AgentService.findSession(this._feed);
-        if (Option.isNone(session) || !(yield* session.value.isRunning())) {
-          return undefined;
-        }
-
-        return session.value;
-      }).pipe(Effect.provide(this._spaceLayer)),
-    );
-    if (!session || this.#requestFiber || this.#registry.get(this.active)) {
-      return;
-    }
-
-    log.info('adopting running agent session', { feed: Obj.getURI(this._feed) });
+    log.info('observing agent turn', { feed: Obj.getURI(this._feed) });
     try {
       this.#registry.set(this.active, true);
       const effect = Effect.gen({ self: this }, function* () {
@@ -427,13 +441,24 @@ export class AiChatProcessor {
         throw EffectEx.causeToError(exit.cause);
       }
     } catch (err) {
-      // An adopted turn was not initiated here, so its failure is reported but not surfaced as this
-      // chat's error: the mount that started it owns that.
-      log.warn('failed to observe adopted agent session', { error: err });
+      // Reported but not surfaced as this chat's error: the mount that issued the turn owns that.
+      log.warn('failed to observe agent turn', { error: err });
     } finally {
       this.#registry.set(this.active, false);
       this.#requestFiber = undefined;
     }
+  }
+
+  /**
+   * Resolves the agent session for this chat's feed, reusing the process a previous mount left
+   * running and spawning one only when there is none.
+   */
+  #getSession(): Effect.Effect<AgentService.Session, never, AgentService.AgentService> {
+    return AgentService.getSession(this._feed, {
+      model: this._options.model,
+      provider: this._options.provider,
+      instructions: this._options.chat?.target?.instructions,
+    });
   }
 
   /**

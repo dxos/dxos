@@ -8,8 +8,8 @@ import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
@@ -51,6 +51,17 @@ const traceMessage = (events: Trace.Event[]): Trace.Message =>
   Obj.make(Trace.Message, { meta: {}, isEphemeral: true, events });
 
 /**
+ * Awaits real macrotask turns (the test context virtualizes `Effect.sleep`) until `predicate` holds,
+ * or a fixed number of turns has elapsed — for the promise hops between `adopt` and its observed turn.
+ */
+const settle = (predicate: () => boolean = () => false) =>
+  Effect.promise(async () => {
+    for (let turn = 0; turn < 100 && !predicate(); ++turn) {
+      await new Promise((resolve) => setTimeout(resolve, 5));
+    }
+  });
+
+/**
  * Stub {@link AgentService.Session} whose ephemeral stream replays a scripted batch sequence.
  * `waitForCompletion` resolves only after the stream has been fully delivered, mirroring the real
  * session's turn-settles-after-streaming ordering.
@@ -67,7 +78,7 @@ const makeStubSession = (
       getContext: () => Effect.succeed([]),
       addContext: () => Effect.void,
       submitPrompt: () => Effect.void,
-      isRunning: () => Effect.succeed(options.running ?? false),
+      running: Atom.make(options.running ?? false),
       waitForCompletion: () => Deferred.await(done),
       terminate: () => Effect.void,
       subscribeEphemeral: () => Stream.fromIterable(batches).pipe(Stream.ensuring(Deferred.succeed(done, undefined))),
@@ -150,7 +161,6 @@ describe('AiChatProcessor streaming', () => {
         const stubSession = yield* makeStubSession(feed, batches);
         const stubAgentService: AgentService.Service = {
           getSession: () => Effect.succeed(stubSession),
-          findSession: () => Effect.succeed(Option.none()),
           hydrate: () => Effect.void,
         };
         const spaceLayer = yield* makeSpaceLayer(stubAgentService);
@@ -233,14 +243,18 @@ describe('AiChatProcessor streaming', () => {
           feed,
           yield* makeSpaceLayer({
             getSession: () => Effect.succeed(idleSession),
-            findSession: () => Effect.succeed(Option.some(idleSession)),
             hydrate: () => Effect.void,
           }),
           { observableRegistry: idleRegistry },
         );
-        const idleUnsubscribe = idleRegistry.subscribe(idleProcessor.messages, () => {}, { immediate: true });
-        yield* Effect.addFinalizer(() => Effect.sync(() => idleUnsubscribe()));
-        yield* Effect.promise(() => idleProcessor.adopt());
+        const idleUnsubscribers = [
+          idleRegistry.subscribe(idleProcessor.messages, () => {}, { immediate: true }),
+          idleProcessor.adopt(),
+        ];
+        yield* Effect.addFinalizer(() => Effect.sync(() => idleUnsubscribers.forEach((dispose) => dispose())));
+        // Real macrotasks, not `Effect.sleep`: adoption resolves the session through a promise, and
+        // the test context virtualizes the clock.
+        yield* settle();
         // A live-but-idle agent (awaiting input) is not adopted: no indicator, nothing streamed.
         expect(idleRegistry.get(idleProcessor.active)).toBe(false);
         expect(idleRegistry.get(idleProcessor.messages)).toEqual([]);
@@ -253,7 +267,6 @@ describe('AiChatProcessor streaming', () => {
           feed,
           yield* makeSpaceLayer({
             getSession: () => Effect.succeed(runningSession),
-            findSession: () => Effect.succeed(Option.some(runningSession)),
             hydrate: () => Effect.void,
           }),
           { observableRegistry },
@@ -268,7 +281,9 @@ describe('AiChatProcessor streaming', () => {
         ];
         yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribers.forEach((unsubscribe) => unsubscribe())));
 
-        yield* Effect.promise(() => processor.adopt());
+        unsubscribers.push(processor.adopt());
+        // Settles once the stub's ephemeral stream has drained and `waitForCompletion` resolves.
+        yield* settle(() => activeSnapshots.includes(true) && !observableRegistry.get(processor.active));
 
         // The turn was observed to completion: the indicator went active and the agent's blocks
         // landed in the thread even though this processor never issued the request.

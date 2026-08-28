@@ -6,8 +6,8 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import type * as Option from 'effect/Option';
 import type * as Stream from 'effect/Stream';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import type { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
@@ -25,13 +25,6 @@ export interface Service {
    * Gets or creates a session for a feed.
    */
   getSession: (feed: Feed.Feed, options?: GetSessionOptions) => Effect.Effect<Session>;
-
-  /**
-   * Resolves the agent session for a feed if a non-terminal process already exists, without
-   * spawning one. Lets a UI that remounted mid-turn (e.g. the user navigated to another page)
-   * re-attach to the running agent instead of rendering the conversation as idle.
-   */
-  findSession: (feed: Feed.Feed) => Effect.Effect<Option.Option<Session>>;
 
   /**
    * Hydrates agent processes persisted by a previous session.
@@ -68,9 +61,10 @@ export interface Session {
 
   /**
    * True while the agent is working on a turn (running, or waiting on a tool call or alarm);
-   * false when it is idle awaiting input, or terminal.
+   * false when it is idle awaiting input, or terminal. Reactive, so a UI attaching to a session
+   * started by an earlier mount follows the turn rather than sampling it once.
    */
-  isRunning: () => Effect.Effect<boolean>;
+  readonly running: Atom.Atom<boolean>;
 
   /**
    * Wait until agent has completed its work.
@@ -95,9 +89,6 @@ export interface Session {
 
 export const getSession = (...args: Parameters<Context.Service.Shape<typeof AgentService>['getSession']>) =>
   AgentService.use((service) => service.getSession(...args));
-
-export const findSession = (...args: Parameters<Context.Service.Shape<typeof AgentService>['findSession']>) =>
-  AgentService.use((service) => service.findSession(...args));
 
 export const hydrate = (...args: Parameters<Context.Service.Shape<typeof AgentService>['hydrate']>) =>
   AgentService.use((service) => service.hydrate(...args));
