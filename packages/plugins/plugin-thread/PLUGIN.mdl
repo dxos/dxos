@@ -18,7 +18,8 @@ The following extension dialects are used in this document.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`        |
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
-| `op`        | `org.dxos.mdl.op@1.0`          |
+| `op`        | `org.dxos.mdl.op@1.1`          |
+| `flow`      | `org.dxos.mdl.flow@1.0`        |
 
 ## Types
 
@@ -72,4 +73,82 @@ feat F-1: Channel chat
 feat F-2: Thread chat
   req F-2.1: A Thread article MUST render the thread's messages and append new
     messages by pushing onto `thread.messages`.
+```
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Create a channel and send a message
+  desc: The core thread round-trip — create a Channel, send a message, read it back from the feed.
+  actors: both
+  covers: [F-1.1]
+  status: unverified
+  given:
+    - identityDid: an identity exists, its DID used as the message `sender`
+    - space: a space is open
+    - no Channel named "QA Channel" exists — ABORT rather than deleting one this flow did not create
+  test:
+    - name: Create the channel
+      do: In the navtree, click + on the space and choose Channel. Name it "QA Channel".
+      invoke: [op:CreateChannel] { spaceId: $given.space.id, name: "QA Channel" }
+      capture: created
+      expect: a Channel named "QA Channel" now exists and opens in the channel article
+      assert: return !!$created.object
+    - name: Place it in the space
+      do: (no separate gesture — the navtree create action places it)
+      invoke: org.dxos.operation.space.addObject { object: $created.object, target: $given.space }
+      expect: "QA Channel" appears as a row in the navtree
+    - name: Send a message
+      do: In the composer at the bottom of the channel article, type "Hello QA" and press Enter.
+      invoke: |
+        org.dxos.operation.thread.appendChannelMessage {
+          channel: $created.object,
+          sender: { identityDid: $given.identityDid },
+          text: "Hello QA"
+        }
+      expect: "Hello QA" appears as the newest (bottom-most) message in the feed
+      note: |
+        `output: void` — Rule 3 applies: verify the effect, not the return value. Reading the
+        feed's queue is not expressible as a synchronous DOM/db snippet here, so this step is
+        judged by `expect` alone.
+  after:
+    - name: Delete the channel
+      do: Right-click "QA Channel" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.space }
+      expect: the row leaves the navtree and its plank closes if it was open
+```
+
+```mdl
+flow QA-2: Default "General" channel on space creation
+  desc: The lifecycle hook that seeds every new space with a channel — no user gesture involved.
+  actors: agent
+  covers: []
+  status: unverified
+  given:
+    - an identity exists
+  test:
+    - name: Create a new space
+      do: Click "Create space" (or invoke the equivalent action).
+      invoke: org.dxos.operation.space.create {}
+      capture: created
+      expect: a new space is created
+      assert: return !!$created.space
+    - name: Confirm the default channel exists
+      do: Open the new space's navtree and look for a "General" channel.
+      expect: a Channel named "General" exists in the root collection of the new space
+      note: |
+        NO separate `invoke` — `org.dxos.plugin.thread.operation.onCreateSpace` is a lifecycle
+        hook the space-creation pipeline runs itself, not something this flow calls directly; this
+        step only verifies the effect.
+      assert: |
+        return (await $created.space.db.query(dxos.Filter.type(Channel)).run())
+          .objects.some((c) => c.name === 'General');
+  after:
+    - name: Delete the space
+      do: Right-click the new space in the navtree and choose Delete space.
+      invoke: org.dxos.operation.space.delete { space: $created.space }
+      expect: the space leaves the navtree
 ```

@@ -26,6 +26,8 @@ export const translations = [
 
         // ToolsExplorer
         'connection-failed.title': 'MCP Server connection failed',
+        'not-configured.title': 'MCP Server is not configured',
+        'not-configured.message': 'Set the introspect endpoint (runtime.services.edgeServices) to browse tools.',
       },
     },
   },

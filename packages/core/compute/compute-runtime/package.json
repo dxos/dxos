@@ -39,6 +39,7 @@
   "scripts": {},
   "dependencies": {
     "@dxos/ai": "workspace:*",
+    "@dxos/blob": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
