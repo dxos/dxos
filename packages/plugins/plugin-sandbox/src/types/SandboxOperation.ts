@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
 import { ClientService } from '@dxos/client';
@@ -10,7 +12,7 @@ import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { File } from '@dxos/types';
 
-import { Sandbox } from '#types';
+import * as Sandbox from './Sandbox';
 
 const SandboxRef = Ref.Ref(Sandbox.Sandbox).annotate({
   description: 'The sandbox object ID.',
