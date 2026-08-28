@@ -238,5 +238,9 @@ const lookupOwningHost = (
     return host.rpc as unknown as RpcClient.RpcClient<HarnessControlRpcs>;
   });
 
+// TERMINATING counts as terminal: the handle is already `#finished` and no longer accepts input.
 const isTerminalProcess = (state: Process.State): boolean =>
-  state === Process.State.SUCCEEDED || state === Process.State.FAILED || state === Process.State.TERMINATED;
+  state === Process.State.SUCCEEDED ||
+  state === Process.State.FAILED ||
+  state === Process.State.TERMINATED ||
+  state === Process.State.TERMINATING;
