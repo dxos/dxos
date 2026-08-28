@@ -29,8 +29,10 @@ export class SuggestionWidget extends WidgetType {
     // and a margin sits outside what it can see, so the height model drifts from what is rendered, the
     // error accumulates down the document, and the turn-fold gutter markers end up visibly misaligned.
     // Adjacent chips are likewise spaced with trailing padding rather than a margin.
+    // `py` separates chips that wrapped onto a second row: an inline-level box contributes its
+    // padding to the line box, so this is the vertical gap — and it is padding for the reason above.
     return Domino.of('span')
-      .classNames(mx('inline-flex max-w-[calc(100cqi-8px)] overflow-hidden'))
+      .classNames(mx('inline-flex max-w-[calc(100cqi-8px)] overflow-hidden py-1'))
       .append(
         Domino.of('button')
           .attributes({

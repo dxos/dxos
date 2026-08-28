@@ -80,7 +80,11 @@ const sharedExtensions = (
 const build = (registry: XmlWidgetRegistry | undefined, editable: boolean, themeMode: 'light' | 'dark'): Extension[] =>
   [
     createBasicExtensions({ readOnly: !editable, editable, lineWrapping: true }),
-    createThemeExtensions({ themeMode }),
+    // Registers the content as an inline-size query container: widgets cap themselves against the
+    // message's own width (`max-w-[calc(100cqi-8px)]`), and with no container `cqi` resolves against
+    // the viewport instead — a suggestion chip then overflows the thread. Inline-size, not `size`:
+    // full containment breaks CodeMirror's viewport measurement.
+    createThemeExtensions({ themeMode, slots: { content: { className: 'dx-inline-size-container' } } }),
     // A registry changes how the document is *parsed*, not only how it is decorated: registered
     // tags have to survive as single blocks through the markdown parser before `xmlTags` can
     // replace them, and without that they render as the literal angle brackets they are.
