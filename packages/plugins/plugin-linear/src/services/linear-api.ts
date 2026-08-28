@@ -122,30 +122,30 @@ const PageInfoSchema = Schema.Struct({
  */
 export class LinearCredentials extends Context.Service<LinearCredentials, LinearCredentialsValue>()(
   '@dxos/plugin-linear/LinearCredentials',
-) {
-  static fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
-    Layer.effect(
-      LinearCredentials,
-      Effect.gen(function* () {
-        const connection = yield* Database.load(connectionRef);
-        const accessToken = yield* Database.load(connection.accessToken);
-        return { token: accessToken.token };
-      }),
-    );
+) {}
 
-  /**
-   * Loads the access token directly and returns its `token` value. Used by callers that only have
-   * an external-sync cursor's `spec.source` — the cursor no longer relates to `Connection`.
-   */
-  static fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
-    Layer.effect(
-      LinearCredentials,
-      Effect.gen(function* () {
-        const accessToken = yield* Database.load(accessTokenRef);
-        return { token: accessToken.token };
-      }),
-    );
-}
+export const fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
+  Layer.effect(
+    LinearCredentials,
+    Effect.gen(function* () {
+      const connection = yield* Database.load(connectionRef);
+      const accessToken = yield* Database.load(connection.accessToken);
+      return { token: accessToken.token };
+    }),
+  );
+
+/**
+ * Loads the access token directly and returns its `token` value. Used by callers that only have
+ * an external-sync cursor's `spec.source` — the cursor no longer relates to `Connection`.
+ */
+export const fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
+  Layer.effect(
+    LinearCredentials,
+    Effect.gen(function* () {
+      const accessToken = yield* Database.load(accessTokenRef);
+      return { token: accessToken.token };
+    }),
+  );
 
 //
 // Request pipeline

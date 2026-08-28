@@ -118,33 +118,33 @@ const SlackUsersInfoResponseSchema = Schema.Struct({
 /**
  * Layer-based credentials service. Every API call pulls creds from this service
  * rather than threading them through, so callers compose
- * `Effect.provide(SlackApi.SlackCredentials.fromConnection(ref))` (discovery, given a
- * `Connection` directly) or `Effect.provide(SlackApi.SlackCredentials.fromAccessToken(ref))`
+ * `Effect.provide(SlackApi.fromConnection(ref))` (discovery, given a
+ * `Connection` directly) or `Effect.provide(SlackApi.fromAccessToken(ref))`
  * (sync, given an external-sync cursor's `spec.source`) once at the operation boundary.
  */
 export class SlackCredentials extends Context.Service<SlackCredentials, SlackCredentialsValue>()(
   '@dxos/plugin-slack/SlackCredentials',
-) {
-  /** Creates a credentials layer from an AccessToken ref. Loads it and returns its `token`. */
-  static fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
-    Layer.effect(
-      SlackCredentials,
-      Effect.gen(function* () {
-        const accessToken = yield* Database.load(accessTokenRef);
-        return { token: accessToken.token };
-      }),
-    );
+) {}
 
-  static fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
-    Layer.effect(
-      SlackCredentials,
-      Effect.gen(function* () {
-        const connection = yield* Database.load(connectionRef);
-        const accessToken = yield* Database.load(connection.accessToken);
-        return { token: accessToken.token };
-      }),
-    );
-}
+/** Creates a credentials layer from an AccessToken ref. Loads it and returns its `token`. */
+export const fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
+  Layer.effect(
+    SlackCredentials,
+    Effect.gen(function* () {
+      const accessToken = yield* Database.load(accessTokenRef);
+      return { token: accessToken.token };
+    }),
+  );
+
+export const fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
+  Layer.effect(
+    SlackCredentials,
+    Effect.gen(function* () {
+      const connection = yield* Database.load(connectionRef);
+      const accessToken = yield* Database.load(connection.accessToken);
+      return { token: accessToken.token };
+    }),
+  );
 
 type SlackEffect<T> = Effect.Effect<
   T,

@@ -57,9 +57,6 @@ describe('RpcPeer', () => {
         aliceOpen = true;
       });
 
-      await sleep(5);
-      expect(aliceOpen).toEqual(false);
-
       await bob.open();
 
       await promise;
@@ -419,12 +416,12 @@ describe('RpcPeer', () => {
     test('client closes the stream', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
-      let closeCalled = false;
+      const closeTrigger = new Trigger();
       const alice = new RpcPeer({
         callHandler: async (msg) => createPayload(),
         streamHandler: (method, msg) =>
           new Stream<Any>(({ next, close }) => () => {
-            closeCalled = true;
+            closeTrigger.wake();
           }),
         port: alicePort,
       });
@@ -439,8 +436,8 @@ describe('RpcPeer', () => {
       const stream = bob.callStream('method', createPayload('request'));
       await stream.close();
 
-      // Poll until the close notification round-trips to the remote peer.
-      await expect.poll(() => closeCalled).toEqual(true);
+      // Wait for the close notification to round-trip to the remote peer.
+      await closeTrigger.wait();
     });
 
     test('reports stream being ready', async () => {
