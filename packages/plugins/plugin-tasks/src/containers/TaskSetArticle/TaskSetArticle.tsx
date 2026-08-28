@@ -2,12 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/echo-react';
+import { useQuery } from '@dxos/echo-react';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { TaskList, type TaskPatch, type TaskPlacement } from '@dxos/react-ui-task';
@@ -53,20 +55,15 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
     [invokePromise, spaceId],
   );
 
-  // One verb per gesture: `MoveTask` re-parents and repositions together, so a drop cannot leave the
-  // task hanging at the end of its new parent while a second call lands.
+  // The one write that does not go through its verb: `MoveTask` re-derives the owning set and
+  // re-validates the parent through index queries, and a drop that waits on those leaves the row
+  // sitting in its old place until they answer. `TaskSet.moveTask` is the write half of the verb,
+  // applied here against objects the list already holds — the placement arrived validated against
+  // the same rendered tree the verb would re-derive.
   const handleMove = useCallback(
     (task: Task.Task, { parentTask, before }: TaskPlacement) =>
-      void invokePromise(
-        TaskOperation.MoveTask,
-        {
-          task: Ref.make(task),
-          parentTask: parentTask ? Ref.make(parentTask) : null,
-          ...(before ? { before: Ref.make(before) } : {}),
-        },
-        { spaceId },
-      ),
-    [invokePromise, spaceId],
+      TaskSet.moveTask(taskSet, task, { parentTask, beforeId: before?.id }),
+    [taskSet],
   );
 
   const [selected, setSelected] = useState<string>();
@@ -115,12 +112,23 @@ TaskSetArticle.displayName = 'TaskSetArticle';
 /**
  * The set's tasks via `childOf` — membership is the ECHO parent edge, and transitive tolerates
  * legacy sub-tasks still parented to their parent task. The query re-emits on membership changes
- * only, never on a member's edit — `TaskList` rows subscribe themselves. Order comes from the
- * `tasks` array, where it is canonical.
+ * only, never on a member's edit — `TaskList` rows subscribe themselves. Structure is the article's
+ * to watch: order from the `tasks` array, where it is canonical, and hierarchy from each member's
+ * `parentTask`, both folded into one atom so the list re-renders once per change.
  */
 const useSetTasks = (taskSet: TaskSet.TaskSet): Task.Task[] => {
   const db = Obj.getDatabase(taskSet);
   const tasks = useQuery(db, Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)));
-  const [taskRefs] = useObject(taskSet, 'tasks');
-  return useMemo(() => TaskSet.orderTasks(tasks, taskRefs ?? []), [tasks, taskRefs]);
+  const orderedAtom = useMemo(
+    () =>
+      Atom.make((get) => {
+        // `parentTask` is subscribed, not just read: the hierarchy is list-level structure, so a
+        // re-parent that leaves array order alone still has to re-mint the array the tree walk
+        // derives from.
+        tasks.forEach((task) => get(Obj.atomProperty(task, 'parentTask')));
+        return TaskSet.orderTasks(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
+      }),
+    [taskSet, tasks],
+  );
+  return useAtomValue(orderedAtom);
 };

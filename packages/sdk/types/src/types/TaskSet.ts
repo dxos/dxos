@@ -461,3 +461,23 @@ export const applyParentTask = (
   });
   Obj.setParent(task, taskSet);
 };
+
+/**
+ * The whole write half of a move: reposition the task in the array and, when `parentTask` is
+ * given (`null` for a root), re-parent it. Synchronous, so a caller holding the objects — the
+ * list, on a drop — lands the move in the frame the gesture ends, rather than after the verb's
+ * lookups answer. Validating the placement is the caller's job: {@link resolveParentTask} in the
+ * verb, the rendered tree in the list.
+ */
+export const moveTask = (
+  taskSet: TaskSet,
+  task: Task.Task,
+  { parentTask, beforeId }: { parentTask?: Task.Task | null; beforeId?: EntityId },
+): void => {
+  Obj.update(taskSet, (taskSet) => {
+    taskSet.tasks = reorder(taskSet.tasks, task.id, beforeId);
+  });
+  if (parentTask !== undefined) {
+    applyParentTask(taskSet, task, parentTask ?? undefined);
+  }
+};

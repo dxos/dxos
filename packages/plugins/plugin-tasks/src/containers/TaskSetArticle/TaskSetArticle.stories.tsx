@@ -172,9 +172,30 @@ export const Behavior: Story = {
     });
     await expect(canvas.findByText('Order sample bags (v2)', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
 
+    // Updates — hierarchy: a re-parent touches no array, so the tree reflows only because the
+    // article subscribes to each member's `parentTask`. This is what a drop leans on to land in
+    // the frame the gesture ends.
+    const cuppings = TaskSet.resolveTasks(taskSet).find((task) => task.title === 'Schedule cuppings')!;
+    const label = TaskSet.resolveTasks(taskSet).find((task) => task.title === 'Design label')!;
+    Obj.update(cuppings, (cuppings) => {
+      cuppings.parentTask = Ref.make(label);
+    });
+    // Asserted after a couple of frames rather than through `waitFor`: the point is that the row
+    // indents on the write, not eventually once an index-backed query catches up.
+    await nextFrames(3);
+    await expect(canvas.getByText('Schedule cuppings').closest('[role="option"]')).toHaveAttribute('aria-level', '2');
+
     // Updates — removal: an array splice alone does not unlist a task (membership is the parent
     // edge) — deleting it does.
     TaskSet.deleteTask(space.db, taskSet, added);
     await waitFor(() => expect(canvas.queryByText('Order sample bags (v2)')).toBeNull(), { timeout: 10_000 });
   },
 };
+
+/** Lets React flush the subscription's re-render, and nothing slower. */
+const nextFrames = (count: number): Promise<void> =>
+  new Promise((resolve) => {
+    let remaining = count;
+    const tick = () => (remaining-- > 0 ? requestAnimationFrame(tick) : resolve());
+    tick();
+  });

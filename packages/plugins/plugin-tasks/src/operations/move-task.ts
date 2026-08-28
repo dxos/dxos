@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Obj } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { TaskSet } from '@dxos/types';
 
 import { TaskOperation } from '#types';
@@ -25,14 +25,11 @@ const handler: Operation.WithHandler<typeof TaskOperation.MoveTask> = TaskOperat
       // drop is one gesture and must not half-apply.
       const newParent = parentTask ? yield* TaskSet.resolveParentTask(taskSet, task, parentTask) : undefined;
 
-      const beforeId = before ? TaskSet.refEntityId(before) : undefined;
-      Obj.update(taskSet, (taskSet) => {
-        taskSet.tasks = TaskSet.reorder(taskSet.tasks, task.id, beforeId);
+      // The same write the list applies on a drop, so a gesture and a verb call cannot diverge.
+      TaskSet.moveTask(taskSet, task, {
+        ...(parentTask !== undefined ? { parentTask: newParent ?? null } : {}),
+        beforeId: before ? TaskSet.refEntityId(before) : undefined,
       });
-
-      if (parentTask !== undefined) {
-        TaskSet.applyParentTask(taskSet, task, newParent);
-      }
 
       return { task: task };
     }),
