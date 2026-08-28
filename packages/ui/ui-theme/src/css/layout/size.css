@@ -26,6 +26,15 @@
   }
 
   /**
+   * Inline-only max size query container. Provides cqi units for children without the layout
+   * containment side-effects of `container-type: size`. Use this in CodeMirror content
+   * wrappers where size containment would break viewport measurement.
+   */
+  .dx-inline-max-size {
+    max-width: 100cqi;
+  }
+
+  /**
    * Document width.
    */
   .dx-document {

@@ -56,11 +56,15 @@ export const createRenderer = (
     // Suggestions are inline widgets meant to flow: a run of them joins on one line and wraps as
     // chips; everything else is separated by a blank line so each block parses as its own
     // markdown block.
+    //
+    // Joined with no separator: the editor's content is `white-space: break-spaces`, which (unlike
+    // `pre-wrap`) does not hang a space at a line break — a separator space wrapped onto the next
+    // row and indented its first chip. The gap between chips is the widget's own trailing padding.
     const text = segments
       .reduce<string[]>((parts, segment) => {
         const previous = parts[parts.length - 1];
         if (previous?.startsWith('<suggestion') && segment.startsWith('<suggestion')) {
-          parts[parts.length - 1] = `${previous} ${segment}`;
+          parts[parts.length - 1] = `${previous}${segment}`;
         } else {
           parts.push(segment);
         }

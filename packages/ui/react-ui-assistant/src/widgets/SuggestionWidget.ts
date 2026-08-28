@@ -19,8 +19,6 @@ export class SuggestionWidget extends WidgetType {
   }
 
   override toDOM() {
-    // NOTE: Container must have `dx-inline-size-container` (or `dx-size-container`) to support cqi.
-    //
     // Inline-level root so consecutive suggestions flow onto one wrapped line rather than stacking —
     // the tag is registered `block: false` and the renderer omits the usual block separator between
     // them.
@@ -32,7 +30,7 @@ export class SuggestionWidget extends WidgetType {
     // `py` separates chips that wrapped onto a second row: an inline-level box contributes its
     // padding to the line box, so this is the vertical gap — and it is padding for the reason above.
     return Domino.of('span')
-      .classNames(mx('inline-flex max-w-[100cqi] overflow-hidden py-1'))
+      .classNames(mx('dx-inline-max-size inline-flex overflow-hidden py-1 pe-1'))
       .append(
         Domino.of('button')
           .attributes({
@@ -42,7 +40,7 @@ export class SuggestionWidget extends WidgetType {
           })
           .classNames(mx('dx-button gap-2 w-full overflow-hidden'))
           .append(
-            Domino.of('dx-icon').attributes({ icon: 'ph--lightning--regular' }),
+            Domino.of('dx-icon').attributes({ icon: 'ph--lightning--regular' }).classNames('text-yellow-500'),
             Domino.of('span').classNames('flex-1 truncate min-w-0').text(this.text),
           ),
       ).root;
