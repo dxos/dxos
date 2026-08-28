@@ -7,20 +7,21 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import * as Operation from '@dxos/compute/Operation';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { DXN } from '@dxos/keys';
 import { Position } from '@dxos/util';
 
-import { LOAD_PLUGIN_DIALOG } from '#containers';
-import { REGISTRY_ID, meta } from '#meta';
+import { meta } from '#meta';
+import { LOAD_PLUGIN_DIALOG } from '#types';
 
 import { getCategoryPredicate, getRemotePluginIds } from '../categories';
+import { REGISTRY_ID } from '../paths';
 
 /**
  * Turns a registry catalog entry into a minimal {@link Plugin.Plugin} so it
@@ -52,9 +53,9 @@ export default Capability.makeModule(
     const pluginManagerAtom = yield* Capability.atom(Capabilities.PluginManager);
 
     const extensions = yield* Effect.all([
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'openRegistry',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
             {
@@ -68,14 +69,14 @@ export default Capability.makeModule(
             },
           ]),
       }),
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'registry',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         // REGISTRY_ID is a pinned workspace (the URL's workspace anchor), so it carries no key of its
         // own; its category and plugin children are the addressable planks (see `categories`/`plugins`).
         connector: () =>
           Effect.succeed([
-            Node.make({
+            AppGraphNode.make({
               id: REGISTRY_ID,
               type: meta.profile.key,
               properties: {
@@ -88,10 +89,10 @@ export default Capability.makeModule(
             }),
           ]),
       }),
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'categories',
         url: { key: 'category', kind: 'item', path: [] },
-        match: NodeMatcher.whenId(`root/${REGISTRY_ID}`),
+        match: GraphNodeMatcher.whenId(`root/${REGISTRY_ID}`),
         connector: (_node, get) => {
           const [manager] = get(pluginManagerAtom);
           if (!manager) {
@@ -108,7 +109,7 @@ export default Capability.makeModule(
           const registryCount = get(manager.pluginRegistry.plugins).entries.length;
 
           return Effect.succeed([
-            Node.make({
+            AppGraphNode.make({
               id: 'bundled',
               type: 'category',
               data: 'bundled',
@@ -119,7 +120,7 @@ export default Capability.makeModule(
                 count: categoryCount('bundled'),
               },
             }),
-            Node.make({
+            AppGraphNode.make({
               id: 'installed',
               type: 'category',
               data: 'installed',
@@ -130,7 +131,7 @@ export default Capability.makeModule(
                 count: categoryCount('installed'),
               },
             }),
-            Node.make({
+            AppGraphNode.make({
               id: 'recommended',
               type: 'category',
               data: 'recommended',
@@ -141,7 +142,7 @@ export default Capability.makeModule(
                 count: categoryCount('recommended'),
               },
             }),
-            Node.make({
+            AppGraphNode.make({
               id: 'labs',
               type: 'category',
               data: 'labs',
@@ -154,7 +155,7 @@ export default Capability.makeModule(
             }),
             ...(registryCount > 0
               ? [
-                  Node.make({
+                  AppGraphNode.make({
                     id: 'registry',
                     type: 'category',
                     data: 'registry',
@@ -170,9 +171,9 @@ export default Capability.makeModule(
           ]);
         },
       }),
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'actions',
-        match: NodeMatcher.whenId(`root/${REGISTRY_ID}`),
+        match: GraphNodeMatcher.whenId(`root/${REGISTRY_ID}`),
         actions: () =>
           Effect.succeed([
             {
@@ -191,10 +192,10 @@ export default Capability.makeModule(
             },
           ]),
       }),
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'plugins',
         url: { key: 'registry', kind: 'item', path: [] },
-        match: NodeMatcher.whenId(`root/${REGISTRY_ID}`),
+        match: GraphNodeMatcher.whenId(`root/${REGISTRY_ID}`),
         connector: (_node, get) => {
           const [manager] = get(pluginManagerAtom);
           if (!manager) {
@@ -203,7 +204,7 @@ export default Capability.makeModule(
           const installedIds = new Set(manager.getPlugins().map((plugin) => plugin.meta.profile.key));
 
           const installedNodes = manager.getPlugins().map((plugin) =>
-            Node.make({
+            AppGraphNode.make({
               id: plugin.meta.profile.key,
               type: 'org.dxos.plugin',
               data: plugin,
@@ -222,7 +223,7 @@ export default Capability.makeModule(
             .filter((entry) => !installedIds.has(entry.profile.key))
             .map((entry) => {
               const plugin = toDisplayPlugin(entry);
-              return Node.make({
+              return AppGraphNode.make({
                 id: plugin.meta.profile.key,
                 type: 'org.dxos.plugin',
                 data: plugin,

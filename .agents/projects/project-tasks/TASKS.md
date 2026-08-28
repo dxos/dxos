@@ -1,0 +1,214 @@
+# Project Tasks — Tasks
+
+_Resume: land #12787 — the hierarchical TaskList with drag-and-drop, built on react-ui-list. Uncommitted: none. Last: #12784 (Repo type, `#nnn` references, task-list UX) merged 2026-08-26._
+
+## Phase 1: Agent delegation over durable tasks
+
+Agent delegation and TaskSet-backed task management — make the delegation loop
+(supervisor → durable Task in a TaskSet → sub-agent → fold-back) work live and
+be visible in the UI, closing the gaps the storybook audit surfaced.
+
+### Tasks
+
+- [x] **Audit storybooks for delegation + TaskSet coverage** — delegation:
+      Chat `WithSubAgents`/`Test1`/`Test2` (stories-assistant), TaskList
+      `WithDelegatedAgent`, TracePanel `WithSubAgentFixture`; TaskSet:
+      TaskSetArticle `Default`/`Behavior`, ProjectArticle `Default`/`Sections`/
+      `Updates`. Gap: no story joins the two (delegation visible in a TaskSet
+      surface).
+- [x] **Fix live delegation dying at the sub-agent's first model call** — the
+      Anthropic API rejects `{}`/typeless tool subschemas; `completeJob` for an
+      undeclared routine output serialized `Schema.Any` to `{}`, and the
+      provider's structured-output transformer rewrote Record/ObjectKeyword
+      back into typeless nodes. Final fix: `completeJob` is a `Tool.dynamic`
+      whose JSON schema reaches the provider verbatim; handler decodes against
+      the same schema. Regression test walks the serialized schema for typeless
+      nodes under both serialization paths.
+- [x] **Stop posting stack traces into the conversation** — `onComplete` posts
+      only `Cause.prettyErrors` messages; full pretty cause stays in `log.warn`.
+      Scripted failure-path test added.
+- [x] **Replace Chat.outline with Chat.taskSet** — the chat's working surface is
+      the durable task set: `ensureTaskSet`/`peekTaskSetRef`/`loadTasks`/
+      `formatChecklist` (renders tasks as checklist markdown for prompts);
+      UpdateTasks upserts durable tasks by title; DelegateTask files into the
+      conversation's set (standalone chats now delegate into their own);
+      the delegation strategy no longer mirrors to markdown; ChatTaskList and
+      the ChatArticle story read/seed the task set.
+- [x] **Open PR** — #12752 (delegation fix, shared TaskList, Chat.taskSet pivot)
+      merged 2026-08-26; the follow-on work is #12784.
+- [ ] **Joined story: delegation beside a TaskSet surface** — chat delegating
+      while a `TaskSetArticle` (or ChatTaskList over the durable TaskSet) shows
+      the agent task appear, run, and complete.
+- [ ] **Promote-task verb** — outside delegation the agent still cannot create
+      a durable Task (carried from plugin-projects; delegation is currently the
+      only promotion path).
+- [ ] **Set taskSet for Chat objects that are children of Projects** — stamp
+      `chat.taskSet` with the project's set when the chat is parented, instead
+      of resolving through the parent walk at read time (`peekProject`), so the
+      ref is durable and the UI needs no reactive parent lookup (closes the
+      TODO on `ChatTaskList`).
+- [ ] **Trigger sub-agents from the task row** — status, dependencies and the
+      spinner all render; what is left is starting a delegation from the row
+      itself rather than through `/task:run` — the delegation loop without going
+      through chat. (Was: "show status, dependencies, and trigger sub-agents".)
+- [ ] **Atomic task-set initialization** — `ensureTaskSet` creates the set and
+      writes the owner ref in separate operations, so concurrent peers can race
+      and orphan a set (CodeRabbit on #12752); needs a create-if-absent
+      primitive or a reconcile that adopts the losing set's tasks.
+- [ ] **Data-flow dependencies** — `dependsOn` is scheduling-only today: a
+      sub-agent receives just its task title, so a dependent task cannot
+      consume a predecessor's result. Render completed dependencies' results
+      (held by the supervisor from fold-back exits) into the dependent
+      sub-agent's synthesized instructions.
+- [x] **Slash commands** — /task:create, /task:run, /task:delete shipped:
+      client-side execution via shared primitives (TaskSet.addTask/deleteTask,
+      ensureTaskSetSync), `/` completion (non-cycling, mono command column,
+      grid popover) + atomic dx-tag decoration in the prompt editor; /task:run
+      wakes the conversation with a scoped follow-up. Live-verified.
+- [x] **Bind slash commands to operation invocations** — no harness bridge was
+      needed: the task verbs declare only `Database.Service`, so the UI invoker
+      can call them (as `TaskSetArticle` already did). The commands moved to
+      plugin-assistant (a core package cannot reference a plugin's operations)
+      and now invoke `CreateTask`/`DeleteTask`/`UpdateTask`; `/task:run` queues
+      through `UpdateTask` and the supervisor's reconcile still spawns. Both the
+      command and its result are appended to the feed, so the transcript records
+      what ran. `assistant-toolkit` keeps the contract and the parse only.
+- [ ] **Cancel/delete tasks** — cancel a started (possibly delegated) task from
+      the UI and the agent surface, and delete via the TaskOperation verb so
+      the set's refs and lifecycle parent edges stay consistent; a cancelled
+      delegated task should also interrupt its sub-agent process.
+
+### References
+
+- Delegation strategy: `packages/core/compute/assistant-toolkit/src/supervisor/delegation-strategy.ts`
+- RunInstructions/completeJob: `packages/core/compute/assistant-toolkit/src/operations/run-instructions.ts`
+- Tool projection pattern (verbatim schema rationale): `packages/core/compute/assistant/src/tool-runtime/services.ts` (`projectFunctionToTool`)
+- Stories: `packages/stories/stories-assistant/src/stories/Chat.stories.tsx`
+- Related project: `plugin-projects` (registry) — task model, delegation-as-promotion
+
+## Phase 2: Task execution and delegation demos
+
+Demonstrate the assistant tracking tasks and delegating sub-agents over them.
+All decisions user-approved 2026-08-25; scripted stories in CI, live twin for
+the drain loop; this PR (#12752).
+
+### Tasks
+
+- [x] **Task.dependsOn** — optional array of suspended self-refs; ready = all
+      deps done.
+- [x] **Numbered checklist** — `formatChecklist` renders ordinals + dependency
+      notes so model and UI share numbering.
+- [x] **delegateTasks verb** — input array of (ordinal | title), resolved
+      server-side; stamps agent assignee; reconcile spawns; spawn sets
+      `started`; onComplete marks done/failed; sweep marks orphaned started
+      agent tasks failed (no zombies).
+- [x] **Calculator skill (stories-assistant)** — local `compute(expression)`
+      operation so sub-agents demonstrably call a local tool.
+- [x] **TaskList ordinals + spinner** — index column; `animate-spin` spinner
+      icon when status started && assignee assistant.
+- [x] **Executable seeds + stories** — A/B/C seeds (B<-A, C<-B); scripted
+      TestTaskExecution/TestTaskDelegation/TestTaskDrain (CI) + live
+      WithTaskDrain; stories reordered demos-first with Test-prefixed play
+      stories last. Fixes en route: agent-runtime re-reconciles after each
+      delegation exits (the drain was one-spawn-per-turn without it);
+      completeJob back to dynamic/typed-union schema after the live JSON
+      digit-separator failure recurred under main's non-strict Schema.Any;
+      checklist notes moved off the title line (models pasted them back into
+      title-keyed upserts, duplicating tasks). Live drain verified: 3/3 done,
+      3 fold-backs, no duplicates, no failures.
+- [x] **Finish** — fixtures regen, suites, lint/format, live verify, changeset,
+      PR comments, DESIGN.md in assistant-toolkit/docs; shipped in #12752.
+
+## Phase 3: Task UX backlog
+
+Follow-ups raised while reviewing the TaskList and chat surfaces (2026-08-26).
+Each is independent of the others. The checked items shipped in #12784, except
+the hierarchical list, which is #12787.
+
+### Tasks
+
+- [x] **Hierarchical tasks in the list** — `TaskList` gains `hierarchical`,
+      `onTaskMove` and controlled `collapsed` state; rows walk the tree
+      (`walkTaskTree`), indent the title cell only, and carry `aria-level` /
+      `aria-posinset` / `aria-expanded` while staying listbox options. Drag and
+      drop reuses react-ui-list's tree-item hitbox, `TreeDropIndicator`,
+      `useListDisclosure` and `paddingIndentation`; the grip lives in the
+      ordinal's gutter, the preview clones the whole subtree, and the dragged
+      rows are hidden for the drag's duration. `MoveTask` gained an optional
+      `parentTask` so a drop is one mutation. Keyboard parity is `Alt`+arrow
+      (not the outliner's `Tab`, which a listbox row cannot consume without
+      trapping focus). The agent may nest: `CreateTask`/`UpdateTask` already
+      take `parentTask`. NOT verified: the pointer drag itself — pragmatic-dnd
+      uses native HTML5 drag events, which cannot be synthesized.
+- [x] **Option to show the task description in the list** — `TaskList.Root`
+      gains `showDescriptions`; a described row grows (`auto-rows-min`) and every
+      other cell is pinned to the title's line, since a row is its own subgrid
+      and the listbox item centres its cells by default. Off by default, so the
+      chat strip stays one row per task. `WithDescriptions` story added.
+- [x] **ProjectArticle tabs** — Overview (the form body) and Tasks (the ledger
+      at full height) in the toolbar; the story also wraps the article in an
+      `AttendableContainer`, without which nothing ever attends the article and
+      the toolbar renders permanently unattended.
+- [ ] **Record when a task reached a terminal status** — `Task` carries no date
+      at all today, so nothing can show when work finished or say how long it
+      took. Stamp the transition into `done`/`failed`/`cancelled` wherever status
+      is written (the TaskOperation verbs, the delegation strategy's fold-back,
+      and the list's own toggle), and decide whether one `completed` field or a
+      status-change timestamp is the right shape.
+- [ ] **A plugin extension contributes a tab** — the Overview/Tasks tablist is
+      hard-coded in `ProjectArticle`; make it a contribution point so e.g. a
+      GitHub extension can add a PRs tab to a project. Needs a surface/capability
+      for tab registration (label, icon, order) alongside the panel surface each
+      tab renders.
+- [ ] **`#nnn` does not resolve in the ProjectArticle story** — diagnosed
+      2026-08-27, not yet fixed. The wiring is complete (the article collects
+      `MarkdownCapabilities.ExtensionProvider` and passes it to the outline,
+      which takes host extensions), `GitHubPlugin` IS mounted in the story now,
+      and the project seeds a `dxos/dxos` Repo — but the outline still renders
+      `#12752` as plain text. Cause: plugin-github's `MarkdownExtension` module
+      activates on `MarkdownEvents.Start`, and the story's `corePlugins()` is
+      attention/graph/process-manager/settings/theme only — no `MarkdownPlugin`,
+      so the event never fires and no provider is ever contributed. Fix is to
+      mount `MarkdownPlugin` in the story, or to activate the module on an event
+      the story reaches. Works elsewhere: `plugins/plugin-tasks/components/
+Outline` → `WithReferences` passes the extension directly.
+- [x] **ProjectArticle `Sections` story was flaky (~1 run in 4)** — the seeding
+      ran from `play`, racing the previous story's client teardown, and the
+      article rendered with every ref-gated section missing. Seeding moved into
+      `onClientInitialized`, so the graph exists before any story mounts: 7
+      consecutive `--retry=0` runs green. The play functions now only wait for
+      the seeded context.
+- [ ] **`#foo` renders as a heading in chat markdown** — a `#` inside a message
+      is parsed as an ATX heading, so `#foo` comes out as a title. The thread
+      renders through CodeMirror (`MarkdownBlock` → `decorateMarkdown`), so the
+      fix belongs there rather than in `MarkdownView`.
+- [x] **`Repo` type + `Project.repo`** — a host-agnostic repository type in
+      `@dxos/types` (`owner`, `name`, `url`, `defaultBranch`, optional
+      `organization`; which host it lives on stays provenance on `Obj.getMeta`
+      keys) and an optional `Project.repo` ref naming the repository a project's
+      work lands in, independent of whether its tasks are mirrored. Project
+      bumped to `0.6.0`.
+- [x] **plugin-github contributes a `#nnn` decoration** — `githubReferences()`
+      decorates `#nnn` as a link to `…/issues/<n>` (GitHub redirects to the PR
+      when the number is one), contributed through
+      `MarkdownCapabilities.ExtensionProvider`. The repo comes from the space:
+      the TaskSet `sync` mirrors a repository into, matched by its `github.com`
+      foreign key and `owner/repo` name; a space mirroring none or several
+      declines rather than guessing. Code, code fences, and link targets are
+      skipped. NOT covered: the task list renders descriptions through
+      react-markdown, so `#nnn` there is inert (see the plain-text item).
+- [x] **Outliner menu popover has no arrow** — not the outliner's: `Popover`'s
+      content carried `overflow-hidden`, and Radix positions the arrow as a
+      child of the content straddling its edge, so EVERY `Popover.Arrow` in the
+      app was clipped. Clipping moved to `Popover.Viewport` (the box that
+      scrolls and holds the rounded corners); verified live on the outliner menu
+      and the react-ui popover story.
+- [x] **Autolink bare URLs in chat markdown** — the chat renders messages through
+      CodeMirror (`MarkdownBlock` → `decorateMarkdown`), not react-markdown. The
+      GFM parser already emitted `URL` (bare) and `Autolink` (`<…>`) nodes, but
+      `decorateMarkdown` only decorated the bracketed `Link` form, so neither
+      rendered as an anchor. Both cases added, sharing one anchor decoration.
+- [x] **Task descriptions in the list are plain text** — rendered through
+      `MarkdownView` now, so a URL in a description is a link. `#nnn` there is
+      still inert: that decoration is a CodeMirror extension and this path is
+      react-markdown (tracked with the `#nnn` item above).

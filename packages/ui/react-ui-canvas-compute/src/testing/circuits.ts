@@ -44,7 +44,7 @@ export const createEmptyCircuit = () => {
 
 export const createBasicCircuit = () => {
   const model = CanvasGraphModel.create<ComputeShape>();
-  model.builder.call(({ model }) => {
+  {
     const a = model.createNode(createSwitch(position({ x: -4, y: 0 })));
     const b = model.createNode(createBeacon(position({ x: 4, y: 0 })));
     const c = model.createNode(createBeacon(position({ x: 4, y: 4 })));
@@ -52,33 +52,34 @@ export const createBasicCircuit = () => {
 
     model.createEdge({ source: a.id, target: b.id });
     model.createEdge({ source: d.id, target: c.id });
-  });
+  }
 
   return model;
 };
 
 export const createTransformCircuit = () => {
   const model = CanvasGraphModel.create<ComputeShape>();
-  model.builder.call(({ model }) => {
+  {
     const a = model.createNode(createRandom(position({ x: -8, y: -3 })));
     const b = model.createNode(createConstant({ value: '$[?(@ > 0.5)]', ...position({ x: -8, y: 2 }) }));
     const c = model.createNode(createJsonTransform(position({ x: 0, y: 0 })));
     const d = model.createNode(createBeacon(position({ x: 8, y: 0 })));
 
-    model.builder
-      // TODO(burdon): Make id optional.
-      .createNode(createNote({ id: EntityId.random(), text: 'Random number generator', ...position({ x: 0, y: -6 }) }))
-      .createEdge({ source: a.id, target: c.id })
-      .createEdge({ source: b.id, target: c.id, input: 'expression' })
-      .createEdge({ source: c.id, target: d.id });
-  });
+    // TODO(burdon): Make id optional.
+    model.createNode(
+      createNote({ id: EntityId.random(), text: 'Random number generator', ...position({ x: 0, y: -6 }) }),
+    );
+    model.createEdge({ source: a.id, target: c.id });
+    model.createEdge({ source: b.id, target: c.id, input: 'expression' });
+    model.createEdge({ source: c.id, target: d.id });
+  }
 
   return model;
 };
 
 export const createLogicCircuit = () => {
   const model = CanvasGraphModel.create<ComputeShape>();
-  model.builder.call(({ model }) => {
+  {
     const a1 = model.createNode(createSwitch(position({ x: -4, y: -4 })));
     const a2 = model.createNode(createSwitch(position({ x: -4, y: 0 })));
     const a3 = model.createNode(createSwitch(position({ x: -4, y: 4 })));
@@ -86,22 +87,19 @@ export const createLogicCircuit = () => {
     const c1 = model.createNode(createOr(position({ x: 4, y: 0 })));
     const d1 = model.createNode(createBeacon(position({ x: 8, y: 0 })));
 
-    model.builder
-      .createEdge({ source: a1.id, target: b1.id, input: 'a' })
-      .createEdge({ source: a2.id, target: b1.id, input: 'b' })
-      .createEdge({ source: b1.id, target: c1.id, input: 'a' })
-      .createEdge({ source: a3.id, target: c1.id, input: 'b' })
-      .createEdge({ source: c1.id, target: d1.id });
-  });
+    model.createEdge({ source: a1.id, target: b1.id, input: 'a' });
+    model.createEdge({ source: a2.id, target: b1.id, input: 'b' });
+    model.createEdge({ source: b1.id, target: c1.id, input: 'a' });
+    model.createEdge({ source: a3.id, target: c1.id, input: 'b' });
+    model.createEdge({ source: c1.id, target: d1.id });
+  }
 
   return model;
 };
 
 export const createControlCircuit = () => {
   const model = CanvasGraphModel.create<ComputeShape>();
-  model.builder.call((builder) => {
-    const model = builder.model;
-
+  {
     const s = model.createNode(createSwitch(position({ x: -9, y: -1 })));
     const c1 = model.createNode(createConstant({ value: 'hello', ...position({ x: -10, y: -10 }) }));
     const c2 = model.createNode(createConstant({ value: 'world', ...position({ x: -10, y: -5 }) }));
@@ -112,16 +110,15 @@ export const createControlCircuit = () => {
     const b2 = model.createNode(createBeacon(position({ x: 9, y: 3 })));
     const j = model.createNode(createJson(position({ x: 12, y: -8 })));
 
-    builder
-      .createEdge({ source: s.id, target: if1.id, input: 'condition' })
-      .createEdge({ source: s.id, target: if2.id, input: 'condition' })
-      .createEdge({ source: c1.id, target: if2.id, input: 'true' })
-      .createEdge({ source: c2.id, target: if2.id, input: 'false' })
-      .createEdge({ source: c3.id, target: if1.id, input: 'value' })
-      .createEdge({ source: if1.id, target: b1.id, output: 'true' })
-      .createEdge({ source: if1.id, target: b2.id, output: 'false' })
-      .createEdge({ source: if2.id, target: j.id });
-  });
+    model.createEdge({ source: s.id, target: if1.id, input: 'condition' });
+    model.createEdge({ source: s.id, target: if2.id, input: 'condition' });
+    model.createEdge({ source: c1.id, target: if2.id, input: 'true' });
+    model.createEdge({ source: c2.id, target: if2.id, input: 'false' });
+    model.createEdge({ source: c3.id, target: if1.id, input: 'value' });
+    model.createEdge({ source: if1.id, target: b1.id, output: 'true' });
+    model.createEdge({ source: if1.id, target: b2.id, output: 'false' });
+    model.createEdge({ source: if2.id, target: j.id });
+  }
 
   return model;
 };
@@ -130,20 +127,19 @@ export const createTemplateCircuit = () => {
   const model = CanvasGraphModel.create<ComputeShape>();
 
   // Gpt
-  model.builder.call((builder) => {
+  {
     const chat = model.createNode(createChat(position({ x: -12, y: 6 })));
     const template = model.createNode(createTemplate(position({ x: -12, y: -4 })));
     const gpt = model.createNode(createGpt(position({ x: 0, y: 0 })));
     const text = model.createNode(createText(position({ x: 14, y: 0 })));
 
-    builder
-      .createEdge({ source: chat.id, target: gpt.id, input: 'prompt' })
-      .createEdge({ source: gpt.id, target: text.id, output: 'text' })
-      .createEdge({ source: template.id, target: gpt.id, input: 'systemPrompt' });
-  });
+    model.createEdge({ source: chat.id, target: gpt.id, input: 'prompt' });
+    model.createEdge({ source: gpt.id, target: text.id, output: 'text' });
+    model.createEdge({ source: template.id, target: gpt.id, input: 'systemPrompt' });
+  }
 
   // Text
-  model.builder.call((builder) => {
+  {
     const text = model.createNode(
       createConstant({ value: 'DXOS', ...position({ x: -12, y: 15, width: 8, height: 4 }) }),
     );
@@ -151,12 +147,12 @@ export const createTemplateCircuit = () => {
       createTemplate({ valueType: 'string', text: 'Hello, {{name}}!', ...position({ x: 0, y: 15 }) }),
     );
     const view = model.createNode(createSurface(position({ x: 14, y: 15 })));
-    builder.createEdge({ source: text.id, target: template.id, input: 'name' });
-    builder.createEdge({ source: template.id, target: view.id });
-  });
+    model.createEdge({ source: text.id, target: template.id, input: 'name' });
+    model.createEdge({ source: template.id, target: view.id });
+  }
 
   // Json
-  model.builder.call((builder) => {
+  {
     const sender = model.createNode(
       createConstant({ value: 'alice@example.com', ...position({ x: -12, y: 24, width: 8, height: 4 }) }),
     );
@@ -184,18 +180,18 @@ export const createTemplateCircuit = () => {
       }),
     );
     const view = model.createNode(createSurface(position({ x: 14, y: 30 })));
-    builder.createEdge({ source: sender.id, target: template.id, input: 'recipient' });
-    builder.createEdge({ source: body.id, target: template.id, input: 'greeting' });
-    builder.createEdge({ source: meta.id, target: template.id, input: 'meta' });
-    builder.createEdge({ source: template.id, target: view.id });
-  });
+    model.createEdge({ source: sender.id, target: template.id, input: 'recipient' });
+    model.createEdge({ source: body.id, target: template.id, input: 'greeting' });
+    model.createEdge({ source: meta.id, target: template.id, input: 'meta' });
+    model.createEdge({ source: template.id, target: view.id });
+  }
 
   return model;
 };
 
 export const createArtifactCircuit = () => {
   const model = CanvasGraphModel.create<ComputeShape>();
-  model.builder.call((builder) => {
+  {
     const prompt = model.createNode(
       createTemplate({
         text: createSystemPrompt({}),
@@ -206,12 +202,11 @@ export const createArtifactCircuit = () => {
     const gpt = model.createNode(createGpt(position({ x: 0, y: 0 })));
     const text = model.createNode(createText(position({ x: 16, y: 8, width: 16, height: 6 })));
     const surface = model.createNode(createSurface(position({ x: 16, y: -5, width: 16, height: 18 })));
-    builder
-      .createEdge({ source: prompt.id, target: gpt.id, input: 'systemPrompt' })
-      .createEdge({ source: chat.id, target: gpt.id, input: 'prompt' })
-      .createEdge({ source: gpt.id, target: text.id, output: 'text' })
-      .createEdge({ source: gpt.id, target: surface.id, output: 'artifact' });
-  });
+    model.createEdge({ source: prompt.id, target: gpt.id, input: 'systemPrompt' });
+    model.createEdge({ source: chat.id, target: gpt.id, input: 'prompt' });
+    model.createEdge({ source: gpt.id, target: text.id, output: 'text' });
+    model.createEdge({ source: gpt.id, target: surface.id, output: 'artifact' });
+  }
 
   return model;
 };
@@ -225,13 +220,12 @@ export const createGptCircuit = (options: {
   instructions?: boolean;
 }) => {
   const model = CanvasGraphModel.create<ComputeShape>();
-  model.builder.call((builder) => {
+  {
     const gpt = model.createNode(createGpt(position({ x: 0, y: -14 })));
     const chat = model.createNode(createChat(position({ x: -18, y: -2 })));
     const text = model.createNode(createText(position({ x: 19, y: 3, width: 10, height: 10 })));
-    builder
-      .createEdge({ source: chat.id, target: gpt.id, input: 'prompt' })
-      .createEdge({ source: gpt.id, target: text.id, output: 'text' });
+    model.createEdge({ source: chat.id, target: gpt.id, input: 'prompt' });
+    model.createEdge({ source: gpt.id, target: text.id, output: 'text' });
 
     if (options.history) {
       const queue = model.createNode(
@@ -244,10 +238,9 @@ export const createGptCircuit = (options: {
       const thread = model.createNode(createFeed(position({ x: -3, y: 3, width: 14, height: 10 })));
       const append = model.createNode(createAppend(position({ x: 10, y: 6 })));
 
-      builder
-        .createEdge({ source: queue.id, target: thread.id })
-        .createEdge({ source: queue.id, target: append.id, input: 'id' })
-        .createEdge({ source: gpt.id, target: append.id, output: 'messages', input: 'items' });
+      model.createEdge({ source: queue.id, target: thread.id });
+      model.createEdge({ source: queue.id, target: append.id, input: 'id' });
+      model.createEdge({ source: gpt.id, target: append.id, output: 'messages', input: 'items' });
     }
 
     if (options.instructions) {
@@ -258,30 +251,30 @@ export const createGptCircuit = (options: {
         }),
       );
 
-      builder.createEdge({ source: prompt.id, target: gpt.id, input: 'systemPrompt' });
+      model.createEdge({ source: prompt.id, target: gpt.id, input: 'systemPrompt' });
     }
 
     if (options.artifact) {
       const artifact = model.createNode(createSurface(position({ x: 17, y: -10, width: 14, height: 14 })));
 
-      builder.createEdge({ source: gpt.id, target: artifact.id, output: 'artifact' });
+      model.createEdge({ source: gpt.id, target: artifact.id, output: 'artifact' });
     }
 
     if (options.cot) {
       const cot = model.createNode(createText(position({ x: 0, y: -10, width: 8, height: 10 })));
-      builder.createEdge({ source: gpt.id, target: cot.id, output: 'cot' });
+      model.createEdge({ source: gpt.id, target: cot.id, output: 'cot' });
     }
 
     if (options.db) {
       const database = model.createNode(createDatabase(position({ x: -10, y: 4 })));
-      builder.createEdge({ source: database.id, target: gpt.id, input: 'tools' });
+      model.createEdge({ source: database.id, target: gpt.id, input: 'tools' });
     }
 
     if (options.image) {
       const tool = model.createNode(createTextToImage(position({ x: -8, y: -16 })));
-      builder.createEdge({ source: tool.id, target: gpt.id, input: 'tools' });
+      model.createEdge({ source: tool.id, target: gpt.id, input: 'tools' });
     }
-  });
+  }
 
   return model;
 };
@@ -294,11 +287,11 @@ export const createGPTRealtimeCircuit = () => {
 
 export const createAudioCircuit = () => {
   const model = CanvasGraphModel.create<ComputeShape>();
-  model.builder.call(({ model }) => {
+  {
     const a = model.createNode(createAudio(position({ x: -4, y: -4 })));
     const b = model.createNode(createScope(position({ x: 4, y: -4 })));
     model.createEdge({ source: a.id, target: b.id });
-  });
+  }
 
   return model;
 };

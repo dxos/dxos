@@ -5,16 +5,15 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { qualifyId } from '@dxos/app-graph';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import { setupGraphBuilder } from '@dxos/app-graph/testing';
 import { Chat } from '@dxos/assistant-toolkit';
 import * as Project from '@dxos/compute/Project';
 import { Feed, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
+import * as GraphNode from '@dxos/graph/GraphNode';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
 import { createProjectChatsExtension } from './app-graph-builder';
 
@@ -37,22 +36,22 @@ describe('project chats graph extension', () => {
     await db.flush();
 
     const rootExtensions = await EffectEx.runPromise(
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'testRoot',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         connector: () => Effect.succeed([{ id: PROJECT_ID, type: 'test', data: project }]),
       }),
     );
     const chatExtensions = await EffectEx.runPromise(createProjectChatsExtension());
     const context = setupGraphBuilder({ extensions: [...rootExtensions, ...chatExtensions] });
 
-    await context.expand(Node.RootId);
-    await context.expand(qualifyId(Node.RootId, PROJECT_ID));
+    await context.expand(GraphNode.RootId);
+    await context.expand(GraphNode.qualifyId(GraphNode.RootId, PROJECT_ID));
 
     const addChat = async (name: string) => {
       const feed = db.add(Feed.make());
       const chat = db.add(Chat.make({ name, feed: Ref.make(feed) }));
-      Obj.setParent(chat, project);
+      Chat.linkCompanion({ chat, subject: project });
       await db.flush();
       await context.flush();
       return chat;
@@ -63,7 +62,8 @@ describe('project chats graph extension', () => {
       db,
       project,
       addChat,
-      getChildIds: () => context.getConnections(qualifyId(Node.RootId, PROJECT_ID)).map((node) => node.id),
+      getChildIds: () =>
+        context.getConnections(GraphNode.qualifyId(GraphNode.RootId, PROJECT_ID)).map((node) => node.id),
     };
   };
 
@@ -78,11 +78,11 @@ describe('project chats graph extension', () => {
     // The connector reads a hierarchy query rather than a ref array, so it must re-run when a chat
     // is newly parented.
     const chat = await addChat('First');
-    expect(getChildIds()).toEqual([qualifyId(Node.RootId, PROJECT_ID, chat.id)]);
+    expect(getChildIds()).toEqual([GraphNode.qualifyId(GraphNode.RootId, PROJECT_ID, chat.id)]);
 
     const second = await addChat('Second');
     expect(getChildIds()).toHaveLength(2);
-    expect(getChildIds()).toContain(qualifyId(Node.RootId, PROJECT_ID, second.id));
+    expect(getChildIds()).toContain(GraphNode.qualifyId(GraphNode.RootId, PROJECT_ID, second.id));
   });
 
   test('excludes non-chat children of the project', async ({ expect }) => {
@@ -95,6 +95,6 @@ describe('project chats graph extension', () => {
     await db.flush();
     await flush();
 
-    expect(getChildIds()).toEqual([qualifyId(Node.RootId, PROJECT_ID, chat.id)]);
+    expect(getChildIds()).toEqual([GraphNode.qualifyId(GraphNode.RootId, PROJECT_ID, chat.id)]);
   });
 });

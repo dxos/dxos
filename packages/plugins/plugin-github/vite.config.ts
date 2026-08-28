@@ -9,6 +9,7 @@ export default defineConfig({
     index: 'src/index.ts',
     GitHubPlugin: 'src/GitHubPlugin.ts',
     capabilities: 'src/capabilities/index.ts',
+    extensions: 'src/extensions/index.ts',
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
     plugin: 'src/plugin.ts',

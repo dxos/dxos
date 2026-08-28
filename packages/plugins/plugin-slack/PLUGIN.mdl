@@ -21,6 +21,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
 
 ## Types
 
@@ -66,13 +67,13 @@ Discovery operations — read-only, no ECHO writes.
 
 ```mdl
 op GetSlackChannels
-  key: org.dxos.plugin.slack.operation.get-slack-channels
+  key: org.dxos.operation.slack.getChannels
   desc: |
     Lists all Slack conversations reachable from the integration's OAuth token
     without creating any local ECHO objects.  Returns one RemoteTarget per
     conversation for the integration UI's target-selection list.
   input:
-    integration: Ref<Integration>
+    connection: Ref<Connection>
   output: { targets: RemoteTarget[] }
   effects: [http]
   note: |
@@ -86,7 +87,7 @@ Sync operations — pull messages from Slack and write to ECHO.
 
 ```mdl
 op SyncSlackChannel
-  key: org.dxos.plugin.slack.operation.sync-slack-channel
+  key: org.dxos.operation.slack.syncChannel
   desc: |
     Reconciles messages for the currently-selected Slack targets on an
     Integration.  For each selected target: materializes a local Channel (on
@@ -95,7 +96,7 @@ op SyncSlackChannel
     Updates the cursor after a successful pull so subsequent runs are
     incremental.
   input:
-    integration: Ref<Integration>
+    connection: Ref<Connection>
     channel?: Ref<Channel>          # optional: narrow to a single target
   output: { pulled: PullResult }
   effects: [http, echo:write]
@@ -289,6 +290,61 @@ test T-8: Idempotent re-sync
   then:
     - no duplicate Message is appended (foreign key deduplication)
     - pulled.added reflects only net-new messages
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Connect a Slack workspace and sync a channel
+  desc: The core round-trip — OAuth-connect a workspace, discover conversations, sync one.
+  actors: human
+  covers: [F-1.1, F-1.2, F-2.1, F-3.1]
+  status: blocked
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-slack is enabled — it ships in the "experimental" set (`plugin-defs.tsx`) and is OFF
+      by default; it is not listed in `getDefaults`, so it must be enabled via Settings -> plugin
+      registry before an IntegrationProvider for 'slack.com' exists
+    - a Slack workspace and user account able to complete OAuth exist, held outside this repo
+    - no Integration for 'slack.com' exists in the space — ABORT rather than reusing or deleting
+      one this flow did not create
+  test:
+    - name: Connect the workspace
+      do: Open Settings -> Connections, choose Slack, and complete the OAuth consent screen for
+        a real Slack workspace.
+      expect: an Integration for source 'slack.com' appears with accessToken.account set to
+        "<user>@<team>"
+      blocked: |
+        Requires a live Slack OAuth consent flow and a real bearer token (F-1.2, F-1.3) — no
+        deterministic operation performs this, and the debug port cannot drive a third-party
+        OAuth redirect. This step is human-only and cannot be scripted; per Execution Rule 9 the
+        flow's status is `blocked`, not `failing`.
+      capture: connection
+    - name: Discover channels
+      do: In the Slack integration's target picker, open the conversation list.
+      invoke: org.dxos.operation.slack.getChannels { connection: $connection.connection }
+      capture: discovered
+      expect: the list shows one row per Slack conversation reachable from the token, and no
+        Channel objects exist in ECHO yet (F-2.2)
+      assert: return Array.isArray($discovered.targets) && $discovered.targets.length > 0;
+    - name: Select and sync a channel
+      do: Select one conversation from the picker and confirm.
+      invoke: org.dxos.operation.slack.syncChannel { connection: $connection.connection }
+      capture: synced
+      expect: a Channel now exists in the navtree with messages from that conversation, and a
+        success toast is shown (F-5.4)
+      assert: return $synced.pulled.added >= 0 && !!$synced;
+  after:
+    - name: Remove the integration and channel
+      do: Right-click the synced Channel and any Integration row and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$discovered], target: $given.space }
+      expect: the Channel and Integration rows leave the navtree
 ```
 
 ---

@@ -1,4 +1,4 @@
-# `dxos` — project tracking for coding agents
+# `dxos` — project tracking and QA flows for coding agents
 
 Durable, resumable project and task tracking. A committed **registry** of
 work-streams, a **`TASKS.md` ledger** per project, and one command to drive them.
@@ -10,6 +10,8 @@ both you and the agent can read it weeks later.
 
 ## Install
 
+In a terminal:
+
 ```bash
 claude plugin marketplace add dxos/dxos
 ```
@@ -18,11 +20,71 @@ claude plugin marketplace add dxos/dxos
 claude plugin install dxos@dxos
 ```
 
+In the Claude Code desktop app, run the first command in a terminal to register
+the marketplace, then install from the plugin manager: the **+** button beside
+the prompt box, **Plugins**, **Add plugin**, and pick `dxos`. **Manage plugins**
+enables, disables and uninstalls. The app reads the same `~/.claude` config the
+CLI writes, so either route lands the plugin in the next desktop session.
+
+That is the whole install for the default `file` backend. `/dxos:project` works
+immediately, against a committed `registry.yml`.
+
+The Claude **Desktop** app is a different product and does not run plugins at all:
+no hooks, so no `/dxos:project`. You can still add the MCP server there by URL as
+a connector, which gives you the tools without the command.
+
+## Setup for the `mcp` backend
+
+Skip this whole section if you are staying on `file`.
+
+### Prerequisites
+
+1. An account on [composer.space](https://composer.space).
+2. A passkey saved to it — **Settings → create passkey**.
+
+Authentication is the passkey, so both have to exist before step 1 can finish.
+
+### Steps
+
+**1. Authenticate the connector.** The plugin ships it, so there is nothing to
+add. Run `/mcp`, pick `composer`, choose Authenticate, and approve in the
+browser.
+
+**2. Select the backend.** `DX_PROJECT_BACKEND` is read by the hook process, so
+it has to be in that process's environment. A desktop session is not launched
+from your shell and inherits nothing from `.zshrc`, so set it in `settings.json`,
+which Claude Code passes to every session and its subprocesses:
+
+```json
+{ "env": { "DX_PROJECT_BACKEND": "mcp" } }
+```
+
+`.claude/settings.local.json` in the repo keeps it to you. `.claude/settings.json`
+commits it for everyone working in the repo. `~/.claude/settings.json` turns it on
+for every repo you open.
+
+**3. Bind the space.** Run `/dxos:project setup`. It lists the spaces you own by
+name, asks which one this repo's projects belong in, confirms the session can
+write to it, and records the answer:
+
+```yaml
+# .agents/projects/space.yml — the ECHO space this repo's projects live in.
+spaceId: <id>
+```
+
+Commit that file. It binds every future session in the repo, on any machine and
+for anyone who clones it. Pass a name to skip the question when it is
+unambiguous: `/dxos:project setup Acme Product`.
+
+The procedure itself belongs to the `project` skill the server serves, so the
+verb loads that skill and follows it rather than carrying its own copy.
+
 ## Use
 
 | Command                          | Does                                                                     |
 | -------------------------------- | ------------------------------------------------------------------------ |
 | `/dxos:project`                  | Status of the current project — worktree, branch, docs, uncommitted work |
+| `/dxos:project setup [space]`    | Bind this repo to the space its projects live in (`mcp` only)           |
 | `/dxos:project list [all]`       | Numbered table of active projects; reply with a row number to resume     |
 | `/dxos:project tasks [all]`      | Open `- [ ]` items from the current project's `TASKS.md`                 |
 | `/dxos:project spawn <N...>` | Spin the numbered open tasks out into background task chips              |
@@ -36,6 +98,58 @@ claude plugin install dxos@dxos
 
 In a repo with no registry yet, `/dxos:project new <name>` creates one. Read verbs
 report that none exists rather than inventing entries.
+
+## `/dxos:qa` — running QA flows
+
+A second command, over the executable `flow` blocks declared in `.mdl` specs (the
+`Deus.QA` dialect — a `## QA` section in a `PLUGIN.mdl`, or an `APP.mdl` for
+journeys crossing plugins).
+
+| Command                            | What it does                                                            |
+| ---------------------------------- | ----------------------------------------------------------------------- |
+| `/dxos:qa`                         | Numbered table of every flow, with its `status:`                        |
+| `/dxos:qa list [filter]`           | The same table, narrowed by document path, flow id, or title            |
+| `/dxos:qa show <plugin> <flowId>`  | Print one flow verbatim — its `given`, steps and `cleanup`              |
+| `/dxos:qa run <plugin> <flowId>`   | Execute it against a live app and report a per-step pass/fail table     |
+| `/dxos:qa run <plugin> <flowId> --skip-cleanup` | Leave the artifacts in place for inspection                |
+| `/dxos:qa help`                    | Table of every verb                                                     |
+
+Rows are addressable by number, as with `/dxos:project list`. Enumeration is
+`scripts/list-flows.mjs`; execution is the repo's `running-qa-flows` skill, which
+the command defers to rather than restating.
+
+Unlike `/dxos:project`, there is no `UserPromptSubmit` hook: the store is the
+`.mdl` files themselves, so there is no backend to swap and nothing for a
+directive to resolve.
+
+## Developing this plugin
+
+Load it straight from the working tree — no install, no cache, no marketplace, no session restart:
+
+```bash
+claude --plugin-dir tools/claude/plugins/dxos
+```
+
+Edits take effect in the next session started with that flag, which is what makes the loop
+repeatable. The installed copy (`dxos@dxos`) is a snapshot of GitHub `main`, so a command added on a
+branch is invisible to it until the branch lands.
+
+Assert it non-interactively — this is the regression check, cheap enough to run on every edit:
+
+```bash
+claude --plugin-dir tools/claude/plugins/dxos --model haiku \
+  -p "List the slash commands available to you whose name starts with dxos."
+```
+
+For scored behavioural cases (does `/dxos:qa list` render the table?) rather than mere presence, see
+`evals/` and `claude plugin eval dxos`.
+
+Two paths that look right and are not:
+
+- **`~/.claude/skills/<name>/`** auto-loads a plugin and `/reload-plugins` reloads it live, but the
+  loader keys on the directory name while `plugin.json` declares `dxos`, so a symlink resolves under
+  neither name.
+- **A local-scope marketplace** works, but costs config surgery plus a restart per change.
 
 ## How it works
 
@@ -57,7 +171,13 @@ merely mentioned it — including the message asking for it to be replaced.
 | --------------------- | -------------------------------- | ----------------------------------------------- |
 | `DX_PROJECT_REGISTRY` | `.agents/projects/registry.yml`  | Registry location, relative to the project root (`file` only) |
 | `DX_PROJECT_BACKEND`  | `file`                           | Where projects are stored — `file` or `mcp`     |
-| `DX_PROJECT_SPACE`    | resolved via `listSpaces`        | Space holding the projects (`mcp` only)         |
+| `DX_PROJECT_SPACE`    | unset                            | Guard against a stale binding (`mcp` only)      |
+
+The space itself is bound per repo in the committed `.agents/projects/space.yml`,
+written by `/dxos:project setup` (see [Setup](#setup-for-the-mcp-backend)), because a
+repo's projects belong to one space whoever opens it. `DX_PROJECT_SPACE` is a
+guard on top of that: set it, and the agent stops if it disagrees with the
+committed binding.
 
 Every directive ends with a `BACKEND:` line naming the store and how to read or
 write it. The verbs, the command file and the skill are all backend-agnostic —
@@ -70,11 +190,19 @@ no services running.
 
 ### `mcp` — DXOS Composer
 
-Projects become live objects in a Composer space, reached through the MCP tools
-`dx mcp serve` exposes. A registry entry is a `Project`, its ledger is
-`Project.outline` (one markdown document), durable items are `Task` objects under
-the project's TaskSet, and design docs are artifact documents — so the same work
-is editable in Composer and from any machine, without a committed file.
+Projects become live objects in a Composer space, reached through MCP tools. A
+registry entry is a `Project`, its ledger is `Project.outline` (one markdown
+document), durable items are `Task` objects under the project's TaskSet, and
+design docs are artifact documents — so the same work is editable in Composer and
+from any machine, without a committed file.
+
+#### The bundled connector
+
+The plugin ships the deployed server, so there is nothing to add:
+
+```json
+"mcpServers": { "composer": { "type": "http", "url": "https://composer.dxos.network/mcp" } }
+```
 
 Two rules the directive enforces:
 

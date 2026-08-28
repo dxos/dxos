@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as Instructions from '@dxos/compute/Instructions';
@@ -14,17 +14,19 @@ import * as Skill from '@dxos/compute/Skill';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import * as GitHubPlugin from '@dxos/plugin-github/GitHubPlugin';
 import { translations as routineTranslations } from '@dxos/plugin-routine/translations';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { translations as tasksTranslations } from '@dxos/plugin-tasks/translations';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
+import { AttendableContainer } from '@dxos/react-ui-attention';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { Text } from '@dxos/schema';
-import { Milestone, Task, TaskSet } from '@dxos/types';
+import { Milestone, Outline, Repo, Task, TaskSet } from '@dxos/types';
 
 import { translations } from '#translations';
 
@@ -32,8 +34,13 @@ import { ProjectArticle } from './ProjectArticle';
 
 const PROJECT_NAME = 'Project 1';
 const TASK_TITLE = 'Ship the tasks section';
+// Carries both reference forms the markdown surfaces linkify: a bare URL and a `#nnn` issue.
+const LINK_TASK_TITLE = 'Follow up on #12752 before the release';
+const LINK_TASK_DESCRIPTION =
+  'Spec at https://github.com/dxos/dxos/pull/12752 — the preview build is at https://pr-12752-composer-dev.dxos.workers.dev, and it supersedes #12431.';
 const ARTIFACT_TITLE = 'Design Notes';
 const MILESTONE_NAME = 'Beta';
+const OUTLINE_ITEM = 'Draft the launch checklist';
 
 /**
  * The seeded graph, kept so a play function can mutate the source objects and assert the article
@@ -41,39 +48,64 @@ const MILESTONE_NAME = 'Beta';
  * *referenced* object (a task's title, a new member of `taskSet.tasks`, a new artifact ref) reaches
  * the DOM is the only way to catch a section that resolved once and then went inert.
  */
-let seeded: { space: Space; project: Project.Project; taskSet: TaskSet.TaskSet } | undefined;
+let generation = 0;
+let seeded:
+  | { generation: number; space: Space; project: Project.Project; taskSet: TaskSet.TaskSet; task: Task.Task }
+  | undefined;
 
-/**
- * Seed a project with the same owned-object graph the create-object capability builds: an owned
- * Instructions document and task set, plus one referenced (non-owned) artifact.
- */
-const seedProject = (space: Space) => {
-  const project = Project.make({ name: PROJECT_NAME, description: 'Track the plugin-projects milestone.' });
-  const instructions = Instructions.make({ text: 'You are an assistant focused on this project.' });
-  Obj.setParent(instructions, project);
-  // `Project.make` materializes the owned task set, so the seed uses that one rather than
-  // substituting its own — swapping it would leave the project's own set orphaned.
+/** Seeded at client init so every story starts populated, including the ones with no play function. */
+const createProject = (space: Space, storyGeneration: number) => {
+  const project = space.db.add(Project.make({ name: PROJECT_NAME }));
   const taskSet = project.taskSet?.target;
   if (!taskSet) {
     throw new Error('Expected the project to own a task set.');
   }
+  const outline = project.outline?.target;
+  if (!outline?.content.target) {
+    throw new Error('Expected the project to own an outline.');
+  }
+
+  // The project names its repository, which is what makes a `#nnn` reference in its documents
+  // resolve (plugin-github reads `project.repo`).
+  const repo = space.db.add(Repo.make({ name: 'dxos', owner: 'dxos', url: 'https://github.com/dxos/dxos' }));
+  const instructions = Instructions.make({ text: 'You are an assistant focused on this project.' });
   const artifact = space.db.add(Text.make({ name: ARTIFACT_TITLE, content: 'Notes.' }));
   Obj.update(project, (project) => {
+    project.repo = Ref.make(repo);
     project.instructions = Ref.make(instructions);
     project.artifacts = [Ref.make(artifact)];
   });
+  Obj.setParent(instructions, project);
 
-  space.db.add(project);
-
-  // Added after the cascade so the task lands in the persisted task set; membership is the set's
-  // `tasks` array, with the parent edge alongside for deletion cascade.
   const task = space.db.add(Task.make({ title: TASK_TITLE, status: 'todo' }));
   Obj.setParent(task, taskSet);
+  const linkTask = space.db.add(
+    Task.make({ title: LINK_TASK_TITLE, description: LINK_TASK_DESCRIPTION, status: 'todo' }),
+  );
+  Obj.setParent(linkTask, taskSet);
   Obj.update(taskSet, (taskSet) => {
-    taskSet.tasks = [Ref.make(task)];
+    taskSet.tasks = [Ref.make(task), Ref.make(linkTask)];
   });
 
-  seeded = { space, project, taskSet };
+  // The third item is what promotion leaves behind: a link to the task in the project's set.
+  Obj.update(outline.content.target, (text) => {
+    text.content = `- [ ] ${OUTLINE_ITEM}\n- [ ] Review #12752 before the release\n- [ ] [${TASK_TITLE}](${Obj.getURI(task)})\n`;
+  });
+
+  seeded = { generation: storyGeneration, space, project, taskSet, task };
+};
+
+/** Waits for the seeded graph a play function asserts against; the writes happen at client init. */
+const seedContent = async () => {
+  // `play` runs once the story has mounted but not necessarily once the client has finished
+  // initializing — the project is created by the plugin's `onClientInitialized`.
+  await waitFor(() => expect(seeded?.generation).toBe(generation), { timeout: 10_000 });
+  const context = seeded;
+  if (!context) {
+    throw new Error('The story did not create a project.');
+  }
+  await context.space.db.flush({ indexes: true });
+  return context;
 };
 
 /** Adds a task to the set the way the verbs do — array membership plus the lifecycle parent edge. */
@@ -86,7 +118,36 @@ const addTask = (space: Space, taskSet: TaskSet.TaskSet, title: string, mileston
   return task;
 };
 
-const DefaultStory = () => {
+/**
+ * Waits for content that only appears once the story's own client has resolved the project's refs.
+ * Each poll yields a frame and a resize the measured surfaces can act on, since testing-library's
+ * polling alone produces neither. NOTE: this story still fails roughly one run in four because the
+ * previous story's client is torn down asynchronously and can strip this story's resolver — the
+ * article renders with every ref-gated section missing. Tracked in TASKS.md; `retry` covers it in
+ * CI meanwhile.
+ */
+const findPainted = async (canvas: ReturnType<typeof within>, text: string) => {
+  await waitFor(
+    async () => {
+      window.dispatchEvent(new Event('resize'));
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      await expect(canvas.queryByText(text)).toBeTruthy();
+    },
+    { timeout: 10_000 },
+  );
+};
+
+/** Radix unmounts an inactive tab panel, so a story asserts a tab's content only while it is shown. */
+const showTab = async (canvas: ReturnType<typeof within>, tab: 'overview' | 'tasks') => {
+  await userEvent.click(await canvas.findByTestId(`projectsPlugin.tab.${tab}`, undefined, { timeout: 10_000 }));
+};
+
+type StoryArgs = {
+  role: string;
+  attendableId: string;
+};
+
+const DefaultStory = ({ role, attendableId }: StoryArgs) => {
   const [space] = useSpaces();
   const projects = useQuery(space?.db, Filter.type(Project.Project));
   const project = projects.find((entry) => entry.name === PROJECT_NAME);
@@ -94,7 +155,17 @@ const DefaultStory = () => {
     return <Loading data={{ db: !!space?.db, project: !!project }} />;
   }
 
-  return <ProjectArticle role='article' subject={project} attendableId='test' />;
+  // `AttendableContainer` marks the subtree with `data-attendable-id`, which is what the deck's
+  // plank does in the app: without it nothing ever attends `attendableId`, so the article's toolbar
+  // renders permanently unattended.
+  // `AttendableContainer` marks the subtree with `data-attendable-id`, which is what the deck's
+  // plank does in the app: without it nothing ever attends `attendableId`, so the article's toolbar
+  // renders permanently unattended.
+  return (
+    <AttendableContainer id={attendableId} classNames='contents'>
+      <ProjectArticle role={role} subject={project} attendableId={attendableId} />
+    </AttendableContainer>
+  );
 };
 
 const meta = {
@@ -107,21 +178,28 @@ const meta = {
       plugins: [
         ...corePlugins(),
         TasksPlugin.make(),
+        // Contributes the `#123` decoration; `project.repo` is what it resolves against.
+        GitHubPlugin.make(),
         ClientPlugin.make({
           types: [
             Project.Project,
             Instructions.Instructions,
             Skill.Skill,
             Text.Text,
+            Outline.Outline,
             TaskSet.TaskSet,
             Task.Task,
             Milestone.Milestone,
+            Repo.Repo,
           ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
+              // Read before the first yield: this client belongs to the story whose `beforeEach`
+              // most recently ran, and a slower predecessor keeps the generation it started under.
+              const storyGeneration = generation;
               const { defaultSpace } = yield* initializeIdentity(client);
               yield* Effect.promise(async () => {
-                seedProject(defaultSpace);
+                createProject(defaultSpace, storyGeneration);
                 await defaultSpace.db.flush({ indexes: true });
               });
             }),
@@ -141,6 +219,12 @@ const meta = {
       ...tasksTranslations,
     ],
   },
+  // Each story mounts its own client: drop the previous story's context, and move the generation
+  // on so a predecessor that finishes initializing late cannot publish its graph as this story's.
+  beforeEach: () => {
+    seeded = undefined;
+    generation += 1;
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -148,8 +232,21 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  args: {
+    role: 'article',
+    attendableId: 'test',
+  },
+};
+
+/**
+ * Each section is asserted by its content rather than its heading, since an invalid surface id is
+ * dropped silently and leaves the heading rendering over an empty section.
+ */
+export const Sections: Story = {
+  ...Default,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    await seedContent();
 
     // Header form: the project name renders as the editable name field's value. Identity/space
     // setup runs async, so allow more than testing-library's default 1s timeout.
@@ -160,13 +257,43 @@ export const Default: Story = {
 
     // Artifacts: the section heading renders, and the seeded artifact's label resolves.
     await expect(canvas.findByText('Artifacts', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    await expect(canvas.findByText(ARTIFACT_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await findPainted(canvas, ARTIFACT_TITLE);
 
-    // Tasks: the section heading renders AND plugin-tasks' TaskSet section surface resolves into it.
-    // The task title is the load-bearing assertion — an invalid surface id is dropped silently, so
-    // the heading alone renders over an empty section.
-    await expect(canvas.findByText('Tasks', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    // Tasks: behind its own toolbar tab, so switch to it. The task title is the load-bearing
+    // assertion — an invalid surface id is dropped silently, leaving an empty panel.
+    await showTab(canvas, 'tasks');
     await expect(canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+  },
+};
+
+/**
+ * A promoted item's link belongs to the project's own ledger, so following it shows the task where
+ * the project keeps its tasks — the Tasks tab — rather than swapping the outline for a task form
+ * inside the Overview.
+ */
+export const TaskLink: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+
+    // Overview owns the outline, so the link is followed from a tab that is not the Tasks one.
+    // `find`, not `get`: seeding completes at client init, which can be before the article mounts.
+    await expect(await canvas.findByTestId('projectsPlugin.tab.tasks', undefined, { timeout: 10_000 })).toHaveAttribute(
+      'data-state',
+      'inactive',
+    );
+
+    const link = await canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 });
+    await userEvent.click(link);
+
+    await waitFor(
+      () => expect(canvas.getByTestId('projectsPlugin.tab.tasks')).toHaveAttribute('data-state', 'active'),
+      { timeout: 10_000 },
+    );
+    // The task is on the tab it navigated to, and the outline it came from is no longer shown.
+    await expect(canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await waitFor(() => expect(canvas.queryByText(OUTLINE_ITEM)).toBeNull(), { timeout: 10_000 });
   },
 };
 
@@ -177,14 +304,12 @@ export const Default: Story = {
  * behaved (`Query.children()` never re-emitted on a member's property change).
  */
 export const Updates: Story = {
+  ...Default,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    const { space, project, taskSet } = await seedContent();
+    await showTab(canvas, 'tasks');
     await expect(canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    const context = seeded;
-    if (!context) {
-      throw new Error('The story did not seed a project.');
-    }
-    const { space, project, taskSet } = context;
 
     // 1. A member's own property change: renaming a task must reach its row.
     const RENAMED = 'Renamed in place';
@@ -209,11 +334,13 @@ export const Updates: Story = {
     });
     const MILESTONE_TASK = 'Filed under the milestone';
     addTask(space, taskSet, MILESTONE_TASK, milestone);
-    // The milestone renders in its own section.
-    await expect(canvas.findByText(MILESTONE_NAME, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     // Its task is only a row: the task list does not group by milestone, so no backlog split appears.
     await expect(canvas.findByText(MILESTONE_TASK, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await waitFor(() => expect(canvas.queryByText('Backlog')).toBeNull(), { timeout: 10_000 });
+
+    // The milestone renders in its own Overview section.
+    await showTab(canvas, 'overview');
+    await expect(canvas.findByText(MILESTONE_NAME, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
 
     // A rename reaches the row, which holds its own subscription.
     Obj.update(milestone, (milestone) => {
@@ -227,7 +354,7 @@ export const Updates: Story = {
     Obj.update(project, (project) => {
       project.artifacts = [...project.artifacts, Ref.make(artifact)];
     });
-    await expect(canvas.findByText(ADDED_ARTIFACT, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await findPainted(canvas, ADDED_ARTIFACT);
 
     // 6. And removing the ref must drop the card — the delete path splices this array rather than
     //    going through a collection.
@@ -235,6 +362,6 @@ export const Updates: Story = {
       project.artifacts = project.artifacts.filter((ref) => ref.target?.id !== artifact.id);
     });
     await waitFor(() => expect(canvas.queryByText(ADDED_ARTIFACT)).toBeNull(), { timeout: 10_000 });
-    await expect(canvas.findByText(ARTIFACT_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await findPainted(canvas, ARTIFACT_TITLE);
   },
 };

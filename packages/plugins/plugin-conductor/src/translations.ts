@@ -4,7 +4,7 @@
 
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
-import { CanvasBoard } from '@dxos/react-ui-canvas-editor';
+import { CanvasBoard } from '@dxos/react-ui-canvas-editor/types';
 
 import { meta } from '#meta';
 

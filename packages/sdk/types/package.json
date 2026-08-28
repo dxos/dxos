@@ -31,6 +31,7 @@
   "dependencies": {
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -42,6 +43,7 @@
   "devDependencies": {
     "@dxos/client-protocol": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@effect/vitest": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {

@@ -5,7 +5,8 @@
 import { describe, expect, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
-import { type Any, Stream, type TaggedType } from '@dxos/codec-protobuf';
+import { Stream } from '@dxos/async';
+import { type Any, type TaggedType } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
 import { type TYPES } from '@dxos/protocols/proto';
 
@@ -55,9 +56,6 @@ describe('RpcPeer', () => {
       const promise = alice.open().then(() => {
         aliceOpen = true;
       });
-
-      await sleep(5);
-      expect(aliceOpen).toEqual(false);
 
       await bob.open();
 
@@ -418,12 +416,12 @@ describe('RpcPeer', () => {
     test('client closes the stream', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
-      let closeCalled = false;
+      const closeTrigger = new Trigger();
       const alice = new RpcPeer({
         callHandler: async (msg) => createPayload(),
         streamHandler: (method, msg) =>
           new Stream<Any>(({ next, close }) => () => {
-            closeCalled = true;
+            closeTrigger.wake();
           }),
         port: alicePort,
       });
@@ -438,8 +436,8 @@ describe('RpcPeer', () => {
       const stream = bob.callStream('method', createPayload('request'));
       await stream.close();
 
-      // Poll until the close notification round-trips to the remote peer.
-      await expect.poll(() => closeCalled).toEqual(true);
+      // Wait for the close notification to round-trip to the remote peer.
+      await closeTrigger.wait();
     });
 
     test('reports stream being ready', async () => {

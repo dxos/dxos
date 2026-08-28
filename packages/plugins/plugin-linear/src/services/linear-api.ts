@@ -122,30 +122,30 @@ const PageInfoSchema = Schema.Struct({
  */
 export class LinearCredentials extends Context.Service<LinearCredentials, LinearCredentialsValue>()(
   '@dxos/plugin-linear/LinearCredentials',
-) {
-  static fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
-    Layer.effect(
-      LinearCredentials,
-      Effect.gen(function* () {
-        const connection = yield* Database.load(connectionRef);
-        const accessToken = yield* Database.load(connection.accessToken);
-        return { token: accessToken.token };
-      }),
-    );
+) {}
 
-  /**
-   * Loads the access token directly and returns its `token` value. Used by callers that only have
-   * an external-sync cursor's `spec.source` — the cursor no longer relates to `Connection`.
-   */
-  static fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
-    Layer.effect(
-      LinearCredentials,
-      Effect.gen(function* () {
-        const accessToken = yield* Database.load(accessTokenRef);
-        return { token: accessToken.token };
-      }),
-    );
-}
+export const fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
+  Layer.effect(
+    LinearCredentials,
+    Effect.gen(function* () {
+      const connection = yield* Database.load(connectionRef);
+      const accessToken = yield* Database.load(connection.accessToken);
+      return { token: accessToken.token };
+    }),
+  );
+
+/**
+ * Loads the access token directly and returns its `token` value. Used by callers that only have
+ * an external-sync cursor's `spec.source` — the cursor no longer relates to `Connection`.
+ */
+export const fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
+  Layer.effect(
+    LinearCredentials,
+    Effect.gen(function* () {
+      const accessToken = yield* Database.load(accessTokenRef);
+      return { token: accessToken.token };
+    }),
+  );
 
 //
 // Request pipeline
@@ -446,10 +446,10 @@ export const fetchTeamIssues = (teamId: string, options: { since?: string } = {}
  * mapping is intentionally lossy and one-way — we don't push status back, so
  * round-trip ambiguity isn't an issue in pull-only mode.
  */
-export const stateTypeToTaskStatus = (type: StateType): 'todo' | 'in-progress' | 'done' => {
+export const stateTypeToTaskStatus = (type: StateType): 'todo' | 'started' | 'done' => {
   switch (type) {
     case 'started':
-      return 'in-progress';
+      return 'started';
     case 'completed':
     case 'canceled':
       return 'done';
@@ -514,7 +514,7 @@ export const taskPriorityToPriorityNumber = (
  * push we pick a single canonical Linear state-type per Task status:
  *
  * - `todo`        → `unstarted`
- * - `in-progress` → `started`
+ * - `started` → `started`
  * - `done`        → `completed`
  * - `failed`      → `canceled` (Linear has no failure category)
  * - `cancelled`   → `canceled`
@@ -524,7 +524,7 @@ export const taskPriorityToPriorityNumber = (
  */
 export const taskStatusToStateType = (status: NonNullable<Task.Task['status']>): StateType => {
   switch (status) {
-    case 'in-progress':
+    case 'started':
       return 'started';
     case 'done':
       return 'completed';

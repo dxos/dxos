@@ -49,8 +49,8 @@ describe('computer operations', () => {
 
   test('the skill exposes exactly the harness tools', ({ expect }) => {
     expect([...ComputerSkill.make().tools]).to.deep.eq([
-      'org.dxos.function.computer.bash',
-      'org.dxos.function.computer.edits',
+      Operation.toolName(ComputerOperation.Bash),
+      Operation.toolName(ComputerOperation.Edits),
     ]);
   });
 

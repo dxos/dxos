@@ -9,7 +9,9 @@ import { AssistantTestLayer, collectEphemeral, messageTextIncludes, waitForMessa
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
 import { getSession } from '@dxos/compute/AgentService';
-import { Database } from '@dxos/echo';
+import * as Operation from '@dxos/compute/Operation';
+import * as Project from '@dxos/compute/Project';
+import { Database, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
@@ -17,7 +19,8 @@ import { Text } from '@dxos/schema';
 import { Message, Outline, Task, TaskSet } from '@dxos/types';
 
 import { AgentHandlers } from '../operations';
-import { DelegationHandlers, DelegationSkill } from '../skills';
+import { DelegationSkill, DelegationSkillHandlers } from '../skills';
+import { DelegateTask } from '../skills/delegation/operations/definitions';
 import { Agent, Chat } from '../types';
 import { makeDelegationStrategy } from './delegation-strategy';
 
@@ -45,7 +48,7 @@ const TestLayer = AssistantTestLayer({
       turns: [
         // Immediate reply + delegation in one turn: the user sees the reply while the work runs.
         {
-          parts: [text('On it — delegating.'), toolCall('delegate-task', { title: TASK_TITLE })],
+          parts: [text('On it — delegating.'), toolCall(Operation.toolName(DelegateTask), { title: TASK_TITLE })],
         },
         {
           parts: [text('Delegated. I will report back when it completes.')],
@@ -53,7 +56,7 @@ const TestLayer = AssistantTestLayer({
       ],
     },
   ]),
-  operationHandlers: [DelegationHandlers, AgentHandlers],
+  operationHandlers: [DelegationSkillHandlers, AgentHandlers],
   skills: [DelegationSkill.make()],
   types: [
     Agent.Agent,
@@ -61,10 +64,54 @@ const TestLayer = AssistantTestLayer({
     Task.Task,
     TaskSet.TaskSet,
     Chat.Chat,
-    Chat.CompanionTo,
     AiContext.Binding,
     Text.Text,
     Message.Message,
+    Project.Project,
+  ],
+});
+
+const FAILURE_MESSAGE = 'Model refused politely.';
+
+// Same routing as `TestLayer`, but the sub-agent reports failure via `completeJob`.
+const FailingTestLayer = AssistantTestLayer({
+  agent: { delegationStrategy: makeDelegationStrategy() },
+  aiService: scriptedAiService([
+    {
+      name: 'sub-agent',
+      match: promptIncludes('non-interactive mode'),
+      turns: [
+        {
+          parts: [toolCall('completeJob', { success: null, failure: { message: FAILURE_MESSAGE, description: null } })],
+        },
+        { parts: [text('Done.')] },
+      ],
+    },
+    {
+      name: 'supervisor',
+      match: () => true,
+      turns: [
+        {
+          parts: [text('On it — delegating.'), toolCall(Operation.toolName(DelegateTask), { title: TASK_TITLE })],
+        },
+        {
+          parts: [text('Delegated. I will report back when it completes.')],
+        },
+      ],
+    },
+  ]),
+  operationHandlers: [DelegationSkillHandlers, AgentHandlers],
+  skills: [DelegationSkill.make()],
+  types: [
+    Agent.Agent,
+    Outline.Outline,
+    Task.Task,
+    TaskSet.TaskSet,
+    Chat.Chat,
+    AiContext.Binding,
+    Text.Text,
+    Message.Message,
+    Project.Project,
   ],
 });
 
@@ -84,6 +131,11 @@ describe('makeDelegationStrategy', () => {
 
         const chat = yield* Agent.loadChat(agent);
         invariant(chat, 'Agent chat not found.');
+        // Delegation files into the PROJECT's task set here: the agent is parented rather than the
+        // chat, which reaches the project through it (a standalone chat would use its own set).
+        const project = yield* Database.add(Project.make({ name: 'Test project' }));
+        Obj.setParent(agent, project);
+        yield* Database.flush();
         const feed = yield* Database.load(chat.feed);
 
         const session = yield* getSession(feed);
@@ -100,10 +152,8 @@ describe('makeDelegationStrategy', () => {
           .join('');
         expect(streamedText).toContain('On it');
 
-        // DelegateTask promoted the work to a durable agent task under the outline's task set.
-        const outlineAfterTurn = chat.outline ? yield* Database.load(chat.outline) : undefined;
-        invariant(outlineAfterTurn, 'Outline not created.');
-        const taskSet = outlineAfterTurn.taskSet ? yield* Database.load(outlineAfterTurn.taskSet) : undefined;
+        // DelegateTask promoted the work to a durable agent task under the project's task set.
+        const taskSet = project.taskSet ? yield* Database.load(project.taskSet) : undefined;
         invariant(taskSet, 'Task set not created.');
         const tasks = TaskSet.resolveTasks(taskSet);
         expect(tasks).toHaveLength(1);
@@ -115,12 +165,51 @@ describe('makeDelegationStrategy', () => {
         expect(Message.extractText(notification)).toContain(TASK_TITLE);
         expect(Message.extractText(notification)).toContain('3628800');
 
-        // ...marked the durable task done and checked off the checklist line.
+        // ...and marked the durable task done — the task set is the working surface.
         expect(tasks[0].status).toEqual('done');
-        const outlineText = yield* Database.load(outlineAfterTurn.content);
-        expect(Outline.parseChecklist(outlineText.content)).toEqual([{ title: TASK_TITLE, done: true }]);
       },
       Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
+
+  it.effect(
+    'posts a concise failure message without a stack trace when the sub-agent fails',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const agent = yield* Agent.makeInitialized(
+          {
+            name: 'Supervisor',
+            instructions: 'You delegate units of work to sub-agents using the available tools.',
+          },
+          DelegationSkill.make(),
+        );
+        yield* Database.flush();
+
+        const chat = yield* Agent.loadChat(agent);
+        invariant(chat, 'Agent chat not found.');
+        const project = yield* Database.add(Project.make({ name: 'Test project' }));
+        Obj.setParent(agent, project);
+        yield* Database.flush();
+        const feed = yield* Database.load(chat.feed);
+
+        const session = yield* getSession(feed);
+        yield* session.submitPrompt('Delegate a task to a sub-agent to compute 10 factorial.');
+        yield* session.waitForCompletion();
+
+        const notification = yield* waitForMessage(feed, messageTextIncludes('The sub-agent failed to complete'));
+        const messageText = Message.extractText(notification);
+        expect(messageText).toContain(TASK_TITLE);
+        expect(messageText).toContain(FAILURE_MESSAGE);
+        // The full cause (with stack frames) belongs to the log, not the conversation.
+        expect(messageText).not.toMatch(/\bat .*[/(]/);
+
+        const taskSet = project.taskSet ? yield* Database.load(project.taskSet) : undefined;
+        invariant(taskSet, 'Task set not created.');
+        expect(TaskSet.resolveTasks(taskSet)[0]?.status).toEqual('failed');
+      },
+      Effect.provide(FailingTestLayer),
       TestHelpers.provideTestContext,
     ),
     { timeout: 30_000 },

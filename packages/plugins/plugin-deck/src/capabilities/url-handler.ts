@@ -21,7 +21,7 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
-import { Attention } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention/types';
 import { isTauri } from '@dxos/util';
 
 import { CompanionViewState, DeckCapabilities, DeckSchema } from '#types';
@@ -30,6 +30,7 @@ import {
   combineVerdicts,
   getCandidateEntityIds,
   getRenderedPlanks,
+  isCompanionOpen,
   resolveCompanionAnchor,
   serializeDeckToUrl,
 } from '../util';
@@ -456,8 +457,12 @@ export default Capability.makeModule(
         // is laid out, so anchoring to an earlier one would serialize a companion the deck cannot render.
         const rendered = getRenderedPlanks(deck.active, registry.get(settingsAtom)?.flatten);
         const anchorId = resolveCompanionAnchor(rendered, attention.getCurrent());
-        // Only the attended plank's companion is on screen, so only it belongs in the URL.
-        const plankId = anchorId && deck.companionPlanks.includes(anchorId) ? anchorId : undefined;
+        // Only the attended plank's companion is on screen, so only it belongs in the URL. Under
+        // `flatten` the open flag is deck-wide, so it applies to whichever plank is rendered.
+        const plankId =
+          anchorId && isCompanionOpen(deck.companionPlanks, registry.get(settingsAtom)?.flatten, anchorId)
+            ? anchorId
+            : undefined;
         const selection = viewState.get(CompanionViewState.aspect, CompanionViewState.CONTEXT);
         if (plankId && selection.variant) {
           const companionNodeId = `${plankId}/${Attention.linkedSegment(selection.variant)}`;

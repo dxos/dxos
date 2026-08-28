@@ -2,14 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-// TODO(wittjosiah): What is a good name for this module?
+export * as AppGraphBuilder from './AppGraphBuilder';
+export * as AppGraphNode from './AppGraphNode';
 export * as CreateAtom from './atoms';
-export * as Graph from './graph';
-export * as GraphBuilder from './graph-builder';
-export * as Node from './node';
-export * as NodeMatcher from './node-matcher';
+export * as AppGraph from './AppGraph';
 export * as PathResolution from './path-resolution';
-export { getParentId, getSegmentId, qualifyId } from './util';
 
 // TODO(wittjosiah): Direct re-export needed for portable type references.
-export type { BuilderExtensions } from './graph-builder';
+export type { BuilderExtensions } from './AppGraphBuilder';

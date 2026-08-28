@@ -57,14 +57,13 @@ export const makeRoutine = ({
   trigger?: Trigger.Trigger;
 }): Routine.Routine => {
   const routine = Routine.make({ ...props, triggers });
+  // `SetParent` on `spec.instructions` / `triggers` makes each write declare the parent edge too.
   if (instructions) {
-    Obj.setParent(instructions, routine);
     Obj.update(routine, (routine) => {
       routine.spec = { kind: 'instructions', instructions: Ref.make(instructions) };
     });
   }
   if (trigger) {
-    Obj.setParent(trigger, routine);
     Obj.update(routine, (routine) => {
       routine.triggers.push(Ref.make(trigger));
     });

@@ -5,13 +5,11 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { CreateSandbox, DownloadFile, Exec, UploadFile } from './definitions';
-
-export * from './definitions';
+import { SandboxOperation } from '#types';
 
 export const SandboxHandlers = OperationHandlerSet.lazy([
-  CreateSandbox.pipe(Operation.lazyHandler(() => import('./create-sandbox'))),
-  Exec.pipe(Operation.lazyHandler(() => import('./exec'))),
-  UploadFile.pipe(Operation.lazyHandler(() => import('./upload-file'))),
-  DownloadFile.pipe(Operation.lazyHandler(() => import('./download-file'))),
+  SandboxOperation.CreateSandbox.pipe(Operation.lazyHandler(() => import('./create-sandbox'))),
+  SandboxOperation.Exec.pipe(Operation.lazyHandler(() => import('./exec'))),
+  SandboxOperation.UploadFile.pipe(Operation.lazyHandler(() => import('./upload-file'))),
+  SandboxOperation.DownloadFile.pipe(Operation.lazyHandler(() => import('./download-file'))),
 ]);

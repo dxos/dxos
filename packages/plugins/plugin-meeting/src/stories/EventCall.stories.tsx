@@ -102,8 +102,8 @@ const meta = {
           config: new Config({
             runtime: {
               services: {
-                edge: { url: 'https://edge.dxos.workers.dev/' },
-                iceProviders: [{ urls: 'https://edge.dxos.workers.dev/ice' }],
+                edge: { url: 'https://dev.dxos.network/' },
+                iceProviders: [{ urls: 'https://dxos.network/ice' }],
               },
             },
           }),

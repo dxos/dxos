@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref } from '@dxos/echo';
@@ -32,7 +32,7 @@ export default Capability.makeModule(
     const loadOps = () => Effect.promise(() => import('../types/VideoOperation'));
     const scope = (video: Video.Video) => ({ spaceId: Obj.getDatabase(video)?.spaceId });
 
-    const extension = yield* GraphBuilder.createExtension({
+    const extension = yield* AppGraphBuilder.createExtension({
       id: 'videoActions',
       match: (node) => (Obj.instanceOf(Video.Video, node.data) ? Option.some(node.data as Video.Video) : Option.none()),
       actions: (video) =>

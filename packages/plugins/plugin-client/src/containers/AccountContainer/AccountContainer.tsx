@@ -138,7 +138,7 @@ export const AccountContainer = () => {
                           placeholder={t('access-request-email.placeholder')}
                           value={requestEmail}
                           onChange={(event) => setRequestEmail(event.target.value)}
-                          classNames='min-w-64'
+                          classNames='w-64 max-w-full min-w-0'
                         />
                       </Input.Root>
                       <Button type='submit' density='sm'>
@@ -173,7 +173,7 @@ export const AccountContainer = () => {
                   )}
                 </Form.Row>
                 <Form.Row label={t('delete-account.label')} description={t('delete-account.description')}>
-                  <Button variant='destructive' density='sm' onClick={handleDeleteAccount}>
+                  <Button variant='destructive' onClick={handleDeleteAccount}>
                     {t('delete-account.label')}
                   </Button>
                 </Form.Row>

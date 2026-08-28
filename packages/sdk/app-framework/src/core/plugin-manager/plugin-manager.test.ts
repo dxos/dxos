@@ -307,7 +307,10 @@ describe('PluginManager', () => {
       assert.deepStrictEqual(manager.getEventsFired(), []);
       yield* manager.activate(ActivationEvents.Startup);
       assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
-      assert.deepStrictEqual(manager.getEventsFired(), [ActivationEvents.Startup.id]);
+      // Idle too: this host has no `requestIdleCallback` (jsdom does not implement it), so the
+      // manager runs the idle wave inline rather than forking it — a forked wave would leave
+      // `start()` returning before the modules gated on it were active.
+      assert.deepStrictEqual(manager.getEventsFired(), [ActivationEvents.Startup.id, ActivationEvents.Idle.id]);
     }),
   );
 
@@ -1923,7 +1926,7 @@ describe('PluginManager', () => {
       Effect.gen(function* () {
         const FailingEvent = ActivationEvent.make('org.dxos.test.activationError');
         const FailingPlugin = Plugin.define(
-          Plugin.makeMeta({ key: DXN.make('org.dxos.test.failing'), name: 'Failing' }),
+          Plugin.makeMeta({ key: DXN.make('com.example.operation.test.failing'), name: 'Failing' }),
         ).pipe(
           Plugin.addModule({
             provides: [],

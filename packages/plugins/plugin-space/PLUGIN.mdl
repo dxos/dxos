@@ -17,7 +17,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
 | `test`      | `org.dxos.mdl.test@1.0`        |
 | `component` | `org.dxos.mdl.component@1.0`   |
-| `op`        | `org.dxos.mdl.op@1.0`          |
+| `op`        | `org.dxos.mdl.op@1.1`          |
+| `flow`      | `org.dxos.mdl.flow@1.0`        |
 
 ## Types
 
@@ -112,13 +113,15 @@ component RelatedArticle
 ```
 
 ```mdl
-component CreateObjectDialog
-  desc: Modal dialog that lets the user pick a schema type and fill initial fields to create a new ECHO object.
+component ObjectFormDialog
+  desc: Modal dialog that lets the user pick a target and a schema type and fill in a new ECHO object. In `live` mode the object is added to the database before the form opens and removed again on dismissal.
   props:
     target: Database | Collection
+    mode?: 'draft' | 'live'
     views?: boolean
     typename?: string
-    initialFormValues?: Record<string, any>
+    schema?: Schema
+    defaults?: Record<string, any>
     navigable?: boolean
   actions:
     confirm(data: Record<string, any>)
@@ -198,6 +201,7 @@ component SyncStatus
 ```mdl
 op SpaceOperation.Create
   desc: Creates a new space with the given display properties.
+  key: org.dxos.operation.space.create
   input:
     name?: string
     icon?: string
@@ -210,6 +214,7 @@ op SpaceOperation.Create
 ```mdl
 op SpaceOperation.Join
   desc: Joins an existing space by resolving and accepting an invitation code.
+  key: org.dxos.operation.space.join
   input:
     invitationCode?: string
   output: void
@@ -219,6 +224,7 @@ op SpaceOperation.Join
 ```mdl
 op SpaceOperation.Open
   desc: Navigates the layout to the given space.
+  key: org.dxos.operation.space.open
   input:
     space: Space
   output: void
@@ -228,6 +234,7 @@ op SpaceOperation.Open
 ```mdl
 op SpaceOperation.Close
   desc: Removes the space from the active navigation context.
+  key: org.dxos.operation.space.close
   input:
     space: Space
   output: void
@@ -237,6 +244,7 @@ op SpaceOperation.Close
 ```mdl
 op SpaceOperation.Share
   desc: Creates an invitation observable for sharing a space; supports single-use and multi-use codes.
+  key: org.dxos.operation.space.share
   input:
     space: Space
     type: Invitation.Type
@@ -250,6 +258,7 @@ op SpaceOperation.Share
 ```mdl
 op SpaceOperation.Rename
   desc: Opens a rename popover for the given space.
+  key: org.dxos.operation.space.rename
   input:
     space: Space
     caller?: string
@@ -260,6 +269,7 @@ op SpaceOperation.Rename
 ```mdl
 op SpaceOperation.AddObject
   desc: Adds an existing ECHO object to a database or collection and optionally navigates to it.
+  key: org.dxos.operation.space.addObject
   input:
     object: Obj.Unknown
     target: Database | Collection
@@ -272,6 +282,7 @@ op SpaceOperation.AddObject
 ```mdl
 op SpaceOperation.RemoveObjects
   desc: Removes one or more objects from a collection; returns undo data.
+  key: org.dxos.operation.space.removeObjects
   input:
     objects: Obj.Unknown[]
     target?: Collection
@@ -282,6 +293,7 @@ op SpaceOperation.RemoveObjects
 ```mdl
 op SpaceOperation.RestoreObjects
   desc: Restores previously removed objects to their collection (inverse of RemoveObjects).
+  key: org.dxos.operation.space.restoreObjects
   input:
     objects: Obj.Unknown[]
     parentCollection: Collection
@@ -294,6 +306,7 @@ op SpaceOperation.RestoreObjects
 ```mdl
 op SpaceOperation.AddSchema
   desc: Registers a new schema type in the space database; optionally makes it visible in the type picker.
+  key: org.dxos.operation.space.addType
   input:
     db: Database
     name?: string
@@ -308,6 +321,7 @@ op SpaceOperation.AddSchema
 ```mdl
 op SpaceOperation.AddRelation
   desc: Creates a typed relation between two ECHO objects.
+  key: org.dxos.operation.space.addRelation
   input:
     db: Database
     schema: Schema.AnyNoContext
@@ -321,6 +335,7 @@ op SpaceOperation.AddRelation
 ```mdl
 op SpaceOperation.DeleteField
   desc: Removes a field from a View; returns undo data.
+  key: org.dxos.operation.space.deleteField
   input:
     view: View
     fieldId: string
@@ -331,6 +346,7 @@ op SpaceOperation.DeleteField
 ```mdl
 op SpaceOperation.RestoreField
   desc: Restores a deleted field to a View at its original index (inverse of DeleteField).
+  key: org.dxos.operation.space.restoreField
   input:
     view: View
     field: View.FieldSchema
@@ -343,6 +359,7 @@ op SpaceOperation.RestoreField
 ```mdl
 op SpaceOperation.ImportSpace
   desc: Imports a binary space archive as a brand-new space.
+  key: org.dxos.operation.space.import
   input:
     archive: { filename: string; contents: Uint8Array }
     tags?: string[]
@@ -353,6 +370,7 @@ op SpaceOperation.ImportSpace
 ```mdl
 op SpaceOperation.ExportSpace
   desc: Serialises a space to an archive and triggers a browser download.
+  key: org.dxos.operation.space.export
   input:
     space: Space
     format: SpaceArchive.Format
@@ -363,6 +381,7 @@ op SpaceOperation.ExportSpace
 ```mdl
 op SpaceOperation.Snapshot
   desc: Captures a point-in-time snapshot of a database or filtered query as a Blob.
+  key: org.dxos.operation.space.snapshot
   input:
     db: Database
     query?: QueryAST.Query
@@ -373,6 +392,7 @@ op SpaceOperation.Snapshot
 ```mdl
 op SpaceOperation.Migrate
   desc: Runs registered migrations against a space to bring it to the current schema version.
+  key: org.dxos.operation.space.migrate
   input:
     space: Space
     version?: string
@@ -385,6 +405,7 @@ op SpaceOperation.Reset
   desc: |
     Permanently deletes all objects and truncates feeds in a space via a new epoch.
     This operation is unrecoverable.
+  key: org.dxos.operation.space.removeAllObjects
   input:
     space: Space
   output: void
@@ -394,6 +415,7 @@ op SpaceOperation.Reset
 ```mdl
 op SpaceOperation.GetShareLink
   desc: Constructs a shareable URL for a space or specific object; optionally copies it to the clipboard.
+  key: org.dxos.operation.space.getShareLink
   input:
     space: Space
     target?: string
@@ -405,6 +427,7 @@ op SpaceOperation.GetShareLink
 ```mdl
 op CollectionOperation.Create
   desc: Creates a new Collection object in the active space.
+  key: org.dxos.operation.space.createCollection
   input:
     name?: string
   output: { object: Collection }
@@ -568,6 +591,101 @@ test T-6: View field delete and restore
   then:
     - after delete, View has fields ["name", "phone"]
     - after restore, View has fields ["name", "email", "phone"] in original order
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Create a space, add and remove an object
+  desc: The core space round-trip — create a space, add an object to it, remove it with undo data.
+  actors: agent
+  covers: [F-1.1, F-3.1, T-1, T-3]
+  status: unverified
+  given:
+    - an identity exists
+    - no space named "QA Space" exists — ABORT rather than deleting one this flow did not create
+  test:
+    - name: Create the space
+      do: Click "New space" in the sidebar and name it "QA Space".
+      invoke: [op:SpaceOperation.Create] { name: "QA Space" }
+      capture: created
+      expect: a new space named "QA Space" exists and opens in the navtree
+      assert: return $created.space.properties.name === 'QA Space';
+    - name: Create a collection to add to
+      do: In "QA Space", click + and choose Collection. Name it "QA Collection".
+      invoke: [op:CollectionOperation.Create] { name: "QA Collection" }
+      capture: collection
+      expect: a Collection named "QA Collection" exists in the space
+      assert: return $collection.object.name === 'QA Collection';
+    - name: Add an object to the space
+      do: In the navtree, click + on "QA Collection" and choose Markdown. Name it "QA Doc".
+      invoke: org.dxos.operation.markdown.create { name: "QA Doc" }
+      capture: doc
+      expect: a Document named "QA Doc" now exists
+    - name: Place it in the collection
+      do: (the navtree create action places it for you)
+      invoke: [op:SpaceOperation.AddObject] { object: $doc.object, target: $collection.object }
+      capture: added
+      expect: "QA Doc" appears as a row under "QA Collection"
+      assert: return $collection.object.objects.some((ref) => ref.target?.id === $doc.object.id);
+      note: Coalesced with the previous step — `doc.object` is live and cannot cross a snippet boundary.
+    - name: Remove the object
+      do: Right-click "QA Doc" in the navtree and choose Delete.
+      invoke: [op:SpaceOperation.RemoveObjects] { objects: [$doc.object], target: $collection.object }
+      capture: removed
+      expect: "QA Doc" leaves the navtree row list under "QA Collection"
+      assert: return $removed.objects.some((o) => o.id === $doc.object.id);
+    - name: Restore the object
+      do: Undo the delete (Cmd/Ctrl+Z), or use the undo toast.
+      invoke: [op:SpaceOperation.RestoreObjects] { objects: $removed.objects, parentCollection: $removed.parentCollection, indices: $removed.indices, wasActive: $removed.wasActive }
+      expect: "QA Doc" reappears as a row under "QA Collection"
+      assert: return $collection.object.objects.some((ref) => ref.target?.id === $doc.object.id);
+  after:
+    - name: Delete the space
+      do: Right-click "QA Space" in the sidebar and choose Delete Space.
+      invoke: org.dxos.operation.space.delete { space: $created.space }
+      expect: "QA Space" no longer appears in the sidebar
+```
+
+```mdl
+flow QA-2: Register a schema and add a typed relation
+  desc: Schema-registry and relation round-trip — the machinery plugin-table/plugin-kanban build on.
+  actors: agent
+  covers: [F-4.1, T-5]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - no schema typename "example.org/type/QaThing" is already registered in the space — ABORT
+      rather than reusing a registration this flow did not create
+    - schema: a runtime `Schema.Struct` for typename "example.org/type/QaThing" to register
+    - relationSchema: a runtime relation schema (source/target typed) to link `a` and `b` with
+    - a: an object already in the space, the relation's source
+    - b: an object already in the space, the relation's target
+  test:
+    - name: Register the schema
+      do: Open Settings -> Schema for the space and register a new type, or create an object of a
+        new type from the type picker, which registers it implicitly.
+      invoke: [op:SpaceOperation.AddSchema] { db: $given.space.db, typename: "example.org/type/QaThing", schema: $given.schema, show: true }
+      capture: registered
+      expect: the type appears in the space's schema registry and in the create-object type picker
+      assert: return $registered.object.typename === 'example.org/type/QaThing';
+    - name: Add a typed relation between two objects
+      do: With two objects selected, use the relation-creation affordance to link them with the
+        registered relation schema.
+      invoke: [op:SpaceOperation.AddRelation] { db: $given.space.db, schema: $given.relationSchema, source: $given.a, target: $given.b }
+      expect: a relation now exists linking the two objects, visible wherever relations render
+      assert: return !!$result.relation;
+  after:
+    - name: No teardown
+      do: Schema registrations are not removed by this flow — they are lightweight and harmless
+        to leave in a scratch space.
+      expect: the space still opens cleanly and the registered schemas remain listed
 ```
 
 ---

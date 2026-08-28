@@ -14,6 +14,13 @@ import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import * as Actor from './Actor';
 import * as Milestone from './Milestone';
 
+export const Priority = Schema.Literals(['none', 'low', 'medium', 'high', 'urgent']);
+export type Priority = Schema.Schema.Type<typeof Priority>;
+
+// `failed`/`cancelled` exist so delegated agent tasks and human tasks share one status vocabulary.
+export const Status = Schema.Literals(['todo', 'started', 'done', 'cancelled', 'failed']);
+export type Status = Schema.Schema.Type<typeof Status>;
+
 export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '0.3.0'))(
   Schema.Struct({
     title: Schema.String.pipe(
@@ -23,11 +30,19 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
         args: [{ min: 3, max: 10 }],
       }),
     ),
-    priority: Schema.Literals(['none', 'low', 'medium', 'high', 'urgent']).pipe(
+    description: Schema.optional(
+      Schema.String.annotate({ title: 'Description' }).pipe(
+        GeneratorAnnotation.set({
+          generator: 'lorem.paragraphs',
+          args: [{ min: 1, max: 3 }],
+        }),
+      ),
+    ),
+    priority: Priority.pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
       GeneratorAnnotation.set({
         generator: 'helpers.arrayElement',
-        args: [['none', 'low', 'medium', 'high', 'urgent']],
+        args: [Priority.literals],
       }),
       Schema.annotate({
         title: 'Priority',
@@ -45,12 +60,11 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
       }),
       Schema.optional,
     ),
-    // `failed`/`cancelled` exist so delegated agent tasks and human tasks share one status vocabulary.
-    status: Schema.Literals(['todo', 'in-progress', 'done', 'failed', 'cancelled']).pipe(
+    status: Status.pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
       GeneratorAnnotation.set({
         generator: 'helpers.arrayElement',
-        args: [['todo', 'in-progress', 'done']],
+        args: [['todo', 'started', 'done']],
       }),
       Schema.annotate({
         title: 'Status',
@@ -58,43 +72,44 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
           singleSelect: {
             options: [
               { id: 'todo', title: 'Todo', color: 'indigo' },
-              { id: 'in-progress', title: 'In Progress', color: 'purple' },
+              { id: 'started', title: 'Started', color: 'purple' },
               { id: 'done', title: 'Done', color: 'amber' },
-              { id: 'failed', title: 'Failed', color: 'red' },
               { id: 'cancelled', title: 'Cancelled', color: 'gray' },
+              { id: 'failed', title: 'Failed', color: 'red' },
             ],
           },
         },
       }),
       Schema.optional,
     ),
+
     /** Human or agent assignment: a HALO identity (DID), a Person ref, a bare email, or a display name. */
     assignee: Schema.optional(Actor.Actor.annotate({ title: 'Assignee' })),
     estimate: Schema.optional(Schema.Number.annotate({ title: 'Estimate' })),
-    description: Schema.optional(
-      Schema.String.annotate({ title: 'Description' }).pipe(
-        GeneratorAnnotation.set({
-          generator: 'lorem.paragraphs',
-          args: [{ min: 1, max: 3 }],
-        }),
-      ),
-    ),
-    /**
-     * The milestone this task belongs to; unset means backlog. A sub-task inherits its nearest
-     * ancestor's milestone at read time unless it sets its own (matching Linear).
-     */
-    milestone: Schema.optional(Ref.Ref(Milestone.Milestone).annotate({ title: 'Milestone' })),
 
     /**
-     * Parent in the sub-task hierarchy (unbounded depth); unset means a root task. Named
-     * `parentTask` because the ECHO parent edge is a different, lifecycle-only concept — it is
-     * set alongside for deletion cascade and is not the queryable hierarchy.
+     * Parent in the sub-task hierarchy (unbounded depth); unset means a root task. App-level: the
+     * ECHO parent edge means membership in the owning TaskSet, so nothing cascades through this field.
      */
     // `Schema.suspend` because the type refers to itself; clear the field with `delete` rather
     // than an `undefined` assignment, which the suspended schema rejects on validation.
     parentTask: Schema.optional(
       Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task).annotate({ title: 'Parent Task' })),
     ),
+
+    /**
+     * Execution-ordering dependencies: this task is ready to start only when every referenced
+     * task is `done`. Orthogonal to `parentTask` (hierarchy) and `milestone` (grouping).
+     */
+    dependsOn: Schema.optional(
+      Schema.Array(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task))).annotate({ title: 'Depends On' }),
+    ),
+
+    /**
+     * The milestone this task belongs to; unset means backlog. A sub-task inherits its nearest
+     * ancestor's milestone at read time unless it sets its own (matching Linear).
+     */
+    milestone: Schema.optional(Ref.Ref(Milestone.Milestone).annotate({ title: 'Milestone' })),
 
     // Set membership is the `TaskSet.tasks` array (flat, ordered, sub-tasks included), not a
     // backref here: enumeration stays one array read and a move stays one field write.

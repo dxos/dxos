@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { ClientService } from '@dxos/client';
+import { ClientService, fromClient } from '@dxos/client';
 import { accessTokenResolverFromEdge, credentialsLayerFromDatabase } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
@@ -45,7 +45,7 @@ const ClientLayerSpec = LayerSpec.make(
     Layer.unwrap(
       Effect.gen(function* () {
         const client = yield* Capability.get(ClientCapabilities.Client);
-        return ClientService.fromClient(client);
+        return fromClient(client);
       }).pipe(Effect.orDie),
     ),
 );

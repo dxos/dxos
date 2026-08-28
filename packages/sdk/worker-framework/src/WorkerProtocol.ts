@@ -51,6 +51,13 @@ export interface DedicatedWorkerReadyMessage {
 export interface DedicatedWorkerStartSessionMessage {
   type: 'start-session';
   clientId: string;
+  /**
+   * Monotonic per-client connect attempt, forwarded from `request-port`. Distinguishes a raced
+   * duplicate of the current attempt (ignored) from a genuine reconnect after a failed one
+   * (supersedes it). Absent from a client that predates the field: the worker then treats every
+   * request as the first attempt, i.e. first-wins.
+   */
+  attempt?: number;
 }
 
 /**
@@ -87,6 +94,8 @@ export type CoordinatorMessage =
   | {
       type: 'request-port';
       clientId: string;
+      /** See {@link DedicatedWorkerStartSessionMessage.attempt}; the leader forwards it verbatim. */
+      attempt?: number;
     }
   | {
       type: 'provide-port';

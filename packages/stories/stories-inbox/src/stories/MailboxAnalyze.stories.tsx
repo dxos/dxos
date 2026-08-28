@@ -15,7 +15,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Role from '@dxos/app-framework/Role';
 import { Surface, useCapabilities, useOptionalCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { ProgressMeter, useActiveSpace, useProgressMonitors } from '@dxos/app-toolkit/ui';
+import { useActiveSpace, useProgressMonitors } from '@dxos/app-toolkit/ui';
 import * as Project from '@dxos/compute/Project';
 import { Feed, Filter, Obj, Query, Ref, Tag } from '@dxos/echo';
 import { EffectEx, createKvsStore } from '@dxos/effect';
@@ -41,7 +41,7 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as ProgressPlugin from '@dxos/plugin-progress/ProgressPlugin';
-import * as ProjectOperation from '@dxos/plugin-projects/ProjectOperation';
+import * as ProjectMailboxOperation from '@dxos/plugin-projects/ProjectMailboxOperation';
 import * as ProjectOperationHandlerSet from '@dxos/plugin-projects/ProjectOperationHandlerSet';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import * as Booking from '@dxos/plugin-trip/Booking';
@@ -52,6 +52,7 @@ import { useClient } from '@dxos/react-client';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Panel, Select, Toolbar } from '@dxos/react-ui';
+import { ProgressMeter } from '@dxos/react-ui-components';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { TagIndex, Text } from '@dxos/schema';
@@ -387,14 +388,14 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
         run: () => invoker.invokePromise(CrmOperation.EnrichImages, {}, { spaceId: space.id }),
       },
       //
-      // ProjectOperation
+      // ProjectMailboxOperation
       //
       {
         // Projects composition: create the admin tracking project from a tracked sender's message
         // (once; reruns reuse it), then run the travel-log and investor-log artifact pipelines
         // against it — the routine→operation→artifact pattern, driven manually.
         id: 'projects',
-        label: 'ProjectOperation.CreateTrackingProject',
+        label: 'ProjectMailboxOperation.CreateTrackingProject',
         run: async () => {
           const anchor =
             messages.find((message) => TRACKED_SENDER_RE.test(message.sender?.email ?? '')) ??
@@ -407,7 +408,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
           let created;
           if (!project) {
             created = await invoker.invokePromise(
-              ProjectOperation.CreateTrackingProject,
+              ProjectMailboxOperation.CreateTrackingProject,
               { mailbox: Ref.make(mailbox), message: anchor },
               { spaceId: space.id },
             );
@@ -419,12 +420,12 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
           }
 
           const travel = await invoker.invokePromise(
-            ProjectOperation.UpdateTravelLog,
+            ProjectMailboxOperation.UpdateTravelLog,
             { project: Ref.make(project), mailbox: Ref.make(mailbox) },
             { spaceId: space.id },
           );
           const investors = await invoker.invokePromise(
-            ProjectOperation.UpdateInvestorLog,
+            ProjectMailboxOperation.UpdateInvestorLog,
             { project: Ref.make(project), mailbox: Ref.make(mailbox), domains: INVESTOR_DOMAINS },
             { spaceId: space.id },
           );

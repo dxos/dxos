@@ -14,13 +14,6 @@ import * as Schema from 'effect/Schema';
 
 import { type EdgeServiceClient, type EdgeServiceError } from './edge-service';
 
-/**
- * Default Composer image-service base URL — the Cloudflare Worker used in
- * production. Override per-environment via the client's `baseUrl`.
- */
-// TODO(burdon): Get from config.
-export const DEFAULT_IMAGE_SERVICE_URL = 'https://image-service-main.dxos.workers.dev';
-
 /** Hosted image returned by the service: a CDN `url` and its storage `id`. */
 export const Result = Schema.Struct({
   id: Schema.optional(Schema.String),
@@ -40,14 +33,14 @@ export const upload = (
   client: EdgeServiceClient,
   blob: Blob,
   opts?: UploadOptions,
-): Effect.Effect<Result, EdgeServiceError> => uploadToPath(client, blob, '/upload', opts);
+): Effect.Effect<Result, EdgeServiceError> => uploadToPath(client, blob, 'upload', opts);
 
 /** Store an image and create a thumbnail, returning its hosted CDN URL (POST `/thumbnail`). */
 export const thumbnail = (
   client: EdgeServiceClient,
   blob: Blob,
   opts?: UploadOptions,
-): Effect.Effect<Result, EdgeServiceError> => uploadToPath(client, blob, '/thumbnail', opts);
+): Effect.Effect<Result, EdgeServiceError> => uploadToPath(client, blob, 'thumbnail', opts);
 
 const uploadToPath = (
   client: EdgeServiceClient,

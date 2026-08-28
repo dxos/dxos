@@ -301,31 +301,17 @@ See: `plugin-sample/src/containers/SampleArticle.tsx`.
 
 ## Reactivity
 
-When an ECHO object is passed into a component as a prop and the component must re-render on changes to it,
-wrap it with **`useObject`** and read from the returned snapshot. A surface receiving an ECHO subject (e.g.
-via `AppSurface.ObjectArticleProps<T>`) MUST do this — without it, mutations to nested arrays/structs (e.g.
-`Obj.update(obj, (m) => (m.images = [...]))`) don't trigger a re-render until you navigate away and back:
-the prop reference stays stable, and the subscription lives inside `useObject`.
-
-```tsx
-const [gallery] = useObject(subject);
-// reads (gallery.images) re-render reactively;
-// writes still go through the original subject:
-const handleDelete = (index: number) =>
-  Obj.update(subject, (obj) => {
-    const mutable = obj as Obj.Mutable<Gallery.Gallery>;
-    mutable.images = (mutable.images ?? []).filter((_, idx) => idx !== index);
-  });
-```
-
-The snapshot type is narrow — cast as needed (`obj as Obj.Mutable<T>` inside `Obj.update`, or `as T` to
-read fields not surfaced on `Snapshot<T>`). For _collections_ of objects use the reactive `useQuery`
-rather than holding a plain array. (Pure presentational components that just receive scalar props don't
-need any of this — keep `useObject` at the container boundary where the ECHO object enters.)
+State lives in one of three stores — React state (ephemeral, local), atoms (shared/derived), ECHO
+objects (persistent, collaborative) — and reading an ECHO object during render does **not**
+subscribe: subscribe where you read (`useObject` / `useQuery`), as narrowly as you read, and write
+through the live object, never the snapshot. The house rules and anti-pattern catalog (bare reads,
+`.target` in render, list-level ref resolution, hook pileups, effect-syncing between stores) live
+in the [reactivity](../reactivity/SKILL.md) skill — load it for any component that holds or reads
+state.
 
 ## State management
 
-Two state stores — don't conflate them (full detail:
+Two app-level homes for atom state — don't conflate them (full detail:
 `packages/ui/react-ui-attention/AUDIT.md`):
 
 - **Settings** — a user preference, _set infrequently_, applies globally, shown in the Settings UI.

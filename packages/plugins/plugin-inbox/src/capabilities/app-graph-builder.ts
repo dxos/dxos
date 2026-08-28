@@ -7,8 +7,8 @@ import * as Option from 'effect/Option';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
@@ -89,7 +89,7 @@ export default Capability.makeModule(
     const connectorAtom = yield* Capability.atom(ConnectorSpec.Connector);
 
     const extensions = yield* Effect.all([
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'mailboxesSection',
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.communications),
         connector: (space, get) => {
@@ -112,7 +112,7 @@ export default Capability.makeModule(
         },
       }),
 
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'mailboxListing',
         url: { key: 'mail', kind: 'item', path: [GraphPath.GroupSegments.communications, getMailboxesSectionId()] },
         match: (node) => {
@@ -121,12 +121,20 @@ export default Capability.makeModule(
         },
         connector: (space, get) => {
           const mailboxes = get(space.db.query(Filter.type(Mailbox.Mailbox)).atom);
+          // Read once for the whole section rather than per mailbox: `Binding.find` scans the space's
+          // cursors either way, and one atom read keeps the connector's subscription set flat.
+          const cursors = get(space.db.query(Filter.type(Cursor.Cursor)).atom);
+          const connections = get(space.db.query(Filter.type(Connection.Connection)).atom);
 
           return Effect.succeed(
             mailboxes.map((mailbox: Mailbox.Mailbox) => {
               const mailboxSnapshot = get(Obj.atom(mailbox));
+              // Every child here is a view onto synced mail, so an unbound mailbox listed seven
+              // folders that could only ever be empty — and buried its own Connect affordance under
+              // them. Unbound, it stays a leaf until a connection arrives.
+              const connected = Boolean(Binding.find(cursors, connections, mailbox)?.connection);
 
-              return Node.make({
+              return AppGraphNode.make({
                 id: mailboxSnapshot.id,
                 type: Type.getTypename(Mailbox.Mailbox),
                 data: mailbox,
@@ -134,154 +142,156 @@ export default Capability.makeModule(
                   label: mailboxSnapshot.name ?? ['object-name.placeholder', { ns: Type.getTypename(Mailbox.Mailbox) }],
                   icon: 'ph--tray--regular',
                   iconHue: 'rose',
-                  role: 'branch',
+                  role: connected ? 'branch' : undefined,
                   // Placeholder for a future "intelligent inbox"; resolved by the canonical `systemTag`,
                   // not this label string (see `MailboxArticle`'s `systemTag` prop).
                   filter: '#inbox',
                   systemTag: 'inbox' satisfies SystemTags.SystemTagId,
                 },
-                nodes: [
-                  // Pre-seeded, non-removable filter nodes — same mechanism as a saved user filter, just
-                  // static with no rename/delete actions.
-                  Node.make({
-                    id: getInboxId(),
-                    type: FILTER_TYPE,
-                    data: mailbox,
-                    properties: {
-                      label: ['inbox.label', { ns: meta.profile.key }],
-                      icon: 'ph--tray--regular',
-                      iconHue: 'rose',
-                      // Gmail/JMAP both model the inbox as positive membership (Gmail's INBOX label,
-                      // JMAP's inbox role), so archiving removes this tag rather than adding one —
-                      // no complement operator is needed here or in `MailboxArticle`.
-                      filter: '#inbox',
-                      systemTag: 'inbox' satisfies SystemTags.SystemTagId,
-                    },
-                  }),
-                  Node.make({
-                    id: getStarredId(),
-                    type: FILTER_TYPE,
-                    data: mailbox,
-                    properties: {
-                      label: ['starred.label', { ns: meta.profile.key }],
-                      icon: 'ph--star--regular',
-                      iconHue: 'rose',
-                      filter: '#starred',
-                      systemTag: 'starred' satisfies SystemTags.SystemTagId,
-                    },
-                  }),
-                  Node.make({
-                    id: getImportantId(),
-                    type: FILTER_TYPE,
-                    data: mailbox,
-                    properties: {
-                      label: ['important.label', { ns: meta.profile.key }],
-                      icon: 'ph--bookmark-simple--regular',
-                      iconHue: 'rose',
-                      filter: '#important',
-                      systemTag: 'important' satisfies SystemTags.SystemTagId,
-                    },
-                  }),
-                  Node.make({
-                    id: getAllMailId(),
-                    type: FILTER_TYPE,
-                    data: mailbox,
-                    properties: {
-                      label: ['all-mail.label', { ns: meta.profile.key }],
-                      icon: 'ph--stack--regular',
-                      iconHue: 'rose',
-                      filter: '',
-                    },
-                  }),
-                  Node.make({
-                    id: getSentId(),
-                    type: FILTER_TYPE,
-                    data: mailbox,
-                    properties: {
-                      label: ['sent.label', { ns: meta.profile.key }],
-                      icon: 'ph--paper-plane-tilt--regular',
-                      iconHue: 'rose',
-                      filter: '#sent',
-                      systemTag: 'sent' satisfies SystemTags.SystemTagId,
-                    },
-                  }),
-                  Node.make({
-                    id: getDraftsId(),
-                    type: FILTER_TYPE,
-                    data: mailbox,
-                    properties: {
-                      label: ['drafts.label', { ns: meta.profile.key }],
-                      icon: 'ph--pencil-simple--regular',
-                      iconHue: 'rose',
-                      filter: '',
-                      systemTag: 'draft' satisfies SystemTags.SystemTagId,
-                    },
-                  }),
-                  Node.make({
-                    id: getSubscriptionsId(),
-                    type: MAILBOX_SUBSCRIPTIONS_TYPE,
-                    data: mailbox,
-                    properties: {
-                      label: ['subscriptions.label', { ns: meta.profile.key }],
-                      icon: 'ph--envelope-simple--regular',
-                      iconHue: 'rose',
-                      mailbox,
-                    },
-                  }),
-                  ...(mailboxSnapshot.filters?.map(({ name, filter }: { name: string; filter: any }) =>
-                    Node.make({
-                      id: `filter-${kebabize(name)}`,
-                      type: FILTER_TYPE,
-                      data: mailbox,
-                      properties: {
-                        label: name,
-                        icon: 'ph--funnel--regular',
-                        iconHue: 'rose',
-                        filter,
-                      },
-                      actions: [
-                        Node.makeAction({
-                          id: 'rename-filter',
-                          data: (params?: Node.InvokeProps) =>
-                            Operation.invoke(InboxOperation.RenameFilter, {
-                              mailbox,
-                              name,
-                              caller: `${params?.caller}:${params?.parent?.id}`,
-                            }),
+                nodes: !connected
+                  ? []
+                  : [
+                      // Pre-seeded, non-removable filter nodes — same mechanism as a saved user filter, just
+                      // static with no rename/delete actions.
+                      AppGraphNode.make({
+                        id: getInboxId(),
+                        type: FILTER_TYPE,
+                        data: mailbox,
+                        properties: {
+                          label: ['inbox.label', { ns: meta.profile.key }],
+                          icon: 'ph--tray--regular',
+                          iconHue: 'rose',
+                          // Gmail/JMAP both model the inbox as positive membership (Gmail's INBOX label,
+                          // JMAP's inbox role), so archiving removes this tag rather than adding one —
+                          // no complement operator is needed here or in `MailboxArticle`.
+                          filter: '#inbox',
+                          systemTag: 'inbox' satisfies SystemTags.SystemTagId,
+                        },
+                      }),
+                      AppGraphNode.make({
+                        id: getStarredId(),
+                        type: FILTER_TYPE,
+                        data: mailbox,
+                        properties: {
+                          label: ['starred.label', { ns: meta.profile.key }],
+                          icon: 'ph--star--regular',
+                          iconHue: 'rose',
+                          filter: '#starred',
+                          systemTag: 'starred' satisfies SystemTags.SystemTagId,
+                        },
+                      }),
+                      AppGraphNode.make({
+                        id: getImportantId(),
+                        type: FILTER_TYPE,
+                        data: mailbox,
+                        properties: {
+                          label: ['important.label', { ns: meta.profile.key }],
+                          icon: 'ph--bookmark-simple--regular',
+                          iconHue: 'rose',
+                          filter: '#important',
+                          systemTag: 'important' satisfies SystemTags.SystemTagId,
+                        },
+                      }),
+                      AppGraphNode.make({
+                        id: getAllMailId(),
+                        type: FILTER_TYPE,
+                        data: mailbox,
+                        properties: {
+                          label: ['all-mail.label', { ns: meta.profile.key }],
+                          icon: 'ph--stack--regular',
+                          iconHue: 'rose',
+                          filter: '',
+                        },
+                      }),
+                      AppGraphNode.make({
+                        id: getSentId(),
+                        type: FILTER_TYPE,
+                        data: mailbox,
+                        properties: {
+                          label: ['sent.label', { ns: meta.profile.key }],
+                          icon: 'ph--paper-plane-tilt--regular',
+                          iconHue: 'rose',
+                          filter: '#sent',
+                          systemTag: 'sent' satisfies SystemTags.SystemTagId,
+                        },
+                      }),
+                      AppGraphNode.make({
+                        id: getDraftsId(),
+                        type: FILTER_TYPE,
+                        data: mailbox,
+                        properties: {
+                          label: ['drafts.label', { ns: meta.profile.key }],
+                          icon: 'ph--pencil-simple--regular',
+                          iconHue: 'rose',
+                          filter: '',
+                          systemTag: 'draft' satisfies SystemTags.SystemTagId,
+                        },
+                      }),
+                      AppGraphNode.make({
+                        id: getSubscriptionsId(),
+                        type: MAILBOX_SUBSCRIPTIONS_TYPE,
+                        data: mailbox,
+                        properties: {
+                          label: ['subscriptions.label', { ns: meta.profile.key }],
+                          icon: 'ph--envelope-simple--regular',
+                          iconHue: 'rose',
+                          mailbox,
+                        },
+                      }),
+                      ...(mailboxSnapshot.filters?.map(({ name, filter }: { name: string; filter: any }) =>
+                        AppGraphNode.make({
+                          id: `filter-${kebabize(name)}`,
+                          type: FILTER_TYPE,
+                          data: mailbox,
                           properties: {
-                            label: ['rename-filter.label', { ns: meta.profile.key }],
-                            icon: 'ph--pencil-simple--regular',
-                            disposition: 'list-item',
+                            label: name,
+                            icon: 'ph--funnel--regular',
+                            iconHue: 'rose',
+                            filter,
                           },
-                        }),
-                        Node.makeAction({
-                          id: 'delete-filter',
-                          data: () =>
-                            Effect.sync(() => {
-                              Obj.update(mailbox, (mailbox) => {
-                                const index = mailbox.filters.findIndex((f: any) => f.name === name);
-                                if (index >= 0) {
-                                  mailbox.filters.splice(index, 1);
-                                }
-                              });
+                          actions: [
+                            AppGraphNode.makeAction({
+                              id: 'rename-filter',
+                              data: (params?: AppGraphNode.InvokeProps) =>
+                                Operation.invoke(InboxOperation.RenameFilter, {
+                                  mailbox,
+                                  name,
+                                  caller: `${params?.caller}:${params?.parent?.id}`,
+                                }),
+                              properties: {
+                                label: ['rename-filter.label', { ns: meta.profile.key }],
+                                icon: 'ph--pencil-simple--regular',
+                                disposition: 'list-item',
+                              },
                             }),
-                          properties: {
-                            label: ['delete-filter.label', { ns: meta.profile.key }],
-                            icon: 'ph--trash--regular',
-                            disposition: 'list-item',
-                          },
+                            AppGraphNode.makeAction({
+                              id: 'delete-filter',
+                              data: () =>
+                                Effect.sync(() => {
+                                  Obj.update(mailbox, (mailbox) => {
+                                    const index = mailbox.filters.findIndex((f: any) => f.name === name);
+                                    if (index >= 0) {
+                                      mailbox.filters.splice(index, 1);
+                                    }
+                                  });
+                                }),
+                              properties: {
+                                label: ['delete-filter.label', { ns: meta.profile.key }],
+                                icon: 'ph--trash--regular',
+                                disposition: 'list-item',
+                              },
+                            }),
+                          ],
                         }),
-                      ],
-                    }),
-                  ) ?? []),
-                ],
+                      ) ?? []),
+                    ],
               });
             }),
           );
         },
       }),
 
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'mailboxDraftsActions',
         // Contributes "create draft", scoped to the Drafts view.
         match: (node) =>
@@ -295,7 +305,7 @@ export default Capability.makeModule(
           }
 
           return Effect.succeed([
-            Node.makeAction({
+            AppGraphNode.makeAction({
               id: 'createDraft',
               data: () =>
                 Operation.invoke(InboxOperation.DraftEmailAndOpen, {
@@ -319,7 +329,7 @@ export default Capability.makeModule(
       // though messages aren't enumerated in the nav tree. Each node's data is the message Echo object
       // itself (so it picks up the standard object companions — assistant, properties, info, debug);
       // the surrounding conversation is looked up by `MessageArticle` when the message is opened.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'mailboxMessages',
         url: { key: 'message', kind: 'item', path: [GraphPath.GroupSegments.communications, getMailboxesSectionId()] },
         match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
@@ -338,7 +348,7 @@ export default Capability.makeModule(
 
           return Effect.succeed(
             [...feedMessages, ...draftMessages].map((message) =>
-              Node.make({
+              AppGraphNode.make({
                 id: message.id,
                 type: Type.getTypename(Message.Message),
                 data: message,
@@ -355,7 +365,7 @@ export default Capability.makeModule(
 
       // One hidden child per attachment, so the deck can address an attachment plank by path. The node
       // carries the MESSAGE plus an index: an attachment is an entry on the message, not an object.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'messageAttachments',
         match: (node) =>
           node.type === Type.getTypename(Message.Message) && Obj.instanceOf(Message.Message, node.data)
@@ -364,7 +374,7 @@ export default Capability.makeModule(
         connector: (message) =>
           Effect.succeed(
             (message.attachments ?? []).map((attachment, index) =>
-              Node.make({
+              AppGraphNode.make({
                 id: `attachment-${index}`,
                 type: ATTACHMENT_NODE_TYPE,
                 data: { message, index } satisfies AttachmentRef,
@@ -378,7 +388,7 @@ export default Capability.makeModule(
           ),
       }),
 
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'mailboxesSectionActions',
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
@@ -386,10 +396,10 @@ export default Capability.makeModule(
         },
         actions: (space) =>
           Effect.succeed([
-            Node.makeAction({
+            AppGraphNode.makeAction({
               id: 'create-mailbox',
               data: () =>
-                Operation.invoke(SpaceOperation.OpenCreateObject, {
+                Operation.invoke(SpaceOperation.OpenObjectForm, {
                   target: space.db,
                   typename: Type.getTypename(Mailbox.Mailbox),
                   targetNodeId: getMailboxesPath(space.db.spaceId),
@@ -408,7 +418,7 @@ export default Capability.makeModule(
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.communications),
         groupSegment: GraphPath.GroupSegments.communications,
         createObject: (space) =>
-          Operation.invoke(SpaceOperation.OpenCreateObject, {
+          Operation.invoke(SpaceOperation.OpenObjectForm, {
             target: space.db,
             typename: calendarTypename,
             targetNodeId: getCalendarsPath(space.db.spaceId),
@@ -418,7 +428,7 @@ export default Capability.makeModule(
       // Every event in a calendar's feed, plus its local draft events, as a hidden child of the
       // calendar node — so `…/calendars/<calendarId>/<eventId>` resolves via the `event` key for any
       // deep-link shape.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'calendarEvents',
         url: { key: 'event', kind: 'item', path: [GraphPath.GroupSegments.communications, calendarTypename] },
         match: (node) => (Calendar.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
@@ -437,7 +447,7 @@ export default Capability.makeModule(
 
           return Effect.succeed(
             [...feedEvents, ...draftEvents].map((event) =>
-              Node.make({
+              AppGraphNode.make({
                 id: event.id,
                 type: Type.getTypename(Event.Event),
                 data: event,
@@ -452,7 +462,7 @@ export default Capability.makeModule(
         },
       }),
 
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'syncMailbox',
         // Matches every sibling view node (they all share node.data: mailbox), not just the primary.
         match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
@@ -504,15 +514,16 @@ export default Capability.makeModule(
         },
       }),
 
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'processMailbox',
         // Matches every sibling view node (they all share node.data: mailbox), not just the primary.
         match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (mailbox, get) => {
           const db = Obj.getDatabase(mailbox);
+          const binding = liveBindingFor(mailbox, get);
           // Gated on a connection, not rendered disabled: a disabled primary button still reads as the
           // view's main call to action on a mailbox that has nothing to analyze yet.
-          if (!db || liveBindingFor(mailbox, get) === undefined) {
+          if (!db || !binding) {
             return Effect.succeed([]);
           }
           return Effect.gen(function* () {
@@ -522,6 +533,12 @@ export default Capability.makeModule(
               onNone: () => false,
               onSome: (registry) => get(registry.monitorAtom(scanKey))?.status === 'running',
             });
+            // Analysis walks what sync brought down, so before the first completed run it has nothing
+            // to walk. `lastTick` is the signal: only `Cursor.recordSuccess` stamps it, and it
+            // survives restarts — a message count would also answer "is there anything here", but not
+            // "has the mailbox finished arriving". Read through the object atom so the button enables
+            // the moment the first sync lands.
+            const synced = Boolean(get(Obj.atom(binding.cursor)).lastTick);
             return [
               {
                 // The pipeline cascade the user runs by hand after a first sync: deterministic
@@ -543,6 +560,8 @@ export default Capability.makeModule(
                     ? ['stop-analyze-mailbox.label', { ns: meta.profile.key }]
                     : ['analyze-mailbox.label', { ns: meta.profile.key }],
                   icon: isScanning ? 'ph--stop--regular' : AI_ACTION_ICON,
+                  // Never disabled mid-run: the control is Stop then, and cancelling has to stay open.
+                  disabled: !isScanning && !synced,
                   disposition: ['toolbar', 'list-item'],
                   presentation: { toolbar: { variant: 'primary', iconOnly: false } },
                   testId: 'inbox.mailbox.analyze',
@@ -553,7 +572,7 @@ export default Capability.makeModule(
         },
       }),
 
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'syncCalendar',
         match: (node) => (Calendar.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (calendar, get) => {

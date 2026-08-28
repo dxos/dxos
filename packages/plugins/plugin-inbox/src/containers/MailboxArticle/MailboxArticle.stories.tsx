@@ -33,10 +33,10 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, TestGrid, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
+import { InboxPlugin } from '#plugin';
 import { initializeMailbox, seedSummaries } from '#testing';
 import { InboxCapabilities, Mailbox } from '#types';
 
-import { InboxPlugin } from '../../plugin';
 import * as InboxOperation from '../../types/InboxOperation';
 import AttachmentArticle from '../AttachmentArticle';
 import MessageArticle from '../MessageArticle';
@@ -98,7 +98,7 @@ type StoryArgs = {
   conversations?: boolean;
   /** Seed the realistic `SAMPLE_MESSAGES` corpus instead of the lorem builder, for the `SearchFilter` play test. */
   seedSearchTerm?: boolean;
-  /** Seeds a sync binding (AccessToken → Connection → Cursor) so `InitializeMailbox` shows "Mailbox empty" instead of "No connections configured". */
+  /** Seeds a sync binding (AccessToken → Connection → Cursor) so `InitializeMailbox` shows "No messages" instead of "No connections configured". */
   bound?: boolean;
   /** Registers a running `#analyze` monitor so the statusbar progress meter renders (see `ProgressProbe`). */
   progress?: boolean;

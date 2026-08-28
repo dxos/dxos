@@ -8,6 +8,9 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } fr
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import type * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
+import type * as Capability from '@dxos/app-framework/Capability';
+
 // `__dirname` is not defined in ESM; derive from `import.meta.url`.
 export const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -67,6 +70,10 @@ export type StartupReport = {
     }>;
     /** Plugin-definition chunk imports (precede all module activation). */
     pluginLoads: Array<{ name: string; duration: number; startTime: number }>;
+    /** Which event activated each module. */
+    moduleCauses: Array<{ module: string; event: string; startTime: number }>;
+    /** Graph-builder extension bodies that ran before the snapshot (first run only). */
+    graphBodies: Array<{ id: string; kind: string; startTime: number }>;
   };
   /**
    * Static module inventory probed from `composer.manager.getModules()` — the classification
@@ -134,6 +141,38 @@ export const waitForReady = async (page: Page, timeout = 30_000): Promise<void> 
   await page.getByTestId('treeView.userAccount').waitFor({ timeout });
 };
 
+/** Throughput is bytes/second, as `Network.emulateNetworkConditions` expects; latency is ms. */
+export type ThrottleProfile = {
+  latency: number;
+  downloadThroughput: number;
+  uploadThroughput: number;
+  cpuRate: number;
+};
+
+/**
+ * CDP emulation settings for the throttled cold start, defaulting to Fast 3G + 2x CPU. Each field
+ * is overridable: `DX_HARNESS_LATENCY_MS`, `DX_HARNESS_DOWN_MBPS`, `DX_HARNESS_UP_KBPS`,
+ * `DX_HARNESS_CPU`.
+ */
+export const throttleProfile = (): ThrottleProfile => {
+  const num = (name: string, fallback: number, min: number): number => {
+    const raw = process.env[name];
+    // Blank is a set-but-empty override, not an absent one; `Number('')` would silently pass it as 0.
+    const value = raw === undefined ? fallback : raw.trim() === '' ? NaN : Number(raw);
+    if (!Number.isFinite(value) || value < min) {
+      throw new Error(`${name} must be a finite number >= ${min}; got ${JSON.stringify(raw)}`);
+    }
+    return value;
+  };
+
+  return {
+    latency: num('DX_HARNESS_LATENCY_MS', 150, 0),
+    downloadThroughput: (num('DX_HARNESS_DOWN_MBPS', 1.5, 0) * 1024 * 1024) / 8,
+    uploadThroughput: (num('DX_HARNESS_UP_KBPS', 750, 0) * 1024) / 8,
+    cpuRate: num('DX_HARNESS_CPU', 2, 1),
+  };
+};
+
 /**
  * Hooks `response` to count bytes and responses; the closure returned reads the accumulated
  * counters. Tracked node-side (not via the page's resource-timing entries, whose default
@@ -186,10 +225,11 @@ export const collectStartupReport = async (page: Page, scenario: Scenario): Prom
       const manager = globalThis.composer?.manager;
       const modules = manager?.getModules?.();
       if (Array.isArray(modules)) {
-        const eventKeyOf = (event: any): string =>
-          `${String(event?.id ?? '?')}${event?.specifier ? `:${String(event.specifier)}` : ''}`;
-        inventory = modules.map((module: any) => {
-          const spec = module.activation ?? {};
+        const eventKeyOf = (event: ActivationEvent.ActivationEvent): string =>
+          `${String(event.id ?? '?')}${event.specifier ? `:${String(event.specifier)}` : ''}`;
+        const tagKeyOf = (tag: Capability.AnyTag): string => `${String(tag.identifier)}#${String(tag.arity)}`;
+        inventory = modules.map((module) => {
+          const spec = module.activation;
           const activatesOn = spec.activatesOn
             ? 'type' in spec.activatesOn
               ? spec.activatesOn.events.map(eventKeyOf)
@@ -198,8 +238,8 @@ export const collectStartupReport = async (page: Page, scenario: Scenario): Prom
           return {
             id: String(module.id),
             activatesOn,
-            requires: (spec.requires ?? []).map((tag: any) => `${String(tag.identifier)}#${String(tag.arity)}`),
-            provides: (spec.provides ?? []).map((tag: any) => `${String(tag.identifier)}#${String(tag.arity)}`),
+            requires: spec.requires.map(tagKeyOf),
+            provides: spec.provides.map(tagKeyOf),
           };
         });
       }
@@ -291,7 +331,7 @@ export const collectStartupReport = async (page: Page, scenario: Scenario): Prom
   const waits = indexByName(data.snapshot?.moduleWaits);
   const runs = indexByName(data.snapshot?.moduleRuns);
   const imports = indexByName(data.snapshot?.moduleImports);
-  const modules = (data.snapshot?.modules ?? []).map((entry: any) => ({
+  const modules = (data.snapshot?.modules ?? []).map((entry) => ({
     name: entry.name,
     startTime: entry.startTime,
     duration: entry.duration,
@@ -315,12 +355,14 @@ export const collectStartupReport = async (page: Page, scenario: Scenario): Prom
       events: data.snapshot?.events ?? [],
       eventCount: data.snapshot?.events.length ?? 0,
       moduleCount: data.snapshot?.modules.length ?? 0,
-      slowestModules: (data.snapshot?.modules ?? []).slice(0, 10).map((entry: any) => ({
+      slowestModules: (data.snapshot?.modules ?? []).slice(0, 10).map((entry) => ({
         name: entry.name,
         duration: entry.duration,
       })),
       modules,
       pluginLoads: data.snapshot?.pluginLoads ?? [],
+      moduleCauses: data.snapshot?.moduleCauses ?? [],
+      graphBodies: data.snapshot?.graphBodies ?? [],
     },
     inventory: data.inventory as StartupReport['inventory'],
     resources: data.resources,

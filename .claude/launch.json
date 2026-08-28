@@ -25,6 +25,16 @@
       "autoPort": true
     },
     {
+      "name": "composer-plugin-s3",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && cd \"$(git rev-parse --show-toplevel)/.claude/worktrees/plugin-s3\" && moon run composer-app:serve -- --port 5183 --strictPort"
+      ],
+      "port": 5183,
+      "autoPort": false
+    },
+    {
       "name": "composer-app-proto",
       "runtimeExecutable": "sh",
       "runtimeArgs": [
@@ -52,6 +62,16 @@
         "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && moon run composer-app:serve-prod -- --port 5281 --strictPort"
       ],
       "port": 5281,
+      "autoPort": false
+    },
+    {
+      "name": "composer-qa",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && moon run composer-app:serve-qa -- --port 5182 --strictPort"
+      ],
+      "port": 5182,
       "autoPort": false
     },
     {

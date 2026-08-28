@@ -13,6 +13,7 @@ import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig, print } from '@dxos/cli-util';
 import { DX_CONFIG, getProfileConfigPath } from '@dxos/client-protocol';
+import { EDGE_URLS } from '@dxos/config';
 import { trim } from '@dxos/util';
 
 import { printProfileCreated } from './util';
@@ -37,10 +38,12 @@ const makeTemplate = (edgeUrl: string) => trim`
 `;
 
 const TEMPLATES = {
-  default: makeTemplate('https://dxos.network'),
-  main: makeTemplate('https://main.dxos.network'),
-  dev: makeTemplate('https://edge.dxos.workers.dev'),
-  local: makeTemplate('http://localhost:8787'),
+  default: makeTemplate(EDGE_URLS.production),
+  preview: makeTemplate(EDGE_URLS.preview),
+  // Preserve `main` as a deprecated alias for existing profiles.
+  main: makeTemplate(EDGE_URLS.preview),
+  dev: makeTemplate(EDGE_URLS.dev),
+  local: makeTemplate(EDGE_URLS.local),
 } as const;
 
 export const create = Command.make(

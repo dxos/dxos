@@ -6,8 +6,8 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
 import { useMemo } from 'react';
 
-import type * as Graph from '@dxos/app-graph/Graph';
-import type * as Node from '@dxos/app-graph/Node';
+import type * as AppGraph from '@dxos/app-graph/AppGraph';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 
 /**
  * React hook to get a node from the graph.
@@ -18,16 +18,16 @@ import type * as Node from '@dxos/app-graph/Node';
  * @returns Node if found, undefined otherwise.
  */
 // TODO(wittjosiah): Factor out to @dxos/app-graph/react.
-export const useNode = <T = any>(graph: Graph.ReadableGraph, id?: string): Node.Node<T> | undefined => {
+export const useNode = <T = any>(graph: AppGraph.ReadableGraph, id?: string): AppGraphNode.Node<T> | undefined => {
   const atom = useMemo(() => graph.node(id ?? ''), [graph, id]);
   return Option.getOrElse(useAtomValue(atom), () => undefined);
 };
 
 export const useConnections = (
-  graph: Graph.ReadableGraph,
+  graph: AppGraph.ReadableGraph,
   id: string | undefined,
-  relation: Node.RelationInput,
-): Node.Node[] => {
+  relation: AppGraphNode.RelationInput,
+): AppGraphNode.Node[] => {
   return useAtomValue(graph.connections(id ?? '', relation));
 };
 
@@ -38,7 +38,7 @@ export const useConnections = (
  * @param id Id of the node.
  * @returns Actions available for the node.
  */
-export const useActions = (graph: Graph.ReadableGraph, id?: string): Node.Node[] => {
+export const useActions = (graph: AppGraph.ReadableGraph, id?: string): AppGraphNode.Node[] => {
   const atom = useMemo(() => graph.actions(id ?? ''), [graph, id]);
   return useAtomValue(atom);
 };
@@ -50,7 +50,7 @@ export const useActions = (graph: Graph.ReadableGraph, id?: string): Node.Node[]
  * @param id Id of the node.
  * @returns Edge topology for the node.
  */
-export const useEdges = (graph: Graph.ReadableGraph, id?: string): Graph.Edges => {
+export const useEdges = (graph: AppGraph.ReadableGraph, id?: string): AppGraph.Edges => {
   const atom = useMemo(() => graph.edges(id ?? ''), [graph, id]);
   return useAtomValue(atom);
 };

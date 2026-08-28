@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref, Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { AutofillAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '@dxos/react-ui-form';
+import { AutofillAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '@dxos/react-ui-form/annotations';
 
 import { CreateSubscription, FeedOperation, Magazine, Subscription } from '#types';
 
@@ -81,7 +81,9 @@ const RssCreate = Schema.Struct({
   ),
 });
 
-const CreateSubscriptionSchema = Schema.Union([StandardSiteCreate, RssCreate]);
+// RSS first: the form opens on the union's first member, and an RSS URL is the common case — a
+// standard-site subscription additionally needs a handle lookup before it can be submitted.
+const CreateSubscriptionSchema = Schema.Union([RssCreate, StandardSiteCreate]);
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

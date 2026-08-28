@@ -160,7 +160,7 @@ export const getSchemaVersion = (schema: Schema.Top): string | undefined => getT
 /**
  * Gets the typename of the object without the version.
  * Returns only the name portion, not the DXN.
- * @example "org.example.type.contact"
+ * @example "com.example.type.contact"
  *
  * @internal (use Obj.getTypename)
  */
@@ -554,6 +554,29 @@ export const IconAnnotation = makeUserAnnotation<IconAnnotation>({
 export const IconFromRefAnnotation = makeUserAnnotation<string>({
   id: 'org.dxos.annotation.icon.from-ref',
   schema: Schema.String,
+});
+
+/**
+ * Marks a `Ref` field (or an array-of-`Ref` field) as owning its targets: writing a ref into the
+ * field, or creating the holder with one, sets the target's parent to the holding object.
+ *
+ * This is NOT an invariant: it does not guarantee that a target held here has this object as its
+ * parent, only that a write through this field updates the parent. Nothing stops `Obj.setParent`
+ * from re-parenting the target afterwards, a ref whose target is not resolved is left alone, and
+ * removing a ref does NOT clear the target's parent — a move between holders would otherwise lose
+ * the edge depending on write order; call `Obj.setParent(child, undefined)` explicitly. Read the
+ * parent with `Obj.getParent`; never infer it from the field.
+ *
+ * @example
+ * ```ts
+ * Schema.Struct({
+ *   body: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set(true)),
+ * })
+ * ```
+ */
+export const SetParentAnnotation = makeUserAnnotation<boolean>({
+  id: 'org.dxos.annotation.setParent',
+  schema: Schema.Boolean,
 });
 
 /**

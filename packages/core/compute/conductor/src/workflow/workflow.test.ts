@@ -25,16 +25,16 @@ import {
   ComputeGraph,
   ComputeGraphModel,
   type ComputeNode,
-  ComputeNodeContext,
   type ComputeResult,
   type Executable,
   ValueBag,
+  layerNoop as computeNodeContextLayerNoop,
   synchronizedComputeFunction,
 } from '../types';
 import { WorkflowLoader, type WorkflowLoaderProps } from './loader';
 
 const TestLayer = Layer.mergeAll(
-  ComputeNodeContext.layerNoop,
+  computeNodeContextLayerNoop,
   Layer.succeed(Operation.Service, {
     invoke: () => Effect.die('Operation.Service not available in test.'),
     schedule: () => Effect.die('Operation.Service not available in test.'),
@@ -226,14 +226,12 @@ describe('workflow', () => {
     transformNode: ComputeNode,
     { inputId, withOutput }: { inputId: string; withOutput: boolean } = { inputId: 'I', withOutput: true },
   ) => {
-    model.builder
-      .createNode({ id: inputId, type: NODE_INPUT })
-      .createNode(transformNode)
-      .createEdge({ node: inputId, property: 'input' }, { node: transformNode.id, property: 'input' });
+    model.createNode({ id: inputId, type: NODE_INPUT });
+    model.createNode(transformNode);
+    model.createEdge({ node: inputId, property: 'input' }, { node: transformNode.id, property: 'input' });
     if (withOutput) {
-      model.builder
-        .createNode({ id: 'O', type: NODE_OUTPUT })
-        .createEdge({ node: transformNode.id, property: 'result' }, { node: 'O', property: 'result' });
+      model.createNode({ id: 'O', type: NODE_OUTPUT });
+      model.createEdge({ node: transformNode.id, property: 'result' }, { node: 'O', property: 'result' });
     }
   };
 

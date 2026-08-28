@@ -97,6 +97,9 @@ const parseFeed = (url: string, xml: string): FetchResult => {
   const isAtom = !parsed.rss;
   const feedName = text(channel.title) ?? '';
   const feedDescription = markdown(text(isAtom ? channel.subtitle : channel.description)) ?? '';
+  // The channel's own `<link>` is the feed's website, not the feed document — Atom spells it as the
+  // `alternate` link, and both live alongside the per-item links parsed below.
+  const feedLink = channelLink(channel, isAtom);
 
   const items: any[] = (isAtom ? channel.entry : channel.item) ?? [];
   const itemList = Array.isArray(items) ? items : [items];
@@ -132,7 +135,23 @@ const parseFeed = (url: string, xml: string): FetchResult => {
     name: feedName,
     url,
     description: feedDescription,
+    link: feedLink,
   });
 
   return { feed, posts };
+};
+
+/** fast-xml-parser's shape for an Atom `<link>` element, or the plain text an RSS `<link>` parses to. */
+type FeedLink = string | { '@_href'?: string; '@_rel'?: string };
+
+/** The channel-level link: RSS carries it as text, Atom as the `rel="alternate"` href. */
+const channelLink = (channel: { link?: FeedLink | FeedLink[] }, isAtom: boolean): string | undefined => {
+  if (!isAtom) {
+    return text(channel.link) || undefined;
+  }
+
+  const links = Array.isArray(channel.link) ? channel.link : channel.link !== undefined ? [channel.link] : [];
+  const alternate = links.find((link) => typeof link === 'object' && link['@_rel'] === 'alternate') ?? links[0];
+  const href = typeof alternate === 'object' ? alternate?.['@_href'] : undefined;
+  return (href ?? text(alternate)) || undefined;
 };

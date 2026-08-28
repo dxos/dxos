@@ -127,6 +127,9 @@
       "path": "../../plugins/plugin-chess-com"
     },
     {
+      "path": "../../plugins/plugin-claude"
+    },
+    {
       "path": "../../plugins/plugin-client"
     },
     {
@@ -157,6 +160,9 @@
       "path": "../../plugins/plugin-deck"
     },
     {
+      "path": "../../plugins/plugin-deepseek"
+    },
+    {
       "path": "../../plugins/plugin-devtools"
     },
     {
@@ -176,6 +182,9 @@
     },
     {
       "path": "../../plugins/plugin-file"
+    },
+    {
+      "path": "../../plugins/plugin-file-system"
     },
     {
       "path": "../../plugins/plugin-freeq"
@@ -217,10 +226,16 @@
       "path": "../../plugins/plugin-kanban"
     },
     {
+      "path": "../../plugins/plugin-lametric"
+    },
+    {
       "path": "../../plugins/plugin-library"
     },
     {
       "path": "../../plugins/plugin-linear"
+    },
+    {
+      "path": "../../plugins/plugin-lingo"
     },
     {
       "path": "../../plugins/plugin-magazine"
@@ -241,10 +256,10 @@
       "path": "../../plugins/plugin-mermaid"
     },
     {
-      "path": "../../plugins/plugin-native"
+      "path": "../../plugins/plugin-mobile"
     },
     {
-      "path": "../../plugins/plugin-native-filesystem"
+      "path": "../../plugins/plugin-native"
     },
     {
       "path": "../../plugins/plugin-navtree"
@@ -289,6 +304,9 @@
       "path": "../../plugins/plugin-routine"
     },
     {
+      "path": "../../plugins/plugin-s3"
+    },
+    {
       "path": "../../plugins/plugin-sample"
     },
     {
@@ -313,9 +331,6 @@
       "path": "../../plugins/plugin-sidekick"
     },
     {
-      "path": "../../plugins/plugin-simple-layout"
-    },
-    {
       "path": "../../plugins/plugin-slack"
     },
     {
@@ -332,6 +347,9 @@
     },
     {
       "path": "../../plugins/plugin-status-bar"
+    },
+    {
+      "path": "../../plugins/plugin-stream-deck"
     },
     {
       "path": "../../plugins/plugin-studio"

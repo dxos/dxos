@@ -15,11 +15,19 @@ import {
   brokenAutomergeReplicatorFactory,
   testAutomergeReplicatorFactory,
 } from '@dxos/echo-host/testing';
+import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { Ref, getTypeAnnotation } from '@dxos/echo/internal';
 import { TestSchema } from '@dxos/echo/testing';
+import { invariant } from '@dxos/invariant';
 import { DXN, type EntityId, PublicKey, type URI } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
+
+/** `db.rootUrl` is set synchronously once a database is created; assert that once here. */
+const rootUrlOf = (db: { readonly rootUrl: string | undefined }): string => {
+  invariant(db.rootUrl, 'Expected the database to have a rootUrl.');
+  return db.rootUrl;
+};
 
 describe('Integration tests', () => {
   let builder: EchoTestBuilder;
@@ -134,7 +142,7 @@ describe('Integration tests', () => {
     const heads = await db.getDocumentHeads();
 
     await using client2 = await peer.createClient();
-    await using db2 = await peer.openDatabase(spaceKey, db.rootUrl!, {
+    await using db2 = await peer.openDatabase(spaceKey, rootUrlOf(db), {
       client: client2,
     });
     await db2.waitUntilHeadsReplicated(heads);
@@ -154,7 +162,7 @@ describe('Integration tests', () => {
 
     // Client 2 opens the same database.
     await using client2 = await peer.createClient();
-    await using db2 = await peer.openDatabase(spaceKey, db1.rootUrl!, {
+    await using db2 = await peer.openDatabase(spaceKey, rootUrlOf(db1), {
       client: client2,
     });
 
@@ -199,7 +207,7 @@ describe('Integration tests', () => {
     await peer.reload();
     {
       await using db = await peer.openLastDatabase();
-      const outer = (await db.query(Filter.id(outerId)).first()) as any;
+      const outer = (await db.query(Filter.id(outerId)).first()) as Obj.OfShape<TestSchema.Expando>;
       expect(outer.inner.target).to.eq(undefined);
 
       // Use explicit load() to load the reference.
@@ -217,7 +225,7 @@ describe('Integration tests', () => {
     let outerId: string;
     {
       await using db = await peer.createDatabase(spaceKey);
-      rootUrl = db.rootUrl!;
+      rootUrl = rootUrlOf(db);
       const inner = db.add(Obj.make(TestSchema.Expando, { name: 'inner' }));
       const outer = db.add(Obj.make(TestSchema.Expando, { inner: Ref.make(inner) }));
       outerId = outer.id;
@@ -227,7 +235,7 @@ describe('Integration tests', () => {
     await peer.reload();
     {
       await using db = await peer.openDatabase(spaceKey, rootUrl);
-      const outer = (await db.query(Filter.id(outerId)).first()) as any;
+      const outer = (await db.query(Filter.id(outerId)).first()) as Obj.OfShape<TestSchema.Expando>;
       expect(outer.inner.target).to.eq(undefined);
 
       const target = await outer.inner.load();
@@ -247,7 +255,7 @@ describe('Integration tests', () => {
     const typeDXN = DXN.make(Type.getTypename(TestSchema.Person), Type.getVersion(TestSchema.Person));
 
     // A database object holds a reference to the registry object via its DXN.
-    const object = db.add(Obj.make(TestSchema.Expando, { type: db.makeRef(typeDXN) })) as any;
+    const object = db.add(Obj.make(TestSchema.Expando, { type: db.makeRef(typeDXN) }));
     await db.flush();
 
     // A DXN ref into the in-process registry resolves synchronously (resolveSync),
@@ -268,14 +276,14 @@ describe('Integration tests', () => {
 
     // Register a keyed (non-type) entity in the in-process registry — e.g. an operation descriptor.
     const registryObject = Obj.make(TestSchema.Expando, {
-      [Obj.Meta]: { key: 'org.example.function.translate', version: '0.1.0' },
+      [Obj.Meta]: { key: 'com.example.function.translate', version: '0.1.0' },
       label: 'Translate',
     });
     db.graph.registry.add([registryObject]);
-    const keyDXN = DXN.make('org.example.function.translate', '0.1.0');
+    const keyDXN = DXN.make('com.example.function.translate', '0.1.0');
 
     // A database object holds a reference to the registry object via its key DXN.
-    const object = db.add(Obj.make(TestSchema.Expando, { fn: db.makeRef(keyDXN) })) as any;
+    const object = db.add(Obj.make(TestSchema.Expando, { fn: db.makeRef(keyDXN) }));
     await db.flush();
 
     // The key DXN resolves synchronously to the in-memory registry entity.
@@ -302,7 +310,7 @@ describe('Integration tests', () => {
     await db1.flush();
     const heads = await db1.getDocumentHeads();
 
-    await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
+    await using db2 = await peer2.openDatabase(spaceKey, rootUrlOf(db1));
     await db2.waitUntilHeadsReplicated(heads);
     await db2.updateIndexes();
     await dataAssertion.verify(db2);
@@ -324,7 +332,7 @@ describe('Integration tests', () => {
       await db1.flush();
       const heads = await db1.getDocumentHeads();
 
-      await using db2 = await peer2.openDatabase(spaceKey1, db1.rootUrl!);
+      await using db2 = await peer2.openDatabase(spaceKey1, rootUrlOf(db1));
       await db2.waitUntilHeadsReplicated(heads);
       await db2.updateIndexes();
       await dataAssertion.verify(db2);
@@ -336,7 +344,7 @@ describe('Integration tests', () => {
       await db1.flush();
       const heads = await db1.getDocumentHeads();
 
-      await using db2 = await peer2.openDatabase(spaceKey2, db1.rootUrl!);
+      await using db2 = await peer2.openDatabase(spaceKey2, rootUrlOf(db1));
       await db2.waitUntilHeadsReplicated(heads);
       await db2.updateIndexes();
       await dataAssertion.verify(db2);
@@ -363,8 +371,8 @@ describe('Integration tests', () => {
     teleportConnections[0].teleport.addExtension('replicator', replicator1.createExtension());
     teleportConnections[1].teleport.addExtension('replicator', replicator2.createExtension());
 
-    await replicator1.authorizeDevice(spaceKey, teleportPeer2.peerId);
-    await replicator2.authorizeDevice(spaceKey, teleportPeer1.peerId);
+    await replicator1.authorizeDevice(await createIdFromSpaceKey(spaceKey), teleportPeer2.peerId);
+    await replicator2.authorizeDevice(await createIdFromSpaceKey(spaceKey), teleportPeer1.peerId);
 
     // TODO(dmaretskyi): No need to call `peer1.host.replicateDocument`.
 
@@ -373,7 +381,7 @@ describe('Integration tests', () => {
     await db1.flush();
     const heads = await db1.getDocumentHeads();
 
-    await using db2 = await asyncTimeout(peer2.openDatabase(spaceKey, db1.rootUrl!), 1_000);
+    await using db2 = await asyncTimeout(peer2.openDatabase(spaceKey, rootUrlOf(db1)), 1_000);
     await db2.waitUntilHeadsReplicated(heads);
     await db2.updateIndexes();
     await dataAssertion.verify(db2);
@@ -404,8 +412,8 @@ describe('Integration tests', () => {
       replicator2.createExtension(testAutomergeReplicatorFactory),
     );
 
-    await replicator1.authorizeDevice(spaceKey, teleportPeer2.peerId);
-    await replicator2.authorizeDevice(spaceKey, teleportPeer1.peerId);
+    await replicator1.authorizeDevice(await createIdFromSpaceKey(spaceKey), teleportPeer2.peerId);
+    await replicator2.authorizeDevice(await createIdFromSpaceKey(spaceKey), teleportPeer1.peerId);
 
     await teleportConnections[0].whenOpen(true);
     await using db1 = await peer1.createDatabase(spaceKey);
@@ -422,7 +430,7 @@ describe('Integration tests', () => {
     let rootUrl: string;
     {
       await using db1 = await peer1.createDatabase(spaceKey);
-      rootUrl = db1.rootUrl!;
+      rootUrl = rootUrlOf(db1);
       await dataAssertion.seed(db1);
       await db1.flush();
     }
@@ -442,14 +450,16 @@ describe('Integration tests', () => {
       await expect
         .poll(async () => {
           const state = await db2.getAutomergeSyncState();
-          return state.peers!.length;
+          return state.peers?.length ?? 0;
         })
         .toBe(1);
 
       await expect
         .poll(async () => {
           const state = await db2.getAutomergeSyncState();
-          return state.peers![0].differentDocuments + state.peers![0].missingOnRemote + state.peers![0].missingOnLocal;
+          const peer = state.peers?.[0];
+          // No peer synced yet — the poll retries until one appears.
+          return peer ? peer.differentDocuments + peer.missingOnRemote + peer.missingOnLocal : -1;
         })
         .toEqual(0);
     }
@@ -465,7 +475,7 @@ describe('Integration tests', () => {
     await peer2.host.addReplicator(Context.default(), await network.createReplicator());
 
     await using db1 = await peer1.createDatabase(spaceKey);
-    await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
+    await using db2 = await peer2.openDatabase(spaceKey, rootUrlOf(db1));
 
     const obj1 = db1.add(
       Obj.make(TestSchema.Expando, {
@@ -624,7 +634,7 @@ describe('Integration tests', () => {
       let rootUrl: string, schemaDxn: URI.URI;
       {
         await using db = await peer.createDatabase(spaceKey);
-        rootUrl = db.rootUrl!;
+        rootUrl = rootUrlOf(db);
 
         const LocalTestSchema = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(
           Schema.Struct({
@@ -632,12 +642,14 @@ describe('Integration tests', () => {
           }),
         );
         const stored = await db.addType(LocalTestSchema);
-        schemaDxn = Type.getURI(stored)!;
+        schemaDxn = Type.getURI(stored);
 
         const object = db.add(Obj.make(stored, { field: 'test' }));
+        const objectType = Obj.getType(object);
+        invariant(objectType, 'Expected the added object to carry its stored type.');
         // After fork, the schema attached to objects is the rebuilt Effect Schema (from jsonSchema),
         // not identical to the Type.Type entity returned by register. Compare URIs instead.
-        expect(Type.getURI(Obj.getType(object)!)).to.eq(Type.getURI(stored));
+        expect(Type.getURI(objectType)).to.eq(Type.getURI(stored));
 
         db.add(Obj.make(TestSchema.Expando, { text: 'Expando object' })); // Add Expando object to test filtering
         await db.flush();
@@ -657,7 +669,9 @@ describe('Integration tests', () => {
         await using db = await peer.openDatabase(spaceKey, rootUrl);
         const objects = await db.query(Query.select(Filter.type(schemaDxn))).run();
         expect(objects.length).to.eq(1);
-        expect(getTypeAnnotation(Type.getSchema(Obj.getType(objects[0])!))).to.include({
+        const objectType = Obj.getType(objects[0]);
+        invariant(objectType, 'Expected the queried object to carry its stored type.');
+        expect(getTypeAnnotation(Type.getSchema(objectType))).to.include({
           typename: 'com.example.type.test',
           version: '0.1.0',
         });
@@ -670,10 +684,13 @@ describe('Integration tests', () => {
         await using db = await peer.openDatabase(spaceKey, rootUrl);
         const types = await db.query(Filter.type(Type.Type)).run();
         const schema = types.find((t) => Type.getTypename(t) === 'com.example.type.test');
+        invariant(schema, 'Expected the persisted Type entity to be found by typename.');
 
-        const objects = await db.query(Filter.type(schema!)).run();
+        const objects = await db.query(Filter.type(schema)).run();
         expect(objects.length).to.eq(1);
-        expect(getTypeAnnotation(Type.getSchema(Entity.getType(objects[0])!))).to.include({
+        const objectType = Entity.getType(objects[0]);
+        invariant(objectType, 'Expected the queried object to carry its stored type.');
+        expect(getTypeAnnotation(Type.getSchema(objectType))).to.include({
           typename: 'com.example.type.test',
           version: '0.1.0',
         });
@@ -691,7 +708,7 @@ describe('Integration tests', () => {
         preloadSchemaOnOpen: false,
       });
       const schema = await db.addType(TestSchema.Person);
-      typeURI = Type.getURI(schema)!;
+      typeURI = Type.getURI(schema);
       db.add(Obj.make(schema, { name: 'Bob' }));
       await db.flush();
     }
@@ -703,8 +720,10 @@ describe('Integration tests', () => {
         preloadSchemaOnOpen: false,
       });
       const [obj] = await db.query(Query.select(Filter.type(typeURI))).run();
-      expect(Obj.getType(obj)).toBeDefined();
-      expect(Type.getTypename(Obj.getType(obj)!)).toEqual(Type.getTypename(TestSchema.Person));
+      const objType = Obj.getType(obj);
+      expect(objType).toBeDefined();
+      invariant(objType, 'Expected the queried object to carry its stored type.');
+      expect(Type.getTypename(objType)).toEqual(Type.getTypename(TestSchema.Person));
     }
   });
 
@@ -793,7 +812,7 @@ describe('load tests', () => {
     await db1.flush();
     const heads = await db1.getDocumentHeads();
 
-    await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
+    await using db2 = await peer2.openDatabase(spaceKey, rootUrlOf(db1));
     await db2.waitUntilHeadsReplicated(heads);
     await db2.updateIndexes();
     await dataAssertion.verify(db2);

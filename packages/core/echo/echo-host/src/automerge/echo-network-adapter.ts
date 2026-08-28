@@ -166,6 +166,8 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   async shouldAdvertise(peerId: PeerId, params: ShouldAdvertiseProps): Promise<boolean> {
     const connection = this._connections.get(peerId);
     if (!connection) {
+      // Denies every document for the peer, so a stale peerId reads as a share-policy refusal.
+      log.verbose('share policy probe: no connection for peer', { peerId, documentId: params.documentId });
       return false;
     }
 

@@ -19,7 +19,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
-| `op`        | `org.dxos.mdl.op@1.0`         |
+| `op`        | `org.dxos.mdl.op@1.1`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
 
 ## Types
 
@@ -151,6 +152,7 @@ component RelatedItemsList
 
 ```mdl
 op createSampleItem
+  key: org.dxos.operation.sample.createItem
   desc: Creates a new SampleItem with an optional name and writes it to ECHO.
   input:
     name?: string
@@ -161,6 +163,7 @@ op createSampleItem
 
 ```mdl
 op randomize
+  key: org.dxos.operation.sample.randomize
   desc: Randomizes all fields of an existing SampleItem using faker data.
   input:
     item: SampleItem
@@ -171,6 +174,7 @@ op randomize
 
 ```mdl
 op updateStatus
+  key: org.dxos.operation.sample.updateStatus
   desc: Sets the status field on an existing SampleItem.
   input:
     item: SampleItem
@@ -324,6 +328,52 @@ test T-8: Settings persisted across restart
   given: user has set showStatusIndicator to false
   when: app reloads
   then: showStatusIndicator is still false (loaded from KVS)
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Create, randomize and archive a SampleItem
+  desc: The core SampleItem round-trip — create, randomize its fields, archive it.
+  actors: agent
+  covers: [F-1.1, F-1.3, F-2.2, T-1, T-3, T-4]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-sample is enabled — it defaults ON only in local dev builds (`isLocal`); elsewhere it
+      must be enabled via Settings -> plugin registry before "Create Sample Item" appears
+    - no SampleItem named "QA Sample" exists — ABORT rather than reusing one this flow did not create
+  test:
+    - name: Create the item
+      do: From the global action menu, choose "Create Sample Item" and name it "QA Sample".
+      invoke: [op:createSampleItem] { name: "QA Sample" }
+      capture: created
+      expect: a SampleItem named "QA Sample" appears in the Samples section of the nav tree
+      assert: return !!$created.object
+
+    - name: Randomize it
+      do: Open the item and click "Randomize" in the article toolbar.
+      invoke: [op:randomize] { item: $created.object }
+      expect: the item's name, description and status change to random faker values
+
+    - name: Archive it
+      do: Right-click "QA Sample" (now under its randomized name) in the nav tree and choose Archive.
+      invoke: [op:updateStatus] { item: $created.object, status: "archived" }
+      expect: the item's status reads "archived"
+      assert: |
+        return (await space.db.query(dxos.Filter.everything()).run()).objects
+          .find((o) => o.id === $created.object.id)?.status === 'archived';
+  after:
+    - name: Delete the item
+      do: Right-click the item in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.space }
+      expect: the row leaves the navtree
 ```
 
 ---

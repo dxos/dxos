@@ -134,7 +134,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           ref: ${{ inputs.ref || github.sha }}
 
       - name: Install Linux dependencies
@@ -165,8 +165,8 @@ jobs:
       - uses: moonrepo/setup-toolchain@v0
         with:
           # IMPORTANT: Keep in-sync with .prototools
-          moon-version: '2.4.5'
-          proto-version: '0.58.2'
+          moon-version: '2.5.2'
+          proto-version: '0.60.2'
 
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -355,7 +355,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           ref: ${{ inputs.ref || github.sha }}
 
       - uses: tecolicom/actions-use-homebrew-tools@v1
@@ -383,8 +383,8 @@ jobs:
       - uses: moonrepo/setup-toolchain@v0
         with:
           # IMPORTANT: Keep in-sync with .prototools
-          moon-version: '2.4.5'
-          proto-version: '0.58.2'
+          moon-version: '2.5.2'
+          proto-version: '0.60.2'
 
       - name: Install stable toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1

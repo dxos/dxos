@@ -4,15 +4,16 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Instructions from '@dxos/compute/Instructions';
-import { Database, Feed, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { Annotation, Database, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { Text } from '@dxos/schema';
-import { Message, Outline } from '@dxos/types';
+import { Message, Outline, Task, TaskSet } from '@dxos/types';
 
 import { Chat } from '../types';
 
@@ -21,8 +22,9 @@ EntityId.dangerouslyDisableRandomness();
 const TestLayer = AssistantTestLayer({
   types: [
     Chat.Chat,
-    Chat.CompanionTo,
     Outline.Outline,
+    TaskSet.TaskSet,
+    Task.Task,
     Feed.Feed,
     Text.Text,
     Instructions.Instructions,
@@ -50,9 +52,9 @@ describe('Chat', () => {
         expect(chat.name).toBe('Test');
 
         // Asserted on the schema, not the instance: `in` reports false for any declared-but-unset
-        // optional field. The agent a chat runs as is reached through CompanionTo, never a field —
-        // that field was the edge that made Agent and Chat mutually dependent.
-        expect(Object.keys(Chat.Chat.fields).sort()).toEqual(['feed', 'instructions', 'name', 'outline', 'viewType']);
+        // optional field. The agent a chat runs as is reached through the ECHO parent edge, never a
+        // field — a field was the edge that made Agent and Chat mutually dependent.
+        expect(Object.keys(Chat.fields).sort()).toEqual(['feed', 'instructions', 'name', 'taskSet', 'viewType']);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -60,18 +62,18 @@ describe('Chat', () => {
   );
 
   it.effect(
-    'ensureOutline attaches an outline lazily and returns the same one thereafter',
+    'ensureTaskSet attaches a task set lazily and returns the same one thereafter',
     Effect.fnUntraced(
       function* (_) {
         const chat = yield* makeChat;
-        expect(chat.outline).toBeUndefined();
+        expect(chat.taskSet).toBeUndefined();
 
-        const outline = yield* Chat.ensureOutline(chat);
-        expect(chat.outline?.uri).toBe(Ref.make(outline).uri);
+        const taskSet = yield* Chat.ensureTaskSet(chat);
+        expect(chat.taskSet?.uri).toBe(Ref.make(taskSet).uri);
 
-        // Second call reuses the attached outline rather than replacing it.
-        const again = yield* Chat.ensureOutline(chat);
-        expect(again.id).toBe(outline.id);
+        // Second call reuses the attached set rather than replacing it.
+        const again = yield* Chat.ensureTaskSet(chat);
+        expect(again.id).toBe(taskSet.id);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -79,22 +81,22 @@ describe('Chat', () => {
   );
 
   it.effect(
-    'CompanionTo links a chat to an arbitrary companion object',
+    'linkCompanion links a chat to an arbitrary subject: annotation ref + parent edge',
     Effect.fnUntraced(
       function* (_) {
         const chat = yield* makeChat;
-        const companion = yield* Database.add(Instructions.make({ text: 'Steer.' }));
-        const relation = yield* Database.add(
-          Relation.make(Chat.CompanionTo, {
-            [Relation.Source]: chat,
-            [Relation.Target]: companion,
-          }),
-        );
+        const subject = yield* Database.add(Instructions.make({ text: 'Steer.' }));
+        Chat.linkCompanion({ chat, subject });
         yield* Database.flush();
 
-        expect(Relation.getSource(relation).id).toBe(chat.id);
-        expect(Relation.getTarget(relation).id).toBe(companion.id);
-        expect(Obj.instanceOf(Chat.Chat, Relation.getSource(relation))).toBe(true);
+        expect(Obj.getParent(chat)?.id).toBe(subject.id);
+        const chats = Annotation.get(subject, Chat.CompanionChatAnnotation).pipe(Option.getOrElse(() => []));
+        expect(chats.map((ref) => ref.uri)).toEqual([Ref.make(chat).uri]);
+
+        // Idempotent per chat: linking again adds no duplicate ref.
+        Chat.linkCompanion({ chat, subject });
+        const again = Annotation.get(subject, Chat.CompanionChatAnnotation).pipe(Option.getOrElse(() => []));
+        expect(again).toHaveLength(1);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

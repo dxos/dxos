@@ -12,7 +12,7 @@ import { EdgeHttpClient } from './edge-http-client';
 import { type EdgeIdentity } from './edge-identity';
 
 // TODO(burdon): Factor out config.
-const DEV_SERVER = 'https://edge.dxos.workers.dev';
+const DEV_SERVER = 'https://dev.dxos.network';
 
 describe.skipIf(process.env.CI)('EdgeHttpClient', () => {
   it.skip('should get status', async ({ expect }) => {
@@ -172,7 +172,7 @@ describe('EdgeHttpClient auth refresh', () => {
     await inFlight;
 
     // The stale presentation was discarded: the request went out without it.
-    const putCall = fetchMock.mock.calls.find((call) => String(call[0]).includes('/api/file/one'));
+    const putCall = fetchMock.mock.calls.find((call) => String(call[0]).includes('/blob/file/one'));
     expect((putCall![1]?.headers as Record<string, string> | undefined)?.Authorization).toBeUndefined();
   });
 
@@ -188,8 +188,8 @@ describe('EdgeHttpClient auth refresh', () => {
       signalAuthStarted = resolve;
     });
     let authCallCount = 0;
-    const fetchMock = vi.fn(async (input: any, _init?: RequestInit) => {
-      const url = String(input instanceof URL ? input : (input.url ?? input));
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) => {
+      const url = String(input instanceof URL ? input : typeof input === 'string' ? input : (input.url ?? input));
       if (url.endsWith('/auth')) {
         if (authCallCount++ === 0) {
           signalAuthStarted();
@@ -302,8 +302,8 @@ describe('EdgeHttpClient blobs', () => {
 
   test('getBlobUrl URL-encodes the key', ({ expect }) => {
     const client = new EdgeHttpClient('https://edge.example.com');
-    expect(client.getBlobUrl('abc123').toString()).toBe('https://edge.example.com/api/file/abc123');
-    expect(client.getBlobUrl('a/b/../c').toString()).toBe('https://edge.example.com/api/file/a%2Fb%2F..%2Fc');
+    expect(client.getBlobUrl('abc123').toString()).toBe('https://edge.example.com/blob/file/abc123');
+    expect(client.getBlobUrl('a/b/../c').toString()).toBe('https://edge.example.com/blob/file/a%2Fb%2F..%2Fc');
   });
 
   test('putBlob sends a raw POST body and pre-fetches /auth', async ({ expect }) => {
@@ -331,9 +331,9 @@ describe('EdgeHttpClient blobs', () => {
     const authCall = fetchMock.mock.calls.find((call) => String(call[0]).endsWith('/auth'));
     expect(authCall).toBeDefined();
 
-    const putCall = fetchMock.mock.calls.find((call) => String(call[0]).includes('/api/file/abc123'));
+    const putCall = fetchMock.mock.calls.find((call) => String(call[0]).includes('/blob/file/abc123'));
     expect(putCall).toBeDefined();
-    expect(String(putCall![0])).toBe('https://edge.example.com/api/file/abc123');
+    expect(String(putCall![0])).toBe('https://edge.example.com/blob/file/abc123');
     expect(putCall![1]?.method).toBe('POST');
     expect(putCall![1]?.body).toBe(bytes);
     expect((putCall![1]?.headers as Record<string, string>)['Content-Type']).toBe('application/octet-stream');
@@ -366,7 +366,7 @@ describe('EdgeHttpClient blobs', () => {
     client.setIdentity(identity);
     await client.putBlob(Context.default(), 'abc123', new Uint8Array([1, 2, 3]));
 
-    const fileCalls = fetchMock.mock.calls.filter((call) => String(call[0]).includes('/api/file/abc123'));
+    const fileCalls = fetchMock.mock.calls.filter((call) => String(call[0]).includes('/blob/file/abc123'));
     expect(fileCalls.length).toBe(2);
     expect((fileCalls[1][1]?.headers as Record<string, string>).Authorization).toMatch(/^VerifiablePresentation/);
   });
@@ -400,7 +400,7 @@ describe('EdgeHttpClient blobs', () => {
       await expect(client.getBlob(Context.default(), 'abc123')).rejects.toThrow(/HTTP code 401/);
 
       // Exactly one attempt at the resource: no auth retry.
-      const fileCalls = fetchMock.mock.calls.filter((call) => String(call[0]).includes('/api/file/abc123'));
+      const fileCalls = fetchMock.mock.calls.filter((call) => String(call[0]).includes('/blob/file/abc123'));
       expect(fileCalls.length).toBe(1);
     });
   }
@@ -408,7 +408,7 @@ describe('EdgeHttpClient blobs', () => {
   test('getBlob returns bytes on success', async ({ expect }) => {
     const fetchMock = vi.fn(async (input: any) => {
       const url = String(input instanceof URL ? input : (input.url ?? input));
-      expect(url).toBe('https://edge.example.com/api/file/abc123');
+      expect(url).toBe('https://edge.example.com/blob/file/abc123');
       return new Response(new Uint8Array([1, 2, 3]), { status: 200 });
     });
     vi.stubGlobal('fetch', fetchMock);
@@ -441,7 +441,7 @@ describe('EdgeHttpClient blobs', () => {
   test('deleteBlob sends a DELETE request', async ({ expect }) => {
     const fetchMock = vi.fn(async (input: any, init?: RequestInit) => {
       expect(String(input instanceof URL ? input : (input.url ?? input))).toBe(
-        'https://edge.example.com/api/file/abc123',
+        'https://edge.example.com/blob/file/abc123',
       );
       expect(init?.method).toBe('DELETE');
       return new Response(null, { status: 200 });
@@ -505,7 +505,7 @@ describe('EdgeHttpClient api key', () => {
 
     const authCall = fetchMock.mock.calls.find((call) => String(call[0]).endsWith('/auth'));
     expect(authCall).toBeUndefined();
-    const putCall = fetchMock.mock.calls.find((call) => String(call[0]).includes('/api/file/abc123'));
+    const putCall = fetchMock.mock.calls.find((call) => String(call[0]).includes('/blob/file/abc123'));
     expect((putCall![1]?.headers as Record<string, string>).Authorization).toBe('Bearer secret-key');
   });
 });

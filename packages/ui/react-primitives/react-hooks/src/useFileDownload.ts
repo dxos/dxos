@@ -4,25 +4,27 @@
 
 import { useMemo } from 'react';
 
+import { log } from '@dxos/log';
+import { downloadBlob } from '@dxos/util';
+
 /**
- * File download anchor.
+ * Save a blob to disk.
+ *
+ * Goes through {@link downloadBlob}, so the download also works inside the Tauri webview, where
+ * `<a download>` is silently dropped. Blob only: a URL would have to fall back to that anchor, and
+ * a caller has no way to notice it did nothing.
  *
  * ```
- * const download = useDownload();
+ * const download = useFileDownload();
  * const handleDownload = (data: string) => {
  *   download(new Blob([data], { type: 'text/plain' }), 'test.txt');
  * };
  * ```
  */
-export const useFileDownload = (): ((data: Blob | string, filename: string) => void) => {
+export const useFileDownload = (): ((data: Blob, filename: string) => void) => {
   return useMemo(
-    () => (data: Blob | string, filename: string) => {
-      const url = typeof data === 'string' ? data : URL.createObjectURL(data);
-      const element = document.createElement('a');
-      element.setAttribute('href', url);
-      element.setAttribute('download', filename);
-      element.setAttribute('target', 'download');
-      element.click();
+    () => (data: Blob, filename: string) => {
+      void downloadBlob(data, filename).catch((err) => log.catch(err));
     },
     [],
   );

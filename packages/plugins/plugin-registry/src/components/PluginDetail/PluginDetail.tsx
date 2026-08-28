@@ -6,6 +6,7 @@ import React, { type PropsWithChildren } from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
+import { useLayout } from '@dxos/app-toolkit/ui';
 import {
   Button,
   Carousel,
@@ -134,6 +135,10 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
   ) => {
     const { t } = useTranslation(meta.profile.key);
     const { themeMode } = useThemeContext();
+    const layout = useLayout();
+    // The gutters exist to hold the icon (col 1) and carousel nav (col 3); on a phone the fixed
+    // 4rem floor on both left it with less width for the center content than the gutters themselves.
+    const isMobile = layout.mode === 'mobile';
     const { key: slug, name, author, description, homePage, source, screenshots, icon: rawIcon } = plugin.meta.profile;
     const iconKey = rawIcon?.key ?? 'ph--circle--regular';
     const iconHue = rawIcon?.hue ?? 'neutral';
@@ -156,12 +161,16 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
            * in col 3.
            */}
           <Grid
-            cols={['4rem', 'minmax(0, 1fr)', '4rem']}
+            cols={isMobile ? ['2.5rem', 'minmax(0, 1fr)', '2.5rem'] : ['4rem', 'minmax(0, 1fr)', '4rem']}
             grow={false}
             align='start'
             classNames='dx-document gap-x-4 p-4'
           >
-            <Icon classNames={mx('row-start-1 p-1 rounded-md', styles.bg, styles.fg)} icon={iconKey} size={14} />
+            <Icon
+              classNames={mx('row-start-1 p-1 rounded-md', styles.bg, styles.fg)}
+              icon={iconKey}
+              size={isMobile ? 8 : 14}
+            />
 
             <Grid
               cols={['1fr', 'min-content']}

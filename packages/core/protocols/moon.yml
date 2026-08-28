@@ -7,13 +7,16 @@ tags:
 tasks:
   build:
     deps:
-      - prebuild
+      - ~:#prebuild
   gen-buf:
     command: buf generate
+    # `buf.gen.yaml` reads the whole `src/proto` tree, so the declared inputs and outputs cover
+    # `example/` too -- narrowing them to `dxos/` left the example modules out of the cached output
+    # and `buf/registry.ts` failed to resolve them on a clean checkout.
     inputs:
-      - src/proto/dxos/**/*.proto
+      - src/proto/**/*.proto
     outputs:
-      - src/buf/proto/gen/dxos
+      - src/buf/proto/gen
   prebuild:
     command: build-protobuf
     args:
@@ -27,6 +30,8 @@ tasks:
       - gen-buf
     outputs:
       - src/proto/gen
+    tags:
+      - prebuild
   test:
     deps:
-      - prebuild
+      - ~:#prebuild

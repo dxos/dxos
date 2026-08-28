@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Attention } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention/types';
 
 import { DeckSchema } from '#types';
 
@@ -10,6 +10,8 @@ export type SetActiveOptions = {
   next: string[];
   deck: DeckSchema.DeckState;
   attention?: Attention.AttentionManager;
+  /** The `flatten` setting; under it the companion flag is deck-wide rather than per plank. */
+  flatten?: boolean;
 };
 
 export type SetActiveResult = {
@@ -27,7 +29,7 @@ export type SetActiveResult = {
  * Computes the new active state for the deck without mutating.
  * Returns the updates to apply and optionally an item to attend.
  */
-export const computeActiveUpdates = ({ next, deck, attention }: SetActiveOptions): SetActiveResult => {
+export const computeActiveUpdates = ({ next, deck, attention, flatten }: SetActiveOptions): SetActiveResult => {
   const removed = deck.active.filter((id) => !next.includes(id));
   const closed = Array.from(new Set([...deck.inactive.filter((id) => !next.includes(id)), ...removed]));
 
@@ -35,8 +37,14 @@ export const computeActiveUpdates = ({ next, deck, attention }: SetActiveOptions
     inactive: closed,
     active: next,
     // Deduped and pruned to open planks: entries survived every close, so a long-lived deck accreted
-    // one per plank ever opened (a live profile measured fourteen, with duplicates).
-    companionPlanks: Array.from(new Set(deck.companionPlanks)).filter((id) => next.includes(id)),
+    // one per plank ever opened (a live profile measured fourteen, with duplicates). Under `flatten`
+    // the flag is deck-wide, so closing the plank that happens to carry it re-points it at whichever
+    // plank is now current — pruning it away would shut a companion the user never closed.
+    companionPlanks: flatten
+      ? deck.companionPlanks.length > 0 && next.length > 0
+        ? [next[next.length - 1]]
+        : []
+      : Array.from(new Set(deck.companionPlanks)).filter((id) => next.includes(id)),
   };
 
   let toAttend: string | undefined;

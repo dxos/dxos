@@ -1,0 +1,150 @@
+{
+  "name": "@dxos/plugin-claude",
+  "version": "0.11.1",
+  "private": true,
+  "description": "Claude managed agents as ECHO objects, with an assistant skill to configure, deploy and run them",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "imports": {
+    "#api": {
+      "source": "./src/api/index.ts",
+      "types": "./dist/types/src/api/index.d.ts",
+      "default": "./dist/lib/api.mjs"
+    },
+    "#capabilities": {
+      "source": {
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "default": "./src/capabilities/index.ts"
+      },
+      "types": "./dist/types/src/capabilities/index.d.ts",
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
+      "default": "./dist/lib/capabilities.mjs"
+    },
+    "#meta": {
+      "source": "./src/meta.ts",
+      "types": "./dist/types/src/meta.d.ts",
+      "default": "./dist/lib/meta.mjs"
+    },
+    "#operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "default": "./dist/lib/operations.mjs"
+    },
+    "#plugin": {
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
+    },
+    "#skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "default": "./dist/lib/skills.mjs"
+    },
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
+    }
+  },
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    },
+    "./package.json": "./package.json",
+    "./ClaudePlugin": {
+      "source": "./src/ClaudePlugin.ts",
+      "types": "./dist/types/src/ClaudePlugin.d.ts",
+      "import": "./dist/lib/ClaudePlugin.mjs"
+    },
+    "./ClaudeAgentOperation": {
+      "source": "./src/types/ClaudeAgentOperation.ts",
+      "types": "./dist/types/src/types/ClaudeAgentOperation.d.ts",
+      "import": "./dist/lib/ClaudeAgentOperation.mjs"
+    },
+    "./ClaudeAgentSession": {
+      "source": "./src/types/ClaudeAgentSession.ts",
+      "types": "./dist/types/src/types/ClaudeAgentSession.d.ts",
+      "import": "./dist/lib/ClaudeAgentSession.mjs"
+    },
+    "./ClaudeEvents": {
+      "source": "./src/types/ClaudeEvents.ts",
+      "types": "./dist/types/src/types/ClaudeEvents.d.ts",
+      "import": "./dist/lib/ClaudeEvents.mjs"
+    },
+    "./ClaudeSkill": {
+      "source": "./src/skills/ClaudeSkill.ts",
+      "types": "./dist/types/src/skills/ClaudeSkill.d.ts",
+      "import": "./dist/lib/ClaudeSkill.mjs"
+    },
+    "./ClaudeManagedAgent": {
+      "source": "./src/types/ClaudeManagedAgent.ts",
+      "types": "./dist/types/src/types/ClaudeManagedAgent.d.ts",
+      "import": "./dist/lib/ClaudeManagedAgent.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "ClaudeAgentOperation": [
+        "dist/types/src/types/ClaudeAgentOperation.d.ts"
+      ],
+      "ClaudeAgentSession": [
+        "dist/types/src/types/ClaudeAgentSession.d.ts"
+      ],
+      "ClaudeEvents": [
+        "dist/types/src/types/ClaudeEvents.d.ts"
+      ],
+      "ClaudeManagedAgent": [
+        "dist/types/src/types/ClaudeManagedAgent.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "dx.config.ts",
+    "src",
+    "PLUGIN.mdl"
+  ],
+  "dependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
+    "@dxos/compute": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
+    "@dxos/errors": "workspace:*",
+    "@dxos/link": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/effect": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "vite": "catalog:"
+  },
+  "peerDependencies": {
+    "@dxos/react-ui": "workspace:^"
+  }
+}

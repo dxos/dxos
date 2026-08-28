@@ -5,7 +5,8 @@
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { latch, sleep } from '@dxos/async';
-import { type RequestOptions, Stream } from '@dxos/codec-protobuf';
+import { Stream } from '@dxos/async';
+import { type RequestOptions } from '@dxos/codec-protobuf';
 import { Context, TRACE_SPAN_ATTRIBUTE } from '@dxos/context';
 import { schema } from '@dxos/protocols/proto';
 import {

@@ -18,6 +18,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
 
 ## Types
 
@@ -170,7 +171,7 @@ feat F-2: Section Management
 
   req F-2.1:
     when: user clicks the Add Section button in the toolbar
-    then: SpaceOperation.OpenCreateObject dialog is invoked with the collection as target
+    then: SpaceOperation.OpenObjectForm dialog is invoked with the collection as target
   req F-2.2:
     when: user selects "Add Before" or "Add After" from a section dropdown
     then: LayoutOperation.UpdateDialog is invoked with the AddSectionDialog, position, and collection context
@@ -224,7 +225,7 @@ test T-1: Collection renders as stack
 test T-2: Add section via toolbar
   given: StackArticle is open
   when: user clicks the Add Section toolbar button
-  then: SpaceOperation.OpenCreateObject is invoked with the collection as target
+  then: SpaceOperation.OpenObjectForm is invoked with the collection as target
 ```
 
 ```mdl
@@ -257,6 +258,68 @@ test T-5: Navigate to section
 test T-6: StackViewType registered
   given: StackPlugin is active
   then: StackViewType (typename org.dxos.type.stackView) is registered with the ECHO schema module
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Render a collection as a stack, add, collapse, and remove a section
+  desc: |
+    StackPlugin declares no operations of its own — every mutation goes through
+    `SpaceOperation.AddObject`/`RemoveObjects` (F-2.1, F-2.3), which belong to `plugin-space`.
+  actors: both
+  covers: [F-1.1, F-1.2, F-2.3, F-3.1, T-1, T-3, T-4]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-stack is enabled — it is OFF by default for everyone (not listed in
+      `getDefaults`, unlike most content plugins in `plugin-defs.tsx`), so no `article` surface
+      resolves for a Collection's stack view until it is turned on
+    - no collection named "QA Stack" exists — ABORT rather than deleting one this flow did not
+      create
+  test:
+    - name: Create the collection and a section
+      do: In the navtree, click + on the space and choose Collection. Name it "QA Stack". Open
+        it, click "Add Section" in the toolbar, and choose Markdown, naming it "QA Section".
+      invoke: org.dxos.operation.space.createCollection { name: "QA Stack" }
+      capture: collection
+      expect: "QA Stack" opens as a StackArticle with one StackSection titled "QA Section"
+      assert: return $collection.object.name === 'QA Stack';
+      note: |
+        Coalesce the "Add Section" click with the object creation it triggers — `OpenObjectForm`
+        opens a dialog and the resulting object is added via `AddObject`, which is the same
+        pattern as `plugin-markdown`'s create+place split.
+    - name: Add the section object
+      do: (the Add Section dialog places it for you on confirm)
+      invoke: org.dxos.operation.markdown.create { name: "QA Section" }
+      capture: doc
+      expect: a Document named "QA Section" exists
+    - name: Place the section in the stack
+      do: (as above)
+      invoke: org.dxos.operation.space.addObject { object: $doc.object, target: $collection.object }
+      expect: a StackSection titled "QA Section" now renders below the toolbar (F-1.2)
+      assert: return $collection.object.objects.some((ref) => ref.target?.id === $doc.object.id);
+    - name: Collapse the section
+      do: Open the section's sigil dropdown and choose Collapse.
+      expect: the section shows only its title; the caret points to "expand" (F-3.3, T-4)
+      note: NO invoke — collapse state is local StackArticle component state (F-3.4), not an
+        ECHO write, so there is nothing to verify against the database.
+    - name: Remove the section
+      do: Open the dropdown again and choose Remove.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$doc.object], target: $collection.object }
+      expect: the section no longer appears in the stack (T-3)
+      assert: return !$collection.object.objects.some((ref) => ref.target?.id === $doc.object.id);
+  after:
+    - name: Delete the collection
+      do: Right-click "QA Stack" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$collection.object], target: $given.space }
+      expect: the row leaves the navtree and its plank closes
 ```
 
 ---

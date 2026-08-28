@@ -24,9 +24,9 @@ import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Channel, Message, Thread } from '@dxos/types';
 
+import { ThreadPlugin } from '#plugin';
 import { translations } from '#translations';
 
-import { ThreadPlugin } from '../../plugin';
 import { ChannelArticle, type ChannelArticleProps } from './ChannelArticle';
 
 // TODO(wittjosiah): Channel doesn't render full height.
@@ -60,11 +60,11 @@ const meta = {
             runtime: {
               services: {
                 edge: {
-                  url: 'https://edge.dxos.workers.dev/',
+                  url: 'https://dev.dxos.network/',
                 },
                 iceProviders: [
                   {
-                    urls: 'https://edge.dxos.workers.dev/ice',
+                    urls: 'https://dxos.network/ice',
                   },
                 ],
               },

@@ -65,7 +65,7 @@ export type FormFieldRendererProps<T = any> = {
   autoFocus?: boolean;
   /** Presentation mode for the field (full/compact/inline/static); see {@link FormPresentation}. */
   presentation?: FormPresentation;
-  /** Whether the field is required (non-optional in the schema); surfaces a trailing asterisk on the label. */
+  /** Whether the field is required AND still unfilled; surfaces a trailing asterisk on the label. */
   required?: boolean;
 } & FormFieldStateProps<T>;
 
@@ -91,8 +91,12 @@ export type FormFieldProvider = (props: {
 export type CreateEntryOverride<S extends Schema.Codec<any, any> = Schema.Codec<any, any>> = {
   /** Replaces the raw ECHO type schema for the inline create form. */
   inputSchema?: S;
-  /** Runs instead of the default onCreate(schema, values) path; values are typed from inputSchema. */
-  createObject?: (values: Schema.Schema.Type<S>, db: Database.Database) => Promise<Obj.Unknown>;
+  /**
+   * Runs instead of the default onCreate(schema, values) path; values are typed from inputSchema.
+   * Resolves to `undefined` where the create only starts the work and no object exists yet — the
+   * ref slot is then left unset rather than pointed at nothing.
+   */
+  createObject?: (values: Schema.Schema.Type<S>, db: Database.Database) => Promise<Obj.Unknown | undefined>;
 };
 
 /**

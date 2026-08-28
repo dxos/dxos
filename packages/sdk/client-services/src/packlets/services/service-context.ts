@@ -27,7 +27,7 @@ import { KeyringApiService, SqliteKeyring, SqliteKeyringLayer } from '@dxos/keyr
 import { SignalManagerService } from '@dxos/messaging';
 import { SwarmNetworkManagerService } from '@dxos/network-manager';
 import { FeedProtocol } from '@dxos/protocols';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { EdgeAgentManagerLayer, EdgeAgentManagerService } from '../agents';
@@ -89,7 +89,7 @@ export class StorageMigrationService extends EffectContext.Service<
 >()('@dxos/client-services/StorageMigration') {}
 
 export type ServiceContextLayerOptions = ServiceContextRuntimeProps & {
-  edgeFeatures?: Runtime.Client.EdgeFeatures;
+  edgeFeatures?: Runtime_Client_EdgeFeatures;
   edgeConnection?: EdgeConnection;
   edgeHttpClient?: EdgeHttpClient;
 };
@@ -146,6 +146,7 @@ export const ServiceContextLayer = (
         devicePresenceOfflineTimeout: options.devicePresenceOfflineTimeout,
         devicePresenceAnnounceInterval: options.devicePresenceAnnounceInterval,
         edgeFeatures: options.edgeFeatures,
+        automergeCredentials: options.automergeCredentials,
       }),
     ),
     Layer.provideMerge(SpaceManagerLayer({ disableP2pReplication: options.disableP2pReplication })),
@@ -241,6 +242,11 @@ const echoHostLayer = (options: { useSubduction?: boolean }) =>
         Effect.promise(() => echoHost.open()),
         () => Effect.promise(() => echoHost.close()),
       );
+
+      // Points back down the stack, like the feed sync handlers above: the identity manager anchors
+      // the HALO space on a root document and needs the open host to do it.
+      const identityManager = yield* IdentityManagerService;
+      yield* Effect.promise(() => identityManager.setEchoHost(echoHost));
     }),
   ).pipe(
     Layer.provideMerge(

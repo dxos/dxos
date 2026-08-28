@@ -8,7 +8,7 @@ import React, { type PropsWithChildren } from 'react';
 import { Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { TogglePanel } from '@dxos/react-ui-components';
 import { type MessageChromeProps, isPrompt } from '@dxos/react-ui-feed';
-import { Message } from '@dxos/types';
+import { type ContentBlock, Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
@@ -123,11 +123,39 @@ export const AssistantToolbar = ({ classNames, message }: MessageToolbarProps) =
       <CopyButton message={message} />
       <Time message={message} />
       <MessageId message={message} />
+      {/* Pushed to the far end: the cost of the turn is a footnote, not a control. */}
+      <Stats message={message} classNames='ms-auto' />
     </div>
   );
 };
 
 AssistantToolbar.displayName = 'AssistantToolbar';
+
+/** Thousands abbreviated to one decimal, so the count stays one glance wide as a turn grows. */
+const formatTokens = (tokens: number): string => (tokens >= 1_000 ? `${(tokens / 1_000).toFixed(1)}k` : String(tokens));
+
+/**
+ * What the turn cost, beside what it produced — the toolbar is where a reader looks for a message's
+ * metadata, and a widget of its own would take a row of the thread to say one line.
+ */
+const Stats = ({ classNames, message }: ThemedClassName<{ message: Message.Message }>) => {
+  const stats = message.blocks.find((block) => block._tag === 'stats') as ContentBlock.Stats | undefined;
+  const tokens = stats?.usage?.totalTokens;
+  const duration = stats?.duration;
+  if (tokens === undefined && duration === undefined) {
+    return null;
+  }
+
+  return (
+    <span className={mx('flex items-center gap-1 tabular-nums', classNames)}>
+      {tokens !== undefined && <span>{formatTokens(tokens)} tokens</span>}
+      {tokens !== undefined && duration !== undefined && <span aria-hidden>·</span>}
+      {duration !== undefined && <span>{(duration / 1_000).toFixed(1)}s</span>}
+    </span>
+  );
+};
+
+Stats.displayName = 'Stats';
 
 //
 // Context
@@ -203,7 +231,7 @@ export const MessageChrome = ({ message, selected, children }: MessageChromeProp
         <div className='min-w-0 flex flex-col items-end'>
           <div className='max-w-[70%] min-w-0'>
             <SyntheticContext message={message} />
-            <div className='px-4 py-3 border-s-2 border-accent-bg rounded-sm bg-input-surface'>{children}</div>
+            <div className='px-3 py-2 border-s-2 border-accent-bg rounded-sm bg-input-surface'>{children}</div>
             <PromptToolbar classNames={mx('justify-end', reveal, !streaming && revealOnHover)} message={message} />
           </div>
         </div>

@@ -10,18 +10,21 @@ import { Button, Dialog, Link, Trans, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 
-// Keyed by the full edge host: `<env>.dxos.network` (apex = production) plus the
-// legacy `edge[-<env>].dxos.workers.dev` names still present in stored configs.
+// Keyed by edge host, including legacy names still present in stored configs and installed builds.
 const ENV_LABELS: Record<string, string> = {
+  'dev.dxos.network': 'Dev',
+  'preview.dxos.network': 'Preview',
+  'dxos.network': 'Production',
+
   'edge.dxos.workers.dev': 'Dev',
-  'edge-main.dxos.workers.dev': 'Main',
-  'edge-labs.dxos.workers.dev': 'Labs',
+  'edge-preview.dxos.workers.dev': 'Preview',
+  'edge-main.dxos.workers.dev': 'Main (retired)',
+  'edge-labs.dxos.workers.dev': 'Labs (retired)',
   'edge-staging.dxos.workers.dev': 'Staging',
   'edge-production.dxos.workers.dev': 'Production',
-  'main.dxos.network': 'Main',
-  'labs.dxos.network': 'Labs',
+  'main.dxos.network': 'Preview',
+  'labs.dxos.network': 'Labs (retired)',
   'staging.dxos.network': 'Staging',
-  'dxos.network': 'Production',
 };
 
 const REPO = 'https://github.com/dxos/dxos';

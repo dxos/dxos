@@ -23,9 +23,9 @@ export class GtdTask extends Type.makeObject<GtdTask>(DXN.make('org.dxos.demo.Gt
     title: Schema.String.annotate({ title: 'Title' }),
     description: Schema.optional(Schema.String.annotate({ title: 'Notes' })),
 
-    /** Lossy on read: `false` cannot say whether the task is `todo` or `in-progress`. */
+    /** Lossy on read: `false` cannot say whether the task is `todo` or `started`. */
     done: Schema.optional(Schema.Boolean.annotate({ title: 'Done' })),
-    stage: Schema.optional(Schema.Literals(['todo', 'in-progress', 'done']).annotate({ title: 'Stage' })),
+    stage: Schema.optional(Schema.Literals(['todo', 'started', 'done']).annotate({ title: 'Stage' })),
     urgency: Schema.optional(Schema.Number.annotate({ title: 'Urgency (1-5)' })),
 
     /** Neither exists on `Task`: both persist in the object's annotation dictionary. */
@@ -49,7 +49,7 @@ export const GtdLens: Lens.Lens<Task.Task, GtdTask> = Lens.register(
   Lens.make(GTD_LENS_ID, Task.Task, GtdTask, {
     urgency: Lens.from('priority', Lens.lookup(URGENCY)),
 
-    // The lossy split: `done` alone cannot restore `todo` vs `in-progress`, so `put` reads the live
+    // The lossy split: `done` alone cannot restore `todo` vs `started`, so `put` reads the live
     // `status` (declared in `from`) to decide.
     done: {
       from: ['status'],
@@ -61,7 +61,7 @@ export const GtdLens: Lens.Lens<Task.Task, GtdTask> = Lens.register(
     stage: {
       from: ['status'],
       get: ({ status }) => status,
-      put: (stage: 'todo' | 'in-progress' | 'done' | undefined) => ({ status: stage }),
+      put: (stage: 'todo' | 'started' | 'done' | undefined) => ({ status: stage }),
     },
   }),
 );
@@ -70,6 +70,6 @@ export const makeDemoTask = () =>
   Task.make({
     title: 'Land the object lens',
     description: 'One object, two interfaces.',
-    status: 'in-progress',
+    status: 'started',
     priority: 'high',
   });

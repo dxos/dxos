@@ -12,6 +12,7 @@ import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { expect } from 'vitest';
 
 import { LanguageModelFixture } from '@dxos/ai/testing';
@@ -29,7 +30,7 @@ import { Annotation, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
-import { Message, Organization } from '@dxos/types';
+import { ContentBlock, Message, Organization } from '@dxos/types';
 
 import { AssistantTestLayer, waitForMessage } from '../testing';
 import * as ResearchService from '../testing/ResearchService';
@@ -41,7 +42,7 @@ EntityId.dangerouslyDisableRandomness();
 
 const Research = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.research'),
+    key: DXN.make('com.example.operation.research'),
     name: 'Research',
     description: 'Research an organization',
   },
@@ -58,7 +59,7 @@ const Research = Operation.make({
  */
 const DelegatedWork = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.delegatedWork'),
+    key: DXN.make('com.example.operation.delegatedWork'),
     name: 'Delegated work',
     description: 'Performs a delegated unit of work',
   },
@@ -66,7 +67,33 @@ const DelegatedWork = Operation.make({
   output: Schema.String,
 });
 
+/**
+ * A no-input operation, whose `Schema.Void` input is the case that survives in-process but not the
+ * registry round trip: `Operation.serialize` renders it as `{type: 'null'}` and `deserialize` reads
+ * it back as `Schema.Null`, so the tool projection sees a tag the authored operation never had.
+ */
+const Ping = Operation.make({
+  meta: {
+    key: DXN.make('com.example.operation.ping'),
+    name: 'Ping',
+    description: 'Pings the service and returns its status. Takes no arguments.',
+  },
+  input: Schema.Void,
+  output: Schema.String,
+});
+
+/** Set by {@link Ping}'s handler so a test can assert the model actually reached the tool. */
+let pingCount = 0;
+
 const handlers = OperationHandlerSet.make(
+  Ping.pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* () {
+        pingCount++;
+        return 'pong';
+      }),
+    ),
+  ),
   Research.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ website }) {
@@ -91,12 +118,18 @@ const ResearchSkill = Skill.make({
   tools: Skill.toolDefinitions({ operations: [Research] }),
 });
 
+const PingSkill = Skill.make({
+  key: 'org.dxos.skill.ping',
+  name: 'Ping',
+  tools: Skill.toolDefinitions({ operations: [Ping] }),
+});
+
 const assistantTestLayerOptions = {
   types: [Organization.Organization, Feed.Feed, Skill.Skill, Instructions.Instructions, Text.Text],
   tracing: 'pretty' as const,
   aiServicePreset: 'edge-remote' as const,
   operationHandlers: [handlers],
-  skills: [ResearchSkill],
+  skills: [ResearchSkill, PingSkill],
   extraServices: ResearchService.layer,
 };
 
@@ -514,7 +547,11 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         const target = Obj.getURI(session.feed);
         // `list` erases the RPC group to `any`, which Effect 4 resolves to an `unknown` requirement
         // on every call; naming the group restores it.
-        const handles: readonly ProcessManager.Handle<any, any, HarnessControlRpcs>[] = yield* processManager.list({
+        const handles: readonly ProcessManager.Handle<
+          string | readonly ContentBlock.Any[],
+          void,
+          HarnessControlRpcs
+        >[] = yield* processManager.list({
           target,
           key: AGENT_PROCESS_KEY,
         });
@@ -543,10 +580,61 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
       TestHelpers.provideTestContext,
     ),
   );
+
+  it.effect(
+    'calls a tool whose operation takes no input',
+    Effect.fnUntraced(
+      function* (_) {
+        pingCount = 0;
+        const session = yield* AgentService.createSession({ skills: [PingSkill] });
+        yield* session.submitPrompt('Ping the service and tell me what it returned.');
+        yield* session.waitForCompletion();
+
+        expect(pingCount).toBe(1);
+        const messages = yield* Feed.query(session.feed, Filter.type(Message.Message)).run;
+        expect(messages.map(Message.extractText).join('\n').toLocaleLowerCase()).toContain('pong');
+      },
+      Effect.provide(TestLayer()),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
+  );
 });
 
 // Control-plane coverage (no LLM turn), so it runs ungated in CI unlike the replay suite above.
 describe('Agent Service (control plane)', () => {
+  it.effect(
+    'reports whether the session is working on a turn',
+    Effect.fnUntraced(
+      function* (_) {
+        const registry = yield* Registry.AtomRegistry;
+        const processManager = yield* ProcessManager.ProcessManagerService;
+        const feed = yield* Database.add(Feed.make());
+        yield* Database.flush();
+        const target = Obj.getURI(feed);
+
+        const session = yield* getSession(feed);
+        const [handle] = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
+
+        // Spawned but not prompted: live, awaiting input, so not working on a turn.
+        expect(handle.status.state).toBe(Process.State.IDLE);
+        expect(registry.get(session.running)).toBe(false);
+
+        // Derived from the process's status atom, not fixed at the time the session was resolved.
+        const observed: boolean[] = [];
+        const unsubscribe = registry.subscribe(session.running, (running) => observed.push(running), {
+          immediate: true,
+        });
+        yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
+        yield* handle.terminate();
+        expect(registry.get(session.running)).toBe(false);
+        expect(observed).toEqual([false]);
+      },
+      Effect.provide(TestLayer()),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
   // Exercises the instruction-aware reuse identity on both paths — the session cache and the
   // remount (rediscovered process) path.
   it.effect(

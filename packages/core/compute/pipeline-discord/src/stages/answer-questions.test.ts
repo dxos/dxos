@@ -23,7 +23,7 @@ describe('answerOpenQuestions', () => {
     'answers an open question from matching facts with citations',
     Effect.fnUntraced(
       function* () {
-        const questions = yield* QuestionStore;
+        const questions = yield* QuestionStore.QuestionStore;
         const facts = yield* FactStore;
         yield* facts.putFacts([fact('f1'), fact('f2')]);
         yield* questions.add('Who works on OPFS?', 'q-1');
@@ -44,7 +44,7 @@ describe('answerOpenQuestions', () => {
     'leaves a question open when there are no facts',
     Effect.fnUntraced(
       function* () {
-        const questions = yield* QuestionStore;
+        const questions = yield* QuestionStore.QuestionStore;
         yield* questions.add('Who works on OPFS?', 'q-1');
         const answered = yield* answerOpenQuestions();
         expect(answered).toBe(0);
@@ -58,7 +58,7 @@ describe('answerOpenQuestions', () => {
     'leaves a question open when the model declines to answer',
     Effect.fnUntraced(
       function* () {
-        const questions = yield* QuestionStore;
+        const questions = yield* QuestionStore.QuestionStore;
         const facts = yield* FactStore;
         yield* facts.putFacts([fact('f1')]);
         yield* questions.add('Who works on OPFS?', 'q-1');
@@ -74,7 +74,7 @@ describe('answerOpenQuestions', () => {
     'counts failed attempts and stops retrying past the cap',
     Effect.fnUntraced(
       function* () {
-        const questions = yield* QuestionStore;
+        const questions = yield* QuestionStore.QuestionStore;
         const facts = yield* FactStore;
         yield* facts.putFacts([fact('f1')]);
         yield* questions.add('Who works on OPFS?', 'q-1');
@@ -111,15 +111,21 @@ const fact = (id: string): RDF.Fact => ({
 const fakeAi = (answer?: string): Layer.Layer<AiService.AiService> =>
   Layer.succeed(AiService.AiService, {
     // The @effect/ai LanguageModel surface is large and external; this test fake fills only the
-    // methods the answer path calls.
+    // methods the answer path calls, returning real response instances rather than duck-typed
+    // objects so the fake needs no cast to satisfy `LanguageModel.Service`.
     model: () =>
       Layer.succeed(LanguageModel.LanguageModel, {
-        generateText: () => Effect.succeed({ text: '', content: [] }),
-        generateObject: (request: { prompt: string }) =>
-          Effect.succeed({
-            value: request.prompt.includes('Answer the question') ? (answer ? { answer } : {}) : {},
-            content: [],
-          }),
+        generateText: () => Effect.succeed(new LanguageModel.GenerateTextResponse([])),
+        // `generateObject`'s real signature is a self-referential generic (`Options extends
+        // NoExcessProperties<..., Options>`) that a concrete stub cannot restate; narrow the cast to
+        // this one member's type rather than the whole fake.
+        generateObject: ((request: { prompt: string }) =>
+          Effect.succeed(
+            new LanguageModel.GenerateObjectResponse(
+              request.prompt.includes('Answer the question') ? (answer ? { answer } : {}) : {},
+              [],
+            ),
+          )) as LanguageModel.Service['generateObject'],
         streamText: () => Stream.empty,
-      } as any),
+      }),
   });

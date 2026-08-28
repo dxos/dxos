@@ -39,7 +39,7 @@ export const SubscriptionsArticle = ({ role, space, attendableId }: Subscription
           });
 
           const companion = Attention.linkedSegment('feed');
-          if (layout.mode === 'simple') {
+          if (layout.mode === 'mobile') {
             void invokePromise(LayoutOperation.UpdateComplementary, {
               subject: companion,
               state: 'expanded',
@@ -77,7 +77,7 @@ export const SubscriptionsArticle = ({ role, space, attendableId }: Subscription
   );
 
   const handleCreate = useCallback(() => {
-    void invokePromise(SpaceOperation.OpenCreateObject, {
+    void invokePromise(SpaceOperation.OpenObjectForm, {
       target: space.db,
       typename: Type.getTypename(Subscription.Subscription),
     });

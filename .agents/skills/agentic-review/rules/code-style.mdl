@@ -1,0 +1,77 @@
+---
+id: org.dxos.review.code-style
+name: CodeStyle
+version: 0.1.0
+---
+
+Repo-wide review rules derived from the `code-style` skill — the authoring
+conventions a linter cannot express. Each `rule` block below is discovered by the
+agentic-review harness, matched against the files its globs select, and applied
+by a focused subagent.
+
+## Extensions
+
+| Term   | URI                   |
+| ------ | --------------------- |
+| `rule` | org.dxos.mdl.rule@1.0 |
+
+## Rules
+
+```mdl
+rule namespace-service-layers: Layer constructors are module-level exports, never class statics
+  In a module marked `@import-as-namespace`, the `Context.Service` tag class
+  carries the module's own name, so anything hung off it as a `static` forces
+  consumers to spell that name twice — `StateStore.StateStore.layerSql` instead
+  of `StateStore.layerSql`. Export layer constructors (`layerMemory`,
+  `layerSql`, `layer`, …) as module-level `const`s beside the tag, leaving the
+  class body empty, and give the service's operations module-level accessors
+  built on `Context.Service.use` for the same reason. Flag a `static layer…`
+  member on a `Context.Service` subclass, and flag any call site that repeats a
+  namespace as `Name.Name.member`. A bare `Name.Name` in a TYPE position is not
+  a violation — the tag genuinely is the type, and there is nowhere else to put
+  it.
+  scope: repo
+  files:
+    - packages/**/*.ts
+    - packages/**/*.tsx
+  grep: static layer|([A-Z]\w+)\.\1\.
+  severity: warn
+```
+
+```mdl
+rule no-trivial-wrappers-over-official-apis: Do not extract a helper that only forwards to an official API
+  A one-line local helper whose body is a single call to a public API
+  (`const makeBody = (text: string) => Obj.make(Body, { text })`, and then
+  `makeBody('x')` at four call sites) does not remove duplication — it renames
+  the API. The reader now has to jump to the definition to learn which API is
+  under test and what it was passed, and a file with several of these grows an
+  ad-hoc DSL that only its author can read. Inline it: `Obj.make(Body, { text:
+  'x' })` at the call site is longer and clearer, and it keeps the API being
+  exercised visible in the assertion's own scope. This is most acute in tests,
+  where the call being made IS the thing under test, but it applies anywhere.
+  Flag a module- or describe-local arrow/function whose body is one expression
+  wrapping a single call, adding no branching, no error handling, no derived
+  values, and no non-trivial defaults. A helper that composes several calls,
+  encodes a non-obvious setup sequence, or is exported for reuse across files
+  is NOT a violation, and neither is a named factory that a package publishes
+  as its own API (`Obj.make` wrappers such as `File.make`).
+  scope: repo
+  files:
+    - packages/**/*.ts
+    - packages/**/*.tsx
+  severity: warn
+```
+
+## Appendix
+
+```mdl
+ext rule
+  uri: org.dxos.mdl.rule@1.0
+  desc: A machine-checked review rule applied by an LLM subagent to changed files.
+  inline-prose: true
+  fields:
+    files:      Glob | Glob[]     # paths this rule reviews, relative to `scope`
+    grep?:      Prose             # optional regex pre-filter over file contents
+    severity?:  warn | error      # defaults to warn
+    scope?:     dir | repo        # glob base: this file's dir (default) or repo root
+```

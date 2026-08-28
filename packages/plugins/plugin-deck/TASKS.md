@@ -217,6 +217,17 @@ one settles rather than leaving it a permanent preference.
       plank's direction of travel. Either promote `slide` into `FoldSpine` and delete the harness, or move
       it behind a `Settings` flag beside `overscroll` — it should not stay as story-only CSS.
 
+## Follow-ups
+
+- [ ] **Rename `plugin-native-filesystem` → `plugin-filesystem`** — requested during the mobile
+      unification (PR #12676); full package rename per repo rules (no compat re-exports, every call
+      site updated in the same change, `workspace:*` deps intact).
+- [ ] **Move `DeckCapabilities.Platform` to `app-toolkit`** — stayed in `plugin-deck` for the
+      plugin-mobile split cut since `plugin-mobile` depends on deck regardless; tracked as
+      out-of-scope in the split's design doc.
+- [ ] **Refresh `PLUGIN.mdl` mobile prose** — the mobile rendering it describes moved to
+      `plugin-mobile`; the doc still reads as if deck owns it.
+
 ## Done
 
 - [x] **Companion beside the attended plank** — the companion renders next to the plank it belongs to,

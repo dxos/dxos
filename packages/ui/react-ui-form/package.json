@@ -21,6 +21,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./annotations": {
+      "source": "./src/annotations.ts",
+      "types": "./dist/types/src/annotations.d.ts",
+      "import": "./dist/lib/annotations.mjs"
+    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
@@ -61,8 +66,6 @@
   },
   "devDependencies": {
     "@codemirror/lang-xml": "catalog:",
-    "@dxos/effect-proto": "workspace:*",
-    "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",

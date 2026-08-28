@@ -90,9 +90,8 @@ export type GetCronTriggersResponse = {
  * trigger's ECHO object id so a client can correlate it with the replicated
  * `Trigger` object in its local database.
  *
- * TODO(edge): The backing endpoint (`GET /triggers/{spaceId}`, see
- * {@link EdgeHttpClient.getSpaceTriggers}) is a proposal and is not yet
- * implemented server-side.
+ * Served by compute-service at `GET /compute/triggers/{spaceId}` (see
+ * {@link EdgeHttpClient.getSpaceTriggers}).
  */
 export type EdgeTriggerStatus = {
   /** ECHO object id of the trigger. */
@@ -114,9 +113,9 @@ export type EdgeTriggerStatus = {
 };
 
 /**
- * Response of the proposed `GET /triggers/{spaceId}` endpoint: the full list of
- * triggers registered on a space's EDGE dispatcher, with runtime status. Polled
- * by the remote trigger monitor to surface edge trigger state.
+ * Response of `GET /compute/triggers/{spaceId}`: the full list of triggers registered on a space's
+ * EDGE dispatcher, with runtime status. Polled by the remote trigger monitor to surface edge
+ * trigger state.
  */
 export type GetSpaceTriggersResponse = {
   /** Whether the space's edge dispatcher is active. */
@@ -159,7 +158,12 @@ export class EdgeHttpClient extends BaseHttpClient {
     body: CreateAgentRequestBody,
     args?: EdgeHttpCallArgs,
   ): Promise<CreateAgentResponseBody> {
-    return this._call(ctx, new URL('/agents/create', this.baseUrl), { ...args, method: 'POST', body, auth: true });
+    return this._call(ctx, new URL('/identity/agents/create', this.baseUrl), {
+      ...args,
+      method: 'POST',
+      body,
+      auth: true,
+    });
   }
 
   public getAgentStatus(
@@ -167,7 +171,7 @@ export class EdgeHttpClient extends BaseHttpClient {
     request: { ownerIdentityDid: string },
     args?: EdgeHttpCallArgs,
   ): Promise<GetAgentStatusResponseBody> {
-    return this._call(ctx, new URL(`/users/${request.ownerIdentityDid}/agent/status`, this.baseUrl), {
+    return this._call(ctx, new URL(`/identity/users/${request.ownerIdentityDid}/agent/status`, this.baseUrl), {
       ...args,
       method: 'GET',
       auth: true,
@@ -183,7 +187,7 @@ export class EdgeHttpClient extends BaseHttpClient {
     spaceId: SpaceId,
     args?: EdgeHttpCallArgs,
   ): Promise<GetNotarizationResponseBody> {
-    return this._call(ctx, new URL(`/spaces/${spaceId}/notarization`, this.baseUrl), {
+    return this._call(ctx, new URL(`/db/spaces/${spaceId}/notarization`, this.baseUrl), {
       ...args,
       method: 'GET',
       auth: true,
@@ -196,7 +200,7 @@ export class EdgeHttpClient extends BaseHttpClient {
     body: PostNotarizationRequestBody,
     args?: EdgeHttpCallArgs,
   ): Promise<void> {
-    await this._call(ctx, new URL(`/spaces/${spaceId}/notarization`, this.baseUrl), {
+    await this._call(ctx, new URL(`/db/spaces/${spaceId}/notarization`, this.baseUrl), {
       ...args,
       body,
       method: 'POST',
@@ -213,7 +217,25 @@ export class EdgeHttpClient extends BaseHttpClient {
     body: RecoverIdentityRequest,
     args?: EdgeHttpCallArgs,
   ): Promise<RecoverIdentityResponseBody> {
-    return this._call(ctx, new URL('/identity/recover', this.baseUrl), { ...args, body, method: 'POST' });
+    return this._call(ctx, new URL('/db/identity/recover', this.baseUrl), { ...args, body, method: 'POST' });
+  }
+
+  /**
+   * Names the space's root document, which edge cannot derive, and returns the root in force —
+   * not necessarily the one offered, since the record is write-once.
+   */
+  public async recordSpaceRoot(
+    ctx: Context,
+    spaceId: SpaceId,
+    body: { rootDocumentUrl: string },
+    args?: EdgeHttpCallArgs,
+  ): Promise<{ rootDocumentUrl: string }> {
+    return this._call(ctx, new URL(`/db/spaces/${spaceId}/root`, this.baseUrl), {
+      ...args,
+      body,
+      method: 'POST',
+      auth: true,
+    });
   }
 
   //
@@ -226,7 +248,7 @@ export class EdgeHttpClient extends BaseHttpClient {
     body: JoinSpaceRequest,
     args?: EdgeHttpCallArgs,
   ): Promise<JoinSpaceResponseBody> {
-    return this._call(ctx, new URL(`/spaces/${spaceId}/join`, this.baseUrl), {
+    return this._call(ctx, new URL(`/db/spaces/${spaceId}/join`, this.baseUrl), {
       ...args,
       body,
       method: 'POST',
@@ -271,7 +293,7 @@ export class EdgeHttpClient extends BaseHttpClient {
   //
 
   async createSpace(ctx: Context, body: CreateSpaceRequest, args?: EdgeHttpCallArgs): Promise<CreateSpaceResponseBody> {
-    return this._call(ctx, new URL('/spaces/create', this.baseUrl), { ...args, body, method: 'POST', auth: true });
+    return this._call(ctx, new URL('/db/spaces/create', this.baseUrl), { ...args, body, method: 'POST', auth: true });
   }
 
   //
@@ -289,7 +311,7 @@ export class EdgeHttpClient extends BaseHttpClient {
     invariant(queueId, 'queueId required');
     return this._call(
       ctx,
-      createUrl(new URL(`/spaces/${subspaceTag}/${spaceId}/queue/${queueId}/query`, this.baseUrl), {
+      createUrl(new URL(`/db/spaces/${subspaceTag}/${spaceId}/queue/${queueId}/query`, this.baseUrl), {
         after: query.after,
         before: query.before,
         limit: query.limit,
@@ -308,7 +330,7 @@ export class EdgeHttpClient extends BaseHttpClient {
     objects: unknown[],
     args?: EdgeHttpCallArgs,
   ): Promise<void> {
-    return this._call(ctx, new URL(`/spaces/${subspaceTag}/${spaceId}/queue/${queueId}`, this.baseUrl), {
+    return this._call(ctx, new URL(`/db/spaces/${subspaceTag}/${spaceId}/queue/${queueId}`, this.baseUrl), {
       ...args,
       body: { objects },
       method: 'POST',
@@ -326,7 +348,7 @@ export class EdgeHttpClient extends BaseHttpClient {
   ): Promise<void> {
     return this._call(
       ctx,
-      createUrl(new URL(`/spaces/${subspaceTag}/${spaceId}/queue/${queueId}`, this.baseUrl), {
+      createUrl(new URL(`/db/spaces/${subspaceTag}/${spaceId}/queue/${queueId}`, this.baseUrl), {
         ids: objectIds.join(','),
       }),
       { ...args, method: 'DELETE', auth: true },
@@ -342,7 +364,7 @@ export class EdgeHttpClient extends BaseHttpClient {
    * callers pass a lowercase hex SHA-256 digest (extracted from an `ni:` URI by the edge backend).
    */
   public getBlobUrl(key: string): URL {
-    return new URL(`/api/file/${encodeURIComponent(key)}`, this.baseUrl);
+    return new URL(`/blob/file/${encodeURIComponent(key)}`, this.baseUrl);
   }
 
   /**
@@ -433,7 +455,7 @@ export class EdgeHttpClient extends BaseHttpClient {
         filename,
       );
     }
-    const path = ['functions', ...(pathParts.functionId ? [pathParts.functionId] : [])].join('/');
+    const path = ['/compute/functions', ...(pathParts.functionId ? [pathParts.functionId] : [])].join('/');
     return this._call(ctx, new URL(path, this.baseUrl), {
       ...args,
       body: formData,
@@ -444,7 +466,7 @@ export class EdgeHttpClient extends BaseHttpClient {
   }
 
   public async listFunctions(ctx: Context, args?: EdgeHttpCallArgs): Promise<any> {
-    return this._call(ctx, new URL('/functions', this.baseUrl), { ...args, method: 'GET', auth: true });
+    return this._call(ctx, new URL('/compute/functions', this.baseUrl), { ...args, method: 'GET', auth: true });
   }
 
   public async invokeFunction(
@@ -459,7 +481,7 @@ export class EdgeHttpClient extends BaseHttpClient {
     input: unknown,
     args?: EdgeHttpCallArgs,
   ): Promise<any> {
-    const url = new URL(`/functions/${params.functionId}`, this.baseUrl);
+    const url = new URL(`/compute/functions/${params.functionId}`, this.baseUrl);
     if (params.version) {
       url.searchParams.set('version', params.version);
     }
@@ -486,7 +508,7 @@ export class EdgeHttpClient extends BaseHttpClient {
     input: any,
     args?: EdgeHttpCallArgs,
   ): Promise<ExecuteWorkflowResponseBody> {
-    return this._call(ctx, new URL(`/workflows/${spaceId}/${graphId}`, this.baseUrl), {
+    return this._call(ctx, new URL(`/compute/workflows/${spaceId}/${graphId}`, this.baseUrl), {
       ...args,
       body: input,
       method: 'POST',
@@ -499,10 +521,14 @@ export class EdgeHttpClient extends BaseHttpClient {
   //
 
   public async getCronTriggers(ctx: Context, spaceId: SpaceId): Promise<GetCronTriggersResponse> {
-    return this._call<GetCronTriggersResponse>(ctx, new URL(`/functions/${spaceId}/triggers/crons`, this.baseUrl), {
-      method: 'GET',
-      auth: true,
-    });
+    return this._call<GetCronTriggersResponse>(
+      ctx,
+      new URL(`/compute/functions/${spaceId}/triggers/crons`, this.baseUrl),
+      {
+        method: 'GET',
+        auth: true,
+      },
+    );
   }
 
   public async getTriggersDispatcherStatus(
@@ -510,7 +536,7 @@ export class EdgeHttpClient extends BaseHttpClient {
     spaceId: SpaceId,
     args?: EdgeHttpCallArgs,
   ): Promise<TriggersDispatcherStatus> {
-    return this._call<TriggersDispatcherStatus>(ctx, new URL(`/triggers/${spaceId}/status`, this.baseUrl), {
+    return this._call<TriggersDispatcherStatus>(ctx, new URL(`/compute/triggers/${spaceId}/status`, this.baseUrl), {
       ...args,
       method: 'GET',
       auth: true,
@@ -518,7 +544,7 @@ export class EdgeHttpClient extends BaseHttpClient {
   }
 
   public async forceRunCronTrigger(ctx: Context, spaceId: SpaceId, triggerId: ObjectId) {
-    return this._call(ctx, new URL(`/functions/${spaceId}/triggers/crons/${triggerId}/run`, this.baseUrl), {
+    return this._call(ctx, new URL(`/compute/functions/${spaceId}/triggers/crons/${triggerId}/run`, this.baseUrl), {
       method: 'POST',
       auth: true,
     });
@@ -529,7 +555,7 @@ export class EdgeHttpClient extends BaseHttpClient {
    * `runAgain` continuation chain. The trigger stays enabled, so its schedule keeps firing.
    */
   public async cancelTriggerRun(ctx: Context, spaceId: SpaceId, triggerId: ObjectId) {
-    return this._call(ctx, new URL(`/functions/${spaceId}/triggers/crons/${triggerId}/cancel`, this.baseUrl), {
+    return this._call(ctx, new URL(`/compute/functions/${spaceId}/triggers/crons/${triggerId}/cancel`, this.baseUrl), {
       method: 'POST',
       auth: true,
     });
@@ -546,7 +572,7 @@ export class EdgeHttpClient extends BaseHttpClient {
     spaceId: SpaceId,
     args?: EdgeHttpCallArgs,
   ): Promise<GetSpaceTriggersResponse> {
-    return this._call<GetSpaceTriggersResponse>(ctx, new URL(`/triggers/${spaceId}`, this.baseUrl), {
+    return this._call<GetSpaceTriggersResponse>(ctx, new URL(`/compute/triggers/${spaceId}`, this.baseUrl), {
       ...args,
       method: 'GET',
       auth: true,
@@ -563,7 +589,7 @@ export class EdgeHttpClient extends BaseHttpClient {
     body: QueryRequestProto,
     args?: EdgeHttpCallArgs,
   ): Promise<QueryResponseProto> {
-    return this._call(ctx, new URL(`/spaces/${spaceId}/exec-query`, this.baseUrl), {
+    return this._call(ctx, new URL(`/db/spaces/${spaceId}/exec-query`, this.baseUrl), {
       ...args,
       body,
       method: 'POST',
@@ -607,7 +633,7 @@ export class EdgeHttpClient extends BaseHttpClient {
     body: ImportBundleRequest,
     args?: EdgeHttpCallArgs,
   ): Promise<void> {
-    return this._call(ctx, new URL(`/spaces/${spaceId}/import`, this.baseUrl), {
+    return this._call(ctx, new URL(`/db/spaces/${spaceId}/import`, this.baseUrl), {
       ...args,
       body,
       method: 'PUT',
@@ -621,7 +647,7 @@ export class EdgeHttpClient extends BaseHttpClient {
     body: ExportBundleRequest,
     args?: EdgeHttpCallArgs,
   ): Promise<ExportBundleResponse> {
-    return this._call(ctx, new URL(`/spaces/${spaceId}/export`, this.baseUrl), {
+    return this._call(ctx, new URL(`/db/spaces/${spaceId}/export`, this.baseUrl), {
       ...args,
       body,
       method: 'POST',

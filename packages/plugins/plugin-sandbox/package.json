@@ -15,8 +15,14 @@
   "type": "module",
   "imports": {
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "default": "./src/capabilities/index.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
     "#meta": {
@@ -62,6 +68,11 @@
       "source": "./src/SandboxPlugin.ts",
       "types": "./dist/types/src/SandboxPlugin.d.ts",
       "import": "./dist/lib/SandboxPlugin.mjs"
+    },
+    "./SandboxOperation": {
+      "source": "./src/types/SandboxOperation.ts",
+      "types": "./dist/types/src/types/SandboxOperation.d.ts",
+      "import": "./dist/lib/SandboxOperation.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -72,6 +83,9 @@
       ],
       "SandboxEvents": [
         "dist/types/src/types/SandboxEvents.d.ts"
+      ],
+      "SandboxOperation": [
+        "dist/types/src/types/SandboxOperation.d.ts"
       ]
     }
   },

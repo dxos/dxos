@@ -18,7 +18,7 @@ import { type FeedWrapper, writeMessages } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type IdentityDid, PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import {
   AdmittedFeed,
@@ -44,7 +44,7 @@ export type IdentityProps = {
   presence?: Presence;
 
   edgeConnection?: EdgeConnection;
-  edgeFeatures?: Runtime.Client.EdgeFeatures;
+  edgeFeatures?: Runtime_Client_EdgeFeatures;
 };
 
 /**
@@ -57,6 +57,7 @@ export class Identity {
   private readonly _deviceStateMachine: DeviceStateMachine;
   private readonly _profileStateMachine: ProfileStateMachine;
   private readonly _edgeFeedReplicator?: EdgeFeedReplicator = undefined;
+  private _haloSpaceRootUrl?: string = undefined;
 
   public readonly authVerifier: TrustedKeySetAuthVerifier;
 
@@ -154,6 +155,18 @@ export class Identity {
 
   get haloSpaceId() {
     return this.space.id;
+  }
+
+  /**
+   * Automerge URL of the halo space root, once anchored. Handed to a joining device so it replicates
+   * the credential chain as a document; undefined while the space is still feed-only.
+   */
+  get haloSpaceRootUrl(): string | undefined {
+    return this._haloSpaceRootUrl;
+  }
+
+  setHaloSpaceRootUrl(url: string): void {
+    this._haloSpaceRootUrl = url;
   }
 
   get haloSpaceKey() {

@@ -3,11 +3,9 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { Connector, MailSend, OperationHandler } from '#capabilities';
+import { Connector, MailSend, OperationHandler, Translations } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
 
 /**
  * Headless Google provider: contributes the Gmail / Calendar / Contacts connectors, Gmail's
@@ -16,10 +14,10 @@ import { translations } from '#translations';
  * `@dxos/plugin-inbox`.
  */
 export const GooglePlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(Connector),
   Plugin.addModule(MailSend),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 
