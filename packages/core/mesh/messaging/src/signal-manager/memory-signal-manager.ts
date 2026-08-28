@@ -8,9 +8,11 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols/proto';
+import { decodeCompat } from '@dxos/protocols/buf-shape-compat';
+import { ReliablePayloadSchema } from '@dxos/protocols/buf/dxos/mesh/messaging_pb';
 import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { type QueryRequest } from '@dxos/protocols/proto/dxos/edge/signal';
+import { type ReliablePayload } from '@dxos/protocols/proto/dxos/mesh/messaging';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import {
@@ -254,7 +256,7 @@ const dec = (payload: Any) => {
     return {};
   }
 
-  const relPayload = schema.getCodecForType('dxos.mesh.messaging.ReliablePayload').decode(payload.value);
+  const relPayload = decodeCompat<ReliablePayload>(ReliablePayloadSchema, payload.value);
 
   if (typeof relPayload?.payload?.data === 'object') {
     return { payload: Object.keys(relPayload?.payload?.data)[0], sessionId: relPayload?.payload?.sessionId };

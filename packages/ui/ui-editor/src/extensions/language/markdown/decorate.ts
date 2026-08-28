@@ -17,6 +17,18 @@ import { image } from './image';
 import { bulletListIndentationWidth, formattingStyles, orderedListIndentationWidth } from './styles';
 import { table } from './table';
 
+/** The anchor every link form renders as, so a bare address is styled like a bracketed one. */
+const linkMark = (url: string, withButton = false) =>
+  Decoration.mark({
+    tagName: 'a',
+    attributes: {
+      class: withButton ? 'cm-link cm-link-with-button' : 'cm-link',
+      href: url,
+      rel: 'noreferrer',
+      target: '_blank',
+    },
+  });
+
 export type NodeData = { name: 'Link'; url: string } | { name: 'Image'; url: string };
 
 export interface DecorateOptions {
@@ -227,6 +239,21 @@ const uncheckedTask = Decoration.replace({ widget: new CheckboxWidget(false) });
 /**
  * Checks if cursor is inside text.
  */
+/** GFM autolinks match schemeless hosts and bare email addresses, which are not usable as `href`. */
+const normalizeUrl = (text: string): string | undefined => {
+  if (/^[a-z][a-z0-9+.-]*:/i.test(text)) {
+    return text;
+  }
+  if (/^www\./i.test(text)) {
+    return `https://${text}`;
+  }
+  if (text.includes('@')) {
+    return `mailto:${text}`;
+  }
+
+  return undefined;
+};
+
 const editingRange = (state: EditorState, range: { from: number; to: number }, focus: boolean) => {
   const {
     readOnly,
@@ -531,15 +558,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           decoRanges.push({
             from: marks[0].to,
             to: !editing && options.renderLinkButton ? node.to : marks[1].from,
-            deco: Decoration.mark({
-              tagName: 'a',
-              attributes: {
-                class: options.renderLinkButton ? 'cm-link cm-link-with-button' : 'cm-link',
-                href: url,
-                rel: 'noreferrer',
-                target: '_blank',
-              },
-            }),
+            deco: linkMark(url, !!options.renderLinkButton),
           });
 
           if (!editing) {
@@ -552,6 +571,47 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
                   })
                 : hide,
             });
+          }
+        }
+        break;
+      }
+
+      //
+      // Bare URLs (GFM autolink) and `<url>` autolinks.
+      // Autolink > [LinkMark, URL, LinkMark] | URL
+      //
+
+      case 'URL': {
+        // The `[label](url)` form is decorated by the `Link` case above, which owns the whole node.
+        const parent = node.node.parent;
+        if (parent?.name === 'Link' || parent?.name === 'Image') {
+          break;
+        }
+
+        const text = state.sliceDoc(node.from, node.to);
+        const url = normalizeUrl(text);
+        if (!url || options.skip?.({ name: 'Link', url })) {
+          break;
+        }
+
+        decoRanges.push({
+          from: node.from,
+          to: node.to,
+          deco: Decoration.mark({
+            tagName: 'a',
+            attributes: {
+              class: 'cm-link',
+              href: url,
+              rel: 'noreferrer',
+              target: '_blank',
+            },
+          }),
+        });
+
+        // The angle brackets of `<url>` are markup, so they are hidden unless the cursor is inside.
+        if (parent?.name === 'Autolink' && !editingRange(state, parent, focus)) {
+          for (const mark of parent.getChildren('LinkMark')) {
+            atomicDecoRanges.push({ from: mark.from, to: mark.to, deco: hide });
           }
         }
         break;

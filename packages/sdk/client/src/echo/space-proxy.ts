@@ -384,7 +384,7 @@ export class SpaceProxy implements Space, CustomInspectable {
 
     if (this._initialized) {
       // Transition onto new automerge root.
-      const automergeRoot = space.pipeline?.spaceRootUrl;
+      const automergeRoot = space.pipeline?.directoryUrl;
       if (automergeRoot) {
         log('set space root', { spaceKey: this.key, automergeRoot });
         // NOOP if the root is the same.
@@ -429,7 +429,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     this._databaseOpen = true;
 
     {
-      const automergeRoot = this._data.pipeline?.spaceRootUrl;
+      const automergeRoot = this._data.pipeline?.directoryUrl;
       if (automergeRoot !== undefined) {
         await this._db.setSpaceRoot(automergeRoot);
       } else {

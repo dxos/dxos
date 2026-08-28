@@ -5,7 +5,6 @@
 import {
   type AnyDocumentId,
   type AutomergeUrl,
-  type DocHandle,
   type DocumentId,
   interpretAsDocumentId,
   isValidAutomergeUrl,
@@ -18,7 +17,15 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { DeferredTask, scheduleTask, sleep } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
-import { DatabaseDirectory, EntityStructure, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
+import {
+  DatabaseDirectory,
+  EntityStructure,
+  SPACE_ROOT_TYPE,
+  SpaceDocVersion,
+  type SpaceRoot,
+  createIdFromSpaceKey,
+  isSpaceRoot,
+} from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
 import { IndexEngine, type IndexingResult } from '@dxos/index-core';
@@ -34,6 +41,7 @@ import {
   AutomergeHost,
   type AutomergeReplicator,
   type CreateDocOptions,
+  type DocumentLease,
   EchoDataMonitor,
   type EchoDataStats,
   type LoadDocOptions,
@@ -49,7 +57,7 @@ import { FeedDataSource } from './feed-data-source';
 import { hintFromIndexingResult } from './invalidation-hint';
 import { LocalFeedServiceImpl } from './local-feed-service';
 import { QueryServiceImpl } from './query-service';
-import { type SpaceDocumentListUpdatedEvent, SpaceStateManager } from './space-state-manager';
+import { type SpaceDocumentListUpdatedEvent, type SpaceRootRefs, SpaceStateManager } from './space-state-manager';
 
 /**
  * Documents walked between event-loop yields during a reachability traversal. Bounds how long one
@@ -416,12 +424,17 @@ export class EchoHost extends Resource {
   }
 
   /**
-   * Loads the document handle from the repo and waits for it to be ready.
+   * Leases the document and waits for it to be ready. Dispose the lease when done with it.
    *
    * @returns `null` when the document is not available yet (e.g. storage-only load with no local chunks).
    */
-  async loadDoc<T>(ctx: Context, documentId: AnyDocumentId, opts?: LoadDocOptions): Promise<DocHandle<T> | null> {
-    return await this._automergeHost.loadDoc(ctx, documentId, opts);
+  async loadDoc<T>(ctx: Context, documentId: AnyDocumentId, opts?: LoadDocOptions): Promise<DocumentLease<T> | null> {
+    return await this._automergeHost.loadDoc<T>(ctx, documentId, opts);
+  }
+
+  /** Leases the document without waiting for it to load. Dispose the lease when done with it. */
+  acquireDoc<T>(documentId: AnyDocumentId): DocumentLease<T> {
+    return this._automergeHost.acquireDoc<T>(documentId);
   }
 
   async exportDoc(id: AnyDocumentId): Promise<Uint8Array> {
@@ -431,8 +444,8 @@ export class EchoHost extends Resource {
   /**
    * Create new persisted document.
    */
-  async createDoc<T>(initialValue?: T, opts?: CreateDocOptions): Promise<DocHandle<T>> {
-    return this._automergeHost.createDoc(initialValue, opts);
+  async createDoc<T>(initialValue?: T, opts?: CreateDocOptions): Promise<DocumentLease<T>> {
+    return this._automergeHost.createDoc<T>(initialValue, opts);
   }
 
   /**
@@ -442,7 +455,8 @@ export class EchoHost extends Resource {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     const spaceId = await createIdFromSpaceKey(spaceKey);
 
-    const automergeRoot = await this._automergeHost.createDoc<DatabaseDirectory>({
+    // Released once the root is assigned: `updateSpaceRoot` takes the lease the space keeps.
+    using automergeRoot = await this._automergeHost.createDoc<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
       // spaceKey is deprecated but still written so older clients can resolve the owning space.
       access: { spaceId, spaceKey: spaceKey.toHex() },
@@ -457,6 +471,141 @@ export class EchoHost extends Resource {
     return await this.updateSpaceRoot(ctx, spaceId, automergeRoot.url);
   }
 
+  /**
+   * Creates a space anchored on an immutable space root document, which carries the credentials
+   * document. The id still derives from the space genesis key, exactly as a feed-backed space's
+   * does — the root changes where credentials live, not how the space is identified.
+   *
+   * NOTE: `createSpaceRoot` above creates the DIRECTORY, which predates this naming.
+   */
+  async createSpaceWithRootDocument(ctx: Context, spaceKey: PublicKey): Promise<CreatedSpace> {
+    invariant(this._lifecycleState === LifecycleState.OPEN);
+
+    const spaceId = await createIdFromSpaceKey(spaceKey);
+    // Both released here: the directory's lease is retaken by `updateSpaceRoot`, and the space root
+    // document is only written once.
+    using rootHandle = await this._automergeHost.createDoc<Partial<SpaceRoot>>({});
+
+    using directoryHandle = await this._automergeHost.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      // spaceKey is deprecated but still written so older clients can resolve the owning space.
+      access: { spaceId, spaceKey: spaceKey.toHex() },
+      objects: {},
+      links: {},
+    });
+
+    rootHandle.change((doc: Partial<SpaceRoot>) => {
+      doc.type = SPACE_ROOT_TYPE;
+      doc.spaceId = spaceId;
+      doc.directory = directoryHandle.url;
+    });
+
+    await this._automergeHost.flush(ctx, { documentIds: [rootHandle.documentId, directoryHandle.documentId] });
+
+    const directory = await this.updateSpaceRoot(ctx, spaceId, directoryHandle.url);
+    await this._spaceStateManager.setSpaceRootRefs(spaceId, {
+      spaceRootDocUrl: rootHandle.url,
+    });
+
+    return { spaceId, spaceRootUrl: rootHandle.url, directory };
+  }
+
+  /**
+   * Mints a space root over a legacy space's existing directory, keeping the space id: it was derived
+   * from the space key and cannot be reproduced from a document, which is what `spaceKey` derivation
+   * records. Idempotent — a space that already has a root keeps it, so a re-run cannot fork the anchor.
+   */
+  async migrateSpaceToRootDocument(ctx: Context, spaceId: SpaceId): Promise<SpaceRootRefs | undefined> {
+    invariant(this._lifecycleState === LifecycleState.OPEN);
+
+    const existing = this._spaceStateManager.getSpaceRootRefs(spaceId);
+    if (existing) {
+      return existing;
+    }
+
+    // A space whose directory is not assigned yet (an accepted space still catching up) has nothing to
+    // anchor; it migrates on a later load rather than failing here.
+    const directory = this._spaceStateManager.getRootBySpaceId(spaceId);
+    if (!directory) {
+      return undefined;
+    }
+
+    using rootHandle = await this._automergeHost.createDoc<Partial<SpaceRoot>>({});
+    rootHandle.change((doc: Partial<SpaceRoot>) => {
+      doc.type = SPACE_ROOT_TYPE;
+      doc.spaceId = spaceId;
+      doc.directory = directory.url;
+    });
+
+    await this._automergeHost.flush(ctx, { documentIds: [rootHandle.documentId] });
+
+    const refs: SpaceRootRefs = { spaceRootDocUrl: rootHandle.url };
+    await this._spaceStateManager.setSpaceRootRefs(spaceId, refs);
+    return refs;
+  }
+
+  /**
+   * Links an already-created credentials document from the space root, once. Idempotent — the link is
+   * what the per-space source flip keys off, so a second document would fork the chain. The document
+   * itself is built a layer up, where credential encoding lives.
+   */
+  /**
+   * Adopts a space root minted elsewhere, so a joining peer records the root the space already has
+   * rather than minting a second one over it. Idempotent; the root must name this space.
+   */
+  async adoptSpaceRoot(ctx: Context, spaceId: SpaceId, spaceRootUrl: AutomergeUrl): Promise<SpaceRootRefs> {
+    invariant(this._lifecycleState === LifecycleState.OPEN);
+
+    const existing = this._spaceStateManager.getSpaceRootRefs(spaceId);
+    if (existing) {
+      invariant(existing.spaceRootDocUrl === spaceRootUrl, `Space already anchored on another root: ${spaceId}`);
+      return existing;
+    }
+
+    // Local-only: a caller adopting a root it was merely told about must not block on the network.
+    using rootHandle = await this._automergeHost.loadDoc<SpaceRoot>(ctx, spaceRootUrl, { fetchFromNetwork: false });
+    const root = rootHandle?.doc();
+    invariant(root && isSpaceRoot(root), 'Space root document must load.');
+    invariant(root.spaceId === spaceId, `Space root names another space: ${root.spaceId}`);
+
+    // The directory travels with the root, so a peer that has never opened the space gets one here.
+    if (!this._spaceStateManager.getRootBySpaceId(spaceId)) {
+      await this.updateSpaceRoot(ctx, spaceId, root.directory);
+    }
+
+    const refs: SpaceRootRefs = {
+      spaceRootDocUrl: spaceRootUrl,
+      credentialsDocUrl: root.credentials,
+    };
+    await this._spaceStateManager.setSpaceRootRefs(spaceId, refs);
+    return refs;
+  }
+
+  async setCredentialsDocument(ctx: Context, spaceId: SpaceId, credentialsDocUrl: AutomergeUrl): Promise<AutomergeUrl> {
+    invariant(this._lifecycleState === LifecycleState.OPEN);
+
+    const refs = this._spaceStateManager.getSpaceRootRefs(spaceId);
+    invariant(refs, `Space has no root document: ${spaceId}`);
+    if (refs.credentialsDocUrl) {
+      return refs.credentialsDocUrl;
+    }
+
+    using rootHandle = await this._automergeHost.loadDoc<SpaceRoot>(ctx, refs.spaceRootDocUrl);
+    invariant(rootHandle, 'Space root document must load before linking credentials.');
+    rootHandle.change((doc: SpaceRoot) => {
+      doc.credentials = credentialsDocUrl;
+    });
+
+    await this._automergeHost.flush(ctx, { documentIds: [rootHandle.documentId] });
+    await this._spaceStateManager.setSpaceRootRefs(spaceId, { ...refs, credentialsDocUrl });
+    return credentialsDocUrl;
+  }
+
+  /** References carried by the space root document, or undefined for a space that predates it. */
+  getSpaceRootRefs(spaceId: SpaceId): SpaceRootRefs | undefined {
+    return this._spaceStateManager.getSpaceRootRefs(spaceId);
+  }
+
   get spaces(): ReadonlyArray<{ spaceId: SpaceId; rootDocUrl: AutomergeUrl }> {
     return this._spaceStateManager.getPersistedSpaces();
   }
@@ -466,13 +615,13 @@ export class EchoHost extends Resource {
     const documentId = this._spaceStateManager.getSpaceRootDocumentId(spaceId);
     invariant(documentId, `Space root document not found for space: ${spaceId}`);
     const url = `automerge:${documentId}` as AutomergeUrl;
-    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(ctx, url, {
+    const lease = await this._automergeHost.loadDoc<DatabaseDirectory>(ctx, url, {
       fetchFromNetwork: true,
     });
-    invariant(handle, 'Space root document must load before assignment.');
-    const query = this._automergeHost.findWithProgress<DatabaseDirectory>(handle.documentId);
+    invariant(lease, 'Space root document must load before assignment.');
 
-    return this._spaceStateManager.assignRootToSpace(spaceId, query);
+    // The lease is handed over: the space's root stays resident for as long as the space is open.
+    return this._spaceStateManager.assignRootToSpace(spaceId, lease);
   }
 
   async updateSpaceRoot(ctx: Context, spaceId: SpaceId, automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
@@ -481,13 +630,13 @@ export class EchoHost extends Resource {
     if (currentRoot && currentRoot.url === automergeUrl) {
       return currentRoot;
     }
-    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(ctx, automergeUrl, {
+    const lease = await this._automergeHost.loadDoc<DatabaseDirectory>(ctx, automergeUrl, {
       fetchFromNetwork: true,
     });
-    invariant(handle, 'Space root document must load before assignment.');
-    const query = this._automergeHost.findWithProgress<DatabaseDirectory>(handle.documentId);
+    invariant(lease, 'Space root document must load before assignment.');
 
-    return this._spaceStateManager.assignRootToSpace(spaceId, query);
+    // The lease is handed over: the space's root stays resident for as long as the space is open.
+    return this._spaceStateManager.assignRootToSpace(spaceId, lease);
   }
 
   async closeSpace(spaceId: SpaceId): Promise<void> {
@@ -740,10 +889,10 @@ export class EchoHost extends Resource {
 
   async #loadFromStorage(documentId: DocumentId): Promise<DatabaseDirectory | null> {
     try {
-      const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, documentId, {
+      using lease = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, documentId, {
         fetchFromNetwork: false,
       });
-      return handle?.doc() ?? null;
+      return lease?.doc() ?? null;
     } catch (err) {
       log.warn('reclamation: document failed to load, treating as opaque', { documentId, err });
       return null;
@@ -797,10 +946,10 @@ export class EchoHost extends Resource {
       // Storage-only: `stats()` is a local metric and must always resolve. A default load would
       // wait on the network for a linked document that is not on disk, hanging `stats()` for an
       // offline space; an unavailable document is simply not counted.
-      const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, documentId, {
+      using lease = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, documentId, {
         fetchFromNetwork: false,
       });
-      const doc = handle?.doc();
+      const doc = lease?.doc();
       if (doc) {
         addCounts(doc);
       }
@@ -831,10 +980,10 @@ export class EchoHost extends Resource {
     const linkedDocs = new Map<string, DatabaseDirectory>();
     for (const [objectId, url] of Object.entries(rootDoc.links ?? {})) {
       const documentId = interpretAsDocumentId(url.toString() as AutomergeUrl);
-      const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, documentId, {
+      using lease = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, documentId, {
         fetchFromNetwork: false,
       });
-      const doc = handle?.doc();
+      const doc = lease?.doc();
       if (!doc) {
         // A storage-only miss is ambiguous: the document may be genuinely gone, or it may be live
         // data this host has not replicated yet. Retain the link — unlinking here would sync the
@@ -859,7 +1008,7 @@ export class EchoHost extends Resource {
       return { unlinkedObjects: 0, removedInlineObjects: [] };
     }
 
-    root.handle.change((draft: DatabaseDirectory) => {
+    root.change((draft: DatabaseDirectory) => {
       for (const id of deletedInlineIds) {
         if (draft.objects) {
           delete draft.objects[id];
@@ -891,10 +1040,10 @@ export class EchoHost extends Resource {
       if (reachable.has(documentId)) {
         continue;
       }
-      const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, documentId, {
+      using lease = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, documentId, {
         fetchFromNetwork: false,
       });
-      const doc = handle?.doc();
+      const doc = lease?.doc();
       if (!doc) {
         continue;
       }
@@ -1078,6 +1227,16 @@ const _mergeInto = (acc: MutableIndexingAccumulator, r: IndexingResult): void =>
 export type EchoStatsDiagnostic = {
   loadedDocsCount: number;
   dataStats: EchoDataStats;
+};
+
+/** A space created from a space root document, before any credentials exist for it. */
+export type CreatedSpace = {
+  spaceId: SpaceId;
+
+  /** Automerge URL of the immutable root; goes into the `SpaceMember` credential as `spaceRootUrl`. */
+  spaceRootUrl: AutomergeUrl;
+
+  directory: DatabaseRoot;
 };
 
 export type EchoHostLayerOptions = Pick<

@@ -8,12 +8,11 @@ import { ClientService } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
-import { Sandbox } from '#types';
+import { Sandbox, SandboxOperation } from '#types';
 
 import { createSandboxClient } from '../../services/sandbox-url';
-import { CreateSandbox } from './definitions';
 
-export default CreateSandbox.pipe(
+export default SandboxOperation.CreateSandbox.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ name, baseImage }) {
       const { db } = yield* Database.Service;

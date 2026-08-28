@@ -10,10 +10,11 @@ import * as Operation from '@dxos/compute/Operation';
 import { Blob, Database, Obj, Ref } from '@dxos/echo';
 import { File } from '@dxos/types';
 
-import { createSandboxClient } from '../../services/sandbox-url';
-import { DownloadFile } from './definitions';
+import { SandboxOperation } from '#types';
 
-export default DownloadFile.pipe(
+import { createSandboxClient } from '../../services/sandbox-url';
+
+export default SandboxOperation.DownloadFile.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ sandbox, path, dest }) {
       const { db } = yield* Database.Service;

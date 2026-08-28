@@ -48,12 +48,8 @@ export const chatLayer = ({
 }: LayerOptions): Layer.Layer<AiChatServices, ConfigError.ConfigError, ClientService> => {
   const aiServiceLayer = Match.value(provider).pipe(
     Match.when('edge', () => AiServiceTestingPreset('direct')),
-    Match.when('lmstudio', () =>
-      AiModelResolver.AiModelResolver.buildAiService.pipe(Layer.provideMerge(LMStudioResolver.make())),
-    ),
-    Match.when('ollama', () =>
-      AiModelResolver.AiModelResolver.buildAiService.pipe(Layer.provideMerge(OllamaResolver.make())),
-    ),
+    Match.when('lmstudio', () => AiModelResolver.buildAiService.pipe(Layer.provideMerge(LMStudioResolver.make()))),
+    Match.when('ollama', () => AiModelResolver.buildAiService.pipe(Layer.provideMerge(OllamaResolver.make()))),
     Match.exhaustive,
   );
 

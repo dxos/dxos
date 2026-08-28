@@ -11,7 +11,7 @@ import turbosnap from 'vite-plugin-turbosnap';
 import wasm from 'vite-plugin-wasm';
 
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
-import { IconsPlugin } from '@dxos/vite-plugin-icons';
+import { IconsPlugin, iconSymbolPattern } from '@dxos/vite-plugin-icons';
 import importSource from '@dxos/vite-plugin-import-source';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -23,7 +23,8 @@ const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
 // Single-pass `vitest run` (not `vitest watch`); `VITEST` is set in both and `VITEST_MODE` is
 // worker-only, so read the run subcommand (first positional token, not any `run`-named filter).
 const vitestSubcommand = process.argv.slice(2).find((arg) => !arg.startsWith('-'));
-const isVitestRun = isTrue(process.env.VITEST) && (vitestSubcommand === 'run' || process.argv.includes('--run'));
+const isVitest = isTrue(process.env.VITEST);
+const isVitestRun = isVitest && (vitestSubcommand === 'run' || process.argv.includes('--run'));
 
 // Browsers targeted for syntax transforms (also applied to `oxc` below so that dev-server
 // transforms downlevel syntax WebKit doesn't parse yet, e.g. `using`/`await using`).
@@ -37,6 +38,7 @@ const staticDir = resolve(baseDir, './static');
 const agentCwd = process.env.DX_AGENT_CWD;
 const iconsDir = resolve(rootDir, 'node_modules/@phosphor-icons/core/assets');
 const dxosIconsDir = resolve(rootDir, 'packages/ui/brand/assets/icons');
+const extendedIconsDir = resolve(rootDir, 'packages/ui/ui-icons/assets');
 // tldraw self-hosts its fonts/icons; plugin-tldraw points tldraw at `/assets/plugin-tldraw` and the
 // app serves them via a copy step (see composer-app `copy:assets`). Mirror that here so sketch
 // surfaces render (tldraw blocks the editor behind an asset preload).
@@ -57,8 +59,30 @@ export const modules = [
   'ui/react-primitives/*/src/**',
 ];
 
+/**
+ * Comma-separated package directories (relative to `packages/`, e.g.
+ * `ui/react-ui-task,plugins/plugin-projects`) to serve stories from; unset serves every package.
+ *
+ * Serving the whole monorepo from source is what makes a long editing session brittle: each newly
+ * crawled dependency makes Vite re-optimize and force a reload, which is what fails an in-flight
+ * story with "Failed to fetch dynamically imported module". Narrowing the set while working in one
+ * or two packages keeps source HMR (unlike `serve-fast`, which resolves `@dxos/**` from dist).
+ */
+const storyDirs = process.env.DX_STORIES?.split(',')
+  .map((entry) =>
+    entry
+      .trim()
+      .replace(/^packages\//, '')
+      .replace(/\/+$/, ''),
+  )
+  .filter(Boolean);
+
 // NOTE: Storybook test depends on relative paths.
-export const stories = modules.map((dir) => join('../../../packages', dir, storyFiles));
+export const stories = (storyDirs?.length ? storyDirs.map((dir) => `${dir}/src/**`) : modules).map((dir) =>
+  join('../../../packages', dir, storyFiles),
+);
+// Not narrowed by `DX_STORIES`: a served story renders components from packages outside the filter,
+// and every icon they reference has to be in the sprite.
 export const content = [
   ...modules.map((dir) => join(packages, dir, contentFiles)),
   join(packages, '**/dx.config.{ts,tsx,js,jsx}'),
@@ -67,6 +91,52 @@ export const content = [
 if (isTrue(process.env.DX_DEBUG)) {
   console.log(JSON.stringify({ stories, content }, null, 2));
 }
+
+/**
+ * Externals pre-bundled ahead of the crawler under `DX_FASTBUNDLE`.
+ *
+ * Vite resolves these from this package's own root, so only its direct dependency graph can be
+ * named here. The heavy libraries this list once also carried — codemirror, radix, automerge,
+ * atlaskit, `@effect/platform` — belong to the individual story packages, not to storybook-react;
+ * under pnpm's strict layout they never resolved, so Vite skipped all 30 with a "Failed to resolve
+ * dependency" warning. The cold-start scan covers them instead: it crawls every story file and
+ * finds ~450 deps unaided.
+ */
+const optimizeDepsInclude = [
+  // React.
+  'react',
+  'react-dom',
+  'react/jsx-runtime',
+  // Effect (with subpath imports).
+  'effect',
+  'effect/Effect',
+  'effect/Array',
+  'effect/Ref',
+  'effect/Option',
+  'effect/Cause',
+  'effect/Exit',
+  'effect/Layer',
+  'effect/Runtime',
+  'effect/Fiber',
+  'effect/Deferred',
+  'effect/Function',
+  'effect/HashSet',
+  'effect/PubSub',
+  'effect/Schema',
+  'effect/Context',
+  'effect/Stream',
+  'effect/Console',
+];
+
+/**
+ * Paths the dev server must not watch, appended to Vite's own defaults (`.git`, `node_modules`,
+ * `test-results`, the cache dir).
+ *
+ * Storybook resolves `@dxos/**` from source, so build output is not in the module graph — but a
+ * `moon run :build` during an editing session still writes thousands of files under these trees,
+ * and every write costs a chokidar event on a watcher already spanning the monorepo.
+ */
+const watchIgnored = ['**/dist/**', '**/out/**', '**/.moon/**', '**/temp/**', '**/.playwright-mcp/**'];
 
 // Minimal structural view of a Babel AST node for a dependency-free traversal.
 type AstNode = { type: string } & Record<string, unknown>;
@@ -220,6 +290,11 @@ export const createConfig = ({
       console.log(JSON.stringify({ config, options }, null, 2));
     }
 
+    // A human-driven `storybook dev`, as opposed to `storybook build` or the browser-mode vitest
+    // suites. Only the former survives long enough for optimizer churn to matter, and only there is
+    // an automatic reload acceptable — under vitest it would sever the test harness's connection.
+    const isInteractiveDev = options.configType !== 'PRODUCTION' && !isVitest;
+
     // NOTE: Dynamic imports seem to help avoid conflicts with storybook's internal esbuild-register usage & Vite 7.
     const { default: react } = await import('@vitejs/plugin-react');
     const { mergeConfig } = await import('vite');
@@ -288,73 +363,17 @@ export const createConfig = ({
           },
           // Vite leaks the file watcher's handles on close, hanging single-pass teardown; disable it
           // in run mode only, so interactive `storybook dev` (local + e2e) and `vitest watch` keep HMR.
-          ...(isVitestRun ? { watch: null } : {}),
+          ...(isVitestRun ? { watch: null } : { watch: { ignored: watchIgnored } }),
         },
         optimizeDeps: {
           // WASM modules.
           exclude: ['@dxos/wa-sqlite', 'manifold-3d'],
-          ...(isFastBundle && {
-            include: [
-              // React.
-              'react',
-              'react-dom',
-              'react/jsx-runtime',
-              // Effect (with subpath imports).
-              'effect',
-              'effect/Effect',
-              'effect/Array',
-              'effect/Ref',
-              'effect/Option',
-              'effect/Cause',
-              'effect/Exit',
-              'effect/Layer',
-              'effect/Runtime',
-              'effect/Fiber',
-              'effect/Deferred',
-              'effect/Function',
-              'effect/HashSet',
-              'effect/PubSub',
-              'effect/Schema',
-              'effect/Context',
-              'effect/Stream',
-              'effect/Console',
-              '@effect/platform',
-              '@effect/platform-browser',
-              // Effect AI (absorbed into the core train under `effect/unstable/ai`).
-              '@effect/ai-anthropic',
-              '@effect/ai-anthropic/AnthropicClient',
-              '@effect/ai-anthropic/AnthropicLanguageModel',
-              '@effect/ai-anthropic/AnthropicTool',
-              '@effect/ai-openai',
-              '@effect/ai-openai/OpenAiClient',
-              '@effect/ai-openai/OpenAiLanguageModel',
-              // Automerge.
-              '@automerge/automerge',
-              '@automerge/automerge-repo',
-              // CodeMirror (many files in HAR).
-              'codemirror',
-              '@codemirror/state',
-              '@codemirror/view',
-              '@codemirror/language',
-              '@codemirror/commands',
-              '@codemirror/autocomplete',
-              '@codemirror/lang-javascript',
-              '@codemirror/lang-json',
-              '@codemirror/lang-markdown',
-              '@codemirror/theme-one-dark',
-              // Radix (many requests in HAR).
-              '@radix-ui/react-dialog',
-              '@radix-ui/react-dropdown-menu',
-              '@radix-ui/react-tooltip',
-              '@radix-ui/react-scroll-area',
-              '@radix-ui/react-popover',
-              '@radix-ui/react-slot',
-              '@radix-ui/react-context-menu',
-              // Atlaskit drag-and-drop.
-              '@atlaskit/pragmatic-drag-and-drop',
-              '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator',
-            ],
-          }),
+          ...(isFastBundle && { include: optimizeDepsInclude }),
+          // A re-optimize invalidates every previously issued `?v=<hash>` URL, so a story that is
+          // mid dynamic-import when one lands dies with "Failed to fetch dynamically imported
+          // module" and renders blank until reloaded by hand. Serving the stale chunk instead lets
+          // that import finish; the full reload Vite queues right after replaces it anyway.
+          ...(isInteractiveDev && { ignoreOutdatedRequests: true }),
         },
         worker: {
           format: 'es',
@@ -455,19 +474,23 @@ export const createConfig = ({
           },
 
           IconsPlugin({
-            // The leading negative lookahead restricts the `dx` set to the `regular` weight only
-            // (custom brand SVGs have no weight variants); the `ph` set retains all Phosphor weights.
-            symbolPattern:
-              '(?!dx--[a-z]+[a-z-]*--(?:bold|duotone|fill|light|thin))(ph|dx)--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+            // Built rather than written out: `ph` carries every weight while `dx` and `px` are regular-only.
+            symbolPattern: iconSymbolPattern({ sets: ['ph', 'dx', 'px'], regularOnly: ['dx', 'px'] }),
             assetPath: (iconSet, name, variant) => {
               switch (iconSet) {
                 case 'dx':
                   return `${dxosIconsDir}/${name}.svg`;
+                case 'px':
+                  return `${extendedIconsDir}/${name}.svg`;
                 default:
                   return `${iconsDir}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`;
               }
             },
             contentPaths: content,
+            // Keeps every `PxIcons` entry in the sprite so stories paint without a round trip.
+            scanPaths: [resolve(rootDir, 'packages/ui/ui-icons/src/index.ts')],
+            // Only `px` is served: the Phosphor catalog is ~9,000 files, too many to hand to a story.
+            assets: [{ route: '/px-icons', dir: extendedIconsDir }],
             spriteFile: 'icons.svg',
           }),
 

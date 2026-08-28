@@ -54,7 +54,7 @@ const TYPES = [
 
 // Computed once at module scope (not inside the `withPluginManager` initializer, which re-runs on
 // every render) so the story doesn't spawn a fresh dedicated worker/coordinator on each re-render.
-const CLIENT_SERVICES = persistentClientServices(configPreset({ edge: 'main' }));
+const CLIENT_SERVICES = persistentClientServices(configPreset({ edge: 'preview' }));
 
 const DECORATORS = [
   withSurfaceDebug(false),

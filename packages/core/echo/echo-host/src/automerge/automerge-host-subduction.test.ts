@@ -15,7 +15,7 @@ import { describe, onTestFinished, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
-import type { CollectionId } from '@dxos/echo-protocol';
+import { type CollectionId, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/teleport/testing';
@@ -57,9 +57,83 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     const host2 = await setupAutomergeHost({ runtime });
     const handle2 = await host2.loadDoc<any>(Context.default(), url);
     invariant(handle2);
-    await handle2.whenReady();
+    await handle2.waitUntilReady();
     expect(handle2.doc()!.text).toEqual('Hello world');
     await host2.flush(Context.default());
+  });
+
+  test('a write after eviction and re-lease is persisted', async ({ expect }) => {
+    // Eviction unloads a document that may be leased again later: the fork's subduction source has
+    // to re-attach to the new handle, or every subsequent write is dropped on the floor.
+    const { runtime, dispose } = createRuntime();
+    onTestFinished(() => dispose());
+    const host = await setupAutomergeHost({ runtime });
+
+    const created = await host.createDoc<any>({ text: 'first' });
+    const documentId = created.documentId;
+    const url = created.url;
+    await host.flush(Context.default());
+    await waitForSubductionSave();
+
+    created[Symbol.dispose]();
+    await host.drainEvictions();
+    expect(host.loadedDocumentIds).not.toContain(documentId);
+
+    using reacquired = host.acquireDoc<any>(documentId);
+    await reacquired.waitUntilReady();
+    reacquired.change((doc: any) => {
+      doc.text = 'second';
+    });
+    await host.flush(Context.default());
+    await waitForSubductionSave();
+    await host.close();
+
+    const reopened = await setupAutomergeHost({ runtime });
+    using loaded = (await reopened.loadDoc<any>(Context.default(), url))!;
+    await loaded.waitUntilReady();
+    expect(loaded.doc()!.text).toEqual('second');
+  });
+
+  test('a write after eviction and re-lease reaches a peer', { timeout: 20_000 }, async ({ expect }) => {
+    // The subduction source keeps a per-document record bound to the handle it attached to; if
+    // eviction leaves that record in place, writes through the re-leased document are never synced.
+    const rt1 = createRuntime();
+    onTestFinished(() => rt1.dispose());
+    const host1 = await setupAutomergeHost({ runtime: rt1.runtime });
+    const rt2 = createRuntime();
+    onTestFinished(() => rt2.dispose());
+    const host2 = await setupAutomergeHost({ runtime: rt2.runtime });
+
+    const created = await host1.createDoc<any>({ text: 'first' });
+    const documentId = created.documentId;
+    await host1.flush(Context.default());
+    await waitForSubductionSave();
+
+    const network = await new TestReplicationNetwork().open();
+    try {
+      await host1.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
+      await host2.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
+
+      using mirrored = (await host2.loadDoc<any>(Context.default(), documentId))!;
+      await expect.poll(() => mirrored.doc()?.text, { timeout: 10_000 }).toEqual('first');
+
+      created[Symbol.dispose]();
+      await host1.drainEvictions();
+      expect(host1.loadedDocumentIds).not.toContain(documentId);
+
+      using reacquired = host1.acquireDoc<any>(documentId);
+      await reacquired.waitUntilReady();
+      reacquired.change((doc: any) => {
+        doc.text = 'second';
+      });
+      await host1.flush(Context.default());
+
+      await expect.poll(() => mirrored.doc()?.text, { timeout: 10_000 }).toEqual('second');
+    } finally {
+      await host1.close();
+      await host2.close();
+      await network.close();
+    }
   });
 
   test('load resolves when document is created from binary', async ({ expect }) => {
@@ -315,10 +389,10 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
         await host2.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => false }));
 
         // Don't await `loadDoc` (it would hang). Probe via findWithProgress and assert no transition to 'ready'.
-        const progress = host1.findWithProgress<{ text: string }>(handle.documentId);
+        const progress = host1.acquireDoc<{ text: string }>(handle.documentId);
         await sleep(POLICY_NEGATIVE_DELAY_MS);
-        expect(progress.peek().state).to.not.equal('ready');
-        expect(progress.handle.doc()?.text).to.be.undefined;
+        expect(progress.state).to.not.equal('ready');
+        expect(progress.doc()?.text).to.be.undefined;
       } finally {
         await host1.close();
         await host2.close();
@@ -351,9 +425,9 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
           await host1.addReplicator(Context.default(), host1Replicator);
           await host2.addReplicator(Context.default(), host2Replicator);
 
-          const progress = host1.findWithProgress<{ text: string }>(handle.documentId);
+          const progress = host1.acquireDoc<{ text: string }>(handle.documentId);
           await sleep(POLICY_NEGATIVE_DELAY_MS);
-          expect(progress.peek().state).to.not.equal('ready');
+          expect(progress.state).to.not.equal('ready');
 
           // Flip the holder to allow, then drive a no-op commit on the holder.
           // Creating a fresh doc on host2 schedules `_sharePolicyChangedTask`, which
@@ -362,8 +436,8 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
           host2Replicator.shouldAdvertise = () => true;
           await host2.createDoc({ kick: true });
 
-          await expect.poll(() => progress.peek().state, { timeout: 5_000 }).toEqual('ready');
-          expect(progress.handle.doc()?.text).toEqual('recover-me');
+          await expect.poll(() => progress.state, { timeout: 5_000 }).toEqual('ready');
+          expect(progress.doc()?.text).toEqual('recover-me');
         } finally {
           await host1.close();
           await host2.close();
@@ -601,7 +675,7 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
   // End-to-end policy gating using the real DXOS replication stack:
   // `MeshEchoReplicator` over `TeleportBuilder`. The mesh replicator is the
   // production wiring for peer-to-peer DXOS connections; it gates per-space
-  // via `authorizeDevice(spaceKey, deviceKey)`.
+  // via `authorizeDevice(await createIdFromSpaceKey(spaceKey), deviceKey)`.
   describe('subductionPolicy + MeshEchoReplicator', () => {
     // Two hosts in the same space, both authorized → doc replicates.
     test('authorized peers in same space replicate', { timeout: 5_000 }, async ({ expect }) => {
@@ -655,10 +729,10 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
 
       await connectMeshPeers(teleportBuilder, host1, host2, spaceKey, /* authorized */ false);
 
-      const progress = host1.host.findWithProgress<{ text: string }>(handle.documentId);
+      const progress = host1.host.acquireDoc<{ text: string }>(handle.documentId);
       await sleep(POLICY_NEGATIVE_DELAY_MS);
-      expect(progress.peek().state).to.not.equal('ready');
-      expect(progress.handle.doc()?.text).to.be.undefined;
+      expect(progress.state).to.not.equal('ready');
+      expect(progress.doc()?.text).to.be.undefined;
     });
 
     // Start unauthorized; the holder's `_subductionPolicy.authorizeFetch` rejects.
@@ -687,16 +761,16 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       // Probe but don't wait on `findWithProgress` (the subduction fork transitions
       // to `'unavailable'` when no peer serves the doc, which is sticky).
       await sleep(POLICY_NEGATIVE_DELAY_MS);
-      const initial = host1.host.findWithProgress<{ text: string }>(handle.documentId).peek();
-      expect(initial.state).to.not.equal('ready');
+      using probe = host1.host.acquireDoc<{ text: string }>(handle.documentId);
+      expect(probe.state).to.not.equal('ready');
 
       // `authorizeDevice` re-emits `peer-disconnected` + `peer-candidate` through the
       // EchoNetworkAdapter, which under subduction triggers a fresh handshake — that
       // clears the stuck "all-failed" fetch entry and rebinds the subduction PeerId.
       // Driving a no-op commit on the holder kicks `_sharePolicyChangedTask` →
       // `shareConfigChanged()` for belt-and-suspenders recovery on the fetcher.
-      await host1.meshReplicator.authorizeDevice(spaceKey, host2.teleport.peerId);
-      await host2.meshReplicator.authorizeDevice(spaceKey, host1.teleport.peerId);
+      await host1.meshReplicator.authorizeDevice(await createIdFromSpaceKey(spaceKey), host2.teleport.peerId);
+      await host2.meshReplicator.authorizeDevice(await createIdFromSpaceKey(spaceKey), host1.teleport.peerId);
       await host2.host.createDoc({ kick: true });
 
       // Re-probe via a fresh load: the previous `DocumentQuery` may already have
@@ -757,8 +831,8 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       await waitForSubductionSave();
 
       // Authorize the device pair only for space A on both sides.
-      await host1.meshReplicator.authorizeDevice(spaceA, host2.teleport.peerId);
-      await host2.meshReplicator.authorizeDevice(spaceA, host1.teleport.peerId);
+      await host1.meshReplicator.authorizeDevice(await createIdFromSpaceKey(spaceA), host2.teleport.peerId);
+      await host2.meshReplicator.authorizeDevice(await createIdFromSpaceKey(spaceA), host1.teleport.peerId);
 
       const [connection1, connection2] = await teleportBuilder.connect(host1.teleport, host2.teleport);
       connection1.teleport.addExtension('automerge', host1.meshReplicator.createExtension());
@@ -776,10 +850,10 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
 
       // Space B doc does NOT — host2's `_subductionPolicy.authorizeFetch` resolves
       // its space → spaceB, finds no authorized devices for spaceB, rejects.
-      const progress = host1.host.findWithProgress<{ text: string }>(spaceBDocId);
+      const progress = host1.host.acquireDoc<{ text: string }>(spaceBDocId);
       await sleep(POLICY_NEGATIVE_DELAY_MS);
-      expect(progress.peek().state).to.not.equal('ready');
-      expect(progress.handle.doc()?.text).to.be.undefined;
+      expect(progress.state).to.not.equal('ready');
+      expect(progress.doc()?.text).to.be.undefined;
     });
   });
 });
@@ -879,8 +953,8 @@ const connectMeshPeers = async (
   authorized: boolean,
 ) => {
   if (authorized) {
-    await peer1.meshReplicator.authorizeDevice(spaceKey, peer2.teleport.peerId);
-    await peer2.meshReplicator.authorizeDevice(spaceKey, peer1.teleport.peerId);
+    await peer1.meshReplicator.authorizeDevice(await createIdFromSpaceKey(spaceKey), peer2.teleport.peerId);
+    await peer2.meshReplicator.authorizeDevice(await createIdFromSpaceKey(spaceKey), peer1.teleport.peerId);
   }
 
   const [connection1, connection2] = await builder.connect(peer1.teleport, peer2.teleport);

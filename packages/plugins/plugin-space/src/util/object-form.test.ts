@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { describe, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
 import { DXN, Obj, type Ref, Type } from '@dxos/echo';
 
@@ -15,9 +15,18 @@ class TestObject extends Type.makeObject<TestObject>(DXN.make('com.example.type.
 
 const spy = () => vi.fn<(result?: Ref.Ref<Obj.Unknown>) => void>();
 
-const tick = () => new Promise((resolve) => setTimeout(resolve, 10));
+/** Deterministically flushes `object-form.ts`'s internal zero-delay `setTimeout`. */
+const tick = () => vi.advanceTimersByTimeAsync(0);
 
 describe('makeObjectFormHandle', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   test('settles synchronously with a ref to the object', ({ expect }) => {
     const onSettled = spy();
     const handle = makeObjectFormHandle(onSettled);

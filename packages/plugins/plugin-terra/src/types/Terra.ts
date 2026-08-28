@@ -47,7 +47,12 @@ export class Terra extends Type.makeObject<Terra>(DXN.make('org.dxos.type.terra'
   Schema.Struct({
     name: Schema.optional(Schema.String),
     config: TerraConfig,
-    objects: Ref.Ref(TerraObject.TerraObject).pipe(Schema.Array, FormInputAnnotation.set(false)),
+    /** Owned objects: `SetParent` cascades each with the world. */
+    objects: Ref.Ref(TerraObject.TerraObject).pipe(
+      Schema.Array,
+      Annotation.SetParent.set(true),
+      FormInputAnnotation.set(false),
+    ),
   }).pipe(
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--globe-hemisphere-west--regular', hue: 'green' }),
@@ -210,13 +215,11 @@ export const makeDemoWorld = (props?: { name?: string; config?: Partial<TerraCon
     ),
   ];
 
-  const terra = Obj.make(Terra, {
+  return Obj.make(Terra, {
     name: props?.name,
     config,
     objects: definitions.map((definition) => Ref.make(definition)),
   });
-  definitions.forEach((definition) => Obj.setParent(definition, terra));
-  return terra;
 };
 
 /** Every kind `makeRandomObject` may pick, one weight each. */

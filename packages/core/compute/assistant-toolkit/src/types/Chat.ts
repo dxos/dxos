@@ -26,10 +26,8 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
     name: Schema.String.pipe(Schema.optional),
     viewType: Schema.String.pipe(Schema.optional),
 
-    /**
-     * Message feed.
-     */
-    feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
+    /** Message feed, owned by the chat so `SetParent` cascades it. */
+    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
 
     /**
      * Instructions steering this conversation, rendered into the system prompt at request time.
@@ -51,6 +49,9 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
     }),
   ),
 ) {}
+
+/** Module-level alias so callers importing the namespace avoid the doubled `Chat.Chat.fields`. */
+export const fields = Chat.fields;
 
 export const make = (props: Obj.MakeProps<typeof Chat>) => Obj.make(Chat, props);
 

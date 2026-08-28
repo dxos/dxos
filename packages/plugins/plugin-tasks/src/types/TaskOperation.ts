@@ -92,6 +92,24 @@ export const UpdateTask = Operation.make({
   }),
 }).pipe(Operation.mutation('write'));
 
+export const TaskRestorePoint = Schema.Struct({
+  entries: Schema.Array(
+    Schema.Struct({
+      task: Type.getSchema(Task.Task),
+      index: Schema.optional(Schema.Number).annotate({
+        description: "Position the task held in the set's `tasks` array; absent when it belonged to no set.",
+      }),
+    }),
+  ).annotate({
+    description: 'The deleted task and every sub-task that went with it.',
+  }),
+  taskSet: Schema.optional(Type.getSchema(TaskSet.TaskSet)).annotate({
+    description: 'The set the tasks were filed in, when they were in one.',
+  }),
+});
+
+export type TaskRestorePoint = Schema.Schema.Type<typeof TaskRestorePoint>;
+
 /**
  * Removes a task and its sub-tasks. `Database.remove` cascades along the parent edge, but the set's
  * `tasks` array is a separate membership record, so a generic delete leaves the whole subtree's
@@ -111,18 +129,34 @@ export const DeleteTask = Operation.make({
   output: Schema.Struct({
     /** Ids of the deleted task and every sub-task that went with it. */
     deleted: Schema.Array(Schema.String),
+    restore: TaskRestorePoint,
   }),
 }).pipe(Operation.mutation('destructive'));
+
+export const RestoreTasks = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.tasks.restore'),
+    name: 'Restore Tasks',
+    description: 'Restore deleted tasks and their sub-tasks to their task set.',
+    icon: 'ph--clock-counter-clockwise--regular',
+  },
+  input: TaskRestorePoint,
+  output: Schema.Void,
+}).pipe(Operation.mutation('write'));
 
 /**
  * Repositions a task within its set's `tasks` array. There is no sort key to patch — the array
  * order is the order — so ordering is unreachable from a generic object update.
+ *
+ * Re-parenting is part of the same verb because a drop in the tree is both at once: doing it as
+ * `UpdateTask` then `MoveTask` leaves a window where the task hangs at the end of its new parent
+ * before the position lands, and costs two undo entries for one gesture.
  */
 export const MoveTask = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.move'),
     name: 'Move Task',
-    description: 'Reposition a task within its task set — array order is the task order.',
+    description: 'Reposition a task within its task set, optionally re-parenting it — array order is the task order.',
     icon: 'ph--arrows-down-up--regular',
   },
   services: [Database.Service],
@@ -130,6 +164,8 @@ export const MoveTask = Operation.make({
     task: Ref.Ref(Task.Task),
     /** Insert immediately before this task; omit to move to the end. */
     before: Schema.optional(Ref.Ref(Task.Task)),
+    /** Re-parent as a sub-task; `null` promotes the task to a root of its set (as `UpdateTask`). */
+    parentTask: Schema.optional(Schema.NullOr(Ref.Ref(Task.Task))),
   }),
   output: Schema.Struct({
     task: Type.getSchema(Task.Task),

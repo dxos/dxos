@@ -14,6 +14,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
+import { Trigger as AsyncTrigger } from '@dxos/async';
 import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
@@ -650,6 +651,7 @@ describe('Binding.syncAll', () => {
     runAgainFor.clear();
     failFor.clear();
     dieFor.clear();
+    recorded.reset();
   });
 
   afterEach(async () => {
@@ -672,11 +674,16 @@ describe('Binding.syncAll', () => {
   /** Binding uris whose sync should die (defect channel), by defect. */
   const dieFor = new Map<string, unknown>();
 
+  // The auto-sync capability forks the sync and returns without waiting for it, so the auto-sync
+  // tests below await this instead of polling `synced`/`fired` for the forked work to land.
+  const recorded = new AsyncTrigger();
+
   /** Records each binding, then applies whichever fault is configured for it. */
   const recordingSync = (binding: Cursor.ExternalCursor) =>
     Effect.gen(function* () {
       const uri = Ref.make(binding).uri;
       synced.push(uri);
+      recorded.wake();
       if (runAgainFor.has(uri)) {
         return yield* Operation.runAgain();
       }
@@ -709,7 +716,11 @@ describe('Binding.syncAll', () => {
   const recordingMonitor: Trigger.Monitor = {
     triggers: Atom.make<readonly Trigger.State[]>([]),
     localDispatcherEnabled: false,
-    invokeTrigger: ({ trigger }) => Effect.sync(() => void fired.push(trigger.id)),
+    invokeTrigger: ({ trigger }) =>
+      Effect.sync(() => {
+        fired.push(trigger.id);
+        recorded.wake();
+      }),
   };
 
   test('fans out to each binding', async ({ expect }) => {
@@ -841,8 +852,9 @@ describe('Binding.syncAll', () => {
       autoSyncConnection(makeInvoker(), makeCapabilities({ scheduled: false }), db, connector, connection),
     );
 
-    // Forked so connection setup returns without waiting, so the sync lands after this call.
-    await expect.poll(() => synced).toEqual([Ref.make(cursor).uri]);
+    // Forked so connection setup returns without waiting; wait for the sync itself to land.
+    await recorded.wait();
+    expect(synced).toEqual([Ref.make(cursor).uri]);
   });
 
   test('auto-sync of a scheduled connector force-runs the account routine’s trigger', async ({ expect }) => {
@@ -855,7 +867,8 @@ describe('Binding.syncAll', () => {
     );
 
     // The trigger dispatcher runs the sync (durable execution), so the operation is not invoked here.
-    await expect.poll(() => fired).toEqual([trigger.id]);
+    await recorded.wait();
+    expect(fired).toEqual([trigger.id]);
     expect(synced).toEqual([]);
   });
 

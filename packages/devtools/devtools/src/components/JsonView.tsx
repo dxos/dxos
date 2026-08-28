@@ -56,7 +56,7 @@ const replacer =
             // viewer formats.
             return {
               '@type': value.type_url,
-              ...decodeCompat(desc, value.value),
+              ...decodeCompat<Record<string, unknown>>(desc, value.value),
             };
           }
         } catch {}

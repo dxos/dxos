@@ -125,37 +125,37 @@ export const credentialsFromToken = (
  * Layer-based credentials service. Mirrors the `GoogleCredentials` pattern in
  * plugin-inbox: every API call pulls creds from this service rather than
  * threading them through as an explicit parameter, so callers compose a
- * single `Effect.provide(TrelloApi.TrelloCredentials.fromConnection(ref))`
+ * single `Effect.provide(TrelloApi.fromConnection(ref))`
  * (with `{ TrelloApi }` from `../services`) at the operation boundary instead
  * of plumbing creds through every call site.
  */
 export class TrelloCredentials extends Context.Service<TrelloCredentials, TrelloCredentialsValue>()(
   '@dxos/plugin-trello/TrelloCredentials',
-) {
-  /** Loads the connection's access token and parses it into `TrelloCredentials`. */
-  static fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
-    Layer.effect(
-      TrelloCredentials,
-      Effect.gen(function* () {
-        const connection = yield* Database.load(connectionRef);
-        const accessToken = yield* Database.load(connection.accessToken);
-        return yield* credentialsFromToken(accessToken.token);
-      }),
-    );
+) {}
 
-  /**
-   * Loads the access token directly and parses it into `TrelloCredentials`. Used by callers that
-   * only have an external-sync cursor's `spec.source` — the cursor no longer relates to `Connection`.
-   */
-  static fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
-    Layer.effect(
-      TrelloCredentials,
-      Effect.gen(function* () {
-        const accessToken = yield* Database.load(accessTokenRef);
-        return yield* credentialsFromToken(accessToken.token);
-      }),
-    );
-}
+/** Loads the connection's access token and parses it into `TrelloCredentials`. */
+export const fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
+  Layer.effect(
+    TrelloCredentials,
+    Effect.gen(function* () {
+      const connection = yield* Database.load(connectionRef);
+      const accessToken = yield* Database.load(connection.accessToken);
+      return yield* credentialsFromToken(accessToken.token);
+    }),
+  );
+
+/**
+ * Loads the access token directly and parses it into `TrelloCredentials`. Used by callers that
+ * only have an external-sync cursor's `spec.source` — the cursor no longer relates to `Connection`.
+ */
+export const fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
+  Layer.effect(
+    TrelloCredentials,
+    Effect.gen(function* () {
+      const accessToken = yield* Database.load(accessTokenRef);
+      return yield* credentialsFromToken(accessToken.token);
+    }),
+  );
 
 /**
  * Build a Trello request URL params record that includes the auth pair plus

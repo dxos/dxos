@@ -33,7 +33,7 @@ export class ToolResolverService extends Context.Service<
 
   static resolveToolkit: (
     ids: ToolId[],
-  ) => Effect.Effect<Toolkit.Toolkit<any>, AiToolNotFoundError, ToolResolverService> = (ids) =>
+  ) => Effect.Effect<Toolkit.Toolkit<Record<string, Tool.Any>>, AiToolNotFoundError, ToolResolverService> = (ids) =>
     Effect.gen(function* () {
       const tools = yield* Effect.forEach(ids, (id) =>
         ToolResolverService.resolve(id).pipe(

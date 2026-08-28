@@ -25,6 +25,8 @@ The following extension dialects are used in this document.
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
 | `test`      | `org.dxos.mdl.test@1.0`        |
 | `component` | `org.dxos.mdl.component@1.0`   |
+| `op`        | `org.dxos.mdl.op@1.1`          |
+| `flow`      | `org.dxos.mdl.flow@1.0`        |
 
 ## Types
 
@@ -265,4 +267,62 @@ test T-4: Playhead loops
   given: a playing Score with active Sequence.length = 4 beats
   when: time advances past 4 beats
   then: playhead position resets to 0 (mod 4)
+```
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Read and write a score as lead-sheet text
+  desc: |
+    The agent-facing round-trip: read a Score's lead-sheet text, write a modified version back, and
+    read again to confirm. `org.dxos.operation.sequencer.read` / `.write` are not declared as `op`
+    blocks above — no Operations section exists in this document — so they are referenced here as
+    full key literals, same as an operation owned by another plugin.
+  actors: both
+  covers: [F-1.1, F-1.2, T-1]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - plugin-sequencer is enabled — it is registered as experimental and defaults ON only in dev
+      builds (`isDev`); it must be enabled via Settings -> plugin registry otherwise
+    - no Score named "QA Score" exists — ABORT rather than reusing one this flow did not create
+    - score: the Score object the human creates in step 1 (named "QA Score"), resolved by the
+      runner after that step so later steps can reference it — there is no create operation to
+      `capture` it from
+  test:
+    - name: Create the score
+      do: In the navtree, click + on a collection and choose Score. Name it "QA Score".
+      expect: a Score named "QA Score" now exists with tempo 120, no tracks, no sequences
+      note: No create operation is declared for Score — this step is human-only (matches F-1.1's
+        navtree-only creation path).
+
+    - name: Read the empty score
+      do: (agent-only — inspect the score's lead-sheet text)
+      invoke: org.dxos.operation.sequencer.read { score: $given.score }
+      capture: before
+      expect: the lead-sheet text contains no track sections
+      assert: return $result.text.trim().length === 0 || !$result.text.includes('[1:')
+
+    - name: Write a track and a note
+      do: In SequenceGrid, add a track and click a cell at (pitch=60, startTime=0).
+      invoke: org.dxos.operation.sequencer.write { score: $given.score, text: "[1:Track 1]\n1.1 60/4\n" }
+      capture: written
+      expect: TrackList shows one track, and SequenceGrid shows one note at middle C, beat 0
+      assert: return $written.tracks === 1 && $written.notes === 1
+
+    - name: Read it back
+      do: (agent-only — confirm the write round-tripped)
+      invoke: org.dxos.operation.sequencer.read { score: $given.score }
+      expect: the lead-sheet text now contains the "[1:Track 1]" section and the "60/4" event
+      assert: return $result.text.includes('[1:Track 1]') && $result.text.includes('60/4')
+  after:
+    - name: Delete the score
+      do: Right-click "QA Score" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$given.score], target: $given.collection }
+      expect: the row leaves the navtree
 ```

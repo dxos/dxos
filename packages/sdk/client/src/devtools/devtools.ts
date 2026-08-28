@@ -223,7 +223,8 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     };
 
     hook.openDevtoolsApp = async () => {
-      const vault = client.config?.values.runtime?.client?.remoteSource ?? 'https://halo.dxos.org';
+      // No default target: when no remote source is configured the devtools app decides on its own.
+      const vault = client.config?.values.runtime?.client?.remoteSource;
 
       // Check if we're serving devtools locally on the usual port.
       let hasLocalDevtools = false;
@@ -236,7 +237,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
       const devtoolsApp = hasLocalDevtools
         ? 'http://localhost:5174/'
         : `https://devtools${isDev ? '.dev.' : '.'}dxos.org/`;
-      const devtoolsUrl = `${devtoolsApp}?target=${vault}`;
+      const devtoolsUrl = vault ? `${devtoolsApp}?target=${vault}` : devtoolsApp;
       window.open(devtoolsUrl, '_blank');
     };
 

@@ -87,7 +87,7 @@ LobbyPreview.displayName = 'LobbyPreview';
 type LobbyToolbarProps = ThemedClassName<
   {
     roomId: string;
-  } & Pick<ToolbarProps, 'onJoin'>
+  } & Pick<ToolbarProps, 'onJoin' | 'joinDisabled'>
 >;
 
 const LobbyToolbar = ({ roomId, ...props }: LobbyToolbarProps) => {

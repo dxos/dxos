@@ -4,7 +4,8 @@
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols/proto';
+import { encodeCompat } from '@dxos/protocols/buf-shape-compat';
+import { PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { type EdgeIdentity } from './edge-identity';
 
@@ -203,7 +204,7 @@ export const presentCredentialsForChallenge = async (
   challenge: string,
 ): Promise<Uint8Array> => {
   const presentation = await identity.presentCredentials({ challenge: Buffer.from(challenge, 'base64') });
-  return schema.getCodecForType('dxos.halo.credentials.Presentation').encode(presentation);
+  return encodeCompat(PresentationSchema, presentation);
 };
 
 export type ChallengeAuthentication = {

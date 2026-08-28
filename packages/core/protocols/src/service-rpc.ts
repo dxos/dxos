@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type DescMessage, type Message, fromBinary, toBinary } from '@bufbuild/protobuf';
+import { type Message, fromBinary, toBinary } from '@bufbuild/protobuf';
 import { type GenMessage } from '@bufbuild/protobuf/codegenv2';
 import * as Schema from 'effect/Schema';
 import * as SchemaTransformation from 'effect/SchemaTransformation';
@@ -12,41 +12,12 @@ import { decodeCompat, encodeCompat } from './buf/shape-compat.ts';
 import { decodeError, encodeError } from './errors/encoding.ts';
 import { type TYPES, schema } from './proto/gen/index.ts';
 
-const ANY_TYPE_NAME = 'google.protobuf.Any';
-
-/**
- * Whether any field reachable from `desc` is a `google.protobuf.Any`, which shape-compat cannot
- * represent. Guarded against the mutual recursion protobuf messages permit.
- */
-const containsAny = (desc: DescMessage, seen = new Set<string>()): boolean => {
-  if (seen.has(desc.typeName)) {
-    return false;
-  }
-  seen.add(desc.typeName);
-  return desc.fields.some((field) => {
-    const nested =
-      field.fieldKind === 'message' || field.fieldKind === 'list' || field.fieldKind === 'map'
-        ? field.message
-        : undefined;
-    return nested !== undefined && (nested.typeName === ANY_TYPE_NAME || containsAny(nested, seen));
-  });
-};
-
-/**
- * The buf descriptor to encode `typeName` through, or `undefined` to stay on the protobuf.js codec.
- * Resolved per `protoMessage()` call so an uncarryable type fails routing rather than a payload.
- */
-const bufDescriptorFor = (typeName: string): DescMessage | undefined => {
-  const desc = bufRegistry.getMessage(typeName);
-  return desc !== undefined && !containsAny(desc) ? desc : undefined;
-};
-
 /**
  * Effect schema for a protobuf message type, encoded as protobuf bytes on the wire.
  * Values keep the protobuf.js field shapes whichever codec carries them.
  */
 export const protoMessage = <K extends keyof TYPES & string>(typeName: K): Schema.Codec<TYPES[K], Uint8Array> => {
-  const desc = bufDescriptorFor(typeName);
+  const desc = bufRegistry.getMessage(typeName);
   return Schema.Uint8Array.pipe(
     Schema.decodeTo(
       Schema.declare<TYPES[K]>((_): _ is TYPES[K] => true),
@@ -78,7 +49,7 @@ export const bufMessage = <T extends Message>(messageSchema: GenMessage<T>): Sch
  * classes on decode so typed errors cross the RPC boundary.
  */
 export const serviceError: Schema.Codec<Error, Uint8Array> = (() => {
-  const desc = bufDescriptorFor('dxos.error.Error');
+  const desc = bufRegistry.getMessage('dxos.error.Error');
   return Schema.Uint8Array.pipe(
     Schema.decodeTo(
       Schema.declare<Error>((value): value is Error => value instanceof Error),
