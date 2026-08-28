@@ -8,11 +8,11 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import platform from 'platform';
 
-import { Event } from '@dxos/async';
+import { Event, scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { CredentialGenerator, createCredentialSignerWithKey, createDidFromIdentityKey } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import { type EchoHost } from '@dxos/echo-host';
+import { type EchoHost, type MeshEchoReplicator, MeshEchoReplicatorService } from '@dxos/echo-host';
 import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
 import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
@@ -30,16 +30,20 @@ import {
   DeviceType,
   type ProfileDocument,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Teleport } from '@dxos/teleport';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
 import { trace as Trace } from '@dxos/tracing';
 import { deferFunction, isNode, isTauri } from '@dxos/util';
 
 import { type IMetadataStore, IMetadataStoreService } from '../metadata';
-import { type SpaceManager, SpaceManagerService, type SwarmIdentity } from '../space';
+import { type Space, type SpaceManager, SpaceManagerService, type SwarmIdentity } from '../space';
 import { openCredentialsDocument } from '../spaces/credentials-document-store';
 import { createAuthProvider } from './authenticator';
 import { Identity } from './identity';
+
+const HALO_ANCHOR_RETRY_INITIAL = 500;
+const HALO_ANCHOR_RETRY_MAX = 30_000;
 
 const DEVICE_PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const DEVICE_PRESENCE_OFFLINE_TIMEOUT = 20_000;
@@ -91,6 +95,8 @@ export type IdentityManagerProps = {
   devicePresenceOfflineTimeout?: number;
   /** See {@link DataSpaceManagerRuntimeProps.automergeCredentials}. Off by default. */
   automergeCredentials?: boolean;
+  /** Replicates HALO documents between the identity's own devices. */
+  meshReplicator?: MeshEchoReplicator;
 };
 
 /**
@@ -139,6 +145,9 @@ export class IdentityManager {
   private readonly _devicePresenceAnnounceInterval: number;
   private readonly _devicePresenceOfflineTimeout: number;
   private readonly _automergeCredentials: boolean;
+  private readonly _meshReplicator: MeshEchoReplicator | undefined;
+  /** Backoff for adopting a root that has not replicated from the inviting device yet. */
+  private _haloAnchorRetryDelay = HALO_ANCHOR_RETRY_INITIAL;
   private readonly _edgeConnection: EdgeConnection | undefined;
   private readonly _edgeFeatures: Runtime_Client_EdgeFeatures | undefined;
 
@@ -157,6 +166,7 @@ export class IdentityManager {
     this._devicePresenceAnnounceInterval = params.devicePresenceAnnounceInterval ?? DEVICE_PRESENCE_ANNOUNCE_INTERVAL;
     this._devicePresenceOfflineTimeout = params.devicePresenceOfflineTimeout ?? DEVICE_PRESENCE_OFFLINE_TIMEOUT;
     this._automergeCredentials = params.automergeCredentials ?? false;
+    this._meshReplicator = params.meshReplicator;
   }
 
   get identity() {
@@ -491,10 +501,18 @@ export class IdentityManager {
           // document carries the chain, so the joining device takes the one the inviter named — and
           // mints nothing when it cannot, since halo documents have no replication path between
           // devices yet and the root may simply never arrive.
-          await echoHost.adoptSpaceRoot(ctx, spaceId, adopted).catch((err) => {
-            log.warn('halo space root named by the inviting device is not available', { spaceId, adopted, err });
-          });
-          return;
+          try {
+            await echoHost.adoptSpaceRoot(ctx, spaceId, adopted);
+          } catch (err) {
+            // The root replicates from the inviting device over the mesh, which emits no identity
+            // state update on arrival, so nothing else would ever retry.
+            log('halo space root named by the inviting device has not replicated yet', { spaceId, adopted, err });
+            if (this._haloAnchorRetryDelay <= HALO_ANCHOR_RETRY_MAX) {
+              scheduleTask(ctx, () => this._anchorHaloOnRootDocument(ctx, identity), this._haloAnchorRetryDelay);
+              this._haloAnchorRetryDelay *= 2;
+            }
+            return;
+          }
         } else {
           // HALO has never had a directory — its data has always lived in the control feed — so one
           // is created here to give the root something to point at.
@@ -531,18 +549,28 @@ export class IdentityManager {
   }
 
   private async _constructSpace({ spaceRecord, swarmIdentity, identityKey, gossip }: ConstructSpaceProps) {
-    return this._spaceManager.constructSpace({
+    const space: Space = await this._spaceManager.constructSpace({
       metadata: {
         key: spaceRecord.key,
         genesisFeedKey: spaceRecord.genesisFeedKey,
       },
       swarmIdentity,
-      onAuthorizedConnection: (session) => {
-        session.addExtension(
-          'dxos.mesh.teleport.gossip',
-          gossip.createExtension({ remotePeerId: session.remotePeerId }),
-        );
-      },
+      onAuthorizedConnection: (session) =>
+        queueMicrotask(async () => {
+          try {
+            if (!session.isOpen) {
+              return;
+            }
+            session.addExtension(
+              'dxos.mesh.teleport.gossip',
+              gossip.createExtension({ remotePeerId: session.remotePeerId }),
+            );
+            await this._connectEchoMeshReplicator(space, session);
+          } catch (err: any) {
+            log.warn('error on authorized connection', { err });
+            await session.close(err);
+          }
+        }),
       onAuthFailure: () => {
         log.warn('auth failure');
       },
@@ -550,6 +578,32 @@ export class IdentityManager {
       onDelegatedInvitationStatusChange: async () => {}, // TODO: will be used for recovery keys
       onMemberRolesChanged: async () => {}, // TODO: will be used for device revocation
     });
+    return space;
+  }
+
+  /**
+   * Gives a peer device access to the HALO's automerge documents. Without it the space root and the
+   * credentials document it names have no path between devices, so a joining device could never
+   * adopt the root the inviting device named and would be left with a feed-only chain.
+   *
+   * Every session reaching here is already authorized as a device of this identity, so membership
+   * needs no further check — unlike a data space, whose members are distinct identities.
+   */
+  private async _connectEchoMeshReplicator(space: Space, session: Teleport): Promise<void> {
+    // The HALO grows documents only under the flag; with it off there is nothing to replicate.
+    if (!this._automergeCredentials) {
+      return;
+    }
+    const replicator = this._meshReplicator;
+    if (!replicator) {
+      log.warn('p2p automerge replication disabled for the halo space', { spaceId: space.id });
+      return;
+    }
+    await replicator.authorizeDevice(space.id, session.remotePeerId);
+    // The session may have ended during device authorization.
+    if (session.isOpen) {
+      session.addExtension('dxos.mesh.teleport.automerge', replicator.createExtension());
+    }
   }
 }
 
@@ -576,7 +630,9 @@ export const IdentityManagerLayer = (
       const feedStore = yield* FeedStoreService;
       const spaceManager = yield* SpaceManagerService;
       const edgeConnection = yield* Effect.serviceOption(EdgeConnectionService);
+      const meshReplicator = yield* Effect.serviceOption(MeshEchoReplicatorService);
       return new IdentityManager({
+        meshReplicator: Option.getOrUndefined(meshReplicator),
         metadataStore,
         keyring,
         feedStore,
