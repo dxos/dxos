@@ -40,6 +40,16 @@ export const findMilestoneTaskSet = (
     return sets[0];
   });
 
+/** Adds the object and flushes, so a set never gains a ref to an object that was not yet stored. */
+export const addPersisted = <T extends Obj.Any>(
+  obj: T & Database.RejectTypeEntity<T>,
+): Effect.Effect<T, never, Database.Service> =>
+  Effect.gen(function* () {
+    const added = yield* Database.add<T>(obj);
+    yield* Database.flush();
+    return added;
+  });
+
 /**
  * Add a task to a set: the array entry (membership and order) plus the lifecycle parent edge — a
  * sub-task hangs off its parent task so it cascades with it, a root task off the set.
@@ -60,9 +70,8 @@ export const addMilestoneToSet = (taskSet: TaskSet.TaskSet, milestone: Milestone
   Obj.setParent(milestone, taskSet);
 };
 
-/** Every task in `taskSet` transitively under `task`, including `task` itself. Cycle-safe. */
-export const collectSubtree = (taskSet: TaskSet.TaskSet, task: Task.Task): Task.Task[] => {
-  const tasks = TaskSet.resolveTasks(taskSet);
+/** Every task in `tasks` transitively under `task`, including `task` itself. Cycle-safe. */
+export const collectSubtree = (tasks: readonly Task.Task[], task: Task.Task): Task.Task[] => {
   const subtree: Task.Task[] = [];
   const seen = new Set<string>();
   const visit = (current: Task.Task): void => {
@@ -139,13 +148,13 @@ export const resolveParentTask = (
 ): Effect.Effect<Task.Task, InvalidOperationInput | Error.EntityNotFoundError, Database.Service> =>
   Effect.gen(function* () {
     const candidate = yield* Database.load(parentTask);
-    const subtree = taskSet ? collectSubtree(taskSet, task) : [task];
+    const members = taskSet ? yield* TaskSet.loadTasks(taskSet) : [];
+    const subtree = taskSet ? collectSubtree(members, task) : [task];
     if (subtree.some((member) => member.id === candidate.id)) {
       return yield* Effect.fail(
         new InvalidOperationInput({ message: 'A task cannot be re-parented under itself or its own sub-tasks.' }),
       );
     }
-    const members = taskSet ? TaskSet.resolveTasks(taskSet) : [];
     if (!members.some((member) => member.id === candidate.id)) {
       return yield* Effect.fail(
         new InvalidOperationInput({ message: 'The parent task does not belong to this task set.' }),

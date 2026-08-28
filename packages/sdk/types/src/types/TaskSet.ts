@@ -4,9 +4,10 @@
 
 // @import-as-namespace
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Annotation, type Database, DXN, EID, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Database, DXN, EID, Obj, Ref, Type } from '@dxos/echo';
 import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Format } from '@dxos/echo/Format';
 
@@ -108,12 +109,33 @@ const refId = <T extends Obj.Unknown>(ref: Ref.Ref<T> | undefined): string | und
 /**
  * The set's tasks in array order, dropping unresolved refs and de-duplicating by id — concurrent
  * edits can merge a ref into the array twice, and a reader must not show the task twice.
+ *
+ * Synchronous, so it only sees targets already in the working set. A handler on a fresh session
+ * (e.g. an MCP worker) must use {@link loadTasks} instead — here every ref of a just-loaded set
+ * resolves to `undefined` and the set reads as empty.
  */
 export const resolveTasks = (taskSet: TaskSet): Task.Task[] => dedupeById(resolveRefs(taskSet.tasks));
 
-/** The set's milestones in sequence, dropping unresolved refs and de-duplicating by id. */
+/** The set's milestones in sequence, dropping unresolved refs and de-duplicating by id (see {@link resolveTasks}). */
 export const resolveMilestones = (taskSet: TaskSet): Milestone.Milestone[] =>
   dedupeById(resolveRefs(taskSet.milestones));
+
+/**
+ * Loads the set's tasks in array order, de-duplicated by id. The async counterpart of
+ * {@link resolveTasks}: each ref is loaded through its resolver, so the result is complete on a
+ * fresh session. A dangling ref (a member whose object was never persisted or has been removed)
+ * is skipped, not an error.
+ */
+export const loadTasks = (taskSet: TaskSet): Effect.Effect<Task.Task[], never, never> => loadRefs(taskSet.tasks);
+
+/** Loads the set's milestones in sequence, de-duplicated by id (see {@link loadTasks}). */
+export const loadMilestones = (taskSet: TaskSet): Effect.Effect<Milestone.Milestone[], never, never> =>
+  loadRefs(taskSet.milestones);
+
+const loadRefs = <T extends Obj.Unknown>(refs: ReadonlyArray<Ref.Ref<T>>): Effect.Effect<T[], never, never> =>
+  Effect.forEach(refs, (ref) => Database.load(ref).pipe(Effect.orElseSucceed(() => undefined))).pipe(
+    Effect.map(dedupeById),
+  );
 
 /** `.target` throws on a ref carrying neither an inlined target nor a resolver, so gate on `isAvailable`. */
 const resolveRefs = <T extends Obj.Unknown>(refs: ReadonlyArray<Ref.Ref<T>>): Array<T | undefined> =>

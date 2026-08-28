@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
+import { TaskSet } from '@dxos/types';
 
 import { TaskOperation } from '#types';
 
@@ -16,7 +17,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.DeleteTask> = TaskOper
     Effect.fnUntraced(function* ({ task: taskRef }) {
       const task = yield* Database.load(taskRef);
       const taskSet = yield* findTaskSet(task);
-      const subtree = taskSet ? collectSubtree(taskSet, task) : [task];
+      const subtree = taskSet ? collectSubtree(yield* TaskSet.loadTasks(taskSet), task) : [task];
       const ids = new Set(subtree.map((member) => member.id));
 
       if (taskSet) {

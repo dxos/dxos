@@ -266,7 +266,7 @@ describe('DataSpaceManager', () => {
     const objectId = PublicKey.random().toHex();
     const objectUrl = (await peer.echoHost.createDoc({})).url;
     const before = await peer.echoHost.openSpaceRoot(new Context(), space.id);
-    before.handle.change((draft: DatabaseDirectory) => {
+    before.change((draft: DatabaseDirectory) => {
       draft.links ??= {};
       draft.links[objectId] = objectUrl;
     });

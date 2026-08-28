@@ -3,14 +3,14 @@
 //
 
 import { save } from '@automerge/automerge';
-import { type AutomergeUrl, type DocHandle } from '@automerge/automerge-repo';
+import { type AutomergeUrl } from '@automerge/automerge-repo';
 
 import { Event, Mutex, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import type { SpecificCredential } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
-import { type DatabaseRoot, type EchoHost } from '@dxos/echo-host';
+import { type DatabaseRoot, type DocumentLease, type EchoHost } from '@dxos/echo-host';
 import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedStore, type FeedWrapper } from '@dxos/feed-store';
@@ -130,7 +130,9 @@ export const loadRootDocWithRetry = async <T>({
     }
 
     try {
-      const result = await cancelWithContext(ctx, attempt());
+      // Not wrapped in `cancelWithContext`: the attempt is context-aware and self-bounded, and an
+      // abandoned resolution here would leak whatever resource the attempt returns.
+      const result = await attempt();
       if (result) {
         return result;
       }
@@ -545,11 +547,13 @@ export class DataSpace {
   private _onNewAutomergeRoot(rootUrl: string): void {
     log('loading automerge root doc for space', { space: this.key, rootUrl });
 
+    let lease: DocumentLease<DatabaseDirectory> | null = null;
+
     // TODO(dmaretskyi): Make this single-threaded (but doc loading should still be parallel to not block epoch processing).
     queueMicrotask(async () => {
       try {
-        const handle = await this._loadAutomergeRootWithRetry(rootUrl);
-        if (!handle || this._ctx.disposed) {
+        lease = await this._loadAutomergeRootWithRetry(rootUrl);
+        if (!lease || this._ctx.disposed) {
           return;
         }
 
@@ -564,9 +568,9 @@ export class DataSpace {
         }
 
         // Attaching space identifiers to legacy documents.
-        const doc = handle.doc();
+        const doc = lease.doc();
         if (!doc.access?.spaceId || !doc.access?.spaceKey) {
-          handle.change((doc: DatabaseDirectory) => {
+          lease.change((doc: DatabaseDirectory) => {
             doc.access ??= {};
             doc.access.spaceId ??= this.id;
             // spaceKey is deprecated but still written so older clients can resolve the owning space.
@@ -576,7 +580,11 @@ export class DataSpace {
 
         // TODO(dmaretskyi): Close roots.
         // TODO(dmaretskyi): How do we handle changing to the next EPOCH?
-        const root = await this._echoHost.updateSpaceRoot(this._ctx, this.id, handle.url);
+        // `updateSpaceRoot` takes its own lease on the root, so this one is released either way.
+        const rootUrlToAssign = lease.url;
+        lease[Symbol.dispose]();
+        lease = null;
+        const root = await this._echoHost.updateSpaceRoot(this._ctx, this.id, rootUrlToAssign);
 
         // NOTE: Make sure this assignment happens synchronously together with the state change.
         this._databaseRoot = root;
@@ -593,6 +601,9 @@ export class DataSpace {
           return;
         }
         log.warn('error loading automerge root doc', { space: this.key, rootUrl, err });
+      } finally {
+        // Released on every path that did not hand it to `updateSpaceRoot`.
+        lease?.[Symbol.dispose]();
       }
     });
   }
@@ -601,7 +612,7 @@ export class DataSpace {
    * Loads the root document, retrying until it loads, the root is superseded, or the space closes.
    * @returns null when the root was superseded by a newer epoch.
    */
-  private _loadAutomergeRootWithRetry(rootUrl: string): Promise<DocHandle<DatabaseDirectory> | null> {
+  private _loadAutomergeRootWithRetry(rootUrl: string): Promise<DocumentLease<DatabaseDirectory> | null> {
     return loadRootDocWithRetry({
       ctx: this._ctx,
       attempt: () =>
