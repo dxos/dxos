@@ -2,15 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { compatCodec } from '@dxos/protocols/buf-shape-compat';
 import { RpcMessageSchema } from '@dxos/protocols/buf/dxos/rpc_pb';
 import { schema } from '@dxos/protocols/proto';
 import { type RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
+import { type TestService } from '@dxos/protocols/proto/example/testing/rpc';
 
 import { type RpcPort } from './rpc';
-import { createProtoRpcPeer } from './service';
+import { type ProtoRpcPeer, createProtoRpcPeer } from './service';
 import { createLinkedPorts } from './testing';
 
 // `ServiceHandler` writes protobuf.js's `fullName` into `Any.type_url`, which carries a leading dot;
@@ -19,7 +20,54 @@ import { createLinkedPorts } from './testing';
 
 const codec = compatCodec<RpcMessage>(RpcMessageSchema);
 
+describe('Any.type_url across the legacy/buf service boundary', () => {
+  test('the legacy service path writes a dotted type_url', async ({ expect }) => {
+    const [clientPort, serverPort] = createLinkedPorts();
+    const { port, seen } = rewriteOutgoingTypeUrl(clientPort, (typeUrl) => typeUrl);
+    await withPair(port, serverPort, async (client) => {
+      await client.rpc.TestService.testCall({ data: 'x' });
+    });
+
+    // Documents the value `#8` changes; if this stops being dotted the rebuild has already happened.
+    expect(seen.length).toBeGreaterThan(0);
+    expect(seen.every((typeUrl) => typeUrl.startsWith('.'))).toBe(true);
+  });
+
+  test('a buf-shaped client (dot-free type_url) is understood by a legacy server', async ({ expect }) => {
+    const [clientPort, serverPort] = createLinkedPorts();
+    const { port, seen } = rewriteOutgoingTypeUrl(clientPort, stripLeadingDot);
+    await withPair(port, serverPort, async (client) => {
+      expect((await client.rpc.TestService.testCall({ data: 'request' })).data).toEqual('echo:request');
+    });
+
+    expect(seen.some((typeUrl) => typeUrl.startsWith('.'))).toBe(true);
+  });
+
+  test('a buf-shaped server (dot-free type_url) is understood by a legacy client', async ({ expect }) => {
+    const [clientPort, serverPort] = createLinkedPorts();
+    const { port, seen } = rewriteOutgoingTypeUrl(serverPort, stripLeadingDot);
+    await withPair(clientPort, port, async (client) => {
+      expect((await client.rpc.TestService.testCall({ data: 'request' })).data).toEqual('echo:request');
+    });
+
+    expect(seen.some((typeUrl) => typeUrl.startsWith('.'))).toBe(true);
+  });
+
+  test('a legacy peer talking to one that expects dots still round-trips', async ({ expect }) => {
+    // The reverse direction, for when only one side of a deployment has been rebuilt.
+    const [clientPort, serverPort] = createLinkedPorts();
+    const { port, seen } = rewriteOutgoingTypeUrl(clientPort, addLeadingDot);
+    await withPair(port, serverPort, async (client) => {
+      expect((await client.rpc.TestService.testCall({ data: 'request' })).data).toEqual('echo:request');
+    });
+
+    expect(seen.length).toBeGreaterThan(0);
+  });
+});
+
 type Rewriter = (typeUrl: string) => string;
+
+type Bundle = { TestService: TestService };
 
 /**
  * Wraps a port so every `Any.type_url` leaving it is rewritten, making one peer emit exactly what a
@@ -47,6 +95,21 @@ const rewriteOutgoingTypeUrl = (port: RpcPort, rewrite: Rewriter) => {
 const stripLeadingDot: Rewriter = (typeUrl) => (typeUrl.startsWith('.') ? typeUrl.slice(1) : typeUrl);
 const addLeadingDot: Rewriter = (typeUrl) => (typeUrl.startsWith('.') ? typeUrl : `.${typeUrl}`);
 
+/** Opens a peer pair, runs `body`, and closes both regardless of the outcome. */
+const withPair = async (
+  clientPort: RpcPort,
+  serverPort: RpcPort,
+  body: (client: ProtoRpcPeer<Bundle>) => Promise<void>,
+): Promise<void> => {
+  const { server, client } = openPair(clientPort, serverPort);
+  await Promise.all([server.open(), client.open()]);
+  try {
+    await body(client);
+  } finally {
+    await Promise.all([client.close(), server.close()]);
+  }
+};
+
 const openPair = (clientPort: RpcPort, serverPort: RpcPort) => {
   const server = createProtoRpcPeer({
     exposed: { TestService: schema.getService('example.testing.rpc.TestService') },
@@ -66,55 +129,3 @@ const openPair = (clientPort: RpcPort, serverPort: RpcPort) => {
 
   return { server, client };
 };
-
-describe('Any.type_url across the legacy/buf service boundary', () => {
-  test('the legacy service path writes a dotted type_url', async () => {
-    const [clientPort, serverPort] = createLinkedPorts();
-    const { port, seen } = rewriteOutgoingTypeUrl(clientPort, (typeUrl) => typeUrl);
-    const { server, client } = openPair(port, serverPort);
-    await Promise.all([server.open(), client.open()]);
-
-    await client.rpc.TestService.testCall({ data: 'x' });
-
-    // Documents the value `#8` changes; if this stops being dotted the rebuild has already happened.
-    expect(seen.length).toBeGreaterThan(0);
-    expect(seen.every((typeUrl) => typeUrl.startsWith('.'))).toBe(true);
-  });
-
-  test('a buf-shaped client (dot-free type_url) is understood by a legacy server', async () => {
-    const [clientPort, serverPort] = createLinkedPorts();
-    const { port, seen } = rewriteOutgoingTypeUrl(clientPort, stripLeadingDot);
-    const { server, client } = openPair(port, serverPort);
-    await Promise.all([server.open(), client.open()]);
-
-    const response = await client.rpc.TestService.testCall({ data: 'request' });
-
-    expect(response.data).toEqual('echo:request');
-    expect(seen.some((typeUrl) => typeUrl.startsWith('.'))).toBe(true);
-  });
-
-  test('a buf-shaped server (dot-free type_url) is understood by a legacy client', async () => {
-    const [clientPort, serverPort] = createLinkedPorts();
-    const { port, seen } = rewriteOutgoingTypeUrl(serverPort, stripLeadingDot);
-    const { server, client } = openPair(clientPort, port);
-    await Promise.all([server.open(), client.open()]);
-
-    const response = await client.rpc.TestService.testCall({ data: 'request' });
-
-    expect(response.data).toEqual('echo:request');
-    expect(seen.some((typeUrl) => typeUrl.startsWith('.'))).toBe(true);
-  });
-
-  test('a legacy peer talking to one that expects dots still round-trips', async () => {
-    // The reverse direction, for when only one side of a deployment has been rebuilt.
-    const [clientPort, serverPort] = createLinkedPorts();
-    const { port, seen } = rewriteOutgoingTypeUrl(clientPort, addLeadingDot);
-    const { server, client } = openPair(port, serverPort);
-    await Promise.all([server.open(), client.open()]);
-
-    const response = await client.rpc.TestService.testCall({ data: 'request' });
-
-    expect(response.data).toEqual('echo:request');
-    expect(seen.length).toBeGreaterThan(0);
-  });
-});

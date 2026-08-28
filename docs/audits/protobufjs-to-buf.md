@@ -219,8 +219,9 @@ independent flags, and `service.ts` asserts `!method.requestStream`, so only the
 are reachable here -- `methodKind === 'unary'` stands in for `!responseStream` across the services
 DXOS actually declares, not in general. But the request/response type names diverge:
 protobuf.js reports `.dxos.mesh.teleport.control.RegisterExtensionRequest` with a leading dot and
-buf reports it without, and that string is what `ServiceHandler` writes into `Any.type_url` on every
-call and response. Two conventions coexist and must not be conflated: `Codec.encode` writes
+buf reports it without, and that string goes into `Any.type_url` from both ends: the client `Service`
+writes the request type on every call, and `ServiceHandler.call`/`callStream` write the response type
+on every reply. Two conventions coexist and must not be conflated: `Codec.encode` writes
 `fullName.slice(1)`, dot-free, and the messaging and swarm paths dispatch on exactly that
 (`swarm-messenger` compares against `dxos.mesh.swarm.SwarmMessage`, `messenger` against
 `dxos.mesh.messaging.{ReliablePayload,Acknowledgement}`) -- buf's `typeName` is dot-free too, so
