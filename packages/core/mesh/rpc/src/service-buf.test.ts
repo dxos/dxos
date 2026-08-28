@@ -5,6 +5,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { Stream } from '@dxos/async';
+import { type ServiceDescriptorLike } from '@dxos/codec-protobuf';
 import { getBufService } from '@dxos/protocols/buf-service';
 import { schema } from '@dxos/protocols/proto';
 import {
@@ -32,6 +33,44 @@ const handlers = {
     testCall: async (req: { data?: string }) => ({ data: `echo:${req.data}` }),
     voidCall: async () => {},
   },
+};
+
+const bufStreamService = () => getBufService<TestStreamService>(STREAM_SERVICE);
+
+const streamHandlers = {
+  TestStreamService: {
+    testCall: () =>
+      new Stream<TestRpcResponse>(({ next, close }) => {
+        next({ data: 'one' });
+        next({ data: 'two' });
+        close();
+      }),
+  },
+};
+
+/** Drives one streaming call across a port, with each side's descriptor supplied by the caller. */
+const streamAcross = async (
+  exposed: ServiceDescriptorLike<TestStreamService>,
+  requested: ServiceDescriptorLike<TestStreamService>,
+): Promise<string[]> => {
+  const [clientPort, serverPort] = createLinkedPorts();
+  const server = createProtoRpcPeer({
+    exposed: { TestStreamService: exposed },
+    handlers: streamHandlers,
+    port: serverPort,
+  });
+  const client = createProtoRpcPeer({ requested: { TestStreamService: requested }, port: clientPort });
+  await Promise.all([server.open(), client.open()]);
+
+  const received: string[] = [];
+  await new Promise<void>((resolve, reject) => {
+    client.rpc.TestStreamService.testCall({ data: 'go' }).subscribe(
+      (msg: TestRpcResponse) => received.push(msg.data!),
+      (err?: Error) => (err ? reject(err) : resolve()),
+    );
+  });
+
+  return received;
 };
 
 describe('Buf service descriptor', () => {
@@ -79,35 +118,12 @@ describe('Buf service descriptor', () => {
   });
 
   test('a server-streaming method round-trips from a legacy server to a buf client', async () => {
-    const [clientPort, serverPort] = createLinkedPorts();
-    const server = createProtoRpcPeer({
-      exposed: { TestStreamService: schema.getService(STREAM_SERVICE) },
-      handlers: {
-        TestStreamService: {
-          testCall: () =>
-            new Stream<TestRpcResponse>(({ next, close }) => {
-              next({ data: 'one' });
-              next({ data: 'two' });
-              close();
-            }),
-        },
-      },
-      port: serverPort,
-    });
-    const client = createProtoRpcPeer({
-      requested: { TestStreamService: getBufService<TestStreamService>(STREAM_SERVICE) },
-      port: clientPort,
-    });
-    await Promise.all([server.open(), client.open()]);
+    expect(await streamAcross(schema.getService(STREAM_SERVICE), bufStreamService())).toEqual(['one', 'two']);
+  });
 
-    const received: string[] = [];
-    await new Promise<void>((resolve, reject) => {
-      client.rpc.TestStreamService.testCall({ data: 'go' }).subscribe(
-        (msg) => received.push(msg.data!),
-        (err) => (err ? reject(err) : resolve()),
-      );
-    });
-
-    expect(received).toEqual(['one', 'two']);
+  test('a server-streaming method round-trips from a buf server to a legacy client', async () => {
+    // The reverse direction: a buf `ServiceHandler` producing the stream, consumed by a legacy
+    // client. Streaming encodes each element separately, so one direction does not imply the other.
+    expect(await streamAcross(bufStreamService(), schema.getService(STREAM_SERVICE))).toEqual(['one', 'two']);
   });
 });
