@@ -88,17 +88,9 @@ jobs:
       - name: Setup
         uses: ./.depot/actions/setup
 
-      # Exports MOON_AFFECTED/MOON_BASE for this trigger, or nothing at all when the trigger wants a full
-      # run. Every moon step below is then one command line instead of a branch-keyed Affected/All pair.
       - name: Resolve affected scope
         uses: ./.depot/actions/affected
 
-      # ─── Stage 1: gates that need no build ──────────────────────────────────────────────────────
-      # Every gate here is an independent node script costing 1–6 s and needing nothing built, so they run
-      # concurrently rather than cheapest-first. The old ordering bought time-to-red-signal at the price of
-      # reporting one failure per run; `fail-fast: false` reports all of them at once, so a PR with an
-      # unformatted file AND a bad publish config learns both in one cycle. The stage now costs the slowest
-      # gate rather than their sum. `format-check` leads only by convention now — it no longer has to.
       - fail-fast: false
         parallel:
           - name: Check formatting
@@ -110,19 +102,11 @@ jobs:
           - name: Check publish config
             run: pnpm run check-publish-config
 
-          # Every gating rule on `.changeset/*.md` — parseability, bump levels, versionable packages, one
-          # entry per PR — in one pass, so a run reports all of them instead of stopping at the first. Each
-          # fails on something otherwise invisible until `changeset version` runs on `main`. The count rule
-          # is diff-based and self-skips outside a `pull_request`: on `main` `.changeset/` holds every
-          # unreleased entry, and a `merge_group` batches PRs that each legitimately carry their own. The
-          # missing-changeset reminder is advisory and stays its own job (`changeset-reminder`).
           - name: Check changesets
             env:
               CHANGESET_BASE_REF: ${{ github.event.pull_request.base.sha }}
             run: pnpm run check-changesets
 
-          # version.ts (DXOS_VERSION) + tauri.conf.json are derived from their package versions by
-          # sync-versions.mjs during release; fail the PR if a committed copy drifts out of sync.
           - name: Check version files in sync
             run: node scripts/sync-versions.mjs --check
 
@@ -139,10 +123,9 @@ jobs:
             run: pnpm run check-packages-published
 
       # `.npmrc` sets `strict-peer-dependencies` with `auto-install-peers=false`, so re-resolving is what
-      # surfaces an unsatisfiable peer. Deliberately NOT a sibling in the block above: `--no-frozen-lockfile`
-      # can rewrite `pnpm-lock.yaml`, which `.moon/tasks/all.yml` declares as an input to every task, and the
-      # `trap` that restores it does not survive a hard cancellation of the job. Alone here, a rewritten
-      # lockfile can never outlive the step and cost stages 2 and 3 their cache.
+      # surfaces an unsatisfiable peer. Not a sibling in the block above: `--no-frozen-lockfile` can rewrite
+      # `pnpm-lock.yaml`, an implicit input to every moon task, and the `trap` does not survive a hard
+      # cancellation.
       - name: Check for peer dependency issues
         run: |
           trap 'git checkout -- pnpm-lock.yaml' EXIT
@@ -158,42 +141,17 @@ jobs:
       - name: Check module structure
         run: moon run :check-module-structure
 
-      # ─── Stage 3: the three slow checks ─────────────────────────────────────────────────────────
-      # ~2m30s, ~1m and ~1m, so these run last — and concurrently, which puts the stage at knip's cost
-      # rather than their sum. `fail-fast: false` keeps the report-all property the old
-      # `continue-on-error` + gate-step pair existed for: fail-fast is free when steps cost seconds, but
-      # here it hides one failure behind the other for a whole further run of the job. The gate step is
-      # gone with it — a failing sibling now fails the block directly, and names itself in the UI.
-      #
-      # The two moon checks share ONE invocation rather than a lane each: they overlap in `^:build`, and
-      # moon schedules that graph once instead of two processes contending for the same task locks and
-      # cache writes. `--on-failure continue` is what makes it report both rather than bail at the first,
-      # the same reason the e2e and test cells pass it — and it is why this is `moon exec` and not
-      # `moon run`, which has no such flag.
-      #
-      # `env -u` because these two are the ONE pair of moon steps in the workflow that must NOT be
-      # affected-scoped, and the resolver's job-level export would otherwise scope them: both catch a
-      # property of an import edge, where the offending edit lands in a package neither project's inputs
-      # name — the same reason `check-boot-budget` runs unscoped on its own job. Unset rather than
-      # `MOON_AFFECTED=''`: empty is not "off", moon reads it as an empty base and still filters.
+      # One moon invocation, not a lane each: two concurrent moon processes in one workspace contend for
+      # the same task locks and cache writes. `moon exec` rather than `moon run` because only `exec` has
+      # `--on-failure`. `env -u` because both catch a property of an import edge, whose offending commit
+      # lands in a package neither project's inputs name — scoped, they no-op on the PRs they exist to
+      # catch. Unset rather than `MOON_AFFECTED=''`: empty is not "off", moon reads it as an empty base
+      # and still filters.
       - fail-fast: false
         parallel:
-          # Unused/undeclared dependencies and unreferenced files. Analyses the source tree — the knip
-          # config resolves workspace packages through their `source` export condition — so it needs no
-          # build, but at 85% of the job's real work it earns no place ahead of anything. Its own lane
-          # because it is the only one of the three that does not go through moon.
           - name: Check dependencies
             run: pnpm run knip
 
-          # `check-plugin-set` is what composer.space actually ships: it fails when a plugin the
-          # production set does not name reached the bundle anyway. Same reasoning as the boot budget —
-          # a property of an import edge, invisible to the build, the tests, and the app's own UI (a
-          # plugin absent from the registry can still be in the bundle) — and it needs its own
-          # `DX_PLUGIN_SET=production` bundle, which no other step builds. Gated here so the PR that
-          # introduces the leak is the one that fails, and on this runner rather than one of its own
-          # because stage 2 has already warmed `^:build`: 22s here against the boot budget's 41s when
-          # the two shared this job, cheap enough that a second machine's ~160s of setup would dominate.
-          #
           # `docs:bundle` IS the docs link check: `starlight-links-validator` runs as the last phase of
           # `astro build`.
           - name: Check production plugin set and docs links
@@ -204,12 +162,12 @@ jobs:
   # Static boot-graph budget over the production bundle, on its own runner. The class it catches is a
   # property of an IMPORT EDGE — a boot-reachable module reaching a barrel instead of a subpath — so a
   # refactor that relocates the edge silently drops the fix and neither the build nor the tests notice;
-  # three separate fixes were undone that way. Not affected-scoped — the job calls no resolver — because the
-  # offending edit lands in some other package. Here rather than on an `e2e` cell so that it gates the PR
-  # that introduces the regression: `e2e` runs on main/changeset-release or an explicit dispatch, so there
-  # it never gated one. Split out of `check`, where its ~41s of bundling (nothing else in the workflow builds
-  # `bundle`) sat behind that job's whole stage 1+2 sequence; the library builds it needs come from the
-  # remote cache instead.
+  # three separate fixes were undone that way. Not affected-scoped, because the offending edit lands in
+  # some other package. Here rather than on an `e2e` cell so that it gates the PR that introduces the
+  # regression: `e2e` runs on main/changeset-release or an explicit dispatch, so there it never gated one.
+  # Split out of `check`, where its ~41s of bundling (nothing else in the workflow builds `bundle`) sat
+  # behind that job's whole stage 1+2 sequence; the library builds it needs come from the remote cache
+  # instead.
   boot-budget:
     permissions:
       contents: read
@@ -451,9 +409,6 @@ jobs:
           - name: Clean stale test results
             run: rm -rf test-results
 
-      # One command, scoped by the MOON_AFFECTED/MOON_BASE the resolver exported — `moon exec` reads both,
-      # including through the uploader's `run:` input. This was four steps: affected × all, each duplicated
-      # for the presence of TRUNK_TOKEN.
       - name: Test
         if: ${{ env.TRUNK_TOKEN != '' }}
         uses: trunk-io/analytics-uploader@v1
@@ -466,7 +421,6 @@ jobs:
             moon exec --on-failure continue :test :test-browser :test-storybook :test-workerd
             --job ${{ matrix.shard }} --job-total 4 -- --no-file-parallelism
 
-      # Fallback for fork PRs and local runs where TRUNK_TOKEN is unavailable.
       - name: Test (no analytics)
         if: ${{ env.TRUNK_TOKEN == '' }}
         run: >-
@@ -525,8 +479,6 @@ jobs:
       - name: Setup
         uses: ./.depot/actions/setup
 
-      # `all` on an explicit e2e dispatch: that dispatch exists to run the whole suite, so its bundles
-      # cannot be scoped to what the branch happens to touch.
       - name: Resolve affected scope
         uses: ./.depot/actions/affected
         with:
@@ -599,18 +551,14 @@ jobs:
       - name: Setup
         uses: ./.depot/actions/setup
 
-      # Same `all` as `e2e-bundle`, and for the same reason — the two must agree or a cell runs suites
-      # whose bundle the warming job never built.
       - name: Resolve affected scope
         uses: ./.depot/actions/affected
         with:
           all: ${{ inputs.e2e }}
 
       # No bundle step: the `e2e-ci` targets declare `bundle-e2e` as a dep, so moon hydrates it from the
-      # cache `e2e-bundle` warmed. Everything below is per-cell preparation with no ordering between the
-      # four, and the browser download dominates it — so the cell pays for that download alone rather than
-      # for it plus a whole-tree `find` plus a moon query. `id`/outputs survive the block: Depot merges
-      # each unit's state back when they join.
+      # cache `e2e-bundle` warmed. Step `id`s and outputs survive the block: Depot snapshots each unit's
+      # env and outputs and merges them back on join.
       - parallel:
           # Only this cell's browser — the other two engines' downloads are dead weight here.
           - name: Install Playwright
@@ -640,10 +588,6 @@ jobs:
               [ -n "$targets" ] || { echo 'no e2e targets resolved'; exit 1; }
               echo "targets=$targets" >> "$GITHUB_OUTPUT"
 
-      # One command, scoped by the resolver's MOON_AFFECTED/MOON_BASE. `DX_E2E_RUN_ID` is now bound on
-      # every path rather than only the former "Test All" one: it is a `$`-input of the `e2e` task
-      # (`.moon/tasks/tag-e2e.yml`), so a path that left it unset hashed differently from one that set it
-      # empty — the two former steps already disagreed that way on ordinary pushes to main.
       - name: Test
         timeout-minutes: 35
         uses: trunk-io/analytics-uploader@v1

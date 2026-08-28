@@ -1,5 +1,7 @@
 name: Affected
-description: Resolve this run's moon affected scope from the CI trigger
+description: >
+  Resolve this run's moon affected scope from the CI trigger and export MOON_AFFECTED/MOON_BASE.
+  Call AFTER the setup action — this needs node on PATH.
 
 inputs:
   all:
@@ -11,10 +13,8 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    # Exports MOON_AFFECTED/MOON_BASE, or nothing at all for a full run, so every moon invocation in the
-    # job is one unconditional command line instead of an Affected/All pair keyed on the branch name.
-    # `moon exec` and `moon run` both read those two variables (2.5.2), including through the Trunk
-    # uploader's `run:` input. Must follow the setup action: it needs node on PATH.
+    # `moon exec` and `moon run` both read MOON_AFFECTED/MOON_BASE (2.5.2), including through the Trunk
+    # uploader's `run:` input.
     - name: Resolve affected scope
       shell: bash
       env:

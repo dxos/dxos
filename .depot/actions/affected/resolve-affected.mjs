@@ -4,41 +4,30 @@
 // Copyright 2026 DXOS.org
 //
 
-// Resolve one CI run's affected scope and export it as moon environment variables, so every moon
-// invocation in the job is a single unconditional command line.
+// moon's own `--affected remote` diffs against whatever `vcs.defaultBranch` resolves to, which is the
+// right base only for a topic-branch PR.
 //
-// `--affected remote` at each call site diffs against whatever `vcs.defaultBranch` resolves to, which
-// is the right base only for a topic-branch PR. Every other trigger carries its own exact base in the
-// event payload, and a local `depot ci run` carries no event at all — which is why the workflow used to
-// approximate all of them with `branch != 'main'` and carry an Affected and an All variant of every
-// step. Resolving once per job collapses those pairs and makes the same decision reproducible outside
-// CI: with no `GITHUB_*` in the environment this falls back to the merge-base with the default branch,
-// so `depot ci run`, `act` and a bare shell all compute what the real trigger would.
-//
-// Falling back to a FULL run whenever a base cannot be resolved is deliberate. moon exits 0 having run
-// nothing when the affected set comes back empty, so a base that silently fails to resolve turns every
-// gate in the workflow green — the same silent-degradation class the remote cache has
-// (`.agents/projects/ci/DESIGN.md`, "The failure mode that governs every decision here").
-//
-// Lives beside the action that calls it rather than in `scripts/`, the same way
-// `.depot/actions/test-report` keeps its shell script: nothing else invokes it, so deleting the action
-// should delete this too.
-//
-// Usage — `A=.depot/actions/affected/resolve-affected.mjs`:
-//   node $A                      # resolve for the current context
-//   node $A --event merge_group  # emulate another trigger
-//   node $A --base <ref>         # pin the base explicitly
-//   node $A --all                # force a full run
-//   eval "$(node $A --shell)"    # apply to the current shell
-//
-// Writes `KEY=value` lines to stdout, appends them to `$GITHUB_ENV` when set, and explains itself on
-// stderr — so `--shell` output stays evaluable.
+// Falling back to a FULL run whenever a base cannot be resolved: moon exits 0 having run nothing when
+// the affected set comes back empty, so a base that silently fails to resolve turns every gate in the
+// workflow green.
 
 import { execFileSync } from 'node:child_process';
 import { appendFileSync, existsSync, readFileSync } from 'node:fs';
 
-// Read rather than imported from `yaml`: this has to run before `pnpm install` and from outside the
-// workspace, so it stays on node builtins. `defaultBranch` appears once in the file.
+const USAGE = `Resolve the moon affected scope for a CI trigger.
+
+Usage: node .depot/actions/affected/resolve-affected.mjs [options]
+
+  --event <name>  Resolve as if this trigger fired. Default: $GITHUB_EVENT_NAME, else a local run.
+  --base <ref>    Compare against this revision instead of the trigger's own base.
+  --head <ref>    Compare up to this revision instead of the working tree.
+  --all           Force a full run.
+  --shell         Print \`export KEY=value\` lines, for eval.
+  --help          Print this.
+
+Writes KEY=value to stdout and appends it to $GITHUB_ENV when set; a full run writes nothing at all.
+Everything else goes to stderr, so --shell output stays evaluable.`;
+
 const DEFAULT_BRANCH_PATTERN = /^\s*defaultBranch:\s*['"]?([^'"\s#]+)/m;
 
 const FULL_RUN = Symbol('full run');
@@ -56,20 +45,17 @@ const main = () => {
   }
 
   const head = args.head ?? 'HEAD';
-  // Counting the diff proves the base is usable rather than merely resolvable, and separates "this PR
-  // touches nothing moon owns" from "the comparison silently found nothing" in the job log. Two dots
-  // from the merge-base rather than three from `base`, so the count includes the working tree — which
-  // is what moon's `remote` scope compares, and the whole point of the local case.
   const fork = tryGit('merge-base', base, head) ?? base;
-  const changed = tryGit('diff', '--name-only', fork)?.split('\n').filter(Boolean) ?? [];
+  const range = args.head ? [fork, args.head] : [fork];
+  const changed =
+    tryGit('diff', '--name-only', ...range)
+      ?.split('\n')
+      .filter(Boolean) ?? [];
   note(`Affected run — ${reason} (${base.slice(0, 8)}..${head}, ${changed.length} changed files).`);
 
   emit(args, { MOON_AFFECTED: 'remote', MOON_BASE: base, ...(args.head ? { MOON_HEAD: args.head } : {}) });
 };
 
-/**
- * Map a trigger to the base commit its affected set should be computed against, or `FULL_RUN`.
- */
 const resolve = ({ args, event, branch, defaultBranch }) => {
   if (args.all || process.env.CI_AFFECTED_ALL === 'true') {
     return { base: FULL_RUN, reason: 'requested explicitly' };
@@ -87,8 +73,6 @@ const resolve = ({ args, event, branch, defaultBranch }) => {
     case 'merge_group':
       return fromRevision(payload.merge_group?.base_sha, 'merge queue base', branch, defaultBranch);
 
-    // A scheduled run is the nightly full sweep, and a push to the default branch is what every
-    // affected comparison is measured against — neither has a meaningful base of its own.
     case 'schedule':
       return { base: FULL_RUN, reason: 'scheduled run' };
 
@@ -96,15 +80,10 @@ const resolve = ({ args, event, branch, defaultBranch }) => {
       if (branch === defaultBranch) {
         return { base: FULL_RUN, reason: `${event} on ${defaultBranch}` };
       }
-      // Deliberately NOT `push.before`, which is the branch's previous tip: a follow-up push would then
-      // test only its own commit and skip everything the branch changed before it.
       return fromMergeBase(branch, defaultBranch, `${event} on ${branch ?? 'a detached HEAD'}`);
   }
 };
 
-/**
- * Use `revision` when git can resolve it, else fall back to the merge-base, else to a full run.
- */
 const fromRevision = (revision, reason, branch, defaultBranch) => {
   const resolved = resolveCommit(revision);
   if (resolved) {
@@ -118,8 +97,8 @@ const fromRevision = (revision, reason, branch, defaultBranch) => {
 };
 
 const fromMergeBase = (branch, defaultBranch, reason) => {
-  // `origin/` first: a checkout's local `main` is whatever the clone happened to leave behind, and in a
-  // worktree it is routinely stale by hundreds of commits.
+  // `origin/` first: a checkout's local `main` is whatever the clone left behind, and in a worktree it
+  // is routinely stale.
   for (const ref of [`origin/${defaultBranch}`, defaultBranch]) {
     const resolved = resolveCommit(ref);
     const base = resolved && tryGit('merge-base', resolved, 'HEAD');
@@ -131,6 +110,10 @@ const fromMergeBase = (branch, defaultBranch, reason) => {
 };
 
 const parseArgs = (argv) => {
+  if (argv.includes('--help')) {
+    console.log(USAGE);
+    process.exit(0);
+  }
   const args = { all: false, shell: false };
   for (let index = 0; index < argv.length; index++) {
     const arg = argv[index];
@@ -213,6 +196,7 @@ const note = (message) => console.error(`affected: ${message}`);
 
 const fail = (message) => {
   note(message);
+  console.error(USAGE);
   process.exit(1);
 };
 

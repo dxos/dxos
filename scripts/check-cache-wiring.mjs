@@ -1,15 +1,8 @@
 // Every job that calls the setup action must either see all three remote-cache credentials or opt out
-// at that call site. A job that does neither used to run with no remote cache, silently and green —
-// `model-fixture.yml` did exactly that when it landed after the call sites were wired. The setup action
-// fails such a job, but failing in CI is a slower way to learn it than this.
+// at that call site. A job that does neither runs with no remote cache, silently and green.
 //
 // Scoped per job rather than per file: env can be set at workflow or job level, and one job opting
 // out must not excuse another job in the same file that did not.
-//
-// Both workflow directories and both action paths, because the check is worth exactly what it covers:
-// after the Depot CI migration every call site said `./.depot/actions/setup` and every moon-running
-// workflow lived in `.depot/workflows`, so a checker that knew only the `.github` spellings passed by
-// matching nothing at all — the same silent-green failure it exists to prevent.
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse } from 'yaml';
@@ -20,9 +13,6 @@ const REQUIRED = ['MOON_CACHE_CA_PEM', 'MOON_CACHE_CLIENT_PEM', 'MOON_CACHE_CLIE
 const problems = [];
 let callSites = 0;
 
-/**
- * Flatten Depot CI `parallel:`/`sequential:` groups, whose members are steps in their own right.
- */
 const flatten = (steps) =>
   (steps ?? []).flatMap((step) =>
     step?.parallel || step?.sequential ? flatten(step.parallel ?? step.sequential) : [step],
@@ -49,8 +39,6 @@ for (const dir of DIRS.filter((candidate) => existsSync(candidate))) {
   }
 }
 
-// A checker that matches nothing reports the same green as a correctly wired repo, which is how the
-// `.github`-only spellings survived the migration unnoticed.
 if (callSites === 0) {
   console.error(`No setup call sites found in ${DIRS.join(', ')} — this check is matching nothing.`);
   console.error(`Looked for a step with \`uses\` of: ${SETUP.join(' or ')}.`);
