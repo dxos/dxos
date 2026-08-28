@@ -46,7 +46,6 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.Update> = Markdown
         newContent = Text.apply(content, 'content', edits);
       });
 
-      // TODO(burdon): It may be inefficient to return the entire document.
       return { applied: edits.length, length: newContent.length };
     }),
   ),
