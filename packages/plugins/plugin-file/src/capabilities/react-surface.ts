@@ -11,7 +11,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { SchemaEx } from '@dxos/effect';
 import { File } from '@dxos/types';
 
-import { FileArticle, FileSettings } from '#containers';
+import { FileArticle, FileProperties, FileSettings } from '#containers';
 import { meta } from '#meta';
 
 import { FileAction } from '../types/FileCapabilities';
@@ -29,6 +29,13 @@ export default Capability.makeModule(() =>
         ),
         component: FileArticle,
         props: ({ role, data: { subject } }) => ({ role, subject }),
+      }),
+      Surface.create({
+        id: 'objectProperties',
+        // Renders inside `DefaultProperties`' `ObjectProperties` slot, so Name and Tags stay.
+        filter: AppSurface.object(AppSurface.ObjectProperties, File.File),
+        component: FileProperties,
+        props: ({ data: { subject } }) => ({ subject }),
       }),
       Surface.create({
         id: 'createForm',

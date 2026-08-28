@@ -31,6 +31,10 @@ export const translations = [
         'settings.backend.description':
           'Where uploaded files are stored. Install additional plugins (e.g. WNFS) to add backends.',
         'settings.backend.placeholder': 'Select backend',
+        'properties.reference.label': 'Reference',
+        'properties.url.label': 'URL',
+        'properties.url.regenerate.label': 'Regenerate URL',
+        'properties.url.description': 'Signed URLs for a private bucket expire; regenerate to get a fresh one.',
       },
     },
   },
