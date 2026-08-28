@@ -36,7 +36,7 @@ const RecoveryUiStory = ({ lines = [], busy = false, debugPortActive = false }: 
     ui.setBusy(busy);
   }, [lines, busy, debugPortActive]);
 
-  return <div ref={containerRef} className='dxos-recovery-fill' />;
+  return <div ref={containerRef} />;
 };
 
 const BANNER = [
