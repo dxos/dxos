@@ -1403,9 +1403,9 @@ export class AutomergeHost extends Resource {
       });
     }
 
-    const toReplicateWithoutBatching = [...different, ...missingOnRemote, ...missingOnLocal];
+    const toReplicate = [...different, ...missingOnRemote, ...missingOnLocal];
 
-    if (toReplicateWithoutBatching.length === 0) {
+    if (toReplicate.length === 0) {
       return;
     }
 
@@ -1415,9 +1415,9 @@ export class AutomergeHost extends Resource {
     log('replicating documents after collection sync', {
       collectionId,
       peerId,
-      count: toReplicateWithoutBatching.length,
+      count: toReplicate.length,
       handleStates: Object.fromEntries(
-        toReplicateWithoutBatching.map((documentId) => [documentId, getHandleState(this._repo, documentId)]),
+        toReplicate.map((documentId) => [documentId, getHandleState(this._repo, documentId)]),
       ),
     });
 
@@ -1426,7 +1426,7 @@ export class AutomergeHost extends Resource {
     // sync this triggers automerge-repo's doc-synchronizer; under Subduction it registers a
     // query for the sedimentreeId. Either way, once bytes arrive `_afterSave` populates
     // `SqliteHeadsStore` so collection sync sees the updated heads on the next diff.
-    for (const documentId of toReplicateWithoutBatching) {
+    for (const documentId of toReplicate) {
       // `findWithProgress` resolves from the existing query for an already-`ready` document and
       // `_documentsToSync` feeds a share policy Subduction does not consult, so a diverged
       // document reaching here gets no retry from either — the diff simply repeats next pass.

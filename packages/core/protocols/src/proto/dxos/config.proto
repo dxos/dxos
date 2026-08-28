@@ -143,9 +143,8 @@ message Runtime {
     }
 
     message EdgeFeatures {
-      /// Field 2 held `echo_replicator`, the classical Automerge edge transport, removed once
-      /// Subduction became the only edge replicator. Both the number and the name are reserved so
-      /// neither can be reused: a new field reusing the name would break JSON/text compatibility.
+      /// Field 2 held `echo_replicator`, the classical Automerge edge transport. Both the number
+      /// and the name are reserved: reusing either breaks wire or JSON/text compatibility.
       reserved 2;
       reserved "echo_replicator";
 

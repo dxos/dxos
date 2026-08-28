@@ -13,7 +13,7 @@ import { type AutomergeProtocolMessage, type SubductionProtocolMessage } from '@
  *
  * @remarks
  * - {@link AutomergeProtocolMessage}: the classical automerge-repo sync frames
- *   (carried by `EchoEdgeReplicator`, mesh, in-memory `TestAdapter`).
+ *   (carried by mesh replication and the in-memory `TestAdapter`).
  * - {@link SubductionProtocolMessage}: the in-process subduction shape
  *   (carried by `EchoEdgeSubductionReplicator` — envelopes are unwrapped to
  *   raw `SubductionConnectionMessage` before they reach the stream).
