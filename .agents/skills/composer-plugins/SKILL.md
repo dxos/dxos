@@ -694,7 +694,8 @@ See: `plugin-chess/moon.yml`
 - Avoid default exports in `src/components/`. The only default exports are in container `index.ts` files (for `React.lazy`).
 - Container-to-container imports use the default import: `import X from '../X';`.
 - Use `Panel.Root` with `role` prop in container article/section components.
-- All ECHO interfaces must be reactive. Use `useQuery`, `useObject`, atoms, etc.
+- All ECHO interfaces must be reactive. Use `useQuery`, `useObject`, atoms, etc. — patterns and
+  anti-patterns in the [reactivity](../reactivity/SKILL.md) skill.
 - Never hand-roll native `<input>`/`<textarea>`/`<select>` or invent color tokens (`bg-input`, `text-primary`). Edit objects with `Form` + schema and use `@dxos/react-ui` primitives / real `@dxos/react-ui-theme` tokens. See the **composer-ui** skill.
 
 ## Build & Test
