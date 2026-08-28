@@ -208,6 +208,7 @@
       "@dxos/typings",
       "@dxos/ui",
       "@dxos/ui-editor",
+      "@dxos/ui-icons",
       "@dxos/ui-theme",
       "@dxos/ui-types",
       "@dxos/util",
