@@ -30,7 +30,9 @@ for (const dir of DIRS.filter((candidate) => existsSync(candidate))) {
         if (String(step.with?.['remote-cache']) === 'false') continue;
 
         const visible = { ...(workflow.env ?? {}), ...(job.env ?? {}), ...(step.env ?? {}) };
-        const missing = REQUIRED.filter((name) => !(name in visible));
+        // Empty counts as missing, because the setup action tests `-z`: a bare `MOON_CACHE_CA_PEM:`
+        // parses to null and would otherwise pass here and fail the job.
+        const missing = REQUIRED.filter((name) => String(visible[name] ?? '') === '');
         if (missing.length) {
           problems.push({ file: join(dir, file), job: jobName, missing });
         }
