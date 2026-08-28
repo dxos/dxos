@@ -120,6 +120,7 @@ export class DocumentLease<T = any> implements Disposable {
     this.#handle.change(callback, options);
   }
 
+  /** Mutates the document as of `heads`, returning the resulting heads, or undefined if none applied. */
   changeAt(heads: UrlHeads, callback: A.ChangeFn<T>, options?: A.ChangeOptions<T>): UrlHeads | undefined {
     return this.#handle.changeAt(heads, callback, options);
   }

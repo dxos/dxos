@@ -164,9 +164,7 @@ describe('DocumentsSynchronizer', () => {
     });
   });
 
-  // The host used to keep every document a client had ever subscribed to: unsubscribing detached the
-  // change listener and left the document in the repo cache, so the client releasing an object
-  // bought nothing on the host side.
+  // Unsubscribing must release the host's lease, or a client releasing an object frees nothing here.
   test('unsubscribing releases the document on the host', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
