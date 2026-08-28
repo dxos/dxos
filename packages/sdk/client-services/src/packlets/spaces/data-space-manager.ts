@@ -3,13 +3,18 @@
 //
 
 import { type Doc } from '@automerge/automerge';
-import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
+import {
+  type AutomergeUrl,
+  type DocumentId,
+  interpretAsDocumentId,
+  isValidAutomergeUrl,
+} from '@automerge/automerge-repo';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
-import { Event, synchronized, trackLeaks } from '@dxos/async';
+import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Context, LifecycleState, Resource, cancelWithContext } from '@dxos/context';
 import {
@@ -215,6 +220,14 @@ export type CreateSpaceOptions = {
   membershipPolicy?: MembershipPolicy;
 };
 
+/** Backoff bounds for retrying an anchor that is waiting on replication or an unassigned directory. */
+const ANCHOR_RETRY_INITIAL = 500;
+const ANCHOR_RETRY_MAX = 30_000;
+
+/** Backoff bounds for reporting a space root to edge; replication normally lands well inside this. */
+const SPACE_ROOT_REPORT_RETRY_INITIAL = 500;
+const SPACE_ROOT_REPORT_RETRY_MAX = 30_000;
+
 @trackLeaks('open', 'close')
 export class DataSpaceManager extends Resource {
   public readonly updated = new Event();
@@ -223,6 +236,8 @@ export class DataSpaceManager extends Resource {
 
   /** Spaces created legacy in this session; see {@link _anchorSpaceOnRootDocument}. */
   private readonly _legacyCreatedSpaces = new Set<SpaceId>();
+  /** Roots named by an inviter, to adopt once they replicate; see {@link _anchorSpaceOnRootDocument}. */
+  private readonly _pendingSpaceRootUrls = new Map<SpaceId, AutomergeUrl>();
 
   private readonly _spaceManager: SpaceManager;
   private readonly _metadataStore: IMetadataStore;
@@ -491,6 +506,12 @@ export class DataSpaceManager extends Resource {
 
     const space = await this._constructSpace(ctx, metadata);
     await space.open(ctx);
+    // Anchoring must adopt the root the inviter named rather than mint one, so remember it: a second
+    // root over the same space would split its credential set, leaving members disagreeing about
+    // which document carries the chain.
+    if (opts.spaceRootUrl !== undefined && isValidAutomergeUrl(opts.spaceRootUrl)) {
+      this._pendingSpaceRootUrls.set(space.id, opts.spaceRootUrl);
+    }
     await this._metadataStore.addSpace(metadata);
     // Use DSM lifecycle ctx: the invitation accept flow disposes `ctx` as soon as
     // `acceptSpace` returns (guardedState.complete -> ctx.dispose). Detached data-pipeline
@@ -527,20 +548,70 @@ export class DataSpaceManager extends Resource {
 
     try {
       if (!this._echoHost.getSpaceRootRefs(space.id)) {
-        const refs = await this._echoHost.migrateSpaceToRootDocument(ctx, space.id);
-        if (!refs) {
-          return false;
-        }
+        // A root the inviter named is the space's only root; adopting it has to wait for it to
+        // replicate rather than fall through to minting a second one over the same space.
+        const named = this._pendingSpaceRootUrls.get(space.id);
+        if (named !== undefined) {
+          try {
+            const refs = await this._echoHost.adoptSpaceRoot(ctx, space.id, named);
+            this._pendingSpaceRootUrls.delete(space.id);
+            log('adopted the space root named by the inviter', { spaceId: space.id, refs });
+          } catch (err) {
+            log('space root named by the inviter has not replicated yet', { spaceId: space.id, named, err });
+            return false;
+          }
+        } else {
+          const refs = await this._echoHost.migrateSpaceToRootDocument(ctx, space.id);
+          if (!refs) {
+            return false;
+          }
 
-        log('migrated space to root document', { spaceId: space.id, refs });
+          log('migrated space to root document', { spaceId: space.id, refs });
+        }
       }
 
       await this._mirrorCredentialsToDocument(ctx, space);
+      this._reportSpaceRootToEdge(space);
       return true;
     } catch (err) {
       log.warn('failed to anchor space on a root document', { spaceId: space.id, err });
       return false;
     }
+  }
+
+  /**
+   * Names the space root to edge, which cannot derive it from a space id that is the hash of the
+   * space key, leaving the space on its control feed.
+   */
+  private _reportSpaceRootToEdge(space: DataSpace): void {
+    const refs = this._echoHost.getSpaceRootRefs(space.id);
+    if (!this._edgeHttpClient || !refs) {
+      return;
+    }
+
+    // Retried in the background because edge rejects a root whose documents have not replicated to
+    // it yet, and bound to the manager's own context because the invitation accept flow disposes
+    // its ctx the moment `acceptSpace` returns, which would cancel every pending retry.
+    let delay = SPACE_ROOT_REPORT_RETRY_INITIAL;
+    const report = async (): Promise<void> => {
+      try {
+        await this._edgeHttpClient!.recordSpaceRoot(this._ctx, space.id, {
+          rootDocumentUrl: refs.spaceRootDocUrl,
+        });
+        log('reported the space root to edge', { spaceId: space.id });
+      } catch (err) {
+        if (delay > SPACE_ROOT_REPORT_RETRY_MAX) {
+          log.warn('gave up reporting the space root to edge', { spaceId: space.id, err });
+          return;
+        }
+
+        log('space root not accepted by edge yet, retrying', { spaceId: space.id, delay, err });
+        scheduleTask(this._ctx, report, delay);
+        delay *= 2;
+      }
+    };
+
+    scheduleTask(this._ctx, report);
   }
 
   /**
@@ -861,22 +932,34 @@ export class DataSpaceManager extends Resource {
     // unassigned, and latching on the attempt would strand the space unanchored for the whole session.
     let anchored = false;
     let anchoring = false;
-    ctx.onDispose(
-      dataSpace.stateUpdate.on(() => {
-        if (anchored || anchoring || !dataSpace.isOpen) {
-          return;
-        }
+    let retryDelay = ANCHOR_RETRY_INITIAL;
+    const attemptAnchor = () => {
+      if (anchored || anchoring || !dataSpace.isOpen) {
+        return;
+      }
 
-        anchoring = true;
-        void this._anchorSpaceOnRootDocument(ctx, dataSpace)
-          .then((settled) => {
-            anchored = settled;
-          })
-          .finally(() => {
-            anchoring = false;
-          });
-      }),
-    );
+      anchoring = true;
+      void this._anchorSpaceOnRootDocument(ctx, dataSpace)
+        .then((settled) => {
+          anchored = settled;
+          if (settled) {
+            return;
+          }
+
+          // What an unsettled attempt waits on — an unassigned directory, or a root named by an
+          // inviter that has not replicated yet — arrives without emitting a space state update, so
+          // nothing else would ever retry.
+          if (retryDelay <= ANCHOR_RETRY_MAX) {
+            scheduleTask(this._ctx, attemptAnchor, retryDelay);
+            retryDelay *= 2;
+          }
+        })
+        .finally(() => {
+          anchoring = false;
+        });
+    };
+
+    ctx.onDispose(dataSpace.stateUpdate.on(attemptAnchor));
 
     this._spaces.set(metadata.key, dataSpace);
     return dataSpace;
