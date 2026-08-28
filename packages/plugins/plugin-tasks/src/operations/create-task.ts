@@ -11,7 +11,7 @@ import { Task } from '@dxos/types';
 import { TaskOperation } from '#types';
 
 import { InvalidOperationInput } from '../errors';
-import { addTaskToSet, refEntityId } from './task-set-membership';
+import { addPersisted, addTaskToSet, refEntityId } from './task-set-membership';
 
 const handler: Operation.WithHandler<typeof TaskOperation.CreateTask> = TaskOperation.CreateTask.pipe(
   Operation.withHandler(
@@ -40,15 +40,13 @@ const handler: Operation.WithHandler<typeof TaskOperation.CreateTask> = TaskOper
         }
       }
 
-      // A cross-set parent would flatten the hierarchy and hand the task's lifecycle to the other
-      // set's cascade; checked on the ref array so the targets need not be loaded.
       if (parent && !taskSet.tasks.some((ref) => refEntityId(ref) === parent.id)) {
         return yield* Effect.fail(
           new InvalidOperationInput({ message: 'The parent task does not belong to this task set.' }),
         );
       }
 
-      const task = yield* Database.add(
+      const task = yield* addPersisted(
         Task.make({
           title: title.trim(),
           status: 'todo',
@@ -59,9 +57,6 @@ const handler: Operation.WithHandler<typeof TaskOperation.CreateTask> = TaskOper
           milestone,
         }),
       );
-      // Flushed before the set gains the ref, so a crash strands an unfiled task rather than a
-      // set entry pointing at nothing.
-      yield* Database.flush();
       addTaskToSet(taskSet, task, parent);
       yield* Database.flush();
       return { task: task };

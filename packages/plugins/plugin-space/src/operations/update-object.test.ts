@@ -45,8 +45,6 @@ describe('SpaceOperation.UpdateObject', () => {
           Obj.make(TestContainer, { name: 'held', items: [Ref.make(first), Ref.make(second)] }),
         );
 
-        // The repair path DX-1217 found closed: rewriting a ref array (here, dropping an entry)
-        // with envelopes — plain envelopes left unconverted fail the type's schema validation.
         yield* Operation.invoke(SpaceOperation.UpdateObject, {
           object: Ref.make(container),
           properties: { items: [{ '/': Obj.getURI(first) }] },

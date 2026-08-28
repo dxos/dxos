@@ -18,8 +18,6 @@ const handler: Operation.WithHandler<typeof ProjectOperation.GetProject> = Proje
       const taskSet = project.taskSet
         ? yield* Database.load(project.taskSet).pipe(Effect.orElseSucceed(() => undefined))
         : undefined;
-      // Membership is the set's `tasks` array — one read, sub-tasks included. Loaded, not resolved
-      // synchronously: on a fresh session the refs have no targets yet and the set would read empty.
       const tasks = taskSet ? yield* TaskSet.loadTasks(taskSet) : [];
 
       const outline = project.outline

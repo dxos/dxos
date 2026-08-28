@@ -123,8 +123,8 @@ export const resolveMilestones = (taskSet: TaskSet): Milestone.Milestone[] =>
 /**
  * Loads the set's tasks in array order, de-duplicated by id. The async counterpart of
  * {@link resolveTasks}: each ref is loaded through its resolver, so the result is complete on a
- * fresh session, and — once loaded — the sync derived views below see the same objects. A dangling
- * ref (a member whose object was never persisted or has been removed) is skipped, not an error.
+ * fresh session. A dangling ref (a member whose object was never persisted or has been removed)
+ * is skipped, not an error.
  */
 export const loadTasks = (taskSet: TaskSet): Effect.Effect<Task.Task[], never, never> => loadRefs(taskSet.tasks);
 

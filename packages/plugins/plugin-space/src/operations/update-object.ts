@@ -18,22 +18,18 @@ const handler: Operation.WithHandler<typeof SpaceOperation.UpdateObject> = Space
       const resolved = yield* Database.load(object);
       Obj.update(resolved, (resolved) => {
         for (const [key, value] of Object.entries(properties)) {
-          // `setValue` rather than an index write: the object is only known to be `Obj.Unknown`,
-          // which declares no arbitrary properties. A patch arrives in wire form, so a reference is
-          // an envelope rather than a live `Ref` — mapped at any depth, since a ref-array property
-          // arrives as an array of envelopes and plain envelopes fail schema validation.
-          Obj.setValue(
-            resolved,
-            [key],
-            deepMapValues(value, (value, recurse) =>
-              EncodedReference.isEncodedReference(value) ? db.makeRef(EncodedReference.toURI(value)) : recurse(value),
-            ),
-          );
+          Obj.setValue(resolved, [key], wireValueToRefs(db, value));
         }
       });
       return { object: resolved };
     }),
   ),
 );
+
+/** A patch arrives in wire form: ref envelopes at any depth become live refs. */
+const wireValueToRefs = (db: Database.Database, value: unknown): unknown =>
+  deepMapValues(value, (value, recurse) =>
+    EncodedReference.isEncodedReference(value) ? db.makeRef(EncodedReference.toURI(value)) : recurse(value),
+  );
 
 export default handler;

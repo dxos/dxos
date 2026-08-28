@@ -28,7 +28,6 @@ export class TestCollectionItem extends Type.makeObject<TestCollectionItem>(
   DXN.make('com.example.type.testCollectionItem', '0.1.0'),
 )(Schema.Struct({ name: Schema.optional(Schema.String) }).pipe(CollectionItemAnnotation.set(true))) {}
 
-/** A type whose schema holds a reference array, the shape a task set's `tasks` presents to a patch. */
 export class TestContainer extends Type.makeObject<TestContainer>(DXN.make('com.example.type.testContainer', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
