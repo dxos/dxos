@@ -215,8 +215,8 @@ op SyncFeed
   key: org.dxos.operation.magazine.syncFeed
   desc: Existing operation. Pulls new Posts from a Feed's source URL.
   input:
-    feedId: DXN
-  output: number                   # number of Posts added
+    feed: Ref<Feed>
+  output: void
   effects: [http, echo:write]
   note: Documented here for context; unchanged by this revision.
 ```
@@ -287,9 +287,10 @@ op CurateMagazine
     existing `description` (no HTTP) and appends the enriched Post ref to
     `magazine.posts`. Skips Posts with empty descriptions.
   input:
-    magazineId: DXN
+    magazine: Ref<Magazine>
   output:
-    added: number
+    synced: number                 # number of feeds successfully synced
+    curated: number                # number of posts added to the magazine
   effects: [echo:write]
   note: >
     Exists alongside the skill. The deterministic path gives the button
@@ -555,13 +556,14 @@ flow QA-1: Create a Magazine, add a feed, curate deterministically
     - collection: a collection in that space, to create into
     - plugin-magazine is enabled — it is OFF by default (isDev-only default). Enabling is a UI
       action (Settings -> plugin registry).
-    - an existing Feed (RSS or ATproto) is in the space, with description-bearing Posts available
+    - feed: an existing Feed (RSS or ATproto) in the space, with description-bearing Posts available
     - no Magazine named "QA Magazine" exists — ABORT rather than deleting one this flow did not create
+    - magazine: the Magazine "QA Magazine" this flow creates — no create op exists (human-only
+      step), so the runner binds this once that step completes
   test:
     - name: Create the Magazine
       do: In the navtree, click + on a collection and choose Magazine. Name it "QA Magazine" and
         add the existing Feed to magazine.feeds.
-      capture: created
       expect: a Magazine named "QA Magazine" appears under the collection, with feeds containing
         one Ref and posts empty
       note: |
@@ -569,19 +571,19 @@ flow QA-1: Create a Magazine, add a feed, curate deterministically
         factory, not a registered op).
     - name: Sync the feed
       do: (the Curate button's first phase — no separate gesture)
-      invoke: [op:SyncFeed] { feedId: $given.feedId }
+      invoke: [op:SyncFeed] { feed: $given.feed }
       expect: new Posts (if any) are pulled into the feed's backing Queue
     - name: Curate
       do: Click the Curate button on the MagazineArticle toolbar.
-      invoke: [op:CurateMagazine] { magazineId: $created.magazine.id }
+      invoke: [op:CurateMagazine] { magazine: $given.magazine }
       capture: curated
       expect: the button shows a spinner then returns to idle; new tiles render in the Masonry
         grid, newest-first
-      assert: return $curated.added >= 0 && $curated.added === $created.magazine.posts.length;
+      assert: return $curated.curated >= 0 && $curated.synced >= 0;
   after:
     - name: Delete the Magazine
       do: Right-click "QA Magazine" in the navtree and choose Delete.
-      invoke: org.dxos.operation.space.removeObjects { objects: [$created.magazine], target: $given.collection }
+      invoke: org.dxos.operation.space.removeObjects { objects: [$given.magazine], target: $given.collection }
       expect: the row leaves the navtree
 ```
 

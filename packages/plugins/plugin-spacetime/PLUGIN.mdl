@@ -471,7 +471,7 @@ flow QA-1: Create a scene, add an object, and export it
     `actors: human`, per Field Rule 2 — a drag on the 3D canvas is not something a debug-port
     invoke can stand in for.
   actors: human
-  covers: [FR-1.1, FR-2.1, FR-6.3, T-FR-1.1]
+  covers: [FR-1.1, FR-2.1, FR-6.4, FR-7.2, T-FR-1.1]
   status: unverified
   given:
     - an identity exists
@@ -499,8 +499,8 @@ flow QA-1: Create a scene, add an object, and export it
   after:
     - name: Delete the scene
       do: Right-click "QA Scene" in the navtree and choose Delete.
-      invoke: org.dxos.operation.space.removeObjects { objects: [$given.scene], target: $given.space }
       expect: the row leaves the navtree and its plank closes
+      note: NO invoke — no step captures a Scene reference to bind, per the flow desc.
 ```
 
 ---

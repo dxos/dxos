@@ -341,12 +341,13 @@ flow QA-1: Configure, deploy and run a Claude managed agent
     - name: Start a session
       do: Click "Run" on the deployed "QA Agent" and enter a first message.
       invoke: org.dxos.operation.claudeAgents.startSession { agent: $created.id, message: "Say hello." }
+      capture: session
       expect: a ClaudeAgentSession is added to the space, keyed by the Anthropic session id, with
         its own vault
       blocked: Depends on the deployed agent from the previous (blocked) step.
     - name: Read the transcript
       do: Open the session and watch its transcript.
-      invoke: org.dxos.operation.claudeAgents.getTranscript { session: $given.session }
+      invoke: org.dxos.operation.claudeAgents.getTranscript { session: $session.id }
       expect: the user's message and the agent's reply appear, in order, and the session status
         refreshes
       blocked: Depends on the running session from the previous (blocked) step.

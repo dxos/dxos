@@ -125,10 +125,13 @@ flow QA-1: Connect a HeyGen key and generate a video
       invoke: org.dxos.operation.studio.generate { artifact: $created.object, provider: "heygen", config: { avatarId: "<picked-avatar-id>", voiceId: "<picked-voice-id>" } }
       capture: generated
       expect: |
-        a pending Variant is appended immediately (holding the in-flight HeyGen jobId), then once
-        polling completes it holds a video/mp4 result playable in the Artifact's variant list
-      assert: return $generated.count === 1
-      note: Async provider — `enqueue` returns a jobId, `awaitResult` polls `GET /v3/videos/{jobId}` until status 'completed'; the assert only confirms the append, not that polling finished.
+        the invoke blocks until HeyGen's job reaches a terminal state (enqueue + awaitResult both
+        run inside the operation), and the appended Variant holds a playable video/mp4 URL
+      assert: |
+        const artifact = await space.db.load($created.object);
+        const last = await space.db.load(artifact.variants[artifact.variants.length - 1]);
+        return $generated.count === 1 && last.contentType === 'video/mp4' && typeof last.url === 'string' && last.url.length > 0;
+      note: Async provider — `enqueue` returns a jobId, `awaitResult` polls `GET /v3/videos/{jobId}` until status 'completed' before the operation returns, so the assert can check the terminal Variant directly.
   after:
     - name: Delete the Artifact
       do: Right-click "QA Avatar Clip" in the navtree and choose Delete.

@@ -348,9 +348,12 @@ flow QA-1: Open the Devtools node and inspect an object
 
 ```mdl
 flow QA-2: Generate synthetic objects into a collection
-  desc: The Space Data Generator — the one devtools surface that writes to the database, via the shared space.addObject operation.
+  desc: |
+    The write path behind the Space Data Generator — the agent binding invokes the shared
+    space.addObject operation directly rather than driving the SpaceGenerator surface, so this
+    exercises F-5.2 (object creation) only, not F-5.1 (the surface rendering).
   actors: agent
-  covers: [F-5.1, F-5.2, T-4]
+  covers: [F-5.2, T-4]
   status: unverified
   given:
     - an identity exists
@@ -361,10 +364,10 @@ flow QA-2: Generate synthetic objects into a collection
       not create
   test:
     - name: Generate one object
-      do: Navigate to the debug node under the space, set count=1 and type=Person, and click Generate.
+      do: (agent-only — invokes space.addObject directly, bypassing the SpaceGenerator surface)
       invoke: org.dxos.operation.space.addObject { object: { "@type": "org.dxos.type.person", fullName: "QA Devtools Object" }, target: $given.collection }
       capture: created
-      expect: one new Person appears in the active collection, and DebugStatus briefly shows "running"
+      expect: one new Person named "QA Devtools Object" appears in the active collection
       assert: return !!$created.object
   after:
     - name: Delete the generated object
