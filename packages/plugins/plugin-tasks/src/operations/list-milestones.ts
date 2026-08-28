@@ -40,6 +40,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.ListMilestones> = Task
         return { milestones: [] };
       }
 
+      // Loaded, not resolved: cold refs dropped here would shorten the list and skew progress.
       const tasks = yield* TaskSet.loadTasks(taskSet);
       const milestones = (yield* TaskSet.loadMilestones(taskSet)).map((milestone) => {
         const { total, done } = TaskSet.milestoneProgress(tasks, milestone);

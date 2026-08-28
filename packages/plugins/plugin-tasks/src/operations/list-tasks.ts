@@ -49,6 +49,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.ListTasks> = TaskOpera
           : undefined;
       }
 
+      // Loaded, not resolved: cold refs dropped from the list would silently shorten it.
       const all = taskSet ? yield* TaskSet.loadTasks(taskSet) : [];
       const scoped = includeSubtasks ? all : TaskSet.rootTasks(all);
       // Resolved against the whole set, not `scoped`: a root task's milestone can only be its own,
