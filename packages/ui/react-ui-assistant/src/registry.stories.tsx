@@ -74,8 +74,12 @@ export const Synthetic: Story = {
 
 export const Reasoning: Story = {
   args: {
-    content:
-      '<reasoning>The user is asking about nested flex layouts and overflow. I should mention min-height 0 and grid track sizing.</reasoning>',
+    content: trim`
+      <reasoning>
+      The user is asking about nested flex layouts and overflow. 
+      I should mention min-height 0 and grid track sizing.
+      </reasoning>
+    `,
   },
 };
 
@@ -93,8 +97,13 @@ export const Reference: Story = {
 
 export const Suggestion: Story = {
   args: {
-    content:
-      '<suggestion>Show me the layout rules (this is a very very long suggestion that should truncate)</suggestion><suggestion>Explain min-h-0</suggestion><suggestion>Draft a fix</suggestion>',
+    // Joined, not one per line: the renderer emits a run of suggestions on a single line, and a
+    // document newline is a new line in the editor no matter how the chips are styled.
+    content: [
+      '<suggestion>Show me the layout rules (this is a very very long suggestion that should truncate)</suggestion>',
+      '<suggestion>Suggestion 2</suggestion>',
+      '<suggestion>Suggestion 3</suggestion>',
+    ].join(''),
   },
 };
 
@@ -102,9 +111,13 @@ export const Select: Story = {
   args: {
     content: trim`
       <select>
-        <option>Scroll the leaf</option>
-        <option>Scroll the panel</option>
-        <option>Do nothing</option>
+        <option>Select red</option>
+        <option>Select green</option>
+        <option>Select blue</option>
+        <option>Select yellow</option>
+        <option>Select purple</option>
+        <option>Select orange</option>
+        <option>Select pink</option>
       </select>
     `,
   },
