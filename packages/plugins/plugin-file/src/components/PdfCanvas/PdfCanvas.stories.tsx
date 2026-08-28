@@ -9,6 +9,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
+import landscapeUrl from '../../../fixtures/landscape.pdf?url';
+import longUrl from '../../../fixtures/long.pdf?url';
 import pdfUrl from '../../../fixtures/test.pdf?url';
 import { PdfCanvas } from './PdfCanvas';
 
@@ -59,5 +61,47 @@ export const Invalid: Story = {
       await expect(canvas.getByRole('alert')).toBeInTheDocument();
     });
     await expect(canvasElement.querySelectorAll('[data-page] canvas')).toHaveLength(0);
+  },
+};
+
+/** Landscape pages: fit-page must fit BOTH axes, or a wide page still overflows the viewport. */
+export const LandscapeFitPage: Story = {
+  args: { url: landscapeUrl, fit: 'page' },
+  play: async ({ canvasElement }) => {
+    await waitFor(
+      async () => {
+        await expect(canvasElement.querySelectorAll('[data-page] canvas').length).toBeGreaterThan(0);
+      },
+      { timeout: 20_000 },
+    );
+    const container = canvasElement.querySelector('[data-page]')!.closest('div[class*="overflow-auto"]')!;
+    const page = canvasElement.querySelector('[data-page]')!;
+    // The whole page fits, rather than only its width.
+    await expect(page.getBoundingClientRect().height).toBeLessThanOrEqual(container.getBoundingClientRect().height);
+    await expect(page.getBoundingClientRect().width).toBeLessThanOrEqual(container.getBoundingClientRect().width);
+  },
+};
+
+/** A long document must not rasterise every page up front — that is what took the tab down. */
+export const Long: Story = {
+  args: { url: longUrl },
+  play: async ({ canvasElement }) => {
+    await waitFor(
+      async () => {
+        await expect(canvasElement.querySelectorAll('[data-page]')).toHaveLength(120);
+      },
+      { timeout: 30_000 },
+    );
+    // Every page is present and sized, so the scrollbar is honest...
+    const pages = [...canvasElement.querySelectorAll('[data-page]')];
+    await expect(pages[119].getBoundingClientRect().height).toBeGreaterThan(0);
+    // ...but only those near the viewport are drawn. Measured by the inline size the renderer sets,
+    // not `canvas.width`: an undrawn canvas reports the spec default of 300, so a size check passes
+    // for every page whether or not anything was rasterised.
+    await waitFor(async () => {
+      const drawn = pages.filter((page) => page.querySelector('canvas')?.style.width).length;
+      await expect(drawn).toBeGreaterThan(0);
+      await expect(drawn).toBeLessThan(30);
+    });
   },
 };

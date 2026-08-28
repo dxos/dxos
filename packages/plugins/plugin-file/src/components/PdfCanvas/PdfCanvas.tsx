@@ -18,6 +18,7 @@ import {
 import workerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
 import React, { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
+import { log } from '@dxos/log';
 import { composable, composableProps, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -55,6 +56,9 @@ export type PdfCanvasProps = {
   apiRef?: React.Ref<PdfApi>;
 };
 
+/** One pass of the windowed renderer; `cancelled` unwinds it when a resize or unmount supersedes it. */
+type RenderRun = { cancelled: boolean; task?: RenderTask };
+
 type PageRefs = {
   page: HTMLDivElement | null;
   canvas: HTMLCanvasElement | null;
@@ -83,6 +87,10 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
     const refs = useRef<PageRefs[]>([]);
     const documentRef = useRef<PDFDocumentProxy | undefined>(undefined);
     const textRef = useRef<PdfPageText[]>([]);
+    /** Unscaled page dimensions, so a page can be sized before it is drawn. */
+    const sizesRef = useRef<({ width: number; height: number } | undefined)[]>([]);
+    /** Scale each page was last drawn at, so scrolling back does not re-rasterise it. */
+    const renderedRef = useRef<(number | undefined)[]>([]);
     // The live query, so a search typed before the text index finished loading can be re-run once it
     // is ready. Without this, searching a large document during its first seconds silently returns
     // nothing and never corrects itself.
@@ -101,7 +109,7 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
     // Tracks the in-flight render so a resize or an unmount can cancel it. Without this, tearing the
     // document down mid-render leaves `page.render(…).promise` and `getPage` rejecting with
     // `RenderingCancelledException` / `Transport destroyed` and nothing to catch them.
-    const renderRef = useRef<{ cancelled: boolean; task?: RenderTask } | undefined>(undefined);
+    const renderRef = useRef<RenderRun | undefined>(undefined);
 
     const cancelRender = useCallback(() => {
       const current = renderRef.current;
@@ -112,7 +120,10 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
       }
     }, []);
 
-    const getRefs = (index: number): PageRefs => (refs.current[index] ??= { page: null, canvas: null, text: null });
+    const getRefs = useCallback(
+      (index: number): PageRefs => (refs.current[index] ??= { page: null, canvas: null, text: null }),
+      [],
+    );
 
     const runSearch = useCallback((query: string) => {
       const found = findMatches(textRef.current, query);
@@ -120,9 +131,96 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
       setActiveMatch(found.length > 0 ? 1 : 0);
     }, []);
 
-    // Fits each page to the container, at device resolution so text stays sharp on a HiDPI display —
-    // a canvas sized in CSS pixels renders visibly soft.
-    const renderPages = useCallback(
+    /** Page size at scale 1, resolved once so placeholders can be sized without rendering. */
+    const sizePage = useCallback((index: number): { width: number; height: number } | undefined => {
+      return sizesRef.current[index];
+    }, []);
+
+    /** Scale that fits a page to the container under the current fit mode. */
+    const scaleFor = useCallback((size: { width: number; height: number }, fitMode: PdfFit): number => {
+      const container = containerRef.current;
+      if (!container) {
+        return 1;
+      }
+      const widthScale = (container.clientWidth - PAGE_MARGIN * 2) / size.width;
+      if (fitMode === 'width') {
+        return widthScale;
+      }
+      // Fit-page must fit BOTH axes, which is what makes a landscape page usable: fitting width
+      // alone leaves a wide page taller than the viewport and it reads as if fit did nothing.
+      return Math.min(widthScale, (container.clientHeight - PAGE_MARGIN * 2) / size.height);
+    }, []);
+
+    // Renders one page at device resolution, so text stays sharp on a HiDPI display — a canvas
+    // sized in CSS pixels renders visibly soft.
+    const renderPage = useCallback(
+      async (pdf: PDFDocumentProxy, pageNumber: number, fitMode: PdfFit, run: RenderRun) => {
+        const { canvas, text } = getRefs(pageNumber - 1);
+        const size = sizePage(pageNumber - 1);
+        if (!canvas || !size || run.cancelled) {
+          return;
+        }
+
+        const scale = scaleFor(size, fitMode);
+        // Skip a page already drawn at this scale; scrolling back over it must not re-rasterise.
+        if (renderedRef.current[pageNumber - 1] === scale) {
+          return;
+        }
+
+        const page = await pdf.getPage(pageNumber);
+        if (run.cancelled) {
+          return;
+        }
+
+        const viewport = page.getViewport({ scale });
+        const ratio = globalThis.devicePixelRatio ?? 1;
+        canvas.width = Math.floor(viewport.width * ratio);
+        canvas.height = Math.floor(viewport.height * ratio);
+        canvas.style.width = `${Math.floor(viewport.width)}px`;
+        canvas.style.height = `${Math.floor(viewport.height)}px`;
+
+        const context = canvas.getContext('2d');
+        if (!context) {
+          return;
+        }
+        const task = page.render({ canvas, canvasContext: context, viewport, transform: [ratio, 0, 0, ratio, 0, 0] });
+        run.task = task;
+        await task.promise;
+        if (run.cancelled) {
+          return;
+        }
+
+        if (text) {
+          text.replaceChildren();
+          // `--total-scale-factor` is the property pdf.js' own stylesheet reads to size and place
+          // each span; `--scale-factor` alone leaves every glyph at the default 16px.
+          text.style.setProperty('--total-scale-factor', String(scale));
+          text.style.setProperty('--scale-factor', String(scale));
+          const layer = new TextLayer({
+            textContentSource: await page.getTextContent(),
+            container: text,
+            viewport,
+          });
+          await layer.render();
+        }
+
+        renderedRef.current[pageNumber - 1] = scale;
+      },
+      [getRefs, scaleFor, sizePage],
+    );
+
+    /**
+     * Renders the pages currently near the viewport.
+     *
+     * Only those, because rendering a whole document up front does not survive contact with a real
+     * one: a few hundred pages is a few hundred rasterisations and text layers held at once, which
+     * takes the tab down. Pages outside the window keep their placeholder box, so scroll position
+     * and page numbering stay correct.
+     *
+     * Each page is isolated: pdf.js raises on individual pages (a JBIG2 image it cannot decode, a
+     * broken font), and one such page must not stop every page after it from drawing.
+     */
+    const renderVisible = useCallback(
       async (pdf: PDFDocumentProxy, fitMode: PdfFit) => {
         const container = containerRef.current;
         if (!container) {
@@ -130,82 +228,49 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
         }
 
         cancelRender();
-        const run: { cancelled: boolean; task?: RenderTask } = { cancelled: false };
+        const run: RenderRun = { cancelled: false };
         renderRef.current = run;
 
-        try {
-          for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
-            const { canvas, text } = getRefs(pageNumber - 1);
-            if (!canvas || run.cancelled) {
-              continue;
-            }
-
-            const page = await pdf.getPage(pageNumber);
-            if (run.cancelled) {
-              return;
-            }
-
-            const unscaled = page.getViewport({ scale: 1 });
-            // Fit-page uses the smaller of the two ratios so the whole page is visible; fit-width
-            // ignores height and lets the page scroll. Both leave room for the gap between pages.
-            const widthScale = (container.clientWidth - PAGE_MARGIN * 2) / unscaled.width;
-            const scale =
-              fitMode === 'page'
-                ? Math.min(widthScale, (container.clientHeight - PAGE_MARGIN * 2) / unscaled.height)
-                : widthScale;
-            const viewport = page.getViewport({ scale });
-            const ratio = globalThis.devicePixelRatio ?? 1;
-
-            canvas.width = Math.floor(viewport.width * ratio);
-            canvas.height = Math.floor(viewport.height * ratio);
-            canvas.style.width = `${Math.floor(viewport.width)}px`;
-            canvas.style.height = `${Math.floor(viewport.height)}px`;
-
-            const context = canvas.getContext('2d');
-            if (!context) {
-              continue;
-            }
-            run.task = page.render({
-              canvas,
-              canvasContext: context,
-              viewport,
-              transform: [ratio, 0, 0, ratio, 0, 0],
-            });
-            await run.task.promise;
-
-            if (text && !run.cancelled) {
-              text.replaceChildren();
-              // pdf.js positions the spans from this custom property, so it has to be set on the
-              // layer before rendering or every span lands at the wrong scale.
-              text.style.setProperty('--scale-factor', String(scale));
-              text.style.width = `${Math.floor(viewport.width)}px`;
-              text.style.height = `${Math.floor(viewport.height)}px`;
-              const layer = new TextLayer({
-                textContentSource: await page.getTextContent(),
-                container: text,
-                viewport,
-              });
-              await layer.render();
-            }
+        const origin = container.getBoundingClientRect();
+        const window = origin.height * RENDER_WINDOW;
+        const wanted: number[] = [];
+        for (let index = 0; index < pdf.numPages; index++) {
+          const element = refs.current[index]?.page;
+          if (!element) {
+            continue;
           }
-        } catch (error) {
-          // A cancelled render is the expected outcome of a resize or an unmount, not a fault. Any
-          // other failure is a real one and must not be swallowed.
-          if (!run.cancelled) {
-            throw error;
-          }
-        } finally {
-          if (renderRef.current === run) {
-            renderRef.current = undefined;
-          }
-          if (!run.cancelled) {
-            // Highlights are measured from the rendered spans, so they can only be placed once the
-            // text layer above exists at its final size.
-            setLayoutVersion((version) => version + 1);
+          const rect = element.getBoundingClientRect();
+          if (rect.bottom >= origin.top - window && rect.top <= origin.bottom + window) {
+            wanted.push(index + 1);
           }
         }
+
+        for (const pageNumber of wanted) {
+          if (run.cancelled) {
+            break;
+          }
+          try {
+            await renderPage(pdf, pageNumber, fitMode, run);
+          } catch (error) {
+            if (run.cancelled) {
+              break;
+            }
+            // Logged rather than thrown: a page pdf.js cannot draw is a property of the document,
+            // and the rest of it is still worth reading.
+            log.warn('failed to render page', { pageNumber, error });
+          }
+        }
+
+        if (renderRef.current === run) {
+          renderRef.current = undefined;
+        }
+        if (!run.cancelled) {
+          // Highlights are measured from the rendered spans, so they can only be placed once the
+          // text layers above exist at their final size.
+          setLayoutVersion((version) => version + 1);
+        }
       },
-      [cancelRender],
+      [cancelRender, renderPage],
     );
 
     useEffect(() => {
@@ -222,16 +287,40 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
             return;
           }
           documentRef.current = pdf;
+          sizesRef.current = [];
+          renderedRef.current = [];
+
+          // Dimensions first, and only dimensions: they size every placeholder so the scrollbar is
+          // honest from the outset, and they cost one cheap `getPage` each rather than a raster.
+          for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+            if (cancelled) {
+              return;
+            }
+            const { width, height } = (await pdf.getPage(pageNumber)).getViewport({ scale: 1 });
+            sizesRef.current[pageNumber - 1] = { width, height };
+          }
+          if (cancelled) {
+            return;
+          }
           setPageCount(pdf.numPages);
           onLoad?.(pdf.numPages);
 
           // Text of every page, resolved once. Searching re-reads it on every keystroke, and
           // `getTextContent` is a worker round-trip per page — fine once, not once per character.
+          // After the sizes, so the document is on screen before the index is built.
           const pages: PdfPageText[] = [];
           for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
-            const page = await pdf.getPage(pageNumber);
-            const content = await page.getTextContent();
-            pages.push({ items: content.items.map((item) => ('str' in item ? item.str : '')) });
+            if (cancelled) {
+              return;
+            }
+            try {
+              const content = await (await pdf.getPage(pageNumber)).getTextContent();
+              pages.push({ items: content.items.map((item) => ('str' in item ? item.str : '')) });
+            } catch (error) {
+              // A page whose text cannot be extracted is still worth showing; it just never matches.
+              log.warn('failed to read page text', { pageNumber, error });
+              pages.push({ items: [] });
+            }
           }
           if (!cancelled) {
             textRef.current = pages;
@@ -269,22 +358,42 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
         return;
       }
 
-      void renderPages(pdf, fit);
-      if (typeof ResizeObserver === 'undefined') {
-        return;
-      }
-      const observer = new ResizeObserver(() => {
-        const current = documentRef.current;
-        if (current) {
-          void renderPages(current, fit);
-        }
-      });
-      observer.observe(container);
+      // A resize or fit change invalidates every drawn page, since the scale moved.
+      renderedRef.current = [];
+      void renderVisible(pdf, fit);
+
+      // Scrolling brings new pages into the window; coalesced to a frame so a fling does not queue
+      // one pass per scroll event.
+      let frame = 0;
+      const onScroll = () => {
+        cancelAnimationFrame(frame);
+        frame = requestAnimationFrame(() => {
+          const current = documentRef.current;
+          if (current) {
+            void renderVisible(current, fit);
+          }
+        });
+      };
+      container.addEventListener('scroll', onScroll, { passive: true });
+
+      const observer =
+        typeof ResizeObserver === 'undefined'
+          ? undefined
+          : new ResizeObserver(() => {
+              const current = documentRef.current;
+              if (current) {
+                renderedRef.current = [];
+                void renderVisible(current, fit);
+              }
+            });
+      observer?.observe(container);
       return () => {
-        observer.disconnect();
+        cancelAnimationFrame(frame);
+        container.removeEventListener('scroll', onScroll);
+        observer?.disconnect();
         cancelRender();
       };
-    }, [pageCount, fit, renderPages, cancelRender]);
+    }, [pageCount, fit, renderVisible, cancelRender]);
 
     // The page under the top of the viewport is "current" — the same rule the browser's own viewer
     // uses, and the one that matches what a reader considers the page they are on.
@@ -407,6 +516,15 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
       );
     }
 
+    const placeholderStyle = (index: number) => {
+      const size = sizesRef.current[index];
+      if (!size) {
+        return undefined;
+      }
+      const scale = scaleFor(size, fit);
+      return { width: Math.floor(size.width * scale), height: Math.floor(size.height * scale) };
+    };
+
     return (
       <div
         {...composableProps(props, { classNames: 'h-full w-full overflow-auto bg-deck select-text' })}
@@ -419,7 +537,11 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
             <div
               key={index}
               data-page={index + 1}
-              className='relative w-fit shadow-md'
+              // Sized from the page's own dimensions rather than from its canvas, so a page outside
+              // the render window still occupies its true height and the scrollbar does not lurch as
+              // pages draw.
+              className='relative w-fit shadow-md bg-white'
+              style={placeholderStyle(index)}
               ref={(element) => {
                 getRefs(index).page = element;
               }}
@@ -443,6 +565,9 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
     );
   },
 );
+
+/** Viewport heights rendered either side of the visible area, so a scroll finds pages ready. */
+const RENDER_WINDOW = 1;
 
 /** Space around and between pages, in CSS pixels; matches the `gap-4`/`py-4` on the page column. */
 const PAGE_MARGIN = 16;
