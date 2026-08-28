@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Panel } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -18,9 +18,9 @@ import { Preview } from './Preview';
 const PNG_URL =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAADCAIAAAA7ljmRAAAAGUlEQVR4nGN47mMDRwx6ZwrhiMFkxm04AgBTKBIF1eRh+AAAAABJRU5ErkJggg==';
 
-const DefaultStory = ({ type, url }: { type: string; url: string }) => (
+const DefaultStory = ({ type, url, name, size }: { type: string; url: string; name?: string; size?: number }) => (
   <Panel.Root>
-    <Preview.Root type={type} url={url}>
+    <Preview.Root type={type} url={url} name={name} size={size}>
       <Panel.Toolbar asChild>
         <Preview.Toolbar />
       </Panel.Toolbar>
@@ -45,7 +45,29 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { type: 'application/pdf', url: pdfUrl },
+  args: { type: 'application/pdf', url: pdfUrl, name: 'test.pdf', size: 143262 },
+};
+
+/** The toolbar's controls are driven by state the content discovers, so this exercises the seam. */
+export const Search: Story = {
+  args: { type: 'application/pdf', url: pdfUrl, name: 'test.pdf' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(async () => await expect(canvas.getByText(/^1 \/ \d+$/)).toBeInTheDocument(), { timeout: 20_000 });
+
+    const input = canvas.getByPlaceholderText('Search');
+    await userEvent.type(input, 'SmartHome');
+    // The count comes from the fixture, so it is matched loosely rather than pinned to a number a
+    // replacement fixture would invalidate.
+    await waitFor(async () => await expect(canvas.getByText(/^1 of \d+$/)).toBeInTheDocument());
+    // Every match is highlighted, measured from the rendered text layer.
+    await expect(canvasElement.querySelectorAll('.dx-pdf-highlight').length).toBeGreaterThan(0);
+
+    await userEvent.clear(input);
+    await userEvent.type(input, 'nothingmatchesthis');
+    await waitFor(async () => await expect(canvas.getByText('No matches')).toBeInTheDocument());
+    await expect(canvasElement.querySelectorAll('.dx-pdf-highlight')).toHaveLength(0);
+  },
 };
 
 export const Image: Story = {
@@ -71,7 +93,7 @@ export const Pdf: Story = {
     // separate parts at all. Page-level rendering is covered by PdfCanvas' own stories.
     await waitFor(
       async () => {
-        await expect(canvas.getByText('1 page')).toBeInTheDocument();
+        await expect(canvas.getByText(/^1 \/ \d+$/)).toBeInTheDocument();
       },
       { timeout: 20_000 },
     );
@@ -79,11 +101,17 @@ export const Pdf: Story = {
   },
 };
 
-/** A type with no preview branch falls back to a download link. */
+/** A type with no preview branch: described rather than blank, with download still in the toolbar. */
 export const Unsupported: Story = {
-  args: { type: 'application/octet-stream', url: 'data:application/octet-stream;base64,AQID' },
+  args: {
+    type: 'application/octet-stream',
+    url: 'data:application/octet-stream;base64,AQID',
+    name: 'notes.bin',
+    size: 3,
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByText('Download file')).toBeInTheDocument();
+    await expect(canvas.getByText('No preview available for this file type.')).toBeInTheDocument();
+    await expect(canvas.getByTitle('Download')).toBeInTheDocument();
   },
 };

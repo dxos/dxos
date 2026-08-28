@@ -1,0 +1,52 @@
+/*
+ * Copyright 2026 DXOS.org
+ */
+
+/*
+ * Minimal equivalent of pdf.js' own `text_layer_builder.css`, inlined rather than imported from the
+ * package: the shipped stylesheet also carries viewer chrome we do not use, and its selectors assume
+ * the viewer's DOM.
+ *
+ * The layer is invisible text positioned exactly over the rendered canvas. That is what makes the
+ * page selectable and searchable — the canvas alone is pixels, with no text for the browser to find.
+ */
+
+.dx-pdf-text-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  line-height: 1;
+  text-size-adjust: none;
+  forced-color-adjust: none;
+  transform-origin: 0 0;
+  /* Without a visible caret the text is selectable but the selection is invisible while dragging. */
+  caret-color: CanvasText;
+  z-index: 1;
+}
+
+.dx-pdf-text-layer span,
+.dx-pdf-text-layer br {
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+  /* Transparent, not hidden: hidden text cannot be selected. */
+  color: transparent;
+}
+
+.dx-pdf-text-layer ::selection {
+  background: color-mix(in srgb, AccentColor 40%, transparent);
+}
+
+/* Highlights sit under the text layer so they do not swallow selection drags. */
+.dx-pdf-highlight {
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 1px;
+  background: color-mix(in srgb, gold 55%, transparent);
+}
+
+.dx-pdf-highlight[data-active='true'] {
+  background: color-mix(in srgb, orange 70%, transparent);
+}

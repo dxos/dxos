@@ -4,15 +4,29 @@
 
 import { createContext, useContext } from 'react';
 
+import { type PdfApi, type PdfCanvasState, type PdfFit } from '../PdfCanvas';
+
 // Kept out of `Preview.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and its hook exported beside them force a full page reload on every edit.
+
+/**
+ * What the toolbar needs from a paged document. Present only while such a document is displayed —
+ * an image has no pages to step through and no text to search.
+ */
+export type PreviewPaged = PdfCanvasState & {
+  api: PdfApi | undefined;
+  fit: PdfFit;
+  setFit: (fit: PdfFit) => void;
+};
 
 export type PreviewContextValue = {
   type: string;
   url: string;
-  /** Page count once a paged document has loaded; `undefined` for everything else. */
-  pageCount?: number;
-  setPageCount: (pageCount: number) => void;
+  /** Filename, when known; used for the download affordance and the unsupported-type details. */
+  name?: string;
+  size?: number;
+  paged?: PreviewPaged;
+  setPaged: (paged: PreviewPaged | undefined) => void;
 };
 
 export const PreviewContext = createContext<PreviewContextValue | undefined>(undefined);

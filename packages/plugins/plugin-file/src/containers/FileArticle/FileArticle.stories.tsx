@@ -99,22 +99,24 @@ export const Pdf: Story = {
     // browser's own viewer, which lives in another origin and cannot be themed.
     await waitFor(
       async () => {
-        await expect(canvasElement.querySelectorAll('canvas')).toHaveLength(1);
+        await expect(canvasElement.querySelectorAll('[data-page] canvas').length).toBeGreaterThan(0);
       },
       { timeout: 20_000 },
     );
     await expect(canvasElement.querySelector('iframe')).toBeNull();
-    await expect(canvas.getByText('1 page')).toBeInTheDocument();
+    await expect(canvas.getByText(/^1 \/ \d+$/)).toBeInTheDocument();
   },
 };
 
-/** A type with no preview branch: the article offers the bytes as a download instead. */
+/** A type with no preview branch: the article describes it, and the toolbar still offers download. */
 export const Unsupported: Story = {
   decorators: [withFile(async () => new Uint8Array([1, 2, 3]), 'notes.bin', 'application/octet-stream')],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await waitFor(async () => {
-      await expect(canvas.getByText('Download file')).toBeInTheDocument();
+      await expect(canvas.getByText('No preview available for this file type.')).toBeInTheDocument();
     });
+    await expect(canvas.getByText('notes.bin')).toBeInTheDocument();
+    await expect(canvas.getByTitle('Download')).toBeInTheDocument();
   },
 };

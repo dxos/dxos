@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import './text-layer.css';
+
 import { composeRefs } from '@radix-ui/react-compose-refs';
 // The `legacy` build, not the default one: the default calls `Map.prototype.getOrInsertComputed`,
 // which is new enough that the Chromium the storybook tests run in throws on it. Legacy targets a
@@ -10,204 +12,425 @@ import {
   GlobalWorkerOptions,
   type PDFDocumentProxy,
   type RenderTask,
+  TextLayer,
   getDocument,
 } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import workerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 import { composable, composableProps, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
+import { type MatchRect, type PdfMatch, type PdfPageText, findMatches, measureMatch } from './pdf-search';
+
 // Bundled and served by us rather than fetched from a CDN: the app must render a PDF offline, and a
 // worker from another origin is also a CSP entry we would otherwise have to keep in step.
 GlobalWorkerOptions.workerSrc = workerUrl;
 
+/** How a page is scaled to the viewport. */
+export type PdfFit = 'width' | 'page';
+
+/** Imperative surface the toolbar drives, published through {@link PdfCanvasProps.apiRef}. */
+export type PdfApi = {
+  goToPage: (page: number) => void;
+  search: (query: string) => void;
+  goToMatch: (index: number) => void;
+};
+
+export type PdfCanvasState = {
+  pageCount: number;
+  currentPage: number;
+  matches: number;
+  activeMatch: number;
+};
+
 export type PdfCanvasProps = {
   url: string;
+  fit?: PdfFit;
   onLoad?: (pageCount: number) => void;
+  onStateChange?: (state: PdfCanvasState) => void;
+  apiRef?: React.Ref<PdfApi>;
+};
+
+type PageRefs = {
+  page: HTMLDivElement | null;
+  canvas: HTMLCanvasElement | null;
+  text: HTMLDivElement | null;
 };
 
 /**
- * Renders a PDF to stacked canvases, one per page.
+ * Renders a PDF to stacked canvases, one per page, each with a selectable text layer over it.
  *
  * Replaces an `<iframe>` pointed at the browser's built-in viewer. That viewer lives in its own
- * origin — a `chrome-extension://` document — so its background, toolbar and zoom chrome cannot be
- * styled, and it letterboxes the page in grey no matter what the surrounding plank looks like.
+ * origin — a `chrome-extension://` document — so nothing about it can be styled or driven. Owning
+ * the render means the toolbar can page, fit and search, and the pages can be themed.
+ *
+ * The text layer is what makes the page more than a picture: it is transparent text positioned over
+ * the canvas, so the browser can select it and search highlights can be measured from real layout
+ * rather than computed from the PDF's transforms.
  *
  * Every page is rendered rather than one at a time: the iframe it replaces scrolled through the
- * whole document, so paginating here would silently hide content behind navigation that does not
- * exist yet. Large documents therefore cost their full page count up front — virtualization is the
- * obvious next step if that becomes a problem.
+ * whole document. Large documents therefore cost their full page count up front — virtualization is
+ * the obvious next step if that becomes a problem.
  */
-export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(({ url, onLoad, ...props }, forwardedRef) => {
-  const { t } = useTranslation(meta.profile.key);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const canvasesRef = useRef<(HTMLCanvasElement | null)[]>([]);
-  const documentRef = useRef<PDFDocumentProxy | undefined>(undefined);
-  const [pageCount, setPageCount] = useState(0);
-  const [error, setError] = useState(false);
+export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
+  ({ url, fit = 'width', onLoad, onStateChange, apiRef, ...props }, forwardedRef) => {
+    const { t } = useTranslation(meta.profile.key);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const refs = useRef<PageRefs[]>([]);
+    const documentRef = useRef<PDFDocumentProxy | undefined>(undefined);
+    const textRef = useRef<PdfPageText[]>([]);
+    // The live query, so a search typed before the text index finished loading can be re-run once it
+    // is ready. Without this, searching a large document during its first seconds silently returns
+    // nothing and never corrects itself.
+    const queryRef = useRef('');
+    const [pageCount, setPageCount] = useState(0);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [matches, setMatches] = useState<PdfMatch[]>([]);
+    const [activeMatch, setActiveMatch] = useState(0);
+    const [highlights, setHighlights] = useState<(MatchRect & { page: number; active: boolean })[]>([]);
+    const [layoutVersion, setLayoutVersion] = useState(0);
+    const [error, setError] = useState(false);
 
-  // Tracks the in-flight render so a resize or an unmount can cancel it. Without this, tearing the
-  // document down mid-render leaves `page.render(…).promise` and `getPage` rejecting with
-  // `RenderingCancelledException` / `Transport destroyed` and nothing to catch them.
-  const renderRef = useRef<{ cancelled: boolean; task?: RenderTask } | undefined>(undefined);
+    // Tracks the in-flight render so a resize or an unmount can cancel it. Without this, tearing the
+    // document down mid-render leaves `page.render(…).promise` and `getPage` rejecting with
+    // `RenderingCancelledException` / `Transport destroyed` and nothing to catch them.
+    const renderRef = useRef<{ cancelled: boolean; task?: RenderTask } | undefined>(undefined);
 
-  const cancelRender = useCallback(() => {
-    const current = renderRef.current;
-    if (current) {
-      current.cancelled = true;
-      current.task?.cancel();
-      renderRef.current = undefined;
-    }
-  }, []);
+    const cancelRender = useCallback(() => {
+      const current = renderRef.current;
+      if (current) {
+        current.cancelled = true;
+        current.task?.cancel();
+        renderRef.current = undefined;
+      }
+    }, []);
 
-  // Fits each page to the container's width, at device resolution so text stays sharp on a HiDPI
-  // display — a canvas sized in CSS pixels renders visibly soft.
-  const renderPages = useCallback(
-    async (pdf: PDFDocumentProxy) => {
+    const getRefs = (index: number): PageRefs => (refs.current[index] ??= { page: null, canvas: null, text: null });
+
+    const runSearch = useCallback((query: string) => {
+      const found = findMatches(textRef.current, query);
+      setMatches(found);
+      setActiveMatch(found.length > 0 ? 1 : 0);
+    }, []);
+
+    // Fits each page to the container, at device resolution so text stays sharp on a HiDPI display —
+    // a canvas sized in CSS pixels renders visibly soft.
+    const renderPages = useCallback(
+      async (pdf: PDFDocumentProxy, fitMode: PdfFit) => {
+        const container = containerRef.current;
+        if (!container) {
+          return;
+        }
+
+        cancelRender();
+        const run: { cancelled: boolean; task?: RenderTask } = { cancelled: false };
+        renderRef.current = run;
+
+        try {
+          for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+            const { canvas, text } = getRefs(pageNumber - 1);
+            if (!canvas || run.cancelled) {
+              continue;
+            }
+
+            const page = await pdf.getPage(pageNumber);
+            if (run.cancelled) {
+              return;
+            }
+
+            const unscaled = page.getViewport({ scale: 1 });
+            // Fit-page uses the smaller of the two ratios so the whole page is visible; fit-width
+            // ignores height and lets the page scroll. Both leave room for the gap between pages.
+            const widthScale = (container.clientWidth - PAGE_MARGIN * 2) / unscaled.width;
+            const scale =
+              fitMode === 'page'
+                ? Math.min(widthScale, (container.clientHeight - PAGE_MARGIN * 2) / unscaled.height)
+                : widthScale;
+            const viewport = page.getViewport({ scale });
+            const ratio = globalThis.devicePixelRatio ?? 1;
+
+            canvas.width = Math.floor(viewport.width * ratio);
+            canvas.height = Math.floor(viewport.height * ratio);
+            canvas.style.width = `${Math.floor(viewport.width)}px`;
+            canvas.style.height = `${Math.floor(viewport.height)}px`;
+
+            const context = canvas.getContext('2d');
+            if (!context) {
+              continue;
+            }
+            run.task = page.render({
+              canvas,
+              canvasContext: context,
+              viewport,
+              transform: [ratio, 0, 0, ratio, 0, 0],
+            });
+            await run.task.promise;
+
+            if (text && !run.cancelled) {
+              text.replaceChildren();
+              // pdf.js positions the spans from this custom property, so it has to be set on the
+              // layer before rendering or every span lands at the wrong scale.
+              text.style.setProperty('--scale-factor', String(scale));
+              text.style.width = `${Math.floor(viewport.width)}px`;
+              text.style.height = `${Math.floor(viewport.height)}px`;
+              const layer = new TextLayer({
+                textContentSource: await page.getTextContent(),
+                container: text,
+                viewport,
+              });
+              await layer.render();
+            }
+          }
+        } catch (error) {
+          // A cancelled render is the expected outcome of a resize or an unmount, not a fault. Any
+          // other failure is a real one and must not be swallowed.
+          if (!run.cancelled) {
+            throw error;
+          }
+        } finally {
+          if (renderRef.current === run) {
+            renderRef.current = undefined;
+          }
+          if (!run.cancelled) {
+            // Highlights are measured from the rendered spans, so they can only be placed once the
+            // text layer above exists at its final size.
+            setLayoutVersion((version) => version + 1);
+          }
+        }
+      },
+      [cancelRender],
+    );
+
+    useEffect(() => {
+      let cancelled = false;
+      setError(false);
+      setPageCount(0);
+      setMatches([]);
+      setHighlights([]);
+
+      const task = getDocument({ url });
+      void task.promise.then(
+        async (pdf) => {
+          // The loading task owns teardown; the cleanup below destroys it and the document with it.
+          if (cancelled) {
+            return;
+          }
+          documentRef.current = pdf;
+          setPageCount(pdf.numPages);
+          onLoad?.(pdf.numPages);
+
+          // Text of every page, resolved once. Searching re-reads it on every keystroke, and
+          // `getTextContent` is a worker round-trip per page — fine once, not once per character.
+          const pages: PdfPageText[] = [];
+          for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+            const page = await pdf.getPage(pageNumber);
+            const content = await page.getTextContent();
+            pages.push({ items: content.items.map((item) => ('str' in item ? item.str : '')) });
+          }
+          if (!cancelled) {
+            textRef.current = pages;
+            if (queryRef.current.trim()) {
+              runSearch(queryRef.current);
+            }
+          }
+        },
+        () => {
+          if (!cancelled) {
+            setError(true);
+          }
+        },
+      );
+
+      return () => {
+        cancelled = true;
+        // Cancel before destroying: `task.destroy()` tears down the transport, and any render still
+        // awaiting it would reject with `Transport destroyed` after this effect is gone.
+        cancelRender();
+        void task.destroy();
+        documentRef.current = undefined;
+        textRef.current = [];
+      };
+      // `onLoad` is deliberately not a dependency: callers pass an inline function, which would
+      // re-fetch the document on every render.
+    }, [url, cancelRender, runSearch]);
+
+    // Runs after the canvases for `pageCount` exist, and again on resize or a fit change so pages
+    // keep filling the available space.
+    useEffect(() => {
+      const pdf = documentRef.current;
       const container = containerRef.current;
-      if (!container) {
+      if (!pdf || !container || pageCount === 0) {
         return;
       }
 
-      cancelRender();
-      const run: { cancelled: boolean; task?: RenderTask } = { cancelled: false };
-      renderRef.current = run;
-
-      try {
-        for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
-          const canvas = canvasesRef.current[pageNumber - 1];
-          if (!canvas || run.cancelled) {
-            continue;
-          }
-
-          const page = await pdf.getPage(pageNumber);
-          if (run.cancelled) {
-            return;
-          }
-
-          const unscaled = page.getViewport({ scale: 1 });
-          const viewport = page.getViewport({ scale: container.clientWidth / unscaled.width });
-          const ratio = globalThis.devicePixelRatio ?? 1;
-
-          canvas.width = Math.floor(viewport.width * ratio);
-          canvas.height = Math.floor(viewport.height * ratio);
-          canvas.style.width = `${Math.floor(viewport.width)}px`;
-          canvas.style.height = `${Math.floor(viewport.height)}px`;
-
-          const context = canvas.getContext('2d');
-          if (!context) {
-            continue;
-          }
-          run.task = page.render({
-            canvas,
-            canvasContext: context,
-            viewport,
-            transform: [ratio, 0, 0, ratio, 0, 0],
-          });
-          await run.task.promise;
-        }
-      } catch (error) {
-        // A cancelled render is the expected outcome of a resize or an unmount, not a fault. Any
-        // other failure is a real one and must not be swallowed.
-        if (!run.cancelled) {
-          throw error;
-        }
-      } finally {
-        if (renderRef.current === run) {
-          renderRef.current = undefined;
-        }
+      void renderPages(pdf, fit);
+      if (typeof ResizeObserver === 'undefined') {
+        return;
       }
-    },
-    [cancelRender],
-  );
-
-  useEffect(() => {
-    let cancelled = false;
-    setError(false);
-    setPageCount(0);
-
-    const task = getDocument({ url });
-    void task.promise.then(
-      (pdf) => {
-        // The loading task owns teardown; the cleanup below destroys it and the document with it.
-        if (cancelled) {
-          return;
+      const observer = new ResizeObserver(() => {
+        const current = documentRef.current;
+        if (current) {
+          void renderPages(current, fit);
         }
-        documentRef.current = pdf;
-        setPageCount(pdf.numPages);
-        onLoad?.(pdf.numPages);
-      },
-      () => {
-        if (!cancelled) {
-          setError(true);
+      });
+      observer.observe(container);
+      return () => {
+        observer.disconnect();
+        cancelRender();
+      };
+    }, [pageCount, fit, renderPages, cancelRender]);
+
+    // The page under the top of the viewport is "current" — the same rule the browser's own viewer
+    // uses, and the one that matches what a reader considers the page they are on.
+    useEffect(() => {
+      const container = containerRef.current;
+      if (!container || pageCount === 0) {
+        return;
+      }
+
+      // Measured from bounding rects rather than `offsetTop`: that is relative to the nearest
+      // *positioned* ancestor, which is not necessarily this scroll container, and comparing it to
+      // `scrollTop` reported the wrong page at rest.
+      const onScroll = () => {
+        const origin = container.getBoundingClientRect().top;
+        let page = 1;
+        for (let index = 0; index < pageCount; index++) {
+          const element = refs.current[index]?.page;
+          if (element && element.getBoundingClientRect().top - origin <= PAGE_MARGIN + 8) {
+            page = index + 1;
+          }
         }
+        setCurrentPage(page);
+      };
+
+      container.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+      return () => container.removeEventListener('scroll', onScroll);
+    }, [pageCount]);
+
+    const goToPage = useCallback((page: number) => {
+      const element = refs.current[page - 1]?.page;
+      const container = containerRef.current;
+      if (element && container) {
+        // Relative scroll for the same reason `onScroll` measures rects: the page's `offsetTop` is
+        // not necessarily expressed in this container's coordinates.
+        const delta = element.getBoundingClientRect().top - container.getBoundingClientRect().top;
+        container.scrollTo({ top: container.scrollTop + delta - PAGE_MARGIN, behavior: 'smooth' });
+      }
+    }, []);
+
+    const search = useCallback(
+      (query: string) => {
+        queryRef.current = query;
+        runSearch(query);
       },
+      [runSearch],
     );
 
-    return () => {
-      cancelled = true;
-      // Cancel before destroying: `task.destroy()` tears down the transport, and any render still
-      // awaiting it would reject with `Transport destroyed` after this effect is gone.
-      cancelRender();
-      void task.destroy();
-      documentRef.current = undefined;
-    };
-    // `onLoad` is deliberately not a dependency: callers pass an inline function, which would
-    // re-fetch the document on every render.
-  }, [url, cancelRender]);
+    const goToMatch = useCallback(
+      (index: number) => {
+        if (matches.length === 0) {
+          return;
+        }
+        // Wraps in both directions, so `next` on the last match returns to the first.
+        const next = ((index - 1 + matches.length) % matches.length) + 1;
+        setActiveMatch(next);
+        goToPage(matches[next - 1].page);
+      },
+      [matches, goToPage],
+    );
 
-  // Runs after the canvases for `pageCount` exist, and again whenever the plank is resized so pages
-  // keep filling the available width.
-  useEffect(() => {
-    const pdf = documentRef.current;
-    const container = containerRef.current;
-    if (!pdf || !container || pageCount === 0) {
-      return;
-    }
+    useImperativeHandle(apiRef, () => ({ goToPage, search, goToMatch }), [goToPage, search, goToMatch]);
 
-    void renderPages(pdf);
-    if (typeof ResizeObserver === 'undefined') {
-      return;
-    }
-    const observer = new ResizeObserver(() => {
-      const current = documentRef.current;
-      if (current) {
-        void renderPages(current);
-      }
-    });
-    observer.observe(container);
-    return () => {
-      observer.disconnect();
-      cancelRender();
-    };
-  }, [pageCount, renderPages, cancelRender]);
+    // Measured from the rendered text layer, so a resize or a fit change re-measures rather than
+    // leaving boxes at stale coordinates.
+    useEffect(() => {
+      const boxes = matches.flatMap((match, index) => {
+        const { page, text } = refs.current[match.page - 1] ?? {};
+        const span = text?.children[match.item];
+        if (!page || !(span instanceof HTMLElement)) {
+          return [];
+        }
+        return measureMatch(span, match.offset, match.length, page).map((rect) => ({
+          ...rect,
+          page: match.page,
+          active: index + 1 === activeMatch,
+        }));
+      });
+      setHighlights(boxes);
+    }, [matches, activeMatch, layoutVersion]);
 
-  return (
-    <div
-      {...composableProps(props, { classNames: 'h-full w-full overflow-auto' })}
-      // Two refs on one node: `containerRef` measures the available width for the page scale, and
-      // `forwardedRef` belongs to whatever slotted this in.
-      ref={composeRefs(containerRef, forwardedRef)}
-    >
-      {error ? (
-        <div role='alert' className='p-4 text-sm text-error-text'>
-          {t('pdf-error.message')}
+    useEffect(() => {
+      onStateChange?.({ pageCount, currentPage, matches: matches.length, activeMatch });
+      // `onStateChange` is excluded for the same reason as `onLoad` above.
+    }, [pageCount, currentPage, matches.length, activeMatch]);
+
+    if (error) {
+      return (
+        <div {...composableProps(props, { classNames: 'h-full w-full overflow-auto' })} ref={forwardedRef}>
+          <div role='alert' className='p-4 text-sm text-error-text'>
+            {t('pdf-error.message')}
+          </div>
         </div>
-      ) : (
-        Array.from({ length: pageCount }, (_, index) => (
-          <canvas
-            key={index}
-            ref={(element) => {
-              canvasesRef.current[index] = element;
-            }}
-            className='mx-auto'
-          />
-        ))
-      )}
-    </div>
-  );
-});
+      );
+    }
+
+    return (
+      <div
+        {...composableProps(props, { classNames: 'h-full w-full overflow-auto bg-deck' })}
+        // Two refs on one node: `containerRef` measures the available width for the page scale, and
+        // `forwardedRef` belongs to whatever slotted this in.
+        ref={composeRefs(containerRef, forwardedRef)}
+      >
+        <div role='none' className='flex flex-col items-center gap-4 py-4'>
+          {Array.from({ length: pageCount }, (_, index) => (
+            <div
+              key={index}
+              data-page={index + 1}
+              className='relative w-fit shadow-md'
+              ref={(element) => {
+                getRefs(index).page = element;
+              }}
+            >
+              <canvas
+                className='block'
+                ref={(element) => {
+                  getRefs(index).canvas = element;
+                }}
+              />
+              {highlights
+                .filter((highlight) => highlight.page === index + 1)
+                .map((highlight, highlightIndex) => (
+                  <div
+                    key={highlightIndex}
+                    role='mark'
+                    className='dx-pdf-highlight'
+                    data-active={highlight.active}
+                    style={{
+                      left: highlight.left,
+                      top: highlight.top,
+                      width: highlight.width,
+                      height: highlight.height,
+                    }}
+                  />
+                ))}
+              <div
+                className='dx-pdf-text-layer'
+                ref={(element) => {
+                  getRefs(index).text = element;
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  },
+);
+
+/** Space around and between pages, in CSS pixels; matches the `gap-4`/`py-4` on the page column. */
+const PAGE_MARGIN = 16;
 
 PdfCanvas.displayName = 'PdfCanvas';
