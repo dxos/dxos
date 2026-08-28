@@ -26,6 +26,7 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
 });
 export const Schema = AppCapability.schema(() => import('./schema'));
 export const Translations = AppCapability.translations(translations);
+export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'));
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',

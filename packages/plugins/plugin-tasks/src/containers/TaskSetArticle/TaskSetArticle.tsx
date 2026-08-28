@@ -116,7 +116,7 @@ const useSetTasks = (taskSet: TaskSet.TaskSet): Task.Task[] => {
     () =>
       Atom.make((get) => {
         subscribeHierarchy(get, tasks);
-        return TaskSet.orderTasks(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
+        return Task.orderTasks(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
       }),
     [taskSet, tasks],
   );

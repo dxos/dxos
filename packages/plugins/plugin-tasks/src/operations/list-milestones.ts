@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, type Obj, type Ref } from '@dxos/echo';
-import { TaskSet } from '@dxos/types';
+import { Task, TaskSet } from '@dxos/types';
 
 import { TaskOperation } from '#types';
 
@@ -43,7 +43,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.ListMilestones> = Task
       // Loaded, not resolved: cold refs dropped here would shorten the list and skew progress.
       const tasks = yield* TaskSet.loadTasks(taskSet);
       const milestones = (yield* TaskSet.loadMilestones(taskSet)).map((milestone) => {
-        const { total, done } = TaskSet.milestoneProgress(tasks, milestone);
+        const { total, done } = Task.milestoneProgress(tasks, milestone);
         return {
           id: milestone.id,
           name: milestone.name,
