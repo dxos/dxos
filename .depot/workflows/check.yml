@@ -127,6 +127,14 @@ jobs:
       - name: Check package.json paths
         run: pnpm run pkg-lint
 
+      # `pkg-lint` rejects a malformed `exports`/`imports` entry; this rejects a stale one. The
+      # toolbox is the only writer of those maps, so anything it would change is drift a contributor
+      # fixes by running the same command.
+      - name: Check package exports in sync
+        run: |
+          pnpm toolbox --lint-package-exports
+          git diff --exit-code -- '**/package.json'
+
       - name: Check public packages don't depend on private packages
         run: pnpm run check-public-dependencies
 
