@@ -17,7 +17,7 @@ import * as Command from 'effect/unstable/cli/Command';
 import { createCliApp } from '@dxos/app-framework/cli';
 import * as AppMigrations from '@dxos/app-toolkit/AppMigrations';
 import { unrefTimeout } from '@dxos/async';
-import { ConfigService, DXOS_VERSION } from '@dxos/client';
+import { ConfigService, DXOS_VERSION, fromConfig } from '@dxos/client';
 import { DEFAULT_PROFILE } from '@dxos/client-protocol';
 import { LogLevel, levels, log } from '@dxos/log';
 import { isRecordEnabled, loadPlugins, makeInstalledPlugins } from '@dxos/plugin-registry';
@@ -156,9 +156,7 @@ const program = Effect.gen(function* () {
   // Built once in the program scope, so each `Effect.provide(layer)` — both the top-level command
   // and every REPL dispatch — reuses the already-constructed services (ClientPlugin, Config, etc.)
   // instead of rebuilding them per invocation.
-  const context = yield* Layer.build(
-    Layer.mergeAll(pluginLayer, ConfigService.fromConfig(config), commandConfigLayer(argv)),
-  );
+  const context = yield* Layer.build(Layer.mergeAll(pluginLayer, fromConfig(config), commandConfigLayer(argv)));
   const layer = Layer.succeedContext(context);
 
   // Register in-process dispatcher so `repl` can reuse the already-built

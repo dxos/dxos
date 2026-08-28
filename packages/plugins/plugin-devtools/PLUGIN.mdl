@@ -18,6 +18,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `test`      | `org.dxos.mdl.test@1.0`        |
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.0`          |
+| `flow`      | `org.dxos.mdl.flow@1.0`        |
 
 ## Types
 
@@ -304,6 +305,75 @@ test T-5: Log download
   when: user clicks "Download Logs" in DebugSettings
   then:
     - a file download is triggered containing the serialised log entries
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+plugin-devtools defines no first-party operations (see "Operations" above), so most of its
+journeys are navigation and settings toggles with no `invoke`. It is a dev-only default: on in
+`isDev` builds, off otherwise (see `packages/apps/composer-app/src/plugin-defs.tsx`).
+
+```mdl
+flow QA-1: Open the Devtools node and inspect an object
+  desc: The core devtools round-trip — navigate to the Devtools tree and open the Debug companion on an object.
+  actors: both
+  covers: [F-1.1, F-1.2, F-2.1, F-2.2, T-1, T-2]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-devtools is enabled (dev-only default; see above)
+    - doc1: a Document already exists in the space
+  test:
+    - name: Open the Devtools node
+      do: In the navtree, click the "Devtools" node pinned at the end of the root.
+      invoke: org.dxos.operation.appToolkit.open { subject: ["root/devtools"] }
+      expect: the Devtools overview opens, listing Client, HALO, ECHO, Mesh, and EDGE sub-trees
+      note: NO deterministic assert on sub-tree contents — this is a static tree, verify visually.
+    - name: Open the Debug companion on an object
+      do: Click "$given.doc1" in the navtree, then select the "Debug" companion tab.
+      invoke: org.dxos.operation.appToolkit.updateCompanion { open: true, variant: "debug" }
+      expect: DebugObjectPanel renders the object's DXN, typename, and raw field map
+  after:
+    - name: Close the companion
+      do: Click the companion toggle again.
+      invoke: org.dxos.operation.appToolkit.updateCompanion { open: false }
+      expect: the companion pane closes
+```
+
+```mdl
+flow QA-2: Generate synthetic objects into a collection
+  desc: |
+    The write path behind the Space Data Generator — the agent binding invokes the shared
+    space.addObject operation directly rather than driving the SpaceGenerator surface, so this
+    exercises F-5.2 (object creation) only, not F-5.1 (the surface rendering).
+  actors: agent
+  covers: [F-5.2, T-4]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, empty of synthetic objects
+    - plugin-devtools is enabled (dev-only default; see above)
+    - no Person named "QA Devtools Object" exists — ABORT rather than reusing one this flow did
+      not create
+  test:
+    - name: Generate one object
+      do: (agent-only — invokes space.addObject directly, bypassing the SpaceGenerator surface)
+      invoke: org.dxos.operation.space.addObject { object: { "@type": "org.dxos.type.person", fullName: "QA Devtools Object" }, target: $given.collection }
+      capture: created
+      expect: one new Person named "QA Devtools Object" appears in the active collection
+      assert: return !!$created.object
+  after:
+    - name: Delete the generated object
+      do: Right-click "QA Devtools Object" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
+      expect: the row leaves the navtree
 ```
 
 ---

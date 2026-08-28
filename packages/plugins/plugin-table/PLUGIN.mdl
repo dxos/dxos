@@ -17,7 +17,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
 | `test`      | `org.dxos.mdl.test@1.0`        |
 | `component` | `org.dxos.mdl.component@1.0`   |
-| `op`        | `org.dxos.mdl.op@1.0`          |
+| `op`        | `org.dxos.mdl.op@1.1`          |
+| `flow`      | `org.dxos.mdl.flow@1.0`        |
 
 ## Types
 
@@ -94,17 +95,20 @@ component TableCard
 
 ```mdl
 op create
+  key: org.dxos.operation.table.create
   desc: Creates a Table bound to an optional typename from the database.
   input:
     db: Database
     name?: string
     typename?: string            # when provided, view is initialised from the schema
-  output: Table
+  output:
+    object: Table
   effects: [echo:write]
 ```
 
 ```mdl
 op addRow
+  key: org.dxos.operation.table.addRow
   desc: Inserts a new row into a Table's underlying collection using the view's typename.
   input:
     view: View
@@ -124,6 +128,7 @@ op onCreateSpace
 
 ```mdl
 op onSchemaAdded
+  key: org.dxos.operation.table.handleTypeAdded
   desc: Lifecycle hook — creates and opens a Table when a new schema type is added to a space.
   input:
     db: Database
@@ -252,6 +257,52 @@ test T-6: Table card read-only
 
 ---
 
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Create a table bound to a schema and add a row
+  desc: The core table round-trip — create a Table over a typename, add a row, read it back.
+  actors: agent
+  covers: [F-1.1, F-1.2, F-2.2, T-1, T-2]
+  status: blocked
+  given:
+    - an identity exists
+    - space: a space is open, with a mutable schema type registered (e.g. Task)
+    - no Table named "QA Table" exists — ABORT rather than deleting one this flow did not create
+  test:
+    - name: Create the table
+      do: In the navtree, click + on the space and choose Table. Select typename "Task" and name it "QA Table".
+      invoke: [op:create] { db: $given.space.db, name: "QA Table", typename: "example.com/type/Task" }
+      blocked: |
+        Not runnable through the operation invoker: the handler reaches a schema registry the
+        plain invoke path does not provide, failing with `Cannot read properties of undefined
+        (reading 'addType')`. The human `do:` path works; the agent binding needs the operation
+        to take a typename it can register itself.
+      capture: created
+      expect: a Table named "QA Table" now exists with columns derived from the Task schema
+      assert: return !!$created.object
+    - name: Place it in the space
+      do: (no separate gesture — the navtree create action places it)
+      invoke: org.dxos.operation.space.addObject { object: $created.object, target: $given.space }
+      expect: "QA Table" appears as a row in the navtree
+    - name: Add a row
+      do: Click "Add Row" in the toolbar and fill in the title cell with "QA row".
+      invoke: [op:addRow] { view: $created.object.view, data: { title: "QA row" } }
+      expect: a new row appears in the table reading "QA row"
+      note: |
+        `[op:addRow]` is marked "appears to be unused" in the source — the toolbar Add Row action
+        may go through a different path (direct `db.add`). This step exercises the declared
+        operation regardless; if it turns out to be dead code, that is itself a finding.
+  after:
+    - name: Delete the table
+      do: Right-click "QA Table" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.space }
+      expect: the row leaves the navtree and its plank closes if it was open
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl
@@ -302,11 +353,12 @@ ext component
 
 ```mdl
 ext op
-  uri: org.dxos.mdl.op@1.0
+  uri: org.dxos.mdl.op@1.1
   desc: |
     A named operation with typed inputs, outputs, and declared errors.
     Pure ops have no effects or requires. Effectful ops declare both.
   fields:
+    key?: NSID                  # runtime operation key — what the invoker receives
     desc?: Prose
     input?: FieldMap
     output?: TypeExpr

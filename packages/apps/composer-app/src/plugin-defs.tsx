@@ -12,7 +12,7 @@ import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
 import * as CallsPlugin from '@dxos/plugin-calls/CallsPlugin';
 import * as ChessComPlugin from '@dxos/plugin-chess-com/ChessComPlugin';
 import * as ChessPlugin from '@dxos/plugin-chess/ChessPlugin';
-import * as ClaudeAgentsPlugin from '@dxos/plugin-claude-agents/ClaudeAgentsPlugin';
+import * as ClaudePlugin from '@dxos/plugin-claude/ClaudePlugin';
 import * as CodePlugin from '@dxos/plugin-code/CodePlugin';
 import * as CommercePlugin from '@dxos/plugin-commerce/CommercePlugin';
 import * as ComputerPlugin from '@dxos/plugin-computer/ComputerPlugin';
@@ -20,6 +20,7 @@ import * as ConductorPlugin from '@dxos/plugin-conductor/ConductorPlugin';
 import * as CrmPlugin from '@dxos/plugin-crm/CrmPlugin';
 import * as CrxPlugin from '@dxos/plugin-crx/CrxPlugin';
 import * as DebugPlugin from '@dxos/plugin-debug/DebugPlugin';
+import * as DeepSeekPlugin from '@dxos/plugin-deepseek/DeepSeekPlugin';
 import * as DevtoolsPlugin from '@dxos/plugin-devtools/DevtoolsPlugin';
 import * as DiscordPlugin from '@dxos/plugin-discord/DiscordPlugin';
 import * as DoctorPlugin from '@dxos/plugin-doctor/DoctorPlugin';
@@ -56,6 +57,7 @@ import * as PipelinePlugin from '@dxos/plugin-pipeline/PipelinePlugin';
 import * as PresenterPlugin from '@dxos/plugin-presenter/PresenterPlugin';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as ReviewPlugin from '@dxos/plugin-review/ReviewPlugin';
+import * as S3Plugin from '@dxos/plugin-s3/S3Plugin';
 import * as SamplePlugin from '@dxos/plugin-sample/SamplePlugin';
 import * as SandboxPlugin from '@dxos/plugin-sandbox/SandboxPlugin';
 import * as ScriptPlugin from '@dxos/plugin-script/ScriptPlugin';
@@ -89,6 +91,9 @@ export type { PluginConfig, State } from './plugin-defs.core';
 /**
  * Plugin keys enabled by default for new users, per environment (dev/local).
  *
+ * New keys go in the `isDev` block, and only for plugins that hit no permission-gated API on
+ * activation: a `fetch` or `WebSocket` to localhost raises Chrome's local network prompt at boot.
+ *
  * NOTE: Keep alphabetically sorted.
  */
 export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[] =>
@@ -109,6 +114,9 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
     ExcalidrawPlugin.meta.profile.key,
     TablePlugin.meta.profile.key,
     ThreadPlugin.meta.profile.key,
+    // Connector-only, so defaulting it on adds no surface — it just puts DeepSeek in the
+    // Connections service list for anyone who has a key.
+    DeepSeekPlugin.meta.profile.key,
 
     // Local
     isLocal && SamplePlugin.meta.profile.key,
@@ -142,10 +150,10 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       OsrmPlugin.meta.profile.key,
       PaymentsPlugin.meta.profile.key,
       PipelinePlugin.meta.profile.key,
+      S3Plugin.meta.profile.key,
       SandboxPlugin.meta.profile.key,
       SequencerPlugin.meta.profile.key,
       SidekickPlugin.meta.profile.key,
-      StreamDeckPlugin.meta.profile.key,
       StudioPlugin.meta.profile.key,
       TasksPlugin.meta.profile.key,
       TranscriptionPlugin.meta.profile.key,
@@ -176,7 +184,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     CallsPlugin.make(),
     ChessPlugin.make(),
     ChessComPlugin.make(),
-    ClaudeAgentsPlugin.make(),
+    ClaudePlugin.make(),
     CodePlugin.make(),
     CommercePlugin.make(),
     // Dev-only coding harness, gated on `isDev` for availability (not just defaults, unlike
@@ -186,6 +194,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     CrmPlugin.make(),
     !isTauri && CrxPlugin.make(),
     DebugPlugin.make({ logStore }),
+    DeepSeekPlugin.make(),
     DevtoolsPlugin.make(),
     DiscordPlugin.make(),
     DoctorPlugin.make(),
@@ -252,6 +261,7 @@ const experimental: Plugin.Plugin[] = [
   IrohBeaconPlugin.make(),
   LinearPlugin.make(),
   LingoPlugin.make(),
+  S3Plugin.make(),
   SequencerPlugin.make(),
   SlackPlugin.make(),
   SpacetimePlugin.make(),

@@ -28,6 +28,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `test`    | `org.dxos.mdl.test@1.0`      |
 | `op`      | `org.dxos.mdl.op@1.0`        |
 | `service` | `org.dxos.mdl.service@1.0`   |
+| `flow`    | `org.dxos.mdl.flow@1.0`      |
 
 ### Existing types used by this plugin
 
@@ -255,6 +256,67 @@ test T-9: UnpublishDraft against Typefully fails once linked
   when: plugin-blogger's op:UnpublishDraft invoked
   then: deleteDraft rejects with PublisherError; the foreign key is NOT cleared
   tags: [known-limitation, derived]
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Connect Typefully, publish once, and confirm the no-republish limitation
+  desc: >
+    plugin-typefully has no ECHO object type or navtree surface of its own — it is a
+    Publisher.PublisherService implementation consumed through plugin-blogger's Publication/Post
+    UI. This flow drives that composed round-trip and checks F-6's derived, previously-untested
+    finding: a second sync on the same post fails rather than re-publishing.
+  actors: human
+  covers: [F-1.2, F-1.3, F-3.1, F-6.1, F-6.2]
+  status: blocked
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-typefully is enabled — it ships only in the experimental set (and additionally under
+      isDev labs defaults); it is OFF by default
+    - plugin-blogger is enabled, so Publication/Post creation and op:SyncPosts are available
+    - publication: a blog Publication exists in the space, with one unpublished Post named "QA Post"
+    - a real Typefully API key, obtained from https://typefully.com/settings/integrations
+  test:
+    - name: Submit the Typefully API key
+      do: Open Settings -> Connections, choose Typefully, and paste the API key.
+      expect: a Connection (source "typefully.com") and an AccessToken holding the key now exist
+      blocked: |
+        `credentialForm.onSubmit` is a plain UI callback, not an `Operation.make` with a `key` —
+        there is nothing to `invoke`, and no automated run in this environment holds a live
+        Typefully API key to submit even by hand. Every later step in this flow depends on the
+        Connection this step creates, so the flow cannot proceed past here unattended.
+      capture: connection
+    - name: Publish the post (first sync — creates the remote draft)
+      do: With "QA Post" open, choose Publish -> Typefully.
+      invoke: org.dxos.operation.blogger.syncPosts { publication: $given.publication, connection: $connection.connection }
+      capture: firstSync
+      expect: "QA Post" shows status "published" and now carries a Typefully foreign key
+      note: |
+        `org.dxos.operation.blogger.syncPosts` has no `op` block in THIS document (it lives in
+        plugin-blogger, `operations/definitions.ts`), so it is written as a full key literal. The
+        F-6 requirements name `op:PublishDraft` / `op:ImportDrafts` / `op:UnpublishDraft`, but no
+        such operations exist in plugin-blogger's source — the three verbs were unified into this
+        one bidirectional `syncPosts`. F-6 is stale against the current implementation; confirming
+        this drove the choice to write this flow around `syncPosts` rather than the named ops.
+    - name: Publish again (second sync — expected to fail)
+      do: Choose Publish -> Typefully a second time on the now-linked "QA Post".
+      invoke: org.dxos.operation.blogger.syncPosts { publication: $given.publication, connection: $connection.connection }
+      expect: the sync fails with a PublisherError, and "QA Post" keeps its existing remote link unchanged
+      note: |
+        Per F-5.2 / F-6.2 — Typefully v1 has no draft-update endpoint, so `updateDraft` rejects
+        unconditionally and a linked post can never be re-published, only created once.
+  after:
+    - name: Remove the Typefully connection
+      do: In Settings -> Connections, remove the Typefully connection.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$connection.connection], target: $given.space }
+      expect: the connection no longer appears in Settings -> Connections
 ```
 
 ---

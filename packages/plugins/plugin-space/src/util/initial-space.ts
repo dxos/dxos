@@ -48,6 +48,10 @@ const getFirstVisibleSpace = (client: Client): Space | undefined =>
  * never signalled again. The space list re-emits on every space's state change as well as its own,
  * so it covers every input `select` reads except the default-space designation, which is a property
  * write on the settings space.
+ *
+ * Every settings-tagged space is watched, not just the canonical one: while duplicates are
+ * converging, which of them `getSettingsSpace` prefers is decided by which already holds the
+ * designation — the very thing being waited for.
  */
 const awaitSpace = (client: Client, select: (client: Client) => Space | undefined): Effect.Effect<Space> =>
   Effect.callback<Space>((resume) => {
@@ -67,12 +71,19 @@ const awaitSpace = (client: Client, select: (client: Client) => Space | undefine
 
     // `subscribe` replays, so this performs the first check as well as watching for later ones.
     const spacesSub = client.spaces.subscribe((spaces) => {
-      for (const space of spaces) {
-        if (
-          AppSpace.isSettingsSpace(space) &&
-          space.state.get() === SpaceState.SPACE_READY &&
-          !propertySubscriptions.has(space.id)
-        ) {
+      const settingsSpaces = spaces.filter(
+        (space) => AppSpace.isSettingsSpace(space) && space.state.get() === SpaceState.SPACE_READY,
+      );
+      // Duplicate healing tombstones the spaces it merges away, so a subscription is dropped as its
+      // space leaves the list rather than being held against a destroyed proxy until resolution.
+      for (const [id, unsubscribe] of propertySubscriptions) {
+        if (!settingsSpaces.some((space) => space.id === id)) {
+          unsubscribe();
+          propertySubscriptions.delete(id);
+        }
+      }
+      for (const space of settingsSpaces) {
+        if (!propertySubscriptions.has(space.id)) {
           propertySubscriptions.set(space.id, Obj.subscribe(space.properties, check));
         }
       }

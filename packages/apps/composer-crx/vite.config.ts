@@ -14,7 +14,7 @@ import wasm from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
-import { IconsPlugin } from '@dxos/vite-plugin-icons';
+import { IconsPlugin, iconSymbolPattern } from '@dxos/vite-plugin-icons';
 import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 // import { createConfig as createTestConfig } from '../../../vitest.base.config';
 
@@ -28,6 +28,7 @@ const { prepareCanonicalDist } = await import(pathToFileURL(path.join(dirname, '
 const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
 const dxosIcons = path.join(rootDir, '/packages/ui/brand/assets/icons');
+const extendedIcons = path.join(rootDir, '/packages/ui/ui-icons/assets');
 const outDir = prepareCanonicalDist(dirname);
 
 /**
@@ -96,14 +97,14 @@ export default defineConfig({
     }),
     ThemePlugin({}),
     IconsPlugin({
-      // The leading negative lookahead restricts the `dx` set to the `regular` weight only (custom
-      // brand SVGs have no weight variants); the `ph` set retains all Phosphor weights.
-      symbolPattern:
-        '(?!dx--[a-z]+[a-z-]*--(?:bold|duotone|fill|light|thin))(ph|dx)--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+      // Built rather than written out: `ph` carries every weight while `dx` and `px` are regular-only.
+      symbolPattern: iconSymbolPattern({ sets: ['ph', 'dx', 'px'], regularOnly: ['dx', 'px'] }),
       assetPath: (iconSet, name, variant) => {
         switch (iconSet) {
           case 'dx':
             return `${dxosIcons}/${name}.svg`;
+          case 'px':
+            return `${extendedIcons}/${name}.svg`;
           default:
             return `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`;
         }
@@ -117,7 +118,13 @@ export default defineConfig({
       // Page-action descriptor icons are contributed by Composer plugins at
       // runtime; those sources are never imported by the extension bundle, so
       // they are scanned eagerly by convention (capabilities/page-action*.ts).
-      scanPaths: [path.join(rootDir, '/packages/plugins/*/src/capabilities/page-action*.ts')],
+      // The `px` catalog is scanned for the same reason. It is sprite-only here by choice: the
+      // extension serves no asset routes, so `@dxos/react-ui`'s runtime fallback has nothing to
+      // fetch and every glyph has to be in the sprite (see `@dxos/ui-icons`).
+      scanPaths: [
+        path.join(rootDir, '/packages/plugins/*/src/capabilities/page-action*.ts'),
+        path.join(rootDir, '/packages/ui/ui-icons/src/index.ts'),
+      ],
     }),
 
     // TODO(burdon): Document.

@@ -62,7 +62,7 @@ const SYSTEM_INSTRUCTIONS = trim`
 `;
 
 const makeAiServiceMiddleware = (): Promise<(_upstream: AiService.Service) => AiService.Service> =>
-  AiService.AiService.pipe(
+  AiService.tag.pipe(
     Effect.provide(AiServiceTestingPreset('direct')),
     Effect.map((service) => (_upstream: AiService.Service) => service),
     EffectEx.runAndForwardErrors,
