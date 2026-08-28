@@ -140,6 +140,10 @@ type ToolPanelProps = {
   calls: ToolCallEntry[];
 } & Pick<TogglePanelRootProps, 'onChangeOpen'>;
 
+/** Whether the call carries anything an expansion could show. */
+const hasDetail = (call: ToolCallEntry): boolean =>
+  call.input !== undefined || call.error !== undefined || call.result !== undefined || call.stats !== undefined;
+
 const ToolPanel = ({ calls, onChangeOpen }: ToolPanelProps) => {
   const { t } = useTranslation(translationKey);
   const [open, setOpen] = useState(false);
@@ -147,33 +151,46 @@ const ToolPanel = ({ calls, onChangeOpen }: ToolPanelProps) => {
   const active = calls.find((call) => call.active);
   // Named while a call is in flight so the reader sees what is happening, counted once the run is
   // done, when the individual titles are available a click away.
-  const summary = active
-    ? calls.length > 1
-      ? t('tool-active-count.label', { name: active.title, count: calls.length })
-      : t('tool-active.label', { name: active.title })
-    : t('tool-run.label', { count: calls.length });
+  const summary = active ? active.title : t('tool-run.label', { count: calls.length });
+  const count = active && calls.length > 1 ? calls.length : undefined;
   const failed = calls.filter((call) => call.error !== undefined).length;
   const icon = active?.icon ?? calls[calls.length - 1]?.icon ?? DEFAULT_TOOL_ICON;
+
+  // A lone call owns the panel itself: a summary above one row says the same thing twice, and the
+  // outer disclosure is the one that opens onto its payload.
+  const only = calls.length === 1 ? calls[0] : undefined;
+  const header = only?.title ?? summary;
 
   return (
     <TogglePanel.Root open={open} onChangeOpen={setOpen}>
       <TogglePanel.Content>
         <TogglePanel.Header classNames='flex items-center gap-2 text-sm'>
           <div className='w-full grid grid-cols-[1fr_auto] items-center gap-2'>
-            <span className='text-description truncate'>
-              {summary}
-              {failed > 0 && <span className='text-error'> · {t('tool-failed.label', { count: failed })}</span>}
+            {/* `tabular-nums` so a rising count does not shift the text beside it, and the counts
+                are `shrink-0` so a long tool name truncates instead of eliding them. */}
+            <span className='flex min-w-0 items-center gap-1 text-description tabular-nums'>
+              <span className={mx('truncate', only?.error !== undefined && 'text-error')}>{header}</span>
+              {count !== undefined && <span className='shrink-0'>({count})</span>}
+              {failed > 0 && <span className='shrink-0 text-error'>· {t('tool-failed.label', { count: failed })}</span>}
             </span>
             <Icon icon={icon} size={4} />
           </div>
         </TogglePanel.Header>
         <TogglePanel.Body>
           <TogglePanel.Viewport>
-            <div role='list' className='flex flex-col divide-y divide-separator'>
-              {calls.map((call) => (
-                <ToolCallRow key={call.id} call={call} onChangeOpen={onChangeOpen} />
-              ))}
-            </div>
+            {only ? (
+              <ToolCallDetail call={only} />
+            ) : (
+              /* Bordered above as well as between, so the list reads as a group under the summary. */
+              <div
+                role='list'
+                className='flex flex-col border-t border-subdued-separator divide-y divide-subdued-separator'
+              >
+                {calls.map((call) => (
+                  <ToolCallRow key={call.id} call={call} onChangeOpen={onChangeOpen} />
+                ))}
+              </div>
+            )}
           </TogglePanel.Viewport>
         </TogglePanel.Body>
       </TogglePanel.Content>
@@ -200,6 +217,16 @@ const ToolCallRow = ({ call, onChangeOpen }: ToolCallRowProps) => {
     onChangeOpen?.(!open);
   }, [open, onChangeOpen]);
 
+  // Nothing to open onto: a caret that reveals emptiness reads as a failure.
+  if (!hasDetail(call)) {
+    return (
+      <div role='listitem' className='flex items-center gap-2 px-2 text-sm min-h-(--dx-control)'>
+        <Icon icon={call.icon ?? DEFAULT_TOOL_ICON} size={4} />
+        <span className={mx('truncate', call.error !== undefined && 'text-error')}>{call.title}</span>
+      </div>
+    );
+  }
+
   return (
     <div role='listitem' className='flex flex-col'>
       <IconButton
@@ -214,14 +241,20 @@ const ToolCallRow = ({ call, onChangeOpen }: ToolCallRowProps) => {
         data-testid='assistant.tool-call'
         onClick={handleToggle}
       />
-      {open && (
-        <div className='flex flex-col gap-1 ps-6 pb-1'>
-          {call.input !== undefined && <ToolSection label={t('tool-input.label')} data={call.input} />}
-          {call.error !== undefined && <ToolSection label={t('tool-error.label')} data={call.error} />}
-          {call.result !== undefined && <ToolSection label={t('tool-result.label')} data={call.result} />}
-          {call.stats !== undefined && <ToolSection label={t('stats.label')} data={call.stats} />}
-        </div>
-      )}
+      {open && <ToolCallDetail call={call} classNames='ps-6' />}
+    </div>
+  );
+};
+
+/** What a call carries, in the order it happened. */
+const ToolCallDetail = ({ call, classNames }: { call: ToolCallEntry; classNames?: string }) => {
+  const { t } = useTranslation(translationKey);
+  return (
+    <div className={mx('flex flex-col gap-1 pb-1', classNames)}>
+      {call.input !== undefined && <ToolSection label={t('tool-input.label')} data={call.input} />}
+      {call.error !== undefined && <ToolSection label={t('tool-error.label')} data={call.error} />}
+      {call.result !== undefined && <ToolSection label={t('tool-result.label')} data={call.result} />}
+      {call.stats !== undefined && <ToolSection label={t('stats.label')} data={call.stats} />}
     </div>
   );
 };

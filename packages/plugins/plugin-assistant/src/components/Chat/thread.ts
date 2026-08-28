@@ -69,11 +69,22 @@ export const projectThread = ({
   return { messages: collapseToolRuns(Feed.history(sorted).items) };
 };
 
-/** Blocks that are the machinery of a turn rather than anything the reader wrote or read. */
-const TOOL_BLOCKS = new Set(['toolCall', 'toolResult', 'stats']);
+/**
+ * Blocks that are the machinery of a turn rather than anything the reader wrote or read.
+ *
+ * `reasoning` is machinery too: the model explains itself before each call, so a run of calls is
+ * interleaved with it and treating it as prose would split every run into one panel per call. A
+ * tool result recovered across a reload arrives as a synthetic text block rather than a tool result
+ * (its call id can no longer be answered), which is machinery on the same grounds.
+ */
+const TOOL_BLOCKS = new Set(['toolCall', 'toolResult', 'stats', 'reasoning']);
+
+const isMachinery = (block: Message.Message['blocks'][number]): boolean =>
+  TOOL_BLOCKS.has(block._tag) ||
+  (block._tag === 'text' && (block as { disposition?: string }).disposition === 'synthetic');
 
 const isToolOnly = (message: Message.Message): boolean =>
-  message.blocks.length > 0 && message.blocks.every((block) => TOOL_BLOCKS.has(block._tag));
+  message.blocks.length > 0 && message.blocks.every(isMachinery);
 
 /**
  * Folds each run of tool-only messages into one, so a multi-step turn renders as a single panel.

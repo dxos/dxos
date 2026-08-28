@@ -139,6 +139,31 @@ describe('collapseToolRuns', () => {
     expect(collapsed).toHaveLength(3);
   });
 
+  // The model explains itself before each call, so a real run is call/reasoning/call — the shape
+  // that produced one panel per call in the app.
+  test('reasoning between calls does not split the run', ({ expect }) => {
+    const collapsed = collapseToolRuns([
+      message('prompt'),
+      reasoning(),
+      toolCall('tc-1'),
+      toolResult('tc-1'),
+      reasoning(),
+      toolCall('tc-2'),
+      toolResult('tc-2'),
+      message('answer', 'assistant'),
+    ]);
+
+    expect(collapsed).toHaveLength(3);
+    expect(collapsed[1].blocks.map((block) => block._tag)).toEqual([
+      'reasoning',
+      'toolCall',
+      'toolResult',
+      'reasoning',
+      'toolCall',
+      'toolResult',
+    ]);
+  });
+
   test('two runs separated by prose stay separate', ({ expect }) => {
     const collapsed = collapseToolRuns([
       toolCall('tc-1'),
@@ -158,6 +183,13 @@ const toolCall = (toolCallId: string) =>
     created: new Date(clock++).toISOString(),
     sender: 'assistant',
     blocks: [{ _tag: 'toolCall', toolCallId, name: 'search', input: '{}', providerExecuted: false }],
+  });
+
+const reasoning = () =>
+  Message.make({
+    created: new Date(clock++).toISOString(),
+    sender: 'assistant',
+    blocks: [{ _tag: 'reasoning', reasoningText: 'because' }],
   });
 
 const toolResult = (toolCallId: string) =>
