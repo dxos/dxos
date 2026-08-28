@@ -91,7 +91,10 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
     );
 
     // Restore last selection and scroll point.
-    const { scrollTo, selection } = useMemo<EditorSelectionState>(() => editorStateStore?.getState(id) ?? {}, [id]);
+    const { scrollTo, scrollOffset, selection } = useMemo<EditorSelectionState>(
+      () => editorStateStore?.getState(id) ?? {},
+      [id, editorStateStore],
+    );
 
     // Everything that varies per render — view mode, theme, the binding's extensions — lives in one
     // compartment and is RECONFIGURED on the live view below. Recreating the view on these deps was
@@ -140,6 +143,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
         ...(role !== AppSurface.Section.role && {
           id,
           scrollTo,
+          scrollOffset,
           selection,
           selectionEnd: true,
         }),

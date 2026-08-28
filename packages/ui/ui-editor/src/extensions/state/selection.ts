@@ -24,6 +24,8 @@ export type EditorSelection = {
 
 export type EditorSelectionState = {
   scrollTo?: number;
+  /** Pixels the anchored line is scrolled past, so a restore lands exactly where recording happened. */
+  scrollOffset?: number;
   selection?: EditorSelection;
 };
 
@@ -34,6 +36,7 @@ export const EditorSelection = Schema.Struct({
 
 export const EditorSelectionStateSchema = Schema.Struct({
   scrollTo: Schema.optional(Schema.Number),
+  scrollOffset: Schema.optional(Schema.Number),
   selection: Schema.optional(EditorSelection),
 }).mapFields(Struct.map(Schema.mutableKey));
 
@@ -53,9 +56,24 @@ export const createEditorStateTransaction = ({ scrollTo, selection }: EditorSele
     scrollIntoView: !scrollTo,
     // `scrollTo` is the position that was at the top of the viewport, so restore it there
     // exactly; a y-margin would offset every restore by that margin.
-    effects: scrollTo ? EditorView.scrollIntoView(scrollTo, { y: 'start' }) : undefined,
+    effects: scrollTo ? EditorView.scrollIntoView(scrollTo, { y: 'start', yMargin: 0 }) : undefined,
     annotations: Transaction.userEvent.of(stateRestoreAnnotation),
   };
+};
+
+/**
+ * Restores a recorded position: the transaction anchors the line at the top of the viewport, then
+ * the sub-line offset is re-applied once CodeMirror has measured, so repeated round-trips do not
+ * creep upwards by the fraction of the line that was originally scrolled past.
+ */
+export const restoreEditorState = (view: EditorView, state: EditorSelectionState) => {
+  view.dispatch(createEditorStateTransaction(state));
+  const { scrollTo, scrollOffset } = state;
+  if (scrollTo != null && scrollOffset) {
+    requestAnimationFrame(() => {
+      view.scrollDOM.scrollTop += scrollOffset;
+    });
+  }
 };
 
 /**
@@ -80,7 +98,8 @@ export const selectionState = ({ getState, setState }: Partial<EditorStateStore>
     const pos = view.posAtCoords({ x: left + 1, y: top + 1 });
     if (pos !== null) {
       const { anchor, head } = view.state.selection.main;
-      setStateDebounced(id, { scrollTo: pos, selection: { anchor, head } });
+      const scrollOffset = Math.round(top - (view.documentTop + view.lineBlockAt(pos).top));
+      setStateDebounced(id, { scrollTo: pos, scrollOffset, selection: { anchor, head } });
     }
   };
 
@@ -107,7 +126,7 @@ export const selectionState = ({ getState, setState }: Partial<EditorStateStore>
             // Only restore when something was actually stored; a store may return an empty state
             // (no scroll/selection) for an unseen document, which would otherwise dispatch a no-op.
             if (state && (state.scrollTo != null || state.selection)) {
-              view.dispatch(createEditorStateTransaction(state));
+              restoreEditorState(view, state);
             }
             return true;
           },
