@@ -62,6 +62,11 @@ a large skill loads mid-session (see `.claude/README.md` §A).
   short flat numbered list; `normal` (the default) sets no budget but keeps
   length proportionate — length is earned by content, never by restating. Set it
   with `/mode terse` / `/mode normal`.
+- **`/mode focus [task]` pins the work as well as the length.** It is `terse`
+  plus one pinned task — with no task on the line, the previous instruction is
+  the pin. While pinned, work on nothing else: no adjacent fixes, no CI or PR
+  polling, and an off-task request gets one line naming the conflict plus a
+  numbered choice. `/mode terse` or `/mode normal` clears the pin.
 - These govern form only. They never override correctness, required safety
   steps, showing test/command output, or reporting a failure honestly.
 
