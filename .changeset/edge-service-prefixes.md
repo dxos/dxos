@@ -21,7 +21,7 @@ no longer has to be populated. An unconfigured client still resolves nothing.
 
 No client path contains `/api/<service>` any more: the calls API moved from `/api/calls` to
 `<edge>/calls/rtc`, sandbox-service's REST API from `<host>/api/sandbox` to `<edge>/sandbox`, and the
-CORS proxy from `cors.dxos.network` to `<edge>/cors`. Video transcripts are fetched directly rather
+CORS proxy from `cors.dxos.network` to `<edge>/cors-proxy`. Video transcripts are fetched directly rather
 than through the CORS proxy, since the EDGE entrypoint sends CORS headers that the worker's own
 hostname did not.
 

@@ -40,11 +40,12 @@ export const EDGE_URLS = Object.freeze({
  * redeployed every time one of them moves, a prefix table does not. See
  * `edge/docs/design/system/http-route-migration.md`.
  *
- * Two entries are not simply `/<name>`:
+ * The entries that are not simply `/<name>`:
  *
  * - `transcription` is the ASR endpoint (`POST /transcribe`), which calls-service serves — the same
  *   worker `calls` reaches, which is why it has always been configured to the same host.
- *   `video-transcription` is the separate transcription-service (`GET /video`).
+ * - `video-transcription` is the separate transcription-service (`GET /video`), whose prefix is the
+ *   worker's own name.
  * - `introspect` carries the `/mcp` path because the value IS the MCP server URL a client connects to.
  */
 const EDGE_SERVICE_PATHS: Record<EdgeServiceName, string> = Object.freeze({
