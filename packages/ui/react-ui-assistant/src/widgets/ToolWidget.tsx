@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Icon, IconBlock, IconButton, SystemIconButton, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, SystemIconButton, useTranslation } from '@dxos/react-ui';
 import { TogglePanel, type TogglePanelRootProps } from '@dxos/react-ui-components';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type ContentBlock } from '@dxos/types';
