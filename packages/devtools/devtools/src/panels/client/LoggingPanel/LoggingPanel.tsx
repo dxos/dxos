@@ -113,7 +113,7 @@ export const LoggingPanel = () => {
       { value: 'error', label: 'Error' },
 
       // TOOD(burdon): Factor out. Move to separate pull down.
-      { value: 'info,echo-edge-replicator:debug', label: 'EDGE Replication' },
+      { value: 'info,echo-edge-subduction-replicator:debug', label: 'EDGE Replication' },
     ],
     [],
   );
