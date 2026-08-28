@@ -1,6 +1,6 @@
 ---
-id: org.dxos.plugin.claudeAgents
-name: ClaudeAgentsPlugin
+id: org.dxos.plugin.claude
+name: ClaudePlugin
 version: 0.1.0
 ---
 
@@ -157,7 +157,7 @@ feat F-5: Skill
 
   req F-5.1:
     when: plugin is activated
-    then: the org.dxos.skill.claudeAgents skill is contributed with all eight
+    then: the org.dxos.skill.claude skill is contributed with all eight
           operations as tools
 
   req F-5.2:
@@ -309,7 +309,7 @@ flow QA-1: Configure, deploy and run a Claude managed agent
     - an identity exists
     - space: a space is open
     - collection: a collection in that space, to create into
-    - plugin-claude-agents is enabled — it is OFF by default, and no claudeAgents operation is
+    - plugin-claude is enabled — it is OFF by default, and no claude operation is
       registered until it is on. Enabling is a UI action (Settings -> plugin registry);
       `manager.enable()` returns without error from the debug port and does not enable it.
     - no ClaudeManagedAgent named "QA Agent" exists — ABORT rather than deleting one this flow
@@ -317,19 +317,19 @@ flow QA-1: Configure, deploy and run a Claude managed agent
   test:
     - name: Create the agent configuration
       do: In the navtree, click + on a collection and choose Claude Agent. Name it "QA Agent".
-      invoke: org.dxos.operation.claudeAgents.createAgent { name: "QA Agent" }
+      invoke: org.dxos.operation.claude.createAgent { name: "QA Agent" }
       capture: created
       expect: a ClaudeManagedAgent named "QA Agent" exists, status "draft", model defaulting to
         claude-opus-5, and no request was made to Anthropic
       assert: return !!$created.id;
     - name: List agents
       do: Open the agent's list view (or ask the assistant to list Claude agents).
-      invoke: org.dxos.operation.claudeAgents.listAgents {}
+      invoke: org.dxos.operation.claude.listAgents {}
       expect: "QA Agent" appears in the returned list with status "draft"
       assert: return $result.agents.some((a) => a.id === $created.id);
     - name: Deploy the agent
       do: Click "Deploy" on "QA Agent".
-      invoke: org.dxos.operation.claudeAgents.deployAgent { agent: $created.id }
+      invoke: org.dxos.operation.claude.deployAgent { agent: $created.id }
       expect: the agent's status becomes "deployed" and it carries an Anthropic `agent_…` foreign
         key
       blocked: |
@@ -340,14 +340,14 @@ flow QA-1: Configure, deploy and run a Claude managed agent
         environment before this step (and everything downstream of it) can run.
     - name: Start a session
       do: Click "Run" on the deployed "QA Agent" and enter a first message.
-      invoke: org.dxos.operation.claudeAgents.startSession { agent: $created.id, message: "Say hello." }
+      invoke: org.dxos.operation.claude.startSession { agent: $created.id, message: "Say hello." }
       capture: session
       expect: a ClaudeAgentSession is added to the space, keyed by the Anthropic session id, with
         its own vault
       blocked: Depends on the deployed agent from the previous (blocked) step.
     - name: Read the transcript
       do: Open the session and watch its transcript.
-      invoke: org.dxos.operation.claudeAgents.getTranscript { session: $session.id }
+      invoke: org.dxos.operation.claude.getTranscript { session: $session.id }
       expect: the user's message and the agent's reply appear, in order, and the session status
         refreshes
       blocked: Depends on the running session from the previous (blocked) step.

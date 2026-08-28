@@ -61,7 +61,7 @@ export interface TranscriptMessage extends Schema.Schema.Type<typeof TranscriptM
  */
 export const CreateAgent = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.claudeAgents.createAgent'),
+    key: DXN.make('org.dxos.operation.claude.createAgent'),
     name: 'Create Claude Agent',
     description: 'Creates a Claude managed agent configuration in the current space.',
     icon: ICON,
@@ -93,7 +93,7 @@ export const CreateAgent = Operation.make({
 /** Lists the agents configured in the current space. */
 export const ListAgents = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.claudeAgents.listAgents'),
+    key: DXN.make('org.dxos.operation.claude.listAgents'),
     name: 'List Claude Agents',
     description: 'Lists the Claude managed agents configured in the current space.',
     icon: ICON,
@@ -112,7 +112,7 @@ export const ListAgents = Operation.make({
  */
 export const DeployAgent = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.claudeAgents.deployAgent'),
+    key: DXN.make('org.dxos.operation.claude.deployAgent'),
     name: 'Deploy Claude Agent',
     description: "Creates or updates the agent on Anthropic's servers from its stored configuration.",
     icon: 'ph--cloud-arrow-up--regular',
@@ -131,7 +131,7 @@ export const DeployAgent = Operation.make({
 /** Starts a session against a deployed agent, optionally with the first instruction. */
 export const StartSession = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.claudeAgents.startSession'),
+    key: DXN.make('org.dxos.operation.claude.startSession'),
     name: 'Start Claude Agent Session',
     description: 'Starts a new session for a deployed Claude managed agent and records it in the space.',
     icon: 'ph--play--regular',
@@ -170,7 +170,7 @@ export const StartSession = Operation.make({
 /** Sends a follow-up message into a running session. */
 export const SendMessage = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.claudeAgents.sendMessage'),
+    key: DXN.make('org.dxos.operation.claude.sendMessage'),
     name: 'Send Message To Claude Agent',
     description: 'Sends a user message into an existing Claude managed agent session.',
     icon: 'ph--paper-plane-tilt--regular',
@@ -189,7 +189,7 @@ export const SendMessage = Operation.make({
 /** Reads back the session transcript and refreshes the stored status. */
 export const GetTranscript = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.claudeAgents.getTranscript'),
+    key: DXN.make('org.dxos.operation.claude.getTranscript'),
     name: 'Get Claude Agent Transcript',
     description: "Reads a Claude managed agent session's messages and its current status.",
     icon: 'ph--chat-text--regular',
@@ -218,7 +218,7 @@ export const GetTranscript = Operation.make({
  */
 export const SetSessionCredentials = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.claudeAgents.setSessionCredentials'),
+    key: DXN.make('org.dxos.operation.claude.setSessionCredentials'),
     name: 'Set Claude Agent Session Credentials',
     description: 'Binds or rotates credentials on a running Claude managed agent session.',
     icon: 'ph--key--regular',
@@ -240,7 +240,7 @@ export const SetSessionCredentials = Operation.make({
 /** Removes credentials from a running session, containing exposure after the work that needed them. */
 export const RevokeSessionCredentials = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.claudeAgents.revokeSessionCredentials'),
+    key: DXN.make('org.dxos.operation.claude.revokeSessionCredentials'),
     name: 'Revoke Claude Agent Session Credentials',
     description: 'Removes credentials from a running Claude managed agent session.',
     icon: 'ph--key--bold',
