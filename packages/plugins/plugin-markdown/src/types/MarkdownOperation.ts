@@ -270,7 +270,10 @@ export const Update = Operation.make({
       }),
     ),
   }),
+  // A receipt, not the document: the result is fed back to the model verbatim, so returning the
+  // whole text charged a full copy of the document per edit — content the model just supplied.
   output: Schema.Struct({
-    newContent: Schema.String,
+    applied: Schema.Number.annotate({ description: 'Number of edits applied; every edit matched or the call failed.' }),
+    length: Schema.Number.annotate({ description: 'Length of the document after the edits.' }),
   }),
 });
