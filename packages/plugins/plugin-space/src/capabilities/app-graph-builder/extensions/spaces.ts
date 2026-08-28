@@ -265,19 +265,12 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
                 .sort((sortA, sortB) => orderMap.get(sortA.id)! - orderMap.get(sortB.id)!),
               ...spaces.filter((space) => !orderMap.has(space.id)),
             ]
-              // Initializing spaces stay listed as loading placeholders: hiding them turns one
-              // space that cannot sync (e.g. an edge outage) into a missing workspace, and the
-              // active workspace vanishing renders as "you don't have this workspace".
-              .filter((space) => {
-                const spaceState = spaceStates.get(space.id);
-                return spaceState === SpaceState.SPACE_READY || spaceState === SpaceState.SPACE_INITIALIZING;
-              })
+              .filter((space) => spaceStates.get(space.id) === SpaceState.SPACE_READY)
               .filter((space) => AppSpace.isVisibleSpace(space))
               .map((space) =>
                 constructSpaceNode({
                   space,
                   navigable: ephemeralState.navigableCollections,
-                  loading: spaceStates.get(space.id) !== SpaceState.SPACE_READY,
                   namesCache: state.spaceNames,
                   graph,
                   spacesOrder,
@@ -347,15 +340,12 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
 const constructSpaceNode = ({
   space,
   navigable = false,
-  loading = false,
   namesCache,
   graph,
   spacesOrder,
 }: {
   space: Space;
   navigable?: boolean;
-  /** Space is still initializing; the node is a placeholder so consumers must not touch its db. */
-  loading?: boolean;
   namesCache?: Record<string, string>;
   graph?: AppGraph.ExpandableGraph;
   spacesOrder?: Obj.Any;
@@ -397,7 +387,6 @@ const constructSpaceNode = ({
           : undefined,
       iconHue: space.state.get() === SpaceState.SPACE_READY && space.properties.iconHue,
       disabled: !navigable || space.state.get() !== SpaceState.SPACE_READY || hasPendingMigration,
-      ...(loading ? { loading: true } : {}),
       disposition: 'workspace',
       testId: 'spacePlugin.space',
       onRearrange,

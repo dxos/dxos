@@ -20,8 +20,6 @@ export const translations = [
         'workspace-unavailable.heading': 'Workspace unavailable',
         'workspace-unavailable.description':
           'You don’t have this workspace, or it no longer exists. Select one of your workspaces to continue.',
-        'workspace-loading.description':
-          'Connecting to this workspace… Its content will appear once it finishes syncing.',
       },
     },
   },
