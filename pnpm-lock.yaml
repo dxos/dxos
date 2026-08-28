@@ -19211,9 +19211,6 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../../plugins/plugin-markdown
-      '@dxos/plugin-tasks':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-tasks
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -19338,6 +19335,9 @@ importers:
       '@dxos/plugin-table':
         specifier: workspace:*
         version: link:../../plugins/plugin-table
+      '@dxos/plugin-tasks':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-tasks
       '@dxos/plugin-thread':
         specifier: workspace:*
         version: link:../../plugins/plugin-thread
@@ -19803,9 +19803,6 @@ importers:
       '@dxos/plugin-projects':
         specifier: workspace:*
         version: link:../../plugins/plugin-projects
-      '@dxos/plugin-tasks':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-tasks
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -19852,6 +19849,9 @@ importers:
       '@dxos/plugin-table':
         specifier: workspace:*
         version: link:../../plugins/plugin-table
+      '@dxos/plugin-tasks':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-tasks
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
