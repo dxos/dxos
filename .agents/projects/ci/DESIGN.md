@@ -52,6 +52,15 @@ Stage boundaries are the dependency edges. Within a stage, independent steps run
    `continue-on-error`-plus-gate-step pair that existed to keep it report-all. The two moon checks
    share **one** invocation rather than a lane each: they overlap in `^:build`, and moon schedules
    that graph once instead of two processes contending for the same task locks and cache writes.
+
+   That invocation is wrapped in `env -u MOON_AFFECTED -u MOON_BASE -u MOON_HEAD`, and it is the one
+   place in the workflow that opts out of the job-level scope. Both checks catch a property of an
+   IMPORT EDGE, where the offending edit lands in a package neither project's inputs name — the same
+   reason `check-boot-budget` runs unscoped on its own job — so scoping them to composer-app's and
+   docs' own sources would skip them on exactly the PRs they exist to catch. **Unset, not
+   `MOON_AFFECTED=''`:** empty is not "off" — moon reads it as an empty base and still filters, which
+   is how this regressed once already (it was caught in review of the same change that introduced it,
+   after a run where the step silently reported "No tasks affected").
    `check-boot-budget` was among these until it moved to its own `boot-budget` job;
    `check-plugin-set` stayed because its `DX_PLUGIN_SET=production` bundle is cheap only on a runner
    where stage 2 has already warmed `^:build` (22 s there, against the boot budget's 41 s when the

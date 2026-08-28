@@ -51,6 +51,20 @@ Depot CI runs [steps concurrently](https://depot.dev/docs/ci/how-to-guides/paral
 
 Two things a `parallel:` block must not contain: a step that mutates a moon task **input** (`pnpm-lock.yaml` above all — its restoring `trap` does not survive a hard cancellation), and a second concurrent `moon` process in the same workspace. The peer-dependency check in `check` is sequential for the first reason.
 
+### Opting a step out of the scope
+
+Because the scope is job-level, a `moon` step that must run unconditionally has to say so. Exactly one does — `check`'s `check-plugin-set` + `docs:bundle`, which catch import-edge regressions whose offending edit lands in a package neither project's inputs name:
+
+```yaml
+run: >-
+  env -u MOON_AFFECTED -u MOON_BASE -u MOON_HEAD
+  moon exec composer-app:check-plugin-set docs:bundle --on-failure continue
+```
+
+**Unset the variables — do not set `MOON_AFFECTED` to an empty string.** Empty is not "off": moon reads it as an empty base and still filters, so the step reports "No tasks affected" and passes having checked nothing.
+
+`moon query` is unaffected either way — its subcommands do not read `MOON_AFFECTED`, so the `e2e` job's `Select shard targets` step returns the same list with or without it.
+
 ## Trunk
 
 [Trunk](https://trunk.io) ingests JUnit from the **Check** workflow ([`check.yml`](../../.depot/workflows/check.yml)) for flaky-test detection and quarantine. The **`test`** and **`e2e`** jobs wrap their `moon` steps with `trunk-io/analytics-uploader@v1` (`org-slug: dxos`, `quarantine: true`, `TRUNK_TOKEN`). Uploaded XML feeds Trunk for flaky labeling and quarantine decisions.

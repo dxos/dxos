@@ -170,6 +170,12 @@ jobs:
       # cache writes. `--on-failure continue` is what makes it report both rather than bail at the first,
       # the same reason the e2e and test cells pass it — and it is why this is `moon exec` and not
       # `moon run`, which has no such flag.
+      #
+      # `env -u` because these two are the ONE pair of moon steps in the workflow that must NOT be
+      # affected-scoped, and the resolver's job-level export would otherwise scope them: both catch a
+      # property of an import edge, where the offending edit lands in a package neither project's inputs
+      # name — the same reason `check-boot-budget` runs unscoped on its own job. Unset rather than
+      # `MOON_AFFECTED=''`: empty is not "off", moon reads it as an empty base and still filters.
       - fail-fast: false
         parallel:
           # Unused/undeclared dependencies and unreferenced files. Analyses the source tree — the knip
@@ -191,7 +197,9 @@ jobs:
           # `docs:bundle` IS the docs link check: `starlight-links-validator` runs as the last phase of
           # `astro build`.
           - name: Check production plugin set and docs links
-            run: moon exec composer-app:check-plugin-set docs:bundle --on-failure continue
+            run: >-
+              env -u MOON_AFFECTED -u MOON_BASE -u MOON_HEAD
+              moon exec composer-app:check-plugin-set docs:bundle --on-failure continue
 
   # Static boot-graph budget over the production bundle, on its own runner. The class it catches is a
   # property of an IMPORT EDGE — a boot-reachable module reaching a barrel instead of a subpath — so a
