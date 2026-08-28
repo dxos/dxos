@@ -103,7 +103,11 @@ export const selectionState = ({ getState, setState }: Partial<EditorStateStore>
     const pos = view.posAtCoords({ x: left + 1, y: top + 1 });
     if (pos !== null) {
       const { anchor, head } = view.state.selection.main;
-      const scrollOffset = Math.round(top - (view.documentTop + view.lineBlockAt(pos).top));
+      // Measure against the position's own visual row (`coordsAtPos`), not its line block: with
+      // line wrapping the top of the viewport is often a continuation row, and a block-relative
+      // offset would then overshoot the restore by every wrapped row above it.
+      const coords = view.coordsAtPos(pos);
+      const scrollOffset = coords ? Math.round(top - coords.top) : 0;
       setStateDebounced(id, { scrollTo: pos, scrollOffset, selection: { anchor, head } });
     }
   };
