@@ -53,7 +53,7 @@ export const make = ({
   // Map each model id (DXN) to the raw Ollama tag passed to the back-end.
   const backendById = new Map(models.map((model) => [model.id, model.backend]));
 
-  return AiModelResolver.AiModelResolver.resolver(
+  return AiModelResolver.resolver(
     {
       name: 'Ollama',
     },

@@ -2,12 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/echo-react';
+import { useQuery } from '@dxos/echo-react';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { TaskList, type TaskPatch, type TaskPlacement } from '@dxos/react-ui-task';
@@ -53,20 +55,10 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
     [invokePromise, spaceId],
   );
 
-  // One verb per gesture: `MoveTask` re-parents and repositions together, so a drop cannot leave the
-  // task hanging at the end of its new parent while a second call lands.
   const handleMove = useCallback(
     (task: Task.Task, { parentTask, before }: TaskPlacement) =>
-      void invokePromise(
-        TaskOperation.MoveTask,
-        {
-          task: Ref.make(task),
-          parentTask: parentTask ? Ref.make(parentTask) : null,
-          ...(before ? { before: Ref.make(before) } : {}),
-        },
-        { spaceId },
-      ),
-    [invokePromise, spaceId],
+      TaskSet.moveTask(taskSet, task, { parentTask, beforeId: before?.id }),
+    [taskSet],
   );
 
   const [selected, setSelected] = useState<string>();
@@ -115,12 +107,23 @@ TaskSetArticle.displayName = 'TaskSetArticle';
 /**
  * The set's tasks via `childOf` — membership is the ECHO parent edge, and transitive tolerates
  * legacy sub-tasks still parented to their parent task. The query re-emits on membership changes
- * only, never on a member's edit — `TaskList` rows subscribe themselves. Order comes from the
- * `tasks` array, where it is canonical.
+ * only, never on a member's edit — `TaskList` rows subscribe themselves.
  */
 const useSetTasks = (taskSet: TaskSet.TaskSet): Task.Task[] => {
   const db = Obj.getDatabase(taskSet);
   const tasks = useQuery(db, Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)));
-  const [taskRefs] = useObject(taskSet, 'tasks');
-  return useMemo(() => Task.orderTasks(tasks, taskRefs ?? []), [tasks, taskRefs]);
+  const orderedAtom = useMemo(
+    () =>
+      Atom.make((get) => {
+        subscribeHierarchy(get, tasks);
+        return Task.orderTasks(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
+      }),
+    [taskSet, tasks],
+  );
+  return useAtomValue(orderedAtom);
+};
+
+/** Subscribes to every member's `parentTask`, which the set's array does not carry. */
+const subscribeHierarchy = (get: Atom.AtomContext, tasks: readonly Task.Task[]): void => {
+  tasks.forEach((task) => get(Obj.atomProperty(task, 'parentTask')));
 };

@@ -737,10 +737,7 @@ const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: Cursor.
         },
         pushed: pushResult,
       };
-    }).pipe(
-      Effect.provide(Database.layer(db)),
-      Effect.provide(GitHubApi.GitHubCredentials.fromAccessToken(binding.spec.source)),
-    ),
+    }).pipe(Effect.provide(Database.layer(db)), Effect.provide(GitHubApi.fromAccessToken(binding.spec.source))),
   );
 
   // Write sync state onto the binding.

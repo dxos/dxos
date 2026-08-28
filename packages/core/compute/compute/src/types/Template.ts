@@ -108,7 +108,7 @@ export const processTemplate = (
 
             // NOTE: Operations referenced by template inputs must accept void input — see `Input.operation`.
             const fn = Operation.deserialize(results[0]);
-            const result = yield* Operation.invoke(fn, undefined as any).pipe(Effect.orDie);
+            const result = yield* Operation.invoke(fn, undefined).pipe(Effect.orDie);
             return [input.name, result] as const;
           }
 
