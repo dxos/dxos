@@ -3,4 +3,5 @@
 //
 
 export * from './FileInput';
-export * from './FilePreview';
+export * from './PdfCanvas';
+export * from './Preview';
