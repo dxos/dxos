@@ -4,7 +4,9 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { Keyboard, nestKeyboardContext } from '@dxos/keyboard';
 import { Icon, Input, MediaPlayer, Toolbar, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { useAttention } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 
@@ -20,6 +22,8 @@ export type PreviewRootProps = {
   url: string;
   name?: string;
   size?: number;
+  /** Attendable id of the surrounding article; without it the toolbar binds no shortcuts. */
+  attendableId?: string;
   children?: React.ReactNode;
 };
 
@@ -37,9 +41,12 @@ export type PreviewRootProps = {
  * surrounds them — `Panel.Toolbar` and `Panel.Content` in the file article — so a wrapper would
  * break the panel's grid by putting a div between it and its areas.
  */
-const PreviewRoot = ({ type, url, name, size, children }: PreviewRootProps) => {
+const PreviewRoot = ({ type, url, name, size, attendableId, children }: PreviewRootProps) => {
   const [paged, setPaged] = useState<PreviewPaged | undefined>(undefined);
-  const value = useMemo(() => ({ type, url, name, size, paged, setPaged }), [type, url, name, size, paged]);
+  const value = useMemo(
+    () => ({ type, url, name, size, attendableId, paged, setPaged }),
+    [type, url, name, size, attendableId, paged],
+  );
 
   return <PreviewContext.Provider value={value}>{children}</PreviewContext.Provider>;
 };
@@ -60,8 +67,43 @@ PreviewRoot.displayName = 'Preview.Root';
  */
 const PreviewToolbar = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   const { t } = useTranslation(meta.profile.key);
-  const { name, url, paged } = usePreview('Preview.Toolbar');
+  const { name, url, paged, attendableId } = usePreview('Preview.Toolbar');
   const [query, setQuery] = useState('');
+  const searchRef = useRef<HTMLInputElement>(null);
+  const { hasAttention } = useAttention(attendableId);
+
+  // Bound in the attended article's own keyboard context rather than globally, so the shortcut
+  // belongs to whichever plank the reader is in — the same mechanism `useArticleKeyboardNavigation`
+  // uses. Without an attendable id there is no context to scope to, so nothing is bound.
+  useEffect(() => {
+    if (!attendableId || !hasAttention || !paged) {
+      return;
+    }
+
+    const contextPath = nestKeyboardContext(attendableId);
+    const context = Keyboard.singleton.getContext(contextPath);
+    const previous = Keyboard.singleton.getCurrentContext();
+    Keyboard.singleton.setCurrentContext(contextPath);
+
+    context.bind({
+      shortcut: 'meta+f',
+      // Not `disableInput`: the point is to reach the field from anywhere in the article, including
+      // when focus is already inside it, where selecting the text is the useful outcome.
+      handler: () => {
+        searchRef.current?.focus();
+        searchRef.current?.select();
+        return true;
+      },
+      data: t('search-shortcut.label'),
+    });
+
+    return () => {
+      context.unbind('meta+f');
+      if (Keyboard.singleton.getCurrentContext() === contextPath) {
+        Keyboard.singleton.setCurrentContext(previous);
+      }
+    };
+  }, [attendableId, hasAttention, paged, t]);
 
   const handleSearch = useCallback(
     (next: string) => {
@@ -82,29 +124,33 @@ const PreviewToolbar = composable<HTMLDivElement>(({ children, ...props }, forwa
             label={paged.fit === 'width' ? t('fit-page.label') : t('fit-width.label')}
             onClick={() => paged.setFit(paged.fit === 'width' ? 'page' : 'width')}
           />
-          {/* First/last are conveniences, not the primary controls: hidden until the toolbar's own
-              width can hold them, so a narrow plank keeps prev/next, the counter and search. */}
           <Toolbar.IconButton
+            compact
             iconOnly
             icon='ph--caret-line-left--regular'
-            density='sm'
-            classNames='hidden @md:flex'
+            classNames='hidden @md:flex transition-none'
             label={t('first-page.label')}
             disabled={paged.currentPage <= 1}
-            onClick={() => paged.api?.goToPage(1)}
+            onClick={() => paged.api?.goToPage(1, 'instant')}
           />
           <Toolbar.IconButton
             iconOnly
             icon='ph--caret-left--regular'
-            classNames='px-0'
             label={t('previous-page.label')}
             disabled={paged.currentPage <= 1}
             onClick={() => paged.api?.stepPage(-1)}
           />
-          {/* `Toolbar.Text` truncates by default, which is right for a label and wrong for a
-              counter — "1 / 12" became "1 …". These must keep their intrinsic width. */}
-          <Toolbar.Text classNames='shrink-0 overflow-visible text-nowrap tabular-nums'>
-            {t('page-of.label', { page: paged.currentPage, count: paged.pageCount })}
+          {/* Two copies stacked in one grid cell: an invisible one of the widest value reserves the
+              box, so stepping 9 → 10 does not shove the buttons beside it. Padding with spaces
+              cannot do this (HTML collapses them) and zero-padding shows a leading zero.
+              `Toolbar.Text` also truncates by default — right for a label, wrong for a counter. */}
+          <Toolbar.Text classNames='grid justify-items-end shrink-0 overflow-visible text-nowrap text-sm tabular-nums'>
+            <span aria-hidden className='invisible col-start-1 row-start-1'>
+              {t('page-of.label', { page: paged.pageCount, count: paged.pageCount })}
+            </span>
+            <span className='col-start-1 row-start-1'>
+              {t('page-of.label', { page: paged.currentPage, count: paged.pageCount })}
+            </span>
           </Toolbar.Text>
           <Toolbar.IconButton
             iconOnly
@@ -114,16 +160,18 @@ const PreviewToolbar = composable<HTMLDivElement>(({ children, ...props }, forwa
             onClick={() => paged.api?.stepPage(1)}
           />
           <Toolbar.IconButton
+            compact
             iconOnly
             icon='ph--caret-line-right--regular'
-            classNames='hidden @md:flex'
+            classNames='hidden @md:flex transition-none'
             label={t('last-page.label')}
             disabled={paged.currentPage >= paged.pageCount}
-            onClick={() => paged.api?.goToPage(paged.pageCount)}
+            onClick={() => paged.api?.goToPage(paged.pageCount, 'instant')}
           />
           <Toolbar.Separator />
           <Input.Root>
             <Input.TextInput
+              ref={searchRef}
               placeholder={t('search.placeholder')}
               value={query}
               classNames='grow'

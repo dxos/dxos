@@ -22,6 +22,8 @@ export type PreviewPaged = PdfCanvasState & {
 export type PreviewContextValue = {
   type: string;
   url: string;
+  /** Attendable id of the surrounding article, when there is one; scopes the toolbar's shortcuts. */
+  attendableId?: string;
   /** Filename, when known; used for the download affordance and the unsupported-type details. */
   name?: string;
   size?: number;

@@ -34,6 +34,7 @@ export const translations = [
         'fit-width.label': 'Fit width',
         'fit-page.label': 'Fit page',
         'search.placeholder': 'Search',
+        'search-shortcut.label': 'Search document',
         'no-matches.label': 'No matches',
         'match-of.label': '{{match}} of {{count}}',
         'previous-match.label': 'Previous match',

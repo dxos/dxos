@@ -33,7 +33,7 @@ export type PdfFit = 'width' | 'page';
 
 /** Imperative surface the toolbar drives, published through {@link PdfCanvasProps.apiRef}. */
 export type PdfApi = {
-  goToPage: (page: number) => void;
+  goToPage: (page: number, behavior?: ScrollBehavior) => void;
   /** Steps by `delta` from the pending target, so repeated clicks accumulate mid-scroll. */
   stepPage: (delta: number) => void;
   search: (query: string) => void;
@@ -317,7 +317,7 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
       return () => container.removeEventListener('scroll', onScroll);
     }, [pageCount]);
 
-    const goToPage = useCallback((page: number) => {
+    const goToPage = useCallback((page: number, behavior: ScrollBehavior = 'smooth') => {
       const element = refs.current[page - 1]?.page;
       const container = containerRef.current;
       if (element && container) {
@@ -325,7 +325,7 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
         // Relative scroll for the same reason `onScroll` measures rects: the page's `offsetTop` is
         // not necessarily expressed in this container's coordinates.
         const delta = element.getBoundingClientRect().top - container.getBoundingClientRect().top;
-        container.scrollTo({ top: container.scrollTop + delta - PAGE_MARGIN, behavior: 'smooth' });
+        container.scrollTo({ top: container.scrollTop + delta - PAGE_MARGIN, behavior });
       }
     }, []);
 
