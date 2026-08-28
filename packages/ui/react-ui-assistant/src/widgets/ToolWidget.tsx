@@ -59,7 +59,6 @@ type ToolCallEntry = {
   error?: unknown;
   input?: unknown;
   result?: unknown;
-  stats?: unknown;
 };
 
 const DEFAULT_TOOL_ICON = 'ph--wrench--regular';
@@ -122,14 +121,6 @@ const toCalls = (blocks: ContentBlock.Any[]): ToolCallEntry[] => {
         }
         break;
       }
-
-      case 'stats': {
-        const entry = calls[calls.length - 1];
-        if (entry) {
-          entry.stats = block;
-        }
-        break;
-      }
     }
   }
 
@@ -142,7 +133,7 @@ type ToolPanelProps = {
 
 /** Whether the call carries anything an expansion could show. */
 const hasDetail = (call: ToolCallEntry): boolean =>
-  call.input !== undefined || call.error !== undefined || call.result !== undefined || call.stats !== undefined;
+  call.input !== undefined || call.error !== undefined || call.result !== undefined;
 
 const ToolPanel = ({ calls, onChangeOpen }: ToolPanelProps) => {
   const { t } = useTranslation(translationKey);
@@ -179,7 +170,7 @@ const ToolPanel = ({ calls, onChangeOpen }: ToolPanelProps) => {
         <TogglePanel.Body>
           <TogglePanel.Viewport>
             {only ? (
-              <ToolCallDetail call={only} />
+              <ToolCallDetail call={only} classNames='px-2' />
             ) : (
               /* Bordered above as well as between, so the list reads as a group under the summary. */
               <div
@@ -254,7 +245,6 @@ const ToolCallDetail = ({ call, classNames }: { call: ToolCallEntry; classNames?
       {call.input !== undefined && <ToolSection label={t('tool-input.label')} data={call.input} />}
       {call.error !== undefined && <ToolSection label={t('tool-error.label')} data={call.error} />}
       {call.result !== undefined && <ToolSection label={t('tool-result.label')} data={call.result} />}
-      {call.stats !== undefined && <ToolSection label={t('stats.label')} data={call.stats} />}
     </div>
   );
 };

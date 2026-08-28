@@ -32,16 +32,33 @@ export const createRenderer = (
     const segments: string[] = [];
     let tools: ContentBlock.Any[] = [];
 
+    // Emitted after the run they interleave with, so the panel stays whole.
+    let deferred: string[] = [];
+
     const flushTools = () => {
       if (tools.length) {
         segments.push(toolkitTag(tools));
         tools = [];
       }
+      if (deferred.length) {
+        segments.push(...deferred);
+        deferred = [];
+      }
     };
 
     for (const block of blocks) {
-      if (block._tag === 'toolCall' || block._tag === 'toolResult' || (block._tag === 'stats' && tools.length)) {
+      if (block._tag === 'toolCall' || block._tag === 'toolResult') {
         tools.push(block);
+        continue;
+      }
+
+      // Stats belong to their own widget, not the tool panel — but they arrive mid-run, so they
+      // must not flush it either, or a run becomes one panel per call again.
+      if (block._tag === 'stats') {
+        const rendered = blockToMarkdown(message, block, getObjectLabel);
+        if (rendered) {
+          deferred.push(rendered);
+        }
         continue;
       }
 
