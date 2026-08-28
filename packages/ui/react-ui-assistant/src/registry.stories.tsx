@@ -7,6 +7,7 @@ import React from 'react';
 
 import { MarkdownBlock, WidgetStateProvider, createWidgetStateStore } from '@dxos/react-ui-feed';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { ContentBlock } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { assistantRegistry } from './registry';
@@ -26,8 +27,7 @@ type StoryArgs = {
 // the item unmounting as the reader scrolls past it.
 const store = createWidgetStateStore();
 
-// The query container a thread gets from `MessageList`'s `Column.Center`: a widget caps itself
-// against it, and without one `cqi` falls back to the viewport.
+// The query container a thread gets from `Column.Center`; without one `cqi` means the viewport.
 const DefaultStory = ({ content }: StoryArgs) => (
   <WidgetStateProvider store={store}>
     <div className='dx-container-type-inline-size'>
@@ -97,8 +97,7 @@ export const Reference: Story = {
 
 export const Suggestion: Story = {
   args: {
-    // Joined, not one per line: the renderer emits a run of suggestions on a single line, and a
-    // document newline is a new line in the editor no matter how the chips are styled.
+    // TODO(burdon): Consider addition container for suggestions (like select).
     content: [
       '<suggestion>Show me the layout rules (this is a very very long suggestion that should truncate)</suggestion>',
       '<suggestion>Suggestion 2</suggestion>',
@@ -133,24 +132,44 @@ export const Stats: Story = {
 // React widgets (portaled outside the editor)
 //
 
+const toolchain: [ContentBlock.ToolCall, ContentBlock.ToolResult][] = [
+  [
+    {
+      _tag: 'toolCall',
+      toolCallId: 'tc-1',
+      name: 'example_tool',
+      input: JSON.stringify({ query: 'status', limit: 10 }),
+      providerExecuted: false,
+    },
+    {
+      _tag: 'toolResult',
+      toolCallId: 'tc-1',
+      name: 'example_tool',
+      result: JSON.stringify({ ok: true, rows: [{ id: 1 }, { id: 2 }] }),
+      providerExecuted: false,
+    },
+  ],
+  [
+    {
+      _tag: 'toolCall',
+      toolCallId: 'tc-2',
+      name: 'example_tool',
+      input: JSON.stringify({ query: 'status', limit: 10 }),
+      providerExecuted: false,
+    },
+    {
+      _tag: 'toolResult',
+      toolCallId: 'tc-2',
+      name: 'example_tool',
+      result: JSON.stringify({ ok: true, rows: [{ id: 1 }, { id: 2 }, { id: 3 }] }),
+      providerExecuted: false,
+    },
+  ],
+];
+
 export const Toolkit: Story = {
   args: {
-    content: `<toolkit>${JSON.stringify([
-      {
-        _tag: 'toolCall',
-        toolCallId: 'tc-story-1',
-        name: 'example_tool',
-        input: JSON.stringify({ query: 'status', limit: 10 }),
-        providerExecuted: false,
-      },
-      {
-        _tag: 'toolResult',
-        toolCallId: 'tc-story-1',
-        name: 'example_tool',
-        result: JSON.stringify({ ok: true, rows: [{ id: 1 }, { id: 2 }] }),
-        providerExecuted: false,
-      },
-    ])}</toolkit>`,
+    content: toolchain.map(([call, result]) => `<toolkit>${JSON.stringify([call, result])}</toolkit>`).join('\n\n'),
   },
 };
 

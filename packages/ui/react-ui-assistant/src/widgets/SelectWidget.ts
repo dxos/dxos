@@ -25,9 +25,8 @@ export class SelectWidget extends WidgetType {
     return (
       Domino.of('div')
         .attributes({ role: 'group' })
-        // Same metrics as a run of suggestion chips (4px between, 8px between rows), so the two read
-        // as one family; flex gap already applies only between items, never at a row's start.
-        .classNames('flex flex-wrap gap-x-1 gap-y-2')
+        // Flex gap rather than per-item padding, since it never lands at a row's start.
+        .classNames('flex flex-wrap gap-x-2 gap-y-2')
         .append(
           ...this.options.map((option) =>
             Domino.of('button')

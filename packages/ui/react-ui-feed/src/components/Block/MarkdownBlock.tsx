@@ -7,7 +7,7 @@ import { EditorView } from '@codemirror/view';
 import React, { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { type XmlWidgetRegistry, type XmlWidgetState } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
@@ -224,9 +224,8 @@ export const MarkdownBlock = memo(
 
     return (
       <>
-        {/* No query container here: this element is the shrink-to-fit basis for a prompt's bubble,
-            and inline-size containment would stop its text sizing it. The container is the row's
-            `Column.Center`, whose width is definite. */}
+        {/* No query container here: a prompt's bubble is sized by this element's text, which
+            inline-size containment would stop contributing. */}
         <div className={mx(classNames)} ref={rootRef} />
         {widgets.map(({ Component, root, id, props }) => (
           <div key={id}>{createPortal(<Component view={view ?? undefined} {...props} />, root)}</div>
