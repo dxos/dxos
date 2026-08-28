@@ -3,10 +3,10 @@
 //
 
 import { type CleanupFn, Event } from '@dxos/async';
+import { type BlobBackend } from '@dxos/blob';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Database, type Entity, Feed, Filter, type Hypergraph, Query, Ref, type Registry, Type } from '@dxos/echo';
-import { type BlobBackend } from '@dxos/echo-protocol';
 import {
   type AnyProperties,
   type RefResolverRequest,

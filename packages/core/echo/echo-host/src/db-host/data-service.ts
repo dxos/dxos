@@ -14,7 +14,7 @@ import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type DataService } from '@dxos/protocols/rpc';
 
-import { type AutomergeHost, deriveCollectionIdFromSpaceId } from '../automerge';
+import { type AutomergeHost, type DocumentLease, deriveCollectionIdFromSpaceId } from '../automerge';
 import { DocumentsSynchronizer } from './documents-synchronizer';
 import { type SpaceStateManager } from './space-state-manager';
 
@@ -39,6 +39,13 @@ export class DataServiceImpl implements DataService.Handlers {
    * subscriptionId -> DocumentsSynchronizer
    */
   private readonly '_subscriptions' = new Map<string, DocumentsSynchronizer>();
+
+  /**
+   * Leases on documents created for a client that has not subscribed to them yet. A created document
+   * lives only in memory until it is saved, and its creator subscribes in a later call, so releasing
+   * it at creation lets the host evict it out from under the write that follows.
+   */
+  private readonly '_pendingCreations' = new Map<DocumentId, DocumentLease>();
 
   private readonly '_automergeHost': AutomergeHost;
   private readonly '_spaceStateManager': SpaceStateManager;
@@ -78,7 +85,22 @@ export class DataServiceImpl implements DataService.Handlers {
           log.catch(err);
           void emit.fail(err);
         });
-      return Effect.sync(() => void synchronizer.close());
+      return Effect.sync(() => {
+        // Guarded by identity: a reconnect re-subscribes under the same id before this finalizer
+        // runs, and an unconditional delete would drop the replacement.
+        if (this._subscriptions.get(request.subscriptionId) === synchronizer) {
+          this._subscriptions.delete(request.subscriptionId);
+        }
+        // Nothing is left to subscribe to a created document once the last client is gone, so its
+        // creation lease would otherwise outlive every reader.
+        if (this._subscriptions.size === 0) {
+          for (const lease of this._pendingCreations.values()) {
+            lease[Symbol.dispose]();
+          }
+          this._pendingCreations.clear();
+        }
+        void synchronizer.close();
+      });
     });
   }
 
@@ -89,6 +111,11 @@ export class DataServiceImpl implements DataService.Handlers {
 
       if (request.addIds?.length) {
         await synchronizer.addDocuments(request.addIds as DocumentId[]);
+        // The subscription now holds each document, so the creation lease has nothing left to guard.
+        for (const documentId of request.addIds as DocumentId[]) {
+          this._pendingCreations.get(documentId)?.[Symbol.dispose]();
+          this._pendingCreations.delete(documentId);
+        }
       }
       if (request.removeIds?.length) {
         await synchronizer.removeDocuments(request.removeIds as DocumentId[]);
@@ -100,8 +127,9 @@ export class DataServiceImpl implements DataService.Handlers {
     request: DataService.CreateDocumentRequest,
   ): Effect.Effect<DataService.CreateDocumentResponse, Error> {
     return Effect.promise(async () => {
-      const handle = await this._automergeHost.createDoc(request.initialValue);
-      return { documentId: handle.documentId };
+      const created = await this._automergeHost.createDoc(request.initialValue);
+      this._pendingCreations.set(created.documentId, created);
+      return { documentId: created.documentId };
     });
   }
 

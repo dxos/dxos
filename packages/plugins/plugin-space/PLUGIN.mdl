@@ -663,6 +663,10 @@ flow QA-2: Register a schema and add a typed relation
     - space: a space is open
     - no schema typename "example.org/type/QaThing" is already registered in the space — ABORT
       rather than reusing a registration this flow did not create
+    - schema: a runtime `Schema.Struct` for typename "example.org/type/QaThing" to register
+    - relationSchema: a runtime relation schema (source/target typed) to link `a` and `b` with
+    - a: an object already in the space, the relation's source
+    - b: an object already in the space, the relation's target
   test:
     - name: Register the schema
       do: Open Settings -> Schema for the space and register a new type, or create an object of a

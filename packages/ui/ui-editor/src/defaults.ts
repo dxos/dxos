@@ -27,7 +27,7 @@ export const documentSlots: ThemeExtensionsOptions['slots'] = {
       // NOTE: Use inline-size, not full size containment — `container-type: size` on the
       // editor content breaks CodeMirror's viewport measurement, leaving blank gaps during
       // scroll until a click forces a re-measure.
-      'dx-inline-size-container',
+      'dx-container-type-inline-size',
       // Wider margin for web (vs. mobile).
       'pointer-fine:max-w-[min(50rem,100%-4rem)] pointer-coarse:max-w-[min(50rem,100%-2rem)]',
       'mx-auto! w-full py-3!',

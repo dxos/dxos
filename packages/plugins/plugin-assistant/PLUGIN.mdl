@@ -380,7 +380,7 @@ flow QA-1: Create a chat and send a message
         through the operation invoker; there is no `SendMessage` operation to call directly.
     - name: Chat is auto-named
       do: (no gesture — happens automatically once the chat has enough messages)
-      invoke: [op:UpdateChatName] { chat: $created.object, prompt: "Hello" }
+      invoke: [op:UpdateChatName] { chat: $created.object }
       expect: the chat's name changes from "QA Chat" to something derived from the conversation
       assert: return typeof $result === 'undefined' || true;
       note: |

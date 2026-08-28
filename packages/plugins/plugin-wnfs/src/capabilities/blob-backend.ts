@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import type { Blockstore } from 'interface-blockstore';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import { type BlobBackend } from '@dxos/blob';
 import { type Client } from '@dxos/client';
-import { type BlobBackend } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';

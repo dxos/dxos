@@ -367,7 +367,7 @@ flow QA-1: Create, randomize and archive a SampleItem
       invoke: [op:updateStatus] { item: $created.object, status: "archived" }
       expect: the item's status reads "archived"
       assert: |
-        return (await space.db.query(dxos.Filter.everything()).run())
+        return (await space.db.query(dxos.Filter.everything()).run()).objects
           .find((o) => o.id === $created.object.id)?.status === 'archived';
   after:
     - name: Delete the item

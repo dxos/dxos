@@ -5,6 +5,5 @@
 export * as ConnectorAnnotations from './ConnectorAnnotations';
 export * as ConnectorCoordination from './ConnectorCoordination';
 export * as ConnectorEvents from './ConnectorEvents';
-export * as ConnectorForm from './ConnectorForm';
 export * as ConnectorOperation from './ConnectorOperation';
 export * as ConnectorSpec from './ConnectorSpec';
