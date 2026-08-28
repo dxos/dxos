@@ -29,12 +29,13 @@ Every `moon` step in **Check** is unconditional. What it runs is decided once pe
 
 `all: true` is set by `e2e-bundle` and `e2e` on an explicit `e2e` dispatch — that dispatch exists to run the whole suite, and the two jobs must agree or a cell runs suites whose bundle was never warmed.
 
-The resolver is [`scripts/ci-affected.mjs`](../../scripts/ci-affected.mjs) and it runs anywhere:
+The resolver is [`resolve-affected.mjs`](../../.depot/actions/affected/resolve-affected.mjs), beside the action that calls it, and it runs anywhere:
 
 ```bash
-pnpm ci-affected                                  # what CI would decide for this checkout
-pnpm ci-affected --event merge_group              # emulate another trigger
-eval "$(pnpm -s ci-affected --shell)" && moon run :build
+A=.depot/actions/affected/resolve-affected.mjs
+node $A                       # what CI would decide for this checkout
+node $A --event merge_group   # emulate another trigger
+eval "$(node $A --shell)" && moon run :build
 ```
 
 **It falls back to a full run whenever a base cannot be resolved**, which is not a nicety: `moon` exits 0 having run nothing when the affected set comes back empty, so a base that silently fails to resolve turns every gate in the workflow green. Same silent-degradation class as a dropped remote cache — see the CI project's [`DESIGN.md`](../../.agents/projects/ci/DESIGN.md).

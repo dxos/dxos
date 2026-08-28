@@ -20,12 +20,16 @@
 // gate in the workflow green — the same silent-degradation class the remote cache has
 // (`.agents/projects/ci/DESIGN.md`, "The failure mode that governs every decision here").
 //
-// Usage:
-//   node scripts/ci-affected.mjs                      # resolve for the current context
-//   node scripts/ci-affected.mjs --event merge_group  # emulate another trigger
-//   node scripts/ci-affected.mjs --base <ref>         # pin the base explicitly
-//   node scripts/ci-affected.mjs --all                # force a full run
-//   eval "$(node scripts/ci-affected.mjs --shell)"    # apply to the current shell
+// Lives beside the action that calls it rather than in `scripts/`, the same way
+// `.depot/actions/test-report` keeps its shell script: nothing else invokes it, so deleting the action
+// should delete this too.
+//
+// Usage — `A=.depot/actions/affected/resolve-affected.mjs`:
+//   node $A                      # resolve for the current context
+//   node $A --event merge_group  # emulate another trigger
+//   node $A --base <ref>         # pin the base explicitly
+//   node $A --all                # force a full run
+//   eval "$(node $A --shell)"    # apply to the current shell
 //
 // Writes `KEY=value` lines to stdout, appends them to `$GITHUB_ENV` when set, and explains itself on
 // stderr — so `--shell` output stays evaluable.
@@ -205,7 +209,7 @@ const tryGit = (...args) => {
   }
 };
 
-const note = (message) => console.error(`ci-affected: ${message}`);
+const note = (message) => console.error(`affected: ${message}`);
 
 const fail = (message) => {
   note(message);

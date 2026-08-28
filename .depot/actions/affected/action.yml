@@ -19,4 +19,4 @@ runs:
       shell: bash
       env:
         CI_AFFECTED_ALL: ${{ inputs.all }}
-      run: node scripts/ci-affected.mjs
+      run: node ./.depot/actions/affected/resolve-affected.mjs

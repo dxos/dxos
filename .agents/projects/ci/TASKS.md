@@ -55,11 +55,11 @@ REPORT.md, "In CI". What remains is operational hardening, not the rollout itsel
 ## Phase 2: Backlog
 
 - [x] **Resolve the affected scope once per job** — `.depot/actions/affected` +
-      `scripts/ci-affected.mjs` export `MOON_AFFECTED`/`MOON_BASE` from the trigger's own base
+      its `resolve-affected.mjs` export `MOON_AFFECTED`/`MOON_BASE` from the trigger's own base
       (`pull_request.base.sha`, `merge_group.base_sha`, else the merge-base with `origin/main`), so
       every moon step is unconditional. Collapsed 11 branch-gated step variants to 4, retired
       `.depot/actions/branch`, and made the decision reproducible off CI —
-      `pnpm ci-affected --event <name>`, and `depot ci run` with no event at all. Falls back to a full
+      the resolver's `--event <name>`, and `depot ci run` with no event at all. Falls back to a full
       run when a base does not resolve, because an empty affected set is a green no-op.
 - [x] **Run independent steps concurrently** (Depot CI `parallel:`) — `check`'s nine no-build gates,
       `check`'s slow checks (knip against `check-plugin-set` + `docs:bundle` in one moon invocation),
