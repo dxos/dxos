@@ -12,7 +12,6 @@ import { Milestone, Task, TaskSet } from '@dxos/types';
 import {
   addMilestoneToSet,
   addTaskToSet,
-  collectSubtree,
   findMilestoneTaskSet,
   findTaskSet,
   refEntityId,
@@ -95,11 +94,11 @@ describe('task set membership', () => {
   });
 
   describe('sub-trees', () => {
-    it.effect('collectSubtree walks descendants and includes the root', () =>
+    it.effect('Task.subtree walks descendants and includes the root', () =>
       Effect.gen(function* () {
         const { taskSet, root, child, grandchild, sibling } = yield* seedTree();
 
-        const subtree = collectSubtree(taskSet, root);
+        const subtree = Task.subtree(yield* TaskSet.loadTasks(taskSet), root);
 
         expect(subtree.map((task) => task.id)).toEqual([root.id, child.id, grandchild.id]);
         expect(subtree.map((task) => task.id)).not.toContain(sibling.id);

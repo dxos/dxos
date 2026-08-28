@@ -471,9 +471,11 @@ flow QA-1: Bind an access token to a new Integration and configure targets
     - an identity exists
     - space: a space is open
     - collection: a collection in that space, to create into
-    - accessToken: an AccessToken already exists in the space for a registered provider (create
-      one via Settings -> Connections -> a custom-token provider, e.g. DeepSeek, which is always
-      listed since ConnectorPlugin and DeepSeekPlugin both default on)
+    - accessToken: an unbound AccessToken exists in the space for a registered provider — added
+      directly via `space.db.add(AccessToken.make({ source, scopes, token }))`, NOT through
+      Settings -> Connections' credential-form dialog, whose `submitCredentialForm` always
+      persists a bound Connection in the same submit (see `connector-coordinator.ts`), which
+      would violate the next precondition
     - no Integration bound to that AccessToken exists yet — ABORT rather than deleting one this
       flow did not create
   test:
@@ -481,7 +483,7 @@ flow QA-1: Bind an access token to a new Integration and configure targets
       do: In the navtree, click + on a collection and choose Integration. Pick the provider in
         the dropdown (F-8's SelectField, populated live from registered IntegrationProvider
         entries) and select the existing access token.
-      invoke: org.dxos.operation.connector.createConnection { accessToken: $given.accessToken, name: "QA Integration" }
+      invoke: org.dxos.operation.connector.createConnection { accessToken: Ref.make($given.accessToken), name: "QA Integration" }
       capture: created
       expect: an Integration named "QA Integration" appears under the collection, and Composer
         navigates to its article in the active Deck

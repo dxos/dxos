@@ -33,6 +33,7 @@ import { meta } from '#meta';
 // `mapFields` only on a `Struct`, and `Type.getSchema` erases to `Codec`, so the pick runs on the AST
 // and the field types are re-attached here.
 type HeaderValues = Pick<Project.Project, 'name' | 'description'>;
+
 const HeaderValues = Schema.make<Schema.Codec<HeaderValues, any>>(
   SchemaAST.pick(Type.getSchema(Project.Project).ast, ['name', 'description']),
 );
@@ -323,7 +324,7 @@ const useToolbarActions = (project: Project.Project, onAddArtifact: () => void) 
           onAddArtifact,
         )
         .build(),
-    [project, invokePromise, spaceId, onAddArtifact],
+    [project, spaceId, invokePromise, onAddArtifact],
   );
 };
 

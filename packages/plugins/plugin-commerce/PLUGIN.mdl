@@ -229,7 +229,9 @@ op SetProviderTemplate
     mapping, and result mapping in one atomic write.
   input:
     provider: Ref<Provider>
-    searchSchema: JsonSchema
+    searchSchema: string             # a JSON Schema object serialized with JSON.stringify; the
+                                     # recursive JSONSchema meta-type produces a tool input_schema
+                                     # LLM providers reject, so the handler parses it instead
     request: RequestMapping
     result: ResultMapping
   output: Ref<Provider>
@@ -343,7 +345,7 @@ test T-2: SetProviderTemplate persists template
   given: a Provider with no template
   when: SetProviderTemplate is called with searchSchema, request, result
   then:
-    - Provider.searchSchema equals the input schema
+    - Provider.searchSchema equals the parsed input schema (the input arrives as a JSON string)
     - Provider.request equals the input mapping
     - Provider.result equals the input mapping
 ```
@@ -486,8 +488,10 @@ flow QA-1: Configure a provider by hand and run a search
         NO `invoke` — Provider creation is a navtree action (F-1.1); this step is human-only.
     - name: Set its search template
       do: In ProviderArticle, fill the request/result mapping form for a GET to
-        `/products/search?q={q}` returning `.products[]` with `title` and `url` fields.
-      invoke: [op:SetProviderTemplate] { provider: $provider.id, searchSchema: { type: "object", properties: { q: { type: "string" } } }, request: { method: "GET", urlTemplate: "https://dummyjson.com/products/search?q={q}" }, result: { path: "products", fields: { title: { selector: "title" }, url: { selector: "id" } } } }
+        `/products/search?q={q}` returning `.products[]`, mapping `title` from the item's
+        `title` and `url` from its `thumbnail` (dummyjson's product listing carries no
+        product-page URL, only a per-item image URL; `id` is not a URL).
+      invoke: [op:SetProviderTemplate] { provider: Ref.make($provider), searchSchema: "{\"type\":\"object\",\"properties\":{\"q\":{\"type\":\"string\"}}}", request: { method: "GET", urlTemplate: "https://dummyjson.com/products/search?q={q}" }, result: { responseType: "json", itemLocator: "products", fields: { title: { path: "title" }, url: { path: "thumbnail" } } } }
       capture: templated
       expect: the Provider is now ready for RunProviderSearch — its searchSchema, request and
         result mappings are all set
@@ -504,7 +508,7 @@ flow QA-1: Configure a provider by hand and run a search
       expect: the button disables while running, then Search.status returns to "idle",
         Search.lastRunAt is set, and results from dummyjson appear in the results list
       assert: |
-        return (await space.db.query(dxos.Filter.type($types.Search)).run())
+        return (await space.db.query(dxos.Filter.type(Search)).run()).objects
           .find((o) => o.id === $search.id)?.status === 'idle';
   after:
     - name: Delete the search and provider

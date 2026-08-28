@@ -88,7 +88,7 @@ op GetDiscordChannels
     is drained in full; channel fetch failures for individual guilds are logged
     and skipped so the rest of the discovery result remains usable.
   input:
-    integration: Ref<Integration>
+    connection: Ref<Connection>
   output: { targets: RemoteTarget[] }
   effects: [http]
   requires: [DiscordREST]
@@ -99,21 +99,34 @@ op GetDiscordChannels
 ```
 
 ```mdl
+op MaterializeDiscordTarget
+  key: org.dxos.operation.discord.materializeTarget
+  desc: >
+    Find-or-create the empty local feed-backed Channel for a selected Discord
+    channel, keyed by the Discord channel id, so a sync cursor can reference it.
+  input:
+    connection: Ref<Connection>
+    remoteTarget: RemoteTarget
+  output: { target: Ref<Channel> }
+  effects: [echo:write]
+```
+
+```mdl
 op SyncDiscordChannel
   key: org.dxos.operation.discord.syncChannel
   desc: >
-    Pull-only incremental sync for the currently-selected Discord targets on an
-    Integration. For each selected channel: resolves (or materializes) the local
-    ECHO Channel keyed by the Discord channel snowflake id, pages through messages
-    newer than target.cursor (or from "now minus maxDays" on first sync),
-    maps each Discord message to a @dxos/types Message, appends the batch to the
-    channel's ECHO Feed, then advances target.cursor to the newest id seen.
-    Targets are processed in parallel (concurrency 3). Failures on one target
-    record lastError on that target and continue; the overall op only fails if
-    the outer guild-list or Discord layer setup fails.
+    Pull-only incremental sync for every Discord target bound to a Connection.
+    For each bound target: resolves the local ECHO Channel keyed by the Discord
+    channel snowflake id, pages through messages newer than target.cursor (or
+    from "now minus maxDays" on first sync), maps each Discord message to a
+    @dxos/types Message, appends the batch to the channel's ECHO Feed, then
+    advances target.cursor to the newest id seen. Targets are processed in
+    parallel (concurrency 3). Failures on one target record lastError on that
+    target and continue; the overall op only fails if the outer guild-list or
+    Discord layer setup fails.
   input:
-    integration: Ref<Integration>
-    channel?: Ref<Channel>           # optional: narrow to a single target channel
+    connection: Ref<Connection>
+    priority?: string                # cursor id of the binding to sync first
   output: { pulled: PullResult }
   effects: [http, echo:write]
   requires: [DiscordREST]
@@ -321,31 +334,38 @@ flow QA-1: Connect a bot and sync a channel
     - an identity exists
     - space: a space is open
     - plugin-discord is enabled — it is OFF by default
-    - a real Discord bot token, invited to at least one guild with a text channel
+    - connection: a real Discord bot token, invited to at least one guild with a text channel,
+        bound as a Connection
   test:
     - name: Add the Discord integration credential
       do: Open Settings > Integrations > Discord, and paste a bot token from the Discord developer portal.
-      expect: the token validates against GET /users/@me and an Integration is created with targets [] and the bot's display name
+      expect: the token validates against GET /users/@me and a Connection is created with targets [] and the bot's display name
       blocked: |
         Requires a real Discord bot token — no agent session holds credentials for an external
         service. A human tester must run this step manually.
     - name: Discover channels
       do: Open the Integration's target picker.
-      invoke: [op:GetDiscordChannels] { integration: $given.integration }
+      invoke: [op:GetDiscordChannels] { connection: $given.connection }
       capture: discovered
       expect: one entry per reachable text/announcement channel, labeled "#channel — Guild"
-      blocked: Depends on the previous step's Integration, which is itself blocked without a real token.
-    - name: Select a channel and sync
+      blocked: Depends on the previous step's Connection, which is itself blocked without a real token.
+    - name: Select a channel and materialize its local Channel
       do: Select one channel from the discovery list and confirm.
-      invoke: [op:SyncDiscordChannel] { integration: $given.integration, channel: $discovered.targets[0] }
+      invoke: [op:MaterializeDiscordTarget] { connection: $given.connection, remoteTarget: $discovered.targets[0] }
+      capture: materialized
+      expect: a local Channel bound to the selected Discord channel now exists
+      blocked: Same dependency chain — cannot run without a live Connection.
+    - name: Sync the bound targets
+      do: (no separate gesture — sync runs automatically once a target is bound, or via a manual "Sync now" action)
+      invoke: [op:SyncDiscordChannel] { connection: $given.connection }
       capture: synced
-      expect: a local Channel is materialized in the space and its recent messages appear in the feed
+      expect: the materialized Channel's recent messages appear in the feed
       assert: return $synced.pulled.added >= 0
-      blocked: Same dependency chain — cannot run without a live Integration.
+      blocked: Same dependency chain.
   after:
     - name: Remove the synced channel and integration
       do: Delete the synced Channel object and remove the Discord Integration from Settings.
-      invoke: org.dxos.operation.space.removeObjects { objects: [$discovered.targets[0]] }
+      invoke: org.dxos.operation.space.removeObjects { refs: [$materialized.target] }
       expect: the Channel and its messages are gone, and the Integration no longer lists the target
       blocked: Same dependency chain.
 ```
@@ -361,12 +381,12 @@ flow QA-2: Re-sync is idempotent
   status: blocked
   given:
     - an identity exists
-    - integration: a Discord Integration with at least one selected target already synced once
+    - connection: a Discord Connection with at least one selected target already synced once
       (see QA-1)
   test:
     - name: Re-run sync against the same cursor
       do: Trigger a sync again without any new Discord activity.
-      invoke: [op:SyncDiscordChannel] { integration: $given.integration }
+      invoke: [op:SyncDiscordChannel] { connection: $given.connection }
       expect: no duplicate Channel is created and pulled.added is 0
       assert: return $result.pulled.added === 0
       blocked: Requires a live Discord bot token and an already-synced Integration (see QA-1).

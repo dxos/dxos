@@ -40,8 +40,8 @@ const handler: Operation.WithHandler<typeof TaskOperation.ListMilestones> = Task
         return { milestones: [] };
       }
 
-      const tasks = TaskSet.resolveTasks(taskSet);
-      const milestones = TaskSet.resolveMilestones(taskSet).map((milestone) => {
+      const tasks = yield* TaskSet.loadTasks(taskSet);
+      const milestones = (yield* TaskSet.loadMilestones(taskSet)).map((milestone) => {
         const { total, done } = Task.milestoneProgress(tasks, milestone);
         return {
           id: milestone.id,

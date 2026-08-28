@@ -22,7 +22,13 @@ import {
   type ChatView,
   ChatThread as NaturalChatThread,
 } from '@dxos/react-ui-assistant';
-import { type MessageRange, type OutlineMarker, Outline as OutlineRail, useFeedModel } from '@dxos/react-ui-feed';
+import {
+  type MessageRange,
+  type OutlineMarker,
+  Outline as OutlineRail,
+  isPrompt,
+  useFeedModel,
+} from '@dxos/react-ui-feed';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { TaskList } from '@dxos/react-ui-task';
 import { Message, Task } from '@dxos/types';
@@ -329,9 +335,18 @@ const PROMPT_SNIPPET_LINES = 3;
 const PROMPT_SNIPPET_CHARS = 280;
 const PROMPT_TITLE_CHARS = 100;
 
+/**
+ * The text the reader actually wrote. Synthetic blocks carry injected context and tool results, so
+ * titling a marker from them would name the machinery rather than the prompt.
+ */
+const authoredText = (message: Message.Message): string =>
+  message.blocks
+    .flatMap((block) => (block._tag === 'text' && block.disposition !== 'synthetic' ? [block.text] : []))
+    .join('\n');
+
 /** First non-empty line of a message's text, truncated for the marker title. */
 const promptTitle = (message: Message.Message): string => {
-  const text = Message.extractText(message).trim();
+  const text = authoredText(message).trim();
   const firstLine = text.split('\n').find((line) => line.trim().length) ?? '';
   return firstLine.length > PROMPT_TITLE_CHARS ? `${firstLine.slice(0, PROMPT_TITLE_CHARS)}…` : firstLine;
 };
@@ -360,16 +375,19 @@ const buildMarkers = (messages: Message.Message[]): OutlineMarker[] => {
   const markers: OutlineMarker[] = [];
   for (let index = 0; index < messages.length; index++) {
     const message = messages[index];
-    if (message.sender.role !== 'user') {
+    // Role alone would also match tool results and injected context, which travel back as
+    // `user`-role messages; `isPrompt` is the feed's single definition of a stop.
+    if (!isPrompt(message)) {
       continue;
     }
 
-    // Extend the turn through the following non-user messages and grab the first assistant reply.
+    // Extend the turn up to the next prompt: a tool-result turn belongs to the turn it serves, so
+    // stopping on any `user`-role message would cut the range at the first tool call.
     let turnTo = index + 1;
     let description: string | undefined;
     for (let next = index + 1; next < messages.length; next++) {
       const nextMessage = messages[next];
-      if (nextMessage.sender.role === 'user') {
+      if (isPrompt(nextMessage)) {
         break;
       }
       turnTo = next + 1;
