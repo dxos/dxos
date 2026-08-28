@@ -23,6 +23,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-projects": "workspace:*",
+    "@dxos/plugin-tasks": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-testing": "workspace:*",
