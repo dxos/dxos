@@ -21,9 +21,9 @@ export class Search extends Type.makeObject<Search>(DXN.make('org.dxos.type.comm
     /** Values for the union of provider fields, keyed by field name. */
     params: Schema.Record(Schema.String, Schema.Unknown).pipe(FormInputAnnotation.set(false)),
     /** Backing ECHO feed (queue) of immutable Result entries appended by each run. */
-    feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
+    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
     /** Per-Result tags keyed by tag uri → Result ids (the `starred` flag — see {@link STARRED_TAG}). */
-    tags: Ref.Ref(TagIndex.TagIndex).pipe(FormInputAnnotation.set(false)),
+    tags: Ref.Ref(TagIndex.TagIndex).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
     /**
      * Timestamp of the last run; persisted metadata, hidden from forms.
      * Run progress itself is ephemeral UI state (see SearchForm), not a persisted property.
@@ -47,17 +47,14 @@ export const make = (
 ): Search => {
   const feed = Feed.make();
   const tags = TagIndex.make();
-  const search = Obj.make(Search, {
+  // The feed and tag index are children (`SetParent`): both cascade-delete with the search.
+  return Obj.make(Search, {
     ...props,
     providers: props.providers ?? [],
     params: props.params ?? {},
     feed: Ref.make(feed),
     tags: Ref.make(tags),
   });
-  Obj.setParent(feed, search);
-  // Tag index is a child: cascade-deleted with the search.
-  Obj.setParent(tags, search);
-  return search;
 };
 
 /** Resolves the uri of the `starred` {@link Tag} if it exists (does not create one). Async. */

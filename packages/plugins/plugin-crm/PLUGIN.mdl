@@ -34,6 +34,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `op`        | `org.dxos.mdl.op@1.0`          |
 | `service`   | `org.dxos.mdl.service@1.0`     |
 | `skill` | `org.dxos.mdl.skill@1.0`   |
+| `op@1.1`    | `org.dxos.mdl.op@1.1`      |
+| `flow`      | `org.dxos.mdl.flow@1.0`    |
 
 ## Types
 
@@ -119,6 +121,7 @@ skill CrmSkill
 
 ```mdl
 op attachImage
+  key: org.dxos.operation.crm.attachImage
   desc: >
     Downloads an external image URL, re-uploads it to the DXOS image service
     (POST /thumbnail), and stores the returned canonical URL on the subject's
@@ -146,6 +149,7 @@ op attachImage
 
 ```mdl
 op processMailbox
+  key: org.dxos.operation.crm.processMailbox
   desc: >
     Cursored CRM pipeline over a mailbox's message feed. Extracts contacts
     for messages past the persisted feed Cursor using @dxos/extractor-lib
@@ -173,6 +177,7 @@ op processMailbox
 
 ```mdl
 op researchPerson
+  key: org.dxos.operation.crm.researchPerson
   desc: >
     Deterministic profile scaffolding for a Person: creates a markdown
     Profile skeleton pre-filled from known ECHO data (emails, role,
@@ -190,6 +195,7 @@ op researchPerson
 
 ```mdl
 op researchOrganization
+  key: org.dxos.operation.crm.researchOrganization
   desc: >
     Deterministic profile scaffolding for an Organization; mirrors
     researchPerson and additionally lists the space's known people at the
@@ -463,7 +469,7 @@ test T-6: Full-loop playground — corporate rich signature
 test T-7: attachImage — success path
   given: imageServiceUrl is configured; the mock image service returns { url: "https://images.dxos.org/abc" };
          a Person exists with no image
-  when: attachImage({ subject: personRef, url: "https://example.com/avatar.png" }) is called
+  when: attachImage({ subject: personRef, url: "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon" }) is called
   then:
     - the mock image service received a multipart POST with field "file"
     - Person.image === "https://images.dxos.org/abc"
@@ -473,7 +479,7 @@ test T-7: attachImage — success path
 ```mdl
 test T-8: attachImage — config missing
   given: imageServiceUrl is not configured in @dxos/config
-  when: attachImage({ subject: personRef, url: "https://example.com/avatar.png" }) is called
+  when: attachImage({ subject: personRef, url: "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon" }) is called
   then:
     - operation returns a structured error tagged ConfigMissing
     - Person.image is unchanged
@@ -560,6 +566,91 @@ Three layers:
 - API-keyed search providers (Tavily, Brave, Google CSE, Clearbit, etc.).
 - Deduping of multiple Person matches by fuzzy-name — v1 updates the best match or asks the user.
 - Image-quality heuristics — v1 accepts whatever candidate URL the agent supplies.
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+plugin-crm is a library-layer plugin with no UI surfaces (see the document intro) — every step is
+driven through the skill's operations, so a "human" run means a person asking the assistant to do
+these things in chat, not a navtree gesture. `actors: agent` below reflects that every step has a
+real `invoke`.
+
+```mdl
+flow QA-1: Research a Person end to end
+  desc: The core CRM round-trip — create a Person, scaffold and link its Profile, read it back.
+  actors: agent
+  covers: [F-1.4, F-4.1, F-5.1, F-5.2, T-4]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - no Person named "QA Contact" exists — ABORT rather than reusing one this flow did not create
+  test:
+    - name: Create the Person
+      do: Ask the assistant to add a new contact named "QA Contact" with email "qa.contact@example.com".
+      invoke: org.dxos.operation.space.addObject { object: { "@type": "org.dxos.type.person", fullName: "QA Contact", emails: ["qa.contact@example.com"] } }
+      capture: created
+      expect: a Person named "QA Contact" now exists in the space
+      assert: return !!$created.object
+    - name: Research the Person
+      do: Ask the assistant to research this contact and produce a profile.
+      invoke: [op:researchPerson] { subject: $created.object }
+      capture: researched
+      expect: a Profile document is created, pre-filled with the known email, and linked to the Person via a ProfileOf relation
+      assert: return !!$researched.profile && $researched.created === true
+      note: |
+        Coalesced with the previous step — `created.object` is live and cannot cross a snippet
+        boundary.
+    - name: Re-run research is idempotent
+      do: Ask the assistant to research the same contact again.
+      invoke: [op:researchPerson] { subject: $created.object }
+      expect: the same Profile document is returned, not a second one, and only lastResearchedAt changes
+      assert: return $result.profile.id === $researched.profile.id && $result.created === false
+  after:
+    - name: Delete the Person and its Profile
+      do: Ask the assistant to remove the "QA Contact" person and its profile document.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object, $researched.profile] }
+      expect: neither the Person nor its Profile document exists in the space any more
+      assert: |
+        return !(await space.db.query(dxos.Filter.everything()).run()).objects
+          .some((o) => o.id === $created.object.id || o.id === $researched.profile.id);
+```
+
+```mdl
+flow QA-2: Attach an image to a Person
+  desc: The image-attachment path — a candidate URL is downloaded, re-hosted, and written to `image`.
+  actors: agent
+  covers: [F-6.1, F-6.2, T-7]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - imageServiceUrl is configured for the runtime — otherwise this flow's test step returns
+      ConfigMissing and should be re-run once configured, not treated as a defect
+    - no Person named "QA Avatar Contact" exists — ABORT rather than reusing one this flow did not
+      create
+  test:
+    - name: Create the Person
+      do: Ask the assistant to add a new contact named "QA Avatar Contact".
+      invoke: org.dxos.operation.space.addObject { object: { "@type": "org.dxos.type.person", fullName: "QA Avatar Contact" } }
+      capture: created
+      expect: a Person named "QA Avatar Contact" now exists with no image
+      assert: return !!$created.object && !$created.object.image
+    - name: Attach an avatar
+      do: Ask the assistant to attach this avatar URL to the contact — "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon".
+      invoke: [op:attachImage] { subject: $created.object, url: "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon" }
+      expect: the Person's `image` field is a canonical URL from the DXOS image service
+      assert: return typeof $result.imageUrl === 'string' && $created.object.image === $result.imageUrl
+  after:
+    - name: Delete the Person
+      do: Ask the assistant to remove "QA Avatar Contact".
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object] }
+      expect: the Person no longer exists in the space
+```
 
 ---
 

@@ -37,7 +37,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`      |
 | `test`      | `org.dxos.mdl.test@1.0`      |
 | `component` | `org.dxos.mdl.component@1.0` |
-| `op`        | `org.dxos.mdl.op@1.0`        |
+| `op`        | `org.dxos.mdl.op@1.1`        |
+| `flow`      | `org.dxos.mdl.flow@1.0`      |
 
 ## Types
 
@@ -180,6 +181,7 @@ surface prompts       -> RoutineList         # space-home prompt list; dispatche
 
 ```mdl
 op CreateTriggerFromTemplate
+  key: org.dxos.operation.routine.createTriggerFromTemplate
   desc: |
     Creates a new Trigger from a lightweight template, optionally wiring it to
     a named Script's PersistentOperation, and navigates to the automations
@@ -203,6 +205,7 @@ op CreateTriggerFromTemplate
 
 ```mdl
 op RunPromptInNewChat
+  key: org.dxos.operation.routine.runPromptInNewChat
   desc: Creates a new chat, binds context objects and skills, then runs a prompt.
   input:
     db: Database
@@ -408,6 +411,70 @@ test T-8: CreateTriggerFromTemplate with feed
   then:
     - Trigger created with spec.kind === "feed", spec.feed === Ref to email-feed
     - Trigger added as hidden ECHO object
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Create a routine and run it
+  desc: The core automation round-trip — create a Routine from a template, then run it on demand.
+  actors: agent
+  covers: [F-1.1, F-1.2, T-2]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - no Routine named "QA Routine" exists — ABORT rather than reusing one this flow did not create
+  test:
+    - name: Create the routine
+      do: In the navtree, click + on a collection and choose Routine (or Prompt). Name it "QA Routine".
+      invoke: org.dxos.operation.routine.createAutomation { db: $given.space.db, templateId: "blank", name: "QA Routine" }
+      capture: created
+      expect: a Routine named "QA Routine" now exists
+      assert: return $result.object.id === $created.object.id
+
+    - name: Run it
+      do: Open "QA Routine" and click the run button.
+      invoke: org.dxos.operation.routine.runAutomation { routine: $created.object }
+      expect: the routine executes without error and a trace message is appended
+  after:
+    - name: Delete the routine
+      do: Right-click "QA Routine" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.space }
+      expect: the row leaves the navtree
+```
+
+```mdl
+flow QA-2: Timer trigger from a template
+  desc: Wire a timer-spec Trigger from a lightweight template — the entrypoint used by Skill actions.
+  actors: both
+  covers: [F-6.1, F-6.3, T-7]
+  status: blocked
+  given:
+    - an identity exists
+    - space: a space is open, with plugin-script's TriggersDisabled unset
+  test:
+    - name: Create a timer trigger
+      do: From a Skill's suggested action, click "Automate this".
+      invoke: [op:CreateTriggerFromTemplate] { db: $given.space.db, template: { type: "timer", cron: "0 8 * * *" }, enabled: false }
+      expect: layout navigates to the space's automations settings panel, and a new (disabled) timer
+        trigger is listed
+      note: Trigger is added as a hidden object, so it will not appear in the navtree — only in
+        AutomationPanel.
+  after:
+    - name: Delete the trigger
+      do: In AutomationPanel, click the delete icon on the new trigger row.
+      expect: the trigger row leaves AutomationPanel
+      blocked: |
+        [op:CreateTriggerFromTemplate] declares `output: void`, so the `test` stage has nothing to
+        capture and this `after` step has no id to pass to `space.removeObjects`. Deletion is
+        human-only (AutomationPanel's own delete button) until the operation returns the created
+        Trigger, or `after` looks it up by name.
 ```
 
 ---

@@ -19,6 +19,17 @@ Goals:
 > [§6 Cleanup plan](#6-cleanup-plan). Phase 1 (this change) consolidates the
 > definitions into `config.proto` and deprecates dead fields; the call-site
 > migration (removing the hard-coded strings) follows.
+>
+> **Host update.** EDGE's own entrypoint is one host per environment — `dxos.network`,
+> `preview.dxos.network`, `dev.dxos.network` — with the services bundled behind it selected by a
+> path prefix (`/ai`, `/hub`, `/db`, …). `EDGE_URLS` in [`edge-services.ts`](src/edge-services.ts)
+> is the source of truth for those hosts. The standalone workers in the tables below are NOT behind
+> edge: each keeps its own hostname, supplied per-app via `runtime.services.edgeServices`.
+> `dxos/edge` → `docs/audits/edge-hosts.md` is the full inventory.
+>
+> The per-worker `*.dxos.network` and `*.dxos.workers.dev` hostnames in the tables below are the
+> pre-normalization state, kept because the **Source** column (config vs. HARDCODED) is what this
+> audit tracks and that has not changed.
 
 ---
 
@@ -72,7 +83,7 @@ constant to migrate.
 | **discord**        | `discord-service.dxos.workers.dev`                                                                       | **HARDCODED** `DISCORD_SERVICE_URL` [`plugin-support/src/constants.ts:11`](../../plugins/plugin-support/src/constants.ts)                                                                                                          | Discord feedback bridge                                           |
 | **cors-proxy**     | `cors-proxy.dxos.workers.dev`                                                                            | **HARDCODED** `LEGACY_CORS_PROXY_URL` [`edge-client/src/cors-proxy.ts:9`](../../core/mesh/edge-client/src/cors-proxy.ts)                                                                                                           | Legacy open CORS proxy                                            |
 | **api-proxy**      | `api-proxy.dxos.workers.dev`                                                                             | **HARDCODED** [`assistant-toolkit/.../discord/operations/fetch-messages.ts:32`](../../core/compute/assistant-toolkit/src/blueprints/discord/operations/fetch-messages.ts)                                                          | Generic 3rd-party API proxy                                       |
-| **introspect**     | `mcp-introspect-service-labs.dxos.workers.dev/mcp`                                                       | **config** `EDGE_SERVICE_DEFAULTS[Introspect]` — read at [`plugin-devtools/.../react-surface.tsx:51`](../../plugins/plugin-devtools/src/capabilities/react-surface.tsx)                                                            | MCP introspection server                                          |
+| **introspect**     | `mcp-introspect-service-labs.dxos.workers.dev/mcp`                                                       | **config** `runtime.services.edgeServices: introspect` — read at [`plugin-devtools/.../react-surface.tsx:51`](../../plugins/plugin-devtools/src/capabilities/react-surface.tsx)                                                    | MCP introspection server                                          |
 | **chat-agent**     | `chat-agent-labs.dxos.workers.dev`, `localhost:8791`                                                     | **HARDCODED** `MAIN_CHAT_AGENT_URL` [`composer-crx/src/config.ts:15`](../../apps/composer-crx/src/config.ts)                                                                                                                       | Conversational agent (CRX)                                        |
 | **playwright-mcp** | `playwright-mcp-example.dxos.workers.dev/sse`                                                            | **HARDCODED** (test/blueprint fixture) [`assistant-toolkit/.../browser/blueprint.ts:29`](../../core/compute/assistant-toolkit/src/blueprints/browser/blueprint.ts)                                                                 | Browser-automation MCP (example)                                  |
 
@@ -237,21 +248,22 @@ for the structurally-rich, load-bearing services (`edge`, `ai`, `ipfs`, `ice`,
 
 **Phase 2 — migrate hard-coded URLs to config. (in progress)**
 
-Canonical names + dev defaults now live in
+Canonical names now live in
 [`@dxos/config` `edge-services.ts`](src/edge-services.ts) (`EdgeServiceName`,
-`EDGE_SERVICE_DEFAULTS`, `getEdgeServiceEndpoint`). Production values are set in
+`getEdgeServiceEndpoint`); there are no built-in endpoints, so an unconfigured
+lookup returns `undefined`. Values are set in
 [`composer-app/dx.yml`](../../apps/composer-app/dx.yml)
 (`runtime.services.edgeServices`).
 
 Migrated (literal removed; resolves from config / canonical default):
 
-| Service       | Site                                                                                | How                                 |
-| ------------- | ----------------------------------------------------------------------------------- | ----------------------------------- |
-| calls         | `plugin-calls` `call-manager.ts`                                                    | `getEdgeServiceEndpoint(config, …)` |
-| transcription | `plugin-transcription` `transcriber.ts`                                             | `EDGE_SERVICE_DEFAULTS` fallback    |
-| image         | `plugin-crm` `attach-image.ts`, `plugin-support` `screenshot.ts`/`GitHubAction.tsx` | default + config read               |
-| discord       | `plugin-support` `DiscordAction.tsx`/`constants.ts`                                 | `getEdgeServiceEndpoint(config, …)` |
-| introspect    | `plugin-debug` `react-surface.tsx`                                                  | `EDGE_SERVICE_DEFAULTS` fallback    |
+| Service       | Site                                                                          | How                                 |
+| ------------- | ----------------------------------------------------------------------------- | ----------------------------------- |
+| calls         | `plugin-calls` `call-manager.ts`                                              | `getEdgeServiceEndpoint(config, …)` |
+| transcription | `plugin-transcription` `transcriber.ts`                                       | config read (required)              |
+| image         | `plugin-crm` `attach-image.ts`, `plugin-support` `useScreenshotAttachment.ts` | config read                         |
+| discord       | `plugin-support` `DiscordAction.tsx`/`constants.ts`                           | `getEdgeServiceEndpoint(config, …)` |
+| introspect    | `plugin-debug` `react-surface.tsx`                                            | config read                         |
 
 Deferred (literal retained; rationale):
 

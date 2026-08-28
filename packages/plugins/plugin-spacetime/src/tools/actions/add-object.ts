@@ -51,7 +51,6 @@ export class AddObjectAction implements ActionHandler {
     Obj.update(scene, (scene) => {
       scene.objects.push(Ref.make(object));
     });
-    Obj.setParent(object, scene);
 
     const objId = (object as any).id as string | undefined;
     if (objId) {

@@ -6,6 +6,7 @@ import * as EffectContext from 'effect/Context';
 import { inspect } from 'node:util';
 
 import { type CleanupFn, Event, MulticastObservable, Trigger, synchronized } from '@dxos/async';
+import { createEdgeBlobBackend } from '@dxos/blob/hosted';
 import {
   type ClientServicesProvider,
   type Echo,
@@ -37,7 +38,7 @@ import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { trace } from '@dxos/tracing';
 import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
-import { type ClientEdgeAPI, createClientEdgeAPI, createEdgeBlobBackend, createEdgeIdentity } from '../edge';
+import { type ClientEdgeAPI, createClientEdgeAPI, createEdgeIdentity } from '../edge';
 import { type MeshProxy } from '../mesh/mesh-proxy';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
@@ -539,7 +540,16 @@ export class Client {
 
       this._edgeBlobBackendCleanup = this._echoClient.graph.registerBlobBackend(
         Blob.Storage.edge,
-        createEdgeBlobBackend({ edgeClient: edgeHttpClient }),
+        // Adapted rather than passed: the backend takes the four operations it needs, so it does not
+        // depend on the other twenty-nine methods of `EdgeHttpClient`, and `Context` stays here.
+        createEdgeBlobBackend({
+          transport: {
+            url: (key) => edgeHttpClient.getBlobUrl(key),
+            put: (key, data, options) => edgeHttpClient.putBlob(Context.default(), key, data, options),
+            get: (key) => edgeHttpClient.getBlob(Context.default(), key),
+            has: (key) => edgeHttpClient.hasBlob(Context.default(), key),
+          },
+        }),
         { default: true },
       );
     }

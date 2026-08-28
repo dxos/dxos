@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+#
+# Copyright 2026 DXOS.org
+#
+# Clears the stale build state that makes a dev server or build fail in ways `pnpm install`
+# reports as "Already up to date": orphaned per-package `.bin` shims left behind by a dependency
+# version bump, and moon cache entries whose hash still matches while their outputs are stale.
+#
+# Usage: pnpm reset [--deep]
+#   (default) prune stale bin shims, drop the moon cache, force-regenerate codegen outputs.
+#   --deep    also remove every package `dist` and reinstall node_modules from scratch.
+
+set -euo pipefail
+
+cd "$(git rev-parse --show-toplevel)"
+
+DEEP=false
+[[ "${1:-}" == "--deep" ]] && DEEP=true
+
+echo "==> Pruning per-package .bin shims that point at removed store paths"
+pruned=0
+while IFS= read -r shim; do
+  target=$(grep -oE '/node_modules/\.pnpm/[^"'"'"' ]+/node_modules/[^"'"'"' ]+\.(js|mjs|cjs)' "$shim" | head -1 || true)
+  [[ -z "$target" ]] && continue
+  if [[ ! -e "${PWD}${target}" ]]; then
+    rm -f "$shim"
+    pruned=$((pruned + 1))
+  fi
+done < <(find packages tools -type f -path '*/node_modules/.bin/*' -not -path './node_modules/*' 2>/dev/null)
+echo "    removed ${pruned} stale shim(s)"
+
+if $DEEP; then
+  echo "==> Removing package dist directories"
+  find packages tools -maxdepth 4 -type d -name dist -not -path '*/node_modules/*' -exec rm -rf {} +
+  echo "==> Reinstalling node_modules"
+  rm -rf node_modules
+  pnpm install
+else
+  pnpm install
+fi
+
+echo "==> Clearing the moon cache"
+rm -rf .moon/cache
+
+echo "==> Regenerating protobuf output"
+rm -rf packages/core/protocols/src/proto/gen
+moon run protocols:prebuild --force
+
+echo "==> Done. Rebuild with: moon exec --on-failure continue --quiet :build"

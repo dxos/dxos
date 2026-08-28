@@ -45,6 +45,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`   | `org.dxos.mdl.feat@1.0`      |
 | `op`     | `org.dxos.mdl.op@1.0`        |
 | `test`   | `org.dxos.mdl.test@1.0`      |
+| `flow`   | `org.dxos.mdl.flow@1.0`      |
 
 ## Cross-package additions
 
@@ -607,3 +608,55 @@ feat TripMapMarkers
   keep the model uniform.
 - Smarter Trip resolution (date-range overlap, traveller match) for
   auto-on-arrival ingestion; v1 uses last-updated as a stand-in.
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Create a trip and add a segment
+  desc: The core trip round-trip — create a trip, add a travel segment, read it back.
+  actors: human
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - plugin-trip is enabled — it ships only in the experimental set and is OFF by default; no
+      trip operation is registered until it is on
+    - no trip named "QA Trip" exists — ABORT rather than deleting one this flow did not create
+    - trip: the Trip "QA Trip" this flow creates — no plain create op exists (human-only step),
+      so the runner binds this once that step completes
+  test:
+    - name: Create the trip
+      do: In the navtree, click + on a collection and choose Trip. Name it "QA Trip".
+      expect: a Trip named "QA Trip" appears under the collection, with an empty itinerary
+      note: |
+        NO `invoke` — there is no plain create operation for Trip (only
+        `org.dxos.operation.trip.createFromEvents`, which needs a Calendar and Events as
+        preconditions, and the extraction path, which needs a confirmation email). This step is
+        human-only, so the flow is `actors: human` for now, same finding as plugin-chess.
+    - name: Add a flight segment
+      do: In the Trip article, click "Add segment", choose Flight, and fill in an origin and destination.
+      invoke: org.dxos.operation.trip.addSegment { trip: $given.trip, kind: "flight", origin: "London Heathrow", destination: "Paris CDG" }
+      capture: added
+      expect: a Flight segment from "London Heathrow" to "Paris CDG" appears in the itinerary
+      assert: return typeof $added.segmentId === 'string' && $added.segmentId.length > 0;
+      note: |
+        `org.dxos.operation.trip.addSegment` has no `op` block in this document — it is not yet
+        documented under `## Operations`/`## Contracts consumed`, so it is written as a full key
+        literal rather than `[op:...]` per the QA dialect's rule for undeclared operations.
+    - name: Read the segment back
+      do: Open the Trip's SegmentStack (or the calendar mini-view) and locate the new leg.
+      expect: the segment row shows "London Heathrow -> Paris CDG" and its status is "tentative"
+      assert: |
+        return $given.trip.segments.some((s) => s.id === $added.segmentId && s.origin?.name === 'London Heathrow');
+  after:
+    - name: Delete the trip
+      do: Right-click "QA Trip" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$given.trip], target: $given.collection }
+      expect: the row leaves the navtree and its plank closes
+```
+
+---

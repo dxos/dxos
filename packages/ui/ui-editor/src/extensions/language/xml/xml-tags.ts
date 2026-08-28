@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { syntaxTree, syntaxTreeAvailable } from '@codemirror/language';
+import { ensureSyntaxTree, syntaxTree, syntaxTreeAvailable } from '@codemirror/language';
 import { type EditorState, type Extension, Prec, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
 import {
   Decoration,
@@ -510,7 +510,8 @@ const createWidgetDecorationsField = (registry: XmlWidgetRegistry = {}, notifier
 
   return StateField.define<WidgetDecorationSet>({
     create: (state) => {
-      return buildDecorations(state, { from: 0, to: state.doc.length }, registry, notifier, urlSchemeMap);
+      // Forced only here, so a streamed chunk is not charged for a parse it will get anyway.
+      return buildDecorations(state, { from: 0, to: state.doc.length }, registry, notifier, urlSchemeMap, true);
     },
     update: ({ from, streamingFrom, decorations }, tr) => {
       // Check for reset effect.
@@ -572,6 +573,9 @@ const createWidgetDecorationsField = (registry: XmlWidgetRegistry = {}, notifier
   });
 };
 
+/** Ceiling on parsing ahead of the background parser; past it `createParseCompletionPlugin` rebuilds. */
+const PARSE_BUDGET = 50;
+
 /**
  * Creates widget decorations for XML tags in the document using the syntax tree.
  * After the tree walk, scans for unclosed streaming tags and creates provisional decorations.
@@ -582,12 +586,16 @@ const buildDecorations = (
   registry: XmlWidgetRegistry,
   notifier: XmlWidgetNotifier,
   urlSchemeMap: Map<string, [string, XmlWidgetDef][]>,
+  /** Parse ahead of the background parser rather than reading a partial tree — see {@link PARSE_BUDGET}. */
+  forceParse = false,
 ): WidgetDecorationSet => {
   const context = state.field(widgetContextStateField, false);
   const widgetStateMap = state.field(widgetStateMapStateField, false) ?? {};
   const builder = new RangeSetBuilder<Decoration>();
 
-  const tree = syntaxTree(state);
+  // A fresh view has parsed only about a viewport, so a large payload's `Element` is absent at
+  // first paint and its markup renders raw until a rebuild — the flash on a remounted row.
+  const tree = (forceParse ? ensureSyntaxTree(state, range.to, PARSE_BUDGET) : null) ?? syntaxTree(state);
   if (!tree || (tree.type.name === 'Program' && tree.length === 0)) {
     return { from: range.from, decorations: Decoration.none };
   }

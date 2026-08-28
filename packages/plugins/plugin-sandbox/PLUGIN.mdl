@@ -6,6 +6,15 @@ version: 0.1.0
 
 Sandbox plugin for DXOS Composer providing isolated shell environments.
 
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term   | URI                       |
+|--------|---------------------------|
+| `flow` | `org.dxos.mdl.flow@1.0`   |
+| `op`   | `org.dxos.mdl.op@1.1`     |
+
 ## Types
 
 ```mdl
@@ -21,6 +30,7 @@ type Sandbox
 
 ```mdl
 op createSandbox
+  key: org.dxos.operation.sandbox.create
   desc: Creates a new sandbox environment persisted as an ECHO object in the space.
   input:
     name?: string
@@ -32,6 +42,7 @@ op createSandbox
 
 ```mdl
 op exec
+  key: org.dxos.operation.sandbox.exec
   desc: Runs a shell command in the sandbox.
   input:
     sandbox: Ref<Sandbox>
@@ -50,6 +61,7 @@ op exec
 
 ```mdl
 op uploadFile
+  key: org.dxos.operation.sandbox.uploadFile
   desc: Uploads a file from ECHO into the sandbox filesystem.
   input:
     sandbox: Ref<Sandbox>
@@ -62,6 +74,7 @@ op uploadFile
 
 ```mdl
 op downloadFile
+  key: org.dxos.operation.sandbox.downloadFile
   desc: Downloads a file from the sandbox filesystem into ECHO.
   input:
     sandbox: Ref<Sandbox>
@@ -70,4 +83,40 @@ op downloadFile
   output:
     objectId: string     # ECHO object URI of the File
   effects: [sandbox:read, echo:write]
+```
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Create a sandbox and run a command
+  desc: The core sandbox round-trip — create an isolated shell environment, exec a command in it.
+  actors: agent
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-sandbox is enabled — it is OFF by default everywhere except dev builds (`isDev`); it
+      must be enabled via Settings -> plugin registry otherwise
+    - no Sandbox named "QA Sandbox" exists — ABORT rather than reusing one this flow did not create
+  test:
+    - name: Create the sandbox
+      do: From the global action menu, choose "Create Sandbox" and name it "QA Sandbox".
+      invoke: [op:createSandbox] { name: "QA Sandbox" }
+      capture: created
+      expect: a Sandbox named "QA Sandbox" now exists and its shell is reachable
+      assert: return !!$created.sandboxId
+
+    - name: Run a command
+      do: Open the sandbox terminal and run `echo hello`.
+      invoke: [op:exec] { sandbox: { "/": $created.sandboxId }, command: "echo hello" }
+      expect: the terminal prints "hello" and the command exits 0
+      assert: return $result.success && $result.stdout.trim() === 'hello';
+  after:
+    - name: Delete the sandbox
+      do: Right-click "QA Sandbox" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { refs: [{ "/": $created.sandboxId }], target: $given.space }
+      expect: the row leaves the navtree and the underlying shell environment is torn down
 ```

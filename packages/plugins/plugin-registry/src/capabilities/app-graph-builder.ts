@@ -17,10 +17,11 @@ import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { DXN } from '@dxos/keys';
 import { Position } from '@dxos/util';
 
-import { REGISTRY_ID, meta } from '#meta';
+import { meta } from '#meta';
 import { LOAD_PLUGIN_DIALOG } from '#types';
 
 import { getCategoryPredicate, getRemotePluginIds } from '../categories';
+import { REGISTRY_ID } from '../paths';
 
 /**
  * Turns a registry catalog entry into a minimal {@link Plugin.Plugin} so it

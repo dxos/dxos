@@ -6,12 +6,19 @@ import * as Effect from 'effect/Effect';
 
 import { Event, scheduleTaskInterval } from '@dxos/async';
 import { type Client, type ClientServices } from '@dxos/client';
-import { type Space, SpaceState } from '@dxos/client/echo';
-import { DeviceKind } from '@dxos/client/halo';
+import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ConnectionState, type NetworkStatus, Platform } from '@dxos/protocols/proto/dxos/client/services';
+// Value imports come straight from protocols: reaching them through the `@dxos/client` barrels
+// puts echo-client (and wa-sqlite, automerge-repo with it) in the app's eager boot graph.
+import {
+  ConnectionState,
+  DeviceKind,
+  type NetworkStatus,
+  Platform,
+  SpaceState,
+} from '@dxos/protocols/proto/dxos/client/services';
 import { readHeap } from '@dxos/tracing';
 
 import { type DataProvider } from '../observability';

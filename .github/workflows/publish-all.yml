@@ -13,6 +13,13 @@ name: Publish
 #     then `changeset publish --tag next`. Ephemeral versions, no commit, no git tags, no `pre` mode.
 #
 # Apps deploy via deploy-apps.yml (which also cuts the versioned Composer production release), never here.
+#
+# TODO(wittjosiah): stays on GitHub Actions, for two independent reasons (flagged by CodeRabbit on
+# #12779): npm's trusted-publisher OIDC only trusts GitHub-hosted Actions runners (plus GitLab.com and
+# CircleCI cloud) - Depot CI's runner identity isn't one of them, so the `id-token: write` provenance
+# flow would fail there. Separately, this job's `container:` pulls ghcr.io/dxos/gh-actions using
+# `secrets.GITHUB_TOKEN`, which doesn't authenticate to GHCR from Depot CI either. The OIDC constraint
+# alone is enough to keep this on GitHub Actions regardless of the GHCR one.
 
 on:
   push:
@@ -62,7 +69,7 @@ jobs:
           fi
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
         with:
           # Published artifacts are built from source, never trusted from a cache any CI job can
           # write to — the same reasoning as the isolated pnpm scope below.

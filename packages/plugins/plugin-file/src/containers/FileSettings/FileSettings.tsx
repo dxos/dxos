@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { useCapabilities, useSettingsState } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
@@ -19,7 +19,10 @@ export const FileSettings = ({ subject }: FileSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
   const client = useClient();
-  const backends = useCapabilities(FileCapabilities.Backend);
+  const contributed = useCapabilities(FileCapabilities.Backend);
+  // Sorted by name: contribution order is module activation order, which is neither stable nor
+  // meaningful to the reader, so the list would otherwise reshuffle as plugins are toggled.
+  const backends = useMemo(() => [...contributed].sort((a, b) => a.name.localeCompare(b.name)), [contributed]);
   // No explicit choice defers to the Blob registry's own configured default (edge when
   // configured, inline otherwise), so the Select reflects what an upload will actually use.
   const requested = settings.backend ? backends.find((b) => b.storage === settings.backend) : undefined;
