@@ -8,7 +8,7 @@ import { trim } from '@dxos/util';
 export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.claudeAgents',
-    name: 'Claude Agents',
+    name: 'Claude',
     author: 'DXOS',
     description: trim`
       Model Anthropic Claude managed agents as first-class objects in your space. A ClaudeManagedAgent
@@ -19,7 +19,7 @@ export default Config2.make({
       agent, start a session, send it work and read back the transcript without leaving the space.
     `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-claude-agents',
-    icon: { key: 'ph--robot--regular', hue: 'indigo' },
+    icon: { key: 'px--anthropic--regular', hue: 'yellow' },
     spec: 'PLUGIN.mdl',
     tags: ['labs'],
   },

@@ -23,7 +23,7 @@ export default Capability.makeModule(
     }
 
     return Capability.contribute(FileCapabilities.Backend, {
-      name: 'Edge',
+      name: 'Blob Service',
       description: 'Store files on the DXOS edge network. Scales beyond the inline size cap.',
       storage: Blob.Storage.edge,
     });

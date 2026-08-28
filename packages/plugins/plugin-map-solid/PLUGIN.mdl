@@ -20,6 +20,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `step`      | `org.dxos.mdl.step@1.0`       |
 
 ## Types
 
@@ -186,6 +188,60 @@ test T-5: Filter rejects non-Map object
   given: a non-Map ECHO object
   when: the ReactSurface filter evaluates
   then: dx-map-surface is not rendered for that object
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Create a Map and view it through the SolidJS surface
+  desc: |
+    The plugin contributes no operations of its own — `resolveSurfaceMarkers` is a reactive
+    derivation, not an invocable op, and creating a Map goes through the generic
+    CreateObjectEntry factory like plugin-chess's `startGame` (no runtime counterpart). This
+    flow is therefore the core round-trip a human can run: create a Map, open it, and confirm
+    `dx-map-surface` (not the React MapControl) renders it.
+  actors: human
+  covers: [F-1.2, F-1.3, F-3.1, T-1, T-4]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - plugin-map-solid is enabled — it is OFF by default AND only registered at all when
+      `isLocal` (see `plugin-defs.tsx`: `isLocal && MapPluginSolid.make()`); on a non-local
+      deployment the plugin is not in the module graph and this flow cannot run at all.
+    - no Map named "QA Solid Map" exists — ABORT rather than deleting one this flow did not create
+    - map: the Map "QA Solid Map" this flow creates — no create op exists (human-only step), so
+      the runner binds this once that step completes
+  test:
+    - name: Create the Map
+      do: In the navtree, click + on a collection and choose Map. Name it "QA Solid Map".
+      expect: a Map appears under the collection, rendered by dx-map-surface in map mode
+      note: |
+        NO `invoke` — Map creation is `SpaceCapabilities.CreateObjectEntry`
+        (`plugin-map/src/capabilities/create-object.ts`), the same factory-through-navtree path
+        as plugin-chess's `startGame`; there is no operation key to call. Human-only, hence
+        `actors: human`.
+    - name: Open it
+      id: open
+      do: Click "QA Solid Map" in the navtree.
+      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$spaceId/content/collections/$given.map.id"] }
+      expect: the article renders the dx-map-surface custom element with MapControl visible, not the plugin-map React surface
+      assert: return !!document.querySelector('dx-map-surface');
+    - name: Toggle to globe view
+      do: Click the toggle control on MapControl.
+      expect: MapControl is hidden and GlobeControl (3-D globe) is shown in its place
+      note: NO `invoke` — `toggleView()` flips a local SolidJS signal inside the Web Component; there is no operation behind it.
+  after:
+    - name: Delete the Map
+      do: Right-click "QA Solid Map" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$given.map], target: $given.collection }
+      expect: the row leaves the navtree and its plank closes
 ```
 
 ---

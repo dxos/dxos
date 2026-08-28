@@ -30,8 +30,9 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
-| `op`        | `org.dxos.mdl.op@1.0`         |
+| `op`        | `org.dxos.mdl.op@1.1`         |
 | `service`   | `org.dxos.mdl.service@1.0`    |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
 
 ### Existing types used by this plugin
 
@@ -214,6 +215,7 @@ service PublisherService
 
 ```mdl
 op AddPublication
+  key: org.dxos.operation.blogger.addPublication
   desc: >
     Creates a new Publication (with an empty instructions document and no
     posts) and files it under `target`.
@@ -226,6 +228,7 @@ op AddPublication
 
 ```mdl
 op AddPost
+  key: org.dxos.operation.blogger.addPost
   desc: >
     Creates a new Post (an outline plus a single empty body document, status =
     draft) and appends it to `publication.posts`, also filing it under
@@ -240,6 +243,7 @@ op AddPost
 
 ```mdl
 op SyncPosts
+  key: org.dxos.operation.blogger.syncPosts
   desc: >
     Bidirectionally reconciles a Publication's posts with an external publisher,
     keyed by the remote id stored as a foreign key on each post's meta (source =
@@ -409,6 +413,82 @@ test T-7: SyncPosts falls back to getDraft when listDrafts omits body text
   boundary (Typefully has no "posts").
 - Phase 2 (agent skills/operations for ideate/draft/publish) is out of scope
   for this spec.
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Create a Publication and a Post
+  desc: The core authoring round-trip — a Publication, a Post inside it, reading its content back.
+  actors: both
+  covers: [F-1.1, F-1.2, F-1.3, F-2.1, F-2.3, F-3.1, F-3.2, T-1, T-2]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - no Publication named "QA Blog" exists — ABORT rather than deleting one this flow did not create
+  test:
+    - name: Create the Publication
+      do: In the space's "Publications" section, click "+ Publication". Name it "QA Blog".
+      invoke: |
+        [op:AddPublication] { name: "QA Blog", target: $given.space.db }
+      capture: publication
+      expect: a Publication named "QA Blog" now exists, with empty instructions and no posts
+      assert: return !!$publication.target
+      note: |
+        The Publications section only appears once a space holds at least one Publication, so this
+        first creation goes through the space's generic create-object menu instead.
+    - name: Add a Post to it
+      do: Open "QA Blog" and click "+ Post" in the toolbar. Name it "QA Post".
+      invoke: |
+        [op:AddPost] { publication: $publication.target, name: "QA Post", target: $given.space.db }
+      capture: post
+      expect: |
+        a Post named "QA Post" appears in "QA Blog"'s gallery, with status "draft", an empty
+        outline, and an empty markdown body
+      assert: return $post.target.status === 'draft' && $publication.target.posts?.some((ref) => ref.target?.id === $post.target.id);
+      note: Coalesced with the previous step — `publication.target` is live and cannot cross a snippet boundary.
+    - name: Open the Post and read it back
+      id: open
+      do: Click "QA Post" in the gallery.
+      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$given.space.id/content/collections/$post.target.id"] }
+      expect: the outline form and the empty body editor both render
+  after:
+    - name: Delete the Publication (and its Post)
+      do: In "QA Blog"'s overflow (⋮) menu, choose Delete and confirm in the dialog.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$publication.target], target: $given.space.db }
+      expect: "QA Blog" no longer appears in the Publications section
+```
+
+```mdl
+flow QA-2: Sync posts with a connected publisher
+  desc: The bidirectional sync path against a live publisher connection (e.g. plugin-typefully).
+  actors: both
+  covers: [F-6.2, F-6.3, F-6.4, F-6.5, T-3]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - publication: a Publication in that space with at least one unlinked draft Post
+    - connection: a Connection to a real publisher exists in the space, matching the
+      Publication's ConnectorAuthAnnotation — this is an external-service dependency; without it
+      the toolbar's Sync action stays disabled (F-6.5)
+  test:
+    - name: Sync
+      do: Click "Sync" in the Publication's toolbar (enabled once the Connection exists).
+      invoke: |
+        [op:SyncPosts] { publication: $given.publication, connection: $given.connection }
+      expect: the unlinked Post's status becomes "published" and it now carries a foreign key to
+        the remote draft id
+      assert: return $result.target.posts?.length > 0;
+  after:
+    - name: (nothing to undo)
+      do: Sync is not itself destructive; delete the created remote draft manually via the
+        publisher if this run should leave no trace there.
+      expect: the local Publication and its Posts are unchanged in shape
+```
 
 ---
 

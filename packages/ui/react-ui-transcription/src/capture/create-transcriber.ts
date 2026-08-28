@@ -17,6 +17,10 @@ const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
 export type CreateTranscriberOptions = {
   audioStreamTrack: MediaStreamTrack;
   onSegments: (segments: ContentBlock.Transcript[]) => Promise<void>;
+  /**
+   * Transcriber configuration. Must carry `endpoint` unless `transcribe` is provided; a
+   * transcriber with neither rejects on `open()` with `TranscriptionEndpointNotConfiguredError`.
+   */
   transcriberConfig?: Partial<TranscribeConfig>;
   recorderConfig?: { interval?: number };
   transcribe?: TranscribeFn;

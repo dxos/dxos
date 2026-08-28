@@ -4,25 +4,33 @@
 
 @layer dx-components {
   /**
-   * Registers the element as a size query container.
-   * Children can use @container queries to apply styles based on the container's dimensions (both width and height).
-   * Also enables children to use cqi/cqb units (e.g., max-w-[100cqi]).
-   * NOTE: `container-type: size` implies layout/size containment, which breaks CodeMirror's
-   * coordinate measurement (causes blank viewport sections during scroll until a click forces
-   * a re-measure). For editor content where only inline (width-based) queries are needed,
-   * use `.dx-inline-size-container` instead.
+   * Query container on both axes: descendants get `cqi`/`cqb` (and `cqw`/`cqh`), which is the only
+   * way to fit a box to the smaller of the two — a square board.
+   * Size containment is the cost: CodeMirror's coordinate measurement breaks under it (blank
+   * viewport sections during scroll until a click forces a re-measure), so editor content wants
+   * `.dx-container-type-inline-size` instead.
    */
-  .dx-size-container {
+  .dx-container-type-size {
     container-type: size;
   }
 
   /**
-   * Inline-only size query container. Provides cqi units for children without the layout
-   * containment side-effects of `container-type: size`. Use this in CodeMirror content
-   * wrappers where size containment would break viewport measurement.
+   * Query container on the inline axis only: descendants get `cqi`, and CodeMirror still measures.
+   * Put it on an element whose width is definite. Inline-size containment stops a descendant's
+   * content contributing to width, so a shrink-to-fit box below it collapses — a chat prompt's
+   * bubble is sized by its own text, and containing that flattened it to a column of words.
    */
-  .dx-inline-size-container {
+  .dx-container-type-inline-size {
     container-type: inline-size;
+  }
+
+  /**
+   * Caps an element at the width of its query container, for content that must not outgrow the
+   * column it renders in. With no container above it `cqi` falls back to the viewport, which reads
+   * as no cap at all.
+   */
+  .dx-container-query-inline-size {
+    max-width: 100cqi;
   }
 
   /**

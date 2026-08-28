@@ -255,8 +255,26 @@ toolkit is deleted; `Gateway`/`Server` became `McpRegistry`/`McpServer`).
 
 ### Plugin bundles the server
 
-- [ ] **`.mcp.json` in the plugin root** — stdio `dx mcp serve` under a SHORT server name; it
-      appears in every tool name and in the auto-generated `/mcp__plugin_dxos_<server>__project`.
+- [x] **Server bundled in `plugin.json`** — `mcpServers.composer`, HTTP against the deployed
+      `https://composer.dxos.network/mcp`, so enabling the plugin plus one `/mcp` authenticate is
+      the whole setup. Inline in the manifest rather than a sibling `.mcp.json`, which keeps one
+      file to read. Named `composer` because the name is carried in every tool
+      (`mcp__plugin_dxos_composer__whoami`).
+- [x] **`/dxos:project setup`** — the binding verb. Necessary, not cosmetic: the hook matches bare
+      `/project` too, so typing the skill's own `/project setup` was intercepted and answered with
+      "verb not recognized". The directive loads the `project` skill and follows its setup section
+      rather than restating the procedure, so the skill stays the single source.
+- [ ] **Directive's deployed-host shape may be stale** — `resolve_backend` still says the deployed
+      host "projects each verb as its own tool", but #12692 replaced per-operation tools with the
+      generic `queryOperations`/`invokeOperation`/`loadSkill` surface. Confirm against the live
+      worker before trusting either branch of that sentence.
+- [ ] **Bundle the stdio host too** — the deployed server is the one that ships; `dx mcp serve`
+      still has to be wired by hand. Blocked on a way to express both without a second plugin, or
+      on deciding that overriding the entry's `url` is the whole answer.
+- [ ] **Rename the plugin to `composer`** — the name `dxos` is the marketplace, the repo and the
+      plugin at once, and now also sits in the middle of every bundled tool name. Costs the
+      published command names (`/dxos:project` → `/composer:project`) and a reinstall for everyone
+      already on `dxos@dxos`, so it wants doing before the plugin has real users, or not at all.
 - [ ] **Space binding moves server-side** — serve reads `.agents/projects/space.yml` (or
       `DX_PROJECT_SPACE`) so tools arrive pre-scoped; `setup` writes the file; a missing binding is
       a typed tool error, replacing the hook's registry `stat`.
