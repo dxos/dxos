@@ -4,12 +4,14 @@
 
 // @import-as-namespace
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, EID, Format, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Database, DXN, EID, Filter, Format, Obj, Query, Ref, Type } from '@dxos/echo';
 import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { FormatAnnotation } from '@dxos/echo/Format';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
+import { type EntityId } from '@dxos/echo/Key';
 
 import * as Actor from './Actor';
 import * as Milestone from './Milestone';
@@ -88,9 +90,8 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
     estimate: Schema.optional(Schema.Number.annotate({ title: 'Estimate' })),
 
     /**
-     * Parent in the sub-task hierarchy (unbounded depth); unset means a root task. Named
-     * `parentTask` because the ECHO parent edge is a different, lifecycle-only concept —
-     * it is set alongside for deletion cascade and is not the queryable hierarchy.
+     * Parent in the sub-task hierarchy (unbounded depth); unset means a root task. App-level: the
+     * ECHO parent edge means membership in the owning TaskSet, so nothing cascades through this field.
      */
     // `Schema.suspend` because the type refers to itself; clear the field with `delete` rather
     // than an `undefined` assignment, which the suspended schema rejects on validation.
@@ -123,19 +124,19 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
 export const make = (props: Obj.MakeProps<typeof Task>): Task => Obj.make(Task, props);
 
 //
-// Derived views, computed rather than stored so hierarchy and grouping cannot disagree with the
-// refs. They take a plain task array, so every holder of an ordered list — a `TaskSet`, a `Chat` —
-// shares them, and compare by ref URI so a React snapshot (no resolver, no `.target`) works too.
+// Derived views over a task list. Nothing here is stored: hierarchy, milestone grouping and
+// progress are computed from `parentTask`/`milestone`, so they cannot disagree with the refs. They
+// take a plain task array rather than a container, so every holder of an ordered list — a
+// `TaskSet`, a `Chat` — shares them, and compare by ref URI so a React snapshot (no resolver, no
+// `.target`) works too.
 //
 
-// TODO(wittjosiah): Factor out? `refId` and `dedupeById` are generic over any ref/object — they
-//  live here because the task views below rest on them and `TaskSet`'s readers need them too.
-
 /**
- * Entity id a ref addresses, parsed from the URI rather than dereferenced: the same object may be
- * addressed locally (`echo:///<id>`) or space-qualified (`echo://<space>/<id>`).
+ * Entity id a ref points at, read off the URI rather than the target so an unloaded ref still
+ * compares, and parsed rather than string-matched: a ref may address the same object locally
+ * (`echo:///<id>`) or space-qualified (`echo://<space>/<id>`).
  */
-export const refId = <T extends Obj.Unknown>(ref: Ref.Ref<T> | undefined): string | undefined => {
+export const refEntityId = <T extends Obj.Unknown>(ref: Ref.Ref<T> | undefined): EntityId | undefined => {
   if (!ref) {
     return undefined;
   }
@@ -143,7 +144,10 @@ export const refId = <T extends Obj.Unknown>(ref: Ref.Ref<T> | undefined): strin
   return eid ? EID.getEntityId(eid) : undefined;
 };
 
-/** Drops unresolved entries and de-duplicates by id: a concurrent merge can land a ref twice. */
+/**
+ * Drops unresolved entries and de-duplicates by id. Exported because a React caller resolves the
+ * arrays through per-ref atoms and still needs the same cleanup.
+ */
 export const dedupeById = <T extends Obj.Unknown>(objects: ReadonlyArray<T | undefined>): T[] => {
   const seen = new Set<string>();
   const result: T[] = [];
@@ -157,43 +161,39 @@ export const dedupeById = <T extends Obj.Unknown>(objects: ReadonlyArray<T | und
   return result;
 };
 
-/** Entity id of a task's parent, exported so a caller walking the tree shares {@link refId}. */
-export const parentTaskId = (task: Task): string | undefined => refId(task.parentTask);
+/** Entity id of a task's parent, exported so a caller walking the tree shares this module's ref-uri parse. */
+export const parentTaskId = (task: Task): string | undefined => refEntityId(task.parentTask);
 
-/** Tasks with no parent present in the list — a dangling `parentTask` reads as a root, not a ghost. */
+/**
+ * Order query-loaded tasks by `refs` — the holder's array is canonical order; a query returns none.
+ * A task the array does not list yet (a concurrent add observed mid-write) sorts to the end.
+ */
+export const orderTasks = (tasks: ReadonlyArray<Task>, refs: ReadonlyArray<Ref.Ref<Task>>): Task[] => {
+  const position = new Map<string, number>();
+  refs.forEach((ref, index) => {
+    const id = refEntityId(ref);
+    if (id !== undefined && !position.has(id)) {
+      position.set(id, index);
+    }
+  });
+  return [...tasks].sort(
+    (a, b) => (position.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (position.get(b.id) ?? Number.MAX_SAFE_INTEGER),
+  );
+};
+
+/** Tasks with no parent present in `tasks` — a dangling `parentTask` reads as a root, not a ghost. */
 export const rootTasks = (tasks: readonly Task[]): Task[] => {
   const present = new Set(tasks.map((task) => task.id));
   return tasks.filter((task) => {
-    const parent = refId(task.parentTask);
+    const parent = refEntityId(task.parentTask);
     return parent === undefined || !present.has(parent);
   });
 };
 
-/** Direct sub-tasks of `task`, in the list's canonical order. */
+/** Direct sub-tasks of `task`, in the order `tasks` lists them. */
 export const subTasks = (tasks: readonly Task[], task: Task): Task[] => {
   const parent = task.id;
-  return tasks.filter((candidate) => refId(candidate.parentTask) === parent);
-};
-
-/**
- * Every task transitively under `task` within `tasks`, including `task` itself — what a delete has
- * to sweep out of a membership array. Cycle-safe against a malformed `parentTask` loop.
- */
-export const subtree = (tasks: readonly Task[], task: Task): Task[] => {
-  const collected: Task[] = [];
-  const seen = new Set<string>();
-  const visit = (current: Task): void => {
-    if (seen.has(current.id)) {
-      return;
-    }
-    seen.add(current.id);
-    collected.push(current);
-    for (const child of subTasks(tasks, current)) {
-      visit(child);
-    }
-  };
-  visit(task);
-  return collected;
+  return tasks.filter((candidate) => refEntityId(candidate.parentTask) === parent);
 };
 
 /**
@@ -203,7 +203,7 @@ export const subtree = (tasks: readonly Task[], task: Task): Task[] => {
 export const isTaskReady = (tasks: readonly Task[], task: Task): boolean => {
   const byId = new Map(tasks.map((candidate) => [candidate.id, candidate]));
   return (task.dependsOn ?? []).every((ref) => {
-    const id = refId(ref);
+    const id = refEntityId(ref);
     const dep = id === undefined ? undefined : byId.get(id);
     return !dep || dep.status === 'done';
   });
@@ -219,7 +219,7 @@ export const effectiveMilestoneId = (tasks: readonly Task[], task: Task): string
 
 /**
  * Every task's effective milestone in one pass, keyed by task id — the per-task walk is otherwise
- * quadratic when grouping a whole list. Exported so a caller filtering the whole list builds it once.
+ * quadratic when grouping a whole set. Exported so a caller filtering the whole set builds it once.
  * Tasks with no milestone anywhere up their chain map to `undefined`, memoized like any other result
  * so a long backlog chain is still walked once.
  */
@@ -246,12 +246,12 @@ export const effectiveMilestoneIds = (tasks: readonly Task[]): Map<string, strin
         break;
       }
       path.push(cursorId);
-      const milestone = refId(cursor.milestone);
+      const milestone = refEntityId(cursor.milestone);
       if (milestone !== undefined) {
         found = milestone;
         break;
       }
-      const parentId: string | undefined = refId(cursor.parentTask);
+      const parentId: string | undefined = refEntityId(cursor.parentTask);
       cursor = parentId === undefined ? undefined : byId.get(parentId);
     }
 
@@ -263,7 +263,7 @@ export const effectiveMilestoneIds = (tasks: readonly Task[]): Map<string, strin
   return resolved;
 };
 
-/** Tasks belonging to a milestone (by {@link effectiveMilestoneId}), in the list's canonical order. */
+/** Tasks belonging to a milestone (by {@link effectiveMilestoneId}), in the set's canonical order. */
 export const tasksForMilestone = (tasks: readonly Task[], milestone: Milestone.Milestone): Task[] => {
   const target = milestone.id;
   const milestoneIds = effectiveMilestoneIds(tasks);
@@ -293,3 +293,50 @@ export const milestoneProgress = (tasks: readonly Task[], milestone: Milestone.M
   const done = counted.filter((task) => task.status === 'done').length;
   return { total: counted.length, done, ratio: counted.length === 0 ? 0 : done / counted.length };
 };
+
+/**
+ * Every task transitively under `task` within `tasks`, including `task` itself — the synchronous
+ * counterpart of {@link collectSubtree} for a caller that already holds the list and cannot run an
+ * Effect. Sees only what the list contains. Cycle-safe.
+ */
+export const subtree = (tasks: readonly Task[], task: Task): Task[] => {
+  const collected: Task[] = [];
+  const seen = new Set<string>();
+  const visit = (current: Task): void => {
+    if (seen.has(current.id)) {
+      return;
+    }
+    seen.add(current.id);
+    collected.push(current);
+    for (const child of subTasks(tasks, current)) {
+      visit(child);
+    }
+  };
+  visit(task);
+  return collected;
+};
+
+/**
+ * Every task transitively under `task` (via `parentTask`), including `task` itself. Children are
+ * discovered through the reverse-ref index — space-wide, loading each as it is found — rather
+ * than any one set's array, since a sub-task may be filed in a different set (or none). Cycle-safe.
+ */
+export const collectSubtree = (task: Task): Effect.Effect<Task[], never, Database.Service> =>
+  Effect.gen(function* () {
+    const subtree: Task[] = [];
+    const seen = new Set<string>();
+    const queue: Task[] = [task];
+    for (let index = 0; index < queue.length; index++) {
+      const current = queue[index];
+      if (seen.has(current.id)) {
+        continue;
+      }
+      seen.add(current.id);
+      subtree.push(current);
+      const children = yield* Database.query(
+        Query.select(Filter.id(current.id)).referencedBy(Task, 'parentTask'),
+      ).run.pipe(Effect.orElseSucceed(() => []));
+      queue.push(...children);
+    }
+    return subtree;
+  });

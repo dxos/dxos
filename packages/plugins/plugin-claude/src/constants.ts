@@ -15,7 +15,7 @@ export const MANAGED_AGENTS_BETA = 'managed-agents-2026-04-01';
 /** Bounds a single control-plane call so a hung request cannot block an operation indefinitely. */
 export const REQUEST_TIMEOUT_MS = 30_000;
 
-/** Retries attempted after a transport, throttling or server-side failure, on top of the first try. */
+/** Retries attempted after a transport, throttling, forbidden or server-side failure, on top of the first try. */
 export const REQUEST_RETRIES = 3;
 
 /** Fixed delay between retries; deliberately not exponential, see `request` in `api/client.ts`. */

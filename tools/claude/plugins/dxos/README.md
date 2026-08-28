@@ -20,8 +20,11 @@ claude plugin marketplace add dxos/dxos
 claude plugin install dxos@dxos
 ```
 
-In the Claude Code desktop app, run the same two as slash commands in any session:
-`/plugin marketplace add dxos/dxos`, then `/plugin install dxos@dxos`.
+In the Claude Code desktop app, run the first command in a terminal to register
+the marketplace, then install from the plugin manager: the **+** button beside
+the prompt box, **Plugins**, **Add plugin**, and pick `dxos`. **Manage plugins**
+enables, disables and uninstalls. The app reads the same `~/.claude` config the
+CLI writes, so either route lands the plugin in the next desktop session.
 
 That is the whole install for the default `file` backend. `/dxos:project` works
 immediately, against a committed `registry.yml`.

@@ -107,7 +107,7 @@ export const deleteTask = (
     // Matched on the ref's own entity id rather than its target, so an entry whose object is not
     // loaded is still swept.
     chat.tasks = chat.tasks.filter((ref) => {
-      const id = Task.refId(ref);
+      const id = Task.refEntityId(ref);
       return id === undefined || !ids.has(id);
     });
   });
