@@ -229,7 +229,9 @@ op SetProviderTemplate
     mapping, and result mapping in one atomic write.
   input:
     provider: Ref<Provider>
-    searchSchema: JsonSchema
+    searchSchema: string             # a JSON Schema object serialized with JSON.stringify; the
+                                     # recursive JSONSchema meta-type produces a tool input_schema
+                                     # LLM providers reject, so the handler parses it instead
     request: RequestMapping
     result: ResultMapping
   output: Ref<Provider>
@@ -343,7 +345,7 @@ test T-2: SetProviderTemplate persists template
   given: a Provider with no template
   when: SetProviderTemplate is called with searchSchema, request, result
   then:
-    - Provider.searchSchema equals the input schema
+    - Provider.searchSchema equals the parsed input schema (the input arrives as a JSON string)
     - Provider.request equals the input mapping
     - Provider.result equals the input mapping
 ```
