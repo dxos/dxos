@@ -72,7 +72,7 @@ const PreviewToolbar = composable<HTMLDivElement>(({ children, ...props }, forwa
   );
 
   return (
-    <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
+    <Toolbar.Root {...composableProps(props, { classNames: '@container' })} ref={forwardedRef}>
       {children}
       {paged && (
         <>
@@ -82,12 +82,24 @@ const PreviewToolbar = composable<HTMLDivElement>(({ children, ...props }, forwa
             label={paged.fit === 'width' ? t('fit-page.label') : t('fit-width.label')}
             onClick={() => paged.setFit(paged.fit === 'width' ? 'page' : 'width')}
           />
+          {/* First/last are conveniences, not the primary controls: hidden until the toolbar's own
+              width can hold them, so a narrow plank keeps prev/next, the counter and search. */}
+          <Toolbar.IconButton
+            iconOnly
+            icon='ph--caret-line-left--regular'
+            density='sm'
+            classNames='hidden @md:flex'
+            label={t('first-page.label')}
+            disabled={paged.currentPage <= 1}
+            onClick={() => paged.api?.goToPage(1)}
+          />
           <Toolbar.IconButton
             iconOnly
             icon='ph--caret-left--regular'
+            classNames='px-0'
             label={t('previous-page.label')}
             disabled={paged.currentPage <= 1}
-            onClick={() => paged.api?.goToPage(paged.currentPage - 1)}
+            onClick={() => paged.api?.stepPage(-1)}
           />
           {/* `Toolbar.Text` truncates by default, which is right for a label and wrong for a
               counter — "1 / 12" became "1 …". These must keep their intrinsic width. */}
@@ -99,14 +111,26 @@ const PreviewToolbar = composable<HTMLDivElement>(({ children, ...props }, forwa
             icon='ph--caret-right--regular'
             label={t('next-page.label')}
             disabled={paged.currentPage >= paged.pageCount}
-            onClick={() => paged.api?.goToPage(paged.currentPage + 1)}
+            onClick={() => paged.api?.stepPage(1)}
+          />
+          <Toolbar.IconButton
+            iconOnly
+            icon='ph--caret-line-right--regular'
+            classNames='hidden @md:flex'
+            label={t('last-page.label')}
+            disabled={paged.currentPage >= paged.pageCount}
+            onClick={() => paged.api?.goToPage(paged.pageCount)}
           />
           <Toolbar.Separator />
           <Input.Root>
             <Input.TextInput
               placeholder={t('search.placeholder')}
               value={query}
-              classNames='w-40'
+              classNames='grow'
+              spellCheck={false}
+              autoCorrect='off'
+              autoCapitalize='off'
+              end={<Icon icon='ph--magnifying-glass--regular' size={4} />}
               onChange={(event) => handleSearch(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter') {
@@ -140,7 +164,7 @@ const PreviewToolbar = composable<HTMLDivElement>(({ children, ...props }, forwa
           )}
         </>
       )}
-      <div role='none' className='grow' />
+      <Toolbar.Separator />
       {/* An anchor rather than a button: `download` is what makes the browser save instead of
           navigate, and it works for the `data:`/`blob:`/presigned URLs every backend produces. */}
       <Toolbar.Link href={url} download={name ?? true} aria-label={t('download.label')} title={t('download.label')}>

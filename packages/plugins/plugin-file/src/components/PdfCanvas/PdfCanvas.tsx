@@ -22,7 +22,7 @@ import { composable, composableProps, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-import { type MatchRect, type PdfMatch, type PdfPageText, findMatches, measureMatch } from './pdf-search';
+import { type PdfMatch, type PdfPageText, findMatches, markSpan } from './pdf-search';
 
 // Bundled and served by us rather than fetched from a CDN: the app must render a PDF offline, and a
 // worker from another origin is also a CSP entry we would otherwise have to keep in step.
@@ -34,6 +34,8 @@ export type PdfFit = 'width' | 'page';
 /** Imperative surface the toolbar drives, published through {@link PdfCanvasProps.apiRef}. */
 export type PdfApi = {
   goToPage: (page: number) => void;
+  /** Steps by `delta` from the pending target, so repeated clicks accumulate mid-scroll. */
+  stepPage: (delta: number) => void;
   search: (query: string) => void;
   goToMatch: (index: number) => void;
 };
@@ -67,8 +69,8 @@ type PageRefs = {
  * the render means the toolbar can page, fit and search, and the pages can be themed.
  *
  * The text layer is what makes the page more than a picture: it is transparent text positioned over
- * the canvas, so the browser can select it and search highlights can be measured from real layout
- * rather than computed from the PDF's transforms.
+ * the canvas, so the browser can select it and search matches can be highlighted by wrapping them
+ * in the layer's own spans rather than by positioning overlays over the page.
  *
  * Every page is rendered rather than one at a time: the iframe it replaces scrolled through the
  * whole document. Large documents therefore cost their full page count up front — virtualization is
@@ -85,11 +87,14 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
     // is ready. Without this, searching a large document during its first seconds silently returns
     // nothing and never corrects itself.
     const queryRef = useRef('');
+    // The page a scroll is heading towards. Stepping reads this rather than the observed page, so
+    // clicking next twice quickly advances two pages instead of re-targeting the same one — smooth
+    // scrolling means the observed page has not moved yet on the second click.
+    const targetRef = useRef<number | undefined>(undefined);
     const [pageCount, setPageCount] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const [matches, setMatches] = useState<PdfMatch[]>([]);
     const [activeMatch, setActiveMatch] = useState(0);
-    const [highlights, setHighlights] = useState<(MatchRect & { page: number; active: boolean })[]>([]);
     const [layoutVersion, setLayoutVersion] = useState(0);
     const [error, setError] = useState(false);
 
@@ -208,7 +213,6 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
       setError(false);
       setPageCount(0);
       setMatches([]);
-      setHighlights([]);
 
       const task = getDocument({ url });
       void task.promise.then(
@@ -303,6 +307,9 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
           }
         }
         setCurrentPage(page);
+        if (targetRef.current === page) {
+          targetRef.current = undefined;
+        }
       };
 
       container.addEventListener('scroll', onScroll, { passive: true });
@@ -314,12 +321,21 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
       const element = refs.current[page - 1]?.page;
       const container = containerRef.current;
       if (element && container) {
+        targetRef.current = page;
         // Relative scroll for the same reason `onScroll` measures rects: the page's `offsetTop` is
         // not necessarily expressed in this container's coordinates.
         const delta = element.getBoundingClientRect().top - container.getBoundingClientRect().top;
         container.scrollTo({ top: container.scrollTop + delta - PAGE_MARGIN, behavior: 'smooth' });
       }
     }, []);
+
+    const stepPage = useCallback(
+      (delta: number) => {
+        const base = targetRef.current ?? currentPage;
+        goToPage(Math.min(Math.max(base + delta, 1), pageCount));
+      },
+      [currentPage, pageCount, goToPage],
+    );
 
     const search = useCallback(
       (query: string) => {
@@ -342,24 +358,38 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
       [matches, goToPage],
     );
 
-    useImperativeHandle(apiRef, () => ({ goToPage, search, goToMatch }), [goToPage, search, goToMatch]);
+    useImperativeHandle(apiRef, () => ({ goToPage, stepPage, search, goToMatch }), [
+      goToPage,
+      stepPage,
+      search,
+      goToMatch,
+    ]);
 
-    // Measured from the rendered text layer, so a resize or a fit change re-measures rather than
-    // leaving boxes at stale coordinates.
+    // Rewrites the spans in place whenever the matches, the active one, or the layout change. The
+    // layout dependency matters: a re-render replaces the spans, discarding any marks on them.
     useEffect(() => {
-      const boxes = matches.flatMap((match, index) => {
-        const { page, text } = refs.current[match.page - 1] ?? {};
-        const span = text?.children[match.item];
-        if (!page || !(span instanceof HTMLElement)) {
-          return [];
+      refs.current.forEach((pageRefs, pageIndex) => {
+        const layer = pageRefs?.text;
+        const items = textRef.current[pageIndex]?.items;
+        if (!layer || !items) {
+          return;
         }
-        return measureMatch(span, match.offset, match.length, page).map((rect) => ({
-          ...rect,
-          page: match.page,
-          active: index + 1 === activeMatch,
-        }));
+        items.forEach((text, itemIndex) => {
+          // The layer alternates spans and `<br>`: pdf.js emits one child per text item, a `<br>`
+          // for the end-of-line ones, so child index tracks item index. Skip the breaks explicitly
+          // rather than relying on their empty text never matching.
+          const span = layer.children[itemIndex];
+          if (!(span instanceof HTMLElement) || span.tagName !== 'SPAN') {
+            return;
+          }
+          const ranges = matches.flatMap((match, index) =>
+            match.page === pageIndex + 1 && match.item === itemIndex
+              ? [{ offset: match.offset, length: match.length, active: index + 1 === activeMatch }]
+              : [],
+          );
+          markSpan(span, text, ranges);
+        });
       });
-      setHighlights(boxes);
     }, [matches, activeMatch, layoutVersion]);
 
     useEffect(() => {
@@ -379,7 +409,7 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
 
     return (
       <div
-        {...composableProps(props, { classNames: 'h-full w-full overflow-auto bg-deck' })}
+        {...composableProps(props, { classNames: 'h-full w-full overflow-auto bg-deck select-text' })}
         // Two refs on one node: `containerRef` measures the available width for the page scale, and
         // `forwardedRef` belongs to whatever slotted this in.
         ref={composeRefs(containerRef, forwardedRef)}
@@ -400,22 +430,6 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
                   getRefs(index).canvas = element;
                 }}
               />
-              {highlights
-                .filter((highlight) => highlight.page === index + 1)
-                .map((highlight, highlightIndex) => (
-                  <div
-                    key={highlightIndex}
-                    role='mark'
-                    className='dx-pdf-highlight'
-                    data-active={highlight.active}
-                    style={{
-                      left: highlight.left,
-                      top: highlight.top,
-                      width: highlight.width,
-                      height: highlight.height,
-                    }}
-                  />
-                ))}
               <div
                 className='dx-pdf-text-layer'
                 ref={(element) => {

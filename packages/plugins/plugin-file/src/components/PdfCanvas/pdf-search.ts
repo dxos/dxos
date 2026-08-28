@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-/** One occurrence of the query, located well enough to scroll to and draw a box around. */
+/** One occurrence of the query, located well enough to scroll to and highlight. */
 export type PdfMatch = {
   /** 1-based. */
   page: number;
-  /** Index into the page's text items, which is also the index into the text layer's `textDivs`. */
+  /** Index into the page's text items, which is also the index into the text layer's spans. */
   item: number;
   /** Character offset of the match within that item's string. */
   offset: number;
@@ -16,9 +16,6 @@ export type PdfMatch = {
 export type PdfPageText = {
   items: string[];
 };
-
-/** Rectangle of a match, in CSS pixels relative to the page's top-left corner. */
-export type MatchRect = { left: number; top: number; width: number; height: number };
 
 /**
  * Every occurrence of `query`, case-insensitively.
@@ -50,34 +47,43 @@ export const findMatches = (pages: PdfPageText[], query: string): PdfMatch[] => 
 };
 
 /**
- * Where to draw a match, measured from the rendered text layer rather than computed from the PDF's
- * own transforms.
+ * Rewrites a text-layer span so its matched substrings sit inside `<mark>` elements.
  *
- * A `Range` over the matched characters gives the browser's own layout of that substring — exact,
- * and correct for proportional fonts, ligatures and any transform the text layer applies. The
- * arithmetic alternative (apportioning a text item's width by character count) put boxes in
- * visibly wrong places on real documents.
+ * Highlighting in the DOM rather than as positioned overlays, because pdf.js gives each span an
+ * `scaleX` transform that stretches it to the glyph widths the PDF specifies. Rectangles measured
+ * with `Range.getClientRects()` do not map through that transform, so an overlay lands narrower
+ * than the word and drifts left — visibly wrong on any proportional font. A `<mark>` inside the
+ * span is laid out by the browser under the same transform, so it cannot disagree.
  */
-export const measureMatch = (span: HTMLElement, offset: number, length: number, page: HTMLElement): MatchRect[] => {
-  const node = span.firstChild;
-  if (!node || node.nodeType !== Node.TEXT_NODE) {
-    return [];
+export const markSpan = (
+  span: HTMLElement,
+  text: string,
+  ranges: { offset: number; length: number; active: boolean }[],
+): void => {
+  if (ranges.length === 0) {
+    // Only rewrite when the span actually carries markup; pdf.js reuses these nodes, and replacing
+    // identical text on every keystroke would churn the whole layer.
+    if (span.firstElementChild) {
+      span.textContent = text;
+    }
+    return;
   }
 
-  const text = node.textContent ?? '';
-  if (offset + length > text.length) {
-    return [];
+  const fragment = document.createDocumentFragment();
+  let cursor = 0;
+  for (const { offset, length, active } of [...ranges].sort((a, b) => a.offset - b.offset)) {
+    if (offset > cursor) {
+      fragment.append(text.slice(cursor, offset));
+    }
+    const mark = document.createElement('mark');
+    mark.className = 'dx-pdf-highlight';
+    mark.dataset.active = String(active);
+    mark.textContent = text.slice(offset, offset + length);
+    fragment.append(mark);
+    cursor = offset + length;
   }
-
-  const range = document.createRange();
-  range.setStart(node, offset);
-  range.setEnd(node, offset + length);
-  const origin = page.getBoundingClientRect();
-
-  return Array.from(range.getClientRects()).map((rect) => ({
-    left: rect.left - origin.left,
-    top: rect.top - origin.top,
-    width: rect.width,
-    height: rect.height,
-  }));
+  if (cursor < text.length) {
+    fragment.append(text.slice(cursor));
+  }
+  span.replaceChildren(fragment);
 };
