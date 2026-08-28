@@ -140,6 +140,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/effect": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "vite": "catalog:"
   },

@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import { beforeEach, describe, test, vi } from 'vitest';
+
+import { EffectEx } from '@dxos/effect';
 
 import { ClaudeAgentApiError } from '../errors';
 import { isRetryable, listEvents } from './client';
@@ -59,14 +60,14 @@ describe('listEvents', () => {
 
   test('reads the last events by default and returns them chronologically', async ({ expect }) => {
     respondWith(page);
-    const result = await Effect.runPromise(listEvents('key', 'sess_1', 2));
+    const result = await EffectEx.runPromise(listEvents('key', 'sess_1', 2));
     expect(String(proxyFetchLegacy.mock.calls[0][0])).toContain('/v1/sessions/sess_1/events?limit=2&order=desc');
     expect(result.data?.map((event) => event.content?.[0]?.text)).toEqual(['oldest', 'newest']);
   });
 
   test('order: first reads the opening events, unreversed', async ({ expect }) => {
     respondWith(page);
-    const result = await Effect.runPromise(listEvents('key', 'sess_1', 2, 'first'));
+    const result = await EffectEx.runPromise(listEvents('key', 'sess_1', 2, 'first'));
     expect(String(proxyFetchLegacy.mock.calls[0][0])).toContain('order=asc');
     expect(result.data?.map((event) => event.content?.[0]?.text)).toEqual(['newest', 'oldest']);
   });

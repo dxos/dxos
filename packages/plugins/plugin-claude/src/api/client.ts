@@ -39,9 +39,7 @@ import {
  * before it reaches the control plane, so it did not act either.
  */
 export const isRetryable = (method: 'GET' | 'POST', error: ClaudeAgentApiError): boolean =>
-  error.status === 403 ||
-  error.status === 429 ||
-  (method === 'GET' && (error.status === 0 || error.status >= 500));
+  error.status === 403 || error.status === 429 || (method === 'GET' && (error.status === 0 || error.status >= 500));
 
 type Request<A> = {
   apiKey: string;
@@ -186,9 +184,7 @@ export const listEvents = (
     method: 'GET',
     path: `/v1/sessions/${sessionId}/events?limit=${limit}&order=${order === 'last' ? 'desc' : 'asc'}`,
     schema: EventPage,
-  }).pipe(
-    Effect.map((page) => (order === 'last' && page.data ? { ...page, data: [...page.data].reverse() } : page)),
-  );
+  }).pipe(Effect.map((page) => (order === 'last' && page.data ? { ...page, data: [...page.data].reverse() } : page)));
 
 /** One vault per session, so archiving it retires every secret that session was given. */
 export const createVault = (apiKey: string, displayName: string): Effect.Effect<VaultResponse, ClaudeAgentApiError> =>
