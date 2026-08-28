@@ -28,7 +28,7 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Slide, File.File),
         ),
         component: FileArticle,
-        props: ({ role, data: { subject } }) => ({ role, subject }),
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
         id: 'objectProperties',
