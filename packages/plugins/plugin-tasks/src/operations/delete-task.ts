@@ -10,20 +10,23 @@ import { TaskSet } from '@dxos/types';
 
 import { TaskOperation } from '#types';
 
-import { collectSubtree, findTaskSet, removeTasksFromSet } from './task-set-membership';
-
 const handler: Operation.WithHandler<typeof TaskOperation.DeleteTask> = TaskOperation.DeleteTask.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ task: taskRef }) {
       const task = yield* Database.load(taskRef);
-      const taskSet = yield* findTaskSet(task);
-      const subtree = taskSet ? collectSubtree(yield* TaskSet.loadTasks(taskSet), task) : [task];
+      const subtree = yield* TaskSet.collectSubtree(task);
       const ids = new Set(subtree.map((member) => member.id));
 
+      // Only the root's own set is swept; a member filed in another set leaves a dangling entry
+      // there, which readers tolerate (a dangling ref reads as absent).
+      const taskSet = yield* TaskSet.findTaskSet(task);
       if (taskSet) {
-        removeTasksFromSet(taskSet, ids);
+        TaskSet.removeTasksFromSet(taskSet, ids);
       }
-      yield* Database.remove(task);
+      // Nothing cascades through `parentTask`, so the subtree is removed explicitly.
+      for (const member of subtree) {
+        yield* Database.remove(member);
+      }
       yield* Database.flush();
 
       return { deleted: [...ids] };

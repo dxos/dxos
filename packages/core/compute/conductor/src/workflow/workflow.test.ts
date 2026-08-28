@@ -25,16 +25,16 @@ import {
   ComputeGraph,
   ComputeGraphModel,
   type ComputeNode,
-  ComputeNodeContext,
   type ComputeResult,
   type Executable,
   ValueBag,
+  layerNoop as computeNodeContextLayerNoop,
   synchronizedComputeFunction,
 } from '../types';
 import { WorkflowLoader, type WorkflowLoaderProps } from './loader';
 
 const TestLayer = Layer.mergeAll(
-  ComputeNodeContext.layerNoop,
+  computeNodeContextLayerNoop,
   Layer.succeed(Operation.Service, {
     invoke: () => Effect.die('Operation.Service not available in test.'),
     schedule: () => Effect.die('Operation.Service not available in test.'),

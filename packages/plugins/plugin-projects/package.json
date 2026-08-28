@@ -185,6 +185,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@effect/atom-react": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "react": "catalog:",
@@ -192,6 +193,7 @@
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
+    "@effect/atom-react": "catalog:",
     "react": "catalog:"
   },
   "publishConfig": {
