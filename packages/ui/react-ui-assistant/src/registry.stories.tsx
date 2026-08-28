@@ -208,6 +208,19 @@ export const Toolkit: Story = {
   },
 };
 
+/** A lone call whose payload is far taller than the panel: collapsed, it must not scroll. */
+export const ToolkitSingleLarge: Story = {
+  args: {
+    content: toolkit([
+      call('tc-1', 'markdown-update', {
+        doc: 'echo://SPACE/01ABC',
+        edits: Array.from({ length: 12 }, (_, i) => ({ oldString: `old ${i}`, newString: `new ${i}` })),
+      }),
+      result('tc-1', 'markdown-update', { newContent: 'x'.repeat(400) }),
+    ]),
+  },
+};
+
 /** A single call still in flight: the summary names it rather than counting. */
 export const ToolkitRunning: Story = {
   args: {

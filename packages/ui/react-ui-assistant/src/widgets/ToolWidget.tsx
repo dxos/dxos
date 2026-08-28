@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Icon, IconButton, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, SystemIconButton, useTranslation } from '@dxos/react-ui';
 import { TogglePanel, type TogglePanelRootProps } from '@dxos/react-ui-components';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type ContentBlock } from '@dxos/types';
@@ -28,6 +28,13 @@ export const ToolWidget = ({ view, children }: ToolWidgetProps) => {
   }, [children]);
 
   const calls = useMemo(() => toCalls(blocks), [blocks]);
+
+  // CodeMirror measures the block as the portal mounts, before the panel has settled to its
+  // collapsed height — leaving the heightmap taller than the row and the editor scrolling behind it.
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => view?.requestMeasure());
+    return () => cancelAnimationFrame(frame);
+  }, [view, calls.length]);
 
   const handleChangeOpen = useCallback(() => {
     setTimeout(() => {
@@ -155,7 +162,12 @@ const ToolPanel = ({ calls, onChangeOpen }: ToolPanelProps) => {
   return (
     <TogglePanel.Root open={open} onChangeOpen={setOpen}>
       <TogglePanel.Content>
-        <TogglePanel.Header classNames='flex items-center gap-2 text-sm'>
+        {/* A lone call is named by this header rather than by a row, so the header carries the row's
+            test id — "a tool call is on screen" is one question, not two. */}
+        <TogglePanel.Header
+          classNames='flex items-center gap-2 text-sm'
+          data-testid={only ? 'assistant.tool-call' : 'assistant.tool-run'}
+        >
           <div className='w-full grid grid-cols-[1fr_auto] items-center gap-2'>
             {/* `tabular-nums` so a rising count does not shift the text beside it, and the counts
                 are `shrink-0` so a long tool name truncates instead of eliding them. */}
@@ -164,15 +176,19 @@ const ToolPanel = ({ calls, onChangeOpen }: ToolPanelProps) => {
               {count !== undefined && <span className='shrink-0'>({count})</span>}
               {failed > 0 && <span className='shrink-0 text-error'>· {t('tool-failed.label', { count: failed })}</span>}
             </span>
-            <Icon icon={icon} size={4} />
+            <div className='p-1'>
+              <Icon icon={icon} size={4} />
+            </div>
           </div>
         </TogglePanel.Header>
         <TogglePanel.Body>
-          <TogglePanel.Viewport>
-            {only ? (
-              <ToolCallDetail call={only} classNames='px-2' />
-            ) : (
-              /* Bordered above as well as between, so the list reads as a group under the summary. */
+          {only ? (
+            // Mounted only while open, as a row's detail is: a collapsed body clips its content but
+            // the content is still laid out, and the editor scrolls behind the panel to reach it.
+            open && <ToolCallDetail call={only} classNames='px-2' />
+          ) : (
+            <TogglePanel.Viewport>
+              {/* Bordered above as well as between, so the list reads as a group under the summary. */}
               <div
                 role='list'
                 className='flex flex-col border-t border-subdued-separator divide-y divide-subdued-separator'
@@ -181,8 +197,8 @@ const ToolPanel = ({ calls, onChangeOpen }: ToolPanelProps) => {
                   <ToolCallRow key={call.id} call={call} onChangeOpen={onChangeOpen} />
                 ))}
               </div>
-            )}
-          </TogglePanel.Viewport>
+            </TogglePanel.Viewport>
+          )}
         </TogglePanel.Body>
       </TogglePanel.Content>
     </TogglePanel.Root>
@@ -232,7 +248,7 @@ const ToolCallRow = ({ call, onChangeOpen }: ToolCallRowProps) => {
         data-testid='assistant.tool-call'
         onClick={handleToggle}
       />
-      {open && <ToolCallDetail call={call} classNames='ps-6' />}
+      {open && <ToolCallDetail call={call} />}
     </div>
   );
 };
@@ -251,10 +267,13 @@ const ToolCallDetail = ({ call, classNames }: { call: ToolCallEntry; classNames?
 
 const ToolSection = ({ label, data }: { label: string; data: unknown }) => (
   <div className='flex flex-col'>
-    <span className='text-xs text-description'>{label}</span>
+    <div className='flex px-1 items-center justify-between'>
+      <span className='ps-1 text-sm text-description'>{label}</span>
+      <SystemIconButton.Clipboard variant='ghost' density='sm' iconOnly size={4} onCopy={() => JSON.stringify(data)} />
+    </div>
     <JsonHighlighter
       data={data}
-      classNames='p-1 text-xs bg-transparent'
+      classNames='px-2 text-xs bg-transparent'
       replacer={{ maxDepth: 3, maxArrayLen: 10, maxStringLen: 128 }}
     />
   </div>
