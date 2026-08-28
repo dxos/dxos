@@ -9,6 +9,7 @@ export * as Layout from './layout';
 export * as Mermaid from './mermaid';
 export * as Scene from './scene';
 export * from './svg-handler';
+export * as Ui from './ui';
 export * as Uml from './uml';
 export * as UmlEngine from './uml-engine';
 export * as UmlGrid from './uml-grid';
