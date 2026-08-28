@@ -12,10 +12,6 @@ import { isRetryable, listEvents } from './client';
 const proxyFetchLegacy = vi.hoisted(() => vi.fn());
 vi.mock('@dxos/edge-client', () => ({ proxyFetchLegacy }));
 
-const respondWith = (body: unknown) => {
-  proxyFetchLegacy.mockResolvedValueOnce({ ok: true, status: 200, json: async () => body });
-};
-
 describe('retry predicate', () => {
   test('a GET retries transport, throttling and server failures', ({ expect }) => {
     expect(isRetryable('GET', new ClaudeAgentApiError(0, 'offline'))).toBe(true);
@@ -72,3 +68,7 @@ describe('listEvents', () => {
     expect(result.data?.map((event) => event.content?.[0]?.text)).toEqual(['newest', 'oldest']);
   });
 });
+
+const respondWith = (body: unknown) => {
+  proxyFetchLegacy.mockResolvedValueOnce({ ok: true, status: 200, json: async () => body });
+};

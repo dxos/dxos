@@ -168,11 +168,7 @@ export const sendUserMessage = (
     body: { events: [{ type: 'user.message', content: [{ type: 'text', text: message }] }] },
   });
 
-/**
- * Reads one page of session events, always chronological (newest last). Defaults to the LAST `limit`
- * events: the API's own default returns the FIRST page, which on a long session hands the caller the
- * opening turns instead of what just happened. `desc` is fetched and reversed to keep that ordering.
- */
+/** Returns events chronologically, defaulting to the last `limit`: the API's own default opens at the first, which on a long session is not what a caller wants. */
 export const listEvents = (
   apiKey: string,
   sessionId: string,
