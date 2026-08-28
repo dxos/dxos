@@ -11,7 +11,7 @@ import { ConfiguredCredentialsService } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
-import { type ComputeGraph, ComputeNodeContext, ValueBag, type WorkflowLoader } from '@dxos/conductor';
+import { type ComputeGraph, ValueBag, type WorkflowLoader, layerNoop } from '@dxos/conductor';
 import { Context } from '@dxos/context';
 import { Database, Registry } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
@@ -138,7 +138,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
               Effect.withSpan('runWorkflow'),
               Effect.flatMap(ValueBag.unwrap),
               Effect.provide(createLocalExecutionContext(space)),
-              Effect.provide(ComputeNodeContext.layerNoop),
+              Effect.provide(layerNoop),
               Effect.scoped,
             ),
         );

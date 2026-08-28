@@ -6,27 +6,37 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
-import { TaskSet } from '@dxos/types';
+import { Task, TaskSet } from '@dxos/types';
 
 import { TaskOperation } from '#types';
-
-import { collectSubtree, findTaskSet, removeTasksFromSet } from './task-set-membership';
 
 const handler: Operation.WithHandler<typeof TaskOperation.DeleteTask> = TaskOperation.DeleteTask.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ task: taskRef }) {
       const task = yield* Database.load(taskRef);
-      const taskSet = yield* findTaskSet(task);
-      const subtree = taskSet ? collectSubtree(yield* TaskSet.loadTasks(taskSet), task) : [task];
+      const subtree = yield* Task.collectSubtree(task);
       const ids = new Set(subtree.map((member) => member.id));
 
+      // Only the root's own set is swept; a member filed in another set leaves a dangling entry
+      // there, which readers tolerate (a dangling ref reads as absent).
+      const taskSet = yield* TaskSet.findTaskSet(task);
+
+      // Read before the sweep: the array order is what an undo puts back.
+      const entries = subtree.map((member) => {
+        const index = taskSet?.tasks.findIndex((ref) => Task.refEntityId(ref) === member.id) ?? -1;
+        return { task: member, index: index === -1 ? undefined : index };
+      });
+
       if (taskSet) {
-        removeTasksFromSet(taskSet, ids);
+        TaskSet.removeTasksFromSet(taskSet, ids);
       }
-      yield* Database.remove(task);
+      // Nothing cascades through `parentTask`, so the subtree is removed explicitly.
+      for (const member of subtree) {
+        yield* Database.remove(member);
+      }
       yield* Database.flush();
 
-      return { deleted: [...ids] };
+      return { deleted: [...ids], restore: { entries, taskSet } };
     }),
   ),
 );

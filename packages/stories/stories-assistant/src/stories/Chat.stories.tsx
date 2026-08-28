@@ -16,10 +16,10 @@ import {
 } from '@dxos/assistant-toolkit';
 import { Chat as AssistantChat } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Filter, Ref } from '@dxos/echo';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import { type Space } from '@dxos/react-client/echo';
-import { Outline, type Task, TaskSet } from '@dxos/types';
+import { Outline, type Task } from '@dxos/types';
 
 import { StoryRole } from '../modules';
 import { Calculate, CalculatorSkill, ModuleContainer, config, createDecorators, storyParameters } from '../testing';
@@ -41,28 +41,26 @@ let storySpace: Space | undefined;
 
 const captureSpace = async ({ space }: { space: Space }) => {
   storySpace = space;
-  // Stories run sequentially in one module: a set seeded by an earlier story must not leak into
-  // the next story's assertions.
-  storyTaskSet = undefined;
+  // Stories share a module, so an earlier story's chat must not leak into these assertions.
+  storyChat = undefined;
 };
 
-// Captured by `seedExecutableTasks`, so assertions read the seeded set directly rather than
-// through the index (which may not have caught up with objects seeded during plugin activation).
-let storyTaskSet: TaskSet.TaskSet | undefined;
+// Read directly rather than through the index, which lags objects seeded during activation.
+let storyChat: AssistantChat.Chat | undefined;
 
-/** The conversation's working tasks — the seeded set when present, else the first queried one. */
+/** The seeded chat's tasks, else the first queried chat's. */
 const readChecklist = async (): Promise<Outline.ChecklistItem[]> => {
-  let taskSet = storyTaskSet;
-  if (!taskSet) {
+  let chat = storyChat;
+  if (!chat) {
     if (!storySpace) {
       return [];
     }
-    [taskSet] = await storySpace.db.query(Filter.type(TaskSet.TaskSet)).run();
+    [chat] = await storySpace.db.query(Filter.type(AssistantChat.Chat)).run();
   }
-  if (!taskSet) {
+  if (!chat) {
     return [];
   }
-  const tasks = await Promise.all(taskSet.tasks.map((ref) => ref.load()));
+  const tasks = await Promise.all(chat.tasks.map((ref) => ref.load()));
   return tasks.map((task) => ({ title: task.title, done: task.status === 'done' }));
 };
 
@@ -143,20 +141,7 @@ const EXECUTABLE_TASKS = [
 ];
 
 const seedExecutableTasks = async ({ db, chat }: { db: Database.Database; chat: AssistantChat.Chat }) => {
-  const taskSet = db.add(TaskSet.make({ name: 'Compute' }));
-  storyTaskSet = taskSet;
-  // A project chat files into the PROJECT's ledger (the resolution `peekTaskSetRef` uses); the
-  // chat also carries the same ref so `Chat.TaskList` (which reads only `chat.taskSet` — see its
-  // parent-walk TODO) renders the strip.
-  const project = AssistantChat.peekProject(chat);
-  if (project) {
-    Obj.update(project, (project) => {
-      project.taskSet = Ref.make(taskSet);
-    });
-  }
-  Obj.update(chat, (chat) => {
-    chat.taskSet = Ref.make(taskSet);
-  });
+  storyChat = chat;
   // `dependencies` are 1-based ordinals (the numbering the checklist and UI speak), so they can
   // only point at earlier entries.
   const tasks: Task.Task[] = [];
@@ -165,7 +150,7 @@ const seedExecutableTasks = async ({ db, chat }: { db: Database.Database; chat: 
       .map((ordinal) => tasks[ordinal - 1])
       .filter((dep) => dep !== undefined)
       .map((dep) => Ref.make(dep));
-    tasks.push(TaskSet.addTask(db, taskSet, title, dependsOn.length > 0 ? { dependsOn } : {}));
+    tasks.push(AssistantChat.addTask(db, chat, title, dependsOn.length > 0 ? { dependsOn } : {}));
   }
 
   await db.flush();
@@ -259,16 +244,12 @@ export const WithWebSearch: Story = {
 };
 
 /**
- * Chat over a pre-seeded working task set: `Chat.TaskList` renders the durable tasks between the
+ * Chat over a pre-seeded checklist: `Chat.TaskList` renders the durable tasks between the
  * thread and the prompt from the first frame, status-grouped without headings.
  */
 export const WithTasks: Story = {
   decorators: createDecorators({
     onChatCreated: async ({ db, chat }) => {
-      const taskSet = db.add(TaskSet.make({ name: 'Launch plan' }));
-      Obj.update(chat, (chat) => {
-        chat.taskSet = Ref.make(taskSet);
-      });
       // More than six rows, so the story also demonstrates the task strip's height cap.
       const seed: { title: string; status: NonNullable<Task.Task['status']> }[] = [
         { title: 'Source the beans', status: 'done' },
@@ -281,7 +262,7 @@ export const WithTasks: Story = {
         { title: 'Update the price list', status: 'todo' },
       ];
       for (const { title, status } of seed) {
-        TaskSet.addTask(db, taskSet, title, { status });
+        AssistantChat.addTask(db, chat, title, { status });
       }
       await db.flush();
     },

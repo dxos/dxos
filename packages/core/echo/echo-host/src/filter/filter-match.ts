@@ -150,7 +150,7 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
             // ignore meta properties
             continue;
           }
-          const value = (obj as any)[key];
+          const value = obj[key];
           if (!filterMatchValue(valueFilter, value)) {
             return false;
           }
