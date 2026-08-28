@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Blob, Database, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { IconButton, Input, useTranslation } from '@dxos/react-ui';
+import { Clipboard, IconButton, Input, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { File } from '@dxos/types';
 
@@ -69,32 +69,40 @@ export const FileProperties = ({ subject: file }: FilePropertiesProps) => {
   }
 
   return (
-    <Form.Section>
-      {reference && (
-        <Input.Root>
-          <Input.Label>{t('properties.reference.label')}</Input.Label>
-          <Input.TextInput readOnly value={reference} />
-        </Input.Root>
-      )}
-      {url && (
-        <Input.Root>
-          <Input.Label>{t('properties.url.label')}</Input.Label>
-          <div role='none' className='flex w-full gap-1'>
-            <Input.TextInput readOnly value={url} classNames='grow' />
-            <IconButton
-              iconOnly
-              icon='ph--arrows-clockwise--regular'
-              label={t('properties.url.regenerate.label')}
-              disabled={pending}
-              onClick={() => void resolve()}
-            />
-          </div>
-          <Input.DescriptionAndValidation>
-            <Input.Description>{t('properties.url.description')}</Input.Description>
-          </Input.DescriptionAndValidation>
-        </Input.Root>
-      )}
-    </Form.Section>
+    // Its own provider: `useClipboard` falls back to a no-op context, so a copy button outside one
+    // fails silently rather than visibly.
+    <Clipboard.Provider>
+      <Form.Section>
+        {reference && (
+          <Input.Root>
+            <Input.Label>{t('properties.reference.label')}</Input.Label>
+            <div role='none' className='flex w-full gap-1'>
+              <Input.TextInput readOnly value={reference} classNames='grow' />
+              <Clipboard.IconButton value={reference} label={t('properties.reference.copy.label')} />
+            </div>
+          </Input.Root>
+        )}
+        {url && (
+          <Input.Root>
+            <Input.Label>{t('properties.url.label')}</Input.Label>
+            <div role='none' className='flex w-full gap-1'>
+              <Input.TextInput readOnly value={url} classNames='grow' />
+              <Clipboard.IconButton value={url} label={t('properties.url.copy.label')} />
+              <IconButton
+                iconOnly
+                icon='ph--arrows-clockwise--regular'
+                label={t('properties.url.regenerate.label')}
+                disabled={pending}
+                onClick={() => void resolve()}
+              />
+            </div>
+            <Input.DescriptionAndValidation>
+              <Input.Description>{t('properties.url.description')}</Input.Description>
+            </Input.DescriptionAndValidation>
+          </Input.Root>
+        )}
+      </Form.Section>
+    </Clipboard.Provider>
   );
 };
 
