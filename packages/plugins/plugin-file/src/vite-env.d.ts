@@ -18,3 +18,8 @@ declare module '*.pdf?url' {
   const src: string;
   export default src;
 }
+
+declare module '*.pdf?inline' {
+  const dataUrl: string;
+  export default dataUrl;
+}

@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import landscapeUrl from '../../../fixtures/landscape.pdf?url';
+import landscapeUrl from '../../../fixtures/composer.pdf?url';
 import longUrl from '../../../fixtures/long.pdf?url';
 import pdfUrl from '../../../fixtures/test.pdf?url';
 import { PdfCanvas } from './PdfCanvas';
@@ -52,15 +52,27 @@ export const Pages: Story = {
   },
 };
 
-/** Bytes that are not a PDF: reported rather than left as an empty box. */
-export const Invalid: Story = {
-  args: { url: 'data:application/pdf;base64,bm90LWEtcGRm' },
+/** A long document must not rasterise every page up front — that is what took the tab down. */
+export const Long: Story = {
+  args: { url: longUrl },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+    await waitFor(
+      async () => {
+        await expect(canvasElement.querySelectorAll('[data-page]')).toHaveLength(120);
+      },
+      { timeout: 30_000 },
+    );
+    // Every page is present and sized, so the scrollbar is honest...
+    const pages = [...canvasElement.querySelectorAll('[data-page]')];
+    await expect(pages[119].getBoundingClientRect().height).toBeGreaterThan(0);
+    // ...but only those near the viewport are drawn. Measured by the inline size the renderer sets,
+    // not `canvas.width`: an undrawn canvas reports the spec default of 300, so a size check passes
+    // for every page whether or not anything was rasterised.
     await waitFor(async () => {
-      await expect(canvas.getByRole('alert')).toBeInTheDocument();
+      const drawn = pages.filter((page) => page.querySelector('canvas')?.style.width).length;
+      await expect(drawn).toBeGreaterThan(0);
+      await expect(drawn).toBeLessThan(30);
     });
-    await expect(canvasElement.querySelectorAll('[data-page] canvas')).toHaveLength(0);
   },
 };
 
@@ -86,30 +98,6 @@ export const LandscapeFitPage: Story = {
   },
 };
 
-/** A long document must not rasterise every page up front — that is what took the tab down. */
-export const Long: Story = {
-  args: { url: longUrl },
-  play: async ({ canvasElement }) => {
-    await waitFor(
-      async () => {
-        await expect(canvasElement.querySelectorAll('[data-page]')).toHaveLength(120);
-      },
-      { timeout: 30_000 },
-    );
-    // Every page is present and sized, so the scrollbar is honest...
-    const pages = [...canvasElement.querySelectorAll('[data-page]')];
-    await expect(pages[119].getBoundingClientRect().height).toBeGreaterThan(0);
-    // ...but only those near the viewport are drawn. Measured by the inline size the renderer sets,
-    // not `canvas.width`: an undrawn canvas reports the spec default of 300, so a size check passes
-    // for every page whether or not anything was rasterised.
-    await waitFor(async () => {
-      const drawn = pages.filter((page) => page.querySelector('canvas')?.style.width).length;
-      await expect(drawn).toBeGreaterThan(0);
-      await expect(drawn).toBeLessThan(30);
-    });
-  },
-};
-
 /** The same landscape document scrolled, where every one of its three pages is present. */
 export const LandscapeFitWidth: Story = {
   args: { url: landscapeUrl, fit: 'width' },
@@ -124,5 +112,17 @@ export const LandscapeFitWidth: Story = {
     const page = canvasElement.querySelector('[data-page]')!;
     // Fit-width fills the width; the page is free to be taller than the viewport.
     await expect(page.getBoundingClientRect().width).toBeLessThanOrEqual(container.getBoundingClientRect().width);
+  },
+};
+
+/** Bytes that are not a PDF: reported rather than left as an empty box. */
+export const Invalid: Story = {
+  args: { url: 'data:application/pdf;base64,bm90LWEtcGRm' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(async () => {
+      await expect(canvas.getByRole('alert')).toBeInTheDocument();
+    });
+    await expect(canvasElement.querySelectorAll('[data-page] canvas')).toHaveLength(0);
   },
 };
