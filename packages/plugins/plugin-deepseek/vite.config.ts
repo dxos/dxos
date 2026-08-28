@@ -11,6 +11,7 @@ export default defineConfig({
     plugin: 'src/plugin.ts',
     capabilities: 'src/capabilities/index.ts',
     meta: 'src/meta.ts',
+    skills: 'src/skills/index.ts',
   },
   test: { node: true },
 });

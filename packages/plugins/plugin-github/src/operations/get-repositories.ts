@@ -44,10 +44,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.GetGitHubRepositorie
             description: repo.description ?? undefined,
           }));
           return { targets };
-        }).pipe(
-          Effect.provide(Database.layer(db)),
-          Effect.provide(GitHubApi.GitHubCredentials.fromConnection(connection)),
-        );
+        }).pipe(Effect.provide(Database.layer(db)), Effect.provide(GitHubApi.fromConnection(connection)));
       }, Effect.provide(FetchHttpClient.layer)),
     ),
   );

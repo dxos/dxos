@@ -73,7 +73,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.GetSlackChannels> = S
           },
         }));
         return { targets };
-      }).pipe(Effect.provide(SlackApi.SlackCredentials.fromConnection(connection)));
+      }).pipe(Effect.provide(SlackApi.fromConnection(connection)));
     }, Effect.provide(FetchHttpClient.layer)),
   ),
 );

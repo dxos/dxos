@@ -50,6 +50,9 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
   ),
 ) {}
 
+/** Module-level alias so callers importing the namespace avoid the doubled `Chat.Chat.fields`. */
+export const fields = Chat.fields;
+
 export const make = (props: Obj.MakeProps<typeof Chat>) => Obj.make(Chat, props);
 
 /**

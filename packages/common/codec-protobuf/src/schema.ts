@@ -10,7 +10,7 @@ import { type Substitutions } from './common';
 import { type BidirectionalMapingDescriptors, createMappingDescriptors } from './mapping';
 import { ServiceDescriptor } from './service';
 
-export class Schema<T, S extends {} = {}> {
+export class Schema<T = unknown, S extends {} = {}> {
   static fromJson<T extends Record<string, any>, S extends Record<string, any> = {}>(
     schema: any,
     substitutions: Substitutions = {},

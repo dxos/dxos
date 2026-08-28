@@ -16,6 +16,8 @@ type IconButtonProps = Omit<ButtonProps, 'children'> &
     noTooltip?: boolean;
     iconOnly?: boolean;
     square?: boolean; // TODO(burdon): Should be automatic in style?
+    /** Removes inline padding while keeping the control's height. */
+    compact?: boolean;
     iconEnd?: boolean;
     iconClassNames?: ThemedClassName<any>['classNames'];
     tooltipSide?: TooltipSide;
@@ -45,7 +47,7 @@ const IconOnlyButton = forwardRef<HTMLButtonElement, IconButtonProps>(
 
 const LabelledIconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
   (
-    { size, icon, iconOnly, square, iconEnd, iconClassNames, label, noTooltip: _, classNames, ...props },
+    { size, icon, iconOnly, square, compact, iconEnd, iconClassNames, label, noTooltip: _, classNames, ...props },
     forwardedRef,
   ) => {
     const { tx } = useThemeContext();
@@ -53,7 +55,7 @@ const LabelledIconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
       // `caretDown` stays in `props` so `Button` still renders the caret; the theme only reads it.
       <Button
         {...props}
-        classNames={tx('iconButton.root', { iconOnly, square, caretDown: props.caretDown }, classNames)}
+        classNames={tx('iconButton.root', { iconOnly, square, compact, caretDown: props.caretDown }, classNames)}
         ref={forwardedRef}
       >
         {icon && !iconEnd && <Icon icon={icon} size={size} classNames={iconClassNames} />}

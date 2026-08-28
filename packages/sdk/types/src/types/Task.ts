@@ -88,9 +88,8 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
     estimate: Schema.optional(Schema.Number.annotate({ title: 'Estimate' })),
 
     /**
-     * Parent in the sub-task hierarchy (unbounded depth); unset means a root task. Named
-     * `parentTask` because the ECHO parent edge is a different, lifecycle-only concept —
-     * it is set alongside for deletion cascade and is not the queryable hierarchy.
+     * Parent in the sub-task hierarchy (unbounded depth); unset means a root task. App-level: the
+     * ECHO parent edge means membership in the owning TaskSet, so nothing cascades through this field.
      */
     // `Schema.suspend` because the type refers to itself; clear the field with `delete` rather
     // than an `undefined` assignment, which the suspended schema rejects on validation.

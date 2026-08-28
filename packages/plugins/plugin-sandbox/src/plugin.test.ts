@@ -16,9 +16,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { SandboxPlugin } from '#plugin';
-import { Sandbox } from '#types';
-
-import { CreateSandbox, Exec } from './skills/functions';
+import { Sandbox, SandboxOperation } from '#types';
 
 /**
  * Prereq: sandbox-service worker at http://localhost:8792 (API at /api/sandbox).
@@ -44,7 +42,7 @@ describe('SandboxPlugin (composer harness)', { tags: ['functions-e2e'] }, () => 
     await harness.runPromise(
       Effect.gen(function* () {
         const { sandboxId } = yield* Operation.invoke(
-          CreateSandbox,
+          SandboxOperation.CreateSandbox,
           { name: 'composer-harness-test' },
           { spaceId: defaultSpace.id },
         );
@@ -54,7 +52,7 @@ describe('SandboxPlugin (composer harness)', { tags: ['functions-e2e'] }, () => 
         expect(sandbox).toBeDefined();
 
         const result = yield* Operation.invoke(
-          Exec,
+          SandboxOperation.Exec,
           {
             sandbox: Ref.make(sandbox),
             command: 'echo hello world',

@@ -12,7 +12,7 @@ import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
 import * as CallsPlugin from '@dxos/plugin-calls/CallsPlugin';
 import * as ChessComPlugin from '@dxos/plugin-chess-com/ChessComPlugin';
 import * as ChessPlugin from '@dxos/plugin-chess/ChessPlugin';
-import * as ClaudeAgentsPlugin from '@dxos/plugin-claude-agents/ClaudeAgentsPlugin';
+import * as ClaudePlugin from '@dxos/plugin-claude/ClaudePlugin';
 import * as CodePlugin from '@dxos/plugin-code/CodePlugin';
 import * as CommercePlugin from '@dxos/plugin-commerce/CommercePlugin';
 import * as ComputerPlugin from '@dxos/plugin-computer/ComputerPlugin';
@@ -57,6 +57,7 @@ import * as PipelinePlugin from '@dxos/plugin-pipeline/PipelinePlugin';
 import * as PresenterPlugin from '@dxos/plugin-presenter/PresenterPlugin';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as ReviewPlugin from '@dxos/plugin-review/ReviewPlugin';
+import * as S3Plugin from '@dxos/plugin-s3/S3Plugin';
 import * as SamplePlugin from '@dxos/plugin-sample/SamplePlugin';
 import * as SandboxPlugin from '@dxos/plugin-sandbox/SandboxPlugin';
 import * as ScriptPlugin from '@dxos/plugin-script/ScriptPlugin';
@@ -149,6 +150,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       OsrmPlugin.meta.profile.key,
       PaymentsPlugin.meta.profile.key,
       PipelinePlugin.meta.profile.key,
+      S3Plugin.meta.profile.key,
       SandboxPlugin.meta.profile.key,
       SequencerPlugin.meta.profile.key,
       SidekickPlugin.meta.profile.key,
@@ -182,7 +184,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     CallsPlugin.make(),
     ChessPlugin.make(),
     ChessComPlugin.make(),
-    ClaudeAgentsPlugin.make(),
+    ClaudePlugin.make(),
     CodePlugin.make(),
     CommercePlugin.make(),
     // Dev-only coding harness, gated on `isDev` for availability (not just defaults, unlike
@@ -259,6 +261,7 @@ const experimental: Plugin.Plugin[] = [
   IrohBeaconPlugin.make(),
   LinearPlugin.make(),
   LingoPlugin.make(),
+  S3Plugin.make(),
   SequencerPlugin.make(),
   SlackPlugin.make(),
   SpacetimePlugin.make(),

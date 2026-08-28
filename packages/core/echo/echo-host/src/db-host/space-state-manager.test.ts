@@ -52,7 +52,7 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
         links: {},
       });
       docId = handle.documentId;
-      const query = automergeHost.findWithProgress<DatabaseDirectory>(handle.documentId);
+      const query = automergeHost.acquireDoc<DatabaseDirectory>(handle.documentId);
 
       const manager = new SpaceStateManager({ runtime });
       await manager.open(Context.default());
@@ -134,7 +134,7 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
           objects: {},
           links: {},
         });
-        return automergeHost.findWithProgress<DatabaseDirectory>(handle.documentId);
+        return automergeHost.acquireDoc<DatabaseDirectory>(handle.documentId);
       };
 
       // The refs are opaque URLs to the store, so real documents stand in for the root and credentials.

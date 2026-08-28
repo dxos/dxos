@@ -53,6 +53,9 @@
       "path": "../../protocols"
     },
     {
+      "path": "../blob"
+    },
+    {
       "path": "../echo"
     },
     {
