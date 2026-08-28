@@ -60,13 +60,53 @@ export const projectThread = ({
       return { messages: [] };
     }
     if (index > 0) {
-      return { messages: Feed.history(sorted, { head: sorted[index - 1].id }).items };
+      return { messages: collapseToolRuns(Feed.history(sorted, { head: sorted[index - 1].id }).items) };
     }
     // Not present — a stale pointer (e.g. the message never replicated); fall through to the feed's
     // own lineage rather than blanking the thread.
   }
 
-  return { messages: Feed.history(sorted).items };
+  return { messages: collapseToolRuns(Feed.history(sorted).items) };
+};
+
+/** Blocks that are the machinery of a turn rather than anything the reader wrote or read. */
+const TOOL_BLOCKS = new Set(['toolCall', 'toolResult', 'stats']);
+
+const isToolOnly = (message: Message.Message): boolean =>
+  message.blocks.length > 0 && message.blocks.every((block) => TOOL_BLOCKS.has(block._tag));
+
+/**
+ * Folds each run of tool-only messages into one, so a multi-step turn renders as a single panel.
+ *
+ * The runtime delivers one block per message, so without this a turn is one row per call and the
+ * panel's summary cannot count the run it belongs to. The run's first message supplies the identity,
+ * keeping the row stable as the run grows and leaving `data-object-id` pointing at a real object.
+ */
+export const collapseToolRuns = (messages: readonly Message.Message[]): Message.Message[] => {
+  const collapsed: Message.Message[] = [];
+  for (let index = 0; index < messages.length; index++) {
+    const message = messages[index];
+    if (!isToolOnly(message)) {
+      collapsed.push(message);
+      continue;
+    }
+
+    let end = index;
+    while (end + 1 < messages.length && isToolOnly(messages[end + 1])) {
+      end++;
+    }
+
+    if (end === index) {
+      collapsed.push(message);
+    } else {
+      const run = messages.slice(index, end + 1);
+      collapsed.push({ ...message, blocks: run.flatMap((entry) => entry.blocks) } as Message.Message);
+    }
+
+    index = end;
+  }
+
+  return collapsed;
 };
 
 /**

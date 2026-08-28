@@ -132,6 +132,33 @@ export const Stats: Story = {
 // React widgets (portaled outside the editor)
 //
 
+const call = (id: string, name: string, input: unknown = { query: 'status', limit: 10 }): ContentBlock.ToolCall => ({
+  _tag: 'toolCall',
+  toolCallId: id,
+  name,
+  input: JSON.stringify(input),
+  providerExecuted: false,
+});
+
+const result = (id: string, name: string, value: unknown): ContentBlock.ToolResult => ({
+  _tag: 'toolResult',
+  toolCallId: id,
+  name,
+  result: JSON.stringify(value),
+  providerExecuted: false,
+});
+
+const failure = (id: string, name: string, error: string): ContentBlock.ToolResult => ({
+  _tag: 'toolResult',
+  toolCallId: id,
+  name,
+  error,
+  providerExecuted: false,
+});
+
+/** One tag per run, which is what the thread's projection produces after folding a turn's messages. */
+const toolkit = (blocks: ContentBlock.Any[]): string => `<toolkit>${JSON.stringify(blocks)}</toolkit>`;
+
 const toolchain: [ContentBlock.ToolCall, ContentBlock.ToolResult][] = [
   [
     {
@@ -167,9 +194,58 @@ const toolchain: [ContentBlock.ToolCall, ContentBlock.ToolResult][] = [
   ],
 ];
 
+/** A finished run: the summary counts, and every call is one row a click from its payload. */
 export const Toolkit: Story = {
   args: {
-    content: toolchain.map(([call, result]) => `<toolkit>${JSON.stringify([call, result])}</toolkit>`).join('\n\n'),
+    content: toolkit([
+      call('tc-1', 'read_document'),
+      result('tc-1', 'read_document', { ok: true, rows: [{ id: 1 }, { id: 2 }] }),
+      call('tc-2', 'search_index'),
+      result('tc-2', 'search_index', { ok: true, hits: 12 }),
+      call('tc-3', 'write_document'),
+      result('tc-3', 'write_document', { ok: true }),
+    ]),
+  },
+};
+
+/** A single call still in flight: the summary names it rather than counting. */
+export const ToolkitRunning: Story = {
+  args: {
+    content: toolkit([call('tc-1', 'read_document')]),
+  },
+};
+
+/** A later call in flight: the summary names the active one and carries the run's count. */
+export const ToolkitRunningRun: Story = {
+  args: {
+    content: toolkit([
+      call('tc-1', 'read_document'),
+      result('tc-1', 'read_document', { ok: true }),
+      call('tc-2', 'search_index'),
+      result('tc-2', 'search_index', { ok: true }),
+      call('tc-3', 'write_document'),
+    ]),
+  },
+};
+
+/** A failed call, which the summary reports without the reader opening anything. */
+export const ToolkitFailed: Story = {
+  args: {
+    content: toolkit([
+      call('tc-1', 'read_document'),
+      result('tc-1', 'read_document', { ok: true }),
+      call('tc-2', 'search_index'),
+      failure('tc-2', 'search_index', 'ENOENT: no such file or directory'),
+      call('tc-3', 'write_document'),
+      result('tc-3', 'write_document', { ok: true }),
+    ]),
+  },
+};
+
+/** The pre-fold shape, kept so a regression to one panel per message is visible. */
+export const ToolkitUnmerged: Story = {
+  args: {
+    content: toolchain.map(([toolCall, toolResult]) => toolkit([toolCall, toolResult])).join('\n\n'),
   },
 };
 
