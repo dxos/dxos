@@ -24,7 +24,7 @@ export const translations = [
       },
       [meta.profile.key]: {
         'plugin.name': 'File',
-        'file-input.placeholder': 'Drop a file here, or click to select a file',
+        'file-input.placeholder': 'Drop an image, video, or PDF here, or click to browse.',
         'too-large-error.message': 'File is too large. Maximum size is 4MB.',
         'unsupported-type-error.message': 'Unsupported file type. Only images, videos, and PDFs are allowed.',
         'settings.backend.label': 'Storage backend',

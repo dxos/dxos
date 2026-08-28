@@ -78,7 +78,12 @@ export const FileArticle = ({ role, subject: file }: FileArticleProps) => {
   }
 
   return (
-    <Panel.Root role={role} classNames='dx-document'>
+    // No `dx-document`: that constrains content to the reading column, which is right for prose and
+    // wrong for a preview — a PDF or image should use the full plank width.
+    <Panel.Root role={role}>
+      {/* Empty for now, but present so the article aligns with every other plank that has one; a
+          preview with no toolbar row sits a row higher than its neighbours. */}
+      <Panel.Toolbar />
       <Panel.Content asChild>
         <FilePreview type={rendered.type} url={rendered.url} />
       </Panel.Content>

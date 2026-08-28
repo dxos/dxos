@@ -155,6 +155,15 @@ outbound `fetch` to the customer's own endpoint. `operation-service` sets no
 
 ## Phase 6: Deferred
 
+- [ ] **Multiple backends in one space.** Today `Settings.backend` is a single storage name applied
+      to every upload, so a space cannot keep some files inline and others in a bucket. The blob
+      layer already supports it — `BlobManager` dispatches reads by URI scheme and `createBlob`
+      takes a per-call `storage` option — so the gap is entirely in how the choice is offered and
+      recorded. Likely needs distinct top-level app-graph groups so the destination is visible in
+      the navtree rather than buried in a setting, plus a per-object (or per-collection) storage
+      choice at create time. Design question first: whether the backend is a property of the
+      collection, the object, or the upload action.
+
 - [ ] **Blob storage naming migration** — `edge` → `blob` (storage name) and `ni:` → `blob:///`
       (scheme), decided during review of this PR. Scheme names the backend, matching `s3:`/`wnfs:`;
       the current `ni:` names an addressing style instead, which is what made a hypothetical IPFS
