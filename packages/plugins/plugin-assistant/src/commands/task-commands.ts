@@ -10,11 +10,7 @@ import * as TaskOperation from '@dxos/plugin-tasks/TaskOperation';
 import { type Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-/**
- * The task shortcuts. Membership writes go through the `Chat` primitives — the chat's `tasks`
- * array is the container, and the task verbs speak `TaskSet` — while `/task:run`, which only
- * patches fields, invokes `UpdateTask` so the assignment rules stay in one place.
- */
+/** Membership writes go through the `Chat` primitives because the chat, not a `TaskSet`, is the container. */
 export const TaskSlashCommands: SlashCommand[] = [
   {
     command: '/task:create',
@@ -33,7 +29,8 @@ export const TaskSlashCommands: SlashCommand[] = [
     command: '/task:delete',
     description: 'Delete task(s) by number or quoted title',
     execute: async (args, { db, chat }) => {
-      const resolved = resolveSelectors(args, chat);
+      const tasks = await hydrate(chat);
+      const resolved = resolveSelectors(args, tasks);
       if (resolved instanceof Error) {
         return resolved;
       }
@@ -48,7 +45,7 @@ export const TaskSlashCommands: SlashCommand[] = [
         if (seen.has(task.id)) {
           continue;
         }
-        for (const member of Chat.deleteTask(db, chat, task)) {
+        for (const member of Chat.deleteTask(db, chat, tasks, task)) {
           seen.add(member.id);
         }
         deleted.push(task);
@@ -61,7 +58,7 @@ export const TaskSlashCommands: SlashCommand[] = [
     command: '/task:run',
     description: 'Delegate task(s) by number or quoted title',
     execute: async (args, { db, chat, invoke }) => {
-      const resolved = resolveSelectors(args, chat);
+      const resolved = resolveSelectors(args, await hydrate(chat));
       if (resolved instanceof Error) {
         return resolved;
       }
@@ -122,14 +119,22 @@ const run = async <I, O>(
   return error;
 };
 
-/** Resolves selectors against the conversation's checklist, in the order the user named them. */
-const resolveSelectors = (args: string, chat: Chat.Chat) => {
+/**
+ * The checklist in full: a reopened chat's refs are unresolved until loaded, and an unresolved
+ * entry is invisible to both selector matching and the subtree sweep.
+ */
+const hydrate = async (chat: Chat.Chat): Promise<Task.Task[]> => {
+  await Promise.all(chat.tasks.map((ref) => ref.load()));
+  return Chat.resolveTasks(chat);
+};
+
+/** Resolves selectors against `tasks`, in the order the user named them. */
+const resolveSelectors = (args: string, tasks: readonly Task.Task[]) => {
   const selectors = parseTaskSelectors(args);
   if (selectors.length === 0) {
     return [];
   }
 
-  const tasks = Chat.resolveTasks(chat);
   const resolved: Task.Task[] = [];
   for (const selector of selectors) {
     const task =

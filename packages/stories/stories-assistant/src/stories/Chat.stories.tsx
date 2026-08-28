@@ -41,16 +41,14 @@ let storySpace: Space | undefined;
 
 const captureSpace = async ({ space }: { space: Space }) => {
   storySpace = space;
-  // Stories run sequentially in one module: a chat seeded by an earlier story must not leak into
-  // the next story's assertions.
+  // Stories share a module, so an earlier story's chat must not leak into these assertions.
   storyChat = undefined;
 };
 
-// Captured by `seedExecutableTasks`, so assertions read the seeded chat directly rather than
-// through the index (which may not have caught up with objects seeded during plugin activation).
+// Read directly rather than through the index, which lags objects seeded during activation.
 let storyChat: AssistantChat.Chat | undefined;
 
-/** The conversation's working tasks — the seeded chat when present, else the first queried one. */
+/** The seeded chat's tasks, else the first queried chat's. */
 const readChecklist = async (): Promise<Outline.ChecklistItem[]> => {
   let chat = storyChat;
   if (!chat) {

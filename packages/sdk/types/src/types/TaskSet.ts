@@ -83,10 +83,7 @@ export const deleteTask = (db: Database.Database, taskSet: TaskSet, task: Task.T
   db.remove(task);
 };
 
-//
-// Set-scoped readers. Membership and order are the arrays; the per-task hierarchy, milestone
-// grouping and progress helpers act on a plain task list and live in `Task`.
-//
+// Set-scoped readers only; the helpers over a plain task list live in `Task`.
 
 /**
  * The set's tasks in array order, dropping unresolved refs and de-duplicating by id — concurrent

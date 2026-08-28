@@ -123,25 +123,17 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
 export const make = (props: Obj.MakeProps<typeof Task>): Task => Obj.make(Task, props);
 
 //
-// Derived views over a task list. Nothing here is stored: hierarchy, milestone grouping, and
-// progress are all computed from `parentTask`/`milestone`, so the two can never disagree. These
-// take a plain task array rather than a container, so the same helpers serve every holder of an
-// ordered task list — a `TaskSet`, a `Chat` — and never require the container's type.
-//
-// Relationships are compared by ref URI rather than by dereferencing, so they also serve a React
-// snapshot, whose refs carry no resolver and whose `.target` is undefined. Each takes an
-// already-resolved list: `TaskSet.resolveTasks` in a handler, refs resolved through their own atoms
-// in a component.
+// Derived views, computed rather than stored so hierarchy and grouping cannot disagree with the
+// refs. They take a plain task array, so every holder of an ordered list — a `TaskSet`, a `Chat` —
+// shares them, and compare by ref URI so a React snapshot (no resolver, no `.target`) works too.
 //
 
 // TODO(wittjosiah): Factor out? `refId` and `dedupeById` are generic over any ref/object — they
 //  live here because the task views below rest on them and `TaskSet`'s readers need them too.
 
 /**
- * Entity id a ref points at, read off the URI rather than the target: a ref may address the same
- * object locally (`echo:///<id>`) or space-qualified (`echo://<space>/<id>`), and dereferencing is
- * exactly what these helpers must not require. Generic rather than task-only, because a milestone
- * ref and a membership array's entries go through the same parse.
+ * Entity id a ref addresses, parsed from the URI rather than dereferenced: the same object may be
+ * addressed locally (`echo:///<id>`) or space-qualified (`echo://<space>/<id>`).
  */
 export const refId = <T extends Obj.Unknown>(ref: Ref.Ref<T> | undefined): string | undefined => {
   if (!ref) {
@@ -151,11 +143,7 @@ export const refId = <T extends Obj.Unknown>(ref: Ref.Ref<T> | undefined): strin
   return eid ? EID.getEntityId(eid) : undefined;
 };
 
-/**
- * Drops unresolved entries and de-duplicates by id — concurrent edits can merge a ref into a
- * membership array twice, and a reader must not show the object twice. Generic, so a React caller
- * resolving refs through per-ref atoms shares the same cleanup.
- */
+/** Drops unresolved entries and de-duplicates by id: a concurrent merge can land a ref twice. */
 export const dedupeById = <T extends Obj.Unknown>(objects: ReadonlyArray<T | undefined>): T[] => {
   const seen = new Set<string>();
   const result: T[] = [];

@@ -92,13 +92,38 @@ describe('Chat', () => {
         const sibling = Chat.addTask(db, chat, 'Unrelated');
         yield* Database.flush();
 
-        const deleted = Chat.deleteTask(db, chat, parent);
+        const deleted = Chat.deleteTask(db, chat, yield* Chat.loadTasks(chat), parent);
         yield* Database.flush();
 
         expect(deleted.map((task) => task.id).sort()).toEqual([parent.id, child.id].sort());
         expect(chat.tasks.map((ref) => ref.uri)).toEqual([Ref.make(sibling).uri]);
         const tasks = yield* Chat.loadTasks(chat);
         expect(tasks.map((task) => task.title)).toEqual(['Unrelated']);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'deleteTask sweeps a sub-task whose ref was never resolved',
+    Effect.fnUntraced(
+      function* (_) {
+        const chat = yield* makeChat;
+        const { db } = yield* Database.Service;
+
+        const parent = Chat.addTask(db, chat, 'Ship the release');
+        const child = Chat.addTask(db, chat, 'Write the changelog', { parentTask: Ref.make(parent) });
+        yield* Database.flush();
+
+        // The sync reader drops an unresolved ref, so a walk over it would miss the child and leave
+        // it in the array — parented to the chat, the cascade does not reach it either.
+        expect(Chat.resolveTasks(chat)).toHaveLength(2);
+        const deleted = Chat.deleteTask(db, chat, yield* Chat.loadTasks(chat), parent);
+        yield* Database.flush();
+
+        expect(deleted.map((task) => task.id).sort()).toEqual([parent.id, child.id].sort());
+        expect(chat.tasks).toEqual([]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

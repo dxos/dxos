@@ -609,16 +609,14 @@ const CHAT_TASK_LIST_NAME = 'Chat.TaskList';
 const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
   const { chat } = useChatContext(CHAT_TASK_LIST_NAME);
 
-  // Subscribe to the chat (membership) and to each ref (row objects) — a query would only
-  // re-emit on membership changes, leaving row edits stale.
+  // Both the chat (membership) and each ref (row objects): a query re-emits only on membership.
   const [chatSnapshot] = useObject(chat);
   const taskRefs = chatSnapshot?.tasks;
   const tasks = useAtomValue(
     useMemo(() => Atom.make((get) => Task.dedupeById((taskRefs ?? []).map((ref) => get(ref.atom)))), [taskRefs]),
   );
 
-  // `Chat.addTask` is the shared primitive the task commands use, so the parent edge and the
-  // chat's refs stay consistent without a cross-plugin operation dependency.
+  // The same primitive the task commands use, so the parent edge and the refs cannot diverge.
   const handleCreate = useCallback(
     (title: string) => {
       const db = chat && Obj.getDatabase(chat);

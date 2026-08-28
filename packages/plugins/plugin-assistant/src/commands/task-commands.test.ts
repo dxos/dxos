@@ -11,15 +11,6 @@ import { Task } from '@dxos/types';
 
 import { TaskSlashCommands } from './task-commands';
 
-/**
- * `/task:create` and `/task:delete` write through the `Chat` primitives, so reaching an operation
- * would be a regression rather than a call worth recording. (`/task:run` does invoke `UpdateTask`,
- * but its assignment rules are unchanged here and untested as before.)
- */
-const unexpectedInvoke: OperationInvoke = async () => {
-  throw new Error('Unexpected operation invocation.');
-};
-
 describe('task slash commands', () => {
   let builder: EchoTestBuilder;
 
@@ -31,27 +22,8 @@ describe('task slash commands', () => {
     await builder.close();
   });
 
-  const setup = async () => {
-    const { db } = await builder.createDatabase({ types: [Chat.Chat, Feed.Feed, Task.Task] });
-    const chat = db.add(Chat.make({ name: 'Test', feed: Ref.make(db.add(Feed.make())) }));
-    await db.flush();
-
-    /** Routes through `resolveSlashCommand`, so the tests exercise the same dispatch the prompt uses. */
-    const run = async (text: string): Promise<SlashCommandResult | Error> => {
-      const resolved = resolveSlashCommand(text, TaskSlashCommands);
-      if (!resolved) {
-        return new Error(`Not a task command: ${text}`);
-      }
-      return resolved.command.execute(resolved.args, { db, chat, invoke: unexpectedInvoke });
-    };
-
-    return { db, chat, run };
-  };
-
-  const titles = (chat: Chat.Chat) => Chat.resolveTasks(chat).map((task) => task.title);
-
   test('/task:create appends to the checklist', async ({ expect }) => {
-    const { chat, run } = await setup();
+    const { chat, run } = await setup(builder);
 
     expect(await run('/task:create Draft the plan')).toEqual({ summary: 'Created task “Draft the plan”.' });
     await run('/task:create Ship it');
@@ -60,14 +32,14 @@ describe('task slash commands', () => {
   });
 
   test('/task:create rejects an empty title', async ({ expect }) => {
-    const { chat, run } = await setup();
+    const { chat, run } = await setup(builder);
 
     expect(await run('/task:create')).toBeInstanceOf(Error);
     expect(titles(chat)).toEqual([]);
   });
 
   test('/task:delete takes ordinals and quoted titles, and sweeps sub-tasks', async ({ expect }) => {
-    const { db, chat, run } = await setup();
+    const { db, chat, run } = await setup(builder);
 
     const parent = Chat.addTask(db, chat, 'Ship the release');
     Chat.addTask(db, chat, 'Write the changelog', { parentTask: Ref.make(parent) });
@@ -85,7 +57,7 @@ describe('task slash commands', () => {
   });
 
   test('/task:delete names a parent and its sub-task once each', async ({ expect }) => {
-    const { db, chat, run } = await setup();
+    const { db, chat, run } = await setup(builder);
 
     const parent = Chat.addTask(db, chat, 'Parent');
     Chat.addTask(db, chat, 'Child', { parentTask: Ref.make(parent) });
@@ -97,7 +69,7 @@ describe('task slash commands', () => {
   });
 
   test('/task:delete reports an unmatched selector rather than deleting anything', async ({ expect }) => {
-    const { db, chat, run } = await setup();
+    const { db, chat, run } = await setup(builder);
 
     Chat.addTask(db, chat, 'Only task');
     await db.flush();
@@ -107,3 +79,27 @@ describe('task slash commands', () => {
     expect(titles(chat)).toEqual(['Only task']);
   });
 });
+
+/** The commands under test never invoke an operation, so a call is a regression rather than a case. */
+const unexpectedInvoke: OperationInvoke = async () => {
+  throw new Error('Unexpected operation invocation.');
+};
+
+const setup = async (builder: EchoTestBuilder) => {
+  const { db } = await builder.createDatabase({ types: [Chat.Chat, Feed.Feed, Task.Task] });
+  const chat = db.add(Chat.make({ name: 'Test', feed: Ref.make(db.add(Feed.make())) }));
+  await db.flush();
+
+  /** Routes through `resolveSlashCommand`, so the tests exercise the prompt's own dispatch. */
+  const run = async (text: string): Promise<SlashCommandResult | Error> => {
+    const resolved = resolveSlashCommand(text, TaskSlashCommands);
+    if (!resolved) {
+      return new Error(`Not a task command: ${text}`);
+    }
+    return resolved.command.execute(resolved.args, { db, chat, invoke: unexpectedInvoke });
+  };
+
+  return { db, chat, run };
+};
+
+const titles = (chat: Chat.Chat) => Chat.resolveTasks(chat).map((task) => task.title);

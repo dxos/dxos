@@ -34,12 +34,7 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
      */
     instructions: Schema.optional(Ref.Ref(Instructions.Instructions).pipe(FormInputAnnotation.set(false))),
 
-    /**
-     * The conversation's working checklist: every task, flat and ordered — sub-tasks included, so
-     * enumeration is one array read (the shape `TaskSet.tasks` has). This array IS the membership
-     * record; hierarchy is `Task.parentTask` and `SetParent` gives every member the chat as its
-     * lifecycle edge, so the tasks cascade with the conversation that produced them.
-     */
+    /** The working checklist, flat and ordered; `SetParent` cascades it with the conversation. */
     tasks: Schema.Array(Ref.Ref(Task.Task)).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
   }).pipe(
     LabelAnnotation.set(['name']),
@@ -81,10 +76,7 @@ export const linkCompanion = ({ chat, subject }: { chat: Chat; subject: Obj.Unkn
   Obj.setParent(chat, subject);
 };
 
-/**
- * Create a task on the conversation's checklist, appended in order. Membership is the chat's
- * `tasks` array; the lifecycle parent edge follows from the field's `SetParent` annotation.
- */
+/** Appends a task to the checklist; the parent edge follows from the field's `SetParent`. */
 export const addTask = (
   db: Database.Database,
   chat: Chat,
@@ -99,14 +91,17 @@ export const addTask = (
 };
 
 /**
- * Delete a task and its sub-tasks: the whole subtree leaves the chat's `tasks` array and the
- * database. Collected here rather than left to the cascade, because every member's parent edge is
- * the chat itself, so removing a parent task would not reach its children. `dependsOn` refs
- * pointing at the removed tasks are left dangling by design — {@link Task.isTaskReady} reads a
- * dangling dependency as satisfied.
+ * Delete a task and its sub-tasks from `tasks`, the chat's checklist loaded in full (see
+ * {@link loadTasks}) — an unloaded child is invisible to the walk, and since every member is
+ * parented to the chat the cascade would not reach it either, leaving it orphaned in the array.
  */
-export const deleteTask = (db: Database.Database, chat: Chat, task: Task.Task): Task.Task[] => {
-  const subtree = Task.subtree(resolveTasks(chat), task);
+export const deleteTask = (
+  db: Database.Database,
+  chat: Chat,
+  tasks: readonly Task.Task[],
+  task: Task.Task,
+): Task.Task[] => {
+  const subtree = Task.subtree(tasks, task);
   const ids = new Set(subtree.map((member) => member.id));
   Obj.update(chat, (chat) => {
     // Matched on the ref's own entity id rather than its target, so an entry whose object is not
@@ -142,10 +137,7 @@ export const peekProject = (chat: Chat): Project.Project | undefined => {
   return undefined;
 };
 
-/**
- * The conversation's tasks in canonical order, dropping refs that fail to resolve and
- * de-duplicating by id — a concurrent merge can land the same ref twice.
- */
+/** Loads the checklist in order, de-duplicated: a concurrent merge can land the same ref twice. */
 export const loadTasks = (chat: Chat): Effect.Effect<Task.Task[], never, Database.Service> =>
   Effect.gen(function* () {
     const tasks = yield* Effect.forEach(chat.tasks, (task) =>
@@ -154,10 +146,7 @@ export const loadTasks = (chat: Chat): Effect.Effect<Task.Task[], never, Databas
     return Task.dedupeById(tasks);
   });
 
-/**
- * Non-Effect twin of {@link loadTasks} for a caller that already holds resolved refs (a UI
- * affordance, a slash command). Unresolved refs contribute nothing rather than throwing.
- */
+/** Sync twin of {@link loadTasks}; an unresolved ref contributes nothing rather than throwing. */
 export const resolveTasks = (chat: Chat): Task.Task[] =>
   Task.dedupeById(chat.tasks.filter((ref) => ref.isAvailable).map((ref) => ref.target));
 
