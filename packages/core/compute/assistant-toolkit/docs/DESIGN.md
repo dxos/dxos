@@ -2,25 +2,29 @@
 
 How the assistant tracks durable tasks and delegates them to sub-agents. Everything described
 here lives in this package unless noted; the UI surface is `@dxos/react-ui-task`, the schema is
-`@dxos/types` (`Task`, `TaskSet`), and the supervisor loop plumbing is `@dxos/agent-runtime`.
+`@dxos/types` (`Task`), and the supervisor loop plumbing is `@dxos/agent-runtime`.
 
 ## Model
 
-- **The conversation's working surface is a durable `TaskSet`** (`Chat.taskSet`). A project chat
-  files into the owning project's ledger (resolved by walking the parent chain — chat → agent →
-  project); a standalone chat lazily creates its own. `Chat.ensureTaskSet` creates, and
-  `Chat.peekTaskSetRef`/`Chat.loadTasks` resolve without creating. There is no markdown mirror:
-  task status lives only on the `Task`.
+- **The conversation's working surface is its own ordered array of task refs** (`Chat.tasks`) —
+  the shape `TaskSet.tasks` has: flat, sub-tasks included, array order canonical. `SetParent` on
+  the field makes every task a child of the chat, so a conversation's checklist cascades with it.
+  `Chat.addTask`/`Chat.deleteTask` write it, `Chat.loadTasks` (Effect) and `Chat.resolveTasks`
+  (already-resolved refs) read it. The derived views over a task list — hierarchy, readiness,
+  milestone grouping — are `Task.*` in `@dxos/types`, since they take a plain array and no
+  container. A project chat's checklist is its own — `Project.taskSet` is
+  the project's durable ledger, written by the project verbs, not by conversations. There is no
+  markdown mirror: task status lives only on the `Task`.
 - **`Task.status`**: `todo | started | done | failed | cancelled`. `started` is stamped by the
   runtime at sub-agent spawn — never by an operation — so a started agent task always means a
   live process, and an orphaned `started` is detectable.
 - **`Task.dependsOn`**: execution-ordering refs (orthogonal to `parentTask` hierarchy and
-  `milestone` grouping). A task is _ready_ when every dependency resolved within the set is
-  `done` (`TaskSet.isTaskReady`; a dangling ref reads as satisfied).
+  `milestone` grouping). A task is _ready_ when every dependency resolved within the checklist is
+  `done` (`Task.isTaskReady`; a dangling ref reads as satisfied).
 
 ## Prompt surface
 
-`Chat.formatChecklist` renders the set as a numbered checklist:
+`Chat.formatChecklist` renders the checklist as numbered items:
 
 ```
 1. [x] Compute 10! using the calculator
@@ -43,8 +47,8 @@ appended to the title, models paste them back through title-keyed upserts and du
 - **Delegation** (`org.dxos.skill.delegation`)
   - `delegate-task` — creates a NEW durable task (queued, agent assignee) from a title.
   - `delegate-tasks` — delegates EXISTING tasks, selected by 1-based checklist ordinal or exact
-    title (`tasks: (number | string)[]`), resolved server-side against set order. Terminal or
-    already-running tasks are skipped and reported.
+    title (`tasks: (number | string)[]`), resolved server-side against checklist order. Terminal
+    or already-running tasks are skipped and reported.
 
 ## Supervisor loop (delegation strategy)
 
@@ -79,8 +83,9 @@ The sub-agent system prompt additionally forbids digit separators and unquoted f
 
 `commands.ts` (this package) defines deterministic prompt shortcuts — `/task:create <title>`,
 `/task:run <selectors>`, `/task:delete <selectors>` — executed client-side by `Chat.Root` on
-submit (no model in the loop) through the shared task primitives (`TaskSet.addTask`/`deleteTask`,
-`ensureTaskSetSync`). Selectors are 1-based ordinals or exact titles. `/task:run` queues the named
+submit (no model in the loop). Membership writes go through the shared chat primitives
+(`Chat.addTask`/`Chat.deleteTask`); `/task:run`, which only patches fields, invokes the
+`UpdateTask` verb. Selectors are 1-based ordinals or exact titles. `/task:run` queues the named
 tasks and wakes the conversation with a scoped follow-up prompt (delegation spawns on the
 supervisor's reconcile). The prompt editor (`react-ui-chat` `commands()` extension) completes `/`
 commands at the prompt start (non-cycling list, command column in mono), and decorates a
@@ -113,8 +118,8 @@ type the prompt yourself.
 
 ## Deferred (tracked in `.agents/projects/project-tasks/TASKS.md`)
 
-- Stamp `chat.taskSet` for project chats (closes `Chat.TaskList`'s parent-walk TODO).
-- Atomic task-set initialization (create-then-link races across peers).
+- Surfacing a conversation's checklist in its project (a project view over its chats' tasks,
+  now that the two are separate).
 - Cancel/delete tasks (cancellation interrupting a live sub-agent).
 - Task list as a launcher: per-task run state, dependencies, and direct sub-agent triggers.
 - Live-process signal for the spinner (Process annotation) instead of the durable approximation.

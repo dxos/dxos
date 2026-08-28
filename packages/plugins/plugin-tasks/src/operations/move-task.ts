@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
-import { TaskSet } from '@dxos/types';
+import { Task, TaskSet } from '@dxos/types';
 
 import { TaskOperation } from '#types';
 
@@ -27,7 +27,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.MoveTask> = TaskOperat
 
       TaskSet.moveTask(taskSet, task, {
         ...(parentTask !== undefined ? { parentTask: newParent ?? null } : {}),
-        beforeId: before ? TaskSet.refEntityId(before) : undefined,
+        beforeId: before ? Task.refEntityId(before) : undefined,
       });
 
       return { task: task };
