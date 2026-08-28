@@ -43,7 +43,7 @@ describe('create-task', () => {
 
       expect(child.parentTask?.target?.id).toBe(parent.id);
       expect(taskSet.tasks.map((ref) => ref.target?.id)).toEqual([parent.id, child.id]);
-      expect(TaskSet.rootTasks(TaskSet.resolveTasks(taskSet)).map((task) => task.id)).toEqual([parent.id]);
+      expect(Task.rootTasks(TaskSet.resolveTasks(taskSet)).map((task) => task.id)).toEqual([parent.id]);
       expect(Obj.getParent(child)?.id).toBe(parent.id);
     }).pipe(Effect.provide(testLayer())),
   );

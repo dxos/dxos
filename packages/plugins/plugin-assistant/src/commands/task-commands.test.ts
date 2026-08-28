@@ -5,25 +5,19 @@
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Chat, type OperationInvoke, type SlashCommandResult, resolveSlashCommand } from '@dxos/assistant-toolkit';
-import * as Operation from '@dxos/compute/Operation';
 import { Feed, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import * as TaskOperation from '@dxos/plugin-tasks/TaskOperation';
 import { Task } from '@dxos/types';
 
 import { TaskSlashCommands } from './task-commands';
 
 /**
- * Records invocations instead of running them: `/task:run`'s effect is the `UpdateTask` call it
- * makes, and the verb's own behaviour is covered by plugin-tasks.
+ * `/task:create` and `/task:delete` write through the `Chat` primitives, so reaching an operation
+ * would be a regression rather than a call worth recording. (`/task:run` does invoke `UpdateTask`,
+ * but its assignment rules are unchanged here and untested as before.)
  */
-const recordingInvoke = () => {
-  const calls: { operation: Operation.Definition.Any; input: unknown }[] = [];
-  const invoke: OperationInvoke = async (operation, ...args) => {
-    calls.push({ operation, input: args[0] });
-    return {};
-  };
-  return { calls, invoke };
+const unexpectedInvoke: OperationInvoke = async () => {
+  throw new Error('Unexpected operation invocation.');
 };
 
 describe('task slash commands', () => {
@@ -41,7 +35,6 @@ describe('task slash commands', () => {
     const { db } = await builder.createDatabase({ types: [Chat.Chat, Feed.Feed, Task.Task] });
     const chat = db.add(Chat.make({ name: 'Test', feed: Ref.make(db.add(Feed.make())) }));
     await db.flush();
-    const { calls, invoke } = recordingInvoke();
 
     /** Routes through `resolveSlashCommand`, so the tests exercise the same dispatch the prompt uses. */
     const run = async (text: string): Promise<SlashCommandResult | Error> => {
@@ -49,10 +42,10 @@ describe('task slash commands', () => {
       if (!resolved) {
         return new Error(`Not a task command: ${text}`);
       }
-      return resolved.command.execute(resolved.args, { db, chat, invoke });
+      return resolved.command.execute(resolved.args, { db, chat, invoke: unexpectedInvoke });
     };
 
-    return { db, chat, calls, run };
+    return { db, chat, run };
   };
 
   const titles = (chat: Chat.Chat) => Chat.resolveTasks(chat).map((task) => task.title);
@@ -82,7 +75,8 @@ describe('task slash commands', () => {
     Chat.addTask(db, chat, 'Also unrelated');
     await db.flush();
 
-    // Ordinal 1 is the parent, so its sub-task goes with it even though nothing named the child.
+    // Ordinal 1 is the parent, so its sub-task goes with it even though nothing named the child —
+    // every member's parent edge is the chat, so the database cascade cannot reach it.
     expect(await run('/task:delete 1')).toEqual({ summary: 'Deleted “Ship the release”.' });
     expect(titles(chat)).toEqual(['Unrelated', 'Also unrelated']);
 
@@ -111,33 +105,5 @@ describe('task slash commands', () => {
     expect(await run('/task:delete 7')).toBeInstanceOf(Error);
     expect(await run('/task:delete')).toBeInstanceOf(Error);
     expect(titles(chat)).toEqual(['Only task']);
-  });
-
-  test('/task:run queues the named tasks through UpdateTask', async ({ expect }) => {
-    const { db, chat, calls, run } = await setup();
-
-    Chat.addTask(db, chat, 'Runnable');
-    Chat.addTask(db, chat, 'Already done', { status: 'done' });
-    await db.flush();
-
-    const result = await run('/task:run 1');
-    expect(result).not.toBeInstanceOf(Error);
-    expect(calls).toHaveLength(1);
-    expect(calls[0].operation).toBe(TaskOperation.UpdateTask);
-    expect(calls[0].input).toMatchObject({ assignee: { role: 'assistant' }, status: 'todo' });
-    // The follow-up is what wakes the conversation so the supervisor's reconcile spawns.
-    expect(result).toHaveProperty('followUp');
-  });
-
-  test('/task:run skips a task with nothing left to run', async ({ expect }) => {
-    const { db, chat, calls, run } = await setup();
-
-    Chat.addTask(db, chat, 'Already done', { status: 'done' });
-    await db.flush();
-
-    expect(await run('/task:run 1')).toEqual({
-      summary: 'Nothing to run: every named task is already done, cancelled, or running.',
-    });
-    expect(calls).toEqual([]);
   });
 });

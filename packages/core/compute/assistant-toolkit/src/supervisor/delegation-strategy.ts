@@ -14,7 +14,7 @@ import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Message, Task, TaskSet } from '@dxos/types';
+import { Message, Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { RunInstructions } from '../operations';
@@ -107,7 +107,7 @@ const findPendingTasks = (
         task.assignee?.role === 'assistant' &&
         (task.status ?? 'todo') === 'todo' &&
         !activeIds.has(task.id) &&
-        TaskSet.isTaskReady(tasks, task),
+        Task.isTaskReady(tasks, task),
     );
   });
 

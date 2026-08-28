@@ -62,7 +62,7 @@ export const addMilestoneToSet = (taskSet: TaskSet.TaskSet, milestone: Milestone
 
 /** Every task in `taskSet` transitively under `task`, including `task` itself. Cycle-safe. */
 export const collectSubtree = (taskSet: TaskSet.TaskSet, task: Task.Task): Task.Task[] =>
-  TaskSet.subtree(TaskSet.resolveTasks(taskSet), task);
+  Task.subtree(TaskSet.resolveTasks(taskSet), task);
 
 /**
  * Remove tasks from the set's array. The database cascade deletes the objects themselves along the

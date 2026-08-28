@@ -13,7 +13,7 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Annotation, Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
-import { Task, TaskSet } from '@dxos/types';
+import { Task } from '@dxos/types';
 
 import { HarnessContextError } from '../errors';
 
@@ -102,17 +102,17 @@ export const addTask = (
  * Delete a task and its sub-tasks: the whole subtree leaves the chat's `tasks` array and the
  * database. Collected here rather than left to the cascade, because every member's parent edge is
  * the chat itself, so removing a parent task would not reach its children. `dependsOn` refs
- * pointing at the removed tasks are left dangling by design — {@link TaskSet.isTaskReady} reads a
+ * pointing at the removed tasks are left dangling by design — {@link Task.isTaskReady} reads a
  * dangling dependency as satisfied.
  */
 export const deleteTask = (db: Database.Database, chat: Chat, task: Task.Task): Task.Task[] => {
-  const subtree = TaskSet.subtree(resolveTasks(chat), task);
+  const subtree = Task.subtree(resolveTasks(chat), task);
   const ids = new Set(subtree.map((member) => member.id));
   Obj.update(chat, (chat) => {
     // Matched on the ref's own entity id rather than its target, so an entry whose object is not
     // loaded is still swept.
     chat.tasks = chat.tasks.filter((ref) => {
-      const id = TaskSet.refId(ref);
+      const id = Task.refId(ref);
       return id === undefined || !ids.has(id);
     });
   });
@@ -151,7 +151,7 @@ export const loadTasks = (chat: Chat): Effect.Effect<Task.Task[], never, Databas
     const tasks = yield* Effect.forEach(chat.tasks, (task) =>
       Database.load(task).pipe(Effect.orElseSucceed(() => undefined)),
     );
-    return TaskSet.dedupeById(tasks);
+    return Task.dedupeById(tasks);
   });
 
 /**
@@ -159,7 +159,7 @@ export const loadTasks = (chat: Chat): Effect.Effect<Task.Task[], never, Databas
  * affordance, a slash command). Unresolved refs contribute nothing rather than throwing.
  */
 export const resolveTasks = (chat: Chat): Task.Task[] =>
-  TaskSet.dedupeById(chat.tasks.filter((ref) => ref.isAvailable).map((ref) => ref.target));
+  Task.dedupeById(chat.tasks.filter((ref) => ref.isAvailable).map((ref) => ref.target));
 
 /** A task is open until it reaches a terminal status. */
 export const isOpenTask = (task: Task.Task): boolean => (task.status ?? 'todo') === 'todo' || task.status === 'started';

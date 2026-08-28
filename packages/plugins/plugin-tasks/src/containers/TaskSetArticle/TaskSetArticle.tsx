@@ -13,7 +13,7 @@ import { useObject } from '@dxos/echo-react';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { TaskList, type TaskPatch, type TaskPlacement } from '@dxos/react-ui-task';
-import { type Task, TaskSet } from '@dxos/types';
+import { Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
 import { TaskOperation } from '#types';
@@ -123,7 +123,7 @@ const useSetTasks = (taskSet: TaskSet.TaskSet): Task.Task[] => {
   const [taskSetSnapshot] = useObject(taskSet);
   const taskRefs = taskSetSnapshot?.tasks;
   const atom = useMemo(
-    () => Atom.make((get) => TaskSet.dedupeById((taskRefs ?? []).map((ref) => get(ref.atom)))),
+    () => Atom.make((get) => Task.dedupeById((taskRefs ?? []).map((ref) => get(ref.atom)))),
     [taskRefs],
   );
   return useAtomValue(atom);

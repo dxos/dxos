@@ -25,7 +25,7 @@ import {
 import { type MessageRange, type OutlineMarker, Outline as OutlineRail, useFeedModel } from '@dxos/react-ui-feed';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { TaskList } from '@dxos/react-ui-task';
-import { Message, TaskSet } from '@dxos/types';
+import { Message, Task } from '@dxos/types';
 import { keyToFallback } from '@dxos/util';
 
 import { useChatToolbarActions, useDebug } from '#hooks';
@@ -596,7 +596,7 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
   const [chatSnapshot] = useObject(chat);
   const taskRefs = chatSnapshot?.tasks;
   const tasks = useAtomValue(
-    useMemo(() => Atom.make((get) => TaskSet.dedupeById((taskRefs ?? []).map((ref) => get(ref.atom)))), [taskRefs]),
+    useMemo(() => Atom.make((get) => Task.dedupeById((taskRefs ?? []).map((ref) => get(ref.atom)))), [taskRefs]),
   );
 
   // `Chat.addTask` is the shared primitive the task commands use, so the parent edge and the

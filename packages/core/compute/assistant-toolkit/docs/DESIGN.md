@@ -2,7 +2,7 @@
 
 How the assistant tracks durable tasks and delegates them to sub-agents. Everything described
 here lives in this package unless noted; the UI surface is `@dxos/react-ui-task`, the schema is
-`@dxos/types` (`Task`, `TaskSet`), and the supervisor loop plumbing is `@dxos/agent-runtime`.
+`@dxos/types` (`Task`), and the supervisor loop plumbing is `@dxos/agent-runtime`.
 
 ## Model
 
@@ -10,7 +10,9 @@ here lives in this package unless noted; the UI surface is `@dxos/react-ui-task`
   the shape `TaskSet.tasks` has: flat, sub-tasks included, array order canonical. `SetParent` on
   the field makes every task a child of the chat, so a conversation's checklist cascades with it.
   `Chat.addTask`/`Chat.deleteTask` write it, `Chat.loadTasks` (Effect) and `Chat.resolveTasks`
-  (already-resolved refs) read it. A project chat's checklist is its own — `Project.taskSet` is
+  (already-resolved refs) read it. The derived views over a task list — hierarchy, readiness,
+  milestone grouping — are `Task.*` in `@dxos/types`, since they take a plain array and no
+  container. A project chat's checklist is its own — `Project.taskSet` is
   the project's durable ledger, written by the project verbs, not by conversations. There is no
   markdown mirror: task status lives only on the `Task`.
 - **`Task.status`**: `todo | started | done | failed | cancelled`. `started` is stamped by the
@@ -18,7 +20,7 @@ here lives in this package unless noted; the UI surface is `@dxos/react-ui-task`
   live process, and an orphaned `started` is detectable.
 - **`Task.dependsOn`**: execution-ordering refs (orthogonal to `parentTask` hierarchy and
   `milestone` grouping). A task is _ready_ when every dependency resolved within the checklist is
-  `done` (`TaskSet.isTaskReady`; a dangling ref reads as satisfied).
+  `done` (`Task.isTaskReady`; a dangling ref reads as satisfied).
 
 ## Prompt surface
 

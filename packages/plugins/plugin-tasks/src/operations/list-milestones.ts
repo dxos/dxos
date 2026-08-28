@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, type Obj, type Ref } from '@dxos/echo';
-import { TaskSet } from '@dxos/types';
+import { Task, TaskSet } from '@dxos/types';
 
 import { TaskOperation } from '#types';
 
@@ -42,7 +42,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.ListMilestones> = Task
 
       const tasks = TaskSet.resolveTasks(taskSet);
       const milestones = TaskSet.resolveMilestones(taskSet).map((milestone) => {
-        const { total, done } = TaskSet.milestoneProgress(tasks, milestone);
+        const { total, done } = Task.milestoneProgress(tasks, milestone);
         return {
           id: milestone.id,
           name: milestone.name,

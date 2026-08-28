@@ -1,6 +1,8 @@
 ---
 '@dxos/assistant-toolkit': minor
 '@dxos/plugin-assistant': minor
+'@dxos/plugin-tasks': minor
+'@dxos/react-ui-task': minor
 '@dxos/types': minor
 ---
 
@@ -10,4 +12,6 @@ What this removes: the lazy task-set dance. `Chat.ensureTaskSet` / `ensureTaskSe
 
 Behaviour change: a project chat's checklist is now its own rather than the owning project's `TaskSet`, so a project's chats no longer share one ledger and delegated tasks no longer appear in the project's task list. `Project.taskSet` is unchanged and remains the project's durable ledger, written by the project verbs.
 
-`@dxos/types` gains `TaskSet.subtree` (every task transitively under a task, cycle-safe) and exports `TaskSet.refId`, so any holder of an ordered task-ref array sweeps its membership through one ref-uri parse.
+**`@dxos/types` — the derived task views move from `TaskSet` to `Task`.** They always took a plain `readonly Task[]` and never touched a `TaskSet`; they lived in that module only because a task set used to be the sole container. With `Chat` as a second container the misplacement forced consumers to import a type they do not use, so `refId`, `dedupeById`, `parentTaskId`, `rootTasks`, `subTasks`, `isTaskReady`, `effectiveMilestoneId(s)`, `tasksForMilestone`, `backlogTasks`, `milestoneProgress` and `Progress` are now `Task.*`, joined by a new `Task.subtree` (every task transitively under one, cycle-safe — what a delete has to sweep out of a membership array). `TaskSet` keeps only what takes a task set: the schema, `make`, `instanceOf`, `addTask`, `deleteTask`, `resolveTasks`, `resolveMilestones`.
+
+Call sites update mechanically (`TaskSet.rootTasks` → `Task.rootTasks`, and so on). `react-ui-task` and `plugin-tasks` follow the rename; `assistant-toolkit` and `plugin-assistant` now reference `TaskSet` nowhere at all.
