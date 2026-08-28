@@ -20,11 +20,19 @@ claude plugin marketplace add dxos/dxos
 claude plugin install dxos@dxos
 ```
 
-In the Claude Code desktop app, run the same two as slash commands in any session:
-`/plugin marketplace add dxos/dxos`, then `/plugin install dxos@dxos`.
+In the Claude Code desktop app, run the first command in a terminal to register
+the marketplace, then install from the plugin manager: the **+** button beside
+the prompt box, **Plugins**, **Add plugin**, and pick `dxos`. **Manage plugins**
+enables, disables and uninstalls. The app reads the same `~/.claude` config the
+CLI writes, so either route lands the plugin in the next desktop session.
 
 That is the whole install for the default `file` backend. `/dxos:project` works
 immediately, against a committed `registry.yml`.
+
+The plugin also ships the `composer` connector, which only the `mcp` backend
+uses. Staying on `file`, run `/mcp`, select `composer`, and toggle it off.
+Toggle it back on if you switch backends, which is what step 1 below
+authenticates.
 
 The Claude **Desktop** app is a different product and does not run plugins at all:
 no hooks, so no `/dxos:project`. You can still add the MCP server there by URL as
