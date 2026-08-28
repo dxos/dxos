@@ -15,7 +15,7 @@ export default Config2.make({
       capability, authenticating via a plugin-connector Connection, so drafts authored in
       Composer can be created and listed on Typefully.
     `,
-    icon: { key: 'ph--paper-plane-tilt--regular', hue: 'sky' },
+    icon: { key: 'ph--feather--regular', hue: 'sky' },
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-typefully',
     spec: 'PLUGIN.mdl',
     tags: ['labs'],
