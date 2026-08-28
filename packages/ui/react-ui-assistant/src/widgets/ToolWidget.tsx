@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Icon, IconButton, SystemIconButton, useTranslation } from '@dxos/react-ui';
+import { Icon, IconBlock, IconButton, SystemIconButton, useTranslation } from '@dxos/react-ui';
 import { TogglePanel, type TogglePanelRootProps } from '@dxos/react-ui-components';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type ContentBlock } from '@dxos/types';
@@ -156,49 +156,43 @@ const ToolPanel = ({ calls, onChangeOpen }: ToolPanelProps) => {
 
   // A lone call owns the panel itself: a summary above one row says the same thing twice, and the
   // outer disclosure is the one that opens onto its payload.
-  const only = calls.length === 1 ? calls[0] : undefined;
-  const header = only?.title ?? summary;
+  const single = calls.length === 1 ? calls[0] : undefined;
+  const header = single?.title ?? summary;
 
   return (
-    <TogglePanel.Root open={open} onChangeOpen={setOpen}>
+    // No reveal animation: the detail mounts and unmounts in one frame while an animated height
+    // ramps over 250ms, and during the ramp the editor scrolls to reach content its box has not
+    // grown to hold yet — a scrollbar on open and a flicker on close.
+    <TogglePanel.Root open={open} duration={0} onChangeOpen={setOpen}>
       <TogglePanel.Content>
-        {/* A lone call is named by this header rather than by a row, so the header carries the row's
-            test id — "a tool call is on screen" is one question, not two. */}
         <TogglePanel.Header
-          classNames='flex items-center gap-2 text-sm'
-          data-testid={only ? 'assistant.tool-call' : 'assistant.tool-run'}
+          data-testid={single ? 'assistant.tool-call' : 'assistant.tool-run'}
+          icon={<Icon icon={icon} size={4} />}
         >
-          <div className='w-full grid grid-cols-[1fr_auto] items-center gap-2'>
-            {/* `tabular-nums` so a rising count does not shift the text beside it, and the counts
-                are `shrink-0` so a long tool name truncates instead of eliding them. */}
-            <span className='flex min-w-0 items-center gap-1 text-description tabular-nums'>
-              <span className={mx('truncate', only?.error !== undefined && 'text-error')}>{header}</span>
-              {count !== undefined && <span className='shrink-0'>({count})</span>}
-              {failed > 0 && <span className='shrink-0 text-error'>· {t('tool-failed.label', { count: failed })}</span>}
-            </span>
-            <div className='p-1'>
-              <Icon icon={icon} size={4} />
-            </div>
-          </div>
+          <span className='flex min-w-0 items-center gap-1 text-description tabular-nums'>
+            <span className={mx('truncate', single?.error !== undefined && 'text-error')}>{header}</span>
+            {count !== undefined && <span className='shrink-0'>({count})</span>}
+            {failed > 0 && <span className='shrink-0 text-error'>· {t('tool-failed.label', { count: failed })}</span>}
+          </span>
         </TogglePanel.Header>
         <TogglePanel.Body>
-          {only ? (
-            // Mounted only while open, as a row's detail is: a collapsed body clips its content but
-            // the content is still laid out, and the editor scrolls behind the panel to reach it.
-            open && <ToolCallDetail call={only} classNames='px-2' />
-          ) : (
-            <TogglePanel.Viewport>
-              {/* Bordered above as well as between, so the list reads as a group under the summary. */}
-              <div
-                role='list'
-                className='flex flex-col border-t border-subdued-separator divide-y divide-subdued-separator'
-              >
-                {calls.map((call) => (
-                  <ToolCallRow key={call.id} call={call} onChangeOpen={onChangeOpen} />
-                ))}
-              </div>
-            </TogglePanel.Viewport>
-          )}
+          <TogglePanel.Viewport>
+            {/* Mounted with the disclosure: a collapsed body clips its content but still lays it
+                out, and the editor measures that as content to scroll to. */}
+            {open &&
+              (single ? (
+                <ToolCallDetail call={single} />
+              ) : (
+                <div
+                  role='list'
+                  className='flex flex-col border-t border-subdued-separator divide-y divide-subdued-separator'
+                >
+                  {calls.map((call) => (
+                    <ToolCallRow key={call.id} call={call} onChangeOpen={onChangeOpen} />
+                  ))}
+                </div>
+              ))}
+          </TogglePanel.Viewport>
         </TogglePanel.Body>
       </TogglePanel.Content>
     </TogglePanel.Root>
@@ -267,8 +261,8 @@ const ToolCallDetail = ({ call, classNames }: { call: ToolCallEntry; classNames?
 
 const ToolSection = ({ label, data }: { label: string; data: unknown }) => (
   <div className='flex flex-col'>
-    <div className='flex px-1 items-center justify-between'>
-      <span className='ps-1 text-sm text-description'>{label}</span>
+    <div className='flex px-2 items-center justify-between'>
+      <span className='text-sm text-description'>{label}</span>
       <SystemIconButton.Clipboard variant='ghost' density='sm' iconOnly size={4} onCopy={() => JSON.stringify(data)} />
     </div>
     <JsonHighlighter
