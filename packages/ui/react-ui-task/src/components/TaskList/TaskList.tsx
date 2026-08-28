@@ -465,12 +465,8 @@ const useTaskDrag = ({
           const { clientX, clientY } = location.initial.input;
           // Offset by where the grip was grabbed, so the preview does not jump under the cursor.
           const offset = { x: clientX - left, y: clientY - top };
-          if (rows.length < 2) {
-            // A leaf (or a collapsed branch) is one row: the live element is a better image than a
-            // clone, since it keeps the subgrid tracks it inherits from the list.
-            nativeSetDragImage?.(element, offset.x, offset.y);
-            return;
-          }
+          // Always a clone, one row or many: the live element cannot be made translucent without the
+          // row itself flashing before it is lifted out.
           setCustomNativeDragPreview({
             nativeSetDragImage,
             getOffset: () => offset,
@@ -576,6 +572,9 @@ const subtreeRows = (element: HTMLElement, tasks: readonly Task.Task[], task: Ta
     : [element];
 };
 
+/** Translucent enough to read as picked up rather than dropped, while its own text stays legible. */
+const DRAG_PREVIEW_OPACITY = '0.8';
+
 /**
  * Clones the subtree into the drag preview. The container is made a grid carrying the list's own
  * track sizes: the rows are `grid-cols-subgrid`, so without them a detached copy collapses to its
@@ -592,8 +591,10 @@ const renderSubtreePreview = (container: HTMLElement, element: HTMLElement, rows
     container.style.gridAutoRows = listStyle.gridAutoRows;
     container.style.alignItems = listStyle.alignItems;
   }
-  // The preview is torn off the page, so it needs its own ground to sit on.
+  // The preview is torn off the page, so it needs its own ground to sit on — and the opacity reads
+  // as "in hand", which is what distinguishes it from the rows it is being dragged over.
   container.classList.add('bg-base-surface');
+  container.style.opacity = DRAG_PREVIEW_OPACITY;
   for (const row of rows) {
     container.appendChild(row.cloneNode(true));
   }
