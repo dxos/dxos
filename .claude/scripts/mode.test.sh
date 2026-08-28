@@ -123,12 +123,13 @@ check '7b context still carries it' '1' "$(printf '%s' "$out" | grep -c '^- FOCU
 echo '=== 8. an unreadable pin degrades to unpinned instead of wedging'
 reset
 printf 'terse' > "$state"
-printf 'stuck' > "$focus"
-chmod 000 "$focus"
+# A directory, not `chmod 000`: root ignores the mode bits, so on a privileged
+# runner the pin would still be readable and this case would silently not run.
+mkdir "$focus"
 out=$(run "$(payload 'status?')" 2> /dev/null)
 check '8a no FOCUS emitted' '0' "$(printf '%s' "$out" | grep -c '^- FOCUS:')"
 check '8b rules still emitted' '1' "$(printf '%s' "$out" | grep -c 'RESPONSE RULES')"
-chmod 600 "$focus"
+rmdir "$focus"
 
 echo '=== 9. an over-long pin is truncated'
 reset

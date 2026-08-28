@@ -191,7 +191,7 @@ told to land a PR would still pick up adjacent fixes and poll CI between turns.
 - [x] **The pin bans scope creep and CI polling** — no adjacent work, no
       offering it, no monitoring CI/PR/background state unless that IS the pin,
       and an off-task request gets one line plus a numbered choice.
-- [x] **`scripts/mode.test.sh`** — 35 assertions feeding the hook the event's
+- [x] **`scripts/mode.test.sh`** — 36 assertions feeding the hook the event's
       JSON, run against a throwaway `CLAUDE_PROJECT_DIR` so a test run cannot
       clobber the state of the session running it.
 
