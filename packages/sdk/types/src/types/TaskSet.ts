@@ -345,8 +345,8 @@ export const collectSubtree = (task: Task.Task): Effect.Effect<Task.Task[], neve
     const subtree: Task.Task[] = [];
     const seen = new Set<string>();
     const queue: Task.Task[] = [task];
-    while (queue.length > 0) {
-      const current = queue.shift()!;
+    for (let index = 0; index < queue.length; index++) {
+      const current = queue[index];
       if (seen.has(current.id)) {
         continue;
       }
