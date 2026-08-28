@@ -5,7 +5,6 @@
 ```ts
 import {
   useObject, // Subscribe to a single Echo object or Ref
-  useObjects, // Subscribe to multiple Refs
   useQuery, // Reactive query subscription
   useType, // Type (schema registry) subscription
 } from '@dxos/echo-react';
@@ -34,11 +33,15 @@ const [name, setName] = useObject(obj, 'name');
 
 ### Subscribing to a Ref
 
-Automatically dereferences the Ref and handles async loading.
+Automatically dereferences the Ref and handles async loading. A deleted target reads as `undefined`,
+the same as a target that has not loaded — deleted objects are invisible by default throughout the
+API.
 
 ```ts
 const [assignee, setAssignee] = useObject(task.assignee);
-assignee?.name; // undefined until the Ref loads
+assignee?.name; // undefined until the Ref loads, and undefined if the target is deleted
+
+const [ghost] = useObject(task.assignee, { deleted: 'include' }); // resolves a tombstoned target
 ```
 
 ### Updating objects
@@ -70,17 +73,6 @@ const [target] = useObject(maybeRef); // Obj.Snapshot<T> | undefined
 
 ---
 
-## useObjects
-
-Subscribe to multiple Refs' target objects. Returns loaded snapshots, filtering out unloaded refs.
-
-```ts
-const snapshots = useObjects(task.watchers);
-snapshots.length; // only includes refs that have loaded
-```
-
----
-
 ## useQuery
 
 Create a reactive subscription to a database query or filter.
@@ -102,6 +94,20 @@ const tasks = useQuery(space.db, Filter.type(Task, { completed: false }));
 - Accepts both `Query` and `Filter` objects (filters are converted to queries internally).
 - The query is memoized based on its AST -- no need to wrap with `useMemo`.
 - Returns an empty array when `resource` is `undefined`.
+- Deleted objects are excluded by default; opt in with `Query.type(Task).options({ deleted: 'include' })`.
+
+### Counting
+
+Cardinality is a query, order is the array: when the UI shows a count, take it from a `useQuery`
+result, never from the length of a ref array. The query count is answered from the index and only
+moves on real writes and replication; a ref array's length varies with which targets happen to be
+loaded locally.
+
+```ts
+const members = useQuery(space.db, Filter.childOf(taskSet));
+members.length; // stable count, deletion respected
+taskSet.tasks.length; // locally visible entries -- not a number to display
+```
 
 ---
 
@@ -139,23 +145,18 @@ interface ObjectPropUpdateCallback<T> {
 
 ### useObject signatures
 
-| Signature                  | Input                        | Return                                                    |
-| -------------------------- | ---------------------------- | --------------------------------------------------------- |
-| `useObject(ref)`           | `Ref.Ref<T>`                 | `[Obj.Snapshot<T> \| undefined, ObjectUpdateCallback<T>]` |
-| `useObject(ref)`           | `Ref.Ref<T> \| undefined`    | `[Obj.Snapshot<T> \| undefined, ObjectUpdateCallback<T>]` |
-| `useObject(obj)`           | `T`                          | `[Obj.Snapshot<T>, ObjectUpdateCallback<T>]`              |
-| `useObject(obj)`           | `T \| undefined`             | `[Obj.Snapshot<T> \| undefined, ObjectUpdateCallback<T>]` |
-| `useObject(objOrRef)`      | `T \| Ref.Ref<T>`            | `[Obj.Snapshot<T> \| undefined, ObjectUpdateCallback<T>]` |
-| `useObject(obj, property)` | `T, K`                       | `[T[K], ObjectPropUpdateCallback<T[K]>]`                  |
-| `useObject(obj, property)` | `T \| undefined, K`          | `[T[K] \| undefined, ObjectPropUpdateCallback<T[K]>]`     |
-| `useObject(ref, property)` | `Ref.Ref<T>, K`              | `[T[K] \| undefined, ObjectPropUpdateCallback<T[K]>]`     |
-| `useObject(ref, property)` | `Ref.Ref<T> \| undefined, K` | `[T[K] \| undefined, ObjectPropUpdateCallback<T[K]>]`     |
-
-### useObjects signature
-
-| Signature          | Input                   | Return              |
-| ------------------ | ----------------------- | ------------------- |
-| `useObjects(refs)` | `readonly Ref.Ref<T>[]` | `Obj.Snapshot<T>[]` |
+| Signature                  | Input                                | Return                                                    |
+| -------------------------- | ------------------------------------ | --------------------------------------------------------- |
+| `useObject(ref)`           | `Ref.Ref<T>`                         | `[Obj.Snapshot<T> \| undefined, ObjectUpdateCallback<T>]` |
+| `useObject(ref)`           | `Ref.Ref<T> \| undefined`            | `[Obj.Snapshot<T> \| undefined, ObjectUpdateCallback<T>]` |
+| `useObject(obj)`           | `T`                                  | `[Obj.Snapshot<T>, ObjectUpdateCallback<T>]`              |
+| `useObject(obj)`           | `T \| undefined`                     | `[Obj.Snapshot<T> \| undefined, ObjectUpdateCallback<T>]` |
+| `useObject(objOrRef)`      | `T \| Ref.Ref<T>`                    | `[Obj.Snapshot<T> \| undefined, ObjectUpdateCallback<T>]` |
+| `useObject(obj, property)` | `T, K`                               | `[T[K], ObjectPropUpdateCallback<T[K]>]`                  |
+| `useObject(obj, property)` | `T \| undefined, K`                  | `[T[K] \| undefined, ObjectPropUpdateCallback<T[K]>]`     |
+| `useObject(ref, property)` | `Ref.Ref<T>, K`                      | `[T[K] \| undefined, ObjectPropUpdateCallback<T[K]>]`     |
+| `useObject(ref, property)` | `Ref.Ref<T> \| undefined, K`         | `[T[K] \| undefined, ObjectPropUpdateCallback<T[K]>]`     |
+| `useObject(ref, options)`  | `Ref.Ref<T>, { deleted: 'include' }` | `[Obj.Snapshot<T> \| undefined, ObjectUpdateCallback<T>]` |
 
 ### useQuery signatures
 
