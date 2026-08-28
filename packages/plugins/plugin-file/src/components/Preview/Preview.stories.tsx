@@ -59,7 +59,8 @@ export const Search: Story = {
     await userEvent.type(input, 'SmartHome');
     // The count comes from the fixture, so it is matched loosely rather than pinned to a number a
     // replacement fixture would invalidate.
-    await waitFor(async () => await expect(canvas.getByText(/^1 of \d+$/)).toBeInTheDocument());
+    // Generous, because pdf.js is loaded on demand and the text index is built after the pages.
+    await waitFor(async () => await expect(canvas.getByText(/^1 of \d+$/)).toBeInTheDocument(), { timeout: 20_000 });
     // Every match is highlighted, measured from the rendered text layer.
     await expect(canvasElement.querySelectorAll('.dx-pdf-highlight').length).toBeGreaterThan(0);
 

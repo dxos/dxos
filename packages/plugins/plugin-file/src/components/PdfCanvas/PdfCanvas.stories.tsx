@@ -74,7 +74,7 @@ export const LandscapeFitPage: Story = {
       },
       { timeout: 20_000 },
     );
-    const container = canvasElement.querySelector('[data-page]')!.closest('div[class*="overflow-auto"]')!;
+    const container = canvasElement.querySelector('[data-pdf-canvas]')!;
     const page = canvasElement.querySelector('[data-page]')!;
     // The whole page fits, rather than only its width.
     await expect(page.getBoundingClientRect().height).toBeLessThanOrEqual(container.getBoundingClientRect().height);

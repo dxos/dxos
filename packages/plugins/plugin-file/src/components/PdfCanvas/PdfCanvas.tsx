@@ -8,13 +8,7 @@ import { composeRefs } from '@radix-ui/react-compose-refs';
 // The `legacy` build, not the default one: the default calls `Map.prototype.getOrInsertComputed`,
 // which is new enough that the Chromium the storybook tests run in throws on it. Legacy targets a
 // wider baseline and is the variant pdf.js publishes for exactly this.
-import {
-  GlobalWorkerOptions,
-  type PDFDocumentProxy,
-  type RenderTask,
-  TextLayer,
-  getDocument,
-} from 'pdfjs-dist/legacy/build/pdf.mjs';
+import type { PDFDocumentLoadingTask, PDFDocumentProxy, RenderTask } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import workerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
 import React, { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
@@ -25,9 +19,25 @@ import { meta } from '#meta';
 
 import { type PdfMatch, type PdfPageText, findMatches, markSpan } from './pdf-search';
 
-// Bundled and served by us rather than fetched from a CDN: the app must render a PDF offline, and a
-// worker from another origin is also a CSP entry we would otherwise have to keep in step.
-GlobalWorkerOptions.workerSrc = workerUrl;
+/**
+ * pdf.js, loaded on first use rather than on import.
+ *
+ * At module scope it joins the plugin's own module graph, so every consumer of the components barrel
+ * pays for the whole PDF engine at load — enough to push `plugin-file` past its activation timeout
+ * and take plugins that depend on it down with it. Memoised, so the cost is paid once.
+ *
+ * The worker is bundled and served by us rather than fetched from a CDN: the app must render a PDF
+ * offline, and a worker on another origin is also a CSP entry we would have to keep in step.
+ */
+let pdfjs: Promise<typeof import('pdfjs-dist/legacy/build/pdf.mjs')> | undefined;
+
+const loadPdfjs = () => {
+  pdfjs ??= import('pdfjs-dist/legacy/build/pdf.mjs').then((module) => {
+    module.GlobalWorkerOptions.workerSrc = workerUrl;
+    return module;
+  });
+  return pdfjs;
+};
 
 /** How a page is scaled to the viewport. */
 export type PdfFit = 'width' | 'page';
@@ -99,6 +109,10 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
     // clicking next twice quickly advances two pages instead of re-targeting the same one — smooth
     // scrolling means the observed page has not moved yet on the second click.
     const targetRef = useRef<number | undefined>(undefined);
+    // Read by the imperative navigation callbacks, which must stay stable for `useImperativeHandle`
+    // while still seeing the current fit mode and page count.
+    const fitRef = useRef<PdfFit>(fit);
+    const pageCountRef = useRef(0);
     const [pageCount, setPageCount] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const [matches, setMatches] = useState<PdfMatch[]>([]);
@@ -196,6 +210,7 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
           // each span; `--scale-factor` alone leaves every glyph at the default 16px.
           text.style.setProperty('--total-scale-factor', String(scale));
           text.style.setProperty('--scale-factor', String(scale));
+          const { TextLayer } = await loadPdfjs();
           const layer = new TextLayer({
             textContentSource: await page.getTextContent(),
             container: text,
@@ -279,69 +294,75 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
       setPageCount(0);
       setMatches([]);
 
-      const task = getDocument({ url });
-      void task.promise.then(
-        async (pdf) => {
-          // The loading task owns teardown; the cleanup below destroys it and the document with it.
-          if (cancelled) {
-            return;
-          }
-          documentRef.current = pdf;
-          sizesRef.current = [];
-          renderedRef.current = [];
-
-          // Dimensions first, and only dimensions: they size every placeholder so the scrollbar is
-          // honest from the outset, and they cost one cheap `getPage` each rather than a raster.
-          for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+      let task: PDFDocumentLoadingTask | undefined;
+      void loadPdfjs().then(({ getDocument }) => {
+        if (cancelled) {
+          return;
+        }
+        task = getDocument({ url });
+        return task.promise.then(
+          async (pdf) => {
+            // The loading task owns teardown; the cleanup below destroys it and the document with it.
             if (cancelled) {
               return;
             }
-            const { width, height } = (await pdf.getPage(pageNumber)).getViewport({ scale: 1 });
-            sizesRef.current[pageNumber - 1] = { width, height };
-          }
-          if (cancelled) {
-            return;
-          }
-          setPageCount(pdf.numPages);
-          onLoad?.(pdf.numPages);
+            documentRef.current = pdf;
+            sizesRef.current = [];
+            renderedRef.current = [];
 
-          // Text of every page, resolved once. Searching re-reads it on every keystroke, and
-          // `getTextContent` is a worker round-trip per page — fine once, not once per character.
-          // After the sizes, so the document is on screen before the index is built.
-          const pages: PdfPageText[] = [];
-          for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+            // Dimensions first, and only dimensions: they size every placeholder so the scrollbar is
+            // honest from the outset, and they cost one cheap `getPage` each rather than a raster.
+            for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+              if (cancelled) {
+                return;
+              }
+              const { width, height } = (await pdf.getPage(pageNumber)).getViewport({ scale: 1 });
+              sizesRef.current[pageNumber - 1] = { width, height };
+            }
             if (cancelled) {
               return;
             }
-            try {
-              const content = await (await pdf.getPage(pageNumber)).getTextContent();
-              pages.push({ items: content.items.map((item) => ('str' in item ? item.str : '')) });
-            } catch (error) {
-              // A page whose text cannot be extracted is still worth showing; it just never matches.
-              log.warn('failed to read page text', { pageNumber, error });
-              pages.push({ items: [] });
+            setPageCount(pdf.numPages);
+            onLoad?.(pdf.numPages);
+
+            // Text of every page, resolved once. Searching re-reads it on every keystroke, and
+            // `getTextContent` is a worker round-trip per page — fine once, not once per character.
+            // After the sizes, so the document is on screen before the index is built.
+            const pages: PdfPageText[] = [];
+            for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+              if (cancelled) {
+                return;
+              }
+              try {
+                const content = await (await pdf.getPage(pageNumber)).getTextContent();
+                pages.push({ items: content.items.map((item) => ('str' in item ? item.str : '')) });
+              } catch (error) {
+                // A page whose text cannot be extracted is still worth showing; it just never matches.
+                log.warn('failed to read page text', { pageNumber, error });
+                pages.push({ items: [] });
+              }
             }
-          }
-          if (!cancelled) {
-            textRef.current = pages;
-            if (queryRef.current.trim()) {
-              runSearch(queryRef.current);
+            if (!cancelled) {
+              textRef.current = pages;
+              if (queryRef.current.trim()) {
+                runSearch(queryRef.current);
+              }
             }
-          }
-        },
-        () => {
-          if (!cancelled) {
-            setError(true);
-          }
-        },
-      );
+          },
+          () => {
+            if (!cancelled) {
+              setError(true);
+            }
+          },
+        );
+      });
 
       return () => {
         cancelled = true;
         // Cancel before destroying: `task.destroy()` tears down the transport, and any render still
         // awaiting it would reject with `Transport destroyed` after this effect is gone.
         cancelRender();
-        void task.destroy();
+        void task?.destroy();
         documentRef.current = undefined;
         textRef.current = [];
       };
@@ -393,13 +414,15 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
         observer?.disconnect();
         cancelRender();
       };
-    }, [pageCount, fit, renderVisible, cancelRender]);
+    }, [pageCount, fit, currentPage, renderVisible, cancelRender]);
 
     // The page under the top of the viewport is "current" — the same rule the browser's own viewer
     // uses, and the one that matches what a reader considers the page they are on.
     useEffect(() => {
       const container = containerRef.current;
-      if (!container || pageCount === 0) {
+      // In fit-page the visible page IS `currentPage`, so deriving it from scroll would fight the
+      // pager: there is no scrolling, and every page sits at the same offset.
+      if (!container || pageCount === 0 || fit === 'page') {
         return;
       }
 
@@ -424,9 +447,9 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
       container.addEventListener('scroll', onScroll, { passive: true });
       onScroll();
       return () => container.removeEventListener('scroll', onScroll);
-    }, [pageCount]);
+    }, [pageCount, fit]);
 
-    const goToPage = useCallback((page: number, behavior: ScrollBehavior = 'smooth') => {
+    const goToPageByScroll = useCallback((page: number, behavior: ScrollBehavior = 'smooth') => {
       const element = refs.current[page - 1]?.page;
       const container = containerRef.current;
       if (element && container) {
@@ -436,6 +459,18 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
         const delta = element.getBoundingClientRect().top - container.getBoundingClientRect().top;
         container.scrollTo({ top: container.scrollTop + delta - PAGE_MARGIN, behavior });
       }
+    }, []);
+
+    const goToPage = useCallback((page: number, behavior: ScrollBehavior = 'smooth') => {
+      const clamped = Math.min(Math.max(page, 1), pageCountRef.current || 1);
+      // Fit-page shows one page at a time, so navigating is a state change; there is nothing to
+      // scroll within.
+      if (fitRef.current === 'page') {
+        targetRef.current = undefined;
+        setCurrentPage(clamped);
+        return;
+      }
+      goToPageByScroll(clamped, behavior);
     }, []);
 
     const stepPage = useCallback(
@@ -466,6 +501,14 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
       },
       [matches, goToPage],
     );
+
+    useEffect(() => {
+      fitRef.current = fit;
+    }, [fit]);
+
+    useEffect(() => {
+      pageCountRef.current = pageCount;
+    }, [pageCount]);
 
     useImperativeHandle(apiRef, () => ({ goToPage, stepPage, search, goToMatch }), [
       goToPage,
@@ -525,15 +568,28 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
       return { width: Math.floor(size.width * scale), height: Math.floor(size.height * scale) };
     };
 
+    // Fit-page is a paged view, not a scrolled one: the whole point of fitting both axes is that
+    // exactly one page is on screen, so it is centred and the pager moves between pages rather than
+    // scrolling within a column. Fit-width keeps the continuous column, where scrolling is the
+    // natural motion.
+    const single = fit === 'page';
+    const shown = single ? [currentPage - 1] : Array.from({ length: pageCount }, (_, index) => index);
+
     return (
       <div
-        {...composableProps(props, { classNames: 'h-full w-full overflow-auto bg-deck select-text' })}
+        data-pdf-canvas=''
+        {...composableProps(props, {
+          classNames: [
+            'h-full w-full bg-deck select-text',
+            single ? 'overflow-hidden grid place-items-center' : 'overflow-auto',
+          ],
+        })}
         // Two refs on one node: `containerRef` measures the available width for the page scale, and
         // `forwardedRef` belongs to whatever slotted this in.
         ref={composeRefs(containerRef, forwardedRef)}
       >
-        <div role='none' className='flex flex-col items-center gap-4 py-4'>
-          {Array.from({ length: pageCount }, (_, index) => (
+        <div role='none' className={single ? 'contents' : 'flex flex-col items-center gap-4 py-4'}>
+          {shown.map((index) => (
             <div
               key={index}
               data-page={index + 1}
