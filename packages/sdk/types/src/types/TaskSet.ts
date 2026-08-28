@@ -4,11 +4,14 @@
 
 // @import-as-namespace
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Annotation, type Database, DXN, EID, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Database, DXN, EID, type Error, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Format } from '@dxos/echo/Format';
+import { type EntityId } from '@dxos/echo/Key';
+import { BaseError } from '@dxos/errors';
 
 import * as Milestone from './Milestone';
 import * as Task from './Task';
@@ -86,7 +89,7 @@ export const addTask = (
  */
 export const deleteTask = (db: Database.Database, taskSet: TaskSet, task: Task.Task): void => {
   Obj.update(taskSet, (taskSet) => {
-    taskSet.tasks = taskSet.tasks.filter((ref) => refId(ref) !== task.id);
+    taskSet.tasks = taskSet.tasks.filter((ref) => refEntityId(ref) !== task.id);
   });
   db.remove(task);
 };
@@ -102,11 +105,11 @@ export const deleteTask = (db: Database.Database, taskSet: TaskSet, task: Task.T
 //
 
 /**
- * Entity id a ref points at, read off the URI rather than the target: a ref may address the same
- * object locally (`echo:///<id>`) or space-qualified (`echo://<space>/<id>`), and dereferencing is
- * exactly what these helpers must not require.
+ * Entity id a ref points at, read off the URI rather than the target so an unloaded ref still
+ * compares, and parsed rather than string-matched: a ref may address the same object locally
+ * (`echo:///<id>`) or space-qualified (`echo://<space>/<id>`).
  */
-const refId = <T extends Obj.Unknown>(ref: Ref.Ref<T> | undefined): string | undefined => {
+export const refEntityId = <T extends Obj.Unknown>(ref: Ref.Ref<T> | undefined): EntityId | undefined => {
   if (!ref) {
     return undefined;
   }
@@ -146,7 +149,7 @@ export const dedupeById = <T extends Obj.Unknown>(objects: ReadonlyArray<T | und
 };
 
 /** Entity id of a task's parent, exported so a caller walking the tree shares this module's ref-uri parse. */
-export const parentTaskId = (task: Task.Task): string | undefined => refId(task.parentTask);
+export const parentTaskId = (task: Task.Task): string | undefined => refEntityId(task.parentTask);
 
 /**
  * Order query-loaded tasks by the set's `tasks` array — membership order is canonical there, and a
@@ -156,7 +159,7 @@ export const parentTaskId = (task: Task.Task): string | undefined => refId(task.
 export const orderTasks = (tasks: ReadonlyArray<Task.Task>, refs: ReadonlyArray<Ref.Ref<Task.Task>>): Task.Task[] => {
   const position = new Map<string, number>();
   refs.forEach((ref, index) => {
-    const id = refId(ref);
+    const id = refEntityId(ref);
     if (id !== undefined && !position.has(id)) {
       position.set(id, index);
     }
@@ -170,7 +173,7 @@ export const orderTasks = (tasks: ReadonlyArray<Task.Task>, refs: ReadonlyArray<
 export const rootTasks = (tasks: readonly Task.Task[]): Task.Task[] => {
   const present = new Set(tasks.map((task) => task.id));
   return tasks.filter((task) => {
-    const parent = refId(task.parentTask);
+    const parent = refEntityId(task.parentTask);
     return parent === undefined || !present.has(parent);
   });
 };
@@ -178,7 +181,7 @@ export const rootTasks = (tasks: readonly Task.Task[]): Task.Task[] => {
 /** Direct sub-tasks of `task`, in the set's canonical order. */
 export const subTasks = (tasks: readonly Task.Task[], task: Task.Task): Task.Task[] => {
   const parent = task.id;
-  return tasks.filter((candidate) => refId(candidate.parentTask) === parent);
+  return tasks.filter((candidate) => refEntityId(candidate.parentTask) === parent);
 };
 
 /**
@@ -188,7 +191,7 @@ export const subTasks = (tasks: readonly Task.Task[], task: Task.Task): Task.Tas
 export const isTaskReady = (tasks: readonly Task.Task[], task: Task.Task): boolean => {
   const byId = new Map(tasks.map((candidate) => [candidate.id, candidate]));
   return (task.dependsOn ?? []).every((ref) => {
-    const id = refId(ref);
+    const id = refEntityId(ref);
     const dep = id === undefined ? undefined : byId.get(id);
     return !dep || dep.status === 'done';
   });
@@ -231,12 +234,12 @@ export const effectiveMilestoneIds = (tasks: readonly Task.Task[]): Map<string, 
         break;
       }
       path.push(cursorId);
-      const milestone = refId(cursor.milestone);
+      const milestone = refEntityId(cursor.milestone);
       if (milestone !== undefined) {
         found = milestone;
         break;
       }
-      const parentId: string | undefined = refId(cursor.parentTask);
+      const parentId: string | undefined = refEntityId(cursor.parentTask);
       cursor = parentId === undefined ? undefined : byId.get(parentId);
     }
 
@@ -277,4 +280,176 @@ export const milestoneProgress = (tasks: readonly Task.Task[], milestone: Milest
   const counted = tasksForMilestone(tasks, milestone).filter((task) => task.status !== 'cancelled');
   const done = counted.filter((task) => task.status === 'done').length;
   return { total: counted.length, done, ratio: counted.length === 0 ? 0 : done / counted.length };
+};
+
+//
+// Membership. The arrays carry order, and every write that adds or removes a member has to touch
+// them; the ECHO parent edge (membership, written by `SetParent` on the arrays) rides along
+// automatically. Keeping the writes here is what stops the array and the edges from drifting.
+//
+
+/**
+ * The task set a task belongs to, found through the reverse-ref index rather than a backref field:
+ * membership is stated once, in the `tasks` array, and a second field on the task could contradict it.
+ */
+export const findTaskSet = (task: Task.Task): Effect.Effect<TaskSet | undefined, never, Database.Service> =>
+  Effect.gen(function* () {
+    const sets = yield* Database.query(Query.select(Filter.id(task.id)).referencedBy(TaskSet, 'tasks')).run.pipe(
+      Effect.orElseSucceed(() => []),
+    );
+    return sets[0];
+  });
+
+/** The task set a milestone belongs to (see {@link findTaskSet}). */
+export const findMilestoneTaskSet = (
+  milestone: Milestone.Milestone,
+): Effect.Effect<TaskSet | undefined, never, Database.Service> =>
+  Effect.gen(function* () {
+    const sets = yield* Database.query(
+      Query.select(Filter.id(milestone.id)).referencedBy(TaskSet, 'milestones'),
+    ).run.pipe(Effect.orElseSucceed(() => []));
+    return sets[0];
+  });
+
+/**
+ * Add an existing task to a set. The array write is the whole filing: order from the position, and
+ * the parent edge (membership + cascade with the set) from `SetParent` on the field.
+ */
+export const addTaskToSet = (taskSet: TaskSet, task: Task.Task): void => {
+  Obj.update(taskSet, (taskSet) => {
+    taskSet.tasks = [...taskSet.tasks, Ref.make(task)];
+  });
+};
+
+/** Add a milestone to a set, appended to the sequence; `SetParent` on the field parents it. */
+export const addMilestoneToSet = (taskSet: TaskSet, milestone: Milestone.Milestone): void => {
+  Obj.update(taskSet, (taskSet) => {
+    taskSet.milestones = [...taskSet.milestones, Ref.make(milestone)];
+  });
+};
+
+/**
+ * Every ref loaded, dropping entries whose object is gone. The arrays may hold cold refs, and the
+ * sync `resolveTasks` silently drops those — an incomplete member list here becomes an incomplete
+ * subtree sweep or a false membership rejection.
+ */
+export const loadRefs = <T extends Obj.Unknown>(
+  refs: ReadonlyArray<Ref.Ref<T>>,
+): Effect.Effect<T[], never, Database.Service> =>
+  Effect.forEach(refs, (ref) =>
+    Database.load(ref).pipe(Effect.catchTag('EntityNotFoundError', () => Effect.succeed(undefined))),
+  ).pipe(Effect.map((objects) => dedupeById(objects)));
+
+/** Every task in the set, loaded. */
+export const loadSetTasks = (taskSet: TaskSet): Effect.Effect<Task.Task[], never, Database.Service> =>
+  loadRefs(taskSet.tasks);
+
+/** Every task in `tasks` transitively under `task`, including `task` itself. Cycle-safe. */
+export const collectSubtree = (tasks: readonly Task.Task[], task: Task.Task): Task.Task[] => {
+  const subtree: Task.Task[] = [];
+  const seen = new Set<string>();
+  const visit = (current: Task.Task): void => {
+    if (seen.has(current.id)) {
+      return;
+    }
+    seen.add(current.id);
+    subtree.push(current);
+    for (const child of subTasks(tasks, current)) {
+      visit(child);
+    }
+  };
+  visit(task);
+  return subtree;
+};
+
+/**
+ * Remove tasks from the set's array. Deleting the objects is the caller's job — nothing cascades
+ * through `parentTask` — and a ref left behind would read as a dangling entry forever.
+ */
+export const removeTasksFromSet = (taskSet: TaskSet, taskIds: ReadonlySet<EntityId>): void => {
+  Obj.update(taskSet, (taskSet) => {
+    // Matched on the ref's own entity id rather than its target, so an entry whose object is not
+    // loaded is still swept.
+    taskSet.tasks = taskSet.tasks.filter((ref) => {
+      const id = refEntityId(ref);
+      return id === undefined || !taskIds.has(id);
+    });
+  });
+};
+
+/**
+ * Move `ref` to sit immediately before `beforeId` in `refs` (or to the end when unanchored).
+ * Returns the array unchanged when the entry is absent, so a concurrent removal is not resurrected.
+ */
+export const reorder = <T extends Obj.Unknown>(
+  refs: ReadonlyArray<Ref.Ref<T>>,
+  id: EntityId,
+  beforeId: EntityId | undefined,
+): Ref.Ref<T>[] => {
+  // Anchoring an entry on itself is a no-op; removing it first would strand it at the end.
+  if (beforeId === id) {
+    return [...refs];
+  }
+  const index = refs.findIndex((ref) => refEntityId(ref) === id);
+  if (index === -1) {
+    return [...refs];
+  }
+  const moved = refs[index];
+  const rest = [...refs.slice(0, index), ...refs.slice(index + 1)];
+  const anchor = beforeId === undefined ? -1 : rest.findIndex((ref) => refEntityId(ref) === beforeId);
+  if (anchor === -1) {
+    return [...rest, moved];
+  }
+  return [...rest.slice(0, anchor), moved, ...rest.slice(anchor)];
+};
+
+/** A parent outside the task's own set, or inside its own subtree — either would orphan the task. */
+export class InvalidParentTaskError extends BaseError.extend('InvalidParentTaskError', 'Invalid parent task.') {}
+
+/** Rejects a parent outside the task's own set or inside its own subtree (see {@link InvalidParentTaskError}). */
+export const resolveParentTask = (
+  taskSet: TaskSet | undefined,
+  task: Task.Task,
+  parentTask: Ref.Ref<Task.Task>,
+): Effect.Effect<Task.Task, InvalidParentTaskError | Error.EntityNotFoundError, Database.Service> =>
+  Effect.gen(function* () {
+    const candidate = yield* Database.load(parentTask);
+    // Loaded, not resolved: a cold ref dropped from the member list would blind the cycle check.
+    const members = taskSet ? yield* loadSetTasks(taskSet) : [];
+    const subtree = taskSet ? collectSubtree(members, task) : [task];
+    if (subtree.some((member) => member.id === candidate.id)) {
+      return yield* Effect.fail(
+        new InvalidParentTaskError({ message: 'A task cannot be re-parented under itself or its own sub-tasks.' }),
+      );
+    }
+    // Membership by the ref's own entity id — no loading, so a cold entry still counts.
+    const belongs = taskSet ? taskSet.tasks.some((ref) => refEntityId(ref) === candidate.id) : false;
+    if (!belongs) {
+      return yield* Effect.fail(
+        new InvalidParentTaskError({ message: 'The parent task does not belong to this task set.' }),
+      );
+    }
+    return candidate;
+  });
+
+/**
+ * Writes the hierarchy field. The ECHO parent edge means membership, not hierarchy, so it is
+ * re-asserted to the owning set (or cleared for a task in no set) — which also heals a legacy
+ * task-parented edge that would otherwise cascade-delete this task with its former parent.
+ */
+export const applyParentTask = (
+  taskSet: TaskSet | undefined,
+  task: Task.Task,
+  newParent: Task.Task | undefined,
+): void => {
+  Obj.update(task, (task) => {
+    if (newParent) {
+      task.parentTask = Ref.make(newParent);
+    } else {
+      // `delete` rather than assigning undefined: the property is optional rather than nullable, and
+      // the self-referential `Schema.suspend` rejects the assignment outright.
+      delete task.parentTask;
+    }
+  });
+  Obj.setParent(task, taskSet);
 };

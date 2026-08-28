@@ -11,7 +11,6 @@ import { Task, TaskSet } from '@dxos/types';
 import { TaskOperation } from '#types';
 
 import { InvalidOperationInput } from '../errors';
-import { loadSetTasks } from './task-set-membership';
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;
@@ -51,7 +50,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.ListTasks> = TaskOpera
       }
 
       // Loaded, not resolved: cold refs dropped from the list would silently shorten it.
-      const all = taskSet ? yield* loadSetTasks(taskSet) : [];
+      const all = taskSet ? yield* TaskSet.loadSetTasks(taskSet) : [];
       const scoped = includeSubtasks ? all : TaskSet.rootTasks(all);
       // Resolved against the whole set, not `scoped`: a root task's milestone can only be its own,
       // but the inheritance walk still has to see every ancestor.

@@ -7,30 +7,21 @@ import * as Effect from 'effect/Effect';
 
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
-import { Milestone, Task, TaskSet } from '@dxos/types';
 
-import {
-  addMilestoneToSet,
-  addTaskToSet,
-  collectSubtree,
-  findMilestoneTaskSet,
-  findTaskSet,
-  loadSetTasks,
-  refEntityId,
-  removeTasksFromSet,
-  reorder,
-} from './task-set-membership';
+import * as Milestone from './Milestone';
+import * as Task from './Task';
+import * as TaskSet from './TaskSet';
 
 const testLayer = () => TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] });
 
 describe('task set membership', () => {
-  describe('reorder', () => {
+  describe('TaskSet.reorder', () => {
     it.effect('moves an entry before its anchor', () =>
       Effect.gen(function* () {
         const tasks = yield* seedTasks(['a', 'b', 'c']);
         const refs = tasks.map((task) => Ref.make(task));
 
-        const next = reorder(refs, tasks[2].id, tasks[0].id);
+        const next = TaskSet.reorder(refs, tasks[2].id, tasks[0].id);
 
         expect(titles(next)).toEqual(['c', 'a', 'b']);
       }).pipe(Effect.provide(testLayer())),
@@ -42,8 +33,8 @@ describe('task set membership', () => {
         const refs = tasks.map((task) => Ref.make(task));
         const stranger = yield* Database.add(Task.make({ title: 'stranger', status: 'todo' }));
 
-        expect(titles(reorder(refs, tasks[0].id, undefined))).toEqual(['b', 'c', 'a']);
-        expect(titles(reorder(refs, tasks[0].id, stranger.id))).toEqual(['b', 'c', 'a']);
+        expect(titles(TaskSet.reorder(refs, tasks[0].id, undefined))).toEqual(['b', 'c', 'a']);
+        expect(titles(TaskSet.reorder(refs, tasks[0].id, stranger.id))).toEqual(['b', 'c', 'a']);
       }).pipe(Effect.provide(testLayer())),
     );
 
@@ -53,19 +44,19 @@ describe('task set membership', () => {
         const refs = tasks.map((task) => Ref.make(task));
         const stranger = yield* Database.add(Task.make({ title: 'stranger', status: 'todo' }));
 
-        expect(titles(reorder(refs, stranger.id, tasks[0].id))).toEqual(['a', 'b']);
-        expect(titles(reorder(refs, tasks[0].id, tasks[0].id))).toEqual(['a', 'b']);
+        expect(titles(TaskSet.reorder(refs, stranger.id, tasks[0].id))).toEqual(['a', 'b']);
+        expect(titles(TaskSet.reorder(refs, tasks[0].id, tasks[0].id))).toEqual(['a', 'b']);
       }).pipe(Effect.provide(testLayer())),
     );
   });
 
-  describe('refEntityId', () => {
+  describe('TaskSet.refEntityId', () => {
     it.effect('reads the id off the URI, so an unloaded ref still compares', () =>
       Effect.gen(function* () {
         const task = yield* Database.add(Task.make({ title: 'a', status: 'todo' }));
         yield* Database.flush();
 
-        expect(refEntityId(Ref.make(task).noInline())).toBe(task.id);
+        expect(TaskSet.refEntityId(Ref.make(task).noInline())).toBe(task.id);
       }).pipe(Effect.provide(testLayer())),
     );
   });
@@ -76,12 +67,12 @@ describe('task set membership', () => {
         const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
         const task = yield* Database.add(Task.make({ title: 'a', status: 'todo' }));
         const milestone = yield* Database.add(Milestone.make({ name: 'Alpha' }));
-        addTaskToSet(taskSet, task);
-        addMilestoneToSet(taskSet, milestone);
+        TaskSet.addTaskToSet(taskSet, task);
+        TaskSet.addMilestoneToSet(taskSet, milestone);
         yield* Database.flush();
 
-        expect((yield* findTaskSet(task))?.id).toBe(taskSet.id);
-        expect((yield* findMilestoneTaskSet(milestone))?.id).toBe(taskSet.id);
+        expect((yield* TaskSet.findTaskSet(task))?.id).toBe(taskSet.id);
+        expect((yield* TaskSet.findMilestoneTaskSet(milestone))?.id).toBe(taskSet.id);
       }).pipe(Effect.provide(testLayer())),
     );
 
@@ -90,30 +81,30 @@ describe('task set membership', () => {
         const orphan = yield* Database.add(Task.make({ title: 'orphan', status: 'todo' }));
         yield* Database.flush();
 
-        expect(yield* findTaskSet(orphan)).toBeUndefined();
+        expect(yield* TaskSet.findTaskSet(orphan)).toBeUndefined();
       }).pipe(Effect.provide(testLayer())),
     );
   });
 
   describe('sub-trees', () => {
-    it.effect('collectSubtree walks descendants and includes the root', () =>
+    it.effect('TaskSet.collectSubtree walks descendants and includes the root', () =>
       Effect.gen(function* () {
         const { taskSet, root, child, grandchild, sibling } = yield* seedTree();
 
-        const subtree = collectSubtree(yield* loadSetTasks(taskSet), root);
+        const subtree = TaskSet.collectSubtree(yield* TaskSet.loadSetTasks(taskSet), root);
 
         expect(subtree.map((task) => task.id)).toEqual([root.id, child.id, grandchild.id]);
         expect(subtree.map((task) => task.id)).not.toContain(sibling.id);
       }).pipe(Effect.provide(testLayer())),
     );
 
-    it.effect('removeTasksFromSet sweeps the array the cascade cannot reach', () =>
+    it.effect('TaskSet.removeTasksFromSet sweeps the array the cascade cannot reach', () =>
       Effect.gen(function* () {
         const { taskSet, root, child, grandchild, sibling } = yield* seedTree();
 
-        removeTasksFromSet(taskSet, new Set([root.id, child.id, grandchild.id]));
+        TaskSet.removeTasksFromSet(taskSet, new Set([root.id, child.id, grandchild.id]));
 
-        expect(taskSet.tasks.map((ref) => refEntityId(ref))).toEqual([sibling.id]);
+        expect(taskSet.tasks.map((ref) => TaskSet.refEntityId(ref))).toEqual([sibling.id]);
       }).pipe(Effect.provide(testLayer())),
     );
   });
@@ -136,10 +127,10 @@ const seedTree = () =>
     const child = yield* Database.add(Task.make({ title: 'child', status: 'todo' }));
     const grandchild = yield* Database.add(Task.make({ title: 'grandchild', status: 'todo' }));
     const sibling = yield* Database.add(Task.make({ title: 'sibling', status: 'todo' }));
-    addTaskToSet(taskSet, root);
-    addTaskToSet(taskSet, child);
-    addTaskToSet(taskSet, grandchild);
-    addTaskToSet(taskSet, sibling);
+    TaskSet.addTaskToSet(taskSet, root);
+    TaskSet.addTaskToSet(taskSet, child);
+    TaskSet.addTaskToSet(taskSet, grandchild);
+    TaskSet.addTaskToSet(taskSet, sibling);
     Obj.update(child, (child) => {
       child.parentTask = Ref.make(root);
     });
