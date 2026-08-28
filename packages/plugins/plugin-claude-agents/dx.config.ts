@@ -8,7 +8,7 @@ import { trim } from '@dxos/util';
 export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.claudeAgents',
-    name: 'Claude Agents',
+    name: 'Claude',
     author: 'DXOS',
     description: trim`
       Model Anthropic Claude managed agents as first-class objects in your space. A ClaudeManagedAgent
