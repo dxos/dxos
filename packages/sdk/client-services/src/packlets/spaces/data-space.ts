@@ -9,7 +9,7 @@ import { Event, Mutex, scheduleTask, sleep, synchronized, trackLeaks } from '@dx
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import type { SpecificCredential } from '@dxos/credentials';
-import { timed, warnAfterTimeout } from '@dxos/debug';
+import { timed } from '@dxos/debug';
 import { type DatabaseRoot, type EchoHost } from '@dxos/echo-host';
 import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
@@ -85,6 +85,67 @@ export type DataSpaceProps = {
 export type CreateEpochOptions = {
   migration?: SpacesService.Migration;
   newAutomergeRoot?: string;
+};
+
+/**
+ * Bounds one attempt to load the space root document — a fetch stranded on a dead edge session
+ * never settles on its own, so this deadline is what converts a hang into a retry.
+ */
+const ROOT_DOC_LOAD_ATTEMPT_TIMEOUT = 30_000;
+/** Initial delay before re-attempting the root document load; doubles per attempt up to the max. */
+const ROOT_DOC_LOAD_RETRY_DELAY_MIN = 1_000;
+const ROOT_DOC_LOAD_RETRY_DELAY_MAX = 30_000;
+
+export type LoadRootDocRetryParams<T> = {
+  ctx: Context;
+  /** One bounded load attempt; resolves null when the document is not available yet. */
+  attempt: () => Promise<T | null>;
+  /** Whether the root being loaded is still the space's current root. */
+  isCurrent: () => boolean;
+  /** Invoked before each backoff; `err` is undefined when the attempt resolved empty. */
+  onFailedAttempt: (attempt: number, err: unknown) => void;
+  retryDelayMin?: number;
+  retryDelayMax?: number;
+};
+
+/**
+ * Runs load attempts with capped jittered backoff until one succeeds, the root is superseded, or
+ * the context is disposed. A one-shot load wedges the space in SPACE_INITIALIZING forever: a fetch
+ * racing an edge outage strands with no re-ask, while each retry here re-announces interest so the
+ * network layer re-drives the fetch once the edge recovers.
+ * @returns null when the root was superseded (or the context disposed before the next attempt).
+ */
+export const loadRootDocWithRetry = async <T>({
+  ctx,
+  attempt,
+  isCurrent,
+  onFailedAttempt,
+  retryDelayMin = ROOT_DOC_LOAD_RETRY_DELAY_MIN,
+  retryDelayMax = ROOT_DOC_LOAD_RETRY_DELAY_MAX,
+}: LoadRootDocRetryParams<T>): Promise<T | null> => {
+  let delay = retryDelayMin;
+  for (let attemptCount = 1; ; attemptCount++) {
+    if (ctx.disposed || !isCurrent()) {
+      return null;
+    }
+
+    try {
+      const result = await cancelWithContext(ctx, attempt());
+      if (result) {
+        return result;
+      }
+      onFailedAttempt(attemptCount, undefined);
+    } catch (err) {
+      if (err instanceof ContextDisposedError) {
+        throw err;
+      }
+      onFailedAttempt(attemptCount, err);
+    }
+
+    // Full jitter keeps a fleet of clients from re-hitting a recovering edge in lockstep.
+    await cancelWithContext(ctx, sleep(Math.random() * delay));
+    delay = Math.min(delay * 2, retryDelayMax);
+  }
 };
 
 @trackLeaks('open', 'close')
@@ -484,29 +545,23 @@ export class DataSpace {
   private _onNewAutomergeRoot(rootUrl: string): void {
     log('loading automerge root doc for space', { space: this.key, rootUrl });
 
-    let handle: DocHandle<DatabaseDirectory> | null = null;
-
     // TODO(dmaretskyi): Make this single-threaded (but doc loading should still be parallel to not block epoch processing).
     queueMicrotask(async () => {
       try {
-        await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', async () => {
-          handle = await cancelWithContext(
-            this._ctx,
-            this._echoHost.loadDoc<DatabaseDirectory>(this._ctx, rootUrl as AutomergeUrl, {
-              fetchFromNetwork: true,
-            }),
-          );
-        });
-        if (this._ctx.disposed) {
-          return;
-        }
-        if (!handle) {
-          log.warn('automerge root doc not available yet', { space: this.key, rootUrl });
+        const handle = await this._loadAutomergeRootWithRetry(rootUrl);
+        if (!handle || this._ctx.disposed) {
           return;
         }
 
         // Ensure only one root is processed at a time.
         using _guard = await this._epochProcessingMutex.acquire();
+
+        // A newer epoch can land while the load above retries; applying this root then would
+        // downgrade the space, so only the loop for the current root proceeds.
+        if (this._automergeSpaceState.rootUrl !== rootUrl) {
+          log('automerge root superseded during load', { space: this.key, rootUrl });
+          return;
+        }
 
         // Attaching space identifiers to legacy documents.
         const doc = handle.doc();
@@ -539,6 +594,26 @@ export class DataSpace {
         }
         log.warn('error loading automerge root doc', { space: this.key, rootUrl, err });
       }
+    });
+  }
+
+  /**
+   * Loads the root document, retrying until it loads, the root is superseded, or the space closes.
+   * @returns null when the root was superseded by a newer epoch.
+   */
+  private _loadAutomergeRootWithRetry(rootUrl: string): Promise<DocHandle<DatabaseDirectory> | null> {
+    return loadRootDocWithRetry({
+      ctx: this._ctx,
+      attempt: () =>
+        this._echoHost.loadDoc<DatabaseDirectory>(this._ctx, rootUrl as AutomergeUrl, {
+          fetchFromNetwork: true,
+          timeout: ROOT_DOC_LOAD_ATTEMPT_TIMEOUT,
+        }),
+      isCurrent: () => this._automergeSpaceState.rootUrl === rootUrl,
+      onFailedAttempt: (attempt, err) =>
+        err === undefined
+          ? log.warn('automerge root doc not available yet', { space: this.key, rootUrl, attempt })
+          : log.warn('automerge root doc load attempt failed', { space: this.key, rootUrl, attempt, err }),
     });
   }
 

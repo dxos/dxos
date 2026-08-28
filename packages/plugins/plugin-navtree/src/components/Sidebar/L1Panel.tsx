@@ -67,6 +67,14 @@ const L1PanelInner = ({ open, path, id, item, spaces, isCurrent, onBack }: L1Pan
   // Needs a published space list to make the claim against, and a workspace actually being asked
   // for — the sentinel deck means none has resolved yet.
   const reportUnavailable = !!spaces && id !== DeckSchema.DEFAULT_DECK_ID;
+  // A loading placeholder has no children and its space's db must not be touched, so the panel
+  // body is a connecting message rather than the tree.
+  const isLoading = !!item?.properties.loading;
+  const testId = item
+    ? isLoading
+      ? 'navtree.workspace.loading'
+      : 'navtree.workspace.visible'
+    : 'navtree.workspace.unavailable';
 
   return (
     <Tabs.Panel
@@ -84,13 +92,23 @@ const L1PanelInner = ({ open, path, id, item, spaces, isCurrent, onBack }: L1Pan
       // reference a missing element.
       {...(!item && { 'aria-labelledby': undefined })}
       {...(isCurrent && {
-        'data-testid': item ? 'navtree.workspace.visible' : 'navtree.workspace.unavailable',
+        'data-testid': testId,
       })}
       {...(!open && { inert: true })}
     >
       {shouldRenderContent &&
         (item ? (
-          <L1PanelContent open={open} path={path} item={item} onBack={onBack} />
+          isLoading ? (
+            <Empty
+              label={t('workspace-loading.description')}
+              // Same placement and settle delay as the unavailable message, so the normal
+              // seconds-long initializing pass at boot stays quiet.
+              classNames='row-start-2 self-start animate-fade-in'
+              style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
+            />
+          ) : (
+            <L1PanelContent open={open} path={path} item={item} onBack={onBack} />
+          )
         ) : (
           reportUnavailable && (
             <Empty
