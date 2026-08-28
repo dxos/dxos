@@ -557,6 +557,7 @@ catalog:
   partykit: ^0.0.103
   partysocket: ^1.0.1
   path-browserify: ^1.0.1
+  pdfjs-dist: ^6.2.108
   picomatch: ^2.3.0
   pify: ~5.0.0
   pkg-up: ^3.1.0

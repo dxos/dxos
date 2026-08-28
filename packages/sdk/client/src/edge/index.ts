@@ -3,5 +3,4 @@
 //
 
 export * from './client-edge-api';
-export * from './edge-blob-backend';
 export * from './edge-identity';
