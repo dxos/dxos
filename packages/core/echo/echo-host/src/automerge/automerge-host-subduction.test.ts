@@ -761,8 +761,8 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       // Probe but don't wait on `findWithProgress` (the subduction fork transitions
       // to `'unavailable'` when no peer serves the doc, which is sticky).
       await sleep(POLICY_NEGATIVE_DELAY_MS);
-      const initial = host1.host.acquireDoc<{ text: string }>(handle.documentId).state;
-      expect(initial).to.not.equal('ready');
+      using probe = host1.host.acquireDoc<{ text: string }>(handle.documentId);
+      expect(probe.state).to.not.equal('ready');
 
       // `authorizeDevice` re-emits `peer-disconnected` + `peer-candidate` through the
       // EchoNetworkAdapter, which under subduction triggers a fresh handshake — that

@@ -61,15 +61,25 @@ export class DocumentLease<T = any> implements Disposable {
   #release: (() => void) | undefined;
 
   /**
+   * `#private` rather than a TypeScript `private`, which survives compilation: the resolver is a
+   * route to the raw `DocHandle`, and a holder that reached it could use one the host has evicted.
+   */
+  readonly #resolve: DocumentResolver<T>;
+
+  /** The handle each listener was registered on, so it is detached from that one — see {@link off}. */
+  readonly #listeners = new Map<(payload: any) => void, DocHandle<T>>();
+
+  /**
    * The pair is resolved through the registry rather than captured, because an eviction of the same
    * document may still be draining: a lease taken during that window must operate on the pair the
    * repo holds after it, not the pair being torn down.
    */
   constructor(
     private readonly _documentId: DocumentId,
-    private readonly _resolve: DocumentResolver<T>,
+    resolve: DocumentResolver<T>,
     release: () => void,
   ) {
+    this.#resolve = resolve;
     this.#release = release;
   }
 
@@ -151,15 +161,21 @@ export class DocumentLease<T = any> implements Disposable {
 
   /** Registers a listener on the document as loaded now; a later eviction detaches it. */
   on<K extends keyof DocumentLeaseEvents<T>>(event: K, listener: (payload: DocumentLeaseEvents<T>[K]) => void): void {
-    this.#handle.on(event as any, listener as any);
+    const handle = this.#handle;
+    this.#listeners.set(listener as (payload: any) => void, handle);
+    handle.on(event as any, listener as any);
   }
 
   /**
-   * Removes a listener from the document it was registered on, which is why this never faults one
-   * in: teardown running after an eviction (or after the repo closed) must not resurrect a document.
+   * Removes a listener from the handle it was registered on, not from whatever the document resolves
+   * to now: an eviction and re-acquisition swaps the handle, so detaching from the current one would
+   * strip a listener another lease registered. It also never faults a document in, so teardown after
+   * an eviction (or after the repo closed) cannot resurrect one.
    */
   off<K extends keyof DocumentLeaseEvents<T>>(event: K, listener: (payload: DocumentLeaseEvents<T>[K]) => void): void {
-    this._resolve.peek()?.handle.off(event as any, listener as any);
+    const registered = this.#listeners.get(listener as (payload: any) => void);
+    this.#listeners.delete(listener as (payload: any) => void);
+    (registered ?? this.#resolve.peek()?.handle)?.off(event as any, listener as any);
   }
 
   /** Registers a one-shot listener; see {@link on} for what an eviction does to it. */
@@ -185,12 +201,12 @@ export class DocumentLease<T = any> implements Disposable {
 
   get #handle(): DocHandle<T> {
     this.#assertLive();
-    return this._resolve.open().handle;
+    return this.#resolve.open().handle;
   }
 
   get #query(): DocumentProgress<T> {
     this.#assertLive();
-    return this._resolve.open().query;
+    return this.#resolve.open().query;
   }
 
   #assertLive(): void {
@@ -332,7 +348,9 @@ export class DocumentLeaseRegistry {
    */
   async closeAndSettle(): Promise<void> {
     this.close();
-    await this.#draining?.catch(() => {});
+    // Not swallowed: `#drain` already logs a failed eviction and carries on, so anything reaching
+    // here is a registry fault the caller needs to see.
+    await this.#draining;
   }
 
   #open(documentId: DocumentId): DocumentPair<any> {
