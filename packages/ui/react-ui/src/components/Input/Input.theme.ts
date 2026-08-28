@@ -86,7 +86,11 @@ const input: ComponentFunction<InputStyleProps> = (props, ...etc) =>
       ? mx(...sharedStaticInputStyles(props), ...etc)
       : mx(...sharedDefaultInputStyles(props), valence(props.validationValence), ...etc);
 
-const textArea: ComponentFunction<InputStyleProps> = (props, ...etc) => input(props, ...etc);
+// An `<input>` centres its single line inside `--dx-control`, so `py-0` still reads as inset; a
+// textarea starts its text at the top edge, where the same rule puts the first line against the
+// border. The inline pad is reused for the block axis: it matches that optical inset to within a
+// pixel and tracks density with it.
+const textArea: ComponentFunction<InputStyleProps> = (props, ...etc) => input(props, 'py-(--dx-control-pad)', ...etc);
 
 // Container that carries the input surface/border/focus when the field has adornments; the inner
 // `<input>` renders "bare" (subdued) so the box wraps the whole row (start adornment · field · end).
