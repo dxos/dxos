@@ -194,10 +194,6 @@ export class TestReplicatorConnection implements AutomergeReplicatorConnection {
     private readonly _shouldAdvertise?: TestShouldAdvertise,
   ) {}
 
-  get bundleSyncEnabled(): boolean {
-    return false;
-  }
-
   async shouldAdvertise(params: ShouldAdvertiseProps): Promise<boolean> {
     return this._shouldAdvertise ? this._shouldAdvertise(params) : true;
   }

@@ -37,7 +37,7 @@ import {
 } from '@dxos/react-ui';
 import { Listbox, TreeDropIndicator, TreeItemToggle, paddingIndentation, useListDisclosure } from '@dxos/react-ui-list';
 import { MarkdownView } from '@dxos/react-ui-markdown';
-import { type Actor, type Task, TaskSet } from '@dxos/types';
+import { type Actor, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
@@ -666,7 +666,7 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
     const description = showDescriptions ? current.description?.trim() || undefined : undefined;
 
     // Virtual: an open task whose dependencies (resolved within the set) are not all done.
-    const blocked = (current.status ?? 'todo') === 'todo' && !TaskSet.isTaskReady(tasks, task);
+    const blocked = (current.status ?? 'todo') === 'todo' && !Task.isTaskReady(tasks, task);
     // A started agent task is actively being worked by a sub-agent (started is stamped at spawn),
     // so it spins; a human-started task keeps the static glyph.
     const active = current.status === 'started' && current.assignee?.role === 'assistant';

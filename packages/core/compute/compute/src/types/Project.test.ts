@@ -9,6 +9,7 @@ import { describe, test } from 'vitest';
 import { Database, DXN, Filter, Obj, Ref, Type, URI } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 import { Outline, Task, TaskSet } from '@dxos/types';
 
 import * as Instructions from './Instructions';
@@ -40,19 +41,21 @@ describe('Project', () => {
   test('a project owns a task set from the start, parented for cascade', ({ expect }) => {
     const project = Project.make({ name: 'test' });
     const taskSet = project.taskSet?.target;
-    expect(taskSet).toBeDefined();
+    invariant(taskSet);
     expect(TaskSet.instanceOf(taskSet)).toBe(true);
-    expect(Obj.getParent(taskSet!)?.id).toBe(project.id);
+    expect(Obj.getParent(taskSet)?.id).toBe(project.id);
   });
 
   test('a project owns an outline from the start, parented for cascade', ({ expect }) => {
     const project = Project.make({ name: 'test' });
     const outline = project.outline?.target;
-    expect(outline).toBeDefined();
-    expect(Obj.instanceOf(Outline.Outline, outline!)).toBe(true);
-    expect(Obj.getParent(outline!)?.id).toBe(project.id);
+    invariant(outline);
+    expect(Obj.instanceOf(Outline.Outline, outline)).toBe(true);
+    expect(Obj.getParent(outline)?.id).toBe(project.id);
     // The outline's text is its own object; it cascades through the outline, not the project.
-    expect(Obj.getParent(outline!.content.target!)?.id).toBe(outline!.id);
+    const content = outline.content.target;
+    invariant(content);
+    expect(Obj.getParent(content)?.id).toBe(outline.id);
   });
 
   test('an explicitly supplied outline is kept', ({ expect }) => {

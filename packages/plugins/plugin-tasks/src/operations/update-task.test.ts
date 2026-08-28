@@ -44,12 +44,11 @@ describe('update-task', () => {
         title: 'Child',
         parentTask: Ref.make(parent),
       });
-      expect(Obj.getParent(child)?.id).toBe(parent.id);
+      expect(Obj.getParent(child)?.id).toBe(taskSet.id);
 
       yield* updateTask.handler({ task: Ref.make(child), parentTask: null });
 
-      // A promoted task falls back to the set; leaving the old edge would cascade-delete it with
-      // the parent it no longer belongs to.
+      // Membership is untouched by promotion: the edge points at the set before and after.
       expect(child.parentTask).toBeUndefined();
       expect(Obj.getParent(child)?.id).toBe(taskSet.id);
     }).pipe(Effect.provide(testLayer())),

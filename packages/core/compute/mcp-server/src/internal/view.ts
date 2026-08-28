@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { Annotation, Database, Filter, Obj, Query, type Registry } from '@dxos/echo';
+import { Annotation, Database, Filter, type JsonSchema, Obj, Query, type Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 /** Reads echo's registry into the shapes the fixed tool surface serves. */
@@ -171,8 +171,8 @@ export type OperationView = {
   };
   /** JSON Schemas of the operation's input and output; present on a `keys` lookup only. */
   schema?: {
-    input?: unknown;
-    output?: unknown;
+    input?: JsonSchema.JsonSchema;
+    output?: JsonSchema.JsonSchema;
   };
 };
 
