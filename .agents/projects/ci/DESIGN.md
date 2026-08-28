@@ -26,7 +26,7 @@ flag, no `if:`. The previous shape carried an Affected and an All variant of eac
 - **A missing event resolves too.** With no `GITHUB_*` in the environment the resolver falls back to
   the merge-base with `origin/main`, so `depot ci run --workflow .depot/workflows/check.yml` and a
   bare shell decide what the real trigger would. The resolver's `--event <name>` emulates any of
-  them; the full table is in `.github/workflows/README.md`.
+  them; the full table is in `.depot/README.md`.
 - **An unresolvable base means a full run, never an empty one.** `moon` exits 0 having run nothing
   when the affected set comes back empty, so a base that silently fails to resolve turns every gate
   green — the failure mode below, in a second guise.
@@ -144,8 +144,8 @@ negation is honoured by `moon query` but NOT by `moon exec --query` — a bare `
 nothing there, and it is still ignored beside a positive clause, so `moon exec ':e2e' --query
 project!=composer-app` ran composer's 36 tests in the pool cell on top of the 8 suites (78 tests in
 one cell). MQL parentheses are also a parse error. An earlier `e2e-ci` marker task (a clone of `e2e`
-that composer excluded) solved the same problem with a duplicate task and its own cache entries. Job layout and the JUnit paths Trunk reads are in
-[`.github/workflows/README.md`](../../../.github/workflows/README.md).
+that composer excluded) solved the same problem with a duplicate task and its own cache entries. Job
+layout and the JUnit paths Trunk reads are in [`.depot/README.md`](../../../.depot/README.md).
 
 The browser rides an env var rather than per-browser task variants (`e2e-chromium`, …) so it does not
 multiply with the shard dimension in the task namespace. Being a hash input already gives each
