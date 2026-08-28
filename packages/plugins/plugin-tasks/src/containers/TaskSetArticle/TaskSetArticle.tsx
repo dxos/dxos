@@ -66,23 +66,21 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
 
   const content = (
     <TaskList.Root
+      hierarchical
       tasks={tasks}
       showDescriptions
-      hierarchical
+      selected={selected}
       statusLabel={statusLabel}
       onTaskCreate={handleCreate}
       onTaskUpdate={handleUpdate}
       onTaskDelete={handleDelete}
       onTaskMove={handleMove}
-      // Selection is local to the list today (it styles the row); opening the task is a separate
-      // affordance, so this only makes the row report which task the reader is looking at.
       onTaskSelect={handleSelect}
-      selected={selected}
     >
-      <TaskList.Viewport classNames='dx-document'>
-        <TaskList.Content />
-      </TaskList.Viewport>
       <TaskList.Create classNames='dx-document' placeholder={t('task-create.placeholder')} />
+      <TaskList.Viewport>
+        <TaskList.Content classNames='dx-document' />
+      </TaskList.Viewport>
     </TaskList.Root>
   );
 
@@ -93,7 +91,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
   }
 
   return (
-    <Panel.Root role={role}>
+    <Panel.Root role={role} classNames='border-2'>
       <Panel.Toolbar asChild>
         <Toolbar.Root disabled={!hasAttention} />
       </Panel.Toolbar>

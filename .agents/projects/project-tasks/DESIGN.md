@@ -196,7 +196,7 @@ Playwright's synthetic dispatch does not produce. So the split is:
 - Unifying the task row onto `Treegrid` so tasks and the navtree share one row substrate. Worth
   revisiting if a third tree surface appears; not worth re-expressing this row for two.
 - Multi-select drag.
-- Auto-scroll while dragging near the viewport edge.<<<<<<< ours
+- Auto-scroll while dragging near the viewport edge.
 
 ### What shipped (2026-08-26)
 
@@ -232,25 +232,3 @@ write. Confirmed by reverting the fix and watching the test fail.
 preload entries / 4.23 MB against a 25 / 4.45 MB budget, both before and after merging main, and
 main's own run was green. Nothing in this diff is boot-reachable — `plugin-assistant` reaches
 `react-ui-task` only through its `/translations` subpath, and the list surfaces are lazy.
-||||||| original
-
-=======
-
-### What shipped (2026-08-26)
-
-- **`MoveTask` takes an optional `parentTask`** and performs the re-parent and the reposition in one
-  mutation, rejecting the same cycles and cross-set parents `UpdateTask` does — the validation and
-  the parent-edge write moved to `task-set-membership` so both verbs cannot drift. The parent is
-  resolved before either write, so a rejected drop leaves the order untouched.
-- **`TaskList` gains `hierarchical`, `onTaskMove`, and `collapsed`/`onCollapsedChange`.** The
-  disclosure set holds COLLAPSED ids, not expanded ones: a branch is open by default, and tracking
-  the expanded set would hide a task's first sub-task at the moment adding it made its parent a
-  branch. `useListDisclosure` (multi) owns the controlled/uncontrolled state machine; its
-  trigger/panel ids are unused, because a sub-task is a sibling row in the same grid rather than a
-  region `aria-controls` could point at.
-- **`Listbox.Item` gained `onKeyDown`**, composed ahead of its own Enter/Space activation so a
-  consumer binding can claim the event.
-- **`TaskSetArticle` renders hierarchically** and calls `MoveTask` once per gesture.
-- Not yet done: the manual drag script, and the ProjectArticle Tasks tab inherits the tree through
-  `TaskSetArticle` but has no story of its own asserting it.
->>>>>>> theirs

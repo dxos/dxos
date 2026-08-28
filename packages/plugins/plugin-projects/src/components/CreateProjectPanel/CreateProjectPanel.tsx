@@ -66,7 +66,9 @@ export const CreateProjectPanel = ({ onCreateObject, templates: templatesProp }:
               data-testid='create-project-panel.template-input'
               placeholder={t('create-panel.template.placeholder')}
             />
-            <SearchList.Viewport>
+            {/* Flush with the form's column: the viewport's default padding reserves a scroll strip,
+                which insets the rows from the name input above them. */}
+            <SearchList.Viewport padding={false}>
               {results.map((template) => (
                 <SearchList.Item
                   key={template.id}
