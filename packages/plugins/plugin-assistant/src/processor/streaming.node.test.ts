@@ -361,6 +361,9 @@ describe('AiChatProcessor streaming', () => {
 
         expect(texts(observableRegistry.get(processor.messages))).toEqual(['Still']);
         expect(observableRegistry.get(processor.active)).toBe(false);
+        // The session still reports a turn in flight, so the observer stopped because it was
+        // disposed rather than because the turn settled.
+        expect(observableRegistry.get(gated.running)).toBe(true);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
