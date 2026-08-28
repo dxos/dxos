@@ -15,7 +15,7 @@ describe('edge services', () => {
     expect(getEdgeServiceEndpoint(config, EdgeServiceName.Calls)).toBe('https://dxos.network/calls');
     expect(getEdgeServiceEndpoint(config, EdgeServiceName.Image)).toBe('https://dxos.network/image');
     expect(getEdgeServiceEndpoint(config, EdgeServiceName.Discord)).toBe('https://dxos.network/discord');
-    expect(getEdgeServiceEndpoint(config, EdgeServiceName.CorsProxy)).toBe('https://dxos.network/cors');
+    expect(getEdgeServiceEndpoint(config, EdgeServiceName.CorsProxy)).toBe('https://dxos.network/cors-proxy');
     expect(getEdgeServiceEndpoint(config, EdgeServiceName.Sandbox)).toBe('https://dxos.network/sandbox');
     // The ASR endpoint is calls-service's `/transcribe`; transcription-service is the `/video` one.
     expect(getEdgeServiceEndpoint(config, EdgeServiceName.Transcription)).toBe('https://dxos.network/calls');

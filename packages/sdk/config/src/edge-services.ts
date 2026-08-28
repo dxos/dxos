@@ -53,7 +53,7 @@ const EDGE_SERVICE_PATHS: Record<EdgeServiceName, string> = Object.freeze({
   [EdgeServiceName.Transcription]: '/calls',
   [EdgeServiceName.VideoTranscription]: '/transcription',
   [EdgeServiceName.Discord]: '/discord',
-  [EdgeServiceName.CorsProxy]: '/cors',
+  [EdgeServiceName.CorsProxy]: '/cors-proxy',
   [EdgeServiceName.Introspect]: '/introspect/mcp',
   [EdgeServiceName.Sandbox]: '/sandbox',
 });

@@ -291,7 +291,7 @@ worker holds an OAuth-derived identity, not a HALO verifiable presentation.
 ## The edge CORS proxy — where it does and does not apply
 
 `proxyFetchLegacy` (`core/mesh/edge-client/src/cors-proxy.ts`) routes through
-`<edge>/cors`, implemented at `edge/packages/services/cors-proxy/src/main.ts`. It strips
+`<edge>/cors-proxy`, implemented at `edge/packages/services/cors-proxy/src/main.ts`. It strips
 `host` from the forwarded request (`main.ts:23`) and supports overriding browser-privileged headers
 via an `x-cors-proxy-` prefix, which is how the client relocates `Authorization`
 (`cors-proxy.ts:15-22`).
