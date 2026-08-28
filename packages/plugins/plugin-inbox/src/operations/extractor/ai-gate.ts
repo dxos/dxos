@@ -22,7 +22,7 @@ export const isAiServiceUnavailable = (error: unknown): boolean => {
     return false;
   }
 
-  const key = AiService.AiService.key;
+  const key = AiService.key;
 
   const context = (error as { context?: { service?: unknown } | null }).context;
   if (context != null && typeof context === 'object' && context.service === key) {
@@ -65,5 +65,5 @@ export const isAiUnavailableCause = (cause: Cause.Cause<unknown>): boolean => {
     return true;
   }
   const rendered = Cause.pretty(cause);
-  return rendered.includes(AiModelNotAvailableError.name) || rendered.includes(AiService.AiService.key);
+  return rendered.includes(AiModelNotAvailableError.name) || rendered.includes(AiService.key);
 };

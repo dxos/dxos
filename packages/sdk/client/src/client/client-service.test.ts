@@ -7,12 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 
-import { ConfigService } from '@dxos/config';
+import { layerMemory } from '@dxos/config';
 import { EffectEx } from '@dxos/effect';
 
-import { ClientService } from './client-service';
+import { ClientService, layer } from './client-service';
 
-const TestLayer = Function.pipe(ClientService.layer, Layer.provideMerge(ConfigService.layerMemory));
+const TestLayer = Function.pipe(layer, Layer.provideMerge(layerMemory));
 
 describe('ClientService', () => {
   it('should initialize', { timeout: 10_000 }, async () => {
