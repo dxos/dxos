@@ -72,9 +72,21 @@ C '{"op":"stop"}'          # closes the context — this is what writes the vide
 ```
 
 Ops: `goto` `click` `fill` `type` `press` `hover` `drag` `waitFor` `text` `count` `eval` `caption`
-`clearCaption` `sleep` `screenshot` `stop`. `selector` takes any Playwright selector; `text` selects
-by visible text instead. Every op answers `{ok:true,...}` or `{ok:false,error}` and never kills the
-driver.
+`clearCaption` `sleep` `screenshot` `pages` `switchPage` `stop`. `selector` takes any Playwright
+selector; `text` selects by visible text instead. Every op answers `{ok:true,...}` or
+`{ok:false,error}` and never kills the driver.
+
+**Popups take focus automatically.** An OAuth consent flow runs entirely in a `window.open` popup, so
+ops follow the newest page as it opens — otherwise every gesture after "Connect" targets the opener,
+which is no longer the window on screen. When the popup closes, come back explicitly:
+
+```bash
+C '{"op":"pages"}'                   # [{index,url,active}] — find the opener
+C '{"op":"switchPage","index":0}'    # point ops back at it
+```
+
+Each page records its own `.webm`, so a flow that crosses into a popup comes back as **two videos**
+(`stop` returns `videos`); trim and send both, or the consent leg is missing from the artifact.
 
 **`stop` is not optional.** The recording is written on context close; a driver killed with the video
 un-stopped leaves nothing behind.

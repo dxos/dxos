@@ -68,7 +68,18 @@ const context = await browser.newContext({
   viewport,
   recordVideo: { dir: options.out, size: viewport },
 });
-const page = await context.newPage();
+/**
+ * The page ops act on. Reassigned when a popup opens, because an OAuth consent flow runs entirely in
+ * a `window.open` popup: with a fixed page binding every gesture after "Connect" targets the opener,
+ * which is no longer the window the user is looking at. Playwright records each page in the context
+ * to its own `.webm`, so the popup's leg of the flow is captured either way — `stop` returns every
+ * video rather than the first.
+ */
+let page = await context.newPage();
+
+context.on('page', (opened) => {
+  page = opened;
+});
 
 /**
  * When each caption went up, measured from the first frame of the recording. `trim-static.mjs` remaps
@@ -210,13 +221,29 @@ const handlers = {
     await page.screenshot({ path: file, fullPage: !!command.fullPage });
     return { file };
   },
+  /** Lists open pages so a popup that stole focus can be identified, and the active one confirmed. */
+  pages: async () => ({
+    pages: context.pages().map((entry, index) => ({ index, url: entry.url(), active: entry === page })),
+  }),
+  /** Points subsequent ops at another open page — the opener, once a popup has closed. */
+  switchPage: async (command) => {
+    const target = context.pages()[command.index ?? 0];
+    if (!target) {
+      throw new Error(`no page at index ${command.index}`);
+    }
+    page = target;
+    await page.bringToFront();
+    return { url: page.url() };
+  },
   stop: async () => {
     const timelineFile = path.join(options.out, 'timeline.json');
     writeFileSync(timelineFile, JSON.stringify({ started, steps: timeline }, null, 2));
     await context.close();
     await browser.close();
-    const video = readdirSync(options.out).find((entry) => entry.endsWith('.webm'));
-    return { video: video ? path.join(options.out, video) : undefined, timeline: timelineFile, steps: timeline.length };
+    const videos = readdirSync(options.out)
+      .filter((entry) => entry.endsWith('.webm'))
+      .map((entry) => path.join(options.out, entry));
+    return { video: videos[0], videos, timeline: timelineFile, steps: timeline.length };
   },
 };
 
