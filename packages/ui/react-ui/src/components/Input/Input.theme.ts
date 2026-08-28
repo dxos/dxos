@@ -139,8 +139,11 @@ const segment: ComponentFunction<InputStyleProps> = (props, ...etc) =>
     ...etc,
   );
 
+// Matches `react-ui-form`'s `fieldLabel` geometry: a control-height row with the text centred, so a
+// label sits the same distance from its field in a bare `Input.Root` as in a schema-driven form.
+// Only when visible — an sr-only label is out of flow, and a min-height on it would be meaningless.
 const label: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
-  mx('block text-sm text-description', props.srOnly && 'sr-only', ...etc);
+  mx('text-sm text-description', props.srOnly ? 'sr-only' : 'flex items-center min-h-(--dx-control)', ...etc);
 
 const description: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx('text-description', props.srOnly && 'sr-only', ...etc);
