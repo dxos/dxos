@@ -18,17 +18,11 @@ const handler: Operation.WithHandler<typeof TaskOperation.DeleteTask> = TaskOper
       const subtree = yield* TaskSet.collectSubtree(task);
       const ids = new Set(subtree.map((member) => member.id));
 
-      // Sweep every owning set's array — a sub-task may be filed in a different set than its
-      // ancestor, and its entry there would otherwise dangle forever.
-      const owners = new Map<string, TaskSet.TaskSet>();
-      for (const member of subtree) {
-        const owner = yield* TaskSet.findTaskSet(member);
-        if (owner) {
-          owners.set(owner.id, owner);
-        }
-      }
-      for (const owner of owners.values()) {
-        TaskSet.removeTasksFromSet(owner, ids);
+      // Only the root's own set is swept; a member filed in another set leaves a dangling entry
+      // there, which readers tolerate (a dangling ref reads as absent).
+      const taskSet = yield* TaskSet.findTaskSet(task);
+      if (taskSet) {
+        TaskSet.removeTasksFromSet(taskSet, ids);
       }
       // The whole subtree, explicitly: `parentTask` is app-level, so nothing cascades through it —
       // the ECHO parent edge ties members to their set, not to each other.
