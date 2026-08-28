@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { composeRefs } from '@radix-ui/react-compose-refs';
 // The `legacy` build, not the default one: the default calls `Map.prototype.getOrInsertComputed`,
 // which is new enough that the Chromium the storybook tests run in throws on it. Legacy targets a
 // wider baseline and is the variant pdf.js publishes for exactly this.
@@ -14,8 +15,7 @@ import {
 import workerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { composable, composableProps, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -23,10 +23,10 @@ import { meta } from '#meta';
 // worker from another origin is also a CSP entry we would otherwise have to keep in step.
 GlobalWorkerOptions.workerSrc = workerUrl;
 
-export type PdfCanvasProps = ThemedClassName<{
+export type PdfCanvasProps = {
   url: string;
   onLoad?: (pageCount: number) => void;
-}>;
+};
 
 /**
  * Renders a PDF to stacked canvases, one per page.
@@ -40,7 +40,7 @@ export type PdfCanvasProps = ThemedClassName<{
  * exist yet. Large documents therefore cost their full page count up front — virtualization is the
  * obvious next step if that becomes a problem.
  */
-export const PdfCanvas = ({ classNames, url, onLoad }: PdfCanvasProps) => {
+export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(({ url, onLoad, ...props }, forwardedRef) => {
   const { t } = useTranslation(meta.profile.key);
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasesRef = useRef<(HTMLCanvasElement | null)[]>([]);
@@ -185,7 +185,12 @@ export const PdfCanvas = ({ classNames, url, onLoad }: PdfCanvasProps) => {
   }, [pageCount, renderPages, cancelRender]);
 
   return (
-    <div ref={containerRef} className={mx('h-full w-full overflow-auto', classNames)}>
+    <div
+      {...composableProps(props, { classNames: 'h-full w-full overflow-auto' })}
+      // Two refs on one node: `containerRef` measures the available width for the page scale, and
+      // `forwardedRef` belongs to whatever slotted this in.
+      ref={composeRefs(containerRef, forwardedRef)}
+    >
       {error ? (
         <div role='alert' className='p-4 text-sm text-error-text'>
           {t('pdf-error.message')}
@@ -203,6 +208,6 @@ export const PdfCanvas = ({ classNames, url, onLoad }: PdfCanvasProps) => {
       )}
     </div>
   );
-};
+});
 
 PdfCanvas.displayName = 'PdfCanvas';

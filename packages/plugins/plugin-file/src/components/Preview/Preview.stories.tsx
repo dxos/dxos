@@ -14,9 +14,9 @@ import { translations } from '#translations';
 import pdfUrl from '../../../fixtures/test.pdf?url';
 import { Preview } from './Preview';
 
-/** A 3×2 PNG, small enough to inline and large enough to have measurable dimensions. */
+/** A 4×3 PNG of three coloured rows. Generated and verified to decode — see the Image story. */
 const PNG_URL =
-  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAACCAIAAADZm76WAAAAF0lEQVQI12P8z8DAwMDAxMDAwMDAwAAADgEBAaMHRJcAAAAASUVORK5CYII=';
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAADCAIAAAA7ljmRAAAAGUlEQVR4nGN47mMDRwx6ZwrhiMFkxm04AgBTKBIF1eRh+AAAAABJRU5ErkJggg==';
 
 const DefaultStory = ({ type, url }: { type: string; url: string }) => (
   <Panel.Root>
@@ -51,10 +51,14 @@ export const Default: Story = {
 export const Image: Story = {
   args: { type: 'image/png', url: PNG_URL },
   play: async ({ canvasElement }) => {
+    // `naturalWidth`, not just the `src` attribute: an image that fails to decode keeps its src and
+    // reports `complete: true`, and MediaPlayer's onError hides it — so an attribute-only assertion
+    // passes while nothing is on screen. That is exactly what a broken fixture did here once.
     await waitFor(async () => {
       const image = canvasElement.querySelector('img');
       await expect(image).not.toBeNull();
-      await expect(image!.getAttribute('src')).toBe(PNG_URL);
+      await expect(image!.naturalWidth).toBe(4);
+      await expect(image!.naturalHeight).toBe(3);
     });
   },
 };
@@ -63,28 +67,15 @@ export const Pdf: Story = {
   args: { type: 'application/pdf', url: pdfUrl },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // A canvas per page, and the count surfaced in the toolbar — the toolbar reads state the
-    // content discovers, which is the reason Root/Toolbar/Content are separate parts at all.
+    // The toolbar reads state the content discovers, which is the reason Root/Toolbar/Content are
+    // separate parts at all. Page-level rendering is covered by PdfCanvas' own stories.
     await waitFor(
       async () => {
-        await expect(canvasElement.querySelectorAll('canvas')).toHaveLength(1);
+        await expect(canvas.getByText('1 page')).toBeInTheDocument();
       },
       { timeout: 20_000 },
     );
-    await expect(canvas.getByText('1 page')).toBeInTheDocument();
     await expect(canvas.queryByRole('alert')).toBeNull();
-  },
-};
-
-/** Not a PDF: the content reports it rather than rendering an empty box. */
-export const Invalid: Story = {
-  args: { type: 'application/pdf', url: 'data:application/pdf;base64,bm90LWEtcGRm' },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await waitFor(async () => {
-      await expect(canvas.getByRole('alert')).toBeInTheDocument();
-    });
-    await expect(canvasElement.querySelectorAll('canvas')).toHaveLength(0);
   },
 };
 

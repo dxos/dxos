@@ -19,9 +19,9 @@ import { translations } from '#translations';
 import pdfUrl from '../../../fixtures/test.pdf?url';
 import { FileArticle } from './FileArticle';
 
-/** A 3×2 PNG, small enough to inline and large enough to have measurable dimensions. */
+/** A 4×3 PNG of three coloured rows. Generated and verified to decode — see the Image story. */
 const PNG_BASE64 =
-  'iVBORw0KGgoAAAANSUhEUgAAAAMAAAACCAIAAADZm76WAAAAF0lEQVQI12P8z8DAwMDAxMDAwMDAwAAADgEBAaMHRJcAAAAASUVORK5CYII=';
+  'iVBORw0KGgoAAAANSUhEUgAAAAQAAAADCAIAAAA7ljmRAAAAGUlEQVR4nGN47mMDRwx6ZwrhiMFkxm04AgBTKBIF1eRh+AAAAABJRU5ErkJggg==';
 
 const decode = (base64: string) => Uint8Array.from(atob(base64), (character) => character.charCodeAt(0));
 
@@ -81,10 +81,12 @@ export const Default: Story = {
 export const Image: Story = {
   decorators: [withFile(async () => decode(PNG_BASE64), 'pixel.png', 'image/png')],
   play: async ({ canvasElement }) => {
+    // `naturalWidth`, not just the `src` attribute — see the note in Preview.stories.tsx.
     await waitFor(async () => {
       const image = canvasElement.querySelector('img');
       await expect(image).not.toBeNull();
       await expect(image!.getAttribute('src')).toMatch(/^data:image\/png/);
+      await expect(image!.naturalWidth).toBe(4);
     });
   },
 };

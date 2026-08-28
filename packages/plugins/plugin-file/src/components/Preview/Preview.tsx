@@ -4,12 +4,11 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { MediaPlayer, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { MediaPlayer, composable, composableProps, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-import { PdfCanvas } from './PdfCanvas';
+import { PdfCanvas } from '../PdfCanvas';
 import { PreviewContext, usePreview } from './PreviewContext';
 
 //
@@ -48,25 +47,30 @@ PreviewRoot.displayName = 'Preview.Root';
 // Toolbar
 //
 
-export type PreviewToolbarProps = ThemedClassName<{ children?: React.ReactNode }>;
-
 /**
  * Controls above the content. Renders the page count once a paged document reports one, so an empty
  * toolbar still reserves its row and the content does not shift when the count arrives.
+ *
+ * `composable` rather than a plain component: this is placed in `Panel.Toolbar asChild`, which
+ * forwards its own className and ref through Slot, and a plain component would silently drop both.
  */
-const PreviewToolbar = ({ classNames, children }: PreviewToolbarProps) => {
+const PreviewToolbar = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   const { t } = useTranslation(meta.profile.key);
   const { pageCount } = usePreview('Preview.Toolbar');
 
   return (
-    <div role='toolbar' className={mx('flex items-center gap-2 px-2 min-h-8', classNames)}>
+    <div
+      {...composableProps(props, { classNames: 'flex items-center gap-2 px-2 min-h-8' })}
+      role='toolbar'
+      ref={forwardedRef}
+    >
       {children}
       {pageCount !== undefined && (
         <span className='text-xs text-subdued'>{t('page-count.label', { count: pageCount })}</span>
       )}
     </div>
   );
-};
+});
 
 PreviewToolbar.displayName = 'Preview.Toolbar';
 
@@ -74,40 +78,45 @@ PreviewToolbar.displayName = 'Preview.Toolbar';
 // Content
 //
 
-export type PreviewContentProps = ThemedClassName<{}>;
-
 /**
- * Renders the source by media type: PDFs through pdf.js, images and video through `MediaPlayer`,
+ * Renders the source by media type: PDFs through pdf.js, images/video/audio through `MediaPlayer`,
  * and anything else as a download link.
+ *
+ * `composable` for the same reason as the toolbar — it is placed in `Panel.Content asChild`.
  */
-const PreviewContent = ({ classNames }: PreviewContentProps) => {
+const PreviewContent = composable<HTMLDivElement>((props, forwardedRef) => {
   const { type, url, setPageCount } = usePreview('Preview.Content');
   const handleLoad = useCallback((count: number) => setPageCount(count), [setPageCount]);
+  const { className } = composableProps(props);
 
   if (type === 'application/pdf') {
-    return <PdfCanvas classNames={classNames} url={url} onLoad={handleLoad} />;
+    return <PdfCanvas classNames={className} url={url} onLoad={handleLoad} ref={forwardedRef} />;
   }
 
   if (type.startsWith('image/') || type.startsWith('video/') || type.startsWith('audio/')) {
     return (
-      <MediaPlayer
-        classNames={mx('h-full w-full', classNames)}
-        src={url}
-        // `kind` is set explicitly for audio and video because the URL is a `data:`/`blob:`/presigned
-        // one with no usable extension, which is all `detectMediaKind` has to go on. Images take no
-        // `kind` — `MediaKind` has no image member, and the unset path is the `<img>` branch.
-        kind={type.startsWith('audio/') ? 'audio' : type.startsWith('video/') ? 'video' : undefined}
-        fit='contain'
-      />
+      <div {...composableProps(props, { classNames: 'grid h-full w-full min-h-0' })} ref={forwardedRef}>
+        <MediaPlayer
+          classNames='h-full w-full'
+          src={url}
+          // `kind` is set explicitly for audio and video because the URL is a `data:`/`blob:`/
+          // presigned one with no usable extension, which is all `detectMediaKind` has to go on.
+          // Images take no `kind` — `MediaKind` has no image member, and the unset path is `<img>`.
+          kind={type.startsWith('audio/') ? 'audio' : type.startsWith('video/') ? 'video' : undefined}
+          fit='contain'
+        />
+      </div>
     );
   }
 
   return (
-    <a className={mx('p-4 underline', classNames)} href={url} download>
-      Download file
-    </a>
+    <div {...composableProps(props, { classNames: 'p-4' })} ref={forwardedRef}>
+      <a className='underline' href={url} download>
+        Download file
+      </a>
+    </div>
   );
-};
+});
 
 PreviewContent.displayName = 'Preview.Content';
 

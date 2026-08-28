@@ -10499,9 +10499,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-react':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-react
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -10535,6 +10532,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@radix-ui/react-compose-refs':
+        specifier: 'catalog:'
+        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
       effect:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
@@ -10545,6 +10545,9 @@ importers:
         specifier: 'catalog:'
         version: 14.2.3(react@19.2.7)
     devDependencies:
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
