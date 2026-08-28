@@ -25,14 +25,18 @@ type StoryArgs = {
 // the item unmounting as the reader scrolls past it.
 const store = createWidgetStateStore();
 
+// The query container a thread gets from `MessageList`'s `Column.Center`: a widget caps itself
+// against it, and without one `cqi` falls back to the viewport.
 const DefaultStory = ({ content }: StoryArgs) => (
   <WidgetStateProvider store={store}>
-    <MarkdownBlock text={content} registry={assistantRegistry} />
+    <div className='dx-container-type-inline-size'>
+      <MarkdownBlock text={content} registry={assistantRegistry} />
+    </div>
   </WidgetStateProvider>
 );
 
 const meta = {
-  title: 'ui/react-ui-assistant/registry',
+  title: 'ui/react-ui-assistant/widgets/Registry',
   component: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'p-4' })],
   parameters: {

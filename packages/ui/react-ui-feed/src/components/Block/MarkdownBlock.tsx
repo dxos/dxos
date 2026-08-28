@@ -224,7 +224,10 @@ export const MarkdownBlock = memo(
 
     return (
       <>
-        <div className={mx('dx-inline-size-container', classNames)} ref={rootRef} />
+        {/* No query container here: this element is the shrink-to-fit basis for a prompt's bubble,
+            and inline-size containment would stop its text sizing it. The container is the row's
+            `Column.Center`, whose width is definite. */}
+        <div className={mx(classNames)} ref={rootRef} />
         {widgets.map(({ Component, root, id, props }) => (
           <div key={id}>{createPortal(<Component view={view ?? undefined} {...props} />, root)}</div>
         ))}

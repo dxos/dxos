@@ -30,7 +30,7 @@ export class SuggestionWidget extends WidgetType {
     // `py` separates chips that wrapped onto a second row: an inline-level box contributes its
     // padding to the line box, so this is the vertical gap — and it is padding for the reason above.
     return Domino.of('span')
-      .classNames(mx('dx-inline-max-size inline-flex overflow-hidden py-1 pe-1'))
+      .classNames(mx('dx-container-query-inline-size inline-flex overflow-hidden py-1 pe-1'))
       .append(
         Domino.of('button')
           .attributes({

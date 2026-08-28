@@ -28,7 +28,7 @@ export class SelectWidget extends WidgetType {
       .append(
         ...this.options.map((option) =>
           Domino.of('button')
-            .classNames('dx-button dx-inline-max-size inline-block py-1')
+            .classNames('dx-button dx-container-query-inline-size inline-block py-1')
             .attributes({ 'data-action': 'submit', 'data-value': option, 'data-density': 'md' })
             .text(option),
         ),

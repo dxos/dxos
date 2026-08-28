@@ -610,7 +610,7 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
                   in (`max-w-[100cqi]`); with no container `cqi` resolves against the viewport and a
                   suggestion chip overflows the thread. Not on the editor's content: a prompt's
                   bubble is shrink-to-fit, and containing the text's contribution collapses it. */}
-              <Column.Center classNames='dx-inline-size-container'>
+              <Column.Center classNames='dx-container-type-inline-size'>
                 <Chrome
                   message={message}
                   index={index}
