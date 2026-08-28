@@ -8,8 +8,14 @@ with backoff, the space root and credentials documents are named in the replicat
 documents are read from whichever replicator realm holds them, and HALO documents now replicate between an
 identity's own devices. What is still NOT done is the CLIENT read flip: there is no `CredentialSource`
 behind `ControlPipeline`, so the client still reads its credentials from the control feed and the document
-is written but never authoritative. That flip and all of Phase 3 are the remaining work. Phase 4 is out of
-scope for every PR so far by design._
+is written but never authoritative. Phase 3 is PARTLY done — the anchor migration, credential mirroring, EDGE
+dual-source read, root reporting and HALO replication items below are checked; what remains is the client
+read flip and the still-unchecked Phase 3 items. Phase 4 is out of scope for every PR so far by design._
+
+> **Historical note on `idDerivation`.** Phases 1–3 below were written when a space could be anchored
+> either on its key or on its root document, recorded as `idDerivation`. That was BACKTRACKED: a space id
+> is now ALWAYS `SHA-256(spaceKey)[0..20]` and `idDerivation` no longer exists in the code. Every mention
+> of it below is historical plan text, not a current contract.
 
 ## Resolved decision (2026-08-27) — was blocking Phase 3
 
@@ -278,10 +284,9 @@ migration; crash mid-migration and resume.
       writing feed credentials for it. Both sources still run today.
 
 - [x] **Reader accepts BOTH sources on EDGE** (dxos/edge#945) — `SpaceStateMachine` pulls from the
-      credentials document alongside the control feed. NOTE: an earlier version of this entry claimed the
-      root was found by DERIVATION (a `rootDoc` space id being the hash of its root document id). That was
-      BACKTRACKED — a space id is always `SHA-256(spaceKey)[0..20]`, `idDerivation` is deleted, and edge
-      instead learns the root from the client via `POST /db/spaces/:spaceId/root`. Cost: the wire contract
+      credentials document alongside the control feed. Edge learns the root from the client via
+      `POST /db/spaces/:spaceId/root` — an earlier version of this entry claimed derivation instead, see
+      the historical note at the top. Cost: the wire contract
       and `orderCredentials` are DUPLICATED in the edge repo, because the catalog pins `@dxos/echo-protocol`
       to a commit predating them. A document write is not gated the way feed admission gates a block, so
       every credential is signature-verified before it reaches a processor.

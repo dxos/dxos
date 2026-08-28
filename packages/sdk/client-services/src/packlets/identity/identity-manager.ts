@@ -148,8 +148,10 @@ export class IdentityManager {
   private readonly _meshReplicator: MeshEchoReplicator | undefined;
   /** Backoff, capped rather than terminating, for adopting a root that has not replicated yet. */
   private _haloAnchorRetryDelay = HALO_ANCHOR_RETRY_INITIAL;
-  /** Spaces whose credential mirroring is already wired, so re-anchoring cannot double-subscribe. */
+  /** Spaces whose credential mirroring is wired, so re-anchoring cannot double-subscribe. */
   private readonly _haloCredentialsWired = new Set<SpaceId>();
+  /** Spaces whose mirroring is being wired right now, so a concurrent pass does not race it. */
+  private readonly _haloCredentialsWiring = new Set<SpaceId>();
   private readonly _edgeConnection: EdgeConnection | undefined;
   private readonly _edgeFeatures: Runtime_Client_EdgeFeatures | undefined;
 
@@ -534,21 +536,28 @@ export class IdentityManager {
 
       // Anchoring re-runs on every retry and from each of the manager's entry points, so the
       // mirroring below has to wire once or each pass replays the whole chain again.
-      if (this._haloCredentialsWired.has(spaceId)) {
+      if (this._haloCredentialsWired.has(spaceId) || this._haloCredentialsWiring.has(spaceId)) {
         return;
       }
-      this._haloCredentialsWired.add(spaceId);
-      ctx.onDispose(() => this._haloCredentialsWired.delete(spaceId));
+      this._haloCredentialsWiring.add(spaceId);
+      try {
+        const store = await openCredentialsDocument(ctx, echoHost, spaceId);
+        for (const credential of identity.space.spaceState.credentials) {
+          store.append(credential);
+        }
+        ctx.onDispose(identity.space.credentialProcessed.on((credential) => store.append(credential)));
 
-      const store = await openCredentialsDocument(ctx, echoHost, spaceId);
-      for (const credential of identity.space.spaceState.credentials) {
-        store.append(credential);
+        // The document feeds the same state machine the feed does; processing is idempotent by
+        // credential id, so both sources can run during the migration window.
+        store.subscribe(ctx, (credential) => identity.space.processDocumentCredential(credential));
+
+        // Marked only once every step above has run, so a failure part-way leaves a later attempt
+        // free to retry rather than latching the space out of mirroring for good.
+        this._haloCredentialsWired.add(spaceId);
+        ctx.onDispose(() => this._haloCredentialsWired.delete(spaceId));
+      } finally {
+        this._haloCredentialsWiring.delete(spaceId);
       }
-      ctx.onDispose(identity.space.credentialProcessed.on((credential) => store.append(credential)));
-
-      // The document feeds the same state machine the feed does; processing is idempotent by
-      // credential id, so both sources can run during the migration window.
-      store.subscribe(ctx, (credential) => identity.space.processDocumentCredential(credential));
     } catch (err) {
       log.warn('failed to anchor the halo space on a root document', { spaceId, err });
     }
