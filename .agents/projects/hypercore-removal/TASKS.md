@@ -1,24 +1,26 @@
 # Hypercore removal — credentials over Automerge — Tasks
 
-_Resume (2026-08-25): PR A `dxos/dxos#12726`, PR B `dxos/edge#945`. Phase 1 is done; Phase 2 is done on the
-WRITE side (root + credentials document minted, populated and mirrored, on both data spaces and HALO) and
-on the EDGE read side. What is NOT done is the CLIENT read flip: there is no `CredentialSource` behind
-`ControlPipeline`, so the client still reads its credentials from the control feed and the document is
-written but never authoritative. That flip (Phase 2 write/read path + notarization) and all of Phase 3 are
-the remaining work, and Phase 3 is blocked on a design decision — see "Open decision" below. Phase 4 is out
-of scope for both PRs by design._
+_Resume (2026-08-28): PRs `dxos/dxos#12726` (merged), `#12774` (merged), `#12825` (open, green) and
+`dxos/edge#945` (open, green). Phase 1 done. Phase 2 done on the WRITE side and on the EDGE read side,
+including the pieces that made the edge path actually work end to end: edge is TOLD its space root over
+`POST /db/spaces/:spaceId/root` (write-once, genesis-checked, KV-cached), the client reports it on anchor
+with backoff, the space root and credentials documents are named in the replicated document set, credential
+documents are read from whichever replicator realm holds them, and HALO documents now replicate between an
+identity's own devices. What is still NOT done is the CLIENT read flip: there is no `CredentialSource`
+behind `ControlPipeline`, so the client still reads its credentials from the control feed and the document
+is written but never authoritative. That flip and all of Phase 3 are the remaining work. Phase 4 is out of
+scope for every PR so far by design._
 
-## Open decision — blocks Phase 3
+## Resolved decision (2026-08-27) — was blocking Phase 3
 
-Client-initiated migration executed by EDGE. Two shapes, not yet chosen:
+Shape 2: the client creates the documents and EDGE records them. Shape 1 (EDGE performs the migration) was
+dropped because edge cannot identify a space root on its own — a space id is `SHA-256(spaceKey)[0..20]` and
+no document id reproduces it, and the subduction replicator never materializes documents to inspect. So the
+record is a client report, made safe rather than authoritative: write-once per space, and a space migrating
+off the control feed must present a root carrying the genesis credential issued by its known space key.
 
-1. EDGE performs the migration and returns the new document ids. Matches the original framing; the
-   recovery/invitation resolver (returning `haloSpaceRootUrl`) falls out of it for free; larger build.
-2. The client creates the documents and EDGE records them. Smaller, and delivers the resolver now, but it
-   moves migration authority to the client, which is weaker than what was asked for.
-
-Until this is settled EDGE has nothing to put in `haloSpaceRootUrl`, because it locates space roots by
-derivation and nothing on EDGE records a root-document url for any space.
+This also delivers `haloSpaceRootUrl` — the inviting device names its root in the device invitation and the
+joining device adopts it.
 
 Branch `claude/remove-hypercore-automerge-creds-uo7lx9`. Rationale in `DESIGN.md`.
 
@@ -276,16 +278,26 @@ migration; crash mid-migration and resume.
       writing feed credentials for it. Both sources still run today.
 
 - [x] **Reader accepts BOTH sources on EDGE** (dxos/edge#945) — `SpaceStateMachine` pulls from the
-      credentials document alongside the control feed. Two things made this cheaper than planned:
-      the root document is found by DERIVATION rather than by a new client API or protocol field
-      (a `rootDoc` space id is the hash of its root document id, so exactly one stored document can
-      match, and the lookup is self-certifying); and the per-space selector falls out of that for
-      free — a space is on the document path exactly when its root resolves, so a legacy space needs
-      no flag to stay on the feed. Cost: the wire contract and `orderCredentials` are DUPLICATED in
-      the edge repo, because the catalog pins `@dxos/echo-protocol` to a commit predating them. A
-      shared fixed derivation vector is asserted on both sides so they cannot drift silently.
-      A document write is not gated the way feed admission gates a block, so every credential is
-      signature-verified before it reaches a processor.
+      credentials document alongside the control feed. NOTE: an earlier version of this entry claimed the
+      root was found by DERIVATION (a `rootDoc` space id being the hash of its root document id). That was
+      BACKTRACKED — a space id is always `SHA-256(spaceKey)[0..20]`, `idDerivation` is deleted, and edge
+      instead learns the root from the client via `POST /db/spaces/:spaceId/root`. Cost: the wire contract
+      and `orderCredentials` are DUPLICATED in the edge repo, because the catalog pins `@dxos/echo-protocol`
+      to a commit predating them. A document write is not gated the way feed admission gates a block, so
+      every credential is signature-verified before it reaches a processor.
+- [x] **Edge is told the space root** — write-once record (`COALESCE`, returns the id in force), genesis
+      credential checked against the space's known space key, cached in `GlobalKv` (safe without
+      invalidation precisely because the record is write-once).
+- [x] **Client reports the root on anchor** (dxos#12774) — `EdgeHttpClient.recordSpaceRoot`, retried with
+      backoff on the manager's own context, since the invitation accept flow disposes its ctx as soon as
+      `acceptSpace` returns.
+- [x] **The three bugs the e2e suite exposed** — the space root and credentials documents hung off the
+      space rather than the directory, so they were never in the replicated set; credentials were read
+      through the classical replicator while replication landed in the subduction realm; and `acceptSpace`
+      accepted a `spaceRootUrl` and then ignored it, minting a competing root.
+- [x] **HALO documents replicate between devices** (dxos#12825) — halo sessions registered only the gossip
+      extension, so a joining device could never fetch the root the inviter named. It now registers the
+      automerge replicator extension too, and adoption retries to a ceiling.
 - [ ] Reader accepts both sources on the CLIENT for the whole migration window.
 - [ ] **Dual-write during the window** — a migrating space writes every credential to BOTH
       the control feed and the credentials doc, so either reader stays complete and no
