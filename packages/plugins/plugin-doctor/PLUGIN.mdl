@@ -16,13 +16,16 @@ The following extension dialects are used in this document.
 | Term   | URI                       |
 |--------|---------------------------|
 | `op`   | `org.dxos.mdl.op@1.0`     |
+| `op@1.1` | `org.dxos.mdl.op@1.1`   |
 | `feat` | `org.dxos.mdl.feat@1.0`   |
 | `test` | `org.dxos.mdl.test@1.0`   |
+| `flow` | `org.dxos.mdl.flow@1.0`   |
 
 ## Operations
 
 ```mdl
 op queryComposerLogs
+  key: org.dxos.operation.doctor.queryComposerLogs
   desc: |
     Query the local browser tab's own NDJSON log store. Read-only. Same
     scenarios as scripts/query-logs.mjs, plus group-by + aggregate.
@@ -126,6 +129,45 @@ test T-2: Top messages by frequency
     - groups.length <= 10
     - groups[0].count >= groups[1].count
     - truncated is true if more than 10 distinct messages existed
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+plugin-doctor is not in `getDefaults` or the dev-only default set (see
+`packages/apps/composer-app/src/plugin-defs.tsx`) — it is OFF by default. It contributes no UI
+surface at all, only the `queryComposerLogs` tool, so the flow is a single agent-invoked query.
+
+```mdl
+flow QA-1: Query the browser tab's own log store
+  desc: The plugin's entire surface — ask the assistant a question that requires reading its own NDJSON log store back.
+  actors: agent
+  covers: [F-1.1, F-1.6, F-1.9, T-1]
+  status: unverified
+  given:
+    - an identity exists
+    - plugin-doctor is enabled — it is OFF by default
+    - the browser tab has produced at least one log entry at each of a few levels (true after
+      any normal session)
+  test:
+    - name: Group log entries by level
+      do: Ask the assistant "how many log entries of each level have been recorded this session?"
+      invoke: [op:queryComposerLogs] { groupBy: "level", aggregate: "count" }
+      capture: grouped
+      expect: the response lists a count per level (e.g. I, W, E), sorted by count descending, and
+        no raw entries are echoed
+      assert: |
+        return Array.isArray($grouped.groups) && $grouped.entries === undefined &&
+          $grouped.groups.every((g, i, arr) => i === 0 || arr[i - 1].count >= g.count);
+    - name: Fetch the most recent warnings
+      do: Ask the assistant "show me the last 5 warning-level log lines."
+      invoke: [op:queryComposerLogs] { levels: ["W"], limit: 5, order: "desc" }
+      expect: at most 5 entries are returned, all at level W, newest first
+      assert: return $result.entries.every((e) => e.l === 'W') && $result.entries.length <= 5
 ```
 
 ---

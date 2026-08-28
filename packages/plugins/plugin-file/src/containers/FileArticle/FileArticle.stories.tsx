@@ -117,7 +117,7 @@ export const PdfPortrait: Story = {
 };
 
 export const PdfLandscape: Story = {
-  decorators: [withFile(() => bytesOf(landscapePdf), 'composer.pdf', 'application/pdf')],
+  decorators: [withFile(() => bytesOf(landscapePdf), 'landscape.pdf', 'application/pdf')],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     // Rendered by pdf.js, not handed to an `<iframe>` — the article must not regress to the

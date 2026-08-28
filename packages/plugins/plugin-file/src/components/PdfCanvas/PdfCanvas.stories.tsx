@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import landscapeUrl from '../../../fixtures/composer.pdf?url';
+import landscapeUrl from '../../../fixtures/landscape.pdf?url';
 import longUrl from '../../../fixtures/long.pdf?url';
 import pdfUrl from '../../../fixtures/test.pdf?url';
 import { PdfCanvas } from './PdfCanvas';

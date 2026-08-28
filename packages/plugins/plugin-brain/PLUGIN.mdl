@@ -36,7 +36,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
-| `op`        | `org.dxos.mdl.op@1.0`         |
+| `op`        | `org.dxos.mdl.op@1.1`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
 
 ## Types
 
@@ -101,6 +102,7 @@ type FactStoreRegistry
 
 ```mdl
 op queryFacts
+  key: org.dxos.operation.brain.queryFacts
   desc: |
     Runs a structured SemanticQuery against the space FactStore and returns compact
     facts for LLM consumption. Visible; listed as a tool of the brain skill.
@@ -115,6 +117,7 @@ op queryFacts
 
 ```mdl
 op summarizeSubject
+  key: org.dxos.operation.brain.summarizeSubject
   desc: |
     Queries all facts mentioning the subject (as subject-entity and as object entity),
     then prompts the LLM to compose a grounded summary that cites fact ids and respects
@@ -268,9 +271,47 @@ test T-5: Enrich → query integration (lives in plugin-inbox)
   then: facts extracted from the messages are returned
 ```
 
----
+## QA
 
-## Appendix: Extension Definitions
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+This plugin has no create operation of its own — facts land in the store via upstream pipelines
+(`plugin-inbox`'s `EnrichMailbox`), never through a user gesture this plugin owns — so there is
+nothing for `before`/`test` to create and nothing for `after` to undo. `queryFacts` and
+`summarizeSubject` are both agent-invocable read operations (`op@1.1`, keys below).
+
+```mdl
+flow QA-1: Query and summarize facts already in the store
+  desc: The plugin's own surface — QueryFacts and SummarizeSubject against a pre-populated FactStore.
+  actors: both
+  covers: [F-2.1, F-2.3, F-3.1, T-2, T-3]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open whose FactStore already holds facts about entity "alice-smith" —
+      seeded by a prior plugin-inbox EnrichMailbox run (see F-4.1); this plugin has no operation
+      that creates a fact itself
+  test:
+    - name: Query facts about the entity
+      do: (no direct UI for a structured query — this is the assistant path; a human instead opens
+        the FactsCompanion below and types "alice-smith" into its filter)
+      invoke: org.dxos.operation.brain.queryFacts { entity: "alice-smith" }
+      capture: queried
+      expect: every returned fact has "alice-smith" as its subject or object entity, bounded by
+        the default limit of 50
+      assert: return $result.facts.length > 0 && $result.facts.every((f) => f.subject.includes('alice') || f.object.includes('alice'));
+    - name: Summarize the entity
+      do: (assistant path only — ask the assistant "summarize alice-smith")
+      invoke: org.dxos.operation.brain.summarizeSubject { subject: "alice-smith" }
+      expect: a grounded summary is returned that cites at least one fact id, with factCount > 0
+      assert: return $result.factCount > 0 && $result.summary.length > 0;
+    - name: Open the FactsCompanion
+      do: Companion an object touched by the seeded facts (e.g. the enriched mailbox message) and
+        open its Facts companion panel.
+      expect: FactViewer lists the space's facts, filterable by entity/predicate text
+      note: NO `invoke` — FactsCompanion is a read-only React surface, not backed by an operation.
+```
 
 Extension block types used in this document are defined below using
 the core `ext` primitive — the only construct the base language provides.

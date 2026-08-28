@@ -91,6 +91,9 @@ export type { PluginConfig, State } from './plugin-defs.core';
 /**
  * Plugin keys enabled by default for new users, per environment (dev/local).
  *
+ * New keys go in the `isDev` block, and only for plugins that hit no permission-gated API on
+ * activation: a `fetch` or `WebSocket` to localhost raises Chrome's local network prompt at boot.
+ *
  * NOTE: Keep alphabetically sorted.
  */
 export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[] =>
@@ -151,7 +154,6 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       SandboxPlugin.meta.profile.key,
       SequencerPlugin.meta.profile.key,
       SidekickPlugin.meta.profile.key,
-      StreamDeckPlugin.meta.profile.key,
       StudioPlugin.meta.profile.key,
       TasksPlugin.meta.profile.key,
       TranscriptionPlugin.meta.profile.key,

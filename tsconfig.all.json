@@ -937,6 +937,9 @@
       "path": "packages/ui/ui-editor/tsconfig.json"
     },
     {
+      "path": "packages/ui/ui-icons/tsconfig.json"
+    },
+    {
       "path": "packages/ui/ui-theme/tsconfig.json"
     },
     {
