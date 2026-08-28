@@ -25,7 +25,6 @@ const handler: Operation.WithHandler<typeof TaskOperation.MoveTask> = TaskOperat
       // drop is one gesture and must not half-apply.
       const newParent = parentTask ? yield* TaskSet.resolveParentTask(taskSet, task, parentTask) : undefined;
 
-      // The same write the list applies on a drop, so a gesture and a verb call cannot diverge.
       TaskSet.moveTask(taskSet, task, {
         ...(parentTask !== undefined ? { parentTask: newParent ?? null } : {}),
         beforeId: before ? TaskSet.refEntityId(before) : undefined,

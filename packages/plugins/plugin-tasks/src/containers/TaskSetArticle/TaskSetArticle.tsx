@@ -55,11 +55,6 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
     [invokePromise, spaceId],
   );
 
-  // The one write that does not go through its verb: `MoveTask` re-derives the owning set and
-  // re-validates the parent through index queries, and a drop that waits on those leaves the row
-  // sitting in its old place until they answer. `TaskSet.moveTask` is the write half of the verb,
-  // applied here against objects the list already holds — the placement arrived validated against
-  // the same rendered tree the verb would re-derive.
   const handleMove = useCallback(
     (task: Task.Task, { parentTask, before }: TaskPlacement) =>
       TaskSet.moveTask(taskSet, task, { parentTask, beforeId: before?.id }),
@@ -112,9 +107,7 @@ TaskSetArticle.displayName = 'TaskSetArticle';
 /**
  * The set's tasks via `childOf` — membership is the ECHO parent edge, and transitive tolerates
  * legacy sub-tasks still parented to their parent task. The query re-emits on membership changes
- * only, never on a member's edit — `TaskList` rows subscribe themselves. Structure is the article's
- * to watch: order from the `tasks` array, where it is canonical, and hierarchy from each member's
- * `parentTask`, both folded into one atom so the list re-renders once per change.
+ * only, never on a member's edit — `TaskList` rows subscribe themselves.
  */
 const useSetTasks = (taskSet: TaskSet.TaskSet): Task.Task[] => {
   const db = Obj.getDatabase(taskSet);
@@ -122,13 +115,15 @@ const useSetTasks = (taskSet: TaskSet.TaskSet): Task.Task[] => {
   const orderedAtom = useMemo(
     () =>
       Atom.make((get) => {
-        // `parentTask` is subscribed, not just read: the hierarchy is list-level structure, so a
-        // re-parent that leaves array order alone still has to re-mint the array the tree walk
-        // derives from.
-        tasks.forEach((task) => get(Obj.atomProperty(task, 'parentTask')));
+        subscribeHierarchy(get, tasks);
         return TaskSet.orderTasks(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
       }),
     [taskSet, tasks],
   );
   return useAtomValue(orderedAtom);
+};
+
+/** Subscribes to every member's `parentTask`, which the set's array does not carry. */
+const subscribeHierarchy = (get: Atom.AtomContext, tasks: readonly Task.Task[]): void => {
+  tasks.forEach((task) => get(Obj.atomProperty(task, 'parentTask')));
 };

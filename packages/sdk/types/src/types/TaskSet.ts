@@ -464,10 +464,7 @@ export const applyParentTask = (
 
 /**
  * The whole write half of a move: reposition the task in the array and, when `parentTask` is
- * given (`null` for a root), re-parent it. Synchronous, so a caller holding the objects — the
- * list, on a drop — lands the move in the frame the gesture ends, rather than after the verb's
- * lookups answer. Validating the placement is the caller's job: {@link resolveParentTask} in the
- * verb, the rendered tree in the list.
+ * given (`null` for a root), re-parent it. Validating the placement is the caller's job.
  */
 export const moveTask = (
   taskSet: TaskSet,

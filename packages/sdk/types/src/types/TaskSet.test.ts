@@ -170,7 +170,6 @@ describe('TaskSet', () => {
       Effect.gen(function* () {
         const { taskSet, root, sibling } = yield* seedTree();
 
-        // Dropped onto `root` as its last child: nothing follows it, so the write is the parent alone.
         TaskSet.moveTask(taskSet, sibling, { parentTask: root });
 
         expect(titles(taskSet.tasks)).toEqual(['root', 'child', 'grandchild', 'sibling']);
