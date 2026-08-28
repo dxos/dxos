@@ -17,7 +17,7 @@ import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
 import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { Device, DeviceKind } from '@dxos/protocols/proto/dxos/client/services';
@@ -148,6 +148,8 @@ export class IdentityManager {
   private readonly _meshReplicator: MeshEchoReplicator | undefined;
   /** Backoff, capped rather than terminating, for adopting a root that has not replicated yet. */
   private _haloAnchorRetryDelay = HALO_ANCHOR_RETRY_INITIAL;
+  /** Spaces whose credential mirroring is already wired, so re-anchoring cannot double-subscribe. */
+  private readonly _haloCredentialsWired = new Set<SpaceId>();
   private readonly _edgeConnection: EdgeConnection | undefined;
   private readonly _edgeFeatures: Runtime_Client_EdgeFeatures | undefined;
 
@@ -497,19 +499,14 @@ export class IdentityManager {
       if (!echoHost.getSpaceRootRefs(spaceId)) {
         const adopted = this._pendingHaloSpaceRootUrl;
         if (adopted !== undefined && isValidAutomergeUrl(adopted)) {
-          // A second root over the same space would leave the two devices disagreeing about which
-          // document carries the chain, so the joining device takes the one the inviter named — and
-          // mints nothing when it cannot, since halo documents have no replication path between
-          // devices yet and the root may simply never arrive.
+          // A second root over the same space would leave the devices disagreeing about which
+          // document carries the chain, so the joining device takes the one the inviter named.
           try {
             await echoHost.adoptSpaceRoot(ctx, spaceId, adopted);
           } catch (err) {
-            // The root replicates from the inviting device over the mesh, which emits no identity
-            // state update on arrival, so nothing else would ever retry.
             log('halo space root named by the inviting device has not replicated yet', { spaceId, adopted, err });
-            // Backs off to a ceiling rather than giving up: a data space has `stateUpdate` to
-            // retrigger its latch, but this retry is the HALO's only path, so a device whose
-            // replication outlasts the backoff would otherwise never adopt the root at all.
+            // The root arrives over the mesh without emitting an identity state update, and this
+            // retry is the only path, so it backs off to a ceiling rather than giving up.
             scheduleTask(ctx, () => this._anchorHaloOnRootDocument(ctx, identity), this._haloAnchorRetryDelay);
             this._haloAnchorRetryDelay = Math.min(this._haloAnchorRetryDelay * 2, HALO_ANCHOR_RETRY_MAX);
             return;
@@ -534,6 +531,14 @@ export class IdentityManager {
       if (refs) {
         identity.setHaloSpaceRootUrl(refs.spaceRootDocUrl);
       }
+
+      // Anchoring re-runs on every retry and from each of the manager's entry points, so the
+      // mirroring below has to wire once or each pass replays the whole chain again.
+      if (this._haloCredentialsWired.has(spaceId)) {
+        return;
+      }
+      this._haloCredentialsWired.add(spaceId);
+      ctx.onDispose(() => this._haloCredentialsWired.delete(spaceId));
 
       const store = await openCredentialsDocument(ctx, echoHost, spaceId);
       for (const credential of identity.space.spaceState.credentials) {
@@ -583,15 +588,11 @@ export class IdentityManager {
   }
 
   /**
-   * Gives a peer device access to the HALO's automerge documents. Without it the space root and the
-   * credentials document it names have no path between devices, so a joining device could never
-   * adopt the root the inviting device named and would be left with a feed-only chain.
-   *
-   * Every session reaching here is already authorized as a device of this identity, so membership
-   * needs no further check — unlike a data space, whose members are distinct identities.
+   * Gives a peer device access to the HALO's automerge documents, without which the space root and
+   * its credentials document have no path between an identity's devices.
    */
   private async _connectEchoMeshReplicator(space: Space, session: Teleport): Promise<void> {
-    // The HALO grows documents only under the flag; with it off there is nothing to replicate.
+    // The HALO grows documents only under the flag, so with it off there is nothing to replicate.
     if (!this._automergeCredentials) {
       return;
     }

@@ -41,7 +41,7 @@ describe('services/device', () => {
     expect(guest.identityManager.identity?.identityKey).to.deep.eq(identity1.identityKey);
   });
 
-  test('the joining device adopts the halo root of the inviting device', { timeout: 60_000 }, async () => {
+  test('the joining device adopts the halo root of the inviting device', { timeout: 90_000 }, async () => {
     const [host, guest] = await chain<ServiceContext>([closeAfterTest])(
       createPeers(2, undefined, { automergeCredentials: true }),
     );
@@ -55,11 +55,10 @@ describe('services/device', () => {
     expect(guest.identityManager.identity?.haloSpaceId).to.equal(spaceId);
 
     // The root replicates over the device swarm rather than arriving with the invitation, so the
-    // guest adopts it on a retry; a competing root would leave the devices disagreeing about which
-    // document carries the credential chain.
+    // budget has to outlast one full capped retry interval.
     await waitForCondition({
       condition: () => guest.echoHost.getSpaceRootRefs(spaceId)?.spaceRootDocUrl === hostRefs!.spaceRootDocUrl,
-      timeout: 30_000,
+      timeout: 60_000,
     });
   });
 
