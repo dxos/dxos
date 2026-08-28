@@ -46,6 +46,7 @@
 //   - Virtualization or drag-and-drop. Reach for `@dxos/react-ui-mosaic`.
 //   - Multi-select. Future expansion — the aspect (`useListSelection`) already supports it.
 
+import { useFocusableGroup } from '@fluentui/react-tabster';
 import React, {
   type ComponentPropsWithRef,
   type FocusEvent,
@@ -287,6 +288,12 @@ const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
     [onKeyDown, interactive, disabled],
   );
 
+  // A row that holds its own controls (a toggle, a delete button) would otherwise take the arrow
+  // keys one focusable at a time, stepping INTO the row instead of on to the next option. The
+  // groupper makes the row a single stop for the container's mover; `Enter` enters its controls and
+  // `Escape` returns. Rows with no focusable children are unaffected — there is nothing to enter.
+  const groupProps = useFocusableGroup({ tabBehavior: 'limited' });
+
   const composed = composableProps<HTMLLIElement>(rest, {
     classNames: styles.listboxItem({
       class: [!interactive && 'cursor-default', disabled && 'opacity-50 cursor-not-allowed'],
@@ -301,6 +308,7 @@ const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
   return (
     <ListItemProviderHost id={id} selected={selected}>
       <ListItem
+        {...groupProps}
         {...composed}
         role={selectable ? 'option' : 'listitem'}
         tabIndex={interactive ? 0 : -1}

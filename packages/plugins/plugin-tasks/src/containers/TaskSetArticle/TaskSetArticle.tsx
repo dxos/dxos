@@ -77,10 +77,12 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
       onTaskMove={handleMove}
       onTaskSelect={handleSelect}
     >
-      <TaskList.Create classNames='dx-document' placeholder={t('task-create.placeholder')} />
-      <TaskList.Viewport>
-        <TaskList.Content classNames='dx-document' />
-      </TaskList.Viewport>
+      <div className='dx-container grid grid-rows-[auto_1fr] gap-2'>
+        <TaskList.Create classNames='dx-document' placeholder={t('task-create.placeholder')} />
+        <TaskList.Viewport>
+          <TaskList.Content classNames='dx-document' />
+        </TaskList.Viewport>
+      </div>
     </TaskList.Root>
   );
 

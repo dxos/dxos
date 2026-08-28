@@ -14,10 +14,11 @@ import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import * as Actor from './Actor';
 import * as Milestone from './Milestone';
 
+// TODO(burdon): History.
+
 export const Priority = Schema.Literals(['none', 'low', 'medium', 'high', 'urgent']);
 export type Priority = Schema.Schema.Type<typeof Priority>;
 
-// `failed`/`cancelled` exist so delegated agent tasks and human tasks share one status vocabulary.
 export const Status = Schema.Literals(['todo', 'started', 'done', 'cancelled', 'failed']);
 export type Status = Schema.Schema.Type<typeof Status>;
 

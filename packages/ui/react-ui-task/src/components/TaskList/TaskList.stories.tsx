@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useState } from 'react';
-import { expect, waitFor } from 'storybook/test';
+import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { Obj, Ref } from '@dxos/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -127,15 +127,15 @@ const DefaultStory = ({
   return (
     <TaskList.Root
       tasks={tasks}
+      hierarchical={hierarchical}
+      selected={selected}
       showGroupLabels={showGroupLabels}
       showOrdinals={showOrdinals}
       showDescriptions={showDescriptions}
-      hierarchical={hierarchical}
       onTaskCreate={readonly ? undefined : handleCreate}
       onTaskUpdate={readonly ? undefined : handleUpdate}
       onTaskDelete={readonly ? undefined : handleDelete}
       onTaskMove={readonly || !hierarchical ? undefined : handleMove}
-      selected={selected}
       onTaskSelect={(task) => setSelected(task.id)}
     >
       <TaskList.Viewport>
@@ -270,6 +270,20 @@ export const TestHierarchy: Story = {
         'Sample the Ethiopian lots:2',
         'Log every profile:2',
       ]),
+    );
+
+    // Arrow keys step row to row and selection follows focus — the listbox aspect's own mechanism,
+    // which only works because each row is a Tabster groupper: without one the arrow lands on the
+    // row's first button instead of the next row.
+    const secondRowTitle = rows()[1].title;
+    rows()[0].row.focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(async () =>
+      expect(canvasElement.querySelector('[aria-selected="true"]')?.textContent).toContain(secondRowTitle),
+    );
+    await userEvent.keyboard('{ArrowUp}');
+    await waitFor(async () =>
+      expect(canvasElement.querySelector('[aria-selected="true"]')?.textContent).toContain(rows()[0].title),
     );
 
     // Moving a parent carries its sub-tasks: only the parent's own parentTask is written, so the
