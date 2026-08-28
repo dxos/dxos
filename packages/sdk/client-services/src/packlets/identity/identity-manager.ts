@@ -146,7 +146,7 @@ export class IdentityManager {
   private readonly _devicePresenceOfflineTimeout: number;
   private readonly _automergeCredentials: boolean;
   private readonly _meshReplicator: MeshEchoReplicator | undefined;
-  /** Backoff for adopting a root that has not replicated from the inviting device yet. */
+  /** Backoff, capped rather than terminating, for adopting a root that has not replicated yet. */
   private _haloAnchorRetryDelay = HALO_ANCHOR_RETRY_INITIAL;
   private readonly _edgeConnection: EdgeConnection | undefined;
   private readonly _edgeFeatures: Runtime_Client_EdgeFeatures | undefined;
@@ -507,10 +507,11 @@ export class IdentityManager {
             // The root replicates from the inviting device over the mesh, which emits no identity
             // state update on arrival, so nothing else would ever retry.
             log('halo space root named by the inviting device has not replicated yet', { spaceId, adopted, err });
-            if (this._haloAnchorRetryDelay <= HALO_ANCHOR_RETRY_MAX) {
-              scheduleTask(ctx, () => this._anchorHaloOnRootDocument(ctx, identity), this._haloAnchorRetryDelay);
-              this._haloAnchorRetryDelay *= 2;
-            }
+            // Backs off to a ceiling rather than giving up: a data space has `stateUpdate` to
+            // retrigger its latch, but this retry is the HALO's only path, so a device whose
+            // replication outlasts the backoff would otherwise never adopt the root at all.
+            scheduleTask(ctx, () => this._anchorHaloOnRootDocument(ctx, identity), this._haloAnchorRetryDelay);
+            this._haloAnchorRetryDelay = Math.min(this._haloAnchorRetryDelay * 2, HALO_ANCHOR_RETRY_MAX);
             return;
           }
         } else {
