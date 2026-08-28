@@ -20,6 +20,7 @@
     "changeset": "changeset",
     "changeset:publish": "changeset publish",
     "changeset:version": "changeset version && node scripts/sync-versions.mjs && pnpm install --lockfile-only",
+    "ci-affected": "node scripts/ci-affected.mjs",
     "check-changeset": "node scripts/check-changeset.mjs",
     "check-changesets": "node scripts/check-changesets.mjs",
     "check-cycles": "node scripts/check-cycles.mjs",
