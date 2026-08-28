@@ -355,6 +355,10 @@ flow QA-1: Create a board, add a card, delete and restore it
     - collection: a collection in that space, to create into
     - a custom ECHO type with a single-select field "status" (e.g. Tasks) exists in the space
     - no Kanban named "QA Board" exists — ABORT rather than deleting one this flow did not create
+    - board: the Kanban "QA Board" this flow creates — no create op exists (human-only step), so
+      the runner binds this once that step completes
+    - card: the card added to the board — no create op exists (human-only step), so the runner
+      binds this once that step completes
   test:
     - name: Create the board
       do: In the navtree, click + on a collection and choose Kanban. Name it "QA Board", pick the

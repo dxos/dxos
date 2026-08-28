@@ -26,6 +26,9 @@ export default Config2.make({
         dark: 'https://customer-5rxcjpyab08avpmn.cloudflarestream.com/cdf2656365bb1fd327c1fc2105d75e5a/iframe?poster=https%3A%2F%2Fcustomer-5rxcjpyab08avpmn.cloudflarestream.com%2Fcdf2656365bb1fd327c1fc2105d75e5a%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600',
       },
       { dark: 'https://media.dxos.network/plugin-details-markdown-dark.png' },
+      {
+        dark: 'https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev/demos/2026-08-27-qa-flows/plugin-markdown-QA-1.webm',
+      },
     ],
     tags: ['beta'],
   },

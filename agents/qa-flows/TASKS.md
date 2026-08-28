@@ -31,7 +31,7 @@ Already had flows before this branch: plugin-chess, plugin-deepseek, plugin-mark
 ### Batch 01
 
 - [x] `plugin-chess-com`
-- [x] `plugin-claude-agents`
+- [x] `plugin-claude`
 - [x] `plugin-code`
 - [x] `plugin-commerce`
 - [x] `plugin-computer`
@@ -166,23 +166,32 @@ Bucket prefix: `demos/2026-08-27-qa-flows/` in `agent-artifacts`.
 
 ### Findings from executing the flows
 
-These are defects in the specs or in the operations, found by running them:
+Executing the flows separates two things that reading them cannot: defects in the specs,
+and defects in my own driver. Both are recorded here, corrected in the specs where they
+belong.
 
-1. `markdown.update` takes `doc: Ref.Ref(...)`. Passing the live object (as the
-   pre-existing QA-1 spec's `$created.object` implies) fails with
-   `ref.tryLoad is not a function`; the invoker does not decode input through the
-   operation schema, so the caller must pass a real `Ref`.
-2. `sheet.create` returns `{ id: <DXN string> }` and places the sheet itself — it does
-   not return `{ object }`, so the usual create → `space.addObject` pairing does not
-   apply.
-3. `sheet.setRange` takes `cells: Record<A1, value>`, not `range` + `values`.
-4. `sheet.getRange` returns the stored formula (`=SUM(A1:A2)`), not the computed value,
-   so an `assert` on the evaluated result has to read the UI rather than the op output.
-5. `thread.appendChannelMessage` takes `{ channel, sender: Actor, text }` — a live
-   object and an actor, not a `Ref` and a `message`.
-6. `table.create` needs a schema-registry service the plain invoker path does not
-   provide (`Cannot read properties of undefined (reading 'addType')`) — not runnable
-   from the debug port as written.
+Spec defects, fixed on this branch:
+
+1. `markdown.update` takes `doc` as a `Ref`, not the live object. The pre-existing QA-1
+   passed `$created.object` and fails with `ref.tryLoad is not a function` — the invoker
+   does not decode input through the operation schema. Flow corrected to `Ref.make(...)`.
+2. `sheet.create` places the sheet in the space itself and returns a DXN string under
+   `id`, so QA-1's following `space.addObject` was redundant and its `$created.id` was
+   not a usable object reference. Step re-noted; `setRange` / `getRange` now take a
+   resolved `Ref`.
+3. `sheet.getRange` returns stored cell content, not the evaluated result — A3 comes back
+   as `=A1+A2`. The `assert` claiming `[[10],[20],[30]]` could never pass; the evaluated
+   value is now judged in the UI via `expect`.
+4. `table.create` is not runnable through the invoker: the handler reaches a schema
+   registry the plain invoke path does not provide (`Cannot read properties of undefined
+(reading 'addType')`). Step marked `blocked:`, flow `status: blocked`.
+
+Driver errors, not spec defects — the specs were right and I was wrong:
+
+5. `sheet.setRange` takes a `cells` record. The spec had this correct; my first driver
+   script passed `range` + `values` and failed.
+6. `thread.appendChannelMessage` takes a live `channel`, a `sender` actor and `text`. The
+   spec had this correct too; my driver passed the wrong shape before I read the schema.
 
 ### Not recorded, and why
 

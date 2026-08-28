@@ -206,6 +206,9 @@ export class AiChatProcessor {
   /** Currently active request fiber. */
   #requestFiber: Fiber.Fiber<void, unknown> | undefined;
 
+  /** Fiber following a turn this processor did not issue ({@link adopt}). */
+  #observeFiber: Fiber.Fiber<void, unknown> | undefined;
+
   /** Last request (for retries). */
   #lastRequest: ProcessorRequest | undefined;
 
@@ -328,26 +331,8 @@ export class AiChatProcessor {
           model: this._options.model,
           provider: this._options.provider,
         });
-        const session = yield* AgentService.getSession(this._feed, {
-          model: this._options.model,
-          provider: this._options.provider,
-          instructions: this._options.chat?.target?.instructions,
-        });
-        const ephemeralStream = session.subscribeEphemeral();
-        yield* ephemeralStream.pipe(
-          Stream.runForEach((message) =>
-            Effect.sync(() => {
-              for (const event of message.events) {
-                if (Trace.isOfType(PartialBlock, event)) {
-                  this.#handleEphemeralMessage(event.data);
-                } else if (Trace.isOfType(McpServerError, event)) {
-                  this.#handleMcpError(event.data);
-                }
-              }
-            }),
-          ),
-          Effect.forkChild,
-        );
+        const session = yield* this.#getSession();
+        yield* this.#forkEphemeralCollector(session);
 
         log('chat processor submitting prompt', { length: requestProp.message.length });
         yield* session.submitPrompt(createPromptContent(requestProp));
@@ -392,6 +377,117 @@ export class AiChatProcessor {
       this.#registry.set(this.active, false);
       this.#requestFiber = undefined;
     }
+  }
+
+  /**
+   * Mirrors turns this processor did not initiate into its own state: active/streaming state is
+   * per-processor ({@link useChatProcessor} builds one per mount) while the agent process outlives
+   * the mount, so a chat remounted mid-turn would otherwise render as idle.
+   *
+   * Returns a disposer that stops observing.
+   */
+  adopt(): () => void {
+    let disposed = false;
+    let unsubscribe: (() => void) | undefined;
+    void this._runtime
+      .runPromise(this.#getSession().pipe(Effect.provide(this._spaceLayer)))
+      .then((session) => {
+        if (disposed) {
+          return;
+        }
+
+        unsubscribe = this.#registry.subscribe(
+          session.running,
+          (running) => {
+            if (running) {
+              void this.#observe(session);
+            }
+          },
+          // The turn is normally already in flight when a remounted chat gets here.
+          { immediate: true },
+        );
+      })
+      .catch((err) => log.warn('failed to attach to agent session', { error: err }));
+
+    return () => {
+      disposed = true;
+      unsubscribe?.();
+      // The collector and its stream subscription outlive the unmount otherwise — one per remount,
+      // all feeding atoms nothing reads any more.
+      const fiber = this.#observeFiber;
+      if (fiber) {
+        this.#observeFiber = undefined;
+        void this._runtime.runPromise(Fiber.interrupt(fiber));
+      }
+    };
+  }
+
+  /**
+   * Follows a turn started elsewhere to completion, surfacing its streamed blocks here.
+   * A turn this processor issued is owned by {@link request}, which reports its own errors.
+   */
+  async #observe(session: AgentService.Session): Promise<void> {
+    if (this.#requestFiber || this.#observeFiber || this.#registry.get(this.active)) {
+      return;
+    }
+
+    log.info('observing agent turn', { feed: Obj.getURI(this._feed) });
+    try {
+      this.#registry.set(this.active, true);
+      const effect = Effect.gen({ self: this }, function* () {
+        yield* this.#forkEphemeralCollector(session);
+        yield* session.waitForCompletion();
+        this.#flushStreaming();
+      });
+
+      // Tracked apart from `#requestFiber` so `cancel` keeps meaning "stop the request this chat
+      // issued", and so the disposer interrupts only the observer.
+      this.#observeFiber = this._runtime.runFork(effect.pipe(Effect.provide(this._spaceLayer)));
+      const exit = await this._runtime.runPromise(Fiber.await(this.#observeFiber));
+      if (Exit.isFailure(exit) && !Cause.hasInterruptsOnly(exit.cause)) {
+        throw EffectEx.causeToError(exit.cause);
+      }
+    } catch (err) {
+      // Reported but not surfaced as this chat's error: the mount that issued the turn owns that.
+      log.warn('failed to observe agent turn', { error: err });
+    } finally {
+      this.#registry.set(this.active, false);
+      this.#observeFiber = undefined;
+    }
+  }
+
+  /**
+   * Resolves the agent session for this chat's feed, reusing the process a previous mount left
+   * running and spawning one only when there is none.
+   */
+  #getSession(): Effect.Effect<AgentService.Session, never, AgentService.AgentService> {
+    return AgentService.getSession(this._feed, {
+      model: this._options.model,
+      provider: this._options.provider,
+      instructions: this._options.chat?.target?.instructions,
+    });
+  }
+
+  /**
+   * Forks the collector for the session's ephemeral trace events (streaming blocks and MCP
+   * failures) as a child of the calling fiber.
+   */
+  #forkEphemeralCollector(session: AgentService.Session): Effect.Effect<void> {
+    return session.subscribeEphemeral().pipe(
+      Stream.runForEach((message) =>
+        Effect.sync(() => {
+          for (const event of message.events) {
+            if (Trace.isOfType(PartialBlock, event)) {
+              this.#handleEphemeralMessage(event.data);
+            } else if (Trace.isOfType(McpServerError, event)) {
+              this.#handleMcpError(event.data);
+            }
+          }
+        }),
+      ),
+      Effect.forkChild,
+      Effect.asVoid,
+    );
   }
 
   /**

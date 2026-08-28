@@ -127,7 +127,7 @@
       "path": "../../plugins/plugin-chess-com"
     },
     {
-      "path": "../../plugins/plugin-claude-agents"
+      "path": "../../plugins/plugin-claude"
     },
     {
       "path": "../../plugins/plugin-client"
@@ -302,6 +302,9 @@
     },
     {
       "path": "../../plugins/plugin-routine"
+    },
+    {
+      "path": "../../plugins/plugin-s3"
     },
     {
       "path": "../../plugins/plugin-sample"

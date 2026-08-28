@@ -63,9 +63,9 @@ flow QA-1: Create a planet and reshape it with live parameters
   after:
     - name: Delete the planet
       do: Right-click "QA Planet" in the navtree and choose Delete.
-      invoke: org.dxos.operation.space.removeObjects { objects: [], target: $given.space }
       expect: the row leaves the navtree and its plank closes if it was open
       note: |
-        `objects` cannot be filled from a prior `invoke` result (there was none) — the agent path
-        resolves the planet live, by name, immediately before this call.
+        NO `invoke` — nothing in the flow captured the planet (the create step is human-only), so
+        there is no id to pass `removeObjects`; deletion stays human-only rather than passing an
+        empty `objects` list, which removes nothing.
 ```

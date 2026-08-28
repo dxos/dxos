@@ -5,13 +5,9 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type JSX, type PropsWithChildren, useEffect } from 'react';
 
-import { Icon, type ThemedClassName, useControlledState } from '@dxos/react-ui';
+import { Icon, IconBlock, type ThemedClassName, useControlledState } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
-
-const IconBlock = ({ children }: PropsWithChildren) => {
-  return <div className='grid h-[24px] w-[24px] place-items-center'>{children}</div>;
-};
 
 //
 // Context
@@ -66,7 +62,7 @@ type ContentProps = ThemedClassName<PropsWithChildren>;
 const Content = composable<HTMLDivElement, ContentProps>(({ children, ...props }, forwardedRef) => (
   <div
     {...composableProps(props, {
-      classNames: 'w-full border border-subdued-separator rounded-md overflow-hidden',
+      classNames: 'w-full border border-subdued-separator rounded-md overflow-hidden!',
     })}
     ref={forwardedRef}
   >
@@ -93,7 +89,7 @@ const Header = ({ classNames, children, icon }: HeaderProps) => {
 
   return (
     <div
-      className={mx('w-full p-1 grid grid-cols-[24px_1fr_24px] gap-1 cursor-pointer select-none', classNames)}
+      className={mx('p-1 grid grid-cols-[2rem_1fr_2rem] items-center cursor-pointer select-none', classNames)}
       onClick={() => setOpen(!open)}
     >
       <IconBlock>
@@ -104,7 +100,7 @@ const Header = ({ classNames, children, icon }: HeaderProps) => {
           classNames={['transition transition-transform ease-in-out', open ? 'rotate-90' : 'transform-none']}
         />
       </IconBlock>
-      <div className='w-full flex gap-1 items-center overflow-hidden truncate'>{children}</div>
+      <div className='flex grow items-center overflow-hidden truncate'>{children}</div>
       {icon && <IconBlock>{icon}</IconBlock>}
     </div>
   );

@@ -3,6 +3,7 @@
 //
 
 export * from './automerge-host';
+export * from './document-lease';
 export * from './handle-state';
 export * from './sqlite-storage-adapter';
 export * from './sqlite-heads-store';

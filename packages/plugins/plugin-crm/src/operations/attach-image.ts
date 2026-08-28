@@ -11,6 +11,7 @@ import { EdgeServiceClient, Image } from '@dxos/edge-client/service';
 import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { Organization, Person } from '@dxos/types';
+import { safeFetchBytes, validateExternalUrl } from '@dxos/util';
 
 import { CrmOperation } from '#types';
 
@@ -27,73 +28,6 @@ const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10 MiB
 
 /** Timeout for the external image download. */
 const FETCH_TIMEOUT_MS = 15_000;
-
-/**
- * Hosts that must be rejected to prevent SSRF attacks on internal metadata
- * services or development loopback addresses. Also rejects explicit private
- * IPv4 ranges in case the agent supplies a raw-IP URL, plus a best-effort
- * check on IPv6 loopback / unique-local / link-local literals.
- */
-const isBlockedHost = (host: string): boolean => {
-  const h = host.toLowerCase().replace(/^\[/, '').replace(/\]$/, '');
-  if (h === 'localhost' || h === '0.0.0.0' || h === '::' || h === '::1') {
-    return true;
-  }
-
-  // IPv6 literals: reject loopback (::1), link-local (fe80::/10), and
-  // unique-local (fc00::/7) prefixes. The parser is intentionally loose —
-  // any false positive is better than a false negative for SSRF.
-  if (h.includes(':')) {
-    if (h.startsWith('fe8') || h.startsWith('fe9') || h.startsWith('fea') || h.startsWith('feb')) {
-      return true;
-    }
-    if (h.startsWith('fc') || h.startsWith('fd')) {
-      return true;
-    }
-    // IPv4-mapped IPv6 (::ffff:a.b.c.d) — fall through to the IPv4 parser
-    // on the embedded dotted-quad.
-    const mapped = h.match(/::ffff:([\d.]+)$/);
-    if (!mapped) {
-      return false;
-    }
-    return isBlockedIPv4(mapped[1]);
-  }
-
-  return isBlockedIPv4(h);
-};
-
-const isBlockedIPv4 = (host: string): boolean => {
-  const ipv4 = host.split('.').map(Number);
-  if (ipv4.length !== 4 || !ipv4.every((n) => Number.isInteger(n) && n >= 0 && n <= 255)) {
-    return false;
-  }
-  const [a, b] = ipv4;
-  // 10.0.0.0/8
-  if (a === 10) {
-    return true;
-  }
-  // 127.0.0.0/8
-  if (a === 127) {
-    return true;
-  }
-  // 169.254.0.0/16 (link-local; includes cloud metadata at 169.254.169.254).
-  if (a === 169 && b === 254) {
-    return true;
-  }
-  // 172.16.0.0/12
-  if (a === 172 && b !== undefined && b >= 16 && b <= 31) {
-    return true;
-  }
-  // 192.168.0.0/16
-  if (a === 192 && b === 168) {
-    return true;
-  }
-  // 100.64.0.0/10 (carrier-grade NAT).
-  if (a === 100 && b !== undefined && b >= 64 && b <= 127) {
-    return true;
-  }
-  return false;
-};
 
 const inferContentTypeFromUrl = (url: string): string | undefined => {
   const ext = url.split('?')[0]?.split('#')[0]?.split('.').pop()?.toLowerCase();
@@ -137,26 +71,6 @@ const getImageServiceUrl = (override?: string): string | undefined => {
   return fromEnv && fromEnv.length > 0 ? fromEnv : undefined;
 };
 
-/**
- * Validate that a URL is an absolute https URL whose host is not loopback,
- * private, or a cloud-metadata address.
- */
-const validateExternalUrl = (raw: string): URL => {
-  let parsed: URL;
-  try {
-    parsed = new URL(raw);
-  } catch {
-    throw new Error(`Invalid URL: ${raw}`);
-  }
-  if (parsed.protocol !== 'https:') {
-    throw new Error(`Only https URLs are accepted (got ${parsed.protocol})`);
-  }
-  if (isBlockedHost(parsed.hostname)) {
-    throw new Error(`Refusing to fetch from disallowed host: ${parsed.hostname}`);
-  }
-  return parsed;
-};
-
 /** Validate that an image-service-returned URL is absolute http(s). */
 const isAbsoluteHttpUrl = (raw: string): boolean => {
   try {
@@ -198,65 +112,17 @@ export const attachImageToSubject = ({
     });
 
     const downloaded = yield* Effect.tryPromise({
-      try: () => proxyFetchLegacy(validatedSource, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) }),
+      try: () =>
+        // Proxied because this runs in the page and the source is a third-party origin. Headless
+        // callers of `safeFetchBytes` omit `fetch` and go direct.
+        safeFetchBytes(validatedSource, {
+          maxBytes: MAX_IMAGE_BYTES,
+          timeoutMs: FETCH_TIMEOUT_MS,
+          fetch: (target, init) => proxyFetchLegacy(target, init),
+        }),
       catch: AttachImageError.wrap({ message: 'Failed to download image' }),
     });
-    if (!downloaded.ok) {
-      return yield* Effect.fail(
-        new AttachImageError({ message: `Failed to download image: ${downloaded.status} ${downloaded.statusText}` }),
-      );
-    }
-
-    const contentLengthHeader = downloaded.headers.get('content-length');
-    if (contentLengthHeader) {
-      const contentLength = Number(contentLengthHeader);
-      if (Number.isFinite(contentLength) && contentLength > MAX_IMAGE_BYTES) {
-        return yield* Effect.fail(
-          new AttachImageError({ message: `Image exceeds size cap (${contentLength} bytes > ${MAX_IMAGE_BYTES})` }),
-        );
-      }
-    }
-
-    // Stream the body and enforce the size cap as we go — a server that
-    // omits content-length or lies about it can otherwise feed arbitrary
-    // bytes bounded only by the fetch timeout.
-    const sourceBlob = yield* Effect.tryPromise({
-      try: async () => {
-        const body = downloaded.body;
-        if (!body) {
-          // No stream available (should be rare); fall back to .blob() but
-          // re-check size below.
-          const fallback = await downloaded.blob();
-          if (fallback.size > MAX_IMAGE_BYTES) {
-            throw new Error(`Image exceeds size cap (${fallback.size} bytes > ${MAX_IMAGE_BYTES})`);
-          }
-          return fallback;
-        }
-        const reader = body.getReader();
-        const chunks: Uint8Array[] = [];
-        let total = 0;
-        try {
-          while (true) {
-            const { value, done } = await reader.read();
-            if (done) {
-              break;
-            }
-            total += value.byteLength;
-            if (total > MAX_IMAGE_BYTES) {
-              await reader.cancel();
-              throw new Error(`Image exceeds size cap (>${MAX_IMAGE_BYTES} bytes)`);
-            }
-            chunks.push(value);
-          }
-        } finally {
-          reader.releaseLock?.();
-        }
-        return new Blob(chunks as BlobPart[]);
-      },
-      catch: AttachImageError.wrap({ message: 'Failed to read the downloaded image' }),
-    });
-
-    const responseType = downloaded.headers.get('content-type')?.split(';')[0]?.trim().toLowerCase();
+    const responseType = downloaded.contentType?.toLowerCase();
     // Strict: if the server supplied a content-type we require it to be
     // in the allowlist. No fallthrough to the URL extension — that was
     // exploitable by a .png URL that actually serves HTML.
@@ -273,7 +139,7 @@ export const attachImageToSubject = ({
       return yield* Effect.fail(new AttachImageError({ message: 'Unable to determine image content-type' }));
     }
 
-    const blob = sourceBlob.type === contentType ? sourceBlob : new Blob([sourceBlob], { type: contentType });
+    const blob = new Blob([downloaded.bytes as BlobPart], { type: contentType });
 
     const client = new EdgeServiceClient({ baseUrl: serviceUrl, timeout: FETCH_TIMEOUT_MS });
     const { url: uploadedUrl } = yield* Image.thumbnail(client, blob, {

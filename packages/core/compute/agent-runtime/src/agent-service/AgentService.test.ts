@@ -12,6 +12,7 @@ import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { expect } from 'vitest';
 
 import { LanguageModelFixture } from '@dxos/ai/testing';
@@ -602,6 +603,38 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
 
 // Control-plane coverage (no LLM turn), so it runs ungated in CI unlike the replay suite above.
 describe('Agent Service (control plane)', () => {
+  it.effect(
+    'reports whether the session is working on a turn',
+    Effect.fnUntraced(
+      function* (_) {
+        const registry = yield* Registry.AtomRegistry;
+        const processManager = yield* ProcessManager.ProcessManagerService;
+        const feed = yield* Database.add(Feed.make());
+        yield* Database.flush();
+        const target = Obj.getURI(feed);
+
+        const session = yield* getSession(feed);
+        const [handle] = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
+
+        // Spawned but not prompted: live, awaiting input, so not working on a turn.
+        expect(handle.status.state).toBe(Process.State.IDLE);
+        expect(registry.get(session.running)).toBe(false);
+
+        // Derived from the process's status atom, not fixed at the time the session was resolved.
+        const observed: boolean[] = [];
+        const unsubscribe = registry.subscribe(session.running, (running) => observed.push(running), {
+          immediate: true,
+        });
+        yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
+        yield* handle.terminate();
+        expect(registry.get(session.running)).toBe(false);
+        expect(observed).toEqual([false]);
+      },
+      Effect.provide(TestLayer()),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
   // Exercises the instruction-aware reuse identity on both paths — the session cache and the
   // remount (rediscovered process) path.
   it.effect(
