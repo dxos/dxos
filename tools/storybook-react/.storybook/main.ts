@@ -11,7 +11,7 @@ import turbosnap from 'vite-plugin-turbosnap';
 import wasm from 'vite-plugin-wasm';
 
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
-import { IconsPlugin } from '@dxos/vite-plugin-icons';
+import { IconsPlugin, iconSymbolPattern } from '@dxos/vite-plugin-icons';
 import importSource from '@dxos/vite-plugin-import-source';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -38,6 +38,7 @@ const staticDir = resolve(baseDir, './static');
 const agentCwd = process.env.DX_AGENT_CWD;
 const iconsDir = resolve(rootDir, 'node_modules/@phosphor-icons/core/assets');
 const dxosIconsDir = resolve(rootDir, 'packages/ui/brand/assets/icons');
+const extendedIconsDir = resolve(rootDir, 'packages/ui/ui-icons/assets');
 // tldraw self-hosts its fonts/icons; plugin-tldraw points tldraw at `/assets/plugin-tldraw` and the
 // app serves them via a copy step (see composer-app `copy:assets`). Mirror that here so sketch
 // surfaces render (tldraw blocks the editor behind an asset preload).
@@ -473,19 +474,23 @@ export const createConfig = ({
           },
 
           IconsPlugin({
-            // The leading negative lookahead restricts the `dx` set to the `regular` weight only
-            // (custom brand SVGs have no weight variants); the `ph` set retains all Phosphor weights.
-            symbolPattern:
-              '(?!dx--[a-z]+[a-z-]*--(?:bold|duotone|fill|light|thin))(ph|dx)--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+            // Built rather than written out: `ph` carries every weight while `dx` and `px` are regular-only.
+            symbolPattern: iconSymbolPattern({ sets: ['ph', 'dx', 'px'], regularOnly: ['dx', 'px'] }),
             assetPath: (iconSet, name, variant) => {
               switch (iconSet) {
                 case 'dx':
                   return `${dxosIconsDir}/${name}.svg`;
+                case 'px':
+                  return `${extendedIconsDir}/${name}.svg`;
                 default:
                   return `${iconsDir}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`;
               }
             },
             contentPaths: content,
+            // Keeps every `PxIcons` entry in the sprite so stories paint without a round trip.
+            scanPaths: [resolve(rootDir, 'packages/ui/ui-icons/src/index.ts')],
+            // Only `px` is served: the Phosphor catalog is ~9,000 files, too many to hand to a story.
+            assets: [{ route: '/px-icons', dir: extendedIconsDir }],
             spriteFile: 'icons.svg',
           }),
 

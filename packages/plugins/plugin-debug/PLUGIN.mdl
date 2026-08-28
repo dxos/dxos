@@ -72,13 +72,12 @@ plugin-debug is a dev-only utility plugin: it defaults on in `isDev` builds (see
 flow QA-1: Insert Lorem ipsum from the slash menu
   desc: The one debug feature with a real operation behind it — the MenuExtension contribution used as the worked example in plugin-markdown's QA-3.
   actors: both
-  covers: [ObjectDebugCompanion]
   status: unverified
   given:
     - an identity exists
     - space: a space is open and contains at least one collection
     - plugin-debug is enabled (dev-only default; see above)
-    - an empty document is open in the editor
+    - attendableId: an empty document is open in the editor, its attendable id
   test:
     - name: Open the command menu
       do: With the caret on an empty line, type `/`.

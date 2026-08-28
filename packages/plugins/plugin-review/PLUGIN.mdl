@@ -589,7 +589,7 @@ flow QA-1: Comment on a document, reply, and resolve
   covers: [F-5.1, F-5.3, T-1, T-7]
   status: unverified
   given:
-    - an identity exists
+    - identity: an identity exists, its Actor used as the comment `sender`
     - space: a space is open
     - collection: a collection in that space, to create into
     - doc: a Markdown document named "QA Review Doc" exists in the collection (created via

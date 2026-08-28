@@ -470,7 +470,8 @@ flow QA-2: Sync posts with a connected publisher
   status: unverified
   given:
     - an identity exists
-    - space: a space is open, with a Publication that has at least one unlinked draft Post
+    - space: a space is open
+    - publication: a Publication in that space with at least one unlinked draft Post
     - connection: a Connection to a real publisher exists in the space, matching the
       Publication's ConnectorAuthAnnotation — this is an external-service dependency; without it
       the toolbar's Sync action stays disabled (F-6.5)
