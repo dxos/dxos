@@ -9,7 +9,8 @@ import * as Process from '@dxos/compute/Process';
 import { log } from '@dxos/log';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { makeProcess } from '../../testing/test-trace';
+import { makeProcess } from '#testing';
+
 import { ProcessTree } from './ProcessTree';
 
 const processes: Process.Info[] = [

@@ -7,7 +7,8 @@ import { describe, test } from 'vitest';
 import * as Process from '@dxos/compute/Process';
 import { SpaceId, URI } from '@dxos/keys';
 
-import { makeProcess } from '../../testing/test-trace';
+import { makeProcess } from '#testing';
+
 import {
   ALL_PROCESS_ENVIRONMENTS,
   DEFAULT_PROCESS_ENVIRONMENTS,
