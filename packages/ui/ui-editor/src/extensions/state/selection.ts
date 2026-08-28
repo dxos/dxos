@@ -44,11 +44,16 @@ export type EditorStateStore = {
 
 const stateRestoreAnnotation = 'org.dxos.cm.state-restore';
 
+/** Window after a restore during which scroll events are not recorded. */
+const RESTORE_SUPPRESS_MS = 500;
+
 export const createEditorStateTransaction = ({ scrollTo, selection }: EditorSelectionState): TransactionSpec => {
   return {
     selection,
     scrollIntoView: !scrollTo,
-    effects: scrollTo ? EditorView.scrollIntoView(scrollTo, { yMargin: 96 }) : undefined,
+    // `scrollTo` is the position that was at the top of the viewport, so restore it there
+    // exactly; a y-margin would offset every restore by that margin.
+    effects: scrollTo ? EditorView.scrollIntoView(scrollTo, { y: 'start' }) : undefined,
     annotations: Transaction.userEvent.of(stateRestoreAnnotation),
   };
 };
@@ -59,27 +64,39 @@ export const createEditorStateTransaction = ({ scrollTo, selection }: EditorSele
 export const selectionState = ({ getState, setState }: Partial<EditorStateStore> = {}): Extension => {
   const setStateDebounced = debounce(setState!, 1_000);
 
+  // A restore dispatches its own scroll, which would immediately record a position measured
+  // before the document has finished laying out; ignore scroll events for a beat afterwards.
+  let suppressUntil = 0;
+
+  const record = (view: EditorView) => {
+    const id = view.state.facet(documentId);
+    if (!id || !setState || performance.now() < suppressUntil) {
+      return;
+    }
+
+    // `posAtCoords` takes client coordinates, so measure from the scroller's own rect rather
+    // than from `scrollTop` (which only coincides when the scroller sits at the top of the window).
+    const { top, left } = view.scrollDOM.getBoundingClientRect();
+    const pos = view.posAtCoords({ x: left + 1, y: top + 1 });
+    if (pos !== null) {
+      const { anchor, head } = view.state.selection.main;
+      setStateDebounced(id, { scrollTo: pos, selection: { anchor, head } });
+    }
+  };
+
   return [
-    // TODO(burdon): Track scrolling (currently only updates when cursor moves).
-    // EditorView.domEventHandlers({
-    //   scroll: (event) => {
-    //     setStateDebounced(id, {});
-    //   },
-    // }),
+    EditorView.domEventHandlers({
+      scroll: (_event, view) => {
+        record(view);
+      },
+    }),
     EditorView.updateListener.of(({ view, transactions }) => {
-      const id = view.state.facet(documentId);
-      if (!id || transactions.some((tr) => tr.isUserEvent(stateRestoreAnnotation))) {
+      if (transactions.some((tr) => tr.isUserEvent(stateRestoreAnnotation))) {
+        suppressUntil = performance.now() + RESTORE_SUPPRESS_MS;
         return;
       }
 
-      if (setState) {
-        const { scrollTop } = view.scrollDOM;
-        const pos = view.posAtCoords({ x: 0, y: scrollTop });
-        if (pos !== null) {
-          const { anchor, head } = view.state.selection.main;
-          setStateDebounced(id, { scrollTo: pos, selection: { anchor, head } });
-        }
-      }
+      record(view);
     }),
     getState &&
       keymap.of([
