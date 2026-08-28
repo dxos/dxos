@@ -91,6 +91,8 @@ jobs:
       - name: Resolve affected scope
         uses: ./.depot/actions/affected
 
+      # ─── Stage 1: gates that need no build ──────────────────────────────────────────────────────
+      # Independent node scripts, seconds each. `fail-fast: false` so one run reports every failure.
       - fail-fast: false
         parallel:
           - name: Check formatting
@@ -141,12 +143,14 @@ jobs:
       - name: Check module structure
         run: moon run :check-module-structure
 
+      # ─── Stage 3: the slow checks ───────────────────────────────────────────────────────────────
+      # ~2m30s against ~1m and ~1m, so they run last, and concurrently. `fail-fast: false` reports both.
+      #
       # One moon invocation, not a lane each: two concurrent moon processes in one workspace contend for
-      # the same task locks and cache writes. `moon exec` rather than `moon run` because only `exec` has
-      # `--on-failure`. `env -u` because both catch a property of an import edge, whose offending commit
-      # lands in a package neither project's inputs name — scoped, they no-op on the PRs they exist to
-      # catch. Unset rather than `MOON_AFFECTED=''`: empty is not "off", moon reads it as an empty base
-      # and still filters.
+      # the same task locks. Only `moon exec` has `--on-failure`. `env -u` because both checks catch a
+      # property of an import edge, whose offending commit lands in a package neither project's inputs
+      # name, so scoped they no-op on the PRs they exist to catch. Unset them, do not set
+      # `MOON_AFFECTED=''`. Empty is not "off", moon reads it as an empty base and still filters.
       - fail-fast: false
         parallel:
           - name: Check dependencies

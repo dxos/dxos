@@ -22,47 +22,7 @@ depot ci run --workflow .depot/workflows/check.yml --job check --ssh-after-step 
 
 ## Affected scoping
 
-Every `moon` step in Check is unconditional. [`actions/affected`](./actions/affected) decides what runs, once per job, by exporting `MOON_AFFECTED` and `MOON_BASE`. Both `moon run` and `moon exec` read those (2.5.2), including through the Trunk uploader's `run:` input, so no `moon` step carries an `--affected` flag or an `if:`.
-
-| Trigger | Scope | Base |
-| :-- | :-- | :-- |
-| `pull_request` / `pull_request_target` | affected | `pull_request.base.sha` |
-| `merge_group` | affected | `merge_group.base_sha` |
-| `push` to `main` | all | none |
-| `push` to any other branch, `workflow_dispatch` | affected | merge-base with `origin/main` |
-| `schedule` | all | none |
-| no event payload | affected | merge-base with `origin/main` |
-| any trigger, with `all: true` on the action | all | none |
-
-That second-to-last row covers any invocation with no event payload, including running the resolver by hand in a checkout. Without it such a run would fall back to rebuilding the world.
-
-`e2e-bundle` and `e2e` set `all: true` on an explicit `e2e` dispatch, which exists to run the whole suite. The two jobs must agree, or a cell runs suites whose bundle was never warmed.
-
-The resolver is [`resolve-affected.mjs`](./actions/affected/resolve-affected.mjs), beside the action that calls it, and it runs anywhere:
-
-```bash
-A=.depot/actions/affected/resolve-affected.mjs
-node $A                       # what CI would decide for this checkout
-node $A --event merge_group   # emulate another trigger
-node $A --help                # every flag
-eval "$(node $A --shell)" && moon run :build
-```
-
-**It falls back to a full run whenever a base cannot be resolved.** That matters more than it sounds. `moon` exits 0 having run nothing when the affected set comes back empty, so a base that quietly fails to resolve turns every gate in the workflow green. Same silent-degradation class as a dropped remote cache, which the CI project's [`DESIGN.md`](../.agents/projects/ci/DESIGN.md) covers.
-
-### Opting a step out of the scope
-
-The scope is job-level, so a `moon` step that must run unconditionally has to say so. Exactly one does, `check`'s `check-plugin-set` and `docs:bundle`, which catch import-edge regressions whose offending commit lands in a package neither project's inputs name:
-
-```yaml
-run: >-
-  env -u MOON_AFFECTED -u MOON_BASE -u MOON_HEAD
-  moon exec composer-app:check-plugin-set docs:bundle --on-failure continue
-```
-
-**Unset the variables. Do not set `MOON_AFFECTED` to an empty string.** Empty is not "off", because moon reads it as an empty base and still filters, so the step reports "No tasks affected" and passes having checked nothing.
-
-`moon query` is unaffected either way. Its subcommands do not read `MOON_AFFECTED`, so the `e2e` job's `Select shard targets` step returns the same list with or without it.
+`moon` steps in Check carry no `--affected` flag. [`actions/affected`](./actions/affected) works out the scope once per job from the trigger and exports it, and every `moon` step in that job inherits it. Its [README](./actions/affected/README.md) has the base per trigger, how to opt a step out, and how to run the resolver by hand.
 
 ## Parallel steps
 

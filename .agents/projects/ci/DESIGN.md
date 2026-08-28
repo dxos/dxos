@@ -26,7 +26,7 @@ flag, no `if:`. The previous shape carried an Affected and an All variant of eac
 - **A missing event resolves too.** With no `GITHUB_*` in the environment the resolver falls back to
   the merge-base with `origin/main`, so running it by hand in a checkout scopes the way the real
   trigger would rather than rebuilding the world. The resolver's `--event <name>` emulates any
-  trigger; the full table is in `.depot/README.md`.
+  trigger; the full table is in `.depot/actions/affected/README.md`.
 - **An unresolvable base means a full run, never an empty one.** `moon` exits 0 having run nothing
   when the affected set comes back empty, so a base that silently fails to resolve turns every gate
   green — the failure mode below, in a second guise.
