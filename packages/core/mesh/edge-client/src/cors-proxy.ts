@@ -27,7 +27,9 @@ const remapAuthorizationForProxy = (headers: Headers): Headers => {
 
 /**
  * Fetch through the open CORS proxy at `<edge>/cors/<host>/<path>`.
- * TEMPORARY — delete when the authenticated `/proxy/*` route on edge ships.
+ *
+ * @deprecated TODO(burdon): Delete when the authenticated `/proxy/*` route on edge ships. Open proxy:
+ * any caller, any target host, no credential.
  */
 export const proxyFetchLegacy = (target: URL, init: RequestInit = {}, clientTag?: string): Promise<Response> => {
   // Concatenated, not `new URL(path, base)`: an absolute path would replace the `/cors` prefix.
