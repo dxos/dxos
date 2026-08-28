@@ -23,7 +23,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.DeleteTask> = TaskOper
 
       // Read before the sweep: the array order is what an undo puts back.
       const entries = subtree.map((member) => {
-        const index = taskSet?.tasks.findIndex((ref) => TaskSet.refEntityId(ref) === member.id) ?? -1;
+        const index = taskSet?.tasks.findIndex((ref) => Task.refEntityId(ref) === member.id) ?? -1;
         return { task: member, index: index === -1 ? undefined : index };
       });
 

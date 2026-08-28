@@ -39,7 +39,7 @@ describe('Chat', () => {
         const chat = yield* makeChat;
 
         expect(Type.getTypename(Chat.Chat)).toBe('org.dxos.type.assistant.chat');
-        expect(Type.getVersion(Chat.Chat)).toBe('0.1.0');
+        expect(Type.getVersion(Chat.Chat)).toBe('0.2.0');
         expect(chat.name).toBe('Test');
 
         // Asserted on the schema, not the instance: `in` reports false for any declared-but-unset

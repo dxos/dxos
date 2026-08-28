@@ -626,7 +626,8 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
     },
     [chat],
   );
-  if (!chat || tasks.length === 0) {
+  // Rendered even when empty, so `TaskList.Create` can always add the first task.
+  if (!chat) {
     return null;
   }
 

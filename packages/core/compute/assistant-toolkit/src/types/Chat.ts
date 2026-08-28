@@ -20,7 +20,7 @@ import { HarnessContextError } from '../errors';
 /**
  * AI chat session.
  */
-export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistant.chat', '0.1.0'))(
+export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistant.chat', '0.2.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),
     viewType: Schema.String.pipe(Schema.optional),
