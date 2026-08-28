@@ -87,9 +87,11 @@ const input: ComponentFunction<InputStyleProps> = (props, ...etc) =>
       : mx(...sharedDefaultInputStyles(props), valence(props.validationValence), ...etc);
 
 // An `<input>` centres its single line inside `--dx-control`, so `py-0` still reads as inset; a
-// textarea starts its text at the top edge, where the same rule puts the first line against the
-// border. The inline pad is reused for the block axis: it matches that optical inset to within a
-// pixel and tracks density with it.
+// textarea lays text from the top edge, where the same rule puts the first line against the border.
+// The inline pad is reused for the block axis: it lands within ~1.5px of the input's optical inset
+// (6.5px against a 32px control) and tracks density with it. Centring it exactly would need
+// `calc((var(--dx-control) - 1lh) / 2)`, and `lh` is newer than this app's browser targets
+// (chrome108 / firefox104 / safari16), where the whole declaration would be dropped.
 const textArea: ComponentFunction<InputStyleProps> = (props, ...etc) => input(props, 'py-(--dx-control-pad)', ...etc);
 
 // Container that carries the input surface/border/focus when the field has adornments; the inner
