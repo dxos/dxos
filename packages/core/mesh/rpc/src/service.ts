@@ -92,8 +92,7 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
   if (exposed) {
     invariant(handlers);
     for (const serviceName of Object.keys(exposed) as (keyof Server)[]) {
-      // Get full service name with the package name without '.' at the beginning.
-      const serviceFqn = exposed[serviceName].serviceProto.fullName.slice(1);
+      const serviceFqn = exposed[serviceName].name;
       const serviceProvider = handlers[serviceName];
       exposedRpcs[serviceFqn] = exposed[serviceName].createServer(serviceProvider, encodingOptions);
     }
@@ -125,8 +124,7 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
   const requestedRpcs: Client = {} as Client;
   if (requested) {
     for (const serviceName of Object.keys(requested) as (keyof Client)[]) {
-      // Get full service name with the package name without '.' at the beginning.
-      const serviceFqn = requested[serviceName].serviceProto.fullName.slice(1);
+      const serviceFqn = requested[serviceName].name;
 
       requestedRpcs[serviceName] = requested[serviceName].createClient(
         {
@@ -230,8 +228,7 @@ export interface RpcBundledServerOptions<S> extends Omit<RpcPeerOptions, 'callHa
 export const createBundledRpcServer = <S>({ services, handlers, ...rest }: RpcBundledServerOptions<S>): RpcPeer => {
   const rpc: Record<string, ServiceHandler<any>> = {};
   for (const serviceName of Object.keys(services) as (keyof S)[]) {
-    // Get full service name with the package name without '.' at the beginning.
-    const serviceFqn = services[serviceName].serviceProto.fullName.slice(1);
+    const serviceFqn = services[serviceName].name;
     rpc[serviceFqn] = services[serviceName].createServer(handlers[serviceName] as any);
   }
 
