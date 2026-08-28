@@ -441,10 +441,6 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
     return this._remotePeerId;
   }
 
-  get bundleSyncEnabled(): boolean {
-    return false;
-  }
-
   async shouldAdvertise(params: ShouldAdvertiseProps): Promise<boolean> {
     if (!this._sharedPolicyEnabled) {
       log.verbose('share policy probe', { documentId: params.documentId, allow: true, reason: 'policy-disabled' });

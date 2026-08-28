@@ -298,9 +298,9 @@ describe('CollectionSynchronizer', () => {
   });
 
   test('peerCollectionStateUpdated fires with newDocsAppeared=false for edge peer orphans', async ({ expect }) => {
-    // peerId prefix must satisfy `isEdgePeerId` — anchored on the AUTOMERGE_REPLICATOR
+    // peerId prefix must satisfy `isEdgePeerId` — anchored on the SUBDUCTION_REPLICATOR
     // service name from `@dxos/protocols`.
-    const edgePeerId = 'automerge-replicator:edge-space-1:abc' as PeerId;
+    const edgePeerId = 'subduction-replicator:edge-space-1:abc' as PeerId;
     const collectionId = 'collection-test';
 
     const peer = await new CollectionSynchronizer({
