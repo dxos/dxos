@@ -180,12 +180,26 @@ describe('TaskSet', () => {
   describe('sub-trees', () => {
     it.effect('collectSubtree walks descendants and includes the root', () =>
       Effect.gen(function* () {
-        const { taskSet, root, child, grandchild, sibling } = yield* seedTree();
+        const { root, child, grandchild, sibling } = yield* seedTree();
 
-        const subtree = TaskSet.collectSubtree(yield* TaskSet.loadSetTasks(taskSet), root);
+        const subtree = yield* TaskSet.collectSubtree(root);
 
         expect(subtree.map((task) => task.id)).toEqual([root.id, child.id, grandchild.id]);
         expect(subtree.map((task) => task.id)).not.toContain(sibling.id);
+      }).pipe(Effect.provide(testLayer())),
+    );
+
+    it.effect('collectSubtree finds a sub-task filed in a different set', () =>
+      Effect.gen(function* () {
+        const { root } = yield* seedTree();
+        const other = yield* Database.add(TaskSet.make({ name: 'Elsewhere' }));
+        const stray = yield* Database.add(Task.make({ title: 'stray', status: 'todo', parentTask: Ref.make(root) }));
+        TaskSet.addTaskToSet(other, stray);
+        yield* Database.flush();
+
+        const subtree = yield* TaskSet.collectSubtree(root);
+
+        expect(subtree.map((task) => task.id)).toContain(stray.id);
       }).pipe(Effect.provide(testLayer())),
     );
 

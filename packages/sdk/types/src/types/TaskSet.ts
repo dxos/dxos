@@ -344,23 +344,30 @@ export const loadRefs = <T extends Obj.Unknown>(
 export const loadSetTasks = (taskSet: TaskSet): Effect.Effect<Task.Task[], never, Database.Service> =>
   loadRefs(taskSet.tasks);
 
-/** Every task in `tasks` transitively under `task`, including `task` itself. Cycle-safe. */
-export const collectSubtree = (tasks: readonly Task.Task[], task: Task.Task): Task.Task[] => {
-  const subtree: Task.Task[] = [];
-  const seen = new Set<string>();
-  const visit = (current: Task.Task): void => {
-    if (seen.has(current.id)) {
-      return;
+/**
+ * Every task transitively under `task` (via `parentTask`), including `task` itself. Children are
+ * discovered through the reverse-ref index — space-wide, loading each as it is found — rather
+ * than any one set's array, since a sub-task may be filed in a different set (or none). Cycle-safe.
+ */
+export const collectSubtree = (task: Task.Task): Effect.Effect<Task.Task[], never, Database.Service> =>
+  Effect.gen(function* () {
+    const subtree: Task.Task[] = [];
+    const seen = new Set<string>();
+    const queue: Task.Task[] = [task];
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      if (seen.has(current.id)) {
+        continue;
+      }
+      seen.add(current.id);
+      subtree.push(current);
+      const children = yield* Database.query(
+        Query.select(Filter.id(current.id)).referencedBy(Task.Task, 'parentTask'),
+      ).run.pipe(Effect.orElseSucceed(() => []));
+      queue.push(...children);
     }
-    seen.add(current.id);
-    subtree.push(current);
-    for (const child of subTasks(tasks, current)) {
-      visit(child);
-    }
-  };
-  visit(task);
-  return subtree;
-};
+    return subtree;
+  });
 
 /**
  * Remove tasks from the set's array. Deleting the objects is the caller's job — nothing cascades
@@ -414,9 +421,8 @@ export const resolveParentTask = (
 ): Effect.Effect<Task.Task, InvalidParentTaskError | Error.EntityNotFoundError, Database.Service> =>
   Effect.gen(function* () {
     const candidate = yield* Database.load(parentTask);
-    // Loaded, not resolved: a cold ref dropped from the member list would blind the cycle check.
-    const members = taskSet ? yield* loadSetTasks(taskSet) : [];
-    const subtree = taskSet ? collectSubtree(members, task) : [task];
+    // Index-discovered and loading, so a cold or cross-set sub-task cannot blind the cycle check.
+    const subtree = yield* collectSubtree(task);
     if (subtree.some((member) => member.id === candidate.id)) {
       return yield* Effect.fail(
         new InvalidParentTaskError({ message: 'A task cannot be re-parented under itself or its own sub-tasks.' }),

@@ -14,15 +14,21 @@ const handler: Operation.WithHandler<typeof TaskOperation.DeleteTask> = TaskOper
   Operation.withHandler(
     Effect.fnUntraced(function* ({ task: taskRef }) {
       const task = yield* Database.load(taskRef);
-      const taskSet = yield* TaskSet.findTaskSet(task);
-      // Loaded, not resolved: a cold ref dropped from the walk would leave its task alive as an
-      // orphan after its ancestor is gone.
-      const members = taskSet ? yield* TaskSet.loadSetTasks(taskSet) : [];
-      const subtree = taskSet ? TaskSet.collectSubtree(members, task) : [task];
+      // Index-discovered and loading, so a cold or cross-set sub-task cannot escape the sweep.
+      const subtree = yield* TaskSet.collectSubtree(task);
       const ids = new Set(subtree.map((member) => member.id));
 
-      if (taskSet) {
-        TaskSet.removeTasksFromSet(taskSet, ids);
+      // Sweep every owning set's array — a sub-task may be filed in a different set than its
+      // ancestor, and its entry there would otherwise dangle forever.
+      const owners = new Map<string, TaskSet.TaskSet>();
+      for (const member of subtree) {
+        const owner = yield* TaskSet.findTaskSet(member);
+        if (owner) {
+          owners.set(owner.id, owner);
+        }
+      }
+      for (const owner of owners.values()) {
+        TaskSet.removeTasksFromSet(owner, ids);
       }
       // The whole subtree, explicitly: `parentTask` is app-level, so nothing cascades through it —
       // the ECHO parent edge ties members to their set, not to each other.
