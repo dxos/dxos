@@ -461,3 +461,20 @@ export const applyParentTask = (
   });
   Obj.setParent(task, taskSet);
 };
+
+/**
+ * The whole write half of a move: reposition the task in the array and, when `parentTask` is
+ * given (`null` for a root), re-parent it. Validating the placement is the caller's job.
+ */
+export const moveTask = (
+  taskSet: TaskSet,
+  task: Task.Task,
+  { parentTask, beforeId }: { parentTask?: Task.Task | null; beforeId?: EntityId },
+): void => {
+  Obj.update(taskSet, (taskSet) => {
+    taskSet.tasks = reorder(taskSet.tasks, task.id, beforeId);
+  });
+  if (parentTask !== undefined) {
+    applyParentTask(taskSet, task, parentTask ?? undefined);
+  }
+};
