@@ -4005,6 +4005,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../log
+      '@dxos/react-error-boundary':
+        specifier: workspace:*
+        version: link:../../ui/react-primitives/react-error-boundary
       '@storybook/icons':
         specifier: 'catalog:'
         version: 2.1.0(react@19.2.7)
@@ -17850,9 +17853,6 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
-      '@dxos/storybook-addon-logger':
-        specifier: workspace:*
-        version: link:../../common/storybook-addon-logger
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0-rc.108(effect@4.0.0-rc.108)(react@19.2.7)(scheduler@0.27.0)
@@ -23667,6 +23667,9 @@ importers:
       '@dxos/agent-claude':
         specifier: workspace:*
         version: link:../../packages/core/compute/agent-claude
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../packages/sdk/app-framework
       '@dxos/log':
         specifier: workspace:*
         version: link:../../packages/common/log
@@ -23790,6 +23793,9 @@ importers:
       sort-package-json:
         specifier: 'catalog:'
         version: 1.57.0
+      yaml:
+        specifier: 'catalog:'
+        version: 2.8.2
     devDependencies:
       '@types/deep-equal':
         specifier: 'catalog:'
