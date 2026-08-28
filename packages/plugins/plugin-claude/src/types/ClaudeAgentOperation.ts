@@ -201,6 +201,12 @@ export const GetTranscript = Operation.make({
         description: 'Maximum events to read (default 50).',
       }),
     ),
+    order: Schema.optional(
+      Schema.Literals(['first', 'last']).annotate({
+        description:
+          'Which end of the session to read: "last" (default) returns the most recent events, "first" the opening ones. Messages are returned in chronological order either way.',
+      }),
+    ),
   }),
   output: Schema.Struct({
     status: Schema.optional(Schema.String),

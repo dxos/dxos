@@ -1,6 +1,6 @@
 ---
-id: org.dxos.plugin.claudeAgents
-name: ClaudeAgentsPlugin
+id: org.dxos.plugin.claude
+name: ClaudePlugin
 version: 0.1.0
 ---
 
@@ -150,6 +150,12 @@ feat F-4: Sessions
     then: |
       the session state and its events are read, the object's status and
       stopReason are refreshed, and the user/agent text turns are returned
+
+  req F-4.7:
+    when: Get Claude Agent Transcript is invoked without an `order`
+    then: |
+      the LAST `limit` events are read (order=desc) and returned chronologically;
+      order: first reads the opening events instead
 ```
 
 ```mdl
@@ -309,7 +315,7 @@ flow QA-1: Configure, deploy and run a Claude managed agent
     - an identity exists
     - space: a space is open
     - collection: a collection in that space, to create into
-    - plugin-claude-agents is enabled — it is OFF by default, and no claudeAgents operation is
+    - plugin-claude is enabled — it is OFF by default, and no claudeAgents operation is
       registered until it is on. Enabling is a UI action (Settings -> plugin registry);
       `manager.enable()` returns without error from the debug port and does not enable it.
     - no ClaudeManagedAgent named "QA Agent" exists — ABORT rather than deleting one this flow

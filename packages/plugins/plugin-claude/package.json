@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/plugin-claude-agents",
+  "name": "@dxos/plugin-claude",
   "version": "0.11.1",
   "private": true,
   "description": "Claude managed agents as ECHO objects, with an assistant skill to configure, deploy and run them",
@@ -74,10 +74,10 @@
       "import": "./dist/lib/translations.mjs"
     },
     "./package.json": "./package.json",
-    "./ClaudeAgentsPlugin": {
-      "source": "./src/ClaudeAgentsPlugin.ts",
-      "types": "./dist/types/src/ClaudeAgentsPlugin.d.ts",
-      "import": "./dist/lib/ClaudeAgentsPlugin.mjs"
+    "./ClaudePlugin": {
+      "source": "./src/ClaudePlugin.ts",
+      "types": "./dist/types/src/ClaudePlugin.d.ts",
+      "import": "./dist/lib/ClaudePlugin.mjs"
     },
     "./ClaudeAgentOperation": {
       "source": "./src/types/ClaudeAgentOperation.ts",
