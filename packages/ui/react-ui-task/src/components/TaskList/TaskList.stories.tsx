@@ -89,6 +89,8 @@ const DefaultStory = ({
   hierarchical?: boolean;
 }) => {
   const [tasks, setTasks] = useState<Task.Task[]>(hierarchical ? hierarchicalSeed : seed);
+  // Selection is what the article wires, and what arrow-key navigation moves.
+  const [selected, setSelected] = useState<string>();
 
   const handleCreate = useCallback((title: string) => {
     setTasks((tasks) => [...tasks, Task.make({ title, status: 'todo' })]);
@@ -133,6 +135,8 @@ const DefaultStory = ({
       onTaskUpdate={readonly ? undefined : handleUpdate}
       onTaskDelete={readonly ? undefined : handleDelete}
       onTaskMove={readonly || !hierarchical ? undefined : handleMove}
+      selected={selected}
+      onTaskSelect={(task) => setSelected(task.id)}
     >
       <TaskList.Viewport>
         <TaskList.Content />

@@ -84,7 +84,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
     </TaskList.Root>
   );
 
-  // Embedded as a section (e.g. the ProjectArticle Tasks section): the host owns scroll and
+  // Embedded as a section (e.g., the ProjectArticle Tasks section): the host owns scroll and
   // chrome, so render the bare list — a nested Panel/scroll root would collapse width.
   if (role === AppSurface.Section.role) {
     return content;

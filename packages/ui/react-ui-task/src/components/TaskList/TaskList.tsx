@@ -159,15 +159,15 @@ const TaskListRoot = ({
   showGroupLabels = true,
   showOrdinals = false,
   showDescriptions = false,
+  hierarchical = false,
+  collapsed,
+  selected: selectedProp,
   statusLabel = (status) => DEFAULT_STATUS_LABELS[status],
   onTaskCreate,
   onTaskUpdate,
   onTaskDelete,
   onTaskSelect,
   onTaskMove,
-  selected: selectedProp,
-  hierarchical = false,
-  collapsed,
   onCollapsedChange,
 }: TaskListRootProps) => {
   // Uncontrolled by default: a host that only wants the click callback still gets the selected
