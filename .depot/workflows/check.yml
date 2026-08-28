@@ -124,14 +124,24 @@ jobs:
           - name: Check public packages are published
             run: pnpm run check-packages-published
 
+      # Neither of the next two can join the block above: each rewrites a file that `.moon/tasks/all.yml`
+      # declares an implicit input to every task, and neither restores it on a hard cancellation.
+      #
       # `.npmrc` sets `strict-peer-dependencies` with `auto-install-peers=false`, so re-resolving is what
-      # surfaces an unsatisfiable peer. Not a sibling in the block above: `--no-frozen-lockfile` can rewrite
-      # `pnpm-lock.yaml`, an implicit input to every moon task, and the `trap` does not survive a hard
-      # cancellation.
+      # surfaces an unsatisfiable peer. `--no-frozen-lockfile` can rewrite `pnpm-lock.yaml`.
       - name: Check for peer dependency issues
         run: |
           trap 'git checkout -- pnpm-lock.yaml' EXIT
           pnpm install --resolution-only --no-frozen-lockfile
+
+      # `pkg-lint` rejects a malformed `exports`/`imports` entry; this rejects a stale one. The toolbox is
+      # the only writer of those maps, so anything it would change is drift a contributor fixes by running
+      # the same command. `--lint-package-exports` writes `package.json` through `updatePackages()`, which
+      # four of the gates above read, so it stays out of the block for that reason too.
+      - name: Check package exports in sync
+        run: |
+          pnpm toolbox --lint-package-exports
+          git diff --exit-code -- '**/package.json'
 
       # ─── Stage 2: the compile gate ──────────────────────────────────────────────────────────────
       # ~15 s warm, minutes cold, and the floor under everything below it.

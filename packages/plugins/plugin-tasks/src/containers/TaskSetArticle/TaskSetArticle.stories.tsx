@@ -64,16 +64,13 @@ const seedTaskSet = (space: Space) => {
     { title: 'Schedule cuppings', status: 'todo' },
     { title: 'Print run v1', status: 'cancelled' },
   ];
-  // Membership and order are the set's arrays; the parent edge rides along for cascade.
   for (const props of seed) {
     const task = space.db.add(Task.make(props));
-    Obj.setParent(task, set);
     Obj.update(set, (set) => {
       set.tasks = [...set.tasks, Ref.make(task)];
     });
   }
   for (const milestone of [roasting, launch]) {
-    Obj.setParent(milestone, set);
     Obj.update(set, (set) => {
       set.milestones = [...set.milestones, Ref.make(milestone)];
     });
@@ -137,9 +134,9 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
- * The set resolves into one flat list and stays live afterwards. Membership is the `tasks` array,
- * so each mutation below is the one that would go stale if the view were cached. Milestones are
- * seeded but deliberately not rendered yet (see TASKS.md) — the list is every task in the set.
+ * The set resolves into one flat list and stays live afterwards — each mutation below is the one
+ * that would go stale if the view were cached. Milestones are seeded but deliberately not rendered
+ * yet (see TASKS.md).
  */
 export const Behavior: Story = {
   play: async ({ canvasElement }) => {
@@ -158,11 +155,11 @@ export const Behavior: Story = {
     }
     const { space, taskSet, roasting } = context;
 
-    // Updates — membership: a task appended to the array joins the list.
+    // Updates — membership: appending to the array parents the task to the set, joining it to the
+    // `childOf` query.
     const added = space.db.add(
       Task.make({ title: 'Order sample bags', status: 'todo', milestone: Ref.make(roasting) }),
     );
-    Obj.setParent(added, taskSet);
     Obj.update(taskSet, (taskSet) => {
       taskSet.tasks = [...taskSet.tasks, Ref.make(added)];
     });
@@ -175,10 +172,25 @@ export const Behavior: Story = {
     });
     await expect(canvas.findByText('Order sample bags (v2)', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
 
-    // Updates — removal: dropping the ref takes the row with it.
-    Obj.update(taskSet, (taskSet) => {
-      taskSet.tasks = taskSet.tasks.filter((ref) => ref.target?.id !== added.id);
+    const cuppings = TaskSet.resolveTasks(taskSet).find((task) => task.title === 'Schedule cuppings')!;
+    const label = TaskSet.resolveTasks(taskSet).find((task) => task.title === 'Design label')!;
+    Obj.update(cuppings, (cuppings) => {
+      cuppings.parentTask = Ref.make(label);
     });
+    await flushRender();
+    await expect(canvas.getByText('Schedule cuppings').closest('[role="option"]')).toHaveAttribute('aria-level', '2');
+
+    // Updates — removal: an array splice alone does not unlist a task (membership is the parent
+    // edge) — deleting it does.
+    TaskSet.deleteTask(space.db, taskSet, added);
     await waitFor(() => expect(canvas.queryByText('Order sample bags (v2)')).toBeNull(), { timeout: 10_000 });
   },
 };
+
+/** Frames enough for React to flush a subscription, far short of an index round trip. */
+const flushRender = (): Promise<void> =>
+  new Promise((resolve) => {
+    let remaining = 3;
+    const tick = () => (remaining-- > 0 ? requestAnimationFrame(tick) : resolve());
+    tick();
+  });

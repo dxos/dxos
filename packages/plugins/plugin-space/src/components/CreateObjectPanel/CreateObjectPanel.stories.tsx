@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { type Database } from '@dxos/echo';
+import { type Database, DXN, Obj, Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -25,10 +25,9 @@ const mockOptions: CreateObjectOption[] = [
   { id: 'org.dxos.type.thread', label: 'Thread', plugin: 'Threads', icon: 'ph--chat-circle-text--regular' },
 ];
 
-const mockSpaces = [
-  { id: 'space-1', db: {} as Database.Database, displayName: 'Personal Space' },
-  { id: 'space-2', db: {} as Database.Database, displayName: 'Team Space' },
-] as unknown as Space[];
+// The story always supplies `target`, so `CreateObjectPanel` never renders the space picker that
+// would read these — an empty, honestly-typed array avoids forcing fixture data through a cast.
+const mockSpaces: Space[] = [];
 
 const DefaultStory = () => {
   const [typename, setTypename] = useState<string | undefined>(undefined);
@@ -60,9 +59,11 @@ const mockInputSchema = Schema.Struct({
   description: Schema.optional(Schema.String.annotate({ title: 'Description' })),
 });
 
+class MockObject extends Type.makeObject<MockObject>(DXN.make('org.dxos.type.test.mock', '0.1.0'))(Schema.Struct({})) {}
+
 const mockMetadata: Metadata = {
   id: 'org.dxos.type.document',
-  createObject: () => Effect.succeed({ id: 'mock-id', subject: [], object: {} as any }),
+  createObject: () => Effect.succeed({ id: 'mock-id', subject: [], object: Obj.make(MockObject, {}) }),
   inputSchema: mockInputSchema,
 };
 

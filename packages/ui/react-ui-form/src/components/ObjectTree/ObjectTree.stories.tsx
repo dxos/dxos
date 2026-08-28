@@ -27,7 +27,6 @@ const ConfigSchema = Schema.Struct({
         dataRoot: Schema.String,
       }),
       edgeFeatures: Schema.Struct({
-        echoReplicator: Schema.Boolean,
         subductionReplicator: Schema.Boolean,
         signaling: Schema.Boolean,
       }),
@@ -68,7 +67,6 @@ const value: ConfigType = {
         dataRoot: '/var/lib/dxos',
       },
       edgeFeatures: {
-        echoReplicator: true,
         subductionReplicator: true,
         signaling: true,
       },

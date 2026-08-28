@@ -32,6 +32,11 @@
       "source": "./src/download.ts",
       "types": "./dist/types/src/download.d.ts",
       "import": "./dist/lib/download.mjs"
+    },
+    "./StorybookErrorFallback": {
+      "source": "./src/StorybookErrorFallback.tsx",
+      "types": "./dist/types/src/StorybookErrorFallback.d.ts",
+      "import": "./dist/lib/StorybookErrorFallback.mjs"
     }
   },
   "files": [
@@ -40,6 +45,7 @@
   ],
   "dependencies": {
     "@dxos/log": "workspace:*",
+    "@dxos/react-error-boundary": "workspace:*",
     "@storybook/icons": "catalog:",
     "@storybook/react-vite": "catalog:",
     "storybook": "catalog:"

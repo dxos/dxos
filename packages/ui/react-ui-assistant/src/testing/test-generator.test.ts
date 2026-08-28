@@ -63,9 +63,7 @@ describe('createMessageGenerator', () => {
     // user prompt and an assistant message with an Organization link (which requires
     // a real database; the recording layer stub is sufficient for this streaming test).
     await EffectEx.runAndForwardErrors(
-      createMessageGenerator()[2]!.pipe(
-        Effect.provide(Layer.mergeAll(Feed.ContextFeedService.layer(feed), recording.layer)),
-      ),
+      createMessageGenerator()[2]!.pipe(Effect.provide(Layer.mergeAll(Feed.layer(feed), recording.layer))),
     );
 
     expect(recording.items).toHaveLength(1);

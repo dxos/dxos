@@ -48,6 +48,8 @@ export const translations = [
         'task-status.failed.label': 'Failed',
         'task-status.cancelled.label': 'Cancelled',
         'delete-object.label': 'Delete object',
+        'task-deleted.label': 'Task deleted',
+        'tasks-deleted.label': 'Tasks deleted',
         'create-outline.label': 'Create outline',
         'text.placeholder': 'Enter text...',
         'menu.label': 'Menu',

@@ -16,14 +16,19 @@ import { makeRegistry } from '@dxos/echo-client';
 import { EffectEx } from '@dxos/effect';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
-import { createStructFieldsFromSchema, makeToolResolverFromOperations, projectFunctionToTool } from './services';
+import {
+  createStructFieldsFromSchema,
+  isHandlerLike,
+  makeToolResolverFromOperations,
+  projectFunctionToTool,
+} from './services';
 
 describe('createStructFieldsFromSchema', () => {
   const SPACE = SpaceId.random();
   const OBJECT = EntityId.random();
 
   // Projects a tool input schema for the LLM and decodes the given `in` value the way a tool call would.
-  const decodeIn = (schema: Schema.Codec<any, any>, value: unknown): any[] => {
+  const decodeIn = (schema: Schema.Codec<unknown, unknown>, value: unknown) => {
     const fields = createStructFieldsFromSchema(schema);
     const decoded: any = Schema.decodeUnknownSync(Schema.Struct(fields))({ in: value });
     return decoded.in;
@@ -197,7 +202,7 @@ describe('makeToolResolverFromOperations', () => {
   const op = (key: string) =>
     Operation.serialize(
       Operation.make({
-        meta: { key: DXN.make(key as any), name: 'Display Copy' },
+        meta: { key: DXN.make(key), name: 'Display Copy' },
         input: Schema.Struct({ value: Schema.String }),
         output: Schema.Struct({ ok: Schema.Boolean }),
       }),
@@ -230,7 +235,7 @@ describe('makeToolResolverFromOperations', () => {
     // Fires the registration inside the first query, after the snapshot is taken but before it is cached.
     let pending: (() => void) | undefined = () => registry.add([op('org.dxos.operation.web-search.fetch')]);
     const query = registry.query.bind(registry);
-    (registry as any).query = (...args: Parameters<typeof query>) => {
+    registry.query = (...args: Parameters<typeof query>) => {
       const result = query(...args);
       const run = result.run.bind(result);
       result.run = async () => {
@@ -307,4 +312,24 @@ describe('makeToolResolverFromOperations', () => {
     };
     return collect(document);
   };
+});
+
+describe('isHandlerLike', () => {
+  test('accepts a value with a tools object and a handle function', ({ expect }) => {
+    expect(isHandlerLike({ tools: {}, handle: () => {} })).toBe(true);
+  });
+
+  test('rejects a value whose tools is null', ({ expect }) => {
+    expect(isHandlerLike({ tools: null, handle: () => {} })).toBe(false);
+  });
+
+  test('rejects a value with no handle function', ({ expect }) => {
+    expect(isHandlerLike({ tools: {} })).toBe(false);
+  });
+
+  test('rejects primitives', ({ expect }) => {
+    expect(isHandlerLike(null)).toBe(false);
+    expect(isHandlerLike(undefined)).toBe(false);
+    expect(isHandlerLike('toolkit')).toBe(false);
+  });
 });

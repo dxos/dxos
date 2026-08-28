@@ -116,9 +116,9 @@ export class RegistryImpl implements Registry.Registry {
     this.prototype.query = this.prototype._query;
   }
 
-  private _query(query: Query.Any | Filter.Any): QueryResult.QueryResult<any> {
+  private _query(query: Query.Any | Filter.Any): QueryResult.QueryResult<unknown> {
     const normalized: Query.Any = Query.is(query) ? query : Query.select(query as Filter.Any);
-    return this.#queryResultCache.getOrCreate(normalized, () => new RegistryQueryResult<any>(this, normalized));
+    return this.#queryResultCache.getOrCreate(normalized, () => new RegistryQueryResult<unknown>(this, normalized));
   }
 
   getByURI(uri: string): Entity.Unknown | undefined {
@@ -295,14 +295,18 @@ class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
   }
 
   runSync(): T[] {
-    return this.runSyncEntries().map((entry) => entry.result!);
+    return this.runSyncEntries()
+      .filter((entry): entry is QueryResult.Entry<T> & { result: T } => entry.result !== undefined)
+      .map((entry) => entry.result);
   }
 
   runSyncEntries(): QueryResult.Entry<T>[] {
     const matches = executeQuery(this.#registry, this.#query.ast);
     return matches.map((entity): QueryResult.Entry<T> => ({
       id: getEntityId(entity),
-      result: entity as unknown as T,
+      // `executeQuery` only knows `Entity.Unknown`; the caller's `T` is verified by `#query`'s own
+      // filter/select AST at construction time, not by the compiler.
+      result: entity as T,
       resolution: { source: 'local', time: 0 },
     }));
   }

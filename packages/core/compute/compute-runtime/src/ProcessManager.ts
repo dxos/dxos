@@ -588,7 +588,7 @@ export class ProcessManagerImpl implements Manager {
       }
 
       const builtinTagKeys = new Set([
-        StorageService.StorageService.key,
+        StorageService.key,
         Scope.Scope.key,
         Trace.TraceService.key,
         Operation.Service.key,
@@ -798,7 +798,7 @@ export class ProcessManagerImpl implements Manager {
       }
 
       const builtinTagKeys = new Set([
-        StorageService.StorageService.key,
+        StorageService.key,
         Scope.Scope.key,
         Trace.TraceService.key,
         Operation.Service.key,

@@ -19,20 +19,15 @@ import {
   type CompleteOAuthRegistrationResponse,
   type CreateAgentRequestBody,
   type CreateAgentResponseBody,
-  type CreateSpaceRequest,
-  type CreateSpaceResponseBody,
   EDGE_CLIENT_TAG_HEADER,
   type EdgeStatus,
   type ExecuteWorkflowResponseBody,
-  type ExportBundleRequest,
-  type ExportBundleResponse,
   type FeedProtocol,
   type GetAccessTokenRequest,
   type GetAccessTokenResponseBody,
   type GetAgentStatusResponseBody,
   type GetNotarizationResponseBody,
   type GetPluginsResponseBody,
-  type ImportBundleRequest,
   type InitiateOAuthFlowRequest,
   type InitiateOAuthFlowResponse,
   type JoinSpaceRequest,
@@ -286,14 +281,6 @@ export class EdgeHttpClient extends BaseHttpClient {
     args?: EdgeHttpCallArgs,
   ): Promise<GetAccessTokenResponseBody> {
     return this._call(ctx, new URL('/oauth/token', this.baseUrl), { ...args, body, method: 'POST', auth: true });
-  }
-
-  //
-  // Spaces
-  //
-
-  async createSpace(ctx: Context, body: CreateSpaceRequest, args?: EdgeHttpCallArgs): Promise<CreateSpaceResponseBody> {
-    return this._call(ctx, new URL('/db/spaces/create', this.baseUrl), { ...args, body, method: 'POST', auth: true });
   }
 
   //
@@ -620,38 +607,6 @@ export class EdgeHttpClient extends BaseHttpClient {
       method: 'POST',
       auth: true,
       ...args,
-    });
-  }
-
-  //
-  // Import/Export
-  //
-
-  public async importBundle(
-    ctx: Context,
-    spaceId: SpaceId,
-    body: ImportBundleRequest,
-    args?: EdgeHttpCallArgs,
-  ): Promise<void> {
-    return this._call(ctx, new URL(`/db/spaces/${spaceId}/import`, this.baseUrl), {
-      ...args,
-      body,
-      method: 'PUT',
-      auth: true,
-    });
-  }
-
-  public async exportBundle(
-    ctx: Context,
-    spaceId: SpaceId,
-    body: ExportBundleRequest,
-    args?: EdgeHttpCallArgs,
-  ): Promise<ExportBundleResponse> {
-    return this._call(ctx, new URL(`/db/spaces/${spaceId}/export`, this.baseUrl), {
-      ...args,
-      body,
-      method: 'POST',
-      auth: true,
     });
   }
 

@@ -348,10 +348,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
               }
 
               return { pulled: syncResult.success };
-            }).pipe(
-              Effect.provide(Database.layer(db)),
-              Effect.provide(SlackApi.SlackCredentials.fromAccessToken(accessTokenRef)),
-            ),
+            }).pipe(Effect.provide(Database.layer(db)), Effect.provide(SlackApi.fromAccessToken(accessTokenRef))),
           );
 
           if (outcome._tag === 'Success') {
