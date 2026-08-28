@@ -570,7 +570,7 @@ export class DataSpaceManager extends Resource {
         }
       }
 
-      await this._mirrorCredentialsToDocument(ctx, space);
+      await this._mirrorCredentialsToDocument(space);
       this._reportSpaceRootToEdge(space);
       return true;
     } catch (err) {
@@ -619,8 +619,12 @@ export class DataSpaceManager extends Resource {
    * credentials backfills the existing chain and dual-writes new ones through one path, since the
    * control pipeline replays the whole feed on open.
    */
-  private async _mirrorCredentialsToDocument(ctx: Context, space: DataSpace): Promise<void> {
+  private async _mirrorCredentialsToDocument(space: DataSpace): Promise<void> {
     {
+      // The manager's own context, not the caller's: the invitation flow disposes its context as
+      // soon as `acceptSpace` returns, and a store bound to it would be released before its first
+      // write — the same reason `initializeDataPipelineAsync` is parented here.
+      const ctx = this._ctx;
       const store = await openCredentialsDocument(ctx, this._echoHost, space.id);
       for (const credential of space.inner.spaceState.credentials) {
         store.append(credential);
