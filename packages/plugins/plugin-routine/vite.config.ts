@@ -15,7 +15,7 @@ export default defineConfig({
     hooks: 'src/hooks/index.ts',
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
-    testing: 'src/testing.ts',
+    testing: 'src/testing/index.ts',
     translations: 'src/translations.ts',
     Routine: 'src/types/Routine.ts',
     RoutineCapabilities: 'src/types/RoutineCapabilities.ts',
