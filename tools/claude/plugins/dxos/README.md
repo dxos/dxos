@@ -29,11 +29,6 @@ CLI writes, so either route lands the plugin in the next desktop session.
 That is the whole install for the default `file` backend. `/dxos:project` works
 immediately, against a committed `registry.yml`.
 
-The plugin also ships the `composer` connector, which only the `mcp` backend
-uses. Staying on `file`, run `/mcp`, select `composer`, and toggle it off.
-Toggle it back on if you switch backends, which is what step 1 below
-authenticates.
-
 The Claude **Desktop** app is a different product and does not run plugins at all:
 no hooks, so no `/dxos:project`. You can still add the MCP server there by URL as
 a connector, which gives you the tools without the command.
