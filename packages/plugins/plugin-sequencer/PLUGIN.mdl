@@ -291,6 +291,9 @@ flow QA-1: Read and write a score as lead-sheet text
     - plugin-sequencer is enabled — it is registered as experimental and defaults ON only in dev
       builds (`isDev`); it must be enabled via Settings -> plugin registry otherwise
     - no Score named "QA Score" exists — ABORT rather than reusing one this flow did not create
+    - score: the Score object the human creates in step 1 (named "QA Score"), resolved by the
+      runner after that step so later steps can reference it — there is no create operation to
+      `capture` it from
   test:
     - name: Create the score
       do: In the navtree, click + on a collection and choose Score. Name it "QA Score".

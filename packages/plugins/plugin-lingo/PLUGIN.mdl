@@ -510,13 +510,20 @@ flow QA-1: Add a word to a deck and drill it to box 3
       capture: added
       expect: "gato" appears in the word list, due immediately (box 0)
       assert: return !$added.existing;
-    - name: Answer it correctly three times
-      do: Open FlashcardsArticle for "QA Deck" and answer "gato" correctly three times in a row.
+    - name: Answer it correctly (1st)
+      do: Open FlashcardsArticle for "QA Deck" and answer "gato" correctly.
+      invoke: [op:RecordReview] { word: $added.word, correct: true }
+      expect: the word's box advances and its streak is 1
+    - name: Answer it correctly (2nd)
+      do: Answer "gato" correctly again.
+      invoke: [op:RecordReview] { word: $added.word, correct: true }
+      expect: the word's box advances again and its streak is 2
+    - name: Answer it correctly (3rd)
+      do: Answer "gato" correctly a third time in a row.
       invoke: [op:RecordReview] { word: $added.word, correct: true }
       expect: after the third correct answer, the word's box is 3, streak is 3, and it is due 7
         days out
       assert: return $result.progress.box === 3 && $result.progress.streak === 3;
-      note: Coalesced — three RecordReview invocations in sequence, one per correct answer.
   after:
     - name: Delete the deck
       do: Right-click "QA Deck" in the navtree and choose Delete.
@@ -534,19 +541,25 @@ flow QA-2: Translate and analyze a passage in the reading companion
   given:
     - an identity exists
     - space: a space is open
-    - a Markdown document with a short non-English passage is open (e.g. "Hola, ¿cómo estás?")
+    - document: a Markdown document with a short non-English passage is open (e.g. "Hola, ¿cómo
+        estás?")
+    - text: the passage text, as it appears in the open document
+    - language: an existing Language ("English", code "en") selected as the target in the
+        reading companion
+    - no Analysis exists for this document and "English" — the first run asserts
+      `cached === false`, so a leftover Analysis from an earlier run fails it
     - plugin-lingo is enabled — it is OFF by default (isDev-only default)
   test:
     - name: Open the reading companion and run analysis
       do: Open the reading companion beside the document, pick "English" as the target language,
         and click the run action.
-      invoke: [op:TranslatePassage] { text: $given.text, language: $given.language }
+      invoke: [op:TranslatePassage] { text: $given.text, language: Ref.make($given.language) }
       capture: translated
       expect: a translated passage renders in the companion pane
       assert: return !!$translated.text;
     - name: Analyze the pair
       do: (the run action chains straight into analysis)
-      invoke: [op:AnalyzeText] { subject: $given.document, text: $given.text, language: $given.language, translation: $translated.text }
+      invoke: [op:AnalyzeText] { subject: Ref.make($given.document), text: $given.text, language: Ref.make($given.language), translation: $translated.text }
       capture: analyzed
       expect: the source pane shows decorated paragraph/sentence/clause/vocab regions; hovering
         one outlines the most specific region and reveals a gloss
@@ -555,7 +568,7 @@ flow QA-2: Translate and analyze a passage in the reading companion
         snippet boundary.
     - name: Re-run and confirm the cache is used
       do: Click the run action again without editing the document.
-      invoke: [op:AnalyzeText] { subject: $given.document, text: $given.text, language: $given.language, translation: $translated.text }
+      invoke: [op:AnalyzeText] { subject: Ref.make($given.document), text: $given.text, language: Ref.make($given.language), translation: $translated.text }
       expect: the same Analysis is reused; no second model call is made
       assert: return $result.cached === true;
   after:

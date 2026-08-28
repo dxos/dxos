@@ -312,7 +312,7 @@ flow QA-1: Add a video, transcribe it, and summarize it
       do: Switch to the Transcript tab.
       expect: the transcript reads the text captured in the previous step
       assert: |
-        return (await space.db.query(dxos.Filter.everything()).run())
+        return (await space.db.query(dxos.Filter.everything()).run()).objects
           .some((o) => o.id === $transcribed.object.id);
       note: Coalesced with the previous step per Execution Rule 2 — the transcript Text is live.
     - name: Summarize the transcript

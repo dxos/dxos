@@ -308,11 +308,12 @@ flow QA-1: Create a board, add and move an item, remove it
   after:
     - name: Delete the board
       do: Right-click "QA Board" in the navtree and choose Delete.
-      invoke: org.dxos.operation.space.removeObjects { objects: [$given.board], target: $given.collection }
       expect: the row leaves the navtree and its plank closes if it was open
       note: |
-        `space.removeObjects` deletes the Board object itself; "Meeting notes" is unaffected — the
-        board only referenced it. Owned by another plugin, not by plugin-board.
+        NO `invoke` — the board is created by a UI gesture in step 1, which has no operation to
+        `capture` it from, so there is no bound value for `space.removeObjects` to name; deletion
+        stays human-only like the rest of this flow. `space.removeObjects` deletes the Board object
+        itself; "Meeting notes" is unaffected — the board only referenced it.
 ```
 
 ---

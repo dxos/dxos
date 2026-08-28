@@ -112,7 +112,6 @@ op openDirectory
     (none — triggered imperatively via the app graph action)
   output: { id: string, subject: string[] } | void
   effects: [fs, echo:write]
-  note: Operation key `org.dxos.plugin.fileSystem.operation.open-directory`.
 ```
 
 ```mdl
@@ -123,7 +122,6 @@ op closeDirectory
     id: string
   output: void
   effects: [fs, echo:write]
-  note: Operation key `org.dxos.plugin.fileSystem.operation.close-directory`.
 ```
 
 ```mdl
@@ -136,7 +134,6 @@ op refreshDirectory
     id: string
   output: void
   effects: [fs]
-  note: Operation key `org.dxos.plugin.fileSystem.operation.refresh-directory`.
 ```
 
 ## Features

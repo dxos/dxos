@@ -165,6 +165,7 @@ export type ToolResult = Schema.Schema.Type<typeof ToolResult>;
 export const ContentBlockResult = Schema.TaggedStruct('~@dxos/types/ContentBlock.ContentBlockResult', {
   content: Schema.Array(Schema.Union([Text, Schema.suspend(() => Image), Schema.suspend(() => File)])),
 });
+
 export interface ContentBlockResult extends Schema.Schema.Type<typeof ContentBlockResult> {}
 
 export const isContentBlockResult = (result: unknown): result is ContentBlockResult => {
