@@ -289,6 +289,13 @@ export const TestHierarchy: Story = {
     // Each row is findable by task id, which is how the drag preview collects a subtree to clone.
     await expect(canvasElement.querySelectorAll('[data-task-id]')).toHaveLength(7);
 
+    // The create row's input starts where a row's title text does. The columns already match; what
+    // differs is that a tree row's title sits past its disclosure toggle and the create row has none.
+    const create = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.create"]')!;
+    await expect(Math.round(create.querySelector('input')!.getBoundingClientRect().left)).toEqual(
+      Math.round(rows()[0].row.querySelector('.truncate')!.getBoundingClientRect().left),
+    );
+
     // Every row carries a handle in the ordinal's own gutter — the ordinal and the handle share one
     // cell, so nothing shifts when the cursor crosses a row. The drop itself needs a real pointer
     // (native HTML5 drag events cannot be synthesized), so the manual script covers the gesture.

@@ -91,7 +91,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
   }
 
   return (
-    <Panel.Root role={role} classNames='border-2'>
+    <Panel.Root role={role}>
       <Panel.Toolbar asChild>
         <Toolbar.Root disabled={!hasAttention} />
       </Panel.Toolbar>

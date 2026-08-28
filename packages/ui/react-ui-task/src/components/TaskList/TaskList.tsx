@@ -879,7 +879,7 @@ type TaskListCreateProps = ComposableProps<{ placeholder?: string }>;
 
 const TaskListCreate = composable<HTMLDivElement, { placeholder?: string }>(
   ({ placeholder = 'Add task', ...props }, forwardedRef) => {
-    const { onTaskCreate, showGutter } = useTaskListContext('TaskList.Create');
+    const { onTaskCreate, showGutter, hierarchical } = useTaskListContext('TaskList.Create');
     const { className, ...rest } = composableProps(props);
     const [title, setTitle] = useState('');
     const handleKeyDown = useCallback(
@@ -910,16 +910,23 @@ const TaskListCreate = composable<HTMLDivElement, { placeholder?: string }>(
       >
         {showGutter && <span />}
         <Icon icon='ph--plus--regular' size={4} classNames='justify-self-center text-subdued' />
-        <Input.Root>
-          <Input.TextInput
-            variant='subdued'
-            classNames='px-0'
-            placeholder={placeholder}
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            onKeyDown={handleKeyDown}
-          />
-        </Input.Root>
+        {/* A tree row's title sits past its disclosure toggle, so the input clears the same distance
+            — the columns already match, and without this only the text within them disagrees. */}
+        <span
+          className='flex items-center min-w-0'
+          style={hierarchical ? { paddingInlineStart: TOGGLE_INSET } : undefined}
+        >
+          <Input.Root>
+            <Input.TextInput
+              variant='subdued'
+              classNames='px-0'
+              placeholder={placeholder}
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+          </Input.Root>
+        </span>
       </div>
     );
   },
