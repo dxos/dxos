@@ -6,6 +6,15 @@ version: 0.1.0
 
 Sandbox plugin for DXOS Composer providing isolated shell environments.
 
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term   | URI                       |
+|--------|---------------------------|
+| `flow` | `org.dxos.mdl.flow@1.0`   |
+| `op`   | `org.dxos.mdl.op@1.1`     |
+
 ## Types
 
 ```mdl
@@ -102,12 +111,12 @@ flow QA-1: Create a sandbox and run a command
 
     - name: Run a command
       do: Open the sandbox terminal and run `echo hello`.
-      invoke: [op:exec] { sandbox: $created.sandboxId, command: "echo hello" }
+      invoke: [op:exec] { sandbox: { "/": $created.sandboxId }, command: "echo hello" }
       expect: the terminal prints "hello" and the command exits 0
       assert: return $result.success && $result.stdout.trim() === 'hello';
   after:
     - name: Delete the sandbox
       do: Right-click "QA Sandbox" in the navtree and choose Delete.
-      invoke: org.dxos.operation.space.removeObjects { objects: [$created.sandboxId], target: $given.space }
+      invoke: org.dxos.operation.space.removeObjects { refs: [{ "/": $created.sandboxId }], target: $given.space }
       expect: the row leaves the navtree and the underlying shell environment is torn down
 ```

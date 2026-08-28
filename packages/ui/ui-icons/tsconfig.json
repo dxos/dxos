@@ -1,0 +1,17 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist/types"
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../react-ui"
+    },
+    {
+      "path": "../ui-theme"
+    }
+  ]
+}

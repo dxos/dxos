@@ -47,7 +47,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.CreateTask> = TaskOper
         );
       }
 
-      const task = yield* Database.add(
+      const task = yield* TaskSet.addPersisted(
         Task.make({
           title: title.trim(),
           status: 'todo',

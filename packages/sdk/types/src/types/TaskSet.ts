@@ -324,16 +324,30 @@ export const addMilestoneToSet = (taskSet: TaskSet, milestone: Milestone.Milesto
  * sync `resolveTasks` silently drops those — an incomplete member list here becomes an incomplete
  * subtree sweep or a false membership rejection.
  */
-export const loadRefs = <T extends Obj.Unknown>(
+const loadRefs = <T extends Obj.Unknown>(
   refs: ReadonlyArray<Ref.Ref<T>>,
 ): Effect.Effect<T[], never, Database.Service> =>
-  Effect.forEach(refs, (ref) =>
-    Database.load(ref).pipe(Effect.catchTag('EntityNotFoundError', () => Effect.succeed(undefined))),
-  ).pipe(Effect.map((objects) => dedupeById(objects)));
+  Effect.forEach(refs, (ref) => Database.load(ref).pipe(Effect.orElseSucceed(() => undefined))).pipe(
+    Effect.map((objects) => dedupeById(objects)),
+  );
 
-/** Every task in the set, loaded. */
-export const loadSetTasks = (taskSet: TaskSet): Effect.Effect<Task.Task[], never, Database.Service> =>
+/** Loads the set's tasks in array order, de-duplicated by id. */
+export const loadTasks = (taskSet: TaskSet): Effect.Effect<Task.Task[], never, Database.Service> =>
   loadRefs(taskSet.tasks);
+
+/** Loads the set's milestones in sequence, de-duplicated by id. */
+export const loadMilestones = (taskSet: TaskSet): Effect.Effect<Milestone.Milestone[], never, Database.Service> =>
+  loadRefs(taskSet.milestones);
+
+/** Adds the object and flushes, so a set never gains a ref to an object that was not yet stored. */
+export const addPersisted = <T extends Obj.Any>(
+  obj: T & Database.RejectTypeEntity<T>,
+): Effect.Effect<T, never, Database.Service> =>
+  Effect.gen(function* () {
+    const added = yield* Database.add<T>(obj);
+    yield* Database.flush();
+    return added;
+  });
 
 /**
  * Every task transitively under `task` (via `parentTask`), including `task` itself. Children are

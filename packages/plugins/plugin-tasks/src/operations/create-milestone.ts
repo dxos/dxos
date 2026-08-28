@@ -14,7 +14,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.CreateMilestone> = Tas
   Operation.withHandler(
     Effect.fnUntraced(function* ({ taskSet: taskSetRef, name, description, targetDate }) {
       const taskSet = yield* Database.load(taskSetRef);
-      const milestone = yield* Database.add(Milestone.make({ name: name.trim(), description, targetDate }));
+      const milestone = yield* TaskSet.addPersisted(Milestone.make({ name: name.trim(), description, targetDate }));
       TaskSet.addMilestoneToSet(taskSet, milestone);
       yield* Database.flush();
       return { milestone: milestone };
