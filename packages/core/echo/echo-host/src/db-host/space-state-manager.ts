@@ -36,6 +36,8 @@ export class SpaceStateManager extends Resource {
   private readonly _perRootContext = new Map<DocumentId, Context>();
   private readonly _lastSpaceDocumentList = new Map<SpaceId, DocumentId[]>();
   private readonly _spaceRootRefs = new Map<SpaceId, SpaceRootRefs>();
+  /** Re-runs a space's document-list check; the anchor documents enter the list only once refs exist. */
+  private readonly _documentListCheck = new Map<SpaceId, () => void>();
 
   public readonly spaceDocumentListUpdated = new Event<SpaceDocumentListUpdatedEvent>();
 
@@ -124,6 +126,8 @@ export class SpaceStateManager extends Resource {
       spaceRootDocUrl: refs.spaceRootDocUrl,
       credentialsDocUrl: refs.credentialsDocUrl,
     });
+    // The list was computed before these existed, and nothing else changes to trigger a recheck.
+    this._documentListCheck.get(spaceId)?.();
   }
 
   /**
@@ -218,7 +222,17 @@ export class SpaceStateManager extends Resource {
     const documentListCheckScheduler = new UpdateScheduler(
       ctx,
       async () => {
-        const documentIds = [root.documentId, ...root.getAllLinkedDocuments().map((url) => interpretAsDocumentId(url))];
+        // The space root and its credentials document hang off the space, not off the directory's
+        // links, so they replicate only if named here — without them a peer (edge included) can
+        // never read the credentials the space was anchored on.
+        const anchorIds = Object.values(this._spaceRootRefs.get(spaceId) ?? {})
+          .filter((url): url is AutomergeUrl => typeof url === 'string')
+          .map((url) => interpretAsDocumentId(url));
+        const documentIds = [
+          root.documentId,
+          ...anchorIds,
+          ...root.getAllLinkedDocuments().map((url) => interpretAsDocumentId(url)),
+        ];
         if (!isEqual(documentIds, this._lastSpaceDocumentList.get(spaceId))) {
           this._lastSpaceDocumentList.set(spaceId, documentIds);
           this.spaceDocumentListUpdated.emit(
@@ -228,6 +242,9 @@ export class SpaceStateManager extends Resource {
       },
       { maxFrequency: 50 },
     );
+    this._documentListCheck.set(spaceId, () => documentListCheckScheduler.trigger());
+    ctx.onDispose(() => this._documentListCheck.delete(spaceId));
+
     const triggerCheckOnChange = () => documentListCheckScheduler.trigger();
     root.on('change', triggerCheckOnChange);
     ctx.onDispose(() => root.off('change', triggerCheckOnChange));
