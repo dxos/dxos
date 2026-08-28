@@ -22,6 +22,7 @@ import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { translations as routineTranslations } from '@dxos/plugin-routine/translations';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
+import { translations as tasksTranslations } from '@dxos/plugin-tasks/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { TagIndex, Text } from '@dxos/schema';
@@ -38,6 +39,7 @@ export const storyParameters = {
     ...projectsTranslations,
     ...inboxTranslations,
     ...routineTranslations,
+    ...tasksTranslations,
     ...formTranslations,
     ...reactUiTranslations,
   ],

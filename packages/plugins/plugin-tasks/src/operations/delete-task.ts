@@ -20,6 +20,13 @@ const handler: Operation.WithHandler<typeof TaskOperation.DeleteTask> = TaskOper
       // Only the root's own set is swept; a member filed in another set leaves a dangling entry
       // there, which readers tolerate (a dangling ref reads as absent).
       const taskSet = yield* TaskSet.findTaskSet(task);
+
+      // Read before the sweep: the array order is what an undo puts back.
+      const entries = subtree.map((member) => {
+        const index = taskSet?.tasks.findIndex((ref) => TaskSet.refEntityId(ref) === member.id) ?? -1;
+        return { task: member, index: index === -1 ? undefined : index };
+      });
+
       if (taskSet) {
         TaskSet.removeTasksFromSet(taskSet, ids);
       }
@@ -29,7 +36,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.DeleteTask> = TaskOper
       }
       yield* Database.flush();
 
-      return { deleted: [...ids] };
+      return { deleted: [...ids], restore: { entries, taskSet } };
     }),
   ),
 );
