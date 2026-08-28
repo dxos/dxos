@@ -68,6 +68,20 @@ describe('task slash commands', () => {
     expect(titles(chat)).toEqual([]);
   });
 
+  test('a dangling checklist entry does not fail the command', async ({ expect }) => {
+    const { db, chat, run } = await setup(builder);
+
+    Chat.addTask(db, chat, 'Still here');
+    const gone = Chat.addTask(db, chat, 'Removed behind the array');
+    await db.flush();
+    // Removed without sweeping the array, so its entry can no longer resolve — `load` would throw
+    // and take the whole command with it.
+    db.remove(gone);
+    await db.flush();
+
+    expect(await run('/task:delete 1')).toEqual({ summary: 'Deleted “Still here”.' });
+  });
+
   test('/task:delete reports an unmatched selector rather than deleting anything', async ({ expect }) => {
     const { db, chat, run } = await setup(builder);
 

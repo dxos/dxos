@@ -106,7 +106,7 @@ describe('Chat', () => {
   );
 
   it.effect(
-    'deleteTask sweeps a sub-task whose ref was never resolved',
+    'deleteTask over a partial list strands the sub-task, which is why it takes the loaded checklist',
     Effect.fnUntraced(
       function* (_) {
         const chat = yield* makeChat;
@@ -116,13 +116,22 @@ describe('Chat', () => {
         const child = Chat.addTask(db, chat, 'Write the changelog', { parentTask: Ref.make(parent) });
         yield* Database.flush();
 
-        // The sync reader drops an unresolved ref, so a walk over it would miss the child and leave
-        // it in the array — parented to the chat, the cascade does not reach it either.
-        expect(Chat.resolveTasks(chat)).toHaveLength(2);
-        const deleted = Chat.deleteTask(db, chat, yield* Chat.loadTasks(chat), parent);
-        yield* Database.flush();
+        // What the sync reader yields when a child is not in the working set: the walk cannot see
+        // the child, so it survives in the array — and, parented to the chat, the cascade misses it.
+        expect(Chat.deleteTask(db, chat, [parent], parent)).toEqual([parent]);
+        expect(chat.tasks.map((ref) => ref.uri)).toEqual([Ref.make(child).uri]);
 
-        expect(deleted.map((task) => task.id).sort()).toEqual([parent.id, child.id].sort());
+        // The loaded checklist takes it with the parent, which is the contract callers must meet.
+        const restored = Chat.addTask(db, chat, 'Ship again');
+        Obj.update(child, (child) => {
+          child.parentTask = Ref.make(restored);
+        });
+        yield* Database.flush();
+        expect(
+          Chat.deleteTask(db, chat, yield* Chat.loadTasks(chat), restored)
+            .map((task) => task.id)
+            .sort(),
+        ).toEqual([restored.id, child.id].sort());
         expect(chat.tasks).toEqual([]);
       },
       Effect.provide(TestLayer),

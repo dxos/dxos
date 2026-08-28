@@ -124,7 +124,9 @@ const run = async <I, O>(
  * entry is invisible to both selector matching and the subtree sweep.
  */
 const hydrate = async (chat: Chat.Chat): Promise<Task.Task[]> => {
-  await Promise.all(chat.tasks.map((ref) => ref.load()));
+  // `tryLoad`, not `load`: the latter throws on an entry whose object is gone, failing the whole
+  // command instead of proceeding with the tasks that do resolve.
+  await Promise.all(chat.tasks.map((ref) => ref.tryLoad()));
   return Chat.resolveTasks(chat);
 };
 
