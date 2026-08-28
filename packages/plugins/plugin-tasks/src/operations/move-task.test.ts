@@ -45,14 +45,14 @@ describe('move-task', () => {
 
       const tasks = TaskSet.resolveTasks(taskSet);
       expect(titles(tasks)).toEqual(['a', 'c', 'b']);
-      expect(titles(TaskSet.rootTasks(tasks))).toEqual(['a', 'b']);
-      expect(titles(TaskSet.subTasks(tasks, tasks[0]))).toEqual(['c']);
+      expect(titles(Task.rootTasks(tasks))).toEqual(['a', 'b']);
+      expect(titles(Task.subTasks(tasks, tasks[0]))).toEqual(['c']);
 
       // `null` promotes back to a root, still repositioning in the same call.
       yield* moveTask.handler({ task: Ref.make(third), parentTask: null });
       const promoted = TaskSet.resolveTasks(taskSet);
       expect(titles(promoted)).toEqual(['a', 'b', 'c']);
-      expect(titles(TaskSet.rootTasks(promoted))).toEqual(['a', 'b', 'c']);
+      expect(titles(Task.rootTasks(promoted))).toEqual(['a', 'b', 'c']);
     }).pipe(Effect.provide(testLayer())),
   );
 
@@ -69,15 +69,15 @@ describe('move-task', () => {
       yield* moveTask.handler({ task: Ref.make(parent), parentTask: Ref.make(other) });
 
       const tasks = TaskSet.resolveTasks(taskSet);
-      expect(titles(TaskSet.rootTasks(tasks))).toEqual(['d']);
-      const [movedParent] = TaskSet.subTasks(
+      expect(titles(Task.rootTasks(tasks))).toEqual(['d']);
+      const [movedParent] = Task.subTasks(
         tasks,
         tasks.find(({ title }) => title === 'd')!,
       );
       expect(movedParent.title).toEqual('a');
-      const [movedChild] = TaskSet.subTasks(tasks, movedParent);
+      const [movedChild] = Task.subTasks(tasks, movedParent);
       expect(movedChild.title).toEqual('b');
-      expect(titles(TaskSet.subTasks(tasks, movedChild))).toEqual(['c']);
+      expect(titles(Task.subTasks(tasks, movedChild))).toEqual(['c']);
     }).pipe(Effect.provide(testLayer())),
   );
 
