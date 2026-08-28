@@ -271,8 +271,7 @@ const makeSession = (process: AgentHandle, feed: Feed.Feed, releaseSession: () =
       );
     }).pipe(Effect.scoped),
   submitPrompt: (prompt: string | ContentBlock.Any[]) => process.submitInput(prompt),
-  // Derived from the process's own status atom (written on the app-wide registry the UI reads),
-  // so a chat attaching to a turn another mount started follows it to completion.
+  // Derived from the process's status atom, written on the app-wide registry the UI reads.
   running: Atom.make(
     (get) =>
       get(process.statusAtom).state === Process.State.RUNNING ||

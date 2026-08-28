@@ -29,7 +29,7 @@ import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Obj, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
-import { type ContentBlock } from '@dxos/types';
+import { type ContentBlock, type Message } from '@dxos/types';
 
 import { AiChatProcessor } from './processor';
 
@@ -46,14 +46,14 @@ const partialBlockEvent = (messageId: string, text: string, pending: boolean): T
   },
 });
 
+const texts = (messages: readonly Message.Message[]): string[] =>
+  messages.map(({ blocks }) => blocks.map((block) => (block as ContentBlock.Text).text).join(''));
+
 /** Wraps events in the trace envelope `subscribeEphemeral` delivers. */
 const traceMessage = (events: Trace.Event[]): Trace.Message =>
   Obj.make(Trace.Message, { meta: {}, isEphemeral: true, events });
 
-/**
- * Awaits real macrotask turns (the test context virtualizes `Effect.sleep`) until `predicate` holds,
- * or a fixed number of turns has elapsed — for the promise hops between `adopt` and its observed turn.
- */
+/** Awaits real macrotask turns until `predicate` holds: the test context virtualizes `Effect.sleep`. */
 const settle = (predicate: () => boolean = () => false) =>
   Effect.promise(async () => {
     for (let turn = 0; turn < 100 && !predicate(); ++turn) {
@@ -83,6 +83,35 @@ const makeStubSession = (
       terminate: () => Effect.void,
       subscribeEphemeral: () => Stream.fromIterable(batches).pipe(Stream.ensuring(Deferred.succeed(done, undefined))),
     };
+  });
+
+/**
+ * Stub session whose stream pauses between the two batches, so a test can dispose the observer
+ * mid-turn and see whether the collector kept consuming. `release` resumes delivery.
+ */
+const makeGatedSession = (
+  feed: Feed.Feed,
+  before: Trace.Message[],
+  after: Trace.Message[],
+): Effect.Effect<{ session: AgentService.Session; release: Effect.Effect<void> }, never, never> =>
+  Effect.gen(function* () {
+    const gate = yield* Deferred.make<void>();
+    const done = yield* Deferred.make<void>();
+    const session: AgentService.Session = {
+      feed,
+      getContext: () => Effect.succeed([]),
+      addContext: () => Effect.void,
+      submitPrompt: () => Effect.void,
+      running: Atom.make(true),
+      waitForCompletion: () => Deferred.await(done),
+      terminate: () => Effect.void,
+      subscribeEphemeral: () =>
+        Stream.fromIterable(before).pipe(
+          Stream.concat(Stream.fromEffect(Deferred.await(gate)).pipe(Stream.flatMap(() => Stream.fromIterable(after)))),
+          Stream.ensuring(Deferred.succeed(done, undefined)),
+        ),
+    };
+    return { session, release: Deferred.succeed(gate, undefined).pipe(Effect.asVoid) };
   });
 
 /** The processor's space layer: the test layer's real services with the stub agent service swapped in. */
@@ -198,8 +227,7 @@ describe('AiChatProcessor streaming', () => {
         // unfinalized partial was flushed into the pending list when the agent completed.
         const messages = observableRegistry.get(processor.messages);
         expect(messages.map(({ id }) => id)).toEqual([m1, m2]);
-        const texts = messages.map(({ blocks }) => blocks.map((block) => (block as ContentBlock.Text).text).join(''));
-        expect(texts).toEqual(['Hello world.', 'Working…']);
+        expect(texts(messages)).toEqual(['Hello world.', 'Working…']);
 
         // The growing m1 partial was upserted in place (a single entry per snapshot), and the
         // stale partial that arrived after finalization never surfaced. Transient two-phase
@@ -218,9 +246,8 @@ describe('AiChatProcessor streaming', () => {
     ),
   );
 
-  // Regression (DX-1198): navigating to another page mid-turn remounts the chat with a fresh
-  // processor, whose `active` starts false while the agent process keeps running — the UI showed
-  // the agent as idle.
+  // A processor built by a remount starts with no state of its own, while the agent process for
+  // the feed keeps working.
   it.effect(
     'adopts an agent still running after a remount, and ignores an idle one',
     Effect.fn(
@@ -252,10 +279,9 @@ describe('AiChatProcessor streaming', () => {
           idleProcessor.adopt(),
         ];
         yield* Effect.addFinalizer(() => Effect.sync(() => idleUnsubscribers.forEach((dispose) => dispose())));
-        // Real macrotasks, not `Effect.sleep`: adoption resolves the session through a promise, and
-        // the test context virtualizes the clock.
+        // Adoption resolves the session through a promise.
         yield* settle();
-        // A live-but-idle agent (awaiting input) is not adopted: no indicator, nothing streamed.
+        // A live-but-idle agent (awaiting input) is not adopted.
         expect(idleRegistry.get(idleProcessor.active)).toBe(false);
         expect(idleRegistry.get(idleProcessor.messages)).toEqual([]);
 
@@ -282,17 +308,59 @@ describe('AiChatProcessor streaming', () => {
         yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribers.forEach((unsubscribe) => unsubscribe())));
 
         unsubscribers.push(processor.adopt());
-        // Settles once the stub's ephemeral stream has drained and `waitForCompletion` resolves.
         yield* settle(() => activeSnapshots.includes(true) && !observableRegistry.get(processor.active));
 
-        // The turn was observed to completion: the indicator went active and the agent's blocks
-        // landed in the thread even though this processor never issued the request.
         expect(activeSnapshots).toContain(true);
         expect(observableRegistry.get(processor.active)).toBe(false);
-        const texts = observableRegistry
-          .get(processor.messages)
-          .map(({ blocks }) => blocks.map((block) => (block as ContentBlock.Text).text).join(''));
-        expect(texts).toEqual(['Still working…']);
+        expect(texts(observableRegistry.get(processor.messages))).toEqual(['Still working…']);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  // Disposal must stop the collector: a remount otherwise leaves the previous mount's consumer on
+  // the session's ephemeral stream for the rest of the turn.
+  it.effect(
+    'stops consuming the stream when the observer is disposed mid-turn',
+    Effect.fn(
+      function* ({ expect }) {
+        const feed = yield* Database.add(Feed.make());
+        const runtime = yield* Effect.context<Database.Service>();
+        const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
+
+        const messageId = Obj.ID.random();
+        const { session: gated, release } = yield* makeGatedSession(
+          feed,
+          [traceMessage([partialBlockEvent(messageId, 'Still', true)])],
+          [traceMessage([partialBlockEvent(messageId, 'Still working…', false)])],
+        );
+
+        const observableRegistry = AtomRegistry.make();
+        const processor = new AiChatProcessor(
+          session,
+          yield* makeTestRuntime,
+          feed,
+          yield* makeSpaceLayer({
+            getSession: () => Effect.succeed(gated),
+            hydrate: () => Effect.void,
+          }),
+          { observableRegistry },
+        );
+
+        const unsubscribe = observableRegistry.subscribe(processor.messages, () => {}, { immediate: true });
+        yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
+
+        const dispose = processor.adopt();
+        yield* settle(() => observableRegistry.get(processor.messages).length > 0);
+        expect(texts(observableRegistry.get(processor.messages))).toEqual(['Still']);
+
+        dispose();
+        yield* release;
+        yield* settle();
+
+        expect(texts(observableRegistry.get(processor.messages))).toEqual(['Still']);
+        expect(observableRegistry.get(processor.active)).toBe(false);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

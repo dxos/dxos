@@ -380,13 +380,9 @@ export class AiChatProcessor {
   }
 
   /**
-   * Mirrors turns this processor did not initiate into its own state.
-   *
-   * Streaming and active state live on the processor, and a processor is created per mount
-   * ({@link useChatProcessor}), so a chat remounted mid-turn — the user navigated to another page
-   * and back — renders as idle while the agent keeps running. The agent process outlives the mount
-   * ({@link AgentService.getSession} returns the running one), and its `running` atom is reactive,
-   * so the turn is followed from wherever it was started.
+   * Mirrors turns this processor did not initiate into its own state: active/streaming state is
+   * per-processor ({@link useChatProcessor} builds one per mount) while the agent process outlives
+   * the mount, so a chat remounted mid-turn would otherwise render as idle.
    *
    * Returns a disposer that stops observing.
    */
@@ -407,8 +403,7 @@ export class AiChatProcessor {
               void this.#observe(session);
             }
           },
-          // The turn is normally already in flight when a remounted chat gets here, so the current
-          // value matters as much as subsequent transitions.
+          // The turn is normally already in flight when a remounted chat gets here.
           { immediate: true },
         );
       })

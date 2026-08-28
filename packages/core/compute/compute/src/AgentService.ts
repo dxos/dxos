@@ -60,9 +60,8 @@ export interface Session {
   submitPrompt: (prompt: string | ContentBlock.Any[]) => Effect.Effect<void>;
 
   /**
-   * True while the agent is working on a turn (running, or waiting on a tool call or alarm);
-   * false when it is idle awaiting input, or terminal. Reactive, so a UI attaching to a session
-   * started by an earlier mount follows the turn rather than sampling it once.
+   * True while the agent is working on a turn (running, or waiting on a tool call or alarm); false
+   * when it is idle awaiting input, or terminal.
    */
   readonly running: Atom.Atom<boolean>;
 

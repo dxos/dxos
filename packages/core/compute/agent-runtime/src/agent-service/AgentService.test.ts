@@ -599,8 +599,6 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
 
 // Control-plane coverage (no LLM turn), so it runs ungated in CI unlike the replay suite above.
 describe('Agent Service (control plane)', () => {
-  // Regression (DX-1198): a chat remounted mid-turn had no way to tell whether the agent it had
-  // spawned was still working, so the UI reported it as idle.
   it.effect(
     'reports whether the session is working on a turn',
     Effect.fnUntraced(
@@ -618,8 +616,7 @@ describe('Agent Service (control plane)', () => {
         expect(handle.status.state).toBe(Process.State.IDLE);
         expect(registry.get(session.running)).toBe(false);
 
-        // Reactive: derived from the process's status atom, so it follows the process rather than
-        // reporting whatever was true when the session was resolved.
+        // Derived from the process's status atom, not fixed at the time the session was resolved.
         const observed: boolean[] = [];
         const unsubscribe = registry.subscribe(session.running, (running) => observed.push(running), {
           immediate: true,
