@@ -23,7 +23,11 @@ No client path contains `/api/<service>` any more: the calls API moved from `/ap
 `<edge>/calls/rtc`, sandbox-service's REST API from `<host>/api/sandbox` to `<edge>/sandbox`, and the
 CORS proxy from `cors.dxos.network` to `<edge>/cors`. Video transcripts are fetched directly rather
 than through the CORS proxy, since the EDGE entrypoint sends CORS headers that the worker's own
-hostname did not. Requires the paired `dxos/edge` change to be deployed.
+hostname did not.
+
+Requires the paired `dxos/edge` change to be deployed to production FIRST. That change is additive —
+every path a released Composer calls keeps answering — so the two can land in either order without an
+outage, but a build made from this commit only works against an EDGE that serves the prefixes.
 
 `configPreset({ sandbox })` sets `runtime.services.sandbox.url` only for `local`; the deployed
 sandbox-service is reached through EDGE.
