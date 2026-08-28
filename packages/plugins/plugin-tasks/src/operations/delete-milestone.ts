@@ -6,11 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
-import { TaskSet } from '@dxos/types';
 
 import { TaskOperation } from '#types';
 
-import { findMilestoneTaskSet, refEntityId } from './task-set-membership';
+import { findMilestoneTaskSet, loadSetTasks, refEntityId } from './task-set-membership';
 
 const handler: Operation.WithHandler<typeof TaskOperation.DeleteMilestone> = TaskOperation.DeleteMilestone.pipe(
   Operation.withHandler(
@@ -20,7 +19,8 @@ const handler: Operation.WithHandler<typeof TaskOperation.DeleteMilestone> = Tas
 
       let releasedTasks = 0;
       if (taskSet) {
-        for (const task of TaskSet.resolveTasks(taskSet)) {
+        // Loaded, not resolved: a cold task skipped here would keep a dangling milestone ref.
+        for (const task of yield* loadSetTasks(taskSet)) {
           if (task.milestone && refEntityId(task.milestone) === milestone.id) {
             Obj.update(task, (task) => {
               delete task.milestone;

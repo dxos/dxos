@@ -15,6 +15,7 @@ import {
   collectSubtree,
   findMilestoneTaskSet,
   findTaskSet,
+  loadSetTasks,
   refEntityId,
   removeTasksFromSet,
   reorder,
@@ -99,7 +100,7 @@ describe('task set membership', () => {
       Effect.gen(function* () {
         const { taskSet, root, child, grandchild, sibling } = yield* seedTree();
 
-        const subtree = collectSubtree(taskSet, root);
+        const subtree = collectSubtree(yield* loadSetTasks(taskSet), root);
 
         expect(subtree.map((task) => task.id)).toEqual([root.id, child.id, grandchild.id]);
         expect(subtree.map((task) => task.id)).not.toContain(sibling.id);

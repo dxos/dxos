@@ -11,6 +11,7 @@ import { TaskSet } from '@dxos/types';
 import { TaskOperation } from '#types';
 
 import { InvalidOperationInput } from '../errors';
+import { loadRefs, loadSetTasks } from './task-set-membership';
 
 const handler: Operation.WithHandler<typeof TaskOperation.ListMilestones> = TaskOperation.ListMilestones.pipe(
   Operation.withHandler(
@@ -40,8 +41,9 @@ const handler: Operation.WithHandler<typeof TaskOperation.ListMilestones> = Task
         return { milestones: [] };
       }
 
-      const tasks = TaskSet.resolveTasks(taskSet);
-      const milestones = TaskSet.resolveMilestones(taskSet).map((milestone) => {
+      // Loaded, not resolved: cold refs dropped here would shorten the list and skew progress.
+      const tasks = yield* loadSetTasks(taskSet);
+      const milestones = (yield* loadRefs(taskSet.milestones)).map((milestone) => {
         const { total, done } = TaskSet.milestoneProgress(tasks, milestone);
         return {
           id: milestone.id,

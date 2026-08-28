@@ -11,10 +11,10 @@ import { Milestone, Task, TaskSet } from '@dxos/types';
 import { InvalidOperationInput } from '../errors';
 
 /**
- * Membership helpers shared by the task verbs. The set's `tasks`/`milestones` arrays are the data
- * model, so every write that adds or removes a member has to touch the array; the ECHO parent edge
- * is set alongside purely so deletion cascades. Keeping both in one place is what stops the two
- * from drifting apart.
+ * Membership helpers shared by the task verbs. The set's `tasks`/`milestones` arrays carry order,
+ * and every write that adds or removes a member has to touch them; the ECHO parent edge
+ * (membership, written by `SetParent` on the arrays) rides along automatically. Keeping the writes
+ * in one place is what stops the array and the edges from drifting apart.
  */
 
 /**
@@ -57,9 +57,24 @@ export const addMilestoneToSet = (taskSet: TaskSet.TaskSet, milestone: Milestone
   });
 };
 
-/** Every task in `taskSet` transitively under `task`, including `task` itself. Cycle-safe. */
-export const collectSubtree = (taskSet: TaskSet.TaskSet, task: Task.Task): Task.Task[] => {
-  const tasks = TaskSet.resolveTasks(taskSet);
+/**
+ * Every ref loaded, dropping entries whose object is gone. The arrays may hold cold refs, and the
+ * sync `TaskSet.resolveTasks` silently drops those — an incomplete member list here becomes an
+ * incomplete subtree sweep or a false membership rejection.
+ */
+export const loadRefs = <T extends Obj.Unknown>(
+  refs: ReadonlyArray<Ref.Ref<T>>,
+): Effect.Effect<T[], never, Database.Service> =>
+  Effect.forEach(refs, (ref) =>
+    Database.load(ref).pipe(Effect.catchTag('EntityNotFoundError', () => Effect.succeed(undefined))),
+  ).pipe(Effect.map((objects) => TaskSet.dedupeById(objects)));
+
+/** Every task in the set, loaded. */
+export const loadSetTasks = (taskSet: TaskSet.TaskSet): Effect.Effect<Task.Task[], never, Database.Service> =>
+  loadRefs(taskSet.tasks);
+
+/** Every task in `tasks` transitively under `task`, including `task` itself. Cycle-safe. */
+export const collectSubtree = (tasks: readonly Task.Task[], task: Task.Task): Task.Task[] => {
   const subtree: Task.Task[] = [];
   const seen = new Set<string>();
   const visit = (current: Task.Task): void => {
@@ -136,14 +151,17 @@ export const resolveParentTask = (
 ): Effect.Effect<Task.Task, InvalidOperationInput | Error.EntityNotFoundError, Database.Service> =>
   Effect.gen(function* () {
     const candidate = yield* Database.load(parentTask);
-    const subtree = taskSet ? collectSubtree(taskSet, task) : [task];
+    // Loaded, not resolved: a cold ref dropped from the member list would blind the cycle check.
+    const members = taskSet ? yield* loadSetTasks(taskSet) : [];
+    const subtree = taskSet ? collectSubtree(members, task) : [task];
     if (subtree.some((member) => member.id === candidate.id)) {
       return yield* Effect.fail(
         new InvalidOperationInput({ message: 'A task cannot be re-parented under itself or its own sub-tasks.' }),
       );
     }
-    const members = taskSet ? TaskSet.resolveTasks(taskSet) : [];
-    if (!members.some((member) => member.id === candidate.id)) {
+    // Membership by the ref's own entity id — no loading, so a cold entry still counts.
+    const belongs = taskSet ? taskSet.tasks.some((ref) => refEntityId(ref) === candidate.id) : false;
+    if (!belongs) {
       return yield* Effect.fail(
         new InvalidOperationInput({ message: 'The parent task does not belong to this task set.' }),
       );

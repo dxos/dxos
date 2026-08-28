@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
-import { Task, TaskSet } from '@dxos/types';
+import { Task } from '@dxos/types';
 
 import { TaskOperation } from '#types';
 
@@ -41,8 +41,9 @@ const handler: Operation.WithHandler<typeof TaskOperation.CreateTask> = TaskOper
       }
 
       // A cross-set parent would flatten the hierarchy here (the parent id is absent from this set,
-      // so the task reads as a root) and hand the task's lifecycle to the other set's cascade.
-      if (parent && !TaskSet.resolveTasks(taskSet).some((member) => member.id === parent.id)) {
+      // so the task reads as a root). Membership by the ref's own entity id — no loading, so a cold
+      // entry still counts.
+      if (parent && !taskSet.tasks.some((ref) => refEntityId(ref) === parent.id)) {
         return yield* Effect.fail(
           new InvalidOperationInput({ message: 'The parent task does not belong to this task set.' }),
         );
