@@ -15,6 +15,11 @@ Goals:
 4. Propose an abstraction that replaces the one-field-per-service sprawl with a
    map of service configurations (endpoint + service-specific props).
 
+> **Superseded in part.** The per-service hosts catalogued below are no longer addresses the client
+> holds: every EDGE service is reached as `<edge>/<service>`, derived from `runtime.services.edge.url`
+> by `getEdgeServiceEndpoint` ([`edge-services.ts`](src/edge-services.ts)). The tables are kept as the
+> record of what the sprawl was; read them as history, not as current state.
+
 > Scope note: this is the static-analysis phase. The cleanup is staged — see
 > [§6 Cleanup plan](#6-cleanup-plan). Phase 1 (this change) consolidates the
 > definitions into `config.proto` and deprecates dead fields; the call-site

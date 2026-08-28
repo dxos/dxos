@@ -10,7 +10,7 @@ import { ToolsExplorer } from '@dxos/react-ui-introspect';
 
 /**
  * Binds the tools explorer to the introspect endpoint from config; the explorer renders its
- * unconfigured state when `runtime.services.edgeServices` has no `introspect` entry.
+ * unconfigured state when neither `runtime.services.edge.url` nor an `introspect` override is set.
  */
 export const ToolsExplorerContainer = () => {
   return <ToolsExplorer serverUrl={useEdgeServiceEndpoint(EdgeServiceName.Introspect)} />;

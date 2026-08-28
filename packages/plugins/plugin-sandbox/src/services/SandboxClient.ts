@@ -33,14 +33,15 @@ type ExecRequest = {
 
 /**
  * HTTP client for the sandbox-service REST API.
- * Service origin is configured separately from EDGE; routes are under `/api/sandbox`.
+ *
+ * `_base` is the service's base URL, normally `<edge>/sandbox`; the worker serves its routes at its
+ * own root, so a path is appended directly.
  */
 export class SandboxClient {
-  constructor(private readonly _origin: string) {}
+  constructor(private readonly _base: string) {}
 
   #apiPath(path: string): string {
-    const origin = this._origin.replace(/\/$/, '');
-    return `${origin}/api/sandbox${path}`;
+    return `${this._base.replace(/\/$/, '')}${path}`;
   }
 
   async createSandbox(

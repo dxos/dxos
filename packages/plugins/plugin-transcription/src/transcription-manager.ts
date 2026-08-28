@@ -39,7 +39,7 @@ export type TranscriptionManagerOptions = {
   registry: Registry.AtomRegistry;
 
   /**
-   * Transcription service base URL (`runtime.services.edgeServices: transcription`).
+   * Transcription service base URL, normally `<edge>/calls` (the worker that serves `/transcribe`).
    * Transcription fails with a clear error when absent — there is no built-in endpoint.
    */
   transcriptionEndpoint?: string;

@@ -79,10 +79,10 @@ service TranscriptionService
   ops:
     transcribe(url: string, lang: string) → Text
   note: |
-    HTTP GET https://transcription.dxos.network/video?url=<url>&lang=<lang>
+    HTTP GET <edge>/transcription/video?url=<url>&lang=<lang>
     Response: { success: boolean, result: { videoId, title, languageCode, generated, text } }.
-    lang defaults to "en". The worker sends no CORS headers, so the browser request is routed
-    through the EDGE CORS proxy via `proxyFetchLegacy` from @dxos/edge-client.
+    lang defaults to "en". Fetched directly: behind the EDGE entrypoint the response carries EDGE's
+    CORS headers, which the worker's own hostname did not send.
   errors:
     TranscriptionFailed: worker returned a non-2xx response, success=false, or empty text
 ```

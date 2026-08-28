@@ -1,0 +1,29 @@
+---
+'@dxos/config': patch
+'@dxos/edge-client': patch
+'@dxos/plugin-sandbox': patch
+'@dxos/plugin-calls': patch
+'@dxos/plugin-video': patch
+'@dxos/plugin-code': patch
+'@dxos/plugin-support': patch
+'@dxos/plugin-transcription': patch
+'@dxos/plugin-crm': patch
+'@dxos/plugin-devtools': patch
+'@dxos/react-ui-introspect': patch
+'@dxos/pipeline-transcription': patch
+---
+
+Every EDGE service is now addressed as `<env>.dxos.network/<service>`, derived from one configured
+entrypoint. `getEdgeServiceEndpoint` falls back to `runtime.services.edge.url` plus the service's
+path prefix, so configuring EDGE configures calls, image, transcription, discord, the CORS proxy,
+introspect and sandbox with it; `runtime.services.edgeServices` stays as the per-service override and
+no longer has to be populated. An unconfigured client still resolves nothing.
+
+No client path contains `/api/<service>` any more: the calls API moved from `/api/calls` to
+`<edge>/calls/rtc`, sandbox-service's REST API from `<host>/api/sandbox` to `<edge>/sandbox`, and the
+CORS proxy from `cors.dxos.network` to `<edge>/cors`. Video transcripts are fetched directly rather
+than through the CORS proxy, since the EDGE entrypoint sends CORS headers that the worker's own
+hostname did not. Requires the paired `dxos/edge` change to be deployed.
+
+`configPreset({ sandbox })` sets `runtime.services.sandbox.url` only for `local`; the deployed
+sandbox-service is reached through EDGE.

@@ -13,7 +13,7 @@ const DEV_CHAT_AGENT_URL = 'ws://localhost:8791';
 const MAIN_CHAT_AGENT_URL = 'wss://chat-agent.dxos.workers.dev';
 
 const DEV_IMAGE_SERVICE_URL = 'http://localhost:8790';
-const MAIN_IMAGE_SERVICE_URL = 'https://image.dxos.network';
+const MAIN_IMAGE_SERVICE_URL = 'https://dxos.network/image';
 
 export type Config = {
   devmode: boolean;

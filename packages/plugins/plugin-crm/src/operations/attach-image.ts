@@ -60,9 +60,9 @@ const filenameFromUrl = (url: string): string => {
   return 'image.jpg';
 };
 
-// No built-in endpoint: the `imageServiceUrl` input carries it, resolved from
-// `runtime.services.edgeServices: image` by the contributing capability, since an operation handler
-// has no config of its own. `DX_CRM_IMAGE_SERVICE_URL` covers node callers (tests, CLI) only.
+// No built-in endpoint: the `imageServiceUrl` input carries it, resolved to `<edge>/image` by the
+// contributing capability, since an operation handler has no config of its own.
+// `DX_CRM_IMAGE_SERVICE_URL` covers node callers (tests, CLI) only.
 const getImageServiceUrl = (override?: string): string | undefined => {
   if (override && override.length > 0) {
     return override;
