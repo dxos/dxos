@@ -31,7 +31,7 @@ export const translations = [
         'delete-object.label': 'Delete session',
       },
       [meta.profile.key]: {
-        'plugin.name': 'Claude Agents',
+        'plugin.name': 'Claude',
       },
     },
   },
