@@ -27,7 +27,7 @@ type StoryArgs = {
 // the item unmounting as the reader scrolls past it.
 const store = createWidgetStateStore();
 
-// The query container a thread gets from `Column.Center`; without one `cqi` means the viewport.
+// Stands in for the query container a thread gets from `Column.Center`, so `cqi` is not the viewport.
 const DefaultStory = ({ content }: StoryArgs) => (
   <WidgetStateProvider store={store}>
     <div className='dx-container-type-inline-size'>
