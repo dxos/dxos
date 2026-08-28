@@ -474,8 +474,7 @@ export const createConfig = ({
           },
 
           IconsPlugin({
-            // `dx` (brand) and `px` (extended) are drawn at one weight only; `ph` carries all of
-            // Phosphor's. The pattern's boundary rules are subtle, so it is built rather than written out.
+            // Built rather than written out: `ph` carries every weight while `dx` and `px` are regular-only.
             symbolPattern: iconSymbolPattern({ sets: ['ph', 'dx', 'px'], regularOnly: ['dx', 'px'] }),
             assetPath: (iconSet, name, variant) => {
               switch (iconSet) {
@@ -488,12 +487,9 @@ export const createConfig = ({
               }
             },
             contentPaths: content,
-            // Keeps every `PxIcons` entry in the sprite rather than relying on a story to reference
-            // each glyph, so stories paint without a round trip — see `@dxos/ui-icons`.
+            // Keeps every `PxIcons` entry in the sprite so stories paint without a round trip.
             scanPaths: [resolve(rootDir, 'packages/ui/ui-icons/src/index.ts')],
-            // Serves the catalogs the runtime resolver in `@dxos/react-ui` falls back to. Only `px`
-            // is served: the Phosphor catalog is ~9,000 files, and a story referencing a `ph` glyph
-            // the scanner did not see is a story bug rather than something to paper over here.
+            // Only `px` is served: the Phosphor catalog is ~9,000 files, too many to hand to a story.
             assets: [{ route: '/px-icons', dir: extendedIconsDir }],
             spriteFile: 'icons.svg',
           }),

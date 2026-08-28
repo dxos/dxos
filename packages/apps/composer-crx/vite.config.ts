@@ -97,8 +97,7 @@ export default defineConfig({
     }),
     ThemePlugin({}),
     IconsPlugin({
-      // `dx` (brand) and `px` (extended) are drawn at one weight only; `ph` carries all of
-      // Phosphor's. The pattern's boundary rules are subtle, so it is built rather than written out.
+      // Built rather than written out: `ph` carries every weight while `dx` and `px` are regular-only.
       symbolPattern: iconSymbolPattern({ sets: ['ph', 'dx', 'px'], regularOnly: ['dx', 'px'] }),
       assetPath: (iconSet, name, variant) => {
         switch (iconSet) {

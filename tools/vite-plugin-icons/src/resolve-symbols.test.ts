@@ -6,15 +6,6 @@ import { describe, expect, test } from 'vitest';
 
 import { type AssetStat, resolveSymbols } from './resolve-symbols.ts';
 
-const symbolPattern = '(ph|px)--([a-z]+[a-z-]*)--(bold|regular)';
-
-const assetPath = (iconSet: string, name: string, variant: string) => `/assets/${iconSet}/${variant}/${name}.svg`;
-
-const resolve = (symbols: string[], files: Record<string, AssetStat>) =>
-  resolveSymbols({ symbols, symbolPattern, assetPath, stat: (path) => files[path] });
-
-const stat = (mtimeMs = 1, size = 100): AssetStat => ({ mtimeMs, size });
-
 describe('resolveSymbols', () => {
   test('resolves a symbol whose asset exists', () => {
     const { resolved, missing } = resolve(['px--circle--regular'], { '/assets/px/regular/circle.svg': stat() });
@@ -72,3 +63,12 @@ describe('resolveSymbols', () => {
     });
   });
 });
+
+const symbolPattern = '(ph|px)--([a-z]+[a-z-]*)--(bold|regular)';
+
+const assetPath = (iconSet: string, name: string, variant: string) => `/assets/${iconSet}/${variant}/${name}.svg`;
+
+const resolve = (symbols: string[], files: Record<string, AssetStat>) =>
+  resolveSymbols({ symbols, symbolPattern, assetPath, stat: (path) => files[path] });
+
+const stat = (mtimeMs = 1, size = 100): AssetStat => ({ mtimeMs, size });

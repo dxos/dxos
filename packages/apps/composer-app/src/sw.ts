@@ -104,13 +104,9 @@ cleanupOutdatedCaches();
 // resolves the route client-side.
 registerRoute(new NavigationRoute(createHandlerBoundToURL('/index.html')));
 
-// Cache-first for the on-demand icon catalogs served under /phosphor/ and /px-icons/ (see the
-// `assets` option in vite.config.ts). Phosphor is ~9,000 immutable SVGs — far too
-// many to precache without an install-time request per file — so each icon is cached on
-// first fetch, making every icon the app has actually rendered available offline. The
-// entry bound is far above any plausible per-install icon footprint; no age bound since
-// the assets are immutable. `/px-icons/` is handled the same way for uniformity, though its
-// glyphs are normally in the sprite already and reach this path only when unregistered.
+// Cache-first for the on-demand icon catalogs under /phosphor/ and /px-icons/, which are far too
+// many files to precache (~9,000) yet have to be available offline once rendered. The entry bound is
+// far above any plausible per-install footprint; no age bound, since the assets are immutable.
 registerRoute(
   ({ url, request }) =>
     request.method === 'GET' &&

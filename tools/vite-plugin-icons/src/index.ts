@@ -173,8 +173,9 @@ export const IconsPlugin = ({
       fresh.forEach((id) => warnedHardcoded.add(id));
       console.warn(
         `[icons] Hardcoded color in ${fresh.length === 1 ? 'symbol' : 'symbols'}: ${fresh.join(', ')} — ` +
-          'an inline style overrides the symbol fill, so the glyph will not follow the theme. ' +
-          'Replace the literal with `currentColor` in the source SVG.',
+          'a paint declaration on the glyph itself (a `style` or a `fill`/`stroke` attribute) overrides ' +
+          'the symbol fill, so it will not follow the theme. Replace the literal with `currentColor` ' +
+          'in the source SVG.',
       );
     }
   };
