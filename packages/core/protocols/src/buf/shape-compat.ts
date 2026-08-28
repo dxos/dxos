@@ -179,7 +179,9 @@ const anyToProto = (field: DescField, value: any, options: CompatOptions): unkno
 const anyFromProto = (field: DescField, value: any, options: CompatOptions): unknown => {
   // The legacy shape keys the packed payload `type_url`, where buf's message uses `typeUrl`.
   const typeUrl: string = value.typeUrl ?? '';
-  const bytes = asBytes(toWireBytes(value.value ?? new Uint8Array()));
+  // Not flattened: the nested decode below reads its byte fields as views over this buffer, so
+  // flattening here would strip Buffer-ness from every byte field inside the payload.
+  const bytes = asBytes(value.value ?? new Uint8Array());
   if (isPreservedAny(field, options)) {
     return packedAny(typeUrl, bytes);
   }

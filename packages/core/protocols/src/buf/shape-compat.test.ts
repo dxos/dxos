@@ -458,4 +458,23 @@ describe('buf shape-compat', () => {
     expect(Buffer.isBuffer(fromPlain.challenge)).toBe(false);
     expect(Buffer.from(fromPlain.challenge).equals(Buffer.from(challenge))).toBe(true);
   });
+
+  // A resolved `Any` payload decodes from the outer message's buffer, so unpacking it must not
+  // flatten that view either -- a credential's signature reaches its verifier through this path.
+  test("bytes inside a resolved Any payload keep the input's view type", ({ expect }) => {
+    const challenge = new Uint8Array([1, 2, 3, 4]);
+    const value = {
+      id: PublicKey.random(),
+      assertion: { '@type': 'dxos.mesh.teleport.auth.AuthenticateRequest', 'challenge': challenge },
+    };
+
+    const codec = schema.getCodecForType('dxos.halo.credentials.Claim');
+    const legacyBytes = Buffer.from(codec.encode(value));
+    const legacyDecoded = codec.decode(legacyBytes);
+    const compatDecoded = decodeCompat<Claim>(ClaimSchema, legacyBytes);
+
+    expect(Buffer.isBuffer(legacyDecoded.assertion.challenge)).toBe(true);
+    expect(Buffer.isBuffer(compatDecoded.assertion.challenge)).toBe(true);
+    expect(Buffer.from(compatDecoded.assertion.challenge).equals(Buffer.from(challenge))).toBe(true);
+  });
 });
