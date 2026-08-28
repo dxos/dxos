@@ -50,13 +50,18 @@ const stateRestoreAnnotation = 'org.dxos.cm.state-restore';
 /** Window after a restore during which scroll events are not recorded. */
 const RESTORE_SUPPRESS_MS = 500;
 
+/**
+ * Builds the transaction that puts a recorded state back: applies the selection, anchors
+ * `scrollTo` at the top of the viewport (falling back to revealing the selection when no position
+ * was recorded), and tags itself so the recorder ignores the scroll it causes.
+ */
 export const createEditorStateTransaction = ({ scrollTo, selection }: EditorSelectionState): TransactionSpec => {
   return {
     selection,
-    scrollIntoView: !scrollTo,
+    scrollIntoView: scrollTo == null,
     // `scrollTo` is the position that was at the top of the viewport, so restore it there
     // exactly; a y-margin would offset every restore by that margin.
-    effects: scrollTo ? EditorView.scrollIntoView(scrollTo, { y: 'start', yMargin: 0 }) : undefined,
+    effects: scrollTo != null ? EditorView.scrollIntoView(scrollTo, { y: 'start', yMargin: 0 }) : undefined,
     annotations: Transaction.userEvent.of(stateRestoreAnnotation),
   };
 };

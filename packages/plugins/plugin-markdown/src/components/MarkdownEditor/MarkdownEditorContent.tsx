@@ -91,9 +91,11 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
     );
 
     // Restore last selection and scroll point.
+    // Keyed to the editor's lifecycle (`id`), matching `useTextEditor`'s own props memo: a value
+    // read on a later render would never reach the view, which is only recreated when `id` changes.
     const { scrollTo, scrollOffset, selection } = useMemo<EditorSelectionState>(
       () => editorStateStore?.getState(id) ?? {},
-      [id, editorStateStore],
+      [id],
     );
 
     // Everything that varies per render — view mode, theme, the binding's extensions — lives in one

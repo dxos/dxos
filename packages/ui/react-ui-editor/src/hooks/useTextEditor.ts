@@ -104,7 +104,7 @@ export const useTextEditor = (
         parent: parentRef.current,
         state,
         // `scrollTo` is the position recorded at the top of the viewport, so restore it there.
-        scrollTo: scrollTo ? EditorView.scrollIntoView(scrollTo, { y: 'start', yMargin: 0 }) : undefined,
+        scrollTo: scrollTo != null ? EditorView.scrollIntoView(scrollTo, { y: 'start', yMargin: 0 }) : undefined,
         dispatchTransactions: debug ? debugDispatcher : undefined,
       });
 
@@ -125,7 +125,7 @@ export const useTextEditor = (
 
   useEffect(() => {
     if (view) {
-      if (scrollTo || selection) {
+      if (scrollTo != null || selection) {
         if (selection && selection.anchor > view.state.doc.length) {
           log.warn('invalid selection', { length: view.state.doc.length, scrollTo, selection });
           return;
