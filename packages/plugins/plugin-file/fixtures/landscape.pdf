@@ -3,7 +3,7 @@
 << /Type /Catalog /Pages 2 0 R >>
 endobj
 2 0 obj
-<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R 9 0 R] /Count 4 >>
+<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R] /Count 3 >>
 endobj
 3 0 obj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 1008 567] /Contents 4 0 R >>
@@ -32,30 +32,19 @@ stream
 0.15 0.45 0.85 rg 60 367 888 60 re f
 endstream
 endobj
-9 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 1008 567] /Contents 10 0 R >>
-endobj
-10 0 obj
-<< /Length 36 >>
-stream
-0.15 0.45 0.85 rg 60 327 888 60 re f
-endstream
-endobj
 xref
-0 11
+0 9
 0000000000 65535 f 
 0000000009 00000 n 
 0000000058 00000 n 
-0000000133 00000 n 
-0000000221 00000 n 
-0000000307 00000 n 
-0000000395 00000 n 
-0000000481 00000 n 
-0000000569 00000 n 
-0000000655 00000 n 
-0000000744 00000 n 
+0000000127 00000 n 
+0000000215 00000 n 
+0000000301 00000 n 
+0000000389 00000 n 
+0000000475 00000 n 
+0000000563 00000 n 
 trailer
-<< /Size 11 /Root 1 0 R >>
+<< /Size 9 /Root 1 0 R >>
 startxref
-831
+649
 %%EOF

@@ -64,7 +64,10 @@ export const Invalid: Story = {
   },
 };
 
-/** Landscape pages: fit-page must fit BOTH axes, or a wide page still overflows the viewport. */
+/**
+ * Landscape pages: fit-page must fit BOTH axes, or a wide page still overflows the viewport. Fit
+ * mode also shows one page at a time, so only a single page is in the DOM here.
+ */
 export const LandscapeFitPage: Story = {
   args: { url: landscapeUrl, fit: 'page' },
   play: async ({ canvasElement }) => {
@@ -74,6 +77,7 @@ export const LandscapeFitPage: Story = {
       },
       { timeout: 20_000 },
     );
+    await expect(canvasElement.querySelectorAll('[data-page]')).toHaveLength(1);
     const container = canvasElement.querySelector('[data-pdf-canvas]')!;
     const page = canvasElement.querySelector('[data-page]')!;
     // The whole page fits, rather than only its width.
@@ -103,5 +107,22 @@ export const Long: Story = {
       await expect(drawn).toBeGreaterThan(0);
       await expect(drawn).toBeLessThan(30);
     });
+  },
+};
+
+/** The same landscape document scrolled, where every one of its three pages is present. */
+export const LandscapeFitWidth: Story = {
+  args: { url: landscapeUrl, fit: 'width' },
+  play: async ({ canvasElement }) => {
+    await waitFor(
+      async () => {
+        await expect(canvasElement.querySelectorAll('[data-page]')).toHaveLength(3);
+      },
+      { timeout: 20_000 },
+    );
+    const container = canvasElement.querySelector('[data-pdf-canvas]')!;
+    const page = canvasElement.querySelector('[data-page]')!;
+    // Fit-width fills the width; the page is free to be taller than the viewport.
+    await expect(page.getBoundingClientRect().width).toBeLessThanOrEqual(container.getBoundingClientRect().width);
   },
 };
