@@ -84,7 +84,7 @@ export const Storage = { inline: 'inline', edge: 'edge' } as const;
 export type Storage = (typeof Storage)[keyof typeof Storage];
 
 /**
- * URI schemes claimed by core backends (see `BlobBackend.schemes` in `@dxos/echo-protocol`).
+ * URI schemes claimed by core backends (see `BlobBackend.schemes` in `@dxos/blob`).
  *
  * `ni` marks an {@link https://www.rfc-editor.org/rfc/rfc6920 RFC 6920} Named Information URI whose
  * authority is empty and whose path carries a registered hash-algorithm name plus a base64url-encoded

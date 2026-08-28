@@ -8,6 +8,9 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } fr
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import type * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
+import type * as Capability from '@dxos/app-framework/Capability';
+
 // `__dirname` is not defined in ESM; derive from `import.meta.url`.
 export const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -222,10 +225,11 @@ export const collectStartupReport = async (page: Page, scenario: Scenario): Prom
       const manager = globalThis.composer?.manager;
       const modules = manager?.getModules?.();
       if (Array.isArray(modules)) {
-        const eventKeyOf = (event: any): string =>
-          `${String(event?.id ?? '?')}${event?.specifier ? `:${String(event.specifier)}` : ''}`;
-        inventory = modules.map((module: any) => {
-          const spec = module.activation ?? {};
+        const eventKeyOf = (event: ActivationEvent.ActivationEvent): string =>
+          `${String(event.id ?? '?')}${event.specifier ? `:${String(event.specifier)}` : ''}`;
+        const tagKeyOf = (tag: Capability.AnyTag): string => `${String(tag.identifier)}#${String(tag.arity)}`;
+        inventory = modules.map((module) => {
+          const spec = module.activation;
           const activatesOn = spec.activatesOn
             ? 'type' in spec.activatesOn
               ? spec.activatesOn.events.map(eventKeyOf)
@@ -234,8 +238,8 @@ export const collectStartupReport = async (page: Page, scenario: Scenario): Prom
           return {
             id: String(module.id),
             activatesOn,
-            requires: (spec.requires ?? []).map((tag: any) => `${String(tag.identifier)}#${String(tag.arity)}`),
-            provides: (spec.provides ?? []).map((tag: any) => `${String(tag.identifier)}#${String(tag.arity)}`),
+            requires: spec.requires.map(tagKeyOf),
+            provides: spec.provides.map(tagKeyOf),
           };
         });
       }
@@ -327,7 +331,7 @@ export const collectStartupReport = async (page: Page, scenario: Scenario): Prom
   const waits = indexByName(data.snapshot?.moduleWaits);
   const runs = indexByName(data.snapshot?.moduleRuns);
   const imports = indexByName(data.snapshot?.moduleImports);
-  const modules = (data.snapshot?.modules ?? []).map((entry: any) => ({
+  const modules = (data.snapshot?.modules ?? []).map((entry) => ({
     name: entry.name,
     startTime: entry.startTime,
     duration: entry.duration,
@@ -351,7 +355,7 @@ export const collectStartupReport = async (page: Page, scenario: Scenario): Prom
       events: data.snapshot?.events ?? [],
       eventCount: data.snapshot?.events.length ?? 0,
       moduleCount: data.snapshot?.modules.length ?? 0,
-      slowestModules: (data.snapshot?.modules ?? []).slice(0, 10).map((entry: any) => ({
+      slowestModules: (data.snapshot?.modules ?? []).slice(0, 10).map((entry) => ({
         name: entry.name,
         duration: entry.duration,
       })),

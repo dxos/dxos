@@ -119,7 +119,7 @@ describe('AutomergeDataSource', () => {
     const doc2Heads = headsCodec.encode(getHeads(handle2.doc()!));
 
     // Modify doc1 to have new heads.
-    handle1.change((doc) => {
+    handle1.change((doc: DatabaseDirectory) => {
       doc.objects!['obj-1'].data.title = 'Doc 1 Updated';
     });
     await host.flush(Context.default());

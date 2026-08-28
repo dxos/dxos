@@ -22,7 +22,16 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/errors"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute/compute"
     },
     {
       "path": "../../core/compute/link"
@@ -34,7 +43,13 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
       "path": "../plugin-connector"
+    },
+    {
+      "path": "../plugin-sandbox"
     }
   ]
 }

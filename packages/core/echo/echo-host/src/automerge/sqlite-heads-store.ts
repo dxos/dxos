@@ -13,6 +13,7 @@ import { RuntimeProvider } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { decodeCompat, encodeCompat } from '@dxos/protocols/buf-shape-compat';
 import { HeadsSchema } from '@dxos/protocols/buf/dxos/echo/query_pb';
+import { type Heads as HeadsProto } from '@dxos/protocols/proto/dxos/echo/query';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/heads';
@@ -24,7 +25,7 @@ const encodeHeads = (heads: Heads): Uint8Array => encodeCompat(HeadsSchema, { ha
 
 const decodeHeads = (data: Uint8Array): Heads => {
   try {
-    return decodeCompat(HeadsSchema, data).hashes;
+    return decodeCompat<HeadsProto>(HeadsSchema, data).hashes ?? [];
   } catch {
     // Legacy encoding migration path for heads persisted before protobuf encoding.
     log.warn('Detected legacy encoding of heads in SQLite storage.');

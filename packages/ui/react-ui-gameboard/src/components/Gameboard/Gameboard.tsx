@@ -93,7 +93,7 @@ const GameboardContent = forwardRef<HTMLDivElement, GameboardContentProps>(
   ({ children, classNames, grow, contain }, forwardedRef) => {
     return (
       <div
-        className={mx(grow && 'dx-size-container dx-expander grid place-content-center', classNames)}
+        className={mx(grow && 'dx-container-type-size dx-expander grid place-content-center', classNames)}
         ref={forwardedRef}
       >
         {contain ? <div className='w-[min(100cqw,100cqh)] h-[min(100cqw,100cqh)]'>{children}</div> : children}

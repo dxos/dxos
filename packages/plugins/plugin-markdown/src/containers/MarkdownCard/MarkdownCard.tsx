@@ -43,10 +43,8 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
   return (
     <Card.Body>
       {snippet && (
-        // The preview grows with the document and stops at `SNIPPET_MAX_HEIGHT`, so a short note
-        // gets a short card. `dx-inline-size-container` is what makes that cap relative to the
-        // card's own width (and is the CodeMirror-safe container — see `size.css`).
-        <Card.Section classNames='dx-inline-size-container relative'>
+        // The container the snippet's cap is measured against, so it scales with the card.
+        <Card.Section classNames='dx-container-type-inline-size relative'>
           <Card.Row fullWidth>
             {/* Re-seed the readonly snippet when the content changes (the editor takes `initialValue`
                 at mount only). Keyed on the snippet so agent/remote edits are reflected. */}

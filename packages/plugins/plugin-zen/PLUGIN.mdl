@@ -21,6 +21,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
 
 ## Types
 
@@ -307,6 +308,59 @@ test T-8: Dream name auto-saved
   given: a Dream with name 'Morning calm'
   when: user edits the name to 'Evening wind' and blurs the field
   then: Dream.name === 'Evening wind' in ECHO
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Build a Dream, add layers, and play it back
+  desc: |
+    The core Zen round-trip. No operation exists anywhere in this plugin — there is no
+    `## Operations` section and no `operations/` module in source — every interaction is a
+    direct ECHO edit driven from the mixer UI, so this flow is entirely human-only.
+  actors: human
+  covers: [F-1.1, F-1.2, F-2.1, F-2.4, F-3.1, F-3.2]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - plugin-zen is enabled — it ships only in the experimental set (also default-on under
+      `isDev` labs); it is OFF by default in a preview/production build
+    - no Dream named "QA Dream" exists — ABORT rather than deleting one this flow did not create
+  test:
+    - name: Create the dream
+      do: In the navtree, click + on a collection and choose Zen. Name it "QA Dream".
+      expect: a Dream named "QA Dream" appears under the collection, with no layers yet
+      note: NO `invoke` — creation goes through the Composer Create Object dialog, not an operation.
+    - name: Add a sample layer
+      do: In the mixer, click "Add layer". Leave it at its default (rain sample, volume 0.5, unmuted).
+      expect: a new Sequence layer appears in the mixer, defaulted to the rain sample
+    - name: Add a generator layer
+      do: Click "Add layer" again and switch its source to Generator, preset "theta".
+      expect: a second layer appears, synthesising a theta binaural beat
+    - name: Play the dream
+      do: Press play.
+      expect: both layers start simultaneously — rain audio and the binaural tone are both audible
+    - name: Mute one layer
+      do: Click mute on the rain layer while playback continues.
+      expect: the rain layer silences immediately; the generator layer keeps playing unaffected
+    - name: Stop playback
+      do: Press stop.
+      expect: all audio stops and the AudioContext is released (no further sound from either layer)
+  after:
+    - name: Delete the dream
+      do: Right-click "QA Dream" in the navtree and choose Delete.
+      expect: the row leaves the navtree and its plank closes
+      note: |
+        NO `invoke` — nothing upstream ever ran through the operation invoker (the create step
+        has none, so there is no live ref to capture), so `space.removeObjects` has nothing to
+        target here; deletion is a navtree click, same as creation.
 ```
 
 ---

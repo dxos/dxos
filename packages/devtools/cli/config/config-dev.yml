@@ -16,6 +16,7 @@ runtime:
     # to -- a hub from another environment mints magic links no redemption can resolve.
     hub:
       url: https://dev.dxos.network/hub/
+      authUrl: https://account.dev.composer.space
     edge:
       url: https://dev.dxos.network/
     iceProviders:
