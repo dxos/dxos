@@ -171,7 +171,6 @@ export const setTaskContainer = Effect.fn('setTaskContainer')(function* (task: T
   Obj.update(container, (container) => {
     container.tasks = [...container.tasks, Ref.make(task)];
   });
-  Obj.setParent(task, container);
 });
 
 //

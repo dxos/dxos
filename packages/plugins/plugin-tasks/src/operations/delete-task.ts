@@ -22,7 +22,11 @@ const handler: Operation.WithHandler<typeof TaskOperation.DeleteTask> = TaskOper
       if (taskSet) {
         removeTasksFromSet(taskSet, ids);
       }
-      yield* Database.remove(task);
+      // The whole subtree, explicitly: `parentTask` is app-level, so nothing cascades through it —
+      // the ECHO parent edge ties members to their set, not to each other.
+      for (const member of subtree) {
+        yield* Database.remove(member);
+      }
       yield* Database.flush();
 
       return { deleted: [...ids] };

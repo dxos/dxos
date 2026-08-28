@@ -21,7 +21,9 @@ import * as Task from './Task';
  * in the set (sub-tasks included), so enumeration never walks a tree, and array order is the
  * canonical order. Hierarchy and milestone assignment are single refs on the task itself
  * (`Task.parentTask`, `Task.milestone`), so moving a task is one field write rather than paired
- * array splices. The ECHO parent edge is still set alongside, but only for deletion cascade.
+ * array splices. The set is every member's ECHO parent (`Annotation.SetParent` on both arrays):
+ * membership is the parent edge — `Filter.childOf(set)` — while `parentTask` stays app-level, so
+ * subtree deletion is the delete verb's job, not a cascade.
  */
 export class TaskSet extends Type.makeObject<TaskSet>(DXN.make('org.dxos.type.taskSet', '0.3.0'))(
   Schema.Struct({
@@ -30,10 +32,16 @@ export class TaskSet extends Type.makeObject<TaskSet>(DXN.make('org.dxos.type.ta
     image: Format.URL.pipe(Schema.annotate({ title: 'Image' }), Schema.optional),
 
     /** Every task in the set, flat and ordered — sub-tasks included, so enumeration is one read. */
-    tasks: Schema.Array(Ref.Ref(Task.Task)).pipe(Annotation.FormInputAnnotation.set(false)),
+    tasks: Schema.Array(Ref.Ref(Task.Task)).pipe(
+      Annotation.FormInputAnnotation.set(false),
+      Annotation.SetParent.set(true),
+    ),
 
     /** The set's milestones, in sequence. */
-    milestones: Schema.Array(Ref.Ref(Milestone.Milestone)).pipe(Annotation.FormInputAnnotation.set(false)),
+    milestones: Schema.Array(Ref.Ref(Milestone.Milestone)).pipe(
+      Annotation.FormInputAnnotation.set(false),
+      Annotation.SetParent.set(true),
+    ),
   }).pipe(
     Schema.annotate({ title: 'Task Set' }),
     LabelAnnotation.set(['name']),
@@ -53,8 +61,8 @@ export const make = (
 export const instanceOf = (value: unknown): value is TaskSet => Obj.instanceOf(TaskSet, value);
 
 /**
- * Create a task in the set. Membership is the set's `tasks` array; the parent edge is set
- * alongside so the task cascade-deletes with the set.
+ * Create a task in the set. The array write is the whole filing: order from the position, and the
+ * parent edge (membership + cascade with the set) from `SetParent` on the field.
  */
 export const addTask = (
   db: Database.Database,
@@ -63,7 +71,6 @@ export const addTask = (
   props: Partial<Omit<Obj.MakeProps<typeof Task.Task>, 'title'>> = {},
 ): Task.Task => {
   const task = db.add(Task.make({ title: title.trim(), status: 'todo', ...props }));
-  Obj.setParent(task, taskSet);
   Obj.update(taskSet, (taskSet) => {
     taskSet.tasks = [...taskSet.tasks, Ref.make(task)];
   });
@@ -71,9 +78,11 @@ export const addTask = (
 };
 
 /**
- * Delete a task: removed from the set's `tasks` array and from the database. `dependsOn` refs
- * pointing at it are left dangling by design — {@link isTaskReady} reads a dangling dependency as
- * satisfied, matching the file's dangling-ref convention.
+ * Delete a single task: removed from the set's `tasks` array and from the database. Its sub-tasks
+ * survive as roots (a dangling `parentTask` reads as a root) — the DeleteTask verb is the path
+ * that sweeps a subtree. `dependsOn` refs pointing at it are left dangling by design —
+ * {@link isTaskReady} reads a dangling dependency as satisfied, matching the file's dangling-ref
+ * convention.
  */
 export const deleteTask = (db: Database.Database, taskSet: TaskSet, task: Task.Task): void => {
   Obj.update(taskSet, (taskSet) => {

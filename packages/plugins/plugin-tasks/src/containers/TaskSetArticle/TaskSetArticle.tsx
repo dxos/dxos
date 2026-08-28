@@ -23,7 +23,7 @@ export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>
  * describe, and restructurable by dragging a row or with `Alt`+arrow. Milestone grouping is
  * deliberately not rendered yet (see TASKS.md). CRUD flows through the
  * {@link TaskOperation} verbs so the article and external agents share one write path: the verbs
- * are what keep the array, the refs and the lifecycle parent edges consistent.
+ * are what keep the array, the refs and `parentTask` consistent.
  */
 export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSetArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -113,11 +113,11 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
 TaskSetArticle.displayName = 'TaskSetArticle';
 
 /**
- * The set's tasks via the space index rather than the ref array: `childOf` (transitive — a
- * sub-task's ECHO parent is its parent task, a root task's is the set) scopes the query to this
- * set, and a query re-emits on membership changes only, never on a member's edit — `TaskList` rows
- * subscribe themselves. Order is the set's `tasks` array (canonical there), subscribed as a
- * property atom and applied as a sort.
+ * The set's tasks via the space index rather than the ref array: every member's ECHO parent is the
+ * set (`SetParent` on `tasks`), so `childOf` is membership — transitive tolerates legacy sub-tasks
+ * still parented to their parent task until a write heals them. A query re-emits on membership
+ * changes only, never on a member's edit — `TaskList` rows subscribe themselves. Order is the
+ * set's `tasks` array (canonical there), subscribed as a property atom and applied as a sort.
  */
 const useSetTasks = (taskSet: TaskSet.TaskSet): Task.Task[] => {
   const db = Obj.getDatabase(taskSet);

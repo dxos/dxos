@@ -136,8 +136,8 @@ const seedTree = () =>
     const grandchild = yield* Database.add(Task.make({ title: 'grandchild', status: 'todo' }));
     const sibling = yield* Database.add(Task.make({ title: 'sibling', status: 'todo' }));
     addTaskToSet(taskSet, root);
-    addTaskToSet(taskSet, child, root);
-    addTaskToSet(taskSet, grandchild, child);
+    addTaskToSet(taskSet, child);
+    addTaskToSet(taskSet, grandchild);
     addTaskToSet(taskSet, sibling);
     Obj.update(child, (child) => {
       child.parentTask = Ref.make(root);

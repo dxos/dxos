@@ -41,23 +41,20 @@ export const findMilestoneTaskSet = (
   });
 
 /**
- * Add a task to a set: the array entry (membership and order) plus the lifecycle parent edge — a
- * sub-task hangs off its parent task so it cascades with it, a root task off the set.
+ * Add a task to a set. The array write is the whole filing: order from the position, and the
+ * parent edge (membership + cascade with the set) from `SetParent` on the field.
  */
-export const addTaskToSet = (taskSet: TaskSet.TaskSet, task: Task.Task, parentTask?: Task.Task): void => {
-  // Ref before parent edge: the array entry is what makes the task referenced content of the set.
+export const addTaskToSet = (taskSet: TaskSet.TaskSet, task: Task.Task): void => {
   Obj.update(taskSet, (taskSet) => {
     taskSet.tasks = [...taskSet.tasks, Ref.make(task)];
   });
-  Obj.setParent(task, parentTask ?? taskSet);
 };
 
-/** Add a milestone to a set, appended to the sequence and parented for cascade. */
+/** Add a milestone to a set, appended to the sequence; `SetParent` on the field parents it. */
 export const addMilestoneToSet = (taskSet: TaskSet.TaskSet, milestone: Milestone.Milestone): void => {
   Obj.update(taskSet, (taskSet) => {
     taskSet.milestones = [...taskSet.milestones, Ref.make(milestone)];
   });
-  Obj.setParent(milestone, taskSet);
 };
 
 /** Every task in `taskSet` transitively under `task`, including `task` itself. Cycle-safe. */
@@ -154,7 +151,11 @@ export const resolveParentTask = (
     return candidate;
   });
 
-/** Moves the lifecycle edge with the hierarchy, so a sub-task still cascades with whatever now holds it. */
+/**
+ * Writes the hierarchy field. The ECHO parent edge means membership, not hierarchy, so it is
+ * re-asserted to the owning set (or cleared for a task in no set) — which also heals a legacy
+ * task-parented edge that would otherwise cascade-delete this task with its former parent.
+ */
 export const applyParentTask = (
   taskSet: TaskSet.TaskSet | undefined,
   task: Task.Task,
@@ -169,7 +170,5 @@ export const applyParentTask = (
       delete task.parentTask;
     }
   });
-  // Set unconditionally, `undefined` included: a task promoted out of a set that no longer holds it
-  // would otherwise keep a stale edge and be cascade-deleted with its former parent.
-  Obj.setParent(task, newParent ?? taskSet);
+  Obj.setParent(task, taskSet);
 };

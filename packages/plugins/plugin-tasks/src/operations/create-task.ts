@@ -59,7 +59,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.CreateTask> = TaskOper
           milestone,
         }),
       );
-      addTaskToSet(taskSet, task, parent);
+      addTaskToSet(taskSet, task);
       yield* Database.flush();
       return { task: task };
     }),

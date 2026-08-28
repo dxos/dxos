@@ -64,16 +64,15 @@ const seedTaskSet = (space: Space) => {
     { title: 'Schedule cuppings', status: 'todo' },
     { title: 'Print run v1', status: 'cancelled' },
   ];
-  // Membership and order are the set's arrays; the parent edge rides along for cascade.
+  // The array write is the whole filing: order from the position, the parent edge (membership)
+  // from `SetParent` on the field.
   for (const props of seed) {
     const task = space.db.add(Task.make(props));
-    Obj.setParent(task, set);
     Obj.update(set, (set) => {
       set.tasks = [...set.tasks, Ref.make(task)];
     });
   }
   for (const milestone of [roasting, launch]) {
-    Obj.setParent(milestone, set);
     Obj.update(set, (set) => {
       set.milestones = [...set.milestones, Ref.make(milestone)];
     });
@@ -159,11 +158,11 @@ export const Behavior: Story = {
     }
     const { space, taskSet, roasting } = context;
 
-    // Updates — membership: a task appended to the array joins the list.
+    // Updates — membership: appending to the array parents the task to the set (`SetParent`),
+    // which is what joins it to the `childOf` query.
     const added = space.db.add(
       Task.make({ title: 'Order sample bags', status: 'todo', milestone: Ref.make(roasting) }),
     );
-    Obj.setParent(added, taskSet);
     Obj.update(taskSet, (taskSet) => {
       taskSet.tasks = [...taskSet.tasks, Ref.make(added)];
     });
