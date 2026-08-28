@@ -7,7 +7,7 @@
 import * as Option from 'effect/Option';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { type Space, isSpace } from '@dxos/client/echo';
+import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { Entity, Obj, type Type } from '@dxos/echo';
 import type * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
@@ -26,7 +26,8 @@ export const SETTINGS_SECTION_TYPE = 'org.dxos.plugin.space.settings';
 
 /**
  * Match space nodes and return the {@link Space} payload — saves callers from
- * unwrapping `node.data` themselves and adds an `isSpace` runtime guard.
+ * unwrapping `node.data` themselves and adds an `isSpace` runtime guard. A space
+ * still initializing does not match, so connectors never see an unopened db.
  *
  * @example
  * ```ts
@@ -38,7 +39,11 @@ export const SETTINGS_SECTION_TYPE = 'org.dxos.plugin.space.settings';
  * ```
  */
 export const whenSpace = (node: AppGraphNode.Node): Option.Option<Space> =>
-  node.type === SPACE_NODE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none();
+  // An initializing space is listed as a loading placeholder, and every connector keyed on this
+  // matcher builds content by querying the space's db — which is not open yet.
+  node.type === SPACE_NODE_TYPE && isSpace(node.data) && node.data.state.get() !== SpaceState.SPACE_INITIALIZING
+    ? Option.some(node.data)
+    : Option.none();
 
 /**
  * Match space-settings section nodes and return the {@link Space} stored in
