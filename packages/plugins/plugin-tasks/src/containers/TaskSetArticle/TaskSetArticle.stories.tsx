@@ -172,9 +172,25 @@ export const Behavior: Story = {
     });
     await expect(canvas.findByText('Order sample bags (v2)', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
 
+    const cuppings = TaskSet.resolveTasks(taskSet).find((task) => task.title === 'Schedule cuppings')!;
+    const label = TaskSet.resolveTasks(taskSet).find((task) => task.title === 'Design label')!;
+    Obj.update(cuppings, (cuppings) => {
+      cuppings.parentTask = Ref.make(label);
+    });
+    await flushRender();
+    await expect(canvas.getByText('Schedule cuppings').closest('[role="option"]')).toHaveAttribute('aria-level', '2');
+
     // Updates — removal: an array splice alone does not unlist a task (membership is the parent
     // edge) — deleting it does.
     TaskSet.deleteTask(space.db, taskSet, added);
     await waitFor(() => expect(canvas.queryByText('Order sample bags (v2)')).toBeNull(), { timeout: 10_000 });
   },
 };
+
+/** Frames enough for React to flush a subscription, far short of an index round trip. */
+const flushRender = (): Promise<void> =>
+  new Promise((resolve) => {
+    let remaining = 3;
+    const tick = () => (remaining-- > 0 ? requestAnimationFrame(tick) : resolve());
+    tick();
+  });

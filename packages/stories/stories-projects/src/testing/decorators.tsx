@@ -119,6 +119,7 @@ export const createDecorators = ({ mailboxName, messages, ai, plugins = [], type
       SpacePlugin({}),
       InboxPlugin(),
       ProjectsPlugin.make(),
+      // Declared in Projects' `dependsOn`, so the manager refuses to resolve it without Tasks.
       TasksPlugin.make(),
       RoutinePlugin.make(),
       makeModuleSurfacesPlugin('org.dxos.plugin.projects.story.modules', moduleSurfaces),

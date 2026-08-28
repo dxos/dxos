@@ -141,6 +141,43 @@ describe('TaskSet', () => {
     );
   });
 
+  describe('moveTask', () => {
+    it.effect('repositions and re-parents in one write, so a drop lands whole', () =>
+      Effect.gen(function* () {
+        const { taskSet, root, child, sibling } = yield* seedTree();
+
+        TaskSet.moveTask(taskSet, sibling, { parentTask: root, beforeId: child.id });
+
+        expect(titles(taskSet.tasks)).toEqual(['root', 'sibling', 'child', 'grandchild']);
+        expect(TaskSet.parentTaskId(sibling)).toBe(root.id);
+      }).pipe(Effect.provide(testLayer())),
+    );
+
+    it.effect('promotes to a root on a null parent, and leaves the hierarchy alone when omitted', () =>
+      Effect.gen(function* () {
+        const { taskSet, child, grandchild } = yield* seedTree();
+
+        TaskSet.moveTask(taskSet, child, { parentTask: null });
+        expect(child.parentTask).toBeUndefined();
+
+        TaskSet.moveTask(taskSet, grandchild, { beforeId: child.id });
+        expect(TaskSet.parentTaskId(grandchild)).toBe(child.id);
+        expect(titles(taskSet.tasks)).toEqual(['root', 'sibling', 'grandchild', 'child']);
+      }).pipe(Effect.provide(testLayer())),
+    );
+
+    it.effect('re-parents the last task, where the array order is already what the move asks for', () =>
+      Effect.gen(function* () {
+        const { taskSet, root, sibling } = yield* seedTree();
+
+        TaskSet.moveTask(taskSet, sibling, { parentTask: root });
+
+        expect(titles(taskSet.tasks)).toEqual(['root', 'child', 'grandchild', 'sibling']);
+        expect(TaskSet.parentTaskId(sibling)).toBe(root.id);
+      }).pipe(Effect.provide(testLayer())),
+    );
+  });
+
   describe('refEntityId', () => {
     it.effect('reads the id off the URI, so an unloaded ref still compares', () =>
       Effect.gen(function* () {

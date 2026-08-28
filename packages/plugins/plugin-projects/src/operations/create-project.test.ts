@@ -100,6 +100,7 @@ type Harness = Awaited<ReturnType<typeof createComposerTestApp>>;
 
 const setup = async (): Promise<Harness> => {
   const harness = await createComposerTestApp({
+    // Tasks is declared in `dependsOn`, so the manager refuses to resolve Projects without it.
     plugins: [ClientPlugin.make({}), SpacePlugin.make({}), TasksPlugin.make(), ProjectsPlugin()],
   });
   const client = harness.get(ClientCapabilities.Client);

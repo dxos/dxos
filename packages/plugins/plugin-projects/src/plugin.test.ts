@@ -21,6 +21,7 @@ const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 describe('ProjectsPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await createComposerTestApp({
+      // Tasks is declared in `dependsOn`, so the manager refuses to resolve Projects without it.
       plugins: [ClientPlugin.make({}), TasksPlugin.make(), ProjectsPlugin()],
     });
 
@@ -39,6 +40,7 @@ describe('ProjectsPlugin', () => {
 
   test('the project skill activates when the assistant starts', async ({ expect }) => {
     await using harness = await createComposerTestApp({
+      // Tasks is declared in `dependsOn`, so the manager refuses to resolve Projects without it.
       plugins: [ClientPlugin.make({}), TasksPlugin.make(), ProjectsPlugin()],
     });
 
@@ -50,6 +52,7 @@ describe('ProjectsPlugin', () => {
   test('registers the project types with the client', async ({ expect }) => {
     // Without a registered `Project` type every project verb fails where it stores the object.
     await using harness = await createComposerTestApp({
+      // Tasks is declared in `dependsOn`, so the manager refuses to resolve Projects without it.
       plugins: [ClientPlugin.make({}), TasksPlugin.make(), ProjectsPlugin()],
     });
 

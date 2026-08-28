@@ -54,6 +54,7 @@ const decorators = createDecorators({
       import('@dxos/plugin-tasks/TasksPlugin'),
     ]);
     return {
+      // Declared in Projects' `dependsOn`, so the manager refuses to resolve it without Tasks.
       plugins: [ProjectsPlugin.make(), TasksPlugin.make()],
       types: [Project.Project, Instructions.Instructions, Routine.Routine, Collection.Collection, Text.Text],
     };
