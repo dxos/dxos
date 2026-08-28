@@ -1,16 +1,6 @@
 ---
 '@dxos/config': patch
-'@dxos/edge-client': patch
 '@dxos/plugin-sandbox': patch
-'@dxos/plugin-calls': patch
-'@dxos/plugin-video': patch
-'@dxos/plugin-code': patch
-'@dxos/plugin-support': patch
-'@dxos/plugin-transcription': patch
-'@dxos/plugin-crm': patch
-'@dxos/plugin-devtools': patch
-'@dxos/react-ui-introspect': patch
-'@dxos/pipeline-transcription': patch
 ---
 
 Every EDGE service is now addressed as `<env>.dxos.network/<service>`, derived from one configured
