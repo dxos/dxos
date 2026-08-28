@@ -549,9 +549,8 @@ type MessageListViewportExtra = Pick<
     /**
      * Chrome pinned over the scroller — a scroll-to-bottom pill, a "new messages" badge.
      *
-     * Mounted inside `ScrollArea.Root`, which is positioned and does not scroll: a child of the
-     * viewport would scroll away with the rows, and a sibling of the whole part would need a
-     * positioned box inserted into the flex-height chain the placement measures.
+     * Mounted inside `ScrollArea.Root` because it is positioned and does not scroll, so nothing has
+     * to enter the flex-height chain the placement measures.
      */
     overlay?: ReactNode;
   };
@@ -606,10 +605,8 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
         <div key={message.id} data-index={index} data-object-id={message.id}>
           {!empty && (
             <Column.Root gutter={gutter}>
-              {/* Inline-size query container so a widget caps itself against the column it renders
-                  in (`max-w-[100cqi]`); with no container `cqi` resolves against the viewport and a
-                  suggestion chip overflows the thread. Not on the editor's content: a prompt's
-                  bubble is shrink-to-fit, and containing the text's contribution collapses it. */}
+              {/* The widgets' query container: it must be an element whose width is definite, since
+                  containment stops a descendant's content sizing it (a prompt's bubble collapses). */}
               <Column.Center classNames='dx-container-type-inline-size'>
                 <Chrome
                   message={message}

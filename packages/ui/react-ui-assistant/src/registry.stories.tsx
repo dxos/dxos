@@ -7,6 +7,7 @@ import React from 'react';
 
 import { MarkdownBlock, WidgetStateProvider, createWidgetStateStore } from '@dxos/react-ui-feed';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { trim } from '@dxos/util';
 
 import { assistantRegistry } from './registry';
 import { translations } from './translations';
@@ -99,8 +100,13 @@ export const Suggestion: Story = {
 
 export const Select: Story = {
   args: {
-    content:
-      '<select><option>Scroll the leaf</option><option>Scroll the panel</option><option>Do nothing</option></select>',
+    content: trim`
+      <select>
+        <option>Scroll the leaf</option>
+        <option>Scroll the panel</option>
+        <option>Do nothing</option>
+      </select>
+    `,
   },
 };
 

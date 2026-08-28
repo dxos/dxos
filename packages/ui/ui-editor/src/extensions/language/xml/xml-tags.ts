@@ -510,9 +510,7 @@ const createWidgetDecorationsField = (registry: XmlWidgetRegistry = {}, notifier
 
   return StateField.define<WidgetDecorationSet>({
     create: (state) => {
-      // The only build that can read a half-parsed tree: every later one follows a transaction, by
-      // which time the parse has advanced or `xmlTagRebuildEffect` has fired. Forcing it here keeps
-      // the cost at mount instead of charging it to every streamed chunk.
+      // Forced only here, so a streamed chunk is not charged for a parse it will get anyway.
       return buildDecorations(state, { from: 0, to: state.doc.length }, registry, notifier, urlSchemeMap, true);
     },
     update: ({ from, streamingFrom, decorations }, tr) => {
@@ -575,11 +573,7 @@ const createWidgetDecorationsField = (registry: XmlWidgetRegistry = {}, notifier
   });
 };
 
-/**
- * Time the initial decoration build may spend parsing ahead of the background parser. One feed row
- * is a small document, so this is a ceiling rather than a cost: past it the raw markup shows for a
- * frame, exactly as before, and `createParseCompletionPlugin` still rebuilds.
- */
+/** Ceiling on parsing ahead of the background parser; past it `createParseCompletionPlugin` rebuilds. */
 const PARSE_BUDGET = 50;
 
 /**
@@ -599,11 +593,8 @@ const buildDecorations = (
   const widgetStateMap = state.field(widgetStateMapStateField, false) ?? {};
   const builder = new RangeSetBuilder<Decoration>();
 
-  // Parse to the end of the range rather than reading whatever the background parse has reached.
-  // A fresh view parses about a viewport's worth synchronously and the rest in idle time, so a
-  // large payload's `Element` is not in the tree at first paint: the walk below matches nothing
-  // and the raw markup renders until `createParseCompletionPlugin` rebuilds — the flash a reader
-  // sees when the virtualizer remounts a row. Budgeted, and the rebuild still covers a timeout.
+  // A fresh view has parsed only about a viewport, so a large payload's `Element` is absent at
+  // first paint and its markup renders raw until a rebuild — the flash on a remounted row.
   const tree = (forceParse ? ensureSyntaxTree(state, range.to, PARSE_BUDGET) : null) ?? syntaxTree(state);
   if (!tree || (tree.type.name === 'Program' && tree.length === 0)) {
     return { from: range.from, decorations: Decoration.none };

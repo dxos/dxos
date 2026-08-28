@@ -22,16 +22,20 @@ export class SelectWidget extends WidgetType {
    * NOTE: Container must set var based on user's identity.
    */
   override toDOM() {
-    return Domino.of('div')
-      .attributes({ role: 'group' })
-      .classNames('flex flex-wrap gap-1')
-      .append(
-        ...this.options.map((option) =>
-          Domino.of('button')
-            .classNames('dx-button dx-container-query-inline-size inline-block py-1')
-            .attributes({ 'data-action': 'submit', 'data-value': option, 'data-density': 'md' })
-            .text(option),
-        ),
-      ).root;
+    return (
+      Domino.of('div')
+        .attributes({ role: 'group' })
+        // Same metrics as a run of suggestion chips (4px between, 8px between rows), so the two read
+        // as one family; flex gap already applies only between items, never at a row's start.
+        .classNames('flex flex-wrap gap-x-1 gap-y-2')
+        .append(
+          ...this.options.map((option) =>
+            Domino.of('button')
+              .classNames('dx-button dx-container-query-inline-size inline-block py-1')
+              .attributes({ 'data-action': 'submit', 'data-value': option, 'data-density': 'md' })
+              .text(option),
+          ),
+        ).root
+    );
   }
 }

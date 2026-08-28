@@ -157,8 +157,8 @@ CodeMirror and dompurify into the extension bundle.
 The namespace already exists at
 `packages/plugins/plugin-assistant/src/components/Chat/Chat.tsx:660-669`:
 
-```
-Chat = { Root, Toolbar, Content, Prompt, Status, Thread, Outline, TaskList }
+```ts
+Chat = { Root, Toolbar, Content, Prompt, Status, Thread, Outline, TaskList };
 ```
 
 …assembled from `react-ui-assistant` (Thread), `react-ui-feed` (Outline), `react-ui-chat` (via
