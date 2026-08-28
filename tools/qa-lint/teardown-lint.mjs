@@ -1,8 +1,10 @@
 // Flags `after:` steps that could remove an object the run did not create.
 //
 // A teardown is safe when it removes something the flow bound itself (a `capture:` or a named
-// `given:`), or resolves by a name the flow's `given` guarantees is absent and throws when that
-// name is missing. Resolving by type-and-index can delete whatever the space happens to hold.
+// `given:`), or resolves by a name the flow's `given` guarantees is absent — constrained to the
+// subject's own type, and throwing when nothing matches. Resolving by type-and-index deletes
+// whatever the space happens to hold first; resolving by name across `Filter.everything()`
+// deletes any object carrying that name, which the `given` precondition does not exclude.
 import { readFileSync, globSync } from 'node:fs';
 
 let unsafe = 0;
@@ -36,10 +38,18 @@ for (const file of globSync('packages/plugins/*/PLUGIN.mdl').sort()) {
     if (!/db\.query/.test(step.join('\n'))) {
       continue; // removes a bound value.
     }
-    const byIndex = /\.objects\[\d+\]/.test(step.join('\n'));
-    const guarded = /throw new Error/.test(step.join('\n'));
-    if (byIndex || !guarded) {
-      console.log(`${file}  ${flow}  L${i + 1}  ${byIndex ? 'resolves by index' : 'unguarded query'}`);
+    const body = step.join('\n');
+    const byIndex = /\.objects\[\d+\]/.test(body);
+    const guarded = /throw new Error/.test(body);
+    // A name match over every object in the space is not narrowed by a `given` that only
+    // promises no *typed* subject carries the name.
+    const untyped = /Filter\.everything\(\)/.test(body) && /\.name ===/.test(body);
+    // Selecting on an id the flow itself produced discriminates even on a dirty fixture,
+    // so it needs no name guard (Execution Rule 5).
+    const byIdentity = /\.id ===/.test(body);
+    const reason = byIndex ? 'resolves by index' : untyped ? 'name match across every type' : 'unguarded query';
+    if (byIndex || untyped || (!guarded && !byIdentity)) {
+      console.log(`${file}  ${flow}  L${i + 1}  ${reason}`);
       unsafe++;
     }
   }

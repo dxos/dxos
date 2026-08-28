@@ -489,7 +489,7 @@ flow QA-1: Configure a provider by hand and run a search
         `/products/search?q={q}` returning `.products[]`, mapping `title` from the item's
         `title` and `url` from its `thumbnail` (dummyjson's product listing carries no
         product-page URL, only a per-item image URL; `id` is not a URL).
-      invoke: [op:SetProviderTemplate] { provider: Ref.make($provider), searchSchema: { type: "object", properties: { q: { type: "string" } } }, request: { method: "GET", urlTemplate: "https://dummyjson.com/products/search?q={q}" }, result: { responseType: "json", itemLocator: "products", fields: { title: { path: "title" }, url: { path: "thumbnail" } } } }
+      invoke: [op:SetProviderTemplate] { provider: Ref.make($provider), searchSchema: "{\"type\":\"object\",\"properties\":{\"q\":{\"type\":\"string\"}}}", request: { method: "GET", urlTemplate: "https://dummyjson.com/products/search?q={q}" }, result: { responseType: "json", itemLocator: "products", fields: { title: { path: "title" }, url: { path: "thumbnail" } } } }
       capture: templated
       expect: the Provider is now ready for RunProviderSearch — its searchSchema, request and
         result mappings are all set

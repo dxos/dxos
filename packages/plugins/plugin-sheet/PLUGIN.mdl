@@ -349,7 +349,8 @@ flow QA-1: Create a sheet, set values, evaluate a formula, read back
   given:
     - an identity exists
     - space: a space is open
-    - collection: a collection in that space, to create into
+    - root: the space's root collection — [op:create] takes no target and files the Sheet
+      there via `CollectionModel.add`, so the flow cannot choose a different one
     - no Sheet named "QA Sheet" exists — ABORT rather than reusing one this flow did not create
   test:
     - name: Create the sheet
@@ -359,9 +360,9 @@ flow QA-1: Create a sheet, set values, evaluate a formula, read back
       expect: a Sheet named "QA Sheet" now exists
       assert: return !!$created.id
 
-    - name: Place it in the collection
+    - name: Place it in the root collection
       do: (no separate gesture — the navtree create action places it)
-      expect: "QA Sheet" appears as a row under the collection
+      expect: "QA Sheet" appears as a row under the space's root collection
       note: |
         NO `invoke` — [op:create] places the sheet in the space itself, so a following
         `space.addObject` is redundant. `$created.id` is a DXN string, not an object;
@@ -392,10 +393,9 @@ flow QA-1: Create a sheet, set values, evaluate a formula, read back
       invoke: org.dxos.operation.space.removeObjects { objects: [space.db.getObjectById($created.id.split('/').pop())] }
       expect: the row leaves the navtree and its plank closes if it was open
       note: |
-        No `target` — `op:create` calls `CollectionModel.add({ object })` with no target, which
-        files the Sheet in the space's root collection, not `$given.collection`; omitting
-        `target` here lets `removeObjects` default to that same root collection instead of the
-        wrong one.
+        No `target` — `op:create` calls `CollectionModel.add({ object })` with no target, so the
+        Sheet lands in the space's root collection; omitting `target` here lets `removeObjects`
+        default to that same collection rather than a different one.
 ```
 
 ---
