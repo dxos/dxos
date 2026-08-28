@@ -11,6 +11,18 @@
   `concise` aliases `terse`; `natural`/`default`/`off` alias `normal`. It must
   lead the message, as a slash command does — so a mid-sentence mention of the
   command cannot flip the mode. The `$mode` sentinel has been removed.
+- **`/mode focus [task]`** adds a pinned task to `terse`. `focus` is not a third
+  mode value: the hook writes `terse` to `.claude/.mode` and the task to
+  `.claude/.focus`, so every reader of the mode is unchanged and the pin is just
+  that second file existing. With no task on the line the hook reads the
+  previous user instruction out of the event's `transcript_path` and pins that —
+  deriving it in the hook keeps the pin a mechanism rather than a request that
+  the agent remember. Nothing pinnable means terse and no pin, said out loud.
+  Any write to the mode clears the pin, so naming a verbosity is how you leave
+  focus; the pin is per-worktree like the mode, so concurrent sessions in one
+  worktree share it.
+- `bash .claude/scripts/mode.test.sh` exercises both files by feeding the hook
+  the JSON the `UserPromptSubmit` event carries. Run it after touching either.
 - **Bare `/mode` changes nothing and re-orients**: reply with the worktree and
   branch, the instruction files actually consulted (including skills loaded this
   session), and the current mode — never the modes as numbered options, since a
