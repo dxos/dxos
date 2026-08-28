@@ -8,3 +8,13 @@ declare module '*.mdl?raw' {
   const content: string;
   export default content;
 }
+
+declare module '*.mjs?url' {
+  const src: string;
+  export default src;
+}
+
+declare module '*.pdf?url' {
+  const src: string;
+  export default src;
+}

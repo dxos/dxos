@@ -25,6 +25,9 @@ export const translations = [
       [meta.profile.key]: {
         'plugin.name': 'File',
         'file-input.placeholder': 'Drop an image, video, or PDF here, or click to browse.',
+        'pdf-error.message': 'This PDF could not be displayed.',
+        'page-count.label_one': '{{count}} page',
+        'page-count.label_other': '{{count}} pages',
         'too-large-error.message': 'File is too large. Maximum size is 4MB.',
         'unsupported-type-error.message': 'Unsupported file type. Only images, videos, and PDFs are allowed.',
         'settings.backend.label': 'Storage backend',
