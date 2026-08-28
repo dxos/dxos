@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, it } from '@effect/vitest';
+import { describe, expect, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Database, Obj, Ref, Type } from '@dxos/echo';
@@ -17,7 +17,7 @@ import * as TaskSet from './TaskSet';
  * ordering the arrays. The views derived from a task list live on `Task`, and are tested there.
  */
 describe('TaskSet', () => {
-  it('typename, version, and array defaults', ({ expect }) => {
+  test('typename, version, and array defaults', ({ expect }) => {
     expect(Type.getTypename(TaskSet.TaskSet)).toBe('org.dxos.type.taskSet');
     expect(Type.getVersion(TaskSet.TaskSet)).toBe('0.3.0');
     const taskSet = TaskSet.make({ name: 'Work' });

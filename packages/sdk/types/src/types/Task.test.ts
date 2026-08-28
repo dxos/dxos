@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, it } from '@effect/vitest';
+import { describe, expect, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Database, Obj, Ref } from '@dxos/echo';
@@ -17,7 +17,7 @@ import * as Task from './Task';
  * a plain task list, which is why they live here rather than on a container.
  */
 describe('Task derived views', () => {
-  it('roots and sub-tasks partition the flat array', ({ expect }) => {
+  test('roots and sub-tasks partition the flat array', ({ expect }) => {
     const parent = Task.make({ title: 'Parent' });
     const child = Task.make({ title: 'Child', parentTask: Ref.make(parent) });
     const grandchild = Task.make({ title: 'Grandchild', parentTask: Ref.make(child) });
@@ -28,14 +28,14 @@ describe('Task derived views', () => {
     expect(Task.subTasks(tasks, child).map((task) => task.title)).toEqual(['Grandchild']);
   });
 
-  it('a task whose parent is absent reads as a root rather than vanishing', ({ expect }) => {
+  test('a task whose parent is absent reads as a root rather than vanishing', ({ expect }) => {
     const absent = Task.make({ title: 'Absent' });
     const orphan = Task.make({ title: 'Orphan', parentTask: Ref.make(absent) });
 
     expect(Task.rootTasks([orphan]).map((task) => task.title)).toEqual(['Orphan']);
   });
 
-  it('sub-tasks inherit the nearest ancestor milestone, and an own milestone overrides', ({ expect }) => {
+  test('sub-tasks inherit the nearest ancestor milestone, and an own milestone overrides', ({ expect }) => {
     const first = Milestone.make({ name: 'First' });
     const second = Milestone.make({ name: 'Second' });
     const parent = Task.make({ title: 'Parent', milestone: Ref.make(first) });
@@ -50,7 +50,7 @@ describe('Task derived views', () => {
     expect(Task.backlogTasks(tasks).map((task) => task.title)).toEqual(['Backlog']);
   });
 
-  it('a parentTask cycle terminates instead of hanging', ({ expect }) => {
+  test('a parentTask cycle terminates instead of hanging', ({ expect }) => {
     const first = Task.make({ title: 'First' });
     const second = Task.make({ title: 'Second', parentTask: Ref.make(first) });
     Obj.update(first, (first) => {
@@ -60,7 +60,7 @@ describe('Task derived views', () => {
     expect(Task.backlogTasks([first, second]).map((task) => task.title)).toEqual(['First', 'Second']);
   });
 
-  it('progress counts done over non-cancelled, so a milestone cannot disagree with its tasks', ({ expect }) => {
+  test('progress counts done over non-cancelled, so a milestone cannot disagree with its tasks', ({ expect }) => {
     const milestone = Milestone.make({ name: 'Ship' });
     const tasks = [
       Task.make({ title: 'a', status: 'done', milestone: Ref.make(milestone) }),
@@ -71,13 +71,13 @@ describe('Task derived views', () => {
     expect(Task.milestoneProgress(tasks, milestone)).toEqual({ total: 2, done: 1, ratio: 0.5 });
   });
 
-  it('an empty milestone reports zero rather than complete', ({ expect }) => {
+  test('an empty milestone reports zero rather than complete', ({ expect }) => {
     const milestone = Milestone.make({ name: 'Empty' });
 
     expect(Task.milestoneProgress([], milestone)).toEqual({ total: 0, done: 0, ratio: 0 });
   });
 
-  it('orderTasks follows the array, appending tasks the array does not list', ({ expect }) => {
+  test('orderTasks follows the array, appending tasks the array does not list', ({ expect }) => {
     const first = Task.make({ title: 'First' });
     const second = Task.make({ title: 'Second' });
     const unlisted = Task.make({ title: 'Unlisted' });
@@ -87,7 +87,7 @@ describe('Task derived views', () => {
     expect(ordered.map((task) => task.title)).toEqual(['Second', 'First', 'Unlisted']);
   });
 
-  it('orderTasks keeps the first array position for a duplicated ref', ({ expect }) => {
+  test('orderTasks keeps the first array position for a duplicated ref', ({ expect }) => {
     const task = Task.make({ title: 'Task' });
     const other = Task.make({ title: 'Other' });
     const refs = [Ref.make(task), Ref.make(other), Ref.make(task)];
@@ -96,7 +96,7 @@ describe('Task derived views', () => {
     expect(ordered.map((entry) => entry.title)).toEqual(['Task', 'Other']);
   });
 
-  it('subtree walks descendants within the list, and stops at what the list holds', ({ expect }) => {
+  test('subtree walks descendants within the list, and stops at what the list holds', ({ expect }) => {
     const root = Task.make({ title: 'Root' });
     const child = Task.make({ title: 'Child', parentTask: Ref.make(root) });
     const grandchild = Task.make({ title: 'Grandchild', parentTask: Ref.make(child) });
