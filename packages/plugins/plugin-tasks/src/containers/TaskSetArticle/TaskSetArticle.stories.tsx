@@ -64,8 +64,6 @@ const seedTaskSet = (space: Space) => {
     { title: 'Schedule cuppings', status: 'todo' },
     { title: 'Print run v1', status: 'cancelled' },
   ];
-  // The array write is the whole filing: order from the position, the parent edge (membership)
-  // from `SetParent` on the field.
   for (const props of seed) {
     const task = space.db.add(Task.make(props));
     Obj.update(set, (set) => {
@@ -136,10 +134,9 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
- * The set resolves into one flat list and stays live afterwards. Membership is the parent edge
- * (the `childOf` query) with the `tasks` array as order, so each mutation below is the one that
- * would go stale if the view were cached. Milestones are seeded but deliberately not rendered yet
- * (see TASKS.md) — the list is every task in the set.
+ * The set resolves into one flat list and stays live afterwards — each mutation below is the one
+ * that would go stale if the view were cached. Milestones are seeded but deliberately not rendered
+ * yet (see TASKS.md).
  */
 export const Behavior: Story = {
   play: async ({ canvasElement }) => {
@@ -158,8 +155,8 @@ export const Behavior: Story = {
     }
     const { space, taskSet, roasting } = context;
 
-    // Updates — membership: appending to the array parents the task to the set (`SetParent`),
-    // which is what joins it to the `childOf` query.
+    // Updates — membership: appending to the array parents the task to the set, joining it to the
+    // `childOf` query.
     const added = space.db.add(
       Task.make({ title: 'Order sample bags', status: 'todo', milestone: Ref.make(roasting) }),
     );
@@ -175,8 +172,8 @@ export const Behavior: Story = {
     });
     await expect(canvas.findByText('Order sample bags (v2)', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
 
-    // Updates — removal, through the real write path: membership is the parent edge (the `childOf`
-    // query), so an array splice alone no longer unlists a task — deleting it does.
+    // Updates — removal: an array splice alone does not unlist a task (membership is the parent
+    // edge) — deleting it does.
     TaskSet.deleteTask(space.db, taskSet, added);
     await waitFor(() => expect(canvas.queryByText('Order sample bags (v2)')).toBeNull(), { timeout: 10_000 });
   },

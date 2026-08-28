@@ -44,8 +44,7 @@ describe('create-task', () => {
       expect(child.parentTask?.target?.id).toBe(parent.id);
       expect(taskSet.tasks.map((ref) => ref.target?.id)).toEqual([parent.id, child.id]);
       expect(TaskSet.rootTasks(TaskSet.resolveTasks(taskSet)).map((task) => task.id)).toEqual([parent.id]);
-      // The ECHO parent edge means membership: a sub-task is still parented to the set, not to
-      // its `parentTask`.
+      // The parent edge means membership: a sub-task is parented to the set, not its `parentTask`.
       expect(Obj.getParent(child)?.id).toBe(taskSet.id);
     }).pipe(Effect.provide(testLayer())),
   );

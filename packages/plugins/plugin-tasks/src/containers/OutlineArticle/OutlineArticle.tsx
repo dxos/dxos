@@ -95,8 +95,8 @@ export const OutlineArticle = ({
   const outlineRef = useRef<OutlineController>(null);
   const handleConvertCurrent = useCallback(() => outlineRef.current?.convertToTask(), []);
 
-  // `childOf` (transitive) scopes to the set's tasks through their ECHO parent edges, so no
-  // membership check against the ref array — which read `.target` and missed cold-unloaded refs.
+  // Membership is the ECHO parent edge; transitive `childOf` also catches legacy sub-tasks still
+  // parented to their parent task.
   const tasks = useQuery(db, taskSet ? Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)) : Filter.nothing());
   // `useQuery` re-emits only when result membership changes, never on a member's property change,
   // so renames are observed by subscribing to each task; the bump rebuilds the resolver, whose new

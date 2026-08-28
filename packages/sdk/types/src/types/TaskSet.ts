@@ -63,10 +63,7 @@ export const make = (
 /** Returns true when value is a TaskSet object. */
 export const instanceOf = (value: unknown): value is TaskSet => Obj.instanceOf(TaskSet, value);
 
-/**
- * Create a task in the set. The array write is the whole filing: order from the position, and the
- * parent edge (membership + cascade with the set) from `SetParent` on the field.
- */
+/** Create a task and file it in the set. */
 export const addTask = (
   db: Database.Database,
   taskSet: TaskSet,
@@ -81,11 +78,9 @@ export const addTask = (
 };
 
 /**
- * Delete a single task: removed from the set's `tasks` array and from the database. Its sub-tasks
- * survive as roots (a dangling `parentTask` reads as a root) — the DeleteTask verb is the path
- * that sweeps a subtree. `dependsOn` refs pointing at it are left dangling by design —
- * {@link isTaskReady} reads a dangling dependency as satisfied, matching the file's dangling-ref
- * convention.
+ * Delete a single task from the array and the database. Sub-tasks survive as roots (the DeleteTask
+ * verb sweeps subtrees), and `dependsOn` refs pointing at it dangle by design — {@link isTaskReady}
+ * reads a dangling dependency as satisfied.
  */
 export const deleteTask = (db: Database.Database, taskSet: TaskSet, task: Task.Task): void => {
   Obj.update(taskSet, (taskSet) => {
@@ -152,9 +147,8 @@ export const dedupeById = <T extends Obj.Unknown>(objects: ReadonlyArray<T | und
 export const parentTaskId = (task: Task.Task): string | undefined => refEntityId(task.parentTask);
 
 /**
- * Order query-loaded tasks by the set's `tasks` array — membership order is canonical there, and a
- * query returns no order of its own. A task the array does not list yet (e.g. a concurrent add
- * observed mid-write) keeps its incoming position at the end.
+ * Order query-loaded tasks by the set's `tasks` array — canonical order; a query returns none. A
+ * task the array does not list yet (a concurrent add observed mid-write) sorts to the end.
  */
 export const orderTasks = (tasks: ReadonlyArray<Task.Task>, refs: ReadonlyArray<Ref.Ref<Task.Task>>): Task.Task[] => {
   const position = new Map<string, number>();
@@ -283,14 +277,14 @@ export const milestoneProgress = (tasks: readonly Task.Task[], milestone: Milest
 };
 
 //
-// Membership. The arrays carry order, and every write that adds or removes a member has to touch
-// them; the ECHO parent edge (membership, written by `SetParent` on the arrays) rides along
-// automatically. Keeping the writes here is what stops the array and the edges from drifting.
+// Membership. Every membership write goes through these helpers so the arrays (order) and the
+// `SetParent`-written parent edges (membership) cannot drift.
 //
 
 /**
- * The task set a task belongs to, found through the reverse-ref index rather than a backref field:
- * membership is stated once, in the `tasks` array, and a second field on the task could contradict it.
+ * The task set a task belongs to, found through the reverse-ref index rather than `Obj.getParent`:
+ * a legacy task's parent edge may not yet be healed to the set, while the `tasks` array always
+ * states membership.
  */
 export const findTaskSet = (task: Task.Task): Effect.Effect<TaskSet | undefined, never, Database.Service> =>
   Effect.gen(function* () {
@@ -311,17 +305,14 @@ export const findMilestoneTaskSet = (
     return sets[0];
   });
 
-/**
- * Add an existing task to a set. The array write is the whole filing: order from the position, and
- * the parent edge (membership + cascade with the set) from `SetParent` on the field.
- */
+/** File an existing task in the set. */
 export const addTaskToSet = (taskSet: TaskSet, task: Task.Task): void => {
   Obj.update(taskSet, (taskSet) => {
     taskSet.tasks = [...taskSet.tasks, Ref.make(task)];
   });
 };
 
-/** Add a milestone to a set, appended to the sequence; `SetParent` on the field parents it. */
+/** Append a milestone to the set's sequence. */
 export const addMilestoneToSet = (taskSet: TaskSet, milestone: Milestone.Milestone): void => {
   Obj.update(taskSet, (taskSet) => {
     taskSet.milestones = [...taskSet.milestones, Ref.make(milestone)];
@@ -410,10 +401,10 @@ export const reorder = <T extends Obj.Unknown>(
   return [...rest.slice(0, anchor), moved, ...rest.slice(anchor)];
 };
 
-/** A parent outside the task's own set, or inside its own subtree — either would orphan the task. */
+/** A parent outside the task's own set (the hierarchy would flatten) or inside its own subtree (a cycle). */
 export class InvalidParentTaskError extends BaseError.extend('InvalidParentTaskError', 'Invalid parent task.') {}
 
-/** Rejects a parent outside the task's own set or inside its own subtree (see {@link InvalidParentTaskError}). */
+/** Load and validate a candidate parent (see {@link InvalidParentTaskError} for the rejections). */
 export const resolveParentTask = (
   taskSet: TaskSet | undefined,
   task: Task.Task,
@@ -421,14 +412,12 @@ export const resolveParentTask = (
 ): Effect.Effect<Task.Task, InvalidParentTaskError | Error.EntityNotFoundError, Database.Service> =>
   Effect.gen(function* () {
     const candidate = yield* Database.load(parentTask);
-    // Index-discovered and loading, so a cold or cross-set sub-task cannot blind the cycle check.
     const subtree = yield* collectSubtree(task);
     if (subtree.some((member) => member.id === candidate.id)) {
       return yield* Effect.fail(
         new InvalidParentTaskError({ message: 'A task cannot be re-parented under itself or its own sub-tasks.' }),
       );
     }
-    // Membership by the ref's own entity id — no loading, so a cold entry still counts.
     const belongs = taskSet ? taskSet.tasks.some((ref) => refEntityId(ref) === candidate.id) : false;
     if (!belongs) {
       return yield* Effect.fail(
@@ -439,9 +428,9 @@ export const resolveParentTask = (
   });
 
 /**
- * Writes the hierarchy field. The ECHO parent edge means membership, not hierarchy, so it is
- * re-asserted to the owning set (or cleared for a task in no set) — which also heals a legacy
- * task-parented edge that would otherwise cascade-delete this task with its former parent.
+ * Writes the hierarchy field and re-asserts the ECHO parent edge to the owning set (or clears it),
+ * healing a legacy task-parented edge that would otherwise cascade-delete this task with its
+ * former parent.
  */
 export const applyParentTask = (
   taskSet: TaskSet | undefined,
@@ -452,8 +441,7 @@ export const applyParentTask = (
     if (newParent) {
       task.parentTask = Ref.make(newParent);
     } else {
-      // `delete` rather than assigning undefined: the property is optional rather than nullable, and
-      // the self-referential `Schema.suspend` rejects the assignment outright.
+      // The self-referential `Schema.suspend` rejects an `undefined` assignment; `delete` is the only clear.
       delete task.parentTask;
     }
   });

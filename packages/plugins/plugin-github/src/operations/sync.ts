@@ -148,9 +148,8 @@ const sinceFromOptions = (options: GitHubOperation.SyncOptions | undefined): str
 const dueOnToTargetDate = (dueOn: string | null | undefined): string | undefined => dueOn?.slice(0, 10) ?? undefined;
 
 /**
- * Move a task into `container`. The array write is the whole filing: order from the position, the
- * parent edge (membership) from `SetParent` on the field. Idempotent — sync runs repeatedly and
- * must never append a second ref for a task already in the set.
+ * Move a task into `container`. Idempotent — sync runs repeatedly and must never append a second
+ * ref for a task already in the set.
  */
 export const setTaskContainer = Effect.fn('setTaskContainer')(function* (task: Task.Task, container: TaskSet.TaskSet) {
   if (container.tasks.some(Ref.hasEntityId(task.id))) {

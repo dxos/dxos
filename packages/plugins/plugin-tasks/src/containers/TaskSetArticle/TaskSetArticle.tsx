@@ -113,11 +113,10 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
 TaskSetArticle.displayName = 'TaskSetArticle';
 
 /**
- * The set's tasks via the space index rather than the ref array: every member's ECHO parent is the
- * set (`SetParent` on `tasks`), so `childOf` is membership — transitive tolerates legacy sub-tasks
- * still parented to their parent task until a write heals them. A query re-emits on membership
- * changes only, never on a member's edit — `TaskList` rows subscribe themselves. Order is the
- * set's `tasks` array (canonical there), subscribed as a property atom and applied as a sort.
+ * The set's tasks via `childOf` — membership is the ECHO parent edge, and transitive tolerates
+ * legacy sub-tasks still parented to their parent task. The query re-emits on membership changes
+ * only, never on a member's edit — `TaskList` rows subscribe themselves. Order comes from the
+ * `tasks` array, where it is canonical.
  */
 const useSetTasks = (taskSet: TaskSet.TaskSet): Task.Task[] => {
   const db = Obj.getDatabase(taskSet);

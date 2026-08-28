@@ -40,8 +40,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.CreateTask> = TaskOper
       }
 
       // A cross-set parent would flatten the hierarchy here (the parent id is absent from this set,
-      // so the task reads as a root). Membership by the ref's own entity id — no loading, so a cold
-      // entry still counts.
+      // so the task reads as a root).
       if (parent && !taskSet.tasks.some((ref) => TaskSet.refEntityId(ref) === parent.id)) {
         return yield* Effect.fail(
           new InvalidOperationInput({ message: 'The parent task does not belong to this task set.' }),
