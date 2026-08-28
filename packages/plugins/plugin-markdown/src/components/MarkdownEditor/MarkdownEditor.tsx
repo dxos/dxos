@@ -44,7 +44,7 @@ type MarkdownEditorContextValue = Merge<
     id: string;
     attendableId?: string;
   },
-  Pick<ExtensionsOptions, 'compact' | 'viewMode' | 'editorStateStore'>,
+  Pick<ExtensionsOptions, 'compact' | 'viewMode'>,
   Pick<NaturalMarkdownToolbarProps, 'onAction' | 'onFileUpload' | 'onViewModeChange'>
 >;
 
@@ -140,12 +140,11 @@ export const MarkdownEditorProvider = ({
       attendableId,
       compact,
       viewMode,
-      editorStateStore,
       onAction,
       onFileUpload,
       onViewModeChange,
     }),
-    [id, attendableId, compact, viewMode, editorStateStore, onAction, onFileUpload, onViewModeChange],
+    [id, attendableId, compact, viewMode, onAction, onFileUpload, onViewModeChange],
   );
 
   return (
@@ -161,10 +160,7 @@ MarkdownEditorProvider.displayName = 'MarkdownEditor.Provider';
 
 const MARKDOWN_EDITOR_CONTENT_NAME = 'MarkdownEditor.Content';
 
-type MarkdownEditorContentProps = Omit<
-  NaturalMarkdownEditorContentProps,
-  'id' | 'extensions' | 'toolbarState' | 'editorStateStore'
->;
+type MarkdownEditorContentProps = Omit<NaturalMarkdownEditorContentProps, 'id' | 'extensions' | 'toolbarState'>;
 
 const MarkdownEditorContent = composable<HTMLDivElement, MarkdownEditorContentProps>(
   ({ compact: compactProp, ...props }, _forwardedRef) => {
@@ -173,7 +169,6 @@ const MarkdownEditorContent = composable<HTMLDivElement, MarkdownEditorContentPr
       attendableId,
       compact = compactProp,
       viewMode,
-      editorStateStore,
       onFileUpload,
     } = useMarkdownEditorContext(MARKDOWN_EDITOR_CONTENT_NAME);
     const { extensions, setController, state } = useEditorContext(MARKDOWN_EDITOR_CONTENT_NAME);
@@ -192,7 +187,6 @@ const MarkdownEditorContent = composable<HTMLDivElement, MarkdownEditorContentPr
         attendableId={attendableId}
         compact={compact}
         viewMode={viewMode}
-        editorStateStore={editorStateStore}
         toolbarState={state as Atom.Writable<EditorToolbarState>}
         extensions={extensions}
         onFileUpload={onFileUpload}
