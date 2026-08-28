@@ -206,6 +206,9 @@ export class AiChatProcessor {
   /** Currently active request fiber. */
   #requestFiber: Fiber.Fiber<void, unknown> | undefined;
 
+  /** Fiber following a turn this processor did not issue ({@link adopt}). */
+  #observeFiber: Fiber.Fiber<void, unknown> | undefined;
+
   /** Last request (for retries). */
   #lastRequest: ProcessorRequest | undefined;
 
@@ -414,6 +417,13 @@ export class AiChatProcessor {
     return () => {
       disposed = true;
       unsubscribe?.();
+      // The collector and its stream subscription outlive the unmount otherwise — one per remount,
+      // all feeding atoms nothing reads any more.
+      const fiber = this.#observeFiber;
+      if (fiber) {
+        this.#observeFiber = undefined;
+        void this._runtime.runPromise(Fiber.interrupt(fiber));
+      }
     };
   }
 
@@ -422,7 +432,7 @@ export class AiChatProcessor {
    * A turn this processor issued is owned by {@link request}, which reports its own errors.
    */
   async #observe(session: AgentService.Session): Promise<void> {
-    if (this.#requestFiber || this.#registry.get(this.active)) {
+    if (this.#requestFiber || this.#observeFiber || this.#registry.get(this.active)) {
       return;
     }
 
@@ -435,8 +445,10 @@ export class AiChatProcessor {
         this.#flushStreaming();
       });
 
-      this.#requestFiber = this._runtime.runFork(effect.pipe(Effect.provide(this._spaceLayer)));
-      const exit = await this._runtime.runPromise(Fiber.await(this.#requestFiber));
+      // Tracked apart from `#requestFiber` so `cancel` keeps meaning "stop the request this chat
+      // issued", and so the disposer interrupts only the observer.
+      this.#observeFiber = this._runtime.runFork(effect.pipe(Effect.provide(this._spaceLayer)));
+      const exit = await this._runtime.runPromise(Fiber.await(this.#observeFiber));
       if (Exit.isFailure(exit) && !Cause.hasInterruptsOnly(exit.cause)) {
         throw EffectEx.causeToError(exit.cause);
       }
@@ -445,7 +457,7 @@ export class AiChatProcessor {
       log.warn('failed to observe agent turn', { error: err });
     } finally {
       this.#registry.set(this.active, false);
-      this.#requestFiber = undefined;
+      this.#observeFiber = undefined;
     }
   }
 
