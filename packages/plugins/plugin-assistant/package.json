@@ -64,7 +64,6 @@
       "types": "./dist/types/src/skills/index.d.ts",
       "default": "./dist/lib/skills.mjs"
     },
-    "#testing": "./src/testing/index.ts",
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
