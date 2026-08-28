@@ -92,9 +92,8 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       this._setupSpacesStream();
     });
 
-    // Not awaited: the proxy is assigned synchronously (so `share`/`join` work immediately) and
-    // its own initial snapshot is not needed to use spaces. Awaiting it put the whole app boot
-    // behind the invitations stream, so a stalled snapshot made the app unbootable.
+    // Not awaited: its initial snapshot is not needed to use spaces, and awaiting it put the whole
+    // app boot behind the invitations stream, so a stalled snapshot made the app unbootable.
     void this._setupInvitationProxy().catch((error) => log.warn('failed to open invitation proxy', { error }));
 
     // Subscribe to spaces and create proxies.
@@ -112,8 +111,10 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
    * Set up the invitation proxy. Called on initial open and reconnect.
    */
   private async _setupInvitationProxy(): Promise<void> {
-    await this._invitationProxy?.close();
     invariant(this._serviceProvider.services.InvitationsService, 'InvitationsService is not available.');
+    const previous = this._invitationProxy;
+    // Assigned before the first await: the caller no longer waits for this method, so `join` would
+    // otherwise see a window where the proxy is missing and throw 'Client not open.'.
     this._invitationProxy = new InvitationsProxy(
       this._serviceProvider.services.InvitationsService,
       this._serviceProvider.services.IdentityService,
@@ -121,6 +122,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
         kind: Invitation.Kind.SPACE,
       }),
     );
+    await previous?.close();
     await this._invitationProxy.open();
   }
 

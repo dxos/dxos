@@ -21,6 +21,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `test`      | `org.dxos.mdl.test@1.0`        |
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.0`          |
+| `flow`      | `org.dxos.mdl.flow@1.0`        |
 
 ## Types
 
@@ -246,6 +247,53 @@ test T-6: SwitchWorkspace forwards without hiding
   then:
     - emitTo('main', 'spotlight:invoke', { operation: 'switch-workspace', payload: { subject: 'workspace-id' } }) is called
     - spotlight panel remains visible
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Invoke spotlight, navigate, and dismiss
+  desc: |
+    The core popover round-trip. `SpotlightLayout` only ever renders inside the Tauri spotlight
+    window (`isPopover`, `plugin-defs.core.tsx`) — a separate OS-level popover process, not a
+    route inside the browser-hosted Composer app the debug port attaches to. No step here has an
+    `invoke`: the ops in this document intercept the shared `LayoutOperation` keys rather than
+    registering new ones, so there is nothing plugin-scoped to invoke, and even the shared
+    `layout.open`/`layout.updateDialog` keys would land on the wrong window if invoked from the
+    debug port. The whole flow is human-only, run against a native Tauri build.
+  actors: human
+  covers: [F-1.1, F-2.1, F-2.2, F-4.1, T-1, T-2, T-5]
+  status: blocked
+  given:
+    - a native Tauri build of Composer is running (spotlight has no browser-hosted equivalent)
+    - the global hotkey for spotlight is configured
+  test:
+    - name: Open the spotlight window
+      do: Press the global hotkey from anywhere on the desktop.
+      expect: the spotlight popover appears with the commands dialog visible and the search
+        input focused
+      blocked: |
+        Requires a native Tauri build and OS-level global hotkey delivery — the debug port
+        connects to the browser-hosted app only, so no runner (human via this repo's dev tooling,
+        or agent) can trigger this step from here. Per Execution Rule 9, the flow is `blocked`,
+        not `failing`.
+    - name: Navigate to an item
+      do: Type a query, select a result from the commands dialog.
+      expect: the main Composer window navigates to the selected item, and the spotlight window
+        hides (F-4.1, T-5)
+    - name: Reopen and dismiss with Escape
+      do: Press the global hotkey again, then press Escape.
+      expect: the spotlight window hides immediately (F-2.2, T-2)
+  after:
+    - name: No teardown
+      do: Spotlight has no persistent state to remove — it forwards navigation to the main
+        window's existing plugins, which own their own cleanup.
+      expect: closing the popover leaves the main window in the state the flow navigated it to
 ```
 
 ---

@@ -45,8 +45,8 @@ An unbound repo is a setup prompt, not a dead end. Run this on `/project setup`,
 whenever the binding is missing and the user wants project work. The space is the user's choice,
 so it is always a question — never an inference.
 
-1. Call `listSpaces {}`. It returns every space the identity owns with its `spaceId` and `name`;
-   that is where a space id comes from.
+1. Call `whoami {}`. Its `spaces` array is every space this session can operate on, each with its
+   `spaceId` and `name`; that is where a space id comes from.
 2. Present them as a **numbered list, by name**, and ask which number this repo's projects belong
    in:
 
@@ -62,17 +62,14 @@ so it is always a question — never an inference.
 
 3. Bind only on an explicit pick. Never infer from a name resembling the repo, and **"only one
    space exists" is not consent** — still ask.
-4. Cross-check the pick against `whoami {}`, whose space list is the narrower one this session can
-   actually write to. A space that `listSpaces` shows but `whoami` omits cannot be written; say so
-   and stop rather than binding to it.
-5. Write `.agents/projects/space.yml`, creating `.agents/projects/` if needed:
+4. Write `.agents/projects/space.yml`, creating `.agents/projects/` if needed:
 
    ```yaml
    # The ECHO space this repo's projects live in.
    spaceId: <the id of the chosen space>
    ```
 
-6. Confirm what happened: name the space, say the file is a repo file that wants committing, and
+5. Confirm what happened: name the space, say the file is a repo file that wants committing, and
    that it binds every future session in this repo.
 
 Two things setup does **not** do. It never creates a space — bind an existing one, and if the user

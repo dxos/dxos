@@ -24,7 +24,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
-| `op`        | `org.dxos.mdl.op@1.0`         |
+| `op`        | `org.dxos.mdl.op@1.1`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
 
 ## Types
 
@@ -159,12 +160,13 @@ Discovery operations — read-only, no local writes.
 
 ```mdl
 op GetGitHubRepositories
+  key: org.dxos.operation.github.getRepositories
   desc: |
     List GitHub repositories reachable from an integration token.
     Read-only: no local objects are created.  Orgs are NOT listed here;
     they are auto-pulled during SyncGitHubRepositories.
   input:
-    integration: Ref<Integration>
+    connection: Ref<Connection>   # renamed from `integration`; see plugin-connector's ConnectorSpec
   output: GetSyncTargetsOutput
   effects: [http]
   errors:
@@ -172,10 +174,24 @@ op GetGitHubRepositories
     NetworkError: transient HTTP failure after retries
 ```
 
+```mdl
+op MaterializeGitHubTarget
+  key: org.dxos.operation.github.materializeTarget
+  desc: |
+    Find-or-create the empty local root Project bound to a selected GitHub repo, keyed by the
+    repo's foreign id, so a Cursor can reference it as its `spec.target`.
+  input:
+    connection: Ref<Connection>
+    remoteTarget?: RemoteTarget
+  output: { target: Ref<Obj> }
+  effects: [echo:write]
+```
+
 Effectful sync operations — pull from GitHub, push diverged fields back.
 
 ```mdl
 op SyncGitHubRepositories
+  key: org.dxos.operation.github.syncRepositories
   desc: |
     Reconcile selected GitHub repositories plus their owning organizations,
     members, issues, PRs, and (future) comments with ECHO.
@@ -185,8 +201,8 @@ op SyncGitHubRepositories
     PR status is pull-only (push is intentionally disabled).
     Updates Integration.targets[i].lastSyncAt / lastError per target.
   input:
-    integration: Ref<Integration>
-    repository?: Ref<Project>   # optional: narrow to a single target repo
+    connection: Ref<Connection>   # renamed from `integration`; every binding of the connection is synced
+    priority?: string             # cursor id to sync first
   output: SyncResult
   effects: [echo:read, echo:write, http]
   errors:
@@ -420,6 +436,118 @@ test T-10: maxDaysBack filters issue window
 
 ---
 
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Connect, select a repository, and sync
+  desc: The core round-trip — authorize a GitHub connection, discover repos, materialize and sync one as a Project with its issues as Tasks.
+  actors: both
+  covers: [F-1.1, F-1.2, F-2.1, F-2.2, F-4.1, F-5.1, T-2, T-3]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - a GitHub account reachable for OAuth, owning at least one repo with at least one open issue
+    - no Project with foreign key [source: "github.com", id: <that repo's numeric id>] exists —
+      ABORT rather than reusing a Project this flow did not create
+  test:
+    - name: Connect a GitHub account
+      id: connect
+      do: Open the GitHub connector panel (Settings -> Connectors -> GitHub) and complete the OAuth authorization flow.
+      capture: connection
+      expect: a Connection object exists with accessToken.account set to the authorized user's GitHub login
+      note: |
+        NO `invoke` — the OAuth redirect and callback are real browser navigation through GitHub's
+        consent screen; the debug port cannot drive it. This step is human-only for any account
+        that has not already authorized the app.
+    - name: Discover repositories
+      do: Open the target picker for the new connection.
+      invoke: [op:GetGitHubRepositories] { connection: $connection.connection }
+      capture: targets
+      expect: the picker lists repos visible to the token, sorted by full_name, and no Organization/Person/Project/Task objects are created yet
+      assert: return $result.targets.length > 0 && !$result.targets.some((t) => /^\d+$/.test(t.id) === false)
+    - name: Select the repository as a sync target
+      do: Pick the target repo from the list and confirm.
+      invoke: [op:MaterializeGitHubTarget] { connection: $connection.connection, remoteTarget: $targets.targets[0] }
+      capture: materialized
+      expect: an empty local root Project now exists, bound to the selected repo
+      assert: return !!$materialized.target
+    - name: Sync the connection
+      do: Click "Sync now" on the connection (or wait for the scheduled sync).
+      invoke: [op:SyncGitHubRepositories] { connection: $connection.connection }
+      capture: synced
+      expect: the Project's fields are populated from the repo, and one Task exists per open/closed issue and PR in that repo
+      assert: return $synced.pulled.projects >= 1 && $synced.pulled.tasks >= 1
+  after:
+    - name: Remove the synced Project and its Tasks
+      do: Right-click the Project in the navtree and choose Delete, then repeat for each Task it produced (or delete the containing collection).
+      invoke: org.dxos.operation.space.removeObjects { objects: [$materialized.target] }
+      expect: the Project and its Tasks leave the navtree; the underlying GitHub repo and issues are untouched
+    - name: Disconnect the GitHub account
+      do: In Settings -> Connectors -> GitHub, remove the connection.
+      expect: the Connection object and its stored access token are removed
+```
+
+```mdl
+flow QA-2: Local edit pushes back to GitHub
+  desc: A push-direction check — editing a synced Task's title round-trips to the GitHub issue via PATCH.
+  actors: human
+  covers: [F-6.2, T-5]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - a GitHub account reachable for OAuth, with write access to a repo owning at least one open
+      (non-PR) issue
+    - no Project with foreign key [source: "github.com", id: <that repo's numeric id>] exists —
+      ABORT rather than reusing a Project this flow did not create
+    - connection: a fresh GitHub Connection, authorized against that account (same human-only
+      OAuth step as QA-1's "Connect a GitHub account")
+    - materialized: the target repo materialized and synced as a Project via
+      op:MaterializeGitHubTarget then op:SyncGitHubRepositories (same steps as QA-1), leaving at
+      least one open (non-PR) Task
+  test:
+    - name: Edit the task title
+      do: Open the synced Task and change its title.
+      expect: the edit is saved locally
+      note: NO `invoke` — this is an ordinary field edit through the Task surface, not a github operation.
+    - name: Re-sync
+      do: Click "Sync now" on the connection again.
+      invoke: [op:SyncGitHubRepositories] { connection: $given.connection }
+      expect: GitHub shows the issue's title updated to match, and the local TaskSnapshot.title now matches the new value
+      note: |
+        Verify by opening the issue on github.com — SyncGitHubRepositories's snapshot-diff push has
+        no separate read-back operation in this document, so the effect is checked against GitHub
+        itself (Execution Rule 3).
+  after:
+    - name: Revert the title on GitHub
+      do: Edit the issue's title back to its original value directly on github.com, then re-sync.
+      invoke: [op:SyncGitHubRepositories] { connection: $given.connection }
+      expect: the local Task.title reflects the reverted value
+    - name: Remove the synced Project and its Tasks
+      do: Right-click the Project in the navtree and choose Delete, then repeat for each Task it
+        produced (or delete the containing collection).
+      invoke: |
+        org.dxos.operation.space.removeObjects {
+          refs: [$given.materialized.target,
+            ...(await space.db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.task'))).run()).objects
+              .filter((task) => task.project?.target?.id === $given.materialized.target.target?.id)
+              .map((task) => window.__echo.Ref.make(task))]
+        }
+      note: |
+        `materialized.target` is a Ref, so it travels in `refs`, not `objects`; the synced Tasks
+        are resolved separately because removing the Project does not cascade to them.
+      expect: the Project and its Tasks leave the navtree; the underlying GitHub repo and issues are untouched
+    - name: Disconnect the GitHub account
+      do: In Settings -> Connectors -> GitHub, remove the connection.
+      expect: the Connection object and its stored access token are removed
+```
+
+---
+
 ## Appendix: Extension Definitions
 
 Extension block types used in this document are defined below using
@@ -473,11 +601,12 @@ ext component
 
 ```mdl
 ext op
-  uri: org.dxos.mdl.op@1.0
+  uri: org.dxos.mdl.op@1.1
   desc: |
     A named operation with typed inputs, outputs, and declared errors.
     Pure ops have no effects or requires. Effectful ops declare both.
   fields:
+    key?: NSID                  # runtime operation key — what the invoker receives
     desc?: Prose
     input?: FieldMap            # named input parameters
     output?: TypeExpr           # return type

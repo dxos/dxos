@@ -23,8 +23,9 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
-| `op`        | `org.dxos.mdl.op@1.0`         |
+| `op`        | `org.dxos.mdl.op@1.1`         |
 | `service`   | `org.dxos.mdl.service@1.0`    |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
 
 ## Architecture
 
@@ -420,6 +421,7 @@ ops via `OperationInvoker`; they never import `service:*` clients.
 
 ```mdl
 op SyncPortfolioReport
+  key: org.dxos.operation.ibkr.syncPortfolioReport
   desc: |
     Fetches a fresh Flex report from IBKR and appends it to the Portfolio feed as
     a PortfolioReport. Driven by the daily timer trigger, and also invokable
@@ -444,6 +446,7 @@ op SyncPortfolioReport
 
 ```mdl
 op ImportPortfolioReport
+  key: org.dxos.operation.ibkr.importPortfolioReport
   desc: |
     Appends a manually supplied raw Flex report XML to the Portfolio feed as a
     PortfolioReport. Invoked from the toolbar's import action (file upload).
@@ -468,6 +471,7 @@ op ImportPortfolioReport
 
 ```mdl
 op GetPortfolio
+  key: org.dxos.operation.ibkr.getPortfolio
   desc: |
     Reads the open positions and cash balances from the most recent stored
     report. Touches no network — parses the latest PortfolioReport.xml.
@@ -486,6 +490,7 @@ op GetPortfolio
 
 ```mdl
 op GetTrades
+  key: org.dxos.operation.ibkr.getTrades
   desc: |
     Reads the trade history from the most recent stored report, limited to the
     last 7 days. Touches no network — parses the latest PortfolioReport.xml.
@@ -541,6 +546,7 @@ type FundamentalsSnapshot
 
 ```mdl
 op MaterializeInstrument
+  key: org.dxos.operation.ibkr.materializeInstrument
   desc: |
     Find-or-create an Instrument in the space, keyed by foreign id. Idempotent:
     returns the existing Instrument when `Obj.Meta.keys` already contains the
@@ -567,6 +573,7 @@ op MaterializeInstrument
 
 ```mdl
 op GetInstrumentFundamentals
+  key: org.dxos.operation.ibkr.getInstrumentFundamentals
   desc: |
     Fetches a compact fundamentals snapshot for an Instrument's primary
     `symbol` via service:SecEdgar. The sole entry point for SEC EDGAR data in
@@ -908,6 +915,97 @@ test T-13: InstrumentCard shows static identity only
 
 ---
 
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Connect, sync, and read the portfolio
+  desc: The core round-trip — connect a Flex credential, pull a report from IBKR, read positions and trades back from the stored snapshot.
+  actors: both
+  covers: [F-1.1, F-1.2, F-2.1, F-2.2, T-1, T-2, T-3]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - a valid IBKR Flex Web Service token and query id, with at least one open position and one trade in the last 7 days
+    - no Connection exists yet for source "interactivebrokers.com" in this space — ABORT rather than reusing one this flow did not create
+    - no Portfolio exists in this space — ABORT rather than syncing into one this flow did not
+      create, since the sync writes into whichever Portfolio it finds
+  test:
+    - name: Connect IBKR
+      do: Open the IBKR connector's credential form and enter the Flex token and query id.
+      expect: an AccessToken is created with the token in `token` and the query id in `account`, and a Connection referencing it exists
+      note: |
+        NO `invoke` — credential submission goes through the Connector's `onSubmit` UI callback,
+        not an operation with a runtime key.
+    - name: Sync the portfolio
+      do: Click the Sync button on the Portfolio (shown in place of Connect once a Connection exists).
+      invoke: [op:SyncPortfolioReport] {}
+      capture: synced
+      expect: a PortfolioReport holding the raw Flex XML is appended to the hidden per-space feed, and the report list in the article updates
+      assert: return $synced.positions > 0 && $synced.trades > 0
+    - name: Read the portfolio
+      do: Open the Portfolio article.
+      invoke: [op:GetPortfolio] {}
+      expect: open positions and cash balances shown match the just-synced report, with no additional IBKR call
+      assert: return $result.fetchedAt === $synced.fetchedAt && $result.positions.length > 0
+    - name: Read recent trades
+      do: Switch to the Trades view.
+      invoke: [op:GetTrades] {}
+      expect: only trades from the last 7 days appear
+      assert: return $result.fetchedAt === $synced.fetchedAt && $result.trades.length > 0
+  after:
+    - name: Remove the report feed
+      do: Right-click the Portfolio and choose "Clear synced data", or delete the Portfolio object entirely.
+      note: |
+        NO `invoke` — no operation returns the Portfolio, so an agent run cannot identify the one
+        this flow produced. Resolving it by type would delete whichever Portfolio the space
+        happens to hold first, which may be the user's own; teardown is human-only until an
+        operation yields the Portfolio to capture.
+      expect: the PortfolioReport feed and its reports no longer exist; the IBKR account itself is untouched (read-only connection, F-1.3)
+    - name: Disconnect IBKR
+      do: In Settings -> Connectors -> Interactive Brokers, remove the connection.
+      expect: the Connection and its AccessToken are removed
+```
+
+```mdl
+flow QA-2: Materialize an instrument and fetch fundamentals
+  desc: The research path — resolve a ticker to an Instrument, then fetch SEC EDGAR fundamentals for it, idempotently.
+  actors: agent
+  covers: [F-6.1, T-11, T-12]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - no Instrument with key { source: "ticker/NASDAQ", id: "AAPL" } exists — ABORT rather than reusing one this flow did not create
+  test:
+    - name: Materialize AAPL
+      do: (agent-only step — ask the assistant to "open AAPL", or invoke directly)
+      invoke: [op:MaterializeInstrument] { key: { source: "ticker/NASDAQ", id: "AAPL" }, symbol: "AAPL", name: "Apple Inc.", exchange: "NASDAQ" }
+      capture: instrument
+      expect: an Instrument now exists, stamped with the foreign key { source: "ticker/NASDAQ", id: "AAPL" }
+      assert: return $instrument.created === true && !!$instrument.instrument
+    - name: Re-materialize the same key
+      do: (agent-only step)
+      invoke: [op:MaterializeInstrument] { key: { source: "ticker/NASDAQ", id: "AAPL" }, symbol: "AAPL" }
+      expect: the existing Instrument is returned, not a duplicate
+      assert: return $result.created === false && $result.instrument.target?.id === $instrument.instrument.target?.id
+    - name: Fetch fundamentals
+      do: Open the Instrument article.
+      invoke: [op:GetInstrumentFundamentals] { instrument: $instrument.instrument }
+      expect: a fundamentals snapshot renders (valuation/performance/ratios from SEC EDGAR XBRL) and the Instrument's own fields are unmodified
+      assert: return !!$result.asOf
+  after:
+    - name: Delete the Instrument
+      do: Right-click the Instrument in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$instrument.instrument] }
+      expect: the row leaves the navtree
+```
+
+---
+
 ## Appendix: Extension Definitions
 
 Extension block types used in this document are defined below using
@@ -961,11 +1059,12 @@ ext component
 
 ```mdl
 ext op
-  uri: org.dxos.mdl.op@1.0
+  uri: org.dxos.mdl.op@1.1
   desc: |
     A named operation with typed inputs, outputs, and declared errors.
     Pure ops have no effects or requires. Effectful ops declare both.
   fields:
+    key?: NSID                  # runtime operation key — what the invoker receives
     desc?: Prose
     input?: FieldMap            # named input parameters
     output?: TypeExpr           # return type

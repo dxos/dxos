@@ -8,9 +8,10 @@ import React, { useCallback, useMemo } from 'react';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Cursor } from '@dxos/link';
-import { Button, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Button, Input, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Empty } from '@dxos/react-ui-list';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { type TestConnectionStatus } from '#hooks';
 import { meta } from '#meta';
@@ -47,6 +48,19 @@ export type ConnectionViewProps = {
   testStatus: TestConnectionStatus;
   /** User-facing reason when `testStatus` is `'invalid'`. */
   testError?: string;
+  /** Whether a probe is in flight; `testStatus` continues to show the previous verdict meanwhile. */
+  testing?: boolean;
+  /** Non-secret connection metadata from the connector's `describeConnection`. */
+  details?: ReadonlyArray<{ label: string; value: string }>;
+  /** Rename the connection. Omitted when the type carries no `name`, which hides the field. */
+  onRename?: (name: string) => void;
+  /**
+   * The stored name, which is absent for a connection that has never been renamed. Distinct from
+   * `title`, which falls back to the account or connector label — seeding the field with that
+   * fallback would persist it on the first focus-and-blur and freeze a label that should keep
+   * tracking the account.
+   */
+  name?: string;
   /** True when the connector supports in-place reauthentication (OAuth connectors). */
   canReauthenticate: boolean;
   /** True while a reauthentication popup/redirect is being initiated. */
@@ -81,6 +95,10 @@ export const ConnectionView = ({
   syncTargetsAvailable,
   testStatus,
   testError,
+  testing = false,
+  details = [],
+  onRename,
+  name,
   canReauthenticate,
   reauthenticating,
   onSync,
@@ -102,6 +120,51 @@ export const ConnectionView = ({
                 <Form.Content>
                   <Form.Section title={title} description={source}>
                     {!hasConnector && <p className='px-trim-md text-description'>{t('no-connector.message')}</p>}
+
+                    {onRename && (
+                      <Form.Row label={t('connection-name.label')}>
+                        <Input.Root>
+                          <Input.TextInput
+                            // Remounted when the stored name changes. The input is uncontrolled, so
+                            // React would otherwise keep the old text after a replicated rename
+                            // arrives — and the next blur would write that stale value back over it.
+                            key={name ?? ''}
+                            // The stored name, not `title`: an unnamed connection shows the account
+                            // or connector label there, and seeding it here would persist that
+                            // fallback the first time the field is focused and blurred.
+                            defaultValue={name ?? ''}
+                            placeholder={title || t('connection-name.placeholder')}
+                            data-testid='connection.name-input'
+                            // Committed on blur and Enter rather than per keystroke: this writes
+                            // straight to a replicated object, and the label is echoed in the
+                            // sidebar as you type. Unchanged input writes nothing, so merely
+                            // tabbing through the field cannot pin the derived label.
+                            onBlur={(event) => {
+                              const next = event.target.value.trim();
+                              if (next !== (name ?? '')) {
+                                onRename(next);
+                              }
+                            }}
+                            onKeyDown={(event) => event.key === 'Enter' && event.currentTarget.blur()}
+                          />
+                        </Input.Root>
+                      </Form.Row>
+                    )}
+
+                    {/*
+                      One JSON block rather than a labelled row per field: none of it is editable,
+                      and a stack of read-only rows competes visually with the two rows that ARE
+                      actionable. Sits above the status so a failure reads against it.
+                    */}
+                    {details.length > 0 && (
+                      <Form.Row label={t('connection-details.label')}>
+                        <JsonHighlighter
+                          data={Object.fromEntries(details.map(({ label, value }) => [label, value]))}
+                          classNames='text-xs overflow-auto'
+                          testId='connection.details'
+                        />
+                      </Form.Row>
+                    )}
 
                     {/* Hide Sync now entirely when the connector has no `sync` op. */}
                     {canSync && (
@@ -129,8 +192,8 @@ export const ConnectionView = ({
                           ) : undefined
                         }
                       >
-                        <Button onClick={onTestConnection} disabled={testStatus === 'testing'}>
-                          {t('test-connection.label')}
+                        <Button onClick={onTestConnection} disabled={testing}>
+                          {testing ? t('testing-connection.label') : t('test-connection.label')}
                         </Button>
                       </Form.Row>
                     )}
@@ -154,7 +217,9 @@ export const ConnectionView = ({
                     )}
 
                     <Form.Row label={t('delete-connection.label')} description={t('delete-connection.description')}>
-                      <Button onClick={onDelete}>{t('delete-connection.label')}</Button>
+                      <Button variant='destructive' onClick={onDelete}>
+                        {t('delete-connection.label')}
+                      </Button>
                     </Form.Row>
                   </Form.Section>
 

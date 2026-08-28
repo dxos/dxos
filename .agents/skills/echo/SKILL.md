@@ -75,7 +75,7 @@ await Effect.runPromise(program.pipe(Effect.provide(Database.layer(db))));
 
 ### React (non-Effect, subscription-based)
 
-From **`@dxos/echo-react`**: **`useQuery`**, **`useObject`**, **`useSchema`** — subscribe to query results / single object / schema state in components.
+From **`@dxos/echo-react`**: **`useQuery`**, **`useObject`**, **`useSchema`** — subscribe to query results / single object / schema state in components. Which hook for which read, and the anti-patterns (bare reads, `.target` in render, list-level ref resolution): [reactivity](../reactivity/SKILL.md) skill.
 
 ### Query & filter builders
 
