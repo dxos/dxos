@@ -86,7 +86,6 @@ export const assistantRegistry: XmlWidgetRegistry = {
     },
   },
 
-  // Inline so a run of suggestions flows onto one wrapped line instead of one block per line.
   'suggestion': {
     block: false,
     factory: ({ children }) => {

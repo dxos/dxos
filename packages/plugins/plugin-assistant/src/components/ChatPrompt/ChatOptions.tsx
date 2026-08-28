@@ -114,7 +114,9 @@ const SkillsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'registry
   return (
     <SearchList.Root onSearch={handleSearch}>
       <SearchList.Content classNames='flex flex-col'>
-        <SearchList.Viewport>
+        {/* Flush to the popover edge, like the sibling `Listbox` panels: this is a menu, not a
+            centered search surface, so the scroll strip is not reserved on both sides. */}
+        <SearchList.Viewport padding={false}>
           {results.map((skill) => {
             const skillKey = Obj.getMeta(skill).key ?? skill.id;
             const isActive = activeSkills.has(skillKey);
@@ -361,8 +363,10 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <SearchList.Content classNames='p-form-chrome [&:has([cmdk-list-sizer]:empty)]:py-0'>
-        <SearchList.Viewport>
+      {/* No chrome padding: the rows align with the toolbar below, which is a sibling of
+          `Content` and so sits flush against the panel edge. */}
+      <SearchList.Content>
+        <SearchList.Viewport padding={false}>
           {results.length ? (
             results.map((object) => {
               const isActive = contextObjects.findIndex((obj) => obj.id === object.id) !== -1;

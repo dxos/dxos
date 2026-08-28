@@ -60,6 +60,36 @@ export const EventPage = Schema.Struct({
 });
 export interface EventPage extends Schema.Schema.Type<typeof EventPage> {}
 
+/** The secret is substituted at egress, so it never reaches the container. */
+export type EnvironmentVariableCredential = {
+  display_name: string;
+  auth: {
+    type: 'environment_variable';
+    secret_name: string;
+    secret_value: string;
+    networking: { type: 'limited'; allowed_hosts: string[] } | { type: 'unrestricted' };
+  };
+};
+
+export const VaultResponse = Schema.Struct({
+  id: Schema.String,
+  display_name: Schema.optional(Schema.String),
+});
+export interface VaultResponse extends Schema.Schema.Type<typeof VaultResponse> {}
+
+/** Secret values are write-only, so an upsert matches on `auth.secret_name`. */
+export const CredentialResponse = Schema.Struct({
+  id: Schema.String,
+  auth: Schema.optional(Schema.Struct({ secret_name: Schema.optional(Schema.String) })),
+});
+export interface CredentialResponse extends Schema.Schema.Type<typeof CredentialResponse> {}
+
+export const CredentialPage = Schema.Struct({
+  data: Schema.optional(Schema.Array(CredentialResponse)),
+  next_page: Schema.optional(Schema.NullOr(Schema.String)),
+});
+export interface CredentialPage extends Schema.Schema.Type<typeof CredentialPage> {}
+
 /** Accepted where the response body carries nothing the caller reads. */
 export const Ignored = Schema.Unknown;
 

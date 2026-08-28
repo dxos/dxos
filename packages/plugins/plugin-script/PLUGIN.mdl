@@ -22,7 +22,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
-| `op`        | `org.dxos.mdl.op@1.0`         |
+| `op`        | `org.dxos.mdl.op@1.1`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
 
 ## Types
 
@@ -147,6 +148,7 @@ Skill operations (called by the Script assistant via its tool set).
 
 ```mdl
 op create
+  key: org.dxos.operation.script.createFunction
   desc: |
     Creates a new Script ECHO object with the given name and TypeScript source,
     and adds it to the space. Optionally seeds from a built-in template or a
@@ -157,11 +159,14 @@ op create
     templateId?: string
   output: { function: string }
   effects: [echo:write]
-  note: Operation key `org.dxos.operation.script.create`.
+  note: Operation key `org.dxos.operation.script.createFunction` — NOT `.create`; that key belongs
+    to the UI-facing [op:createScript] below. The skill tool set and the navtree create action are
+    two different operations that happen to share a verb.
 ```
 
 ```mdl
 op read
+  key: org.dxos.operation.script.read
   desc: Reads the name, source code, and description of an existing Script.
   input:
     function: Ref<Script>
@@ -172,6 +177,7 @@ op read
 
 ```mdl
 op update
+  key: org.dxos.operation.script.update
   desc: |
     Applies one or more string edits (find/replace pairs) to a Script's source
     and optionally updates its name and description.
@@ -187,6 +193,7 @@ op update
 
 ```mdl
 op delete
+  key: org.dxos.operation.script.delete
   desc: Permanently removes a Script and its source from the space.
   input:
     function: Ref<Script>
@@ -197,6 +204,7 @@ op delete
 
 ```mdl
 op deploy
+  key: org.dxos.operation.script.deploy
   desc: |
     Compiles and deploys a Script to the EDGE (Cloudflare Workers) runtime.
     The source must export a single Operation handler as default.
@@ -213,6 +221,7 @@ op deploy
 
 ```mdl
 op invoke
+  key: org.dxos.operation.script.invoke
   desc: Calls a deployed EDGE function with an optional JSON payload.
   input:
     function: Ref<Script>
@@ -227,6 +236,7 @@ op invoke
 
 ```mdl
 op inspectInvocations
+  key: org.dxos.operation.script.inspectInvocations
   desc: |
     Queries the EDGE invocation trace feed for a function and returns
     recent invocation spans (id, timestamp, duration, outcome, input, error).
@@ -235,21 +245,23 @@ op inspectInvocations
     limit?: number              # default 20
   output: { invocations: InvocationSpan[], total: number }
   effects: [echo:read]
-  note: Operation key `org.dxos.function.script.inspect-invocations`.
+  note: Operation key `org.dxos.operation.script.inspectInvocations`.
 ```
 
 ```mdl
 op queryDeployedFunctions
+  key: org.dxos.operation.script.queryDeployed
   desc: Lists all functions currently deployed to the EDGE runtime.
   input:
     (none)
   output: { functions: DeployedFunction[] }
   effects: [http]
-  note: Operation key `org.dxos.function.script.query-deployed`.
+  note: Operation key `org.dxos.operation.script.queryDeployed`.
 ```
 
 ```mdl
 op installFunction
+  key: org.dxos.operation.script.install
   desc: |
     Installs a globally-deployed EDGE function into the current space by key.
     Creates a Script ECHO object backed by the remote function.
@@ -265,6 +277,7 @@ UI-facing operation (creates Script via the navtree / "create object" flow).
 
 ```mdl
 op createScript
+  key: org.dxos.operation.script.create
   desc: Creates a new Script ECHO object via the Composer create-object flow.
   input:
     name?: string
@@ -273,7 +286,7 @@ op createScript
     db: Database
   output: { object: Script }
   effects: [echo:write]
-  note: Operation key `org.dxos.plugin.script.operation.create-script`.
+  note: Operation key `org.dxos.operation.script.create` — corrected from `org.dxos.plugin.script.operation.create-script`, which does not exist in source.
 ```
 
 ## Features
@@ -443,6 +456,69 @@ test T-9: QueryDeployedFunctions and install
   then:
     - a new Script ECHO object appears in the space
     - op returns the function ID, name, and version
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Create, edit, deploy and invoke a script
+  desc: The core script round-trip through the running app — the UI creates via [op:createScript];
+    the skill's own create/read/update path is a SEPARATE operation ([op:create], key
+    `org.dxos.operation.script.createFunction`) that this flow does not exercise.
+  actors: both
+  covers: [F-1.2, F-2.3, F-3.2, F-4.3, T-1, T-3, T-4, T-5]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - plugin-script is enabled — it is OFF by default (not in `getDefaults`); it must be enabled
+      via Settings -> plugin registry before "Script" appears in the create menu
+    - no Script named "QA Script" exists — ABORT rather than reusing one this flow did not create
+  test:
+    - name: Create the script
+      do: In the navtree, click + on a collection and choose Script. Name it "QA Script".
+      invoke: [op:createScript] { name: "QA Script", db: $given.space.db }
+      capture: created
+      expect: a Script named "QA Script" now exists, seeded from the default template
+      assert: return !!$created.object
+
+    - name: Place it in the collection
+      do: (no separate gesture — the navtree create action places it)
+      invoke: org.dxos.operation.space.addObject { object: $created.object, target: $given.collection }
+      expect: "QA Script" appears as a row under the collection
+
+    - name: Edit the source
+      do: In ScriptArticle, change the exported Operation's `name` field to "QA Script Op".
+      invoke: [op:update] { function: $created.object, edits: [{ oldString: "name: 'My Function'", newString: "name: 'QA Script Op'" }] }
+      expect: the editor shows the edited source
+      note: |
+        [op:update]'s runtime key is `org.dxos.operation.script.update` (skill-facing,
+        `services: [Database.Service]`) — distinct from the UI's own reactive `Obj.update` path a
+        human editing in CodeMirror actually triggers (F-2.3). Both converge on the same source field.
+
+    - name: Deploy it
+      do: Click Deploy in the ScriptToolbar and confirm in DeploymentDialog.
+      invoke: org.dxos.operation.script.deploy { function: $created.object }
+      capture: deployed
+      expect: the dialog shows a success state and, if available, a function URL
+      assert: return !!$deployed.function
+
+    - name: Invoke it
+      do: Open the Execute companion and submit an empty payload.
+      invoke: org.dxos.operation.script.invoke { function: $created.object, payload: {} }
+      expect: TestContainer displays the function's response
+      assert: return $result.response !== undefined
+  after:
+    - name: Delete the script
+      do: Right-click "QA Script" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
+      expect: the row leaves the navtree and its plank closes if it was open
 ```
 
 ---

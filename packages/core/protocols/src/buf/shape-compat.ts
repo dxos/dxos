@@ -39,6 +39,14 @@ export class UnsupportedSubstitutionError extends Error {
 /** Thrown when a `google.protobuf.Any` value cannot be packed or unpacked in the legacy shape. */
 export class AnyEncodingError extends Error {}
 
+/** Mirrors the legacy codec's `EncodingOptions`, which callers pass per encode/decode. */
+export type CompatOptions = {
+  /** Leave every `Any` packed, whether or not its field carries `[(preserve_any) = true]`. */
+  readonly preserveAny?: boolean;
+};
+
+const NO_OPTIONS: CompatOptions = {};
+
 type Substitution = {
   /** Substituted JS value -> plain object accepted by the buf message constructor. */
   readonly toProto: (value: any) => unknown;
@@ -100,22 +108,26 @@ const substitutions: Record<string, Substitution> = {
 const ANY_TYPE_NAME = 'google.protobuf.Any';
 const STRUCT_TYPE_NAME = 'google.protobuf.Struct';
 
-/** The legacy shape for an `Any` whose payload stays packed. */
+// The legacy codec hands a packed payload back as a `Buffer`, and consumers branch on that --
+// `JsonView` tests `value.type === 'Buffer'`, and an RPC handler receiving a preserved `Any` compares
+// against one -- so this is part of the shape rather than an incidental view type.
 const packedAny = (typeUrl: string, value: Uint8Array) => ({
   '@type': ANY_TYPE_NAME,
   'type_url': typeUrl,
-  'value': value,
+  'value': Buffer.from(value),
 });
 
-// The legacy codec resolves `Any` payloads unless the field opts out, so the option decides.
-const isPreservedAny = (field: DescField): boolean =>
-  field.proto.options !== undefined &&
-  hasExtension(field.proto.options, preserve_any) &&
-  getExtension(field.proto.options, preserve_any) === true;
+// The legacy codec preserves an `Any` when either the caller or the field says so; `dxos.rpc` and
+// `dxos.mesh.messaging` rely on the caller half, their protos carrying no `preserve_any`.
+const isPreservedAny = (field: DescField, options: CompatOptions): boolean =>
+  options.preserveAny === true ||
+  (field.proto.options !== undefined &&
+    hasExtension(field.proto.options, preserve_any) &&
+    getExtension(field.proto.options, preserve_any) === true);
 
-const anyToProto = (field: DescField, value: any): unknown => {
+const anyToProto = (field: DescField, value: any, options: CompatOptions): unknown => {
   const packed = { typeUrl: value.type_url ?? '', value: value.value ?? new Uint8Array() };
-  if (isPreservedAny(field)) {
+  if (isPreservedAny(field, options)) {
     if (value['@type'] !== undefined && value['@type'] !== ANY_TYPE_NAME) {
       throw new AnyEncodingError(`Field ${field.name} preserves Any, so its payload cannot be packed here.`);
     }
@@ -136,14 +148,14 @@ const anyToProto = (field: DescField, value: any): unknown => {
   if (desc === undefined) {
     throw new UnsupportedSubstitutionError(typeName);
   }
-  return { typeUrl: typeName, value: encodeCompat(desc, payload) };
+  return { typeUrl: typeName, value: encodeCompat(desc, payload, options) };
 };
 
-const anyFromProto = (field: DescField, value: any): unknown => {
+const anyFromProto = (field: DescField, value: any, options: CompatOptions): unknown => {
   // The legacy shape keys the packed payload `type_url`, where buf's message uses `typeUrl`.
   const typeUrl: string = value.typeUrl ?? '';
   const bytes = normalizeBytes(value.value ?? new Uint8Array());
-  if (isPreservedAny(field)) {
+  if (isPreservedAny(field, options)) {
     return packedAny(typeUrl, bytes);
   }
   if (typeUrl === STRUCT_TYPE_NAME) {
@@ -154,23 +166,23 @@ const anyFromProto = (field: DescField, value: any): unknown => {
     // An unresolvable type stays packed rather than failing, matching the legacy codec.
     return packedAny(typeUrl, bytes);
   }
-  return { ...decodeCompat(desc, bytes), '@type': typeUrl };
+  return { ...decodeCompat(desc, bytes, options), '@type': typeUrl };
 };
 
-const anySubstitution = (field: DescField): Substitution => ({
-  toProto: (value) => anyToProto(field, value),
-  fromProto: (value) => anyFromProto(field, value),
+const anySubstitution = (field: DescField, options: CompatOptions): Substitution => ({
+  toProto: (value) => anyToProto(field, value, options),
+  fromProto: (value) => anyFromProto(field, value, options),
 });
 
 // Field traversal.
 
-const substitutionFor = (field: DescField): Substitution | undefined => {
+const substitutionFor = (field: DescField, options: CompatOptions): Substitution | undefined => {
   const typeName = messageTypeName(field);
   if (typeName === undefined) {
     return undefined;
   }
   if (typeName === ANY_TYPE_NAME) {
-    return anySubstitution(field);
+    return anySubstitution(field, options);
   }
   return substitutions[typeName];
 };
@@ -238,19 +250,30 @@ const isBytesField = (field: DescField): boolean =>
   (field.fieldKind === 'scalar' && field.scalar === ScalarType.BYTES) ||
   (field.fieldKind === 'list' && field.listKind === 'scalar' && field.scalar === ScalarType.BYTES);
 
-const convertField = (field: DescField, fieldValue: any, direction: keyof Substitution): any => {
-  const substitution = substitutionFor(field);
+const convertField = (
+  field: DescField,
+  fieldValue: any,
+  direction: keyof Substitution,
+  options: CompatOptions,
+): any => {
+  const substitution = substitutionFor(field, options);
   if (substitution !== undefined) {
     return substituteField(field, fieldValue, substitution, direction);
   }
   if (isBytesField(field)) {
     return Array.isArray(fieldValue) ? fieldValue.map(normalizeBytes) : normalizeBytes(fieldValue);
   }
-  return mapValue(field, fieldValue, (nested, entry) => convert(nested, entry, direction));
+  return mapValue(field, fieldValue, (nested, entry) => convert(nested, entry, direction, options));
 };
 
 // Translates oneof groups, which buf shapes as `{ case, value }` and protobuf.js as a flat field.
-const convertOneofs = (schema: DescMessage, value: any, result: Record<string, any>, direction: keyof Substitution) => {
+const convertOneofs = (
+  schema: DescMessage,
+  value: any,
+  result: Record<string, any>,
+  direction: keyof Substitution,
+  options: CompatOptions,
+) => {
   for (const oneof of schema.oneofs) {
     if (direction === 'toProto') {
       const selected = oneof.fields.find((field) => value[field.localName] != null);
@@ -260,7 +283,7 @@ const convertOneofs = (schema: DescMessage, value: any, result: Record<string, a
       if (selected !== undefined) {
         result[oneof.localName] = {
           case: selected.localName,
-          value: convertField(selected, value[selected.localName], direction),
+          value: convertField(selected, value[selected.localName], direction, options),
         };
       }
     } else {
@@ -268,13 +291,13 @@ const convertOneofs = (schema: DescMessage, value: any, result: Record<string, a
       delete result[oneof.localName];
       const selected = group?.case && oneof.fields.find((field) => field.localName === group.case);
       if (selected) {
-        result[selected.localName] = convertField(selected, group.value, direction);
+        result[selected.localName] = convertField(selected, group.value, direction, options);
       }
     }
   }
 };
 
-const convert = (schema: DescMessage, value: any, direction: keyof Substitution): any => {
+const convert = (schema: DescMessage, value: any, direction: keyof Substitution, options: CompatOptions): any => {
   if (value == null) {
     return value;
   }
@@ -288,34 +311,37 @@ const convert = (schema: DescMessage, value: any, direction: keyof Substitution)
     if (fieldValue == null) {
       continue;
     }
-    result[field.localName] = convertField(field, fieldValue, direction);
+    result[field.localName] = convertField(field, fieldValue, direction, options);
   }
-  convertOneofs(schema, value, result, direction);
+  convertOneofs(schema, value, result, direction, options);
   return result;
 };
 
 /**
  * Encodes a value carrying protobuf.js-shaped fields to protobuf wire bytes via buf.
  */
-export const encodeCompat = <T extends Message>(schema: DescMessage, value: any): Uint8Array =>
-  toBinary(schema, create(schema, convert(schema, value, 'toProto')) as T);
+export const encodeCompat = <T extends Message>(
+  schema: DescMessage,
+  value: any,
+  options: CompatOptions = NO_OPTIONS,
+): Uint8Array => toBinary(schema, create(schema, convert(schema, value, 'toProto', options)) as T);
 
 /**
  * Decodes protobuf wire bytes via buf, returning protobuf.js-shaped fields.
  */
-export const decodeCompat = (schema: DescMessage, bytes: Uint8Array): any =>
-  convert(schema, fromBinary(schema, bytes), 'fromProto');
+export const decodeCompat = (schema: DescMessage, bytes: Uint8Array, options: CompatOptions = NO_OPTIONS): any =>
+  convert(schema, fromBinary(schema, bytes), 'fromProto', options);
 
 /** A codec over protobuf.js-shaped values, matching the surface a persisted store needs. */
 export type CompatCodec<T> = {
-  encode: (value: T) => Uint8Array;
-  decode: (bytes: Uint8Array) => T;
+  encode: (value: T, options?: CompatOptions) => Uint8Array;
+  decode: (bytes: Uint8Array, options?: CompatOptions) => T;
 };
 
 /**
  * Codec adapter so a store can move its on-disk records to buf without changing its own plumbing.
  */
 export const compatCodec = <T>(messageSchema: DescMessage): CompatCodec<T> => ({
-  encode: (value) => encodeCompat(messageSchema, value),
-  decode: (bytes) => decodeCompat(messageSchema, bytes),
+  encode: (value, options) => encodeCompat(messageSchema, value, options),
+  decode: (bytes, options) => decodeCompat(messageSchema, bytes, options),
 });

@@ -484,6 +484,9 @@ flow QA-1: Start a game and play the opening
       it is on. Enabling is a UI action (Settings -> plugin registry); `manager.enable()` returns
       without error from the debug port and does not enable it.
     - no game named "QA Game" exists — ABORT rather than deleting one this flow did not create
+    - game: the Game object the human creates in step 1 (named "QA Game"), resolved by the runner
+      after that step so later steps can reference it — there is no create operation to `capture`
+      it from
   test:
     - name: Create the game
       do: In the navtree, click + on a collection and choose Chess. Name it "QA Game".

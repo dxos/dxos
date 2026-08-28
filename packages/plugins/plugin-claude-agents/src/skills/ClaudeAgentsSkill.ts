@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import type * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
@@ -11,14 +12,16 @@ import { ClaudeAgentOperation } from '#types';
 export const key = 'org.dxos.skill.claudeAgents';
 
 /** Operation definitions behind the skill's tools, for hosts without a registry to resolve ToolIds. */
-export const operations = [
+export const operations: readonly Operation.Definition.Any[] = [
   ClaudeAgentOperation.CreateAgent,
   ClaudeAgentOperation.ListAgents,
   ClaudeAgentOperation.DeployAgent,
   ClaudeAgentOperation.StartSession,
   ClaudeAgentOperation.SendMessage,
+  ClaudeAgentOperation.SetSessionCredentials,
+  ClaudeAgentOperation.RevokeSessionCredentials,
   ClaudeAgentOperation.GetTranscript,
-] as const;
+];
 
 /** Builds the skill, binding the operations above as its tools. */
 export const make = (): Skill.Skill =>
@@ -53,6 +56,37 @@ export const make = (): Skill.Skill =>
            \`<surface role='integration-prompt' data='{"service":"anthropic.com"}' />\`
         3. Say that connecting Anthropic lets you continue, then stop and wait — do not retry the
            operation in the same turn, and never ask the user to paste a key into the conversation.
+
+        ## Giving an agent a credential
+        An agent's own credentials — a GitHub token, a Stripe key — are bound to the session by
+        REFERENCE, never by value:
+        1. The secret lives in the space as an AccessToken object. Pass its ref as \`token\`, the
+           environment variable the agent should read it as (\`as\`), and optionally the hosts it may
+           be sent to (\`scope\`, defaulting to the token's own source).
+        2. The value is resolved when it is injected and handed to the container's environment over
+           the control plane. It never enters the transcript, and the platform refuses to substitute
+           it into a request to any host outside \`scope\`.
+        3. NEVER ask the user to paste a secret into the conversation, and never put one in a system
+           prompt or a message — both persist in the session's history. If the credential is not in
+           the space yet, prompt for it as described under Missing credentials below.
+
+        Bind at start with Start Claude Agent Session's \`credentials\`; bind or rotate on a session
+        that is already running with Set Claude Agent Session Credentials — it takes effect on the
+        session's next operation, so a 401 mid-run is fixed by attaching the credential and letting
+        the agent retry, not by restarting. Revoke Claude Agent Session Credentials removes one when
+        the work that needed it is done; do that as a matter of course for a short-lived grant.
+
+        ## Missing credentials
+        A session that goes idle with \`stopReason: requires_action\` is blocked, and a missing
+        credential is the common cause — read the transcript to see what it asked for. Do not
+        improvise a paragraph describing which token to mint: emit the connector prompt with the
+        requirement as structured data, so the user gets the inline surface:
+
+        \`<surface role='integration-prompt' data='{"service":"github.com","scopes":["Contents: read and write","Pull requests: read and write"],"reason":"The agent needs to push a branch and open a PR."}' />\`
+
+        \`service\` is the domain, \`scopes\` the permissions the agent actually needs, \`reason\` one
+        sentence on why. Then stop and wait; once the user attaches it, bind it to the live session
+        with Set Claude Agent Session Credentials and send a message telling the agent to retry.
 
         ## Environments
         An environment id (\`env_…\`) is the container template a session runs in. You do not need one

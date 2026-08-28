@@ -277,7 +277,7 @@ jobs:
           IPFS_API_SECRET: ${{ secrets.IPFS_API_SECRET }}
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
         with:
           remote-cache: 'false'
 
@@ -335,7 +335,7 @@ jobs:
 
       # Needed before "Check app targets this environment" — apps.mjs imports json5 from node_modules.
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
         with:
           remote-cache: 'false'
 
@@ -461,7 +461,7 @@ jobs:
   # `ios` input). CrabNebula channel is derived from the environment inside the reusable workflow. On
   # production it builds the bumped release commit.
   #
-  # TODO: this job (and deploy-tauri.yaml, which it calls) keeps this workflow on GitHub Actions rather
+  # TODO(wittjosiah): this job (and deploy-tauri.yaml, which it calls) keeps this workflow on GitHub Actions rather
   # than Depot CI — deploy-tauri.yaml's build_tauri/build_tauri_ios jobs need depot-macos-latest, and
   # Depot CI's own orchestrator has no macOS sandboxes yet. Revisit once Depot CI supports macOS runners.
   tauri:

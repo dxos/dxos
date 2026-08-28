@@ -18,6 +18,7 @@ import { Stream as PbStream } from '@dxos/async';
 import { type RequestOptions } from '@dxos/codec-protobuf';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { runServiceCall } from '@dxos/protocols';
 import {
   ContactsService,
@@ -380,7 +381,7 @@ export const makeServicesFromRpc = (
 
     if (RpcSchema.isStreamSchema(rpcDef.successSchema)) {
       service[methodName] = (request?: unknown) =>
-        streamToPbStream(runtime, invoke(request) as Stream.Stream<unknown, unknown>);
+        streamToPbStream(runtime, invoke(request) as Stream.Stream<unknown, unknown>, tag);
     } else {
       service[methodName] = (request?: unknown, options?: RequestOptions) =>
         runServiceCall(runtime, invoke(request) as Effect.Effect<unknown, unknown, never>, {
@@ -443,14 +444,29 @@ export const pbStreamToStream = <T>(open: () => PbStream<T>): Stream.Stream<T, E
  * Adapts an effect stream to a protobuf service stream.
  * Consumer close interrupts the underlying rpc subscription.
  */
-export const streamToPbStream = <T>(runtime: Context.Context<never>, stream: Stream.Stream<T, unknown>): PbStream<T> =>
+export const streamToPbStream = <T>(
+  runtime: Context.Context<never>,
+  stream: Stream.Stream<T, unknown>,
+  label?: string,
+): PbStream<T> =>
   new PbStream<T>(({ ready, next, close }) => {
     const fiber = stream.pipe(
       Stream.onStart(Effect.sync(ready)),
       Stream.runForEach((item) => Effect.sync(() => next(item))),
       Effect.matchCauseEffect({
         onFailure: (cause) =>
-          Effect.sync(() => close(Cause.hasInterruptsOnly(cause) ? undefined : toError(Cause.squash(cause)))),
+          Effect.sync(() => {
+            const error = toError(Cause.squash(cause));
+            if (Cause.hasInterruptsOnly(cause)) {
+              close();
+              return;
+            }
+            // A `PbStream` consumer may pass no error handler, in which case the failure is dropped
+            // and the consumer waits forever — a silently unencodable response field once made the
+            // app unbootable this way. Logged here so every client service stream is diagnosable.
+            log.warn('client service stream failed', { label, error: String(error) });
+            close(error);
+          }),
         onSuccess: () => Effect.sync(() => close()),
       }),
       Effect.runForkWith(runtime),

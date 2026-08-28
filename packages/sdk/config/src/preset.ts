@@ -10,7 +10,7 @@ import { EDGE_URLS } from './edge-services';
 export type ConfigPresetOptions = {
   /**
    * Edge service.
-   * @default main
+   * @default preview
    */
   edge?: 'local' | 'dev' | 'preview' | 'main' | 'production';
 
@@ -41,7 +41,7 @@ const sandboxUrl = (sandbox: NonNullable<ConfigPresetOptions['sandbox']>) =>
     Match.exhaustive,
   );
 
-export const configPreset = ({ edge = 'main', sandbox }: ConfigPresetOptions = {}) =>
+export const configPreset = ({ edge = 'preview', sandbox }: ConfigPresetOptions = {}) =>
   new Config({
     version: 1,
     runtime: {

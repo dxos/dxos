@@ -1476,7 +1476,9 @@ export class AutomergeHost extends Resource {
       // `_documentsToSync` feeds a share policy Subduction does not consult, so a diverged
       // document reaching here gets no retry from either — the diff simply repeats next pass.
       if (this._useSubduction && getHandleState(this._repo, documentId) === 'ready' && different.includes(documentId)) {
-        log.warn('diverged document has no subduction retry path', {
+        // Verbose: this fires on every diff pass for docs that are in practice fully synced,
+        // so at warn level it floods the console without indicating a real fault.
+        log.verbose('diverged document has no subduction retry path', {
           collectionId,
           peerId,
           documentId,
