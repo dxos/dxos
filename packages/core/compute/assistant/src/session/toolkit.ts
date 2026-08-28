@@ -46,11 +46,13 @@ export const createToolkit = ({
     const duplicates = toolNames.filter((name, index) => toolNames.indexOf(name) !== index);
     invariant(duplicates.length === 0, `Duplicate tool names in session toolkit: ${duplicates.join(', ')}`);
     const mergedToolkit = Toolkit.merge(...toolkitDefs);
+    // The merged handler layers are independent contexts; the `Handler<any>`/`unknown` they
+    // provide is OpaqueToolkit's deliberate type erasure, not a service another merged layer
+    // consumes.
     const combinedHandlerLayer = Layer.mergeAll(
+      // @effect-diagnostics-next-line layerMergeAllWithDependencies:off
       Layer.succeedContext(skillToolHandler),
       toolkitProp?.layer ?? OpaqueToolkit.empty.layer,
-      // Opaque handler layers are independent; the `unknown` they provide is OpaqueToolkit's
-      // deliberate type erasure, not a service another merged layer consumes.
       // @effect-diagnostics-next-line layerMergeAllWithDependencies:off
       opaqueToolkit.layer,
     );
