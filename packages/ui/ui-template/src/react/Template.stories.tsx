@@ -104,18 +104,29 @@ const WITH_EVENTS = trim`
 type Area = 'schema' | 'context' | 'template' | 'rendered';
 
 const AREAS = `
-  "schema   template"
-  "context  rendered"
+  "schema   rendered"
+  "context  template"
 `;
 
-type CellProps = ThemedClassName<{
+/**
+ * Interior edges only, declared per area. `divide-x`/`divide-y` key off sibling order along one
+ * axis, so on a 2D grid they draw an edge on some cells and skip others.
+ */
+const areaBorders: Record<Area, string> = {
+  schema: 'border-e border-b border-separator',
+  rendered: 'border-b border-separator',
+  context: 'border-e border-separator',
+  template: '',
+};
+
+type CellProps = {
   area: Area;
   title: string;
   children: React.ReactNode;
-}>;
+};
 
-const Cell = ({ classNames, area, title, children }: CellProps) => (
-  <Flex column style={{ gridArea: area }} classNames={mx('min-w-0', classNames)}>
+const Cell = ({ area, title, children }: CellProps) => (
+  <Flex column style={{ gridArea: area }} classNames={mx('min-w-0', areaBorders[area])}>
     <div className='px-2 py-1 text-xs uppercase tracking-wide text-subdued border-be border-separator'>{title}</div>
     <Flex column grow classNames='min-h-0 overflow-hidden'>
       {children}
@@ -152,11 +163,7 @@ const DefaultStory = ({ source: initialSource }: { source: string }) => {
   const templateExtensions = useMemo<Extension[]>(() => templateLanguage(), []);
 
   return (
-    <Flex
-      style={{ gridTemplateAreas: AREAS }}
-      classNames='dx-container grid grid-rows-2 grid-cols-2 divide-x divide-y divide-separator'
-      align='stretch'
-    >
+    <Flex style={{ gridTemplateAreas: AREAS }} classNames='dx-container grid grid-rows-2 grid-cols-2' align='stretch'>
       <Cell area='schema' title='Context schema'>
         <Editor value={schemaText} extensions={schemaExtensions} />
       </Cell>
