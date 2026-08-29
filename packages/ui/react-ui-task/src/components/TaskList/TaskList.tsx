@@ -176,6 +176,7 @@ const TaskListRoot = ({
   const [selectedState, setSelectedState] = useState<string | undefined>(selectedProp);
   const selected = selectedProp ?? selectedState;
   const selectable = selectableProp ?? (!!onTaskSelect || selectedProp !== undefined);
+
   const handleValueChange = useCallback(
     (id: string) => {
       setSelectedState(id);
@@ -222,16 +223,16 @@ const TaskListRoot = ({
       // shows no numbers.
       showGutter={showOrdinals || !!onTaskMove}
       isCollapsed={isCollapsed}
-      onCollapseToggle={onCollapseToggle}
+      selected={selected}
       dragging={dragging}
       onDraggingChange={setDraggingTask}
+      onCollapseToggle={onCollapseToggle}
       onTaskCreate={onTaskCreate}
       onTaskUpdate={onTaskUpdate}
       onTaskDelete={onTaskDelete}
       onTaskSelect={onTaskSelect}
       onDeselect={handleDeselect}
       onTaskMove={onTaskMove}
-      selected={selected}
     >
       {/* Both roots are headless, so the pair renders no DOM of its own. */}
       <Listbox.Root {...(selectable ? { value: selected, onValueChange: handleValueChange } : {})}>
