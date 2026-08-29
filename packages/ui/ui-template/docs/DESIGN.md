@@ -219,12 +219,255 @@ The extrapolation the spike argues for: **an application is the fixed point of t
   error (`R-8`), not a blank region — which is the honest failure mode for "async dynamic loading
   of components".
 
-Open questions, ranked: (1) published-state addressing across templates/plugins (namespace by
-plugin? by template instance?); (2) operation payload typing and capability injection (what does a
-handler get besides `ui`/`db`?); (3) where derived context lives when it is shared (today a story
-function; in an app, a memoized selector layer — effectively Views over state); (4) the
-parts/sizing grammar gaps (`when=` landed as `show`); (5) whether machine transition tables earn their keep over
-slots + operations (the spike says: not yet).
+Open questions, ranked: (1) published-state addressing across templates/plugins — **answered in
+[Typed binding and modules](#typed-binding-and-modules-proposal)**: names are module exports,
+addressed `<alias>.<name>` through an explicit `use`; (2) operation payload typing and capability
+injection (what does a handler get besides `ui`/`db`?); (3) where derived context lives when it is
+shared — **also there**: derived values are typed exports of the module that owns the inputs, not
+an ambient context object; (4) the parts/sizing grammar gaps (`when=` landed as `show`); (5)
+whether machine transition tables earn their keep over slots + operations (the spike says: not
+yet).
+
+## Typed binding and modules (proposal)
+
+The flaw the stories expose: `selected`, `filtered`, `organizations` resolve by falling through
+every lexical scope to an untyped root context object that story code assembles
+(`deriveContext`). A typo — `data-items="organisation"` — resolves `undefined` silently, and the
+collection renders empty as though the data were absent. Nothing is type-checked, because the
+root context has no declared type anywhere the template can see. (`<let derive=…>` was considered
+and dropped; it would have multiplied ambient names, not typed them.)
+
+Direction: the app consists of **modules** (plugins, in today's Composer) that provide named
+state — and other capabilities — with definite types. Any module that wants another module's
+state binds to it **explicitly**. No magic variables: every name a binding uses is either
+declared locally (`let`) or references another module's typed provision. Root-context
+fall-through is deleted, not patched.
+
+### Survey
+
+How other declarative systems handle exactly this boundary — how a consumer names a provider's
+state, and where the error surfaces when the name or type is wrong:
+
+| System                                                                                                              | Provision                                                                        | Binding                                                                     | Error surface                                                                                                            |
+| ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| [Android DataBinding](https://developer.android.com/topic/libraries/data-binding/expressions)                       | `<data><variable name="user" type="com.example.User"/>` — typed template inputs  | `@{user.name}` expressions against declared variables                       | Build: the generated binding class fails javac on a bad path                                                             |
+| [Angular strictTemplates](https://angular.dev/tools/cli/template-typecheck)                                         | Component class members (typed by TypeScript)                                    | Template expressions; `[input]="expr"`                                      | Build: the compiler emits a type-check block per template and reports every binding mismatch as a diagnostic             |
+| [QML](https://doc.qt.io/qt-6/qtqml-syntax-objectattributes.html#required-properties)                                | Typed `property` declarations; `required property` demands a value               | Qualified `id.` access + imports; unqualified context properties deprecated | Instantiation error for an unset required property; `qmllint` statically                                                 |
+| [SwiftUI Environment](https://developer.apple.com/documentation/swiftui/environmentkey)                             | `EnvironmentKey` with a mandatory `defaultValue`                                 | `@Environment(\.key)` — typed keyed read                                    | Compile for key/type; a missing provider silently yields the default (cautionary)                                        |
+| [Terraform modules](https://developer.hashicorp.com/terraform/language/values/variables)                            | Module `variable` (typed, validated) and `output` blocks                         | `module.<name>.<output>` — explicit, qualified                              | `terraform validate` / plan — unknown output, missing required variable, type mismatch all fail before anything applies  |
+| [XAML compiled bindings](https://learn.microsoft.com/en-us/dotnet/maui/fundamentals/data-binding/compiled-bindings) | Ambient `DataContext` (untyped) → `x:DataType` declares the context type         | `{Binding Path}`                                                            | Classic: silent runtime failure (trace output only). Compiled: build error; MAUI now warns by default on uncompiled ones |
+| [XState v5 actors](https://stately.ai/docs/actors)                                                                  | `setup({ actors })` — typed actor logic, typed `input`                           | Typed `ActorRef` from invoke/spawn; events typed per actor                  | TypeScript compile; missing/mistyped `input` rejects at the spawn site                                                   |
+| [ES modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules)                                 | `export` — a static, per-module name table                                       | Static `import { name } from`; no ambient names                             | Link time: an import of a missing binding fails before any code evaluates                                                |
+| Composer capabilities (`@dxos/app-framework › Capability`)                                                          | `Capability.make<T>()('org.dxos…')` — NSID-branded typed tags; module `provides` | Module `requires` tuple; `yield* tag` in the body                           | Compile (`EnsureProvides` completeness, `Requirements` channel) plus activation-time manager validation                  |
+
+Three findings decide the design:
+
+1. **Ambient context is a documented regret everywhere it shipped.** XAML's untyped `DataContext`
+   fails silently at runtime; the platform's answer is `x:DataType` compiled bindings, now
+   warn-by-default, with guidance to treat the warnings as errors. QML deprecated unqualified
+   context-property lookup in favour of `required property`. Angular retrofitted
+   `strictTemplates`. No surveyed system moved toward fall-through.
+2. **The consumer declares; the composition site is checked.** Android's `<variable>`, Terraform's
+   `variable`, QML's `required property`, an ES `import`, a Composer `requires` — in every case
+   the consumer names what it needs with a type, and the error surfaces where provider meets
+   consumer (build, plan, link, activation), never inside the consumer at runtime.
+3. **Defaults mask wiring errors.** SwiftUI's mandatory `defaultValue` converts a missing provider
+   into silent wrong behaviour; MAUI documents `x:DataType="x:Object"` as the anti-pattern that
+   trades build errors for runtime silence. Inputs are required or explicitly optional — never
+   defaulted. And for late-loading providers, ES link-time plus Composer's activation-time manager
+   check is the model: static where authoring is typed, a validation pass as the authoritative
+   backstop where it is not.
+
+### Variant A — typed template signature
+
+The template root declares its inputs, Android-`<variable>` style. `var` is a new closed tag,
+valid only as a direct child of the root; its `type` is a registry schema key, with cardinality
+and optionality from the ontology's §3 columns.
+
+```xml
+<layout id="contacts" rows="1fr 1fr">
+  <var name="organizations" type="org.dxos.type.Organization" many="true" />
+  <var name="selected" type="org.dxos.view.OrganizationForm" optional="true" />
+  <let name="selection" machine="org.dxos.machine.selection" />
+  <let name="draft" machine="org.dxos.machine.flag" />
+  <collection data-items="organizations" item-id="id" item-label="name"
+              data-selection="selection"
+              on-select="org.dxos.operation.contacts.select" />
+  <show when="selected">
+    <form schema="org.dxos.type.Organization" data-values="selected"
+          on-save="org.dxos.operation.contacts.save"
+          on-cancel="org.dxos.operation.contacts.cancel" />
+    <fallback>
+      <display label="Nothing selected." />
+    </fallback>
+  </show>
+</layout>
+```
+
+- **Types**: registry schemas (`type=` keys resolve exactly as `schema=` does today); `let` slots
+  keep their machine's `stateSchema`. With TSX authoring, `select<Signature>()` checks the same
+  names at compile time — the signature is the `State` parameter `R-1` always demanded.
+- **Resolution (closed)**: a binding's first segment must be a `let` in an enclosing scope or a
+  root `var`. Anything else is an error. `deriveContext`'s output becomes the value the host
+  supplies against the signature.
+- **Errors**: undeclared name → **parse/validate** (both declaration and use are in the
+  document); unknown `type=` key → **registration**; host context failing the signature
+  (`Schema.decodeUnknown` over the declared `var`s) → **mount**; nothing left for runtime except
+  legitimately-absent async values, which `show` already covers (`R-2`).
+- **Migration**: add `var` to `TAGS` + `validate`; delete the fall-through branch in `resolve`
+  (the story change is mechanical — each story template declares the two or three names it uses).
+
+### Variant B — module import/export
+
+A module publishes a **typed export table** in the registry — name → data primitive (ontology §3)
+plus schema — and a template names the module it consumes, Terraform/ES-module style:
+
+```xml
+<container id="picker">
+  <use module="org.dxos.plugin.contacts" as="contacts" />
+  <let name="filter" machine="org.dxos.machine.text" />
+  <display variant="title" data-text="contacts.title" />
+  <combobox placeholder="Select organization…"
+            data-items="contacts.filtered" item-id="id" item-label="name"
+            data-value="contacts.pickerLabel" data-filter="filter"
+            on-input="org.dxos.operation.picker.input"
+            on-select="org.dxos.operation.picker.select" />
+  <show when="contacts.selected">
+    <form schema="org.dxos.type.Organization" data-values="contacts.selected" />
+  </show>
+</container>
+```
+
+```ts
+// The provider side: what deriveContext becomes — a module's typed export table.
+const ContactsModule = {
+  key: 'org.dxos.plugin.contacts',
+  exports: {
+    organizations: { primitive: 'query', schema: Organization },
+    filtered: { primitive: 'query', schema: Organization }, // derived — still typed, still owned here
+    selected: { primitive: 'view', schema: OrganizationForm, optional: true },
+    pickerLabel: { primitive: 'object', schema: Schema.String },
+  },
+};
+```
+
+- **Types**: the export table is the authority; derived values (`filtered`, `selected`) are typed
+  exports of the module that owns the inputs — shared derived context (open question 3) stops
+  being an ambient story function.
+- **Resolution (closed)**: first segment is a `let` name or a `use` alias; the second segment
+  must be in that module's export table. No alias, no binding.
+- **Errors**: unresolvable first segment or dangling alias → **parse/validate**; unknown export
+  name or primitive/kind mismatch → **registration** when the module is present, **mount** when
+  it loads late — surfaced as an inline error per `R-8`, exactly as an unknown `schema=` key
+  renders today; never silence.
+- **Migration**: `use` joins `TAGS`; the registry grows `modules: Record<key, ExportTable>`;
+  each story registers one story-local module whose exports are today's `deriveContext` fields.
+
+### Variant C — module-provided machine instances
+
+State machines are **capabilities provided by modules**. A module declares a machine
+**instance** — named, schema-described state (and eventually behaviour), not a def the template
+instantiates — and every component that binds that name observes the same instance. In
+master-detail, the collection and the form are two binders of one module-owned `selection`
+instance; the template's `let` references the instance, it does not create one. This is the
+Composer capability model (`Capability.make<T>()` — a typed token, one contributed
+implementation, many consumers) and the XState v5 actor model (one spawned actor, typed
+`ActorRef`s held by many observers) applied to UI state:
+
+```xml
+<layout id="contacts" rows="1fr 1fr">
+  <use module="org.dxos.plugin.contacts" as="contacts" />
+  <let name="selection" from="contacts.selection" />
+  <collection data-items="contacts.organizations" item-id="id" item-label="name"
+              data-selection="selection"
+              on-select="org.dxos.operation.contacts.select" />
+  <show when="contacts.selected">
+    <form schema="org.dxos.type.Organization" data-values="contacts.selected"
+          on-save="org.dxos.operation.contacts.save"
+          on-cancel="org.dxos.operation.contacts.cancel" />
+    <fallback>
+      <display label="Nothing selected." />
+    </fallback>
+  </show>
+</layout>
+```
+
+```ts
+// The provider side: the module contributes the instance as a typed capability — in Composer
+// terms, rows in its `provides`.
+const ContactsModule = {
+  key: 'org.dxos.plugin.contacts',
+  exports: {
+    // A machine INSTANCE: identity + stateSchema + transitions. Shared by construction.
+    selection: Machine.instance(SelectionMachine),
+    organizations: { primitive: 'query', schema: Organization },
+    // Derived from selection × organizations — typed, owned by the module that owns the inputs.
+    selected: { primitive: 'view', schema: OrganizationForm, optional: true },
+  },
+};
+```
+
+- **Types**: the machine's `stateSchema` is declared once, at the instance the module provides;
+  every binder — this template's collection and form, another plugin's toolbar — gets the same
+  type by construction, the way every `yield*` of one capability tag does.
+- **Resolution (closed)**: `let from=` binds a local name to a module export that must be a
+  machine instance; plain `data-` paths reach read exports through the `use` alias. A `let
+machine=` (today's form) remains for template-private state — the combobox's `filter` has no
+  business being a module export — so the private/shared line is drawn in the grammar, not by
+  publication-path convention.
+- **Errors**: dangling `from=` alias or non-instance target → **registration** (mount for a
+  late-loading module, with `waitFor` + absent state per `R-2`); writes remain scope-relative
+  operations dispatched to the instance, so `R-3` and the single operation log hold — undo sees
+  cross-component transitions for free.
+- **Migration**: registry machines gain identity (module-scoped instance, not def-per-scope);
+  `seedUi` seeds only `let machine=` slots; `ui.<idPath>.<name>` publication becomes the private
+  case, while shared state is addressed by module + export name — which dissolves the
+  namespace-collision half of open question 1.
+
+### Recommendation
+
+**C is the provision model; B is its addressing; A is the template boundary that composes with
+them.** The direction is C's: modules declare typed machine instances (and queries, views,
+schemas, operations) as capabilities; templates bind local names to them explicitly; nothing is
+ambient. B and C are one mechanism seen from two sides — the export table is _how a module
+declares_ its instances and derived values, `use`/`let from=` is _how a template names_ them —
+so they land together: `use` + export tables where writable rows are machine instances. A
+remains worth keeping, not as an alternative but as the boundary check: a reusable template
+declares its `var` signature, and the composition site satisfies it by wiring module exports —
+Android's `<variable>` on one side, Terraform's module wiring on the other. A can also land
+first on its own: it is the smallest change that deletes the fall-through hole and makes the
+stories self-describing while the registry work behind B/C proceeds.
+
+Error classes, consolidated (the never-runtime column is the point):
+
+| Error                                       | A              | B + C                        | Caught     |
+| ------------------------------------------- | -------------- | ---------------------------- | ---------- |
+| Binding names an undeclared first segment   | parse/validate | parse/validate               | always     |
+| Unknown schema / machine / module key       | registration   | registration (mount if late) | per `R-8`  |
+| Unknown export on a known module            | —              | registration / mount         | inline     |
+| `let from=` targets a non-instance export   | —              | registration                 | inline     |
+| Host context does not satisfy the signature | mount          | mount (wiring check)         | once       |
+| Typo resolving `undefined` at render        | impossible     | impossible                   | —          |
+| Legitimately absent async value             | `show` (`R-2`) | `show` (`R-2`)               | structural |
+
+### Open questions
+
+1. **Export-table derivation**: is a module's export table authored, or derived from its
+   contributed capabilities (the Composer `provides` tuple already carries the types)? Deriving
+   avoids a second declaration; authoring keeps the table smaller than the capability surface.
+2. **Versioning the boundary**: Terraform treats a changed output as a breaking change
+   surfaced at plan; what is the equivalent when a plugin update removes an export a mounted
+   template uses — mount error on next render, or a deprecation window in the registry?
+3. **`item-*` typing**: `many` exports give the collection's element type; threading it into
+   `item-*` validation needs the ontology's cardinality column to become part of the export
+   table's contract.
+4. **Instance lifecycle and cardinality**: a module-provided machine instance is app-scoped by
+   default, but master-detail per plank wants instance-per-context (the XState answer is spawn
+   with typed input; the Composer answer would be a keyed multi capability). Which contexts get
+   their own instance, and who tears it down?
+5. **Operation payloads** (open question 2 above) are the same boundary in the write direction —
+   the export-table shape should extend to operations (typed input schema per key) rather than
+   growing a parallel mechanism.
 
 ## Verification (2026-08-29)
 
