@@ -3,14 +3,15 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import type * as Schema from 'effect/Schema';
+import * as Schema from 'effect/Schema';
 import React, { useMemo, useState } from 'react';
 
-import { Filter, Type } from '@dxos/echo';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
+import { type Database, Filter, Obj } from '@dxos/echo';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { useQuery } from '@dxos/echo-react';
 import { Flex, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Organization } from '@dxos/types';
 import { compactSlots, createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
@@ -30,7 +31,36 @@ import { useSystem } from './useSystem';
 // (published state × live ECHO query) → render → operations → new state.
 //
 
-type Db = NonNullable<ReturnType<typeof useSpaces>[number]>['db'];
+type Db = Database.Database;
+
+/**
+ * Story database: `EchoTestBuilder` rather than the full client harness — no HALO, no space
+ * pipeline, milliseconds to open. One per page load; stories share it, which also demonstrates
+ * that the system tolerates pre-existing data.
+ */
+const testDb = (() => {
+  let promise: Promise<Db> | undefined;
+  return () => {
+    promise ??= (async () => {
+      const builder = new EchoTestBuilder();
+      await builder.open();
+      const { db } = await builder.createDatabase({ types: [Organization.Organization] });
+      ['Blue Yard', 'Backed', 'Protocol Labs', 'DXOS', 'Ink & Switch', 'Socket Supply'].forEach((name, index) => {
+        db.add(Organization.make({ name, status: index % 2 === 0 ? 'prospect' : 'active' }));
+      });
+      return db;
+    })();
+    return promise;
+  };
+})();
+
+const useTestDb = (): Db | undefined => {
+  const [db, setDb] = useState<Db>();
+  useMemo(() => {
+    void testDb().then(setDb);
+  }, []);
+  return db;
+};
 
 //
 // Registry. Everything a template references, by URI. Operations are the only writer: they step
@@ -39,12 +69,36 @@ type Db = NonNullable<ReturnType<typeof useSpaces>[number]>['db'];
 
 const ORGANIZATION = 'org.dxos.type.Organization';
 
+/**
+ * The FORM schema: the editable projection, not the stored type. `Type.getSchema(Organization)`
+ * carries the ECHO `id` as a required field, which a draft cannot satisfy — a live reminder that
+ * forms want a View (ONTOLOGY R-5), and the registry should hold both.
+ */
+const OrganizationForm = Schema.Struct({
+  name: Schema.String.pipe(Schema.annotate({ title: 'Name' }), Schema.optional),
+  description: Schema.String.pipe(Schema.annotate({ title: 'Description' }), Schema.optional),
+  status: Schema.Literals(['prospect', 'qualified', 'active', 'commit', 'reject']).pipe(
+    Schema.annotate({ title: 'Status' }),
+    Schema.optional,
+  ),
+  website: Schema.String.pipe(Schema.annotate({ title: 'Website' }), Schema.optional),
+});
+
+type OrganizationFormValues = Schema.Schema.Type<typeof OrganizationForm>;
+
+const toFormValues = (org: Organization.Organization): OrganizationFormValues => ({
+  name: org.name,
+  description: org.description,
+  status: org.status,
+  website: org.website,
+});
+
 const uiPatch = (ui: UiState, id: string, patch: Record<string, unknown>): UiState =>
   withInstance(ui, id, { ...ui[id], ...patch });
 
 const registry: Registry<Db, Schema.Codec<any, any>> = {
   schemas: {
-    [ORGANIZATION]: Type.getSchema(Organization.Organization),
+    [ORGANIZATION]: OrganizationForm,
   },
 
   machines: {
@@ -81,16 +135,23 @@ const registry: Registry<Db, Schema.Codec<any, any>> = {
       key: 'org.dxos.operation.contacts.save',
       description: 'Commit the form draft: update the selected object, or add the draft to the database.',
       handler: ({ ui, payload, db }) => {
-        const values = (payload ?? {}) as Partial<Organization.Organization>;
+        const values = (payload ?? {}) as OrganizationFormValues;
         const instance = ui.contacts ?? {};
         if (instance.draft) {
           db?.add(Organization.make(values));
           return uiPatch(ui, 'contacts', { draft: false });
         }
         const id = typeof instance.selection === 'string' ? instance.selection : undefined;
-        const object = id ? db?.getObjectById(id) : undefined;
+        const object = id ? db?.getObjectById<Organization.Organization>(id) : undefined;
         if (object) {
-          Object.assign(object, values);
+          // Field by field, never Object.assign: the form's values may carry keys the schema
+          // projection does not own (the ECHO id is readonly).
+          Obj.update(object, (object) => {
+            object.name = values.name;
+            object.description = values.description;
+            object.status = values.status;
+            object.website = values.website;
+          });
         }
         return undefined;
       },
@@ -105,9 +166,11 @@ const registry: Registry<Db, Schema.Codec<any, any>> = {
       description: 'Toolbar action over the current selection: mark the organization qualified.',
       handler: ({ ui, db }) => {
         const id = typeof ui.contacts?.selection === 'string' ? ui.contacts.selection : undefined;
-        const object = id ? db?.getObjectById(id) : undefined;
+        const object = id ? db?.getObjectById<Organization.Organization>(id) : undefined;
         if (object) {
-          Object.assign(object, { status: 'qualified' });
+          Obj.update(object, (object) => {
+            object.status = 'qualified';
+          });
         }
         return undefined;
       },
@@ -145,7 +208,7 @@ type AppContext = {
   ui: UiState;
   organizations: readonly Organization.Organization[];
   filtered: readonly Organization.Organization[];
-  selected: Partial<Organization.Organization> | undefined;
+  selected: OrganizationFormValues | undefined;
   pickerLabel: string;
 };
 
@@ -334,9 +397,8 @@ const EMPTY: Node = { tag: 'container' };
 
 const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
   const [sources, setSources] = useState(initialSources);
-  const spaces = useSpaces();
-  const space = spaces[0];
-  const organizations = useQuery(space?.db, Filter.type(Organization.Organization));
+  const db = useTestDb();
+  const organizations = useQuery(db, Filter.type(Organization.Organization));
 
   // Which layout renders is itself a function of published state — layout selection is the
   // meta-level of "entirely state-driven".
@@ -361,7 +423,7 @@ const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
     return { tag: 'container', children };
   }, [parsedAll]);
 
-  const { ui, log, dispatch } = useSystem({ registry, root: seedRoot, db: space?.db });
+  const { ui, log, dispatch } = useSystem({ registry, root: seedRoot, db });
   const renderer = useMemo(() => createReactRenderer({ schemas: registry.schemas }), []);
 
   const activeKey = pick?.(ui) ?? firstKey;
@@ -410,21 +472,8 @@ const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
 const meta: Meta<typeof DefaultStory> = {
   title: 'ui/ui-template/System',
   render: DefaultStory,
-  decorators: [
-    withTheme(),
-    withLayout({ layout: 'fullscreen' }),
-    withClientProvider({
-      createIdentity: true,
-      createSpace: true,
-      types: [Organization.Organization],
-      onCreateSpace: ({ space }) => {
-        ['Blue Yard', 'Backed', 'Protocol Labs', 'DXOS', 'Ink & Switch', 'Socket Supply'].forEach((name, index) => {
-          space.db.add(Organization.make({ name, status: index % 2 === 0 ? 'prospect' : 'active' }));
-        });
-      },
-    }),
-  ],
-  parameters: { layout: 'fullscreen' },
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  parameters: { layout: 'fullscreen', translations: formTranslations },
 };
 
 export default meta;

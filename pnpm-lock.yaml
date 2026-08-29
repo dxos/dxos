@@ -23466,6 +23466,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-client
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react

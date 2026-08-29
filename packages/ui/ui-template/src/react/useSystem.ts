@@ -38,8 +38,16 @@ export const useSystem = <Db>({ registry, root, db }: UseSystemOptions<Db>): Use
 
   const dispatch = useCallback<Dispatch>(
     (operation, { payload }) => {
-      const { ui, entry } = systemDispatch(registry, ref.current.ui, operation, payload, db);
-      ref.current = { ui, log: [entry, ...ref.current.log].slice(0, 20) };
+      // A failed operation is a log entry, not a vanished promise — the loop must stay observable.
+      try {
+        const { ui, entry } = systemDispatch(registry, ref.current.ui, operation, payload, db);
+        ref.current = { ui, log: [entry, ...ref.current.log].slice(0, 20) };
+      } catch (err) {
+        ref.current = {
+          ...ref.current,
+          log: [{ operation, payload: `ERROR: ${err}` }, ...ref.current.log].slice(0, 20),
+        };
+      }
       force();
     },
     [registry, db],
