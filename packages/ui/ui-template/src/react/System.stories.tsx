@@ -407,20 +407,22 @@ const FORM = trim`
 `;
 
 const MASTER_DETAIL = trim`
-  <layout id="example" rows="1fr 1fr" resizable="true">
+  <container id="example">
     <use module="org.dxos.module.tasks" as="tasks" />
-    <collection data-items="tasks.items" item-id="id" item-label="title"
-                data-selection="tasks.selectionId"
-                on-select="org.dxos.operation.tasks.select" />
-    <show when="tasks.selected">
-      <form schema="org.dxos.type.Task" data-values="tasks.selected"
-            on-save="org.dxos.operation.tasks.save"
-            on-cancel="org.dxos.operation.tasks.cancel" />
-      <fallback>
-        <display label="Nothing selected." />
-      </fallback>
-    </show>
-  </layout>
+    <layout rows="1fr 1fr" resizable="true">
+      <collection data-items="tasks.items" item-id="id" item-label="title"
+                  data-selection="tasks.selectionId"
+                  on-select="org.dxos.operation.tasks.select" />
+      <show when="tasks.selected">
+        <form schema="org.dxos.type.Task" data-values="tasks.selected"
+              on-save="org.dxos.operation.tasks.save"
+              on-cancel="org.dxos.operation.tasks.cancel" />
+        <fallback>
+          <display label="Nothing selected." />
+        </fallback>
+      </show>
+    </layout>
+  </container>
 `;
 
 const MASTER_DETAIL_TOOLBAR = trim`

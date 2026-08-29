@@ -162,6 +162,11 @@ export const parse = (input: string): Node => {
   if (!root) {
     throw new TemplateParseError('empty template');
   }
+  // The root is the template's boundary: `container` gives the declarations (`id`, `var`, `use`)
+  // one fixed home, the way a QML root item or an Android layout's <data> block does.
+  if (root.tag !== 'container') {
+    throw new TemplateParseError(`the root element must be a 'container', found '${root.tag}'`);
+  }
   // The per-node validation above cannot see parents or children; the full-tree pass enforces the
   // structural rules (a `let` needs an enclosing id, a `fallback` needs its `show`) and the
   // closed-resolution rule (every state binding's first segment names a declaration).

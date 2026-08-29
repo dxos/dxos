@@ -26,7 +26,7 @@ if the model needs React, the result is negative and we have learned it cheaply.
 ## Grammar
 
 ```text
-template  ::= element                        (exactly one root)
+template  ::= container                      (exactly one root, always a `container`)
 element   ::= '<' tag attr* ( '/>' | '>' element* '</' tag '>' )
 tag       ::= 'container' | 'layout' | 'display' | 'control' | 'collection' | 'command'
             | 'form' | 'combobox' | 'tabs' | 'tab'

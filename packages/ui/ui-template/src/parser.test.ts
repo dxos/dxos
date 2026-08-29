@@ -34,7 +34,7 @@ describe('parse', () => {
   });
 
   test('narrows numeric and boolean literals so the renderer never parses strings', ({ expect }) => {
-    const node = parse('<layout cols="3" wrap="true" gap="sm" />');
+    const [node] = parse('<container><layout cols="3" wrap="true" gap="sm" /></container>').children as Node[];
     expect(node.props).toEqual({ cols: 3, wrap: true, gap: 'sm' });
   });
 
@@ -60,13 +60,20 @@ describe('parse', () => {
 
   test('an event value must name an operation key', ({ expect }) => {
     // ONTOLOGY R-3: the only outbound edge is an operation, never an arbitrary token.
-    expect(() => parse('<control on-activate="rename" />')).toThrow(/must name an operation key/);
+    expect(() => parse('<container><control on-activate="rename" /></container>')).toThrow(
+      /must name an operation key/,
+    );
   });
 
   test('reports unbalanced and multi-root documents', ({ expect }) => {
     expect(() => parse('<container><display /></layout>')).toThrow(/expected <\/container>/);
     expect(() => parse('<container>')).toThrow(/unclosed <container>/);
     expect(() => parse('<display /><display />')).toThrow(/exactly one root/);
+  });
+
+  test('the root element must be a container', ({ expect }) => {
+    // The template boundary owns the declarations; interior geometry starts one level down.
+    expect(() => parse('<layout rows="1fr 1fr" />')).toThrow(/root element must be a 'container'/);
   });
 
   test('text content is not part of the grammar', ({ expect }) => {
@@ -109,21 +116,23 @@ describe('parse', () => {
       /'fallback' is only valid inside 'show'/,
     );
     // `switch` children must be `match`.
-    expect(() => parse('<switch on="view"><display label="x" /></switch>')).toThrow(
+    expect(() => parse('<container><switch on="view"><display label="x" /></switch></container>')).toThrow(
       /'switch' children must be 'match'/,
     );
     // `show` requires a when binding; `switch` requires on.
-    expect(() => parse('<show><display label="x" /></show>')).toThrow(/'show' requires a when binding/);
-    expect(() => parse('<switch><match value="list"><display label="x" /></match></switch>')).toThrow(
-      /'switch' requires an on binding/,
+    expect(() => parse('<container><show><display label="x" /></show></container>')).toThrow(
+      /'show' requires a when binding/,
     );
+    expect(() =>
+      parse('<container><switch><match value="list"><display label="x" /></match></switch></container>'),
+    ).toThrow(/'switch' requires an on binding/);
   });
 });
 
 describe('closed resolution', () => {
   test('a binding to an undeclared name is a parse error, never a silent undefined', ({ expect }) => {
     // The no-magic-variables rule: nothing falls through to an ambient context object.
-    expect(() => parse('<display data-text="title" />')).toThrow(/names undeclared 'title'/);
+    expect(() => parse('<container><display data-text="title" /></container>')).toThrow(/names undeclared 'title'/);
     expect(() => parse('<container id="s"><let name="a" initial="0" /><display data-text="b" /></container>')).toThrow(
       /names undeclared 'b'/,
     );
@@ -139,7 +148,7 @@ describe('closed resolution', () => {
   });
 
   test('a bare-dot state binding has no name to resolve', ({ expect }) => {
-    expect(() => parse('<collection data-items="." />')).toThrow(/requires a path/);
+    expect(() => parse('<container><collection data-items="." /></container>')).toThrow(/requires a path/);
   });
 
   test('a rung-1 let takes a literal initial value', ({ expect }) => {
@@ -288,7 +297,7 @@ describe('attribute edge cases', () => {
   });
 
   test('signed and fractional numerics are coerced', ({ expect }) => {
-    const node = parse('<layout span="1.5" offset="-2" />');
+    const [node] = parse('<container><layout span="1.5" offset="-2" /></container>').children as Node[];
     expect(node.props).toEqual({ span: 1.5, offset: -2 });
   });
 });
