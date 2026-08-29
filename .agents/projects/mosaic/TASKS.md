@@ -56,18 +56,18 @@ DESIGN.md); ECHO live in the stories; machines tonight = named state slots + ope
 schema-described; anonymous ⇒ private. Documented goals: on-the-fly layout generation, chainable
 undo, async updates, async dynamic component loading, entirely state-driven layout.
 
-- [ ] **Registry** — URI-keyed components/schemas/operations/machine-state-schemas.
-- [ ] **System state + dispatch** — one state tree (data/ui/drafts), pure render, operations loop,
+- [x] **Registry** — URI-keyed components/schemas/operations/machine-state-schemas.
+- [x] **System state + dispatch** — one state tree (data/ui/drafts), pure render, operations loop,
       operation log; ECHO feeds state via a subscription effect (async updates stay MVU).
-- [ ] **Rung 1: list** — ECHO query → Listbox; `schema=` from registry.
-- [ ] **Rung 2: form** — schema-driven Form over a draft buffer; `save`/`cancel` operations.
-- [ ] **Rung 3: master-detail** — 1+2 composed; selection published at `state.ui.<id>.selection`.
-- [ ] **Rung 4: + toolbar** — button dispatches operation by URI with current object context;
+- [x] **Rung 1: list** — ECHO query → Listbox; `schema=` from registry.
+- [x] **Rung 2: form** — schema-driven Form over a draft buffer; `save`/`cancel` operations.
+- [x] **Rung 3: master-detail** — 1+2 composed; selection published at `state.ui.<id>.selection`.
+- [x] **Rung 4: + toolbar** — button dispatches operation by URI with current object context;
       operation log visible. Single storybook, single DefaultStory, per-story schema/layout/context.
-- [ ] **ECHO scenarios** — combobox filtering the database; master-detail with Add → draft object →
+- [x] **ECHO scenarios** — combobox filtering the database; master-detail with Add → draft object →
       db on save; 2-3 extensions (candidates: filter toolbar driving the query; same context under
       two swapped layouts; layout dispatch by object type).
-- [ ] **DESIGN.md** (`ui-template/docs`) — schema, data structure, layout, component libraries,
+- [x] **DESIGN.md** (`ui-template/docs`) — schema, data structure, layout, component libraries,
       machines (incl. two-tier private/published state + addressing), style variants, surfaces,
       operations, composite app state, layouts↔app-state updates, undo chains; composition via the
       plugin mechanism: an app as a dynamic collection of plugins contributing

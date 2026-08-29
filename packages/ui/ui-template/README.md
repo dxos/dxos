@@ -4,7 +4,9 @@ Layout templates: a framework-agnostic model, an XML surface syntax, and a plugg
 
 **Status: spike.** The question under test is whether a template can describe real UI without
 procedural logic, and render through more than one framework. Only React is implemented; the
-renderer contract is the part that has to earn the "pluggable" claim.
+renderer contract is the part that has to earn the "pluggable" claim. Findings and the system
+design (registry, operations, machines, published state, undo, plugin composition) →
+[`docs/DESIGN.md`](./docs/DESIGN.md).
 
 Vocabulary comes from [`react-ui/docs/ONTOLOGY.md`](../react-ui/docs/ONTOLOGY.md) — kind tags from
 §1, binding types from §3, and the rules in §5 (cited below as `R-n`).
