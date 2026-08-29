@@ -3,7 +3,7 @@
 //
 
 export * from './automerge';
-export * from './edge-pbt';
+export * from './edge-stress';
 export * from './edge-sync';
 export * from './edge-ws';
 export * from './empty';
