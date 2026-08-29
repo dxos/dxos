@@ -1,0 +1,53 @@
+<scene xmlns:on="dxos:on" xmlns:data="dxos:data" xmlns:state="dxos:state">
+  <command slot="toolbar" attention="$node.attendableId">
+    <navigation kind="tabs" value="$local.tab" default="overview">
+      <item value="overview" label="i18n:overview.label" testid="projectsPlugin.tab.overview" />
+      <item value="tasks" label="i18n:tasks.label" testid="projectsPlugin.tab.tasks" />
+    </navigation>
+    <separator />
+    <action id="create-chat" icon="ph--chat-text--regular" label="i18n:create-chat.label"
+      on:activate="org.dxos.operation.projects.createProjectChat" />
+    <action id="add-artifact" icon="ph--plus--regular" label="i18n:add-artifact.label"
+      on:activate="org.dxos.operation.projects.addArtifact" />
+  </command>
+
+  <container slot="content" when="$local.tab == 'overview'">
+    <form data:object="$subject" fields="name,description">
+      <field name="name" />
+      <field name="description" />
+
+      <form data:object="$subject.instructions" absent="omit" />
+
+      <section title="i18n:context.label">
+        <form data:object="$subject.instructions" fields="objects" absent="omit" />
+      </section>
+
+      <section title="i18n:outline.label">
+        <surface role="section"
+          data:subject="$subject.outline"
+          state:taskSet="$subject.taskSet"
+          on:selectTask="org.dxos.operation.projects.showTasks"
+          absent="omit" />
+      </section>
+
+      <section title="i18n:milestones.label" when="$subject.taskSet.milestones.length > 0">
+        <collection data:items="$subject.taskSet.milestones" selection="none" density="sm">
+          <row icon="ph--flag--regular" label="$item.name" meta="$item.targetDate" />
+        </collection>
+      </section>
+
+      <section title="i18n:artifacts.label">
+        <arrangement kind="masonry" data:items="$subject.artifacts" id="uri" scroll="inherit">
+          <tile
+            component="plugin-projects›ObjectCard"
+            on:activate="org.dxos.operation.layout.open"
+            on:delete="org.dxos.operation.projects.removeArtifact" />
+        </arrangement>
+      </section>
+    </form>
+  </container>
+
+  <container slot="content" when="$local.tab == 'tasks'">
+    <surface role="section" data:subject="$subject.taskSet" absent="i18n:no-task-set.message" />
+  </container>
+</scene>

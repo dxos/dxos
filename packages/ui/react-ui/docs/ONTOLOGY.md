@@ -135,7 +135,46 @@ names where that one place is; where there isn't one, the row says so.
 - **Key bindings** are per-surface, with no registry, so there is no way to enumerate what a chord
   does in a given context, or to detect a collision between two surfaces.
 
-## 3. Audit
+## 3. Data primitives
+
+A template is only useful if it can be _bound_. This table names the things a node binds to — the
+value types on the other side of a `data-*` or `state-*` attribute. Each is a real type in the
+repo, not a DSL invention.
+
+Two columns carry the weight. **Cardinality** says whether the binding yields one thing or many,
+which decides what kinds can consume it. **Resolution** says when the value is available, which
+decides whether the consuming node needs an absent state — every `async` row implies one.
+
+| Tag          | Primitive         | What it is                                                                                     | Where                                                           | Cardinality | Resolution      | Bound by                                         |
+| ------------ | ----------------- | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ----------- | --------------- | ------------------------------------------------ |
+| `schema`     | **Schema**        | The shape and meaning of an object. An Effect Schema plus DXOS type annotations.               | `@dxos/echo › Type`, `Schema`                                   | one         | static          | `form`, `collection` (columns), `control`        |
+| `object`     | **Object**        | One live ECHO entity, addressed by DXN. Mutations are reactive.                                | `@dxos/echo › Obj`, `DXN`                                       | one         | reactive        | `form`, `container`, `surface`                   |
+| `ref`        | **Ref**           | A typed pointer to an object that may not be loaded yet. **The reason `absent` exists.**       | `@dxos/echo › Ref` (`Ref.target`, `Ref.atom`)                   | one         | async, reactive | anything that takes `object`                     |
+| `query`      | **Query**         | A filter plus order over a database; yields a live array.                                      | `@dxos/echo › Query`, `Filter`, `QueryResult`                   | many        | async, reactive | `collection`, `arrangement`, `composite_control` |
+| `view`       | **View**          | A query _plus_ a field projection and order — what a form or table should actually show.       | `@dxos/echo › View`; `@dxos/schema › projection`, `ViewModel`   | many        | async, reactive | `form`, `collection`                             |
+| `feed`       | **Feed**          | An append-only stream of immutable objects; ordered by insertion, not by query.                | `@dxos/echo › Feed`, `Queue`                                    | many        | async, reactive | `conversation`, `collection`                     |
+| `space`      | **Space**         | The database a binding resolves against; the scope for queries and creates.                    | `@dxos/echo › Database`; `Obj.getDatabase`                      | one         | reactive        | ambient — rarely bound explicitly                |
+| `graph_node` | **AppGraph node** | A node in the navigation graph: id, label, icon, actions, children.                            | `@dxos/app-graph › AppGraphNode`, `AppGraph`                    | one or many | async, reactive | `navigation`, `command`                          |
+| `capability` | **Capability**    | A host-provided service or contribution, resolved by token rather than by data.                | `@dxos/app-framework › useCapabilities`                         | one or many | reactive        | `surface`, `provider`, `command`                 |
+| `operation`  | **Operation**     | A named, keyed, invocable action — the only primitive that _writes_. The sink for every event. | `@dxos/app-framework › Operation` (`org.dxos.operation.*` keys) | one         | invoked         | every `on-*` binding                             |
+| `atom`       | **Atom**          | A reactive cell. The substrate the others are observed through, not usually bound directly.    | `effect/unstable/reactivity/Atom`; `Ref.atom`                   | one         | reactive        | internal                                         |
+
+### Notes
+
+- **`ref` vs `object` is the distinction that matters most in practice.** `ProjectArticle` resolves
+  three refs (`instructions`, `taskSet`, `outline`) and each needs its own not-yet-loaded branch. A
+  template language that treats a ref as an object will render empty sections on every cold load.
+- **`view` is what forms should bind to, and mostly don't.** `Form` today takes a schema plus values;
+  the projection (which fields, in what order, with what formats) is a separate concern that `View`
+  already models. Binding forms to `view` rather than `schema` is what would let field order be data.
+- **`operation` is the only writer.** Every other row is read-only from the template's point of view.
+  That asymmetry is why events deserve a separate binding family rather than being "just another
+  attribute".
+- **There is no `selection` primitive**, and there should be. Six component families implement
+  selection independently (see the audit). Until it is one type, no template can bind two components
+  to the same selection.
+
+## 4. Audit
 
 Every component exported by the `@dxos/react-ui*` family, mapped to a kind. 182 rows across 44
 packages. Generated by walking each package's `src/components/<Name>/` and `src/<Name>/`
@@ -366,6 +405,146 @@ component that fits nowhere means the taxonomy is short a row. Findings follow t
 - **Two components are kinded by their own admission rather than their name**: `Syntax` is a
   headless provider despite sitting in a rendering package, and `KeyboardContainer` is a provider
   despite the name suggesting a container.
+
+## 5. Rules
+
+Observations that survived contact with the code, written as rules so they can be cited and
+argued with. Each one names the evidence that produced it; a rule with no evidence is a
+preference, and does not belong here.
+
+Rules are numbered for reference (`R-1`) and stable — a rule that turns out to be wrong is struck
+through with a note, never renumbered.
+
+### Binding
+
+**R-1 — A layout template is bound to a state object, and parameterized by that object's type.**
+A template is not a picture; it is a function from state to structure. The state object is the
+single root that every `data-*` binding in the template resolves against, and its type is the
+template's type parameter. Without the parameter, a template is a set of unchecked string paths.
+
+_Evidence:_ every real container resolves from one subject — `ProjectArticle` takes
+`subject: Project` and reaches `subject.instructions`, `subject.taskSet`, `subject.artifacts`.
+_Consequence:_ `<Layout<{ title: string }>>` is the correct shape. The binding root is named
+(`context`, `subject`) and typed; paths are checked against it.
+
+**R-2 — Every asynchronous binding implies an absent state on the consuming node.**
+A `ref`, `query`, `view`, or `feed` may not be loaded. If the template cannot say what to render
+in that window, the component will render as though the data were empty.
+
+_Evidence:_ §3 marks five primitives `async`. `ProjectArticle` guards three resolved refs, and its
+own comments record that a synchronous `.target` read leaves sections "permanently missing" on a
+cold load.
+_Consequence:_ an `absent` attribute (or equivalent) is mandatory on async bindings, not optional
+sugar.
+
+**R-3 — Only `operation` writes; every other primitive is read-only to a template.**
+Templates describe. The single outbound edge is an event bound to an operation key.
+
+_Evidence:_ §3 — ten read primitives, one invocable.
+_Consequence:_ events are a distinct binding family, not an attribute that happens to hold a
+function. It also means a template can be statically checked for what it can change: the set of
+operation keys it names.
+
+**R-4 — Per-instance UI state is its own binding family.**
+The state a template needs that is neither persisted data nor host context — a selected tab, an
+expanded row, a draft filter — has no home in a data/state/event split.
+
+_Evidence:_ the ProjectArticle draft required an invented `$local.tab`; the real component holds it
+in `useState`, and `onSelectTask` sets it.
+_Consequence:_ either the DSL grows a fourth read family, or every such value is promoted to a real
+object — which makes tab selection a database write.
+
+**R-5 — Forms bind to a view, not to a schema.**
+A schema gives shape. Which fields appear, in what order, with what formats, is a projection — and
+that is a separate primitive that already exists.
+
+_Evidence:_ `@dxos/echo › View` plus `@dxos/schema › projection`/`ViewModel` model exactly this;
+`Form` today takes schema plus values, so field order is code.
+_Consequence:_ binding forms to `view` is what makes layout data rather than markup.
+
+### Naming and addressing
+
+**R-6 — Tags name kinds, not components.**
+A template that names `Listbox` is a React template. A template that names `collection` is not.
+
+_Evidence:_ Goal 1 — [`solid-ui-geo`](../../solid-ui-geo) and [`lit-grid`](../../lit-grid) are
+working non-React implementations of components in this family.
+_Consequence:_ `component=` exists as an escape hatch for when a specific implementation is
+genuinely required, mirroring how `surface` in the app dialect takes a role first.
+
+**R-7 — Components are addressed by package and name, never by name alone.**
+_Evidence:_ the audit — `Grid` is a `layout` in `react-ui`, a `spatial_surface` in
+`react-ui-canvas`, and a `collection` in `react-ui-grid`. `Toolbar`, `Tree`, `Board`, `Picker`,
+`Editor`, `Calendar`, `ToolForm`, and `ToolList` each recur across packages under different kinds.
+_Consequence:_ any `component=` value is package-qualified.
+
+**R-8 — A tag outside the table is an error, not a no-op.**
+_Evidence:_ the closed-vocabulary goal; a silently dropped element renders as though the author
+never wrote it.
+_Consequence:_ the parser reports the unknown tag and its position, and refuses the document.
+
+**R-9 — Kinds are too coarse to be tags on their own.**
+Seventeen kinds cannot distinguish a tab bar from a breadcrumb, or a masonry from a carousel.
+
+_Evidence:_ the ProjectArticle draft needed `<navigation kind="tabs">` and
+`<arrangement kind="masonry">` within four lines of each other.
+_Consequence:_ either a second discriminator is part of the grammar, or the tag set is finer than
+the kind set. **Open.**
+
+**R-10 — Parts are a vocabulary distinct from kinds.**
+`Panel.Toolbar`, `Form.Section`, `Tabs.Button` are not kinds; they are named positions within one.
+
+_Evidence:_ the draft used `<item>`, `<action>`, `<field>`, `<row>`, `<tile>`, `<section>`,
+`<slot>`, `<separator>` — none of which is one of the 17.
+_Consequence:_ a schema cannot validate which children a node admits until parts are enumerated.
+**Open — no parts table exists.**
+
+### Structure and logic
+
+**R-11 — A template expresses structure, not sequence.**
+Anything with a step, a result, or a branch on a result is not layout.
+
+_Evidence:_ `ProjectArticle`'s add-artifact flow invokes a form operation, checks whether the user
+dismissed it, and only then splices the returned ref; create-chat sequences three invocations plus
+a non-operation call.
+_Consequence:_ adopting a template language means writing those as named operations first. The
+logic is relocated, not removed.
+
+**R-12 — An aspect must be extractable, or it is not an aspect.**
+If a concern cannot be lifted out of the components that implement it, naming it in Table 2
+describes a coincidence rather than a shared mechanism.
+
+_Evidence:_ density and elevation are context plus hook and are genuinely shared; selection is
+implemented six times with different prop names and different multi-select semantics.
+_Consequence:_ `selection` is not yet an aspect. It is a name for six things.
+
+**R-13 — A kind must be definable without reference to a framework.**
+If the only way to say what something is involves hooks, context, or JSX, the definition is of an
+implementation.
+
+_Evidence:_ Goal 1.
+_Consequence:_ Table 1's "what defines it" column mentions no React concept, and should stay that
+way.
+
+**R-14 — Layout escape hatches must be expressible.**
+A declarative layer that cannot say "not that way, it breaks" will silently regress the
+workarounds the imperative code earned.
+
+_Evidence:_ `ProjectArticle` hand-rolls its tab switching because Radix `Tabs.Panel` mounts hidden
+for a frame and masonry measures zero there; it omits `Masonry.Content` because `Form.Viewport`
+already scrolls.
+_Consequence:_ **Open.** Neither workaround has a declarative form today.
+
+### Tooling
+
+**R-15 — The surface syntax must be valid in its own format.**
+If the reason for choosing XML is free editor, schema, and formatter support, then a grammar that
+those tools reject has given up the only reason to choose it.
+
+_Evidence:_ `on:activate` fails XML validation — an undeclared namespace prefix — the first time a
+real editor sees it.
+_Consequence:_ prefixes are hyphenated (`on-activate`), or namespaces are declared, or the format
+is not XML.
 
 ## Appendix: canonical references
 

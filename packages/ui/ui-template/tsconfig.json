@@ -1,0 +1,32 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ],
+  "references": [
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../react-ui"
+    },
+    {
+      "path": "../react-ui-editor"
+    },
+    {
+      "path": "../ui-editor"
+    },
+    {
+      "path": "../ui-theme"
+    }
+  ]
+}
