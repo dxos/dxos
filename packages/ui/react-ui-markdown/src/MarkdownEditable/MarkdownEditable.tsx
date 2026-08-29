@@ -66,7 +66,7 @@ export const MarkdownEditable = ({
     // Wrapped rather than styled directly: `TextEditor` forwards its rest props to the editor's
     // config, not to the DOM, and the preview is a box of the same kind — so the two match.
     return (
-      <div data-testid='markdownEditable.editor' className={mx('is-full', classNames)}>
+      <div data-testid='markdownEditable.editor' className={mx('w-full', classNames)}>
         <TextEditor value={draft} onChange={setDraft} extensions={extensions} autoFocus selectionEnd />
       </div>
     );
@@ -76,7 +76,7 @@ export const MarkdownEditable = ({
     <div
       {...(readonly ? {} : previewProps)}
       data-testid='markdownEditable.preview'
-      className={mx('is-full', !readonly && 'cursor-text', classNames)}
+      className={mx('w-full', !readonly && 'cursor-text', classNames)}
     >
       <MarkdownView content={value || placeholder} components={components} />
     </div>
