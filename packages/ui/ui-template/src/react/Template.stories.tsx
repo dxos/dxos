@@ -64,6 +64,8 @@ void select<ProjectState>().title;
 
 const SIMPLE = trim`
   <container>
+    <var name="title" type="org.dxos.type.Text" />
+    <var name="description" type="org.dxos.type.Text" />
     <display variant="title" data-text="title" />
     <display data-text="description" />
   </container>
@@ -71,6 +73,9 @@ const SIMPLE = trim`
 
 const WITH_COLLECTION = trim`
   <container>
+    <var name="title" type="org.dxos.type.Text" />
+    <var name="description" type="org.dxos.type.Text" />
+    <var name="tags" type="org.dxos.type.Text" many="true" />
     <display variant="title" data-text="title" />
     <display data-text="description" />
     <collection data-items="tags">
@@ -81,6 +86,8 @@ const WITH_COLLECTION = trim`
 
 const WITH_EVENTS = trim`
   <container>
+    <var name="title" type="org.dxos.type.Text" />
+    <var name="tags" type="org.dxos.type.Text" many="true" />
     <layout align="center">
       <display variant="title" data-text="title" />
     </layout>
@@ -144,6 +151,7 @@ const DefaultStory = ({ source: initialSource }: { source: string }) => {
           parsed.node && state.value ? (
             <Template
               node={parsed.node}
+              vars={state.value}
               renderer={renderer}
               options={{
                 dispatch: (operation, { payload }) =>

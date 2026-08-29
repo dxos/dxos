@@ -201,6 +201,75 @@ export const seedUi = (registry: Registry<never>, root: WalkNode): UiState => {
   return ui;
 };
 
+/** One entry of a template's signature: a typed, host-supplied input declared by a root `var`. */
+export type VarDecl = {
+  name: string;
+  /** A registry schema key. */
+  type: string;
+  many?: boolean;
+  optional?: boolean;
+};
+
+/** Read the signature off a template root's direct `var` children. */
+export const varDecls = (root: WalkNode): VarDecl[] =>
+  (root.children ?? []).flatMap((child) => {
+    if (child.tag !== 'var' || typeof child.props?.name !== 'string' || typeof child.props?.type !== 'string') {
+      return [];
+    }
+    return [
+      {
+        name: child.props.name,
+        type: child.props.type,
+        ...(child.props.many === true ? { many: true } : null),
+        ...(child.props.optional === true ? { optional: true } : null),
+      },
+    ];
+  });
+
+/**
+ * Mount check: the host-supplied values against the template's `var` signature. An unknown
+ * `type=` key is a registration error; a missing required input, a non-array for `many`, or a
+ * value failing `isValid` (schema decode, supplied by the host layer that owns the schema
+ * representation) is a mount error. Returns messages for the host to surface visibly — a failed
+ * signature must never render as though the data were absent.
+ */
+export const checkVars = <S>(
+  schemas: Readonly<Record<string, S>>,
+  decls: readonly VarDecl[],
+  values: Readonly<Record<string, unknown>>,
+  isValid?: (schema: S, value: unknown) => boolean,
+): string[] => {
+  const errors: string[] = [];
+  for (const decl of decls) {
+    const schema = schemas[decl.type];
+    if (schema === undefined) {
+      errors.push(`var '${decl.name}': unknown type '${decl.type}'`);
+      continue;
+    }
+    const value = values[decl.name];
+    if (value === undefined) {
+      if (decl.optional !== true) {
+        errors.push(`var '${decl.name}' is required`);
+      }
+      continue;
+    }
+    if (decl.many === true) {
+      if (!Array.isArray(value)) {
+        errors.push(`var '${decl.name}' expects an array`);
+        continue;
+      }
+      if (isValid && !value.every((element) => isValid(schema, element))) {
+        errors.push(`var '${decl.name}': an element does not satisfy '${decl.type}'`);
+      }
+      continue;
+    }
+    if (isValid && !isValid(schema, value)) {
+      errors.push(`var '${decl.name}' does not satisfy '${decl.type}'`);
+    }
+  }
+  return errors;
+};
+
 /** Depth-first walk, for audits. */
 export function* walk(node: WalkNode): Generator<WalkNode> {
   yield node;

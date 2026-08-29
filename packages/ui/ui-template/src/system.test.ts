@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { parse } from './parser';
-import { type Registry, type SlotFrame, SystemError, dispatch, seedUi } from './system';
+import { type Registry, type SlotFrame, SystemError, checkVars, dispatch, seedUi, varDecls } from './system';
 
 const registry: Registry<never> = {
   schemas: {},
@@ -162,8 +162,78 @@ const makeStringRenderer = (): import('./render').Renderer<string | null> => {
     show: echoTag('show'),
     fallback: none,
     let: none,
+    var: none,
   };
 };
+
+describe('vars', () => {
+  const SIGNATURE =
+    '<container>' +
+    '<var name="organizations" type="org.dxos.type.Organization" many="true" />' +
+    '<var name="selected" type="org.dxos.type.Organization" optional="true" />' +
+    '<collection data-items="organizations" item-id="id" item-label="name" />' +
+    '</container>';
+
+  test('the signature is readable off the root', ({ expect }) => {
+    const decls = varDecls(parse(SIGNATURE));
+    expect(decls).toEqual([
+      { name: 'organizations', type: 'org.dxos.type.Organization', many: true },
+      { name: 'selected', type: 'org.dxos.type.Organization', optional: true },
+    ]);
+  });
+
+  test('a declared var resolves from the host-supplied values', async ({ expect }) => {
+    const { render } = await import('./render');
+    const renderer = makeStringRenderer();
+    const node = parse(
+      '<container>' +
+        '<var name="title" type="org.dxos.type.Text" />' +
+        '<display data-text="title" />' +
+        '</container>',
+    );
+    expect(render(node, { vars: { title: 'MOSAIC' } }, renderer)).toBe('container(display(MOSAIC))');
+  });
+
+  test('an undeclared host value never resolves — the signature closes the namespace', async ({ expect }) => {
+    const { BindingResolutionError } = await import('./model');
+    const { render } = await import('./render');
+    const renderer = makeStringRenderer();
+    // Constructed directly: the parser rejects the undeclared binding statically.
+    const node: import('./model').Node = {
+      tag: 'container',
+      children: [
+        { tag: 'var', props: { name: 'title', type: 'org.dxos.type.Text' } },
+        { tag: 'display', data: { text: { from: 'state', path: ['extra'] } } },
+      ],
+    };
+    expect(() => render(node, { vars: { title: 'x', extra: 'leak' } }, renderer)).toThrow(BindingResolutionError);
+  });
+
+  test('checkVars reports the mount errors the design table names', ({ expect }) => {
+    const schemas = { 'org.dxos.type.Organization': 'org-schema' };
+    const decls = varDecls(parse(SIGNATURE));
+
+    // Missing required input.
+    expect(checkVars(schemas, decls, {})).toEqual([`var 'organizations' is required`]);
+    // Optional input may be absent.
+    expect(checkVars(schemas, decls, { organizations: [] })).toEqual([]);
+    // `many` demands an array.
+    expect(checkVars(schemas, decls, { organizations: 'not-a-list' })).toEqual([
+      `var 'organizations' expects an array`,
+    ]);
+    // Unknown type key is a registration error.
+    expect(checkVars({}, decls, { organizations: [] })).toEqual([
+      `var 'organizations': unknown type 'org.dxos.type.Organization'`,
+      `var 'selected': unknown type 'org.dxos.type.Organization'`,
+    ]);
+    // The host's schema decode runs per value (per element under `many`).
+    const isValid = (schema: string, value: unknown) => typeof value === 'object' && value !== null;
+    expect(checkVars(schemas, decls, { organizations: [{}, 'bad'] }, isValid)).toEqual([
+      `var 'organizations': an element does not satisfy 'org.dxos.type.Organization'`,
+    ]);
+    expect(checkVars(schemas, decls, { organizations: [{}], selected: {} }, isValid)).toEqual([]);
+  });
+});
 
 describe('switch/match', () => {
   test('renders only the match equal to the resolved on binding', async ({ expect }) => {

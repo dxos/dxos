@@ -288,17 +288,20 @@ export const createReactRenderer = ({ schemas }: ReactRendererOptions): Renderer
     </div>
   ),
 
-  // Structural only — `switch`/`show` render the matched branch's children directly, and `let`
-  // exists to declare a slot, never to render.
+  // Structural only — `switch`/`show` render the matched branch's children directly, and
+  // `let`/`var` exist to declare names, never to render.
   match: () => null,
   fallback: () => null,
   let: () => null,
+  var: () => null,
 });
 
 export type TemplateProps = {
   node: Node;
   /** Published UI state; `let` slot values are read at `<idPath>.<name>`. */
   ui?: Readonly<Record<string, unknown>>;
+  /** Host-supplied values for the root's `var` signature (validate with `checkVars` at mount). */
+  vars?: Readonly<Record<string, unknown>>;
   renderer: Renderer<ReactNode>;
   options?: RenderOptions<ReactNode>;
 };
@@ -311,7 +314,7 @@ const renderBindingError = (error: Error, path: string): ReactNode => (
 );
 
 /** Render a parsed template against published state and its declared inputs. */
-export const Template = ({ node, ui, renderer, options }: TemplateProps) => {
-  const scope: Scope = { ui };
+export const Template = ({ node, ui, vars, renderer, options }: TemplateProps) => {
+  const scope: Scope = { ui, vars };
   return <>{render(node, scope, renderer, { onError: renderBindingError, ...options })}</>;
 };

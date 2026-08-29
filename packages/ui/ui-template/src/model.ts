@@ -27,7 +27,8 @@ export type Tag =
   | 'match'
   | 'show'
   | 'fallback'
-  | 'let';
+  | 'let'
+  | 'var';
 
 export const TAGS: readonly Tag[] = [
   'container',
@@ -45,6 +46,7 @@ export const TAGS: readonly Tag[] = [
   'show',
   'fallback',
   'let',
+  'var',
 ];
 
 /**
@@ -135,6 +137,12 @@ export type Scope = {
   /** Published UI state: the tree `let` slot values are read from at `<idPath>.<name>`. */
   readonly ui?: Readonly<Record<string, unknown>>;
   readonly item?: unknown;
+  /**
+   * Host-supplied values for the root's `var` signature. Keys are the declared input names —
+   * a declared-but-absent optional input resolves to `undefined`; an undeclared key never
+   * resolves at all (render narrows the record to the signature).
+   */
+  readonly vars?: Readonly<Record<string, unknown>>;
   /** Enclosing scopes, outermost first. */
   readonly frames?: readonly ScopeFrame[];
 };
@@ -170,12 +178,15 @@ export const resolve = (binding: Binding, scope: Scope): unknown => {
     if (head === undefined) {
       throw new BindingResolutionError('a state binding requires a path', binding.path);
     }
-    // Innermost scope wins.
+    // Innermost scope wins; the root `var` signature is the outermost declaration ring.
     const frame = (scope.frames ?? []).findLast((candidate) => head in candidate.values);
-    if (!frame) {
+    if (frame) {
+      value = frame.values[head];
+    } else if (scope.vars && head in scope.vars) {
+      value = scope.vars[head];
+    } else {
       throw new BindingResolutionError(`unresolved name '${head}'`, binding.path);
     }
-    value = frame.values[head];
     rest = binding.path.slice(1);
   }
   for (const key of rest) {
@@ -235,6 +246,22 @@ export const validate = (node: Node, at = 'root'): void => {
       }
       break;
     }
+    case 'var': {
+      // The template signature: a typed, host-supplied input (registry schema key), with
+      // cardinality/optionality explicit — inputs are required or optional, never defaulted.
+      if (typeof node.props?.name !== 'string') {
+        throw new TemplateValidationError(`'var' requires a name`, at);
+      }
+      if (typeof node.props?.type !== 'string') {
+        throw new TemplateValidationError(`'var' requires a type`, at);
+      }
+      for (const flag of ['many', 'optional']) {
+        if (node.props && flag in node.props && typeof node.props[flag] !== 'boolean') {
+          throw new TemplateValidationError(`'var' ${flag} must be a boolean`, at);
+        }
+      }
+      break;
+    }
     case 'show': {
       if (!node.data?.when) {
         throw new TemplateValidationError(`'show' requires a when binding`, at);
@@ -275,12 +302,27 @@ const letNames = (node: Node): string[] =>
     child.tag === 'let' && typeof child.props?.name === 'string' ? [child.props.name] : [],
   );
 
+/** Input names a root's direct `var` children declare — the template's signature. */
+export const varNames = (root: Node): string[] =>
+  (root.children ?? []).flatMap((child) =>
+    child.tag === 'var' && typeof child.props?.name === 'string' ? [child.props.name] : [],
+  );
+
 /**
  * Full-tree closed-resolution check: every state binding's first path segment must be a declared
- * name — a `let` slot in an enclosing scope. Declaration and use are both in the document, so an
- * undeclared name is a parse-time error, never a silent `undefined` at render (R-8).
+ * name — a `let` slot in an enclosing scope or a root `var` input. Declaration and use are both
+ * in the document, so an undeclared name is a parse-time error, never a silent `undefined` at
+ * render (R-8).
  */
 export const checkBindings = (root: Node): void => {
+  const rootDeclarations = new Set<string>();
+  for (const name of varNames(root)) {
+    if (rootDeclarations.has(name)) {
+      throw new TemplateValidationError(`duplicate declaration '${name}'`, 'root');
+    }
+    rootDeclarations.add(name);
+  }
+
   const check = (node: Node, declared: ReadonlySet<string>, at: string): void => {
     let scope = declared;
     if (typeof node.props?.id === 'string') {
@@ -301,7 +343,13 @@ export const checkBindings = (root: Node): void => {
         throw new TemplateValidationError(`binding '${key}' names undeclared '${head}'`, at);
       }
     }
-    node.children?.forEach((child, index) => check(child, scope, `${at} > ${child.tag}[${index}]`));
+    node.children?.forEach((child, index) => {
+      // The signature is the root's: a `var` anywhere else declares nothing and is rejected.
+      if (child.tag === 'var' && node !== root) {
+        throw new TemplateValidationError(`'var' is only valid as a direct child of the root`, at);
+      }
+      check(child, scope, `${at} > ${child.tag}[${index}]`);
+    });
   };
-  check(root, new Set(), 'root');
+  check(root, rootDeclarations, 'root');
 };

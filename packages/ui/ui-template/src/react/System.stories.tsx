@@ -17,7 +17,7 @@ import { trim } from '@dxos/util';
 import { templateLanguage } from '../codemirror';
 import { type Node } from '../model';
 import { parse } from '../parser';
-import { type Registry, type UiState, getIn } from '../system';
+import { type Registry, type UiState, checkVars, getIn, varDecls } from '../system';
 import { Template, createReactRenderer } from './renderer';
 import { Editor, OperationLog, Workbench } from './testing';
 import { useSystem } from './useSystem';
@@ -90,9 +90,12 @@ const toFormValues = (org: Organization.Organization): OrganizationFormValues =>
   website: org.website,
 });
 
+const TEXT = 'org.dxos.type.Text';
+
 const registry: Registry<Db, Schema.Codec<any, any>> = {
   schemas: {
     [ORGANIZATION]: OrganizationForm,
+    [TEXT]: Schema.String,
   },
 
   // Slot machines: each names one value's initial state; a template's `let` binds it to a name.
@@ -236,6 +239,8 @@ const deriveContext = (ui: UiState, organizations: readonly Organization.Organiz
 
 const LIST = trim`
   <container>
+    <var name="title" type="org.dxos.type.Text" />
+    <var name="organizations" type="org.dxos.type.Organization" many="true" />
     <display variant="title" data-text="title" />
     <collection data-items="organizations" item-id="id" item-label="name" />
   </container>
@@ -243,6 +248,8 @@ const LIST = trim`
 
 const FORM = trim`
   <container id="contacts">
+    <var name="title" type="org.dxos.type.Text" />
+    <var name="selected" type="org.dxos.type.Organization" optional="true" />
     <let name="selection" machine="org.dxos.machine.selection" />
     <let name="draft" machine="org.dxos.machine.flag-set" />
     <display variant="title" data-text="title" />
@@ -254,6 +261,8 @@ const FORM = trim`
 
 const MASTER_DETAIL = trim`
   <layout id="contacts" rows="1fr 1fr">
+    <var name="organizations" type="org.dxos.type.Organization" many="true" />
+    <var name="selected" type="org.dxos.type.Organization" optional="true" />
     <let name="selection" machine="org.dxos.machine.selection" />
     <let name="draft" machine="org.dxos.machine.flag" />
     <collection data-items="organizations" item-id="id" item-label="name"
@@ -272,6 +281,8 @@ const MASTER_DETAIL = trim`
 
 const MASTER_DETAIL_TOOLBAR = trim`
   <container id="contacts">
+    <var name="organizations" type="org.dxos.type.Organization" many="true" />
+    <var name="selected" type="org.dxos.type.Organization" optional="true" />
     <let name="selection" machine="org.dxos.machine.selection" />
     <let name="draft" machine="org.dxos.machine.flag" />
     <command>
@@ -296,6 +307,10 @@ const MASTER_DETAIL_TOOLBAR = trim`
 
 const COMBOBOX = trim`
   <container id="picker">
+    <var name="title" type="org.dxos.type.Text" />
+    <var name="filtered" type="org.dxos.type.Organization" many="true" />
+    <var name="selected" type="org.dxos.type.Organization" optional="true" />
+    <var name="pickerLabel" type="org.dxos.type.Text" />
     <let name="filter" machine="org.dxos.machine.text" />
     <let name="value" machine="org.dxos.machine.selection" />
     <display variant="title" data-text="title" />
@@ -312,6 +327,7 @@ const COMBOBOX = trim`
 
 const FILTER_LIST = trim`
   <container id="filter">
+    <var name="filtered" type="org.dxos.type.Organization" many="true" />
     <let name="text" machine="org.dxos.machine.text" />
     <control label="Filter" placeholder="Type to filter…" data-value="text"
              on-input="org.dxos.operation.filter.input" />
@@ -321,6 +337,8 @@ const FILTER_LIST = trim`
 
 const TABS = trim`
   <container id="contacts">
+    <var name="organizations" type="org.dxos.type.Organization" many="true" />
+    <var name="selected" type="org.dxos.type.Organization" optional="true" />
     <let name="view" machine="org.dxos.machine.view" />
     <let name="selection" machine="org.dxos.machine.selection" />
     <tabs data-value="view" on-select="org.dxos.operation.view.set">
@@ -393,7 +411,19 @@ const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
 
   const activeKey = pick?.(ui) ?? firstKey;
   const active = parsedAll[activeKey] ?? parsedAll[firstKey];
+  // What deriveContext produces is no longer ambient: it is the value the host supplies against
+  // the template's `var` signature, narrowed and mount-checked against the registry's schemas.
   const context = deriveContext(ui, organizations);
+  const vars: Record<string, unknown> = { title: 'Organizations', ...context };
+  const mountErrors = active?.node
+    ? checkVars(registry.schemas, varDecls(active.node), vars, (schema, value) => {
+        try {
+          return Schema.is(schema)(value);
+        } catch {
+          return false;
+        }
+      })
+    : [];
 
   return (
     <Workbench
@@ -421,11 +451,15 @@ const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
       ]}
       main={{
         title: 'Rendered',
-        children: active?.node ? (
-          <Template node={active.node} ui={ui} renderer={renderer} options={{ dispatch }} />
-        ) : (
-          <span className='text-error-text text-sm'>{active?.error}</span>
-        ),
+        children:
+          active?.node && mountErrors.length === 0 ? (
+            <Template node={active.node} ui={ui} vars={vars} renderer={renderer} options={{ dispatch }} />
+          ) : (
+            // A failed signature renders its errors, never garbage (mount row of the error table).
+            <span className='text-error-text text-sm whitespace-pre-wrap'>
+              {active?.error ?? mountErrors.join('\n')}
+            </span>
+          ),
       }}
     />
   );

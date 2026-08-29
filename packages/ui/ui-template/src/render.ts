@@ -16,6 +16,7 @@ import {
   type ScopeFrame,
   type Tag,
   resolve,
+  varNames,
 } from './model';
 
 const asText = (value: unknown): string => (value == null ? '' : String(value));
@@ -100,6 +101,19 @@ const openFrame = (node: Node, scope: Scope): ScopeFrame => {
 };
 
 /**
+ * Narrow the host-supplied `vars` to the root's `var` signature: every declared input resolves
+ * (to the supplied value or `undefined`), and an undeclared key never resolves — the signature,
+ * not the host, closes the namespace.
+ */
+const narrowVars = (root: Node, scope: Scope): Scope => {
+  const vars: Record<string, unknown> = {};
+  for (const name of varNames(root)) {
+    vars[name] = scope.vars?.[name];
+  }
+  return { ...scope, vars };
+};
+
+/**
  * Walk the model and hand each node to the renderer.
  *
  * `collection` introduces an item scope (children render once per resolved item); an element with
@@ -113,6 +127,14 @@ export const render = <Output>(
   renderer: Renderer<Output>,
   options: RenderOptions<Output> = {},
   path = '0',
+): Output | null => renderNode(node, narrowVars(node, scope), renderer, options, path);
+
+const renderNode = <Output>(
+  node: Node,
+  scope: Scope,
+  renderer: Renderer<Output>,
+  options: RenderOptions<Output>,
+  path: string,
 ): Output | null => {
   // The frame is pushed before this node's own bindings resolve, so an element binds against its
   // own `let`s.
@@ -140,12 +162,12 @@ export const render = <Output>(
 
   const renderSubset = (nodes: readonly Node[], suffix: string): readonly Output[] =>
     nodes
-      .map((child, index) => render(child, scope, renderer, options, `${path}${suffix}.${index}`))
+      .map((child, index) => renderNode(child, scope, renderer, options, `${path}${suffix}.${index}`))
       .filter((child): child is Output => child !== null);
 
   const renderChildren = (childScope: Scope, suffix = ''): readonly Output[] =>
     (node.children ?? [])
-      .map((child, index) => render(child, childScope, renderer, options, `${path}${suffix}.${index}`))
+      .map((child, index) => renderNode(child, childScope, renderer, options, `${path}${suffix}.${index}`))
       .filter((child): child is Output => child !== null);
 
   // Structural conditionality: `show` renders its children while `when` is present, otherwise the

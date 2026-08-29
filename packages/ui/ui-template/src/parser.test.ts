@@ -146,6 +146,42 @@ describe('closed resolution', () => {
     const [slot] = parse('<container id="s"><let name="count" initial="3" /></container>').children as Node[];
     expect(slot.props).toEqual({ name: 'count', initial: 3 });
   });
+
+  test('a root var declares a typed input the template may bind', ({ expect }) => {
+    const node = parse(
+      '<container>' +
+        '<var name="organizations" type="org.dxos.type.Organization" many="true" />' +
+        '<collection data-items="organizations" item-id="id" item-label="name" />' +
+        '</container>',
+    );
+    const [decl] = node.children as Node[];
+    expect(decl.props).toEqual({ name: 'organizations', type: 'org.dxos.type.Organization', many: true });
+  });
+
+  test('var demands a name and a registry type key', ({ expect }) => {
+    expect(() => parse('<container><var name="x" /></container>')).toThrow(/'var' requires a type/);
+    expect(() => parse('<container><var type="org.dxos.type.X" /></container>')).toThrow(/'var' requires a name/);
+    expect(() => parse('<container><var name="x" type="org.dxos.type.X" many="yes" /></container>')).toThrow(
+      /'var' many must be a boolean/,
+    );
+  });
+
+  test('var is only valid as a direct child of the root', ({ expect }) => {
+    expect(() => parse('<container><layout><var name="x" type="org.dxos.type.X" /></layout></container>')).toThrow(
+      /'var' is only valid as a direct child of the root/,
+    );
+  });
+
+  test('duplicate root declarations are rejected', ({ expect }) => {
+    expect(() =>
+      parse(
+        '<container>' +
+          '<var name="x" type="org.dxos.type.X" />' +
+          '<var name="x" type="org.dxos.type.Y" />' +
+          '</container>',
+      ),
+    ).toThrow(/duplicate declaration 'x'/);
+  });
 });
 
 describe('resolve', () => {
