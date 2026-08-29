@@ -9,7 +9,7 @@
 
 import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import React, { useRef } from 'react';
+import React, { ReactNode, useRef } from 'react';
 
 import { Flex, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
@@ -24,7 +24,9 @@ import { type SequencedLogEntry } from './useSystem';
 
 export type Pane = {
   title: string;
-  children: React.ReactNode;
+  children: ReactNode;
+  /** Relative share of the stack (flex-grow weight; the grid renders it as `<size>fr`). Default 1. */
+  size?: number;
 };
 
 export type WorkbenchProps = {
@@ -41,7 +43,7 @@ export const Workbench = ({ panes, main }: WorkbenchProps) => (
       column
       grow
       classNames='dx-container grid divide-y divide-separator'
-      style={{ gridTemplateRows: `repeat(${panes.length}, 1fr)` }}
+      style={{ gridTemplateRows: panes.map((pane) => `${pane.size ?? 1}fr`).join(' ') }}
     >
       {panes.map((pane) => (
         <Cell key={pane.title} title={pane.title}>
