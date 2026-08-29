@@ -211,8 +211,9 @@ merely mentioned it — including the message asking for it to be replaced.
 | `DX_PROJECT_SPACE`    | unset                            | Guard against a stale binding (`mcp` only)      |
 
 The space itself is bound per repo in the committed `.agents/projects/space.yml`,
-written by `/dxos:project setup` (see [Setup](#setup-for-the-mcp-backend)), because a
-repo's projects belong to one space whoever opens it. `DX_PROJECT_SPACE` is a
+written by `/dxos:project setup` (see
+[Use Composer for project tracking](#use-composer-for-project-tracking)), because
+a repo's projects belong to one space whoever opens it. `DX_PROJECT_SPACE` is a
 guard on top of that: set it, and the agent stops if it disagrees with the
 committed binding.
 
