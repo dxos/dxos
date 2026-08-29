@@ -97,37 +97,14 @@ const WITH_EVENTS = trim`
   </container>
 `;
 
-/**
- * Named grid areas, so a cell's position is declared where it is rendered rather than inferred from
- * source order — moving a cell is an edit to one attribute.
- */
-type Area = 'schema' | 'context' | 'template' | 'rendered';
-
-const AREAS = `
-  "schema   rendered"
-  "context  template"
-`;
-
-/**
- * Interior edges only, declared per area. `divide-x`/`divide-y` key off sibling order along one
- * axis, so on a 2D grid they draw an edge on some cells and skip others.
- */
-const areaBorders: Record<Area, string> = {
-  schema: 'border-e border-b border-separator',
-  rendered: 'border-b border-separator',
-  context: 'border-e border-separator',
-  template: '',
-};
-
 type CellProps = {
-  area: Area;
   title: string;
   children: React.ReactNode;
 };
 
-const Cell = ({ area, title, children }: CellProps) => (
-  <Flex column style={{ gridArea: area }} classNames={mx('dx-container', areaBorders[area])}>
-    <div className='px-2 py-1 text-xs uppercase tracking-wide text-subdued border-be border-separator'>{title}</div>
+const Cell = ({ title, children }: CellProps) => (
+  <Flex column classNames='dx-container'>
+    <div className='px-2 py-1 text-xs uppercase tracking-wide text-description border-be border-separator'>{title}</div>
     <Flex column grow classNames='dx-container'>
       {children}
     </Flex>
@@ -164,20 +141,30 @@ const DefaultStory = ({ source: initialSource }: { source: string }) => {
   const templateExtensions = useMemo<Extension[]>(() => templateLanguage(), []);
 
   return (
-    <Flex style={{ gridTemplateAreas: AREAS }} classNames='dx-container grid grid-rows-2 grid-cols-2' align='stretch'>
-      <Cell area='schema' title='Context schema'>
-        <Editor value={schemaText} extensions={schemaExtensions} />
-      </Cell>
+    <Flex classNames='dx-container grid grid-cols-2 divide-x divide-separator' align='stretch'>
+      <Flex column grow classNames='dx-container grid grid-rows-4 divide-y divide-separator'>
+        <Cell title='Context schema'>
+          <Editor value={schemaText} extensions={schemaExtensions} />
+        </Cell>
 
-      <Cell area='template' title='Layout'>
-        <Editor value={source} extensions={templateExtensions} onChange={setSource} />
-      </Cell>
+        <Cell title='Layout'>
+          <Editor value={source} extensions={templateExtensions} onChange={setSource} />
+        </Cell>
 
-      <Cell area='context' title='Context object'>
-        <Editor value={stateText} extensions={stateExtensions} onChange={setStateText} />
-      </Cell>
+        <Cell title='Context object'>
+          <Editor value={stateText} extensions={stateExtensions} onChange={setStateText} />
+        </Cell>
 
-      <Cell area='rendered' title='Rendered'>
+        <Cell title='Log'>
+          {log.map((operation, index) => (
+            <span key={index} className='font-mono text-xs'>
+              {operation}
+            </span>
+          ))}
+        </Cell>
+      </Flex>
+
+      <Cell title='Rendered'>
         {parsed.node && state.value ? (
           <Template
             node={parsed.node}
@@ -188,21 +175,6 @@ const DefaultStory = ({ source: initialSource }: { source: string }) => {
         ) : (
           <span className='text-error-text text-sm'>{parsed.error ?? state.error}</span>
         )}
-      </Cell>
-
-      <Cell area='log' title='Log'>
-        <Panel.Root>
-          <Panel.Content>
-            <Flex column gap='xs'>
-              <span className='text-xs text-subdued'>dispatched</span>
-              {log.map((operation, index) => (
-                <span key={index} className='font-mono text-xs'>
-                  {operation}
-                </span>
-              ))}
-            </Flex>
-          </Panel.Content>
-        </Panel.Root>
       </Cell>
     </Flex>
   );

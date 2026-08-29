@@ -15,9 +15,12 @@ export type UseSystemOptions<Db> = {
   db?: Db;
 };
 
+/** A log entry with a stable identity, so list renderers can key it. */
+export type SequencedLogEntry = LogEntry & { seq: number };
+
 export type UseSystem = {
   ui: UiState;
-  log: readonly LogEntry[];
+  log: readonly SequencedLogEntry[];
   /** For the renderer: resolves the `on-*` operation key and steps the system. */
   dispatch: Dispatch;
 };
@@ -33,7 +36,8 @@ export type UseSystem = {
  */
 export const useSystem = <Db>({ registry, root, db }: UseSystemOptions<Db>): UseSystem => {
   const initial = useMemo(() => seedUi(registry, root), [registry, root]);
-  const ref = useRef<{ ui: UiState; log: readonly LogEntry[] }>({ ui: initial, log: [] });
+  const ref = useRef<{ ui: UiState; log: readonly SequencedLogEntry[] }>({ ui: initial, log: [] });
+  const seq = useRef(0);
   const [, force] = useReducer((tick: number) => tick + 1, 0);
 
   const dispatch = useCallback<Dispatch>(
@@ -41,11 +45,11 @@ export const useSystem = <Db>({ registry, root, db }: UseSystemOptions<Db>): Use
       // A failed operation is a log entry, not a vanished promise — the loop must stay observable.
       try {
         const { ui, entry } = systemDispatch(registry, ref.current.ui, operation, payload, db);
-        ref.current = { ui, log: [entry, ...ref.current.log].slice(0, 20) };
+        ref.current = { ui, log: [{ ...entry, seq: seq.current++ }, ...ref.current.log].slice(0, 20) };
       } catch (err) {
         ref.current = {
           ...ref.current,
-          log: [{ operation, payload: `ERROR: ${err}` }, ...ref.current.log].slice(0, 20),
+          log: [{ operation, payload: `ERROR: ${err}`, seq: seq.current++ }, ...ref.current.log].slice(0, 20),
         };
       }
       force();

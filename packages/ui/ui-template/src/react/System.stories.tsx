@@ -12,6 +12,7 @@ import { useQuery } from '@dxos/echo-react';
 import { Flex, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
+import { Empty, Listbox } from '@dxos/react-ui-list';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Organization } from '@dxos/types';
 import { compactSlots, createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
@@ -23,7 +24,7 @@ import { type Node } from '../model';
 import { parse } from '../parser';
 import { type Registry, type UiState, withInstance } from '../system';
 import { Template, createReactRenderer } from './renderer';
-import { useSystem } from './useSystem';
+import { type SequencedLogEntry, useSystem } from './useSystem';
 
 //
 // SPIKE. The system stories: one DefaultStory, per-story layout/context/state. Everything below a
@@ -454,18 +455,33 @@ const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
       </Cell>
 
       <Cell area='log' title='Operation log'>
-        <Flex column gap='xs'>
-          {log.map((entry, index) => (
-            <span key={index} className='font-mono text-xs'>
-              {entry.operation}
-              {entry.payload !== undefined ? ` ${JSON.stringify(entry.payload)}` : ''}
-            </span>
-          ))}
-        </Flex>
+        <OperationLog entries={log} />
       </Cell>
     </Flex>
   );
 };
+
+/**
+ * The operation log as a proper list (never a hand-rolled map of spans): a read-only Listbox —
+ * flat rows, keyboard traversal for free, `Empty` when nothing has been dispatched yet.
+ */
+const OperationLog = ({ entries }: { entries: readonly SequencedLogEntry[] }) => (
+  <Listbox.Root>
+    <Listbox.Viewport>
+      <Listbox.Content aria-label='Operation log'>
+        {entries.map((entry) => (
+          <Listbox.Item key={entry.seq} id={String(entry.seq)}>
+            <Listbox.ItemLabel classNames='font-mono text-xs'>
+              {entry.operation}
+              {entry.payload !== undefined ? ` ${JSON.stringify(entry.payload)}` : ''}
+            </Listbox.ItemLabel>
+          </Listbox.Item>
+        ))}
+        {entries.length === 0 && <Empty label='No operations dispatched.' />}
+      </Listbox.Content>
+    </Listbox.Viewport>
+  </Listbox.Root>
+);
 
 const meta: Meta<typeof DefaultStory> = {
   title: 'ui/ui-template/System',
