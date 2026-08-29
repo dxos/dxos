@@ -912,8 +912,7 @@ type TaskListEditProps = ComposableProps<{
 const TaskListEdit = composable<HTMLDivElement, { placeholder?: string; descriptionPlaceholder?: string }>(
   ({ placeholder = 'Add task', descriptionPlaceholder = 'Add a description', ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
-    const { tasks, selected, showGutter, hierarchical, onTaskCreate, onTaskUpdate, onDeselect } =
-      useTaskListContext('TaskList.Edit');
+    const { tasks, selected, onTaskCreate, onTaskUpdate, onDeselect } = useTaskListContext('TaskList.Edit');
     const { className, ...rest } = composableProps(props);
 
     const task = useMemo(() => tasks.find(({ id }) => id === selected), [tasks, selected]);
@@ -1105,11 +1104,11 @@ export const TaskList = {
 };
 
 export type {
-  TaskListRootProps,
-  TaskListViewportProps,
+  TaskListAssigneeProps,
   TaskListContentProps,
+  TaskListEditProps,
   TaskListGroupLabelProps,
   TaskListItemProps,
-  TaskListEditProps,
-  TaskListAssigneeProps,
+  TaskListRootProps,
+  TaskListViewportProps,
 };
