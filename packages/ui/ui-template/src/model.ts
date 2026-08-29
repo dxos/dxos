@@ -140,6 +140,10 @@ export class TemplateValidationError extends Error {
   }
 }
 
+/**
+ * Recursively validate a node tree: every tag must be in the closed set and every event value must
+ * name an operation key. Throws {@link TemplateValidationError} with the offending node's path.
+ */
 export const validate = (node: Node, at = 'root'): void => {
   if (!TAGS.includes(node.tag)) {
     throw new TemplateValidationError(`unknown tag '${node.tag}'`, at);

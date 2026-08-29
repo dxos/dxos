@@ -761,7 +761,7 @@ flow QA-2: Create a draft calendar event and save it to Google
     op:syncDraftEvents makes a real Google Calendar API call, which no fixture in this repo can
     stand up. Steps that only touch local ECHO state still run.
   actors: human
-  covers: [F-2.1, F-8.1, F-8.4]
+  covers: [F-5.1]
   status: blocked
   given:
     - an identity exists

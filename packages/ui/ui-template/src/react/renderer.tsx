@@ -63,6 +63,7 @@ export type ReactRendererOptions = {
   schemas: Readonly<Record<string, Schema.Codec<any, any>>>;
 };
 
+/** Create the React renderer: one function per kind tag, resolving `schema=` against the registry. */
 export const createReactRenderer = ({ schemas }: ReactRendererOptions): Renderer<ReactNode> => ({
   container: ({ path, props, children }) => (
     <Flex key={path} column gap={oneOf(GAPS, props.gap)} classNames='dx-container'>
