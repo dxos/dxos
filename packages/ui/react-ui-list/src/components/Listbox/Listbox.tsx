@@ -115,11 +115,24 @@ type RootProps = PropsWithChildren<{
    * something was selected — repeated Escapes are a no-op — and keeps `onValueChange` narrow.
    */
   onDeselect?: () => void;
+  /**
+   * Externally-managed multi-select (e.g. a machine owns the selection): options + arrow
+   * navigation without the internal single-select value model.
+   */
+  multiselectable?: boolean;
   /** Reserved for parity with the prior `Listbox.Root`; focus-on-entry already covers most cases. */
   autoFocus?: boolean;
 }>;
 
-const Root = ({ value, defaultValue, onValueChange, onDeselect, autoFocus: _autoFocus, children }: RootProps) => {
+const Root = ({
+  value,
+  defaultValue,
+  onValueChange,
+  onDeselect,
+  multiselectable = false,
+  autoFocus: _autoFocus,
+  children,
+}: RootProps) => {
   // Selection is opt-in: a list is selectable only when the consumer wires the value model.
   // Plain content lists (the migrated `@dxos/react-ui` `List` call sites) pass none of these
   // and render as `role=list`/`listitem` rows.
@@ -143,7 +156,7 @@ const Root = ({ value, defaultValue, onValueChange, onDeselect, autoFocus: _auto
     },
   });
 
-  const context = useMemo(() => ({ selectable, selection }), [selectable, selection]);
+  const context = useMemo(() => ({ selectable, multiselectable, selection }), [selectable, multiselectable, selection]);
 
   return <ListboxProvider {...context}>{children}</ListboxProvider>;
 };
@@ -189,12 +202,13 @@ type ContentProps = {
 };
 
 const Content = composable<HTMLUListElement, ContentProps>((props, forwardedRef) => {
-  const { selectable } = useListboxContext(LISTBOX_CONTENT_NAME);
+  const { selectable, multiselectable } = useListboxContext(LISTBOX_CONTENT_NAME);
 
   // `useListNavigation` bundles role + aria-orientation + Tabster arrow nav. In `listbox` mode
   // it also adds the focus-on-entry redirect (to selected, then first non-disabled option);
   // `list` mode is for the non-selectable rows (arrow nav across interactive descendants only).
-  const navigation = useListNavigation({ mode: selectable ? 'listbox' : 'list' });
+  // External multi-select is still a listbox per WAI-ARIA, so it keeps option navigation.
+  const navigation = useListNavigation({ mode: selectable || multiselectable ? 'listbox' : 'list' });
 
   const { children, ...rest } = props as PropsWithChildren<ContentProps & Record<string, unknown>>;
 
@@ -203,10 +217,12 @@ const Content = composable<HTMLUListElement, ContentProps>((props, forwardedRef)
   // aspect rather than the primitive's `selectable` plumbing — that keeps the ARIA grammar
   // (`aria-selected`) owned by `Item` below.
   const composed = composableProps<HTMLUListElement>(rest, { classNames: styles.listboxContent() });
+  const multiselectableProps = multiselectable ? { 'aria-multiselectable': true } : null;
   return (
     <List
       variant='unordered'
       {...composed}
+      {...multiselectableProps}
       {...navigation.containerProps}
       ref={forwardedRef as unknown as ForwardedRef<HTMLOListElement>}
     >
@@ -224,6 +240,8 @@ Content.displayName = LISTBOX_CONTENT_NAME;
 type ItemProps = PropsWithChildren<{
   /** Stable identifier; matched against the parent's `value`. */
   id: string;
+  /** Externally-managed selection state (multiselectable lists); overrides the internal model. */
+  selected?: boolean;
   /** Disable the row — focusable but doesn't update selection, dimmed. */
   disabled?: boolean;
   /** Optional click handler in addition to selection; also fired by Enter/Space when interactive. */
@@ -244,11 +262,20 @@ type ItemProps = PropsWithChildren<{
 }>;
 
 const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
-  const { id, disabled, onClick, onFocus, onMouseDown, onKeyDown, children, ...rest } = props as ItemProps &
-    Record<string, unknown>;
-  const { selectable, selection } = useListboxContext(LISTBOX_ITEM_NAME);
+  const {
+    id,
+    disabled,
+    selected: selectedProp,
+    onClick,
+    onFocus,
+    onMouseDown,
+    onKeyDown,
+    children,
+    ...rest
+  } = props as ItemProps & Record<string, unknown>;
+  const { selectable, multiselectable, selection } = useListboxContext(LISTBOX_ITEM_NAME);
   const binding: SelectionItemBinding = selection.bind(id, { disabled });
-  const selected = selectable && binding.selected;
+  const selected = selectedProp ?? (selectable && binding.selected);
   // A non-selectable row is interactive only if the caller wired a click; otherwise it's a
   // plain display row (no pointer affordance).
   const interactive = selectable || onClick != null;
@@ -331,9 +358,9 @@ const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
       <ListItem
         {...groupProps}
         {...composed}
-        role={selectable ? 'option' : 'listitem'}
+        role={selectable || multiselectable ? 'option' : 'listitem'}
         tabIndex={interactive ? 0 : -1}
-        aria-selected={selectable ? selected : undefined}
+        aria-selected={selectable || multiselectable ? selected : undefined}
         aria-disabled={disabled || undefined}
         onClick={handleClick}
         onFocus={handleFocus}

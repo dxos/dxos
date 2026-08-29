@@ -88,9 +88,7 @@ const WITH_EVENTS = trim`
   <container>
     <var name="title" type="org.dxos.type.Text" />
     <var name="tags" type="org.dxos.type.Text" many="true" />
-    <layout align="center">
-      <display variant="title" data-text="title" />
-    </layout>
+    <display variant="title" data-text="title" />
     <control label="Name" data-value="title" on-commit="org.dxos.operation.projects.rename" />
     <collection data-items="tags">
       <display item-text="." />

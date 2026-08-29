@@ -18,6 +18,7 @@ import { type Align, Button, Flex, type Gap, Grid, Input, type Justify } from '@
 import { Form } from '@dxos/react-ui-form';
 import { Combobox, Listbox } from '@dxos/react-ui-list';
 import { Tabs } from '@dxos/react-ui-tabs';
+import { mx } from '@dxos/ui-theme';
 
 import { type Binding, type ModuleView, type Node, type Scope, resolve } from '../model';
 import { type CreateRendererOptions, type Renderer, type RenderOptions, present, render } from '../render';
@@ -120,7 +121,7 @@ export const createReactRenderer = ({
   },
 
   display: ({ path, props, data }) => (
-    <span key={path} className={props.variant === 'title' ? 'text-lg font-medium' : 'text-description'}>
+    <span key={path} className={mx(props.variant === 'title' ? 'text-lg font-medium' : 'text-description')}>
       {asText(data.text ?? props.label)}
     </span>
   ),
@@ -175,16 +176,16 @@ export const createReactRenderer = ({
       }
       const selections = Array.isArray(data.selections) ? data.selections.map(asText) : [];
       return (
-        <Listbox.Root key={path}>
+        <Listbox.Root key={path} multiselectable>
           <Listbox.Viewport>
-            <Listbox.Content aria-multiselectable>
+            <Listbox.Content>
               {items.map((item, index) => {
                 const id = asText(itemField(node, scope, item, 'id') ?? index);
                 return (
                   <Listbox.Item
                     key={id}
                     id={id}
-                    classNames={selections.includes(id) && 'bg-selected-surface text-selected-fg font-semibold'}
+                    selected={selections.includes(id)}
                     // A shift-click must not start a text selection before the row's click handler runs.
                     onMouseDown={(event) => event.shiftKey && event.preventDefault()}
                     onClick={(event) =>
