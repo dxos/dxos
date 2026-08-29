@@ -1,6 +1,6 @@
 # MOSAIC — Model-Oriented System for Adaptive Interface Composition — Tasks
 
-_Resume: PR #12840 OPEN (supersedes #12484). Phase 5 (ui-template overnight spike) COMPLETE 2026-08-29 — state-driven layout system with URI-keyed registry, published state (`ui.<id>` via `id=`+`machine=`), operations-as-only-writer, 7 browser-verified ECHO-bound stories, and `packages/ui/ui-template/docs/DESIGN.md`. Next: Rich reviews DESIGN.md + stories; then the ranked open items in DESIGN.md (state addressing, operation payload typing, when=/parts/sizing, machines-vs-slots), or Phase 4 schematic phase 2._
+_Resume: PR #12840 OPEN (supersedes #12484). Phase 6 (typed modules) COMPLETE 2026-08-30 — module contract (state/operations/capabilities), ladder `let initial|machine|from`, `var`/`use`, no fall-through; CONTAINERS.md audit done. Phase 5 COMPLETE 2026-08-29 — state-driven layout system with URI-keyed registry, published state (`ui.<id>` via `id=`+`machine=`), operations-as-only-writer, 7 browser-verified ECHO-bound stories, and `packages/ui/ui-template/docs/DESIGN.md`. Next: Rich reviews DESIGN.md + stories; then the ranked open items in DESIGN.md (state addressing, operation payload typing, when=/parts/sizing, machines-vs-slots), or Phase 4 schematic phase 2._
 
 Full context in `DESIGN.md` (an index — the design lives in the specs it links).
 Branch `claude/mosaic-ui-worktree-41481d` (PR #12840).
@@ -82,11 +82,13 @@ undo, async updates, async dynamic component loading, entirely state-driven layo
 
 Spec = DESIGN.md "Typed binding and modules" (module contract triad + ladder + landing order).
 
-- [ ] **Implement the recommended landing order** — delete binding fall-through; rung-1
-      `let initial=` (declarative useState); `var` template signatures (variant A, mount-checked);
-      `use module= as=` + per-module export tables (state / operations / capabilities) (B/C).
-- [ ] **Mutual-module test** — two modules that reference each other (bind the other's state,
-      dispatch the other's operations); headless system test.
+- [x] **Implement the recommended landing order** — landed in 6 commits (d214a781bf…b0eb267072):
+      fall-through deleted (undeclared name = parse error), rung-1 `let initial=`, `var`
+      signatures mount-checked, `use module= as=` + module contract triad with write ownership
+      (foreign `scope.set` throws); stories rewritten (deriveContext deleted, master-detail =
+      shared `contacts.selection` capability); 61 tests, build/lint green, browser-verified.
+- [x] **Mutual-module test** — `filter` ⇄ `contacts` (reads both ways, cross-module writes only
+      via `invoke` of the owner's operation, violations throw, cycles detected).
 - [x] **Container audit** — `ui-template/docs/CONTAINERS.md` (8e03224995): 10 units audited
       (7 plugin-tasks, 3 plugin-projects); top gaps = ref/query async bindings, command channel,
       surface node, i18n labels, interaction triggers; OutlineCard/CreateProjectPanel/
