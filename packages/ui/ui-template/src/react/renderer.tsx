@@ -135,33 +135,23 @@ export const createReactRenderer = ({ schemas }: ReactRendererOptions): Renderer
           key={path}
           value={asText(data.selection) || undefined}
           onValueChange={(next) => handlers.select?.(next)}
+          // Esc on a focused option: deselect is the same operation with no payload. The Listbox
+          // fires this only when something was selected, so an empty selection dispatches nothing.
+          onDeselect={() => handlers.select?.(undefined)}
         >
-          {/* display:contents key trap — the list composables expose no key handlers, and the
-              wrapper adds no box. Esc clears the selection: deselect is the same operation with
-              no payload. */}
-          <div
-            role='none'
-            className='contents'
-            onKeyDown={(event) => {
-              if (event.key === 'Escape') {
-                handlers.select?.(undefined);
-              }
-            }}
-          >
-            <Listbox.Viewport>
-              <Listbox.Content>
-                {items.map((item, index) => {
-                  const id = asText(itemField(node, scope, item, 'id') ?? index);
-                  return (
-                    <Listbox.Item key={id} id={id}>
-                      <Listbox.ItemLabel>{asText(itemField(node, scope, item, 'label') ?? id)}</Listbox.ItemLabel>
-                      <Listbox.Indicator />
-                    </Listbox.Item>
-                  );
-                })}
-              </Listbox.Content>
-            </Listbox.Viewport>
-          </div>
+          <Listbox.Viewport>
+            <Listbox.Content>
+              {items.map((item, index) => {
+                const id = asText(itemField(node, scope, item, 'id') ?? index);
+                return (
+                  <Listbox.Item key={id} id={id}>
+                    <Listbox.ItemLabel>{asText(itemField(node, scope, item, 'label') ?? id)}</Listbox.ItemLabel>
+                    <Listbox.Indicator />
+                  </Listbox.Item>
+                );
+              })}
+            </Listbox.Content>
+          </Listbox.Viewport>
         </Listbox.Root>
       );
     }

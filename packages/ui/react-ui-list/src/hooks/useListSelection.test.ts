@@ -79,6 +79,25 @@ describe('useListSelection', () => {
       container.remove();
     });
 
+    test('clear emits once and is a no-op when nothing is selected', ({ expect }) => {
+      const onValueChange = vi.fn();
+      const { result, rerender } = renderHook(
+        ({ value }) => useListSelection({ mode: 'single', value, onValueChange }),
+        {
+          initialProps: { value: 'a' as string | undefined },
+        },
+      );
+      act(() => result.current.clear());
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+      expect(onValueChange).toHaveBeenLastCalledWith(undefined);
+
+      // The consumer accepts the clear; further clears must not emit.
+      rerender({ value: undefined });
+      act(() => result.current.clear());
+      act(() => result.current.clear());
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+    });
+
     test('disabled rows do not update selection on click', ({ expect }) => {
       const onValueChange = vi.fn();
       const { result } = renderHook(() => useListSelection({ mode: 'single', onValueChange }));
