@@ -61,9 +61,16 @@ const seedTaskSet = (space: Space) => {
       assignee: { email: 'riley@example.com' },
       milestone: Ref.make(launch),
     },
-    { title: 'Schedule cuppings', status: 'todo' },
-    { title: 'Print run v1', status: 'cancelled' },
+    {
+      title: 'Schedule cuppings',
+      status: 'todo',
+    },
+    {
+      title: 'Print run v1',
+      status: 'cancelled',
+    },
   ];
+
   for (const props of seed) {
     const task = space.db.add(Task.make(props));
     Obj.update(set, (set) => {

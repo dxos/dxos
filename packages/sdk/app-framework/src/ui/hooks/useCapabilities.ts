@@ -4,7 +4,9 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
+
+import type * as Operation from '@dxos/compute/Operation';
 
 import { Capabilities } from '../../common';
 import { type Capability } from '../../core';
@@ -126,3 +128,25 @@ export const useOptionalAtomCapabilityState = <T>(
  * Hook to get the operation invoker capability.
  */
 export const useOperationInvoker = (): Capabilities.OperationInvoker => useCapability(Capabilities.OperationInvoker);
+
+/**
+ * PROTOTYPE (extraction candidate for `@dxos/app-framework/ui`): bind an operation to a UI
+ * callback in one step — `map` turns the component's callback arguments into the operation's
+ * input. The handler identity is stable across renders (the mapper and options read through
+ * refs), so it replaces the per-handler `useCallback` boilerplate.
+ */
+export const useOperation = <TArgs extends readonly unknown[], TInput>(
+  operation: Operation.Definition<TInput, unknown>,
+  map: (...args: TArgs) => TInput,
+  options?: Operation.InvokeOptions,
+): ((...args: TArgs) => void) => {
+  const { invokePromise } = useOperationInvoker();
+  const mapRef = useRef(map);
+  mapRef.current = map;
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
+  return useCallback(
+    (...args: TArgs) => void invokePromise(operation, mapRef.current(...args), optionsRef.current),
+    [invokePromise, operation],
+  );
+};
