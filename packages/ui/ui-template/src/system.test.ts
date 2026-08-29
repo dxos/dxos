@@ -354,7 +354,7 @@ describe('mutual modules', () => {
     state: {
       text: fromSlot('text'),
       // The reverse read: filter observes tasks' state.
-      hasSelection: { derive: ({ read }) => read(TASKS, 'selection') !== undefined },
+      hasSelection: { derive: ({ read }) => read(TASKS, 'selectionId') !== undefined },
     },
     operations: {
       set: {
@@ -368,7 +368,7 @@ describe('mutual modules', () => {
       grab: {
         // Ownership violation: filter reaching into tasks' slots.
         key: 'org.dxos.operation.filter.grab',
-        handler: ({ scope }) => scope.set({ selection: 'stolen' }),
+        handler: ({ scope }) => scope.set({ selections: ['stolen'] }),
       },
     },
     capabilities: {},
@@ -376,9 +376,12 @@ describe('mutual modules', () => {
 
   const tasks: ModuleDef<never> = {
     key: TASKS,
-    slots: { selection: { initial: undefined } },
+    slots: { selections: { initial: [] } },
     state: {
-      selection: fromSlot('selection'),
+      selections: fromSlot('selections'),
+      selectionId: {
+        derive: ({ slots }) => (Array.isArray(slots.selections) ? slots.selections[0] : undefined),
+      },
       visible: {
         derive: ({ inputs, read }) => {
           const text = String(read(FILTER, 'text') ?? '').toLowerCase();
@@ -391,7 +394,7 @@ describe('mutual modules', () => {
       select: {
         key: 'org.dxos.operation.tasks.select',
         handler: ({ scope, payload, invoke }) => {
-          scope.set({ selection: payload });
+          scope.set({ selections: typeof payload === 'string' ? [payload] : [] });
           // Cross-module interaction IS dispatching the other module's operation.
           invoke('org.dxos.operation.filter.clear');
         },
@@ -402,9 +405,7 @@ describe('mutual modules', () => {
         handler: ({ scope }) => scope.set({ text: 'hijack' }),
       },
     },
-    capabilities: {
-      selection: { machine: 'org.dxos.machine.selection', slot: 'selection' },
-    },
+    capabilities: {},
   };
 
   const mutual: Registry<never> = { ...registry, modules: { [FILTER]: filter, [TASKS]: tasks } };
@@ -418,14 +419,14 @@ describe('mutual modules', () => {
     // …and filter derives from tasks' state.
     expect(read(FILTER, 'hasSelection')).toBe(false);
 
-    const filtered = { ...seeded, [FILTER]: { text: 'fix' }, [TASKS]: { selection: 'task-1' } };
+    const filtered = { ...seeded, [FILTER]: { text: 'fix' }, [TASKS]: { selections: ['task-1'] } };
     const readFiltered = createModuleReader(mutual, () => filtered, inputs);
     expect(readFiltered(TASKS, 'visible')).toEqual(['Fix build']);
     expect(readFiltered(FILTER, 'hasSelection')).toBe(true);
   });
 
   test('a write to foreign state goes through the owning module operation via invoke', ({ expect }) => {
-    const before = { [FILTER]: { text: 'fix' }, [TASKS]: { selection: undefined } };
+    const before = { [FILTER]: { text: 'fix' }, [TASKS]: { selections: [] } };
     const { ui, entries } = dispatch(
       mutual,
       before,
@@ -436,7 +437,7 @@ describe('mutual modules', () => {
       inputs,
     );
     // The selection landed in tasks' slice, the clear in filter's — each by its owner.
-    expect(ui).toEqual({ [FILTER]: { text: '' }, [TASKS]: { selection: 'task-1' } });
+    expect(ui).toEqual({ [FILTER]: { text: '' }, [TASKS]: { selections: ['task-1'] } });
     // Both writes are in the one log, attributed to their operations.
     expect(entries).toEqual([
       { operation: 'org.dxos.operation.tasks.select', payload: 'task-1' },
@@ -450,7 +451,7 @@ describe('mutual modules', () => {
       /module 'org.dxos.module.tasks' owns no slot 'text'/,
     );
     expect(() => dispatch(mutual, seeded, 'org.dxos.operation.filter.grab', undefined, undefined, [], inputs)).toThrow(
-      /module 'org.dxos.module.filter' owns no slot 'selection'/,
+      /module 'org.dxos.module.filter' owns no slot 'selections'/,
     );
   });
 
@@ -617,6 +618,7 @@ describe('lexical resolution', () => {
 
 describe('capability sync (zag)', () => {
   const TASKS = 'org.dxos.module.tasks';
+  const SELECT = 'org.dxos.operation.tasks.select';
   const SELECT_MANY = 'org.dxos.operation.tasks.select-many';
   const MULTI_SELECT_MACHINE = 'org.dxos.machine.multi-select';
 
@@ -640,6 +642,11 @@ describe('capability sync (zag)', () => {
         selectionCount: { derive: ({ slots }) => asIds(slots.selections).length },
       },
       operations: {
+        // The constrained single-select writer of the same slot: one id or, with no payload, none.
+        select: {
+          key: SELECT,
+          handler: ({ scope, payload }) => scope.set({ selections: typeof payload === 'string' ? [payload] : [] }),
+        },
         selectMany: {
           key: SELECT_MANY,
           handler: ({ scope, payload }) => {
@@ -684,15 +691,16 @@ describe('capability sync (zag)', () => {
     };
     let ui = seedModules(host);
     const log: LogEntry[] = [];
-    const instances = mountCapabilities(host, (operation, payload) => {
+    const send = (operation: string, payload?: unknown) => {
       const result = dispatch(host, ui, operation, payload);
       ui = result.ui;
       log.push(...result.entries);
-    });
+    };
+    const instances = mountCapabilities(host, send);
     if (!api) {
       throw new Error('capability instance did not mount');
     }
-    return { host, instances, api, log, ui: () => ui };
+    return { host, instances, api, log, send, ui: () => ui };
   };
 
   test('a machine event reaches published state as onChange -> operation -> slot, and is logged', async ({
@@ -730,6 +738,31 @@ describe('capability sync (zag)', () => {
     expect(views[TASKS].capabilities.multiSelect).toEqual(['d']);
     expect(views[TASKS].apis?.multiSelect).toBe(api);
     expect(views[TASKS].state.selectionCount).toBe(1);
+    unmountCapabilities(instances);
+  });
+
+  test('single-select then shift-click: both writers land in the one slot, one history', async ({ expect }) => {
+    const { instances, api, log, send, ui } = createHost();
+
+    // The constrained single writer: a direct dispatch, no machine involved.
+    send(SELECT, 'a');
+    expect(ui()[TASKS]).toEqual({ selections: ['a'] });
+
+    // The multi writer: a shift-click transition snapshots the machine's own committed
+    // selection over the same slot (the machine holds its state, not the slot's).
+    api.select('b', true);
+    await settle();
+    expect(ui()[TASKS]).toEqual({ selections: ['b'] });
+
+    // One history carries both writers, in order.
+    expect(log).toEqual([
+      { operation: SELECT, payload: 'a' },
+      { operation: SELECT_MANY, payload: { ids: ['b'] } },
+    ]);
+
+    // The no-payload dispatch is the Esc-deselect path: the same slot, emptied.
+    send(SELECT);
+    expect(ui()[TASKS]).toEqual({ selections: [] });
     unmountCapabilities(instances);
   });
 

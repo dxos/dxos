@@ -124,31 +124,38 @@ const asIds = (value: unknown): string[] => (Array.isArray(value) ? value.map(St
 
 /**
  * The tasks module: what `deriveContext` used to smuggle in ambiently is now the module's
- * typed export table — the module that owns the inputs (selection, draft, the query) exports the
+ * typed export table — the module that owns the inputs (selections, draft, the query) exports the
  * derivations (`selected`), and its operations are the only writers of its slots.
  */
 const TasksModule: ModuleDef<Db> = {
   key: TASKS_MODULE,
   description: 'Tasks: query, shared selection, and the editing draft.',
   slots: {
-    selection: { initial: undefined },
     selections: { initial: [] },
     draft: { initial: false },
   },
   state: {
     items: { derive: ({ inputs }) => inputTasks(inputs) },
-    // Derived from selection × draft × items — typed, owned here, never ambient.
+    // Derived from selections × draft × items — typed, owned here, never ambient.
     selected: {
       derive: ({ slots, inputs }) => {
         if (slots.draft === true) {
           return {};
         }
-        const selected = inputTasks(inputs).find((task) => task.id === slots.selection);
+        const ids = asIds(slots.selections);
+        const selected = ids.length === 1 ? inputTasks(inputs).find((task) => task.id === ids[0]) : undefined;
         return selected ? toFormValues(selected) : undefined;
       },
     },
-    // The multi-selection snapshot and its structural derivations — `show` branches on these,
-    // so "exactly one" lives here, never as a template expression.
+    // The singular listbox's controlled value: a string only while exactly one id is selected.
+    selectionId: {
+      derive: ({ slots }) => {
+        const ids = asIds(slots.selections);
+        return ids.length === 1 ? ids[0] : undefined;
+      },
+    },
+    // The ONE selection slot's snapshot and its structural derivations — `show` branches on
+    // these, so "exactly one" lives here, never as a template expression.
     selections: fromSlot('selections'),
     selectedOne: {
       derive: ({ slots, inputs }) => {
@@ -170,8 +177,10 @@ const TasksModule: ModuleDef<Db> = {
   operations: {
     select: {
       key: 'org.dxos.operation.tasks.select',
-      description: 'Select a row in the master list.',
-      handler: ({ scope, payload }) => scope.set({ selection: payload, draft: false }),
+      description: 'Select a row in the master list — the constrained single writer of the selections slot.',
+      // No payload (Esc-deselect) clears the slot; a string selects exactly that id.
+      handler: ({ scope, payload }) =>
+        scope.set({ selections: typeof payload === 'string' ? [payload] : [], draft: false }),
     },
     selectMany: {
       key: 'org.dxos.operation.tasks.select-many',
@@ -184,7 +193,7 @@ const TasksModule: ModuleDef<Db> = {
     add: {
       key: 'org.dxos.operation.tasks.add',
       description: 'Start a draft; the form edits a temporary object until save.',
-      handler: ({ scope }) => scope.set({ selection: undefined, draft: true }),
+      handler: ({ scope }) => scope.set({ selections: [], draft: true }),
     },
     save: {
       key: 'org.dxos.operation.tasks.save',
@@ -196,10 +205,9 @@ const TasksModule: ModuleDef<Db> = {
           scope.set({ draft: false });
           return;
         }
-        const selection = scope.get('selection');
-        const lone = asIds(scope.get('selections'));
-        // The single-select slot wins; a lone multi-selection is the multi template's subject.
-        const id = typeof selection === 'string' ? selection : lone.length === 1 ? lone[0] : undefined;
+        // Exactly one selected id is the form's subject — single and multi templates alike.
+        const ids = asIds(scope.get('selections'));
+        const id = ids.length === 1 ? ids[0] : undefined;
         const object = id ? db?.getObjectById<Task.Task>(id) : undefined;
         if (object) {
           // Field by field, never Object.assign: the form's values may carry keys the schema
@@ -219,24 +227,20 @@ const TasksModule: ModuleDef<Db> = {
     },
     done: {
       key: 'org.dxos.operation.tasks.done',
-      description: 'Toolbar action over the current selection: mark the task done.',
+      description: 'Toolbar action over the current selection: mark every selected task done.',
       handler: ({ scope, db }) => {
-        const selection = scope.get('selection');
-        const id = typeof selection === 'string' ? selection : undefined;
-        const object = id ? db?.getObjectById<Task.Task>(id) : undefined;
-        if (object) {
-          Obj.update(object, (object) => {
-            object.status = 'done';
-          });
+        for (const id of asIds(scope.get('selections'))) {
+          const object = db?.getObjectById<Task.Task>(id);
+          if (object) {
+            Obj.update(object, (object) => {
+              object.status = 'done';
+            });
+          }
         }
       },
     },
   },
   capabilities: {
-    // The shared-selection instance: the master list and the detail form bind ONE instance,
-    // and so would a toolbar in another template — observation is shared, writes go through
-    // the operations above.
-    selection: { machine: 'org.dxos.machine.selection', slot: 'selection' },
     // The zag machine as a live capability: one shared instance, mounted with the system. Its
     // only write path is onChange → select-many → the selections slot, so every transition is a
     // logged operation and the published snapshot is the state binders read — the machine stays
@@ -405,9 +409,8 @@ const FORM = trim`
 const MASTER_DETAIL = trim`
   <layout id="example" rows="1fr 1fr" resizable="true">
     <use module="org.dxos.module.tasks" as="tasks" />
-    <let name="selection" from="tasks.selection" />
     <collection data-items="tasks.items" item-id="id" item-label="title"
-                data-selection="selection"
+                data-selection="tasks.selectionId"
                 on-select="org.dxos.operation.tasks.select" />
     <show when="tasks.selected">
       <form schema="org.dxos.type.Task" data-values="tasks.selected"
@@ -423,7 +426,6 @@ const MASTER_DETAIL = trim`
 const MASTER_DETAIL_TOOLBAR = trim`
   <container id="example">
     <use module="org.dxos.module.tasks" as="tasks" />
-    <let name="selection" from="tasks.selection" />
     <command>
       <control as="button" label="Add" on-activate="org.dxos.operation.tasks.add" />
       <control as="button" label="Done" enabled="tasks.selected"
@@ -431,7 +433,7 @@ const MASTER_DETAIL_TOOLBAR = trim`
     </command>
     <layout rows="1fr 1fr" resizable="true">
       <collection data-items="tasks.items" item-id="id" item-label="title"
-                  data-selection="selection"
+                  data-selection="tasks.selectionId"
                   on-select="org.dxos.operation.tasks.select" />
       <show when="tasks.selected">
         <form schema="org.dxos.type.Task" data-values="tasks.selected"
@@ -496,7 +498,6 @@ const TABS = trim`
   <container id="example">
     <use module="org.dxos.module.tasks" as="tasks" />
     <let name="view" initial="list" />
-    <let name="selection" from="tasks.selection" />
     <tabs data-value="view" on-select="org.dxos.operation.view.set">
       <tab value="list" label="List" />
       <tab value="detail" label="Detail" />
@@ -504,7 +505,7 @@ const TABS = trim`
     <switch on="view">
       <match value="list">
         <collection data-items="tasks.items" item-id="id" item-label="title"
-                    data-selection="selection"
+                    data-selection="tasks.selectionId"
                     on-select="org.dxos.operation.tasks.select" />
       </match>
       <match value="detail">
@@ -622,18 +623,14 @@ const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
         title: 'Rendered',
         children:
           active?.node && mountErrors.length === 0 ? (
-            <div className='dx-container p-4'>
-              <div className='dx-container border border-separator rounded-sm'>
-                <Template
-                  node={active.node}
-                  ui={ui}
-                  vars={vars}
-                  modules={modules}
-                  renderer={renderer}
-                  options={{ dispatch }}
-                />
-              </div>
-            </div>
+            <Template
+              node={active.node}
+              ui={ui}
+              vars={vars}
+              modules={modules}
+              renderer={renderer}
+              options={{ dispatch }}
+            />
           ) : (
             // A failed signature or module wiring renders its errors, never garbage.
             <span className='text-error-text text-sm whitespace-pre-wrap'>

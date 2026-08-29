@@ -239,8 +239,11 @@ yet).
 > capabilities, `viewModules`, `createModuleReader`, `checkUses`), write ownership enforced in
 > dispatch (a module operation's `scope.set` throws on a foreign slot; cross-module writes go
 > through `invoke`), `let from=` binding module capabilities; (4) stories migrated —
-> `deriveContext` is gone, its derivations are module state exports, master-detail binds the
-> module-provided shared selection instance; (5) a mutual-module system test proves reciprocal
+> `deriveContext` is gone, its derivations are module state exports, and the tasks module holds
+> ONE `selections: string[]` slot: the single-select `select` operation is a constrained writer
+> of it (`[id]`, or `[]` on Esc-deselect), `select-many` snapshots the multi-select machine into
+> it, and the singular listbox binds the derived `selectionId` export; (5) a mutual-module
+> system test proves reciprocal
 > reads, invoke-only cross-module writes, and ownership violations throwing. The flat
 > `registry.operations` table remains as the anonymous-template (template-local) case, per "the
 > base of the ladder". The proposal text below is preserved as written.

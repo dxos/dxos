@@ -87,7 +87,7 @@ export const createReactRenderer = ({
   schemas,
 }: CreateRendererOptions<Schema.Codec<any, any>>): Renderer<ReactNode> => ({
   container: ({ path, props, children }) => (
-    <Flex key={path} column gap={oneOf(GAPS, props.gap)} classNames='dx-container'>
+    <Flex key={path} column gap={oneOf(GAPS, props.gap)} classNames='dx-container ring-2 ring-separator rounded-sm'>
       {children}
     </Flex>
   ),

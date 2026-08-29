@@ -51,7 +51,7 @@ export const Workbench = ({ panes, main }: WorkbenchProps) => (
         </Cell>
       ))}
     </Flex>
-    <Cell title={main.title}>{main.children}</Cell>
+    <div className='dx-container p-4'>{main.children}</div>
   </Flex>
 );
 

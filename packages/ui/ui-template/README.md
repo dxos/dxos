@@ -141,9 +141,10 @@ A module publishes a typed export table with exactly three columns (the module c
 
 `<use module="org.dxos.module.tasks" as="tasks" />` imports a module; `data-` paths then
 read its state column (`data-items="tasks.items"`), events dispatch its operations by
-key, and `<let name="selection" from="tasks.selection" />` binds a local name to a capability —
-every binder of that name observes the same instance (the master list and the detail form share
-one selection). Cross-module writes do not exist: another module's state changes only by
+key, and `<let name="selections" from="tasks.multiSelect" />` binds a local name to a capability —
+every binder of that name observes the same instance (the master list and the detail form derive
+from the module's one `selections` slot). Cross-module writes do not exist: another module's
+state changes only by
 dispatching that module's operations (a handler's `invoke`), and a handler's `scope.set` throws on
 any slot its module does not own. Derived values live in the module that owns the inputs — never
 in an ambient context object.
