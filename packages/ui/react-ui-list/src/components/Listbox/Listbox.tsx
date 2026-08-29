@@ -279,7 +279,15 @@ const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLLIElement>) => {
       onKeyDown?.(event);
-      if (event.defaultPrevented || !interactive || disabled || (event.key !== 'Enter' && event.key !== ' ')) {
+      if (
+        event.defaultPrevented ||
+        !interactive ||
+        disabled ||
+        // Bubbled from a control inside the row — the groupper puts focus there deliberately, and
+        // its Enter belongs to it, not to the row.
+        event.target !== event.currentTarget ||
+        (event.key !== 'Enter' && event.key !== ' ')
+      ) {
         return;
       }
       event.preventDefault();

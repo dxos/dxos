@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type KeyboardEvent, type MouseEvent, useCallback, useState } from 'react';
+import { type KeyboardEvent, type MouseEvent, useCallback, useRef, useState } from 'react';
 
 /**
  * The inline-edit state machine, separated from what draws it.
@@ -52,7 +52,8 @@ export type UseEditableReturn = {
   disabled: boolean;
   setDraft: (draft: string) => void;
   edit: () => void;
-  commit: () => void;
+  /** Commits `next` when given: a caller that already holds the text must not race the draft state. */
+  commit: (next?: string) => void;
   revert: () => void;
   /** Applies `blurBehavior`. */
   onBlur: () => void;
@@ -77,6 +78,14 @@ export const useEditable = ({
 
   const [draft, setDraft] = useState(value);
 
+  // `edit()` seeds the draft, but a host driving `editing` never calls it — so the transition is
+  // watched here too, or a controlled field opens on whatever the last edit left behind.
+  const wasEditing = useRef(editing);
+  if (editing && !wasEditing.current) {
+    setDraft(value);
+  }
+  wasEditing.current = editing;
+
   const setEditing = useCallback(
     (next: boolean) => {
       setEditingState(next);
@@ -93,13 +102,18 @@ export const useEditable = ({
     setEditing(true);
   }, [disabled, value, setEditing]);
 
-  const commit = useCallback(() => {
-    setEditing(false);
-    if (draft !== value) {
-      setValueState(draft);
-      onValueChange?.(draft);
-    }
-  }, [draft, value, onValueChange, setEditing]);
+  const commit = useCallback(
+    (next?: string) => {
+      const committed = next ?? draft;
+      setEditing(false);
+      setDraft(committed);
+      if (committed !== value) {
+        setValueState(committed);
+        onValueChange?.(committed);
+      }
+    },
+    [draft, value, onValueChange, setEditing],
+  );
 
   const revert = useCallback(() => {
     setDraft(value);

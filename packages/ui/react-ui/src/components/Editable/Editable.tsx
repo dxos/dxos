@@ -183,11 +183,20 @@ const EditableInput = forwardRef<HTMLInputElement, EditableInputProps>(
         onBlur={handleBlur}
         ref={(element) => {
           localRef.current = element;
-          if (typeof forwardedRef === 'function') {
-            forwardedRef(element);
-          } else if (forwardedRef) {
+          // React 19 lets a callback ref return a cleanup; dropping it would leak whatever the
+          // consumer set up.
+          // Typed `unknown` because `ForwardedRef`'s callback is declared to return void, while
+          // React 19 may hand back a cleanup at runtime.
+          const cleanup: unknown = typeof forwardedRef === 'function' ? forwardedRef(element) : undefined;
+          if (forwardedRef && typeof forwardedRef !== 'function') {
             forwardedRef.current = element;
           }
+          return () => {
+            localRef.current = null;
+            if (typeof cleanup === 'function') {
+              cleanup();
+            }
+          };
         }}
       />
     );

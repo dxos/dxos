@@ -43,6 +43,10 @@ export type MarkdownEditableProps = ThemedClassName<
   }
 >;
 
+/**
+ * Rendered markdown that becomes a markdown editor in place. Pair it with `editing` held open to
+ * make an editor pane, or leave it uncontrolled for click-to-edit.
+ */
 export const MarkdownEditable = ({
   classNames,
   placeholder,
@@ -69,10 +73,9 @@ export const MarkdownEditable = ({
       createMarkdownExtensions(),
       decorateMarkdown(),
       inlineEdit({
-        onCommit: (text) => {
-          handlers.current.setDraft(text);
-          handlers.current.commit();
-        },
+        // The text comes with the event: committing the draft instead would write whatever the
+        // previous render captured.
+        onCommit: (text) => handlers.current.commit(text),
         onRevert: () => handlers.current.revert(),
         commitOnBlur,
         submitOnEnter: !multiline,
@@ -108,7 +111,7 @@ export const MarkdownEditable = ({
     <div
       {...(readonly ? {} : previewProps)}
       data-testid='markdownEditable.preview'
-      className={mx('w-full', !readonly && 'cursor-text', classNames)}
+      className={mx('w-full', !readonly && 'cursor-text', !value && placeholder && 'text-placeholder', classNames)}
     >
       <MarkdownView content={value || placeholder} components={components} />
     </div>

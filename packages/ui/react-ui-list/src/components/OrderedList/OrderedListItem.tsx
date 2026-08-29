@@ -121,7 +121,14 @@ export const OrderedListItem = <T extends ListItemRecord>({
         onKeyDown={(event) => {
           // An option is not natively activatable, so Enter/Space have to be wired the way a button
           // gets them for free.
-          if (navigationMode === 'listbox' && onClick && (event.key === 'Enter' || event.key === ' ')) {
+          // `event.target === event.currentTarget`: bubbled from a control inside the row, its Enter
+          // belongs to that control — the groupper puts focus there deliberately.
+          if (
+            navigationMode === 'listbox' &&
+            onClick &&
+            event.target === event.currentTarget &&
+            (event.key === 'Enter' || event.key === ' ')
+          ) {
             event.preventDefault();
             event.currentTarget.click();
           }
