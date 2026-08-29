@@ -12,7 +12,7 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import React, { type ReactNode } from 'react';
+import React, { type PropsWithChildren, type ReactNode } from 'react';
 
 import { type Align, Button, Flex, type Gap, Grid, Input, type Justify } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -22,6 +22,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { type Binding, type ModuleView, type Node, type Scope, resolve } from '../model';
 import { type CreateRendererOptions, type Renderer, type RenderOptions, present, render } from '../render';
+import { useAttention } from './attention';
 import { Splitter } from './testing/Splitter';
 
 const asText = (value: unknown): string => (value == null ? '' : String(value));
@@ -74,6 +75,31 @@ const isMultiSelectDriver = (value: unknown): value is MultiSelectDriver =>
   'extendTo' in value &&
   typeof value.extendTo === 'function';
 
+/**
+ * The container kind with the attention aspect: focusing anywhere inside attends the container
+ * (sticky), and the attended container's ring goes primary. Hook use forces a real component —
+ * renderer entries are plain functions.
+ */
+const AttendableContainer = ({ id, gap, children }: PropsWithChildren<{ id?: string; gap?: Gap }>) => {
+  const { attended, attend } = useAttention();
+  return (
+    // The slottable Flex exposes no event props; a display:contents trap adds no box (the same
+    // pattern the Esc key trap used) and hears every focus entering the container.
+    <div role='none' className='contents' onFocusCapture={id ? () => attend(id) : undefined}>
+      <Flex
+        column
+        gap={gap}
+        classNames={mx(
+          'dx-container ring-2 ring-separator rounded-sm',
+          id && attended === id && 'ring-[var(--color-focus-ring)]',
+        )}
+      >
+        {children}
+      </Flex>
+    </div>
+  );
+};
+
 /** Resolve a `capability="alias.name"` aspect to the mounted instance's api off the `use` ring. */
 const capabilityApi = (scope: Scope, ref: unknown): unknown => {
   if (typeof ref !== 'string') {
@@ -88,9 +114,13 @@ export const createReactRenderer = ({
   schemas,
 }: CreateRendererOptions<Schema.Codec<any, any>>): Renderer<ReactNode> => ({
   container: ({ path, props, children }) => (
-    <Flex key={path} column gap={oneOf(GAPS, props.gap)} classNames='dx-container ring-2 ring-separator rounded-sm'>
+    <AttendableContainer
+      key={path}
+      id={typeof props.id === 'string' ? props.id : undefined}
+      gap={oneOf(GAPS, props.gap)}
+    >
       {children}
-    </Flex>
+    </AttendableContainer>
   ),
 
   /**

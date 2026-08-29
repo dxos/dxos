@@ -31,6 +31,7 @@ import {
   viewModules,
 } from '../system';
 import { type MultiSelectSchema, connect, multiSelectMachine } from '../testing/Example';
+import { AttentionProvider } from './attention';
 import { Template, createReactRenderer } from './renderer';
 import { Editor, OperationLog, Workbench } from './testing';
 import { useSystem } from './useSystem';
@@ -172,6 +173,14 @@ const TasksModule: ModuleDef<Db> = {
     },
     selectionLabel: {
       derive: ({ slots }) => `${asIds(slots.selections).length} selected`,
+    },
+    // Selection cardinality as a value, so templates branch with a flat switch/match rather
+    // than nested binary shows.
+    selectionState: {
+      derive: ({ slots }) => {
+        const count = asIds(slots.selections).length;
+        return count === 0 ? 'none' : count === 1 ? 'one' : 'many';
+      },
     },
   },
   operations: {
@@ -456,19 +465,19 @@ const MASTER_DETAIL_MULTI = trim`
       <collection data-items="tasks.items" item-id="id" item-label="title"
                   data-selections="tasks.selections"
                   capability="tasks.multiSelect" />
-      <show when="tasks.selectedOne">
-        <form schema="org.dxos.type.Task" data-values="tasks.selectedOne"
-              on-save="org.dxos.operation.tasks.save"
-              on-cancel="org.dxos.operation.tasks.cancel" />
-        <fallback>
-          <show when="tasks.manySelected">
-            <display variant="title" data-text="tasks.selectionLabel" />
-            <fallback>
-              <display label="Nothing selected — click a row; shift-click toggles." />
-            </fallback>
-          </show>
-        </fallback>
-      </show>
+      <switch on="tasks.selectionState">
+        <match value="one">
+          <form schema="org.dxos.type.Task" data-values="tasks.selectedOne"
+                on-save="org.dxos.operation.tasks.save"
+                on-cancel="org.dxos.operation.tasks.cancel" />
+        </match>
+        <match value="many">
+          <display variant="title" data-text="tasks.selectionLabel" />
+        </match>
+        <match value="none">
+          <display label="Nothing selected — click a row; shift-click toggles." />
+        </match>
+      </switch>
     </layout>
   </container>
 `;
@@ -627,14 +636,16 @@ const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
         title: 'Rendered',
         children:
           active?.node && mountErrors.length === 0 ? (
-            <Template
-              node={active.node}
-              ui={ui}
-              vars={vars}
-              modules={modules}
-              renderer={renderer}
-              options={{ dispatch }}
-            />
+            <AttentionProvider>
+              <Template
+                node={active.node}
+                ui={ui}
+                vars={vars}
+                modules={modules}
+                renderer={renderer}
+                options={{ dispatch }}
+              />
+            </AttentionProvider>
           ) : (
             // A failed signature or module wiring renders its errors, never garbage.
             <span className='text-error-text text-sm whitespace-pre-wrap'>
