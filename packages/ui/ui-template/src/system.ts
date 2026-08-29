@@ -39,12 +39,12 @@ export type OperationScope = {
 /** Read another module's state export — the readonly, public column of the module contract. */
 export type ModuleRead = (module: string, name: string) => unknown;
 
-export type OperationContext<Db = unknown> = {
+export type OperationContext<TDatabase = unknown> = {
   ui: UiState;
   scope: OperationScope;
   payload?: unknown;
   /** The database. Operations are the only place it is written. */
-  db?: Db;
+  db?: TDatabase;
   /** Read another module's state — observation is shared; mutation stays with the owner. */
   read: ModuleRead;
   /**
@@ -54,14 +54,14 @@ export type OperationContext<Db = unknown> = {
   invoke: (operation: string, payload?: unknown) => void;
 };
 
-export type OperationDef<Db = unknown> = {
+export type OperationDef<TDatabase = unknown> = {
   key: string;
   description?: string;
   /**
    * Steps the system: normally writes slots through `scope.set` and returns nothing; returning a
    * UiState overrides the tree wholesale. May mutate the db.
    */
-  handler: (context: OperationContext<Db>) => UiState | void;
+  handler: (context: OperationContext<TDatabase>) => UiState | void;
 };
 
 /**
@@ -109,7 +109,7 @@ export type CapabilityDef = {
  * module's slots), and capabilities (machine instances shared by every binder). The slots are
  * the private substrate under all three columns.
  */
-export type ModuleDef<Db = unknown> = {
+export type ModuleDef<TDatabase = unknown> = {
   key: string;
   description?: string;
   /** Writable slots — the module's substrate; only its own operations write them. */
@@ -117,7 +117,7 @@ export type ModuleDef<Db = unknown> = {
   /** Column 1: reactive readonly state. */
   state: Readonly<Record<string, ModuleStateDef>>;
   /** Column 2: typed one-shot writes — the only writers of this module's slots. */
-  operations: Readonly<Record<string, OperationDef<Db>>>;
+  operations: Readonly<Record<string, OperationDef<TDatabase>>>;
   /** Column 3: machine instances over the module's slots. */
   capabilities: Readonly<Record<string, CapabilityDef>>;
 };
@@ -132,11 +132,11 @@ export type ModuleInputs = Readonly<Record<string, Readonly<Record<string, unkno
  * an anonymous template's local operations; a named module's operations live in its own table
  * (`modules`), where dispatch scopes their writes to the module's slots.
  */
-export type Registry<Db = unknown, Schema = unknown> = {
+export type Registry<TDatabase = unknown, Schema = unknown> = {
   schemas: Readonly<Record<string, Schema>>;
-  operations: Readonly<Record<string, OperationDef<Db>>>;
+  operations: Readonly<Record<string, OperationDef<TDatabase>>>;
   machines: Readonly<Record<string, MachineDef>>;
-  modules: Readonly<Record<string, ModuleDef<Db>>>;
+  modules: Readonly<Record<string, ModuleDef<TDatabase>>>;
 };
 
 export type LogEntry = {
@@ -189,8 +189,8 @@ export type SlotFrame = Pick<ScopeFrame, 'path' | 'slots'>;
  * module or export is an error (registration/mount row of the error table), and so is a circular
  * derivation.
  */
-export const createModuleReader = <Db>(
-  registry: Registry<Db>,
+export const createModuleReader = <TDatabase>(
+  registry: Registry<TDatabase>,
   ui: () => UiState,
   inputs: ModuleInputs = {},
 ): ModuleRead => {
@@ -224,8 +224,8 @@ export const createModuleReader = <Db>(
 };
 
 /** Materialize every registry module's contract for binding (state + capability columns). */
-export const viewModules = <Db>(
-  registry: Registry<Db>,
+export const viewModules = <TDatabase>(
+  registry: Registry<TDatabase>,
   ui: UiState,
   inputs: ModuleInputs = {},
 ): Record<string, ModuleView> => {
@@ -253,12 +253,12 @@ export const viewModules = <Db>(
  * handler cannot name, let alone write, another module's state. Pure with respect to `ui`; the
  * db is the deliberate exception (operations may mutate data).
  */
-export const dispatch = <Db>(
-  registry: Registry<Db>,
+export const dispatch = <TDatabase>(
+  registry: Registry<TDatabase>,
   ui: UiState,
   operation: string,
   payload?: unknown,
-  db?: Db,
+  db?: TDatabase,
   frames: readonly SlotFrame[] = [],
   inputs: ModuleInputs = {},
 ): { ui: UiState; entries: LogEntry[] } => {
@@ -286,7 +286,7 @@ export const dispatch = <Db>(
     },
   };
 
-  const moduleScope = (module: ModuleDef<Db>): OperationScope => ({
+  const moduleScope = (module: ModuleDef<TDatabase>): OperationScope => ({
     has: (name) => name in module.slots,
     get: (name) => getIn(next, [module.key, name]),
     set: (patch) => {
@@ -299,7 +299,7 @@ export const dispatch = <Db>(
     },
   });
 
-  const ownerOf = (key: string): ModuleDef<Db> | undefined =>
+  const ownerOf = (key: string): ModuleDef<TDatabase> | undefined =>
     Object.values(registry.modules).find((module) => Object.values(module.operations).some((def) => def.key === key));
 
   const run = (key: string, runPayload?: unknown): void => {
@@ -381,7 +381,7 @@ export const seedUi = (registry: Registry<never>, root: WalkNode): UiState => {
  * seeded once from the registry, not per template — while `seedUi` seeds only the template's
  * private (`initial=`/`machine=`) slots.
  */
-export const seedModules = <Db>(registry: Registry<Db>): UiState => {
+export const seedModules = <TDatabase>(registry: Registry<TDatabase>): UiState => {
   let ui: UiState = {};
   for (const [key, module] of Object.entries(registry.modules)) {
     for (const [name, slot] of Object.entries(module.slots)) {
@@ -396,7 +396,7 @@ export const seedModules = <Db>(registry: Registry<Db>): UiState => {
  * module, and every `let from=` must target one of its capabilities (whose slot and machine must
  * themselves exist). Returns messages for the host to surface visibly per R-8.
  */
-export const checkUses = <Db>(registry: Registry<Db>, root: WalkNode): string[] => {
+export const checkUses = <TDatabase>(registry: Registry<TDatabase>, root: WalkNode): string[] => {
   const errors: string[] = [];
   const aliasModule: Record<string, string> = {};
   for (const child of root.children ?? []) {

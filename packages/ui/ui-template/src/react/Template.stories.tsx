@@ -137,13 +137,22 @@ const DefaultStory = ({ source: initialSource }: { source: string }) => {
   return (
     <Workbench
       panes={[
-        { title: 'Context schema', children: <Editor value={schemaText} extensions={schemaExtensions} /> },
-        { title: 'Layout', children: <Editor value={source} extensions={templateExtensions} onChange={setSource} /> },
+        {
+          title: 'Context schema',
+          children: <Editor value={schemaText} extensions={schemaExtensions} />,
+        },
+        {
+          title: 'Layout',
+          children: <Editor value={source} extensions={templateExtensions} onChange={setSource} />,
+        },
         {
           title: 'Context object',
           children: <Editor value={stateText} extensions={stateExtensions} onChange={setStateText} />,
         },
-        { title: 'Log', children: <OperationLog entries={log} /> },
+        {
+          title: 'Log',
+          children: <OperationLog entries={log} />,
+        },
       ]}
       main={{
         title: 'Rendered',
