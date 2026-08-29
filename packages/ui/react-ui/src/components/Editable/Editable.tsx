@@ -33,30 +33,19 @@ import React, {
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { Icon } from '../Icon';
+import {
+  type EditableActivation,
+  type EditableBlurBehavior,
+  type UseEditableOptions,
+  type UseEditableReturn,
+  useEditable,
+} from './useEditable';
 
 const EDITABLE_NAME = 'Editable.Root';
 const EDITABLE_PREVIEW_NAME = 'Editable.Preview';
 const EDITABLE_INPUT_NAME = 'Editable.Input';
 
-/** What turns the preview into an input. `dblclick` suits rows whose single click already selects. */
-export type EditableActivation = 'click' | 'dblclick';
-
-/** What a blur does with the pending edit. `Escape` always reverts and `Enter` always commits. */
-export type EditableBlurBehavior = 'commit' | 'revert';
-
-type EditableContextValue = {
-  value: string;
-  draft: string;
-  editing: boolean;
-  disabled: boolean;
-  placeholder?: string;
-  activation: EditableActivation;
-  setDraft: (draft: string) => void;
-  edit: () => void;
-  commit: () => void;
-  revert: () => void;
-  onBlur: () => void;
-};
+type EditableContextValue = UseEditableReturn & { placeholder?: string };
 
 const [EditableProvider, useEditableContext] = createContext<EditableContextValue>(EDITABLE_NAME);
 
@@ -65,98 +54,25 @@ const [EditableProvider, useEditableContext] = createContext<EditableContextValu
 //
 
 type EditableRootProps = ThemedClassName<
-  PropsWithChildren<{
-    /** Current text (controlled). */
-    value?: string;
-    /** Initial text when uncontrolled. */
-    defaultValue?: string;
-    /** Called when an edit is committed — never while typing, so a keystroke is not a write. */
-    onValueChange?: (value: string) => void;
-    /** Shown, dimmed, when the value is empty. */
-    placeholder?: string;
-    activation?: EditableActivation;
-    blurBehavior?: EditableBlurBehavior;
-    disabled?: boolean;
-    /** Editing state (controlled); pair with `onEditingChange` to drive it from outside. */
-    editing?: boolean;
-    onEditingChange?: (editing: boolean) => void;
-  }>
+  PropsWithChildren<
+    UseEditableOptions & {
+      /** Shown, dimmed, when the value is empty. */
+      placeholder?: string;
+    }
+  >
 >;
 
 const EditableRoot = forwardRef<HTMLDivElement, EditableRootProps>(
-  (
-    {
-      children,
-      classNames,
-      value: valueProp,
-      defaultValue = '',
-      onValueChange,
-      placeholder,
-      activation = 'click',
-      blurBehavior = 'commit',
-      disabled = false,
-      editing: editingProp,
-      onEditingChange,
-    },
-    forwardedRef,
-  ) => {
+  ({ children, classNames, placeholder, ...options }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const [valueState, setValueState] = useState(defaultValue);
-    const value = valueProp ?? valueState;
-
-    const [editingState, setEditingState] = useState(false);
-    const editing = editingProp ?? editingState;
-
-    // The draft is separate from the value so `Escape` has something to revert to, and so a
-    // keystroke never reaches the consumer — `onValueChange` fires on commit only.
-    const [draft, setDraft] = useState(value);
-
-    const setEditing = useCallback(
-      (next: boolean) => {
-        setEditingState(next);
-        onEditingChange?.(next);
-      },
-      [onEditingChange],
-    );
-
-    const edit = useCallback(() => {
-      if (disabled) {
-        return;
-      }
-      setDraft(value);
-      setEditing(true);
-    }, [disabled, value, setEditing]);
-
-    const commit = useCallback(() => {
-      setEditing(false);
-      if (draft !== value) {
-        setValueState(draft);
-        onValueChange?.(draft);
-      }
-    }, [draft, value, onValueChange, setEditing]);
-
-    const revert = useCallback(() => {
-      setDraft(value);
-      setEditing(false);
-    }, [value, setEditing]);
-
-    const onBlur = useCallback(() => (blurBehavior === 'commit' ? commit() : revert()), [blurBehavior, commit, revert]);
+    const editable = useEditable(options);
 
     return (
-      <EditableProvider
-        value={value}
-        draft={draft}
-        editing={editing}
-        disabled={disabled}
-        placeholder={placeholder}
-        activation={activation}
-        setDraft={setDraft}
-        edit={edit}
-        commit={commit}
-        revert={revert}
-        onBlur={onBlur}
-      >
-        <div className={tx('editable.root', { editing, disabled }, classNames)} ref={forwardedRef}>
+      <EditableProvider {...editable} placeholder={placeholder}>
+        <div
+          className={tx('editable.root', { editing: editable.editing, disabled: editable.disabled }, classNames)}
+          ref={forwardedRef}
+        >
           {children}
         </div>
       </EditableProvider>
@@ -172,62 +88,30 @@ EditableRoot.displayName = EDITABLE_NAME;
 
 type EditablePreviewProps = ThemedClassName<Omit<ComponentPropsWithRef<'div'>, 'children'>>;
 
-const EditablePreview = forwardRef<HTMLDivElement, EditablePreviewProps>(
-  ({ classNames, onClick, onDoubleClick, onKeyDown, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    const { value, editing, disabled, placeholder, activation, edit } = useEditableContext(EDITABLE_PREVIEW_NAME);
+const EditablePreview = forwardRef<HTMLDivElement, EditablePreviewProps>(({ classNames, ...props }, forwardedRef) => {
+  const { tx } = useThemeContext();
+  const { value, editing, disabled, placeholder, previewProps } = useEditableContext(EDITABLE_PREVIEW_NAME);
 
-    const handleActivate = useCallback(() => !disabled && edit(), [disabled, edit]);
+  if (editing) {
+    return null;
+  }
 
-    const handleKeyDown = useCallback(
-      (event: KeyboardEvent<HTMLDivElement>) => {
-        onKeyDown?.(event);
-        if (!event.defaultPrevented && (event.key === 'Enter' || event.key === ' ')) {
-          event.preventDefault();
-          handleActivate();
-        }
-      },
-      [onKeyDown, handleActivate],
-    );
-
-    if (editing) {
-      return null;
-    }
-
-    return (
-      <div
-        {...props}
-        // Focusable and Enter/Space-activated: the affordance is a pointer one, and a keyboard
-        // reader needs the same door.
-        role='button'
-        tabIndex={disabled ? -1 : 0}
-        aria-disabled={disabled || undefined}
-        data-testid='editable.preview'
-        className={tx('editable.preview', { disabled, placeholder: !value }, classNames)}
-        onClick={(event) => {
-          onClick?.(event);
-          if (activation === 'click' && !event.defaultPrevented) {
-            handleActivate();
-          }
-        }}
-        onDoubleClick={(event) => {
-          onDoubleClick?.(event);
-          if (activation === 'dblclick' && !event.defaultPrevented) {
-            handleActivate();
-          }
-        }}
-        onKeyDown={handleKeyDown}
-        ref={forwardedRef}
-      >
-        <span className='truncate'>{value || placeholder}</span>
-        {/* Pushed to the trailing edge: the affordance belongs to the row, not to the text, so it
+  return (
+    <div
+      {...props}
+      {...previewProps}
+      data-testid='editable.preview'
+      className={tx('editable.preview', { disabled, placeholder: !value }, classNames)}
+      ref={forwardedRef}
+    >
+      <span className='truncate'>{value || placeholder}</span>
+      {/* Pushed to the trailing edge: the affordance belongs to the row, not to the text, so it
             does not move as the title's length changes. */}
-        <span className='grow' />
-        <Icon icon='ph--pencil-simple--regular' size={4} classNames={tx('editable.previewIcon', {})} />
-      </div>
-    );
-  },
-);
+      <span className='grow' />
+      <Icon icon='ph--pencil-simple--regular' size={4} classNames={tx('editable.previewIcon', {})} />
+    </div>
+  );
+});
 
 EditablePreview.displayName = EDITABLE_PREVIEW_NAME;
 
@@ -320,5 +204,6 @@ export const Editable = {
 };
 
 export { useEditableContext };
+export * from './useEditable';
 
-export type { EditableInputProps, EditablePreviewProps, EditableRootProps };
+export type { EditableActivation, EditableBlurBehavior, EditableInputProps, EditablePreviewProps, EditableRootProps };

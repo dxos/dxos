@@ -3,4 +3,5 @@
 //
 
 export * from './MarkdownView';
+export * from './MarkdownEditable';
 export * from './MarkdownStream';
