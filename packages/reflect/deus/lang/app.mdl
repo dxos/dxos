@@ -158,7 +158,7 @@ ext menu
 
 ## Example
 
-A mailbox with system folders, a three-level reading chain, and a companion:
+A mailbox with system folders, a two-level reading chain, and a companion:
 
 ```mdl
 node MailboxNode
@@ -188,7 +188,7 @@ plank MessagePlank
 
 ```mdl
 deck MailboxDeck
-  desc: Reading down the mailbox reuses one plank per level.
+  desc: Reading down the mailbox reuses one plank per level (two levels shown; the attachment level is elided).
   chain: MailboxPlank > MessagePlank
 ```
 

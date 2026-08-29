@@ -38,6 +38,9 @@ export const useSystem = <Db>({ registry, root, db }: UseSystemOptions<Db>): Use
   const initial = useMemo(() => seedUi(registry, root), [registry, root]);
   const ref = useRef<{ ui: UiState; log: readonly SequencedLogEntry[] }>({ ui: initial, log: [] });
   const seq = useRef(0);
+  // An edited template can introduce new instances: seed the ids that are missing without
+  // resetting the state of the ones that survive.
+  ref.current = { ...ref.current, ui: { ...initial, ...ref.current.ui } };
   const [, force] = useReducer((tick: number) => tick + 1, 0);
 
   const dispatch = useCallback<Dispatch>(

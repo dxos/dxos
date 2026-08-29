@@ -14,9 +14,10 @@
 import type * as Schema from 'effect/Schema';
 import React, { type ReactNode } from 'react';
 
-import { type Align, Button, Flex, type Gap, Grid, Input, type Justify, Panel } from '@dxos/react-ui';
+import { type Align, Button, Flex, type Gap, Grid, Input, type Justify } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Combobox, Listbox } from '@dxos/react-ui-list';
+import { Tabs } from '@dxos/react-ui-tabs';
 
 import { type Binding, type Node, type Scope, resolve } from '../model';
 import { type Renderer, type RenderOptions, render } from '../render';
@@ -64,13 +65,9 @@ export type ReactRendererOptions = {
 
 export const createReactRenderer = ({ schemas }: ReactRendererOptions): Renderer<ReactNode> => ({
   container: ({ path, props, children }) => (
-    <Panel.Root key={path}>
-      <Panel.Content>
-        <Flex column gap={oneOf(GAPS, props.gap) ?? 'sm'}>
-          {children}
-        </Flex>
-      </Panel.Content>
-    </Panel.Root>
+    <Flex key={path} column gap={oneOf(GAPS, props.gap)} classNames='dx-container'>
+      {children}
+    </Flex>
   ),
 
   /**
@@ -82,16 +79,17 @@ export const createReactRenderer = ({ schemas }: ReactRendererOptions): Renderer
     const rows = tracks(props.rows);
     if (cols || rows) {
       return (
-        <Grid key={path} cols={cols} rows={rows} gap={oneOf(GAPS, props.gap) ?? 'sm'} grow={false}>
+        <Grid key={path} cols={cols} rows={rows} gap={oneOf(GAPS, props.gap)} grow={false} classNames='dx-container'>
           {children}
         </Grid>
       );
+    } else {
+      return (
+        <Flex key={path} {...flexProps(props)} classNames='dx-container'>
+          {children}
+        </Flex>
+      );
     }
-    return (
-      <Flex key={path} {...flexProps(props)} classNames='min-w-0'>
-        {children}
-      </Flex>
-    );
   },
 
   display: ({ path, props, data }) => (
@@ -137,19 +135,32 @@ export const createReactRenderer = ({ schemas }: ReactRendererOptions): Renderer
           value={asText(data.selection) || undefined}
           onValueChange={(next) => handlers.select?.(next)}
         >
-          <Listbox.Viewport>
-            <Listbox.Content>
-              {items.map((item, index) => {
-                const id = asText(itemField(node, scope, item, 'id') ?? index);
-                return (
-                  <Listbox.Item key={id} id={id}>
-                    <Listbox.ItemLabel>{asText(itemField(node, scope, item, 'label') ?? id)}</Listbox.ItemLabel>
-                    <Listbox.Indicator />
-                  </Listbox.Item>
-                );
-              })}
-            </Listbox.Content>
-          </Listbox.Viewport>
+          {/* display:contents key trap — the list composables expose no key handlers, and the
+              wrapper adds no box. Esc clears the selection: deselect is the same operation with
+              no payload. */}
+          <div
+            role='none'
+            className='contents'
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') {
+                handlers.select?.(undefined);
+              }
+            }}
+          >
+            <Listbox.Viewport>
+              <Listbox.Content>
+                {items.map((item, index) => {
+                  const id = asText(itemField(node, scope, item, 'id') ?? index);
+                  return (
+                    <Listbox.Item key={id} id={id}>
+                      <Listbox.ItemLabel>{asText(itemField(node, scope, item, 'label') ?? id)}</Listbox.ItemLabel>
+                      <Listbox.Indicator />
+                    </Listbox.Item>
+                  );
+                })}
+              </Listbox.Content>
+            </Listbox.Viewport>
+          </div>
         </Listbox.Root>
       );
     }
@@ -183,6 +194,7 @@ export const createReactRenderer = ({ schemas }: ReactRendererOptions): Renderer
         </span>
       );
     }
+
     const values = data.values && typeof data.values === 'object' ? (data.values as Record<string, unknown>) : {};
     const identity = asText(values.id ?? path);
     return (
@@ -193,7 +205,7 @@ export const createReactRenderer = ({ schemas }: ReactRendererOptions): Renderer
         onSave={(next) => handlers.save?.(next)}
         onCancel={() => handlers.cancel?.()}
       >
-        <Form.Viewport>
+        <Form.Viewport scroll>
           <Form.Content>
             <Form.FieldSet />
             {(node.events?.save || node.events?.cancel) && <Form.Actions />}
@@ -241,6 +253,45 @@ export const createReactRenderer = ({ schemas }: ReactRendererOptions): Renderer
       {children}
     </Flex>
   ),
+
+  /**
+   * Tab strip over published state: the current tab is the resolved `data-value`, choosing one
+   * dispatches `select`. The panels live in a sibling `switch` — tabs only set state.
+   */
+  tabs: ({ path, node, data, handlers, scope }) => (
+    <Tabs.Root
+      key={path}
+      orientation='horizontal'
+      value={asText(data.value) || undefined}
+      onValueChange={(next) => handlers.select?.(next)}
+    >
+      <Tabs.Tablist>
+        {(node.children ?? [])
+          .filter((child) => child.tag === 'tab')
+          .map((tab) => {
+            const value = asText(tab.props?.value);
+            return (
+              <Tabs.Button key={value} value={value}>
+                {asText(tab.props?.label ?? value)}
+              </Tabs.Button>
+            );
+          })}
+      </Tabs.Tablist>
+    </Tabs.Root>
+  ),
+
+  // Rendered by `tabs` from its props; never on its own.
+  tab: () => null,
+
+  // The walker already narrowed `children` to the matched case's subtree.
+  switch: ({ path, children }) => (
+    <Flex key={path} column grow gap='sm'>
+      {children}
+    </Flex>
+  ),
+
+  // Structural only — `switch` renders the matched case's children directly.
+  case: () => null,
 });
 
 export type TemplateProps<State> = {

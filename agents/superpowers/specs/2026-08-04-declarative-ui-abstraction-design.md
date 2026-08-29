@@ -416,8 +416,8 @@ in v1, reading controller atoms.
    move unchanged. Regression: existing inbox e2e/storybook coverage plus H2's
    new headless tests.
 
-Exit criteria (**partially met** — H3 was never measured; see Results): H1–H3
-measured and written up; the four bridge findings
+Exit criteria (**partially met** — H3 was never measured; see Results): H1–H2
+measured and written up, H3 deferred to the running app; the four bridge findings
 (anchors, slots, debounce, pagination atom) folded back into this spec's
 Recommendation step 1; a go/no-go on extracting a second, simple container
 (`TaskSetArticle`) to test that the pattern generalizes downward as well as up.

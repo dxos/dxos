@@ -8,12 +8,12 @@ renderer contract is the part that has to earn the "pluggable" claim. Findings a
 design (registry, operations, machines, published state, undo, plugin composition) →
 [`docs/DESIGN.md`](./docs/DESIGN.md).
 
-Vocabulary comes from [`react-ui/docs/ONTOLOGY.md`](../react-ui/docs/ONTOLOGY.md) — kind tags from
+Vocabulary comes from [`docs/ONTOLOGY.md`](./docs/ONTOLOGY.md) — kind tags from
 §1, binding types from §3, and the rules in §5 (cited below as `R-n`).
 
 ## Shape
 
-```
+```text
 authoring          model            renderer
 ─────────          ─────            ────────
 XML  ──parse──▶  Node tree  ──render──▶  React
@@ -25,7 +25,7 @@ if the model needs React, the result is negative and we have learned it cheaply.
 
 ## Grammar
 
-```
+```text
 template  ::= element                        (exactly one root)
 element   ::= '<' tag attr* ( '/>' | '>' element* '</' tag '>' )
 tag       ::= 'container' | 'layout' | 'display' | 'control' | 'collection' | 'command'

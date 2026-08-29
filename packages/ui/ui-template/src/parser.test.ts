@@ -77,3 +77,16 @@ describe('resolve', () => {
     expect(resolve({ from: 'item', path: [] }, { state, item: 'ontology' })).toBe('ontology');
   });
 });
+
+describe('attribute edge cases', () => {
+  test("a quoted '>' does not terminate the tag", ({ expect }) => {
+    const node = parse('<display label="a > b" data-text="title" />');
+    expect(node.props).toEqual({ label: 'a > b' });
+    expect(node.data).toEqual({ text: { from: 'state', path: ['title'] } });
+  });
+
+  test('signed and fractional numerics are coerced', ({ expect }) => {
+    const node = parse('<layout span="1.5" offset="-2" />');
+    expect(node.props).toEqual({ span: 1.5, offset: -2 });
+  });
+});

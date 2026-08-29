@@ -2,7 +2,7 @@
 
 State-driven, declaratively-described UI: what the overnight spike built, what it proved, what it
 broke on, and the design that follows. Vocabulary and rules come from
-[`react-ui/docs/ONTOLOGY.md`](../../react-ui/docs/ONTOLOGY.md) (cited as `R-n`); the spike's code is
+[`ONTOLOGY.md`](./ONTOLOGY.md) (cited as `R-n`); the spike's code is
 this package; the evidence is its stories (`ui/ui-template/System` in storybook).
 
 ## Goals

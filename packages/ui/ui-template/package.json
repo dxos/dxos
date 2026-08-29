@@ -42,7 +42,8 @@
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
     "@dxos/react-ui-form": "workspace:*",
-    "@dxos/react-ui-list": "workspace:*"
+    "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-tabs": "workspace:*"
   },
   "devDependencies": {
     "@dxos/echo": "workspace:*",

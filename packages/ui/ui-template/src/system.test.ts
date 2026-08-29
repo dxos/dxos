@@ -63,3 +63,40 @@ describe('dispatch', () => {
     expect(() => dispatch(registry, {}, 'org.dxos.operation.missing')).toThrow(SystemError);
   });
 });
+
+describe('switch/case', () => {
+  test('renders only the case matching published state', async ({ expect }) => {
+    const { render } = await import('./render');
+    const node = parse(
+      '<switch data-value="ui.view.mode">' +
+        '<case value="list"><display label="the-list" /></case>' +
+        '<case value="detail"><display label="the-detail" /></case>' +
+        '</switch>',
+    );
+    // A string renderer keeps the assertion framework-free.
+    const echoTag = (tag: string) => (props: { children: readonly string[]; props: Record<string, unknown> }) =>
+      `${tag}(${String(props.props.label ?? '')}${props.children.join(',')})`;
+    const renderer = Object.fromEntries(
+      (
+        [
+          'container',
+          'layout',
+          'display',
+          'control',
+          'collection',
+          'command',
+          'form',
+          'combobox',
+          'tabs',
+          'tab',
+          'switch',
+          'case',
+        ] as const
+      ).map((tag) => [tag, echoTag(tag)]),
+    ) as import('./render').Renderer<string>;
+
+    expect(render(node, { state: { ui: { view: { mode: 'list' } } } }, renderer)).toBe('switch(display(the-list))');
+    expect(render(node, { state: { ui: { view: { mode: 'detail' } } } }, renderer)).toBe('switch(display(the-detail))');
+    expect(render(node, { state: { ui: {} } }, renderer)).toBe('switch()');
+  });
+});

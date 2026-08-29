@@ -103,6 +103,10 @@ const registry: Registry<Db, Schema.Codec<any, any>> = {
       key: 'org.dxos.machine.master-detail',
       initial: { selection: undefined, draft: false },
     },
+    'org.dxos.machine.draft': {
+      key: 'org.dxos.machine.draft',
+      initial: { selection: undefined, draft: true },
+    },
     'org.dxos.machine.combobox': {
       key: 'org.dxos.machine.combobox',
       initial: { filter: '', value: undefined },
@@ -184,13 +188,10 @@ const registry: Registry<Db, Schema.Codec<any, any>> = {
       key: 'org.dxos.operation.filter.input',
       handler: ({ ui, payload }) => uiPatch(ui, 'filter', { text: String(payload ?? '') }),
     },
-    'org.dxos.operation.view.list': {
-      key: 'org.dxos.operation.view.list',
-      handler: ({ ui }) => uiPatch(ui, 'view', { mode: 'list' }),
-    },
-    'org.dxos.operation.view.detail': {
-      key: 'org.dxos.operation.view.detail',
-      handler: ({ ui }) => uiPatch(ui, 'view', { mode: 'detail' }),
+    'org.dxos.operation.view.set': {
+      key: 'org.dxos.operation.view.set',
+      description: 'Tabs write which branch of the switch exists.',
+      handler: ({ ui, payload }) => uiPatch(ui, 'view', { mode: String(payload ?? 'list') }),
     },
   },
 };
@@ -243,7 +244,8 @@ const LIST = trim`
 const FORM = trim`
   <container>
     <display variant="title" data-text="title" />
-    <form schema="org.dxos.type.Organization" data-values="selected"
+    <form id="contacts" machine="org.dxos.machine.draft"
+          schema="org.dxos.type.Organization" data-values="selected"
           on-save="org.dxos.operation.contacts.save"
           on-cancel="org.dxos.operation.contacts.cancel" />
   </container>
@@ -255,7 +257,7 @@ const MASTER_DETAIL = trim`
                 data-items="organizations" item-id="id" item-label="name"
                 data-selection="ui.contacts.selection"
                 on-select="org.dxos.operation.contacts.select" />
-    <form schema="org.dxos.type.Organization" data-values="selected"
+    <form schema="org.dxos.type.Organization" data-values="selected" absent="omit"
           on-save="org.dxos.operation.contacts.save"
           on-cancel="org.dxos.operation.contacts.cancel" />
   </layout>
@@ -267,7 +269,7 @@ const MASTER_DETAIL_TOOLBAR = trim`
       <control as="button" label="Add" on-activate="org.dxos.operation.contacts.add" />
       <control as="button" label="Qualify" on-activate="org.dxos.operation.contacts.qualify" />
     </command>
-    <layout rows="min-content 1fr">
+    <layout rows="1fr 1fr">
       <collection id="contacts" machine="org.dxos.machine.master-detail"
                   data-items="organizations" item-id="id" item-label="name"
                   data-selection="ui.contacts.selection"
@@ -300,28 +302,26 @@ const FILTER_LIST = trim`
   </container>
 `;
 
-const VIEW_LIST = trim`
+const TABS = trim`
   <container>
-    <command>
-      <control as="button" label="List" on-activate="org.dxos.operation.view.list" />
-      <control as="button" label="Detail" on-activate="org.dxos.operation.view.detail" />
-    </command>
-    <collection id="contacts" machine="org.dxos.machine.master-detail"
-                data-items="organizations" item-id="id" item-label="name"
-                data-selection="ui.contacts.selection"
-                on-select="org.dxos.operation.contacts.select" />
-  </container>
-`;
-
-const VIEW_DETAIL = trim`
-  <container>
-    <command>
-      <control as="button" label="List" on-activate="org.dxos.operation.view.list" />
-      <control as="button" label="Detail" on-activate="org.dxos.operation.view.detail" />
-    </command>
-    <form schema="org.dxos.type.Organization" data-values="selected"
-          on-save="org.dxos.operation.contacts.save"
-          on-cancel="org.dxos.operation.contacts.cancel" />
+    <tabs id="view" machine="org.dxos.machine.view"
+          data-value="ui.view.mode" on-select="org.dxos.operation.view.set">
+      <tab value="list" label="List" />
+      <tab value="detail" label="Detail" />
+    </tabs>
+    <switch data-value="ui.view.mode">
+      <case value="list">
+        <collection id="contacts" machine="org.dxos.machine.master-detail"
+                    data-items="organizations" item-id="id" item-label="name"
+                    data-selection="ui.contacts.selection"
+                    on-select="org.dxos.operation.contacts.select" />
+      </case>
+      <case value="detail">
+        <form schema="org.dxos.type.Organization" data-values="selected" absent="omit"
+              on-save="org.dxos.operation.contacts.save"
+              on-cancel="org.dxos.operation.contacts.cancel" />
+      </case>
+    </switch>
   </container>
 `;
 
@@ -467,9 +467,4 @@ export const FilterList: Story = {
   },
 };
 
-export const ViewSwitch: Story = {
-  args: {
-    sources: { list: VIEW_LIST, detail: VIEW_DETAIL },
-    pick: (ui) => (ui.view?.mode === 'detail' ? 'detail' : 'list'),
-  },
-};
+export const TabsStory: Story = { name: 'Tabs', args: { sources: { tabs: TABS } } };

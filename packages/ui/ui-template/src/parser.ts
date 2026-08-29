@@ -28,7 +28,8 @@ export class TemplateParseError extends Error {
   }
 }
 
-const TAG_RE = /<\s*(\/?)\s*([\w-]+)([^>]*?)(\/?)\s*>/g;
+// Attribute values may contain `>`, so the attribute region matches quoted strings as units.
+const TAG_RE = /<\s*(\/?)\s*([\w-]+)((?:"[^"]*"|'[^']*'|[^>"'])*?)(\/?)\s*>/g;
 const ATTR_RE = /([\w-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
 
 type Token =
@@ -88,7 +89,8 @@ const toNode = (name: string, attrs: Record<string, string>, children: Node[], p
       events[key.slice(3)] = value;
     } else {
       // Numeric and boolean literals are narrowed here so the renderer never parses strings.
-      props[key] = value === 'true' ? true : value === 'false' ? false : /^\d+$/.test(value) ? Number(value) : value;
+      props[key] =
+        value === 'true' ? true : value === 'false' ? false : /^-?\d+(\.\d+)?$/.test(value) ? Number(value) : value;
     }
   }
 

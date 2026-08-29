@@ -445,7 +445,7 @@ service FactStore
 
 ## Operations
 
-Keys `org.dxos.plugin.inbox.operation.<name>`. Provider-facing ops are defined here but handled in
+Keys `org.dxos.operation.inbox.<name>`. Provider-facing ops are defined here but handled in
 plugin-google / plugin-jmap; `GenerateReply` is handled in plugin-brain. Long-running mailbox
 pipelines report through progress monitors keyed `<mailbox uri>#<suffix>` (`sync`, `process`,
 `enrich`, `classify`, `summarize`, `analyze`, `correspondents`, `subscriptions`) and serialize on
@@ -861,7 +861,7 @@ ext service
 
 ```mdl
 ext op
-  uri: org.dxos.mdl.op@1.0
+  uri: org.dxos.mdl.op@1.1
   desc: |
     A named operation with typed inputs, outputs, and declared errors.
     Pure ops have no effects or requires. Effectful ops declare both.

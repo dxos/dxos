@@ -184,7 +184,8 @@ Time-boxed vertical slice, smallest end-to-end loop:
    (generalized from the FormLayout approach, generic over an element
    registry) and printer (model → XML) — round-trip tested headlessly.
 
-   That union is the **closed subset for this slice**. The DSL section above
+   That union is the **closed subset for this slice** (plus `scene` as the
+   document root and `tab` as `tabs`'s item element). The DSL section above
    also shows `stack`, `table`, and `menu`; those are registry entries the
    skeleton does not ship, and the codec must _reject_ an unknown tag with
    the tag name and its position, never drop it silently — a dropped element

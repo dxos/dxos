@@ -72,7 +72,6 @@ export const Grid = slottable<HTMLDivElement, GridProps>(
   ) => {
     const { className, ...rest } = composableProps<HTMLDivElement>(props);
     const Comp = asChild ? Slot : Primitive.div;
-    const spansParent = cols === 'subgrid' || rows === 'subgrid';
 
     return (
       <Comp
@@ -87,7 +86,8 @@ export const Grid = slottable<HTMLDivElement, GridProps>(
                 // `dx-container` already clips; a non-growing grid must not, or converting a plain
                 // wrapper would silently start cutting off overflow (focus rings, popovers).
                 grow && 'dx-container',
-                spansParent && 'col-span-full',
+                cols === 'subgrid' && 'col-span-full',
+                rows === 'subgrid' && 'row-span-full',
                 gap && gapClasses[gap],
                 center && 'place-items-center',
                 align && alignClasses[align],

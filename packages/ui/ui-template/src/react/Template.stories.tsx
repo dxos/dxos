@@ -115,7 +115,9 @@ const DefaultStory = ({ source: initialSource }: { source: string }) => {
 
   const state = useMemo<{ value?: ProjectState; error?: string }>(() => {
     try {
-      return { value: JSON.parse(stateText) };
+      // Decode, not merely parse: `null` or wrongly-typed fields must fail here, visibly, rather
+      // than reach the renderer as a malformed context.
+      return { value: Schema.decodeUnknownSync(ProjectState)(JSON.parse(stateText)) };
     } catch (err) {
       return { error: (err as Error).message };
     }

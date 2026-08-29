@@ -4,7 +4,7 @@
 
 //
 // SPIKE. The layout template model: a plain, serializable tree that names kinds from
-// `react-ui/docs/ONTOLOGY.md` and nothing else.
+// `docs/ONTOLOGY.md` and nothing else.
 //
 // This file must never import a UI framework — that constraint is the experiment (ONTOLOGY R-6,
 // R-13). If it ever needs React, Solid, or the DOM, the model has leaked and the result is
@@ -12,7 +12,19 @@
 //
 
 /** Kind tags. Deliberately a subset of the ontology's 17 — see the spike's scope. */
-export type Tag = 'container' | 'layout' | 'display' | 'control' | 'collection' | 'command' | 'form' | 'combobox';
+export type Tag =
+  | 'container'
+  | 'layout'
+  | 'display'
+  | 'control'
+  | 'collection'
+  | 'command'
+  | 'form'
+  | 'combobox'
+  | 'tabs'
+  | 'tab'
+  | 'switch'
+  | 'case';
 
 export const TAGS: readonly Tag[] = [
   'container',
@@ -23,6 +35,10 @@ export const TAGS: readonly Tag[] = [
   'command',
   'form',
   'combobox',
+  'tabs',
+  'tab',
+  'switch',
+  'case',
 ];
 
 /**
