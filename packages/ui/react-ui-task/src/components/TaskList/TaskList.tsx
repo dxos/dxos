@@ -97,8 +97,10 @@ type TaskListContextValue = {
   onTaskCreate?: (title: string) => void;
   onTaskUpdate?: (task: Task.Task, patch: TaskPatch) => void;
   onTaskDelete?: (task: Task.Task) => void;
-  onTaskSelect?: (task: Task.Task) => void;
+  onTaskSelect?: (task: Task.Task | undefined) => void;
   onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
+  /** Clears the selection; `Escape` on a row calls it. */
+  onDeselect: () => void;
 };
 
 const [TaskListProvider, useTaskListContext] = createContext<TaskListContextValue>(TASK_LIST_NAME);
@@ -129,8 +131,11 @@ type TaskListRootProps = PropsWithChildren<{
   onTaskUpdate?: (task: Task.Task, patch: TaskPatch) => void;
   /** Enables the per-row delete affordance. */
   onTaskDelete?: (task: Task.Task) => void;
-  /** Row click. Wiring it (or `selected`) makes the list selectable, so the row shows as selected. */
-  onTaskSelect?: (task: Task.Task) => void;
+  /**
+   * Row click, and `Escape` — which passes `undefined`, since a reader needs a way back out of a
+   * selection. Wiring it (or `selected`) makes the list selectable, so the row shows as selected.
+   */
+  onTaskSelect?: (task: Task.Task | undefined) => void;
   /** Selected task id (controlled); omit to let the list track the last row clicked. */
   selected?: string;
   /**
@@ -188,6 +193,11 @@ const TaskListRoot = ({
     [tasks, onTaskSelect],
   );
 
+  const handleDeselect = useCallback(() => {
+    setSelectedState(undefined);
+    onTaskSelect?.(undefined);
+  }, [onTaskSelect]);
+
   // The hook owns the controlled/uncontrolled Set state machine; its trigger/panel ids are not
   // used, because a sub-task is a sibling row in the same grid rather than a region the toggle
   // could point `aria-controls` at — `aria-expanded` on the row carries the disclosure instead.
@@ -226,6 +236,7 @@ const TaskListRoot = ({
       onTaskUpdate={onTaskUpdate}
       onTaskDelete={onTaskDelete}
       onTaskSelect={onTaskSelect}
+      onDeselect={handleDeselect}
       onTaskMove={onTaskMove}
       selected={selected}
     >
@@ -637,8 +648,10 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
       showGutter,
       onTaskUpdate,
       onTaskDelete,
+      selected,
       onTaskSelect,
       onTaskMove,
+      onDeselect,
       isCollapsed,
       onCollapseToggle,
       dragging,
@@ -687,6 +700,12 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
     // focus out of the list. One modifier covers all four moves.
     const handleKeyDown = useCallback(
       (event: KeyboardEvent<HTMLLIElement>) => {
+        // A reader needs a way back out of a selection, and `Escape` is where they look for it.
+        if (event.key === 'Escape' && selected === task.id) {
+          event.preventDefault();
+          onDeselect();
+          return;
+        }
         if (!onTaskMove || !row || !event.altKey) {
           return;
         }
@@ -710,7 +729,7 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
           onTaskMove(task, placement);
         }
       },
-      [onTaskMove, row, tasks, task],
+      [onTaskMove, row, tasks, task, selected, onDeselect],
     );
 
     return (

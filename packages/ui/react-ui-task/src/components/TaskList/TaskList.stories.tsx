@@ -136,7 +136,7 @@ const DefaultStory = ({
       onTaskUpdate={readonly ? undefined : handleUpdate}
       onTaskDelete={readonly ? undefined : handleDelete}
       onTaskMove={readonly || !hierarchical ? undefined : handleMove}
-      onTaskSelect={(task) => setSelected(task.id)}
+      onTaskSelect={(task) => setSelected(task?.id)}
     >
       <TaskList.Viewport>
         <TaskList.Content />
@@ -213,6 +213,17 @@ export const TestEdit: Story = {
     const firstTitle = first.querySelector('.truncate')!.textContent;
     first.click();
     await waitFor(async () => expect(title().value).toEqual(firstTitle));
+    await waitFor(async () => expect(description()).not.toBeNull());
+
+    // Escape gives the reader a way back out: the selection clears and the pane returns to creating.
+    first.focus();
+    first.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await waitFor(async () => expect(description()).toBeNull());
+    await expect(title().value).toEqual('');
+    await expect(canvasElement.querySelectorAll('[aria-selected="true"]')).toHaveLength(0);
+
+    // Re-select for the remaining assertions.
+    first.click();
     await waitFor(async () => expect(description()).not.toBeNull());
 
     // Editing the description writes it back on blur.

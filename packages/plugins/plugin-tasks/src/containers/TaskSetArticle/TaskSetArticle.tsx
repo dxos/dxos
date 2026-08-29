@@ -62,7 +62,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
   );
 
   const [selected, setSelected] = useState<string>();
-  const handleSelect = useCallback((task: Task.Task) => setSelected(task.id), []);
+  const handleSelect = useCallback((task: Task.Task | undefined) => setSelected(task?.id), []);
 
   const content = (
     <TaskList.Root
