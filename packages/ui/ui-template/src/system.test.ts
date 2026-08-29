@@ -336,6 +336,143 @@ describe('modules', () => {
   });
 });
 
+describe('mutual modules', () => {
+  const FILTER = 'org.dxos.module.filter';
+  const CONTACTS = 'org.dxos.module.contacts';
+
+  // Two modules that reference each other: `contacts.visible` derives from `filter.text`
+  // (reads the other's state), and `contacts.select` clears the filter by dispatching
+  // `filter.clear` (writes the other's state ONLY through its owner's operation).
+  const filter: ModuleDef<never> = {
+    key: FILTER,
+    slots: { text: { initial: '' } },
+    state: {
+      text: fromSlot('text'),
+      // The reverse read: filter observes contacts' state.
+      hasSelection: { derive: ({ read }) => read(CONTACTS, 'selection') !== undefined },
+    },
+    operations: {
+      set: {
+        key: 'org.dxos.operation.filter.set',
+        handler: ({ scope, payload }) => scope.set({ text: String(payload ?? '') }),
+      },
+      clear: {
+        key: 'org.dxos.operation.filter.clear',
+        handler: ({ scope }) => scope.set({ text: '' }),
+      },
+      grab: {
+        // Ownership violation: filter reaching into contacts' slots.
+        key: 'org.dxos.operation.filter.grab',
+        handler: ({ scope }) => scope.set({ selection: 'stolen' }),
+      },
+    },
+    capabilities: {},
+  };
+
+  const contacts: ModuleDef<never> = {
+    key: CONTACTS,
+    slots: { selection: { initial: undefined } },
+    state: {
+      selection: fromSlot('selection'),
+      visible: {
+        derive: ({ inputs, read }) => {
+          const text = String(read(FILTER, 'text') ?? '').toLowerCase();
+          const items = Array.isArray(inputs.items) ? (inputs.items as string[]) : [];
+          return text ? items.filter((item) => item.toLowerCase().includes(text)) : items;
+        },
+      },
+    },
+    operations: {
+      select: {
+        key: 'org.dxos.operation.contacts.select',
+        handler: ({ scope, payload, invoke }) => {
+          scope.set({ selection: payload });
+          // Cross-module interaction IS dispatching the other module's operation.
+          invoke('org.dxos.operation.filter.clear');
+        },
+      },
+      poach: {
+        // Ownership violation: contacts reaching into filter's slots.
+        key: 'org.dxos.operation.contacts.poach',
+        handler: ({ scope }) => scope.set({ text: 'hijack' }),
+      },
+    },
+    capabilities: {
+      selection: { machine: 'org.dxos.machine.selection', slot: 'selection' },
+    },
+  };
+
+  const mutual: Registry<never> = { ...registry, modules: { [FILTER]: filter, [CONTACTS]: contacts } };
+  const inputs = { [CONTACTS]: { items: ['Blue Yard', 'Backed', 'DXOS'] } };
+
+  test('reads work both ways across the boundary', ({ expect }) => {
+    const seeded = seedModules(mutual);
+    const read = createModuleReader(mutual, () => seeded, inputs);
+    // contacts derives from filter's state…
+    expect(read(CONTACTS, 'visible')).toEqual(['Blue Yard', 'Backed', 'DXOS']);
+    // …and filter derives from contacts' state.
+    expect(read(FILTER, 'hasSelection')).toBe(false);
+
+    const filtered = { ...seeded, [FILTER]: { text: 'ba' }, [CONTACTS]: { selection: 'org-1' } };
+    const readFiltered = createModuleReader(mutual, () => filtered, inputs);
+    expect(readFiltered(CONTACTS, 'visible')).toEqual(['Backed']);
+    expect(readFiltered(FILTER, 'hasSelection')).toBe(true);
+  });
+
+  test('a write to foreign state goes through the owning module operation via invoke', ({ expect }) => {
+    const before = { [FILTER]: { text: 'ba' }, [CONTACTS]: { selection: undefined } };
+    const { ui, entries } = dispatch(
+      mutual,
+      before,
+      'org.dxos.operation.contacts.select',
+      'org-1',
+      undefined,
+      [],
+      inputs,
+    );
+    // The selection landed in contacts' slice, the clear in filter's — each by its owner.
+    expect(ui).toEqual({ [FILTER]: { text: '' }, [CONTACTS]: { selection: 'org-1' } });
+    // Both writes are in the one log, attributed to their operations.
+    expect(entries).toEqual([
+      { operation: 'org.dxos.operation.contacts.select', payload: 'org-1' },
+      { operation: 'org.dxos.operation.filter.clear', payload: undefined },
+    ]);
+  });
+
+  test('write-ownership violations throw in both directions', ({ expect }) => {
+    const seeded = seedModules(mutual);
+    expect(() =>
+      dispatch(mutual, seeded, 'org.dxos.operation.contacts.poach', undefined, undefined, [], inputs),
+    ).toThrow(/module 'org.dxos.module.contacts' owns no slot 'text'/);
+    expect(() => dispatch(mutual, seeded, 'org.dxos.operation.filter.grab', undefined, undefined, [], inputs)).toThrow(
+      /module 'org.dxos.module.filter' owns no slot 'selection'/,
+    );
+  });
+
+  test('a violating dispatch leaves no partial writes behind', ({ expect }) => {
+    // dispatch is pure over `ui`: the thrown step's accumulated state is discarded with it.
+    const before = seedModules(mutual);
+    expect(() =>
+      dispatch(mutual, before, 'org.dxos.operation.contacts.poach', undefined, undefined, [], inputs),
+    ).toThrow(SystemError);
+    expect(before).toEqual(seedModules(mutual));
+  });
+
+  test('a circular cross-module derivation is an error, not a hang', ({ expect }) => {
+    const loopFilter: ModuleDef<never> = {
+      ...filter,
+      state: { ...filter.state, echo: { derive: ({ read }) => read(CONTACTS, 'mirror') } },
+    };
+    const loopContacts: ModuleDef<never> = {
+      ...contacts,
+      state: { ...contacts.state, mirror: { derive: ({ read }) => read(FILTER, 'echo') } },
+    };
+    const looped: Registry<never> = { ...registry, modules: { [FILTER]: loopFilter, [CONTACTS]: loopContacts } };
+    const read = createModuleReader(looped, () => seedModules(looped), inputs);
+    expect(() => read(FILTER, 'echo')).toThrow(/circular state derivation/);
+  });
+});
+
 describe('vars', () => {
   const SIGNATURE =
     '<container>' +
