@@ -65,7 +65,7 @@ const SPACE_READY_TIMEOUT = 60_000;
  *
  * Deliberately dumb: it holds no notion of the model or of what is being tested. Every public
  * method is an RPC verb (blade-runner reflects over the prototype), so arguments and return values
- * must be JSON-serializable — no `PublicKey`, no `Uint8Array`.
+ * must be JSON-serializable, plus the `PublicKey` and `Uint8Array` the RPC codec tags.
  */
 export class ClientReplicant {
   #env: ReplicantEnv;
