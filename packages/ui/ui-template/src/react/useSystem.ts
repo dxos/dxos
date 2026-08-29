@@ -15,6 +15,7 @@ import {
   type UiState,
   mountCapabilities,
   seedModules,
+  startCapabilities,
   seedUi,
   dispatch as systemDispatch,
   unmountCapabilities,
@@ -108,7 +109,12 @@ export const useSystem = <Db>({ registry, root, db, inputs }: UseSystemOptions<D
     () => mountCapabilities(registry, (operation, payload) => stepRef.current(operation, payload)),
     [registry],
   );
-  useEffect(() => () => unmountCapabilities(capabilities), [capabilities]);
+  // Start inside the effect, not at creation: strict mode runs the cleanup on its simulated
+  // unmount, and a machine stopped there would silently drop every send after the remount.
+  useEffect(() => {
+    startCapabilities(capabilities);
+    return () => unmountCapabilities(capabilities);
+  }, [capabilities]);
 
   return { ...ref.current, dispatch, capabilities };
 };

@@ -243,9 +243,24 @@ const ContactsModule: ModuleDef<Db> = {
         const machine = new VanillaMachine<MultiSelectSchema>(multiSelectMachine, {
           onChange: ({ selection }) => invoke('org.dxos.operation.contacts.select-many', { ids: [...selection] }),
         });
-        machine.start();
+        // Started via `start`, guarded so strict mode's dispose/remount cycle restarts it exactly once.
+        let running = false;
+        const start = () => {
+          if (!running) {
+            machine.start();
+            running = true;
+          }
+        };
+        start();
         // Senders only: connect's snapshot reads go stale by design — binders read the slot.
-        return { api: connect(machine.service), dispose: () => machine.stop() };
+        return {
+          api: connect(machine.service),
+          start,
+          dispose: () => {
+            machine.stop();
+            running = false;
+          },
+        };
       },
     },
   },

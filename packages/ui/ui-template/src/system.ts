@@ -107,6 +107,8 @@ export type CapabilityMountContext = {
  */
 export type CapabilityInstance = {
   api: unknown;
+  /** Restart a stopped backing (idempotent) — React strict mode disposes and remounts. */
+  start?: () => void;
   dispose?: () => void;
 };
 
@@ -266,6 +268,15 @@ export const mountCapabilities = <TDatabase>(
     }
   }
   return instances;
+};
+
+/** (Re)start mounted instances — idempotent; pairs with {@link unmountCapabilities}. */
+export const startCapabilities = (instances: CapabilityInstances): void => {
+  for (const module of Object.values(instances)) {
+    for (const instance of Object.values(module)) {
+      instance.start?.();
+    }
+  }
 };
 
 /** Tear the mounted instances down (machine stop, subscriptions). */
