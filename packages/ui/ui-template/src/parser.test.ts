@@ -150,12 +150,12 @@ describe('closed resolution', () => {
   test('a root var declares a typed input the template may bind', ({ expect }) => {
     const node = parse(
       '<container>' +
-        '<var name="organizations" type="org.dxos.type.Organization" many="true" />' +
-        '<collection data-items="organizations" item-id="id" item-label="name" />' +
+        '<var name="tasks" type="org.dxos.type.Task" many="true" />' +
+        '<collection data-items="tasks" item-id="id" item-label="title" />' +
         '</container>',
     );
     const [decl] = node.children as Node[];
-    expect(decl.props).toEqual({ name: 'organizations', type: 'org.dxos.type.Organization', many: true });
+    expect(decl.props).toEqual({ name: 'tasks', type: 'org.dxos.type.Task', many: true });
   });
 
   test('var demands a name and a registry type key', ({ expect }) => {
@@ -175,12 +175,12 @@ describe('closed resolution', () => {
   test('a use alias declares a module import; bindings read <alias>.<export>', ({ expect }) => {
     const node = parse(
       '<container>' +
-        '<use module="org.dxos.module.contacts" as="contacts" />' +
-        '<display data-text="contacts.title" />' +
+        '<use module="org.dxos.module.tasks" as="tasks" />' +
+        '<display data-text="tasks.title" />' +
         '</container>',
     );
     const [decl] = node.children as Node[];
-    expect(decl.props).toEqual({ module: 'org.dxos.module.contacts', as: 'contacts' });
+    expect(decl.props).toEqual({ module: 'org.dxos.module.tasks', as: 'tasks' });
   });
 
   test('use demands a module key and an alias, at the root only', ({ expect }) => {
@@ -195,34 +195,34 @@ describe('closed resolution', () => {
     expect(() =>
       parse(
         '<container>' +
-          '<use module="org.dxos.module.contacts" as="contacts" />' +
-          '<display data-text="contacts" />' +
+          '<use module="org.dxos.module.tasks" as="tasks" />' +
+          '<display data-text="tasks" />' +
           '</container>',
       ),
-    ).toThrow(/through 'contacts' requires an export name/);
+    ).toThrow(/through 'tasks' requires an export name/);
   });
 
   test('a rung-3 let binds a declared alias capability', ({ expect }) => {
     const source =
       '<container id="s">' +
-      '<use module="org.dxos.module.contacts" as="contacts" />' +
-      '<let name="selection" from="contacts.selection" />' +
+      '<use module="org.dxos.module.tasks" as="tasks" />' +
+      '<let name="selection" from="tasks.selection" />' +
       '<display data-text="selection" />' +
       '</container>';
     expect(() => parse(source)).not.toThrow();
 
-    expect(() => parse('<container id="s"><let name="selection" from="contacts.selection" /></container>')).toThrow(
-      /'let' from names undeclared alias 'contacts'/,
+    expect(() => parse('<container id="s"><let name="selection" from="tasks.selection" /></container>')).toThrow(
+      /'let' from names undeclared alias 'tasks'/,
     );
     expect(() =>
       parse(
         '<container id="s">' +
-          '<use module="org.dxos.module.contacts" as="contacts" />' +
-          '<let name="selection" from="contacts" />' +
+          '<use module="org.dxos.module.tasks" as="tasks" />' +
+          '<let name="selection" from="tasks" />' +
           '</container>',
       ),
     ).toThrow(/'let' from must name '<alias>.<capability>'/);
-    expect(() => parse('<container id="s"><let name="a" initial="0" from="contacts.selection" /></container>')).toThrow(
+    expect(() => parse('<container id="s"><let name="a" initial="0" from="tasks.selection" /></container>')).toThrow(
       /'let' requires exactly one of initial, machine, or from/,
     );
   });

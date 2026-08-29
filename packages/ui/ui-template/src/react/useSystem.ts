@@ -15,8 +15,8 @@ import {
   type UiState,
   mountCapabilities,
   seedModules,
-  startCapabilities,
   seedUi,
+  startCapabilities,
   dispatch as systemDispatch,
   unmountCapabilities,
 } from '../system';

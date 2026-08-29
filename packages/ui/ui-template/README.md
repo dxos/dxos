@@ -95,7 +95,7 @@ declare slots whose **backing escalates in place** while the binding surface sta
 | ---- | ----------------------------------------------- | ------------------------------------ | ------------------------------ |
 | 1    | `<let name="text" initial="" />`                | a literal value                      | scope-relative operations      |
 | 2    | `<let name="selection" machine="…selection" />` | a registry machine's initial value   | scope-relative operations      |
-| 3    | `<let name="selection" from="contacts.…" />`    | a module-provided machine instance   | the owning module's operations |
+| 3    | `<let name="selection" from="tasks.…" />`    | a module-provided machine instance   | the owning module's operations |
 
 Rung 1/2 slots are seeded and published at `ui.<idPath>.<n>` — where `idPath` is the chain of
 enclosing scope ids. Publication requires the name; anonymous elements have no published state. A
@@ -120,9 +120,9 @@ The root declares its inputs, and the host supplies values against them:
 
 ```xml
 <container>
-  <var name="organizations" type="org.dxos.type.Organization" many="true" />
-  <var name="selected" type="org.dxos.type.Organization" optional="true" />
-  <collection data-items="organizations" item-id="id" item-label="name" />
+  <var name="tasks" type="org.dxos.type.Task" many="true" />
+  <var name="selected" type="org.dxos.type.Task" optional="true" />
+  <collection data-items="tasks" item-id="id" item-label="title" />
 </container>
 ```
 
@@ -139,9 +139,9 @@ A module publishes a typed export table with exactly three columns (the module c
 2. **Operations** — typed one-shot writes that may mutate ONLY the module's own slots.
 3. **Capabilities** — machine instances: shared, typed APIs over the module's state.
 
-`<use module="org.dxos.module.contacts" as="contacts" />` imports a module; `data-` paths then
-read its state column (`data-items="contacts.organizations"`), events dispatch its operations by
-key, and `<let name="selection" from="contacts.selection" />` binds a local name to a capability —
+`<use module="org.dxos.module.tasks" as="tasks" />` imports a module; `data-` paths then
+read its state column (`data-items="tasks.items"`), events dispatch its operations by
+key, and `<let name="selection" from="tasks.selection" />` binds a local name to a capability —
 every binder of that name observes the same instance (the master list and the detail form share
 one selection). Cross-module writes do not exist: another module's state changes only by
 dispatching that module's operations (a handler's `invoke`), and a handler's `scope.set` throws on

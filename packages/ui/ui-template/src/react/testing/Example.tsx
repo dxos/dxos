@@ -41,7 +41,7 @@ export const MultiSelectList = ({ items, onChange }: MultiSelectListProps) => {
   return (
     <Listbox.Root>
       <Listbox.Viewport>
-        <Listbox.Content aria-label='Organizations' aria-multiselectable>
+        <Listbox.Content aria-label='Tasks' aria-multiselectable>
           {items.map(({ id, label }) => (
             <Listbox.Item
               key={id}

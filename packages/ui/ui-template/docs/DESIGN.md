@@ -47,16 +47,16 @@ Recorded as directives, not aspirations — each shaped a decision below.
 
 Three findings, all live in the stories:
 
-- **Forms bind to a projection, not the stored type** (`R-5`). `Type.getSchema(Organization)`
+- **Forms bind to a projection, not the stored type** (`R-5`). `Type.getSchema(Task)`
   carries the readonly ECHO `id` as a required field; a draft can never satisfy it, and the
   rendered form exposes it for editing. The spike registers a hand-written projection
-  (name/description/status/website). The real answer is `View` — query + field projection — and the
+  (title/description/status). The real answer is `View` — query + field projection — and the
   registry should resolve a `view` key wherever it resolves a `schema` key today.
 - **Save values leak non-projection keys.** The form's save payload included `id` even though the
   projection doesn't declare it; `Object.assign` onto a live ECHO object then throws
   (`id` is readonly). Operations therefore write **field by field, through `Obj.update`** — the
   projection is the whitelist.
-- **The registry is the type authority.** `schema="org.dxos.type.Organization"` resolves at render
+- **The registry is the type authority.** `schema="org.dxos.type.Task"` resolves at render
   time; an unknown key renders an inline error rather than nothing. The same lookup discipline
   should eventually be a validation pass over the whole template (as `R-8` already is for tags).
 
@@ -177,7 +177,7 @@ Spike shape (borrowed from app-framework Operations, minus the plumbing):
 
 ```ts
 type OperationDef<Db> = {
-  key: string; // org.dxos.operation.contacts.save
+  key: string; // org.dxos.operation.tasks.save
   description?: string;
   handler: (ctx: { ui; payload?; db? }) => UiState | void;
 };
@@ -214,7 +214,7 @@ The extrapolation the spike argues for: **an application is the fixed point of t
   (`layout.open` writes `ui.deck`); the deck's chain rule (app dialect `deck.chain`) is a machine.
 - **Layouts update app state only via operations** — including navigation, plank management, and
   machine transitions. No second channel. This is what makes app-level undo _possible at all_:
-  closing a plank is as reversible as renaming an organization, because both are logged operations.
+  closing a plank is as reversible as renaming a task, because both are logged operations.
 - **Dynamic plugins** = registry mutation at runtime. Because templates reference by URI, a newly
   arrived plugin's contributions are picked up by the next render; a missing reference is a visible
   error (`R-8`), not a blank region — which is the honest failure mode for "async dynamic loading
@@ -245,7 +245,7 @@ yet).
 > `registry.operations` table remains as the anonymous-template (template-local) case, per "the
 > base of the ladder". The proposal text below is preserved as written.
 
-The flaw the stories expose: `selected`, `filtered`, `organizations` resolve by falling through
+The flaw the stories expose: `selected`, `filtered`, `items` resolve by falling through
 every lexical scope to an untyped root context object that story code assembles
 (`deriveContext`). A typo — `data-items="organisation"` — resolves `undefined` silently, and the
 collection renders empty as though the data were absent. Nothing is type-checked, because the
@@ -304,7 +304,7 @@ locally by a `let`. This retroactively explains why the spike works at all witho
 fall-through is deleted, an anonymous module's scope is **closed by construction** — the set of
 resolvable names is exactly the set of its own declarations, and the whole error table below
 collapses to the parse/validate row. The stories' one violation of anonymity is the root context
-(`organizations`, `filtered`, `selected`) — which is precisely where the flaw lives. The same
+(`items`, `filtered`, `selected`) — which is precisely where the flaw lives. The same
 holds on the write side: an anonymous module's operations are local definitions — handlers
 registered alongside the template, writing only its own `let` slots through `scope.set` — and
 naming a module is what turns them into exports. An anonymous module is not a degenerate case to
@@ -333,7 +333,7 @@ binding surface (the name, the `data-`/`on-` attributes against it) stays fixed:
 | ---- | ----------------------------------------------- | ------------------------ | --------------------- | -------------------- |
 | 1    | `<let name="text" initial="" />`                | `useState`               | none — a value        | private to the scope |
 | 2    | `<let name="selection" machine="…selection" />` | `useReducer` / actor     | transitions, guards   | private instance     |
-| 3    | `<let name="selection" from="contacts.…" />`    | context / external store | the module instance's | shared, module-owned |
+| 3    | `<let name="selection" from="tasks.…" />`       | context / external store | the module instance's | shared, module-owned |
 
 Rung 1 is a grammar relaxation — today's `let` demands a `machine=` and starts life on rung 2;
 a plain initial value is the honest floor. Upgrading a rung is a one-attribute edit: when
@@ -362,18 +362,18 @@ valid only as a direct child of the root; its `type` is a registry schema key, w
 and optionality from the ontology's §3 columns.
 
 ```xml
-<layout id="contacts" rows="1fr 1fr">
-  <var name="organizations" type="org.dxos.type.Organization" many="true" />
-  <var name="selected" type="org.dxos.view.OrganizationForm" optional="true" />
+<layout id="tasks" rows="1fr 1fr">
+  <var name="tasks" type="org.dxos.type.Task" many="true" />
+  <var name="selected" type="org.dxos.view.TaskForm" optional="true" />
   <let name="selection" machine="org.dxos.machine.selection" />
   <let name="draft" machine="org.dxos.machine.flag" />
-  <collection data-items="organizations" item-id="id" item-label="name"
+  <collection data-items="tasks" item-id="id" item-label="title"
               data-selection="selection"
-              on-select="org.dxos.operation.contacts.select" />
+              on-select="org.dxos.operation.tasks.select" />
   <show when="selected">
-    <form schema="org.dxos.type.Organization" data-values="selected"
-          on-save="org.dxos.operation.contacts.save"
-          on-cancel="org.dxos.operation.contacts.cancel" />
+    <form schema="org.dxos.type.Task" data-values="selected"
+          on-save="org.dxos.operation.tasks.save"
+          on-cancel="org.dxos.operation.tasks.cancel" />
     <fallback>
       <display label="Nothing selected." />
     </fallback>
@@ -401,28 +401,28 @@ plus schema — and a template names the module it consumes, Terraform/ES-module
 
 ```xml
 <container id="picker">
-  <use module="org.dxos.plugin.contacts" as="contacts" />
+  <use module="org.dxos.plugin.tasks" as="tasks" />
   <let name="filter" machine="org.dxos.machine.text" />
-  <display variant="title" data-text="contacts.title" />
-  <combobox placeholder="Select organization…"
-            data-items="contacts.filtered" item-id="id" item-label="name"
-            data-value="contacts.pickerLabel" data-filter="filter"
+  <display variant="title" data-text="tasks.title" />
+  <combobox placeholder="Select task…"
+            data-items="tasks.filtered" item-id="id" item-label="title"
+            data-value="tasks.pickerLabel" data-filter="filter"
             on-input="org.dxos.operation.picker.input"
             on-select="org.dxos.operation.picker.select" />
-  <show when="contacts.selected">
-    <form schema="org.dxos.type.Organization" data-values="contacts.selected" />
+  <show when="tasks.selected">
+    <form schema="org.dxos.type.Task" data-values="tasks.selected" />
   </show>
 </container>
 ```
 
 ```ts
 // The provider side: what deriveContext becomes — a module's typed export table.
-const ContactsModule = {
-  key: 'org.dxos.plugin.contacts',
+const TasksModule = {
+  key: 'org.dxos.plugin.tasks',
   exports: {
-    organizations: { primitive: 'query', schema: Organization },
-    filtered: { primitive: 'query', schema: Organization }, // derived — still typed, still owned here
-    selected: { primitive: 'view', schema: OrganizationForm, optional: true },
+    items: { primitive: 'query', schema: Task },
+    filtered: { primitive: 'query', schema: Task }, // derived — still typed, still owned here
+    selected: { primitive: 'view', schema: TaskForm, optional: true },
     pickerLabel: { primitive: 'object', schema: Schema.String },
   },
 };
@@ -452,16 +452,16 @@ implementation, many consumers) and the XState v5 actor model (one spawned actor
 `ActorRef`s held by many observers) applied to UI state:
 
 ```xml
-<layout id="contacts" rows="1fr 1fr">
-  <use module="org.dxos.plugin.contacts" as="contacts" />
-  <let name="selection" from="contacts.selection" />
-  <collection data-items="contacts.organizations" item-id="id" item-label="name"
+<layout id="tasks" rows="1fr 1fr">
+  <use module="org.dxos.plugin.tasks" as="tasks" />
+  <let name="selection" from="tasks.selection" />
+  <collection data-items="tasks.items" item-id="id" item-label="title"
               data-selection="selection"
-              on-select="org.dxos.operation.contacts.select" />
-  <show when="contacts.selected">
-    <form schema="org.dxos.type.Organization" data-values="contacts.selected"
-          on-save="org.dxos.operation.contacts.save"
-          on-cancel="org.dxos.operation.contacts.cancel" />
+              on-select="org.dxos.operation.tasks.select" />
+  <show when="tasks.selected">
+    <form schema="org.dxos.type.Task" data-values="tasks.selected"
+          on-save="org.dxos.operation.tasks.save"
+          on-cancel="org.dxos.operation.tasks.cancel" />
     <fallback>
       <display label="Nothing selected." />
     </fallback>
@@ -472,19 +472,19 @@ implementation, many consumers) and the XState v5 actor model (one spawned actor
 ```ts
 // The provider side: the module contract's three columns (see "The module contract" below) —
 // in Composer terms, rows in its `provides`.
-const ContactsModule = {
-  key: 'org.dxos.plugin.contacts',
+const TasksModule = {
+  key: 'org.dxos.plugin.tasks',
   // 1. Reactive readonly state — consumers read and subscribe, never write.
   state: {
-    organizations: { primitive: 'query', schema: Organization },
-    // Derived from selection × organizations — typed, owned by the module that owns the inputs.
-    selected: { primitive: 'view', schema: OrganizationForm, optional: true },
+    items: { primitive: 'query', schema: Task },
+    // Derived from selection × items — typed, owned by the module that owns the inputs.
+    selected: { primitive: 'view', schema: TaskForm, optional: true },
   },
   // 2. Operations — one-shot typed writes; the ONLY writers of the state above.
   operations: {
-    select: { key: 'org.dxos.operation.contacts.select', input: Schema.String },
-    save: { key: 'org.dxos.operation.contacts.save', input: OrganizationForm },
-    qualify: { key: 'org.dxos.operation.contacts.qualify' },
+    select: { key: 'org.dxos.operation.tasks.select', input: Schema.String },
+    save: { key: 'org.dxos.operation.tasks.save', input: TaskForm },
+    done: { key: 'org.dxos.operation.tasks.done' },
   },
   // 3. Capabilities — typed APIs over the state; the machine instance is the exemplar.
   capabilities: {
@@ -501,9 +501,9 @@ const ContactsModule = {
 machine=` (today's form) remains for template-private state — the combobox's `filter` has no
   business being a module export — so the private/shared line is drawn in the grammar, not by
   publication-path convention.
-- **Writes**: a consumer of `contacts.selection` never sets it — it dispatches contacts' own
-  operations (`on-select="org.dxos.operation.contacts.select"`), exactly as the master-detail
-  template already does, and a toolbar in another plugin qualifies the selection the same way.
+- **Writes**: a consumer of `tasks.selection` never sets it — it dispatches tasks' own
+  operations (`on-select="org.dxos.operation.tasks.select"`), exactly as the master-detail
+  template already does, and a toolbar in another plugin marks the selection done the same way.
   Observation is shared; mutation stays with the owner.
 - **Errors**: dangling `from=` alias or non-capability target → **registration** (mount for a
   late-loading module, with `waitFor` + absent state per `R-2`); writes remain scope-relative
@@ -539,12 +539,12 @@ module boundary is that closure promoted one level: the scope chain of a module'
 at the module, not at an app-global frame. `R-3` ("only `operation` writes") gains an owner
 clause: only the _owning module's_ operation writes. The payoff is the same one ES modules and
 Composer capabilities get from explicit boundaries — a module's state transitions are enumerable
-from its own operation table, so "what can change `contacts.selection`?" has a static answer, and
+from its own operation table, so "what can change `tasks.selection`?" has a static answer, and
 the operation log partitions by module for free.
 
 The spike's single global operation registry (`registry.operations`, flat
 `org.dxos.operation.*` keys) is then a **temporary flattening** of per-module tables: the keys
-already carry the module segment (`contacts.select`, `picker.input`), so unflattening is
+already carry the module segment (`tasks.select`, `picker.input`), so unflattening is
 attribution, not renaming. What changes is enforcement — dispatch resolves the key through the
 owning module's table, and the handler's `scope` is the module's own slots rather than the
 dispatching template's frames.
@@ -558,11 +558,11 @@ capability** when the system mounts (never per render), handing the factory a si
 The sync pattern is one-directional by construction:
 
 - **Write path (only one)**: machine transition → bindable `onChange` → `invoke` dispatches the
-  owning module's operation (`contacts.select-many { ids }`) → its handler `scope.set`s the
+  owning module's operation (`tasks.select-many { ids }`) → its handler `scope.set`s the
   capability's slot (`selections`). Every transition is therefore a logged operation, and the
   published-state pane shows the snapshot — MVU holds with the machine as an implementation
   detail behind the slot.
-- **Read path**: binders read the slot (`data-selections="contacts.selections"`), never the
+- **Read path**: binders read the slot (`data-selections="tasks.selections"`), never the
   machine. The mounted api (`ModuleView.apis`, reached by the component's
   `capability="alias.name"` aspect) exposes **event senders only** — its snapshot getters go
   stale by design.
@@ -641,7 +641,7 @@ database (the full client harness wedged the dev server on space boot and is not
 | List                | 6 rows from a live query                                                         |
 | Form                | projection schema renders; no readonly `id` field                                |
 | MasterDetail        | click → `select` op → published state → form; save → `Obj.update` → query → list |
-| MasterDetailToolbar | Add → draft → save → `db.add` (new row); Qualify writes the selection            |
+| MasterDetailToolbar | Add → draft → save → `db.add` (new row); Done writes the selection               |
 | Combobox            | typing dispatches `picker.input`; items narrow from state; pick fills the form   |
 | FilterList          | `filter.text` state narrows the list                                             |
 | ViewSwitch          | `view.mode` swaps the whole layout; selection survives the swap                  |

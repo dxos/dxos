@@ -19,30 +19,26 @@ import { Splitter } from './Splitter';
 // point is the machines standing alone as capabilities.
 //
 
-const OrganizationSchema = Schema.Struct({
-  name: Schema.String.pipe(Schema.annotate({ title: 'Name' }), Schema.optional),
-  status: Schema.Literals(['prospect', 'qualified', 'active']).pipe(
-    Schema.annotate({ title: 'Status' }),
-    Schema.optional,
-  ),
-  website: Schema.String.pipe(Schema.annotate({ title: 'Website' }), Schema.optional),
+const TaskSchema = Schema.Struct({
+  title: Schema.String.pipe(Schema.annotate({ title: 'Title' }), Schema.optional),
+  status: Schema.Literals(['todo', 'started', 'done']).pipe(Schema.annotate({ title: 'Status' }), Schema.optional),
 });
 
-type OrganizationValues = Schema.Schema.Type<typeof OrganizationSchema>;
+type TaskValues = Schema.Schema.Type<typeof TaskSchema>;
 
-type OrganizationRow = OrganizationValues & { id: string };
+type TaskRow = TaskValues & { id: string };
 
-const ORGANIZATIONS: OrganizationRow[] = [
-  'Blue Yard',
-  'Backed',
-  'Protocol Labs',
-  'DXOS',
-  'Ink & Switch',
-  'Socket Supply',
-].map((name, index) => ({
-  id: `org-${index + 1}`,
-  name,
-  status: index % 2 === 0 ? 'prospect' : 'active',
+const TASKS: TaskRow[] = [
+  'Write release notes',
+  'Fix login redirect',
+  'Update onboarding docs',
+  'Review open pull requests',
+  'Ship beta build',
+  'Triage support inbox',
+].map((title, index) => ({
+  id: `task-${index + 1}`,
+  title,
+  status: index % 2 === 0 ? 'todo' : 'started',
 }));
 
 type StoryArgs = {
@@ -51,24 +47,24 @@ type StoryArgs = {
 };
 
 const DefaultStory = ({ splitter }: StoryArgs) => {
-  const [organizations, setOrganizations] = useState(ORGANIZATIONS);
+  const [tasks, setTasks] = useState(TASKS);
   const [selection, setSelection] = useState<ReadonlySet<string>>(new Set());
 
   // The detail subject: the most recently selected id still present in the data.
   const selectedId = [...selection].at(-1);
-  const selected = organizations.find((org) => org.id === selectedId);
+  const selected = tasks.find((task) => task.id === selectedId);
 
   const list = (
-    <MultiSelectList items={organizations.map(({ id, name }) => ({ id, label: name ?? id }))} onChange={setSelection} />
+    <MultiSelectList items={tasks.map(({ id, title }) => ({ id, label: title ?? id }))} onChange={setSelection} />
   );
 
   const detail = selected ? (
     <Form.Root
       key={selected.id}
-      schema={OrganizationSchema}
+      schema={TaskSchema}
       defaultValues={selected}
-      onSave={(values: OrganizationValues) =>
-        setOrganizations((current) => current.map((org) => (org.id === selected.id ? { ...org, ...values } : org)))
+      onSave={(values: TaskValues) =>
+        setTasks((current) => current.map((task) => (task.id === selected.id ? { ...task, ...values } : task)))
       }
     >
       <Form.Viewport scroll>

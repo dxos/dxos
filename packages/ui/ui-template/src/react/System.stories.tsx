@@ -12,7 +12,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { useQuery } from '@dxos/echo-react';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { Organization } from '@dxos/types';
+import { Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { templateLanguage } from '../codemirror';
@@ -55,9 +55,16 @@ const testDb = (() => {
     promise ??= (async () => {
       const builder = new EchoTestBuilder();
       await builder.open();
-      const { db } = await builder.createDatabase({ types: [Organization.Organization] });
-      ['Blue Yard', 'Backed', 'Protocol Labs', 'DXOS', 'Ink & Switch', 'Socket Supply'].forEach((name, index) => {
-        db.add(Organization.make({ name, status: index % 2 === 0 ? 'prospect' : 'active' }));
+      const { db } = await builder.createDatabase({ types: [Task.Task] });
+      [
+        'Write release notes',
+        'Fix login redirect',
+        'Update onboarding docs',
+        'Review open pull requests',
+        'Ship beta build',
+        'Triage support inbox',
+      ].forEach((title, index) => {
+        db.add(Task.make({ title, status: index % 2 === 0 ? 'todo' : 'started' }));
       });
       return db;
     })();
@@ -78,66 +85,64 @@ const useTestDb = (): Db | undefined => {
 // published state and may mutate the database; the query feeds mutations back as new inputs.
 //
 
-const ORGANIZATION = 'org.dxos.type.Organization';
+const TASK = 'org.dxos.type.Task';
 const TEXT = 'org.dxos.type.Text';
 
-const CONTACTS_MODULE = 'org.dxos.module.contacts';
+const TASKS_MODULE = 'org.dxos.module.tasks';
 const PICKER_MODULE = 'org.dxos.module.picker';
 const FILTER_MODULE = 'org.dxos.module.filter';
 
+/** The status subset the form edits — the stored type also carries terminal states. */
+const TaskStatus = Schema.Literals(['todo', 'started', 'done']);
+
 /**
- * The FORM schema: the editable projection, not the stored type. `Type.getSchema(Organization)`
+ * The FORM schema: the editable projection, not the stored type. `Type.getSchema(Task)`
  * carries the ECHO `id` as a required field, which a draft cannot satisfy — a live reminder that
  * forms want a View (ONTOLOGY R-5), and the registry should hold both.
  */
-const OrganizationForm = Schema.Struct({
-  name: Schema.String.pipe(Schema.annotate({ title: 'Name' }), Schema.optional),
+const TaskForm = Schema.Struct({
+  title: Schema.String.annotate({ title: 'Title' }),
   description: Schema.String.pipe(Schema.annotate({ title: 'Description' }), Schema.optional),
-  status: Schema.Literals(['prospect', 'qualified', 'active', 'commit', 'reject']).pipe(
-    Schema.annotate({ title: 'Status' }),
-    Schema.optional,
-  ),
-  website: Schema.String.pipe(Schema.annotate({ title: 'Website' }), Schema.optional),
+  status: TaskStatus.pipe(Schema.annotate({ title: 'Status' }), Schema.optional),
 });
 
-type OrganizationFormValues = Schema.Schema.Type<typeof OrganizationForm>;
+type TaskFormValues = Schema.Schema.Type<typeof TaskForm>;
 
-const toFormValues = (org: Organization.Organization): OrganizationFormValues => ({
-  name: org.name,
-  description: org.description,
-  status: org.status,
-  website: org.website,
+const toFormValues = (task: Task.Task): TaskFormValues => ({
+  title: task.title,
+  description: task.description,
+  status: Schema.is(TaskStatus)(task.status) ? task.status : undefined,
 });
 
-/** The organizations a module received as input (the live query, wired by the host). */
-const inputOrganizations = (inputs: Readonly<Record<string, unknown>>): readonly Organization.Organization[] =>
-  Array.isArray(inputs.organizations) ? inputs.organizations : [];
+/** The tasks a module received as input (the live query, wired by the host). */
+const inputTasks = (inputs: Readonly<Record<string, unknown>>): readonly Task.Task[] =>
+  Array.isArray(inputs.tasks) ? inputs.tasks : [];
 
 /** A multi-selection as ids — the `selections` slot value or a `select-many` payload's `ids`. */
 const asIds = (value: unknown): string[] => (Array.isArray(value) ? value.map(String) : []);
 
 /**
- * The contacts module: what `deriveContext` used to smuggle in ambiently is now the module's
+ * The tasks module: what `deriveContext` used to smuggle in ambiently is now the module's
  * typed export table — the module that owns the inputs (selection, draft, the query) exports the
  * derivations (`selected`), and its operations are the only writers of its slots.
  */
-const ContactsModule: ModuleDef<Db> = {
-  key: CONTACTS_MODULE,
-  description: 'Organizations: query, shared selection, and the editing draft.',
+const TasksModule: ModuleDef<Db> = {
+  key: TASKS_MODULE,
+  description: 'Tasks: query, shared selection, and the editing draft.',
   slots: {
     selection: { initial: undefined },
     selections: { initial: [] },
     draft: { initial: false },
   },
   state: {
-    organizations: { derive: ({ inputs }) => inputOrganizations(inputs) },
-    // Derived from selection × draft × organizations — typed, owned here, never ambient.
+    items: { derive: ({ inputs }) => inputTasks(inputs) },
+    // Derived from selection × draft × items — typed, owned here, never ambient.
     selected: {
       derive: ({ slots, inputs }) => {
         if (slots.draft === true) {
           return {};
         }
-        const selected = inputOrganizations(inputs).find((org) => org.id === slots.selection);
+        const selected = inputTasks(inputs).find((task) => task.id === slots.selection);
         return selected ? toFormValues(selected) : undefined;
       },
     },
@@ -150,7 +155,7 @@ const ContactsModule: ModuleDef<Db> = {
         if (ids.length !== 1) {
           return undefined;
         }
-        const selected = inputOrganizations(inputs).find((org) => org.id === ids[0]);
+        const selected = inputTasks(inputs).find((task) => task.id === ids[0]);
         return selected ? toFormValues(selected) : undefined;
       },
     },
@@ -163,12 +168,12 @@ const ContactsModule: ModuleDef<Db> = {
   },
   operations: {
     select: {
-      key: 'org.dxos.operation.contacts.select',
+      key: 'org.dxos.operation.tasks.select',
       description: 'Select a row in the master list.',
       handler: ({ scope, payload }) => scope.set({ selection: payload, draft: false }),
     },
     selectMany: {
-      key: 'org.dxos.operation.contacts.select-many',
+      key: 'org.dxos.operation.tasks.select-many',
       description: 'Snapshot the multi-select capability instance into the selections slot.',
       handler: ({ scope, payload }) => {
         const ids = payload !== null && typeof payload === 'object' && 'ids' in payload ? asIds(payload.ids) : [];
@@ -176,17 +181,17 @@ const ContactsModule: ModuleDef<Db> = {
       },
     },
     add: {
-      key: 'org.dxos.operation.contacts.add',
+      key: 'org.dxos.operation.tasks.add',
       description: 'Start a draft; the form edits a temporary object until save.',
       handler: ({ scope }) => scope.set({ selection: undefined, draft: true }),
     },
     save: {
-      key: 'org.dxos.operation.contacts.save',
+      key: 'org.dxos.operation.tasks.save',
       description: 'Commit the form draft: update the selected object, or add the draft to the database.',
       handler: ({ scope, payload, db }) => {
-        const values = (payload ?? {}) as OrganizationFormValues;
+        const values = (payload ?? {}) as TaskFormValues;
         if (scope.get('draft') === true) {
-          db?.add(Organization.make(values));
+          db?.add(Task.make(values));
           scope.set({ draft: false });
           return;
         }
@@ -194,34 +199,33 @@ const ContactsModule: ModuleDef<Db> = {
         const lone = asIds(scope.get('selections'));
         // The single-select slot wins; a lone multi-selection is the multi template's subject.
         const id = typeof selection === 'string' ? selection : lone.length === 1 ? lone[0] : undefined;
-        const object = id ? db?.getObjectById<Organization.Organization>(id) : undefined;
+        const object = id ? db?.getObjectById<Task.Task>(id) : undefined;
         if (object) {
           // Field by field, never Object.assign: the form's values may carry keys the schema
           // projection does not own (the ECHO id is readonly).
           Obj.update(object, (object) => {
-            object.name = values.name;
+            object.title = values.title;
             object.description = values.description;
             object.status = values.status;
-            object.website = values.website;
           });
         }
       },
     },
     cancel: {
-      key: 'org.dxos.operation.contacts.cancel',
+      key: 'org.dxos.operation.tasks.cancel',
       description: 'Discard the draft.',
       handler: ({ scope }) => scope.set({ draft: false }),
     },
-    qualify: {
-      key: 'org.dxos.operation.contacts.qualify',
-      description: 'Toolbar action over the current selection: mark the organization qualified.',
+    done: {
+      key: 'org.dxos.operation.tasks.done',
+      description: 'Toolbar action over the current selection: mark the task done.',
       handler: ({ scope, db }) => {
         const selection = scope.get('selection');
         const id = typeof selection === 'string' ? selection : undefined;
-        const object = id ? db?.getObjectById<Organization.Organization>(id) : undefined;
+        const object = id ? db?.getObjectById<Task.Task>(id) : undefined;
         if (object) {
           Obj.update(object, (object) => {
-            object.status = 'qualified';
+            object.status = 'done';
           });
         }
       },
@@ -241,7 +245,7 @@ const ContactsModule: ModuleDef<Db> = {
       slot: 'selections',
       create: ({ invoke }) => {
         const machine = new VanillaMachine<MultiSelectSchema>(multiSelectMachine, {
-          onChange: ({ selection }) => invoke('org.dxos.operation.contacts.select-many', { ids: [...selection] }),
+          onChange: ({ selection }) => invoke('org.dxos.operation.tasks.select-many', { ids: [...selection] }),
         });
         // Started via `start`, guarded so strict mode's dispose/remount cycle restarts it exactly once.
         let running = false;
@@ -278,18 +282,18 @@ const PickerModule: ModuleDef<Db> = {
     filtered: {
       derive: ({ slots, inputs }) => {
         const text = String(slots.filter ?? '').toLowerCase();
-        const organizations = inputOrganizations(inputs);
-        return text ? organizations.filter((org) => (org.name ?? '').toLowerCase().includes(text)) : organizations;
+        const tasks = inputTasks(inputs);
+        return text ? tasks.filter((task) => task.title.toLowerCase().includes(text)) : tasks;
       },
     },
     selected: {
       derive: ({ slots, inputs }) => {
-        const selected = inputOrganizations(inputs).find((org) => org.id === slots.value);
+        const selected = inputTasks(inputs).find((task) => task.id === slots.value);
         return selected ? toFormValues(selected) : undefined;
       },
     },
     pickerLabel: {
-      derive: ({ slots, inputs }) => inputOrganizations(inputs).find((org) => org.id === slots.value)?.name ?? '',
+      derive: ({ slots, inputs }) => inputTasks(inputs).find((task) => task.id === slots.value)?.title ?? '',
     },
   },
   operations: {
@@ -316,8 +320,8 @@ const FilterModule: ModuleDef<Db> = {
     filtered: {
       derive: ({ slots, inputs }) => {
         const text = String(slots.text ?? '').toLowerCase();
-        const organizations = inputOrganizations(inputs);
-        return text ? organizations.filter((org) => (org.name ?? '').toLowerCase().includes(text)) : organizations;
+        const tasks = inputTasks(inputs);
+        return text ? tasks.filter((task) => task.title.toLowerCase().includes(text)) : tasks;
       },
     },
   },
@@ -332,7 +336,7 @@ const FilterModule: ModuleDef<Db> = {
 
 const registry: Registry<Db, Schema.Codec<any, any>> = {
   schemas: {
-    [ORGANIZATION]: OrganizationForm,
+    [TASK]: TaskForm,
     [TEXT]: Schema.String,
   },
 
@@ -359,7 +363,7 @@ const registry: Registry<Db, Schema.Codec<any, any>> = {
   },
 
   modules: {
-    [CONTACTS_MODULE]: ContactsModule,
+    [TASKS_MODULE]: TasksModule,
     [PICKER_MODULE]: PickerModule,
     [FILTER_MODULE]: FilterModule,
   },
@@ -372,24 +376,24 @@ const registry: Registry<Db, Schema.Codec<any, any>> = {
 const LIST = trim`
   <container>
     <var name="title" type="org.dxos.type.Text" />
-    <use module="org.dxos.module.contacts" as="contacts" />
+    <use module="org.dxos.module.tasks" as="tasks" />
     <display variant="title" data-text="title" />
-    <collection data-items="contacts.organizations" item-id="id" item-label="name" />
+    <collection data-items="tasks.items" item-id="id" item-label="title" />
   </container>
 `;
 
 const FORM = trim`
   <container>
     <var name="title" type="org.dxos.type.Text" />
-    <use module="org.dxos.module.contacts" as="contacts" />
+    <use module="org.dxos.module.tasks" as="tasks" />
     <display variant="title" data-text="title" />
     <command>
-      <control as="button" label="Add" on-activate="org.dxos.operation.contacts.add" />
+      <control as="button" label="Add" on-activate="org.dxos.operation.tasks.add" />
     </command>
-    <show when="contacts.selected">
-      <form schema="org.dxos.type.Organization" data-values="contacts.selected"
-            on-save="org.dxos.operation.contacts.save"
-            on-cancel="org.dxos.operation.contacts.cancel" />
+    <show when="tasks.selected">
+      <form schema="org.dxos.type.Task" data-values="tasks.selected"
+            on-save="org.dxos.operation.tasks.save"
+            on-cancel="org.dxos.operation.tasks.cancel" />
       <fallback>
         <display label="Nothing selected — Add starts a draft." />
       </fallback>
@@ -398,16 +402,16 @@ const FORM = trim`
 `;
 
 const MASTER_DETAIL = trim`
-  <layout id="contacts" rows="1fr 1fr" resizable="true">
-    <use module="org.dxos.module.contacts" as="contacts" />
-    <let name="selection" from="contacts.selection" />
-    <collection data-items="contacts.organizations" item-id="id" item-label="name"
+  <layout id="tasks" rows="1fr 1fr" resizable="true">
+    <use module="org.dxos.module.tasks" as="tasks" />
+    <let name="selection" from="tasks.selection" />
+    <collection data-items="tasks.items" item-id="id" item-label="title"
                 data-selection="selection"
-                on-select="org.dxos.operation.contacts.select" />
-    <show when="contacts.selected">
-      <form schema="org.dxos.type.Organization" data-values="contacts.selected"
-            on-save="org.dxos.operation.contacts.save"
-            on-cancel="org.dxos.operation.contacts.cancel" />
+                on-select="org.dxos.operation.tasks.select" />
+    <show when="tasks.selected">
+      <form schema="org.dxos.type.Task" data-values="tasks.selected"
+            on-save="org.dxos.operation.tasks.save"
+            on-cancel="org.dxos.operation.tasks.cancel" />
       <fallback>
         <display label="Nothing selected." />
       </fallback>
@@ -416,22 +420,22 @@ const MASTER_DETAIL = trim`
 `;
 
 const MASTER_DETAIL_TOOLBAR = trim`
-  <container id="contacts">
-    <use module="org.dxos.module.contacts" as="contacts" />
-    <let name="selection" from="contacts.selection" />
+  <container id="tasks">
+    <use module="org.dxos.module.tasks" as="tasks" />
+    <let name="selection" from="tasks.selection" />
     <command>
-      <control as="button" label="Add" on-activate="org.dxos.operation.contacts.add" />
-      <control as="button" label="Qualify" enabled="contacts.selected"
-               on-activate="org.dxos.operation.contacts.qualify" />
+      <control as="button" label="Add" on-activate="org.dxos.operation.tasks.add" />
+      <control as="button" label="Done" enabled="tasks.selected"
+               on-activate="org.dxos.operation.tasks.done" />
     </command>
     <layout rows="1fr 1fr" resizable="true">
-      <collection data-items="contacts.organizations" item-id="id" item-label="name"
+      <collection data-items="tasks.items" item-id="id" item-label="title"
                   data-selection="selection"
-                  on-select="org.dxos.operation.contacts.select" />
-      <show when="contacts.selected">
-        <form schema="org.dxos.type.Organization" data-values="contacts.selected"
-              on-save="org.dxos.operation.contacts.save"
-              on-cancel="org.dxos.operation.contacts.cancel" />
+                  on-select="org.dxos.operation.tasks.select" />
+      <show when="tasks.selected">
+        <form schema="org.dxos.type.Task" data-values="tasks.selected"
+              on-save="org.dxos.operation.tasks.save"
+              on-cancel="org.dxos.operation.tasks.cancel" />
         <fallback>
           <display label="Nothing selected." />
         </fallback>
@@ -442,17 +446,17 @@ const MASTER_DETAIL_TOOLBAR = trim`
 
 const MASTER_DETAIL_MULTI = trim`
   <layout rows="1fr 1fr" resizable="true">
-    <use module="org.dxos.module.contacts" as="contacts" />
-    <collection data-items="contacts.organizations" item-id="id" item-label="name"
-                data-selections="contacts.selections"
-                capability="contacts.multiSelect" />
-    <show when="contacts.selectedOne">
-      <form schema="org.dxos.type.Organization" data-values="contacts.selectedOne"
-            on-save="org.dxos.operation.contacts.save"
-            on-cancel="org.dxos.operation.contacts.cancel" />
+    <use module="org.dxos.module.tasks" as="tasks" />
+    <collection data-items="tasks.items" item-id="id" item-label="title"
+                data-selections="tasks.selections"
+                capability="tasks.multiSelect" />
+    <show when="tasks.selectedOne">
+      <form schema="org.dxos.type.Task" data-values="tasks.selectedOne"
+            on-save="org.dxos.operation.tasks.save"
+            on-cancel="org.dxos.operation.tasks.cancel" />
       <fallback>
-        <show when="contacts.manySelected">
-          <display variant="title" data-text="contacts.selectionLabel" />
+        <show when="tasks.manySelected">
+          <display variant="title" data-text="tasks.selectionLabel" />
           <fallback>
             <display label="Nothing selected — click a row; shift-click toggles." />
           </fallback>
@@ -467,13 +471,13 @@ const COMBOBOX = trim`
     <var name="title" type="org.dxos.type.Text" />
     <use module="org.dxos.module.picker" as="picker" />
     <display variant="title" data-text="title" />
-    <combobox placeholder="Select organization…"
-              data-items="picker.filtered" item-id="id" item-label="name"
+    <combobox placeholder="Select task…"
+              data-items="picker.filtered" item-id="id" item-label="title"
               data-value="picker.pickerLabel" data-filter="picker.filter"
               on-input="org.dxos.operation.picker.input"
               on-select="org.dxos.operation.picker.select" />
     <show when="picker.selected">
-      <form schema="org.dxos.type.Organization" data-values="picker.selected" />
+      <form schema="org.dxos.type.Task" data-values="picker.selected" />
     </show>
   </container>
 `;
@@ -483,30 +487,30 @@ const FILTER_LIST = trim`
     <use module="org.dxos.module.filter" as="filter" />
     <control label="Filter" placeholder="Type to filter…" data-value="filter.text"
              on-input="org.dxos.operation.filter.input" />
-    <collection data-items="filter.filtered" item-id="id" item-label="name" />
+    <collection data-items="filter.filtered" item-id="id" item-label="title" />
   </container>
 `;
 
 const TABS = trim`
-  <container id="contacts">
-    <use module="org.dxos.module.contacts" as="contacts" />
+  <container id="tasks">
+    <use module="org.dxos.module.tasks" as="tasks" />
     <let name="view" initial="list" />
-    <let name="selection" from="contacts.selection" />
+    <let name="selection" from="tasks.selection" />
     <tabs data-value="view" on-select="org.dxos.operation.view.set">
       <tab value="list" label="List" />
       <tab value="detail" label="Detail" />
     </tabs>
     <switch on="view">
       <match value="list">
-        <collection data-items="contacts.organizations" item-id="id" item-label="name"
+        <collection data-items="tasks.items" item-id="id" item-label="title"
                     data-selection="selection"
-                    on-select="org.dxos.operation.contacts.select" />
+                    on-select="org.dxos.operation.tasks.select" />
       </match>
       <match value="detail">
-        <show when="contacts.selected">
-          <form schema="org.dxos.type.Organization" data-values="contacts.selected"
-                on-save="org.dxos.operation.contacts.save"
-                on-cancel="org.dxos.operation.contacts.cancel" />
+        <show when="tasks.selected">
+          <form schema="org.dxos.type.Task" data-values="tasks.selected"
+                on-save="org.dxos.operation.tasks.save"
+                on-cancel="org.dxos.operation.tasks.cancel" />
           <fallback>
             <display label="Nothing selected." />
           </fallback>
@@ -529,16 +533,16 @@ type StoryArgs = {
 const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
   const [sources, setSources] = useState(initialSources);
   const db = useTestDb();
-  const organizations = useQuery(db, Filter.type(Organization.Organization));
+  const tasks = useQuery(db, Filter.type(Task.Task));
 
   // The host wires the live query into the modules that declared it as an input.
   const inputs = useMemo<ModuleInputs>(
     () => ({
-      [CONTACTS_MODULE]: { organizations },
-      [PICKER_MODULE]: { organizations },
-      [FILTER_MODULE]: { organizations },
+      [TASKS_MODULE]: { tasks },
+      [PICKER_MODULE]: { tasks },
+      [FILTER_MODULE]: { tasks },
     }),
-    [organizations],
+    [tasks],
   );
 
   // Which layout renders is itself a function of published state — layout selection is the
@@ -573,7 +577,7 @@ const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
 
   // The host side of the contract: values against the `var` signature, module views against the
   // `use` imports — both mount-checked, both visible when they fail (never garbage).
-  const vars: Record<string, unknown> = { title: 'Organizations' };
+  const vars: Record<string, unknown> = { title: 'Tasks' };
   const modules = viewModules(registry, ui, inputs, capabilities);
   const mountErrors = active?.node
     ? [
@@ -601,6 +605,7 @@ const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
               onChange={(next) => setSources((current) => ({ ...current, [activeKey]: next }))}
             />
           ),
+          size: 2,
         },
         {
           title: 'Published state',
@@ -610,20 +615,27 @@ const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
             </pre>
           ),
         },
-        { title: 'Operation log', children: <OperationLog entries={log} /> },
+        {
+          title: 'Operation log',
+          children: <OperationLog entries={log} />,
+        },
       ]}
       main={{
         title: 'Rendered',
         children:
           active?.node && mountErrors.length === 0 ? (
-            <Template
-              node={active.node}
-              ui={ui}
-              vars={vars}
-              modules={modules}
-              renderer={renderer}
-              options={{ dispatch }}
-            />
+            <div className='dx-container p-4'>
+              <div className='dx-container border border-separator rounded-sm'>
+                <Template
+                  node={active.node}
+                  ui={ui}
+                  vars={vars}
+                  modules={modules}
+                  renderer={renderer}
+                  options={{ dispatch }}
+                />
+              </div>
+            </div>
           ) : (
             // A failed signature or module wiring renders its errors, never garbage.
             <span className='text-error-text text-sm whitespace-pre-wrap'>
