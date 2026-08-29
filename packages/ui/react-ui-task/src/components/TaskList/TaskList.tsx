@@ -69,7 +69,9 @@ const DEFAULT_STATUS_LABELS: Record<Task.Status, string> = {
   cancelled: 'Cancelled',
 };
 
-export type TaskPatch = Partial<Pick<Task.Task, 'title' | 'status' | 'priority' | 'estimate' | 'assignee'>>;
+export type TaskPatch = Partial<
+  Pick<Task.Task, 'title' | 'description' | 'status' | 'priority' | 'estimate' | 'assignee'>
+>;
 
 //
 // Context — plain Radix context (un-scoped); nesting task lists has no meaning today.
@@ -876,64 +878,138 @@ const CompactIconButton = (props: IconButtonProps) => {
 // Create — the add row; renders nothing unless the root supplies `onTaskCreate`.
 //
 
-type TaskListCreateProps = ComposableProps<{ placeholder?: string }>;
+type TaskListEditProps = ComposableProps<{
+  /** Placeholder for the title field when nothing is selected (the create case). */
+  placeholder?: string;
+  /** Placeholder for the description field. */
+  descriptionPlaceholder?: string;
+}>;
 
-const TaskListCreate = composable<HTMLDivElement, { placeholder?: string }>(
-  ({ placeholder = 'Add task', ...props }, forwardedRef) => {
-    const { onTaskCreate, showGutter, hierarchical } = useTaskListContext('TaskList.Create');
+/**
+ * The detail half of the list: it edits whichever task is selected, and creates one when none is.
+ *
+ * Editing lives here rather than in the row because a row is 32px of shared subgrid — a field
+ * opening inside it moves everything around it. A pane below the list has room to be a field.
+ */
+const TaskListEdit = composable<HTMLDivElement, { placeholder?: string; descriptionPlaceholder?: string }>(
+  ({ placeholder = 'Add task', descriptionPlaceholder = 'Add a description', ...props }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
+    const { tasks, selected, showGutter, hierarchical, onTaskCreate, onTaskUpdate } =
+      useTaskListContext('TaskList.Edit');
     const { className, ...rest } = composableProps(props);
-    const [title, setTitle] = useState('');
-    const handleKeyDown = useCallback(
+
+    const task = useMemo(() => tasks.find(({ id }) => id === selected), [tasks, selected]);
+    // Subscribe to the selected task so the pane follows a rename made anywhere else.
+    const [snapshot] = useObject(task);
+    const current = snapshot ?? task;
+
+    const [draft, setDraft] = useState('');
+    // The pane is a view onto whichever task is selected, so switching tasks replaces what it holds
+    // rather than carrying the previous one's text across.
+    const [draftDescription, setDraftDescription] = useState('');
+    const editingId = useRef<string | undefined>(undefined);
+    if (editingId.current !== current?.id) {
+      editingId.current = current?.id;
+      setDraft(current?.title ?? '');
+      setDraftDescription(current?.description ?? '');
+    }
+
+    const commitTitle = useCallback(() => {
+      const title = draft.trim();
+      if (task && current) {
+        if (title.length > 0 && title !== current.title) {
+          onTaskUpdate?.(task, { title });
+        }
+      } else if (title.length > 0) {
+        onTaskCreate?.(title);
+        setDraft('');
+      }
+    }, [draft, task, current, onTaskCreate, onTaskUpdate]);
+
+    const commitDescription = useCallback(() => {
+      if (task && current && draftDescription !== (current.description ?? '')) {
+        onTaskUpdate?.(task, { description: draftDescription });
+      }
+    }, [draftDescription, task, current, onTaskUpdate]);
+
+    const handleTitleKeyDown = useCallback(
       (event: KeyboardEvent<HTMLInputElement>) => {
-        const trimmed = title.trim();
-        if (event.key === 'Enter' && trimmed.length > 0) {
-          onTaskCreate?.(trimmed);
-          setTitle('');
+        if (event.key === 'Enter') {
+          commitTitle();
         }
       },
-      [title, onTaskCreate],
+      [commitTitle],
     );
 
-    if (!onTaskCreate) {
+    // Nothing to create with and nothing to edit: the pane has no purpose.
+    if (!onTaskCreate && !(current && onTaskUpdate)) {
       return null;
     }
 
     return (
-      <div
-        {...rest}
-        data-testid='taskList.create'
-        className={mx(
-          'grid gap-x-1 items-center w-full min-w-0 h-8 shrink-0',
-          showGutter ? GRID_COLS.createWithOrdinals : GRID_COLS.create,
-          className,
-        )}
-        ref={forwardedRef}
-      >
-        {showGutter && <span />}
-        <Icon icon='ph--plus--regular' size={4} classNames='justify-self-center text-subdued' />
-        {/* A tree row's title sits past its disclosure toggle, so the input clears the same distance
-            — the columns already match, and without this only the text within them disagrees. */}
-        <span
-          className='flex items-center min-w-0'
-          style={hierarchical ? { paddingInlineStart: TOGGLE_INSET } : undefined}
+      <div {...rest} data-testid='taskList.edit' className={mx('flex flex-col w-full min-w-0 shrink-0', className)}>
+        <div
+          className={mx(
+            'grid gap-x-1 items-center w-full min-w-0 h-8',
+            showGutter ? GRID_COLS.createWithOrdinals : GRID_COLS.create,
+          )}
         >
-          <Input.Root>
-            <Input.TextInput
-              variant='subdued'
-              classNames='px-0'
-              placeholder={placeholder}
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              onKeyDown={handleKeyDown}
-            />
-          </Input.Root>
-        </span>
+          {showGutter && <span />}
+          <Icon
+            icon={current ? 'ph--pencil-simple--regular' : 'ph--plus--regular'}
+            size={4}
+            classNames='justify-self-center text-subdued'
+          />
+          {/* A tree row's title sits past its disclosure toggle, so the input clears the same distance
+              — the columns already match, and without this only the text within them disagrees. */}
+          <span
+            className='flex items-center min-w-0'
+            style={hierarchical ? { paddingInlineStart: TOGGLE_INSET } : undefined}
+          >
+            <Input.Root>
+              <Input.TextInput
+                variant='subdued'
+                classNames='px-0'
+                data-testid='taskList.edit.title'
+                placeholder={current ? t('task-title.placeholder') : placeholder}
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                onKeyDown={handleTitleKeyDown}
+                onBlur={commitTitle}
+              />
+            </Input.Root>
+          </span>
+        </div>
+        {/* Only a selected task has a description to edit; there is nothing to attach one to before
+            the task exists. */}
+        {current && onTaskUpdate && (
+          <div
+            className={mx('grid gap-x-1 w-full min-w-0', showGutter ? GRID_COLS.createWithOrdinals : GRID_COLS.create)}
+          >
+            {showGutter && <span />}
+            <span />
+            <span className='flex min-w-0' style={hierarchical ? { paddingInlineStart: TOGGLE_INSET } : undefined}>
+              <Input.Root>
+                <Input.TextArea
+                  variant='subdued'
+                  rows={2}
+                  classNames='px-0 text-sm text-description'
+                  data-testid='taskList.edit.description'
+                  placeholder={descriptionPlaceholder}
+                  value={draftDescription}
+                  onChange={(event) => setDraftDescription(event.target.value)}
+                  onBlur={commitDescription}
+                />
+              </Input.Root>
+            </span>
+          </div>
+        )}
       </div>
     );
   },
 );
 
-TaskListCreate.displayName = 'TaskList.Create';
+TaskListEdit.displayName = 'TaskList.Edit';
 
 //
 // Assignee — actor-aware chip: a Person ref resolves to the contact's name; otherwise fall back to
@@ -976,14 +1052,14 @@ export const TaskList = {
   Content: TaskListContent,
   GroupLabel: TaskListGroupLabel,
   Item: TaskListItem,
-  Create: TaskListCreate,
+  Edit: TaskListEdit,
   Assignee: TaskListAssignee,
 };
 
 export type {
   TaskListAssigneeProps,
   TaskListContentProps,
-  TaskListCreateProps,
+  TaskListEditProps,
   TaskListGroupLabelProps,
   TaskListItemProps,
   TaskListRootProps,

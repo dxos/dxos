@@ -16,8 +16,6 @@ import { type EntityId } from '@dxos/echo/Key';
 import * as Actor from './Actor';
 import * as Milestone from './Milestone';
 
-// TODO(burdon): History.
-
 export const Priority = Schema.Literals(['none', 'low', 'medium', 'high', 'urgent']);
 export type Priority = Schema.Schema.Type<typeof Priority>;
 

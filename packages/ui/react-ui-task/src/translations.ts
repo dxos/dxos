@@ -19,6 +19,7 @@ export const translations = [
         'status-cancelled.label': 'Cancelled',
         'task-blocked.label': 'Blocked',
         'delete-task.label': 'Delete task',
+        'task-title.placeholder': 'Untitled',
       },
     },
   },

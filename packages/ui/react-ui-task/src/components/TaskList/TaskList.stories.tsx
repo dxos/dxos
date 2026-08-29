@@ -141,7 +141,7 @@ const DefaultStory = ({
       <TaskList.Viewport>
         <TaskList.Content />
       </TaskList.Viewport>
-      <TaskList.Create />
+      <TaskList.Edit />
     </TaskList.Root>
   );
 };
@@ -191,6 +191,36 @@ export const Hierarchical: Story = {
     hierarchical: true,
     showOrdinals: true,
     showDescriptions: true,
+  },
+};
+
+export const TestEdit: Story = {
+  args: { showGroupLabels: false, showOrdinals: true },
+  // The pane is the detail half: it creates when nothing is selected and edits the selection
+  // otherwise, which is the whole reason editing moved out of the row.
+  play: async ({ canvasElement }) => {
+    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
+    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
+    const description = () => pane.querySelector<HTMLTextAreaElement>('[data-testid="taskList.edit.description"]');
+    const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
+
+    // Nothing selected: the pane creates, and has no description to attach one to.
+    await expect(title().value).toEqual('');
+    await expect(description()).toBeNull();
+
+    // Selecting a task fills the pane with it.
+    const first = rows()[0];
+    const firstTitle = first.querySelector('.truncate')!.textContent;
+    first.click();
+    await waitFor(async () => expect(title().value).toEqual(firstTitle));
+    await waitFor(async () => expect(description()).not.toBeNull());
+
+    // Editing the description writes it back on blur.
+    await userEvent.click(description()!);
+    await userEvent.keyboard(' — amended');
+    description()!.blur();
+    await waitFor(async () => expect(rows()[0].textContent).toContain(firstTitle));
+    await expect(description()!.value).toContain('amended');
   },
 };
 
@@ -309,7 +339,7 @@ export const TestHierarchy: Story = {
 
     // The create row's input starts where a row's title text does. The columns already match; what
     // differs is that a tree row's title sits past its disclosure toggle and the create row has none.
-    const create = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.create"]')!;
+    const create = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
     await expect(Math.round(create.querySelector('input')!.getBoundingClientRect().left)).toEqual(
       Math.round(rows()[0].row.querySelector('.truncate')!.getBoundingClientRect().left),
     );
@@ -340,7 +370,7 @@ export const Test: Story = {
   // up, since only geometry (not the DOM) shows the misalignment.
   play: async ({ canvasElement }) => {
     const row = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.item"]');
-    const create = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.create"]');
+    const create = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]');
     if (!row || !create) {
       throw new Error('Task rows not found.');
     }
@@ -351,7 +381,8 @@ export const Test: Story = {
     };
 
     const rowIcon = row.firstElementChild;
-    const createIcon = create.firstElementChild;
+    // The pane is a column: the title row is the grid whose gutters must line up with a task row.
+    const createIcon = create.firstElementChild?.firstElementChild;
     if (!rowIcon || !createIcon) {
       throw new Error('Row icons not found.');
     }
@@ -360,7 +391,10 @@ export const Test: Story = {
     await expect(Math.abs(center(rowIcon) - center(createIcon))).toBeLessThan(1);
     // ...and the labels start at the same x.
     await expect(
-      Math.abs(row.children[1].getBoundingClientRect().left - create.children[1].getBoundingClientRect().left),
+      Math.abs(
+        row.children[1].getBoundingClientRect().left -
+          (create.firstElementChild as HTMLElement).children[1].getBoundingClientRect().left,
+      ),
     ).toBeLessThan(1);
 
     // The row spans the full width, so trailing actions sit at the far edge.
