@@ -27,7 +27,6 @@ import React, {
   useCallback,
   useEffect,
   useRef,
-  useState,
 } from 'react';
 
 import { useThemeContext } from '../../hooks';

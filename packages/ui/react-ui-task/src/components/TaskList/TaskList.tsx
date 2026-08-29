@@ -36,7 +36,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { Listbox, TreeDropIndicator, TreeItemToggle, paddingIndentation, useListDisclosure } from '@dxos/react-ui-list';
-import { MarkdownEditable } from '@dxos/react-ui-markdown';
+import { MarkdownView } from '@dxos/react-ui-markdown';
 import { type Actor, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
@@ -69,9 +69,7 @@ const DEFAULT_STATUS_LABELS: Record<Task.Status, string> = {
   cancelled: 'Cancelled',
 };
 
-export type TaskPatch = Partial<
-  Pick<Task.Task, 'title' | 'description' | 'status' | 'priority' | 'estimate' | 'assignee'>
->;
+export type TaskPatch = Partial<Pick<Task.Task, 'title' | 'status' | 'priority' | 'estimate' | 'assignee'>>;
 
 //
 // Context — plain Radix context (un-scoped); nesting task lists has no meaning today.
@@ -618,9 +616,6 @@ const DESCRIPTION_COMPONENTS = {
   p: ({ children }: PropsWithChildren) => <span>{children}</span>,
 };
 
-/** A title is one run of text; markdown is what the reader may type, not a block to lay out. */
-const TITLE_COMPONENTS = DESCRIPTION_COMPONENTS;
-
 const STATUS_ICONS: Record<Task.Status, { icon: string; classNames?: string }> = {
   todo: { icon: 'ph--square--regular', classNames: 'text-subdued' },
   started: { icon: 'ph--hourglass--regular', classNames: 'text-info-text' },
@@ -822,16 +817,7 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
               }}
             />
           )}
-          {/* Double-click, not click: a single click on this row already selects it. */}
-          <MarkdownEditable
-            classNames='min-w-0 truncate'
-            value={current.title ?? ''}
-            onValueChange={(title) => onTaskUpdate?.(task, { title })}
-            readonly={!onTaskUpdate}
-            activation='dblclick'
-            placeholder={t('task-title.placeholder')}
-            components={TITLE_COMPONENTS}
-          />
+          <span className='truncate'>{current.title}</span>
         </span>
         {current.assignee ? (
           <span className='flex h-8 items-center'>
@@ -856,12 +842,8 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
         {instruction && <TreeDropIndicator instruction={instruction} gap={0} />}
         {description && (
           // Its own row in the subgrid, starting under the title and spanning the label columns.
-          <MarkdownEditable
-            value={description}
-            onValueChange={(next) => onTaskUpdate?.(task, { description: next })}
-            readonly={!onTaskUpdate}
-            activation='dblclick'
-            placeholder={t('task-description.placeholder')}
+          <MarkdownView
+            content={description}
             classNames={mx(
               showGutter ? 'col-start-3' : 'col-start-2',
               // Aligned under its own title — which sits past the disclosure toggle — so a

@@ -118,12 +118,12 @@ const BasicStory = () => {
             <MasterDetail<Row>
               classNames='dx-document'
               items={CATEGORIES}
+              detail={selected ? <div className='p-2 text-sm'>Selected: {selected.label}</div> : null}
               selectedId={selectedId}
-              onSelect={setSelectedId}
               getLabel={(_get, row) => row.label}
               getIcon={(_get, row) => ({ icon: row.icon })}
               emptyLabel='No categories'
-              detail={selected ? <div className='p-2 text-sm'>Selected: {selected.label}</div> : null}
+              onSelect={setSelectedId}
             />
           </ScrollArea.Viewport>
         </ScrollArea.Root>
