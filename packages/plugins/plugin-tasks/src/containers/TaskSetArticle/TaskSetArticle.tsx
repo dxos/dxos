@@ -32,9 +32,6 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
   const { hasAttention } = useAttention(attendableId);
   const spaceId = Obj.getDatabase(taskSet)?.spaceId;
   const { invokePromise } = useOperationInvoker();
-
-  const statusLabel = useCallback((status: Task.Status) => t(`task-status.${status}.label`), [t]);
-
   const tasks = useSetTasks(taskSet);
 
   const handleCreate = useCallback(
@@ -71,9 +68,8 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
     <TaskList.Root
       hierarchical
       selectable
-      tasks={tasks}
       showDescriptions
-      statusLabel={statusLabel}
+      tasks={tasks}
       onTaskCreate={handleCreate}
       onTaskUpdate={handleUpdate}
       onTaskDelete={handleDelete}

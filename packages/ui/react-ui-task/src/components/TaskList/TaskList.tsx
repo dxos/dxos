@@ -61,15 +61,6 @@ const TASK_LIST_NAME = 'TaskList.Root';
 /** Linear-style status groups, most active first. */
 export const STATUS_ORDER: Task.Status[] = ['started', 'todo', 'done', 'failed', 'cancelled'];
 
-/** Fallback status labels. */
-const DEFAULT_STATUS_LABELS: Record<Task.Status, string> = {
-  started: 'Started',
-  todo: 'To Do',
-  done: 'Done',
-  failed: 'Failed',
-  cancelled: 'Cancelled',
-};
-
 export type TaskPatch = Partial<
   Pick<Task.Task, 'title' | 'description' | 'status' | 'priority' | 'estimate' | 'assignee'>
 >;
@@ -87,7 +78,6 @@ type TaskListContextValue = {
   hierarchical: boolean;
   /** Whether the leading gutter is rendered at all — it holds the ordinal and the drag handle. */
   showGutter: boolean;
-  statusLabel: (status: Task.Status) => string;
   selected?: string;
   /** Whether a branch's sub-tasks are hidden, and the toggle that flips it. */
   isCollapsed: (id: string) => boolean;
@@ -124,8 +114,6 @@ type TaskListRootProps = PropsWithChildren<{
   /** Render each task's description under its title; rows grow to fit. Off by default, so a
    * single-line list (e.g. the chat strip) keeps one row per task. */
   showDescriptions?: boolean;
-  /** i18n hook for group headings; defaults to English labels. */
-  statusLabel?: (status: Task.Status) => string;
   /** Enables `Create`; called with the trimmed title. */
   onTaskCreate?: (title: string) => void;
   /** Enables the done toggle. Every mutation is delegated — the list never writes. */
@@ -176,7 +164,6 @@ const TaskListRoot = ({
   collapsed,
   selected: selectedProp,
   selectable: selectableProp,
-  statusLabel = (status) => DEFAULT_STATUS_LABELS[status],
   onTaskCreate,
   onTaskUpdate,
   onTaskDelete,
@@ -234,7 +221,6 @@ const TaskListRoot = ({
       // The handle lives in the ordinal's gutter, so a movable list reserves the track even when it
       // shows no numbers.
       showGutter={showOrdinals || !!onTaskMove}
-      statusLabel={statusLabel}
       isCollapsed={isCollapsed}
       onCollapseToggle={onCollapseToggle}
       dragging={dragging}
@@ -295,6 +281,7 @@ const GRID_COLS = {
 type TaskListContentProps = ComposableProps;
 
 const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
+  const { t } = useTranslation(translationKey);
   const {
     tasks,
     groupByStatus,
@@ -303,7 +290,6 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
     showDescriptions,
     hierarchical,
     showGutter,
-    statusLabel,
     isCollapsed,
   } = useTaskListContext('TaskList.Content');
   // Ordinals follow the set's canonical order, not the display order, so a task keeps its number as
@@ -356,7 +342,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
           ))
         : groups.map(({ status, tasks }) => (
             <Fragment key={status ?? 'all'}>
-              {status && showGroupLabels && <TaskListGroupLabel>{statusLabel(status)}</TaskListGroupLabel>}
+              {status && showGroupLabels && <TaskListGroupLabel>{t(`status-${status}.label`)}</TaskListGroupLabel>}
               {tasks.map((task) => (
                 <TaskListItem key={task.id} task={task} ordinal={showOrdinals ? ordinals.get(task.id) : undefined} />
               ))}
