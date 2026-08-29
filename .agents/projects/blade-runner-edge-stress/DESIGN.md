@@ -104,10 +104,11 @@ Consequences for us:
 - Transport is two Redis lists per replicant (request/response queues) with blocking pops, wrapped
   in `@dxos/rpc`'s `RpcPeer` (`noHandshake: true`, `timeout: 0` on the orchestrator side —
   **no RPC timeout**, so a hung replicant hangs the plan; our own timeouts must be explicit).
-- **The codec is `JSON.stringify`/`JSON.parse`** (`rpcCodec` in `redis/util.ts`). Therefore every
-  argument and return value must be plain JSON: strings, numbers, booleans, arrays, objects.
-  No `PublicKey`, no `Uint8Array`, no `Date`, no `undefined`-in-arrays semantics. Space ids travel
-  as strings, keys as hex.
+- **The codec is JSON with a tagged escape** (`rpcCodec` in `redis/rpc-codec.ts`). Plain JSON —
+  strings, numbers, booleans, arrays, objects — is carried unchanged, and `PublicKey` and
+  `Uint8Array` are tagged so they arrive as themselves at any depth. Everything else still degrades
+  to its JSON projection: no `Date`, no `Map`/`Set`, no `undefined`-in-arrays semantics. Extending
+  the set is adding one entry to the `codecs` table.
 - `syncBarrier(key, n)` / `syncData(key, n, data)` exist on both sides (Redis `INCR` + keyspace
   notifications) for replicant-to-replicant rendezvous. Our design does not need them: the
   orchestrator sequences everything, which is what makes the model authoritative.
@@ -449,7 +450,9 @@ Concrete things the implementation must confirm or fix — found by reading the 
    Fall back to destroy+init for offline/online only if that fix proves unsafe.
 2. **VP auth against a Hub account** — §13's risk; test one `DELETE /data/space/:spaceId` from a
    freshly minted identity against preview before committing to path A.
-3. **RPC is JSON-only** (§3.4) — no `PublicKey`/`Uint8Array` may cross the replicant boundary.
+3. ~~**RPC is JSON-only**~~ — fixed (§3.4): the codec now tags `PublicKey` and `Uint8Array`, which
+   previously did not error but corrupted silently (a key became a hex string, bytes became an
+   index map). Other non-JSON types still degrade, so check the `codecs` table before relying on one.
 4. **No RPC timeout on the orchestrator** (`timeout: 0`) — every wait we care about (quiescence,
    join, flush) needs its own explicit timeout, or a hung replicant hangs the whole run.
 5. **`plan.run` is the only place cleanup can run** (§3.2) — put it in `try/finally` there;
