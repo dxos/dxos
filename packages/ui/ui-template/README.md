@@ -30,17 +30,28 @@ template  ::= element                        (exactly one root)
 element   ::= '<' tag attr* ( '/>' | '>' element* '</' tag '>' )
 tag       ::= 'container' | 'layout' | 'display' | 'control' | 'collection' | 'command'
             | 'form' | 'combobox' | 'tabs' | 'tab'
-            | 'show' | 'fallback' | 'switch' | 'match' | 'let'
+            | 'show' | 'fallback' | 'switch' | 'match'
+            | 'let' | 'var' | 'use'
 attr      ::= aspect | data | item | event
 aspect    ::= NAME '=' STRING               static; narrowed to number/boolean where it parses
-data      ::= 'data-' NAME '=' PATH         read binding against the state object
+data      ::= 'data-' NAME '=' PATH         read binding against declared names (see below)
 item      ::= 'item-' NAME '=' PATH         read binding against the current collection item
 event     ::= 'on-' NAME '=' OPERATION_KEY  the single outbound edge
-PATH      ::= NAME ( '.' NAME )* | '.'      '.' is the item itself
+PATH      ::= NAME ( '.' NAME )*            first segment must be a declared name
+            | '.'                           item bindings only: the item itself
 ```
 
-Two intrinsic binding attributes lack the `data-` prefix but are state bindings all the same:
-`when` on `show` and `on` on `switch`.
+Declarations (all closed-world — a binding to an undeclared name is a parse error):
+
+```text
+let  ::= '<let' 'name='NAME ( 'initial='LITERAL | 'machine='KEY | 'from='ALIAS'.'CAP ) '/>'
+var  ::= '<var' 'name='NAME 'type='SCHEMA_KEY [ 'many="true"' ] [ 'optional="true"' ] '/>'
+use  ::= '<use' 'module='MODULE_KEY 'as='ALIAS '/>'
+```
+
+`var` and `use` are valid only as direct children of the root; `let` needs an enclosing element
+with an `id`. Two intrinsic binding attributes lack the `data-` prefix but are state bindings all
+the same: `when` on `show` and `on` on `switch`.
 
 Text content is not part of the grammar. A bound string is a `display` node with a binding, never a
 text child — so there is nothing to interpolate and no expression language to evaluate.
@@ -51,12 +62,12 @@ tools reject has given up its only advantage (`R-15`).
 
 ### Attribute families
 
-| Family    | Prefix   | Resolves against              | Direction |
-| --------- | -------- | ----------------------------- | --------- |
-| Aspect    | *(none)* | nothing — static              | —         |
-| Data      | `data-`  | the template's state object   | in        |
-| Item      | `item-`  | the current `collection` item | in        |
-| Event     | `on-`    | an operation key              | **out**   |
+| Family    | Prefix   | Resolves against                            | Direction |
+| --------- | -------- | ------------------------------------------- | --------- |
+| Aspect    | *(none)* | nothing — static                            | —         |
+| Data      | `data-`  | declared names: `let` / `var` / `use` alias | in        |
+| Item      | `item-`  | the current `collection` item               | in        |
+| Event     | `on-`    | an operation key                            | **out**   |
 
 Only `on-*` writes (`R-3`). Everything else is read-only from the template's point of view, which
 means a template can be statically audited for what it can change: the set of operation keys it
@@ -75,29 +86,74 @@ names.
 Unmatched branches are not hidden — they are never rendered. Which children exist is a function of
 one resolved binding, so the grammar still holds no expressions.
 
-### Lexical scopes
+### Lexical scopes and the declaration ladder
 
-Any element that declares `id="x"` opens a named scope for its subtree. Its direct
-`<let name="n" machine="org.dxos.machine.…" />` children declare writable slots, seeded from the
-named machine's initial value and published at `ui.<idPath>.<n>` — where `idPath` is the chain of
-enclosing scope ids. Publication requires the name; anonymous elements have no published state.
+Any element that declares `id="x"` opens a named scope for its subtree. Its direct `let` children
+declare slots whose **backing escalates in place** while the binding surface stays fixed:
 
-Binding resolution is lexical: the first path segment of a state binding is looked up through the
-enclosing scopes, innermost first — a frame declaring that name resolves from its slot's value —
-before falling back to the root state object, so app-level context (`organizations`, `title`,
-`selected`) needs no declaration. Operations are scope-relative: a dispatched handler receives a
-`scope` with `has`/`get`/`set` that resolve slot names the same way and write into the published
-tree; setting an undeclared name is an error.
+| Rung | Declaration                                     | Backing                              | Writable by                    |
+| ---- | ----------------------------------------------- | ------------------------------------ | ------------------------------ |
+| 1    | `<let name="text" initial="" />`                | a literal value                      | scope-relative operations      |
+| 2    | `<let name="selection" machine="…selection" />` | a registry machine's initial value   | scope-relative operations      |
+| 3    | `<let name="selection" from="contacts.…" />`    | a module-provided machine instance   | the owning module's operations |
+
+Rung 1/2 slots are seeded and published at `ui.<idPath>.<n>` — where `idPath` is the chain of
+enclosing scope ids. Publication requires the name; anonymous elements have no published state. A
+rung-3 slot is not published by the template: it mirrors the module's shared instance, readable in
+the subtree but never writable by template-local operations.
+
+Binding resolution is lexical **and closed**: the first path segment of a state binding must be a
+`let` slot in an enclosing scope (innermost first), a root `var` input, or a root `use` alias.
+There is no fall-through to an ambient context object — a typo is a parse error, never a silently
+empty render. Operations are scope-relative: a dispatched handler receives a `scope` with
+`has`/`get`/`set` that resolve slot names the same way and write into the published tree; setting
+an undeclared name is an error.
 
 `collection` additionally introduces an item scope: it resolves `data-items` to an array and
 renders its children once per element, with `item-*` bindings resolving against that element.
 
-Paths to walk, slots to name — still no expression language to evaluate.
+Paths to walk, names to declare — still no expression language to evaluate.
+
+### Template signatures (`var`)
+
+The root declares its inputs, and the host supplies values against them:
+
+```xml
+<container>
+  <var name="organizations" type="org.dxos.type.Organization" many="true" />
+  <var name="selected" type="org.dxos.type.Organization" optional="true" />
+  <collection data-items="organizations" item-id="id" item-label="name" />
+</container>
+```
+
+`type=` is a registry schema key; an unknown key is a registration error. The host's values are
+validated against the signature at mount (`checkVars` + a schema decode) — a missing required
+input, a non-array for `many`, or a value failing its schema reports a visible error instead of
+rendering garbage. Inputs are required or explicitly optional, never defaulted.
+
+### Modules (`use`, `let from=`)
+
+A module publishes a typed export table with exactly three columns (the module contract):
+
+1. **State** — reactive readonly values and derivations; consumers bind, never write.
+2. **Operations** — typed one-shot writes that may mutate ONLY the module's own slots.
+3. **Capabilities** — machine instances: shared, typed APIs over the module's state.
+
+`<use module="org.dxos.module.contacts" as="contacts" />` imports a module; `data-` paths then
+read its state column (`data-items="contacts.organizations"`), events dispatch its operations by
+key, and `<let name="selection" from="contacts.selection" />` binds a local name to a capability —
+every binder of that name observes the same instance (the master list and the detail form share
+one selection). Cross-module writes do not exist: another module's state changes only by
+dispatching that module's operations (a handler's `invoke`), and a handler's `scope.set` throws on
+any slot its module does not own. Derived values live in the module that owns the inputs — never
+in an ambient context object.
 
 ## Example
 
 ```xml
 <container gap="sm">
+  <var name="title" type="org.dxos.type.Text" />
+  <var name="tags" type="org.dxos.type.Text" many="true" />
   <display variant="title" data-text="title" />
   <control label="Name" data-value="title" on-commit="org.dxos.operation.projects.rename" />
   <collection data-items="tags">
@@ -109,7 +165,8 @@ Paths to walk, slots to name — still no expression language to evaluate.
 </container>
 ```
 
-Bound to `{ title: string; description: string; tags: string[] }`.
+The `var` signature is the template's parameter list; the host binds it to
+`{ title: string; tags: string[] }` and the values are schema-checked at mount.
 
 ## Typed bindings
 
@@ -130,7 +187,11 @@ TSX authoring surface over XML.
 
 An unknown tag is an error with its position, never a dropped element (`R-8`): a silently dropped
 element renders as though the author never wrote it. The parser also rejects unbalanced tags,
-multiple roots, text content, and an `on-*` value that does not look like an operation key.
+multiple roots, text content, an `on-*` value that does not look like an operation key, and any
+state binding whose first segment is undeclared. What cannot be known statically fails visibly
+later, never silently: an unknown module/export or a failed `var` signature reports at
+registration/mount (`checkUses`/`checkVars`), and a binding that fails at render throws
+`BindingResolutionError`, which the React renderer surfaces as an inline error element.
 
 ## Not implemented
 
@@ -143,5 +204,5 @@ Deliberate gaps, each tracked as a rule in the ontology:
 - **Parts** (`R-10`) — `<control as="button">` is standing in for an action part that does not
   exist in the vocabulary.
 - **Async bindings** (`R-2`) — `show`/`fallback` covers the absent state structurally, but the
-  state object here is plain data; nothing resolves a `ref` or a `query` yet.
+  declared inputs here are plain data; nothing resolves a `ref` or a `query` yet.
 - **Layout escape hatches** (`R-14`) — no way to say "not that way, it breaks".

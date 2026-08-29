@@ -426,6 +426,11 @@ _Evidence:_ every real container resolves from one subject — `ProjectArticle` 
 `subject: Project` and reaches `subject.instructions`, `subject.taskSet`, `subject.artifacts`.
 _Consequence:_ `<Layout<{ title: string }>>` is the correct shape. The binding root is named
 (`context`, `subject`) and typed; paths are checked against it.
+_Update (2026-08-29):_ landed in `ui-template` as the root `var` signature: the template declares
+its typed inputs (`<var name="…" type="…" many optional />`), the host's values are validated
+against it at mount, and there is no untyped state object — resolution is closed over declared
+names (`let`/`var`/`use`), so an undeclared first segment is a parse error. See
+[`DESIGN.md`](./DESIGN.md) § Typed binding and modules.
 
 **R-2 — Every asynchronous binding implies an absent state on the consuming node.**
 A `ref`, `query`, `view`, or `feed` may not be loaded. If the template cannot say what to render
@@ -445,6 +450,10 @@ _Evidence:_ §3 — ten read primitives, one invocable.
 _Consequence:_ events are a distinct binding family, not an attribute that happens to hold a
 function. It also means a template can be statically checked for what it can change: the set of
 operation keys it names.
+_Update (2026-08-29):_ the rule gains an owner clause under the module contract: only the
+_owning module's_ operation writes its state — a module operation's `scope` covers exactly its
+own slots (a foreign write throws), and cross-module interaction is dispatching the other
+module's operations. See [`DESIGN.md`](./DESIGN.md) § The module contract.
 
 **R-4 — Per-instance UI state is its own binding family.**
 The state a template needs that is neither persisted data nor host context — a selected tab, an
@@ -455,11 +464,12 @@ in `useState`, and `onSelectTask` sets it.
 _Consequence:_ either the DSL grows a fourth read family, or every such value is promoted to a real
 object — which makes tab selection a database write.
 _Update (2026-08-29):_ the `ui-template` spike answers this with **published state under lexical
-scopes**: an element declaring `id` opens a scope, its `let` children bind registry machines to
-slot names published at `ui.<idPath>.<name>`, written only by scope-relative operations and read
-through ordinary `data-` bindings resolved lexically — a third option neither anticipated.
-Publication requires the name; anonymous elements stay private. See
-[`DESIGN.md`](./DESIGN.md).
+scopes**: an element declaring `id` opens a scope, its `let` children declare slot names published
+at `ui.<idPath>.<name>`, written only by scope-relative operations and read through ordinary
+`data-` bindings resolved lexically — a third option neither anticipated. Publication requires the
+name; anonymous elements stay private. The `let` backing is a ladder — a literal `initial=`
+value, a registry `machine=`, or `from=` a module-provided shared instance (written only by the
+owning module's operations). See [`DESIGN.md`](./DESIGN.md).
 
 **R-5 — Forms bind to a view, not to a schema.**
 A schema gives shape. Which fields appear, in what order, with what formats, is a projection — and

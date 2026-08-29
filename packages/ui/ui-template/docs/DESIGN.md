@@ -81,10 +81,11 @@ The template grammar (see [`README.md`](../README.md)): closed kind tags, four a
 grammar:
 
 - **Lexical scopes.** An element declaring `id` opens a named scope for its subtree; its `let`
-  children declare machine-backed slots published at `ui.<idPath>.<name>` (the chain of enclosing
-  scope ids). Binding resolution is lexical — the first path segment resolves through enclosing
-  scopes innermost-first before falling back to the root state object. Publication requires the
-  name; anonymous elements stay private.
+  children declare slots published at `ui.<idPath>.<name>` (the chain of enclosing scope ids).
+  Binding resolution is lexical — the first path segment resolves through enclosing scopes
+  innermost-first. _Updated 2026-08-29:_ the spike's fall-through to a root state object is
+  deleted; resolution is closed over declared names (`let`, root `var`, `use` alias) per the
+  module proposal below. Publication requires the name; anonymous elements stay private.
 - **Structural conditionality** (Solid-inspired): `show`/`fallback` renders one branch by the
   presence of a single `when` binding — replacing the earlier `absent="omit"` attribute — and
   `switch`/`match` picks a branch by strict equality against an `on` binding. No expressions; one
@@ -144,9 +145,9 @@ type MachineDef = {
   integrate at commit points via operations) and _published_ (master-detail selection —
   schema-described, addressable). A form's draft buffer is tier-1: the same rule covers both.
 - **Addressing**: `id=` opens a scope and `let` publishes a slot at `ui.<idPath>.<name>` —
-  landed as **lexical scopes**: a template addresses only names its enclosing scopes declare (plus
-  the root state object), and operations write only the slots in the dispatching node's scope
-  chain. What remains open is the cross-plugin/app scope: a toolbar in one template observing
+  landed as **lexical scopes**: a template addresses only names its enclosing scopes declare
+  (plus, since 2026-08-29, the root's `var` inputs and `use` aliases — never an ambient state
+  object), and operations write only the slots in the dispatching node's scope chain. What remains open is the cross-plugin/app scope: a toolbar in one template observing
   another template's scope needs an app-level frame both resolve through (which then needs a
   collision rule), and instance-per-item state (a `let` inside a collection scope).
 - **zag-js**: adoptable as an _implementation_ of `MachineDef` only if its internal state is
@@ -229,6 +230,20 @@ whether machine transition tables earn their keep over slots + operations (the s
 yet).
 
 ## Typed binding and modules (proposal)
+
+> **Status (2026-08-29): the recommendation below is IMPLEMENTED**, in the landing order it
+> prescribes. Landed: (1) fall-through deleted + rung-1 `let initial=` (closed resolution is a
+> parse-time check, `BindingResolutionError` + inline render errors cover the rest); (2) `var`
+> signatures with registration/mount checking (`varDecls`/`checkVars`); (3) `use` + per-module
+> export tables under the three-column module contract (`ModuleDef`: slots/state/operations/
+> capabilities, `viewModules`, `createModuleReader`, `checkUses`), write ownership enforced in
+> dispatch (a module operation's `scope.set` throws on a foreign slot; cross-module writes go
+> through `invoke`), `let from=` binding module capabilities; (4) stories migrated —
+> `deriveContext` is gone, its derivations are module state exports, master-detail binds the
+> module-provided shared selection instance; (5) a mutual-module system test proves reciprocal
+> reads, invoke-only cross-module writes, and ownership violations throwing. The flat
+> `registry.operations` table remains as the anonymous-template (template-local) case, per "the
+> base of the ladder". The proposal text below is preserved as written.
 
 The flaw the stories expose: `selected`, `filtered`, `organizations` resolve by falling through
 every lexical scope to an untyped root context object that story code assembles
