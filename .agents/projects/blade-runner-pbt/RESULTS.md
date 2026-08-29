@@ -40,7 +40,7 @@ cd packages/services/edge && pnpm exec tsx scripts/dev.mts \
 # 2. The test (in the dxos repo).
 redis-server --port 6379 &
 cd packages/e2e/blade-runner
-GRAVITY_OUT_BASE=$PWD node --import tsx src/edge-pbt-main.ts --seed <seed> [--specfile spec.yml]
+GRAVITY_OUT_BASE=$PWD node --import tsx src/main.ts edgePbt --no-browser --seed <seed> [-s spec.yml]
 ```
 
 Notes that cost time to find:
@@ -48,8 +48,10 @@ Notes that cost time to find:
 - `blade-runner:build` is a **no-op** (`command: 'true'`), so the `pnpm run-tests` entry
   (`dist/lib/node-esm/main.mjs`) does not exist. Run the TypeScript with
   `node --import tsx`; replicants inherit `execArgv`, so children load TS too.
-- Run `edge-pbt-main.ts`, not `main.ts`: the latter imports every plan barrel, and `edge-sync`
-  transitively pulls the function bundler (`parsimmon`), which fails to load as ESM.
+- `main.ts` loads each plan and each replicant through a dynamic `import()`. A static barrel
+  would load every plan's dependencies to run any one of them, and `edge-sync` transitively
+  pulls the function bundler (`parsimmon`), which fails to load as ESM.
+- Pass `--no-browser` for this plan: it is node-only, and the bundle step is pure overhead.
 - Only EDGE gets an HTTP port in group mode; the other workers answer over service bindings.
 - Both repos need ~15 min of setup and build before anything runs.
 
