@@ -29,16 +29,18 @@ if the model needs React, the result is negative and we have learned it cheaply.
 template  ::= element                        (exactly one root)
 element   ::= '<' tag attr* ( '/>' | '>' element* '</' tag '>' )
 tag       ::= 'container' | 'layout' | 'display' | 'control' | 'collection' | 'command'
-            | 'form' | 'combobox'
+            | 'form' | 'combobox' | 'tabs' | 'tab'
+            | 'show' | 'fallback' | 'switch' | 'match' | 'let'
 attr      ::= aspect | data | item | event
-              (aspects `id` + `machine` together bind a registry machine and publish its
-               state at `ui.<id>` — see docs/DESIGN.md)
 aspect    ::= NAME '=' STRING               static; narrowed to number/boolean where it parses
 data      ::= 'data-' NAME '=' PATH         read binding against the state object
 item      ::= 'item-' NAME '=' PATH         read binding against the current collection item
 event     ::= 'on-' NAME '=' OPERATION_KEY  the single outbound edge
 PATH      ::= NAME ( '.' NAME )* | '.'      '.' is the item itself
 ```
+
+Two intrinsic binding attributes lack the `data-` prefix but are state bindings all the same:
+`when` on `show` and `on` on `switch`.
 
 Text content is not part of the grammar. A bound string is a `display` node with a binding, never a
 text child — so there is nothing to interpolate and no expression language to evaluate.
@@ -60,14 +62,37 @@ Only `on-*` writes (`R-3`). Everything else is read-only from the template's poi
 means a template can be statically audited for what it can change: the set of operation keys it
 names.
 
-### Scope
+### Conditional rendering
 
-`collection` is the only kind that introduces a scope. It resolves `data-items` to an array and
+`show`/`fallback` and `switch`/`match` are structural, expression-free conditionality:
+
+- `<show when="selected">` renders its children while the resolved `when` binding is present
+  (anything except `undefined`/`null`/`false`); otherwise it renders the children of its single
+  optional `<fallback>` child. `fallback` is only valid inside `show`.
+- `<switch on="view">` renders the children of the `<match value="…">` whose `value` strictly
+  equals the resolved `on` binding. `switch` children must be `match`.
+
+Unmatched branches are not hidden — they are never rendered. Which children exist is a function of
+one resolved binding, so the grammar still holds no expressions.
+
+### Lexical scopes
+
+Any element that declares `id="x"` opens a named scope for its subtree. Its direct
+`<let name="n" machine="org.dxos.machine.…" />` children declare writable slots, seeded from the
+named machine's initial value and published at `ui.<idPath>.<n>` — where `idPath` is the chain of
+enclosing scope ids. Publication requires the name; anonymous elements have no published state.
+
+Binding resolution is lexical: the first path segment of a state binding is looked up through the
+enclosing scopes, innermost first — a frame declaring that name resolves from its slot's value —
+before falling back to the root state object, so app-level context (`organizations`, `title`,
+`selected`) needs no declaration. Operations are scope-relative: a dispatched handler receives a
+`scope` with `has`/`get`/`set` that resolve slot names the same way and write into the published
+tree; setting an undeclared name is an error.
+
+`collection` additionally introduces an item scope: it resolves `data-items` to an array and
 renders its children once per element, with `item-*` bindings resolving against that element.
-Every other kind passes its scope through unchanged.
 
-That single rule is what keeps the model free of an expression language: there is nothing to
-evaluate, only paths to walk.
+Paths to walk, slots to name — still no expression language to evaluate.
 
 ## Example
 
@@ -111,11 +136,12 @@ multiple roots, text content, and an `on-*` value that does not look like an ope
 
 Deliberate gaps, each tracked as a rule in the ontology:
 
-- ~~**Per-instance UI state** (`R-4`)~~ — answered by published state: `id=` + `machine=` seed a
-  registry-shaped slot at `ui.<id>`, written only by operations (see `docs/DESIGN.md`).
+- ~~**Per-instance UI state** (`R-4`)~~ — answered by published state: an `id`-scoped element's
+  `let` slots seed from registry machines at `ui.<idPath>.<name>`, written only by scope-relative
+  operations (see `docs/DESIGN.md`).
 - **Sub-discriminators** (`R-9`) — six kinds cannot distinguish a tab bar from a breadcrumb.
 - **Parts** (`R-10`) — `<control as="button">` is standing in for an action part that does not
   exist in the vocabulary.
-- **Async bindings and `absent`** (`R-2`) — the state object here is plain data; nothing resolves a
-  `ref` or a `query` yet.
+- **Async bindings** (`R-2`) — `show`/`fallback` covers the absent state structurally, but the
+  state object here is plain data; nothing resolves a `ref` or a `query` yet.
 - **Layout escape hatches** (`R-14`) — no way to say "not that way, it breaks".

@@ -10,7 +10,7 @@ import { type LogEntry, type Registry, type UiState, seedUi, dispatch as systemD
 
 export type UseSystemOptions<Db> = {
   registry: Registry<Db, any>;
-  /** The parsed template; instances declaring `id` + `machine` are seeded from the registry. */
+  /** The parsed template; `let` slots under `id`-scoped elements are seeded from the registry. */
   root: Node;
   db?: Db;
 };
@@ -34,20 +34,37 @@ export type UseSystem = {
  * may mutate the database, and strict mode re-runs updaters — which would run the mutation twice.
  * The event handler runs once; the step belongs there.
  */
+const isPlainObject = (value: unknown): value is Readonly<Record<string, unknown>> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/** Add keys missing from `current` at any depth without clobbering values that survive an edit. */
+const deepSeed = (initial: UiState, current: UiState): UiState => {
+  let next = current;
+  for (const [key, seed] of Object.entries(initial)) {
+    const existing = next[key];
+    if (!(key in next)) {
+      next = { ...next, [key]: seed };
+    } else if (isPlainObject(seed) && isPlainObject(existing)) {
+      next = { ...next, [key]: deepSeed(seed, existing) };
+    }
+  }
+  return next;
+};
+
 export const useSystem = <Db>({ registry, root, db }: UseSystemOptions<Db>): UseSystem => {
   const initial = useMemo(() => seedUi(registry, root), [registry, root]);
   const ref = useRef<{ ui: UiState; log: readonly SequencedLogEntry[] }>({ ui: initial, log: [] });
   const seq = useRef(0);
-  // An edited template can introduce new instances: seed the ids that are missing without
-  // resetting the state of the ones that survive.
-  ref.current = { ...ref.current, ui: { ...initial, ...ref.current.ui } };
+  // An edited template can introduce new slots: seed the ones that are missing without resetting
+  // the state of the ones that survive.
+  ref.current = { ...ref.current, ui: deepSeed(initial, ref.current.ui) };
   const [, force] = useReducer((tick: number) => tick + 1, 0);
 
   const dispatch = useCallback<Dispatch>(
-    (operation, { payload }) => {
+    (operation, { scope, payload }) => {
       // A failed operation is a log entry, not a vanished promise — the loop must stay observable.
       try {
-        const { ui, entry } = systemDispatch(registry, ref.current.ui, operation, payload, db);
+        const { ui, entry } = systemDispatch(registry, ref.current.ui, operation, payload, db, scope.frames ?? []);
         ref.current = { ui, log: [{ ...entry, seq: seq.current++ }, ...ref.current.log].slice(0, 20) };
       } catch (err) {
         ref.current = {

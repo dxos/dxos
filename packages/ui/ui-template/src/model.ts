@@ -24,7 +24,10 @@ export type Tag =
   | 'tabs'
   | 'tab'
   | 'switch'
-  | 'case';
+  | 'match'
+  | 'show'
+  | 'fallback'
+  | 'let';
 
 export const TAGS: readonly Tag[] = [
   'container',
@@ -38,12 +41,16 @@ export const TAGS: readonly Tag[] = [
   'tabs',
   'tab',
   'switch',
-  'case',
+  'match',
+  'show',
+  'fallback',
+  'let',
 ];
 
 /**
- * A read binding. `path` is resolved against the template's state object; `item` against the
- * current element inside a `collection`, which is the only scope a template introduces.
+ * A read binding. `path` is resolved lexically: the first segment is looked up through the
+ * enclosing scopes (innermost first) before falling back to the root state object. `item` binds
+ * against the current element inside a `collection`.
  */
 export type Binding = { readonly from: 'state' | 'item'; readonly path: readonly string[] };
 
@@ -109,12 +116,47 @@ export const fromItem = (path: Path<any>): Binding => ({ from: 'item', path: pat
 // Resolution.
 //
 
-export type Scope = { readonly state: unknown; readonly item?: unknown };
+/**
+ * One lexical scope, opened by an element that declares `id`. Its `let` children declare the
+ * machine-backed slots, published at `ui.<path>.<name>`. `values` holds the slots' current
+ * values, resolved from published state.
+ */
+export type ScopeFrame = {
+  readonly id: string;
+  /** Publication path: the enclosing scope ids plus this one. */
+  readonly path: readonly string[];
+  /** Machine-backed `let` names — the slots operations may write. */
+  readonly slots: readonly string[];
+  readonly values: Readonly<Record<string, unknown>>;
+};
+
+export type Scope = {
+  readonly state: unknown;
+  readonly item?: unknown;
+  /** Enclosing scopes, outermost first. */
+  readonly frames?: readonly ScopeFrame[];
+};
 
 /** Walk a binding against a scope. Returns `undefined` for a path that does not resolve. */
 export const resolve = (binding: Binding, scope: Scope): unknown => {
-  let value: any = binding.from === 'item' ? scope.item : scope.state;
-  for (const key of binding.path) {
+  let value: any;
+  let rest: readonly string[] = binding.path;
+  if (binding.from === 'item') {
+    value = scope.item;
+  } else {
+    const head = binding.path[0];
+    const frames = scope.frames ?? [];
+    // Innermost scope wins; an undeclared name falls through to the root state object, so
+    // app-level context (`organizations`, `title`) needs no declaration.
+    const frame = head === undefined ? undefined : frames.findLast((candidate) => head in candidate.values);
+    if (frame && head !== undefined) {
+      value = frame.values[head];
+      rest = binding.path.slice(1);
+    } else {
+      value = scope.state;
+    }
+  }
+  for (const key of rest) {
     if (value == null) {
       return undefined;
     }
@@ -126,8 +168,9 @@ export const resolve = (binding: Binding, scope: Scope): unknown => {
 //
 // Validation.
 //
-// A tag outside the set is an error, never a silent no-op (R-8). The spike checks tags and event
-// values; a real implementation would check props against each kind's closed aspect set.
+// A tag outside the set is an error, never a silent no-op (R-8). The spike checks tags, event
+// values, and the structural rules of the conditional/scope constructs; a real implementation
+// would check props against each kind's closed aspect set.
 //
 
 export class TemplateValidationError extends Error {
@@ -141,8 +184,11 @@ export class TemplateValidationError extends Error {
 }
 
 /**
- * Recursively validate a node tree: every tag must be in the closed set and every event value must
- * name an operation key. Throws {@link TemplateValidationError} with the offending node's path.
+ * Recursively validate a node tree: every tag must be in the closed set, every event value must
+ * name an operation key, and the structural constructs must be well-formed — `let` declares
+ * `name` plus `machine` and lives under an element with `id`; `show`
+ * requires `when`; `switch` requires `on` and only `match` children. Throws
+ * {@link TemplateValidationError} with the offending node's path.
  */
 export const validate = (node: Node, at = 'root'): void => {
   if (!TAGS.includes(node.tag)) {
@@ -153,5 +199,47 @@ export const validate = (node: Node, at = 'root'): void => {
       throw new TemplateValidationError(`event '${event}' must name an operation key`, at);
     }
   }
+
+  switch (node.tag) {
+    case 'let': {
+      if (typeof node.props?.name !== 'string') {
+        throw new TemplateValidationError(`'let' requires a name`, at);
+      }
+      if (typeof node.props?.machine !== 'string') {
+        throw new TemplateValidationError(`'let' requires a machine`, at);
+      }
+      break;
+    }
+    case 'show': {
+      if (!node.data?.when) {
+        throw new TemplateValidationError(`'show' requires a when binding`, at);
+      }
+      break;
+    }
+    case 'switch': {
+      if (!node.data?.on) {
+        throw new TemplateValidationError(`'switch' requires an on binding`, at);
+      }
+      if (node.children?.some((child) => child.tag !== 'match')) {
+        throw new TemplateValidationError(`'switch' children must be 'match'`, at);
+      }
+      break;
+    }
+    case 'match': {
+      if (node.props?.value === undefined) {
+        throw new TemplateValidationError(`'match' requires a value`, at);
+      }
+      break;
+    }
+  }
+
+  // Parent-side rules: variables need a scope to live in; a lone fallback needs its show.
+  if (node.children?.some((child) => child.tag === 'let') && typeof node.props?.id !== 'string') {
+    throw new TemplateValidationError(`'let' requires an enclosing element with an id`, at);
+  }
+  if (node.tag !== 'show' && node.children?.some((child) => child.tag === 'fallback')) {
+    throw new TemplateValidationError(`'fallback' is only valid inside 'show'`, at);
+  }
+
   node.children?.forEach((child, index) => validate(child, `${at} > ${child.tag}[${index}]`));
 };

@@ -58,6 +58,36 @@ describe('parse', () => {
     // A bound string is a `display` node with a binding, never a text child.
     expect(() => parse('<container>hello</container>')).toThrow(/unexpected text/);
   });
+
+  test('when/on are intrinsic state bindings despite the missing data- prefix', ({ expect }) => {
+    const show = parse('<show when="selected.name"><display data-text="selected.name" /></show>');
+    expect(show.data).toEqual({ when: { from: 'state', path: ['selected', 'name'] } });
+
+    const node = parse('<switch on="view"><match value="list"><display data-text="title" /></match></switch>');
+    expect(node.data).toEqual({ on: { from: 'state', path: ['view'] } });
+  });
+
+  test('structural validation runs over the whole tree', ({ expect }) => {
+    // `let` requires a machine.
+    expect(() => parse('<container id="x"><let name="a" /></container>')).toThrow(/'let' requires a machine/);
+    // `let` requires an enclosing element with an id.
+    expect(() => parse('<container><let name="a" machine="org.dxos.machine.flag" /></container>')).toThrow(
+      /enclosing element with an id/,
+    );
+    // `fallback` is only valid inside `show`.
+    expect(() => parse('<container><fallback><display data-text="title" /></fallback></container>')).toThrow(
+      /'fallback' is only valid inside 'show'/,
+    );
+    // `switch` children must be `match`.
+    expect(() => parse('<switch on="view"><display data-text="title" /></switch>')).toThrow(
+      /'switch' children must be 'match'/,
+    );
+    // `show` requires a when binding; `switch` requires on.
+    expect(() => parse('<show><display data-text="title" /></show>')).toThrow(/'show' requires a when binding/);
+    expect(() => parse('<switch><match value="list"><display data-text="title" /></match></switch>')).toThrow(
+      /'switch' requires an on binding/,
+    );
+  });
 });
 
 describe('resolve', () => {

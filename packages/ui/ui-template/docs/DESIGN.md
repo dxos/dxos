@@ -27,7 +27,7 @@ Recorded as directives, not aspirations — each shaped a decision below.
 
 ```text
                        ┌────────────────────────────┐
-        seed machines  │      published state       │  ui.<id> per named instance
+        seed machines  │      published state       │  ui.<idPath>.<name> per slot
        ┌──────────────▶│  (+ database, via queries) │◀───────────────┐
        │               └─────────────┬──────────────┘                │
        │                             │ derive context (pure)         │ operations
@@ -66,8 +66,8 @@ The data primitives table (ONTOLOGY §3) held up. The spike exercised: `schema` 
 `object` (selection resolution), `query` (live `useQuery` feeding context), `operation` (the only
 writer). `ref`, `view`, `feed` stayed design-only. Two additions it forced:
 
-- **Published state** is a primitive of its own: `ui.<instance-id>` slots, schema-described by the
-  instance's machine, written only by operations. It is deliberately _not_ in the database — it is
+- **Published state** is a primitive of its own: `ui.<idPath>.<name>` slots declared by a scope's
+  `let`, shaped by the named machine, written only by operations. It is deliberately _not_ in the database — it is
   per-session UI state — but it is shaped and addressed exactly as if it could be, which is what
   would make "persist this panel's layout state" a policy change rather than a redesign.
 - **The draft** (tier-1 private state): a form's in-progress edit, an editor's cursor. The system
@@ -77,20 +77,27 @@ writer). `ref`, `view`, `feed` stayed design-only. Two additions it forced:
 ## Layout
 
 The template grammar (see [`README.md`](../README.md)): closed kind tags, four attribute families
-(`aspect`, `data-`, `item-`, `on-`), no text content, no expressions. `collection` is the only
-scope-introducing node. What the spike added to the grammar:
+(`aspect`, `data-`, `item-`, `on-`), no text content, no expressions. What the spike added to the
+grammar:
 
-- **`id` + `machine`**: declaring both binds a registry machine to the instance and publishes its
-  state at `ui.<id>`. Publication requires the name; anonymous instances stay private.
+- **Lexical scopes.** An element declaring `id` opens a named scope for its subtree; its `let`
+  children declare machine-backed slots published at `ui.<idPath>.<name>` (the chain of enclosing
+  scope ids). Binding resolution is lexical — the first path segment resolves through enclosing
+  scopes innermost-first before falling back to the root state object. Publication requires the
+  name; anonymous elements stay private.
+- **Structural conditionality** (Solid-inspired): `show`/`fallback` renders one branch by the
+  presence of a single `when` binding — replacing the earlier `absent="omit"` attribute — and
+  `switch`/`match` picks a branch by strict equality against an `on` binding. No expressions; one
+  resolved binding decides which children exist.
 - **Layout selection is above the template.** The ViewSwitch story holds two templates and picks by
-  `ui.view.mode` — the layout _itself_ is a function of published state, and selection survives the
-  swap because it lives in state, not in the tree. This is the seed of the composite-app story
+  published state — the layout _itself_ is a function of published state, and selection survives
+  the swap because it lives in state, not in the tree. This is the seed of the composite-app story
   (below): a shell is a state-driven chooser over templates, recursively.
 
-Not yet in the grammar, known gaps: conditionals (`when=`), parts (`R-10`), sub-discriminators
-(`R-9`), `absent` for async bindings (`R-2`), widths/sizing (the master list needed an inline
-flex-basis in the renderer — geometry belongs in the template's aspect vocabulary, not in renderer
-code).
+Not yet in the grammar, known gaps: parts (`R-10`), sub-discriminators (`R-9`), async binding
+resolution (`R-2` — `show` covers the absent state, but nothing resolves a `ref`/`query`),
+widths/sizing (the master list needed an inline flex-basis in the renderer — geometry belongs in
+the template's aspect vocabulary, not in renderer code).
 
 ## Component libraries
 
@@ -110,9 +117,10 @@ existing components: `Listbox` (collection with selection), `Form` (react-ui-for
 
 ## Component state machines
 
-Tonight's machines are **named state shapes**: `{ key, initial }` in the registry, seeded when a
-template binds them, written by ordinary operations. The full formalism — specified here, not yet
-executed:
+Tonight's machines are **named slots**: `{ key, initial }` in the registry, bound to a name by a
+scope's `let`, seeded at the slot's publication path, written by scope-relative operations
+(`scope.get`/`scope.set` resolve slot names lexically through the dispatching node's frames). The
+full formalism — specified here, not yet executed:
 
 ```ts
 type MachineDef = {
@@ -135,10 +143,12 @@ type MachineDef = {
 - **Two tiers of component state** (from discussion): _opaque_ (CM editor cursor/decorations —
   integrate at commit points via operations) and _published_ (master-detail selection —
   schema-described, addressable). A form's draft buffer is tier-1: the same rule covers both.
-- **Addressing**: `id=` in the template ⇒ `ui.<id>`, generalizing `AppCapabilities.ProgressRegistry`
-  (a named map of schema-described entries). Open: cross-template references (can a toolbar in one
-  template observe `ui.contacts` from another? — yes if ids are app-scoped, which then needs a
-  collision rule), and instance-per-item state (a machine inside a collection scope).
+- **Addressing**: `id=` opens a scope and `let` publishes a slot at `ui.<idPath>.<name>` —
+  landed as **lexical scopes**: a template addresses only names its enclosing scopes declare (plus
+  the root state object), and operations write only the slots in the dispatching node's scope
+  chain. What remains open is the cross-plugin/app scope: a toolbar in one template observing
+  another template's scope needs an app-level frame both resolve through (which then needs a
+  collision rule), and instance-per-item state (a `let` inside a collection scope).
 - **zag-js**: adoptable as an _implementation_ of `MachineDef` only if its internal state is
   snapshotted into the published slot after every transition — two sources of truth during a
   transition is the cost. The atom-native alternative stays open; the spike's evidence is that the
@@ -213,7 +223,7 @@ Open questions, ranked: (1) published-state addressing across templates/plugins 
 plugin? by template instance?); (2) operation payload typing and capability injection (what does a
 handler get besides `ui`/`db`?); (3) where derived context lives when it is shared (today a story
 function; in an app, a memoized selector layer — effectively Views over state); (4) the
-`when=`/parts/sizing grammar gaps; (5) whether machine transition tables earn their keep over
+parts/sizing grammar gaps (`when=` landed as `show`); (5) whether machine transition tables earn their keep over
 slots + operations (the spike says: not yet).
 
 ## Verification (2026-08-29)

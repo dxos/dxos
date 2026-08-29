@@ -81,7 +81,11 @@ const toNode = (name: string, attrs: Record<string, string>, children: Node[], p
   const events: Record<string, string> = {};
 
   for (const [key, value] of Object.entries(attrs)) {
-    if (key.startsWith('data-')) {
+    // Intrinsic binding attributes: `when`/`on` are state bindings despite the missing `data-`
+    // prefix — conditionality binds against published state by construction.
+    if ((name === 'show' && key === 'when') || (name === 'switch' && key === 'on')) {
+      data[key] = toBinding('state', value);
+    } else if (key.startsWith('data-')) {
       data[key.slice(5)] = toBinding('state', value);
     } else if (key.startsWith('item-')) {
       data[key.slice(5)] = toBinding('item', value);
@@ -153,6 +157,13 @@ export const parse = (input: string): Node => {
   }
   if (!root) {
     throw new TemplateParseError('empty template');
+  }
+  // The per-node validation above cannot see parents or children; the full-tree pass enforces the
+  // structural rules (a `let` needs an enclosing id, a `fallback` needs its `show`).
+  try {
+    validate(root);
+  } catch (err) {
+    throw new TemplateParseError((err as Error).message);
   }
   return root;
 };

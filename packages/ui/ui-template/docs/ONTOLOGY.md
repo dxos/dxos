@@ -145,19 +145,19 @@ Two columns carry the weight. **Cardinality** says whether the binding yields on
 which decides what kinds can consume it. **Resolution** says when the value is available, which
 decides whether the consuming node needs an absent state — every `async` row implies one.
 
-| Tag          | Primitive         | What it is                                                                                     | Where                                                           | Cardinality | Resolution      | Bound by                                         |
-| ------------ | ----------------- | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ----------- | --------------- | ------------------------------------------------ |
-| `schema`     | **Schema**        | The shape and meaning of an object. An Effect Schema plus DXOS type annotations.               | `@dxos/echo › Type`, `Schema`                                   | one         | static          | `form`, `collection` (columns), `control`        |
-| `object`     | **Object**        | One live ECHO entity, addressed by DXN. Mutations are reactive.                                | `@dxos/echo › Obj`, `DXN`                                       | one         | reactive        | `form`, `container`, `surface`                   |
-| `ref`        | **Ref**           | A typed pointer to an object that may not be loaded yet. **The reason `absent` exists.**       | `@dxos/echo › Ref` (`Ref.target`, `Ref.atom`)                   | one         | async, reactive | anything that takes `object`                     |
-| `query`      | **Query**         | A filter plus order over a database; yields a live array.                                      | `@dxos/echo › Query`, `Filter`, `QueryResult`                   | many        | async, reactive | `collection`, `arrangement`, `composite_control` |
-| `view`       | **View**          | A query _plus_ a field projection and order — what a form or table should actually show.       | `@dxos/echo › View`; `@dxos/schema › projection`, `ViewModel`   | many        | async, reactive | `form`, `collection`                             |
-| `feed`       | **Feed**          | An append-only stream of immutable objects; ordered by insertion, not by query.                | `@dxos/echo › Feed`, `Queue`                                    | many        | async, reactive | `conversation`, `collection`                     |
-| `space`      | **Space**         | The database a binding resolves against; the scope for queries and creates.                    | `@dxos/echo › Database`; `Obj.getDatabase`                      | one         | reactive        | ambient — rarely bound explicitly                |
-| `graph_node` | **AppGraph node** | A node in the navigation graph: id, label, icon, actions, children.                            | `@dxos/app-graph › AppGraphNode`, `AppGraph`                    | one or many | async, reactive | `navigation`, `command`                          |
-| `capability` | **Capability**    | A host-provided service or contribution, resolved by token rather than by data.                | `@dxos/app-framework › useCapabilities`                         | one or many | reactive        | `surface`, `provider`, `command`                 |
-| `operation`  | **Operation**     | A named, keyed, invocable action — the only primitive that _writes_. The sink for every event. | `@dxos/app-framework › Operation` (`org.dxos.operation.*` keys) | one         | invoked         | every `on-*` binding                             |
-| `atom`       | **Atom**          | A reactive cell. The substrate the others are observed through, not usually bound directly.    | `effect/unstable/reactivity/Atom`; `Ref.atom`                   | one         | reactive        | internal                                         |
+| Tag          | Primitive         | What it is                                                                                                           | Where                                                           | Cardinality | Resolution      | Bound by                                         |
+| ------------ | ----------------- | -------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ----------- | --------------- | ------------------------------------------------ |
+| `schema`     | **Schema**        | The shape and meaning of an object. An Effect Schema plus DXOS type annotations.                                     | `@dxos/echo › Type`, `Schema`                                   | one         | static          | `form`, `collection` (columns), `control`        |
+| `object`     | **Object**        | One live ECHO entity, addressed by DXN. Mutations are reactive.                                                      | `@dxos/echo › Obj`, `DXN`                                       | one         | reactive        | `form`, `container`, `surface`                   |
+| `ref`        | **Ref**           | A typed pointer to an object that may not be loaded yet. **The reason the absent state (`show`/`fallback`) exists.** | `@dxos/echo › Ref` (`Ref.target`, `Ref.atom`)                   | one         | async, reactive | anything that takes `object`                     |
+| `query`      | **Query**         | A filter plus order over a database; yields a live array.                                                            | `@dxos/echo › Query`, `Filter`, `QueryResult`                   | many        | async, reactive | `collection`, `arrangement`, `composite_control` |
+| `view`       | **View**          | A query _plus_ a field projection and order — what a form or table should actually show.                             | `@dxos/echo › View`; `@dxos/schema › projection`, `ViewModel`   | many        | async, reactive | `form`, `collection`                             |
+| `feed`       | **Feed**          | An append-only stream of immutable objects; ordered by insertion, not by query.                                      | `@dxos/echo › Feed`, `Queue`                                    | many        | async, reactive | `conversation`, `collection`                     |
+| `space`      | **Space**         | The database a binding resolves against; the scope for queries and creates.                                          | `@dxos/echo › Database`; `Obj.getDatabase`                      | one         | reactive        | ambient — rarely bound explicitly                |
+| `graph_node` | **AppGraph node** | A node in the navigation graph: id, label, icon, actions, children.                                                  | `@dxos/app-graph › AppGraphNode`, `AppGraph`                    | one or many | async, reactive | `navigation`, `command`                          |
+| `capability` | **Capability**    | A host-provided service or contribution, resolved by token rather than by data.                                      | `@dxos/app-framework › useCapabilities`                         | one or many | reactive        | `surface`, `provider`, `command`                 |
+| `operation`  | **Operation**     | A named, keyed, invocable action — the only primitive that _writes_. The sink for every event.                       | `@dxos/app-framework › Operation` (`org.dxos.operation.*` keys) | one         | invoked         | every `on-*` binding                             |
+| `atom`       | **Atom**          | A reactive cell. The substrate the others are observed through, not usually bound directly.                          | `effect/unstable/reactivity/Atom`; `Ref.atom`                   | one         | reactive        | internal                                         |
 
 ### Notes
 
@@ -434,8 +434,9 @@ in that window, the component will render as though the data were empty.
 _Evidence:_ §3 marks five primitives `async` (`ref`, `query`, `view`, `feed`, `graph_node`). `ProjectArticle` guards three resolved refs, and its
 own comments record that a synchronous `.target` read leaves sections "permanently missing" on a
 cold load.
-_Consequence:_ an `absent` attribute (or equivalent) is mandatory on async bindings, not optional
-sugar.
+_Consequence:_ the absent state must be sayable in the template. The `ui-template` spike says it
+structurally: a `show`/`fallback` pair renders one branch by the presence of a single `when`
+binding, so the window where data is not loaded has explicit content rather than an implicit blank.
 
 **R-3 — Only `operation` writes; every other primitive is read-only to a template.**
 Templates describe. The single outbound edge is an event bound to an operation key.
@@ -453,10 +454,11 @@ _Evidence:_ the ProjectArticle draft required an invented `$local.tab`; the real
 in `useState`, and `onSelectTask` sets it.
 _Consequence:_ either the DSL grows a fourth read family, or every such value is promoted to a real
 object — which makes tab selection a database write.
-_Update (2026-08-29):_ the `ui-template` spike answers this with **published state**: an instance
-declaring `id` + `machine` gets a registry-shaped slot at `ui.<id>`, written only by operations and
-read through ordinary `data-` bindings — a third option neither anticipated. Publication requires
-the name; anonymous instances stay private. See
+_Update (2026-08-29):_ the `ui-template` spike answers this with **published state under lexical
+scopes**: an element declaring `id` opens a scope, its `let` children bind registry machines to
+slot names published at `ui.<idPath>.<name>`, written only by scope-relative operations and read
+through ordinary `data-` bindings resolved lexically — a third option neither anticipated.
+Publication requires the name; anonymous elements stay private. See
 [`DESIGN.md`](./DESIGN.md).
 
 **R-5 — Forms bind to a view, not to a schema.**

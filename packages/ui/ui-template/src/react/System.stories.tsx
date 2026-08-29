@@ -17,7 +17,7 @@ import { trim } from '@dxos/util';
 import { templateLanguage } from '../codemirror';
 import { type Node } from '../model';
 import { parse } from '../parser';
-import { type Registry, type UiState, withInstance } from '../system';
+import { type Registry, type UiState, getIn } from '../system';
 import { Template, createReactRenderer } from './renderer';
 import { Editor, OperationLog, Workbench } from './testing';
 import { useSystem } from './useSystem';
@@ -90,59 +90,61 @@ const toFormValues = (org: Organization.Organization): OrganizationFormValues =>
   website: org.website,
 });
 
-const uiPatch = (ui: UiState, id: string, patch: Record<string, unknown>): UiState =>
-  withInstance(ui, id, { ...ui[id], ...patch });
-
 const registry: Registry<Db, Schema.Codec<any, any>> = {
   schemas: {
     [ORGANIZATION]: OrganizationForm,
   },
 
+  // Slot machines: each names one value's initial state; a template's `let` binds it to a name.
   machines: {
-    'org.dxos.machine.master-detail': {
-      key: 'org.dxos.machine.master-detail',
-      initial: { selection: undefined, draft: false },
+    'org.dxos.machine.selection': {
+      key: 'org.dxos.machine.selection',
+      initial: undefined,
     },
-    'org.dxos.machine.draft': {
-      key: 'org.dxos.machine.draft',
-      initial: { selection: undefined, draft: true },
+    'org.dxos.machine.flag': {
+      key: 'org.dxos.machine.flag',
+      initial: false,
     },
-    'org.dxos.machine.combobox': {
-      key: 'org.dxos.machine.combobox',
-      initial: { filter: '', value: undefined },
+    'org.dxos.machine.flag-set': {
+      key: 'org.dxos.machine.flag-set',
+      initial: true,
     },
-    'org.dxos.machine.filter': {
-      key: 'org.dxos.machine.filter',
-      initial: { text: '' },
+    'org.dxos.machine.text': {
+      key: 'org.dxos.machine.text',
+      initial: '',
     },
     'org.dxos.machine.view': {
       key: 'org.dxos.machine.view',
-      initial: { mode: 'list' },
+      initial: 'list',
     },
   },
 
+  // Operations are scope-relative: they read and write the dispatching node's slots by name,
+  // resolved lexically — the same operation serves any template that declares the slot.
   operations: {
     'org.dxos.operation.contacts.select': {
       key: 'org.dxos.operation.contacts.select',
       description: 'Select a row in the master list.',
-      handler: ({ ui, payload }) => uiPatch(ui, 'contacts', { selection: payload, draft: false }),
+      handler: ({ scope, payload }) =>
+        scope.set({ selection: payload, ...(scope.has('draft') ? { draft: false } : {}) }),
     },
     'org.dxos.operation.contacts.add': {
       key: 'org.dxos.operation.contacts.add',
       description: 'Start a draft; the form edits a temporary object until save.',
-      handler: ({ ui }) => uiPatch(ui, 'contacts', { selection: undefined, draft: true }),
+      handler: ({ scope }) => scope.set({ selection: undefined, draft: true }),
     },
     'org.dxos.operation.contacts.save': {
       key: 'org.dxos.operation.contacts.save',
       description: 'Commit the form draft: update the selected object, or add the draft to the database.',
-      handler: ({ ui, payload, db }) => {
+      handler: ({ scope, payload, db }) => {
         const values = (payload ?? {}) as OrganizationFormValues;
-        const instance = ui.contacts ?? {};
-        if (instance.draft) {
+        if (scope.get('draft') === true) {
           db?.add(Organization.make(values));
-          return uiPatch(ui, 'contacts', { draft: false });
+          scope.set({ draft: false });
+          return;
         }
-        const id = typeof instance.selection === 'string' ? instance.selection : undefined;
+        const selection = scope.get('selection');
+        const id = typeof selection === 'string' ? selection : undefined;
         const object = id ? db?.getObjectById<Organization.Organization>(id) : undefined;
         if (object) {
           // Field by field, never Object.assign: the form's values may carry keys the schema
@@ -154,44 +156,43 @@ const registry: Registry<Db, Schema.Codec<any, any>> = {
             object.website = values.website;
           });
         }
-        return undefined;
       },
     },
     'org.dxos.operation.contacts.cancel': {
       key: 'org.dxos.operation.contacts.cancel',
       description: 'Discard the draft.',
-      handler: ({ ui }) => uiPatch(ui, 'contacts', { draft: false }),
+      handler: ({ scope }) => scope.set({ draft: false }),
     },
     'org.dxos.operation.contacts.qualify': {
       key: 'org.dxos.operation.contacts.qualify',
       description: 'Toolbar action over the current selection: mark the organization qualified.',
-      handler: ({ ui, db }) => {
-        const id = typeof ui.contacts?.selection === 'string' ? ui.contacts.selection : undefined;
+      handler: ({ scope, db }) => {
+        const selection = scope.get('selection');
+        const id = typeof selection === 'string' ? selection : undefined;
         const object = id ? db?.getObjectById<Organization.Organization>(id) : undefined;
         if (object) {
           Obj.update(object, (object) => {
             object.status = 'qualified';
           });
         }
-        return undefined;
       },
     },
     'org.dxos.operation.picker.input': {
       key: 'org.dxos.operation.picker.input',
-      handler: ({ ui, payload }) => uiPatch(ui, 'picker', { filter: String(payload ?? '') }),
+      handler: ({ scope, payload }) => scope.set({ filter: String(payload ?? '') }),
     },
     'org.dxos.operation.picker.select': {
       key: 'org.dxos.operation.picker.select',
-      handler: ({ ui, payload }) => uiPatch(ui, 'picker', { value: payload, filter: '' }),
+      handler: ({ scope, payload }) => scope.set({ value: payload, filter: '' }),
     },
     'org.dxos.operation.filter.input': {
       key: 'org.dxos.operation.filter.input',
-      handler: ({ ui, payload }) => uiPatch(ui, 'filter', { text: String(payload ?? '') }),
+      handler: ({ scope, payload }) => scope.set({ text: String(payload ?? '') }),
     },
     'org.dxos.operation.view.set': {
       key: 'org.dxos.operation.view.set',
       description: 'Tabs write which branch of the switch exists.',
-      handler: ({ ui, payload }) => uiPatch(ui, 'view', { mode: String(payload ?? 'list') }),
+      handler: ({ scope, payload }) => scope.set({ view: String(payload ?? 'list') }),
     },
   },
 };
@@ -211,16 +212,15 @@ type AppContext = {
 };
 
 const deriveContext = (ui: UiState, organizations: readonly Organization.Organization[]): AppContext => {
-  const contacts = ui.contacts ?? {};
-  const filterText = String(ui.filter?.text ?? ui.picker?.filter ?? '').toLowerCase();
+  const filterText = String(getIn(ui, ['filter', 'text']) ?? getIn(ui, ['picker', 'filter']) ?? '').toLowerCase();
   const filtered = filterText
     ? organizations.filter((org) => (org.name ?? '').toLowerCase().includes(filterText))
     : organizations;
-  const selected = contacts.draft
+  const selected = getIn(ui, ['contacts', 'draft'])
     ? {}
-    : (organizations.find((org) => org.id === contacts.selection) ??
-      organizations.find((org) => org.id === ui.picker?.value));
-  const pickerValue = organizations.find((org) => org.id === ui.picker?.value);
+    : (organizations.find((org) => org.id === getIn(ui, ['contacts', 'selection'])) ??
+      organizations.find((org) => org.id === getIn(ui, ['picker', 'value'])));
+  const pickerValue = organizations.find((org) => org.id === getIn(ui, ['picker', 'value']));
   return {
     ui,
     organizations,
@@ -242,85 +242,107 @@ const LIST = trim`
 `;
 
 const FORM = trim`
-  <container>
+  <container id="contacts">
+    <let name="selection" machine="org.dxos.machine.selection" />
+    <let name="draft" machine="org.dxos.machine.flag-set" />
     <display variant="title" data-text="title" />
-    <form id="contacts" machine="org.dxos.machine.draft"
-          schema="org.dxos.type.Organization" data-values="selected"
+    <form schema="org.dxos.type.Organization" data-values="selected"
           on-save="org.dxos.operation.contacts.save"
           on-cancel="org.dxos.operation.contacts.cancel" />
   </container>
 `;
 
 const MASTER_DETAIL = trim`
-  <layout rows="1fr 1fr">
-    <collection id="contacts" machine="org.dxos.machine.master-detail"
-                data-items="organizations" item-id="id" item-label="name"
-                data-selection="ui.contacts.selection"
+  <layout id="contacts" rows="1fr 1fr">
+    <let name="selection" machine="org.dxos.machine.selection" />
+    <let name="draft" machine="org.dxos.machine.flag" />
+    <collection data-items="organizations" item-id="id" item-label="name"
+                data-selection="selection"
                 on-select="org.dxos.operation.contacts.select" />
-    <form schema="org.dxos.type.Organization" data-values="selected" absent="omit"
-          on-save="org.dxos.operation.contacts.save"
-          on-cancel="org.dxos.operation.contacts.cancel" />
+    <show when="selected">
+      <form schema="org.dxos.type.Organization" data-values="selected"
+            on-save="org.dxos.operation.contacts.save"
+            on-cancel="org.dxos.operation.contacts.cancel" />
+      <fallback>
+        <display label="Nothing selected." />
+      </fallback>
+    </show>
   </layout>
 `;
 
 const MASTER_DETAIL_TOOLBAR = trim`
-  <container>
+  <container id="contacts">
+    <let name="selection" machine="org.dxos.machine.selection" />
+    <let name="draft" machine="org.dxos.machine.flag" />
     <command>
       <control as="button" label="Add" on-activate="org.dxos.operation.contacts.add" />
       <control as="button" label="Qualify" on-activate="org.dxos.operation.contacts.qualify" />
     </command>
     <layout rows="1fr 1fr">
-      <collection id="contacts" machine="org.dxos.machine.master-detail"
-                  data-items="organizations" item-id="id" item-label="name"
-                  data-selection="ui.contacts.selection"
+      <collection data-items="organizations" item-id="id" item-label="name"
+                  data-selection="selection"
                   on-select="org.dxos.operation.contacts.select" />
-      <form schema="org.dxos.type.Organization" data-values="selected"
-            on-save="org.dxos.operation.contacts.save"
-            on-cancel="org.dxos.operation.contacts.cancel" />
+      <show when="selected">
+        <form schema="org.dxos.type.Organization" data-values="selected"
+              on-save="org.dxos.operation.contacts.save"
+              on-cancel="org.dxos.operation.contacts.cancel" />
+        <fallback>
+          <display label="Nothing selected." />
+        </fallback>
+      </show>
     </layout>
   </container>
 `;
 
 const COMBOBOX = trim`
-  <container>
+  <container id="picker">
+    <let name="filter" machine="org.dxos.machine.text" />
+    <let name="value" machine="org.dxos.machine.selection" />
     <display variant="title" data-text="title" />
-    <combobox id="picker" machine="org.dxos.machine.combobox" placeholder="Select organization…"
+    <combobox placeholder="Select organization…"
               data-items="filtered" item-id="id" item-label="name"
-              data-value="pickerLabel" data-filter="ui.picker.filter"
+              data-value="pickerLabel" data-filter="filter"
               on-input="org.dxos.operation.picker.input"
               on-select="org.dxos.operation.picker.select" />
-    <form schema="org.dxos.type.Organization" data-values="selected" />
+    <show when="selected">
+      <form schema="org.dxos.type.Organization" data-values="selected" />
+    </show>
   </container>
 `;
 
 const FILTER_LIST = trim`
-  <container>
-    <control id="filter" machine="org.dxos.machine.filter" label="Filter"
-             placeholder="Type to filter…" data-value="ui.filter.text"
+  <container id="filter">
+    <let name="text" machine="org.dxos.machine.text" />
+    <control label="Filter" placeholder="Type to filter…" data-value="text"
              on-input="org.dxos.operation.filter.input" />
     <collection data-items="filtered" item-id="id" item-label="name" />
   </container>
 `;
 
 const TABS = trim`
-  <container>
-    <tabs id="view" machine="org.dxos.machine.view"
-          data-value="ui.view.mode" on-select="org.dxos.operation.view.set">
+  <container id="contacts">
+    <let name="view" machine="org.dxos.machine.view" />
+    <let name="selection" machine="org.dxos.machine.selection" />
+    <tabs data-value="view" on-select="org.dxos.operation.view.set">
       <tab value="list" label="List" />
       <tab value="detail" label="Detail" />
     </tabs>
-    <switch data-value="ui.view.mode">
-      <case value="list">
-        <collection id="contacts" machine="org.dxos.machine.master-detail"
-                    data-items="organizations" item-id="id" item-label="name"
-                    data-selection="ui.contacts.selection"
+    <switch on="view">
+      <match value="list">
+        <collection data-items="organizations" item-id="id" item-label="name"
+                    data-selection="selection"
                     on-select="org.dxos.operation.contacts.select" />
-      </case>
-      <case value="detail">
-        <form schema="org.dxos.type.Organization" data-values="selected" absent="omit"
-              on-save="org.dxos.operation.contacts.save"
-              on-cancel="org.dxos.operation.contacts.cancel" />
-      </case>
+      </match>
+      <match value="detail">
+        <show when="selected">
+          <form schema="org.dxos.type.Organization" data-values="selected"
+                on-save="org.dxos.operation.contacts.save"
+                on-cancel="org.dxos.operation.contacts.cancel" />
+          <fallback>
+            <display label="Nothing selected." />
+          </fallback>
+        </show>
+      </match>
     </switch>
   </container>
 `;
@@ -467,4 +489,11 @@ export const FilterList: Story = {
   },
 };
 
-export const TabsStory: Story = { name: 'Tabs', args: { sources: { tabs: TABS } } };
+export const TabsStory: Story = {
+  name: 'Tabs',
+  args: {
+    sources: {
+      tabs: TABS,
+    },
+  },
+};

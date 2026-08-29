@@ -95,7 +95,7 @@ export const createReactRenderer = ({ schemas }: ReactRendererOptions): Renderer
 
   display: ({ path, props, data }) => (
     <span key={path} className={props.variant === 'title' ? 'text-lg font-medium' : 'text-description'}>
-      {asText(data.text)}
+      {asText(data.text ?? props.label)}
     </span>
   ),
 
@@ -284,15 +284,25 @@ export const createReactRenderer = ({ schemas }: ReactRendererOptions): Renderer
   // Rendered by `tabs` from its props; never on its own.
   tab: () => null,
 
-  // The walker already narrowed `children` to the matched case's subtree.
+  // The walker already narrowed `children` to the matched branch's subtree.
   switch: ({ path, children }) => (
     <Flex key={path} column grow gap='sm'>
       {children}
     </Flex>
   ),
 
-  // Structural only — `switch` renders the matched case's children directly.
-  case: () => null,
+  // display:contents — a `show` inside a grid row must not break track placement with a box.
+  show: ({ path, children }) => (
+    <div key={path} role='none' className='contents'>
+      {children}
+    </div>
+  ),
+
+  // Structural only — `switch`/`show` render the matched branch's children directly, and `let`
+  // exists to declare a slot, never to render.
+  match: () => null,
+  fallback: () => null,
+  let: () => null,
 });
 
 export type TemplateProps<State> = {

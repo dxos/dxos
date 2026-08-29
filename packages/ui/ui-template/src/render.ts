@@ -8,7 +8,7 @@
 // React or Solid appears.
 //
 
-import { type Binding, type Node, type Scope, type Tag, resolve } from './model';
+import { type Binding, type Node, type Scope, type ScopeFrame, type Tag, resolve } from './model';
 
 const asText = (value: unknown): string => (value == null ? '' : String(value));
 
@@ -50,22 +50,48 @@ export type RenderOptions = {
 const resolveData = (data: Readonly<Record<string, Binding>> | undefined, scope: Scope) =>
   Object.fromEntries(Object.entries(data ?? {}).map(([key, binding]) => [key, resolve(binding, scope)]));
 
+/** `show` presence: anything except undefined/null/false renders the children. */
+const present = (value: unknown): boolean => value !== undefined && value !== null && value !== false;
+
+/** Read the published slot value for a frame's `let` at `ui.<path>.<name>` off the root state. */
+const readSlot = (state: unknown, path: readonly string[]): unknown => {
+  let value: unknown = (state as { ui?: unknown } | null | undefined)?.ui;
+  for (const key of path) {
+    if (value == null || typeof value !== 'object') {
+      return undefined;
+    }
+    value = (value as Record<string, unknown>)[key];
+  }
+  return value;
+};
+
 /**
- * `absent="omit"`: the node is omitted while every one of its `data-*` bindings resolves to
- * undefined (ONTOLOGY R-2). Omission is driven by binding resolution — never by an expression —
- * so a detail pane disappears when nothing is selected without the grammar growing conditionals.
+ * An element declaring `id` opens a lexical scope: its direct `let` children are the slots, and
+ * their current values come from published state at `ui.<enclosing ids>.<id>.<name>`.
  */
-const isAbsent = (node: Node, data: Readonly<Record<string, unknown>>): boolean =>
-  node.props?.absent === 'omit' &&
-  Object.keys(node.data ?? {}).length > 0 &&
-  Object.values(data).every((value) => value === undefined);
+const openFrame = (node: Node, scope: Scope): ScopeFrame => {
+  const id = String(node.props?.id);
+  const outer = scope.frames?.[scope.frames.length - 1];
+  const path = [...(outer?.path ?? []), id];
+  const slots: string[] = [];
+  const values: Record<string, unknown> = {};
+  for (const child of node.children ?? []) {
+    if (child.tag === 'let' && typeof child.props?.name === 'string') {
+      const name = child.props.name;
+      slots.push(name);
+      values[name] = readSlot(scope.state, [...path, name]);
+    }
+  }
+  return { id, path, slots, values };
+};
 
 /**
  * Walk the model and hand each node to the renderer.
  *
- * `collection` is the only kind that introduces a scope: it renders its children once per resolved
- * item. Every other kind passes its scope through unchanged, which is what keeps the model free of
- * an expression language — there is nothing to evaluate, only paths to walk.
+ * `collection` introduces an item scope (children render once per resolved item); an element with
+ * `id` opens a lexical scope frame over its subtree. `show`/`switch` are structural, expression-
+ * free conditionality: which children exist is a function of one resolved binding. There is no
+ * expression language — only paths to walk.
  */
 export const render = <Output>(
   node: Node,
@@ -74,10 +100,13 @@ export const render = <Output>(
   options: RenderOptions = {},
   path = '0',
 ): Output | null => {
-  const data = resolveData(node.data, scope);
-  if (isAbsent(node, data)) {
-    return null;
+  // The frame is pushed before this node's own bindings resolve, so an element binds against its
+  // own `let`s.
+  if (typeof node.props?.id === 'string') {
+    scope = { ...scope, frames: [...(scope.frames ?? []), openFrame(node, scope)] };
   }
+
+  const data = resolveData(node.data, scope);
 
   const handlers = Object.fromEntries(
     Object.entries(node.events ?? {}).map(([event, operation]) => [
@@ -86,19 +115,42 @@ export const render = <Output>(
     ]),
   );
 
-  // `switch` is structural, expression-free conditionality: it renders the `case` child whose
-  // `value` prop equals its resolved `data-value` binding — equality against published state, so
-  // tabs (or any operation) drive which branch exists. The other cases are not hidden; they are
-  // never rendered.
-  const matchedCase =
-    node.tag === 'switch'
-      ? (node.children ?? []).find((child) => child.tag === 'case' && child.props?.value === data.value)
-      : undefined;
+  const renderSubset = (nodes: readonly Node[], suffix: string): readonly Output[] =>
+    nodes
+      .map((child, index) => render(child, scope, renderer, options, `${path}${suffix}.${index}`))
+      .filter((child): child is Output => child !== null);
 
   const renderChildren = (childScope: Scope, suffix = ''): readonly Output[] =>
     (node.children ?? [])
       .map((child, index) => render(child, childScope, renderer, options, `${path}${suffix}.${index}`))
       .filter((child): child is Output => child !== null);
+
+  // Structural conditionality: `show` renders its children while `when` is present, otherwise the
+  // children of its `fallback`; `switch` renders the children of the `match` whose value equals
+  // the resolved `on`. Unmatched branches are not hidden — they are never rendered.
+  const children = (): readonly Output[] => {
+    switch (node.tag) {
+      case 'collection':
+        // A collection's children belong to its items; the renderer calls `renderChildren` per item.
+        return [];
+      case 'show': {
+        if (present(data.when)) {
+          return renderSubset(
+            (node.children ?? []).filter((child) => child.tag !== 'fallback'),
+            '[show]',
+          );
+        }
+        const fallback = (node.children ?? []).find((child) => child.tag === 'fallback');
+        return renderSubset(fallback?.children ?? [], '[fallback]');
+      }
+      case 'switch': {
+        const matched = (node.children ?? []).find((child) => child.tag === 'match' && child.props?.value === data.on);
+        return renderSubset(matched?.children ?? [], `[${asText(data.on)}]`);
+      }
+      default:
+        return renderChildren(scope);
+    }
+  };
 
   return renderer[node.tag]({
     node,
@@ -108,15 +160,6 @@ export const render = <Output>(
     handlers,
     scope,
     renderChildren,
-    // A collection's children belong to its items (the renderer calls `renderChildren` per item);
-    // a switch renders only its matched case's children.
-    children:
-      node.tag === 'collection'
-        ? []
-        : node.tag === 'switch'
-          ? (matchedCase?.children ?? [])
-              .map((child, index) => render(child, scope, renderer, options, `${path}[${asText(data.value)}].${index}`))
-              .filter((child): child is Output => child !== null)
-          : renderChildren(scope),
+    children: children(),
   });
 };
