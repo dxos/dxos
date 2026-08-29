@@ -3,22 +3,21 @@
 //
 
 import { type Extension } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 
 import { toJsonSchema } from '@dxos/echo/JsonSchema';
-import { Flex, Panel, useThemeContext } from '@dxos/react-ui';
-import { useTextEditor } from '@dxos/react-ui-editor';
+import { Flex } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { compactSlots, createBasicExtensions, createThemeExtensions, json } from '@dxos/ui-editor';
-import { mx } from '@dxos/ui-theme';
+import { json } from '@dxos/ui-editor';
 import { trim } from '@dxos/util';
 
 import { templateLanguage } from '../codemirror';
 import { type Node, TemplateParseError, parse, select } from '../index';
 import { Template, createReactRenderer } from './renderer';
+import { Cell, Editor, OperationLog } from './testing';
+import { type SequencedLogEntry } from './useSystem';
 
 //
 // SPIKE story. Four columns, left to right: the type the template is parameterized by, an instance
@@ -97,25 +96,12 @@ const WITH_EVENTS = trim`
   </container>
 `;
 
-type CellProps = {
-  title: string;
-  children: React.ReactNode;
-};
-
-const Cell = ({ title, children }: CellProps) => (
-  <Flex column classNames='dx-container'>
-    <div className='px-2 py-1 text-xs uppercase tracking-wide text-description border-be border-separator'>{title}</div>
-    <Flex column grow classNames='dx-container'>
-      {children}
-    </Flex>
-  </Flex>
-);
-
 const DefaultStory = ({ source: initialSource }: { source: string }) => {
   const renderer = useMemo(() => createReactRenderer({ schemas: {} }), []);
   const [source, setSource] = useState(initialSource);
   const [stateText, setStateText] = useState(() => JSON.stringify(initialState, null, 2));
-  const [log, setLog] = useState<string[]>([]);
+  const [log, setLog] = useState<readonly SequencedLogEntry[]>([]);
+  const seq = useRef(0);
 
   const schemaText = useMemo(() => JSON.stringify(toJsonSchema(ProjectState), null, 2), []);
   const jsonSchema = useMemo(() => toJsonSchema(ProjectState), []);
@@ -156,11 +142,7 @@ const DefaultStory = ({ source: initialSource }: { source: string }) => {
         </Cell>
 
         <Cell title='Log'>
-          {log.map((operation, index) => (
-            <span key={index} className='font-mono text-xs'>
-              {operation}
-            </span>
-          ))}
+          <OperationLog entries={log} />
         </Cell>
       </Flex>
 
@@ -170,7 +152,10 @@ const DefaultStory = ({ source: initialSource }: { source: string }) => {
             node={parsed.node}
             state={state.value}
             renderer={renderer}
-            options={{ dispatch: (operation) => setLog((entries) => [operation, ...entries].slice(0, 8)) }}
+            options={{
+              dispatch: (operation, { payload }) =>
+                setLog((entries) => [{ operation, payload, seq: seq.current++ }, ...entries].slice(0, 8)),
+            }}
           />
         ) : (
           <span className='text-error-text text-sm'>{parsed.error ?? state.error}</span>
@@ -178,46 +163,6 @@ const DefaultStory = ({ source: initialSource }: { source: string }) => {
       </Cell>
     </Flex>
   );
-};
-
-//
-// Editor.
-//
-
-/** Mirror the document out on change so the render column follows the editor. */
-const mirrorTo = (onChange: (value: string) => void) =>
-  EditorView.updateListener.of((update) => {
-    if (update.docChanged) {
-      onChange(update.state.doc.toString());
-    }
-  });
-
-type EditorProps = {
-  value: string;
-  extensions: Extension[];
-  /** Omit for a read-only column. */
-  onChange?: (value: string) => void;
-};
-
-const Editor = ({ value, extensions, onChange }: EditorProps) => {
-  const { themeMode } = useThemeContext();
-  const { parentRef } = useTextEditor(
-    () => ({
-      initialValue: value,
-      extensions: [
-        createThemeExtensions({ themeMode, slots: compactSlots, syntaxHighlighting: true, monospace: true }),
-        createBasicExtensions({ readOnly: !onChange, lineWrapping: false }),
-        ...extensions,
-        ...(onChange ? [mirrorTo(onChange)] : []),
-      ],
-    }),
-    // An editable editor owns its text once mounted, so it must NOT key on `value` — recreating it
-    // on every keystroke would lose the cursor. A read-only one has no such state, and keys on
-    // `value` so an externally changed document is picked up.
-    [themeMode, extensions, onChange, onChange ? null : value],
-  );
-
-  return <div ref={parentRef} className='flex-1 min-h-0 overflow-auto' />;
 };
 
 const meta: Meta<typeof DefaultStory> = {

@@ -9,14 +9,10 @@ import React, { useMemo, useState } from 'react';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { useQuery } from '@dxos/echo-react';
-import { Flex, useThemeContext } from '@dxos/react-ui';
-import { useTextEditor } from '@dxos/react-ui-editor';
+import { Flex } from '@dxos/react-ui';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
-import { Empty, Listbox } from '@dxos/react-ui-list';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Organization } from '@dxos/types';
-import { compactSlots, createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
-import { mx } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 
 import { templateLanguage } from '../codemirror';
@@ -24,7 +20,8 @@ import { type Node } from '../model';
 import { parse } from '../parser';
 import { type Registry, type UiState, withInstance } from '../system';
 import { Template, createReactRenderer } from './renderer';
-import { type SequencedLogEntry, useSystem } from './useSystem';
+import { Cell, Editor, OperationLog } from './testing';
+import { useSystem } from './useSystem';
 
 //
 // SPIKE. The system stories: one DefaultStory, per-story layout/context/state. Everything below a
@@ -333,61 +330,6 @@ const VIEW_DETAIL = trim`
 // Story shell.
 //
 
-type Area = 'template' | 'rendered' | 'state' | 'log';
-
-const AREAS = `
-  "template rendered"
-  "state    log"
-`;
-
-const areaBorders: Record<Area, string> = {
-  template: 'border-e border-b border-separator',
-  rendered: 'border-b border-separator',
-  state: 'border-e border-separator',
-  log: '',
-};
-
-const Cell = ({ area, title, children }: { area: Area; title: string; children: React.ReactNode }) => (
-  <Flex column style={{ gridArea: area }} classNames={mx('min-w-0', areaBorders[area])}>
-    <div className='px-2 py-1 text-xs uppercase tracking-wide text-subdued border-be border-separator'>{title}</div>
-    <Flex column grow classNames='min-h-0 overflow-auto'>
-      {children}
-    </Flex>
-  </Flex>
-);
-
-const TemplateEditor = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => {
-  const { themeMode } = useThemeContext();
-  const { parentRef } = useTextEditor(
-    () => ({
-      initialValue: value,
-      extensions: [
-        createThemeExtensions({ themeMode, slots: compactSlots, syntaxHighlighting: true, monospace: true }),
-        createBasicExtensions({ lineWrapping: false }),
-        ...templateLanguage(),
-      ],
-    }),
-    // The editor owns the text once mounted; `value` in deps would recreate it per keystroke. The
-    // story remounts the editor per story via `key`, which is when `value` legitimately changes.
-    [themeMode],
-  );
-
-  return (
-    <div
-      ref={parentRef}
-      className='flex-1 min-h-0 overflow-auto'
-      onBlur={() => {
-        // Mirrored on blur rather than per keystroke: re-seeding machines on every edit would
-        // reset published state while typing.
-        const text = parentRef.current?.querySelector('.cm-content')?.textContent;
-        if (text != null) {
-          onChange(text);
-        }
-      }}
-    />
-  );
-};
-
 type StoryArgs = {
   /** Layouts by view-mode key; `pick` chooses from published state. Single-layout stories use one. */
   sources: Record<string, string>;
@@ -426,6 +368,7 @@ const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
 
   const { ui, log, dispatch } = useSystem({ registry, root: seedRoot, db });
   const renderer = useMemo(() => createReactRenderer({ schemas: registry.schemas }), []);
+  const editorExtensions = useMemo(() => templateLanguage(), []);
 
   const activeKey = pick?.(ui) ?? firstKey;
   const active = parsedAll[activeKey] ?? parsedAll[firstKey];
@@ -433,55 +376,38 @@ const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
   const state = { title: 'Organizations', ...context };
 
   return (
-    <Flex style={{ gridTemplateAreas: AREAS }} classNames='dx-container grid grid-rows-2 grid-cols-2' align='stretch'>
-      <Cell area='template' title={`Layout (${activeKey})`}>
-        <TemplateEditor
-          key={activeKey}
-          value={sources[activeKey] ?? ''}
-          onChange={(next) => setSources((current) => ({ ...current, [activeKey]: next }))}
-        />
-      </Cell>
+    <Flex classNames='dx-container grid grid-cols-2 divide-x divide-separator' align='stretch'>
+      <Flex column grow classNames='dx-container grid grid-rows-3 divide-y divide-separator'>
+        <Cell title={`Layout (${activeKey})`}>
+          <Editor
+            key={activeKey}
+            value={sources[activeKey] ?? ''}
+            extensions={editorExtensions}
+            onChange={(next) => setSources((current) => ({ ...current, [activeKey]: next }))}
+          />
+        </Cell>
 
-      <Cell area='rendered' title='Rendered'>
+        <Cell title='Published state'>
+          <pre className='p-2 font-mono text-xs text-description whitespace-pre-wrap'>
+            {JSON.stringify(ui, null, 2)}
+          </pre>
+        </Cell>
+
+        <Cell title='Operation log'>
+          <OperationLog entries={log} />
+        </Cell>
+      </Flex>
+
+      <Cell title='Rendered'>
         {active?.node ? (
           <Template node={active.node} state={state} renderer={renderer} options={{ dispatch }} />
         ) : (
           <span className='text-error-text text-sm'>{active?.error}</span>
         )}
       </Cell>
-
-      <Cell area='state' title='Published state'>
-        <pre className='p-2 font-mono text-xs text-description whitespace-pre-wrap'>{JSON.stringify(ui, null, 2)}</pre>
-      </Cell>
-
-      <Cell area='log' title='Operation log'>
-        <OperationLog entries={log} />
-      </Cell>
     </Flex>
   );
 };
-
-/**
- * The operation log as a proper list (never a hand-rolled map of spans): a read-only Listbox —
- * flat rows, keyboard traversal for free, `Empty` when nothing has been dispatched yet.
- */
-const OperationLog = ({ entries }: { entries: readonly SequencedLogEntry[] }) => (
-  <Listbox.Root>
-    <Listbox.Viewport>
-      <Listbox.Content aria-label='Operation log'>
-        {entries.map((entry) => (
-          <Listbox.Item key={entry.seq} id={String(entry.seq)}>
-            <Listbox.ItemLabel classNames='font-mono text-xs'>
-              {entry.operation}
-              {entry.payload !== undefined ? ` ${JSON.stringify(entry.payload)}` : ''}
-            </Listbox.ItemLabel>
-          </Listbox.Item>
-        ))}
-        {entries.length === 0 && <Empty label='No operations dispatched.' />}
-      </Listbox.Content>
-    </Listbox.Viewport>
-  </Listbox.Root>
-);
 
 const meta: Meta<typeof DefaultStory> = {
   title: 'ui/ui-template/System',
@@ -494,12 +420,52 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const List: Story = { args: { sources: { list: LIST } } };
-export const FormStory: Story = { name: 'Form', args: { sources: { form: FORM } } };
-export const MasterDetail: Story = { args: { sources: { 'master-detail': MASTER_DETAIL } } };
-export const MasterDetailToolbar: Story = { args: { sources: { toolbar: MASTER_DETAIL_TOOLBAR } } };
-export const ComboboxStory: Story = { name: 'Combobox', args: { sources: { combobox: COMBOBOX } } };
-export const FilterList: Story = { args: { sources: { filter: FILTER_LIST } } };
+export const List: Story = {
+  args: { sources: { list: LIST } },
+};
+
+export const FormStory: Story = {
+  name: 'Form',
+  args: {
+    sources: {
+      form: FORM,
+    },
+  },
+};
+
+export const MasterDetail: Story = {
+  args: {
+    sources: {
+      'master-detail': MASTER_DETAIL,
+    },
+  },
+};
+
+export const MasterDetailToolbar: Story = {
+  args: {
+    sources: {
+      toolbar: MASTER_DETAIL_TOOLBAR,
+    },
+  },
+};
+
+export const ComboboxStory: Story = {
+  name: 'Combobox',
+  args: {
+    sources: {
+      combobox: COMBOBOX,
+    },
+  },
+};
+
+export const FilterList: Story = {
+  args: {
+    sources: {
+      filter: FILTER_LIST,
+    },
+  },
+};
+
 export const ViewSwitch: Story = {
   args: {
     sources: { list: VIEW_LIST, detail: VIEW_DETAIL },
