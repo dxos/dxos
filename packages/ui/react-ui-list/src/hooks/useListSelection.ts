@@ -76,8 +76,22 @@ export const useListSelection: {
   }, [isControlled, value]);
 
   const resolvedValue = isControlled ? value : internalValue;
+
+  // One mouse press selects twice before the next render — focus-follow, then click — while a
+  // controlled `value` is still stale, so single-select dedupes consecutive emissions. The ref
+  // re-syncs to the resolved value each render, so a consumer that rejects the change is emitted
+  // to again rather than silenced.
+  const emittedRef = useRef<SingleValue | MultiValue>(resolvedValue);
+  useEffect(() => {
+    emittedRef.current = resolvedValue;
+  });
+
   const setResolvedValue = useCallback(
     (next: SingleValue | MultiValue) => {
+      if (mode !== 'multi' && next === emittedRef.current) {
+        return;
+      }
+      emittedRef.current = next;
       if (!isControlled) {
         setInternalValue(next);
       }
