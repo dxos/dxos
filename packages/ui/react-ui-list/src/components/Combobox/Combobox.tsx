@@ -38,6 +38,7 @@ import {
   composable,
   composableProps,
   useId,
+  useThemeContext,
 } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
@@ -173,7 +174,8 @@ ComboboxContent.displayName = COMBOBOX_CONTENT_NAME;
 type ComboboxTriggerProps = ButtonProps;
 
 const ComboboxTrigger = composable<HTMLButtonElement, ComboboxTriggerProps>(
-  ({ children, onClick, ...props }, forwardedRef) => {
+  ({ children, classNames, onClick, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
     const { modalId, open, onOpenChange, placeholder, value, displayValue } = useComboboxContext(COMBOBOX_TRIGGER_NAME);
     const handleClick = useCallback(
       (event: Parameters<Exclude<ButtonProps['onClick'], undefined>>[0]) => {
@@ -187,6 +189,9 @@ const ComboboxTrigger = composable<HTMLButtonElement, ComboboxTriggerProps>(
       <Popover.Trigger asChild>
         <Button
           {...props}
+          // The `Select` trigger slot, so the two controls are indistinguishable in a form
+          // (input surface, 1fr/auto grid, control sizing).
+          classNames={tx('select.triggerButton', {}, classNames)}
           role='combobox'
           aria-expanded={open}
           aria-controls={modalId}
