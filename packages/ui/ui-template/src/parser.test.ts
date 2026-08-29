@@ -4,22 +4,31 @@
 
 import { describe, test } from 'vitest';
 
-import { type Node, TemplateParseError, fromState, resolve, select } from './index';
+import {
+  BindingResolutionError,
+  type Node,
+  type ScopeFrame,
+  TemplateParseError,
+  fromState,
+  resolve,
+  select,
+} from './index';
 import { parse } from './parser';
 
 describe('parse', () => {
   test('reads the three attribute families', ({ expect }) => {
     const node = parse(
-      `<container gap="sm">
+      `<container id="project" gap="sm">
+         <let name="title" initial="MOSAIC" />
          <display variant="title" data-text="title" />
          <control label="Name" data-value="title" on-commit="org.dxos.operation.projects.rename" />
        </container>`,
     );
 
     expect(node.tag).toBe('container');
-    expect(node.props).toEqual({ gap: 'sm' });
+    expect(node.props).toEqual({ id: 'project', gap: 'sm' });
 
-    const [display, control] = node.children as Node[];
+    const [, display, control] = node.children as Node[];
     expect(display.data).toEqual({ text: { from: 'state', path: ['title'] } });
     expect(control.events).toEqual({ commit: 'org.dxos.operation.projects.rename' });
   });
@@ -30,9 +39,15 @@ describe('parse', () => {
   });
 
   test('an item binding is scoped to the collection element', ({ expect }) => {
-    const node = parse('<collection data-items="tags"><display item-text="." /></collection>');
-    const [child] = node.children as Node[];
-    expect(node.data).toEqual({ items: { from: 'state', path: ['tags'] } });
+    const root = parse(
+      '<container id="s">' +
+        '<let name="tags" machine="org.dxos.machine.list" />' +
+        '<collection data-items="tags"><display item-text="." /></collection>' +
+        '</container>',
+    );
+    const [, collection] = root.children as Node[];
+    const [child] = collection.children as Node[];
+    expect(collection.data).toEqual({ items: { from: 'state', path: ['tags'] } });
     // A bare `.` is the item itself, so the path is empty rather than a literal key.
     expect(child.data).toEqual({ text: { from: 'item', path: [] } });
   });
@@ -60,57 +75,113 @@ describe('parse', () => {
   });
 
   test('when/on are intrinsic state bindings despite the missing data- prefix', ({ expect }) => {
-    const show = parse('<show when="selected.name"><display data-text="selected.name" /></show>');
+    const [, show] = parse(
+      '<container id="s">' +
+        '<let name="selected" machine="org.dxos.machine.selection" />' +
+        '<show when="selected.name"><display data-text="selected.name" /></show>' +
+        '</container>',
+    ).children as Node[];
     expect(show.data).toEqual({ when: { from: 'state', path: ['selected', 'name'] } });
 
-    const node = parse('<switch on="view"><match value="list"><display data-text="title" /></match></switch>');
+    const [, node] = parse(
+      '<container id="s">' +
+        '<let name="view" machine="org.dxos.machine.view" />' +
+        '<switch on="view"><match value="list"><display label="the-list" /></match></switch>' +
+        '</container>',
+    ).children as Node[];
     expect(node.data).toEqual({ on: { from: 'state', path: ['view'] } });
   });
 
   test('structural validation runs over the whole tree', ({ expect }) => {
-    // `let` requires a machine.
-    expect(() => parse('<container id="x"><let name="a" /></container>')).toThrow(/'let' requires a machine/);
+    // `let` backing is exactly one of initial/machine — none is an error, both are an error.
+    expect(() => parse('<container id="x"><let name="a" /></container>')).toThrow(
+      /'let' requires exactly one of initial or machine/,
+    );
+    expect(() =>
+      parse('<container id="x"><let name="a" initial="0" machine="org.dxos.machine.flag" /></container>'),
+    ).toThrow(/'let' requires exactly one of initial or machine/);
     // `let` requires an enclosing element with an id.
     expect(() => parse('<container><let name="a" machine="org.dxos.machine.flag" /></container>')).toThrow(
       /enclosing element with an id/,
     );
     // `fallback` is only valid inside `show`.
-    expect(() => parse('<container><fallback><display data-text="title" /></fallback></container>')).toThrow(
+    expect(() => parse('<container><fallback><display label="x" /></fallback></container>')).toThrow(
       /'fallback' is only valid inside 'show'/,
     );
     // `switch` children must be `match`.
-    expect(() => parse('<switch on="view"><display data-text="title" /></switch>')).toThrow(
+    expect(() => parse('<switch on="view"><display label="x" /></switch>')).toThrow(
       /'switch' children must be 'match'/,
     );
     // `show` requires a when binding; `switch` requires on.
-    expect(() => parse('<show><display data-text="title" /></show>')).toThrow(/'show' requires a when binding/);
-    expect(() => parse('<switch><match value="list"><display data-text="title" /></match></switch>')).toThrow(
+    expect(() => parse('<show><display label="x" /></show>')).toThrow(/'show' requires a when binding/);
+    expect(() => parse('<switch><match value="list"><display label="x" /></match></switch>')).toThrow(
       /'switch' requires an on binding/,
     );
   });
 });
 
-describe('resolve', () => {
-  type State = { title: string; nested: { count: number } };
-  const state: State = { title: 'MOSAIC', nested: { count: 3 } };
-
-  test('walks a typed path', ({ expect }) => {
-    expect(resolve(fromState(select<State>().title), { state })).toBe('MOSAIC');
-    expect(resolve(fromState(select<State>().nested.count), { state })).toBe(3);
+describe('closed resolution', () => {
+  test('a binding to an undeclared name is a parse error, never a silent undefined', ({ expect }) => {
+    // The no-magic-variables rule: nothing falls through to an ambient context object.
+    expect(() => parse('<display data-text="title" />')).toThrow(/names undeclared 'title'/);
+    expect(() => parse('<container id="s"><let name="a" initial="0" /><display data-text="b" /></container>')).toThrow(
+      /names undeclared 'b'/,
+    );
   });
 
-  test('a path that does not resolve yields undefined rather than throwing', ({ expect }) => {
-    expect(resolve({ from: 'state', path: ['missing', 'deeper'] }, { state })).toBeUndefined();
+  test('a let slot is visible to its whole subtree, not to siblings of its scope', ({ expect }) => {
+    const source =
+      '<container id="outer">' +
+      '<let name="a" initial="0" />' +
+      '<container><display data-text="a" /></container>' +
+      '</container>';
+    expect(() => parse(source)).not.toThrow();
+  });
+
+  test('a bare-dot state binding has no name to resolve', ({ expect }) => {
+    expect(() => parse('<collection data-items="." />')).toThrow(/requires a path/);
+  });
+
+  test('a rung-1 let takes a literal initial value', ({ expect }) => {
+    const [slot] = parse('<container id="s"><let name="count" initial="3" /></container>').children as Node[];
+    expect(slot.props).toEqual({ name: 'count', initial: 3 });
+  });
+});
+
+describe('resolve', () => {
+  type State = { title: string; nested: { count: number } };
+  const frame: ScopeFrame = {
+    id: 'project',
+    path: ['project'],
+    slots: ['title', 'nested'],
+    values: { title: 'MOSAIC', nested: { count: 3 } },
+  };
+
+  test('walks a typed path through a declaring frame', ({ expect }) => {
+    expect(resolve(fromState(select<State>().title), { frames: [frame] })).toBe('MOSAIC');
+    expect(resolve(fromState(select<State>().nested.count), { frames: [frame] })).toBe(3);
+  });
+
+  test('an undeclared first segment throws rather than resolving undefined', ({ expect }) => {
+    expect(() => resolve({ from: 'state', path: ['missing', 'deeper'] }, { frames: [frame] })).toThrow(
+      BindingResolutionError,
+    );
+  });
+
+  test('a path off a resolved slot yields undefined — legitimate absence, not an error', ({ expect }) => {
+    expect(resolve({ from: 'state', path: ['nested', 'missing'] }, { frames: [frame] })).toBeUndefined();
   });
 
   test('an item binding reads the collection scope', ({ expect }) => {
-    expect(resolve({ from: 'item', path: [] }, { state, item: 'ontology' })).toBe('ontology');
+    expect(resolve({ from: 'item', path: [] }, { item: 'ontology' })).toBe('ontology');
   });
 });
 
 describe('attribute edge cases', () => {
   test("a quoted '>' does not terminate the tag", ({ expect }) => {
-    const node = parse('<display label="a > b" data-text="title" />');
+    const [, node] = parse(
+      '<container id="s"><let name="title" initial="x" /><display label="a > b" data-text="title" /></container>',
+    ).children as Node[];
     expect(node.props).toEqual({ label: 'a > b' });
     expect(node.data).toEqual({ text: { from: 'state', path: ['title'] } });
   });

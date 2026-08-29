@@ -16,7 +16,7 @@
 //   on-x="key"       an event bound to an operation key — the only outbound edge
 //
 
-import { type Binding, type Node, type Tag, validate } from './model';
+import { type Binding, type Node, type Tag, checkBindings, validate } from './model';
 
 export class TemplateParseError extends Error {
   readonly _tag = 'TemplateParseError';
@@ -159,9 +159,11 @@ export const parse = (input: string): Node => {
     throw new TemplateParseError('empty template');
   }
   // The per-node validation above cannot see parents or children; the full-tree pass enforces the
-  // structural rules (a `let` needs an enclosing id, a `fallback` needs its `show`).
+  // structural rules (a `let` needs an enclosing id, a `fallback` needs its `show`) and the
+  // closed-resolution rule (every state binding's first segment names a declaration).
   try {
     validate(root);
+    checkBindings(root);
   } catch (err) {
     throw new TemplateParseError((err as Error).message);
   }

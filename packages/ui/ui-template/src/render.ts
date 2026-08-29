@@ -8,7 +8,15 @@
 // React or Solid appears.
 //
 
-import { type Binding, type Node, type Scope, type ScopeFrame, type Tag, resolve } from './model';
+import {
+  type Binding,
+  BindingResolutionError,
+  type Node,
+  type Scope,
+  type ScopeFrame,
+  type Tag,
+  resolve,
+} from './model';
 
 const asText = (value: unknown): string => (value == null ? '' : String(value));
 
@@ -43,8 +51,14 @@ export type Renderer<Output> = {
 /** Invoked for every `on-*` binding. The template never holds a callback — only an operation key. */
 export type Dispatch = (operation: string, context: { scope: Scope; node: Node; payload?: unknown }) => void;
 
-export type RenderOptions = {
+export type RenderOptions<Output = unknown> = {
   readonly dispatch?: Dispatch;
+  /**
+   * Renders a node whose bindings failed to resolve at render time. Without one the
+   * {@link BindingResolutionError} propagates — headless callers assert on it; a UI renderer
+   * supplies an inline error element (R-8: visible, never silent).
+   */
+  readonly onError?: (error: Error, path: string) => Output;
 };
 
 const resolveData = (data: Readonly<Record<string, Binding>> | undefined, scope: Scope) =>
@@ -53,9 +67,9 @@ const resolveData = (data: Readonly<Record<string, Binding>> | undefined, scope:
 /** `show` presence: anything except undefined/null/false renders the children. */
 const present = (value: unknown): boolean => value !== undefined && value !== null && value !== false;
 
-/** Read the published slot value for a frame's `let` at `ui.<path>.<name>` off the root state. */
-const readSlot = (state: unknown, path: readonly string[]): unknown => {
-  let value: unknown = (state as { ui?: unknown } | null | undefined)?.ui;
+/** Read the published slot value for a frame's `let` at `<path>.<name>` off the scope's ui tree. */
+const readSlot = (ui: unknown, path: readonly string[]): unknown => {
+  let value: unknown = ui;
   for (const key of path) {
     if (value == null || typeof value !== 'object') {
       return undefined;
@@ -79,7 +93,7 @@ const openFrame = (node: Node, scope: Scope): ScopeFrame => {
     if (child.tag === 'let' && typeof child.props?.name === 'string') {
       const name = child.props.name;
       slots.push(name);
-      values[name] = readSlot(scope.state, [...path, name]);
+      values[name] = readSlot(scope.ui, [...path, name]);
     }
   }
   return { id, path, slots, values };
@@ -97,7 +111,7 @@ export const render = <Output>(
   node: Node,
   scope: Scope,
   renderer: Renderer<Output>,
-  options: RenderOptions = {},
+  options: RenderOptions<Output> = {},
   path = '0',
 ): Output | null => {
   // The frame is pushed before this node's own bindings resolve, so an element binds against its
@@ -106,7 +120,16 @@ export const render = <Output>(
     scope = { ...scope, frames: [...(scope.frames ?? []), openFrame(node, scope)] };
   }
 
-  const data = resolveData(node.data, scope);
+  let data: Readonly<Record<string, unknown>>;
+  try {
+    data = resolveData(node.data, scope);
+  } catch (err) {
+    // R-8: a binding that fails to resolve renders a visible error in place of the node.
+    if (err instanceof BindingResolutionError && options.onError) {
+      return options.onError(err, path);
+    }
+    throw err;
+  }
 
   const handlers = Object.fromEntries(
     Object.entries(node.events ?? {}).map(([event, operation]) => [

@@ -43,10 +43,20 @@ describe('seedUi', () => {
       '<container id="contacts">' +
         '<let name="selection" machine="org.dxos.machine.selection" />' +
         '<let name="draft" machine="org.dxos.machine.flag" />' +
-        '<collection data-items="rows" />' +
         '</container>',
     );
     expect(seedUi(registry, node)).toEqual({ contacts: { selection: undefined, draft: false } });
+  });
+
+  test('a rung-1 let is seeded from its literal initial value', ({ expect }) => {
+    const node = parse(
+      '<container id="filter">' +
+        '<let name="text" initial="" />' +
+        '<let name="count" initial="3" />' +
+        '<let name="open" initial="true" />' +
+        '</container>',
+    );
+    expect(seedUi(registry, node)).toEqual({ filter: { text: '', count: 3, open: true } });
   });
 
   test('nested scopes seed at the id path', ({ expect }) => {
@@ -62,7 +72,7 @@ describe('seedUi', () => {
   });
 
   test('anonymous elements publish nothing', ({ expect }) => {
-    const node = parse('<container><collection data-items="rows" /></container>');
+    const node = parse('<container><display label="static" /></container>');
     expect(seedUi(registry, node)).toEqual({});
   });
 
@@ -160,15 +170,18 @@ describe('switch/match', () => {
     const { render } = await import('./render');
     const renderer = makeStringRenderer();
     const node = parse(
-      '<switch on="view.mode">' +
+      '<container id="view">' +
+        '<let name="mode" initial="list" />' +
+        '<switch on="mode">' +
         '<match value="list"><display label="the-list" /></match>' +
         '<match value="detail"><display label="the-detail" /></match>' +
-        '</switch>',
+        '</switch>' +
+        '</container>',
     );
 
-    expect(render(node, { state: { view: { mode: 'list' } } }, renderer)).toBe('switch(display(the-list))');
-    expect(render(node, { state: { view: { mode: 'detail' } } }, renderer)).toBe('switch(display(the-detail))');
-    expect(render(node, { state: {} }, renderer)).toBe('switch()');
+    expect(render(node, { ui: { view: { mode: 'list' } } }, renderer)).toBe('container(switch(display(the-list)))');
+    expect(render(node, { ui: { view: { mode: 'detail' } } }, renderer)).toBe('container(switch(display(the-detail)))');
+    expect(render(node, { ui: {} }, renderer)).toBe('container(switch())');
   });
 });
 
@@ -177,15 +190,20 @@ describe('show/fallback', () => {
     const { render } = await import('./render');
     const renderer = makeStringRenderer();
     const node = parse(
-      '<show when="selected">' +
+      '<container id="contacts">' +
+        '<let name="selected" machine="org.dxos.machine.selection" />' +
+        '<show when="selected">' +
         '<display label="the-detail" />' +
         '<fallback><display label="nothing" /></fallback>' +
-        '</show>',
+        '</show>' +
+        '</container>',
     );
 
-    expect(render(node, { state: { selected: { id: 'org-1' } } }, renderer)).toBe('show(display(the-detail))');
-    expect(render(node, { state: { selected: false } }, renderer)).toBe('show(display(nothing))');
-    expect(render(node, { state: {} }, renderer)).toBe('show(display(nothing))');
+    expect(render(node, { ui: { contacts: { selected: { id: 'org-1' } } } }, renderer)).toBe(
+      'container(show(display(the-detail)))',
+    );
+    expect(render(node, { ui: { contacts: { selected: false } } }, renderer)).toBe('container(show(display(nothing)))');
+    expect(render(node, { ui: {} }, renderer)).toBe('container(show(display(nothing)))');
   });
 });
 
@@ -200,11 +218,19 @@ describe('lexical resolution', () => {
         '</container>',
     );
 
-    const state = { ui: { contacts: { selection: 'org-1' } } };
-    expect(render(node, { state }, renderer)).toBe('container(display(org-1))');
-    // An undeclared name still falls back to the root state object.
-    expect(render(parse('<display data-text="title" />'), { state: { title: 'root' } }, renderer)).toBe(
-      'display(root)',
+    expect(render(node, { ui: { contacts: { selection: 'org-1' } } }, renderer)).toBe('container(display(org-1))');
+  });
+
+  test('an undeclared name at render surfaces inline through onError, or throws without one', async ({ expect }) => {
+    const { BindingResolutionError } = await import('./model');
+    const { render } = await import('./render');
+    const renderer = makeStringRenderer();
+    // Constructed directly — the parser would have rejected the undeclared binding already.
+    const node: import('./model').Node = { tag: 'display', data: { text: { from: 'state', path: ['title'] } } };
+
+    expect(() => render(node, {}, renderer)).toThrow(BindingResolutionError);
+    expect(render(node, {}, renderer, { onError: (error) => `error(${error.message})` })).toBe(
+      "error(unresolved name 'title' (binding 'title'))",
     );
   });
 });

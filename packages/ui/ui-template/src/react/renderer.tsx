@@ -295,15 +295,23 @@ export const createReactRenderer = ({ schemas }: ReactRendererOptions): Renderer
   let: () => null,
 });
 
-export type TemplateProps<State> = {
+export type TemplateProps = {
   node: Node;
-  state: State;
+  /** Published UI state; `let` slot values are read at `<idPath>.<name>`. */
+  ui?: Readonly<Record<string, unknown>>;
   renderer: Renderer<ReactNode>;
-  options?: RenderOptions;
+  options?: RenderOptions<ReactNode>;
 };
 
-/** Render a parsed template against a state object. */
-export const Template = <State,>({ node, state, renderer, options }: TemplateProps<State>) => {
-  const scope: Scope = { state };
-  return <>{render(node, scope, renderer, options)}</>;
+/** A binding that failed to resolve renders in place of its node, never as silence (R-8). */
+const renderBindingError = (error: Error, path: string): ReactNode => (
+  <span key={`error:${path}`} className='text-error-text text-sm'>
+    {error.message}
+  </span>
+);
+
+/** Render a parsed template against published state and its declared inputs. */
+export const Template = ({ node, ui, renderer, options }: TemplateProps) => {
+  const scope: Scope = { ui };
+  return <>{render(node, scope, renderer, { onError: renderBindingError, ...options })}</>;
 };

@@ -144,7 +144,6 @@ const DefaultStory = ({ source: initialSource }: { source: string }) => {
           parsed.node && state.value ? (
             <Template
               node={parsed.node}
-              state={state.value}
               renderer={renderer}
               options={{
                 dispatch: (operation, { payload }) =>

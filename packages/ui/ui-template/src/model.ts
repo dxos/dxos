@@ -48,9 +48,10 @@ export const TAGS: readonly Tag[] = [
 ];
 
 /**
- * A read binding. `path` is resolved lexically: the first segment is looked up through the
- * enclosing scopes (innermost first) before falling back to the root state object. `item` binds
- * against the current element inside a `collection`.
+ * A read binding. `path` is resolved lexically against declared names only: the first segment
+ * must be a `let` slot in an enclosing scope, a root `var` input, or a `use` alias — there is no
+ * fall-through to an ambient context object. `item` binds against the current element inside a
+ * `collection`.
  */
 export type Binding = { readonly from: 'state' | 'item'; readonly path: readonly string[] };
 
@@ -131,13 +132,34 @@ export type ScopeFrame = {
 };
 
 export type Scope = {
-  readonly state: unknown;
+  /** Published UI state: the tree `let` slot values are read from at `<idPath>.<name>`. */
+  readonly ui?: Readonly<Record<string, unknown>>;
   readonly item?: unknown;
   /** Enclosing scopes, outermost first. */
   readonly frames?: readonly ScopeFrame[];
 };
 
-/** Walk a binding against a scope. Returns `undefined` for a path that does not resolve. */
+/**
+ * A binding that reached an undeclared or unresolvable name at render time. Statically-knowable
+ * failures are caught at parse ({@link checkBindings}); this class covers the rest — and a
+ * renderer surfaces it inline rather than rendering as though the data were absent (R-8).
+ */
+export class BindingResolutionError extends Error {
+  readonly _tag = 'BindingResolutionError';
+  constructor(
+    message: string,
+    readonly path: readonly string[],
+  ) {
+    super(`${message} (binding '${path.join('.')}')`);
+  }
+}
+
+/**
+ * Walk a binding against a scope. The first segment of a state binding must resolve to a declared
+ * name — a `let` slot in an enclosing frame; anything else throws {@link BindingResolutionError}
+ * (no fall-through to an ambient context object). A path that walks off a resolved value yields
+ * `undefined` — legitimate absence, handled structurally by `show` (R-2).
+ */
 export const resolve = (binding: Binding, scope: Scope): unknown => {
   let value: any;
   let rest: readonly string[] = binding.path;
@@ -145,16 +167,16 @@ export const resolve = (binding: Binding, scope: Scope): unknown => {
     value = scope.item;
   } else {
     const head = binding.path[0];
-    const frames = scope.frames ?? [];
-    // Innermost scope wins; an undeclared name falls through to the root state object, so
-    // app-level context (`organizations`, `title`) needs no declaration.
-    const frame = head === undefined ? undefined : frames.findLast((candidate) => head in candidate.values);
-    if (frame && head !== undefined) {
-      value = frame.values[head];
-      rest = binding.path.slice(1);
-    } else {
-      value = scope.state;
+    if (head === undefined) {
+      throw new BindingResolutionError('a state binding requires a path', binding.path);
     }
+    // Innermost scope wins.
+    const frame = (scope.frames ?? []).findLast((candidate) => head in candidate.values);
+    if (!frame) {
+      throw new BindingResolutionError(`unresolved name '${head}'`, binding.path);
+    }
+    value = frame.values[head];
+    rest = binding.path.slice(1);
   }
   for (const key of rest) {
     if (value == null) {
@@ -205,8 +227,11 @@ export const validate = (node: Node, at = 'root'): void => {
       if (typeof node.props?.name !== 'string') {
         throw new TemplateValidationError(`'let' requires a name`, at);
       }
-      if (typeof node.props?.machine !== 'string') {
-        throw new TemplateValidationError(`'let' requires a machine`, at);
+      // The ladder: rung 1 is a literal initial value, rung 2 a machine-backed slot — the
+      // backing escalates in place, so exactly one must be named.
+      const backings = ['initial', 'machine'].filter((key) => node.props && key in node.props);
+      if (backings.length !== 1) {
+        throw new TemplateValidationError(`'let' requires exactly one of initial or machine`, at);
       }
       break;
     }
@@ -242,4 +267,41 @@ export const validate = (node: Node, at = 'root'): void => {
   }
 
   node.children?.forEach((child, index) => validate(child, `${at} > ${child.tag}[${index}]`));
+};
+
+/** Slot names an element's direct `let` children declare. */
+const letNames = (node: Node): string[] =>
+  (node.children ?? []).flatMap((child) =>
+    child.tag === 'let' && typeof child.props?.name === 'string' ? [child.props.name] : [],
+  );
+
+/**
+ * Full-tree closed-resolution check: every state binding's first path segment must be a declared
+ * name — a `let` slot in an enclosing scope. Declaration and use are both in the document, so an
+ * undeclared name is a parse-time error, never a silent `undefined` at render (R-8).
+ */
+export const checkBindings = (root: Node): void => {
+  const check = (node: Node, declared: ReadonlySet<string>, at: string): void => {
+    let scope = declared;
+    if (typeof node.props?.id === 'string') {
+      const names = letNames(node);
+      if (names.length) {
+        scope = new Set([...declared, ...names]);
+      }
+    }
+    for (const [key, binding] of Object.entries(node.data ?? {})) {
+      if (binding.from !== 'state') {
+        continue;
+      }
+      const head = binding.path[0];
+      if (head === undefined) {
+        throw new TemplateValidationError(`binding '${key}' requires a path`, at);
+      }
+      if (!scope.has(head)) {
+        throw new TemplateValidationError(`binding '${key}' names undeclared '${head}'`, at);
+      }
+    }
+    node.children?.forEach((child, index) => check(child, scope, `${at} > ${child.tag}[${index}]`));
+  };
+  check(root, new Set(), 'root');
 };

@@ -394,7 +394,6 @@ const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
   const activeKey = pick?.(ui) ?? firstKey;
   const active = parsedAll[activeKey] ?? parsedAll[firstKey];
   const context = deriveContext(ui, organizations);
-  const state = { title: 'Organizations', ...context };
 
   return (
     <Workbench
@@ -423,7 +422,7 @@ const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
       main={{
         title: 'Rendered',
         children: active?.node ? (
-          <Template node={active.node} state={state} renderer={renderer} options={{ dispatch }} />
+          <Template node={active.node} ui={ui} renderer={renderer} options={{ dispatch }} />
         ) : (
           <span className='text-error-text text-sm'>{active?.error}</span>
         ),
