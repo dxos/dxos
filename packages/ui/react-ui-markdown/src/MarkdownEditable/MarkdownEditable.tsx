@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
 import { type ThemedClassName, type UseEditableOptions, useEditable, useThemeContext } from '@dxos/react-ui';
 import { TextEditor } from '@dxos/react-ui-editor';
@@ -84,17 +84,20 @@ export const MarkdownEditable = forwardRef<MarkdownEditableController, MarkdownE
     // The editor owns its document (see `initialValue` below), so reverting the draft alone would
     // leave the reader's text on screen — the editor is rebuilt around the restored text instead.
     const [epoch, setEpoch] = useState(0);
-    useImperativeHandle(
-      forwardedRef,
-      () => ({
-        commit: () => handlers.current.commit(),
-        revert: () => {
-          handlers.current.revert();
-          setEpoch((current) => current + 1);
-        },
-      }),
-      [],
-    );
+
+    // Tearing that editor down fires a blur, and blur commits: without this a revert would write
+    // the very text it just discarded. Cleared by the next keystroke, so a field the reader returns
+    // to still commits when they leave it.
+    const discarded = useRef(false);
+    const revertAll = useCallback(() => {
+      discarded.current = true;
+      handlers.current.revert();
+      setEpoch((current) => current + 1);
+    }, []);
+
+    useImperativeHandle(forwardedRef, () => ({ commit: () => handlers.current.commit(), revert: revertAll }), [
+      revertAll,
+    ]);
 
     const { themeMode } = useThemeContext();
     const commitOnBlur = options.blurBehavior !== 'revert';
@@ -115,13 +118,17 @@ export const MarkdownEditable = forwardRef<MarkdownEditableController, MarkdownE
         inlineEdit({
           // The text comes with the event: committing the draft instead would write whatever the
           // previous render captured.
-          onCommit: (text) => handlers.current.commit(text),
-          onRevert: () => handlers.current.revert(),
+          onCommit: (text) => {
+            if (!discarded.current) {
+              handlers.current.commit(text);
+            }
+          },
+          onRevert: () => revertAll(),
           commitOnBlur,
           submitOnEnter: !multiline,
         }),
       ],
-      [commitOnBlur, multiline, placeholder, themeMode],
+      [commitOnBlur, multiline, placeholder, themeMode, revertAll],
     );
 
     if (editing) {
@@ -143,7 +150,10 @@ export const MarkdownEditable = forwardRef<MarkdownEditableController, MarkdownE
             // get into — right for a document pane, wrong for a field next to a title.
             focusable={false}
             initialValue={draft}
-            onChange={(text) => handlers.current.setDraft(text)}
+            onChange={(text) => {
+              discarded.current = false;
+              handlers.current.setDraft(text);
+            }}
             extensions={extensions}
             autoFocus={autoFocus}
             selectionEnd

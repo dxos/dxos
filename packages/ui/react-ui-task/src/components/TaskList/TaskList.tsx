@@ -914,7 +914,7 @@ type TaskListEditProps = ComposableProps<{
 const TaskListEdit = composable<HTMLDivElement, { placeholder?: string; descriptionPlaceholder?: string }>(
   ({ placeholder = 'Add task', descriptionPlaceholder = 'Add a description', ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
-    const { tasks, selected, showGutter, hierarchical, onTaskCreate, onTaskUpdate } =
+    const { tasks, selected, showGutter, hierarchical, onTaskCreate, onTaskUpdate, onDeselect } =
       useTaskListContext('TaskList.Edit');
     const { className, ...rest } = composableProps(props);
 
@@ -955,17 +955,21 @@ const TaskListEdit = composable<HTMLDivElement, { placeholder?: string; descript
 
     const descriptionRef = useRef<MarkdownEditableController>(null);
 
+    // Writes both fields and leaves, as cancelling does — the pane drops back to creating either
+    // way, and only what it did with the pending text differs.
     const handleSave = useCallback(() => {
       commitTitle();
       descriptionRef.current?.commit();
-    }, [commitTitle]);
+      onDeselect();
+    }, [commitTitle, onDeselect]);
 
-    // Restores both fields from the task, which is what the reader means by cancelling an edit they
-    // have not saved. With nothing selected there is only the new task's title to throw away.
+    // Throws away the pending edit and leaves: the pane drops back to creating, which is the same
+    // exit Escape on a row gives. Reverting first, since deselecting unmounts the fields.
     const handleCancel = useCallback(() => {
-      setDraft(current?.title ?? '');
       descriptionRef.current?.revert();
-    }, [current]);
+      setDraft('');
+      onDeselect();
+    }, [onDeselect]);
 
     // Nothing to create with and nothing to edit: the pane has no purpose.
     if (!onTaskCreate && !(current && onTaskUpdate)) {
@@ -1053,18 +1057,18 @@ const TaskListEdit = composable<HTMLDivElement, { placeholder?: string; descript
             iconOnly
             icon='ph--check--regular'
             data-testid='taskList.edit.save'
-            onMouseDown={(event) => event.preventDefault()}
             label={t('save-task.label')}
             onClick={handleSave}
+            onMouseDown={(event) => event.preventDefault()}
           />
           <Toolbar.IconButton
             variant='ghost'
             iconOnly
             icon='ph--x--regular'
             data-testid='taskList.edit.cancel'
-            onMouseDown={(event) => event.preventDefault()}
             label={t('cancel-edit.label')}
             onClick={handleCancel}
+            onMouseDown={(event) => event.preventDefault()}
           />
         </Toolbar.Root>
       </div>

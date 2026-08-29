@@ -255,27 +255,31 @@ export const TestEdit: Story = {
     await userEvent.tab();
     await waitFor(async () => expect(description()!.contains(document.activeElement)).toBeFalsy());
 
-    // Cancel restores the description. The buttons must not take focus: the field commits on blur,
-    // so a Cancel that stole focus would have written the text it is meant to throw away.
+    // Save writes the pending description and leaves, dropping the pane back to creating.
     const content = () => description()!.querySelector<HTMLElement>('.cm-content')!;
     const text = () => content().textContent ?? '';
-    const committed = text();
-    await userEvent.click(content());
-    await userEvent.keyboard(' DISCARD');
-    await waitFor(async () => expect(text()).toContain('DISCARD'));
-    await userEvent.click(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.cancel"]')!);
-    await waitFor(async () => expect(text()).toEqual(committed));
-
-    // ...and Save writes it, so cancelling afterwards restores the saved text rather than the old.
     await userEvent.click(content());
     await userEvent.keyboard(' KEEP');
     await userEvent.click(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.save"]')!);
-    await waitFor(async () => expect(text()).toContain('KEEP'));
+    await waitFor(async () => expect(description()).toBeNull());
+    await expect(title().value).toEqual('');
+
+    // Cancel leaves the same way but throws the pending edit away. The buttons must not take focus:
+    // the fields commit on blur, so a Cancel that stole focus would have written the very text it is
+    // meant to discard — as would the blur that tearing the editor down fires.
+    rows()[0].click();
+    await waitFor(async () => expect(description()).not.toBeNull());
     await userEvent.click(content());
     await userEvent.keyboard(' THROW');
     await userEvent.click(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.cancel"]')!);
-    await waitFor(async () => expect(text()).not.toContain('THROW'));
-    await expect(text()).toContain('KEEP');
+    await waitFor(async () => expect(description()).toBeNull());
+    await expect(canvasElement.querySelectorAll('[aria-selected="true"]')).toHaveLength(0);
+
+    // ...so what Save wrote survived and what Cancel discarded did not.
+    rows()[0].click();
+    await waitFor(async () => expect(description()).not.toBeNull());
+    await waitFor(async () => expect(text()).toContain('KEEP'));
+    await expect(text()).not.toContain('THROW');
   },
 };
 
