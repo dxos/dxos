@@ -119,7 +119,7 @@ const TaskSetView = ({ outline, taskSet }: { outline: Outline.Outline; taskSet?:
           onTaskDelete={handleDelete}
         >
           <TaskList.Content />
-          <TaskList.Create />
+          <TaskList.Edit />
         </TaskList.Root>
       </Panel.Content>
     </Panel.Root>

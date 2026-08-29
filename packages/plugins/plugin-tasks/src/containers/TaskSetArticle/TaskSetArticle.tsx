@@ -62,38 +62,43 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
   );
 
   const [selected, setSelected] = useState<string>();
-  const handleSelect = useCallback((task: Task.Task) => setSelected(task.id), []);
+  const handleSelect = useCallback((task: Task.Task | undefined) => setSelected(task?.id), []);
 
   const content = (
     <TaskList.Root
+      hierarchical
       tasks={tasks}
       showDescriptions
-      hierarchical
+      selected={selected}
       statusLabel={statusLabel}
       onTaskCreate={handleCreate}
       onTaskUpdate={handleUpdate}
       onTaskDelete={handleDelete}
       onTaskMove={handleMove}
-      // Selection is local to the list today (it styles the row); opening the task is a separate
-      // affordance, so this only makes the row report which task the reader is looking at.
       onTaskSelect={handleSelect}
-      selected={selected}
     >
-      <TaskList.Viewport classNames='dx-document'>
-        <TaskList.Content />
-      </TaskList.Viewport>
-      <TaskList.Create classNames='dx-document' placeholder={t('task-create.placeholder')} />
+      <div className='dx-container grid grid-rows-[auto_1fr] gap-2'>
+        <TaskList.Viewport>
+          <TaskList.Content classNames='dx-document' />
+        </TaskList.Viewport>
+      </div>
+      <div className='p-2'>
+        <TaskList.Edit
+          classNames='dx-document border border-separator rounded-md p-2'
+          placeholder={t('task-create.placeholder')}
+        />
+      </div>
     </TaskList.Root>
   );
 
-  // Embedded as a section (e.g. the ProjectArticle Tasks section): the host owns scroll and
+  // Embedded as a section (e.g., the ProjectArticle Tasks section): the host owns scroll and
   // chrome, so render the bare list — a nested Panel/scroll root would collapse width.
   if (role === AppSurface.Section.role) {
     return content;
   }
 
   return (
-    <Panel.Root role={role} classNames='dx-document'>
+    <Panel.Root role={role}>
       <Panel.Toolbar asChild>
         <Toolbar.Root disabled={!hasAttention} />
       </Panel.Toolbar>

@@ -192,10 +192,15 @@ export const _TextInput: Story = {
   render: () => (
     <div className='flex flex-col gap-3 min-w-[24rem]'>
       {TEXT_INPUT_TYPES.map(({ type, placeholder }) => (
-        <Input.Root key={type}>
-          <Input.Label>{`type="${type}"`}</Input.Label>
-          <Input.TextInput type={type} placeholder={placeholder} />
-        </Input.Root>
+        // `Input.Root` renders no element, so without this wrapper the gap falls between each label
+        // and its own field rather than between the groups — making the label spacing look unlike
+        // every other story's.
+        <div key={type}>
+          <Input.Root>
+            <Input.Label>{`type="${type}"`}</Input.Label>
+            <Input.TextInput type={type} placeholder={placeholder} />
+          </Input.Root>
+        </div>
       ))}
     </div>
   ),

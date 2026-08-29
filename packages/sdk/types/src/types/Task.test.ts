@@ -148,6 +148,42 @@ describe('collectSubtree', () => {
   );
 });
 
+describe('history', () => {
+  it.effect('records an activity log that round-trips through the database', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(
+        Task.make({
+          title: 'Draft launch email',
+          status: 'todo',
+          history: [{ date: '2026-08-01T09:00:00.000Z', event: 'created', description: 'Task created.' }],
+        }),
+      );
+      yield* Database.flush();
+
+      // Append-only by convention: an entry records something that happened, so the write adds
+      // rather than rewrites.
+      Obj.update(task, (task) => {
+        task.history = [
+          ...(task.history ?? []),
+          {
+            date: '2026-08-02T10:30:00.000Z',
+            actor: { name: 'Scout', role: 'assistant' },
+            event: 'status-changed',
+            description: 'Status changed from todo to done.',
+          },
+        ];
+      });
+      yield* Database.flush();
+
+      expect(task.history?.map((entry) => entry.event)).toEqual(['created', 'status-changed']);
+      expect(task.history?.[1].actor?.name).toEqual('Scout');
+      expect(task.history?.[1].description).toEqual('Status changed from todo to done.');
+      // The actor is optional: something the system did on its own has none.
+      expect(task.history?.[0].actor).toBeUndefined();
+    }).pipe(Effect.provide(testLayer())),
+  );
+});
+
 const testLayer = () => TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task] });
 
 const seedTree = () =>

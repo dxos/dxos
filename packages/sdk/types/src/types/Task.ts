@@ -19,11 +19,41 @@ import * as Milestone from './Milestone';
 export const Priority = Schema.Literals(['none', 'low', 'medium', 'high', 'urgent']);
 export type Priority = Schema.Schema.Type<typeof Priority>;
 
-// `failed`/`cancelled` exist so delegated agent tasks and human tasks share one status vocabulary.
 export const Status = Schema.Literals(['todo', 'started', 'done', 'cancelled', 'failed']);
 export type Status = Schema.Schema.Type<typeof Status>;
 
-export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '0.3.0'))(
+/**
+ * What happened to a task, as recorded in its {@link History}. Deliberately coarser than the field
+ * set: an entry says a task was assigned, not which field carried it, so the log stays readable
+ * when the shape of a task changes.
+ */
+export const Event = Schema.Literals([
+  'created',
+  'updated',
+  'status-changed',
+  'assigned',
+  'moved',
+  'commented',
+  'delegated',
+]);
+export type Event = Schema.Schema.Type<typeof Event>;
+
+/**
+ * One line of a task's activity log. `description` is the human-readable record ("status changed
+ * from todo to done"), so a reader needs nothing but the entry to understand what happened; the
+ * `event` is what a filter or an icon keys on.
+ */
+export const HistoryEntry = Schema.Struct({
+  /** When it happened, ISO-8601 — a string rather than a Date so an entry survives serialization. */
+  date: Format.DateTime.annotate({ title: 'Date' }),
+  /** Who did it: absent for something the system did on its own. */
+  actor: Schema.optional(Actor.Actor.annotate({ title: 'Actor' })),
+  event: Event.annotate({ title: 'Event' }),
+  description: Schema.String.annotate({ title: 'Description' }),
+}).annotate({ title: 'History Entry' });
+export type HistoryEntry = Schema.Schema.Type<typeof HistoryEntry>;
+
+export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '0.4.0'))(
   Schema.Struct({
     title: Schema.String.pipe(
       Schema.annotate({ title: 'Title' }),
@@ -112,6 +142,15 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
      * ancestor's milestone at read time unless it sets its own (matching Linear).
      */
     milestone: Schema.optional(Ref.Ref(Milestone.Milestone).annotate({ title: 'Milestone' })),
+
+    /**
+     * Activity log, oldest first. Append-only by convention: an entry records something that
+     * happened, so rewriting one would be rewriting the past. It lives on the task rather than in a
+     * side channel because the log is worthless if it can be separated from what it describes.
+     */
+    history: Schema.optional(
+      Schema.Array(HistoryEntry).pipe(Annotation.FormInputAnnotation.set(false), Schema.annotate({ title: 'History' })),
+    ),
 
     // Set membership is the `TaskSet.tasks` array (flat, ordered, sub-tasks included), not a
     // backref here: enumeration stays one array read and a move stays one field write.
