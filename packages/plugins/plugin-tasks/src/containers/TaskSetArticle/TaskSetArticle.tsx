@@ -61,14 +61,17 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
     (props: TaskDraft) => ({ taskSet: Ref.make(taskSet), ...props }),
     { spaceId },
   );
+
   const handleUpdate = useOperation(
     TaskOperation.UpdateTask,
     (task: Task.Task, props: TaskEdit) => ({ task: Ref.make(task), ...props }),
     { spaceId },
   );
+
   const handleDelete = useOperation(TaskOperation.DeleteTask, (task: Task.Task) => ({ task: Ref.make(task) }), {
     spaceId,
   });
+
   const handleMove = useOperation(
     TaskOperation.MoveTask,
     (task: Task.Task, { parentTask, before }: TaskPlacement) => ({
