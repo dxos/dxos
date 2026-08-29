@@ -377,7 +377,7 @@ describe('mutual modules', () => {
       visible: {
         derive: ({ inputs, read }) => {
           const text = String(read(FILTER, 'text') ?? '').toLowerCase();
-          const items = Array.isArray(inputs.items) ? (inputs.items as string[]) : [];
+          const items = Array.isArray(inputs.items) ? inputs.items.map(String) : [];
           return text ? items.filter((item) => item.toLowerCase().includes(text)) : items;
         },
       },
