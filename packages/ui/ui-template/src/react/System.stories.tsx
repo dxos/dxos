@@ -450,25 +450,27 @@ const MASTER_DETAIL_TOOLBAR = trim`
 `;
 
 const MASTER_DETAIL_MULTI = trim`
-  <layout rows="1fr 1fr" resizable="true">
+  <container id="example">
     <use module="org.dxos.module.tasks" as="tasks" />
-    <collection data-items="tasks.items" item-id="id" item-label="title"
-                data-selections="tasks.selections"
-                capability="tasks.multiSelect" />
-    <show when="tasks.selectedOne">
-      <form schema="org.dxos.type.Task" data-values="tasks.selectedOne"
-            on-save="org.dxos.operation.tasks.save"
-            on-cancel="org.dxos.operation.tasks.cancel" />
-      <fallback>
-        <show when="tasks.manySelected">
-          <display variant="title" data-text="tasks.selectionLabel" />
-          <fallback>
-            <display label="Nothing selected — click a row; shift-click toggles." />
-          </fallback>
-        </show>
-      </fallback>
-    </show>
-  </layout>
+    <layout rows="1fr 1fr" resizable="true">
+      <collection data-items="tasks.items" item-id="id" item-label="title"
+                  data-selections="tasks.selections"
+                  capability="tasks.multiSelect" />
+      <show when="tasks.selectedOne">
+        <form schema="org.dxos.type.Task" data-values="tasks.selectedOne"
+              on-save="org.dxos.operation.tasks.save"
+              on-cancel="org.dxos.operation.tasks.cancel" />
+        <fallback>
+          <show when="tasks.manySelected">
+            <display variant="title" data-text="tasks.selectionLabel" />
+            <fallback>
+              <display label="Nothing selected — click a row; shift-click toggles." />
+            </fallback>
+          </show>
+        </fallback>
+      </show>
+    </layout>
+  </container>
 `;
 
 const COMBOBOX = trim`
