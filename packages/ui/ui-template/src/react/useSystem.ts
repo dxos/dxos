@@ -68,14 +68,32 @@ const deepSeed = (initial: UiState, current: UiState): UiState => {
   return next;
 };
 
+/**
+ * Reconcile published state to the declared shape: keys come from `initial` (so state for slots
+ * removed from an edited template is dropped), surviving values come from `current`. Below a
+ * declared slot the current value wins wholesale — operations own that structure.
+ */
+const reconcileSeed = (initial: UiState, current: UiState): UiState => {
+  const next: Record<string, unknown> = {};
+  for (const [key, seed] of Object.entries(initial)) {
+    if (!(key in current)) {
+      next[key] = seed;
+    } else {
+      const existing = current[key];
+      next[key] = isPlainObject(seed) && isPlainObject(existing) ? reconcileSeed(seed, existing) : existing;
+    }
+  }
+  return next;
+};
+
 export const useSystem = <Db>({ registry, root, db, inputs }: UseSystemOptions<Db>): UseSystem => {
   // Module slots seed once from the registry (shared instances); template lets seed per scope.
   const initial = useMemo(() => deepSeed(seedModules(registry), seedUi(registry, root)), [registry, root]);
   const ref = useRef<{ ui: UiState; log: readonly SequencedLogEntry[] }>({ ui: initial, log: [] });
   const seq = useRef(0);
-  // An edited template can introduce new slots: seed the ones that are missing without resetting
-  // the state of the ones that survive.
-  ref.current = { ...ref.current, ui: deepSeed(initial, ref.current.ui) };
+  // An edited template can add or remove slots: seed the missing, drop the undeclared, and keep
+  // the state of the ones that survive. The log is untouched — history outlives declarations.
+  ref.current = { ...ref.current, ui: reconcileSeed(initial, ref.current.ui) };
   const [, force] = useReducer((tick: number) => tick + 1, 0);
 
   const step = useCallback(

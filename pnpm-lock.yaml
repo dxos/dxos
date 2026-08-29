@@ -23474,6 +23474,12 @@ importers:
       '@dxos/react-ui-tabs':
         specifier: workspace:*
         version: link:../react-ui-tabs
+      '@zag-js/react':
+        specifier: 'catalog:'
+        version: 1.43.3(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@zag-js/splitter':
+        specifier: 'catalog:'
+        version: 1.43.3
     devDependencies:
       '@dxos/echo':
         specifier: workspace:*
@@ -23509,12 +23515,6 @@ importers:
         specifier: ~19.2.17
         version: 19.2.17
       '@zag-js/core':
-        specifier: 'catalog:'
-        version: 1.43.3
-      '@zag-js/react':
-        specifier: 'catalog:'
-        version: 1.43.3(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@zag-js/splitter':
         specifier: 'catalog:'
         version: 1.43.3
       '@zag-js/vanilla':

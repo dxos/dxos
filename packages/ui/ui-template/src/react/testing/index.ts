@@ -3,5 +3,4 @@
 //
 
 export * from './MultiSelectList';
-export * from './Splitter';
 export * from './Workbench';
