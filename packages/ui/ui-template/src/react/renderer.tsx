@@ -14,7 +14,7 @@
 import type * as Schema from 'effect/Schema';
 import React, { type ReactNode } from 'react';
 
-import { type Align, Button, Flex, type Gap, Input, type Justify, Panel } from '@dxos/react-ui';
+import { type Align, Button, Flex, type Gap, Grid, Input, type Justify, Panel } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Combobox, Listbox } from '@dxos/react-ui-list';
 
@@ -33,13 +33,23 @@ const oneOf = <T extends string>(values: readonly T[], value: unknown): T | unde
 /**
  * `gap`/`align`/`justify` come off the node's static props and are handed to `Flex` unchanged —
  * the aspect vocabulary in the template is the same closed set the primitive already takes.
+ * `gap` defaults to the ramp's `sm`: a minimal template says nothing and gets sane spacing.
  */
 const flexProps = (props: Readonly<Record<string, string | number | boolean>>) => ({
   column: props.direction === 'column',
-  gap: oneOf(GAPS, props.gap),
+  gap: oneOf(GAPS, props.gap) ?? 'sm',
   align: oneOf(ALIGNS, props.align),
   justify: oneOf(JUSTIFIES, props.justify),
 });
+
+/** A `columns`/`rows` aspect: whitespace-separated CSS tracks, bare numbers read as `<n>fr`. */
+const tracks = (value: string | number | boolean | undefined): (string | number)[] | undefined =>
+  typeof value === 'string' && value.trim()
+    ? value
+        .trim()
+        .split(/\s+/)
+        .map((track) => (/^\d+$/.test(track) ? Number(track) : track))
+    : undefined;
 
 /** Resolve a per-item binding (`item-id`, `item-label`) declared on the collection node itself. */
 const itemField = (node: Node, scope: Scope, item: unknown, name: string): unknown => {
@@ -63,11 +73,26 @@ export const createReactRenderer = ({ schemas }: ReactRendererOptions): Renderer
     </Panel.Root>
   ),
 
-  layout: ({ path, props, children }) => (
-    <Flex key={path} {...flexProps(props)} classNames='min-w-0'>
-      {children}
-    </Flex>
-  ),
+  /**
+   * `columns`/`rows` turn the layout into a grid with explicit tracks — geometry lives in the
+   * template, not in renderer workarounds. Without them it is a flex row/column.
+   */
+  layout: ({ path, props, children }) => {
+    const cols = tracks(props.columns);
+    const rows = tracks(props.rows);
+    if (cols || rows) {
+      return (
+        <Grid key={path} cols={cols} rows={rows} gap={oneOf(GAPS, props.gap) ?? 'sm'} grow={false}>
+          {children}
+        </Grid>
+      );
+    }
+    return (
+      <Flex key={path} {...flexProps(props)} classNames='min-w-0'>
+        {children}
+      </Flex>
+    );
+  },
 
   display: ({ path, props, data }) => (
     <span key={path} className={props.variant === 'title' ? 'text-lg font-medium' : 'text-description'}>
@@ -112,9 +137,7 @@ export const createReactRenderer = ({ schemas }: ReactRendererOptions): Renderer
           value={asText(data.selection) || undefined}
           onValueChange={(next) => handlers.select?.(next)}
         >
-          {/* Inline flex-basis: the viewport's own `dx-container` (flex-1, basis 0) wins over any
-              width utility in a row, so a class cannot size it. */}
-          <Listbox.Viewport style={{ flex: '0 0 14rem' }}>
+          <Listbox.Viewport>
             <Listbox.Content>
               {items.map((item, index) => {
                 const id = asText(itemField(node, scope, item, 'id') ?? index);

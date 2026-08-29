@@ -8,7 +8,6 @@ import * as Schema from 'effect/Schema';
 import React, { useMemo, useRef, useState } from 'react';
 
 import { toJsonSchema } from '@dxos/echo/JsonSchema';
-import { Flex } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { json } from '@dxos/ui-editor';
 import { trim } from '@dxos/util';
@@ -16,7 +15,7 @@ import { trim } from '@dxos/util';
 import { templateLanguage } from '../codemirror';
 import { type Node, TemplateParseError, parse, select } from '../index';
 import { Template, createReactRenderer } from './renderer';
-import { Cell, Editor, OperationLog } from './testing';
+import { Editor, OperationLog, Workbench } from './testing';
 import { type SequencedLogEntry } from './useSystem';
 
 //
@@ -64,14 +63,14 @@ const initialState: ProjectState = {
 void select<ProjectState>().title;
 
 const SIMPLE = trim`
-  <container gap="sm">
+  <container>
     <display variant="title" data-text="title" />
     <display data-text="description" />
   </container>
 `;
 
 const WITH_COLLECTION = trim`
-  <container gap="sm">
+  <container>
     <display variant="title" data-text="title" />
     <display data-text="description" />
     <collection data-items="tags">
@@ -81,8 +80,8 @@ const WITH_COLLECTION = trim`
 `;
 
 const WITH_EVENTS = trim`
-  <container gap="sm">
-    <layout direction="row" gap="sm" align="center">
+  <container>
+    <layout align="center">
       <display variant="title" data-text="title" />
     </layout>
     <control label="Name" data-value="title" on-commit="org.dxos.operation.projects.rename" />
@@ -127,41 +126,34 @@ const DefaultStory = ({ source: initialSource }: { source: string }) => {
   const templateExtensions = useMemo<Extension[]>(() => templateLanguage(), []);
 
   return (
-    <Flex classNames='dx-container grid grid-cols-2 divide-x divide-separator' align='stretch'>
-      <Flex column grow classNames='dx-container grid grid-rows-4 divide-y divide-separator'>
-        <Cell title='Context schema'>
-          <Editor value={schemaText} extensions={schemaExtensions} />
-        </Cell>
-
-        <Cell title='Layout'>
-          <Editor value={source} extensions={templateExtensions} onChange={setSource} />
-        </Cell>
-
-        <Cell title='Context object'>
-          <Editor value={stateText} extensions={stateExtensions} onChange={setStateText} />
-        </Cell>
-
-        <Cell title='Log'>
-          <OperationLog entries={log} />
-        </Cell>
-      </Flex>
-
-      <Cell title='Rendered'>
-        {parsed.node && state.value ? (
-          <Template
-            node={parsed.node}
-            state={state.value}
-            renderer={renderer}
-            options={{
-              dispatch: (operation, { payload }) =>
-                setLog((entries) => [{ operation, payload, seq: seq.current++ }, ...entries].slice(0, 8)),
-            }}
-          />
-        ) : (
-          <span className='text-error-text text-sm'>{parsed.error ?? state.error}</span>
-        )}
-      </Cell>
-    </Flex>
+    <Workbench
+      panes={[
+        { title: 'Context schema', children: <Editor value={schemaText} extensions={schemaExtensions} /> },
+        { title: 'Layout', children: <Editor value={source} extensions={templateExtensions} onChange={setSource} /> },
+        {
+          title: 'Context object',
+          children: <Editor value={stateText} extensions={stateExtensions} onChange={setStateText} />,
+        },
+        { title: 'Log', children: <OperationLog entries={log} /> },
+      ]}
+      main={{
+        title: 'Rendered',
+        children:
+          parsed.node && state.value ? (
+            <Template
+              node={parsed.node}
+              state={state.value}
+              renderer={renderer}
+              options={{
+                dispatch: (operation, { payload }) =>
+                  setLog((entries) => [{ operation, payload, seq: seq.current++ }, ...entries].slice(0, 8)),
+              }}
+            />
+          ) : (
+            <span className='text-error-text text-sm'>{parsed.error ?? state.error}</span>
+          ),
+      }}
+    />
   );
 };
 
@@ -176,6 +168,20 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Simple: Story = { args: { source: SIMPLE } };
-export const Collection: Story = { args: { source: WITH_COLLECTION } };
-export const Events: Story = { args: { source: WITH_EVENTS } };
+export const Simple: Story = {
+  args: {
+    source: SIMPLE,
+  },
+};
+
+export const Collection: Story = {
+  args: {
+    source: WITH_COLLECTION,
+  },
+};
+
+export const Events: Story = {
+  args: {
+    source: WITH_EVENTS,
+  },
+};

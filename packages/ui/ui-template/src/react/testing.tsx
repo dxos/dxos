@@ -9,7 +9,7 @@
 
 import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import React from 'react';
+import React, { useRef } from 'react';
 
 import { Flex, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
@@ -17,6 +17,41 @@ import { Empty, Listbox } from '@dxos/react-ui-list';
 import { compactSlots, createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
 import { type SequencedLogEntry } from './useSystem';
+
+//
+// Workbench
+//
+
+export type Pane = {
+  title: string;
+  children: React.ReactNode;
+};
+
+export type WorkbenchProps = {
+  /** Stacked panes on the left. */
+  panes: Pane[];
+  /** The render pane on the right. */
+  main: Pane;
+};
+
+/** The shared story frame: a stack of tool panes beside the rendered result. */
+export const Workbench = ({ panes, main }: WorkbenchProps) => (
+  <Flex classNames='dx-container grid grid-cols-2 divide-x divide-separator' align='stretch'>
+    <Flex
+      column
+      grow
+      classNames='dx-container grid divide-y divide-separator'
+      style={{ gridTemplateRows: `repeat(${panes.length}, 1fr)` }}
+    >
+      {panes.map((pane) => (
+        <Cell key={pane.title} title={pane.title}>
+          {pane.children}
+        </Cell>
+      ))}
+    </Flex>
+    <Cell title={main.title}>{main.children}</Cell>
+  </Flex>
+);
 
 //
 // Cell
@@ -59,20 +94,25 @@ export type EditorProps = {
 /** One CodeMirror pane: monospace, theme-following, syntax highlighting on. */
 export const Editor = ({ value, extensions, onChange }: EditorProps) => {
   const { themeMode } = useThemeContext();
+  // The callback goes through a ref: an inline `onChange` closure changes identity every render,
+  // and keying the editor on it would recreate CodeMirror — and drop focus — on each keystroke.
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+  const readOnly = !onChange;
   const { parentRef } = useTextEditor(
     () => ({
       initialValue: value,
       extensions: [
         createThemeExtensions({ themeMode, slots: compactSlots, syntaxHighlighting: true, monospace: true }),
-        createBasicExtensions({ readOnly: !onChange, lineWrapping: false }),
+        createBasicExtensions({ readOnly, lineWrapping: false }),
         ...extensions,
-        ...(onChange ? [mirrorTo(onChange)] : []),
+        ...(readOnly ? [] : [mirrorTo((next) => onChangeRef.current?.(next))]),
       ],
     }),
     // An editable editor owns its text once mounted, so it must NOT key on `value` — recreating it
     // on every keystroke would lose the cursor. A read-only one has no such state, and keys on
     // `value` so an externally changed document is picked up.
-    [themeMode, extensions, onChange, onChange ? null : value],
+    [themeMode, extensions, readOnly, readOnly ? value : null],
   );
 
   return <div ref={parentRef} className='flex-1 min-h-0 overflow-auto' />;

@@ -9,7 +9,6 @@ import React, { useMemo, useState } from 'react';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { useQuery } from '@dxos/echo-react';
-import { Flex } from '@dxos/react-ui';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Organization } from '@dxos/types';
@@ -20,7 +19,7 @@ import { type Node } from '../model';
 import { parse } from '../parser';
 import { type Registry, type UiState, withInstance } from '../system';
 import { Template, createReactRenderer } from './renderer';
-import { Cell, Editor, OperationLog } from './testing';
+import { Editor, OperationLog, Workbench } from './testing';
 import { useSystem } from './useSystem';
 
 //
@@ -235,14 +234,14 @@ const deriveContext = (ui: UiState, organizations: readonly Organization.Organiz
 //
 
 const LIST = trim`
-  <container gap="sm">
+  <container>
     <display variant="title" data-text="title" />
     <collection data-items="organizations" item-id="id" item-label="name" />
   </container>
 `;
 
 const FORM = trim`
-  <container gap="sm">
+  <container>
     <display variant="title" data-text="title" />
     <form schema="org.dxos.type.Organization" data-values="selected"
           on-save="org.dxos.operation.contacts.save"
@@ -251,7 +250,7 @@ const FORM = trim`
 `;
 
 const MASTER_DETAIL = trim`
-  <layout direction="row" gap="md">
+  <layout rows="1fr 1fr">
     <collection id="contacts" machine="org.dxos.machine.master-detail"
                 data-items="organizations" item-id="id" item-label="name"
                 data-selection="ui.contacts.selection"
@@ -263,12 +262,12 @@ const MASTER_DETAIL = trim`
 `;
 
 const MASTER_DETAIL_TOOLBAR = trim`
-  <container gap="sm">
+  <container>
     <command>
       <control as="button" label="Add" on-activate="org.dxos.operation.contacts.add" />
       <control as="button" label="Qualify" on-activate="org.dxos.operation.contacts.qualify" />
     </command>
-    <layout direction="row" gap="md">
+    <layout rows="min-content 1fr">
       <collection id="contacts" machine="org.dxos.machine.master-detail"
                   data-items="organizations" item-id="id" item-label="name"
                   data-selection="ui.contacts.selection"
@@ -281,7 +280,7 @@ const MASTER_DETAIL_TOOLBAR = trim`
 `;
 
 const COMBOBOX = trim`
-  <container gap="sm">
+  <container>
     <display variant="title" data-text="title" />
     <combobox id="picker" machine="org.dxos.machine.combobox" placeholder="Select organization…"
               data-items="filtered" item-id="id" item-label="name"
@@ -293,7 +292,7 @@ const COMBOBOX = trim`
 `;
 
 const FILTER_LIST = trim`
-  <container gap="sm">
+  <container>
     <control id="filter" machine="org.dxos.machine.filter" label="Filter"
              placeholder="Type to filter…" data-value="ui.filter.text"
              on-input="org.dxos.operation.filter.input" />
@@ -302,7 +301,7 @@ const FILTER_LIST = trim`
 `;
 
 const VIEW_LIST = trim`
-  <container gap="sm">
+  <container>
     <command>
       <control as="button" label="List" on-activate="org.dxos.operation.view.list" />
       <control as="button" label="Detail" on-activate="org.dxos.operation.view.detail" />
@@ -315,7 +314,7 @@ const VIEW_LIST = trim`
 `;
 
 const VIEW_DETAIL = trim`
-  <container gap="sm">
+  <container>
     <command>
       <control as="button" label="List" on-activate="org.dxos.operation.view.list" />
       <control as="button" label="Detail" on-activate="org.dxos.operation.view.detail" />
@@ -376,36 +375,38 @@ const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
   const state = { title: 'Organizations', ...context };
 
   return (
-    <Flex classNames='dx-container grid grid-cols-2 divide-x divide-separator' align='stretch'>
-      <Flex column grow classNames='dx-container grid grid-rows-3 divide-y divide-separator'>
-        <Cell title={`Layout (${activeKey})`}>
-          <Editor
-            key={activeKey}
-            value={sources[activeKey] ?? ''}
-            extensions={editorExtensions}
-            onChange={(next) => setSources((current) => ({ ...current, [activeKey]: next }))}
-          />
-        </Cell>
-
-        <Cell title='Published state'>
-          <pre className='p-2 font-mono text-xs text-description whitespace-pre-wrap'>
-            {JSON.stringify(ui, null, 2)}
-          </pre>
-        </Cell>
-
-        <Cell title='Operation log'>
-          <OperationLog entries={log} />
-        </Cell>
-      </Flex>
-
-      <Cell title='Rendered'>
-        {active?.node ? (
+    <Workbench
+      panes={[
+        {
+          title: `Layout (${activeKey})`,
+          children: (
+            <Editor
+              key={activeKey}
+              value={sources[activeKey] ?? ''}
+              extensions={editorExtensions}
+              onChange={(next) => setSources((current) => ({ ...current, [activeKey]: next }))}
+            />
+          ),
+        },
+        {
+          title: 'Published state',
+          children: (
+            <pre className='p-2 font-mono text-xs text-description whitespace-pre-wrap'>
+              {JSON.stringify(ui, null, 2)}
+            </pre>
+          ),
+        },
+        { title: 'Operation log', children: <OperationLog entries={log} /> },
+      ]}
+      main={{
+        title: 'Rendered',
+        children: active?.node ? (
           <Template node={active.node} state={state} renderer={renderer} options={{ dispatch }} />
         ) : (
           <span className='text-error-text text-sm'>{active?.error}</span>
-        )}
-      </Cell>
-    </Flex>
+        ),
+      }}
+    />
   );
 };
 
