@@ -12,7 +12,7 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { TaskList, type TaskPatch, type TaskPlacement } from '@dxos/react-ui-task';
+import { type TaskDraft, TaskList, type TaskPatch, type TaskPlacement } from '@dxos/react-ui-task';
 import { Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -35,7 +35,13 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
   const tasks = useSetTasks(taskSet);
 
   const handleCreate = useCallback(
-    (title: string) => void invokePromise(TaskOperation.CreateTask, { taskSet: Ref.make(taskSet), title }, { spaceId }),
+    // CreateTask accepts the draft's title/description/priority/assignee; status is its own default.
+    ({ title, description, priority, assignee }: TaskDraft) =>
+      void invokePromise(
+        TaskOperation.CreateTask,
+        { taskSet: Ref.make(taskSet), title, description, priority, assignee },
+        { spaceId },
+      ),
     [invokePromise, spaceId, taskSet],
   );
 

@@ -15,7 +15,7 @@ import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Panel, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
-import { TaskList, type TaskPatch } from '@dxos/react-ui-task';
+import { type TaskDraft, TaskList, type TaskPatch } from '@dxos/react-ui-task';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Outline, Task, TaskSet } from '@dxos/types';
@@ -87,9 +87,9 @@ const TaskSetView = ({ outline, taskSet }: { outline: Outline.Outline; taskSet?:
   }, [tasks, taskSet]);
 
   const handleCreate = useCallback(
-    (title: string) => {
+    ({ title, ...props }: TaskDraft) => {
       if (db && taskSet) {
-        TaskSet.addTask(db, taskSet, title);
+        TaskSet.addTask(db, taskSet, title, props);
       }
     },
     [db, taskSet],

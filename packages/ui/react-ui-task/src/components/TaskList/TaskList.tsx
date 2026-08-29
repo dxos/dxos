@@ -65,6 +65,9 @@ export type TaskPatch = Partial<
   Pick<Task.Task, 'title' | 'description' | 'status' | 'priority' | 'estimate' | 'assignee'>
 >;
 
+/** A new task: `title` required, any other patchable field supplied when available. */
+export type TaskDraft = Pick<Task.Task, 'title'> & Omit<TaskPatch, 'title'>;
+
 //
 // Context — plain Radix context (un-scoped); nesting task lists has no meaning today.
 //
@@ -85,7 +88,7 @@ type TaskListContextValue = {
   /** Ids of the task being dragged and its sub-tasks — lifted out of the list for the drag's duration. */
   dragging: ReadonlySet<string>;
   onDraggingChange: (task: Task.Task | undefined) => void;
-  onTaskCreate?: (title: string) => void;
+  onTaskCreate?: (task: TaskDraft) => void;
   onTaskUpdate?: (task: Task.Task, patch: TaskPatch) => void;
   onTaskDelete?: (task: Task.Task) => void;
   onTaskSelect?: (task: Task.Task | undefined) => void;
@@ -114,8 +117,8 @@ type TaskListRootProps = PropsWithChildren<{
   /** Render each task's description under its title; rows grow to fit. Off by default, so a
    * single-line list (e.g. the chat strip) keeps one row per task. */
   showDescriptions?: boolean;
-  /** Enables `Create`; called with the trimmed title. */
-  onTaskCreate?: (title: string) => void;
+  /** Enables `Create`; called with a draft carrying at least the trimmed title. */
+  onTaskCreate?: (task: TaskDraft) => void;
   /** Enables the done toggle. Every mutation is delegated — the list never writes. */
   onTaskUpdate?: (task: Task.Task, patch: TaskPatch) => void;
   /** Enables the per-row delete affordance. */
@@ -929,7 +932,7 @@ const TaskListEdit = composable<HTMLDivElement, { placeholder?: string; descript
           onTaskUpdate?.(task, { title });
         }
       } else if (title.length > 0) {
-        onTaskCreate?.(title);
+        onTaskCreate?.({ title });
         setDraft('');
       }
     }, [draft, task, current, onTaskCreate, onTaskUpdate]);
