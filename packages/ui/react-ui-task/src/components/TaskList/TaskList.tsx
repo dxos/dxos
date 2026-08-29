@@ -1011,10 +1011,10 @@ const TaskListEdit = composable<HTMLDivElement, { placeholder?: string; descript
                 key={current.id}
                 classNames='text-sm'
                 value={current.description ?? ''}
-                onValueChange={(description) => task && onTaskUpdate?.(task, { description })}
-                placeholder={descriptionPlaceholder}
                 editing
                 multiline
+                onValueChange={(description) => task && onTaskUpdate?.(task, { description })}
+                placeholder={descriptionPlaceholder}
                 // Held open, so it must not pull focus: selecting a row by keyboard would otherwise
                 // land the reader in the description instead of the list.
                 autoFocus={false}

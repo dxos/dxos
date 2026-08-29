@@ -4,9 +4,16 @@
 
 import React, { useMemo, useRef } from 'react';
 
-import { type ThemedClassName, type UseEditableOptions, useEditable } from '@dxos/react-ui';
+import { type ThemedClassName, type UseEditableOptions, useEditable, useThemeContext } from '@dxos/react-ui';
 import { TextEditor } from '@dxos/react-ui-editor';
-import { createMarkdownExtensions, decorateMarkdown, inlineEdit } from '@dxos/ui-editor';
+import {
+  createBasicExtensions,
+  createMarkdownExtensions,
+  createThemeExtensions,
+  decorateMarkdown,
+  fullWidth,
+  inlineEdit,
+} from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
 import { MarkdownView, type MarkdownViewProps } from '../MarkdownView';
@@ -67,10 +74,21 @@ export const MarkdownEditable = ({
   const handlers = useRef({ setDraft, commit, revert });
   handlers.current = { setDraft, commit, revert };
 
+  const { themeMode } = useThemeContext();
   const commitOnBlur = options.blurBehavior !== 'revert';
   const extensions = useMemo(
     () => [
-      createMarkdownExtensions(),
+      // The markdown bundle is only half an editor — without the basic set the content is
+      // `white-space: pre`, so a description runs off the side instead of wrapping, and there is no
+      // undo. Line numbers and the active-line highlight belong to a document, not a field.
+      createBasicExtensions({ lineWrapping: true, highlightActiveLine: false, placeholder, tabbable: true }),
+      // Tab moves to the next field rather than indenting: this is a field in a form, and a stop
+      // that swallows Tab is a trap.
+      createMarkdownExtensions({ indentWithTab: false }),
+      // Without the theme the caret keeps CodeMirror's own 1px black, which is invisible against a
+      // dark surface. `fullWidth` rather than the default `grow`: this is a field that grows with
+      // its content, not a pane filling a height.
+      createThemeExtensions({ themeMode, syntaxHighlighting: true, slots: fullWidth }),
       decorateMarkdown(),
       inlineEdit({
         // The text comes with the event: committing the draft instead would write whatever the
@@ -81,7 +99,7 @@ export const MarkdownEditable = ({
         submitOnEnter: !multiline,
       }),
     ],
-    [commitOnBlur, multiline],
+    [commitOnBlur, multiline, placeholder, themeMode],
   );
 
   if (editing) {
@@ -97,6 +115,10 @@ export const MarkdownEditable = ({
         {/* `initialValue`, not a controlled value: the editor owns its document once open, and
             feeding `draft` back in on every keystroke would fight the cursor. */}
         <TextEditor
+          // The text itself is the tab stop (`tabbable` above). `TextEditor` otherwise puts a
+          // tabindex on its wrapper, so Tab lands on a box that shows nothing and needs Enter to
+          // get into — right for a document pane, wrong for a field next to a title.
+          focusable={false}
           initialValue={draft}
           onChange={(text) => handlers.current.setDraft(text)}
           extensions={extensions}

@@ -141,7 +141,9 @@ const DefaultStory = ({
       <TaskList.Viewport>
         <TaskList.Content />
       </TaskList.Viewport>
-      <TaskList.Edit />
+      <div className='p-2'>
+        <TaskList.Edit classNames='border border-separator rounded-md p-2' />
+      </div>
     </TaskList.Root>
   );
 };
@@ -234,6 +236,16 @@ export const TestEdit: Story = {
     // otherwise sit the description further in than the field above it.
     const left = (element: Element) => Math.round(element.getBoundingClientRect().left);
     await expect(left(description()!.querySelector('.cm-line')!)).toEqual(left(title()));
+
+    // Tab moves from the title into the description's TEXT. The editor otherwise puts its tab stop
+    // on a wrapper that needs a further Enter to get into, so the caret was two keys away.
+    title().focus();
+    await userEvent.tab();
+    await waitFor(async () => expect(document.activeElement).toEqual(description()!.querySelector('.cm-content')));
+
+    // ...and Tab leaves again rather than indenting, so the field is not a trap.
+    await userEvent.tab();
+    await waitFor(async () => expect(description()!.contains(document.activeElement)).toBeFalsy());
   },
 };
 
