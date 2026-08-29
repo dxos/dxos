@@ -278,6 +278,63 @@ Three findings decide the design:
    check is the model: static where authoring is typed, a validation pass as the authoritative
    backstop where it is not.
 
+### The module ladder
+
+The variants are not alternatives at the same altitude; they are rungs. Two observations from the
+spike order them.
+
+**The current stories are anonymous modules.** Every story template is self-contained: it
+references no other module, so it needs no `use` and no `var` — everything it binds is declared
+locally by a `let`. This retroactively explains why the spike works at all without A/B/C: once
+fall-through is deleted, an anonymous module's scope is **closed by construction** — the set of
+resolvable names is exactly the set of its own declarations, and the whole error table below
+collapses to the parse/validate row. The stories' one violation of anonymity is the root context
+(`organizations`, `filtered`, `selected`) — which is precisely where the flaw lives. The same
+holds on the write side: an anonymous module's operations are local definitions — handlers
+registered alongside the template, writing only its own `let` slots through `scope.set` — and
+naming a module is what turns them into exports. An anonymous module is not a degenerate case to
+grow out of; it is the base of the ladder, and most leaf templates should stay there.
+
+**Intra-module wiring is already the long form of `useState`.** FilterList is the proof:
+
+```xml
+<let name="text" machine="org.dxos.machine.text" />
+<control label="Filter" data-value="text" on-input="org.dxos.operation.filter.input" />
+```
+
+One slot, one component reading it (`data-value`) and one operation writing it (`on-input` →
+`scope.set({ text })`) — a declarative `const [text, setText] = useState('')` where the tuple's
+two halves are two attributes against the same `let`. The pair is the canonical controlled-binding
+shape, but today only convention couples them: the grammar sees an operation key, not the slot the
+handler writes, so nothing checks that `on-input`'s handler actually targets `text`. Whether the
+pair earns a checked form — a `bind-value="text"` sugar expanding to the read binding plus a
+dispatch of the slot's machine's default write event, keeping `R-3` (the write is still an
+operation, just a derived one) — is an open question below.
+
+The ladder, then — one declaration form, `let`, whose **backing escalates in place** while the
+binding surface (the name, the `data-`/`on-` attributes against it) stays fixed:
+
+| Rung | Declaration                                     | Analogue                 | Behaviour             | Sharing              |
+| ---- | ----------------------------------------------- | ------------------------ | --------------------- | -------------------- |
+| 1    | `<let name="text" initial="" />`                | `useState`               | none — a value        | private to the scope |
+| 2    | `<let name="selection" machine="…selection" />` | `useReducer` / actor     | transitions, guards   | private instance     |
+| 3    | `<let name="selection" from="contacts.…" />`    | context / external store | the module instance's | shared, module-owned |
+
+Rung 1 is a grammar relaxation — today's `let` demands a `machine=` and starts life on rung 2;
+a plain initial value is the honest floor. Upgrading a rung is a one-attribute edit: when
+selection outgrows "a value" (guards, multi-select semantics), `initial=` becomes `machine=`;
+when another template needs to observe it, `machine=` becomes `from=` and the instance moves to
+the module's export table. **No binding in the subtree changes at any step** — that is what "same
+slot, same binding surface, added behaviour" buys, and it is the property React loses at the same
+transitions (`useState` → `useReducer` → context is three refactors).
+
+The variants sit on the same ladder one level up, at the module boundary: **A is the rung where a
+module stops being anonymous** — the moment a template needs a name it does not declare, it must
+say so in its signature (`var`) rather than reaching into ambient context; **B and C are the
+named-module rungs** — providers publish typed export tables (B) whose writable rows are machine
+instances (C), and consumers climb from `var` (host wires it) to `use` (the template names its
+provider).
+
 ### Variant A — typed template signature
 
 The template root declares its inputs, Android-`<variable>` style. `var` is a new closed tag,
@@ -404,6 +461,12 @@ const ContactsModule = {
     // Derived from selection × organizations — typed, owned by the module that owns the inputs.
     selected: { primitive: 'view', schema: OrganizationForm, optional: true },
   },
+  operations: {
+    // The write side: the ONLY writers of the state above (see "The write side" below).
+    select: { key: 'org.dxos.operation.contacts.select', input: Schema.String },
+    save: { key: 'org.dxos.operation.contacts.save', input: OrganizationForm },
+    qualify: { key: 'org.dxos.operation.contacts.qualify' },
+  },
 };
 ```
 
@@ -415,6 +478,10 @@ const ContactsModule = {
 machine=` (today's form) remains for template-private state — the combobox's `filter` has no
   business being a module export — so the private/shared line is drawn in the grammar, not by
   publication-path convention.
+- **Writes**: a consumer of `contacts.selection` never sets it — it dispatches contacts' own
+  operations (`on-select="org.dxos.operation.contacts.select"`), exactly as the master-detail
+  template already does, and a toolbar in another plugin qualifies the selection the same way.
+  Observation is shared; mutation stays with the owner.
 - **Errors**: dangling `from=` alias or non-instance target → **registration** (mount for a
   late-loading module, with `waitFor` + absent state per `R-2`); writes remain scope-relative
   operations dispatched to the instance, so `R-3` and the single operation log hold — undo sees
@@ -424,19 +491,48 @@ machine=` (today's form) remains for template-private state — the combobox's `
   case, while shared state is addressed by module + export name — which dissolves the
   namespace-collision half of open question 1.
 
-### Recommendation
+### The write side: operations are module-owned
 
-**C is the provision model; B is its addressing; A is the template boundary that composes with
-them.** The direction is C's: modules declare typed machine instances (and queries, views,
-schemas, operations) as capabilities; templates bind local names to them explicitly; nothing is
-ambient. B and C are one mechanism seen from two sides — the export table is _how a module
-declares_ its instances and derived values, `use`/`let from=` is _how a template names_ them —
-so they land together: `use` + export tables where writable rows are machine instances. A
-remains worth keeping, not as an alternative but as the boundary check: a reusable template
-declares its `var` signature, and the composition site satisfies it by wiring module exports —
-Android's `<variable>` on one side, Terraform's module wiring on the other. A can also land
-first on its own: it is the smallest change that deletes the fall-through hole and makes the
-stories self-describing while the registry work behind B/C proceeds.
+Operations are provided by modules exactly as state is, and **an operation may mutate only the
+state its own module provides**. Another module reaches that state by dispatching the owning
+module's operations — never by writing the slots directly. The export table is therefore
+three-columned: **state** (typed read exports, including derived views), **machines** (the
+writable instances behind them), and **operations** (the only steppers of those instances, each
+with a typed input schema — folding open question 5 into the same table).
+
+This is not a new rule so much as the existing one said out loud. `scope.set` already refuses an
+undeclared name — a handler can only write slots in the dispatching node's scope chain — and the
+module boundary is that closure promoted one level: the scope chain of a module's operations ends
+at the module, not at an app-global frame. `R-3` ("only `operation` writes") gains an owner
+clause: only the _owning module's_ operation writes. The payoff is the same one ES modules and
+Composer capabilities get from explicit boundaries — a module's state transitions are enumerable
+from its own operation table, so "what can change `contacts.selection`?" has a static answer, and
+the operation log partitions by module for free.
+
+The spike's single global operation registry (`registry.operations`, flat
+`org.dxos.operation.*` keys) is then a **temporary flattening** of per-module tables: the keys
+already carry the module segment (`contacts.select`, `picker.input`), so unflattening is
+attribution, not renaming. What changes is enforcement — dispatch resolves the key through the
+owning module's table, and the handler's `scope` is the module's own slots rather than the
+dispatching template's frames.
+
+**Adopt the ladder whole: one declaration form, `let`, whose backing escalates — value →
+machine → imported instance — under a closed resolution rule.** C is the provision model at the
+top rung: modules declare typed machine instances (and queries, views, schemas, operations) as
+capabilities; templates bind local names to them explicitly; nothing is ambient. The write side
+mirrors it: a module exports the operations that step its own state, and a foreign module
+dispatches those — it never writes another module's slots. B is its addressing — the export table is _how a module declares_ its instances and derived values,
+`use`/`let from=` is _how a template names_ them — so B and C land together. A is the boundary
+rung between them and anonymity: a template that needs a name it does not declare says so in its
+`var` signature, and the composition site satisfies it by wiring module exports — Android's
+`<variable>` on one side, Terraform's module wiring on the other.
+
+The landing order follows the rungs, cheapest first: (1) delete fall-through and admit rung-1
+`let initial=` — the stories become anonymous modules, closed by construction; (2) A's `var`,
+which makes the remaining root-context names explicit and mount-checked while the registry work
+proceeds; (3) B/C's `use` + export tables with instance-backed rows. Each step is independently
+shippable, and no step rewrites a binding the previous step introduced — the same in-place
+upgrade property the ladder gives a single `let`.
 
 Error classes, consolidated (the never-runtime column is the point):
 
@@ -465,9 +561,15 @@ Error classes, consolidated (the never-runtime column is the point):
    default, but master-detail per plank wants instance-per-context (the XState answer is spawn
    with typed input; the Composer answer would be a keyed multi capability). Which contexts get
    their own instance, and who tears it down?
-5. **Operation payloads** (open question 2 above) are the same boundary in the write direction —
-   the export-table shape should extend to operations (typed input schema per key) rather than
-   growing a parallel mechanism.
+5. ~~**Operation payloads** are the same boundary in the write direction~~ — answered by
+   [the write side](#the-write-side-operations-are-module-owned): operations are the export
+   table's third column, with a typed input schema per key. What remains open from question 2 is
+   capability injection (what a handler is given besides `ui`/`db`).
+6. **The controlled pair**: should `data-value` + `on-*` against one slot get a checked form —
+   `bind-value="text"` expanding to the read binding plus a dispatch of the slot's default write
+   event (`R-3` preserved; the write target becomes visible to validation) — or stay two
+   attributes coupled by convention, with the ladder's rung-1 `let` making the convention cheap
+   enough to tolerate?
 
 ## Verification (2026-08-29)
 
