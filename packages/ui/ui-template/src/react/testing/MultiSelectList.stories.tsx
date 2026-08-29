@@ -97,7 +97,7 @@ const DefaultStory = ({ splitter }: StoryArgs) => {
 };
 
 const meta: Meta<typeof DefaultStory> = {
-  title: 'ui/ui-template/Example',
+  title: 'ui/ui-template/MultiSelect',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { layout: 'fullscreen', translations: formTranslations },
