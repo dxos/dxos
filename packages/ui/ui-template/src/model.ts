@@ -12,9 +12,18 @@
 //
 
 /** Kind tags. Deliberately a subset of the ontology's 17 — see the spike's scope. */
-export type Tag = 'container' | 'layout' | 'display' | 'control' | 'collection' | 'command';
+export type Tag = 'container' | 'layout' | 'display' | 'control' | 'collection' | 'command' | 'form' | 'combobox';
 
-export const TAGS: readonly Tag[] = ['container', 'layout', 'display', 'control', 'collection', 'command'];
+export const TAGS: readonly Tag[] = [
+  'container',
+  'layout',
+  'display',
+  'control',
+  'collection',
+  'command',
+  'form',
+  'combobox',
+];
 
 /**
  * A read binding. `path` is resolved against the template's state object; `item` against the

@@ -22,8 +22,8 @@ export type RenderProps<Output> = {
   readonly props: Readonly<Record<string, string | number | boolean>>;
   /** Resolved `data-*` / `item-*` values, by prop name. */
   readonly data: Readonly<Record<string, unknown>>;
-  /** Event name to a handler that dispatches the bound operation key. */
-  readonly handlers: Readonly<Record<string, () => void>>;
+  /** Event name to a handler that dispatches the bound operation key with an optional payload. */
+  readonly handlers: Readonly<Record<string, (payload?: unknown) => void>>;
   readonly children: readonly Output[];
   /** The scope this node renders in; needed only by kinds that introduce one (`collection`). */
   readonly scope: Scope;
@@ -39,7 +39,7 @@ export type Renderer<Output> = {
 };
 
 /** Invoked for every `on-*` binding. The template never holds a callback — only an operation key. */
-export type Dispatch = (operation: string, payload: { scope: Scope; node: Node }) => void;
+export type Dispatch = (operation: string, context: { scope: Scope; node: Node; payload?: unknown }) => void;
 
 export type RenderOptions = {
   readonly dispatch?: Dispatch;
@@ -67,7 +67,7 @@ export const render = <Output>(
   const handlers = Object.fromEntries(
     Object.entries(node.events ?? {}).map(([event, operation]) => [
       event,
-      () => options.dispatch?.(operation, { scope, node }),
+      (payload?: unknown) => options.dispatch?.(operation, { scope, node, payload }),
     ]),
   );
 

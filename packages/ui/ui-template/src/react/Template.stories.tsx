@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import React, { useMemo, useState } from 'react';
 
 import { toJsonSchema } from '@dxos/echo/JsonSchema';
-import { Flex, Panel, ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { Flex, Panel, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { compactSlots, createBasicExtensions, createThemeExtensions, json } from '@dxos/ui-editor';
@@ -18,7 +18,7 @@ import { trim } from '@dxos/util';
 
 import { templateLanguage } from '../codemirror';
 import { type Node, TemplateParseError, parse, select } from '../index';
-import { Template } from './renderer';
+import { Template, createReactRenderer } from './renderer';
 
 //
 // SPIKE story. Four columns, left to right: the type the template is parameterized by, an instance
@@ -135,6 +135,7 @@ const Cell = ({ area, title, children }: CellProps) => (
 );
 
 const DefaultStory = ({ source: initialSource }: { source: string }) => {
+  const renderer = useMemo(() => createReactRenderer({ schemas: {} }), []);
   const [source, setSource] = useState(initialSource);
   const [stateText, setStateText] = useState(() => JSON.stringify(initialState, null, 2));
   const [log, setLog] = useState<string[]>([]);
@@ -182,6 +183,7 @@ const DefaultStory = ({ source: initialSource }: { source: string }) => {
             <Template
               node={parsed.node}
               state={state.value}
+              renderer={renderer}
               options={{ dispatch: (operation) => setLog((entries) => [operation, ...entries].slice(0, 8)) }}
             />
           ) : (
