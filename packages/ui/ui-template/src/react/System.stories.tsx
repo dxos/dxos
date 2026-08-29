@@ -198,6 +198,8 @@ const registry: Registry<Db, Schema.Codec<any, any>> = {
       handler: ({ scope, payload }) => scope.set({ view: String(payload ?? 'list') }),
     },
   },
+
+  modules: {},
 };
 
 //

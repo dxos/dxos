@@ -93,13 +93,13 @@ describe('parse', () => {
   });
 
   test('structural validation runs over the whole tree', ({ expect }) => {
-    // `let` backing is exactly one of initial/machine — none is an error, both are an error.
+    // `let` backing is exactly one of initial/machine/from — none is an error, both are an error.
     expect(() => parse('<container id="x"><let name="a" /></container>')).toThrow(
-      /'let' requires exactly one of initial or machine/,
+      /'let' requires exactly one of initial, machine, or from/,
     );
     expect(() =>
       parse('<container id="x"><let name="a" initial="0" machine="org.dxos.machine.flag" /></container>'),
-    ).toThrow(/'let' requires exactly one of initial or machine/);
+    ).toThrow(/'let' requires exactly one of initial, machine, or from/);
     // `let` requires an enclosing element with an id.
     expect(() => parse('<container><let name="a" machine="org.dxos.machine.flag" /></container>')).toThrow(
       /enclosing element with an id/,
@@ -169,6 +169,61 @@ describe('closed resolution', () => {
   test('var is only valid as a direct child of the root', ({ expect }) => {
     expect(() => parse('<container><layout><var name="x" type="org.dxos.type.X" /></layout></container>')).toThrow(
       /'var' is only valid as a direct child of the root/,
+    );
+  });
+
+  test('a use alias declares a module import; bindings read <alias>.<export>', ({ expect }) => {
+    const node = parse(
+      '<container>' +
+        '<use module="org.dxos.module.contacts" as="contacts" />' +
+        '<display data-text="contacts.title" />' +
+        '</container>',
+    );
+    const [decl] = node.children as Node[];
+    expect(decl.props).toEqual({ module: 'org.dxos.module.contacts', as: 'contacts' });
+  });
+
+  test('use demands a module key and an alias, at the root only', ({ expect }) => {
+    expect(() => parse('<container><use module="org.dxos.module.x" /></container>')).toThrow(/'use' requires an alias/);
+    expect(() => parse('<container><use as="x" /></container>')).toThrow(/'use' requires a module/);
+    expect(() => parse('<container><layout><use module="org.dxos.module.x" as="x" /></layout></container>')).toThrow(
+      /'use' is only valid as a direct child of the root/,
+    );
+  });
+
+  test('a binding through an alias must name an export', ({ expect }) => {
+    expect(() =>
+      parse(
+        '<container>' +
+          '<use module="org.dxos.module.contacts" as="contacts" />' +
+          '<display data-text="contacts" />' +
+          '</container>',
+      ),
+    ).toThrow(/through 'contacts' requires an export name/);
+  });
+
+  test('a rung-3 let binds a declared alias capability', ({ expect }) => {
+    const source =
+      '<container id="s">' +
+      '<use module="org.dxos.module.contacts" as="contacts" />' +
+      '<let name="selection" from="contacts.selection" />' +
+      '<display data-text="selection" />' +
+      '</container>';
+    expect(() => parse(source)).not.toThrow();
+
+    expect(() => parse('<container id="s"><let name="selection" from="contacts.selection" /></container>')).toThrow(
+      /'let' from names undeclared alias 'contacts'/,
+    );
+    expect(() =>
+      parse(
+        '<container id="s">' +
+          '<use module="org.dxos.module.contacts" as="contacts" />' +
+          '<let name="selection" from="contacts" />' +
+          '</container>',
+      ),
+    ).toThrow(/'let' from must name '<alias>.<capability>'/);
+    expect(() => parse('<container id="s"><let name="a" initial="0" from="contacts.selection" /></container>')).toThrow(
+      /'let' requires exactly one of initial, machine, or from/,
     );
   });
 

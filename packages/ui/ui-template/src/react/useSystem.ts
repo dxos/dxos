@@ -6,13 +6,23 @@ import { useCallback, useMemo, useReducer, useRef } from 'react';
 
 import { type Node } from '../model';
 import { type Dispatch } from '../render';
-import { type LogEntry, type Registry, type UiState, seedUi, dispatch as systemDispatch } from '../system';
+import {
+  type LogEntry,
+  type ModuleInputs,
+  type Registry,
+  type UiState,
+  seedModules,
+  seedUi,
+  dispatch as systemDispatch,
+} from '../system';
 
 export type UseSystemOptions<Db> = {
   registry: Registry<Db, any>;
   /** The parsed template; `let` slots under `id`-scoped elements are seeded from the registry. */
   root: Node;
   db?: Db;
+  /** Host-supplied module inputs (query results, wiring), keyed by module key. */
+  inputs?: ModuleInputs;
 };
 
 /** A log entry with a stable identity, so list renderers can key it. */
@@ -51,8 +61,9 @@ const deepSeed = (initial: UiState, current: UiState): UiState => {
   return next;
 };
 
-export const useSystem = <Db>({ registry, root, db }: UseSystemOptions<Db>): UseSystem => {
-  const initial = useMemo(() => seedUi(registry, root), [registry, root]);
+export const useSystem = <Db>({ registry, root, db, inputs }: UseSystemOptions<Db>): UseSystem => {
+  // Module slots seed once from the registry (shared instances); template lets seed per scope.
+  const initial = useMemo(() => deepSeed(seedModules(registry), seedUi(registry, root)), [registry, root]);
   const ref = useRef<{ ui: UiState; log: readonly SequencedLogEntry[] }>({ ui: initial, log: [] });
   const seq = useRef(0);
   // An edited template can introduce new slots: seed the ones that are missing without resetting
@@ -64,8 +75,17 @@ export const useSystem = <Db>({ registry, root, db }: UseSystemOptions<Db>): Use
     (operation, { scope, payload }) => {
       // A failed operation is a log entry, not a vanished promise — the loop must stay observable.
       try {
-        const { ui, entry } = systemDispatch(registry, ref.current.ui, operation, payload, db, scope.frames ?? []);
-        ref.current = { ui, log: [{ ...entry, seq: seq.current++ }, ...ref.current.log].slice(0, 20) };
+        const { ui, entries } = systemDispatch(
+          registry,
+          ref.current.ui,
+          operation,
+          payload,
+          db,
+          scope.frames ?? [],
+          inputs,
+        );
+        const sequenced = entries.map((entry) => ({ ...entry, seq: seq.current++ }));
+        ref.current = { ui, log: [...sequenced.reverse(), ...ref.current.log].slice(0, 20) };
       } catch (err) {
         ref.current = {
           ...ref.current,
@@ -74,7 +94,7 @@ export const useSystem = <Db>({ registry, root, db }: UseSystemOptions<Db>): Use
       }
       force();
     },
-    [registry, db],
+    [registry, db, inputs],
   );
 
   return { ...ref.current, dispatch };

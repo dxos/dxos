@@ -5,7 +5,21 @@
 import { describe, test } from 'vitest';
 
 import { parse } from './parser';
-import { type Registry, type SlotFrame, SystemError, checkVars, dispatch, seedUi, varDecls } from './system';
+import {
+  type ModuleDef,
+  type Registry,
+  type SlotFrame,
+  SystemError,
+  checkUses,
+  checkVars,
+  createModuleReader,
+  dispatch,
+  fromSlot,
+  seedModules,
+  seedUi,
+  varDecls,
+  viewModules,
+} from './system';
 
 const registry: Registry<never> = {
   schemas: {},
@@ -33,6 +47,7 @@ const registry: Registry<never> = {
       handler: () => undefined,
     },
   },
+  modules: {},
 };
 
 const CONTACTS_FRAME: SlotFrame = { path: ['contacts'], slots: ['selection'] };
@@ -84,9 +99,9 @@ describe('seedUi', () => {
 
 describe('dispatch', () => {
   test('scope.set writes the nested slot and logs the operation', ({ expect }) => {
-    const { ui, entry } = dispatch(registry, {}, 'org.dxos.operation.select', 'org-1', undefined, [CONTACTS_FRAME]);
+    const { ui, entries } = dispatch(registry, {}, 'org.dxos.operation.select', 'org-1', undefined, [CONTACTS_FRAME]);
     expect(ui).toEqual({ contacts: { selection: 'org-1' } });
-    expect(entry).toEqual({ operation: 'org.dxos.operation.select', payload: 'org-1' });
+    expect(entries).toEqual([{ operation: 'org.dxos.operation.select', payload: 'org-1' }]);
   });
 
   test('scope.get resolves through the innermost frame declaring the name', ({ expect }) => {
@@ -163,8 +178,152 @@ const makeStringRenderer = (): import('./render').Renderer<string | null> => {
     fallback: none,
     let: none,
     var: none,
+    use: none,
   };
 };
+
+describe('modules', () => {
+  const COUNTER = 'org.dxos.module.counter';
+  const counter: ModuleDef<never> = {
+    key: COUNTER,
+    slots: { count: { initial: 0 } },
+    state: {
+      count: fromSlot('count'),
+      doubled: { derive: ({ slots }) => Number(slots.count) * 2 },
+      scaled: { derive: ({ slots, inputs }) => Number(slots.count) * Number(inputs.factor ?? 1) },
+    },
+    operations: {
+      increment: {
+        key: 'org.dxos.operation.counter.increment',
+        handler: ({ scope }) => scope.set({ count: Number(scope.get('count')) + 1 }),
+      },
+      escape: {
+        key: 'org.dxos.operation.counter.escape',
+        handler: ({ scope }) => scope.set({ other: 1 }),
+      },
+      wholesale: {
+        key: 'org.dxos.operation.counter.wholesale',
+        handler: () => ({ hijacked: true }),
+      },
+    },
+    capabilities: {
+      counter: { machine: 'org.dxos.machine.selection', slot: 'count' },
+    },
+  };
+  const withCounter: Registry<never> = { ...registry, modules: { [COUNTER]: counter } };
+
+  test('module slots seed at ui.<moduleKey>.<slot>', ({ expect }) => {
+    expect(seedModules(withCounter)).toEqual({ [COUNTER]: { count: 0 } });
+  });
+
+  test('state exports derive from slots and inputs; unknown exports and modules are errors', ({ expect }) => {
+    const read = createModuleReader(withCounter, () => ({ [COUNTER]: { count: 3 } }), {
+      [COUNTER]: { factor: 10 },
+    });
+    expect(read(COUNTER, 'count')).toBe(3);
+    expect(read(COUNTER, 'doubled')).toBe(6);
+    expect(read(COUNTER, 'scaled')).toBe(30);
+    expect(() => read(COUNTER, 'missing')).toThrow(SystemError);
+    expect(() => read('org.dxos.module.missing', 'count')).toThrow(SystemError);
+  });
+
+  test('viewModules materializes the state and capability columns with every export present', ({ expect }) => {
+    const views = viewModules(withCounter, { [COUNTER]: { count: 2 } });
+    expect(views[COUNTER].state).toEqual({ count: 2, doubled: 4, scaled: 2 });
+    expect(views[COUNTER].capabilities).toEqual({ counter: 2 });
+  });
+
+  test('a module operation runs against its own slots, without template frames', ({ expect }) => {
+    const { ui, entries } = dispatch(withCounter, { [COUNTER]: { count: 1 } }, 'org.dxos.operation.counter.increment');
+    expect(ui).toEqual({ [COUNTER]: { count: 2 } });
+    expect(entries).toEqual([{ operation: 'org.dxos.operation.counter.increment', payload: undefined }]);
+  });
+
+  test('write ownership: a module operation cannot touch a slot it does not own', ({ expect }) => {
+    expect(() => dispatch(withCounter, seedModules(withCounter), 'org.dxos.operation.counter.escape')).toThrow(
+      /owns no slot 'other'/,
+    );
+  });
+
+  test('a module operation may not replace the ui tree wholesale', ({ expect }) => {
+    expect(() => dispatch(withCounter, seedModules(withCounter), 'org.dxos.operation.counter.wholesale')).toThrow(
+      /must write through scope.set/,
+    );
+  });
+
+  test('checkUses reports unknown modules and dangling capabilities', ({ expect }) => {
+    const node = parse(
+      '<container id="s">' +
+        '<use module="org.dxos.module.missing" as="gone" />' +
+        '<use module="org.dxos.module.counter" as="counter" />' +
+        '<let name="value" from="counter.counter" />' +
+        '<let name="bad" from="counter.missing" />' +
+        '<display data-text="value" />' +
+        '</container>',
+    );
+    expect(checkUses(withCounter, node)).toEqual([
+      `use 'gone': unknown module 'org.dxos.module.missing'`,
+      `let from 'counter.missing': unknown capability on module 'org.dxos.module.counter'`,
+    ]);
+    expect(checkUses(registry, node)).toContain(`use 'counter': unknown module 'org.dxos.module.counter'`);
+  });
+
+  test('a use alias binds module state; an unknown export is an inline error, not silence', async ({ expect }) => {
+    const { BindingResolutionError } = await import('./model');
+    const { render } = await import('./render');
+    const renderer = makeStringRenderer();
+    const modules = viewModules(withCounter, { [COUNTER]: { count: 5 } });
+
+    const node = parse(
+      '<container>' +
+        '<use module="org.dxos.module.counter" as="counter" />' +
+        '<display data-text="counter.doubled" />' +
+        '</container>',
+    );
+    expect(render(node, { modules }, renderer)).toBe('container(display(10))');
+
+    // Bypasses the registry's export table only at the binding site: constructed directly.
+    const bad: import('./model').Node = {
+      tag: 'container',
+      children: [
+        { tag: 'use', props: { module: COUNTER, as: 'counter' } },
+        { tag: 'display', data: { text: { from: 'state', path: ['counter', 'missing'] } } },
+      ],
+    };
+    expect(() => render(bad, { modules }, renderer)).toThrow(BindingResolutionError);
+    // A declared alias whose module never loaded errors visibly as well.
+    expect(() => render(node, { modules: {} }, renderer)).toThrow(/unknown module for alias 'counter'/);
+  });
+
+  test('let from= binds a module capability into the scope, read-only for template operations', async ({ expect }) => {
+    const { render } = await import('./render');
+    const renderer = makeStringRenderer();
+    const modules = viewModules(withCounter, { [COUNTER]: { count: 7 } });
+    const node = parse(
+      '<container id="s">' +
+        '<use module="org.dxos.module.counter" as="counter" />' +
+        '<let name="value" from="counter.counter" />' +
+        '<display data-text="value" />' +
+        '</container>',
+    );
+    expect(render(node, { modules }, renderer)).toBe('container(display(7))');
+
+    // The from-slot is not a writable template slot: a local operation cannot set it.
+    const frame: SlotFrame = { path: ['s'], slots: [] };
+    const local: Registry<never> = {
+      ...withCounter,
+      operations: {
+        'org.dxos.operation.poke': {
+          key: 'org.dxos.operation.poke',
+          handler: ({ scope }) => scope.set({ value: 99 }),
+        },
+      },
+    };
+    expect(() => dispatch(local, {}, 'org.dxos.operation.poke', undefined, undefined, [frame])).toThrow(
+      /no slot 'value' in scope/,
+    );
+  });
+});
 
 describe('vars', () => {
   const SIGNATURE =

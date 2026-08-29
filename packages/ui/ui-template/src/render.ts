@@ -11,11 +11,13 @@
 import {
   type Binding,
   BindingResolutionError,
+  type ModuleView,
   type Node,
   type Scope,
   type ScopeFrame,
   type Tag,
   resolve,
+  useAliases,
   varNames,
 } from './model';
 
@@ -80,9 +82,27 @@ const readSlot = (ui: unknown, path: readonly string[]): unknown => {
   return value;
 };
 
+/** Read a `let from="alias.capability"` value off the scope's module aliases. */
+const readCapability = (scope: Scope, from: string, path: readonly string[]): unknown => {
+  const [alias, capability] = from.split('.');
+  if (!scope.aliases || !(alias in scope.aliases)) {
+    throw new BindingResolutionError(`'let' from names undeclared alias '${alias}'`, path);
+  }
+  const view = scope.aliases[alias];
+  if (!view) {
+    throw new BindingResolutionError(`unknown module for alias '${alias}'`, path);
+  }
+  if (!(capability in view.capabilities)) {
+    throw new BindingResolutionError(`unknown capability '${alias}.${capability}' on module '${view.key}'`, path);
+  }
+  return view.capabilities[capability];
+};
+
 /**
- * An element declaring `id` opens a lexical scope: its direct `let` children are the slots, and
- * their current values come from published state at `ui.<enclosing ids>.<id>.<name>`.
+ * An element declaring `id` opens a lexical scope: its direct `let` children are the slots.
+ * Rung 1/2 slots read published state at `ui.<enclosing ids>.<id>.<name>` and stay writable;
+ * a rung-3 `from=` slot mirrors the module capability it binds — readable in the subtree but
+ * never writable here (only the owning module's operations write it).
  */
 const openFrame = (node: Node, scope: Scope): ScopeFrame => {
   const id = String(node.props?.id);
@@ -93,6 +113,10 @@ const openFrame = (node: Node, scope: Scope): ScopeFrame => {
   for (const child of node.children ?? []) {
     if (child.tag === 'let' && typeof child.props?.name === 'string') {
       const name = child.props.name;
+      if (typeof child.props.from === 'string') {
+        values[name] = readCapability(scope, child.props.from, [...path, name]);
+        continue;
+      }
       slots.push(name);
       values[name] = readSlot(scope.ui, [...path, name]);
     }
@@ -101,16 +125,22 @@ const openFrame = (node: Node, scope: Scope): ScopeFrame => {
 };
 
 /**
- * Narrow the host-supplied `vars` to the root's `var` signature: every declared input resolves
- * (to the supplied value or `undefined`), and an undeclared key never resolves — the signature,
- * not the host, closes the namespace.
+ * Open the root's declaration ring. `vars` narrows to the `var` signature: every declared input
+ * resolves (to the supplied value or `undefined`), and an undeclared key never resolves — the
+ * signature, not the host, closes the namespace. `use` aliases map onto the host-supplied module
+ * views by module key; a declared alias whose module is absent stays present (as `undefined`) so
+ * resolving through it errors visibly instead of falling silent.
  */
-const narrowVars = (root: Node, scope: Scope): Scope => {
+const openRoot = (root: Node, scope: Scope): Scope => {
   const vars: Record<string, unknown> = {};
   for (const name of varNames(root)) {
     vars[name] = scope.vars?.[name];
   }
-  return { ...scope, vars };
+  const aliases: Record<string, ModuleView | undefined> = {};
+  for (const [alias, moduleKey] of Object.entries(useAliases(root))) {
+    aliases[alias] = scope.modules?.[moduleKey];
+  }
+  return { ...scope, vars, aliases };
 };
 
 /**
@@ -127,7 +157,7 @@ export const render = <Output>(
   renderer: Renderer<Output>,
   options: RenderOptions<Output> = {},
   path = '0',
-): Output | null => renderNode(node, narrowVars(node, scope), renderer, options, path);
+): Output | null => renderNode(node, openRoot(node, scope), renderer, options, path);
 
 const renderNode = <Output>(
   node: Node,
@@ -136,14 +166,13 @@ const renderNode = <Output>(
   options: RenderOptions<Output>,
   path: string,
 ): Output | null => {
-  // The frame is pushed before this node's own bindings resolve, so an element binds against its
-  // own `let`s.
-  if (typeof node.props?.id === 'string') {
-    scope = { ...scope, frames: [...(scope.frames ?? []), openFrame(node, scope)] };
-  }
-
   let data: Readonly<Record<string, unknown>>;
   try {
+    // The frame is pushed before this node's own bindings resolve, so an element binds against
+    // its own `let`s; opening it can itself fail on a dangling `from=` capability.
+    if (typeof node.props?.id === 'string') {
+      scope = { ...scope, frames: [...(scope.frames ?? []), openFrame(node, scope)] };
+    }
     data = resolveData(node.data, scope);
   } catch (err) {
     // R-8: a binding that fails to resolve renders a visible error in place of the node.

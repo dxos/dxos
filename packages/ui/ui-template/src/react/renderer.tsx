@@ -19,7 +19,7 @@ import { Form } from '@dxos/react-ui-form';
 import { Combobox, Listbox } from '@dxos/react-ui-list';
 import { Tabs } from '@dxos/react-ui-tabs';
 
-import { type Binding, type Node, type Scope, resolve } from '../model';
+import { type Binding, type ModuleView, type Node, type Scope, resolve } from '../model';
 import { type Renderer, type RenderOptions, render } from '../render';
 
 const asText = (value: unknown): string => (value == null ? '' : String(value));
@@ -294,6 +294,7 @@ export const createReactRenderer = ({ schemas }: ReactRendererOptions): Renderer
   fallback: () => null,
   let: () => null,
   var: () => null,
+  use: () => null,
 });
 
 export type TemplateProps = {
@@ -302,6 +303,8 @@ export type TemplateProps = {
   ui?: Readonly<Record<string, unknown>>;
   /** Host-supplied values for the root's `var` signature (validate with `checkVars` at mount). */
   vars?: Readonly<Record<string, unknown>>;
+  /** Materialized module views by module key (`viewModules`); `use` aliases resolve onto them. */
+  modules?: Readonly<Record<string, ModuleView>>;
   renderer: Renderer<ReactNode>;
   options?: RenderOptions<ReactNode>;
 };
@@ -314,7 +317,7 @@ const renderBindingError = (error: Error, path: string): ReactNode => (
 );
 
 /** Render a parsed template against published state and its declared inputs. */
-export const Template = ({ node, ui, vars, renderer, options }: TemplateProps) => {
-  const scope: Scope = { ui, vars };
+export const Template = ({ node, ui, vars, modules, renderer, options }: TemplateProps) => {
+  const scope: Scope = { ui, vars, modules };
   return <>{render(node, scope, renderer, { onError: renderBindingError, ...options })}</>;
 };

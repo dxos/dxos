@@ -28,7 +28,8 @@ export type Tag =
   | 'show'
   | 'fallback'
   | 'let'
-  | 'var';
+  | 'var'
+  | 'use';
 
 export const TAGS: readonly Tag[] = [
   'container',
@@ -47,6 +48,7 @@ export const TAGS: readonly Tag[] = [
   'fallback',
   'let',
   'var',
+  'use',
 ];
 
 /**
@@ -133,6 +135,19 @@ export type ScopeFrame = {
   readonly values: Readonly<Record<string, unknown>>;
 };
 
+/**
+ * The current values of one module's contract, materialized for binding. Column 2 (operations)
+ * has no read surface — events dispatch it by key. Every export name is present as a key, so a
+ * missing export is distinguishable from a legitimately-absent value.
+ */
+export type ModuleView = {
+  readonly key: string;
+  /** Column 1: reactive readonly state — export name → current value. */
+  readonly state: Readonly<Record<string, unknown>>;
+  /** Column 3: capabilities — instance name → the instance's current state (`let from=` binds it). */
+  readonly capabilities: Readonly<Record<string, unknown>>;
+};
+
 export type Scope = {
   /** Published UI state: the tree `let` slot values are read from at `<idPath>.<name>`. */
   readonly ui?: Readonly<Record<string, unknown>>;
@@ -143,6 +158,14 @@ export type Scope = {
    * resolves at all (render narrows the record to the signature).
    */
   readonly vars?: Readonly<Record<string, unknown>>;
+  /** Host-supplied module views by module key; render maps the root's `use` aliases onto them. */
+  readonly modules?: Readonly<Record<string, ModuleView>>;
+  /**
+   * `use` aliases (built by render from the root's `use` children). A key mapped to `undefined`
+   * is a declared alias whose module is missing — resolving through it is an inline error, not
+   * silence.
+   */
+  readonly aliases?: Readonly<Record<string, ModuleView | undefined>>;
   /** Enclosing scopes, outermost first. */
   readonly frames?: readonly ScopeFrame[];
 };
@@ -178,16 +201,35 @@ export const resolve = (binding: Binding, scope: Scope): unknown => {
     if (head === undefined) {
       throw new BindingResolutionError('a state binding requires a path', binding.path);
     }
-    // Innermost scope wins; the root `var` signature is the outermost declaration ring.
+    // Innermost scope wins; the root `var` signature and `use` aliases are the outermost ring.
     const frame = (scope.frames ?? []).findLast((candidate) => head in candidate.values);
     if (frame) {
       value = frame.values[head];
+      rest = binding.path.slice(1);
     } else if (scope.vars && head in scope.vars) {
       value = scope.vars[head];
+      rest = binding.path.slice(1);
+    } else if (scope.aliases && head in scope.aliases) {
+      const view = scope.aliases[head];
+      if (!view) {
+        throw new BindingResolutionError(`unknown module for alias '${head}'`, binding.path);
+      }
+      const name = binding.path[1];
+      if (name === undefined) {
+        throw new BindingResolutionError(`binding through '${head}' requires an export name`, binding.path);
+      }
+      // Plain data paths read column 1 only; capabilities are reached with `let from=`.
+      if (!(name in view.state)) {
+        throw new BindingResolutionError(
+          `unknown state export '${head}.${name}' on module '${view.key}'`,
+          binding.path,
+        );
+      }
+      value = view.state[name];
+      rest = binding.path.slice(2);
     } else {
       throw new BindingResolutionError(`unresolved name '${head}'`, binding.path);
     }
-    rest = binding.path.slice(1);
   }
   for (const key of rest) {
     if (value == null) {
@@ -238,11 +280,17 @@ export const validate = (node: Node, at = 'root'): void => {
       if (typeof node.props?.name !== 'string') {
         throw new TemplateValidationError(`'let' requires a name`, at);
       }
-      // The ladder: rung 1 is a literal initial value, rung 2 a machine-backed slot — the
-      // backing escalates in place, so exactly one must be named.
-      const backings = ['initial', 'machine'].filter((key) => node.props && key in node.props);
+      // The ladder: rung 1 is a literal initial value, rung 2 a machine-backed slot, rung 3 a
+      // module-provided capability — the backing escalates in place, so exactly one must be named.
+      const backings = ['initial', 'machine', 'from'].filter((key) => node.props && key in node.props);
       if (backings.length !== 1) {
-        throw new TemplateValidationError(`'let' requires exactly one of initial or machine`, at);
+        throw new TemplateValidationError(`'let' requires exactly one of initial, machine, or from`, at);
+      }
+      if (node.props && 'from' in node.props) {
+        const from = node.props.from;
+        if (typeof from !== 'string' || from.split('.').length !== 2 || from.split('.').some((part) => !part)) {
+          throw new TemplateValidationError(`'let' from must name '<alias>.<capability>'`, at);
+        }
       }
       break;
     }
@@ -259,6 +307,17 @@ export const validate = (node: Node, at = 'root'): void => {
         if (node.props && flag in node.props && typeof node.props[flag] !== 'boolean') {
           throw new TemplateValidationError(`'var' ${flag} must be a boolean`, at);
         }
+      }
+      break;
+    }
+    case 'use': {
+      // The module import: a registry module key bound to a local alias — bindings then read
+      // `<alias>.<export>`, and nothing resolves without the alias.
+      if (typeof node.props?.module !== 'string') {
+        throw new TemplateValidationError(`'use' requires a module`, at);
+      }
+      if (typeof node.props?.as !== 'string') {
+        throw new TemplateValidationError(`'use' requires an alias (as)`, at);
       }
       break;
     }
@@ -308,14 +367,31 @@ export const varNames = (root: Node): string[] =>
     child.tag === 'var' && typeof child.props?.name === 'string' ? [child.props.name] : [],
   );
 
+/** Module aliases a root's direct `use` children declare, alias → module key. */
+export const useAliases = (root: Node): Record<string, string> => {
+  const aliases: Record<string, string> = {};
+  for (const child of root.children ?? []) {
+    if (child.tag === 'use' && typeof child.props?.as === 'string' && typeof child.props?.module === 'string') {
+      aliases[child.props.as] = child.props.module;
+    }
+  }
+  return aliases;
+};
+
 /**
  * Full-tree closed-resolution check: every state binding's first path segment must be a declared
- * name — a `let` slot in an enclosing scope or a root `var` input. Declaration and use are both
- * in the document, so an undeclared name is a parse-time error, never a silent `undefined` at
- * render (R-8).
+ * name — a `let` slot in an enclosing scope, a root `var` input, or a root `use` alias.
+ * Declaration and use are both in the document, so an undeclared name is a parse-time error,
+ * never a silent `undefined` at render (R-8). What a module actually exports is checked later,
+ * against the registry (registration/mount).
  */
 export const checkBindings = (root: Node): void => {
-  const rootDeclarations = new Set<string>();
+  const aliases = new Set(Object.keys(useAliases(root)));
+  const rootDeclarations = new Set<string>(aliases);
+  // The alias record collapses duplicates, so a count mismatch means two `use` claimed one alias.
+  if ((root.children ?? []).filter((child) => child.tag === 'use').length !== aliases.size) {
+    throw new TemplateValidationError(`duplicate use alias`, 'root');
+  }
   for (const name of varNames(root)) {
     if (rootDeclarations.has(name)) {
       throw new TemplateValidationError(`duplicate declaration '${name}'`, 'root');
@@ -342,11 +418,22 @@ export const checkBindings = (root: Node): void => {
       if (!scope.has(head)) {
         throw new TemplateValidationError(`binding '${key}' names undeclared '${head}'`, at);
       }
+      if (aliases.has(head) && binding.path.length < 2) {
+        throw new TemplateValidationError(`binding '${key}' through '${head}' requires an export name`, at);
+      }
+    }
+    // A rung-3 let binds a module capability: its alias must be a root `use` declaration.
+    if (node.tag === 'let' && typeof node.props?.from === 'string') {
+      const [alias] = node.props.from.split('.');
+      if (!aliases.has(alias)) {
+        throw new TemplateValidationError(`'let' from names undeclared alias '${alias}'`, at);
+      }
     }
     node.children?.forEach((child, index) => {
-      // The signature is the root's: a `var` anywhere else declares nothing and is rejected.
-      if (child.tag === 'var' && node !== root) {
-        throw new TemplateValidationError(`'var' is only valid as a direct child of the root`, at);
+      // Declarations against the outside world are the root's: `var`/`use` anywhere else is
+      // rejected rather than silently declaring nothing.
+      if ((child.tag === 'var' || child.tag === 'use') && node !== root) {
+        throw new TemplateValidationError(`'${child.tag}' is only valid as a direct child of the root`, at);
       }
       check(child, scope, `${at} > ${child.tag}[${index}]`);
     });

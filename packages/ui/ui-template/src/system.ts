@@ -20,7 +20,7 @@
 // neither imports ECHO nor casts around it.
 //
 
-import { type ScopeFrame } from './model';
+import { type ModuleView, type ScopeFrame } from './model';
 
 /** Published UI state: a nested tree of scope ids ending in slot values. */
 export type UiState = Readonly<Record<string, unknown>>;
@@ -36,12 +36,22 @@ export type OperationScope = {
   set: (patch: Record<string, unknown>) => void;
 };
 
+/** Read another module's state export — the readonly, public column of the module contract. */
+export type ModuleRead = (module: string, name: string) => unknown;
+
 export type OperationContext<Db = unknown> = {
   ui: UiState;
   scope: OperationScope;
   payload?: unknown;
   /** The database. Operations are the only place it is written. */
   db?: Db;
+  /** Read another module's state — observation is shared; mutation stays with the owner. */
+  read: ModuleRead;
+  /**
+   * Dispatch another operation by key — the ONLY cross-module write path: foreign state changes
+   * by asking its owner, never by writing its slots.
+   */
+  invoke: (operation: string, payload?: unknown) => void;
 };
 
 export type OperationDef<Db = unknown> = {
@@ -65,15 +75,68 @@ export type MachineDef = {
   initial: unknown;
 };
 
+export type ModuleStateContext = {
+  /** The module's own slot values. */
+  slots: Readonly<Record<string, unknown>>;
+  /** Host-supplied inputs for this module (query results, wiring), by name. */
+  inputs: Readonly<Record<string, unknown>>;
+  /** Read another module's state export — cross-module reads are public. */
+  read: ModuleRead;
+};
+
+/** Column 1 of the module contract: one reactive readonly state export. */
+export type ModuleStateDef = {
+  description?: string;
+  /** Derive the export's current value — pure over slots × inputs × other modules' state. */
+  derive: (context: ModuleStateContext) => unknown;
+};
+
+/** A state export backed 1:1 by a module slot. */
+export const fromSlot = (name: string): ModuleStateDef => ({ derive: ({ slots }) => slots[name] });
+
+/** Column 3 of the module contract: a machine instance — a typed API over the module's state. */
+export type CapabilityDef = {
+  description?: string;
+  /** The registry machine whose instance this capability is. */
+  machine: string;
+  /** The module slot holding the instance's current state. */
+  slot: string;
+};
+
+/**
+ * The module contract: a module provides exactly three things — reactive readonly state
+ * (consumers bind, never write), operations (typed one-shot writes that mutate ONLY this
+ * module's slots), and capabilities (machine instances shared by every binder). The slots are
+ * the private substrate under all three columns.
+ */
+export type ModuleDef<Db = unknown> = {
+  key: string;
+  description?: string;
+  /** Writable slots — the module's substrate; only its own operations write them. */
+  slots: Readonly<Record<string, { initial: unknown }>>;
+  /** Column 1: reactive readonly state. */
+  state: Readonly<Record<string, ModuleStateDef>>;
+  /** Column 2: typed one-shot writes — the only writers of this module's slots. */
+  operations: Readonly<Record<string, OperationDef<Db>>>;
+  /** Column 3: machine instances over the module's slots. */
+  capabilities: Readonly<Record<string, CapabilityDef>>;
+};
+
+/** Host-supplied inputs, keyed by module key then input name. */
+export type ModuleInputs = Readonly<Record<string, Readonly<Record<string, unknown>>>>;
+
 /**
  * The unified registry: everything a template references, resolved by URI-style key
  * (`org.dxos.type.Contact`, `org.dxos.operation.list.select`, `org.dxos.machine.selection`).
- * A layout is then entirely references — nothing is inlined.
+ * A layout is then entirely references — nothing is inlined. The flat `operations` table holds
+ * an anonymous template's local operations; a named module's operations live in its own table
+ * (`modules`), where dispatch scopes their writes to the module's slots.
  */
 export type Registry<Db = unknown, Schema = unknown> = {
   schemas: Readonly<Record<string, Schema>>;
   operations: Readonly<Record<string, OperationDef<Db>>>;
   machines: Readonly<Record<string, MachineDef>>;
+  modules: Readonly<Record<string, ModuleDef<Db>>>;
 };
 
 export type LogEntry = {
@@ -120,9 +183,75 @@ export const setSlot = setIn;
 export type SlotFrame = Pick<ScopeFrame, 'path' | 'slots'>;
 
 /**
- * One step: look up the operation, run it with a scope over the dispatching node's frames, return
- * the next ui state and the log entry. Pure with respect to `ui`; the db is the deliberate
- * exception (operations may mutate data).
+ * Read module state through the registry: `read(module, export)` runs the export's derivation
+ * over the module's current slots, its host inputs, and — via the same reader — other modules'
+ * state. `ui` is a getter so a dispatch in progress reads its own accumulated writes. An unknown
+ * module or export is an error (registration/mount row of the error table), and so is a circular
+ * derivation.
+ */
+export const createModuleReader = <Db>(
+  registry: Registry<Db>,
+  ui: () => UiState,
+  inputs: ModuleInputs = {},
+): ModuleRead => {
+  const reading = new Set<string>();
+  const read: ModuleRead = (moduleKey, name) => {
+    const module = registry.modules[moduleKey];
+    if (!module) {
+      throw new SystemError(`unknown module '${moduleKey}'`);
+    }
+    const def = module.state[name];
+    if (!def) {
+      throw new SystemError(`unknown state export '${moduleKey}.${name}'`);
+    }
+    const token = `${moduleKey}.${name}`;
+    if (reading.has(token)) {
+      throw new SystemError(`circular state derivation '${token}'`);
+    }
+    reading.add(token);
+    try {
+      const slots = ui()[moduleKey];
+      return def.derive({
+        slots: isPlainObject(slots) ? slots : {},
+        inputs: inputs[moduleKey] ?? {},
+        read,
+      });
+    } finally {
+      reading.delete(token);
+    }
+  };
+  return read;
+};
+
+/** Materialize every registry module's contract for binding (state + capability columns). */
+export const viewModules = <Db>(
+  registry: Registry<Db>,
+  ui: UiState,
+  inputs: ModuleInputs = {},
+): Record<string, ModuleView> => {
+  const read = createModuleReader(registry, () => ui, inputs);
+  const views: Record<string, ModuleView> = {};
+  for (const [key, module] of Object.entries(registry.modules)) {
+    const state: Record<string, unknown> = {};
+    for (const name of Object.keys(module.state)) {
+      state[name] = read(key, name);
+    }
+    const capabilities: Record<string, unknown> = {};
+    for (const [name, capability] of Object.entries(module.capabilities)) {
+      capabilities[name] = getIn(ui, [key, capability.slot]);
+    }
+    views[key] = { key, state, capabilities };
+  }
+  return views;
+};
+
+/**
+ * One step: look up the operation, run it, return the next ui state and the log entries (the
+ * dispatched operation first, then anything it `invoke`d). A key in the flat table runs with a
+ * scope over the dispatching node's frames; a key owned by a module runs with a scope over the
+ * module's OWN slots — the write-ownership rule (R-3's owner clause) is this scoping, so a
+ * handler cannot name, let alone write, another module's state. Pure with respect to `ui`; the
+ * db is the deliberate exception (operations may mutate data).
  */
 export const dispatch = <Db>(
   registry: Registry<Db>,
@@ -131,17 +260,16 @@ export const dispatch = <Db>(
   payload?: unknown,
   db?: Db,
   frames: readonly SlotFrame[] = [],
-): { ui: UiState; entry: LogEntry } => {
-  const def = registry.operations[operation];
-  if (!def) {
-    throw new SystemError(`unknown operation '${operation}'`);
-  }
-
-  // The scope resolves slot names lexically — the innermost frame that declares the name wins —
-  // and accumulates writes so a handler may set several slots and read its own writes back.
+  inputs: ModuleInputs = {},
+): { ui: UiState; entries: LogEntry[] } => {
   let next = ui;
+  const entries: LogEntry[] = [];
+  const read = createModuleReader(registry, () => next, inputs);
+
+  // The template scope resolves slot names lexically — the innermost frame that declares the
+  // name wins — and accumulates writes so a handler reads its own writes back.
   const frameOf = (name: string): SlotFrame | undefined => frames.findLast((frame) => frame.slots.includes(name));
-  const scope: OperationScope = {
+  const templateScope: OperationScope = {
     has: (name) => frameOf(name) !== undefined,
     get: (name) => {
       const frame = frameOf(name);
@@ -158,8 +286,51 @@ export const dispatch = <Db>(
     },
   };
 
-  const result = def.handler({ ui, scope, payload, db });
-  return { ui: result ?? next, entry: { operation, payload } };
+  const moduleScope = (module: ModuleDef<Db>): OperationScope => ({
+    has: (name) => name in module.slots,
+    get: (name) => getIn(next, [module.key, name]),
+    set: (patch) => {
+      for (const [name, value] of Object.entries(patch)) {
+        if (!(name in module.slots)) {
+          throw new SystemError(`module '${module.key}' owns no slot '${name}'`);
+        }
+        next = setIn(next, [module.key, name], value);
+      }
+    },
+  });
+
+  const ownerOf = (key: string): ModuleDef<Db> | undefined =>
+    Object.values(registry.modules).find((module) => Object.values(module.operations).some((def) => def.key === key));
+
+  const run = (key: string, runPayload?: unknown): void => {
+    const owner = ownerOf(key);
+    const def = owner
+      ? Object.values(owner.operations).find((candidate) => candidate.key === key)
+      : registry.operations[key];
+    if (!def) {
+      throw new SystemError(`unknown operation '${key}'`);
+    }
+    entries.push({ operation: key, payload: runPayload });
+    const result = def.handler({
+      ui: next,
+      scope: owner ? moduleScope(owner) : templateScope,
+      payload: runPayload,
+      db,
+      read,
+      invoke: run,
+    });
+    if (result) {
+      // A wholesale ui replacement would bypass write ownership, so only an anonymous
+      // template's local operation may return one.
+      if (owner) {
+        throw new SystemError(`module operation '${key}' must write through scope.set`);
+      }
+      next = result;
+    }
+  };
+
+  run(operation, payload);
+  return { ui: next, entries };
 };
 
 /**
@@ -199,6 +370,63 @@ export const seedUi = (registry: Registry<never>, root: WalkNode): UiState => {
   };
   visit(root, []);
   return ui;
+};
+
+/**
+ * Seed every registry module's slots at `ui.<moduleKey>.<slot>`. Module instances are shared —
+ * seeded once from the registry, not per template — while `seedUi` seeds only the template's
+ * private (`initial=`/`machine=`) slots.
+ */
+export const seedModules = <Db>(registry: Registry<Db>): UiState => {
+  let ui: UiState = {};
+  for (const [key, module] of Object.entries(registry.modules)) {
+    for (const [name, slot] of Object.entries(module.slots)) {
+      ui = setIn(ui, [key, name], slot.initial);
+    }
+  }
+  return ui;
+};
+
+/**
+ * Registration/mount check for a template's module wiring: every `use` must name a registry
+ * module, and every `let from=` must target one of its capabilities (whose slot and machine must
+ * themselves exist). Returns messages for the host to surface visibly per R-8.
+ */
+export const checkUses = <Db>(registry: Registry<Db>, root: WalkNode): string[] => {
+  const errors: string[] = [];
+  const aliasModule: Record<string, string> = {};
+  for (const child of root.children ?? []) {
+    if (child.tag === 'use' && typeof child.props?.as === 'string' && typeof child.props?.module === 'string') {
+      aliasModule[child.props.as] = child.props.module;
+      if (!registry.modules[child.props.module]) {
+        errors.push(`use '${child.props.as}': unknown module '${child.props.module}'`);
+      }
+    }
+  }
+  for (const node of walk(root)) {
+    if (node.tag !== 'let' || typeof node.props?.from !== 'string') {
+      continue;
+    }
+    const [alias, capability] = node.props.from.split('.');
+    const moduleKey = aliasModule[alias];
+    const module = moduleKey === undefined ? undefined : registry.modules[moduleKey];
+    if (!module) {
+      // A missing alias is a parse error; a missing module is already reported above.
+      continue;
+    }
+    const def = module.capabilities[capability];
+    if (!def) {
+      errors.push(`let from '${node.props.from}': unknown capability on module '${moduleKey}'`);
+      continue;
+    }
+    if (!(def.slot in module.slots)) {
+      errors.push(`module '${moduleKey}' capability '${capability}' names unknown slot '${def.slot}'`);
+    }
+    if (!registry.machines[def.machine]) {
+      errors.push(`module '${moduleKey}' capability '${capability}' names unknown machine '${def.machine}'`);
+    }
+  }
+  return errors;
 };
 
 /** One entry of a template's signature: a typed, host-supplied input declared by a root `var`. */
