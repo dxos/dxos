@@ -107,9 +107,9 @@ export const TestMultiline: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const editor = await canvas.findByTestId('markdownEditable.editor');
-    const content = await waitFor(() => {
+    const content = await waitFor(async () => {
       const found = editor.querySelector('.cm-content');
-      expect(found).not.toBeNull();
+      await expect(found).not.toBeNull();
       return found as HTMLElement;
     });
 

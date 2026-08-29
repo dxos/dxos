@@ -1049,8 +1049,8 @@ const TaskListEdit = composable<HTMLDivElement, { placeholder?: string; descript
             Placed on the title line explicitly; its place in the DOM is what orders Tab. */}
         <Toolbar.Root density='sm' classNames='row-start-1 col-start-[-2] p-0 bg-transparent'>
           <Toolbar.IconButton
-            iconOnly
             variant='ghost'
+            iconOnly
             icon='ph--check--regular'
             data-testid='taskList.edit.save'
             onMouseDown={(event) => event.preventDefault()}
@@ -1058,8 +1058,8 @@ const TaskListEdit = composable<HTMLDivElement, { placeholder?: string; descript
             onClick={handleSave}
           />
           <Toolbar.IconButton
-            iconOnly
             variant='ghost'
+            iconOnly
             icon='ph--x--regular'
             data-testid='taskList.edit.cancel'
             onMouseDown={(event) => event.preventDefault()}

@@ -81,12 +81,16 @@ const DefaultStory = ({
   showOrdinals,
   showDescriptions,
   hierarchical,
+  framed = true,
 }: {
   readonly?: boolean;
   showGroupLabels?: boolean;
   showOrdinals?: boolean;
   showDescriptions?: boolean;
   hierarchical?: boolean;
+  /** Insets the pane in a card, as an article does. Off for the tests that measure the pane's own
+      columns against a row's, which the inset would offset. */
+  framed?: boolean;
 }) => {
   const [tasks, setTasks] = useState<Task.Task[]>(hierarchical ? hierarchicalSeed : seed);
   // Selection is what the article wires, and what arrow-key navigation moves.
@@ -141,9 +145,13 @@ const DefaultStory = ({
       <TaskList.Viewport>
         <TaskList.Content />
       </TaskList.Viewport>
-      <div className='p-2'>
-        <TaskList.Edit classNames='border border-separator rounded-md p-2' />
-      </div>
+      {framed ? (
+        <div className='p-2'>
+          <TaskList.Edit classNames='border border-separator rounded-md p-2' />
+        </div>
+      ) : (
+        <TaskList.Edit />
+      )}
     </TaskList.Root>
   );
 };
@@ -273,7 +281,7 @@ export const TestEdit: Story = {
 
 export const TestHierarchy: Story = {
   // Descriptions on, so the alignment between a sub-task's description and its title is asserted.
-  args: { hierarchical: true, showOrdinals: true, showDescriptions: true },
+  args: { hierarchical: true, showOrdinals: true, showDescriptions: true, framed: false },
   // The tree is what the walk produces, not what the array holds; and restructuring is driven from
   // the keyboard, which is the half of the gesture set that CAN be synthesized (a native HTML5 drag
   // cannot).
@@ -413,6 +421,7 @@ export const TestHierarchy: Story = {
 };
 
 export const Test: Story = {
+  args: { framed: false },
   // The status toggle and the add-`+` share one row grid; assert their icon gutters actually line
   // up, since only geometry (not the DOM) shows the misalignment.
   play: async ({ canvasElement }) => {
@@ -428,8 +437,9 @@ export const Test: Story = {
     };
 
     const rowIcon = row.firstElementChild;
-    // The pane is a column: the title row is the grid whose gutters must line up with a task row.
-    const createIcon = create.firstElementChild?.firstElementChild;
+    // The pane is one grid whose first cells ARE the title line, so its gutter cell is its first
+    // child — the same column a row's status toggle occupies.
+    const createIcon = create.firstElementChild;
     if (!rowIcon || !createIcon) {
       throw new Error('Row icons not found.');
     }
@@ -438,10 +448,7 @@ export const Test: Story = {
     await expect(Math.abs(center(rowIcon) - center(createIcon))).toBeLessThan(1);
     // ...and the labels start at the same x.
     await expect(
-      Math.abs(
-        row.children[1].getBoundingClientRect().left -
-          (create.firstElementChild as HTMLElement).children[1].getBoundingClientRect().left,
-      ),
+      Math.abs(row.children[1].getBoundingClientRect().left - create.children[1].getBoundingClientRect().left),
     ).toBeLessThan(1);
 
     // The row spans the full width, so trailing actions sit at the far edge.
