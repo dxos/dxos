@@ -4,7 +4,7 @@
 
 //
 // SPIKE. The React face of the zag probe: `useMachine` runs the framework-free machine from
-// `src/testing/Example.ts`, and the component is nothing but bindings onto its connect surface —
+// `src/testing/multi-select.ts`, and the component is nothing but bindings onto its connect surface —
 // the machine is the capability, the component one of its observers.
 //
 
@@ -13,7 +13,7 @@ import React, { useMemo } from 'react';
 
 import { Listbox } from '@dxos/react-ui-list';
 
-import { type MultiSelectSchema, connect, multiSelectMachine } from '../../testing/Example';
+import { type MultiSelectSchema, connect, multiSelectMachine } from '../../testing';
 
 export type MultiSelectItem = {
   id: string;

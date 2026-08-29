@@ -30,7 +30,7 @@ import {
   varDecls,
   viewModules,
 } from '../system';
-import { type MultiSelectSchema, connect, multiSelectMachine } from '../testing/Example';
+import { type MultiSelectSchema, connect, multiSelectMachine } from '../testing';
 import { AttentionProvider } from './attention';
 import { Template, createReactRenderer } from './renderer';
 import { Editor, OperationLog, Workbench } from './testing';

@@ -24,7 +24,7 @@ import {
   varDecls,
   viewModules,
 } from './system';
-import { type MultiSelectApi, type MultiSelectSchema, connect, multiSelectMachine } from './testing/Example';
+import { type MultiSelectApi, type MultiSelectSchema, connect, multiSelectMachine } from './testing';
 
 const registry: Registry<never> = {
   schemas: {},

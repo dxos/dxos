@@ -10,7 +10,7 @@ import { Form } from '@dxos/react-ui-form';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { MultiSelectList } from './Example';
+import { MultiSelectList } from './MultiSelectList';
 import { Splitter } from './Splitter';
 
 //

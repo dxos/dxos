@@ -5,7 +5,7 @@
 import { VanillaMachine } from '@zag-js/vanilla';
 import { describe, test } from 'vitest';
 
-import { type MultiSelectProps, type MultiSelectSchema, connect, multiSelectMachine } from './Example';
+import { type MultiSelectProps, type MultiSelectSchema, connect, multiSelectMachine } from './multi-select';
 
 const ITEMS = ['a', 'b', 'c', 'd', 'e'];
 
