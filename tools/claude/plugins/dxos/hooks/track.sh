@@ -115,7 +115,7 @@ emit_hydrate() {
 }
 
 emit_resume() {
-  emit "$(printf 'TASK-PLANNING RESUME: `/dxos:project resume`. Follow the task-planning skill "Project handoff" -> resume: pick the project — %s. Stay in this session'"'"'s assigned worktree: NEVER cd into, edit in, or adopt another project'"'"'s worktree or branch — if the prior work lives on an unmerged branch elsewhere, report that and ask the user instead of following it. Read the project'"'"'s `tasks` (TASKS.md) + `design` doc, check git status + recent git log, report a concise state (done / in-progress / next action / uncommitted), then continue with the next action unless the user directed otherwise.' "$1")"
+  emit "$(printf 'TASK-PLANNING RESUME: `/dxos:project resume`. Follow the task-planning skill "Project handoff" -> resume: pick the project — %s. Stay in this session'"'"'s assigned worktree: NEVER cd into, edit in, or adopt another project'"'"'s worktree or branch — if the prior work lives on an unmerged branch elsewhere, report that and ask the user instead of following it. Read the project'"'"'s `tasks` (TASKS.md) + `design` doc, check git status + recent git log, report a concise state (done / in-progress / next action / uncommitted), set this session'"'"'s title to `<project> - #<PR>` via the session-management set_session_title tool (session_id "self") when that tool is available - the desktop app shows the title where a statusline would be - then continue with the next action unless the user directed otherwise.' "$1")"
 }
 
 # First line only — a slash command leads the message, and restricting the match
