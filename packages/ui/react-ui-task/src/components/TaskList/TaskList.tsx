@@ -284,8 +284,6 @@ TaskListViewport.displayName = 'TaskList.Viewport';
 const GRID_COLS = {
   content: 'grid-cols-[1.5rem_1fr_min-content_min-content_2rem]',
   contentWithOrdinals: 'grid-cols-[2rem_1.5rem_1fr_min-content_min-content_2rem]',
-  create: 'grid-cols-[1.5rem_1fr_min-content]',
-  createWithOrdinals: 'grid-cols-[2rem_1.5rem_1fr_min-content]',
 };
 
 type TaskListContentProps = ComposableProps;
@@ -983,13 +981,8 @@ const TaskListEdit = composable<HTMLDivElement, { placeholder?: string; descript
       <div
         {...rest}
         data-testid='taskList.edit'
-        className={mx(
-          'grid gap-x-1 w-full min-w-0 shrink-0',
-          showGutter ? GRID_COLS.createWithOrdinals : GRID_COLS.create,
-          className,
-        )}
+        className={mx('grid grid-cols-[1.5rem_1fr_min-content] gap-x-1 w-full min-w-0 shrink-0', className)}
       >
-        {showGutter && <span className='h-8' />}
         <span className='flex items-center justify-center h-8'>
           <Icon
             icon={current ? 'ph--pencil-simple--regular' : 'ph--plus--regular'}
@@ -997,36 +990,24 @@ const TaskListEdit = composable<HTMLDivElement, { placeholder?: string; descript
             classNames='text-subdued'
           />
         </span>
-        {/* A tree row's title sits past its disclosure toggle, so the input clears the same distance
-            — the columns already match, and without this only the text within them disagrees. */}
-        <span
-          className='flex items-center min-w-0 h-8'
-          style={hierarchical ? { paddingInlineStart: TOGGLE_INSET } : undefined}
-        >
-          <Input.Root>
-            <Input.TextInput
-              variant='subdued'
-              classNames='px-0'
-              data-testid='taskList.edit.title'
-              placeholder={current ? t('task-title.placeholder') : placeholder}
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              onKeyDown={handleTitleKeyDown}
-              onBlur={commitTitle}
-            />
-          </Input.Root>
-        </span>
+        <Input.Root>
+          <Input.TextInput
+            variant='subdued'
+            classNames='px-0'
+            data-testid='taskList.edit.title'
+            placeholder={current ? t('task-title.placeholder') : placeholder}
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={handleTitleKeyDown}
+            onBlur={commitTitle}
+          />
+        </Input.Root>
         {/* Only a selected task has a description to edit; there is nothing to attach one to before
             the task exists. */}
         {current && onTaskUpdate && (
           <>
-            {showGutter && <span />}
             <span />
-            <span
-              data-testid='taskList.edit.description'
-              className='flex min-w-0'
-              style={hierarchical ? { paddingInlineStart: TOGGLE_INSET } : undefined}
-            >
+            <span data-testid='taskList.edit.description' className='flex min-w-0'>
               {/* A description is markdown, so it is edited as markdown. `editing` is held open —
                   the pane IS the editor, so there is nothing to click into — and the key remounts
                   it per task, since a field held open never re-reads its subject. */}
@@ -1124,11 +1105,11 @@ export const TaskList = {
 };
 
 export type {
-  TaskListAssigneeProps,
-  TaskListContentProps,
-  TaskListEditProps,
-  TaskListGroupLabelProps,
-  TaskListItemProps,
   TaskListRootProps,
   TaskListViewportProps,
+  TaskListContentProps,
+  TaskListGroupLabelProps,
+  TaskListItemProps,
+  TaskListEditProps,
+  TaskListAssigneeProps,
 };
