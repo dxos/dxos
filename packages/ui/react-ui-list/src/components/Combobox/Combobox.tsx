@@ -139,18 +139,21 @@ type ComboboxContentProps = PopoverContentProps & {
 };
 
 const ComboboxContent = composable<HTMLDivElement, ComboboxContentProps>(
-  ({ children, resetSelectionOnChange, ...props }, forwardedRef) => {
+  ({ children, classNames, resetSelectionOnChange, ...props }, forwardedRef) => {
     const { modalId } = useComboboxContext(COMBOBOX_CONTENT_NAME);
 
     return (
       <Popover.Content
-        {...composableProps(props, {
-          id: modalId,
-          // Width on the CONTENT, so its border/padding sit inside the trigger's footprint —
-          // on the viewport, the chrome overhung the trigger and collision handling then shifted
-          // the whole popover out of alignment near a container edge.
-          classNames: 'w-(--radix-popover-trigger-width) box-border',
-        })}
+        {...props}
+        id={modalId}
+        // `classNames`, never `composableProps`: `Popover.Content` computes its own `className`
+        // and silently drops an incoming one. Width sits on the CONTENT so the border stays
+        // inside the trigger's footprint; the chrome matches `Select.Content` (1px separator
+        // border, overlay surface) since the two controls sit side by side in forms.
+        classNames={[
+          'w-(--radix-popover-trigger-width) box-border border border-separator bg-(--dx-surface-overlay)',
+          classNames,
+        ]}
         ref={forwardedRef}
       >
         <Popover.Viewport classNames='w-full min-w-0'>

@@ -73,10 +73,10 @@ undo, async updates, async dynamic component loading, entirely state-driven layo
       plugin mechanism: an app as a dynamic collection of plugins contributing
       components/machines/layouts/operations to the app-graph.
 - [x] **Fold findings** into ONTOLOGY.md rules (R-4 published-state update); checkpoint.
-- [ ] **Fix combobox** (react-ui-list `Combobox`, seen in the System story) — (1) the popover must
-      span the entire width of the input/trigger (still narrower than the trigger after the
-      `w-(--radix-popover-trigger-width)` content fix); (2) the popover/input/item styles should
-      match the `Select` control (compare the Status select in the same form).
+- [x] **Fix combobox** — popover now spans the trigger width and matches `Select` chrome (1px
+      separator border, overlay surface). Root cause: `Popover.Content` drops an incoming
+      `className`, so the earlier `composableProps` width fix never reached the DOM; the classes
+      now pass through `classNames`.
 
 ## Parked / later
 
