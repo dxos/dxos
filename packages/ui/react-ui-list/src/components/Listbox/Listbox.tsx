@@ -46,6 +46,7 @@
 //   - Virtualization or drag-and-drop. Reach for `@dxos/react-ui-mosaic`.
 //   - Multi-select. Future expansion — the aspect (`useListSelection`) already supports it.
 
+import { useFocusableGroup } from '@fluentui/react-tabster';
 import React, {
   type ComponentPropsWithRef,
   type FocusEvent,
@@ -278,7 +279,15 @@ const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLLIElement>) => {
       onKeyDown?.(event);
-      if (event.defaultPrevented || !interactive || disabled || (event.key !== 'Enter' && event.key !== ' ')) {
+      if (
+        event.defaultPrevented ||
+        !interactive ||
+        disabled ||
+        // Bubbled from a control inside the row — the groupper puts focus there deliberately, and
+        // its Enter belongs to it, not to the row.
+        event.target !== event.currentTarget ||
+        (event.key !== 'Enter' && event.key !== ' ')
+      ) {
         return;
       }
       event.preventDefault();
@@ -286,6 +295,12 @@ const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
     },
     [onKeyDown, interactive, disabled],
   );
+
+  // A row that holds its own controls (a toggle, a delete button) would otherwise take the arrow
+  // keys one focusable at a time, stepping INTO the row instead of on to the next option. The
+  // groupper makes the row a single stop for the container's mover; `Enter` enters its controls and
+  // `Escape` returns. Rows with no focusable children are unaffected — there is nothing to enter.
+  const groupProps = useFocusableGroup({ tabBehavior: 'limited' });
 
   const composed = composableProps<HTMLLIElement>(rest, {
     classNames: styles.listboxItem({
@@ -301,6 +316,7 @@ const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
   return (
     <ListItemProviderHost id={id} selected={selected}>
       <ListItem
+        {...groupProps}
         {...composed}
         role={selectable ? 'option' : 'listitem'}
         tabIndex={interactive ? 0 : -1}

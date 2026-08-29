@@ -17,6 +17,7 @@ export * from './ErrorFallback';
 export * from './Focus';
 export * from './Icon';
 export * from './Image';
+export * from './Editable';
 export * from './Input';
 export * from './Link';
 export * from './Main';

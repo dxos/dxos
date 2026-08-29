@@ -173,9 +173,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
               <Menu.Items />
             </Menu.Toolbar>
           </Panel.Toolbar>
-          {/* A column: the tasks tab's list scrolls while its create row stays on screen, which a
-              plain block would push past the panel's bottom edge. */}
-          <Panel.Content classNames='flex flex-col min-h-0'>
+          <Panel.Content classNames='flex flex-col'>
             {/* Rendered by hand rather than through `Tabs.Panel`: Radix mounts its content
                 hidden for a frame, and the artifact gallery's masonry measures zero there and
                 never recovers. The tablist still owns the switching. */}

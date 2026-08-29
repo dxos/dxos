@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useFocusableGroup } from '@fluentui/react-tabster';
 import { createContext } from '@radix-ui/react-context';
 import React, {
   type ComponentProps,
@@ -89,7 +90,11 @@ export const OrderedListItem = <T extends ListItemRecord>({
   style,
   children,
 }: OrderedListItemProps<T>) => {
-  const { reorder, disclosure, navigation } = useOrderedListContext(ORDERED_LIST_ITEM_NAME);
+  const { reorder, disclosure, navigation, navigationMode } = useOrderedListContext(ORDERED_LIST_ITEM_NAME);
+  // A row that holds its own controls (a menu, a handle) would otherwise take the arrow keys one
+  // focusable at a time. The groupper makes it a single stop, with `Enter` to reach inside — the
+  // same treatment `Listbox.Item` gets, and only meaningful once the row itself is focusable.
+  const groupProps = useFocusableGroup({ tabBehavior: 'limited' });
   const { rowRef, handleRef, closestEdge, state } = useReorderItem(reorder, id);
   const { expanded, toggle, triggerProps, panelProps } = disclosure.bind(id);
 
@@ -107,8 +112,27 @@ export const OrderedListItem = <T extends ListItemRecord>({
         ref={rowRef as RefCallback<HTMLDivElement>}
         {...navigation.itemProps()}
         style={style}
-        aria-current={selected || undefined}
+        {...(navigationMode === 'listbox'
+          ? // An option's selected-ness is `aria-selected`; `aria-current` is the `list`-mode grammar.
+            { 'aria-selected': !!selected }
+          : { 'aria-current': selected || undefined })}
+        {...(navigationMode === 'listbox' ? groupProps : {})}
         onClick={onClick}
+        onKeyDown={(event) => {
+          // An option is not natively activatable, so Enter/Space have to be wired the way a button
+          // gets them for free.
+          // `event.target === event.currentTarget`: bubbled from a control inside the row, its Enter
+          // belongs to that control — the groupper puts focus there deliberately.
+          if (
+            navigationMode === 'listbox' &&
+            onClick &&
+            event.target === event.currentTarget &&
+            (event.key === 'Enter' || event.key === ' ')
+          ) {
+            event.preventDefault();
+            event.currentTarget.click();
+          }
+        }}
         className={styles.orderedListItem({
           class: mx(hover && 'dx-hover', state.type === 'dragging' && 'opacity-50', classNames),
         })}

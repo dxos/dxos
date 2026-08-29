@@ -50,7 +50,9 @@ export const CreateProjectPanel = ({ onCreateObject, templates: templatesProp }:
   return (
     <Form.Root>
       <Form.Viewport>
-        <Form.Content classNames='my-form-gap'>
+        {/* `Form.Content` pads its bottom only, so the top is matched here to sit off the dialog's
+            chrome; the gap spaces the name field from the template picker, which are otherwise flush. */}
+        <Form.Content classNames='pt-form-padding gap-form-gap'>
           <Input.Root>
             <Input.TextInput
               autoFocus
@@ -62,11 +64,12 @@ export const CreateProjectPanel = ({ onCreateObject, templates: templatesProp }:
           </Input.Root>
           <SearchList.Root onSearch={handleSearch}>
             <SearchList.Input
-              classNames='py-form-gap'
               data-testid='create-project-panel.template-input'
               placeholder={t('create-panel.template.placeholder')}
             />
-            <SearchList.Viewport>
+            {/* Flush with the form's column: the viewport's default padding reserves a scroll strip,
+                which insets the rows from the name input above them. */}
+            <SearchList.Viewport padding={false}>
               {results.map((template) => (
                 <SearchList.Item
                   key={template.id}

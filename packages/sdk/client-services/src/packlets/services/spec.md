@@ -54,7 +54,6 @@ Status: `done` | `todo`
 | `SpaceManager`                 | `SpaceManagerService`            | `SpaceManagerLayer({ disableP2pReplication? })`                          | `disableP2pReplication?` | `FeedStoreService`, `SwarmNetworkManagerService`, `IMetadataStoreService` | done   |
 | `EchoHost`                     | `EchoHostService`                | `EchoHostLayer({ ...callbacks, useSubduction?, assignQueuePositions? })` | callbacks, flags         | `SqlClient \| SqlTransaction`                                             | done   |
 | `MeshEchoReplicator`           | `AutomergeReplicatorService`     | `MeshEchoReplicatorLayer()`                                              | —                        | —                                                                         | done   |
-| `EchoEdgeReplicator`           | `EdgeAutomergeReplicatorService` | `EchoEdgeReplicatorLayer({ disableSharePolicy? })`                       | `disableSharePolicy?`    | `EdgeConnectionService`, `EdgeHttpClientService`                          | done   |
 | `EchoEdgeSubductionReplicator` | `EdgeAutomergeReplicatorService` | `EchoEdgeSubductionReplicatorLayer({ disableSharePolicy? })`             | `disableSharePolicy?`    | `EdgeConnectionService`, `EdgeHttpClientService`                          | done   |
 
 ### Identity / invitations / spaces (client-services)

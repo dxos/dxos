@@ -10,6 +10,7 @@ export default defineConfig({
     manager: 'src/manager.tsx',
     preview: 'src/preview.tsx',
     download: 'src/download.ts',
+    StorybookErrorFallback: 'src/StorybookErrorFallback.tsx',
   },
   jsx: 'react',
   // Classic runtime (`React.createElement`), not automatic. The `manager` entry runs inside the

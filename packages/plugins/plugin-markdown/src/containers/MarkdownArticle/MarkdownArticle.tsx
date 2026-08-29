@@ -31,12 +31,7 @@ import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
 import { Text } from '@dxos/schema';
 import { Merge } from '@dxos/util';
 
-import {
-  MarkdownEditor,
-  type MarkdownEditorContentProps,
-  MarkdownEditorProvider,
-  type MarkdownEditorProviderProps,
-} from '#components';
+import { MarkdownEditor, MarkdownEditorProvider, type MarkdownEditorProviderProps } from '#components';
 import { useLinkQuery } from '#hooks';
 import { Markdown, MarkdownCapabilities } from '#types';
 
@@ -119,8 +114,7 @@ export type MarkdownArticleProps = AppSurface.ObjectArticleProps<
       onSelectObject?: (objectId: string) => void;
     },
     Pick<MarkdownCapabilities.MarkdownPluginState, 'extensionProviders'>,
-    Pick<MarkdownEditorProviderProps, 'viewMode' | 'onViewModeChange'>,
-    Pick<MarkdownEditorContentProps, 'editorStateStore'>
+    Pick<MarkdownEditorProviderProps, 'viewMode' | 'onViewModeChange' | 'editorStateStore'>
   >
 >;
 
