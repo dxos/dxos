@@ -398,7 +398,7 @@ const FORM = trim`
 `;
 
 const MASTER_DETAIL = trim`
-  <layout id="contacts" rows="1fr 1fr">
+  <layout id="contacts" rows="1fr 1fr" resizable="true">
     <use module="org.dxos.module.contacts" as="contacts" />
     <let name="selection" from="contacts.selection" />
     <collection data-items="contacts.organizations" item-id="id" item-label="name"
@@ -423,7 +423,7 @@ const MASTER_DETAIL_TOOLBAR = trim`
       <control as="button" label="Add" on-activate="org.dxos.operation.contacts.add" />
       <control as="button" label="Qualify" on-activate="org.dxos.operation.contacts.qualify" />
     </command>
-    <layout rows="1fr 1fr">
+    <layout rows="1fr 1fr" resizable="true">
       <collection data-items="contacts.organizations" item-id="id" item-label="name"
                   data-selection="selection"
                   on-select="org.dxos.operation.contacts.select" />
@@ -440,7 +440,7 @@ const MASTER_DETAIL_TOOLBAR = trim`
 `;
 
 const MASTER_DETAIL_MULTI = trim`
-  <layout rows="1fr 1fr">
+  <layout rows="1fr 1fr" resizable="true">
     <use module="org.dxos.module.contacts" as="contacts" />
     <collection data-items="contacts.organizations" item-id="id" item-label="name"
                 data-selections="contacts.selections"

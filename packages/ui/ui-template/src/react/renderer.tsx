@@ -21,6 +21,7 @@ import { Tabs } from '@dxos/react-ui-tabs';
 
 import { type Binding, type ModuleView, type Node, type Scope, resolve } from '../model';
 import { type CreateRendererOptions, type Renderer, type RenderOptions, render } from '../render';
+import { Splitter } from './testing/Splitter';
 
 const asText = (value: unknown): string => (value == null ? '' : String(value));
 
@@ -98,6 +99,11 @@ export const createReactRenderer = ({
   layout: ({ path, props, children }) => {
     const cols = tracks(props.columns);
     const rows = tracks(props.rows);
+    // `resizable` swaps the fixed tracks for a zag splitter — the divider between exactly two
+    // panes becomes draggable; more panes fall back to the grid, since the wrapper is two-pane.
+    if (props.resizable === true && children.length === 2) {
+      return <Splitter key={path} orientation={rows ? 'vertical' : 'horizontal'} panes={[children[0], children[1]]} />;
+    }
     if (cols || rows) {
       return (
         <Grid key={path} cols={cols} rows={rows} gap={oneOf(GAPS, props.gap)} grow={false} classNames='dx-container'>
