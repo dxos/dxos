@@ -12,8 +12,7 @@ import { toJsonSchema } from '@dxos/echo/JsonSchema';
 import { Flex, Panel, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { createBasicExtensions, createThemeExtensions, compactSlots, json } from '@dxos/ui-editor';
-import { mx } from '@dxos/ui-theme';
+import { compactSlots, createBasicExtensions, createThemeExtensions, json } from '@dxos/ui-editor';
 import { trim } from '@dxos/util';
 
 import { templateLanguage } from '../codemirror';
@@ -25,6 +24,25 @@ import { Template } from './renderer';
 // of it, the template, and the render. Editing the middle two re-renders the fourth, so the whole
 // loop — schema, state, layout, output — is visible at once.
 //
+
+/**
+ * The JSON Schema meta-schema, so the schema column is validated as a schema rather than merely as
+ * JSON. Enough of draft-07 to catch a malformed type or a bad `properties` shape.
+ */
+const JSON_SCHEMA_META = {
+  $schema: 'http://json-schema.org/draft-07/schema#',
+  type: 'object',
+  properties: {
+    $schema: { type: 'string' },
+    type: { type: 'string' },
+    title: { type: 'string' },
+    description: { type: 'string' },
+    properties: { type: 'object' },
+    items: { type: 'object' },
+    required: { type: 'array', items: { type: 'string' } },
+    additionalProperties: { type: 'boolean' },
+  },
+} as const;
 
 /** The context type. A template is parameterized by this (ONTOLOGY R-1). */
 const ProjectState = Schema.Struct({
@@ -81,13 +99,11 @@ const WITH_EVENTS = trim`
 type ColumnProps = {
   title: string;
   children: React.ReactNode;
-  /** Width in rem; the render column takes the remainder. */
-  width?: string;
 };
 
-const Column = ({ title, children, width }: ColumnProps) => (
-  <Flex column classNames={mx('min-w-0', width ? `${width} shrink-0` : 'flex-1')}>
-    <div className='p-1 text-xs uppercase tracking-wide text-subdued border-be border-separator'>{title}</div>
+const Column = ({ title, children }: ColumnProps) => (
+  <Flex column classNames='min-w-0 flex-1'>
+    <div className='px-2 py-1 text-xs uppercase tracking-wide text-subdued border-be border-separator'>{title}</div>
     <Flex column grow classNames='min-h-0 overflow-hidden'>
       {children}
     </Flex>
@@ -118,21 +134,21 @@ const DefaultStory = ({ source: initialSource }: { source: string }) => {
     }
   }, [stateText]);
 
-  const schemaExtensions = useMemo<Extension[]>(() => [json()], []);
+  const schemaExtensions = useMemo<Extension[]>(() => [json({ schema: JSON_SCHEMA_META })], []);
   const stateExtensions = useMemo<Extension[]>(() => [json({ schema: jsonSchema })], [jsonSchema]);
   const templateExtensions = useMemo<Extension[]>(() => templateLanguage(), []);
 
   return (
-    <Flex classNames='h-full w-full divide-x divide-separator' align='stretch'>
-      <Column title='Context schema' width='w-80'>
+    <Flex classNames='dx-container grid grid-rows-2 grid-cols-2 divide-x divide-y divide-separator' align='stretch'>
+      <Column title='Context schema'>
         <Editor value={schemaText} extensions={schemaExtensions} />
       </Column>
 
-      <Column title='Context object' width='w-80'>
+      <Column title='Context object'>
         <Editor value={stateText} extensions={stateExtensions} onChange={setStateText} />
       </Column>
 
-      <Column title='Layout' width='w-80'>
+      <Column title='Layout'>
         <Editor value={source} extensions={templateExtensions} onChange={setSource} />
       </Column>
 
@@ -193,7 +209,7 @@ const Editor = ({ value, extensions, onChange }: EditorProps) => {
     () => ({
       initialValue: value,
       extensions: [
-        createThemeExtensions({ themeMode, slots: compactSlots }),
+        createThemeExtensions({ themeMode, slots: compactSlots, syntaxHighlighting: true, monospace: true }),
         createBasicExtensions({ readOnly: !onChange, lineWrapping: false }),
         ...extensions,
         ...(onChange ? [mirrorTo(onChange)] : []),

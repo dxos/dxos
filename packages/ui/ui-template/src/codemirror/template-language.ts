@@ -16,7 +16,7 @@ import { type Diagnostic, linter } from '@codemirror/lint';
 import { type Extension, RangeSetBuilder } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
-import { TAGS } from '../model';
+import { type Tag, TAGS } from '../model';
 import { TemplateParseError, parse } from '../parser';
 
 /**
@@ -24,6 +24,8 @@ import { TemplateParseError, parse } from '../parser';
  * author to remember it.
  */
 const elements = TAGS.map((tag) => ({ name: tag }));
+
+const isKnownTag = (name: string): name is Tag => (TAGS as readonly string[]).includes(name);
 
 /**
  * Live diagnostics from the real parser, rather than a second implementation that can disagree
@@ -60,34 +62,42 @@ const templateLinter = linter((view): Diagnostic[] => {
 });
 
 //
-// Attribute-family decoration.
+// Semantic decoration.
 //
-// XML sees one kind of attribute. This language has four, and which family an attribute belongs to
-// is the single most important thing to read off a template — a `data-` reads, an `on-` writes.
+// XML sees one kind of tag and one kind of attribute. This language has a closed tag set and four
+// attribute families, and which family an attribute belongs to is the single most important thing
+// to read off a template — a `data-` reads, an `on-` writes.
 //
 
-const familyMark = {
-  data: Decoration.mark({ class: 'cm-template-data' }),
-  item: Decoration.mark({ class: 'cm-template-item' }),
-  event: Decoration.mark({ class: 'cm-template-event' }),
+// Theme utility classes, not an editor theme block: the palette is the app's, and an invented
+// `--dx-*` variable would silently resolve to nothing.
+const marks = {
+  data: Decoration.mark({ class: 'text-accent-text' }),
+  item: Decoration.mark({ class: 'text-accent-text italic' }),
+  event: Decoration.mark({ class: 'text-success-text font-medium' }),
+  unknown: Decoration.mark({ class: 'text-error-text underline decoration-wavy' }),
 };
 
-const familyOf = (name: string): keyof typeof familyMark | undefined =>
+const familyOf = (name: string): 'data' | 'item' | 'event' | undefined =>
   name.startsWith('data-') ? 'data' : name.startsWith('item-') ? 'item' : name.startsWith('on-') ? 'event' : undefined;
 
-const decorateFamilies = (view: EditorView): DecorationSet => {
+const decorate = (view: EditorView): DecorationSet => {
   const builder = new RangeSetBuilder<Decoration>();
   for (const { from, to } of view.visibleRanges) {
     syntaxTree(view.state).iterate({
       from,
       to,
       enter: (node) => {
-        if (node.name !== 'AttributeName') {
-          return;
-        }
-        const family = familyOf(view.state.doc.sliceString(node.from, node.to));
-        if (family) {
-          builder.add(node.from, node.to, familyMark[family]);
+        const text = view.state.doc.sliceString(node.from, node.to);
+        if (node.name === 'AttributeName') {
+          const family = familyOf(text);
+          if (family) {
+            builder.add(node.from, node.to, marks[family]);
+          }
+        } else if (node.name === 'TagName' && !isKnownTag(text)) {
+          // Marked as well as linted: the squiggle says something is wrong, the strike says the
+          // vocabulary is closed and this word is not in it.
+          builder.add(node.from, node.to, marks.unknown);
         }
       },
     });
@@ -95,38 +105,30 @@ const decorateFamilies = (view: EditorView): DecorationSet => {
   return builder.finish();
 };
 
-const familyDecorations = ViewPlugin.fromClass(
+const semanticDecorations = ViewPlugin.fromClass(
   class {
     decorations: DecorationSet;
     constructor(view: EditorView) {
-      this.decorations = decorateFamilies(view);
+      this.decorations = decorate(view);
     }
 
     update(update: ViewUpdate) {
       if (update.docChanged || update.viewportChanged) {
-        this.decorations = decorateFamilies(update.view);
+        this.decorations = decorate(update.view);
       }
     }
   },
   { decorations: (plugin) => plugin.decorations },
 );
 
-// Theme tokens rather than literal colours, so the editor follows light/dark with everything else.
-const familyTheme = EditorView.theme({
-  '.cm-template-data': { color: 'var(--dx-accentText)' },
-  '.cm-template-item': { color: 'var(--dx-accentText)', fontStyle: 'italic' },
-  '.cm-template-event': { color: 'var(--dx-successText)', fontWeight: '500' },
-});
-
 export type TemplateLanguageOptions = {
   /** Report parse errors as diagnostics. Default `true`. */
   lint?: boolean;
 };
 
-/** XML, extended with the template grammar: tag completions, live diagnostics, family colouring. */
+/** XML, extended with the template grammar: tag completions, live diagnostics, semantic colouring. */
 export const templateLanguage = ({ lint = true }: TemplateLanguageOptions = {}): Extension[] => [
   xml({ elements }),
-  familyDecorations,
-  familyTheme,
+  semanticDecorations,
   ...(lint ? [templateLinter] : []),
 ];
