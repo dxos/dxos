@@ -215,3 +215,20 @@ Playwright's synthetic dispatch does not produce. So the split is:
 - **`TaskSetArticle` renders hierarchically** and calls `MoveTask` once per gesture.
 - Not yet done: the manual drag script, and the ProjectArticle Tasks tab inherits the tree through
   `TaskSetArticle` but has no story of its own asserting it.
+
+### Review round (#12787)
+
+One real defect, found by review rather than by the suites: `applyParentTask` skipped
+`Obj.setParent` when neither a new parent nor a task set was available, so
+`UpdateTask({ parentTask: null })` on a task belonging to no set cleared the ref but left the ECHO
+parent edge pointing at its former parent — which would then cascade-delete the promoted task. The
+edge is now written unconditionally, `undefined` included.
+
+Worth remembering about the test: the obvious version of it passes under the buggy code, because a
+task still in a set has the set to fall back to. Only a task outside any set exercises the skipped
+write. Confirmed by reverting the fix and watching the test fail.
+
+`Check / boot-budget` failed once and passed on re-run with no change: measured locally twice at 22
+preload entries / 4.23 MB against a 25 / 4.45 MB budget, both before and after merging main, and
+main's own run was green. Nothing in this diff is boot-reachable — `plugin-assistant` reaches
+`react-ui-task` only through its `/translations` subpath, and the list surfaces are lazy.
