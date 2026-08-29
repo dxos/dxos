@@ -20,6 +20,8 @@ export const translations = [
         'task-blocked.label': 'Blocked',
         'delete-task.label': 'Delete task',
         'task-title.placeholder': 'Untitled',
+        'save-task.label': 'Save',
+        'cancel-edit.label': 'Cancel',
       },
     },
   },

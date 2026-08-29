@@ -31,12 +31,13 @@ import {
   IconButtonProps,
   Input,
   Tag,
+  Toolbar,
   composable,
   composableProps,
   useTranslation,
 } from '@dxos/react-ui';
 import { Listbox, TreeDropIndicator, TreeItemToggle, paddingIndentation, useListDisclosure } from '@dxos/react-ui-list';
-import { MarkdownEditable, MarkdownView } from '@dxos/react-ui-markdown';
+import { MarkdownEditable, type MarkdownEditableController, MarkdownView } from '@dxos/react-ui-markdown';
 import { type Actor, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
@@ -283,8 +284,8 @@ TaskListViewport.displayName = 'TaskList.Viewport';
 const GRID_COLS = {
   content: 'grid-cols-[1.5rem_1fr_min-content_min-content_2rem]',
   contentWithOrdinals: 'grid-cols-[2rem_1.5rem_1fr_min-content_min-content_2rem]',
-  create: 'grid-cols-[1.5rem_1fr]',
-  createWithOrdinals: 'grid-cols-[2rem_1.5rem_1fr]',
+  create: 'grid-cols-[1.5rem_1fr_min-content]',
+  createWithOrdinals: 'grid-cols-[2rem_1.5rem_1fr_min-content]',
 };
 
 type TaskListContentProps = ComposableProps;
@@ -952,51 +953,69 @@ const TaskListEdit = composable<HTMLDivElement, { placeholder?: string; descript
       [commitTitle],
     );
 
+    const descriptionRef = useRef<MarkdownEditableController>(null);
+
+    const handleSave = useCallback(() => {
+      commitTitle();
+      descriptionRef.current?.commit();
+    }, [commitTitle]);
+
+    // Restores both fields from the task, which is what the reader means by cancelling an edit they
+    // have not saved. With nothing selected there is only the new task's title to throw away.
+    const handleCancel = useCallback(() => {
+      setDraft(current?.title ?? '');
+      descriptionRef.current?.revert();
+    }, [current]);
+
     // Nothing to create with and nothing to edit: the pane has no purpose.
     if (!onTaskCreate && !(current && onTaskUpdate)) {
       return null;
     }
 
     return (
-      <div {...rest} data-testid='taskList.edit' className={mx('flex flex-col w-full min-w-0 shrink-0', className)}>
-        <div
-          className={mx(
-            'grid gap-x-1 items-center w-full min-w-0 h-8',
-            showGutter ? GRID_COLS.createWithOrdinals : GRID_COLS.create,
-          )}
-        >
-          {showGutter && <span />}
+      // One grid, not a row of grids: the title and the description line up column for column, and
+      // the toolbar can sit on the title line while coming LAST in the DOM — so Tab runs title →
+      // description → buttons rather than stopping at a button on the way to the text.
+      <div
+        {...rest}
+        data-testid='taskList.edit'
+        className={mx(
+          'grid gap-x-1 w-full min-w-0 shrink-0',
+          showGutter ? GRID_COLS.createWithOrdinals : GRID_COLS.create,
+          className,
+        )}
+      >
+        {showGutter && <span className='h-8' />}
+        <span className='flex items-center justify-center h-8'>
           <Icon
             icon={current ? 'ph--pencil-simple--regular' : 'ph--plus--regular'}
             size={4}
-            classNames='justify-self-center text-subdued'
+            classNames='text-subdued'
           />
-          {/* A tree row's title sits past its disclosure toggle, so the input clears the same distance
-              — the columns already match, and without this only the text within them disagrees. */}
-          <span
-            className='flex items-center min-w-0'
-            style={hierarchical ? { paddingInlineStart: TOGGLE_INSET } : undefined}
-          >
-            <Input.Root>
-              <Input.TextInput
-                variant='subdued'
-                classNames='px-0'
-                data-testid='taskList.edit.title'
-                placeholder={current ? t('task-title.placeholder') : placeholder}
-                value={draft}
-                onChange={(event) => setDraft(event.target.value)}
-                onKeyDown={handleTitleKeyDown}
-                onBlur={commitTitle}
-              />
-            </Input.Root>
-          </span>
-        </div>
+        </span>
+        {/* A tree row's title sits past its disclosure toggle, so the input clears the same distance
+            — the columns already match, and without this only the text within them disagrees. */}
+        <span
+          className='flex items-center min-w-0 h-8'
+          style={hierarchical ? { paddingInlineStart: TOGGLE_INSET } : undefined}
+        >
+          <Input.Root>
+            <Input.TextInput
+              variant='subdued'
+              classNames='px-0'
+              data-testid='taskList.edit.title'
+              placeholder={current ? t('task-title.placeholder') : placeholder}
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              onKeyDown={handleTitleKeyDown}
+              onBlur={commitTitle}
+            />
+          </Input.Root>
+        </span>
         {/* Only a selected task has a description to edit; there is nothing to attach one to before
             the task exists. */}
         {current && onTaskUpdate && (
-          <div
-            className={mx('grid gap-x-1 w-full min-w-0', showGutter ? GRID_COLS.createWithOrdinals : GRID_COLS.create)}
-          >
+          <>
             {showGutter && <span />}
             <span />
             <span
@@ -1009,6 +1028,7 @@ const TaskListEdit = composable<HTMLDivElement, { placeholder?: string; descript
                   it per task, since a field held open never re-reads its subject. */}
               <MarkdownEditable
                 key={current.id}
+                ref={descriptionRef}
                 classNames='text-sm'
                 value={current.description ?? ''}
                 editing
@@ -1020,8 +1040,33 @@ const TaskListEdit = composable<HTMLDivElement, { placeholder?: string; descript
                 autoFocus={false}
               />
             </span>
-          </div>
+          </>
         )}
+        {/* The description is held open with no blur to commit it, so the pane needs to say
+            explicitly what happens to the pending text. Both buttons keep focus where it is
+            (`preventDefault` on mousedown): the fields commit on blur, so a button that took focus
+            would commit before its own handler ran — and Cancel could never mean anything.
+            Placed on the title line explicitly; its place in the DOM is what orders Tab. */}
+        <Toolbar.Root density='sm' classNames='row-start-1 col-start-[-2] p-0 bg-transparent'>
+          <Toolbar.IconButton
+            iconOnly
+            variant='ghost'
+            icon='ph--check--regular'
+            data-testid='taskList.edit.save'
+            onMouseDown={(event) => event.preventDefault()}
+            label={t('save-task.label')}
+            onClick={handleSave}
+          />
+          <Toolbar.IconButton
+            iconOnly
+            variant='ghost'
+            icon='ph--x--regular'
+            data-testid='taskList.edit.cancel'
+            onMouseDown={(event) => event.preventDefault()}
+            label={t('cancel-edit.label')}
+            onClick={handleCancel}
+          />
+        </Toolbar.Root>
       </div>
     );
   },
