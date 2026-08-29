@@ -140,7 +140,6 @@ const DefaultStory = ({ source: initialSource }: { source: string }) => {
         {
           title: 'Context schema',
           children: <Editor value={schemaText} extensions={schemaExtensions} />,
-          size: 2,
         },
         {
           title: 'Layout',

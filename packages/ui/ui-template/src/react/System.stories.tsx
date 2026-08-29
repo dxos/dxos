@@ -13,6 +13,7 @@ import { useQuery } from '@dxos/echo-react';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Task } from '@dxos/types';
+import { json } from '@dxos/ui-editor';
 import { trim } from '@dxos/util';
 
 import { templateLanguage } from '../codemirror';
@@ -571,6 +572,7 @@ const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
   const { ui, log, dispatch, capabilities } = useSystem({ registry, root: seedRoot, db, inputs });
   const renderer = useMemo(() => createReactRenderer({ schemas: registry.schemas }), []);
   const editorExtensions = useMemo(() => templateLanguage(), []);
+  const stateExtensions = useMemo(() => [json()], []);
 
   const activeKey = pick?.(ui) ?? firstKey;
   const active = parsedAll[activeKey] ?? parsedAll[firstKey];
@@ -596,7 +598,7 @@ const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
     <Workbench
       panes={[
         {
-          title: `Layout (${activeKey})`,
+          title: `Layout: ${activeKey}`,
           children: (
             <Editor
               key={activeKey}
@@ -608,15 +610,11 @@ const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
           size: 2,
         },
         {
-          title: 'Published state',
-          children: (
-            <pre className='p-2 font-mono text-xs text-description whitespace-pre-wrap'>
-              {JSON.stringify(ui, null, 2)}
-            </pre>
-          ),
+          title: 'State',
+          children: <Editor value={JSON.stringify(ui, null, 2)} extensions={stateExtensions} />,
         },
         {
-          title: 'Operation log',
+          title: 'Operations',
           children: <OperationLog entries={log} />,
         },
       ]}
