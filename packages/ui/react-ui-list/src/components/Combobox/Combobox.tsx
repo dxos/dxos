@@ -196,7 +196,9 @@ const ComboboxTrigger = composable<HTMLButtonElement, ComboboxTriggerProps>(
         >
           {children ?? (
             <>
-              <span className={styles.comboboxTriggerText({ class: !value && 'text-subdued' })}>
+              {/* `text-placeholder` is the host-derived placeholder role real inputs use, so the
+                  trigger's placeholder tracks the same contrast as the form fields beside it. */}
+              <span className={styles.comboboxTriggerText({ class: !value && 'text-placeholder' })}>
                 {displayValue || value || placeholder}
               </span>
               <Icon icon='ph--caret-down--bold' size={3} />
