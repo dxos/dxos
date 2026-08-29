@@ -125,3 +125,6 @@ re-measured on the next run against EDGE.
   diagnosis above possible.
 - `analyzeResourceUsage` throws `ENOENT` on `agent.log` for a plan whose replicants never wrote
   one. Caught and warned by `runPlanner`, so harmless, but noisy.
+- The RPC codec silently corrupted two common types rather than rejecting them: `PublicKey` has a
+  `toJSON` returning hex, so a key arrived as an indistinguishable string, and a `Uint8Array`
+  arrived as `{"0":1,...}`. Now tagged and round-tripped (`redis/rpc-codec.ts`, nine tests).
