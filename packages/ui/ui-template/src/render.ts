@@ -33,13 +33,19 @@ export type RenderProps<Output> = {
    */
   readonly path: string;
   readonly props: Readonly<Record<string, string | number | boolean>>;
-  /** Resolved `data-*` / `item-*` values, by prop name. */
+  /**
+   * Resolved `data-*` / `item-*` values, by prop name.
+   */
   readonly data: Readonly<Record<string, unknown>>;
-  /** Event name to a handler that dispatches the bound operation key with an optional payload. */
+  /**
+   * Event name to a handler that dispatches the bound operation key with an optional payload.
+   */
   readonly handlers: Readonly<Record<string, (payload?: unknown) => void>>;
-  readonly children: readonly Output[];
-  /** The scope this node renders in; needed only by kinds that introduce one (`collection`). */
+  /**
+   * The scope this node renders in; needed only by kinds that introduce one (`collection`).
+   */
   readonly scope: Scope;
+  readonly children: readonly Output[];
   /**
    * Render this node's children under a narrowed scope. `suffix` distinguishes repeats, so a
    * collection's items produce distinct paths.
@@ -52,7 +58,23 @@ export type Renderer<Output> = {
 };
 
 /** Invoked for every `on-*` binding. The template never holds a callback — only an operation key. */
-export type Dispatch = (operation: string, context: { scope: Scope; node: Node; payload?: unknown }) => void;
+export type Dispatch = (
+  operation: string,
+  context: {
+    scope: Scope;
+    node: Node;
+    payload?: unknown;
+  },
+) => void;
+
+/**
+ * What a renderer factory needs from the registry, independent of the output framework —
+ * `schema=` resolution is a property of the grammar, not of React.
+ */
+export type CreateRendererOptions<Schema = unknown> = {
+  /** The registry's schemas by URI key; `form` resolves `schema=` against this. */
+  readonly schemas: Readonly<Record<string, Schema>>;
+};
 
 export type RenderOptions<Output = unknown> = {
   readonly dispatch?: Dispatch;

@@ -20,16 +20,16 @@ import { Combobox, Listbox } from '@dxos/react-ui-list';
 import { Tabs } from '@dxos/react-ui-tabs';
 
 import { type Binding, type ModuleView, type Node, type Scope, resolve } from '../model';
-import { type Renderer, type RenderOptions, render } from '../render';
+import { type CreateRendererOptions, type Renderer, type RenderOptions, render } from '../render';
 
 const asText = (value: unknown): string => (value == null ? '' : String(value));
+
+const oneOf = <T extends string>(values: readonly T[], value: unknown): T | undefined =>
+  values.find((candidate) => candidate === value);
 
 const GAPS: readonly Gap[] = ['none', 'xs', 'sm', 'md', 'lg', 'xl', '2xl', 'form', 'form-section'];
 const ALIGNS: readonly Align[] = ['start', 'center', 'end', 'baseline', 'stretch'];
 const JUSTIFIES: readonly Justify[] = ['start', 'center', 'end', 'between', 'around', 'evenly'];
-
-const oneOf = <T extends string>(values: readonly T[], value: unknown): T | undefined =>
-  values.find((candidate) => candidate === value);
 
 /**
  * `gap`/`align`/`justify` come off the node's static props and are handed to `Flex` unchanged —
@@ -58,13 +58,10 @@ const itemField = (node: Node, scope: Scope, item: unknown, name: string): unkno
   return binding ? resolve(binding, { ...scope, item }) : undefined;
 };
 
-export type ReactRendererOptions = {
-  /** The registry's schemas by URI key; `form` resolves `schema=` against this. */
-  schemas: Readonly<Record<string, Schema.Codec<any, any>>>;
-};
-
 /** Create the React renderer: one function per kind tag, resolving `schema=` against the registry. */
-export const createReactRenderer = ({ schemas }: ReactRendererOptions): Renderer<ReactNode> => ({
+export const createReactRenderer = ({
+  schemas,
+}: CreateRendererOptions<Schema.Codec<any, any>>): Renderer<ReactNode> => ({
   container: ({ path, props, children }) => (
     <Flex key={path} column gap={oneOf(GAPS, props.gap)} classNames='dx-container'>
       {children}
@@ -106,20 +103,21 @@ export const createReactRenderer = ({ schemas }: ReactRendererOptions): Renderer
           {asText(props.label)}
         </Button>
       );
+    } else {
+      return (
+        <Input.Root key={path}>
+          <Flex column>
+            {props.label ? <Input.Label>{asText(props.label)}</Input.Label> : null}
+            <Input.TextInput
+              placeholder={asText(props.placeholder)}
+              value={asText(data.value)}
+              // MVU: the input is controlled from published state; each change dispatches.
+              onChange={(event) => handlers.input?.(event.target.value)}
+            />
+          </Flex>
+        </Input.Root>
+      );
     }
-    return (
-      <Input.Root key={path}>
-        <Flex column>
-          {props.label ? <Input.Label>{asText(props.label)}</Input.Label> : null}
-          <Input.TextInput
-            placeholder={asText(props.placeholder)}
-            value={asText(data.value)}
-            // MVU: the input is controlled from published state; each change dispatches.
-            onChange={(event) => handlers.input?.(event.target.value)}
-          />
-        </Flex>
-      </Input.Root>
-    );
   },
 
   /**
@@ -159,7 +157,7 @@ export const createReactRenderer = ({ schemas }: ReactRendererOptions): Renderer
     return (
       <Flex key={path} column gap='xs' role='list'>
         {items.map((item, index) => (
-          <Flex key={asText(itemField(node, scope, item, 'id') ?? index)} role='listitem' gap='sm' align='center'>
+          <Flex key={asText(itemField(node, scope, item, 'id') ?? index)} role='listitem' align='center'>
             {node.children?.length
               ? renderChildren({ ...scope, item }, `[${index}]`)
               : asText(itemField(node, scope, item, 'label') ?? item)}
@@ -240,7 +238,7 @@ export const createReactRenderer = ({ schemas }: ReactRendererOptions): Renderer
   },
 
   command: ({ path, children }) => (
-    <Flex key={path} gap='sm' align='center' role='toolbar'>
+    <Flex key={path} align='center' role='toolbar'>
       {children}
     </Flex>
   ),
@@ -249,7 +247,7 @@ export const createReactRenderer = ({ schemas }: ReactRendererOptions): Renderer
    * Tab strip over published state: the current tab is the resolved `data-value`, choosing one
    * dispatches `select`. The panels live in a sibling `switch` — tabs only set state.
    */
-  tabs: ({ path, node, data, handlers, scope }) => (
+  tabs: ({ path, node, data, handlers }) => (
     <Tabs.Root
       key={path}
       orientation='horizontal'
@@ -276,7 +274,7 @@ export const createReactRenderer = ({ schemas }: ReactRendererOptions): Renderer
 
   // The walker already narrowed `children` to the matched branch's subtree.
   switch: ({ path, children }) => (
-    <Flex key={path} column grow gap='sm'>
+    <Flex key={path} column grow>
       {children}
     </Flex>
   ),

@@ -140,12 +140,15 @@ type ComboboxContentProps = PopoverContentProps & {
 };
 
 const ComboboxContent = composable<HTMLDivElement, ComboboxContentProps>(
-  ({ children, classNames, resetSelectionOnChange, ...props }, forwardedRef) => {
+  ({ children, classNames, resetSelectionOnChange, collisionPadding = 0, ...props }, forwardedRef) => {
     const { modalId } = useComboboxContext(COMBOBOX_CONTENT_NAME);
 
     return (
       <Popover.Content
         {...props}
+        // Zero, not the Popover default of 8: the content is exactly trigger-width, so a trigger
+        // flush with a viewport edge would otherwise be shifted sideways out of alignment.
+        collisionPadding={collisionPadding}
         id={modalId}
         // `classNames`, never `composableProps`: `Popover.Content` computes its own `className`
         // and silently drops an incoming one. Width sits on the CONTENT so the border stays
