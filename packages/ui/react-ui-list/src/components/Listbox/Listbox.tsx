@@ -110,11 +110,16 @@ type RootProps = PropsWithChildren<{
    * defined id.
    */
   onValueChange?: (value: string) => void;
+  /**
+   * Called when the user clears the selection (Escape on a focused option). Fires only when
+   * something was selected — repeated Escapes are a no-op — and keeps `onValueChange` narrow.
+   */
+  onDeselect?: () => void;
   /** Reserved for parity with the prior `Listbox.Root`; focus-on-entry already covers most cases. */
   autoFocus?: boolean;
 }>;
 
-const Root = ({ value, defaultValue, onValueChange, autoFocus: _autoFocus, children }: RootProps) => {
+const Root = ({ value, defaultValue, onValueChange, onDeselect, autoFocus: _autoFocus, children }: RootProps) => {
   // Selection is opt-in: a list is selectable only when the consumer wires the value model.
   // Plain content lists (the migrated `@dxos/react-ui` `List` call sites) pass none of these
   // and render as `role=list`/`listitem` rows.
@@ -131,6 +136,9 @@ const Root = ({ value, defaultValue, onValueChange, autoFocus: _autoFocus, child
     onValueChange: (next) => {
       if (next !== undefined) {
         onValueChange?.(next);
+      } else {
+        // The aspect emits `undefined` only from `clear` (Escape), never from a row click.
+        onDeselect?.();
       }
     },
   });
@@ -284,16 +292,21 @@ const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
         !interactive ||
         disabled ||
         // Bubbled from a control inside the row — the groupper puts focus there deliberately, and
-        // its Enter belongs to it, not to the row.
-        event.target !== event.currentTarget ||
-        (event.key !== 'Enter' && event.key !== ' ')
+        // its Enter belongs to it, not to the row (and its Escape is the groupper's exit).
+        event.target !== event.currentTarget
       ) {
         return;
       }
-      event.preventDefault();
-      event.currentTarget.click();
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        event.currentTarget.click();
+      } else if (event.key === 'Escape' && selectable) {
+        // Deselect; a no-op (no emission, no preventDefault) when nothing is selected, so the
+        // event still reaches an enclosing dismissable.
+        selection.clear();
+      }
     },
-    [onKeyDown, interactive, disabled],
+    [onKeyDown, interactive, disabled, selectable, selection],
   );
 
   // A row that holds its own controls (a toggle, a delete button) would otherwise take the arrow

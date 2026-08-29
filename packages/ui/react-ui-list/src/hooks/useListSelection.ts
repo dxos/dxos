@@ -37,6 +37,11 @@ export type SelectionItemBinding = {
 
 export type UseListSelectionReturn = {
   bind: (id: string, opts?: { disabled?: boolean }) => SelectionItemBinding;
+  /**
+   * Clear the selection (single: `undefined`; multi: empty set). A no-op — no emission — when
+   * nothing is selected, so repeated invocations (e.g. Escape presses) emit at most once.
+   */
+  clear: () => void;
 };
 
 const isMulti = (value: SingleValue | MultiValue): value is MultiValue => value instanceof Set;
@@ -128,6 +133,16 @@ export const useListSelection: {
     [mode, resolvedValue, setResolvedValue],
   );
 
+  const clear = useCallback(() => {
+    if (mode === 'multi') {
+      if (isMulti(resolvedValue) && resolvedValue.size > 0) {
+        setResolvedValue(new Set());
+      }
+    } else if (resolvedValue !== undefined) {
+      setResolvedValue(undefined);
+    }
+  }, [mode, resolvedValue, setResolvedValue]);
+
   const followFocusDefault = mode === 'single';
   const trackFocus = followsFocus ?? followFocusDefault;
 
@@ -172,5 +187,5 @@ export const useListSelection: {
     [isSelected, mode, setSelected, trackFocus],
   );
 
-  return { bind };
+  return { bind, clear };
 };
