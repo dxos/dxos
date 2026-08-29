@@ -13,7 +13,7 @@ import { Task } from '@dxos/types';
 import { translations } from '#translations';
 
 import { type TaskPlacement } from './hierarchy';
-import { type TaskDraft, TaskList, type TaskPatch } from './TaskList';
+import { type TaskDraft, type TaskEdit, TaskList } from './TaskList';
 
 const seed = (): Task.Task[] => [
   Task.make({
@@ -100,7 +100,7 @@ const DefaultStory = ({
     setTasks((tasks) => [...tasks, Task.make({ title, status: 'todo', ...props })]);
   }, []);
 
-  const handleUpdate = useCallback((task: Task.Task, patch: TaskPatch) => {
+  const handleUpdate = useCallback((task: Task.Task, patch: TaskEdit) => {
     Obj.update(task, (task) => {
       Object.assign(task, patch);
     });

@@ -12,7 +12,7 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { type TaskDraft, TaskList, type TaskPatch, type TaskPlacement } from '@dxos/react-ui-task';
+import { type TaskDraft, type TaskEdit, TaskList, type TaskPlacement } from '@dxos/react-ui-task';
 import { Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -30,24 +30,19 @@ export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>
 export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSetArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
-  const spaceId = Obj.getDatabase(taskSet)?.spaceId;
   const { invokePromise } = useOperationInvoker();
+  const spaceId = Obj.getDatabase(taskSet)?.spaceId;
   const tasks = useSetTasks(taskSet);
 
   const handleCreate = useCallback(
-    // CreateTask accepts the draft's title/description/priority/assignee; status is its own default.
-    ({ title, description, priority, assignee }: TaskDraft) =>
-      void invokePromise(
-        TaskOperation.CreateTask,
-        { taskSet: Ref.make(taskSet), title, description, priority, assignee },
-        { spaceId },
-      ),
+    (props: TaskDraft) =>
+      void invokePromise(TaskOperation.CreateTask, { taskSet: Ref.make(taskSet), ...props }, { spaceId }),
     [invokePromise, spaceId, taskSet],
   );
 
   const handleUpdate = useCallback(
-    (task: Task.Task, patch: TaskPatch) =>
-      void invokePromise(TaskOperation.UpdateTask, { task: Ref.make(task), ...patch }, { spaceId }),
+    (task: Task.Task, props: TaskEdit) =>
+      void invokePromise(TaskOperation.UpdateTask, { task: Ref.make(task), ...props }, { spaceId }),
     [invokePromise, spaceId],
   );
 
