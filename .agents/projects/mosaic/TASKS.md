@@ -72,7 +72,7 @@ undo, async updates, async dynamic component loading, entirely state-driven layo
       operations, composite app state, layouts↔app-state updates, undo chains; composition via the
       plugin mechanism: an app as a dynamic collection of plugins contributing
       components/machines/layouts/operations to the app-graph.
-- [ ] **Fold findings** into ONTOLOGY.md rules; checkpoint.
+- [x] **Fold findings** into ONTOLOGY.md rules (R-4 published-state update); checkpoint.
 
 ## Parked / later
 
