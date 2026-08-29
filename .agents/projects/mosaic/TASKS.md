@@ -78,6 +78,20 @@ undo, async updates, async dynamic component loading, entirely state-driven layo
       `className`, so the earlier `composableProps` width fix never reached the DOM; the classes
       now pass through `classNames`.
 
+## Phase 6: typed modules (overnight 2026-08-30)
+
+Spec = DESIGN.md "Typed binding and modules" (module contract triad + ladder + landing order).
+
+- [ ] **Implement the recommended landing order** — delete binding fall-through; rung-1
+      `let initial=` (declarative useState); `var` template signatures (variant A, mount-checked);
+      `use module= as=` + per-module export tables (state / operations / capabilities) (B/C).
+- [ ] **Mutual-module test** — two modules that reference each other (bind the other's state,
+      dispatch the other's operations); headless system test.
+- [ ] **Container audit** — map plugin-tasks + plugin-projects containers onto the template
+      (what the template covers, what is missing) → `ui-template/docs/CONTAINERS.md`.
+- [ ] **Idiom catalog** — common state/hook idioms across those containers; which could factor
+      into reusable hooks / state machines progressively.
+
 ## Parked / later
 
 - [ ] TaskSetArticle scale-down extraction (Experiment 1 follow-up; superseded unless machines revive it).
