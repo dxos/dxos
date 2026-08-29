@@ -87,10 +87,13 @@ Spec = DESIGN.md "Typed binding and modules" (module contract triad + ladder + l
       `use module= as=` + per-module export tables (state / operations / capabilities) (B/C).
 - [ ] **Mutual-module test** — two modules that reference each other (bind the other's state,
       dispatch the other's operations); headless system test.
-- [ ] **Container audit** — map plugin-tasks + plugin-projects containers onto the template
-      (what the template covers, what is missing) → `ui-template/docs/CONTAINERS.md`.
-- [ ] **Idiom catalog** — common state/hook idioms across those containers; which could factor
-      into reusable hooks / state machines progressively.
+- [x] **Container audit** — `ui-template/docs/CONTAINERS.md` (8e03224995): 10 units audited
+      (7 plugin-tasks, 3 plugin-projects); top gaps = ref/query async bindings, command channel,
+      surface node, i18n labels, interaction triggers; OutlineCard/CreateProjectPanel/
+      QuickEntryDialog expressible today, TaskSetArticle closest module candidate.
+- [x] **Idiom catalog** — 19 idioms cited by file; top machine candidates = selection,
+      view-switch, draft-edit-commit, filter, race-guarded async commit; 6-step progressive
+      factoring order recorded.
 
 ## Parked / later
 
