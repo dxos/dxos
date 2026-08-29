@@ -4,10 +4,11 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import type * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -21,6 +22,28 @@ import { TaskOperation } from '#types';
 export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>;
 
 /**
+ * PROTOTYPE (extraction candidate for `@dxos/app-framework/ui`): bind an operation to a UI
+ * callback in one step — `map` turns the component's callback arguments into the operation's
+ * input. The handler identity is stable across renders (the mapper and options read through
+ * refs), so it replaces the per-handler `useCallback` boilerplate.
+ */
+const useOperation = <TArgs extends readonly unknown[], TInput>(
+  operation: Operation.Definition<TInput, unknown>,
+  map: (...args: TArgs) => TInput,
+  options?: Operation.InvokeOptions,
+): ((...args: TArgs) => void) => {
+  const { invokePromise } = useOperationInvoker();
+  const mapRef = useRef(map);
+  mapRef.current = map;
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
+  return useCallback(
+    (...args: TArgs) => void invokePromise(operation, mapRef.current(...args), optionsRef.current),
+    [invokePromise, operation],
+  );
+};
+
+/**
  * Every task in a set, rendered as the sub-task tree the flat `tasks` array plus `parentTask`
  * describe, and restructurable by dragging a row or with `Alt`+arrow. Milestone grouping is
  * deliberately not rendered yet (see TASKS.md). CRUD flows through the
@@ -30,39 +53,30 @@ export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>
 export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSetArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
-  const { invokePromise } = useOperationInvoker();
   const spaceId = Obj.getDatabase(taskSet)?.spaceId;
   const tasks = useSetTasks(taskSet);
 
-  const handleCreate = useCallback(
-    (props: TaskDraft) =>
-      void invokePromise(TaskOperation.CreateTask, { taskSet: Ref.make(taskSet), ...props }, { spaceId }),
-    [invokePromise, spaceId, taskSet],
+  const handleCreate = useOperation(
+    TaskOperation.CreateTask,
+    (props: TaskDraft) => ({ taskSet: Ref.make(taskSet), ...props }),
+    { spaceId },
   );
-
-  const handleUpdate = useCallback(
-    (task: Task.Task, props: TaskEdit) =>
-      void invokePromise(TaskOperation.UpdateTask, { task: Ref.make(task), ...props }, { spaceId }),
-    [invokePromise, spaceId],
+  const handleUpdate = useOperation(
+    TaskOperation.UpdateTask,
+    (task: Task.Task, props: TaskEdit) => ({ task: Ref.make(task), ...props }),
+    { spaceId },
   );
-
-  const handleDelete = useCallback(
-    (task: Task.Task) => void invokePromise(TaskOperation.DeleteTask, { task: Ref.make(task) }, { spaceId }),
-    [invokePromise, spaceId],
-  );
-
-  const handleMove = useCallback(
-    (task: Task.Task, { parentTask, before }: TaskPlacement) =>
-      void invokePromise(
-        TaskOperation.MoveTask,
-        {
-          task: Ref.make(task),
-          parentTask: parentTask ? Ref.make(parentTask) : null,
-          ...(before ? { before: Ref.make(before) } : {}),
-        },
-        { spaceId },
-      ),
-    [invokePromise, spaceId],
+  const handleDelete = useOperation(TaskOperation.DeleteTask, (task: Task.Task) => ({ task: Ref.make(task) }), {
+    spaceId,
+  });
+  const handleMove = useOperation(
+    TaskOperation.MoveTask,
+    (task: Task.Task, { parentTask, before }: TaskPlacement) => ({
+      task: Ref.make(task),
+      parentTask: parentTask ? Ref.make(parentTask) : null,
+      ...(before ? { before: Ref.make(before) } : {}),
+    }),
+    { spaceId },
   );
 
   const content = (
