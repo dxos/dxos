@@ -382,7 +382,10 @@ handlers read published state, not closures).
 The order below extracts idioms into shared hooks/machines without rewriting a container — each
 step is useful standing alone, and each converts a §3 row from hand-rolled to declared. It
 deliberately mirrors the DESIGN.md landing order (anonymous modules → `var` → module contract):
-the hooks are the rung-1/2 forms of what modules later provide.
+the hooks are the rung-1/2 forms of what modules later provide. Orthogonal to all six steps,
+`@dxos/react-ui`'s `Show`/`Switch` primitives are the conditional-rendering step: a container's
+subtree-selecting ternaries and early returns become the grammar's `show`/`fallback`/`switch`/`match`
+shapes ahead of any template (piloted in `plugin-tasks`).
 
 1. **Promote inline ECHO writes to operations** (idiom 10). No new machinery — `plugin-tasks`
    already did it for task CRUD (`TaskOperation` verbs in `TaskSetArticle`); `Journal`'s

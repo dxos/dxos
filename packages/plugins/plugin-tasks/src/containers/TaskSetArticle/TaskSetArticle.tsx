@@ -10,7 +10,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { TaskList, type TaskPatch, type TaskPlacement } from '@dxos/react-ui-task';
 import { Task, TaskSet } from '@dxos/types';
@@ -75,7 +75,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
       onTaskDelete={handleDelete}
       onTaskMove={handleMove}
     >
-      <TaskList.Viewport classNames='dx-container grid grid-rows-[auto_1fr] gap-2'>
+      <TaskList.Viewport classNames='grid grid-rows-[auto_1fr] gap-2'>
         <TaskList.Content classNames='dx-document' />
       </TaskList.Viewport>
       <div className='p-2'>
@@ -87,19 +87,22 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
     </TaskList.Root>
   );
 
-  // Embedded as a section (e.g., the ProjectArticle Tasks section): the host owns scroll and
-  // chrome, so render the bare list — a nested Panel/scroll root would collapse width.
-  if (role === AppSurface.Section.role) {
-    return content;
-  }
-
   return (
-    <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root disabled={!hasAttention} />
-      </Panel.Toolbar>
-      <Panel.Content>{content}</Panel.Content>
-    </Panel.Root>
+    <Switch.Root
+      on={role}
+      fallback={
+        <Panel.Root role={role}>
+          <Panel.Toolbar asChild>
+            <Toolbar.Root disabled={!hasAttention} />
+          </Panel.Toolbar>
+          <Panel.Content>{content}</Panel.Content>
+        </Panel.Root>
+      }
+    >
+      {/* Embedded as a section (e.g., the ProjectArticle Tasks section): the host owns scroll and
+          chrome, so render the bare list — a nested Panel/scroll root would collapse width. */}
+      <Switch.Match when={AppSurface.Section.role}>{content}</Switch.Match>
+    </Switch.Root>
   );
 };
 
