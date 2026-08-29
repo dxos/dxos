@@ -9,10 +9,11 @@ import * as Schema from 'effect/Schema';
 import React, { useMemo, useState } from 'react';
 
 import { toJsonSchema } from '@dxos/echo/JsonSchema';
-import { Flex, Panel, useThemeContext } from '@dxos/react-ui';
+import { Flex, Panel, ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { compactSlots, createBasicExtensions, createThemeExtensions, json } from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 
 import { templateLanguage } from '../codemirror';
@@ -96,13 +97,25 @@ const WITH_EVENTS = trim`
   </container>
 `;
 
-type ColumnProps = {
+/**
+ * Named grid areas, so a cell's position is declared where it is rendered rather than inferred from
+ * source order — moving a cell is an edit to one attribute.
+ */
+type Area = 'schema' | 'context' | 'template' | 'rendered';
+
+const AREAS = `
+  "schema   template"
+  "context  rendered"
+`;
+
+type CellProps = ThemedClassName<{
+  area: Area;
   title: string;
   children: React.ReactNode;
-};
+}>;
 
-const Column = ({ title, children }: ColumnProps) => (
-  <Flex column classNames='min-w-0 flex-1'>
+const Cell = ({ classNames, area, title, children }: CellProps) => (
+  <Flex column style={{ gridArea: area }} classNames={mx('min-w-0', classNames)}>
     <div className='px-2 py-1 text-xs uppercase tracking-wide text-subdued border-be border-separator'>{title}</div>
     <Flex column grow classNames='min-h-0 overflow-hidden'>
       {children}
@@ -139,20 +152,24 @@ const DefaultStory = ({ source: initialSource }: { source: string }) => {
   const templateExtensions = useMemo<Extension[]>(() => templateLanguage(), []);
 
   return (
-    <Flex classNames='dx-container grid grid-rows-2 grid-cols-2 divide-x divide-y divide-separator' align='stretch'>
-      <Column title='Context schema'>
+    <Flex
+      style={{ gridTemplateAreas: AREAS }}
+      classNames='dx-container grid grid-rows-2 grid-cols-2 divide-x divide-y divide-separator'
+      align='stretch'
+    >
+      <Cell area='schema' title='Context schema'>
         <Editor value={schemaText} extensions={schemaExtensions} />
-      </Column>
+      </Cell>
 
-      <Column title='Context object'>
-        <Editor value={stateText} extensions={stateExtensions} onChange={setStateText} />
-      </Column>
-
-      <Column title='Layout'>
+      <Cell area='template' title='Layout'>
         <Editor value={source} extensions={templateExtensions} onChange={setSource} />
-      </Column>
+      </Cell>
 
-      <Column title='Rendered'>
+      <Cell area='context' title='Context object'>
+        <Editor value={stateText} extensions={stateExtensions} onChange={setStateText} />
+      </Cell>
+
+      <Cell area='rendered' title='Rendered'>
         <Flex column gap='md' classNames='overflow-auto'>
           {parsed.node && state.value ? (
             <Template
@@ -165,7 +182,7 @@ const DefaultStory = ({ source: initialSource }: { source: string }) => {
           )}
 
           {log.length > 0 && (
-            <Panel.Root role='none' classNames='border border-subdued-separator rounded-sm'>
+            <Panel.Root>
               <Panel.Content>
                 <Flex column gap='xs'>
                   <span className='text-xs text-subdued'>dispatched</span>
@@ -179,7 +196,7 @@ const DefaultStory = ({ source: initialSource }: { source: string }) => {
             </Panel.Root>
           )}
         </Flex>
-      </Column>
+      </Cell>
     </Flex>
   );
 };
