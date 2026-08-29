@@ -324,9 +324,14 @@ Rung 1 is a grammar relaxation — today's `let` demands a `machine=` and starts
 a plain initial value is the honest floor. Upgrading a rung is a one-attribute edit: when
 selection outgrows "a value" (guards, multi-select semantics), `initial=` becomes `machine=`;
 when another template needs to observe it, `machine=` becomes `from=` and the instance moves to
-the module's export table. **No binding in the subtree changes at any step** — that is what "same
-slot, same binding surface, added behaviour" buys, and it is the property React loses at the same
-transitions (`useState` → `useReducer` → context is three refactors).
+the owning module's capabilities column. **No binding in the subtree changes at any step** — that
+is what "same slot, same binding surface, added behaviour" buys, and it is the property React
+loses at the same transitions (`useState` → `useReducer` → context is three refactors).
+
+The rungs are also a column selector against the module contract (below): rung 1 backs a `let`
+with a plain value, rung 2 with a locally-instantiated machine, rung 3 with a module-provided
+capability. Reading another module's state needs no `let` at all — a `data-` path through the
+`use` alias binds the state column directly.
 
 The variants sit on the same ladder one level up, at the module boundary: **A is the rung where a
 module stops being anonymous** — the moment a template needs a name it does not declare, it must
@@ -450,22 +455,25 @@ implementation, many consumers) and the XState v5 actor model (one spawned actor
 ```
 
 ```ts
-// The provider side: the module contributes the instance as a typed capability — in Composer
-// terms, rows in its `provides`.
+// The provider side: the module contract's three columns (see "The module contract" below) —
+// in Composer terms, rows in its `provides`.
 const ContactsModule = {
   key: 'org.dxos.plugin.contacts',
-  exports: {
-    // A machine INSTANCE: identity + stateSchema + transitions. Shared by construction.
-    selection: Machine.instance(SelectionMachine),
+  // 1. Reactive readonly state — consumers read and subscribe, never write.
+  state: {
     organizations: { primitive: 'query', schema: Organization },
     // Derived from selection × organizations — typed, owned by the module that owns the inputs.
     selected: { primitive: 'view', schema: OrganizationForm, optional: true },
   },
+  // 2. Operations — one-shot typed writes; the ONLY writers of the state above.
   operations: {
-    // The write side: the ONLY writers of the state above (see "The write side" below).
     select: { key: 'org.dxos.operation.contacts.select', input: Schema.String },
     save: { key: 'org.dxos.operation.contacts.save', input: OrganizationForm },
     qualify: { key: 'org.dxos.operation.contacts.qualify' },
+  },
+  // 3. Capabilities — typed APIs over the state; the machine instance is the exemplar.
+  capabilities: {
+    selection: Machine.instance(SelectionMachine),
   },
 };
 ```
@@ -474,7 +482,7 @@ const ContactsModule = {
   every binder — this template's collection and form, another plugin's toolbar — gets the same
   type by construction, the way every `yield*` of one capability tag does.
 - **Resolution (closed)**: `let from=` binds a local name to a module export that must be a
-  machine instance; plain `data-` paths reach read exports through the `use` alias. A `let
+  capability (a machine instance); plain `data-` paths reach read exports through the `use` alias. A `let
 machine=` (today's form) remains for template-private state — the combobox's `filter` has no
   business being a module export — so the private/shared line is drawn in the grammar, not by
   publication-path convention.
@@ -482,7 +490,7 @@ machine=` (today's form) remains for template-private state — the combobox's `
   operations (`on-select="org.dxos.operation.contacts.select"`), exactly as the master-detail
   template already does, and a toolbar in another plugin qualifies the selection the same way.
   Observation is shared; mutation stays with the owner.
-- **Errors**: dangling `from=` alias or non-instance target → **registration** (mount for a
+- **Errors**: dangling `from=` alias or non-capability target → **registration** (mount for a
   late-loading module, with `waitFor` + absent state per `R-2`); writes remain scope-relative
   operations dispatched to the instance, so `R-3` and the single operation log hold — undo sees
   cross-component transitions for free.
@@ -491,14 +499,24 @@ machine=` (today's form) remains for template-private state — the combobox's `
   case, while shared state is addressed by module + export name — which dissolves the
   namespace-collision half of open question 1.
 
-### The write side: operations are module-owned
+### The module contract
 
-Operations are provided by modules exactly as state is, and **an operation may mutate only the
-state its own module provides**. Another module reaches that state by dispatching the owning
-module's operations — never by writing the slots directly. The export table is therefore
-three-columned: **state** (typed read exports, including derived views), **machines** (the
-writable instances behind them), and **operations** (the only steppers of those instances, each
-with a typed input schema — folding open question 5 into the same table).
+The canonical definition, superseding any two-sided framing above: **a module provides exactly
+three things.**
+
+1. **Reactive readonly state** — typed values and derived views a consumer can read and
+   subscribe to, never write.
+2. **Operations** — one-shot, typed invocations that may mutate **their own module's state
+   only**; the sole write path from outside.
+3. **Capabilities** — typed APIs for manipulating the state; the machine instance is the
+   exemplar: a behavioural surface (transitions, guards, subscription) over the module's state,
+   richer than a one-shot operation.
+
+Reads bind to (1); writes dispatch (2); stateful, ongoing interaction goes through (3). The
+export table has these three columns — state, operations, capabilities — and nothing else, with
+each operation carrying a typed input schema (folding open question 5 into the same table).
+Another module reaches foreign state by dispatching the owning module's operations or driving
+its capabilities — never by writing slots directly.
 
 This is not a new rule so much as the existing one said out loud. `scope.set` already refuses an
 undeclared name — a handler can only write slots in the dispatching node's scope chain — and the
@@ -516,21 +534,24 @@ attribution, not renaming. What changes is enforcement — dispatch resolves the
 owning module's table, and the handler's `scope` is the module's own slots rather than the
 dispatching template's frames.
 
-**Adopt the ladder whole: one declaration form, `let`, whose backing escalates — value →
-machine → imported instance — under a closed resolution rule.** C is the provision model at the
-top rung: modules declare typed machine instances (and queries, views, schemas, operations) as
-capabilities; templates bind local names to them explicitly; nothing is ambient. The write side
-mirrors it: a module exports the operations that step its own state, and a foreign module
-dispatches those — it never writes another module's slots. B is its addressing — the export table is _how a module declares_ its instances and derived values,
-`use`/`let from=` is _how a template names_ them — so B and C land together. A is the boundary
-rung between them and anonymity: a template that needs a name it does not declare says so in its
-`var` signature, and the composition site satisfies it by wiring module exports — Android's
-`<variable>` on one side, Terraform's module wiring on the other.
+### Recommendation
+
+**Adopt the module contract and the ladder whole: one declaration form, `let`, whose backing
+escalates — value → machine → imported capability — under a closed resolution rule.** C is the
+provision model at the top rung: modules provide the contract's triad — readonly state,
+operations, capabilities — and templates bind local names to it explicitly; nothing is ambient.
+The columns partition the binding surface: `data-` paths read column 1, `on-` dispatches column
+2, `let from=` binds column 3 — and only a module's own operations write its state. B is the
+addressing — the export table is _how a module declares_ the triad, `use`/`let from=` is _how a
+template names_ it — so B and C land together. A is the boundary rung between them and
+anonymity: a template that needs a name it does not declare says so in its `var` signature, and
+the composition site satisfies it by wiring module exports — Android's `<variable>` on one side,
+Terraform's module wiring on the other.
 
 The landing order follows the rungs, cheapest first: (1) delete fall-through and admit rung-1
 `let initial=` — the stories become anonymous modules, closed by construction; (2) A's `var`,
 which makes the remaining root-context names explicit and mount-checked while the registry work
-proceeds; (3) B/C's `use` + export tables with instance-backed rows. Each step is independently
+proceeds; (3) B/C's `use` + three-column export tables under the module contract. Each step is independently
 shippable, and no step rewrites a binding the previous step introduced — the same in-place
 upgrade property the ladder gives a single `let`.
 
@@ -541,7 +562,7 @@ Error classes, consolidated (the never-runtime column is the point):
 | Binding names an undeclared first segment   | parse/validate | parse/validate               | always     |
 | Unknown schema / machine / module key       | registration   | registration (mount if late) | per `R-8`  |
 | Unknown export on a known module            | —              | registration / mount         | inline     |
-| `let from=` targets a non-instance export   | —              | registration                 | inline     |
+| `let from=` targets a non-capability export | —              | registration                 | inline     |
 | Host context does not satisfy the signature | mount          | mount (wiring check)         | once       |
 | Typo resolving `undefined` at render        | impossible     | impossible                   | —          |
 | Legitimately absent async value             | `show` (`R-2`) | `show` (`R-2`)               | structural |
@@ -562,8 +583,8 @@ Error classes, consolidated (the never-runtime column is the point):
    with typed input; the Composer answer would be a keyed multi capability). Which contexts get
    their own instance, and who tears it down?
 5. ~~**Operation payloads** are the same boundary in the write direction~~ — answered by
-   [the write side](#the-write-side-operations-are-module-owned): operations are the export
-   table's third column, with a typed input schema per key. What remains open from question 2 is
+   [the module contract](#the-module-contract): operations are the contract's second column,
+   with a typed input schema per key. What remains open from question 2 is
    capability injection (what a handler is given besides `ui`/`db`).
 6. **The controlled pair**: should `data-value` + `on-*` against one slot get a checked form —
    `bind-value="text"` expanding to the read binding plus a dispatch of the slot's default write
