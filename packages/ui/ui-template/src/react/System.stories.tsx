@@ -403,7 +403,7 @@ const FORM = trim`
 `;
 
 const MASTER_DETAIL = trim`
-  <layout id="tasks" rows="1fr 1fr" resizable="true">
+  <layout id="example" rows="1fr 1fr" resizable="true">
     <use module="org.dxos.module.tasks" as="tasks" />
     <let name="selection" from="tasks.selection" />
     <collection data-items="tasks.items" item-id="id" item-label="title"
@@ -421,7 +421,7 @@ const MASTER_DETAIL = trim`
 `;
 
 const MASTER_DETAIL_TOOLBAR = trim`
-  <container id="tasks">
+  <container id="example">
     <use module="org.dxos.module.tasks" as="tasks" />
     <let name="selection" from="tasks.selection" />
     <command>
@@ -493,7 +493,7 @@ const FILTER_LIST = trim`
 `;
 
 const TABS = trim`
-  <container id="tasks">
+  <container id="example">
     <use module="org.dxos.module.tasks" as="tasks" />
     <let name="view" initial="list" />
     <let name="selection" from="tasks.selection" />
