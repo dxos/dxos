@@ -453,6 +453,11 @@ _Evidence:_ the ProjectArticle draft required an invented `$local.tab`; the real
 in `useState`, and `onSelectTask` sets it.
 _Consequence:_ either the DSL grows a fourth read family, or every such value is promoted to a real
 object — which makes tab selection a database write.
+_Update (2026-08-29):_ the `ui-template` spike answers this with **published state**: an instance
+declaring `id` + `machine` gets a registry-shaped slot at `ui.<id>`, written only by operations and
+read through ordinary `data-` bindings — a third option neither anticipated. Publication requires
+the name; anonymous instances stay private. See
+[`ui-template/docs/DESIGN.md`](../../ui-template/docs/DESIGN.md).
 
 **R-5 — Forms bind to a view, not to a schema.**
 A schema gives shape. Which fields appear, in what order, with what formats, is a projection — and

@@ -29,7 +29,10 @@ if the model needs React, the result is negative and we have learned it cheaply.
 template  ::= element                        (exactly one root)
 element   ::= '<' tag attr* ( '/>' | '>' element* '</' tag '>' )
 tag       ::= 'container' | 'layout' | 'display' | 'control' | 'collection' | 'command'
+            | 'form' | 'combobox'
 attr      ::= aspect | data | item | event
+              (aspects `id` + `machine` together bind a registry machine and publish its
+               state at `ui.<id>` — see docs/DESIGN.md)
 aspect    ::= NAME '=' STRING               static; narrowed to number/boolean where it parses
 data      ::= 'data-' NAME '=' PATH         read binding against the state object
 item      ::= 'item-' NAME '=' PATH         read binding against the current collection item
@@ -108,8 +111,8 @@ multiple roots, text content, and an `on-*` value that does not look like an ope
 
 Deliberate gaps, each tracked as a rule in the ontology:
 
-- **Per-instance UI state** (`R-4`) — a selected tab has no binding family. The story holds it in
-  React state, outside the template.
+- ~~**Per-instance UI state** (`R-4`)~~ — answered by published state: `id=` + `machine=` seed a
+  registry-shaped slot at `ui.<id>`, written only by operations (see `docs/DESIGN.md`).
 - **Sub-discriminators** (`R-9`) — six kinds cannot distinguish a tab bar from a breadcrumb.
 - **Parts** (`R-10`) — `<control as="button">` is standing in for an action part that does not
   exist in the vocabulary.
