@@ -24,14 +24,14 @@ import { trace } from '@dxos/tracing';
 import { type ReplicantEnv, ReplicantRegistry } from '../env';
 
 /**
- * The one document type the property test manipulates.
+ * The one document type the stress test manipulates.
  *
  * `docId` is the orchestrator's logical id, so digests key on something the model can name without
  * knowing ECHO's object ids. `counters` is a per-writer register map — each client only ever writes
  * its own key, which is what lets the model predict an exact value under concurrent merges.
  */
-export class PbtDocument extends Type.makeObject<PbtDocument>(
-  DXN.make('org.dxos.type.bladeRunner.pbtDocument', '0.1.0'),
+export class EdgeStressDocument extends Type.makeObject<EdgeStressDocument>(
+  DXN.make('org.dxos.type.bladeRunner.edgeStressDocument', '0.1.0'),
 )(
   Schema.Struct({
     docId: Schema.String,
@@ -61,7 +61,7 @@ const INVITATION_TIMEOUT = 60_000;
 const SPACE_READY_TIMEOUT = 60_000;
 
 /**
- * One real `@dxos/client` peer, driven entirely over RPC by the `edgePbt` plan.
+ * One real `@dxos/client` peer, driven entirely over RPC by the `edgeStress` plan.
  *
  * Deliberately dumb: it holds no notion of the model or of what is being tested. Every public
  * method is an RPC verb (blade-runner reflects over the prototype), so arguments and return values
@@ -120,7 +120,7 @@ export class ClientReplicant {
 
     const client = new Client({ config: fullConfig, services });
     await client.initialize();
-    await client.addTypes([PbtDocument]);
+    await client.addTypes([EdgeStressDocument]);
 
     this.#services = services;
     this.#client = client;
@@ -282,7 +282,7 @@ export class ClientReplicant {
     counterSlots: number;
   }): Promise<void> {
     const db = (await this.#getSpace(spaceId)).db;
-    db.add(Obj.make(PbtDocument, { docId, content: '', counters: new Array(counterSlots).fill(0) }));
+    db.add(Obj.make(EdgeStressDocument, { docId, content: '', counters: new Array(counterSlots).fill(0) }));
     await db.flush();
   }
 
@@ -377,7 +377,7 @@ export class ClientReplicant {
    * The observable state of a space, reduced to exactly what the model can predict.
    */
   async digest({ spaceId }: { spaceId: string }): Promise<SpaceDigest> {
-    const objects = await (await this.#getSpace(spaceId)).db.query(Query.select(Filter.type(PbtDocument))).run();
+    const objects = await (await this.#getSpace(spaceId)).db.query(Query.select(Filter.type(EdgeStressDocument))).run();
     const docs: Record<string, DocumentDigest> = {};
     for (const object of objects) {
       docs[object.docId] = {
@@ -459,13 +459,15 @@ export class ClientReplicant {
       interval: 100,
       error: new Error(`space not found: ${spaceId}`),
     });
+    // It only resolves on a truthy value, but its return type keeps the predicate's `undefined`.
+    invariant(space, `space not found: ${spaceId}`);
     await space.waitUntilReady();
     return space;
   }
 
-  async #findDocument(spaceId: string, docId: string): Promise<PbtDocument> {
-    const objects = await (await this.#getSpace(spaceId)).db.query(Query.select(Filter.type(PbtDocument))).run();
-    const doc = objects.find((object: PbtDocument) => object.docId === docId);
+  async #findDocument(spaceId: string, docId: string): Promise<EdgeStressDocument> {
+    const objects = await (await this.#getSpace(spaceId)).db.query(Query.select(Filter.type(EdgeStressDocument))).run();
+    const doc = objects.find((object: EdgeStressDocument) => object.docId === docId);
     invariant(doc, `document not found: ${docId}`);
     return doc;
   }

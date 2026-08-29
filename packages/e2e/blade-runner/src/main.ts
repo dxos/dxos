@@ -26,7 +26,7 @@ import {
  * `edge-sync` transitively pulls the function bundler (parsimmon), which fails to load as ESM.
  */
 const plans: { [key: string]: () => Promise<TestPlan<any, any>> } = {
-  edgePbt: async () => new (await import('./spec/edge-pbt')).EdgePbt(),
+  edgeStress: async () => new (await import('./spec/edge-stress')).EdgeStress(),
   edgeSync: async () => new (await import('./spec/edge-sync')).EdgeSync(),
   edgeWs: async () => new (await import('./spec/edge-ws')).EdgeWs(),
   automerge: async () => new (await import('./spec/automerge')).AutomergeTestPlan(),
