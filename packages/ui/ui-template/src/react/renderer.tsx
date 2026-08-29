@@ -85,8 +85,8 @@ export const createReactRenderer = ({ schemas }: ReactRendererOptions): Renderer
     }
     return (
       <Input.Root key={path}>
-        <Flex align='center' gap='sm'>
-          {props.label ? <Input.Label classNames='shrink-0'>{asText(props.label)}</Input.Label> : null}
+        <Flex column>
+          {props.label ? <Input.Label>{asText(props.label)}</Input.Label> : null}
           <Input.TextInput
             placeholder={asText(props.placeholder)}
             value={asText(data.value)}

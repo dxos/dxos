@@ -13,15 +13,15 @@ Recorded as directives, not aspirations — each shaped a decision below.
    layout. Nothing renders from hidden state; a snapshot of published state is a snapshot of the UI.
 2. **On-the-fly layout generation.** A layout is plain data (parse of an XML surface syntax, or any
    other producer — including a model). Generating UI is producing data, not producing code.
-3. **Chainable undo.** Because state changes only through operations, the operation log is the undo
-   substrate: an inverse per operation makes any chain reversible. (Spike: log only; semantics
-   below.)
-4. **Async updates.** Data mutations land in the database; queries feed them back as new context;
+3. **Async updates.** Data mutations land in the database; queries feed them back as new context;
    the layout re-renders. Remote updates take the same path as local ones — there is no second
    mechanism.
-5. **Async dynamic loading.** Components, schemas, machines, and operations resolve through a
+4. **Async dynamic loading.** Components, schemas, machines, and operations resolve through a
    URI-keyed registry, so any of them can arrive late (a plugin loading) without the template
    changing.
+5. **Chainable undo.** Because state changes only through operations, the operation log is the undo
+   substrate: an inverse per operation makes any chain reversible. (Spike: log only; semantics
+   below.)
 
 ## The loop
 
