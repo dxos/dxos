@@ -1,9 +1,9 @@
 # MOSAIC — Model-Oriented System for Adaptive Interface Composition — Tasks
 
-_Resume: PR #12484 OPEN, retitled to match its contents, merged with main (2026-08-20) and CodeRabbit's 20 threads answered — the valid findings are folded in (schematic ids qualified by container, ASCII box widths aligned, `ResetFeedCursor` misnaming corrected, `surface` position-ordering documented, Scenes parser hardening + closed tag set). Ontology + DEUS app dialect + PLUGIN.mdl rewrite + UI-schematic phase 1 delivered. Next decision: schematic phase 2 (app-graph → deck schematics) vs Scenes Experiment 2._
+_Resume: PR #12840 OPEN (supersedes #12484). Phase 5 (ui-template overnight spike) COMPLETE 2026-08-29 — state-driven layout system with URI-keyed registry, published state (`ui.<id>` via `id=`+`machine=`), operations-as-only-writer, 7 browser-verified ECHO-bound stories, and `packages/ui/ui-template/docs/DESIGN.md`. Next: Rich reviews DESIGN.md + stories; then the ranked open items in DESIGN.md (state addressing, operation payload typing, when=/parts/sizing, machines-vs-slots), or Phase 4 schematic phase 2._
 
 Full context in `DESIGN.md` (an index — the design lives in the specs it links).
-Branch `claude/declarative-ui-abstraction-h28b9j`.
+Branch `claude/mosaic-ui-worktree-41481d` (PR #12840).
 
 ## Phase 1: Survey + Experiment 1 (controller extraction) — PARKED
 
