@@ -549,6 +549,30 @@ attribution, not renaming. What changes is enforcement — dispatch resolves the
 owning module's table, and the handler's `scope` is the module's own slots rather than the
 dispatching template's frames.
 
+### Capability sync (zag)
+
+Implemented (`CapabilityDef.create`, `mountCapabilities`, the `MasterDetailMulti` story): a
+capability may carry a live machine instance — the Zag multi-select from
+`src/testing/Example.ts` is the exemplar. The host mounts **one shared instance per module
+capability** when the system mounts (never per render), handing the factory a single `invoke`.
+The sync pattern is one-directional by construction:
+
+- **Write path (only one)**: machine transition → bindable `onChange` → `invoke` dispatches the
+  owning module's operation (`contacts.select-many { ids }`) → its handler `scope.set`s the
+  capability's slot (`selections`). Every transition is therefore a logged operation, and the
+  published-state pane shows the snapshot — MVU holds with the machine as an implementation
+  detail behind the slot.
+- **Read path**: binders read the slot (`data-selections="contacts.selections"`), never the
+  machine. The mounted api (`ModuleView.apis`, reached by the component's
+  `capability="alias.name"` aspect) exposes **event senders only** — its snapshot getters go
+  stale by design.
+
+The probe's conclusion stands confirmed: the machine's bindable context is a second state
+store, and `onChange` snapshotting through an operation is the sync seam that keeps it
+subordinate to published state. Cost observed: the snapshot in the slot and the context in the
+machine are the same data twice, reconciled only by the onChange discipline — a machine that
+mutated context outside an action would desync silently.
+
 ### Recommendation
 
 **Adopt the module contract and the ladder whole: one declaration form, `let`, whose backing

@@ -94,6 +94,22 @@ export type ModuleStateDef = {
 /** A state export backed 1:1 by a module slot. */
 export const fromSlot = (name: string): ModuleStateDef => ({ derive: ({ slots }) => slots[name] });
 
+/** What a capability factory is handed at mount — the instance's ONLY write path. */
+export type CapabilityMountContext = {
+  /** Dispatch one of the owning module's operations; `onChange` snapshots machine state through it. */
+  invoke: (operation: string, payload?: unknown) => void;
+};
+
+/**
+ * A mounted capability: the typed connect surface binders drive (event senders), plus teardown.
+ * The api never carries readable state — reads flow back through the published slot, so the
+ * machine stays an implementation detail behind it.
+ */
+export type CapabilityInstance = {
+  api: unknown;
+  dispose?: () => void;
+};
+
 /** Column 3 of the module contract: a machine instance — a typed API over the module's state. */
 export type CapabilityDef = {
   description?: string;
@@ -101,6 +117,12 @@ export type CapabilityDef = {
   machine: string;
   /** The module slot holding the instance's current state. */
   slot: string;
+  /**
+   * Optional live backing: create the module-shared instance at system mount (never per render).
+   * Every transition must reach published state as `onChange` → `invoke(<own operation>)` →
+   * `scope.set(<slot>)` — so the operation log records the machine's history.
+   */
+  create?: (context: CapabilityMountContext) => CapabilityInstance;
 };
 
 /**
@@ -223,11 +245,44 @@ export const createModuleReader = <TDatabase>(
   return read;
 };
 
+/** Mounted capability instances, keyed by module key then capability name. */
+export type CapabilityInstances = Readonly<Record<string, Readonly<Record<string, CapabilityInstance>>>>;
+
+/**
+ * Create every factory-backed capability instance — one per module capability, shared by all
+ * binders for the system's lifetime. `invoke` is the host's dispatch: the instance writes
+ * published state only by dispatching its own module's operations.
+ */
+export const mountCapabilities = <TDatabase>(
+  registry: Registry<TDatabase>,
+  invoke: (operation: string, payload?: unknown) => void,
+): CapabilityInstances => {
+  const instances: Record<string, Record<string, CapabilityInstance>> = {};
+  for (const [key, module] of Object.entries(registry.modules)) {
+    for (const [name, capability] of Object.entries(module.capabilities)) {
+      if (capability.create) {
+        (instances[key] ??= {})[name] = capability.create({ invoke });
+      }
+    }
+  }
+  return instances;
+};
+
+/** Tear the mounted instances down (machine stop, subscriptions). */
+export const unmountCapabilities = (instances: CapabilityInstances): void => {
+  for (const module of Object.values(instances)) {
+    for (const instance of Object.values(module)) {
+      instance.dispose?.();
+    }
+  }
+};
+
 /** Materialize every registry module's contract for binding (state + capability columns). */
 export const viewModules = <TDatabase>(
   registry: Registry<TDatabase>,
   ui: UiState,
   inputs: ModuleInputs = {},
+  instances: CapabilityInstances = {},
 ): Record<string, ModuleView> => {
   const read = createModuleReader(registry, () => ui, inputs);
   const views: Record<string, ModuleView> = {};
@@ -237,10 +292,15 @@ export const viewModules = <TDatabase>(
       state[name] = read(key, name);
     }
     const capabilities: Record<string, unknown> = {};
+    const apis: Record<string, unknown> = {};
     for (const [name, capability] of Object.entries(module.capabilities)) {
       capabilities[name] = getIn(ui, [key, capability.slot]);
+      const instance = instances[key]?.[name];
+      if (instance) {
+        apis[name] = instance.api;
+      }
     }
-    views[key] = { key, state, capabilities };
+    views[key] = { key, state, capabilities, apis };
   }
   return views;
 };
@@ -408,6 +468,14 @@ export const checkUses = <TDatabase>(registry: Registry<TDatabase>, root: WalkNo
     }
   }
   for (const node of walk(root)) {
+    // A component-side capability binding (`capability="alias.name"`) must resolve like `let from=`.
+    if (node.tag !== 'let' && typeof node.props?.capability === 'string') {
+      const [alias, name] = node.props.capability.split('.');
+      const module = aliasModule[alias] === undefined ? undefined : registry.modules[aliasModule[alias]];
+      if (module && !module.capabilities[name]) {
+        errors.push(`capability '${node.props.capability}': unknown capability on module '${aliasModule[alias]}'`);
+      }
+    }
     if (node.tag !== 'let' || typeof node.props?.from !== 'string') {
       continue;
     }

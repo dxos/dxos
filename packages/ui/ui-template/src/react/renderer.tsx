@@ -58,6 +58,29 @@ const itemField = (node: Node, scope: Scope, item: unknown, name: string): unkno
   return binding ? resolve(binding, { ...scope, item }) : undefined;
 };
 
+/** The connect surface a multi-select collection drives — senders only; reads come from state. */
+type MultiSelectDriver = {
+  select: (id: string, shift?: boolean) => void;
+  extendTo: (id: string) => void;
+};
+
+const isMultiSelectDriver = (value: unknown): value is MultiSelectDriver =>
+  typeof value === 'object' &&
+  value !== null &&
+  'select' in value &&
+  typeof value.select === 'function' &&
+  'extendTo' in value &&
+  typeof value.extendTo === 'function';
+
+/** Resolve a `capability="alias.name"` aspect to the mounted instance's api off the `use` ring. */
+const capabilityApi = (scope: Scope, ref: unknown): unknown => {
+  if (typeof ref !== 'string') {
+    return undefined;
+  }
+  const [alias, name] = ref.split('.');
+  return scope.aliases?.[alias]?.apis?.[name];
+};
+
 /** Create the React renderer: one function per kind tag, resolving `schema=` against the registry. */
 export const createReactRenderer = ({
   schemas,
@@ -125,8 +148,49 @@ export const createReactRenderer = ({
    * back, clicking dispatches). Without one: a plain read-only list. Item identity and label come
    * from the collection's own `item-id` / `item-label` bindings.
    */
-  collection: ({ path, node, data, handlers, scope, renderChildren }) => {
+  collection: ({ path, node, props, data, handlers, scope, renderChildren }) => {
     const items = Array.isArray(data.items) ? data.items : [];
+
+    // With a plural `data-selections` binding: a multi-select list driven by the module's
+    // capability instance (`capability="alias.name"`). The rows only mark and send — selection
+    // state is read back from the published slot the machine's onChange snapshots into.
+    if (node.data?.selections) {
+      const api = capabilityApi(scope, props.capability);
+      if (!isMultiSelectDriver(api)) {
+        return (
+          <span key={path} className='text-error-text text-sm'>
+            unresolved capability '{asText(props.capability)}'
+          </span>
+        );
+      }
+      const selections = Array.isArray(data.selections) ? data.selections.map(asText) : [];
+      return (
+        <Listbox.Root key={path}>
+          <Listbox.Viewport>
+            <Listbox.Content aria-multiselectable>
+              {items.map((item, index) => {
+                const id = asText(itemField(node, scope, item, 'id') ?? index);
+                return (
+                  <Listbox.Item
+                    key={id}
+                    id={id}
+                    classNames={selections.includes(id) && 'bg-selected-surface text-selected-fg font-semibold'}
+                    // A shift-click must not start a text selection before the row's click handler runs.
+                    onMouseDown={(event) => event.shiftKey && event.preventDefault()}
+                    onClick={(event) =>
+                      event.shiftKey && event.altKey ? api.extendTo(id) : api.select(id, event.shiftKey)
+                    }
+                  >
+                    <Listbox.ItemLabel>{asText(itemField(node, scope, item, 'label') ?? id)}</Listbox.ItemLabel>
+                  </Listbox.Item>
+                );
+              })}
+            </Listbox.Content>
+          </Listbox.Viewport>
+        </Listbox.Root>
+      );
+    }
+
     if (node.events?.select) {
       return (
         <Listbox.Root

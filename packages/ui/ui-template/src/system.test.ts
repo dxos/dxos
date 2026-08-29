@@ -2,10 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import { VanillaMachine } from '@zag-js/vanilla';
 import { describe, test } from 'vitest';
 
 import { parse } from './parser';
 import {
+  type LogEntry,
   type ModuleDef,
   type Registry,
   type SlotFrame,
@@ -15,11 +17,14 @@ import {
   createModuleReader,
   dispatch,
   fromSlot,
+  mountCapabilities,
   seedModules,
   seedUi,
+  unmountCapabilities,
   varDecls,
   viewModules,
 } from './system';
+import { type MultiSelectApi, type MultiSelectSchema, connect, multiSelectMachine } from './testing/Example';
 
 const registry: Registry<never> = {
   schemas: {},
@@ -609,5 +614,138 @@ describe('lexical resolution', () => {
     expect(render(node, {}, renderer, { onError: (error) => `error(${error.message})` })).toBe(
       "error(unresolved name 'title' (binding 'title'))",
     );
+  });
+});
+
+describe('capability sync (zag)', () => {
+  const CONTACTS = 'org.dxos.module.contacts';
+  const SELECT_MANY = 'org.dxos.operation.contacts.select-many';
+  const MULTI_SELECT_MACHINE = 'org.dxos.machine.multi-select';
+
+  const asIds = (value: unknown): string[] => (Array.isArray(value) ? value.map(String) : []);
+
+  /** Zag defers `send` to a microtask; one turn drains every event queued before it. */
+  const settle = () => new Promise<void>((resolve) => queueMicrotask(resolve));
+
+  /**
+   * The headless host loop: mount the module's capability instances against a dispatch that
+   * folds each operation's result back into `ui` and appends its entries to the log — the same
+   * wiring `useSystem` does, minus React.
+   */
+  const createHost = () => {
+    let api: MultiSelectApi | undefined;
+    const contacts: ModuleDef<never> = {
+      key: CONTACTS,
+      slots: { selections: { initial: [] } },
+      state: {
+        selections: fromSlot('selections'),
+        selectionCount: { derive: ({ slots }) => asIds(slots.selections).length },
+      },
+      operations: {
+        selectMany: {
+          key: SELECT_MANY,
+          handler: ({ scope, payload }) => {
+            const ids = payload !== null && typeof payload === 'object' && 'ids' in payload ? asIds(payload.ids) : [];
+            scope.set({ selections: ids });
+          },
+        },
+      },
+      capabilities: {
+        multiSelect: {
+          machine: MULTI_SELECT_MACHINE,
+          slot: 'selections',
+          create: ({ invoke }) => {
+            const machine = new VanillaMachine<MultiSelectSchema>(multiSelectMachine, {
+              // The instance's ONLY write path: every committed transition dispatches the
+              // owning module's operation, whose handler snapshots into the slot.
+              onChange: ({ selection }) => invoke(SELECT_MANY, { ids: [...selection] }),
+            });
+            machine.start();
+            api = connect(machine.service);
+            return { api, dispose: () => machine.stop() };
+          },
+        },
+      },
+    };
+    const other: ModuleDef<never> = {
+      key: 'org.dxos.module.other',
+      slots: {},
+      state: {},
+      operations: {
+        poke: {
+          key: 'org.dxos.operation.other.poke',
+          handler: ({ scope }) => scope.set({ selections: ['x'] }),
+        },
+      },
+      capabilities: {},
+    };
+    const host: Registry<never> = {
+      ...registry,
+      machines: { ...registry.machines, [MULTI_SELECT_MACHINE]: { key: MULTI_SELECT_MACHINE, initial: [] } },
+      modules: { [CONTACTS]: contacts, 'org.dxos.module.other': other },
+    };
+    let ui = seedModules(host);
+    const log: LogEntry[] = [];
+    const instances = mountCapabilities(host, (operation, payload) => {
+      const result = dispatch(host, ui, operation, payload);
+      ui = result.ui;
+      log.push(...result.entries);
+    });
+    if (!api) {
+      throw new Error('capability instance did not mount');
+    }
+    return { host, instances, api, log, ui: () => ui };
+  };
+
+  test('a machine event reaches published state as onChange -> operation -> slot, and is logged', async ({
+    expect,
+  }) => {
+    const { instances, api, log, ui } = createHost();
+    expect(ui()[CONTACTS]).toEqual({ selections: [] });
+
+    api.select('a');
+    await settle();
+    expect(ui()[CONTACTS]).toEqual({ selections: ['a'] });
+    expect(log).toEqual([{ operation: SELECT_MANY, payload: { ids: ['a'] } }]);
+    unmountCapabilities(instances);
+  });
+
+  test('multi -> single transitions log every snapshot, in order', async ({ expect }) => {
+    const { host, instances, api, log, ui } = createHost();
+    api.select('a');
+    api.select('b', true);
+    api.select('c', true);
+    api.select('d');
+    await settle();
+
+    expect(log.map((entry) => entry.operation)).toEqual([SELECT_MANY, SELECT_MANY, SELECT_MANY, SELECT_MANY]);
+    expect(log.map((entry) => entry.payload)).toEqual([
+      { ids: ['a'] },
+      { ids: ['a', 'b'] },
+      { ids: ['a', 'b', 'c'] },
+      { ids: ['d'] },
+    ]);
+    expect(ui()[CONTACTS]).toEqual({ selections: ['d'] });
+
+    // The module view carries the snapshot (capabilities column) and the live api (apis column).
+    const views = viewModules(host, ui(), {}, instances);
+    expect(views[CONTACTS].capabilities.multiSelect).toEqual(['d']);
+    expect(views[CONTACTS].apis?.multiSelect).toBe(api);
+    expect(views[CONTACTS].state.selectionCount).toBe(1);
+    unmountCapabilities(instances);
+  });
+
+  test('write ownership holds against the machine-backed slot', ({ expect }) => {
+    const { host, instances, ui } = createHost();
+    expect(() => dispatch(host, ui(), 'org.dxos.operation.other.poke')).toThrow(/owns no slot 'selections'/);
+    unmountCapabilities(instances);
+  });
+
+  test('unmount disposes the instance: no operations after teardown', async ({ expect }) => {
+    const { instances, api, log } = createHost();
+    unmountCapabilities(instances);
+    api.select('a');
+    await settle();
+    expect(log).toEqual([]);
   });
 });

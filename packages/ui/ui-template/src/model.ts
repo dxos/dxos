@@ -146,6 +146,11 @@ export type ModuleView = {
   readonly state: Readonly<Record<string, unknown>>;
   /** Column 3: capabilities — instance name → the instance's current state (`let from=` binds it). */
   readonly capabilities: Readonly<Record<string, unknown>>;
+  /**
+   * Column 3, live: capability name → the mounted instance's connect surface (event senders).
+   * Reads never come from here — the instance's state flows back through published slots.
+   */
+  readonly apis?: Readonly<Record<string, unknown>>;
 };
 
 export type Scope = {

@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { VanillaMachine } from '@zag-js/vanilla';
 import * as Schema from 'effect/Schema';
 import React, { useMemo, useState } from 'react';
 
@@ -28,6 +29,7 @@ import {
   varDecls,
   viewModules,
 } from '../system';
+import { type MultiSelectSchema, connect, multiSelectMachine } from '../testing/Example';
 import { Template, createReactRenderer } from './renderer';
 import { Editor, OperationLog, Workbench } from './testing';
 import { useSystem } from './useSystem';
@@ -111,6 +113,9 @@ const toFormValues = (org: Organization.Organization): OrganizationFormValues =>
 const inputOrganizations = (inputs: Readonly<Record<string, unknown>>): readonly Organization.Organization[] =>
   Array.isArray(inputs.organizations) ? inputs.organizations : [];
 
+/** A multi-selection as ids — the `selections` slot value or a `select-many` payload's `ids`. */
+const asIds = (value: unknown): string[] => (Array.isArray(value) ? value.map(String) : []);
+
 /**
  * The contacts module: what `deriveContext` used to smuggle in ambiently is now the module's
  * typed export table — the module that owns the inputs (selection, draft, the query) exports the
@@ -121,6 +126,7 @@ const ContactsModule: ModuleDef<Db> = {
   description: 'Organizations: query, shared selection, and the editing draft.',
   slots: {
     selection: { initial: undefined },
+    selections: { initial: [] },
     draft: { initial: false },
   },
   state: {
@@ -135,12 +141,39 @@ const ContactsModule: ModuleDef<Db> = {
         return selected ? toFormValues(selected) : undefined;
       },
     },
+    // The multi-selection snapshot and its structural derivations — `show` branches on these,
+    // so "exactly one" lives here, never as a template expression.
+    selections: fromSlot('selections'),
+    selectedOne: {
+      derive: ({ slots, inputs }) => {
+        const ids = asIds(slots.selections);
+        if (ids.length !== 1) {
+          return undefined;
+        }
+        const selected = inputOrganizations(inputs).find((org) => org.id === ids[0]);
+        return selected ? toFormValues(selected) : undefined;
+      },
+    },
+    manySelected: {
+      derive: ({ slots }) => (asIds(slots.selections).length > 1 ? asIds(slots.selections).length : undefined),
+    },
+    selectionLabel: {
+      derive: ({ slots }) => `${asIds(slots.selections).length} selected`,
+    },
   },
   operations: {
     select: {
       key: 'org.dxos.operation.contacts.select',
       description: 'Select a row in the master list.',
       handler: ({ scope, payload }) => scope.set({ selection: payload, draft: false }),
+    },
+    selectMany: {
+      key: 'org.dxos.operation.contacts.select-many',
+      description: 'Snapshot the multi-select capability instance into the selections slot.',
+      handler: ({ scope, payload }) => {
+        const ids = payload !== null && typeof payload === 'object' && 'ids' in payload ? asIds(payload.ids) : [];
+        scope.set({ selections: ids, draft: false });
+      },
     },
     add: {
       key: 'org.dxos.operation.contacts.add',
@@ -158,7 +191,9 @@ const ContactsModule: ModuleDef<Db> = {
           return;
         }
         const selection = scope.get('selection');
-        const id = typeof selection === 'string' ? selection : undefined;
+        const lone = asIds(scope.get('selections'));
+        // The single-select slot wins; a lone multi-selection is the multi template's subject.
+        const id = typeof selection === 'string' ? selection : lone.length === 1 ? lone[0] : undefined;
         const object = id ? db?.getObjectById<Organization.Organization>(id) : undefined;
         if (object) {
           // Field by field, never Object.assign: the form's values may carry keys the schema
@@ -197,6 +232,22 @@ const ContactsModule: ModuleDef<Db> = {
     // and so would a toolbar in another template — observation is shared, writes go through
     // the operations above.
     selection: { machine: 'org.dxos.machine.selection', slot: 'selection' },
+    // The zag machine as a live capability: one shared instance, mounted with the system. Its
+    // only write path is onChange → select-many → the selections slot, so every transition is a
+    // logged operation and the published snapshot is the state binders read — the machine stays
+    // an implementation detail behind the slot.
+    multiSelect: {
+      machine: 'org.dxos.machine.multi-select',
+      slot: 'selections',
+      create: ({ invoke }) => {
+        const machine = new VanillaMachine<MultiSelectSchema>(multiSelectMachine, {
+          onChange: ({ selection }) => invoke('org.dxos.operation.contacts.select-many', { ids: [...selection] }),
+        });
+        machine.start();
+        // Senders only: connect's snapshot reads go stale by design — binders read the slot.
+        return { api: connect(machine.service), dispose: () => machine.stop() };
+      },
+    },
   },
 };
 
@@ -275,6 +326,10 @@ const registry: Registry<Db, Schema.Codec<any, any>> = {
     'org.dxos.machine.selection': {
       key: 'org.dxos.machine.selection',
       initial: undefined,
+    },
+    'org.dxos.machine.multi-select': {
+      key: 'org.dxos.machine.multi-select',
+      initial: [],
     },
   },
 
@@ -367,6 +422,28 @@ const MASTER_DETAIL_TOOLBAR = trim`
       </show>
     </layout>
   </container>
+`;
+
+const MASTER_DETAIL_MULTI = trim`
+  <layout rows="1fr 1fr">
+    <use module="org.dxos.module.contacts" as="contacts" />
+    <collection data-items="contacts.organizations" item-id="id" item-label="name"
+                data-selections="contacts.selections"
+                capability="contacts.multiSelect" />
+    <show when="contacts.selectedOne">
+      <form schema="org.dxos.type.Organization" data-values="contacts.selectedOne"
+            on-save="org.dxos.operation.contacts.save"
+            on-cancel="org.dxos.operation.contacts.cancel" />
+      <fallback>
+        <show when="contacts.manySelected">
+          <display variant="title" data-text="contacts.selectionLabel" />
+          <fallback>
+            <display label="Nothing selected — click a row; shift-click toggles." />
+          </fallback>
+        </show>
+      </fallback>
+    </show>
+  </layout>
 `;
 
 const COMBOBOX = trim`
@@ -471,7 +548,7 @@ const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
     return { tag: 'container', children };
   }, [parsedAll]);
 
-  const { ui, log, dispatch } = useSystem({ registry, root: seedRoot, db, inputs });
+  const { ui, log, dispatch, capabilities } = useSystem({ registry, root: seedRoot, db, inputs });
   const renderer = useMemo(() => createReactRenderer({ schemas: registry.schemas }), []);
   const editorExtensions = useMemo(() => templateLanguage(), []);
 
@@ -481,7 +558,7 @@ const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
   // The host side of the contract: values against the `var` signature, module views against the
   // `use` imports — both mount-checked, both visible when they fail (never garbage).
   const vars: Record<string, unknown> = { title: 'Organizations' };
-  const modules = viewModules(registry, ui, inputs);
+  const modules = viewModules(registry, ui, inputs, capabilities);
   const mountErrors = active?.node
     ? [
         ...checkVars(registry.schemas, varDecls(active.node), vars, (schema, value) => {
@@ -578,6 +655,14 @@ export const MasterDetailToolbar: Story = {
   args: {
     sources: {
       toolbar: MASTER_DETAIL_TOOLBAR,
+    },
+  },
+};
+
+export const MasterDetailMulti: Story = {
+  args: {
+    sources: {
+      'master-detail-multi': MASTER_DETAIL_MULTI,
     },
   },
 };

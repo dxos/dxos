@@ -2,18 +2,22 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useCallback, useMemo, useReducer, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 
 import { type Node } from '../model';
 import { type Dispatch } from '../render';
 import {
+  type CapabilityInstances,
   type LogEntry,
   type ModuleInputs,
   type Registry,
+  type SlotFrame,
   type UiState,
+  mountCapabilities,
   seedModules,
   seedUi,
   dispatch as systemDispatch,
+  unmountCapabilities,
 } from '../system';
 
 export type UseSystemOptions<Db> = {
@@ -33,6 +37,8 @@ export type UseSystem = {
   log: readonly SequencedLogEntry[];
   /** For the renderer: resolves the `on-*` operation key and steps the system. */
   dispatch: Dispatch;
+  /** Module-shared capability instances, mounted once per registry — pass to `viewModules`. */
+  capabilities: CapabilityInstances;
 };
 
 /**
@@ -71,19 +77,11 @@ export const useSystem = <Db>({ registry, root, db, inputs }: UseSystemOptions<D
   ref.current = { ...ref.current, ui: deepSeed(initial, ref.current.ui) };
   const [, force] = useReducer((tick: number) => tick + 1, 0);
 
-  const dispatch = useCallback<Dispatch>(
-    (operation, { scope, payload }) => {
+  const step = useCallback(
+    (operation: string, payload?: unknown, frames: readonly SlotFrame[] = []) => {
       // A failed operation is a log entry, not a vanished promise — the loop must stay observable.
       try {
-        const { ui, entries } = systemDispatch(
-          registry,
-          ref.current.ui,
-          operation,
-          payload,
-          db,
-          scope.frames ?? [],
-          inputs,
-        );
+        const { ui, entries } = systemDispatch(registry, ref.current.ui, operation, payload, db, frames, inputs);
         const sequenced = entries.map((entry) => ({ ...entry, seq: seq.current++ }));
         ref.current = { ui, log: [...sequenced.reverse(), ...ref.current.log].slice(0, 20) };
       } catch (err) {
@@ -97,5 +95,20 @@ export const useSystem = <Db>({ registry, root, db, inputs }: UseSystemOptions<D
     [registry, db, inputs],
   );
 
-  return { ...ref.current, dispatch };
+  const dispatch = useCallback<Dispatch>(
+    (operation, { scope, payload }) => step(operation, payload, scope.frames ?? []),
+    [step],
+  );
+
+  // Capability instances mount once per registry and outlive any one step: their `invoke` reads
+  // the current step through a ref, so a db/inputs change never remounts a running machine.
+  const stepRef = useRef(step);
+  stepRef.current = step;
+  const capabilities = useMemo(
+    () => mountCapabilities(registry, (operation, payload) => stepRef.current(operation, payload)),
+    [registry],
+  );
+  useEffect(() => () => unmountCapabilities(capabilities), [capabilities]);
+
+  return { ...ref.current, dispatch, capabilities };
 };
