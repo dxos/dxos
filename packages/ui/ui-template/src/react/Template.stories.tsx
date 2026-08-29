@@ -12,6 +12,7 @@ import { Flex, Panel, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createBasicExtensions, createThemeExtensions, documentSlots, json } from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 
 import { templateLanguage } from '../codemirror';
@@ -84,8 +85,8 @@ type ColumnProps = {
 };
 
 const Column = ({ title, children, width }: ColumnProps) => (
-  <Flex column classNames={width ? `${width} shrink-0 min-w-0` : 'flex-1 min-w-0'}>
-    <div className='px-3 py-2 text-xs uppercase tracking-wide text-subdued border-be border-separator'>{title}</div>
+  <Flex column classNames={mx('min-w-0', width ? `${width} shrink-0` : 'flex-1')}>
+    <div className='p-1 text-xs uppercase tracking-wide text-subdued border-be border-separator'>{title}</div>
     <Flex column grow classNames='min-h-0 overflow-hidden'>
       {children}
     </Flex>
@@ -130,12 +131,12 @@ const DefaultStory = ({ source: initialSource }: { source: string }) => {
         <LiveEditor value={stateText} onChange={setStateText} extensions={stateExtensions} />
       </Column>
 
-      <Column title='Layout' width='w-96'>
+      <Column title='Layout' width='w-80'>
         <LiveEditor value={source} onChange={setSource} extensions={templateExtensions} />
       </Column>
 
       <Column title='Rendered'>
-        <Flex column gap='md' classNames='p-3 overflow-auto'>
+        <Flex column gap='md' classNames='overflow-auto'>
           {parsed.node && state.value ? (
             <Template
               node={parsed.node}
@@ -148,7 +149,7 @@ const DefaultStory = ({ source: initialSource }: { source: string }) => {
 
           {log.length > 0 && (
             <Panel.Root role='none' classNames='border border-subdued-separator rounded-sm'>
-              <Panel.Content classNames='p-2'>
+              <Panel.Content>
                 <Flex column gap='xs'>
                   <span className='text-xs text-subdued'>dispatched</span>
                   {log.map((operation, index) => (

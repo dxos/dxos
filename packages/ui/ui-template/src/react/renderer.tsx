@@ -33,7 +33,7 @@ const flexProps = (props: Readonly<Record<string, string | number | boolean>>) =
 
 export const reactRenderer: Renderer<ReactNode> = {
   container: ({ path, props, children }) => (
-    <Panel.Root key={path} role='none' classNames='p-2 border border-separator rounded-sm'>
+    <Panel.Root key={path}>
       <Panel.Content classNames='p-2'>
         <Flex column gap={(props.gap as any) ?? 'sm'}>
           {children}
