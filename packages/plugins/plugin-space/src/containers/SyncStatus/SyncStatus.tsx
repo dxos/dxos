@@ -8,13 +8,15 @@ import { StatusBar } from '@dxos/plugin-status-bar/components';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
 import { type SpaceSyncStateMap, getSyncSummary, useSyncState } from '@dxos/react-client/echo';
-import { Flex, Icon, IconButton, Popover, useTranslation } from '@dxos/react-ui';
+import { Flex, Grid, Icon, IconButton, Popover, useTranslation } from '@dxos/react-ui';
 import { iconSize, mx } from '@dxos/ui-theme';
 import { Unit, type UnitFormat } from '@dxos/util';
 
 import { createClientSaveTracker, getIcon, getStatus } from '#components';
 import { useEdgeStatus, useStalled } from '#hooks';
 import { meta } from '#meta';
+
+const SYNC_COLS = ['min-content', '1fr', 'min-content', 'min-content'];
 
 export const SyncStatus = () => {
   const client = useClient();
@@ -91,38 +93,38 @@ const EdgeConnectionPopover = ({ status }: { status: EdgeStatus }) => {
 
       {/* Connection Details */}
       {!isConnected && (
-        <div className='grid grid-cols-[min-content_1fr_min-content_min-content] gap-2'>
+        <Grid cols={SYNC_COLS} grow={false} gap='sm'>
           <Icon icon='ph--cloud-x--regular' />
           <span className='text-description'>{t('sync-no-connection.label')}</span>
-        </div>
+        </Grid>
       )}
 
       {isConnected && (
-        <div className='grid grid-cols-[min-content_1fr_min-content_min-content] gap-2 gap-y-1'>
+        <Grid cols={SYNC_COLS} grow={false} gap='sm' classNames='gap-y-1'>
           {/* Latency */}
-          <div className='col-span-full grid grid-cols-subgrid gap-2 items-center text-sm'>
+          <Grid cols='subgrid' grow={false} gap='sm' align='center' classNames='text-sm'>
             <Icon icon='ph--timer--regular' />
             <span className='text-description'>{t('sync-latency.label')}</span>
             <div />
             <UnitValue value={status.rtt} format={Unit.Millisecond} />
-          </div>
+          </Grid>
 
           {/* Upload Speed */}
-          <div className='col-span-full grid grid-cols-subgrid gap-2 items-center text-sm'>
+          <Grid cols='subgrid' grow={false} gap='sm' align='center' classNames='text-sm'>
             <Icon icon='ph--arrow-up--regular' classNames='text-green-500' />
             <span className='text-description'>{t('sync-upload.label')}</span>
             <UnitValue value={status.messagesSent} format={Unit.Thousand} />
             <UnitValue value={status.rateBytesUp} format={Unit.Kilobyte} suffix='/s' />
-          </div>
+          </Grid>
 
           {/* Download Speed */}
-          <div className='col-span-full grid grid-cols-subgrid gap-2 items-center text-sm'>
+          <Grid cols='subgrid' grow={false} gap='sm' align='center' classNames='text-sm'>
             <Icon icon='ph--arrow-down--regular' classNames='text-orange-500' />
             <span className='text-description'>{t('sync-download.label')}</span>
             <UnitValue value={status.messagesReceived} format={Unit.Thousand} />
             <UnitValue value={status.rateBytesDown} format={Unit.Kilobyte} suffix='/s' />
-          </div>
-        </div>
+          </Grid>
+        </Grid>
       )}
     </Flex>
   );

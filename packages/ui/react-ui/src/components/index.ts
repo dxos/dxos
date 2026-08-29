@@ -30,6 +30,7 @@ export * from './Progress';
 export * from './ScrollArea';
 export * from './ScrollContainer';
 export * from './Select';
+export * from './Show';
 export * from './Separator';
 export * from './Skeleton';
 export * from './Slider';

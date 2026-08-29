@@ -41,6 +41,7 @@ import { MarkdownEditable, type MarkdownEditableController, MarkdownView } from 
 import { type Actor, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
+import { type MakeRequired } from '@dxos/util';
 
 import { translationKey } from '#translations';
 
@@ -61,18 +62,12 @@ const TASK_LIST_NAME = 'TaskList.Root';
 /** Linear-style status groups, most active first. */
 export const STATUS_ORDER: Task.Status[] = ['started', 'todo', 'done', 'failed', 'cancelled'];
 
-/** Fallback status labels. */
-const DEFAULT_STATUS_LABELS: Record<Task.Status, string> = {
-  started: 'Started',
-  todo: 'To Do',
-  done: 'Done',
-  failed: 'Failed',
-  cancelled: 'Cancelled',
-};
-
-export type TaskPatch = Partial<
+export type TaskEdit = Partial<
   Pick<Task.Task, 'title' | 'description' | 'status' | 'priority' | 'estimate' | 'assignee'>
 >;
+
+/** A new task: `title` required, any other editable field supplied when available. */
+export type TaskDraft = MakeRequired<TaskEdit, 'title'>;
 
 //
 // Context — plain Radix context (un-scoped); nesting task lists has no meaning today.
@@ -87,7 +82,6 @@ type TaskListContextValue = {
   hierarchical: boolean;
   /** Whether the leading gutter is rendered at all — it holds the ordinal and the drag handle. */
   showGutter: boolean;
-  statusLabel: (status: Task.Status) => string;
   selected?: string;
   /** Whether a branch's sub-tasks are hidden, and the toggle that flips it. */
   isCollapsed: (id: string) => boolean;
@@ -95,8 +89,8 @@ type TaskListContextValue = {
   /** Ids of the task being dragged and its sub-tasks — lifted out of the list for the drag's duration. */
   dragging: ReadonlySet<string>;
   onDraggingChange: (task: Task.Task | undefined) => void;
-  onTaskCreate?: (title: string) => void;
-  onTaskUpdate?: (task: Task.Task, patch: TaskPatch) => void;
+  onTaskCreate?: (task: TaskDraft) => void;
+  onTaskUpdate?: (task: Task.Task, patch: TaskEdit) => void;
   onTaskDelete?: (task: Task.Task) => void;
   onTaskSelect?: (task: Task.Task | undefined) => void;
   onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
@@ -124,12 +118,10 @@ type TaskListRootProps = PropsWithChildren<{
   /** Render each task's description under its title; rows grow to fit. Off by default, so a
    * single-line list (e.g. the chat strip) keeps one row per task. */
   showDescriptions?: boolean;
-  /** i18n hook for group headings; defaults to English labels. */
-  statusLabel?: (status: Task.Status) => string;
-  /** Enables `Create`; called with the trimmed title. */
-  onTaskCreate?: (title: string) => void;
+  /** Enables `Create`; called with a draft carrying at least the trimmed title. */
+  onTaskCreate?: (task: TaskDraft) => void;
   /** Enables the done toggle. Every mutation is delegated — the list never writes. */
-  onTaskUpdate?: (task: Task.Task, patch: TaskPatch) => void;
+  onTaskUpdate?: (task: Task.Task, patch: TaskEdit) => void;
   /** Enables the per-row delete affordance. */
   onTaskDelete?: (task: Task.Task) => void;
   /**
@@ -139,6 +131,11 @@ type TaskListRootProps = PropsWithChildren<{
   onTaskSelect?: (task: Task.Task | undefined) => void;
   /** Selected task id (controlled); omit to let the list track the last row clicked. */
   selected?: string;
+  /**
+   * Makes the list selectable without a controlled `selected` or an `onTaskSelect` — for a host
+   * whose selection consumers (e.g. `Edit`) live inside the list's own context.
+   */
+  selectable?: boolean;
   /**
    * Render the set as the tree it stores (`Task.parentTask`), not as status groups — the two are
    * mutually exclusive, since a tree regrouped by status is no longer a tree.
@@ -170,7 +167,7 @@ const TaskListRoot = ({
   hierarchical = false,
   collapsed,
   selected: selectedProp,
-  statusLabel = (status) => DEFAULT_STATUS_LABELS[status],
+  selectable: selectableProp,
   onTaskCreate,
   onTaskUpdate,
   onTaskDelete,
@@ -182,7 +179,8 @@ const TaskListRoot = ({
   // styling, and one that owns the selection passes `selected`.
   const [selectedState, setSelectedState] = useState<string | undefined>(selectedProp);
   const selected = selectedProp ?? selectedState;
-  const selectable = !!onTaskSelect || selectedProp !== undefined;
+  const selectable = selectableProp ?? (!!onTaskSelect || selectedProp !== undefined);
+
   const handleValueChange = useCallback(
     (id: string) => {
       setSelectedState(id);
@@ -228,18 +226,17 @@ const TaskListRoot = ({
       // The handle lives in the ordinal's gutter, so a movable list reserves the track even when it
       // shows no numbers.
       showGutter={showOrdinals || !!onTaskMove}
-      statusLabel={statusLabel}
       isCollapsed={isCollapsed}
-      onCollapseToggle={onCollapseToggle}
+      selected={selected}
       dragging={dragging}
       onDraggingChange={setDraggingTask}
+      onCollapseToggle={onCollapseToggle}
       onTaskCreate={onTaskCreate}
       onTaskUpdate={onTaskUpdate}
       onTaskDelete={onTaskDelete}
       onTaskSelect={onTaskSelect}
       onDeselect={handleDeselect}
       onTaskMove={onTaskMove}
-      selected={selected}
     >
       {/* Both roots are headless, so the pair renders no DOM of its own. */}
       <Listbox.Root {...(selectable ? { value: selected, onValueChange: handleValueChange } : {})}>
@@ -289,6 +286,7 @@ const GRID_COLS = {
 type TaskListContentProps = ComposableProps;
 
 const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
+  const { t } = useTranslation(translationKey);
   const {
     tasks,
     groupByStatus,
@@ -297,7 +295,6 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
     showDescriptions,
     hierarchical,
     showGutter,
-    statusLabel,
     isCollapsed,
   } = useTaskListContext('TaskList.Content');
   // Ordinals follow the set's canonical order, not the display order, so a task keeps its number as
@@ -350,7 +347,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
           ))
         : groups.map(({ status, tasks }) => (
             <Fragment key={status ?? 'all'}>
-              {status && showGroupLabels && <TaskListGroupLabel>{statusLabel(status)}</TaskListGroupLabel>}
+              {status && showGroupLabels && <TaskListGroupLabel>{t(`status-${status}.label`)}</TaskListGroupLabel>}
               {tasks.map((task) => (
                 <TaskListItem key={task.id} task={task} ordinal={showOrdinals ? ordinals.get(task.id) : undefined} />
               ))}
@@ -936,7 +933,7 @@ const TaskListEdit = composable<HTMLDivElement, { placeholder?: string; descript
           onTaskUpdate?.(task, { title });
         }
       } else if (title.length > 0) {
-        onTaskCreate?.(title);
+        onTaskCreate?.({ title });
         setDraft('');
       }
     }, [draft, task, current, onTaskCreate, onTaskUpdate]);

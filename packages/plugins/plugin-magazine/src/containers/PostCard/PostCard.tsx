@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { Card } from '@dxos/react-ui';
+import { Card, Grid } from '@dxos/react-ui';
 
 import { Subscription } from '#types';
 
@@ -58,10 +58,16 @@ export const PostCard = ({ subject }: PostCardProps) => {
       )}
       {(feedName || published) && (
         <Card.Row>
-          <div className='grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 text-sm text-description overflow-hidden'>
+          <Grid
+            cols={['minmax(0, 1fr)', 'auto']}
+            grow={false}
+            gap='sm'
+            align='center'
+            classNames='text-sm text-description overflow-hidden'
+          >
             <span className='truncate'>{feedName ?? ''}</span>
             <span className='text-end shrink-0'>{published ?? ''}</span>
-          </div>
+          </Grid>
         </Card.Row>
       )}
       {post.link && <Card.Link label={post.link} href={post.link} />}
