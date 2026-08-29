@@ -91,7 +91,7 @@ const AttendableContainer = ({ id, gap, children }: PropsWithChildren<{ id?: str
         gap={gap}
         classNames={mx(
           'dx-container ring-2 ring-separator rounded-sm',
-          id && attended === id && 'ring-[var(--color-focus-ring)]',
+          id && attended === id && 'ring-[var(--color-focus-ring-subtle)]',
         )}
       >
         {children}
