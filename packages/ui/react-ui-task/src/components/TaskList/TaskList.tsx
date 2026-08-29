@@ -140,6 +140,11 @@ type TaskListRootProps = PropsWithChildren<{
   /** Selected task id (controlled); omit to let the list track the last row clicked. */
   selected?: string;
   /**
+   * Makes the list selectable without a controlled `selected` or an `onTaskSelect` — for a host
+   * whose selection consumers (e.g. `Edit`) live inside the list's own context.
+   */
+  selectable?: boolean;
+  /**
    * Render the set as the tree it stores (`Task.parentTask`), not as status groups — the two are
    * mutually exclusive, since a tree regrouped by status is no longer a tree.
    */
@@ -170,6 +175,7 @@ const TaskListRoot = ({
   hierarchical = false,
   collapsed,
   selected: selectedProp,
+  selectable: selectableProp,
   statusLabel = (status) => DEFAULT_STATUS_LABELS[status],
   onTaskCreate,
   onTaskUpdate,
@@ -182,7 +188,7 @@ const TaskListRoot = ({
   // styling, and one that owns the selection passes `selected`.
   const [selectedState, setSelectedState] = useState<string | undefined>(selectedProp);
   const selected = selectedProp ?? selectedState;
-  const selectable = !!onTaskSelect || selectedProp !== undefined;
+  const selectable = selectableProp ?? (!!onTaskSelect || selectedProp !== undefined);
   const handleValueChange = useCallback(
     (id: string) => {
       setSelectedState(id);

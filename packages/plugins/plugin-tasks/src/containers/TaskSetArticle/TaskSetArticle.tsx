@@ -4,7 +4,7 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -33,13 +33,13 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
   const spaceId = Obj.getDatabase(taskSet)?.spaceId;
   const { invokePromise } = useOperationInvoker();
 
-  const tasks = useSetTasks(taskSet);
-
   const statusLabel = useCallback((status: Task.Status) => t(`task-status.${status}.label`), [t]);
+
+  const tasks = useSetTasks(taskSet);
 
   const handleCreate = useCallback(
     (title: string) => void invokePromise(TaskOperation.CreateTask, { taskSet: Ref.make(taskSet), title }, { spaceId }),
-    [invokePromise, taskSet, spaceId],
+    [invokePromise, spaceId, taskSet],
   );
 
   const handleUpdate = useCallback(
@@ -48,8 +48,6 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
     [invokePromise, spaceId],
   );
 
-  // Deleting through the verb (not `db.remove`) is what sweeps the task and its sub-tasks out of
-  // the set's `tasks` array; the cascade alone would leave the refs behind.
   const handleDelete = useCallback(
     (task: Task.Task) => void invokePromise(TaskOperation.DeleteTask, { task: Ref.make(task) }, { spaceId }),
     [invokePromise, spaceId],
@@ -57,31 +55,33 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
 
   const handleMove = useCallback(
     (task: Task.Task, { parentTask, before }: TaskPlacement) =>
-      TaskSet.moveTask(taskSet, task, { parentTask, beforeId: before?.id }),
-    [taskSet],
+      void invokePromise(
+        TaskOperation.MoveTask,
+        {
+          task: Ref.make(task),
+          parentTask: parentTask ? Ref.make(parentTask) : null,
+          ...(before ? { before: Ref.make(before) } : {}),
+        },
+        { spaceId },
+      ),
+    [invokePromise, spaceId],
   );
-
-  const [selected, setSelected] = useState<string>();
-  const handleSelect = useCallback((task: Task.Task | undefined) => setSelected(task?.id), []);
 
   const content = (
     <TaskList.Root
       hierarchical
+      selectable
       tasks={tasks}
       showDescriptions
-      selected={selected}
       statusLabel={statusLabel}
       onTaskCreate={handleCreate}
       onTaskUpdate={handleUpdate}
       onTaskDelete={handleDelete}
       onTaskMove={handleMove}
-      onTaskSelect={handleSelect}
     >
-      <div className='dx-container grid grid-rows-[auto_1fr] gap-2'>
-        <TaskList.Viewport>
-          <TaskList.Content classNames='dx-document' />
-        </TaskList.Viewport>
-      </div>
+      <TaskList.Viewport classNames='dx-container grid grid-rows-[auto_1fr] gap-2'>
+        <TaskList.Content classNames='dx-document' />
+      </TaskList.Viewport>
       <div className='p-2'>
         <TaskList.Edit
           classNames='dx-document border border-separator rounded-md p-2'
