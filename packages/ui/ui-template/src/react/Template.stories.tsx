@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
@@ -11,7 +12,7 @@ import { toJsonSchema } from '@dxos/echo/JsonSchema';
 import { Flex, Panel, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { createBasicExtensions, createThemeExtensions, documentSlots, json } from '@dxos/ui-editor';
+import { createBasicExtensions, createThemeExtensions, compactSlots, json } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 
@@ -117,22 +118,22 @@ const DefaultStory = ({ source: initialSource }: { source: string }) => {
     }
   }, [stateText]);
 
-  const schemaExtensions = useMemo(() => [json()], []);
-  const stateExtensions = useMemo(() => [json({ schema: jsonSchema })], [jsonSchema]);
-  const templateExtensions = useMemo(() => templateLanguage(), []);
+  const schemaExtensions = useMemo<Extension[]>(() => [json()], []);
+  const stateExtensions = useMemo<Extension[]>(() => [json({ schema: jsonSchema })], [jsonSchema]);
+  const templateExtensions = useMemo<Extension[]>(() => templateLanguage(), []);
 
   return (
     <Flex classNames='h-full w-full divide-x divide-separator' align='stretch'>
       <Column title='Context schema' width='w-80'>
-        <ReadOnlyEditor value={schemaText} extensions={schemaExtensions} />
+        <Editor value={schemaText} extensions={schemaExtensions} />
       </Column>
 
       <Column title='Context object' width='w-80'>
-        <LiveEditor value={stateText} onChange={setStateText} extensions={stateExtensions} />
+        <Editor value={stateText} extensions={stateExtensions} onChange={setStateText} />
       </Column>
 
       <Column title='Layout' width='w-80'>
-        <LiveEditor value={source} onChange={setSource} extensions={templateExtensions} />
+        <Editor value={source} extensions={templateExtensions} onChange={setSource} />
       </Column>
 
       <Column title='Rendered'>
@@ -168,54 +169,8 @@ const DefaultStory = ({ source: initialSource }: { source: string }) => {
 };
 
 //
-// Editors. Split into read-only and live variants because the live one needs an update listener,
-// which has to be created with the view rather than passed as a prop.
+// Editor.
 //
-
-const ReadOnlyEditor = ({ value, extensions }: { value: string; extensions: any[] }) => {
-  const { themeMode } = useThemeContext();
-  const { parentRef } = useTextEditor(
-    () => ({
-      initialValue: value,
-      extensions: [
-        createThemeExtensions({ themeMode, slots: documentSlots }),
-        createBasicExtensions({ readOnly: true, lineWrapping: false }),
-        ...extensions,
-      ],
-    }),
-    [themeMode, value, extensions],
-  );
-
-  return <div ref={parentRef} className='flex-1 min-h-0 overflow-auto' />;
-};
-
-const LiveEditor = ({
-  value,
-  onChange,
-  extensions,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  extensions: any[];
-}) => {
-  const { themeMode } = useThemeContext();
-  const { parentRef } = useTextEditor(
-    () => ({
-      initialValue: value,
-      extensions: [
-        createThemeExtensions({ themeMode, slots: documentSlots }),
-        createBasicExtensions({ lineWrapping: false }),
-        ...extensions,
-        mirrorTo(onChange),
-      ],
-    }),
-    // Deliberately not keyed on `value`: the editor owns the text once mounted, and re-creating it
-    // on every keystroke would lose the cursor.
-    [themeMode, extensions],
-  );
-
-  return <div ref={parentRef} className='flex-1 min-h-0 overflow-auto' />;
-};
 
 /** Mirror the document out on change so the render column follows the editor. */
 const mirrorTo = (onChange: (value: string) => void) =>
@@ -224,6 +179,34 @@ const mirrorTo = (onChange: (value: string) => void) =>
       onChange(update.state.doc.toString());
     }
   });
+
+type EditorProps = {
+  value: string;
+  extensions: Extension[];
+  /** Omit for a read-only column. */
+  onChange?: (value: string) => void;
+};
+
+const Editor = ({ value, extensions, onChange }: EditorProps) => {
+  const { themeMode } = useThemeContext();
+  const { parentRef } = useTextEditor(
+    () => ({
+      initialValue: value,
+      extensions: [
+        createThemeExtensions({ themeMode, slots: compactSlots }),
+        createBasicExtensions({ readOnly: !onChange, lineWrapping: false }),
+        ...extensions,
+        ...(onChange ? [mirrorTo(onChange)] : []),
+      ],
+    }),
+    // An editable editor owns its text once mounted, so it must NOT key on `value` — recreating it
+    // on every keystroke would lose the cursor. A read-only one has no such state, and keys on
+    // `value` so an externally changed document is picked up.
+    [themeMode, extensions, onChange, onChange ? null : value],
+  );
+
+  return <div ref={parentRef} className='flex-1 min-h-0 overflow-auto' />;
+};
 
 const meta: Meta<typeof DefaultStory> = {
   title: 'ui/ui-template/Template',
