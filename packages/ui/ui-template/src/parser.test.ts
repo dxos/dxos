@@ -239,6 +239,16 @@ describe('closed resolution', () => {
   });
 });
 
+describe('intrinsic bindings', () => {
+  test("a control's enabled attribute is a state binding", ({ expect }) => {
+    const node = parse(
+      '<container id="x"><let name="ready" initial="true" /><control as="button" label="Done" enabled="ready" on-activate="org.dxos.operation.x.y" /></container>',
+    );
+    const control = node.children?.find((child) => child.tag === 'control');
+    expect(control?.data).toEqual({ enabled: { from: 'state', path: ['ready'] } });
+  });
+});
+
 describe('resolve', () => {
   type State = { title: string; nested: { count: number } };
   const frame: ScopeFrame = {

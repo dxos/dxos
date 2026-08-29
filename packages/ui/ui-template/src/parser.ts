@@ -83,7 +83,11 @@ const toNode = (name: string, attrs: Record<string, string>, children: Node[], p
   for (const [key, value] of Object.entries(attrs)) {
     // Intrinsic binding attributes: `when`/`on` are state bindings despite the missing `data-`
     // prefix — conditionality binds against published state by construction.
-    if ((name === 'show' && key === 'when') || (name === 'switch' && key === 'on')) {
+    if (
+      (name === 'show' && key === 'when') ||
+      (name === 'switch' && key === 'on') ||
+      (name === 'control' && key === 'enabled')
+    ) {
       data[key] = toBinding('state', value);
     } else if (key.startsWith('data-')) {
       data[key.slice(5)] = toBinding('state', value);

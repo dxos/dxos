@@ -90,7 +90,8 @@ const resolveData = (data: Readonly<Record<string, Binding>> | undefined, scope:
   Object.fromEntries(Object.entries(data ?? {}).map(([key, binding]) => [key, resolve(binding, scope)]));
 
 /** `show` presence: anything except undefined/null/false renders the children. */
-const present = (value: unknown): boolean => value !== undefined && value !== null && value !== false;
+/** Presence: the shared semantics of `show when=` and `control enabled=`. */
+export const present = (value: unknown): boolean => value !== undefined && value !== null && value !== false;
 
 /** Read the published slot value for a frame's `let` at `<path>.<name>` off the scope's ui tree. */
 const readSlot = (ui: unknown, path: readonly string[]): unknown => {

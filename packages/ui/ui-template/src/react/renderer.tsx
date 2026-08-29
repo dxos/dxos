@@ -20,7 +20,7 @@ import { Combobox, Listbox } from '@dxos/react-ui-list';
 import { Tabs } from '@dxos/react-ui-tabs';
 
 import { type Binding, type ModuleView, type Node, type Scope, resolve } from '../model';
-import { type CreateRendererOptions, type Renderer, type RenderOptions, render } from '../render';
+import { type CreateRendererOptions, type Renderer, type RenderOptions, present, render } from '../render';
 import { Splitter } from './testing/Splitter';
 
 const asText = (value: unknown): string => (value == null ? '' : String(value));
@@ -125,10 +125,14 @@ export const createReactRenderer = ({
     </span>
   ),
 
-  control: ({ path, props, data, handlers }) => {
+  control: ({ path, node, props, data, handlers }) => {
     if (props.as === 'button') {
+      // `enabled` is an intrinsic binding with `show`'s presence semantics: the button is
+      // disabled while the bound value is undefined/null/false, so command availability is
+      // published state, never a component callback.
+      const disabled = node.data?.enabled ? !present(data.enabled) : undefined;
       return (
-        <Button key={path} onClick={() => handlers.activate?.()}>
+        <Button key={path} disabled={disabled} onClick={() => handlers.activate?.()}>
           {asText(props.label)}
         </Button>
       );

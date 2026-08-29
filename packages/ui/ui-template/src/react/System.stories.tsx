@@ -421,7 +421,8 @@ const MASTER_DETAIL_TOOLBAR = trim`
     <let name="selection" from="contacts.selection" />
     <command>
       <control as="button" label="Add" on-activate="org.dxos.operation.contacts.add" />
-      <control as="button" label="Qualify" on-activate="org.dxos.operation.contacts.qualify" />
+      <control as="button" label="Qualify" enabled="contacts.selected"
+               on-activate="org.dxos.operation.contacts.qualify" />
     </command>
     <layout rows="1fr 1fr" resizable="true">
       <collection data-items="contacts.organizations" item-id="id" item-label="name"
