@@ -816,6 +816,18 @@ catalogs:
     '@xyflow/react':
       specifier: ^12.8.1
       version: 12.8.1
+    '@zag-js/core':
+      specifier: ^1.43.3
+      version: 1.43.3
+    '@zag-js/react':
+      specifier: ^1.43.3
+      version: 1.43.3
+    '@zag-js/splitter':
+      specifier: ^1.43.3
+      version: 1.43.3
+    '@zag-js/vanilla':
+      specifier: ^1.43.3
+      version: 1.43.3
     JSONStream:
       specifier: ^1.3.5
       version: 1.3.5
@@ -23496,6 +23508,18 @@ importers:
       '@types/react':
         specifier: ~19.2.17
         version: 19.2.17
+      '@zag-js/core':
+        specifier: 'catalog:'
+        version: 1.43.3
+      '@zag-js/react':
+        specifier: 'catalog:'
+        version: 1.43.3(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@zag-js/splitter':
+        specifier: 'catalog:'
+        version: 1.43.3
+      '@zag-js/vanilla':
+        specifier: 'catalog:'
+        version: 1.43.3
       effect:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
@@ -33066,6 +33090,36 @@ packages:
   '@yuku-toolchain/types@0.8.7':
     resolution: {integrity: sha512-2Z53dNxAJL6UvFoIrDZvYf3zlO8s4VJK4O2hhaB4mXVwwpX/7ajtss3cmfqKvamlNLWyt9FSWs4eoYdlbxpnHA==}
 
+  '@zag-js/anatomy@1.43.3':
+    resolution: {integrity: sha512-KzosWgu0TTtdBNHPUZg2W8E5JsGsExQ8oGkLDmV6Sym9twaATU2YVMCWsfitq3Isss4099wNMsHdjEPK2UyCjw==}
+
+  '@zag-js/core@1.43.3':
+    resolution: {integrity: sha512-afREBcZWvPLHz/2AxJeuAP2o6+o3V7NZO/MutLhdclKaVSBlPzCr6qqP9k8hq1zOxk1jogKT5VVGielzWDY2Dw==}
+
+  '@zag-js/dom-query@1.43.3':
+    resolution: {integrity: sha512-kpTTYMemMmHxhp4gyOllK7/Lf86AySTO+AlGds9iQM21eUwi1jvc9q3VTxP+qD/KwHePGftfPwkwxifC3iSGbw==}
+
+  '@zag-js/react@1.43.3':
+    resolution: {integrity: sha512-PVfq738OhicFsGOZNqrsBmdOHuh54XnIhkyJ9HSWDpzQcGHq4fuFWIvfmqW/5o/Xkj+JwFQLoIDVX/KHaUjcXA==}
+    peerDependencies:
+      react: ~19.2.7
+      react-dom: ~19.2.7
+
+  '@zag-js/splitter@1.43.3':
+    resolution: {integrity: sha512-iQDlQvAD+ldG0QEj6pwQazIiEjR5bvJhZFeqoSRy11BHOls5mT978QNOcCTZ0gQ1ilwsWoAMnESY8d33U1v1Vw==}
+
+  '@zag-js/store@1.43.3':
+    resolution: {integrity: sha512-NL3Uxk5Rszjd+X+cPXw0N7Kn5TNMyrS6cTMazlBOcN2+J68mzXhNFvM/0H38m0X+3ybK3sE5Ta6NPlhOQADRqw==}
+
+  '@zag-js/types@1.43.3':
+    resolution: {integrity: sha512-QokzUgkJ7a/TRE8SAXqlm1XfiNDbyM8y+mx0PpmzHa8bvmWXLEe/Zx2TRz8aYoGim75NluYzDy3x+WWileF7uA==}
+
+  '@zag-js/utils@1.43.3':
+    resolution: {integrity: sha512-9P9fvFFxuiDcLqX0BYgGNkf0/a/id32nHvQpwgv/Xv3b9n5yeyw2U8nKefpWr+1VfFsrpf2XMXiA2CDSWZgt2g==}
+
+  '@zag-js/vanilla@1.43.3':
+    resolution: {integrity: sha512-wHb5vvUFuThJfNEk1lCKxKOFfdsvvNYy5TJbnnSRdlxXUD6w2OxiPPPc7bu+PUxJDpEA7Eu3Xr1lGf5IGYRxgg==}
+
   '@zeit/schemas@2.36.0':
     resolution: {integrity: sha512-7kjMwcChYEzMKjeex9ZFXkt1AyNov9R5HZtjBKVsmVpw7pa7ZtlCGvCBC2vnnXctaYN+aRI61HjIqeetZW5ROg==}
 
@@ -39755,6 +39809,9 @@ packages:
   proxy-agent@6.3.1:
     resolution: {integrity: sha512-Rb5RVBy1iyqOtNl15Cw/llpeLH8bsb37gM1FUfKQ+Wck6xHlbAhWGUFiTRHtkjqGTA5pSHz6+0hrPW/oECihPQ==}
     engines: {node: '>= 14'}
+
+  proxy-compare@3.0.1:
+    resolution: {integrity: sha512-V9plBAt3qjMlS1+nC8771KNf6oJ12gExvaxnNzN/9yVRLdTv/lc+oJlnSzrdYDAvBfTStPCoiaCOTmTs0adv7Q==}
 
   proxy-from-env@1.1.0:
     resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
@@ -54827,6 +54884,51 @@ snapshots:
 
   '@yuku-toolchain/types@0.8.7': {}
 
+  '@zag-js/anatomy@1.43.3': {}
+
+  '@zag-js/core@1.43.3':
+    dependencies:
+      '@zag-js/dom-query': 1.43.3
+      '@zag-js/utils': 1.43.3
+
+  '@zag-js/dom-query@1.43.3':
+    dependencies:
+      '@zag-js/types': 1.43.3
+
+  '@zag-js/react@1.43.3(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
+    dependencies:
+      '@zag-js/core': 1.43.3
+      '@zag-js/store': 1.43.3
+      '@zag-js/types': 1.43.3
+      '@zag-js/utils': 1.43.3
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+
+  '@zag-js/splitter@1.43.3':
+    dependencies:
+      '@zag-js/anatomy': 1.43.3
+      '@zag-js/core': 1.43.3
+      '@zag-js/dom-query': 1.43.3
+      '@zag-js/types': 1.43.3
+      '@zag-js/utils': 1.43.3
+
+  '@zag-js/store@1.43.3':
+    dependencies:
+      proxy-compare: 3.0.1
+
+  '@zag-js/types@1.43.3':
+    dependencies:
+      csstype: 3.2.3
+
+  '@zag-js/utils@1.43.3': {}
+
+  '@zag-js/vanilla@1.43.3':
+    dependencies:
+      '@zag-js/core': 1.43.3
+      '@zag-js/store': 1.43.3
+      '@zag-js/types': 1.43.3
+      '@zag-js/utils': 1.43.3
+
   '@zeit/schemas@2.36.0': {}
 
   '@zone-eu/mailsplit@5.4.15':
@@ -63092,6 +63194,8 @@ snapshots:
       socks-proxy-agent: 8.0.5
     transitivePeerDependencies:
       - supports-color
+
+  proxy-compare@3.0.1: {}
 
   proxy-from-env@1.1.0: {}
 
