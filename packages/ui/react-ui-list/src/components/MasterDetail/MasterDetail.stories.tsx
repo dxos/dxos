@@ -147,9 +147,9 @@ export const Basic: Story = {
   decorators: [withLayout({ layout: 'column' })],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const options = await waitFor(() => {
+    const options = await waitFor(async () => {
       const found = canvas.getAllByRole('option');
-      expect(found.length).toBeGreaterThan(1);
+      await expect(found.length).toBeGreaterThan(1);
       return found;
     });
 
