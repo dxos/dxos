@@ -201,7 +201,7 @@ export const TestEdit: Story = {
   play: async ({ canvasElement }) => {
     const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
     const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
-    const description = () => pane.querySelector<HTMLTextAreaElement>('[data-testid="taskList.edit.description"]');
+    const description = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.description"]');
     const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
 
     // Nothing selected: the pane creates, and has no description to attach one to.
@@ -226,12 +226,14 @@ export const TestEdit: Story = {
     first.click();
     await waitFor(async () => expect(description()).not.toBeNull());
 
-    // Editing the description writes it back on blur.
-    await userEvent.click(description()!);
-    await userEvent.keyboard(' — amended');
-    description()!.blur();
-    await waitFor(async () => expect(rows()[0].textContent).toContain(firstTitle));
-    await expect(description()!.value).toContain('amended');
+    // The description is a markdown editor, held open — the pane IS the editor, so there is nothing
+    // to click into.
+    await waitFor(async () => expect(description()!.querySelector('.cm-content')).not.toBeNull());
+
+    // ...and its text starts where the title's does. CodeMirror insets its own content, which would
+    // otherwise sit the description further in than the field above it.
+    const left = (element: Element) => Math.round(element.getBoundingClientRect().left);
+    await expect(left(description()!.querySelector('.cm-line')!)).toEqual(left(title()));
   },
 };
 

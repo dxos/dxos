@@ -36,7 +36,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { Listbox, TreeDropIndicator, TreeItemToggle, paddingIndentation, useListDisclosure } from '@dxos/react-ui-list';
-import { MarkdownView } from '@dxos/react-ui-markdown';
+import { MarkdownEditable, MarkdownView } from '@dxos/react-ui-markdown';
 import { type Actor, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
@@ -923,14 +923,12 @@ const TaskListEdit = composable<HTMLDivElement, { placeholder?: string; descript
     const current = snapshot ?? task;
 
     const [draft, setDraft] = useState('');
-    // The pane is a view onto whichever task is selected, so switching tasks replaces what it holds
-    // rather than carrying the previous one's text across.
-    const [draftDescription, setDraftDescription] = useState('');
+    // The pane is a view onto whichever task is selected, so switching tasks replaces the title it
+    // holds rather than carrying the previous one's across.
     const editingId = useRef<string | undefined>(undefined);
     if (editingId.current !== current?.id) {
       editingId.current = current?.id;
       setDraft(current?.title ?? '');
-      setDraftDescription(current?.description ?? '');
     }
 
     const commitTitle = useCallback(() => {
@@ -944,12 +942,6 @@ const TaskListEdit = composable<HTMLDivElement, { placeholder?: string; descript
         setDraft('');
       }
     }, [draft, task, current, onTaskCreate, onTaskUpdate]);
-
-    const commitDescription = useCallback(() => {
-      if (task && current && draftDescription !== (current.description ?? '')) {
-        onTaskUpdate?.(task, { description: draftDescription });
-      }
-    }, [draftDescription, task, current, onTaskUpdate]);
 
     const handleTitleKeyDown = useCallback(
       (event: KeyboardEvent<HTMLInputElement>) => {
@@ -1007,19 +999,26 @@ const TaskListEdit = composable<HTMLDivElement, { placeholder?: string; descript
           >
             {showGutter && <span />}
             <span />
-            <span className='flex min-w-0' style={hierarchical ? { paddingInlineStart: TOGGLE_INSET } : undefined}>
-              <Input.Root>
-                <Input.TextArea
-                  variant='subdued'
-                  rows={2}
-                  classNames='px-0 text-sm text-description'
-                  data-testid='taskList.edit.description'
-                  placeholder={descriptionPlaceholder}
-                  value={draftDescription}
-                  onChange={(event) => setDraftDescription(event.target.value)}
-                  onBlur={commitDescription}
-                />
-              </Input.Root>
+            <span
+              data-testid='taskList.edit.description'
+              className='flex min-w-0'
+              style={hierarchical ? { paddingInlineStart: TOGGLE_INSET } : undefined}
+            >
+              {/* A description is markdown, so it is edited as markdown. `editing` is held open —
+                  the pane IS the editor, so there is nothing to click into — and the key remounts
+                  it per task, since a field held open never re-reads its subject. */}
+              <MarkdownEditable
+                key={current.id}
+                classNames='text-sm'
+                value={current.description ?? ''}
+                onValueChange={(description) => task && onTaskUpdate?.(task, { description })}
+                placeholder={descriptionPlaceholder}
+                editing
+                multiline
+                // Held open, so it must not pull focus: selecting a row by keyboard would otherwise
+                // land the reader in the description instead of the list.
+                autoFocus={false}
+              />
             </span>
           </div>
         )}

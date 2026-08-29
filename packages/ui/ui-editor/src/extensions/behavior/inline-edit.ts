@@ -14,6 +14,11 @@ export type InlineEditOptions = {
   onRevert?: () => void;
   /** Whether leaving the editor keeps the edit or discards it. */
   commitOnBlur?: boolean;
+  /**
+   * Whether `Enter` commits. False for a multi-line field, where `Enter` has to stay a newline and
+   * leaving the field is the only way to commit.
+   */
+  submitOnEnter?: boolean;
 };
 
 /**
@@ -24,10 +29,15 @@ export type InlineEditOptions = {
  * The document is one field's worth of text here, not a document, which is why `Enter` is free to
  * mean something else.
  */
-export const inlineEdit = ({ onCommit, onRevert, commitOnBlur = true }: InlineEditOptions = {}): Extension => {
+export const inlineEdit = ({
+  onCommit,
+  onRevert,
+  commitOnBlur = true,
+  submitOnEnter = true,
+}: InlineEditOptions = {}): Extension => {
   return [
     // `submit` already owns Enter / Shift-Enter; only the escape hatch is new.
-    submit({ fireIfEmpty: true, onSubmit: (text) => void onCommit?.(text) }),
+    submitOnEnter ? submit({ fireIfEmpty: true, onSubmit: (text) => void onCommit?.(text) }) : [],
     Prec.highest(
       keymap.of([
         {

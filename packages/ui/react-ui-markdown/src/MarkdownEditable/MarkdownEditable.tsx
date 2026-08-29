@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 
 import { type ThemedClassName, type UseEditableOptions, useEditable } from '@dxos/react-ui';
 import { TextEditor } from '@dxos/react-ui-editor';
@@ -29,6 +29,17 @@ export type MarkdownEditableProps = ThemedClassName<
     components?: MarkdownViewProps['components'];
     /** Renders as plain markdown with no affordance to edit. */
     readonly?: boolean;
+    /**
+     * A field that holds paragraphs rather than a line: `Enter` stays a newline, so leaving the
+     * field is what commits.
+     */
+    multiline?: boolean;
+    /**
+     * Whether opening the editor takes focus. True for click-to-edit, where the reader just asked
+     * for it; false for a field held open in a pane, which would otherwise pull focus away from
+     * whatever the reader is actually driving.
+     */
+    autoFocus?: boolean;
   }
 >;
 
@@ -37,6 +48,8 @@ export const MarkdownEditable = ({
   placeholder,
   components,
   readonly,
+  multiline,
+  autoFocus = true,
   ...options
 }: MarkdownEditableProps) => {
   const { value, draft, editing, setDraft, commit, revert, previewProps } = useEditable({
@@ -44,30 +57,49 @@ export const MarkdownEditable = ({
     disabled: options.disabled || readonly,
   });
 
+  // Held in a ref, and the extensions built once: `commit` closes over the draft, so it is a new
+  // function on every keystroke — and a new extensions array tears the editor down and builds it
+  // again, losing focus and the character just typed.
+  const handlers = useRef({ setDraft, commit, revert });
+  handlers.current = { setDraft, commit, revert };
+
+  const commitOnBlur = options.blurBehavior !== 'revert';
   const extensions = useMemo(
     () => [
       createMarkdownExtensions(),
       decorateMarkdown(),
       inlineEdit({
         onCommit: (text) => {
-          setDraft(text);
-          commit();
+          handlers.current.setDraft(text);
+          handlers.current.commit();
         },
-        onRevert: revert,
-        commitOnBlur: options.blurBehavior !== 'revert',
+        onRevert: () => handlers.current.revert(),
+        commitOnBlur,
+        submitOnEnter: !multiline,
       }),
     ],
-    // The extension closes over the current draft's handlers, so it is rebuilt when they change —
-    // which is per commit, not per keystroke.
-    [setDraft, commit, revert, options.blurBehavior],
+    [commitOnBlur, multiline],
   );
 
   if (editing) {
     // Wrapped rather than styled directly: `TextEditor` forwards its rest props to the editor's
     // config, not to the DOM, and the preview is a box of the same kind — so the two match.
     return (
-      <div data-testid='markdownEditable.editor' className={mx('w-full', classNames)}>
-        <TextEditor value={draft} onChange={setDraft} extensions={extensions} autoFocus selectionEnd />
+      // CodeMirror insets its own content, which would sit the text further in than the preview it
+      // replaced; the field owns its inset, so the editor's is removed.
+      <div
+        data-testid='markdownEditable.editor'
+        className={mx('w-full [&_.cm-content]:!p-0 [&_.cm-line]:!px-0', classNames)}
+      >
+        {/* `initialValue`, not a controlled value: the editor owns its document once open, and
+            feeding `draft` back in on every keystroke would fight the cursor. */}
+        <TextEditor
+          initialValue={draft}
+          onChange={(text) => handlers.current.setDraft(text)}
+          extensions={extensions}
+          autoFocus={autoFocus}
+          selectionEnd
+        />
       </div>
     );
   }
