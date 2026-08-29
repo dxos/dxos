@@ -23,9 +23,6 @@
       "path": "../../core/echo/echo-react"
     },
     {
-      "path": "../../sdk/react-client"
-    },
-    {
       "path": "../../sdk/types"
     },
     {

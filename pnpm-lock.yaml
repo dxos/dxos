@@ -23459,9 +23459,12 @@ importers:
       '@codemirror/view':
         specifier: 'catalog:'
         version: 6.43.9
-      '@lezer/common':
-        specifier: ^1.5.2
-        version: 1.5.2
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../react-ui-form
+      '@dxos/react-ui-list':
+        specifier: workspace:*
+        version: link:../react-ui-list
     devDependencies:
       '@dxos/echo':
         specifier: workspace:*
@@ -23472,21 +23475,12 @@ importers:
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-client
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../react-ui-editor
-      '@dxos/react-ui-form':
-        specifier: workspace:*
-        version: link:../react-ui-form
-      '@dxos/react-ui-list':
-        specifier: workspace:*
-        version: link:../react-ui-list
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -23505,6 +23499,9 @@ importers:
       '@types/react':
         specifier: ~19.2.17
         version: 19.2.17
+      effect:
+        specifier: 4.0.0-rc.108
+        version: 4.0.0-rc.108
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -23514,6 +23511,9 @@ importers:
       vite:
         specifier: '>=8.2.1'
         version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
 
   packages/ui/ui-theme:
     dependencies:

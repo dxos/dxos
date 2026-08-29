@@ -126,9 +126,9 @@ type CellProps = {
 };
 
 const Cell = ({ area, title, children }: CellProps) => (
-  <Flex column style={{ gridArea: area }} classNames={mx('min-w-0', areaBorders[area])}>
+  <Flex column style={{ gridArea: area }} classNames={mx('dx-container', areaBorders[area])}>
     <div className='px-2 py-1 text-xs uppercase tracking-wide text-subdued border-be border-separator'>{title}</div>
-    <Flex column grow classNames='min-h-0 overflow-hidden'>
+    <Flex column grow classNames='dx-container'>
       {children}
     </Flex>
   </Flex>
@@ -178,33 +178,31 @@ const DefaultStory = ({ source: initialSource }: { source: string }) => {
       </Cell>
 
       <Cell area='rendered' title='Rendered'>
-        <Flex column gap='md' classNames='overflow-auto'>
-          {parsed.node && state.value ? (
-            <Template
-              node={parsed.node}
-              state={state.value}
-              renderer={renderer}
-              options={{ dispatch: (operation) => setLog((entries) => [operation, ...entries].slice(0, 8)) }}
-            />
-          ) : (
-            <span className='text-error-text text-sm'>{parsed.error ?? state.error}</span>
-          )}
+        {parsed.node && state.value ? (
+          <Template
+            node={parsed.node}
+            state={state.value}
+            renderer={renderer}
+            options={{ dispatch: (operation) => setLog((entries) => [operation, ...entries].slice(0, 8)) }}
+          />
+        ) : (
+          <span className='text-error-text text-sm'>{parsed.error ?? state.error}</span>
+        )}
+      </Cell>
 
-          {log.length > 0 && (
-            <Panel.Root>
-              <Panel.Content>
-                <Flex column gap='xs'>
-                  <span className='text-xs text-subdued'>dispatched</span>
-                  {log.map((operation, index) => (
-                    <span key={index} className='font-mono text-xs'>
-                      {operation}
-                    </span>
-                  ))}
-                </Flex>
-              </Panel.Content>
-            </Panel.Root>
-          )}
-        </Flex>
+      <Cell area='log' title='Log'>
+        <Panel.Root>
+          <Panel.Content>
+            <Flex column gap='xs'>
+              <span className='text-xs text-subdued'>dispatched</span>
+              {log.map((operation, index) => (
+                <span key={index} className='font-mono text-xs'>
+                  {operation}
+                </span>
+              ))}
+            </Flex>
+          </Panel.Content>
+        </Panel.Root>
       </Cell>
     </Flex>
   );

@@ -76,7 +76,7 @@ export const FileProperties = ({ subject: file }: FilePropertiesProps) => {
         {reference && (
           <Input.Root>
             <Input.Label>{t('properties.reference.label')}</Input.Label>
-            <div role='none' className='flex w-full gap-1'>
+            <div className='flex w-full gap-1'>
               <Input.TextInput readOnly value={reference} classNames='grow' />
               <Clipboard.IconButton value={reference} label={t('properties.reference.copy.label')} />
             </div>
@@ -85,7 +85,7 @@ export const FileProperties = ({ subject: file }: FilePropertiesProps) => {
         {url && (
           <Input.Root>
             <Input.Label>{t('properties.url.label')}</Input.Label>
-            <div role='none' className='flex w-full gap-1'>
+            <div className='flex w-full gap-1'>
               <Input.TextInput readOnly value={url} classNames='grow' />
               <Clipboard.IconButton value={url} label={t('properties.url.copy.label')} />
               <IconButton

@@ -442,13 +442,11 @@ const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
       </Cell>
 
       <Cell area='rendered' title='Rendered'>
-        <Flex column gap='md' classNames='p-2 overflow-auto'>
-          {active?.node ? (
-            <Template node={active.node} state={state} renderer={renderer} options={{ dispatch }} />
-          ) : (
-            <span className='text-error-text text-sm'>{active?.error}</span>
-          )}
-        </Flex>
+        {active?.node ? (
+          <Template node={active.node} state={state} renderer={renderer} options={{ dispatch }} />
+        ) : (
+          <span className='text-error-text text-sm'>{active?.error}</span>
+        )}
       </Cell>
 
       <Cell area='state' title='Published state'>
@@ -456,7 +454,7 @@ const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
       </Cell>
 
       <Cell area='log' title='Operation log'>
-        <Flex column gap='xs' classNames='p-2'>
+        <Flex column gap='xs'>
           {log.map((entry, index) => (
             <span key={index} className='font-mono text-xs'>
               {entry.operation}

@@ -55,7 +55,7 @@ export type ReactRendererOptions = {
 export const createReactRenderer = ({ schemas }: ReactRendererOptions): Renderer<ReactNode> => ({
   container: ({ path, props, children }) => (
     <Panel.Root key={path}>
-      <Panel.Content classNames='p-2'>
+      <Panel.Content>
         <Flex column gap={oneOf(GAPS, props.gap) ?? 'sm'}>
           {children}
         </Flex>
