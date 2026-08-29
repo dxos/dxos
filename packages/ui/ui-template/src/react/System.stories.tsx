@@ -17,15 +17,27 @@ import { trim } from '@dxos/util';
 import { templateLanguage } from '../codemirror';
 import { type Node } from '../model';
 import { parse } from '../parser';
-import { type Registry, type UiState, checkVars, getIn, varDecls } from '../system';
+import {
+  type ModuleDef,
+  type ModuleInputs,
+  type Registry,
+  type UiState,
+  checkUses,
+  checkVars,
+  fromSlot,
+  varDecls,
+  viewModules,
+} from '../system';
 import { Template, createReactRenderer } from './renderer';
 import { Editor, OperationLog, Workbench } from './testing';
 import { useSystem } from './useSystem';
 
 //
-// SPIKE. The system stories: one DefaultStory, per-story layout/context/state. Everything below a
-// story's `source` runs through the same loop — parse → seed machines → derive context from
-// (published state × live ECHO query) → render → operations → new state.
+// SPIKE. The system stories: one DefaultStory, per-story layout. Everything below a story's
+// `source` runs through the same loop — parse → seed slots (template lets + module slots) →
+// materialize module views from (published state × live ECHO query inputs) → render →
+// operations → new state. Nothing is ambient: every name a template binds is a `let`, a root
+// `var`, or a `use` alias into a module's typed export table.
 //
 
 type Db = Database.Database;
@@ -61,10 +73,15 @@ const useTestDb = (): Db | undefined => {
 
 //
 // Registry. Everything a template references, by URI. Operations are the only writer: they step
-// published state and may mutate the database; the query feeds mutations back as new context.
+// published state and may mutate the database; the query feeds mutations back as new inputs.
 //
 
 const ORGANIZATION = 'org.dxos.type.Organization';
+const TEXT = 'org.dxos.type.Text';
+
+const CONTACTS_MODULE = 'org.dxos.module.contacts';
+const PICKER_MODULE = 'org.dxos.module.picker';
+const FILTER_MODULE = 'org.dxos.module.filter';
 
 /**
  * The FORM schema: the editable projection, not the stored type. `Type.getSchema(Organization)`
@@ -90,53 +107,47 @@ const toFormValues = (org: Organization.Organization): OrganizationFormValues =>
   website: org.website,
 });
 
-const TEXT = 'org.dxos.type.Text';
+/** The organizations a module received as input (the live query, wired by the host). */
+const inputOrganizations = (inputs: Readonly<Record<string, unknown>>): readonly Organization.Organization[] =>
+  Array.isArray(inputs.organizations) ? inputs.organizations : [];
 
-const registry: Registry<Db, Schema.Codec<any, any>> = {
-  schemas: {
-    [ORGANIZATION]: OrganizationForm,
-    [TEXT]: Schema.String,
+/**
+ * The contacts module: what `deriveContext` used to smuggle in ambiently is now the module's
+ * typed export table — the module that owns the inputs (selection, draft, the query) exports the
+ * derivations (`selected`), and its operations are the only writers of its slots.
+ */
+const ContactsModule: ModuleDef<Db> = {
+  key: CONTACTS_MODULE,
+  description: 'Organizations: query, shared selection, and the editing draft.',
+  slots: {
+    selection: { initial: undefined },
+    draft: { initial: false },
   },
-
-  // Slot machines: each names one value's initial state; a template's `let` binds it to a name.
-  machines: {
-    'org.dxos.machine.selection': {
-      key: 'org.dxos.machine.selection',
-      initial: undefined,
-    },
-    'org.dxos.machine.flag': {
-      key: 'org.dxos.machine.flag',
-      initial: false,
-    },
-    'org.dxos.machine.flag-set': {
-      key: 'org.dxos.machine.flag-set',
-      initial: true,
-    },
-    'org.dxos.machine.text': {
-      key: 'org.dxos.machine.text',
-      initial: '',
-    },
-    'org.dxos.machine.view': {
-      key: 'org.dxos.machine.view',
-      initial: 'list',
+  state: {
+    organizations: { derive: ({ inputs }) => inputOrganizations(inputs) },
+    // Derived from selection × draft × organizations — typed, owned here, never ambient.
+    selected: {
+      derive: ({ slots, inputs }) => {
+        if (slots.draft === true) {
+          return {};
+        }
+        const selected = inputOrganizations(inputs).find((org) => org.id === slots.selection);
+        return selected ? toFormValues(selected) : undefined;
+      },
     },
   },
-
-  // Operations are scope-relative: they read and write the dispatching node's slots by name,
-  // resolved lexically — the same operation serves any template that declares the slot.
   operations: {
-    'org.dxos.operation.contacts.select': {
+    select: {
       key: 'org.dxos.operation.contacts.select',
       description: 'Select a row in the master list.',
-      handler: ({ scope, payload }) =>
-        scope.set({ selection: payload, ...(scope.has('draft') ? { draft: false } : {}) }),
+      handler: ({ scope, payload }) => scope.set({ selection: payload, draft: false }),
     },
-    'org.dxos.operation.contacts.add': {
+    add: {
       key: 'org.dxos.operation.contacts.add',
       description: 'Start a draft; the form edits a temporary object until save.',
       handler: ({ scope }) => scope.set({ selection: undefined, draft: true }),
     },
-    'org.dxos.operation.contacts.save': {
+    save: {
       key: 'org.dxos.operation.contacts.save',
       description: 'Commit the form draft: update the selected object, or add the draft to the database.',
       handler: ({ scope, payload, db }) => {
@@ -161,12 +172,12 @@ const registry: Registry<Db, Schema.Codec<any, any>> = {
         }
       },
     },
-    'org.dxos.operation.contacts.cancel': {
+    cancel: {
       key: 'org.dxos.operation.contacts.cancel',
       description: 'Discard the draft.',
       handler: ({ scope }) => scope.set({ draft: false }),
     },
-    'org.dxos.operation.contacts.qualify': {
+    qualify: {
       key: 'org.dxos.operation.contacts.qualify',
       description: 'Toolbar action over the current selection: mark the organization qualified.',
       handler: ({ scope, db }) => {
@@ -180,18 +191,96 @@ const registry: Registry<Db, Schema.Codec<any, any>> = {
         }
       },
     },
-    'org.dxos.operation.picker.input': {
+  },
+  capabilities: {
+    // The shared-selection instance: the master list and the detail form bind ONE instance,
+    // and so would a toolbar in another template — observation is shared, writes go through
+    // the operations above.
+    selection: { machine: 'org.dxos.machine.selection', slot: 'selection' },
+  },
+};
+
+/** The picker module: combobox filter text, committed value, and their derivations. */
+const PickerModule: ModuleDef<Db> = {
+  key: PICKER_MODULE,
+  slots: {
+    filter: { initial: '' },
+    value: { initial: undefined },
+  },
+  state: {
+    filter: fromSlot('filter'),
+    filtered: {
+      derive: ({ slots, inputs }) => {
+        const text = String(slots.filter ?? '').toLowerCase();
+        const organizations = inputOrganizations(inputs);
+        return text ? organizations.filter((org) => (org.name ?? '').toLowerCase().includes(text)) : organizations;
+      },
+    },
+    selected: {
+      derive: ({ slots, inputs }) => {
+        const selected = inputOrganizations(inputs).find((org) => org.id === slots.value);
+        return selected ? toFormValues(selected) : undefined;
+      },
+    },
+    pickerLabel: {
+      derive: ({ slots, inputs }) => inputOrganizations(inputs).find((org) => org.id === slots.value)?.name ?? '',
+    },
+  },
+  operations: {
+    input: {
       key: 'org.dxos.operation.picker.input',
       handler: ({ scope, payload }) => scope.set({ filter: String(payload ?? '') }),
     },
-    'org.dxos.operation.picker.select': {
+    select: {
       key: 'org.dxos.operation.picker.select',
       handler: ({ scope, payload }) => scope.set({ value: payload, filter: '' }),
     },
-    'org.dxos.operation.filter.input': {
+  },
+  capabilities: {},
+};
+
+/** The filter module: the `useState` exemplar promoted to a module that owns its derivation. */
+const FilterModule: ModuleDef<Db> = {
+  key: FILTER_MODULE,
+  slots: {
+    text: { initial: '' },
+  },
+  state: {
+    text: fromSlot('text'),
+    filtered: {
+      derive: ({ slots, inputs }) => {
+        const text = String(slots.text ?? '').toLowerCase();
+        const organizations = inputOrganizations(inputs);
+        return text ? organizations.filter((org) => (org.name ?? '').toLowerCase().includes(text)) : organizations;
+      },
+    },
+  },
+  operations: {
+    input: {
       key: 'org.dxos.operation.filter.input',
       handler: ({ scope, payload }) => scope.set({ text: String(payload ?? '') }),
     },
+  },
+  capabilities: {},
+};
+
+const registry: Registry<Db, Schema.Codec<any, any>> = {
+  schemas: {
+    [ORGANIZATION]: OrganizationForm,
+    [TEXT]: Schema.String,
+  },
+
+  // Machines back capability instances (and rung-2 lets); rung-1 lets need none.
+  machines: {
+    'org.dxos.machine.selection': {
+      key: 'org.dxos.machine.selection',
+      initial: undefined,
+    },
+  },
+
+  // The flat table holds only template-local operations — an anonymous template's writers.
+  // Everything module-owned lives in the module's own operations column below.
+  operations: {
     'org.dxos.operation.view.set': {
       key: 'org.dxos.operation.view.set',
       description: 'Tabs write which branch of the switch exists.',
@@ -199,40 +288,11 @@ const registry: Registry<Db, Schema.Codec<any, any>> = {
     },
   },
 
-  modules: {},
-};
-
-//
-// Context derivation: the pure function from (published state, query results) to the object the
-// template binds against. This is where filtering and selection resolution live — never in a
-// component (MVU).
-//
-
-type AppContext = {
-  ui: UiState;
-  organizations: readonly Organization.Organization[];
-  filtered: readonly Organization.Organization[];
-  selected: OrganizationFormValues | undefined;
-  pickerLabel: string;
-};
-
-const deriveContext = (ui: UiState, organizations: readonly Organization.Organization[]): AppContext => {
-  const filterText = String(getIn(ui, ['filter', 'text']) ?? getIn(ui, ['picker', 'filter']) ?? '').toLowerCase();
-  const filtered = filterText
-    ? organizations.filter((org) => (org.name ?? '').toLowerCase().includes(filterText))
-    : organizations;
-  const selected = getIn(ui, ['contacts', 'draft'])
-    ? {}
-    : (organizations.find((org) => org.id === getIn(ui, ['contacts', 'selection'])) ??
-      organizations.find((org) => org.id === getIn(ui, ['picker', 'value'])));
-  const pickerValue = organizations.find((org) => org.id === getIn(ui, ['picker', 'value']));
-  return {
-    ui,
-    organizations,
-    filtered,
-    selected,
-    pickerLabel: pickerValue?.name ?? '',
-  };
+  modules: {
+    [CONTACTS_MODULE]: ContactsModule,
+    [PICKER_MODULE]: PickerModule,
+    [FILTER_MODULE]: FilterModule,
+  },
 };
 
 //
@@ -242,36 +302,40 @@ const deriveContext = (ui: UiState, organizations: readonly Organization.Organiz
 const LIST = trim`
   <container>
     <var name="title" type="org.dxos.type.Text" />
-    <var name="organizations" type="org.dxos.type.Organization" many="true" />
+    <use module="org.dxos.module.contacts" as="contacts" />
     <display variant="title" data-text="title" />
-    <collection data-items="organizations" item-id="id" item-label="name" />
+    <collection data-items="contacts.organizations" item-id="id" item-label="name" />
   </container>
 `;
 
 const FORM = trim`
-  <container id="contacts">
+  <container>
     <var name="title" type="org.dxos.type.Text" />
-    <var name="selected" type="org.dxos.type.Organization" optional="true" />
-    <let name="selection" machine="org.dxos.machine.selection" />
-    <let name="draft" machine="org.dxos.machine.flag-set" />
+    <use module="org.dxos.module.contacts" as="contacts" />
     <display variant="title" data-text="title" />
-    <form schema="org.dxos.type.Organization" data-values="selected"
-          on-save="org.dxos.operation.contacts.save"
-          on-cancel="org.dxos.operation.contacts.cancel" />
+    <command>
+      <control as="button" label="Add" on-activate="org.dxos.operation.contacts.add" />
+    </command>
+    <show when="contacts.selected">
+      <form schema="org.dxos.type.Organization" data-values="contacts.selected"
+            on-save="org.dxos.operation.contacts.save"
+            on-cancel="org.dxos.operation.contacts.cancel" />
+      <fallback>
+        <display label="Nothing selected — Add starts a draft." />
+      </fallback>
+    </show>
   </container>
 `;
 
 const MASTER_DETAIL = trim`
   <layout id="contacts" rows="1fr 1fr">
-    <var name="organizations" type="org.dxos.type.Organization" many="true" />
-    <var name="selected" type="org.dxos.type.Organization" optional="true" />
-    <let name="selection" machine="org.dxos.machine.selection" />
-    <let name="draft" machine="org.dxos.machine.flag" />
-    <collection data-items="organizations" item-id="id" item-label="name"
+    <use module="org.dxos.module.contacts" as="contacts" />
+    <let name="selection" from="contacts.selection" />
+    <collection data-items="contacts.organizations" item-id="id" item-label="name"
                 data-selection="selection"
                 on-select="org.dxos.operation.contacts.select" />
-    <show when="selected">
-      <form schema="org.dxos.type.Organization" data-values="selected"
+    <show when="contacts.selected">
+      <form schema="org.dxos.type.Organization" data-values="contacts.selected"
             on-save="org.dxos.operation.contacts.save"
             on-cancel="org.dxos.operation.contacts.cancel" />
       <fallback>
@@ -283,20 +347,18 @@ const MASTER_DETAIL = trim`
 
 const MASTER_DETAIL_TOOLBAR = trim`
   <container id="contacts">
-    <var name="organizations" type="org.dxos.type.Organization" many="true" />
-    <var name="selected" type="org.dxos.type.Organization" optional="true" />
-    <let name="selection" machine="org.dxos.machine.selection" />
-    <let name="draft" machine="org.dxos.machine.flag" />
+    <use module="org.dxos.module.contacts" as="contacts" />
+    <let name="selection" from="contacts.selection" />
     <command>
       <control as="button" label="Add" on-activate="org.dxos.operation.contacts.add" />
       <control as="button" label="Qualify" on-activate="org.dxos.operation.contacts.qualify" />
     </command>
     <layout rows="1fr 1fr">
-      <collection data-items="organizations" item-id="id" item-label="name"
+      <collection data-items="contacts.organizations" item-id="id" item-label="name"
                   data-selection="selection"
                   on-select="org.dxos.operation.contacts.select" />
-      <show when="selected">
-        <form schema="org.dxos.type.Organization" data-values="selected"
+      <show when="contacts.selected">
+        <form schema="org.dxos.type.Organization" data-values="contacts.selected"
               on-save="org.dxos.operation.contacts.save"
               on-cancel="org.dxos.operation.contacts.cancel" />
         <fallback>
@@ -308,54 +370,48 @@ const MASTER_DETAIL_TOOLBAR = trim`
 `;
 
 const COMBOBOX = trim`
-  <container id="picker">
+  <container>
     <var name="title" type="org.dxos.type.Text" />
-    <var name="filtered" type="org.dxos.type.Organization" many="true" />
-    <var name="selected" type="org.dxos.type.Organization" optional="true" />
-    <var name="pickerLabel" type="org.dxos.type.Text" />
-    <let name="filter" machine="org.dxos.machine.text" />
-    <let name="value" machine="org.dxos.machine.selection" />
+    <use module="org.dxos.module.picker" as="picker" />
     <display variant="title" data-text="title" />
     <combobox placeholder="Select organization…"
-              data-items="filtered" item-id="id" item-label="name"
-              data-value="pickerLabel" data-filter="filter"
+              data-items="picker.filtered" item-id="id" item-label="name"
+              data-value="picker.pickerLabel" data-filter="picker.filter"
               on-input="org.dxos.operation.picker.input"
               on-select="org.dxos.operation.picker.select" />
-    <show when="selected">
-      <form schema="org.dxos.type.Organization" data-values="selected" />
+    <show when="picker.selected">
+      <form schema="org.dxos.type.Organization" data-values="picker.selected" />
     </show>
   </container>
 `;
 
 const FILTER_LIST = trim`
-  <container id="filter">
-    <var name="filtered" type="org.dxos.type.Organization" many="true" />
-    <let name="text" machine="org.dxos.machine.text" />
-    <control label="Filter" placeholder="Type to filter…" data-value="text"
+  <container>
+    <use module="org.dxos.module.filter" as="filter" />
+    <control label="Filter" placeholder="Type to filter…" data-value="filter.text"
              on-input="org.dxos.operation.filter.input" />
-    <collection data-items="filtered" item-id="id" item-label="name" />
+    <collection data-items="filter.filtered" item-id="id" item-label="name" />
   </container>
 `;
 
 const TABS = trim`
   <container id="contacts">
-    <var name="organizations" type="org.dxos.type.Organization" many="true" />
-    <var name="selected" type="org.dxos.type.Organization" optional="true" />
-    <let name="view" machine="org.dxos.machine.view" />
-    <let name="selection" machine="org.dxos.machine.selection" />
+    <use module="org.dxos.module.contacts" as="contacts" />
+    <let name="view" initial="list" />
+    <let name="selection" from="contacts.selection" />
     <tabs data-value="view" on-select="org.dxos.operation.view.set">
       <tab value="list" label="List" />
       <tab value="detail" label="Detail" />
     </tabs>
     <switch on="view">
       <match value="list">
-        <collection data-items="organizations" item-id="id" item-label="name"
+        <collection data-items="contacts.organizations" item-id="id" item-label="name"
                     data-selection="selection"
                     on-select="org.dxos.operation.contacts.select" />
       </match>
       <match value="detail">
-        <show when="selected">
-          <form schema="org.dxos.type.Organization" data-values="selected"
+        <show when="contacts.selected">
+          <form schema="org.dxos.type.Organization" data-values="contacts.selected"
                 on-save="org.dxos.operation.contacts.save"
                 on-cancel="org.dxos.operation.contacts.cancel" />
           <fallback>
@@ -377,12 +433,20 @@ type StoryArgs = {
   pick?: (ui: UiState) => string;
 };
 
-const EMPTY: Node = { tag: 'container' };
-
 const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
   const [sources, setSources] = useState(initialSources);
   const db = useTestDb();
   const organizations = useQuery(db, Filter.type(Organization.Organization));
+
+  // The host wires the live query into the modules that declared it as an input.
+  const inputs = useMemo<ModuleInputs>(
+    () => ({
+      [CONTACTS_MODULE]: { organizations },
+      [PICKER_MODULE]: { organizations },
+      [FILTER_MODULE]: { organizations },
+    }),
+    [organizations],
+  );
 
   // Which layout renders is itself a function of published state — layout selection is the
   // meta-level of "entirely state-driven".
@@ -399,7 +463,7 @@ const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
     return out;
   }, [sources]);
 
-  // Machines are seeded from every layout, so switching layouts keeps instance state.
+  // Template lets are seeded from every layout, so switching layouts keeps instance state.
   const seedRoot = useMemo<Node>(() => {
     const children = Object.values(parsedAll)
       .map((entry) => entry.node)
@@ -407,24 +471,28 @@ const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
     return { tag: 'container', children };
   }, [parsedAll]);
 
-  const { ui, log, dispatch } = useSystem({ registry, root: seedRoot, db });
+  const { ui, log, dispatch } = useSystem({ registry, root: seedRoot, db, inputs });
   const renderer = useMemo(() => createReactRenderer({ schemas: registry.schemas }), []);
   const editorExtensions = useMemo(() => templateLanguage(), []);
 
   const activeKey = pick?.(ui) ?? firstKey;
   const active = parsedAll[activeKey] ?? parsedAll[firstKey];
-  // What deriveContext produces is no longer ambient: it is the value the host supplies against
-  // the template's `var` signature, narrowed and mount-checked against the registry's schemas.
-  const context = deriveContext(ui, organizations);
-  const vars: Record<string, unknown> = { title: 'Organizations', ...context };
+
+  // The host side of the contract: values against the `var` signature, module views against the
+  // `use` imports — both mount-checked, both visible when they fail (never garbage).
+  const vars: Record<string, unknown> = { title: 'Organizations' };
+  const modules = viewModules(registry, ui, inputs);
   const mountErrors = active?.node
-    ? checkVars(registry.schemas, varDecls(active.node), vars, (schema, value) => {
-        try {
-          return Schema.is(schema)(value);
-        } catch {
-          return false;
-        }
-      })
+    ? [
+        ...checkVars(registry.schemas, varDecls(active.node), vars, (schema, value) => {
+          try {
+            return Schema.is(schema)(value);
+          } catch {
+            return false;
+          }
+        }),
+        ...checkUses(registry, active.node),
+      ]
     : [];
 
   return (
@@ -455,9 +523,16 @@ const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
         title: 'Rendered',
         children:
           active?.node && mountErrors.length === 0 ? (
-            <Template node={active.node} ui={ui} vars={vars} renderer={renderer} options={{ dispatch }} />
+            <Template
+              node={active.node}
+              ui={ui}
+              vars={vars}
+              modules={modules}
+              renderer={renderer}
+              options={{ dispatch }}
+            />
           ) : (
-            // A failed signature renders its errors, never garbage (mount row of the error table).
+            // A failed signature or module wiring renders its errors, never garbage.
             <span className='text-error-text text-sm whitespace-pre-wrap'>
               {active?.error ?? mountErrors.join('\n')}
             </span>

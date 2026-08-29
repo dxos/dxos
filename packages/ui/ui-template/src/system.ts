@@ -352,6 +352,10 @@ export const seedUi = (registry: Registry<never>, root: WalkNode): UiState => {
     for (const child of node.children ?? []) {
       if (child.tag === 'let') {
         const name = String(child.props?.name);
+        if (child.props && 'from' in child.props) {
+          // Rung 3: the slot mirrors a module capability — the module seeds it, not the template.
+          continue;
+        }
         if (child.props && 'initial' in child.props) {
           // Rung 1: a plain writable slot seeded from the literal initial value.
           ui = setIn(ui, [...path, name], child.props.initial);

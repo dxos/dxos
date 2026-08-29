@@ -91,6 +91,17 @@ describe('seedUi', () => {
     expect(seedUi(registry, node)).toEqual({});
   });
 
+  test('a rung-3 from= let is not seeded — the owning module seeds the instance', ({ expect }) => {
+    const node = parse(
+      '<container id="s">' +
+        '<use module="org.dxos.module.contacts" as="contacts" />' +
+        '<let name="selection" from="contacts.selection" />' +
+        '<let name="draft" initial="false" />' +
+        '</container>',
+    );
+    expect(seedUi(registry, node)).toEqual({ s: { draft: false } });
+  });
+
   test('an unknown machine is an error, not an empty slot', ({ expect }) => {
     const node = parse('<container id="contacts"><let name="x" machine="org.dxos.machine.missing" /></container>');
     expect(() => seedUi(registry, node)).toThrow(SystemError);
