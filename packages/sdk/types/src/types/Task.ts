@@ -153,6 +153,183 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
 export const make = (props: Obj.MakeProps<typeof Task>): Task => Obj.make(Task, props);
 
 //
+// Mutations. Every edit that should be remembered goes through one of these, so the log cannot
+// drift from the task: a caller writing a field directly leaves no entry, and a caller writing an
+// entry by hand can describe something that never happened. Each one is a single `Obj.update`, so
+// the change and its note reach the database together.
+//
+// Only the fields a person edits are covered. `parentTask` and `milestone` carry ownership and set
+// membership, so they move through `TaskSet` rather than here.
+//
+
+/**
+ * Fields an edit may set. `null` clears an optional field — distinct from `undefined`, which means
+ * the edit does not mention it at all.
+ */
+export type Edit = {
+  title?: string;
+  description?: string | null;
+  status?: Status;
+  priority?: Priority | null;
+  estimate?: number | null;
+  assignee?: Actor.Actor | null;
+};
+
+export type EditOptions = {
+  /** Who did it; omitted for something the system did on its own. */
+  actor?: Actor.Actor;
+  /** When, ISO-8601. Defaults to now; supplied by a caller replaying or backdating a change. */
+  date?: string;
+  /** Replaces the generated note — for a caller that knows why, not just what. */
+  description?: string;
+};
+
+/** How an actor reads in a note: whatever identifies them, most human-readable first. */
+const actorLabel = (actor: Actor.Actor): string =>
+  actor.name ?? actor.email ?? actor.identityDid ?? (actor.role === 'assistant' ? 'an agent' : 'someone');
+
+/** Compared on what identifies an actor, so re-assigning the same person records nothing. */
+const sameActor = (a: Actor.Actor | undefined, b: Actor.Actor | undefined): boolean => {
+  if (!a || !b) {
+    return a === b;
+  }
+  return (
+    a.name === b.name &&
+    a.email === b.email &&
+    a.identityDid === b.identityDid &&
+    a.role === b.role &&
+    refEntityId(a.contact) === refEntityId(b.contact)
+  );
+};
+
+/** A title in a note, bounded: the log is read as prose, and a paragraph-long title buries it. */
+const quote = (value: string): string => (value.length > 60 ? `"${value.slice(0, 57)}..."` : `"${value}"`);
+
+/**
+ * Appends one entry to a task's log. Append-only by convention, so this adds rather than rewrites;
+ * prefer {@link edit}, which writes the entry and the change it describes together.
+ */
+export const appendHistory = (task: Task, entry: HistoryEntry): void => {
+  Obj.update(task, (task) => {
+    task.history = [...(task.history ?? []), entry];
+  });
+};
+
+/** Records that a task was created. Separate from {@link make} so a caller chooses whether to log. */
+export const recordCreated = (task: Task, options: EditOptions = {}): HistoryEntry => {
+  const entry: HistoryEntry = {
+    date: options.date ?? new Date().toISOString(),
+    ...(options.actor ? { actor: options.actor } : {}),
+    event: 'created',
+    description: options.description ?? `Created ${quote(task.title)}.`,
+  };
+  appendHistory(task, entry);
+  return entry;
+};
+
+/**
+ * Applies `changes` and records ONE entry describing them — an edit is what the person did, not
+ * one note per field they touched.
+ *
+ * Fields already holding the given value are skipped, so a no-op edit writes nothing at all and
+ * returns `undefined`: a log full of "status changed from done to done" is a log nobody reads.
+ */
+export const edit = (task: Task, changes: Edit, options: EditOptions = {}): HistoryEntry | undefined => {
+  const notes: string[] = [];
+
+  if (changes.title !== undefined && changes.title !== task.title) {
+    notes.push(`Title changed to ${quote(changes.title)}.`);
+  }
+  if (changes.description !== undefined && (changes.description ?? undefined) !== task.description) {
+    notes.push(changes.description === null ? 'Description cleared.' : 'Description updated.');
+  }
+  if (changes.status !== undefined && changes.status !== task.status) {
+    notes.push(
+      task.status === undefined
+        ? `Status set to ${changes.status}.`
+        : `Status changed from ${task.status} to ${changes.status}.`,
+    );
+  }
+  if (changes.priority !== undefined && (changes.priority ?? undefined) !== task.priority) {
+    notes.push(
+      changes.priority === null
+        ? 'Priority cleared.'
+        : task.priority === undefined
+          ? `Priority set to ${changes.priority}.`
+          : `Priority changed from ${task.priority} to ${changes.priority}.`,
+    );
+  }
+  if (changes.estimate !== undefined && (changes.estimate ?? undefined) !== task.estimate) {
+    notes.push(changes.estimate === null ? 'Estimate cleared.' : `Estimate set to ${changes.estimate}.`);
+  }
+  if (changes.assignee !== undefined && !sameActor(changes.assignee ?? undefined, task.assignee)) {
+    notes.push(changes.assignee === null ? 'Unassigned.' : `Assigned to ${actorLabel(changes.assignee)}.`);
+  }
+
+  if (notes.length === 0) {
+    return undefined;
+  }
+
+  const entry: HistoryEntry = {
+    date: options.date ?? new Date().toISOString(),
+    ...(options.actor ? { actor: options.actor } : {}),
+    event: 'updated',
+    description: options.description ?? notes.join(' '),
+  };
+
+  // One transaction: the fields and the entry that explains them are never separately observable.
+  Obj.update(task, (task) => {
+    if (changes.title !== undefined) {
+      task.title = changes.title;
+    }
+    // Optional fields are cleared with `delete` rather than an `undefined` assignment, which the
+    // property schema rejects on validation.
+    if (changes.description !== undefined) {
+      if (changes.description === null) {
+        delete task.description;
+      } else {
+        task.description = changes.description;
+      }
+    }
+    if (changes.status !== undefined) {
+      task.status = changes.status;
+    }
+    if (changes.priority !== undefined) {
+      if (changes.priority === null) {
+        delete task.priority;
+      } else {
+        task.priority = changes.priority;
+      }
+    }
+    if (changes.estimate !== undefined) {
+      if (changes.estimate === null) {
+        delete task.estimate;
+      } else {
+        task.estimate = changes.estimate;
+      }
+    }
+    if (changes.assignee !== undefined) {
+      if (changes.assignee === null) {
+        delete task.assignee;
+      } else {
+        task.assignee = changes.assignee;
+      }
+    }
+    task.history = [...(task.history ?? []), entry];
+  });
+
+  return entry;
+};
+
+/** Moves a task to `status`, recording the transition it made. */
+export const setStatus = (task: Task, status: Status, options?: EditOptions): HistoryEntry | undefined =>
+  edit(task, { status }, options);
+
+/** Assigns a task, or unassigns it with `null`. */
+export const assign = (task: Task, assignee: Actor.Actor | null, options?: EditOptions): HistoryEntry | undefined =>
+  edit(task, { assignee }, options);
+
+//
 // Derived views over a task list. Nothing here is stored: hierarchy, milestone grouping and
 // progress are computed from `parentTask`/`milestone`, so they cannot disagree with the refs. They
 // take a plain task array rather than a container, so every holder of an ordered list — a

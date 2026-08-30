@@ -148,6 +148,79 @@ describe('collectSubtree', () => {
   );
 });
 
+describe('mutations', () => {
+  it.effect('records one entry per edit, naming what changed', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(Task.make({ title: 'Draft launch email', status: 'todo' }));
+      yield* Database.flush();
+
+      const entry = Task.edit(
+        task,
+        { status: 'done', assignee: { name: 'Scout', role: 'assistant' } },
+        { actor: { name: 'Rich' } },
+      );
+      yield* Database.flush();
+
+      // An edit is what the person did, so both fields share one note rather than one note each.
+      expect(task.history).toHaveLength(1);
+      expect(entry?.description).toEqual('Status changed from todo to done. Assigned to Scout.');
+      expect(task.history?.[0].event).toEqual('updated');
+      expect(task.history?.[0].actor?.name).toEqual('Rich');
+      expect(task.status).toEqual('done');
+      expect(task.assignee?.name).toEqual('Scout');
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('writes nothing when an edit changes nothing', () =>
+    Effect.gen(function* () {
+      const assignee = { name: 'Scout', role: 'assistant' as const };
+      const task = yield* Database.add(Task.make({ title: 'Draft launch email', status: 'todo', assignee }));
+      yield* Database.flush();
+
+      // Same values, and an equal-but-not-identical actor: a log of "done to done" is unreadable.
+      const entry = Task.edit(task, { status: 'todo', assignee: { name: 'Scout', role: 'assistant' } });
+      yield* Database.flush();
+
+      expect(entry).toBeUndefined();
+      expect(task.history).toBeUndefined();
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('clears an optional field with null and says so', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(
+        Task.make({ title: 'Draft launch email', status: 'todo', assignee: { name: 'Scout' }, estimate: 3 }),
+      );
+      yield* Database.flush();
+
+      Task.assign(task, null);
+      Task.edit(task, { estimate: null });
+      yield* Database.flush();
+
+      expect(task.assignee).toBeUndefined();
+      expect(task.estimate).toBeUndefined();
+      expect(task.history?.map((entry) => entry.description)).toEqual(['Unassigned.', 'Estimate cleared.']);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('setStatus and recordCreated append to the same log', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(Task.make({ title: 'Draft launch email' }));
+      yield* Database.flush();
+
+      Task.recordCreated(task, { date: '2026-08-01T09:00:00.000Z' });
+      Task.setStatus(task, 'started', { date: '2026-08-01T10:00:00.000Z' });
+      yield* Database.flush();
+
+      expect(task.history?.map((entry) => entry.event)).toEqual(['created', 'updated']);
+      expect(task.history?.[0].description).toEqual('Created "Draft launch email".');
+      // No prior status, so the note states the value rather than inventing a transition.
+      expect(task.history?.[1].description).toEqual('Status set to started.');
+      expect(task.history?.[1].date).toEqual('2026-08-01T10:00:00.000Z');
+    }).pipe(Effect.provide(testLayer())),
+  );
+});
+
 describe('history', () => {
   it.effect('records an activity log that round-trips through the database', () =>
     Effect.gen(function* () {

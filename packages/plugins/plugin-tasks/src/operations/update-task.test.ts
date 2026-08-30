@@ -34,6 +34,31 @@ describe('update-task', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
+  it.effect('records what the patch changed, and nothing when it changed nothing', () =>
+    Effect.gen(function* () {
+      const taskSet = yield* Database.add(TaskSet.make({}));
+      yield* Database.flush();
+      const { task } = yield* createTask.handler({
+        taskSet: Ref.make(taskSet),
+        title: 'Draft',
+        status: 'todo',
+      });
+
+      yield* updateTask.handler({
+        task: Ref.make(task),
+        status: 'done',
+        assignee: { name: 'Scout', role: 'assistant' },
+      });
+      expect(task.history?.map((entry) => entry.description)).toEqual([
+        'Status changed from todo to done. Assigned to Scout.',
+      ]);
+
+      // Re-applying the same patch is not an event: it left the task exactly as it was.
+      yield* updateTask.handler({ task: Ref.make(task), status: 'done' });
+      expect(task.history).toHaveLength(1);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
   it.effect('clearing parentTask clears the lifecycle edge, not just the ref', () =>
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
