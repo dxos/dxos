@@ -307,6 +307,11 @@ export const TaskAction: Story = {
     });
     await userEvent.click(trigger);
 
+    // Every item resolves to a label: a key rendered raw (`delete-task.label`) means the container
+    // looked it up in a namespace that does not hold it, which typechecks and reaches the user.
+    const menu = (await screen.findByRole('menu', undefined, { timeout: 10_000 })).textContent ?? '';
+    await expect(menu).not.toMatch(/\.label\b/);
+
     const item = await screen.findByText('Discuss in chat', undefined, { timeout: 10_000 });
     await userEvent.click(item);
 

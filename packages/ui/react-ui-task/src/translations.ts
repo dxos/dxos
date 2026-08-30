@@ -19,7 +19,6 @@ export const translations = [
         'status-failed.label': 'Failed',
         'status-cancelled.label': 'Cancelled',
         'task-blocked.label': 'Blocked',
-        'delete-task.label': 'Delete task',
         'task-actions.label': 'Task actions',
         'task-title.placeholder': 'Untitled',
         'save-task.label': 'Save',
