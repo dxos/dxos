@@ -79,9 +79,6 @@ export const ChatPrompt = ({
   companionTo,
 }: ChatPromptProps) => {
   const { t } = useTranslation(meta.profile.key);
-
-  const platform = usePlatform();
-
   const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
   const streaming = useAtomValue(processor.streaming);
   const active = useAtomValue(processor.active);

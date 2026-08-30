@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { expect, within } from 'storybook/test';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
@@ -19,7 +19,7 @@ import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { Config } from '@dxos/react-client';
 import { useRegistry, useSpaces } from '@dxos/react-client/echo';
-import { Loading, withTheme } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message, Task } from '@dxos/types';
 
 import { useChatProcessor, useChatServices, usePresets } from '#hooks';
@@ -27,7 +27,7 @@ import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
 import { AssistantCapabilities } from '#types';
 
-import { Chat } from '../Chat';
+import { Chat, type ChatEvent } from '../Chat';
 
 type StoryArgs = {
   /** Seed the chat's checklist, so the tasks toggle has something to show. */
@@ -35,7 +35,7 @@ type StoryArgs = {
   tasksVisible?: boolean;
 };
 
-const DefaultStory = ({ tasksVisible }: StoryArgs) => {
+const DefaultStory = ({ tasksVisible: initialTasksVisible }: StoryArgs) => {
   const [space] = useSpaces();
   const [chat] = useQuery(space?.db, Filter.type(ChatType.Chat));
   const settings = useAtomCapability(AssistantCapabilities.Settings);
@@ -44,6 +44,16 @@ const DefaultStory = ({ tasksVisible }: StoryArgs) => {
   const db = space?.db;
   const runtime = useChatServices({ id: db?.spaceId });
   const processor = useChatProcessor({ db, chat, preset, runtime, registry, settings });
+
+  // Held here, as `ChatArticle` holds it: the prompt only reports the toggle, since the checklist it
+  // shows and hides is its sibling, not its child.
+  const [tasksVisible, setTasksVisible] = useState(initialTasksVisible);
+  const handleEvent = useCallback((event: ChatEvent) => {
+    if (event.type === 'toggle-tasks') {
+      setTasksVisible((visible) => !visible);
+    }
+  }, []);
+
   if (!chat || !db || !processor) {
     return <Loading />;
   }
@@ -51,11 +61,17 @@ const DefaultStory = ({ tasksVisible }: StoryArgs) => {
   return (
     <div className='flex justify-center p-4'>
       <div className='w-full max-w-document-width'>
-        <Chat.Root chat={chat} db={db} processor={processor}>
+        <Chat.Root chat={chat} db={db} processor={processor} onEvent={handleEvent}>
           {tasksVisible && <Chat.TaskList classNames='border border-separator border-b-0 rounded-t-sm' />}
           {/* `attendableId` is the graph node contributed actions are filed under; the story's chat
               has no node, so the row shows only its own controls unless a plugin renders one. */}
-          <Chat.Prompt {...chatProps} outline preset={preset?.id} tasksVisible={tasksVisible} />
+          <Chat.Prompt
+            {...chatProps}
+            outline
+            preset={preset?.id}
+            tasksVisible={tasksVisible}
+            classNames='rounded-t-0'
+          />
         </Chat.Root>
       </div>
     </div>
@@ -67,6 +83,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme(),
+    withLayout({ layout: 'column', classNames: 'flex flex-col justify-end w-[30rem]' }),
     withPluginManager<StoryArgs>(({ args: { tasks = [] } }) => ({
       plugins: [
         ...corePlugins(),
