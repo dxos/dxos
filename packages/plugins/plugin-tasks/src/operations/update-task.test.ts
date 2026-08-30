@@ -38,10 +38,11 @@ describe('update-task', () => {
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({}));
       yield* Database.flush();
-      const { task } = yield* createTask.handler({
-        taskSet: Ref.make(taskSet),
-        title: 'Draft',
-        status: 'todo',
+      const { task } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Draft' });
+      // Seeded directly: `CreateTask` takes no status, and a patch to set one would itself be
+      // logged, which is the very thing under test.
+      Obj.update(task, (task) => {
+        task.status = 'todo';
       });
 
       yield* updateTask.handler({
