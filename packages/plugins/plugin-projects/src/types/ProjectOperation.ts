@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { Chat } from '@dxos/assistant-toolkit';
+import { AgentService } from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Database, Obj, Ref, Type } from '@dxos/echo';
@@ -48,7 +49,11 @@ export const DelegateTaskToChat = Operation.make({
     description: 'Creates a chat for a task and places the task in its checklist.',
     icon: 'ph--chat-text--regular',
   },
-  services: [Capability.Service, Database.Service],
+  // `AgentService` because the operation runs the chat's first turn: a message written to the feed
+  // is a message nobody read.
+  // `AgentService` because the operation runs the chat's first turn: a message written to the
+  // feed is a message nobody read.
+  services: [Capability.Service, Database.Service, AgentService],
   input: Schema.Struct({
     task: Ref.Ref(Task.Task),
   }),

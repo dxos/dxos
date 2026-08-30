@@ -2,17 +2,32 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 
+import * as Capability from '@dxos/app-framework/Capability';
+import { AiContext } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
+import { getSession } from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import * as Skill from '@dxos/compute/Skill';
+import { Database, Obj, Ref } from '@dxos/echo';
+import { log } from '@dxos/log';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
-import { Message } from '@dxos/types';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import { Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { ProjectOperation } from '#types';
+
+/**
+ * Skills the delegated session needs beyond a chat's defaults: the checklist it works from, the
+ * ability to write a document, and the project verbs that file what it wrote. The project's own
+ * skill arrives with the subject binding — a `Project` carries it as an annotation.
+ */
+const DELEGATION_SKILL_KEYS = ['org.dxos.skill.planning', 'org.dxos.skill.markdown', 'org.dxos.skill.project'];
 
 const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat> =
   ProjectOperation.DelegateTaskToChat.pipe(
@@ -47,20 +62,88 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         // not run that plugin.
         db.add(chat);
 
-        // An opening prompt, so the conversation starts on the work rather than on a blank page. A
-        // user message rather than instructions: it is what the reader would otherwise have typed.
+        // Whoever delegated the work reviews it, so a finished task comes back to them rather than
+        // closing itself. `reviewers` being non-empty is what sends the task to `review`.
+        const reviewer = yield* currentActor;
+
+        // `started` on delegation, not on completion: the row shows work is underway from the moment
+        // the session has it.
+        Task.setStatus(task, 'started', { actor: reviewer });
+        if (reviewer) {
+          Obj.update(task, (task) => {
+            task.reviewers = [reviewer];
+          });
+        }
+
+        yield* bindDelegationContext(chat, project);
+        yield* Database.flush();
+
+        // Appending to the feed would leave the message unread: a turn runs when a session is asked
+        // to run one, so the prompt is submitted rather than written.
         const feed = yield* Database.load(chat.feed);
-        yield* Feed.append(feed, [
-          Message.make({
-            sender: { role: 'user' },
-            blocks: [{ _tag: 'text', text: openingPrompt(task.title, task.description) }],
-          }),
-        ]);
+        // Best-effort, and deliberately not fatal: the delegation itself is already durable — the
+        // chat exists, carries the task, and is filed under the project — so a host with no agent
+        // runtime (a test harness, an offline client) still delegates and the reader can send the
+        // first turn themselves.
+        //
+        // `Effect.exit`, not `Effect.catch`: a missing runtime service arrives as a DEFECT (the
+        // process layers are `orDie`), which a failure channel handler never sees.
+        const started = yield* Effect.gen(function* () {
+          const session = yield* getSession(feed, { instructions: chat.instructions });
+          yield* session.submitPrompt([{ _tag: 'text', text: OPENING_PROMPT, disposition: 'synthetic' }]);
+        }).pipe(Effect.exit);
+        if (Exit.isFailure(started)) {
+          log.warn('delegated chat did not start its turn', { cause: Cause.pretty(started.cause) });
+        }
 
         return { chat };
       }),
     ),
   );
+
+/**
+ * References the checklist rather than restating the task: the task is already bound to the chat,
+ * and a copy in the prompt is one the reader can edit into disagreeing with the original.
+ */
+const OPENING_PROMPT = trim`
+  Work the task on your checklist. Read it first, then do it.
+
+  File anything you create into this project's artifacts, and mark the task done when it is
+  finished — the checklist is what reports your progress.
+`;
+
+/** The delegating identity as an actor, for the reviewer field. */
+const currentActor = Effect.gen(function* () {
+  const client = yield* Capability.get(ClientCapabilities.Client);
+  const identity = client.halo.identity.get();
+  if (!identity) {
+    return undefined;
+  }
+  return {
+    identityDid: identity.did,
+    name: identity.profile?.displayName,
+    role: 'user' as const,
+  };
+}).pipe(Effect.catch(() => Effect.succeed(undefined)));
+
+/**
+ * Binds what the session needs onto the chat's feed: the skills, and the project as a context
+ * object so the artifact verbs have something to file into.
+ *
+ * Bound here rather than through `AssistantOperation.BindChatContext`, which would also run every
+ * contributed subject-context provider: that operation requires `Registry.Service`, and declaring it
+ * makes this one unresolvable on a host that does not provide it.
+ */
+const bindDelegationContext = Effect.fnUntraced(function* (chat: Chat.Chat, project: Project.Project | undefined) {
+  const feed = yield* Database.load(chat.feed);
+  const runtime = yield* Effect.context<Database.Service>();
+  const binder = new AiContext.Binder({ feed, runtime });
+  // Registry refs rather than database clones: the ECHO resolver spans the registry, as
+  // `CreateChat` does for the default set.
+  const skills = DELEGATION_SKILL_KEYS.map((key) => Ref.fromURI(Skill.registryURI(key)));
+  const objects = project ? [Ref.make(project)] : [];
+  yield* Effect.promise(() => binder.use((binder: AiContext.Binder) => binder.bind({ skills, objects })));
+});
 
 /** The task's project, walked up the ECHO parents (task → task set → project). */
 const findProject = (task: Obj.Any): Project.Project | undefined => {
@@ -74,11 +157,5 @@ const findProject = (task: Obj.Any): Project.Project | undefined => {
   }
   return undefined;
 };
-
-const openingPrompt = (title: string, description?: string) => trim`
-  Execute this task: "${title}".${description ? `\n\n${description}` : ''}
-
-  Report what you did when it is done.
-`;
 
 export default handler;
