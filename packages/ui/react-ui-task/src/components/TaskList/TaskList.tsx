@@ -24,7 +24,8 @@ import React, {
   useState,
 } from 'react';
 
-import { useObject } from '@dxos/echo-react';
+import { Filter, Obj } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import {
   Icon,
   IconButton,
@@ -845,6 +846,7 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
         <div className='h-8 flex justify-start items-center gap-1'>
           {blocked && <Tag hue='indigo'>{t('task-blocked.label')}</Tag>}
           {current.priority && current.priority !== 'none' && <Tag hue='neutral'>{current.priority}</Tag>}
+          <TaskListItemArtifacts task={task} />
         </div>
         <TaskListItemActions task={task} />
         {instruction && <TreeDropIndicator instruction={instruction} gap={0} />}
@@ -924,6 +926,38 @@ const TaskListItemActions = ({ task }: { task: Task.Task }) => {
     </Menu.Root>
   );
 };
+
+/**
+ * What a task produced, one tag each. Queried rather than read off `ref.target`: on a cold load the
+ * targets are not in memory yet, and a sync read would leave the row permanently empty.
+ */
+const TaskListItemArtifacts = ({ task }: { task: Task.Task }) => {
+  const db = Obj.getDatabase(task);
+  const ids = useMemo(
+    () =>
+      (task.artifacts ?? []).flatMap((ref) => {
+        const id = Task.refEntityId(ref);
+        return id ? [id] : [];
+      }),
+    [task.artifacts],
+  );
+  const queried = useQuery(ids.length > 0 ? db : undefined, Filter.id(...ids));
+  // Without a database — a story, a preview — the refs were made from objects already in hand, so
+  // their targets resolve synchronously and the row still shows what the task produced.
+  const artifacts = db ? queried : (task.artifacts ?? []).flatMap((ref) => (ref.target ? [ref.target] : []));
+
+  return (
+    <>
+      {artifacts.map((artifact) => (
+        <Tag key={artifact.id} hue='amber'>
+          {Obj.getLabel(artifact) ?? Obj.getTypename(artifact)}
+        </Tag>
+      ))}
+    </>
+  );
+};
+
+TaskListItemArtifacts.displayName = 'TaskList.ItemArtifacts';
 
 TaskListItemActions.displayName = 'TaskList.ItemActions';
 

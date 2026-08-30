@@ -24,6 +24,13 @@ const seed = (): Task.Task[] => [
     description:
       'Two Ethiopian lots and one Colombian, sampled before committing to a full bag. Supplier list: https://example.com/suppliers',
   }),
+  // Artifacts render as tags beside priority: what the task produced, not what it is.
+  Task.make({
+    title: 'Write the launch poem',
+    status: 'review',
+    reviewers: [{ name: 'Rich', role: 'user' }],
+    artifacts: [Ref.make(Task.make({ title: 'Ode to a Coffee Bean' }))],
+  }),
   Task.make({
     title: 'Finalize roast curve',
     status: 'started',
