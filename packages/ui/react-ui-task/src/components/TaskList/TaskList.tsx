@@ -1051,6 +1051,15 @@ const TaskListEdit = composable<HTMLDivElement, { placeholder?: string; descript
       }
     }, [draft, task, current, onTaskCreate, onTaskUpdate]);
 
+    // Blur commits a rename but never a create: leaving the field is not a decision to add a task,
+    // and half a title would become one — clicking the list, the thread, or anywhere else would
+    // leave a stray behind. Creating takes Enter or Save, which are the deliberate acts.
+    const handleTitleBlur = useCallback(() => {
+      if (task && current) {
+        commitTitle();
+      }
+    }, [task, current, commitTitle]);
+
     const handleTitleKeyDown = useCallback(
       (event: KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter') {
@@ -1108,7 +1117,7 @@ const TaskListEdit = composable<HTMLDivElement, { placeholder?: string; descript
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={handleTitleKeyDown}
-            onBlur={commitTitle}
+            onBlur={handleTitleBlur}
           />
         </Input.Root>
         {/* Only a selected task has a description to edit; there is nothing to attach one to before

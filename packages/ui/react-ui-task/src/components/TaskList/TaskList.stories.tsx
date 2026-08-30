@@ -239,6 +239,19 @@ export const TestEdit: Story = {
     await expect(title().value).toEqual('');
     await expect(description()).toBeNull();
 
+    // A half-typed title that loses focus creates nothing: leaving the field is not a decision to
+    // add a task. Enter and Save are the deliberate acts, and they still work.
+    const before = rows().length;
+    await userEvent.click(title());
+    await userEvent.keyboard('Stray');
+    await expect(title().value).toEqual('Stray');
+    // Tab rather than `blur()`: a real focus move is what a reader does, and what React's delegated
+    // focusout listens for.
+    await userEvent.tab();
+    await waitFor(async () => expect(title()).not.toEqual(document.activeElement));
+    await expect(rows()).toHaveLength(before);
+    await userEvent.clear(title());
+
     // Selecting a task fills the pane with it.
     const first = rows()[0];
     const firstTitle = first.querySelector('.truncate')!.textContent;
