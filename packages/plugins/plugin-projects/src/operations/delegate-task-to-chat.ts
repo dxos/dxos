@@ -23,6 +23,8 @@ import { trim } from '@dxos/util';
 
 import { ProjectOperation } from '#types';
 
+import { getProjectChatPath } from '../paths';
+
 /**
  * Skills the delegated session needs beyond a chat's defaults: the checklist it works from, the
  * ability to write a document, and the project verbs that file what it wrote. The project's own
@@ -89,7 +91,7 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         //
         // `Effect.exit`, not `Effect.catch`: a missing service arrives as a DEFECT (the process
         // layers are `orDie`), which a failure channel handler never sees.
-        const opened = yield* openChat(chat).pipe(Effect.exit);
+        const opened = yield* openChat(chat, project).pipe(Effect.exit);
         if (Exit.isFailure(opened)) {
           log.warn('delegated chat did not open', { cause: Cause.pretty(opened.cause) });
         }
@@ -108,20 +110,32 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
   );
 
 /**
- * Navigates to a chat. Resolved rather than composed from a path helper: only a resolver knows
- * where an object is addressable, and a project's chats sit on a branch of their own.
+ * Navigates to a chat.
+ *
+ * A project's chat is composed from this plugin's own path helper rather than asked of
+ * `ResolveNavigationTargets`: the Chats branch belongs to this plugin, so it already knows where the
+ * chat lives, and the generic resolvers answer with the assistant's Chats section — which lists only
+ * UNPARENTED chats, so that path names a node that does not exist and the deck renders nothing.
+ * Only a chat outside a project goes to the resolver.
+ *
+ * `immediate` expands the path instead of validating it. The chat was created moments ago, so its
+ * graph node may not exist yet — the branch connector's query has not re-emitted — and validation
+ * sends an unmaterialized path to the not-found route, which empties the deck.
  */
-const openChat = Effect.fnUntraced(function* (chat: Chat.Chat) {
+const openChat = Effect.fnUntraced(function* (chat: Chat.Chat, project: Project.Project | undefined) {
+  const db = Obj.getDatabase(chat);
+  const path = project && db ? getProjectChatPath(db.spaceId, project.id, chat.id) : yield* resolvePath(chat);
+  if (path) {
+    yield* Operation.invoke(LayoutOperation.Open, { subject: [path], navigation: 'immediate' });
+  }
+});
+
+/** Where a chat outside any project is addressable, per whichever plugin claims it. */
+const resolvePath = Effect.fnUntraced(function* (chat: Chat.Chat) {
   const { targets } = yield* Operation.invoke(NavigationOperation.ResolveNavigationTargets, {
     query: { uri: Obj.getURI(chat) },
   });
-  const target = targets[0];
-  if (target) {
-    // `immediate` expands the path instead of validating it. The chat was created moments ago, so
-    // its graph node does not exist yet — the connector's query has not re-emitted — and validation
-    // resolves an unmaterialized path to the not-found route, leaving the deck showing nothing.
-    yield* Operation.invoke(LayoutOperation.Open, { subject: [target.path], navigation: 'immediate' });
-  }
+  return targets[0]?.path;
 });
 
 /**
