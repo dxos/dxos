@@ -372,6 +372,13 @@ reusable React hook as the intermediate step. Occurrences cite the file that exh
 | 18  | Capability collection                  | `ProjectArticle` (extension providers), `CreateProjectPanel` (templates)                                                                                         | `useCapabilities(Tag)` + `useMemo` flatten                                 | (b) `capability` binding through a module (`use` alias)                                                                                   |
 | 19  | Race-guarded async commit              | `Outline` (`convertItemToTask` re-check after await), `OutlineArticle` (effect clearing selection before hand-off)                                               | re-validate state after `await`; effect ordering                           | (b) machine guards — the transition re-checks its predicate at dispatch                                                                   |
 
+**Optimistic overlay** (Phase 7 spike, landed): idioms 8 + 9 + 17 now compose through
+`Optimistic.make(source)` (`@dxos/app-framework`) — the container reads one atom emitting the
+source rows with ordered overlay entries applied, and `useOptimisticOperation` registers an entry
+on dispatch that retires on the first source emission after the operation settles (dropping
+immediately on failure). This is the optimistic contract that idiom 5's async bindings will also need
+once the `ref`/`query` construct exists. Piloted in `TaskSetArticle.useSetTasks`/`handleMove`.
+
 Cross-cutting, not numbered: **translations** (`useTranslation` in all ten units — a grammar
 construct, §2.1-4, not a state idiom) and **stale-closure refs** (`Outline.reportConvertible`,
 `QuickEntryDialog.continueRef` — React artifacts that have no equivalent under MVU because
