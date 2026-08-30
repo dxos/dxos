@@ -10,13 +10,19 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import type * as Layer from 'effect/Layer';
 import type * as Command from 'effect/unstable/cli/Command';
-import React, { useEffect, useRef } from 'react';
+import React, { type MutableRefObject, useEffect, useRef } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { XtermBridge, XtermContext, runShell } from '../../cli';
 import { createXtermTheme } from './theme';
+
+/** Imperative surface for hosts that render controls beside the terminal (a clear button, e.g.). */
+export type TerminalApi = {
+  clear: () => void;
+  focus: () => void;
+};
 
 export type TerminalProps<Name extends string, Input, ContextInput, E, R> = ThemedClassName<{
   /**
@@ -36,6 +42,8 @@ export type TerminalProps<Name extends string, Input, ContextInput, E, R> = Them
   prompt?: string;
   banner?: string;
   fontSize?: number;
+  /** Receives the live {@link TerminalApi} while mounted; a plain ref so writes never re-run the terminal effect. */
+  apiRef?: MutableRefObject<TerminalApi | null>;
 }>;
 
 /**
@@ -53,8 +61,13 @@ export const Terminal = <Name extends string, Input, ContextInput, E, R>({
   prompt,
   banner,
   fontSize = 13,
+  apiRef,
 }: TerminalProps<Name, Input, ContextInput, E, R>) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  // Latest ref carried through the effect without joining its deps: a host re-rendering with a new
+  // ref object must not tear the terminal down.
+  const apiRefRef = useRef(apiRef);
+  apiRefRef.current = apiRef;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -97,6 +110,13 @@ export const Terminal = <Name extends string, Input, ContextInput, E, R>({
 
     xterm.focus();
 
+    if (apiRefRef.current) {
+      apiRefRef.current.current = {
+        clear: () => xterm.clear(),
+        focus: () => xterm.focus(),
+      };
+    }
+
     const bridge = new XtermBridge(xterm);
     const shell = runShell(bridge, { command, name, version, prompt, banner }).pipe(
       Effect.provide(XtermContext.layer(bridge)),
@@ -108,6 +128,9 @@ export const Terminal = <Name extends string, Input, ContextInput, E, R>({
     observer.observe(container);
 
     return () => {
+      if (apiRefRef.current) {
+        apiRefRef.current.current = null;
+      }
       cancelAnimationFrame(frame);
       themeObserver.disconnect();
       observer.disconnect();

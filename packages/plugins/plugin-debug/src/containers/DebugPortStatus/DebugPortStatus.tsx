@@ -2,14 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useSyncExternalStore } from 'react';
+import React, { useCallback, useState, useSyncExternalStore } from 'react';
+import { createPortal } from 'react-dom';
 
-import { CliPanel } from '@dxos/plugin-devtools/containers';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
 import { type DebugPortController, getDebugPortController } from '@dxos/react-client/devtools';
 import { IconButton, Popover, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
+
+import { DebugConsole } from '../DebugConsole';
 
 export type DebugPortStatusProps = {
   /** Injectable for stories/tests; defaults to the page-wide controller. */
@@ -26,9 +28,12 @@ export const DebugPortStatus = ({ controller = getDebugPortController() }: Debug
   const subscribe = useCallback((listener: () => void) => controller.subscribe(listener), [controller]);
   const getStatus = useCallback(() => controller.getStatus(), [controller]);
   const status = useSyncExternalStore(subscribe, getStatus);
+  // Controlled so the console's toolbar close button can dismiss the popover.
+  const [open, setOpen] = useState(false);
+  const handleClose = useCallback(() => setOpen(false), []);
 
   return (
-    <Popover.Root>
+    <Popover.Root open={open} onOpenChange={setOpen}>
       {/* IconButton is the direct trigger child so the trigger ref/handlers/ARIA attach to the button, not the container. */}
       <StatusBar.Item classNames='relative'>
         <Popover.Trigger asChild>
@@ -48,12 +53,21 @@ export const DebugPortStatus = ({ controller = getDebugPortController() }: Debug
           />
         )}
       </StatusBar.Item>
+      {/* Full-width strip pinned to the bottom of the viewport: with side=top / align=center the
+          console opens horizontally centered above the status bar rather than over the trigger.
+          Portaled to the body so `fixed` measures against the viewport — inside the status bar a
+          transformed ancestor would re-root it next to the trigger. */}
+      {createPortal(
+        <Popover.Anchor asChild>
+          <span role='none' className='fixed inset-x-0 bottom-0 pointer-events-none' />
+        </Popover.Anchor>,
+        document.body,
+      )}
       <Popover.Portal>
-        <Popover.Content side='top'>
+        <Popover.Content side='top' align='center'>
           <Popover.Viewport classNames='w-[40rem] h-[24rem]'>
-            <CliPanel />
+            <DebugConsole onClose={handleClose} />
           </Popover.Viewport>
-          <Popover.Arrow />
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>

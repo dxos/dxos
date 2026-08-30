@@ -9693,9 +9693,6 @@ importers:
       '@dxos/plugin-connector':
         specifier: workspace:*
         version: link:../plugin-connector
-      '@dxos/plugin-devtools':
-        specifier: workspace:*
-        version: link:../plugin-devtools
       '@dxos/plugin-google':
         specifier: workspace:*
         version: link:../plugin-google
@@ -9753,6 +9750,9 @@ importers:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
+      '@dxos/react-ui-terminal':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-terminal
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema

@@ -22,6 +22,8 @@ export const translations = [
         'open-logs.label': 'Show logs',
         'open-console.label': 'Show console',
         'debug-port-status.running.label': 'Agent debug port is open — show console',
+        'console.clear.label': 'Clear log',
+        'console.copy.label': 'Copy last result',
 
         'remove-all-objects.confirm.description': 'Remove all objects from this space? This cannot be undone.',
         'remove-all-objects.error.title': 'Failed to remove objects.',
