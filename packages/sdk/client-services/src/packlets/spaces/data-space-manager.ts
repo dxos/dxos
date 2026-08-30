@@ -600,6 +600,11 @@ export class DataSpaceManager extends Resource {
     // its ctx the moment `acceptSpace` returns, which would cancel every pending retry.
     let delay = SPACE_ROOT_REPORT_RETRY_INITIAL;
     const report = async (): Promise<void> => {
+      // A retry outlives the attempt that scheduled it, so it has to re-check: a space closed or
+      // removed in between must not be named to edge.
+      if (!space.isOpen) {
+        return;
+      }
       try {
         await this._edgeHttpClient!.recordSpaceRoot(this._ctx, space.id, {
           rootDocumentUrl: refs.spaceRootDocUrl,
@@ -632,6 +637,9 @@ export class DataSpaceManager extends Resource {
       // write — the same reason `initializeDataPipelineAsync` is parented here.
       const ctx = this._ctx;
       const store = await openCredentialsDocument(ctx, this._echoHost, space.id);
+      if (!space.isOpen) {
+        return;
+      }
       for (const credential of space.inner.spaceState.credentials) {
         store.append(credential);
       }
