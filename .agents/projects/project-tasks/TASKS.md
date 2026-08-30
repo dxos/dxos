@@ -157,6 +157,22 @@ the hierarchical list, which is #12787.
       at full height) in the toolbar; the story also wraps the article in an
       `AttendableContainer`, without which nothing ever attends the article and
       the toolbar renders permanently unattended.
+- [x] **Editing a task in a detail pane** — shipped in #12839.
+      `TaskList.Create` became `TaskList.Edit`: it creates when nothing is
+      selected and edits the selected task otherwise, with the title as an input
+      and the description as a held-open markdown editor. Save and Cancel sit on
+      the title line (a `density='sm'` toolbar) and both leave the pane; neither
+      may take focus, since the fields commit on blur. Escape on a row deselects.
+      Three defects fell out of building it, all fixed in the same PR: the
+      markdown bundle without `createBasicExtensions` leaves the content
+      `white-space: pre` (no wrap, no undo) and without `createThemeExtensions`
+      the caret keeps CodeMirror's invisible 1px black; `Toolbar.Root` declared
+      density as a CSS class only, but `Button`/`Input` stamp `data-density` from
+      React context, and that stamp shadows the variable the class set around
+      them — so a toolbar's density never reached its controls anywhere in the
+      app; and tearing the editor down fires a blur, which commits, so a revert
+      wrote the text it was discarding.
+
 - [ ] **Record when a task reached a terminal status** — `Task` carries no date
       at all today, so nothing can show when work finished or say how long it
       took. Stamp the transition into `done`/`failed`/`cancelled` wherever status
