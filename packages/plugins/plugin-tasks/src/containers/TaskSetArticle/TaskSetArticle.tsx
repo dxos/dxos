@@ -7,7 +7,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useMemo } from 'react';
 
 import * as Optimistic from '@dxos/app-framework/Optimistic';
-import { useOperation, useOptimisticOperation } from '@dxos/app-framework/ui';
+import { useOperation, useOptimisticOperation, useOptimisticQuery } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -123,20 +123,16 @@ TaskSetArticle.displayName = 'TaskSetArticle';
 const useSetTasks = (
   taskSet: TaskSet.TaskSet,
 ): { tasks: readonly Task.Task[]; overlay: Optimistic.Overlay<Task.Task> } => {
-  const db = Obj.getDatabase(taskSet);
-  const overlay = useMemo(() => {
-    const query = db?.query(Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)));
-    const source = Atom.make((get): readonly Task.Task[] => {
-      const tasks: readonly Task.Task[] = query ? get(query.atom) : [];
-      subscribeHierarchy(get, tasks);
+  const { rows, overlay } = useOptimisticQuery(
+    Obj.getDatabase(taskSet),
+    Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)),
+    // Subscribes each member's `parentTask` (the set's array does not carry hierarchy) and
+    // orders by the set's canonical array.
+    (get, tasks) => {
+      tasks.forEach((task) => get(Obj.atomProperty(task, 'parentTask')));
       return Task.orderTasks(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
-    });
-    return Optimistic.make(source);
-  }, [taskSet, db]);
-  return { tasks: useAtomValue(overlay.atom), overlay };
-};
-
-/** Subscribes to every member's `parentTask`, which the set's array does not carry. */
-const subscribeHierarchy = (get: Atom.AtomContext, tasks: readonly Task.Task[]): void => {
-  tasks.forEach((task) => get(Obj.atomProperty(task, 'parentTask')));
+    },
+    [taskSet],
+  );
+  return { tasks: rows, overlay };
 };
