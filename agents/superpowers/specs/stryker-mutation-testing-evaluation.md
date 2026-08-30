@@ -78,7 +78,16 @@ never be run un-scoped.
 
 ## Reproducing
 
-Dependencies are at the workspace root (`@stryker-mutator/core`, `@stryker-mutator/vitest-runner`).
+The Stryker packages are deliberately NOT in the workspace's `package.json`: adding them at the
+root made pnpm rewrite peer-dependency keys across the whole lockfile (~1600 lines), which CI's
+frozen install rejects with `ERR_PNPM_LOCKFILE_MISSING_DEPENDENCY`. For an on-demand audit tool
+that is not worth a permanent lockfile change — install it for the session and discard the
+lockfile edit afterwards:
+
+```sh
+pnpm add -Dw --ignore-workspace-root-check @stryker-mutator/core@10 @stryker-mutator/vitest-runner@10
+```
+
 Per-package `stryker.conf.json` files are checked in. Build the package's deps first
 (`moon run <pkg>:test` once), then from the package directory:
 

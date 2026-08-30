@@ -93,8 +93,6 @@
     "@posthog/cli": "catalog:",
     "@rollup/plugin-inject": "catalog:",
     "@storybook/addon-vitest": "catalog:",
-    "@stryker-mutator/core": "^10.0.0",
-    "@stryker-mutator/vitest-runner": "^10.0.0",
     "@swc/core": "catalog:",
     "@swc/types": "catalog:",
     "@tailwindcss/oxide": "catalog:",
