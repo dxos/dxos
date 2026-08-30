@@ -1,5 +1,6 @@
 ---
 '@dxos/echo': minor
+'@dxos/plugin-markdown': patch
 ---
 
 `Task.edit`, `Task.setStatus`, `Task.assign` and `Task.appendHistory` write a field and the activity-log entry describing it in one transaction; an edit that changes nothing records nothing. `UpdateTask` goes through them, so a patched task now carries its own history.
@@ -7,3 +8,7 @@
 **Breaking:** `TaskEdit` and `TaskDraft` are gone from `@dxos/react-ui-task` — the editable surface of a task now has one definition, `Task.Edit` and `Task.Draft` in `@dxos/types`, shared by the list UI, the mutation helpers and the `UpdateTask` operation. `UpdateTask` accepts `null` to clear `description`, `priority`, `estimate` and `assignee`; it could previously set an assignee but never remove one.
 
 **Breaking:** `Task.Event` is now `created | updated` — the `status-changed`, `assigned`, `moved`, `commented` and `delegated` literals are gone, and a history entry's `description` is optional. Nothing wrote the log before this release, so no stored task carries a removed value.
+
+A plugin can now put a menu item on another plugin's object: `ObjectAction<T>` in `@dxos/app-toolkit` is the shared shape, and a host declares a capability over it. plugin-tasks declares `TaskAction`, so a task row shows contributed actions — plugin-projects contributes `Discuss in chat`, which opens a chat carrying the task in its checklist.
+
+**Breaking:** `TaskList.Root`'s `onTaskDelete` is replaced by `getTaskActions`, which returns the row's menu items; delete is now an ordinary action the container supplies. One item renders as a button, several as an overflow menu.
