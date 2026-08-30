@@ -247,6 +247,10 @@ the hierarchical list, which is #12787.
       ship disabled in a default profile). Add it to the skill's recipes, and note
       that most plugins under development are off until enabled — otherwise every
       live verification starts by concluding the feature is missing.
+- [ ] **Combine the Send/Stop buttons in `ChatPrompt`** — the two are separate
+      controls today, so the prompt's trailing edge changes shape as a turn
+      starts and stops. One button that swaps its icon and action with the
+      session's running state keeps the target in place.
 - [ ] **Record when a task reached a terminal status** — `Task` carries no date
       at all today, so nothing can show when work finished or say how long it
       took. Stamp the transition into `done`/`failed`/`cancelled` wherever status
