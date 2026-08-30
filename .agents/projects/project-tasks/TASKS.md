@@ -258,6 +258,15 @@ the hierarchical list, which is #12787.
       a read-only indicator on the chat today, derived from the provider in
       settings (`preset?.provider === Provider.edge.id`); as an option on the
       prompt it becomes the control it looks like.
+- [ ] **An unresolvable subject empties the deck instead of showing 404** — proved
+      2026-08-30 with the debug port: opening a path whose graph node does not
+      exist (a project chat addressed at the assistant's Chats section) leaves
+      the deck with no plank at all, and re-opening the correct path does not
+      recover it — the EID dedup in `LayoutOperation.Open` remaps the second
+      subject onto the broken entry. `NotFound.validateNavigationTarget` returns
+      `NOT_FOUND_PATH` as designed, so the loss is downstream of it, in
+      plugin-deck. A 404 plank would have made the delegation bug obvious in
+      seconds rather than a blank screen.
 - [ ] **Record when a task reached a terminal status** — `Task` carries no date
       at all today, so nothing can show when work finished or say how long it
       took. Stamp the transition into `done`/`failed`/`cancelled` wherever status

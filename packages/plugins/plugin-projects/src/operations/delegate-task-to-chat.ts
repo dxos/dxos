@@ -117,7 +117,10 @@ const openChat = Effect.fnUntraced(function* (chat: Chat.Chat) {
   });
   const target = targets[0];
   if (target) {
-    yield* Operation.invoke(LayoutOperation.Open, { subject: [target.path] });
+    // `immediate` expands the path instead of validating it. The chat was created moments ago, so
+    // its graph node does not exist yet — the connector's query has not re-emitted — and validation
+    // resolves an unmaterialized path to the not-found route, leaving the deck showing nothing.
+    yield* Operation.invoke(LayoutOperation.Open, { subject: [target.path], navigation: 'immediate' });
   }
 });
 
