@@ -23,9 +23,19 @@ export interface ServiceBackend {
 export type ServiceProvider<Service> = Service | (() => Service) | (() => Promise<Service>);
 
 /**
+ * What a service bundle needs of a descriptor, so a bundle can hold either the protobuf.js
+ * implementation below or the buf-backed one in `@dxos/protocols/buf-service`.
+ */
+export interface ServiceDescriptorLike<Service> {
+  readonly name: string;
+  createClient(backend: ServiceBackend, encodingOptions?: EncodingOptions): Service;
+  createServer(handlers: ServiceProvider<Service>, encodingOptions?: EncodingOptions): ServiceBackend;
+}
+
+/**
  * Client/server service wrapper.
  */
-export class ServiceDescriptor<S> {
+export class ServiceDescriptor<S> implements ServiceDescriptorLike<S> {
   // prettier-ignore
   constructor(
     private readonly _service: pb.Service,

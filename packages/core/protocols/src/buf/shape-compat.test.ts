@@ -33,6 +33,7 @@ import { ClaimSchema, CredentialSchema } from './proto/gen/dxos/halo/credentials
 import { KeyRecordSchema } from './proto/gen/dxos/halo/keyring_pb.ts';
 import { ReliablePayloadSchema } from './proto/gen/dxos/mesh/messaging_pb.ts';
 import { CommandSchema } from './proto/gen/dxos/mesh/muxer_pb.ts';
+import { AuthenticateRequestSchema } from './proto/gen/dxos/mesh/teleport/auth_pb.ts';
 import { RpcMessageSchema } from './proto/gen/dxos/rpc_pb.ts';
 import { AnyEncodingError, decodeCompat, encodeCompat } from './shape-compat.ts';
 
@@ -69,8 +70,14 @@ describe('buf shape-compat', () => {
     const bufBytes = encodeCompat(KeyRecordSchema, value);
     expect(new Uint8Array(bufBytes)).toEqual(new Uint8Array(legacyBytes));
 
-    expect(decodeCompat<KeyRecord>(KeyRecordSchema, legacyBytes)).toMatchObject(value);
-    expect(codec.decode(bufBytes)).toMatchObject(value);
+    // Compared field-wise, because both codecs return `bytes` as a view into the buffer they were
+    // handed: the view type tracks the input, so the two decodes below differ in view type while
+    // carrying the same bytes. `bytes decode preserves the input's view type` pins that down.
+    const legacyDecoded = codec.decode(legacyBytes);
+    const compatDecoded = decodeCompat<KeyRecord>(KeyRecordSchema, legacyBytes);
+    invariant(compatDecoded.privateKey && legacyDecoded.privateKey, 'expected both private keys');
+    expect(Buffer.from(compatDecoded.publicKey).equals(Buffer.from(legacyDecoded.publicKey))).toBe(true);
+    expect(Buffer.from(compatDecoded.privateKey).equals(Buffer.from(legacyDecoded.privateKey))).toBe(true);
   });
 
   test('Heads round-trips identically (no substituted fields)', ({ expect }) => {
@@ -432,5 +439,42 @@ describe('buf shape-compat', () => {
 
   test('packing an Any without an @type fails rather than writing an empty payload', ({ expect }) => {
     expect(() => encodeCompat(ClaimSchema, { id: PublicKey.random(), assertion: {} })).toThrow(AnyEncodingError);
+  });
+
+  // The shape assertions above compare through `canonicalStringify`, which renders a Buffer and a
+  // bare Uint8Array identically and so cannot see this. Flattening a Buffer here drops the methods
+  // `AuthExtension` needs to verify a credential against the challenge it sent, and the error is
+  // swallowed as an auth failure — so assert the view type, matching what the legacy codec returns.
+  test("bytes decode preserves the input's view type", ({ expect }) => {
+    const challenge = new Uint8Array(32).map((_, index) => (index * 7 + 3) & 0xff);
+    const wire = encodeCompat(AuthenticateRequestSchema, { challenge });
+
+    const fromBuffer = decodeCompat<{ challenge: Uint8Array }>(AuthenticateRequestSchema, Buffer.from(wire));
+    expect(Buffer.isBuffer(fromBuffer.challenge)).toBe(true);
+    expect(Buffer.from(fromBuffer.challenge).equals(Buffer.from(challenge))).toBe(true);
+
+    // A plain input stays plain, as protobuf.js does — nothing is coerced to Buffer.
+    const fromPlain = decodeCompat<{ challenge: Uint8Array }>(AuthenticateRequestSchema, new Uint8Array(wire));
+    expect(Buffer.isBuffer(fromPlain.challenge)).toBe(false);
+    expect(Buffer.from(fromPlain.challenge).equals(Buffer.from(challenge))).toBe(true);
+  });
+
+  // A resolved `Any` payload decodes from the outer message's buffer, so unpacking it must not
+  // flatten that view either -- a credential's signature reaches its verifier through this path.
+  test("bytes inside a resolved Any payload keep the input's view type", ({ expect }) => {
+    const challenge = new Uint8Array([1, 2, 3, 4]);
+    const value = {
+      id: PublicKey.random(),
+      assertion: { '@type': 'dxos.mesh.teleport.auth.AuthenticateRequest', 'challenge': challenge },
+    };
+
+    const codec = schema.getCodecForType('dxos.halo.credentials.Claim');
+    const legacyBytes = Buffer.from(codec.encode(value));
+    const legacyDecoded = codec.decode(legacyBytes);
+    const compatDecoded = decodeCompat<Claim>(ClaimSchema, legacyBytes);
+
+    expect(Buffer.isBuffer(legacyDecoded.assertion.challenge)).toBe(true);
+    expect(Buffer.isBuffer(compatDecoded.assertion.challenge)).toBe(true);
+    expect(Buffer.from(compatDecoded.assertion.challenge).equals(Buffer.from(challenge))).toBe(true);
   });
 });

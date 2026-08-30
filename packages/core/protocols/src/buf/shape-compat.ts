@@ -179,7 +179,9 @@ const anyToProto = (field: DescField, value: any, options: CompatOptions): unkno
 const anyFromProto = (field: DescField, value: any, options: CompatOptions): unknown => {
   // The legacy shape keys the packed payload `type_url`, where buf's message uses `typeUrl`.
   const typeUrl: string = value.typeUrl ?? '';
-  const bytes = asBytes(normalizeBytes(value.value ?? new Uint8Array()));
+  // Not flattened: the nested decode below reads its byte fields as views over this buffer, so
+  // flattening here would strip Buffer-ness from every byte field inside the payload.
+  const bytes = asBytes(value.value ?? new Uint8Array());
   if (isPreservedAny(field, options)) {
     return packedAny(typeUrl, bytes);
   }
@@ -283,9 +285,13 @@ const substituteField = (
   }
 };
 
-// buf returns `bytes` fields as views into the input buffer, so a Buffer input yields Buffer
-// fields that protobuf.js output never contains.
-const normalizeBytes = (value: unknown): unknown =>
+// Both codecs return `bytes` as a view into the buffer they decoded, so the view type follows the
+// input: a Buffer input yields Buffer fields. Decoding must leave that alone — flattening it to a
+// bare Uint8Array drops the Buffer methods `AuthExtension` needs to verify a credential against the
+// challenge it sent, which fails silently as an auth failure under the browser's Buffer polyfill.
+//
+// buf accepts any view on the way in, so only the encode direction flattens a Buffer subclass.
+const toWireBytes = (value: unknown): unknown =>
   value instanceof Uint8Array && value.constructor !== Uint8Array ? new Uint8Array(value) : value;
 
 const isBytesField = (field: DescField): boolean =>
@@ -303,7 +309,10 @@ const convertField = (
     return substituteField(field, fieldValue, substitution, direction);
   }
   if (isBytesField(field)) {
-    return Array.isArray(fieldValue) ? fieldValue.map(normalizeBytes) : normalizeBytes(fieldValue);
+    if (direction === 'fromProto') {
+      return fieldValue;
+    }
+    return Array.isArray(fieldValue) ? fieldValue.map(toWireBytes) : toWireBytes(fieldValue);
   }
   return mapValue(field, fieldValue, (nested, entry) => convert(nested, entry, direction, options));
 };
