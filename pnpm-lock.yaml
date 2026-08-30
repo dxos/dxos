@@ -6715,6 +6715,9 @@ importers:
       '@dxos/timeframe':
         specifier: workspace:*
         version: link:../../common/timeframe
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
     devDependencies:
       '@bufbuild/buf':
         specifier: 'catalog:'
