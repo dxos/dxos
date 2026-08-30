@@ -182,13 +182,46 @@ describe('completion', () => {
       const unreviewed = yield* Database.add(Task.make({ title: 'Unreviewed', status: 'started' }));
       yield* Database.flush();
 
-      Task.complete(reviewed);
-      Task.complete(unreviewed);
+      // Every writer asks for `done` — the agent tools, the list's checkbox — and none of them know
+      // about reviewers, so the rule is on the write itself.
+      Task.setStatus(reviewed, 'done');
+      Task.setStatus(unreviewed, 'done');
       yield* Database.flush();
 
       // Finished, not closed: someone was named to look at it.
       expect(reviewed.status).toEqual('review');
       expect(unreviewed.status).toEqual('done');
+
+      // The log records the transition that happened, not the one that was asked for.
+      expect(reviewed.history?.at(-1)?.description).toEqual('Status changed from started to review.');
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('leaving review for done is the sign-off, so it is not coerced back', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(
+        Task.make({ title: 'Reviewed', status: 'review', reviewers: [{ name: 'Rich' }] }),
+      );
+      yield* Database.flush();
+
+      // Only a reviewer is in a position to make this transition, so it needs no flag to say so.
+      Task.setStatus(task, 'done');
+      yield* Database.flush();
+      expect(task.status).toEqual('done');
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('an update naming a reviewed task done still records its other fields', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(
+        Task.make({ title: 'Reviewed', status: 'started', reviewers: [{ name: 'Rich' }] }),
+      );
+      yield* Database.flush();
+
+      Task.update(task, { status: 'done', priority: 'high' });
+      yield* Database.flush();
+      expect(task.status).toEqual('review');
+      expect(task.priority).toEqual('high');
     }).pipe(Effect.provide(testLayer())),
   );
 

@@ -27,13 +27,9 @@ export default UpdateTasks.pipe(
       for (const { title, status } of tasks) {
         const task = existing.find((candidate) => candidate.title === title.trim());
         if (task) {
-          // `complete` rather than a raw status write: a task someone was named to review is
-          // finished, not closed, and the model naming `done` cannot know that.
-          if (status === 'done') {
-            Task.complete(task);
-          } else {
-            Task.setStatus(task, status);
-          }
+          // A task someone was named to review lands in `review` rather than closing; the rule is
+          // `Task.update`'s, since the model naming `done` cannot know about reviewers.
+          Task.setStatus(task, status);
         } else {
           existing.push(Chat.addTask(db, chat, title, { status }));
         }

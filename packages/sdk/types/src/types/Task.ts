@@ -251,13 +251,30 @@ export const appendHistory = (task: Task, entry: HistoryEntry): void => {
 };
 
 /**
+ * A finish nobody has signed off on lands in `review`, not `done`: a task naming {@link Task.reviewers}
+ * does not close without them.
+ *
+ * The rule lives on the write rather than in a verb of its own because every caller that finishes a
+ * task — the planning tool, `UpdateTask`, the list's own checkbox — simply asks for `done`, and none
+ * of them know a task has reviewers. Sited anywhere else it has to be re-remembered at each new call
+ * site, which is exactly how the first one was missed.
+ *
+ * Leaving `review` for `done` passes straight through: that transition IS the sign-off, and only a
+ * reviewer is in a position to make it, so it needs no flag to say so.
+ */
+const finishStatus = (task: Task, status: Status): Status =>
+  status === 'done' && task.status !== 'review' && (task.reviewers?.length ?? 0) > 0 ? 'review' : status;
+
+/**
  * Applies `changes` and records ONE entry describing them — an edit is what the person did, not
  * one note per field they touched.
  *
  * Fields already holding the given value are skipped, so a no-op edit writes nothing at all and
  * returns `undefined`: a log full of "status changed from done to done" is a log nobody reads.
  */
-export const update = (task: Task, changes: Edit, options: EditOptions = {}): HistoryEntry | undefined => {
+export const update = (task: Task, requested: Edit, options: EditOptions = {}): HistoryEntry | undefined => {
+  const changes: Edit =
+    requested.status === undefined ? requested : { ...requested, status: finishStatus(task, requested.status) };
   const notes: string[] = [];
 
   if (changes.title !== undefined && changes.title !== task.title) {
@@ -344,19 +361,9 @@ export const update = (task: Task, changes: Edit, options: EditOptions = {}): Hi
   return entry;
 };
 
-/** Moves a task to `status`, recording the transition it made. */
+/** Moves a task to `status`, recording the transition it actually made (see {@link finishStatus}). */
 export const setStatus = (task: Task, status: Status, options?: EditOptions): HistoryEntry | undefined =>
   update(task, { status }, options);
-
-/**
- * Finishes a task: `review` when someone was named to look at it, `done` otherwise.
- *
- * A verb of its own rather than a coercion inside {@link update}, so a caller asking for `done`
- * always gets `done` — this is the one place that decides work is finished, and it is the decision,
- * not the assignment, that consults `reviewers`.
- */
-export const complete = (task: Task, options?: EditOptions): HistoryEntry | undefined =>
-  setStatus(task, (task.reviewers?.length ?? 0) > 0 ? 'review' : 'done', options);
 
 /**
  * Records an object the task produced. Refs, not children: the artifact belongs to wherever it was
