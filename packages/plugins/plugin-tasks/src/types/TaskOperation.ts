@@ -44,7 +44,7 @@ export const CreateTask = Operation.make({
     }),
     title: Schema.String,
     description: Schema.optional(Schema.String),
-    priority: Schema.optional(Schema.Literals(['none', 'low', 'medium', 'high', 'urgent'])),
+    priority: Schema.optional(Task.Priority),
     assignee: Schema.optional(Actor.Actor),
     /** Parent task for a sub-task; the task still joins the set's flat `tasks` array. */
     parentTask: Schema.optional(Ref.Ref(Task.Task)),
@@ -77,8 +77,8 @@ export const UpdateTask = Operation.make({
     // `null` clears an optional field, matching `Task.Edit` — without it the operation can set an
     // assignee but never remove one.
     description: Schema.optional(Schema.NullOr(Schema.String)),
-    status: Schema.optional(Schema.Literals(['todo', 'started', 'done', 'failed', 'cancelled'])),
-    priority: Schema.optional(Schema.NullOr(Schema.Literals(['none', 'low', 'medium', 'high', 'urgent']))),
+    status: Schema.optional(Task.Status),
+    priority: Schema.optional(Schema.NullOr(Task.Priority)),
     estimate: Schema.optional(Schema.NullOr(Schema.Number)),
     assignee: Schema.optional(Schema.NullOr(Actor.Actor)),
     /** Re-file under a milestone; `null` moves the task to the backlog. */
@@ -197,7 +197,7 @@ export const ListTasks = Operation.make({
     project: Schema.optional(Ref.Ref(Obj.Unknown)).annotate({
       description: 'Project whose task set is listed (org.dxos.type.project).',
     }),
-    status: Schema.optional(Schema.Literals(['todo', 'started', 'done', 'failed', 'cancelled'])),
+    status: Schema.optional(Task.Status),
     /** Matches the assignee by DID, email, or display name — whichever the actor carries. */
     assignee: Schema.optional(Schema.String),
     /** Only tasks under this milestone (inherited by sub-tasks from their nearest ancestor). */
