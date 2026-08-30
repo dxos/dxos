@@ -27,15 +27,7 @@ export type Status = Schema.Schema.Type<typeof Status>;
  * set: an entry says a task was assigned, not which field carried it, so the log stays readable
  * when the shape of a task changes.
  */
-export const Event = Schema.Literals([
-  'created',
-  'updated',
-  'status-changed',
-  'assigned',
-  'moved',
-  'commented',
-  'delegated',
-]);
+export const Event = Schema.Literals(['created', 'updated']);
 export type Event = Schema.Schema.Type<typeof Event>;
 
 /**
@@ -44,12 +36,10 @@ export type Event = Schema.Schema.Type<typeof Event>;
  * `event` is what a filter or an icon keys on.
  */
 export const HistoryEntry = Schema.Struct({
-  /** When it happened, ISO-8601 — a string rather than a Date so an entry survives serialization. */
   date: Format.DateTime.annotate({ title: 'Date' }),
-  /** Who did it: absent for something the system did on its own. */
   actor: Schema.optional(Actor.Actor.annotate({ title: 'Actor' })),
   event: Event.annotate({ title: 'Event' }),
-  description: Schema.String.annotate({ title: 'Description' }),
+  description: Schema.optional(Schema.String.annotate({ title: 'Description' })),
 }).annotate({ title: 'History Entry' });
 export type HistoryEntry = Schema.Schema.Type<typeof HistoryEntry>;
 

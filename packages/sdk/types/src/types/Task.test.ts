@@ -168,14 +168,14 @@ describe('history', () => {
           {
             date: '2026-08-02T10:30:00.000Z',
             actor: { name: 'Scout', role: 'assistant' },
-            event: 'status-changed',
+            event: 'updated',
             description: 'Status changed from todo to done.',
           },
         ];
       });
       yield* Database.flush();
 
-      expect(task.history?.map((entry) => entry.event)).toEqual(['created', 'status-changed']);
+      expect(task.history?.map((entry) => entry.event)).toEqual(['created', 'updated']);
       expect(task.history?.[1].actor?.name).toEqual('Scout');
       expect(task.history?.[1].description).toEqual('Status changed from todo to done.');
       // The actor is optional: something the system did on its own has none.
