@@ -62,11 +62,16 @@ export const createRenderer = (
         continue;
       }
 
-      flushTools();
+      // Rendered BEFORE the flush: a block that renders to nothing must not end the run. The
+      // runtime interleaves empty text blocks with tool calls, and flushing on one split a single
+      // run into a panel per call with nothing visible between them.
       const rendered = blockToMarkdown(message, block, getObjectLabel);
-      if (rendered) {
-        segments.push(rendered);
+      if (!rendered) {
+        continue;
       }
+
+      flushTools();
+      segments.push(rendered);
     }
     flushTools();
 
