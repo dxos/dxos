@@ -254,6 +254,10 @@ the hierarchical list, which is #12787.
 - [ ] **Toggle the task panel from `ChatPrompt`** — a button at the end of the
       bottom row showing/hiding the checklist, so a conversation that is working
       a task can surface it without leaving the prompt.
+- [ ] **Move the online/offline toggle into the `ChatPrompt` options** — it is
+      a read-only indicator on the chat today, derived from the provider in
+      settings (`preset?.provider === Provider.edge.id`); as an option on the
+      prompt it becomes the control it looks like.
 - [ ] **Record when a task reached a terminal status** — `Task` carries no date
       at all today, so nothing can show when work finished or say how long it
       took. Stamp the transition into `done`/`failed`/`cancelled` wherever status
