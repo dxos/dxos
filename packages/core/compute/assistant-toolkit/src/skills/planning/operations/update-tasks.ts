@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Obj } from '@dxos/echo';
+import { Database } from '@dxos/echo';
+import { Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { Chat } from '../../../types';
@@ -26,9 +27,9 @@ export default UpdateTasks.pipe(
       for (const { title, status } of tasks) {
         const task = existing.find((candidate) => candidate.title === title.trim());
         if (task) {
-          Obj.update(task, (task) => {
-            task.status = status;
-          });
+          // A task someone was named to review lands in `review` rather than closing; the rule is
+          // `Task.update`'s, since the model naming `done` cannot know about reviewers.
+          Task.setStatus(task, status);
         } else {
           existing.push(Chat.addTask(db, chat, title, { status }));
         }

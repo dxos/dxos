@@ -6,7 +6,7 @@ import { Transform, pipeline } from 'node:stream';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, latch } from '@dxos/async';
-import { schema } from '@dxos/protocols/proto';
+import { getBufService } from '@dxos/protocols/buf-service';
 import { type TestService } from '@dxos/protocols/proto/example/testing/rpc';
 import { createProtoRpcPeer } from '@dxos/rpc';
 
@@ -39,10 +39,10 @@ const setupPeers = () => {
 const createRpc = (port: RpcPort, handler: TestService['testCall']) =>
   createProtoRpcPeer({
     requested: {
-      TestService: schema.getService('example.testing.rpc.TestService'),
+      TestService: getBufService<TestService>('example.testing.rpc.TestService'),
     },
     exposed: {
-      TestService: schema.getService('example.testing.rpc.TestService'),
+      TestService: getBufService<TestService>('example.testing.rpc.TestService'),
     },
     handlers: {
       TestService: {

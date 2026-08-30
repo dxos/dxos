@@ -564,8 +564,8 @@ Deliberate non-features:
    verbose enough to deserve a human read; 6 sit inside `mx(…)` conditionals or responsive variants
    (`plugin-onboarding › Welcome:784`, `plugin-chess › ChessArticle:97`) and must be done by hand.
    All 23 are listed in §3 under A/B.
-4. **Extend `Grid`** with a track-list `cols`/`rows`, `subgrid`, `gap` (reusing `Gap` from
-   `layout.ts`), and `center` — then P4, P6, P10. Route P5 to `Panel` instead.
+4. ~~**Extend `Grid`**~~ — done, §9. 18 sites converted across 9 files; the rest of P4/P6 and all of
+   P10 remain, and P5 still routes to `Panel` rather than `Grid`.
 5. **Scope a `Text` primitive** for P7. It is bigger than everything above combined and is now most
    of the remaining corpus.
 6. Re-run the extraction after each step; §1's After column is the new baseline.
@@ -611,3 +611,40 @@ times in containers, on elements the codemod did not touch — a `Text`/`Grid` p
 > scanned and is expected to hold a comparable or larger population of the same patterns — the
 > presentational layer is where rows and stacks are densest. `Flex` is exported from
 > `@dxos/react-ui`, so the same codemod applies there unchanged.
+
+## 9. `Grid`, extended
+
+[`src/primitives/Grid/Grid.tsx`](./src/primitives/Grid/Grid.tsx). Was `cols`/`rows` as counts only —
+`repeat(n, 1fr)` — which no P4 site can use, hence its single consumer. Now:
+
+| Added                       | Why                                                                                       |
+| --------------------------- | ----------------------------------------------------------------------------------------- |
+| Track lists                 | `cols={['min-content', '1fr']}`. A bare number in the list reads as `<n>fr` (`[2, 1]`).   |
+| `cols`/`rows` = `'subgrid'` | Adopts the parent tracks and spans them (`col-span-full`), which is the only useful form. |
+| `gap`                       | Reuses `Gap`/`gapClasses` from `layout.ts`, so grids land on the ramp like flexes.        |
+| `align`, `center`           | `items-*` and `place-items-center`, the two P6 rows carry.                                |
+| `contents`                  | `display: contents` for the conditional-collapse case (P10).                              |
+| `asChild`                   | Was `composable` (leaf); now `slottable`, like `Flex` and `Container`.                    |
+
+**One behavior change:** `overflow-hidden` is no longer unconditional — it now comes only with `grow`
+(via `dx-container`, which already clips). A converted wrapper must not silently start cutting off
+focus rings and popovers that a plain `<div>` let through. Conversions therefore pass `grow={false}`
+unless the original carried `dx-container`.
+
+### Converted (18 sites, 9 files)
+
+| File                                | Sites | Note                                                                                     |
+| ----------------------------------- | ----: | ---------------------------------------------------------------------------------------- |
+| `plugin-space › SyncStatus`         |     5 | P4 outer + 3 P6 subgrid rows; track list hoisted to a const so the two stay in lockstep. |
+| `plugin-chess › Info`               |     2 | `PlayerIndicator` carried both `grid` and `flex` — the `flex` was dead and is gone.      |
+| `plugin-script › TestPanel`         |     2 | Shared rail-item track list.                                                             |
+| `plugin-code › CodeArticle`         |     2 | Nested `[30rem_1fr]` / `[1fr_2fr]`, both already `dx-container`.                         |
+| `plugin-registry › PluginDetail`    |     2 |                                                                                          |
+| `plugin-review › ReviewStoryLayout` |     2 | Inner grid dropped an inline `gridTemplateRows` style.                                   |
+| `plugin-commerce › ResultDetail`    |     1 |                                                                                          |
+| `plugin-magazine › PostCard`        |     1 |                                                                                          |
+| `plugin-routine › TemplateForm`     |     1 |                                                                                          |
+
+Verified: `react-ui` + all 9 plugins build; `:lint` clean; `PluginDetail` and `Chessboard` stories
+render unchanged (the chess moves row still computes `48px 84px 84px 16px`, gap `8px`, and
+`overflow: visible`).

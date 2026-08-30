@@ -7,7 +7,7 @@ import { Context } from '@dxos/context';
 import { randomBytes } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols/proto';
+import { getBufService } from '@dxos/protocols/buf-service';
 import { type AuthService } from '@dxos/protocols/proto/dxos/mesh/teleport/auth';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 
@@ -32,10 +32,10 @@ export class AuthExtension extends RpcExtension<Services, Services> {
   constructor(private readonly _authProps: AuthExtensionProps) {
     super({
       requested: {
-        AuthService: schema.getService('dxos.mesh.teleport.auth.AuthService'),
+        AuthService: getBufService<AuthService>('dxos.mesh.teleport.auth.AuthService'),
       },
       exposed: {
-        AuthService: schema.getService('dxos.mesh.teleport.auth.AuthService'),
+        AuthService: getBufService<AuthService>('dxos.mesh.teleport.auth.AuthService'),
       },
       timeout: 60 * 1000, // Long timeout because auth can wait for sync in certain cases.
     });

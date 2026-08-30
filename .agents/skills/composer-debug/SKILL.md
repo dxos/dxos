@@ -105,6 +105,12 @@ comes back `false` — on `/recovery.html` there is no `composer` at all — say
 since `recovery.log('…')` prints into the page the user is already looking at. Either way, tell the
 user in chat that you are connected; the toast supplements that, it does not replace it.
 
+When `plugin-debug` is active the status bar also shows a terminal button with a **red dot while
+the port is open** — persistent, unlike the toast — and clicking it opens the debug console
+popover, whose commands (`snapshot`, `plugins`, `enable`/`disable`, `ops`, `invoke`, `eval`,
+`port`) run through the same operation invoker the agent uses. That console is the user's window
+onto this session: expect them to replay your invocations there when something looks off.
+
 ## 3. Writing snippets
 
 The body runs inside `async () => { … }`, so:
@@ -129,6 +135,7 @@ builders `DXN Type Obj Relation Ref Query Filter Schema Feed getMeta`.
 composer.plugins()                             // id, name, core, enabled, active, moduleIds
 composer.operations(pluginId?)                 // key, name, description, pluginId, moduleId, input, output
 composer.invoke(key, input)                    // DXN-form key or bare NSID
+composer.snapshot()                            // one JSON doc of the live UI state (needs plugin-debug active)
 composer.manager                               // PluginManager (getPlugins/getEnabled/getActive/getModules)
 composer.graph, composer.attention, composer.editorView, composer.profiler, composer.otel
 ```
@@ -159,6 +166,36 @@ Search `<Plugin>Operation` regardless of how the plugin structures it — `plugi
 `list_operations` does _not_ enumerate operations — it returns the handler-file location per plugin.
 
 ## 5. Recipes
+
+### Perceive before you act — `snapshot`, not screenshots
+
+`org.dxos.operation.debug.snapshot` (plugin-debug; also `composer.snapshot()`) returns one JSON
+document of the live UI state: `layout` (mode, sidebars, workspace, `active` plank ids — the ids
+`layout.open` accepts), `attention`, each open plank with its resolved `label`, `subject`
+(`{ dxn, typename, name }`), and the graph `actions` the UI offers **with their operation DXNs and
+disabled state**, plus mounted `dx-surface` entries and plugin counts. The drive loop is
+`snapshot → invoke → snapshot`: read what is open, act by operation key, verify by ids — reach for
+a screenshot only for visual defects. Design + roadmap: `packages/sdk/app-framework/docs/INTROSPECTION.md`.
+
+### Reshaping the host — plugin management
+
+The registry operations let the agent turn capabilities on and off instead of asking the user to
+click through settings. All four are read/write-safe in the operation sense (`enable`/`disable`
+reply with the end state; already-on/off is not a failure; core and not-installed come back
+`rejected` with reasons; dependencies come on with an enable, enabled dependents go off with a
+disable):
+
+```js
+await composer.invoke('org.dxos.operation.registry.queryPlugins', {}); // everything installed
+await composer.invoke('org.dxos.operation.registry.queryDisabledPlugins', {});
+await composer.invoke('org.dxos.operation.registry.enablePlugins', { ids: ['org.dxos.plugin.chess'] });
+await composer.invoke('org.dxos.operation.registry.disablePlugins', { ids: ['org.dxos.plugin.chess'] });
+```
+
+Enablement persists (the browser host writes the enabled set on every change), and a newly enabled
+plugin's operations appear on the host within a second or two — verify with `composer.operations()`
+rather than trusting the reply. `plugin-debug` itself is not enabled on every profile: if
+`composer.snapshot` is missing, enable `org.dxos.plugin.debug` first.
 
 ```js
 // Which plugins are on, and did any fail?
@@ -319,6 +356,11 @@ Each of these cost a retry in practice; they are why this file exists.
     after the result returns, or raise `COMPOSER_RECOVERY_TIMEOUT` and accept the block.
 11. **`composer` is absent** on `/recovery.html` and until React mounts. Probe for it rather
     than assuming.
+12. **Boot is visibility-gated.** A hidden/backgrounded tab suspends `requestAnimationFrame`, and
+    the app sits on the boot screen indefinitely with the plugin manager fully active underneath
+    (`startup` + `idle` fired, `composer.*` answering) while `main` never mounts. An agent booting
+    Composer in a background tab must front/show the tab before waiting on boot; a late rAF shim
+    cannot rescue the already-pending callback. (Observed 2026-08-30; relevant to #12845.)
 
 ## Checklist
 

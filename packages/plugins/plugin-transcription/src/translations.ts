@@ -3,6 +3,7 @@
 //
 
 import { type Resource } from '@dxos/react-ui';
+import { translations as transcriptionTranslations } from '@dxos/react-ui-transcription/translations';
 
 import { meta } from '#meta';
 
@@ -18,18 +19,13 @@ export const translations = [
         'scroll-to-end.label': 'Scroll to latest',
 
         'start-recording.label': 'Start recording',
+        'microphone-denied.label': 'Microphone access denied',
         'stop-recording.label': 'Stop recording',
         'hold-to-record.label': 'Hold to record',
-
-        'recording-options.label': 'Recording options',
-        'record-mode.label': 'Record mode',
-        'record-mode.toggle.label': 'Toggle',
-        'record-mode.hold.label': 'Hold to record (push to talk)',
-        'audio-device.label': 'Microphone',
-        'audio-device.default.label': 'System default',
-
-        'settings.entity-extraction.label': 'Entity extraction',
       },
     },
   },
+  // The mic's option labels belong to the component that renders them; re-exported here so a host
+  // loading this plugin still gets them, the way plugin-tasks re-exports react-ui-task's.
+  ...transcriptionTranslations,
 ] as const satisfies Resource[];

@@ -1,0 +1,50 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ],
+  "references": [
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../core/echo/echo-react"
+    },
+    {
+      "path": "../../sdk/types"
+    },
+    {
+      "path": "../react-ui"
+    },
+    {
+      "path": "../react-ui-editor"
+    },
+    {
+      "path": "../react-ui-form"
+    },
+    {
+      "path": "../react-ui-list"
+    },
+    {
+      "path": "../react-ui-tabs"
+    },
+    {
+      "path": "../ui-editor"
+    },
+    {
+      "path": "../ui-theme"
+    }
+  ]
+}

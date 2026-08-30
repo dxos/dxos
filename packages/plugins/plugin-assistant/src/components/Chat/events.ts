@@ -66,4 +66,8 @@ export type ChatEvent =
     }
   | {
       type: 'thread-close';
+    }
+  /** Show or hide the checklist beside the prompt. */
+  | {
+      type: 'toggle-tasks';
     };

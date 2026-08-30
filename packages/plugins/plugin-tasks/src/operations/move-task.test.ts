@@ -81,6 +81,25 @@ describe('move-task', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
+  it.effect('the optimistic reorder transform predicts the handler resulting order', () =>
+    Effect.gen(function* () {
+      const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
+      yield* Database.flush();
+      const [first, , third, fourth] = yield* seedTasks(taskSet, ['a', 'b', 'c', 'd']);
+
+      // Anchored move: `TaskSetArticle`'s overlay entry must render the exact order the handler
+      // commits, otherwise the list would still jump when the query re-emits.
+      const anchored = TaskSet.reorderItems(TaskSet.resolveTasks(taskSet), (row) => row.id, third.id, first.id);
+      yield* moveTask.handler({ task: Ref.make(third), before: Ref.make(first) });
+      expect(titles(TaskSet.resolveTasks(taskSet))).toEqual(titles(anchored));
+
+      // Unanchored move to the end.
+      const unanchored = TaskSet.reorderItems(TaskSet.resolveTasks(taskSet), (row) => row.id, fourth.id, undefined);
+      yield* moveTask.handler({ task: Ref.make(fourth) });
+      expect(titles(TaskSet.resolveTasks(taskSet))).toEqual(titles(unanchored));
+    }).pipe(Effect.provide(testLayer())),
+  );
+
   it.effect('rejects a parent inside its own subtree, leaving the order untouched', () =>
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));

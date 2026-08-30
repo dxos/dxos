@@ -618,10 +618,10 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
 
   // The same primitive the task commands use, so the parent edge and the refs cannot diverge.
   const handleCreate = useCallback(
-    (title: string) => {
+    ({ title, ...props }: Task.Draft) => {
       const db = chat && Obj.getDatabase(chat);
       if (chat && db) {
-        AssistantChat.addTask(db, chat, title);
+        AssistantChat.addTask(db, chat, title, props);
       }
     },
     [chat],
