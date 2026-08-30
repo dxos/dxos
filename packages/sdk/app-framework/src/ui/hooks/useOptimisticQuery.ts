@@ -28,18 +28,19 @@ export const useOptimisticQuery = <T extends Obj.Any>(
   filter: Filter.Filter<T>,
   project?: QueryProjection<T>,
   deps: readonly unknown[] = [],
-): { rows: readonly T[]; overlay: Optimistic.Overlay<T> } => {
+): { objects: readonly T[]; overlay: Optimistic.Overlay<T> } => {
   const overlay = useMemo(() => {
     const query = db?.query(filter);
     const source = Atom.make((get): readonly T[] => {
-      const rows: readonly T[] = query ? get(query.atom) : [];
-      return project ? project(get, rows) : rows;
+      const objects: readonly T[] = query ? get(query.atom) : [];
+      return project ? project(get, objects) : objects;
     });
+
     return Optimistic.make(source);
     // The filter participates through `deps`: filters are value objects built inline, so the
     // caller names the identities that actually change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [db, ...deps]);
 
-  return { rows: useAtomValue(overlay.atom), overlay };
+  return { objects: useAtomValue(overlay.atom), overlay };
 };

@@ -29,7 +29,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
   const { t } = useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
   const spaceId = Obj.getDatabase(taskSet)?.spaceId;
-  const { tasks, overlay } = useSetTasks(taskSet);
+  const { tasks, overlay } = useTasks(taskSet);
 
   const handleCreate = useOperation(
     TaskOperation.CreateTask,
@@ -47,9 +47,9 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
     spaceId,
   });
 
-  // The optimistic entry mirrors the MoveTask handler's array write (`TaskSet.reorder` via
-  // `reorderItems`), so the dropped row renders in its target position on the drop frame instead
-  // of jumping back until the query re-emits the db order.
+  // The optimistic entry mirrors the MoveTask handler's array write (`TaskSet.reorder` via `reorderItems`),
+  // so the dropped row renders in its target position on the drop frame instead of jumping back until
+  // the query re-emits the db order.
   const handleMove = useOptimisticOperation(
     TaskOperation.MoveTask,
     (task: Task.Task, { parentTask, before }: TaskPlacement) => ({
@@ -118,10 +118,10 @@ TaskSetArticle.displayName = 'TaskSetArticle';
  * `query.atom` instead of `useQuery`, whose fresh arrays would rebuild the overlay and lose
  * pending entries mid-operation).
  */
-const useSetTasks = (
+const useTasks = (
   taskSet: TaskSet.TaskSet,
 ): { tasks: readonly Task.Task[]; overlay: Optimistic.Overlay<Task.Task> } => {
-  const { rows, overlay } = useOptimisticQuery(
+  const { objects, overlay } = useOptimisticQuery(
     Obj.getDatabase(taskSet),
     Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)),
     // Subscribes each member's `parentTask` (the set's array does not carry hierarchy)
@@ -133,5 +133,5 @@ const useSetTasks = (
     [taskSet],
   );
 
-  return { tasks: rows, overlay };
+  return { tasks: objects, overlay };
 };
