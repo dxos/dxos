@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { type ItemContent } from '@dxos/react-ui-feed';
 import { Message } from '@dxos/types';
