@@ -58,9 +58,7 @@ export const ChatActions = ({
   return (
     <div className={mx('flex items-center gap-1', classNames)}>
       {children}
-
       {customActions && <ContributedActions actions={customActions} attendableId={attendableId} />}
-
       {debug && (
         <IconButton
           variant='ghost'
@@ -77,13 +75,14 @@ export const ChatActions = ({
           classNames={mx(TOUCH_TARGET, tasksVisible && 'text-accent-text')}
           icon='ph--list-checks--regular'
           iconOnly
+          // The control's state, for a reader who cannot see the accent: it is a toggle, not a
+          // button that happens to be coloured.
           aria-pressed={tasksVisible}
           label={t(tasksVisible ? 'hide-tasks.button' : 'show-tasks.button')}
           data-testid='assistant.toggle-tasks'
           onClick={() => onEvent?.({ type: 'toggle-tasks' })}
         />
       )}
-
       {/* One control, not two: send and stop are the same affordance at two moments of a turn, and
           as separate buttons one of them was always present and dead. Enter is the only other way to
           submit, and a touch keyboard offers no such affordance. */}

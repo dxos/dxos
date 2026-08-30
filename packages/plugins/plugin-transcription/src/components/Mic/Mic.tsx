@@ -163,15 +163,14 @@ export const Mic = ({ docId }: MicProps) => {
         variant='ghost'
         disabled={microphoneDenied}
         label={recordLabel}
-        recording={recording}
         mode={recordMode}
+        recording={recording}
         onToggle={handleToggle}
         onPressStart={handlePressStart}
         onPressEnd={handlePressEnd}
         data-testid='transcription.record'
       />
       <MicSettings
-        translationNs={meta.profile.key}
         recordMode={recordMode}
         entityExtraction={entityExtraction}
         devices={devices}

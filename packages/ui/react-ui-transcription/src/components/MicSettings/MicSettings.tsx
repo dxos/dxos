@@ -7,13 +7,12 @@ import React from 'react';
 import { MenuButton, type MenuButtonItem, useTranslation } from '@dxos/react-ui';
 
 import { type AudioInputDevice } from '../../capture';
+import { translationKey } from '../../translations';
 
 /** Recording trigger mode: toggle on/off, or hold-to-record (push-to-talk). */
 export type RecordMode = 'toggle' | 'hold';
 
 export type MicSettingsProps = {
-  /** Translation namespace for the option labels (owned by the consuming plugin). */
-  translationNs: string;
   recordMode: RecordMode;
   entityExtraction: boolean;
   devices: AudioInputDevice[];
@@ -32,7 +31,6 @@ export type MicSettingsProps = {
  * opens a list of them.
  */
 export const MicSettings = ({
-  translationNs,
   recordMode,
   entityExtraction,
   devices,
@@ -41,7 +39,7 @@ export const MicSettings = ({
   onEntityExtractionChange,
   onSelectDevice,
 }: MicSettingsProps) => {
-  const { t } = useTranslation(translationNs);
+  const { t } = useTranslation(translationKey);
 
   const items: MenuButtonItem[] = [
     { type: 'group', label: t('record-mode.label') },
@@ -57,8 +55,13 @@ export const MicSettings = ({
       selected: recordMode === 'hold',
       onSelect: () => onRecordModeChange('hold'),
     },
-    { type: 'separator' },
-    { type: 'group', label: t('audio-device.label') },
+    {
+      type: 'separator',
+    },
+    {
+      type: 'group',
+      label: t('audio-device.label'),
+    },
     {
       type: 'option',
       label: t('audio-device.default.label'),
@@ -85,9 +88,8 @@ export const MicSettings = ({
     <MenuButton
       icon='ph--caret-down--regular'
       iconOnly
+      compact
       variant='ghost'
-      // Half-width slim caret abutting the mic (split-control affordance).
-      classNames='w-4'
       label={t('recording-options.label')}
       data-testid='transcription.record.options'
       items={items}

@@ -9,7 +9,6 @@ import { MicButton, Toolbar } from '@dxos/react-ui';
 import { type AudioInputDevice, MicSettings, type RecordMode } from '@dxos/react-ui-transcription';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 
 const DEVICES: AudioInputDevice[] = [
@@ -39,7 +38,6 @@ const DefaultStory = () => {
         onPressEnd={() => setRecording(false)}
       />
       <MicSettings
-        translationNs={pluginMeta.profile.key}
         recordMode={recordMode}
         entityExtraction={entityExtraction}
         devices={DEVICES}
