@@ -251,6 +251,9 @@ the hierarchical list, which is #12787.
       controls today, so the prompt's trailing edge changes shape as a turn
       starts and stops. One button that swaps its icon and action with the
       session's running state keeps the target in place.
+- [ ] **Toggle the task panel from `ChatPrompt`** — a button at the end of the
+      bottom row showing/hiding the checklist, so a conversation that is working
+      a task can surface it without leaving the prompt.
 - [ ] **Record when a task reached a terminal status** — `Task` carries no date
       at all today, so nothing can show when work finished or say how long it
       took. Stamp the transition into `done`/`failed`/`cancelled` wherever status
