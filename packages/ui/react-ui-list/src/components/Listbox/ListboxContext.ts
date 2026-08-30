@@ -25,6 +25,11 @@ export type ListboxContextValue = {
    * `aria-selected`, and whether row clicks update the selection model.
    */
   selectable: boolean;
+  /**
+   * Externally-managed multi-select: rows are `option`s in an `aria-multiselectable` listbox and
+   * carry the caller's `selected` state, but the internal selection model stays disengaged.
+   */
+  multiselectable: boolean;
   /** Selection aspect binding factory; items consume their own bindings from this. */
   selection: UseListSelectionReturn;
 };

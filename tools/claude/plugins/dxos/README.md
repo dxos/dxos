@@ -1,56 +1,82 @@
-# `dxos` — project tracking and QA flows for coding agents
+# `dxos` plugin for Claude Code
 
-Durable, resumable project and task tracking. A committed **registry** of
-work-streams, a **`TASKS.md` ledger** per project, and one command to drive them.
+The `dxos` plugin packages the DXOS Composer MCP server for Claude Code. Its main
+workflow is durable project tracking through `/dxos:project`. It also includes
+`/dxos:qa` for running QA flows.
 
-The problem it solves: an agent's own todo list is ephemeral. It dies with the
-context window, so the next session starts blind — re-deriving what was done,
-what is in flight, and what comes next. `dxos` keeps that state in the repo, where
-both you and the agent can read it weeks later.
+The marketplace manifest is
+[`.claude-plugin/marketplace.json`](../../../../.claude-plugin/marketplace.json).
+It publishes this plugin from `tools/claude/plugins/dxos`.
 
 ## Install
 
-In a terminal:
+Register the marketplace once, then install the plugin:
 
 ```bash
 claude plugin marketplace add dxos/dxos
-```
-
-```bash
 claude plugin install dxos@dxos
 ```
 
-In the Claude Code desktop app, run the first command in a terminal to register
-the marketplace, then install from the plugin manager: the **+** button beside
-the prompt box, **Plugins**, **Add plugin**, and pick `dxos`. **Manage plugins**
-enables, disables and uninstalls. The app reads the same `~/.claude` config the
-CLI writes, so either route lands the plugin in the next desktop session.
+Start a new Claude Code session after installing.
 
-That is the whole install for the default `file` backend. `/dxos:project` works
-immediately, against a committed `registry.yml`.
+## Update
 
-The Claude **Desktop** app is a different product and does not run plugins at all:
-no hooks, so no `/dxos:project`. You can still add the MCP server there by URL as
-a connector, which gives you the tools without the command.
+Update the marketplace and plugin from a terminal:
 
-## Setup for the `mcp` backend
+```bash
+claude plugin marketplace update dxos
+claude plugin update dxos@dxos
+```
+
+Start a new Claude Code session after updating.
+
+## Uninstall
+
+Uninstall the plugin before removing its marketplace:
+
+```bash
+claude plugin uninstall dxos@dxos
+claude plugin marketplace remove dxos
+```
+
+## Claude Code Desktop
+
+Desktop shares its plugin configuration with the CLI, so the commands above
+work for both. You can manage the plugin through the Desktop UI instead:
+
+- To install, register the marketplace with the first install command, then
+  click **+**, **Plugins**, **Add plugin**, and install **dxos**.
+- To update or uninstall, click **+**, **Plugins**, **Manage plugins**, and select
+  **DXOS Project Tracking**. Marketplace updates and removal still use the
+  terminal commands above.
+- After installing or updating, start a new Desktop session.
+
+## Connect Composer
+
+The plugin provides the Composer MCP server. Do not add its URL manually.
+
+Create an account at [composer.space](https://composer.space), then open its
+settings and create a passkey.
+
+### CLI
+
+Run `claude` from your project directory, enter `/mcp`, and select `composer`.
+Enable it if needed, then choose **Authenticate** and complete the passkey
+sign-in in your browser.
+
+### Claude Code Desktop
+
+1. Start a new Desktop session. Click **+**, **Plugins**, **Manage plugins**,
+   **DXOS Project Tracking**, **Connectors**, then select `composer`.
+2. Click **Connect** and complete the passkey sign-in in your browser.
+
+## Use Composer for project tracking
 
 Skip this whole section if you are staying on `file`.
 
-### Prerequisites
-
-1. An account on [composer.space](https://composer.space).
-2. A passkey saved to it — **Settings → create passkey**.
-
-Authentication is the passkey, so both have to exist before step 1 can finish.
-
 ### Steps
 
-**1. Authenticate the connector.** The plugin ships it, so there is nothing to
-add. Run `/mcp`, pick `composer`, choose Authenticate, and approve in the
-browser.
-
-**2. Select the backend.** `DX_PROJECT_BACKEND` is read by the hook process, so
+**1. Select the backend.** `DX_PROJECT_BACKEND` is read by the hook process, so
 it has to be in that process's environment. A desktop session is not launched
 from your shell and inherits nothing from `.zshrc`, so set it in `settings.json`,
 which Claude Code passes to every session and its subprocesses:
@@ -63,7 +89,7 @@ which Claude Code passes to every session and its subprocesses:
 commits it for everyone working in the repo. `~/.claude/settings.json` turns it on
 for every repo you open.
 
-**3. Bind the space.** Run `/dxos:project setup`. It lists the spaces you own by
+**2. Bind the space.** Run `/dxos:project setup`. It lists the spaces you own by
 name, asks which one this repo's projects belong in, confirms the session can
 write to it, and records the answer:
 
@@ -78,6 +104,17 @@ unambiguous: `/dxos:project setup Acme Product`.
 
 The procedure itself belongs to the `project` skill the server serves, so the
 verb loads that skill and follows it rather than carrying its own copy.
+
+## Troubleshooting
+
+### Composer is turned off for the session
+
+Claude saves the enabled state of an MCP server per project. Installing or
+enabling the plugin does not clear an older disabled choice.
+
+1. Open a terminal in the same project directory and run `claude`.
+2. Enter `/mcp`, select `composer`, and choose **Enable**.
+3. Start a new Desktop session and connect again.
 
 ## Use
 
@@ -174,8 +211,9 @@ merely mentioned it — including the message asking for it to be replaced.
 | `DX_PROJECT_SPACE`    | unset                            | Guard against a stale binding (`mcp` only)      |
 
 The space itself is bound per repo in the committed `.agents/projects/space.yml`,
-written by `/dxos:project setup` (see [Setup](#setup-for-the-mcp-backend)), because a
-repo's projects belong to one space whoever opens it. `DX_PROJECT_SPACE` is a
+written by `/dxos:project setup` (see
+[Use Composer for project tracking](#use-composer-for-project-tracking)), because
+a repo's projects belong to one space whoever opens it. `DX_PROJECT_SPACE` is a
 guard on top of that: set it, and the agent stops if it disagrees with the
 committed binding.
 

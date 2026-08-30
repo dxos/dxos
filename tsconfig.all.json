@@ -940,6 +940,9 @@
       "path": "packages/ui/ui-icons/tsconfig.json"
     },
     {
+      "path": "packages/ui/ui-template/tsconfig.json"
+    },
+    {
       "path": "packages/ui/ui-theme/tsconfig.json"
     },
     {

@@ -508,6 +508,17 @@ projects:
     design: .agents/projects/effect-smol/DESIGN.md
     prs: [12521]
     resume: 'Both repos migrated, reviewed and pushed as draft PRs: dxos/dxos#12521 and dxos/edge#827 (branch claude/effect-4-migration-audit-pq2m8z in each). dxos build 326/326 + node tests green; edge build 83/83 + full :test sweep green. Durable v4 rules extracted to .agents/skills/effect/v4-schema.md; spike moved to .agents/projects/effect-smol/spike. NEXT: D7 — dispatch pkg.pr.new on the dxos branch, then repoint edge catalogs.dxos off the 315 local tarball overrides (edge CI is red until that lands, install-time, by design).'
+
+  - name: mosaic
+    status: active
+    user: root
+    host: vm
+    created: 2026-08-13
+    summary: 'MOSAIC (Model-Oriented System for Adaptive Interface Composition; unrelated to react-ui-mosaic) — declarative UI / app ontology work-stream: name the data + app ontologies (Hyperspace/Space/Schema/Feeds; Deck/Plugins/Components), give them a DEUS specification surface (app dialect: node/deck/plank/companion/surface/menu), describe plugin-inbox in it, and design the Scenes composition DSL.'
+    tasks: .agents/projects/mosaic/TASKS.md
+    design: .agents/projects/mosaic/DESIGN.md
+    prs: [12484]
+    resume: 'PR #12840 OPEN (supersedes #12484, closed): MOSAIC docs + illustrator Ui dialect + Grid primitive extension + @dxos/ui-template. Overnight spike DONE (2026-08-29): state-driven layout system — URI-keyed registry (schemas/operations/machines), published state at ui.<id> (id=+machine= binds from registry; publication requires the name), operations as only writer with visible log, ECHO-bound stories on EchoTestBuilder (withClientProvider wedged dev server). 7 stories verified in browser: list/form/master-detail/toolbar(add->draft->db.add, qualify)/combobox/filter/view-switch (layout itself swaps on state, selection survives). Design written to packages/ui/ui-template/docs/DESIGN.md incl. machines formalism (not executed), undo (log-only), plugin/app-graph composition; ONTOLOGY R-4 updated with the published-state answer. NEXT: Rich reviews DESIGN.md + stories; open items ranked in DESIGN.md (state addressing across templates, operation payload typing, when=/parts/sizing grammar, machines-vs-slots).'
   - name: halo-consumer-migration
     status: active
     user: dmaretskyi

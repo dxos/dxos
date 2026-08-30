@@ -58,6 +58,46 @@ describe('useListSelection', () => {
       outside.remove();
     });
 
+    test('a press that focuses then clicks the same row emits once', ({ expect }) => {
+      const onValueChange = vi.fn();
+      const container = document.createElement('div');
+      container.setAttribute('role', 'listbox');
+      const optionA = document.createElement('div');
+      container.append(optionA);
+      document.body.append(container);
+
+      const { result } = renderHook(() => useListSelection({ mode: 'single', value: undefined, onValueChange }));
+      // A mouse press fires focus-follow then click in one frame, before the controlled value
+      // re-renders — the second selection of the same id must not re-emit.
+      act(() => {
+        result.current.bind('a').rowProps.onFocus?.(focusEvent({ currentTarget: optionA, relatedTarget: container }));
+        result.current.bind('a').rowProps.onClick({} as any);
+      });
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+      expect(onValueChange).toHaveBeenLastCalledWith('a');
+
+      container.remove();
+    });
+
+    test('clear emits once and is a no-op when nothing is selected', ({ expect }) => {
+      const onValueChange = vi.fn();
+      const { result, rerender } = renderHook(
+        ({ value }) => useListSelection({ mode: 'single', value, onValueChange }),
+        {
+          initialProps: { value: 'a' as string | undefined },
+        },
+      );
+      act(() => result.current.clear());
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+      expect(onValueChange).toHaveBeenLastCalledWith(undefined);
+
+      // The consumer accepts the clear; further clears must not emit.
+      rerender({ value: undefined });
+      act(() => result.current.clear());
+      act(() => result.current.clear());
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+    });
+
     test('disabled rows do not update selection on click', ({ expect }) => {
       const onValueChange = vi.fn();
       const { result } = renderHook(() => useListSelection({ mode: 'single', onValueChange }));

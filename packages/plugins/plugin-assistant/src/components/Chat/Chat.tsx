@@ -30,7 +30,7 @@ import {
   useFeedModel,
 } from '@dxos/react-ui-feed';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
-import { TaskList } from '@dxos/react-ui-task';
+import { type TaskDraft, TaskList } from '@dxos/react-ui-task';
 import { Message, Task } from '@dxos/types';
 import { keyToFallback } from '@dxos/util';
 
@@ -618,10 +618,10 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
 
   // The same primitive the task commands use, so the parent edge and the refs cannot diverge.
   const handleCreate = useCallback(
-    (title: string) => {
+    ({ title, ...props }: TaskDraft) => {
       const db = chat && Obj.getDatabase(chat);
       if (chat && db) {
-        AssistantChat.addTask(db, chat, title);
+        AssistantChat.addTask(db, chat, title, props);
       }
     },
     [chat],
