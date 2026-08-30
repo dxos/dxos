@@ -182,7 +182,7 @@ const meta = {
         ...corePlugins(),
         TasksPlugin.make(),
         // The plugin under test, for its own contributions rather than its surfaces: the `TaskAction`
-        // module is what puts `Discuss in chat` on a task row, and Assistant supplies the `CreateChat`
+        // module is what puts an action on a task row, and Assistant supplies the `CreateChat`
         // handler that action runs.
         ProjectsPlugin.make(),
         AssistantPlugin.make(),

@@ -15,7 +15,7 @@ export default Capability.makeModule(
     return Capability.contributeAll(TasksCapabilities.TaskAction, [
       {
         id: 'delegate-to-chat',
-        label: 'Discuss in chat',
+        label: 'Assign to agent',
         icon: 'ph--chat-text--regular',
         // Applies to every task: a conversation about it is always meaningful, so there is nothing
         // to gate on and the list is never empty.

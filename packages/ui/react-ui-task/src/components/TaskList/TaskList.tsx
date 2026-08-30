@@ -16,6 +16,7 @@ import React, {
   type CSSProperties,
   Fragment,
   type KeyboardEvent,
+  type MouseEvent,
   type PropsWithChildren,
   useCallback,
   useEffect,
@@ -27,6 +28,7 @@ import React, {
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import {
+  DxAnchorActivate,
   Icon,
   IconButton,
   IconButtonProps,
@@ -949,13 +951,41 @@ const TaskListItemArtifacts = ({ task }: { task: Task.Task }) => {
   return (
     <>
       {artifacts.map((artifact) => (
-        <Tag key={artifact.id} hue='amber'>
-          {Obj.getLabel(artifact) ?? Obj.getTypename(artifact)}
-        </Tag>
+        <ArtifactTag key={artifact.id} artifact={artifact} />
       ))}
     </>
   );
 };
+
+/**
+ * One artifact, as a tag that opens the object's preview card — the row names what the task
+ * produced, and the reader wants to see it without leaving the list.
+ *
+ * Click, not hover or focus: the tag sits inside a listbox option, where a tab stop of its own would
+ * split the row into several arrow-key stops, and a hover card would fire while the pointer crosses
+ * the row on its way somewhere else.
+ */
+const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
+  const tagRef = useRef<HTMLSpanElement>(null);
+  const label = Obj.getLabel(artifact) ?? Obj.getTypename(artifact) ?? '';
+  const handleClick = useCallback(
+    (event: MouseEvent<HTMLSpanElement>) => {
+      // The row is an option: without this the click selects the task as well as opening the card.
+      event.stopPropagation();
+      const trigger = tagRef.current;
+      trigger?.dispatchEvent(new DxAnchorActivate({ trigger, dxn: Obj.getURI(artifact), label, kind: 'card' }));
+    },
+    [artifact, label],
+  );
+
+  return (
+    <Tag ref={tagRef} hue='amber' role='button' classNames='cursor-pointer' onClick={handleClick}>
+      {label}
+    </Tag>
+  );
+};
+
+ArtifactTag.displayName = 'TaskList.ArtifactTag';
 
 TaskListItemArtifacts.displayName = 'TaskList.ItemArtifacts';
 

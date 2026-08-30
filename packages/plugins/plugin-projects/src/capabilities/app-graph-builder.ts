@@ -119,11 +119,18 @@ export const CHATS_SECTION_TYPE = 'org.dxos.plugin.projects.chats-section';
 /** Path segment of the Chats branch. */
 export const CHATS_SEGMENT = 'chats';
 
-/** Data carried by the Chats branch node. Wrapped so no Project-matching extension claims it. */
-export type ChatsBranch = { project: Project.Project };
+/**
+ * Data carried by the Chats branch node. Wrapped so no Project-matching extension claims it, and
+ * tagged because the Artifacts branch wraps a project the same way — without the tag a surface
+ * matching on the shape alone renders whichever branch it saw first for both.
+ */
+export type ChatsBranch = { branch: 'chats'; project: Project.Project };
 
-const isChatsBranch = (data: unknown): data is ChatsBranch =>
-  typeof data === 'object' && data !== null && Obj.instanceOf(Project.Project, (data as ChatsBranch).project);
+export const isChatsBranch = (data: unknown): data is ChatsBranch =>
+  typeof data === 'object' &&
+  data !== null &&
+  (data as ChatsBranch).branch === 'chats' &&
+  Obj.instanceOf(Project.Project, (data as ChatsBranch).project);
 
 /**
  * A virtual "Chats" branch under each project's navtree row, mirroring the Artifacts branch beside
@@ -145,12 +152,15 @@ export const createProjectChatsExtension = () =>
         AppGraphNode.make({
           id: CHATS_SEGMENT,
           type: CHATS_SECTION_TYPE,
-          data: { project } satisfies ChatsBranch,
+          data: { branch: 'chats', project } satisfies ChatsBranch,
           properties: {
             label: ['chats.label', { ns: meta.profile.key }],
             icon: 'ph--sparkle--regular',
             iconHue: 'amber',
             role: 'branch',
+            // Selecting the branch opens its objects as cards (see `ProjectChatsArticle`), the way
+            // a database type node does; expanding it still lists them in the tree.
+            selectable: true,
             draggable: false,
             droppable: false,
             space,
@@ -234,11 +244,14 @@ export const ARTIFACTS_SECTION_TYPE = 'org.dxos.plugin.projects.artifacts-sectio
 /** Path segment (and node id) of that branch under its project. */
 export const ARTIFACTS_SEGMENT = 'artifacts';
 
-/** Data carried by the Artifacts branch node. Wrapped so no Project-matching extension claims it. */
-export type ArtifactsBranch = { project: Project.Project };
+/** Data carried by the Artifacts branch node; tagged for the reason {@link ChatsBranch} is. */
+export type ArtifactsBranch = { branch: 'artifacts'; project: Project.Project };
 
-const isArtifactsBranch = (data: unknown): data is ArtifactsBranch =>
-  typeof data === 'object' && data !== null && Obj.instanceOf(Project.Project, (data as ArtifactsBranch).project);
+export const isArtifactsBranch = (data: unknown): data is ArtifactsBranch =>
+  typeof data === 'object' &&
+  data !== null &&
+  (data as ArtifactsBranch).branch === 'artifacts' &&
+  Obj.instanceOf(Project.Project, (data as ArtifactsBranch).project);
 
 /**
  * A virtual "Artifacts" branch under each project's navtree row, mirroring the Artifacts section of
@@ -267,12 +280,13 @@ export const createProjectArtifactsExtension = () =>
           // and this one) keys off `Obj.instanceOf(Project)`, so a branch carrying the project as its
           // own data matched them all — it grew its own Artifacts child, forever. The wrapper is
           // matched only by {@link createProjectArtifactsActionExtension}.
-          data: { project } satisfies ArtifactsBranch,
+          data: { branch: 'artifacts', project } satisfies ArtifactsBranch,
           properties: {
             label: ['artifacts.label', { ns: meta.profile.key }],
             icon: 'ph--cube--regular',
             iconHue: 'amber',
             role: 'branch',
+            selectable: true,
             draggable: false,
             droppable: false,
             space,
