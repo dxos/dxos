@@ -219,24 +219,12 @@ const quote = (value: string): string => (value.length > 60 ? `"${value.slice(0,
 
 /**
  * Appends one entry to a task's log. Append-only by convention, so this adds rather than rewrites;
- * prefer {@link edit}, which writes the entry and the change it describes together.
+ * prefer {@link update}, which writes the entry and the change it describes together.
  */
 export const appendHistory = (task: Task, entry: HistoryEntry): void => {
   Obj.update(task, (task) => {
     task.history = [...(task.history ?? []), entry];
   });
-};
-
-/** Records that a task was created. Separate from {@link make} so a caller chooses whether to log. */
-export const recordCreated = (task: Task, options: EditOptions = {}): HistoryEntry => {
-  const entry: HistoryEntry = {
-    date: options.date ?? new Date().toISOString(),
-    ...(options.actor ? { actor: options.actor } : {}),
-    event: 'created',
-    description: options.description ?? `Created ${quote(task.title)}.`,
-  };
-  appendHistory(task, entry);
-  return entry;
 };
 
 /**
@@ -246,7 +234,7 @@ export const recordCreated = (task: Task, options: EditOptions = {}): HistoryEnt
  * Fields already holding the given value are skipped, so a no-op edit writes nothing at all and
  * returns `undefined`: a log full of "status changed from done to done" is a log nobody reads.
  */
-export const edit = (task: Task, changes: Edit, options: EditOptions = {}): HistoryEntry | undefined => {
+export const update = (task: Task, changes: Edit, options: EditOptions = {}): HistoryEntry | undefined => {
   const notes: string[] = [];
 
   if (changes.title !== undefined && changes.title !== task.title) {
@@ -335,11 +323,14 @@ export const edit = (task: Task, changes: Edit, options: EditOptions = {}): Hist
 
 /** Moves a task to `status`, recording the transition it made. */
 export const setStatus = (task: Task, status: Status, options?: EditOptions): HistoryEntry | undefined =>
-  edit(task, { status }, options);
+  update(task, { status }, options);
 
 /** Assigns a task, or unassigns it with `null`. */
-export const assign = (task: Task, assignee: Actor.Actor | null, options?: EditOptions): HistoryEntry | undefined =>
-  edit(task, { assignee }, options);
+export const setAssignee = (
+  task: Task,
+  assignee: Actor.Actor | null,
+  options?: EditOptions,
+): HistoryEntry | undefined => update(task, { assignee }, options);
 
 //
 // Derived views over a task list. Nothing here is stored: hierarchy, milestone grouping and

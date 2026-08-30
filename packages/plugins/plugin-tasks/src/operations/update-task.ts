@@ -44,7 +44,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
 
       // Through `Task.edit`, so the change and the log entry that explains it land together and a
       // no-op patch records nothing. Milestone stays here: it is set membership, not a field edit.
-      Task.edit(task, { title, description, status, priority, estimate, assignee });
+      Task.update(task, { title, description, status, priority, estimate, assignee });
 
       if (milestone !== undefined) {
         Obj.update(task, (task) => {

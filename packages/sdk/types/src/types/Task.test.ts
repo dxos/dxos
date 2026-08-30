@@ -154,7 +154,7 @@ describe('mutations', () => {
       const task = yield* Database.add(Task.make({ title: 'Draft launch email', status: 'todo' }));
       yield* Database.flush();
 
-      const entry = Task.edit(
+      const entry = Task.update(
         task,
         { status: 'done', assignee: { name: 'Scout', role: 'assistant' } },
         { actor: { name: 'Rich' } },
@@ -178,7 +178,7 @@ describe('mutations', () => {
       yield* Database.flush();
 
       // Same values, and an equal-but-not-identical actor: a log of "done to done" is unreadable.
-      const entry = Task.edit(task, { status: 'todo', assignee: { name: 'Scout', role: 'assistant' } });
+      const entry = Task.update(task, { status: 'todo', assignee: { name: 'Scout', role: 'assistant' } });
       yield* Database.flush();
 
       expect(entry).toBeUndefined();
@@ -193,8 +193,8 @@ describe('mutations', () => {
       );
       yield* Database.flush();
 
-      Task.assign(task, null);
-      Task.edit(task, { estimate: null });
+      Task.setAssignee(task, null);
+      Task.update(task, { estimate: null });
       yield* Database.flush();
 
       expect(task.assignee).toBeUndefined();
@@ -203,20 +203,18 @@ describe('mutations', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
-  it.effect('setStatus and recordCreated append to the same log', () =>
+  it.effect('setStatus records the transition, and the caller may date it', () =>
     Effect.gen(function* () {
       const task = yield* Database.add(Task.make({ title: 'Draft launch email' }));
       yield* Database.flush();
 
-      Task.recordCreated(task, { date: '2026-08-01T09:00:00.000Z' });
       Task.setStatus(task, 'started', { date: '2026-08-01T10:00:00.000Z' });
       yield* Database.flush();
 
-      expect(task.history?.map((entry) => entry.event)).toEqual(['created', 'updated']);
-      expect(task.history?.[0].description).toEqual('Created "Draft launch email".');
       // No prior status, so the note states the value rather than inventing a transition.
-      expect(task.history?.[1].description).toEqual('Status set to started.');
-      expect(task.history?.[1].date).toEqual('2026-08-01T10:00:00.000Z');
+      expect(task.history?.[0].event).toEqual('updated');
+      expect(task.history?.[0].description).toEqual('Status set to started.');
+      expect(task.history?.[0].date).toEqual('2026-08-01T10:00:00.000Z');
     }).pipe(Effect.provide(testLayer())),
   );
 });
