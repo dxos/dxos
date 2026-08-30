@@ -26,7 +26,7 @@ import { pendingText } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { type Merge } from '@dxos/util';
 
-import { useChatKeymapExtensions, usePlatform } from '#hooks';
+import { useChatKeymapExtensions } from '#hooks';
 import { meta } from '#meta';
 import { AssistantPreset } from '#types';
 
