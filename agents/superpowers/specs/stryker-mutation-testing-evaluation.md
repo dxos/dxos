@@ -57,6 +57,25 @@ the forced `pool: 'threads', maxWorkers: 1` did not break `node:sqlite` or autom
 `@effect/vitest` tests are killed normally; `perTest` coverage works and cut the average to
 1–9 tests per mutant.
 
+## Measured effect of acting on the survivors
+
+The survivor list was then used to strengthen three existing `compute-runtime` suites (tests only,
+no source changes): 164 → 178 passing tests. Re-running Stryker over just those four source files
+gives the before/after, both runs with `ignoreStatic`:
+
+| File                    | Before | After     | Delta |
+| ----------------------- | ------ | --------- | ----- |
+| `process-store.ts`      | 77.3%  | **93.2%** | +15.9 |
+| `ProcessManager.ts`     | 45.0%  | **53.5%** | +8.5  |
+| `ProcessHandle.ts`      | 39.6%  | **45.3%** | +5.7  |
+| `trigger-dispatcher.ts` | 56.6%  | **58.1%** | +1.4  |
+
+1641 mutants, 45m56s on 4 cores. The spread is the useful part: a small, self-contained store
+moves a long way on a handful of assertions, while `trigger-dispatcher.ts` barely moves because
+most of its remaining survivors are `log()`/`invariant()` arguments and private helpers with no
+public seam — exactly the mutants worth NOT chasing. Reading the score without that distinction
+would mislead.
+
 ## Cost model
 
 The dry run pays the full suite once (echo-client: 2m23s — 2× its normal 65s because Stryker

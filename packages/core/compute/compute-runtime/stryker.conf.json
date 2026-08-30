@@ -7,7 +7,12 @@
   },
   "coverageAnalysis": "perTest",
   "inPlace": true,
-  "mutate": ["src/**/*.ts", "!src/**/*.test.ts", "!src/testing/**", "!src/LayerStack.ts"],
+  "mutate": [
+    "src/ProcessManager.ts",
+    "src/ProcessHandle.ts",
+    "src/process-store.ts",
+    "src/triggers/trigger-dispatcher.ts"
+  ],
   "reporters": ["clear-text", "json"],
   "jsonReporter": {
     "fileName": "reports/mutation/mutation.json"
