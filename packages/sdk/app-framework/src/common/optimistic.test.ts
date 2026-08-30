@@ -8,18 +8,6 @@ import { afterEach, describe, test, vi } from 'vitest';
 
 import * as Optimistic from './optimistic';
 
-const setup = (initial: readonly number[]) => {
-  const registry = AtomRegistry.make();
-  const source = Atom.make<readonly number[]>(initial);
-  const overlay = Optimistic.make(source);
-  const emissions: (readonly number[])[] = [];
-  const unsubscribe = registry.subscribe(overlay.atom, (rows) => emissions.push(rows), { immediate: true });
-  const emit = (rows: readonly number[]) => registry.set(source, rows);
-  return { registry, overlay, emissions, emit, unsubscribe };
-};
-
-const latest = (emissions: (readonly number[])[]): readonly number[] => emissions[emissions.length - 1];
-
 describe('Optimistic.make', () => {
   afterEach(() => {
     vi.useRealTimers();
@@ -173,4 +161,38 @@ describe('Optimistic.make', () => {
     handle.revert();
     expect(latest(emissions)).toEqual([1, 3]);
   });
+
+  test('retain matches re-emitted rows by logical key, not reference', ({ expect }) => {
+    type Row = { id: string };
+    const registry = AtomRegistry.make();
+    const source = Atom.make<readonly Row[]>([{ id: '1' }, { id: '2' }]);
+    const overlay = Optimistic.make(source);
+    const emissions: (readonly Row[])[] = [];
+    registry.subscribe(overlay.atom, (rows) => emissions.push(rows), { immediate: true });
+
+    overlay.mutate({ retain: (row) => row.id === '2', keyOf: (row) => row.id });
+    // The source re-emits row 2 as a FRESH object: with reference equality the pin would
+    // duplicate it; with the key it is recognized as present.
+    registry.set(source, [{ id: '1' }, { id: '2' }]);
+    expect(emissions[emissions.length - 1].map((row) => row.id)).toEqual(['1', '2']);
+
+    // Dropping the logical row pins the captured instance in place.
+    registry.set(source, [{ id: '1' }]);
+    expect(emissions[emissions.length - 1].map((row) => row.id)).toEqual(['1', '2']);
+    expect(overlay.isLeaving(emissions[emissions.length - 1][1])).toBe(true);
+  });
 });
+
+// Helpers after the suite, per test-structure conventions.
+
+const setup = (initial: readonly number[]) => {
+  const registry = AtomRegistry.make();
+  const source = Atom.make<readonly number[]>(initial);
+  const overlay = Optimistic.make(source);
+  const emissions: (readonly number[])[] = [];
+  const unsubscribe = registry.subscribe(overlay.atom, (rows) => emissions.push(rows), { immediate: true });
+  const emit = (rows: readonly number[]) => registry.set(source, rows);
+  return { registry, overlay, emissions, emit, unsubscribe };
+};
+
+const latest = (emissions: (readonly number[])[]): readonly number[] => emissions[emissions.length - 1];

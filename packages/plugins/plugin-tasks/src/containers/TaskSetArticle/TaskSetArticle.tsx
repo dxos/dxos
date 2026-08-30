@@ -124,13 +124,14 @@ const useSetTasks = (
   const { rows, overlay } = useOptimisticQuery(
     Obj.getDatabase(taskSet),
     Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)),
-    // Subscribes each member's `parentTask` (the set's array does not carry hierarchy) and
-    // orders by the set's canonical array.
+    // Subscribes each member's `parentTask` (the set's array does not carry hierarchy)
+    // and orders by the set's canonical array.
     (get, tasks) => {
       tasks.forEach((task) => get(Obj.atomProperty(task, 'parentTask')));
       return Task.orderTasks(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
     },
     [taskSet],
   );
+
   return { tasks: rows, overlay };
 };

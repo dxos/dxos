@@ -19,6 +19,12 @@ export type ApplyEntry<T> = {
  */
 export type RetainEntry<T> = {
   readonly retain: (row: T) => boolean;
+  /**
+   * Logical row identity for presence checks; defaults to reference equality, which is only
+   * safe for identity-stable rows (live ECHO objects) — a source that re-emits fresh objects
+   * per row must supply the key or a pinned row would duplicate its re-emitted twin.
+   */
+  readonly keyOf?: (row: T) => unknown;
   /** Grace window after {@link Handle.commit}; without it the pin holds until {@link Handle.revert}. */
   readonly graceMs?: number;
 };
@@ -78,7 +84,9 @@ export const make = <T>(source: Atom.Atom<readonly T[]>): Overlay<T> => {
       if ('apply' in state.entry) {
         rows = state.entry.apply(rows);
       } else if (state.pinned) {
-        const missing = state.pinned.filter(({ row }) => !rows.includes(row));
+        const keyOf = state.entry.keyOf ?? ((row: T) => row);
+        const present = new Set(rows.map(keyOf));
+        const missing = state.pinned.filter(({ row }) => !present.has(keyOf(row)));
         if (missing.length > 0) {
           const patched = [...rows];
           for (const { row, index } of missing) {

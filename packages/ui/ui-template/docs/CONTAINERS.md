@@ -376,7 +376,7 @@ reusable React hook as the intermediate step. Occurrences cite the file that exh
 `Optimistic.make(source)` (`@dxos/app-framework`) — the container reads one atom emitting the
 source rows with ordered overlay entries applied, and `useOptimisticOperation` registers an entry
 on dispatch that retires on the first source emission after the operation settles (dropping
-immediately on failure). This is the optimistic contract idiom 5's async bindings will also need
+immediately on failure). This is the optimistic contract that idiom 5's async bindings will also need
 once the `ref`/`query` construct exists. Piloted in `TaskSetArticle.useSetTasks`/`handleMove`.
 
 Cross-cutting, not numbered: **translations** (`useTranslation` in all ten units — a grammar

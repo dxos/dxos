@@ -130,10 +130,9 @@ export const useOptionalAtomCapabilityState = <T>(
 export const useOperationInvoker = (): Capabilities.OperationInvoker => useCapability(Capabilities.OperationInvoker);
 
 /**
- * PROTOTYPE (extraction candidate for `@dxos/app-framework/ui`): bind an operation to a UI
- * callback in one step — `map` turns the component's callback arguments into the operation's
- * input. The handler identity is stable across renders (the mapper and options read through
- * refs), so it replaces the per-handler `useCallback` boilerplate.
+ * Binds an operation to a UI callback in one step: `map` turns the component's callback
+ * arguments into the operation's input. The handler identity is stable across renders (the
+ * mapper and options read through refs), so it replaces per-handler `useCallback` boilerplate.
  */
 export const useOperation = <TArgs extends readonly unknown[], TInput>(
   operation: Operation.Definition<TInput, unknown>,
@@ -161,7 +160,7 @@ export type OptimisticBinding<TArgs extends readonly unknown[], TRow> = {
 };
 
 /**
- * PROTOTYPE (sibling of {@link useOperation}): the returned handler registers the optimistic
+ * Sibling of {@link useOperation} for optimistic gestures: the returned handler registers the optimistic
  * overlay entry synchronously — the gesture's own frame — then dispatches via `invokePromise` and
  * settles the entry from the promise result: success retires it on the next source emission,
  * failure drops it immediately (auto-revert).

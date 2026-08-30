@@ -3,7 +3,7 @@
 _Resume: PR #12846 OPEN (follow-on; #12840 MERGED 2026-08-29, superseded #12484). Phase 6 (typed modules) COMPLETE 2026-08-30 — module contract (state/operations/capabilities), ladder `let initial|machine|from`, `var`/`use`, no fall-through; CONTAINERS.md audit done. Phase 5 COMPLETE 2026-08-29 — state-driven layout system with URI-keyed registry, published state (`ui.<id>` via `id=`+`machine=`), operations-as-only-writer, 7 browser-verified ECHO-bound stories, and `packages/ui/ui-template/docs/DESIGN.md`. Next: Rich reviews DESIGN.md + stories; then the ranked open items in DESIGN.md (state addressing, operation payload typing, when=/parts/sizing, machines-vs-slots), or Phase 4 schematic phase 2._
 
 Full context in `DESIGN.md` (an index — the design lives in the specs it links).
-Branch `claude/mosaic-ui-worktree-41481d` (PR #12840).
+Branch `claude/mosaic-ui-worktree-41481d` (PR #12846; #12840 merged).
 
 ## Phase 1: Survey + Experiment 1 (controller extraction) — PARKED
 
