@@ -168,10 +168,10 @@ const DefaultStory = ({
       </TaskList.Viewport>
       {framed ? (
         <div className='p-2'>
-          <TaskList.Edit classNames='border border-separator rounded-md p-2' />
+          <TaskList.Edit grid classNames='border border-separator rounded-md p-2' />
         </div>
       ) : (
-        <TaskList.Edit />
+        <TaskList.Edit grid />
       )}
     </TaskList.Root>
   );

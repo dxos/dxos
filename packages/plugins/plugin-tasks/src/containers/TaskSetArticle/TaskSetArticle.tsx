@@ -100,6 +100,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
       </TaskList.Viewport>
       <div className='p-2'>
         <TaskList.Edit
+          grid
           classNames='dx-document border border-separator rounded-md p-2'
           placeholder={t('task-create.placeholder')}
         />

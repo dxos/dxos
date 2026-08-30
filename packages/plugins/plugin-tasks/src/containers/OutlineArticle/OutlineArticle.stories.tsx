@@ -131,7 +131,7 @@ const TaskSetView = ({ outline, taskSet }: { outline: Outline.Outline; taskSet?:
           getTaskActions={getTaskActions}
         >
           <TaskList.Content />
-          <TaskList.Edit />
+          <TaskList.Edit grid />
         </TaskList.Root>
       </Panel.Content>
     </Panel.Root>

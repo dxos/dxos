@@ -637,7 +637,7 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
         <TaskList.Viewport classNames='min-h-0'>
           <TaskList.Content />
         </TaskList.Viewport>
-        <TaskList.Edit classNames='shrink-0' />
+        <TaskList.Edit grid classNames='shrink-0' />
       </div>
     </TaskList.Root>
   );
