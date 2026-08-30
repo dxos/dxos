@@ -1,9 +1,9 @@
 # MOSAIC — Model-Oriented System for Adaptive Interface Composition — Tasks
 
-_Resume: PR #12840 OPEN (supersedes #12484). Phase 6 (typed modules) COMPLETE 2026-08-30 — module contract (state/operations/capabilities), ladder `let initial|machine|from`, `var`/`use`, no fall-through; CONTAINERS.md audit done. Phase 5 COMPLETE 2026-08-29 — state-driven layout system with URI-keyed registry, published state (`ui.<id>` via `id=`+`machine=`), operations-as-only-writer, 7 browser-verified ECHO-bound stories, and `packages/ui/ui-template/docs/DESIGN.md`. Next: Rich reviews DESIGN.md + stories; then the ranked open items in DESIGN.md (state addressing, operation payload typing, when=/parts/sizing, machines-vs-slots), or Phase 4 schematic phase 2._
+_Resume: PR #12846 OPEN (follow-on; #12840 MERGED 2026-08-29, superseded #12484). Phase 6 (typed modules) COMPLETE 2026-08-30 — module contract (state/operations/capabilities), ladder `let initial|machine|from`, `var`/`use`, no fall-through; CONTAINERS.md audit done. Phase 5 COMPLETE 2026-08-29 — state-driven layout system with URI-keyed registry, published state (`ui.<id>` via `id=`+`machine=`), operations-as-only-writer, 7 browser-verified ECHO-bound stories, and `packages/ui/ui-template/docs/DESIGN.md`. Next: Rich reviews DESIGN.md + stories; then the ranked open items in DESIGN.md (state addressing, operation payload typing, when=/parts/sizing, machines-vs-slots), or Phase 4 schematic phase 2._
 
 Full context in `DESIGN.md` (an index — the design lives in the specs it links).
-Branch `claude/mosaic-ui-worktree-41481d` (PR #12840).
+Branch `claude/mosaic-ui-worktree-41481d` (PR #12846; #12840 merged).
 
 ## Phase 1: Survey + Experiment 1 (controller extraction) — PARKED
 
@@ -96,6 +96,21 @@ Spec = DESIGN.md "Typed binding and modules" (module contract triad + ladder + l
 - [x] **Idiom catalog** — 19 idioms cited by file; top machine candidates = selection,
       view-switch, draft-edit-commit, filter, race-guarded async commit; 6-step progressive
       factoring order recorded.
+
+## Phase 7: optimistic operations (design)
+
+- [ ] **Invoker eager dispatch** — investigate running already-loaded, local-only operation
+      handlers synchronously in the dispatch tick (fall back to async path otherwise); fixes the
+      re-render jump for every sync ECHO mutation app-wide. Changes the invoker concurrency
+      contract (`packages/core/compute/operation/src/invoker.test.ts` platform-contract note) —
+      needs its own risk pass.
+- [x] **Optimistic overlay atom** — landed 2026-08-29: `Optimistic.make(source)` in
+      `@dxos/app-framework` (13 headless tests incl. retain grace) + `useOptimisticOperation`
+      seam + `TaskSetArticle.handleMove` pilot sharing `TaskSet.reorderItems` with the handler.
+- [ ] **Held objects (secondary)** — the same overlay in `retain` mode: a mutation that would drop
+      a row out of a filtered view (mark done in "active tasks") pins the row as `leaving` for a
+      grace window with an Undo affordance (ties into app-framework UndoRegistry); undo dispatches
+      the inverse operation, expiry releases the row.
 
 ## Parked / later
 

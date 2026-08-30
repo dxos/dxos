@@ -837,13 +837,13 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
           <span className='truncate'>{current.title}</span>
         </span>
         {current.assignee ? (
-          <span className='flex h-8 items-center'>
+          <span className='h-8 flex justify-end items-center'>
             <TaskListAssignee assignee={current.assignee} />
           </span>
         ) : (
           <div />
         )}
-        <div className='flex h-8 items-center gap-1'>
+        <div className='h-8 flex justify-start items-center gap-1'>
           {blocked && <Tag hue='indigo'>{t('task-blocked.label')}</Tag>}
           {current.priority && current.priority !== 'none' && <Tag hue='neutral'>{current.priority}</Tag>}
         </div>
