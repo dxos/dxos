@@ -81,8 +81,9 @@ never be run un-scoped.
 The Stryker packages are deliberately NOT in the workspace's `package.json`: adding them at the
 root made pnpm rewrite peer-dependency keys across the whole lockfile (~1600 lines), which CI's
 frozen install rejects with `ERR_PNPM_LOCKFILE_MISSING_DEPENDENCY`. For an on-demand audit tool
-that is not worth a permanent lockfile change — install it for the session and discard the
-lockfile edit afterwards:
+that is not worth a permanent lockfile change — install it for the session, then revert what the
+command wrote to BOTH the workspace-root `package.json` and the shared `pnpm-lock.yaml` when the
+audit is done (keeping any unrelated edits of your own):
 
 ```sh
 pnpm add -Dw --ignore-workspace-root-check @stryker-mutator/core@10 @stryker-mutator/vitest-runner@10
