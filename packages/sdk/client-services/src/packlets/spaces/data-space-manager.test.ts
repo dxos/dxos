@@ -214,7 +214,9 @@ describe('DataSpaceManager', () => {
     expect(attempts.length).to.be.greaterThan(1);
   });
 
-  test('an accepted space anchors on a root that replicates after the invitation context is gone', async () => {
+  test('an accepted space anchors on a root that replicates after the invitation context is gone', async ({
+    expect,
+  }) => {
     const builder = new TestBuilder();
 
     const peer1 = builder.createPeer({ dataSpaceProps: { automergeCredentials: true } });
