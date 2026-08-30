@@ -173,6 +173,15 @@ the hierarchical list, which is #12787.
       app; and tearing the editor down fires a blur, which commits, so a revert
       wrote the text it was discarding.
 
+- [ ] **`composer-debug` cannot enable a plugin** — the skill documents reading the
+      running app but not turning a plugin on, and the obvious route is a trap:
+      `composer.manager.enable(id)` returns an **Effect**, so awaiting it does
+      nothing and the plugin silently stays disabled. The working call is the
+      operation `org.dxos.operation.registry.enablePlugins` with `{ ids: [...] }`
+      (verified 2026-08-30 enabling plugin-tasks + plugin-projects, which both
+      ship disabled in a default profile). Add it to the skill's recipes, and note
+      that most plugins under development are off until enabled — otherwise every
+      live verification starts by concluding the feature is missing.
 - [ ] **Record when a task reached a terminal status** — `Task` carries no date
       at all today, so nothing can show when work finished or say how long it
       took. Stamp the transition into `done`/`failed`/`cancelled` wherever status
