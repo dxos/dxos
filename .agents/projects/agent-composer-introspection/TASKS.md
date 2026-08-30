@@ -1,6 +1,6 @@
 # Agent Composer Introspection — Tasks
 
-_Resume: run the live `snapshot()` evaluation (needs a visible Browser pane — hidden tabs stall boot on suspended rAF), then land PR #12850. Uncommitted: none. Last: Phase A snapshot operation implemented + tested; PR open._
+_Resume: land PR #12850 (green, review resolved, live evaluation passed). Uncommitted: none. Last: snapshot() live-verified end to end against the running app._
 
 ## Phase 1: Assessment & plugin management
 
@@ -43,8 +43,10 @@ are visible, their context objects, and which operations are reachable
   - acceptance test; §5 sequencing (Phase A/B/C).
 - [x] **Implement Phase A** (`snapshot()` in plugin-debug) — `org.dxos.operation.debug.snapshot` +
       `composer.snapshot()` sugar, headless-harness test green, PR #12850.
-- [ ] **Evaluate live** against the acceptance test in INTROSPECTION.md §4 — blocked on a visible
-      Browser pane (hidden tabs stall boot on suspended rAF).
+- [x] **Evaluate live** against the acceptance test in INTROSPECTION.md §4 — full flow via
+      operations only (enable plugin-debug live, createDraft + addObject + open, one snapshot):
+      snapshot reported the open plank with subject identity, 6 UI actions (4 with operation DXNs),
+      19 mounted surfaces, and plugin counts, all matching the rendered UI.
 
 ### References
 
