@@ -24,6 +24,7 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
   environments: [],
 });
+export const NavigationTargetResolver = AppCapability.navigationResolver(() => import('./navigation-target-resolver'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
 });

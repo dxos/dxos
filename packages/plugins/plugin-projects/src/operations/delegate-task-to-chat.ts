@@ -7,6 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import { AiContext } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
@@ -77,30 +79,47 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         yield* bindDelegationContext(chat, project);
         yield* Database.flush();
 
-        // Opens the chat and queues the first turn, rather than submitting to a session here: a
-        // session spawned from this operation carries no model, and `AgentService` terminates the
-        // running process the moment the chat's UI asks for one carrying the user's selected model
-        // — which interrupted the turn mid-flight. Navigating is also what the reader wants: the
-        // work they just delegated is what they are looking at.
+        // The reader is taken to the work they just delegated. Opened before the turn starts so the
+        // first tokens land on screen rather than into a conversation nobody is looking at.
         //
-        // Best-effort, and deliberately not fatal: the delegation itself is already durable — the
-        // chat exists, carries the task, and is filed under the project — so a host with no layout
-        // (a test harness, a headless client) still delegates.
+        // Both steps are best-effort and deliberately not fatal: the delegation itself is already
+        // durable — the chat exists, carries the task, and is filed under the project — so a host
+        // with no layout or no agent runtime (a test harness, a headless client) still delegates,
+        // and the reader can send the first turn themselves.
         //
         // `Effect.exit`, not `Effect.catch`: a missing service arrives as a DEFECT (the process
         // layers are `orDie`), which a failure channel handler never sees.
+        const opened = yield* openChat(chat).pipe(Effect.exit);
+        if (Exit.isFailure(opened)) {
+          log.warn('delegated chat did not open', { cause: Cause.pretty(opened.cause) });
+        }
+
         const started = yield* Operation.invoke(AssistantOperation.RunPromptInChat, {
           chat,
           prompt: OPENING_PROMPT,
         }).pipe(Effect.exit);
         if (Exit.isFailure(started)) {
-          log.warn('delegated chat did not open', { cause: Cause.pretty(started.cause) });
+          log.warn('delegated chat did not start its turn', { cause: Cause.pretty(started.cause) });
         }
 
         return { chat };
       }),
     ),
   );
+
+/**
+ * Navigates to a chat. Resolved rather than composed from a path helper: only a resolver knows
+ * where an object is addressable, and a project's chats sit on a branch of their own.
+ */
+const openChat = Effect.fnUntraced(function* (chat: Chat.Chat) {
+  const { targets } = yield* Operation.invoke(NavigationOperation.ResolveNavigationTargets, {
+    query: { uri: Obj.getURI(chat) },
+  });
+  const target = targets[0];
+  if (target) {
+    yield* Operation.invoke(LayoutOperation.Open, { subject: [target.path] });
+  }
+});
 
 /**
  * References the checklist rather than restating the task: the task is already bound to the chat,

@@ -3,43 +3,46 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
+import * as Capability from '@dxos/app-framework/Capability';
+import { getSession } from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
-import { Obj } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
+import { Database } from '@dxos/echo';
 
 import { AssistantCapabilities, AssistantOperation } from '#types';
+
+import { defaultPreset } from '../processor';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> =
   AssistantOperation.RunPromptInChat.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ chat, prompt }) {
-        const db = Obj.getDatabase(chat);
-        invariant(db, 'Chat must belong to a space.');
-        const spaceId = db.spaceId;
-
-        // Resolved rather than composed from `getChatPath`: a chat filed under a project sits on a
-        // branch of its own, and only the resolver knows where an object is addressable.
-        const { targets } = yield* Operation.invoke(
-          NavigationOperation.ResolveNavigationTargets,
-          { query: { uri: Obj.getURI(chat) } },
-          { spaceId },
-        );
-        const target = targets[0];
-        invariant(target, 'Chat has no navigation target.');
-
-        // Keyed by the path the layout opens, which is what reaches `ChatArticle` as its
-        // `attendableId` — the two must agree or the prompt is never picked up.
-        yield* Capabilities.updateAtomValue(AssistantCapabilities.State, (current) => ({
-          ...current,
-          pendingPrompts: { ...current.pendingPrompts, [target.path]: prompt },
-        }));
-        yield* Operation.invoke(LayoutOperation.Open, { subject: [target.path] }, { spaceId });
+        const feed = yield* Database.load(chat.feed);
+        const preset = yield* chatPreset;
+        const session = yield* getSession(feed, {
+          model: preset?.model,
+          provider: preset?.provider,
+          instructions: chat.instructions,
+        });
+        yield* session.submitPrompt(prompt);
       }),
     ),
   );
+
+/**
+ * The preset the chat's UI would run with. Absent settings (a host with no assistant UI) leaves the
+ * model unset, which is the agent process's own default.
+ */
+const chatPreset = Effect.gen(function* () {
+  const settings = yield* Capabilities.getAtomValueOption(AssistantCapabilities.Settings);
+  // The bundled sidecar's presence is what makes `built-in` rather than `ollama` the live provider.
+  const ollama = yield* Capability.getOption(AssistantCapabilities.OllamaManager);
+  return Option.match(settings, {
+    onNone: () => undefined,
+    onSome: (settings) => defaultPreset(settings, { hasBuiltIn: Option.isSome(ollama) }),
+  });
+});
 
 export default handler;
