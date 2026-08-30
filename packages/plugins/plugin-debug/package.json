@@ -158,6 +158,7 @@
     "@dxos/operation": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
+    "@dxos/plugin-devtools": "workspace:*",
     "@dxos/plugin-google": "workspace:*",
     "@dxos/plugin-illustrator": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",

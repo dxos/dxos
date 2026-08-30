@@ -7,6 +7,9 @@ import { type ComponentType, lazy } from 'react';
 export const DebugObjectPanel: ComponentType<any> = lazy(() => import('./DebugObjectPanel'));
 export const DebugSettings: ComponentType<any> = lazy(() => import('./DebugSettings'));
 export const DebugSpaceObjectsPanel: ComponentType<any> = lazy(() => import('./DebugSpaceObjectsPanel'));
+export const DebugPortStatus: ComponentType<any> = lazy(() =>
+  import('./DebugPortStatus').then((module) => ({ default: module.DebugPortStatus })),
+);
 export const DebugStatus: ComponentType<any> = lazy(() => import('./DebugStatus'));
 export const LogStatus: ComponentType<any> = lazy(() =>
   import('./LogStatus').then((module) => ({ default: module.LogStatus })),

@@ -9693,6 +9693,9 @@ importers:
       '@dxos/plugin-connector':
         specifier: workspace:*
         version: link:../plugin-connector
+      '@dxos/plugin-devtools':
+        specifier: workspace:*
+        version: link:../plugin-devtools
       '@dxos/plugin-google':
         specifier: workspace:*
         version: link:../plugin-google
