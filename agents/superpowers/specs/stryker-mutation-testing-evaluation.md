@@ -82,6 +82,6 @@ Dependencies are at the workspace root (`@stryker-mutator/core`, `@stryker-mutat
 Per-package `stryker.conf.json` files are checked in. Build the package's deps first
 (`moon run <pkg>:test` once), then from the package directory:
 
-```
+```sh
 pnpm exec stryker run
 ```
