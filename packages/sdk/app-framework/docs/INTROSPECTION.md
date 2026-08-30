@@ -37,22 +37,31 @@ A devtools helper (and twin read-only operation `org.dxos.operation.debug.snapsh
 
 ```jsonc
 {
-  "layout": { "mode": "solo", "sidebarOpen": true, "dialogOpen": false, "workspace": "root/…" },
+  "layout": {
+    "mode": "solo",
+    "sidebarOpen": true,
+    "dialogOpen": false,
+    "workspace": "root/…",
+    "active": ["root/…/home"],
+    "inactive": [],
+  },
   "attention": ["root/…/home"],
   "planks": [
     {
       "id": "root/BF6…/home", // graph path — the id `layout.open` accepts
-      "node": { "type": "…", "label": "Home" }, // label resolved via the Translator capability
+      "type": "…", // graph node type
+      "label": "Home", // resolved via the Translator capability
       "subject": { "dxn": "echo://…", "typename": "org.dxos.type.document", "name": "Notes" },
       "actions": [
         // graph actions = toolbar/menu entries
         { "operation": "dxn:org.dxos.operation.support.startWelcomeTour", "label": "Start tour", "disabled": false },
       ],
-      "surfaces": [{ "id": "article", "role": "org.dxos.role.article", "component": "HomeContainer" }],
     },
   ],
-  "dialogs": [], // open dialog/popover subjects, from the layout atom
-  "plugins": { "enabled": 39, "active": 39 },
+  // Mounted surfaces, flat for now — the Phase B surface registry adds the per-plank association
+  // (and dialog subjects) once the DOM ↔ graph ↔ data link exists.
+  "surfaces": [{ "id": "article", "role": "org.dxos.role.article", "component": "HomeContainer" }],
+  "plugins": { "installed": 96, "enabled": 39, "active": 39 },
 }
 ```
 
@@ -95,17 +104,17 @@ For flows that must touch the DOM (clicks, typing), make the anchors determinist
 
 ## 4. Evaluation criteria vs. screen capture
 
-| Criterion           | Screenshot                                                                                                    | Snapshot API                                                               |
-| ------------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Latency             | seconds (front tab, paint, capture)                                                                           | ms (one eval)                                                              |
-| Token cost          | high (image) per look                                                                                         | small JSON, diffable across steps                                          |
-| Data identity       | none — pixels; must re-derive objects                                                                         | canonical ids (graph path, DXN, typename)                                  |
-| Actionability       | infer a click target                                                                                          | operation DXN ready to `invoke`, disabled state included                   |
-| Determinism         | theme/viewport/scroll dependent                                                                               | stable across themes and viewports                                         |
-| Visibility          | requires fronted, painted tab (background tabs throttle rAF — boot itself stalls hidden, observed 2026-08-30) | works in background tabs and headless flows                                |
-| Verifying an effect | before/after diff by eye                                                                                      | assert on ids/values                                                       |
-| Visual defects      | **catches them**                                                                                              | blind to them                                                              |
-| Trust boundary      | pixels are honest                                                                                             | snapshot claims mount state — the DOM attrs (3.3) let the agent spot-check |
+| Criterion           | Screenshot                                                                                                                 | Snapshot API                                                               |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Latency             | seconds (front tab, paint, capture)                                                                                        | ms (one eval)                                                              |
+| Token cost          | high (image) per look                                                                                                      | small JSON, diffable across steps                                          |
+| Data identity       | none — pixels; must re-derive objects                                                                                      | canonical ids (graph path, DXN, typename)                                  |
+| Actionability       | infer a click target                                                                                                       | operation DXN ready to `invoke`, disabled state included                   |
+| Determinism         | theme/viewport/scroll dependent                                                                                            | stable across themes and viewports                                         |
+| Visibility          | requires the tab to be fronted and painted (background tabs throttle rAF — boot itself stalls hidden, observed 2026-08-30) | works in background tabs and headless flows                                |
+| Verifying an effect | before/after diff by eye                                                                                                   | assert on ids/values                                                       |
+| Visual defects      | **catches them**                                                                                                           | blind to them                                                              |
+| Trust boundary      | pixels are honest                                                                                                          | snapshot claims mount state — the DOM attrs (3.3) let the agent spot-check |
 
 Acceptance test for Phase A: an agent executes a QA flow (open object, run toolbar action, verify)
 using only `snapshot()` + `invoke()` + at most one screenshot, where today the same flow takes

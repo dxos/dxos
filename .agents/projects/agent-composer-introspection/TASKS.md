@@ -1,6 +1,6 @@
 # Agent Composer Introspection — Tasks
 
-_Resume: decide whether to implement INTROSPECTION.md Phase A (`snapshot()` in plugin-debug). Uncommitted: none. Last: disablePlugins landed on the branch + design doc moved to packages/sdk/app-framework/docs/INTROSPECTION.md._
+_Resume: run the live `snapshot()` evaluation (needs a visible Browser pane — hidden tabs stall boot on suspended rAF), then land PR #12850. Uncommitted: none. Last: Phase A snapshot operation implemented + tested; PR open._
 
 ## Phase 1: Assessment & plugin management
 
@@ -41,7 +41,10 @@ are visible, their context objects, and which operations are reachable
       `data-action`, keep `dx-surface` attrs + `data-testid` + ARIA state).
 - [x] **Write the design doc with evaluation criteria vs. the screenshot approach** — §4 criteria table
   - acceptance test; §5 sequencing (Phase A/B/C).
-- [ ] **Implement Phase A** (`snapshot()` in plugin-debug) — awaiting go-ahead.
+- [x] **Implement Phase A** (`snapshot()` in plugin-debug) — `org.dxos.operation.debug.snapshot` +
+      `composer.snapshot()` sugar, headless-harness test green, PR #12850.
+- [ ] **Evaluate live** against the acceptance test in INTROSPECTION.md §4 — blocked on a visible
+      Browser pane (hidden tabs stall boot on suspended rAF).
 
 ### References
 
