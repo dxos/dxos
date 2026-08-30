@@ -570,6 +570,12 @@ export class DataSpaceManager extends Resource {
         }
       }
 
+      // Re-checked after the adopt/migrate await: the anchor now runs on the manager's context, so a
+      // space that started closing during it would otherwise still gain credentials and be reported.
+      if (!space.isOpen) {
+        return false;
+      }
+
       await this._mirrorCredentialsToDocument(space);
       this._reportSpaceRootToEdge(space);
       return true;
