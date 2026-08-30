@@ -943,7 +943,10 @@ export class DataSpaceManager extends Resource {
       }
 
       anchoring = true;
-      void this._anchorSpaceOnRootDocument(ctx, dataSpace)
+      // The manager's context, not the caller's: an accepted space arrives with the invitation's
+      // context, which `acceptSpace` disposes on return, and the anchor's own awaits would be
+      // cancelled under it.
+      void this._anchorSpaceOnRootDocument(this._ctx, dataSpace)
         .then((settled) => {
           anchored = settled;
           if (settled) {
@@ -963,7 +966,10 @@ export class DataSpaceManager extends Resource {
         });
     };
 
-    ctx.onDispose(dataSpace.stateUpdate.on(attemptAnchor));
+    // Subscribed for the space's lifetime rather than the caller's: a root named by an inviter can
+    // replicate long after the invitation context is gone, and its state update is what retries.
+    const unsubscribeFromStateUpdate = dataSpace.stateUpdate.on(this._ctx, attemptAnchor);
+    dataSpace.preClose.append(async () => unsubscribeFromStateUpdate());
 
     this._spaces.set(metadata.key, dataSpace);
     return dataSpace;
