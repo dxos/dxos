@@ -84,10 +84,9 @@ type TaskListContextValue = {
   onTaskCreate?: (task: Task.Draft) => void;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
   onTaskDelete?: (task: Task.Task) => void;
+  /** Selects a task, or clears the selection with `undefined`; defined only when the list is selectable. */
   onTaskSelect?: (task: Task.Task | undefined) => void;
   onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
-  /** Clears the selection; `Escape` on a row calls it. */
-  onDeselect: () => void;
 };
 
 const [TaskListProvider, useTaskListContext] = createContext<TaskListContextValue>(TASK_LIST_NAME);
@@ -184,10 +183,14 @@ const TaskListRoot = ({
     [tasks, onTaskSelect],
   );
 
-  const handleDeselect = useCallback(() => {
-    setSelectedState(undefined);
-    onTaskSelect?.(undefined);
-  }, [onTaskSelect]);
+  // Passing `undefined` clears the selection — what `Escape` on a row and the edit pane's buttons do.
+  const handleSelect = useCallback(
+    (task: Task.Task | undefined) => {
+      setSelectedState(task?.id);
+      onTaskSelect?.(task);
+    },
+    [onTaskSelect],
+  );
 
   // The hook owns the controlled/uncontrolled Set state machine; its trigger/panel ids are not
   // used, because a sub-task is a sibling row in the same grid rather than a region the toggle
@@ -226,8 +229,7 @@ const TaskListRoot = ({
       onTaskCreate={onTaskCreate}
       onTaskUpdate={onTaskUpdate}
       onTaskDelete={onTaskDelete}
-      onTaskSelect={onTaskSelect}
-      onDeselect={handleDeselect}
+      onTaskSelect={selectable ? handleSelect : undefined}
       onTaskMove={onTaskMove}
     >
       {/* Both roots are headless, so the pair renders no DOM of its own. */}
@@ -639,7 +641,6 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
       selected,
       onTaskSelect,
       onTaskMove,
-      onDeselect,
       isCollapsed,
       onCollapseToggle,
       dragging,
@@ -691,7 +692,7 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
         // A reader needs a way back out of a selection, and `Escape` is where they look for it.
         if (event.key === 'Escape' && selected === task.id) {
           event.preventDefault();
-          onDeselect();
+          onTaskSelect?.(undefined);
           return;
         }
         if (!onTaskMove || !row || !event.altKey) {
@@ -717,7 +718,7 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
           onTaskMove(task, placement);
         }
       },
-      [onTaskMove, row, tasks, task, selected, onDeselect],
+      [onTaskMove, row, tasks, task, selected, onTaskSelect],
     );
 
     return (
@@ -901,7 +902,7 @@ type TaskListEditProps = ComposableProps<{
 const TaskListEdit = composable<HTMLDivElement, { placeholder?: string; descriptionPlaceholder?: string }>(
   ({ placeholder = 'Add task', descriptionPlaceholder = 'Add a description', ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
-    const { tasks, selected, onTaskCreate, onTaskUpdate, onDeselect } = useTaskListContext('TaskList.Edit');
+    const { tasks, selected, onTaskCreate, onTaskUpdate, onTaskSelect } = useTaskListContext('TaskList.Edit');
     const { className, ...rest } = composableProps(props);
 
     const task = useMemo(() => tasks.find(({ id }) => id === selected), [tasks, selected]);
@@ -946,16 +947,16 @@ const TaskListEdit = composable<HTMLDivElement, { placeholder?: string; descript
     const handleSave = useCallback(() => {
       commitTitle();
       descriptionRef.current?.commit();
-      onDeselect();
-    }, [commitTitle, onDeselect]);
+      onTaskSelect?.(undefined);
+    }, [commitTitle, onTaskSelect]);
 
     // Throws away the pending edit and leaves: the pane drops back to creating, which is the same
     // exit Escape on a row gives. Reverting first, since deselecting unmounts the fields.
     const handleCancel = useCallback(() => {
       descriptionRef.current?.revert();
       setDraft('');
-      onDeselect();
-    }, [onDeselect]);
+      onTaskSelect?.(undefined);
+    }, [onTaskSelect]);
 
     // Nothing to create with and nothing to edit: the pane has no purpose.
     if (!onTaskCreate && !(current && onTaskUpdate)) {
