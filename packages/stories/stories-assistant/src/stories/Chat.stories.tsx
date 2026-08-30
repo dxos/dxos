@@ -659,6 +659,10 @@ export const TestTaskDrainScripted: Story = {
     scripted: [
       ...EXECUTABLE_TASKS.map(subAgentRoute),
       chatNameRoute,
+      // Before the catch-all: the checklist is open for the whole drain, so the planning skill's
+      // reminder fires — and without a route of its own the supervisor answers it, burning one of
+      // the two turns it has. The story then times out waiting for a reply the script cannot give.
+      planReminderRoute,
       {
         name: 'supervisor',
         match: () => true,
