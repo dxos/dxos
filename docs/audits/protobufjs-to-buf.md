@@ -490,3 +490,35 @@ deleting the two packages removes their own test and example protos with them, s
 migrating only if the fixtures are worth keeping. `#4`, `#5` and `#7` are easy to
 overlook here because they read protobuf.js through generated types and `protoMessage()` rather
 than through `codec-protobuf` directly, but they are consumers all the same.
+
+## Structuring for teardown: the type surface, not the runtime
+
+Migrating every runtime call site does **not** make `codec-protobuf` deletable. Of the 22 source
+files outside the package that import it, most import only `type`s, and those split into three
+groups with different fates:
+
+| Group                                                                      | Symbols                                                                                                                                         | Fate                                |
+| -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| **Transport vocabulary** — describes the wire, contains no protobuf.js     | `Any`, `RequestOptions`, `EncodingOptions`, `Codec`, `ServiceBackend`, `ServiceProvider`, `ServiceDescriptorLike`                               | must **move**; nothing retires them |
+| **Shape conventions** — the substituted shapes the compat layer reproduces | `WithTypeUrl`, `TaggedType`, `Struct`, `TypedProtoMessage`                                                                                      | retire with the shape-compat layer  |
+| **protobuf.js machinery**                                                  | `compressSchema`, `anySubstitutions`, `structSubstitutions`, `timestampSubstitutions`, and the `Codec`/schema/mapping/sanitizer implementations | deleted with the package            |
+
+The first group is what keeps the package alive past the migration. `hypercore/src/crypto.ts` and
+`feed-store` want a thing with `encode`/`decode`; `messaging` and `blade-runner` want the `Any`
+envelope; `client-services/pipeline/codec.ts` wants `Codec`. None of them is a protobuf.js
+consumer, so no migration thread ever removes their import — the symbols have to leave instead.
+
+**They cannot move into `@dxos/protocols`.** `hypercore` and `feed-store` live in `common/` and do
+not depend on it; routing them through `core/protocols` would invert the layering. The transport
+vocabulary needs a `common/`-level home of its own — a types-only package with no protobuf.js
+dependency, which `codec-protobuf` then implements rather than defines.
+
+Doing that extraction **before** the remaining threads is what makes the teardown a deletion rather
+than a refactor: each thread that lands afterwards imports the vocabulary from its new home, so
+`codec-protobuf`'s dependent list shrinks monotonically to zero instead of being re-established by
+every new call site. Left to the end, the same work has to be done anyway, but against a wider set
+of consumers and with the package still in the graph.
+
+Ordering: extract the vocabulary → land what remains (`#5`'s 14 files, `#9c`'s `pipeline/codec`,
+`#9d`'s type sweep, and `#2` whenever) against it → the package is then reachable only from
+`protobuf-compiler` and its own tests, and goes with them in one commit.
