@@ -582,7 +582,11 @@ export class DataSpaceManager extends Resource {
         return false;
       }
 
-      await this._mirrorCredentialsToDocument(space);
+      // Unsettled when the mirror bailed on a closing space: latching would leave the credentials
+      // half-written with nothing to retry it, since an anchored space never attempts again.
+      if (!(await this._mirrorCredentialsToDocument(space))) {
+        return false;
+      }
       this._reportSpaceRootToEdge(space);
       return true;
     } catch (err) {
@@ -641,7 +645,7 @@ export class DataSpaceManager extends Resource {
    * credentials backfills the existing chain and dual-writes new ones through one path, since the
    * control pipeline replays the whole feed on open.
    */
-  private async _mirrorCredentialsToDocument(space: DataSpace): Promise<void> {
+  private async _mirrorCredentialsToDocument(space: DataSpace): Promise<boolean> {
     {
       // The manager's own context, not the caller's: the invitation flow disposes its context as
       // soon as `acceptSpace` returns, and a store bound to it would be released before its first
@@ -649,7 +653,7 @@ export class DataSpaceManager extends Resource {
       const ctx = this._ctx;
       const store = await openCredentialsDocument(ctx, this._echoHost, space.id);
       if (!this._isSpaceLive(space)) {
-        return;
+        return false;
       }
       for (const credential of space.inner.spaceState.credentials) {
         store.append(credential);
@@ -661,6 +665,7 @@ export class DataSpaceManager extends Resource {
       // by credential id, so during the migration window both sources can run without conflict — a
       // space that has flipped simply stops gaining feed credentials.
       store.subscribe(ctx, (credential) => space.inner.processDocumentCredential(credential));
+      return true;
     }
   }
 
