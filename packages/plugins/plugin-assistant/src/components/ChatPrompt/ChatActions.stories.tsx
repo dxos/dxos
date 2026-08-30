@@ -65,8 +65,9 @@ export const SendIsOneControl: Story = {
     const canvas = within(canvasElement);
 
     // One control, idle: send. The two used to sit side by side with one of them always dead.
-    // `findBy` because the plugin manager mounts the row asynchronously.
-    const send = await canvas.findByTestId('assistant.send');
+    // `findBy` with a raised timeout: the plugin manager mounts the row asynchronously, and the
+    // default second is not enough when the whole suite is competing for the browser.
+    const send = await canvas.findByTestId('assistant.send', {}, { timeout: 10_000 });
     await expect(send).toHaveAccessibleName('Send');
     await expect(canvas.queryAllByTestId('assistant.send')).toHaveLength(1);
   },
@@ -77,7 +78,7 @@ export const StopReplacesSendWhileProcessing: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     // Same control, same handle — the mode is what changed.
-    const stop = await canvas.findByTestId('assistant.send');
+    const stop = await canvas.findByTestId('assistant.send', {}, { timeout: 10_000 });
     await expect(stop).toHaveAccessibleName('Stop processing');
     await expect(canvas.queryAllByTestId('assistant.send')).toHaveLength(1);
     // Enabled despite `canSend: false`: stopping is always available while a turn runs.
@@ -89,7 +90,7 @@ export const TaskToggleFlips: Story = {
   args: { canSend: true, tasksVisible: true },
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
-    const toggle = await canvas.findByTestId('assistant.toggle-tasks');
+    const toggle = await canvas.findByTestId('assistant.toggle-tasks', {}, { timeout: 10_000 });
     await expect(toggle).toHaveAttribute('aria-pressed', 'true');
     await userEvent.click(toggle);
     await expect(canvas.getByTestId('assistant.toggle-tasks')).toHaveAttribute('aria-pressed', 'false');

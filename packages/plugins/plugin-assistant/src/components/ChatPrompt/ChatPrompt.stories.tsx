@@ -125,7 +125,8 @@ export const TestBareRow: Story = {
   args: {},
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await canvas.findByTestId('assistant.send');
+    // Generous: the story boots a client and a space before the prompt exists at all.
+    await canvas.findByTestId('assistant.send', {}, { timeout: 30_000 });
     await expect(canvas.queryByTestId('transcription.record')).toBeNull();
   },
 };
