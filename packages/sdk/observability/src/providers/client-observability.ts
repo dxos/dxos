@@ -351,15 +351,15 @@ export const eventLoopLagProvider = (): DataProvider =>
     }
 
     // #region DEBUG
-    // [DEBUG H-suspend] Dual-clock suspension probe, shipped temporarily to verify the native
-    // app's WebContent-suspension fix (`background_throttling(Disabled)` in composer-app's
-    // src-tauri) in the wild. Remove together with the Rust host heartbeat in src-tauri/lib.rs
-    // once preview bundles confirm the fix. Runs in every realm (tab + workers); logs only on a
-    // wake after a ≥15s execution gap and on visibility transitions, so steady state is silent.
-    // Reading a gap line:
+    // [DEBUG H-suspend] Dual-clock suspension probe, shipped temporarily to confirm the
+    // native-app freeze diagnosis in the wild — WKWebView's WebContent process suspended while
+    // the window sits hidden — before the fix lands. Remove together with the Rust host
+    // heartbeat in composer-app's src-tauri/lib.rs. Runs in every realm (tab + workers); logs
+    // only on a wake after a ≥15s execution gap and on visibility transitions, so steady state
+    // is silent. Reading a gap line in a downloaded bundle:
     //   - wallDeltaMs ≈ monoDeltaMs → the realm did not run while both clocks did ⇒ process
-    //     suspension (the 2026-08-29 soak showed multi-hour WebContent freezes this way, with
-    //     the Rust host heartbeat clean throughout).
+    //     suspension (a 2026-08-29 dev soak showed multi-hour WebContent freezes this way,
+    //     with the Rust host heartbeat clean throughout).
     //   - wallDeltaMs >> monoDeltaMs → the machine slept; not an app fault.
     const DEBUG_PROBE_INTERVAL_MS = 5_000;
     const DEBUG_GAP_MS = 15_000;
