@@ -298,7 +298,7 @@ export const TaskAction: Story = {
     // Scoped to this task's own row — every row carries a menu, so the seeded task has to be found
     // through its title rather than by picking the first trigger on the page.
     const row = title.closest('[data-testid="taskList.item"]');
-    expect(row).toBeTruthy();
+    await expect(row).toBeTruthy();
 
     // Two actions on the row (the contributed one plus the list's own delete), so they collapse into
     // the overflow menu rather than rendering as a bare button.
@@ -316,8 +316,8 @@ export const TaskAction: Story = {
       async () => {
         const chats = await space.db.query(Filter.type(Chat.Chat)).run();
         const chat = chats.find((chat) => chat.name === TASK_TITLE);
-        expect(chat).toBeTruthy();
-        expect(chat!.tasks.map((ref) => Task.refEntityId(ref))).toContain(task.id);
+        await expect(chat).toBeTruthy();
+        await expect(chat!.tasks.map((ref) => Task.refEntityId(ref))).toContain(task.id);
       },
       { timeout: 10_000 },
     );
