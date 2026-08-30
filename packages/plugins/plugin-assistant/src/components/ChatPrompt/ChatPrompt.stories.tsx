@@ -70,7 +70,7 @@ const DefaultStory = ({ tasksVisible: initialTasksVisible }: StoryArgs) => {
             outline
             preset={preset?.id}
             tasksVisible={tasksVisible}
-            classNames='rounded-t-0'
+            classNames={[tasksVisible && 'rounded-t-none']}
           />
         </Chat.Root>
       </div>

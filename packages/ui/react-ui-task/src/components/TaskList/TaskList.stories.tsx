@@ -239,6 +239,16 @@ export const TestEdit: Story = {
     await expect(title().value).toEqual('');
     await expect(description()).toBeNull();
 
+    // ...and offers no Save/Cancel: with nothing typed there is nothing to save and nothing to
+    // cancel, and two dead controls read as a form to fill in rather than a place to type.
+    const save = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.save"]');
+    await expect(save()).toBeNull();
+    await userEvent.click(title());
+    await userEvent.keyboard('Something');
+    await waitFor(async () => expect(save()).not.toBeNull());
+    await userEvent.clear(title());
+    await waitFor(async () => expect(save()).toBeNull());
+
     // A half-typed title that loses focus creates nothing: leaving the field is not a decision to
     // add a task. Enter and Save are the deliberate acts, and they still work.
     const before = rows().length;

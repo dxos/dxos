@@ -1149,27 +1149,33 @@ const TaskListEdit = composable<HTMLDivElement, { placeholder?: string; descript
             explicitly what happens to the pending text. Both buttons keep focus where it is
             (`preventDefault` on mousedown): the fields commit on blur, so a button that took focus
             would commit before its own handler ran — and Cancel could never mean anything.
-            Placed on the title line explicitly; its place in the DOM is what orders Tab. */}
-        <Toolbar.Root density='sm' classNames='row-start-1 col-start-[-2] p-0 bg-transparent'>
-          <Toolbar.IconButton
-            variant='ghost'
-            iconOnly
-            icon='ph--check--regular'
-            data-testid='taskList.edit.save'
-            label={t('save-task.label')}
-            onClick={handleSave}
-            onMouseDown={(event) => event.preventDefault()}
-          />
-          <Toolbar.IconButton
-            variant='ghost'
-            iconOnly
-            icon='ph--x--regular'
-            data-testid='taskList.edit.cancel'
-            label={t('cancel-edit.label')}
-            onClick={handleCancel}
-            onMouseDown={(event) => event.preventDefault()}
-          />
-        </Toolbar.Root>
+            Placed on the title line explicitly; its place in the DOM is what orders Tab.
+
+            Hidden while the add row is untouched: with nothing typed there is nothing to save and
+            nothing to cancel, and two dead controls on an empty row read as a form to fill in
+            rather than a place to type. */}
+        {(current || draft.trim().length > 0) && (
+          <Toolbar.Root density='sm' classNames='row-start-1 col-start-[-2] p-0 bg-transparent'>
+            <Toolbar.IconButton
+              variant='ghost'
+              iconOnly
+              icon='ph--check--regular'
+              data-testid='taskList.edit.save'
+              label={t('save-task.label')}
+              onClick={handleSave}
+              onMouseDown={(event) => event.preventDefault()}
+            />
+            <Toolbar.IconButton
+              variant='ghost'
+              iconOnly
+              icon='ph--x--regular'
+              data-testid='taskList.edit.cancel'
+              label={t('cancel-edit.label')}
+              onClick={handleCancel}
+              onMouseDown={(event) => event.preventDefault()}
+            />
+          </Toolbar.Root>
+        )}
       </div>
     );
   },
