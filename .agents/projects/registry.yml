@@ -554,6 +554,16 @@ projects:
       op key gap is everywhere — chess declares six operations of which one has a runtime counterpart
       and startGame has none. NEXT: run the three unverified flows, then routine part (a) (reconcile a
       PLUGIN.mdl against Operation.make), then composer-app/APP.mdl."
+  - name: agent-composer-introspection
+    status: active
+    user: burdon
+    host: burdon-mbp-2092
+    created: 2026-08-30
+    summary: 'Make the agent a first-class Composer operator: fix the plugin enable/disable operation path (list all / list active / enable / disable via the debug port), and design an app-graph-driven state-introspection API (JSON surface/context/operations snapshot + ARIA/data- attributes) that replaces screenshot-based inspection.'
+    tasks: .agents/projects/agent-composer-introspection/TASKS.md
+    design: .agents/projects/agent-composer-introspection/DESIGN.md
+    prs: []
+    resume: 'Project created; start Composer in debug mode, assess current capabilities, then diagnose the plugin-enable operation failure.'
 ended:
   - name: task-planning-skill
     user: burdon
