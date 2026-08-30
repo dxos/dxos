@@ -2,9 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect/atom-react/Hooks';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import * as Optimistic from '@dxos/app-framework/Optimistic';
 import { useOperation, useOptimisticOperation, useOptimisticQuery } from '@dxos/app-framework/ui';

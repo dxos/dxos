@@ -19,8 +19,8 @@ import { translations as reactUiTranslations } from '@dxos/react-ui/translations
 import { Milestone, Person, Task, TaskSet } from '@dxos/types';
 
 import { translations } from '#translations';
-import * as TasksPlugin from '../../TasksPlugin';
 
+import * as TasksPlugin from '../../TasksPlugin';
 import { TaskSetArticle } from './TaskSetArticle';
 
 /** Kept so a play function can mutate the source objects and assert the article follows. */
