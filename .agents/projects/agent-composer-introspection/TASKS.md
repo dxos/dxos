@@ -1,6 +1,6 @@
 # Agent Composer Introspection — Tasks
 
-_Resume: decide whether to implement DESIGN.md Phase A (`snapshot()` in plugin-debug). Uncommitted: none. Last: disablePlugins landed on the branch + DESIGN.md written._
+_Resume: decide whether to implement INTROSPECTION.md Phase A (`snapshot()` in plugin-debug). Uncommitted: none. Last: disablePlugins landed on the branch + design doc moved to packages/sdk/app-framework/docs/INTROSPECTION.md._
 
 ## Phase 1: Assessment & plugin management
 
@@ -33,13 +33,13 @@ are visible, their context objects, and which operations are reachable
 
 ### Tasks
 
-- [x] **Survey what state is already reachable** — DESIGN.md §2 table, all verified live (layout
+- [x] **Survey what state is already reachable** — INTROSPECTION.md §2 table, all verified live (layout
       atom, attention, graph actions carrying operation DXNs, `dx-surface` wrappers, testids/ARIA).
-- [x] **Design a debugging API** — DESIGN.md §3.1 `composer.snapshot()` + twin read-only
+- [x] **Design a debugging API** — INTROSPECTION.md §3.1 `composer.snapshot()` + twin read-only
       `org.dxos.operation.debug.snapshot`; §3.2 surface registry closing DOM ↔ graph ↔ data.
-- [x] **Design ARIA / data- attribute conventions** — DESIGN.md §3.3 (`data-node-id`,
+- [x] **Design ARIA / data- attribute conventions** — INTROSPECTION.md §3.3 (`data-node-id`,
       `data-action`, keep `dx-surface` attrs + `data-testid` + ARIA state).
-- [x] **Write DESIGN.md with evaluation criteria vs. the screenshot approach** — §4 criteria table
+- [x] **Write the design doc with evaluation criteria vs. the screenshot approach** — §4 criteria table
   - acceptance test; §5 sequencing (Phase A/B/C).
 - [ ] **Implement Phase A** (`snapshot()` in plugin-debug) — awaiting go-ahead.
 

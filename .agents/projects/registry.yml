@@ -561,7 +561,7 @@ projects:
     created: 2026-08-30
     summary: 'Make the agent a first-class Composer operator: fix the plugin enable/disable operation path (list all / list active / enable / disable via the debug port), and design an app-graph-driven state-introspection API (JSON surface/context/operations snapshot + ARIA/data- attributes) that replaces screenshot-based inspection.'
     tasks: .agents/projects/agent-composer-introspection/TASKS.md
-    design: .agents/projects/agent-composer-introspection/DESIGN.md
+    design: packages/sdk/app-framework/docs/INTROSPECTION.md
     prs: []
     resume: 'Phase 1 DONE: enablePlugins worked at head (prior failure predates #12775); disablePlugins ADDED (definition+handler+5 tests, live-verified — chess deactivates, ops vanish). Phase 2 DESIGN.md written and live-verified: §3.1 composer.snapshot() + org.dxos.operation.debug.snapshot, §3.2 surface registry (dx-surface wrappers already exist in dev builds), §3.3 data-node-id/data-action conventions, §4 eval criteria vs screenshots. FINDING: boot is visibility-gated — a backgrounded tab sits on the boot screen with the manager fully active (startup+idle fired) until fronted; relevant to #12845. NEXT: implement Phase A (snapshot in plugin-debug) on go-ahead, then open PR.'
 ended:
