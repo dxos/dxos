@@ -136,41 +136,48 @@ back. Ordered as a chain — each item is what the one above it needs.
 
 ### Tasks
 
-- [ ] **The delegated chat never runs the task** — the chat opens with the task
-      bound and the opening prompt appended, and the session sits idle. Find what
-      makes a chat process its opening turn (the delegation strategy wakes the
-      conversation; a fresh chat has no such trigger) and give the delegated chat
-      the same push.
-- [ ] **The opening prompt should reference the task, not restate it** — it
-      currently interpolates the title and description into the message, so the
-      chat carries two copies that can disagree the moment the task is edited.
-      The task is already in `chat.tasks`; the prompt should point at it.
-- [ ] **The chat needs a tool that lists its tasks** — a session cannot act on
-      work it cannot enumerate. `stories-assistant` already demonstrates a task
-      list in a chat; find that provision and make sure the delegated chat has
-      it rather than building a second one.
-- [ ] **Make the test task actually actionable** — "Summarize the release notes"
-      cannot be verified. Use something with an observable product, e.g. "create
-      a markdown document with a short poem", so the play test asserts on what
-      the session made.
-- [ ] **A created document must land as an artifact of the project** —
-      investigate the existing provision (`project.artifacts` is a ref array, and
-      the Artifacts branch has its own create path) and use it. Do NOT write the
-      ref by hand from the session; if no provision exists, write a short design
-      doc proposing one before implementing.
-- [ ] **Mark the task `started` when the session picks it up** — the status
-      should reflect that work began, not jump from `todo` to a terminal state.
-- [ ] **`Task.artifacts`** — an array of refs to the objects a task produced. The
-      session attaches what it creates, so a finished task shows its output
-      rather than only asserting it happened.
-- [ ] **`Task.reviewers`** — an optional array of `Actor`.
-- [ ] **A `review` status** — added to `Task.Status`. On finishing, a task with a
-      non-empty `reviewers` goes to `review`; otherwise `done`. Note the status
-      union is duplicated in `TaskOperation` inputs and in the single-select
-      annotation's options — both follow.
-- [ ] **Delegation assigns the current user as reviewer** — plugin-projects sets
-      `reviewers` to the acting identity when it opens the chat, so delegated
-      work comes back to whoever asked for it.
+- [x] **The delegated chat never runs the task** — root cause was not a missing
+      push but a session collision: delegation spawned a session with no model,
+      and the chat's UI then asked for one carrying the user's selected model,
+      which made `AgentService` terminate the running process mid-turn
+      ("InterruptError: All fibers interrupted without error"). The prompt now
+      goes through `AssistantOperation.RunPromptInChat`, which queues it for the
+      chat's UI exactly as `RunPromptInNewChat` does, so one session runs the
+      conversation.
+- [x] **The opening prompt should reference the task, not restate it** — it
+      points at the checklist the task is already bound to.
+- [x] **The chat needs a tool that lists its tasks** — no new tool needed: the
+      planning skill renders `chat.tasks` into the system prompt as a numbered
+      checklist (`Chat.renderNumberedChecklist`), which is what the scripted
+      story's session reads.
+- [x] **Make the test task actually actionable** — "create a markdown document
+      with a short poem", asserted on the document the session produces.
+- [x] **A created document must land as an artifact of the project** — via the
+      existing `ProjectOperation.ArtifactAdd`, which gained an optional `task`
+      so the object is recorded on both the project and the task that made it.
+- [x] **Mark the task `started` when the session picks it up** — set on
+      delegation, so the row shows work underway from the moment the session
+      has it.
+- [x] **`Task.artifacts`** — a ref array of what the task produced, rendered as
+      tags in the task list's tag column.
+- [x] **`Task.reviewers`** — an optional array of `Actor`.
+- [x] **A `review` status** — `Task.complete()` is the one place that decides
+      work is finished, and it consults `reviewers`.
+- [x] **Delegation assigns the current user as reviewer.**
+- [x] **Delegation must not steal the task from its project** — `Chat.tasks` was
+      an owning (`SetParent`) field, so adding a project's task re-parented it,
+      and since membership is the parent edge the task disappeared from the
+      project. Ownership is now decided at creation: `Chat.addTask` parents its
+      own, a delegated task keeps the parent it arrived with, and
+      `Chat.deleteTask` destroys only members the chat owns.
+- [x] **Delegating should navigate to the chat it started** —
+      `RunPromptInChat` opens it, so the reader lands on the work they just
+      delegated.
+- [ ] **Repair tasks already re-parented by the old owning checklist** — a task
+      delegated before the fix still has the chat as its ECHO parent and stays
+      missing from its project. One-off (`Obj.setParent(task, taskSet)`); decide
+      whether it is worth a migration or just a manual fix in the affected
+      spaces.
 
 - [ ] **A lone tool call renders outside its "Ran N commands" group** — observed
       2026-08-30: a `space-query-objects` call sat above the group block, which
