@@ -169,6 +169,8 @@ export const translations: Resource[] = [
         'settings.entity-extraction.label': 'Entity extraction',
         'send.label': 'Send',
         'cancel-processing.button': 'Stop processing',
+        'show-tasks.button': 'Show tasks',
+        'hide-tasks.button': 'Hide tasks',
 
         'options.skills.title': 'Skills',
         'options.mcp.title': 'MCP',

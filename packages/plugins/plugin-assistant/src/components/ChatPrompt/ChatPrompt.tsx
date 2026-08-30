@@ -12,7 +12,7 @@ import { type Event } from '@dxos/async';
 import * as Project from '@dxos/compute/Project';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import {
   ChatEditor,
   type ChatEditorController,
@@ -46,8 +46,8 @@ export type ChatPromptProps = Merge<
     chat?: Chat.Chat;
     processor: AiChatProcessor;
     event: Event<ChatEvent>;
-    /** Read-only indicator of whether the configured provider is the remote (online) service. */
-    online?: boolean;
+    /** Whether the checklist beside the prompt is shown; the toggle renders only when provided. */
+    tasksVisible?: boolean;
     placeholder?: ChatEditorProps['placeholder'];
     /** Object the chat is attached to; its project instructions (if any) supply sentinel-command completion. */
     companionTo?: Obj.Unknown;
@@ -62,7 +62,7 @@ export const ChatPrompt = ({
   chat,
   processor,
   event,
-  online,
+  tasksVisible,
   placeholder,
   onPresetChange,
   settings = true,
@@ -214,17 +214,10 @@ export const ChatPrompt = ({
             docId={docId}
             processing={streaming}
             canSend={canSend}
+            tasksVisible={tasksVisible}
             onSend={handleSend}
             onEvent={handleEvent}
-          >
-            {online !== undefined && platform !== 'mobile' && (
-              <Input.Root>
-                <Input.Label srOnly>{t('online-switch.label')}</Input.Label>
-                {/* Read-only: the provider is configured in Assistant settings, not toggled here. */}
-                <Input.Switch classNames='mx-1' checked={online} disabled />
-              </Input.Root>
-            )}
-          </ChatActions>
+          />
         </div>
       )}
     </div>

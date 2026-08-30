@@ -37,6 +37,8 @@ export type ChatActionsProps = ThemedClassName<
     onSend?: () => void;
     /** Whether the prompt holds text and the processor would accept it; drives the send control's enablement. */
     canSend?: boolean;
+    /** Whether the checklist beside the prompt is shown; the toggle renders only when provided. */
+    tasksVisible?: boolean;
     onEvent?: (event: ChatEvent) => void;
   }>
 >;
@@ -50,6 +52,7 @@ export const ChatActions = ({
   debug,
   onSend,
   canSend,
+  tasksVisible,
   onEvent,
 }: ChatActionsProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -266,31 +269,37 @@ export const ChatActions = ({
         />
       )}
 
-      {/* Enter is the only other way to submit, and a touch keyboard offers no such affordance. */}
-      {onSend && (
+      {tasksVisible !== undefined && (
         <IconButton
-          disabled={!canSend}
           variant='ghost'
-          classNames={mx(TOUCH_TARGET, canSend && 'text-accent-text')}
-          icon='ph--paper-plane-right--regular'
+          classNames={mx(TOUCH_TARGET, tasksVisible && 'text-accent-text')}
+          icon='ph--list-checks--regular'
           iconOnly
-          label={t('send.label')}
-          data-testid='assistant.send'
-          onClick={onSend}
+          aria-pressed={tasksVisible}
+          label={t(tasksVisible ? 'hide-tasks.button' : 'show-tasks.button')}
+          data-testid='assistant.toggle-tasks'
+          onClick={() => onEvent?.({ type: 'toggle-tasks' })}
         />
       )}
 
-      <IconButton
-        disabled={!processing} // TODO(dmaretskyi): Set processing state correctly on rehydrated agents.
-        variant='ghost'
-        classNames={mx(TOUCH_TARGET, processing && 'text-error-text')}
-        icon={processing ? 'ph--square--duotone' : 'ph--square--regular'}
-        iconOnly
-        label={t('cancel-processing.button')}
-        onClick={() => {
-          onEvent?.({ type: 'cancel' });
-        }}
-      />
+      {/* One control, not two: send and stop are the same affordance at two moments of a turn, and
+          as separate buttons one of them was always present and dead. Enter is the only other way to
+          submit, and a touch keyboard offers no such affordance. */}
+      {onSend && (
+        // TODO(dmaretskyi): Set processing state correctly on rehydrated agents.
+        <IconButton
+          disabled={!processing && !canSend}
+          variant='ghost'
+          classNames={mx(TOUCH_TARGET, processing ? 'text-error-text' : canSend && 'text-accent-text')}
+          icon={processing ? 'ph--square--duotone' : 'ph--paper-plane-right--regular'}
+          iconOnly
+          label={t(processing ? 'cancel-processing.button' : 'send.label')}
+          // One stable handle for the prompt's primary action; its mode is the accessible label,
+          // which is also how a reader tells the two apart.
+          data-testid='assistant.send'
+          onClick={() => (processing ? onEvent?.({ type: 'cancel' }) : onSend())}
+        />
+      )}
     </div>
   );
 };

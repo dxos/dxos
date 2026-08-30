@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef, useCallback, useEffect, useRef } from 'react';
+import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
-import { Provider } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
@@ -43,8 +42,6 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     const runtime = useChatServices({ id: db?.spaceId });
 
     const { preset, ...chatProps } = usePresets(settings);
-    // The provider is configured in settings; the chat surfaces it as a read-only online indicator.
-    const online = preset?.provider === Provider.edge.id;
     const processor = useChatProcessor({ db, chat, preset, runtime, registry, settings });
     const getContext = useSelectionContext(companionTo);
 
@@ -57,6 +54,21 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     const handleViewUsage = useCallback(() => {
       void invokePromise(ClientOperation.OpenUsage, undefined);
     }, [invokePromise]);
+
+    // Shown by default: a chat carrying a checklist should show it without being asked, and the
+    // toggle is how the reader gets the room back once they have read it. Per mount rather than
+    // persisted — it is a glance, not a preference.
+    const [tasksVisible, setTasksVisible] = useState(true);
+    const handleEvent = useCallback<NonNullable<ChatArticleProps['onEvent']>>(
+      (event) => {
+        if (event.type === 'toggle-tasks') {
+          setTasksVisible((visible) => !visible);
+          return;
+        }
+        onEvent?.(event);
+      },
+      [onEvent],
+    );
 
     // Reset the one-shot guard when the target conversation changes, so a pending prompt for a new
     // `attendableId` is still auto-submitted within the same mount.
@@ -94,7 +106,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
         processor={processor}
         debug={debug}
         getContext={getContext}
-        onEvent={onEvent}
+        onEvent={handleEvent}
         onSubmit={onSubmit}
       >
         <Panel.Root role={role} ref={forwardedRef}>
@@ -118,13 +130,15 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                 )}
               </div>
               <div className='dx-document flex flex-col px-4 pb-4'>
-                <div className='px-4'>
-                  <ChatComponent.TaskList classNames='shrink-0 max-h-[calc(4*2rem+1px)] border border-separator border-b-0 rounded-t-sm text-description' />
-                </div>
+                {tasksVisible && (
+                  <div className='px-4'>
+                    <ChatComponent.TaskList classNames='shrink-0 max-h-[calc(4*2rem+1px)] border border-separator border-b-0 rounded-t-sm text-description' />
+                  </div>
+                )}
                 <ChatComponent.Prompt
                   {...chatProps}
                   outline
-                  online={online}
+                  tasksVisible={tasksVisible}
                   preset={preset?.id}
                   companionTo={companionTo}
                 />
