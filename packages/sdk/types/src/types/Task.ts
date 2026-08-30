@@ -12,6 +12,7 @@ import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { FormatAnnotation } from '@dxos/echo/Format';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { type EntityId } from '@dxos/echo/Key';
+import { type MakeRequired } from '@dxos/util';
 
 import * as Actor from './Actor';
 import * as Milestone from './Milestone';
@@ -163,8 +164,12 @@ export const make = (props: Obj.MakeProps<typeof Task>): Task => Obj.make(Task, 
 //
 
 /**
- * Fields an edit may set. `null` clears an optional field — distinct from `undefined`, which means
- * the edit does not mention it at all.
+ * Fields an edit may set — the editable surface of a task, shared by the mutation helpers here, the
+ * `UpdateTask` operation, and the list UI, so the three cannot disagree about what an edit is.
+ *
+ * `null` clears an optional field, distinct from `undefined`, which means the edit does not mention
+ * it at all. `parentTask` and `milestone` are absent by design: they carry ownership and set
+ * membership, so they move through `TaskSet`.
  */
 export type Edit = {
   title?: string;
@@ -174,6 +179,12 @@ export type Edit = {
   estimate?: number | null;
   assignee?: Actor.Actor | null;
 };
+
+/**
+ * A new task: `title` required, every other field optional. Nothing is nullable — a create has
+ * nothing to clear, and a field it does not mention is simply unset.
+ */
+export type Draft = MakeRequired<{ [K in keyof Edit]: Exclude<Edit[K], null> }, 'title'>;
 
 export type EditOptions = {
   /** Who did it; omitted for something the system did on its own. */
@@ -193,6 +204,7 @@ const sameActor = (a: Actor.Actor | undefined, b: Actor.Actor | undefined): bool
   if (!a || !b) {
     return a === b;
   }
+
   return (
     a.name === b.name &&
     a.email === b.email &&

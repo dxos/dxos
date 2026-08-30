@@ -41,7 +41,6 @@ import { MarkdownEditable, type MarkdownEditableController, MarkdownView } from 
 import { type Actor, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
-import { type MakeRequired } from '@dxos/util';
 
 import { translationKey } from '#translations';
 
@@ -61,13 +60,6 @@ const TASK_LIST_NAME = 'TaskList.Root';
 
 /** Linear-style status groups, most active first. */
 export const STATUS_ORDER: Task.Status[] = ['started', 'todo', 'done', 'failed', 'cancelled'];
-
-export type TaskEdit = Partial<
-  Pick<Task.Task, 'title' | 'description' | 'status' | 'priority' | 'estimate' | 'assignee'>
->;
-
-/** A new task: `title` required, any other editable field supplied when available. */
-export type TaskDraft = MakeRequired<TaskEdit, 'title'>;
 
 //
 // Context — plain Radix context (un-scoped); nesting task lists has no meaning today.
@@ -89,8 +81,8 @@ type TaskListContextValue = {
   /** Ids of the task being dragged and its sub-tasks — lifted out of the list for the drag's duration. */
   dragging: ReadonlySet<string>;
   onDraggingChange: (task: Task.Task | undefined) => void;
-  onTaskCreate?: (task: TaskDraft) => void;
-  onTaskUpdate?: (task: Task.Task, patch: TaskEdit) => void;
+  onTaskCreate?: (task: Task.Draft) => void;
+  onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
   onTaskDelete?: (task: Task.Task) => void;
   onTaskSelect?: (task: Task.Task | undefined) => void;
   onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
@@ -119,9 +111,9 @@ type TaskListRootProps = PropsWithChildren<{
    * single-line list (e.g. the chat strip) keeps one row per task. */
   showDescriptions?: boolean;
   /** Enables `Create`; called with a draft carrying at least the trimmed title. */
-  onTaskCreate?: (task: TaskDraft) => void;
+  onTaskCreate?: (task: Task.Draft) => void;
   /** Enables the done toggle. Every mutation is delegated — the list never writes. */
-  onTaskUpdate?: (task: Task.Task, patch: TaskEdit) => void;
+  onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
   /** Enables the per-row delete affordance. */
   onTaskDelete?: (task: Task.Task) => void;
   /**

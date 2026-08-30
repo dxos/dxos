@@ -67,18 +67,20 @@ export const UpdateTask = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.update'),
     name: 'Update Task',
-    description: 'Patch task fields: title, description, status, priority, estimate, assignee.',
+    description: 'Patch task fields: title, description, status, priority, estimate, assignee. Null clears a field.',
     icon: 'ph--pencil-simple--regular',
   },
   services: [Database.Service],
   input: Schema.Struct({
     task: Ref.Ref(Task.Task),
     title: Schema.optional(Schema.String),
-    description: Schema.optional(Schema.String),
+    // `null` clears an optional field, matching `Task.Edit` — without it the operation can set an
+    // assignee but never remove one.
+    description: Schema.optional(Schema.NullOr(Schema.String)),
     status: Schema.optional(Schema.Literals(['todo', 'started', 'done', 'failed', 'cancelled'])),
-    priority: Schema.optional(Schema.Literals(['none', 'low', 'medium', 'high', 'urgent'])),
-    estimate: Schema.optional(Schema.Number),
-    assignee: Schema.optional(Actor.Actor),
+    priority: Schema.optional(Schema.NullOr(Schema.Literals(['none', 'low', 'medium', 'high', 'urgent']))),
+    estimate: Schema.optional(Schema.NullOr(Schema.Number)),
+    assignee: Schema.optional(Schema.NullOr(Actor.Actor)),
     /** Re-file under a milestone; `null` moves the task to the backlog. */
     milestone: Schema.optional(Schema.NullOr(Ref.Ref(Milestone.Milestone))),
     /** Re-parent as a sub-task; `null` promotes the task to a root of its set. */

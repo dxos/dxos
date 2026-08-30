@@ -60,6 +60,25 @@ describe('update-task', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
+  it.effect('clears an optional field with null', () =>
+    Effect.gen(function* () {
+      const taskSet = yield* Database.add(TaskSet.make({}));
+      yield* Database.flush();
+      const { task } = yield* createTask.handler({
+        taskSet: Ref.make(taskSet),
+        title: 'Draft',
+        assignee: { name: 'Scout' },
+      });
+
+      // Without `null` the operation could set an assignee but never remove one, since `undefined`
+      // means the patch does not mention the field.
+      yield* updateTask.handler({ task: Ref.make(task), assignee: null });
+
+      expect(task.assignee).toBeUndefined();
+      expect(task.history?.at(-1)?.description).toEqual('Unassigned.');
+    }).pipe(Effect.provide(testLayer())),
+  );
+
   it.effect('clearing parentTask clears the lifecycle edge, not just the ref', () =>
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));

@@ -13,7 +13,7 @@ import { Task } from '@dxos/types';
 import { translations } from '#translations';
 
 import { type TaskPlacement } from './hierarchy';
-import { type TaskDraft, type TaskEdit, TaskList } from './TaskList';
+import { TaskList } from './TaskList';
 
 const seed = (): Task.Task[] => [
   Task.make({
@@ -96,11 +96,11 @@ const DefaultStory = ({
   // Selection is what the article wires, and what arrow-key navigation moves.
   const [selected, setSelected] = useState<string>();
 
-  const handleCreate = useCallback(({ title, ...props }: TaskDraft) => {
+  const handleCreate = useCallback(({ title, ...props }: Task.Draft) => {
     setTasks((tasks) => [...tasks, Task.make({ title, status: 'todo', ...props })]);
   }, []);
 
-  const handleUpdate = useCallback((task: Task.Task, patch: TaskEdit) => {
+  const handleUpdate = useCallback((task: Task.Task, patch: Task.Edit) => {
     Obj.update(task, (task) => {
       Object.assign(task, patch);
     });

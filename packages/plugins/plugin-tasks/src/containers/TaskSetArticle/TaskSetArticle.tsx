@@ -10,7 +10,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { type TaskDraft, type TaskEdit, TaskList, type TaskPlacement } from '@dxos/react-ui-task';
+import { TaskList, type TaskPlacement } from '@dxos/react-ui-task';
 import { Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -33,13 +33,13 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
 
   const handleCreate = useOperation(
     TaskOperation.CreateTask,
-    (props: TaskDraft) => ({ taskSet: Ref.make(taskSet), ...props }),
+    (props: Task.Draft) => ({ taskSet: Ref.make(taskSet), ...props }),
     { spaceId },
   );
 
   const handleUpdate = useOperation(
     TaskOperation.UpdateTask,
-    (task: Task.Task, props: TaskEdit) => ({ task: Ref.make(task), ...props }),
+    (task: Task.Task, props: Task.Edit) => ({ task: Ref.make(task), ...props }),
     { spaceId },
   );
 
