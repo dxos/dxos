@@ -179,12 +179,13 @@ back. Ordered as a chain — each item is what the one above it needs.
       whether it is worth a migration or just a manual fix in the affected
       spaces.
 
-- [ ] **A lone tool call renders outside its "Ran N commands" group** — observed
-      2026-08-30: a `space-query-objects` call sat above the group block, which
-      then listed two more of the same tool. The grouping in the chat thread is
-      dropping the first call rather than folding it in (an off-by-one in how a
-      run of consecutive tool blocks is collected, or a group started only on the
-      second matching block). Lives in the thread renderer, not in this feature.
+- [x] **A lone tool call renders outside its "Ran N commands" group** — fixed in
+      `react-ui-assistant/renderer.ts`: `flushTools()` ran BEFORE the block was
+      rendered, so a block rendering to nothing — an empty text block, which the
+      runtime interleaves with tool calls — ended the run anyway. Rendered first
+      now; only a block with visible output splits a run. Three tests in
+      `renderer.test.ts`; the middle one fails without the fix. Verified live: the
+      thread collapsed from three panels to one "Ran 5 commands".
 
 ### References
 
