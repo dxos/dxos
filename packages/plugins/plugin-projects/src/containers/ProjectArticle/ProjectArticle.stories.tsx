@@ -5,16 +5,19 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { Chat } from '@dxos/assistant-toolkit';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as GitHubPlugin from '@dxos/plugin-github/GitHubPlugin';
+import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import { translations as routineTranslations } from '@dxos/plugin-routine/translations';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { translations as tasksTranslations } from '@dxos/plugin-tasks/translations';
@@ -178,6 +181,11 @@ const meta = {
       plugins: [
         ...corePlugins(),
         TasksPlugin.make(),
+        // The plugin under test, for its own contributions rather than its surfaces: the `TaskAction`
+        // module is what puts `Discuss in chat` on a task row, and Assistant supplies the `CreateChat`
+        // handler that action runs.
+        ProjectsPlugin.make(),
+        AssistantPlugin.make(),
         // Contributes the `#123` decoration; `project.repo` is what it resolves against.
         GitHubPlugin.make(),
         ClientPlugin.make({
@@ -271,6 +279,51 @@ export const Sections: Story = {
  * the project keeps its tasks — the Tasks tab — rather than swapping the outline for a task form
  * inside the Overview.
  */
+/**
+ * The whole cross-plugin path in one gesture: plugin-projects contributes a `TaskAction`, the task
+ * row shows it, and running it invokes the operation that opens a chat carrying the task.
+ *
+ * Asserted on the database rather than on any UI the chat might get, since the point is that the
+ * contribution reached the row and the row reached the operation.
+ */
+export const TaskAction: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const { space, task } = await seedContent();
+
+    await showTab(canvas, 'tasks');
+    const title = await canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 });
+
+    // Scoped to this task's own row — every row carries a menu, so the seeded task has to be found
+    // through its title rather than by picking the first trigger on the page.
+    const row = title.closest('[data-testid="taskList.item"]');
+    expect(row).toBeTruthy();
+
+    // Two actions on the row (the contributed one plus the list's own delete), so they collapse into
+    // the overflow menu rather than rendering as a bare button.
+    const trigger = await within(row as HTMLElement).findByTestId('taskList.item.actions', undefined, {
+      timeout: 10_000,
+    });
+    await userEvent.click(trigger);
+
+    const item = await screen.findByText('Discuss in chat', undefined, { timeout: 10_000 });
+    await userEvent.click(item);
+
+    // The chat is named for the task and carries it, and `Chat.tasks` being a `SetParent` field means
+    // the task moved under the chat.
+    await waitFor(
+      async () => {
+        const chats = await space.db.query(Filter.type(Chat.Chat)).run();
+        const chat = chats.find((chat) => chat.name === TASK_TITLE);
+        expect(chat).toBeTruthy();
+        expect(chat!.tasks.map((ref) => Task.refEntityId(ref))).toContain(task.id);
+      },
+      { timeout: 10_000 },
+    );
+  },
+};
+
 export const TaskLink: Story = {
   ...Default,
   play: async ({ canvasElement }) => {

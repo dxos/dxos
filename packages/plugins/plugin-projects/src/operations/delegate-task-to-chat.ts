@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
-import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { ProjectOperation } from '#types';
 
@@ -29,7 +28,11 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
           chat.tasks = [...chat.tasks, Ref.make(task)];
         });
 
-        yield* Operation.invoke(SpaceOperation.AddObject, { object: chat });
+        // Added here rather than through `SpaceOperation.AddObject`: this is a database write, and
+        // routing it through plugin-space would make the operation unavailable to any host that does
+        // not run that plugin.
+        const { db } = yield* Database.Service;
+        db.add(chat);
 
         return { chat };
       }),
