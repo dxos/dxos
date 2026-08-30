@@ -14,9 +14,6 @@ import { RegistryPlugin } from '#plugin';
 
 const graphKey = GraphPlugin.make().meta.profile.key;
 
-const makePlugin = (key: string, dependsOn?: string[]) =>
-  Plugin.make(Plugin.define({ profile: { key, name: key, dependsOn } }))();
-
 describe('RegistryOperation.DisablePlugins', () => {
   test('disables an enabled plugin', async ({ expect }) => {
     const key = 'org.dxos.plugin.testTarget';
@@ -85,3 +82,6 @@ describe('RegistryOperation.DisablePlugins', () => {
     expect(rejected).toEqual([]);
   });
 });
+
+const makePlugin = (key: string, dependsOn?: string[]) =>
+  Plugin.make(Plugin.define({ profile: { key, name: key, dependsOn } }))();
