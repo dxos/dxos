@@ -26,7 +26,7 @@ export const ProjectsPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(Schema),
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(SubjectContext),
-  // Injects `Discuss in chat` into plugin-tasks' task rows.
+  // Injects `Assign to agent` into plugin-tasks' task rows.
   Plugin.addModule(TaskAction),
   Plugin.addModule(Templates),
   Plugin.addModule(Translations),

@@ -279,6 +279,9 @@ export const Sections: Story = {
  * the project keeps its tasks — the Tasks tab — rather than swapping the outline for a task form
  * inside the Overview.
  */
+/** The contributed action's label, as written in `capabilities/task-action.ts`. */
+const TASK_ACTION_LABEL = 'Assign to agent';
+
 /**
  * The whole cross-plugin path in one gesture: plugin-projects contributes a `TaskAction`, the task
  * row shows it, and running it invokes the operation that opens a chat carrying the task.
@@ -312,7 +315,9 @@ export const TaskAction: Story = {
     const menu = (await screen.findByRole('menu', undefined, { timeout: 10_000 })).textContent ?? '';
     await expect(menu).not.toMatch(/\.label\b/);
 
-    const item = await screen.findByText('Discuss in chat', undefined, { timeout: 10_000 });
+    // The label the contribution carries (`capabilities/task-action.ts`); a rename there has to be
+    // made here too, which is the point — the assertion is that the row shows what was contributed.
+    const item = await screen.findByText(TASK_ACTION_LABEL, undefined, { timeout: 10_000 });
     await userEvent.click(item);
 
     // The chat is named for the task and carries it, and `Chat.tasks` being a `SetParent` field means
