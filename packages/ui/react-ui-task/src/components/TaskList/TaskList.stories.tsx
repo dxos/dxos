@@ -63,23 +63,70 @@ const seed = (): Task.Task[] => [
 ];
 
 /**
+ * Ten tasks, one per row and every status represented — enough to fill the viewport, take the
+ * ordinals into double digits, and put more than one task under each group heading, which a
+ * seven-task list does not.
+ */
+const manySeed = (): Task.Task[] => [
+  Task.make({ title: 'Source green coffee', status: 'done', priority: 'high' }),
+  Task.make({ title: 'Cup the samples', status: 'done' }),
+  Task.make({ title: 'Finalize roast curve', status: 'started', priority: 'high' }),
+  Task.make({ title: 'Draft launch email', status: 'started', assignee: { role: 'assistant', name: 'Scout' } }),
+  Task.make({
+    title: 'Write the launch poem',
+    status: 'review',
+    reviewers: [{ name: 'Rich', role: 'user' }],
+    artifacts: [Ref.make(Task.make({ title: 'Ode to a Coffee Bean' }))],
+  }),
+  Task.make({ title: 'Design label', status: 'todo', assignee: { email: 'riley@example.com' } }),
+  Task.make({ title: 'Publish the tasting notes', status: 'todo' }),
+  Task.make({ title: 'Book the launch venue', status: 'todo', priority: 'low' }),
+  Task.make({ title: 'Print run v1', status: 'cancelled' }),
+  Task.make({ title: 'Ship the pre-orders', status: 'failed', priority: 'urgent' }),
+];
+
+/**
  * Two roots with sub-tasks two levels deep. Array order is sibling order only, so the seed
  * deliberately interleaves the two branches — a list that walked the array instead of the tree
  * would render them out of order, which is the bug this story exists to catch.
  */
 const hierarchicalSeed = (): Task.Task[] => {
-  const release = Task.make({ title: 'Ship the spring release', status: 'started', priority: 'high' });
-  const roast = Task.make({ title: 'Dial in the roast', status: 'todo' });
+  const release = Task.make({
+    title: 'Ship the spring release',
+    status: 'started',
+    priority: 'high',
+  });
+  const roast = Task.make({
+    title: 'Dial in the roast',
+    status: 'todo',
+  });
   const notes = Task.make({
     title: 'Write the tasting notes',
     status: 'todo',
     parentTask: Ref.make(release),
     description: 'One paragraph per lot, in the order they are poured.',
   });
-  const sample = Task.make({ title: 'Sample the Ethiopian lots', status: 'done', parentTask: Ref.make(roast) });
-  const label = Task.make({ title: 'Approve the label art', status: 'todo', parentTask: Ref.make(release) });
-  const curve = Task.make({ title: 'Log every profile', status: 'started', parentTask: Ref.make(roast) });
-  const proof = Task.make({ title: 'Proofread the back label', status: 'todo', parentTask: Ref.make(label) });
+  const sample = Task.make({
+    title: 'Sample the Ethiopian lots',
+    status: 'done',
+    parentTask: Ref.make(roast),
+  });
+  const label = Task.make({
+    title: 'Approve the label art',
+    status: 'todo',
+    parentTask: Ref.make(release),
+  });
+  const curve = Task.make({
+    title: 'Log every profile',
+    status: 'started',
+    parentTask: Ref.make(roast),
+  });
+  const proof = Task.make({
+    title: 'Proofread the back label',
+    status: 'todo',
+    parentTask: Ref.make(label),
+  });
+
   return [release, roast, notes, sample, label, curve, proof];
 };
 
@@ -89,6 +136,7 @@ const DefaultStory = ({
   showOrdinals,
   showDescriptions,
   hierarchical,
+  many,
   framed = true,
 }: {
   readonly?: boolean;
@@ -96,11 +144,13 @@ const DefaultStory = ({
   showOrdinals?: boolean;
   showDescriptions?: boolean;
   hierarchical?: boolean;
+  /** Seed the longer, ten-task list instead of the default seven. */
+  many?: boolean;
   /** Insets the pane in a card, as an article does. Off for the tests that measure the pane's own
       columns against a row's, which the inset would offset. */
   framed?: boolean;
 }) => {
-  const [tasks, setTasks] = useState<Task.Task[]>(hierarchical ? hierarchicalSeed : seed);
+  const [tasks, setTasks] = useState<Task.Task[]>(hierarchical ? hierarchicalSeed : many ? manySeed : seed);
   // Selection is what the article wires, and what arrow-key navigation moves.
   const [selected, setSelected] = useState<string>();
 
@@ -168,7 +218,7 @@ const DefaultStory = ({
       </TaskList.Viewport>
       {framed ? (
         <div className='p-2'>
-          <TaskList.Edit grid classNames='border border-separator rounded-md p-2' />
+          <TaskList.Edit classNames='border border-separator rounded-md p-2' />
         </div>
       ) : (
         <TaskList.Edit grid />
@@ -189,6 +239,14 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+/** A list long enough to scroll, group and number into double digits. */
+export const TenTasks: Story = {
+  args: {
+    many: true,
+    showOrdinals: true,
+  },
+};
 
 export const Readonly: Story = {
   args: {
