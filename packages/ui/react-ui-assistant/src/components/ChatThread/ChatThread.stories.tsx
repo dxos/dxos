@@ -147,7 +147,7 @@ const DefaultStory = ({
             </Toolbar.Root>
           </Panel.Toolbar>
 
-          <Panel.Content classNames='dx-container flex flex-col min-h-0'>
+          <Panel.Content classNames='flex flex-col'>
             <div className='relative grow min-h-0'>
               <PromptOutline model={model} />
               <ChatThread.Viewport classNames='absolute inset-0' padding />

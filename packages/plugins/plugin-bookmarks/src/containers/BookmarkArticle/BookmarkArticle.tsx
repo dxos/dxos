@@ -87,7 +87,7 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
             <Menu.Items />
           </Menu.Toolbar>
         </Panel.Toolbar>
-        <Panel.Content classNames='dx-container flex flex-col'>
+        <Panel.Content classNames='flex flex-col'>
           <Flex justify='center'>
             <div className='dx-document py-3'>
               <Card.Root fullWidth border={false}>

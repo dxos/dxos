@@ -484,7 +484,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
           </Select.Root>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content data-testid='counts' classNames='dx-container grid grid-cols-2'>
+      <Panel.Content data-testid='counts' classNames='grid grid-cols-2'>
         <JsonHighlighter
           classNames='text-xs'
           data={{

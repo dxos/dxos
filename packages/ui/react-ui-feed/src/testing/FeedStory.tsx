@@ -313,7 +313,7 @@ export const FeedStory = ({
               </Toolbar.Root>
             </Panel.Toolbar>
 
-            <Panel.Content classNames='relative dx-container'>
+            <Panel.Content classNames='relative'>
               <div className='z-10 absolute left-0 top-0 bottom-0 grid grid-rows-[1fr_4fr_1fr] justify-center'>
                 <FeedOutline classNames='row-start-2' messages={messages} />
               </div>

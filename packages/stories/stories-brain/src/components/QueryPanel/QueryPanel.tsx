@@ -71,7 +71,7 @@ export const QueryPanel = ({
         />
       </Toolbar.Root>
     </Panel.Toolbar>
-    <Panel.Content classNames='dx-container'>
+    <Panel.Content>
       <Form.Root
         schema={QueryOptions}
         values={{ question, query }}

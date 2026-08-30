@@ -67,7 +67,7 @@ export const VocabularyArticle = ({ role, subject, attendableId }: VocabularyArt
             <Menu.Items />
           </Menu.Toolbar>
         </Panel.Toolbar>
-        <Panel.Content classNames='dx-container'>
+        <Panel.Content>
           <WordList words={sorted} />
         </Panel.Content>
       </Panel.Root>

@@ -227,7 +227,7 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
         <Panel.Content asChild>
           <div className='dx-container grid grid-cols-[30rem_1fr] divide-x divide-separator'>
             <div className='dx-container grid grid-rows-[1fr_2fr] divide-y divide-subdued-separator'>
-              <div role='region' aria-label={t('browse-pane.label')} className='dx-container grid overflow-auto'>
+              <div role='region' aria-label={t('browse-pane.label')} className='dx-expander grid overflow-auto'>
                 <FileTree
                   files={fileEntries}
                   selectedPath={selectedPath}
@@ -235,15 +235,11 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
                   emptyMessage={t('view.code.empty.placeholder')}
                 />
               </div>
-              <div role='region' aria-label={t('inspect-pane.label')} className='dx-container grid overflow-hidden'>
+              <div role='region' aria-label={t('inspect-pane.label')} className='dx-container grid'>
                 <BuildOutput state={projectState} />
               </div>
             </div>
-            <div
-              role='region'
-              aria-label={t('output-pane.label')}
-              className='dx-container grid min-h-0 overflow-hidden'
-            >
+            <div role='region' aria-label={t('output-pane.label')} className='dx-container grid'>
               {selected ? <FileEditor file={selected} role={role} /> : null}
             </div>
           </div>

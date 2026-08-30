@@ -113,7 +113,7 @@ export const CrawlPanel = ({
           <IconButton icon='ph--trash--regular' iconOnly label='Reset' disabled={!!busy} onClick={onReset} />
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='dx-container'>
+      <Panel.Content>
         <Form.Root schema={CrawlOptions} values={options} fieldMap={fieldMap} onValuesChanged={onValuesChanged}>
           <Form.Viewport>
             <Form.Content>

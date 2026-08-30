@@ -92,7 +92,7 @@ const MasterDetailStory = () => {
           </Listbox.Content>
         </Listbox.Viewport>
       </Listbox.Root>
-      <div role='region' aria-label='Detail' className='dx-container p-4 overflow-auto'>
+      <div role='region' aria-label='Detail' className='dx-expander p-4 overflow-auto'>
         {detail && (
           <>
             <h2 className='text-lg font-semibold'>{detail.name}</h2>
