@@ -216,6 +216,11 @@ export type EditOptions = {
   date?: string;
   /** Replaces the generated note — for a caller that knows why, not just what. */
   description?: string;
+  /**
+   * The caller is signing off as a reviewer, so `done` means `done` (see {@link approve}). Set by a
+   * surface acting for a person; an agent tool must never set it.
+   */
+  approve?: boolean;
 };
 
 /** How an actor reads in a note: whatever identifies them, most human-readable first. */
@@ -259,11 +264,13 @@ export const appendHistory = (task: Task, entry: HistoryEntry): void => {
  * of them know a task has reviewers. Sited anywhere else it has to be re-remembered at each new call
  * site, which is exactly how the first one was missed.
  *
- * Leaving `review` for `done` passes straight through: that transition IS the sign-off, and only a
- * reviewer is in a position to make it, so it needs no flag to say so.
+ * Only {@link approve} is exempt. An earlier version exempted `review → done` instead, reasoning that
+ * only a reviewer could make that move — but an agent asking for `done` twice makes it too: the first
+ * call lands the task in `review` and the second reads as the sign-off. Who is asking is not
+ * recoverable from the status, so the caller has to say.
  */
-const finishStatus = (task: Task, status: Status): Status =>
-  status === 'done' && task.status !== 'review' && (task.reviewers?.length ?? 0) > 0 ? 'review' : status;
+const finishStatus = (task: Task, status: Status, approve: boolean): Status =>
+  status === 'done' && !approve && (task.reviewers?.length ?? 0) > 0 ? 'review' : status;
 
 /**
  * Applies `changes` and records ONE entry describing them — an edit is what the person did, not
@@ -274,7 +281,9 @@ const finishStatus = (task: Task, status: Status): Status =>
  */
 export const update = (task: Task, requested: Edit, options: EditOptions = {}): HistoryEntry | undefined => {
   const changes: Edit =
-    requested.status === undefined ? requested : { ...requested, status: finishStatus(task, requested.status) };
+    requested.status === undefined
+      ? requested
+      : { ...requested, status: finishStatus(task, requested.status, options.approve ?? false) };
   const notes: string[] = [];
 
   if (changes.title !== undefined && changes.title !== task.title) {
@@ -364,6 +373,13 @@ export const update = (task: Task, requested: Edit, options: EditOptions = {}): 
 /** Moves a task to `status`, recording the transition it actually made (see {@link finishStatus}). */
 export const setStatus = (task: Task, status: Status, options?: EditOptions): HistoryEntry | undefined =>
   update(task, { status }, options);
+
+/**
+ * Closes a task on a reviewer's say-so — the one write that may reach `done` past named reviewers.
+ * Reserved for a surface that acts for a person; never wire an agent tool to it.
+ */
+export const approve = (task: Task, options?: EditOptions): HistoryEntry | undefined =>
+  update(task, { status: 'done' }, { ...options, approve: true });
 
 /**
  * Records an object the task produced. Refs, not children: the artifact belongs to wherever it was

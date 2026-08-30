@@ -197,15 +197,29 @@ describe('completion', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
-  it.effect('leaving review for done is the sign-off, so it is not coerced back', () =>
+  it.effect('a task in review is not closed by asking again', () =>
     Effect.gen(function* () {
       const task = yield* Database.add(
         Task.make({ title: 'Reviewed', status: 'review', reviewers: [{ name: 'Rich' }] }),
       );
       yield* Database.flush();
 
-      // Only a reviewer is in a position to make this transition, so it needs no flag to say so.
+      // What a session does: it asks for `done`, sees the task is not done, and asks again. Exempting
+      // `review → done` let the second call close it, which is the reviewer's move, not the worker's.
       Task.setStatus(task, 'done');
+      yield* Database.flush();
+      expect(task.status).toEqual('review');
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('approve is the one write that closes a reviewed task', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(
+        Task.make({ title: 'Reviewed', status: 'review', reviewers: [{ name: 'Rich' }] }),
+      );
+      yield* Database.flush();
+
+      Task.approve(task);
       yield* Database.flush();
       expect(task.status).toEqual('done');
     }).pipe(Effect.provide(testLayer())),
