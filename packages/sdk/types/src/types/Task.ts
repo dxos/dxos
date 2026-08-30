@@ -348,6 +348,31 @@ export const update = (task: Task, changes: Edit, options: EditOptions = {}): Hi
 export const setStatus = (task: Task, status: Status, options?: EditOptions): HistoryEntry | undefined =>
   update(task, { status }, options);
 
+/**
+ * Finishes a task: `review` when someone was named to look at it, `done` otherwise.
+ *
+ * A verb of its own rather than a coercion inside {@link update}, so a caller asking for `done`
+ * always gets `done` — this is the one place that decides work is finished, and it is the decision,
+ * not the assignment, that consults `reviewers`.
+ */
+export const complete = (task: Task, options?: EditOptions): HistoryEntry | undefined =>
+  setStatus(task, (task.reviewers?.length ?? 0) > 0 ? 'review' : 'done', options);
+
+/**
+ * Records an object the task produced. Refs, not children: the artifact belongs to wherever it was
+ * filed, and finishing the task must not cascade to it. Adding the same object twice is a no-op —
+ * compared by entity id, since the same object may be addressed local or space-qualified.
+ */
+export const addArtifact = (task: Task, artifact: Obj.Unknown): void => {
+  const id = artifact.id;
+  if ((task.artifacts ?? []).some((ref) => refEntityId(ref) === id)) {
+    return;
+  }
+  Obj.update(task, (task) => {
+    task.artifacts = [...(task.artifacts ?? []), Ref.make(artifact)];
+  });
+};
+
 /** Assigns a task, or unassigns it with `null`. */
 export const setAssignee = (
   task: Task,

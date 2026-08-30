@@ -143,7 +143,8 @@ export const ArtifactAdd = Operation.make({
       Files an object into a project's artifacts collection.
       Use this after creating an object (document, outline, sheet, contact, …) while working in a
       project's context, so the project owns it and it appears in the project's artifacts list.
-      Adding the same object twice is a no-op.
+      When the object was produced for a task on your checklist, pass that task too, so the finished
+      task shows what it made. Adding the same object twice is a no-op.
     `,
   },
   input: Schema.Struct({
@@ -153,6 +154,13 @@ export const ArtifactAdd = Operation.make({
     object: Ref.Ref(Obj.Unknown).annotate({
       description: 'The object to file as an artifact.',
     }),
+    task: Schema.optional(
+      Ref.Ref(Task.Task).annotate({
+        description:
+          'The task this object was produced for, when working one — records it on the task as well, ' +
+          'so a finished task shows what it made.',
+      }),
+    ),
   }),
   output: Schema.Void,
   services: [Database.Service],

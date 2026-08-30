@@ -173,6 +173,42 @@ describe('review', () => {
   );
 });
 
+describe('completion', () => {
+  it.effect('goes to review when someone was named, and done when nobody was', () =>
+    Effect.gen(function* () {
+      const reviewed = yield* Database.add(
+        Task.make({ title: 'Reviewed', status: 'started', reviewers: [{ name: 'Rich' }] }),
+      );
+      const unreviewed = yield* Database.add(Task.make({ title: 'Unreviewed', status: 'started' }));
+      yield* Database.flush();
+
+      Task.complete(reviewed);
+      Task.complete(unreviewed);
+      yield* Database.flush();
+
+      // Finished, not closed: someone was named to look at it.
+      expect(reviewed.status).toEqual('review');
+      expect(unreviewed.status).toEqual('done');
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('records what a task produced, once per object', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(Task.make({ title: 'Write a poem' }));
+      const doc = yield* Database.add(Task.make({ title: 'The poem' }));
+      yield* Database.flush();
+
+      Task.addArtifact(task, doc);
+      Task.addArtifact(task, doc);
+      yield* Database.flush();
+
+      // Idempotent: a session that files the same object twice must not double it.
+      expect(task.artifacts).toHaveLength(1);
+      expect(Task.refEntityId(task.artifacts?.[0])).toEqual(doc.id);
+    }).pipe(Effect.provide(testLayer())),
+  );
+});
+
 describe('mutations', () => {
   it.effect('records one entry per edit, naming what changed', () =>
     Effect.gen(function* () {

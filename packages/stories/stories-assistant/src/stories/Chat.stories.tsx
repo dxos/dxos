@@ -89,7 +89,11 @@ const seedProjectTask = async ({
   });
   Obj.setParent(taskSet, project);
 
-  const task = AssistantChat.addTask(db, chat, POEM_TASK_TITLE, { status: 'todo' });
+  // A named reviewer is what sends the finished task to `review` rather than `done`.
+  const task = AssistantChat.addTask(db, chat, POEM_TASK_TITLE, {
+    status: 'todo',
+    reviewers: [{ name: 'Rich', role: 'user' }],
+  });
   Obj.update(taskSet, (taskSet) => {
     taskSet.tasks = [Ref.make(task)];
   });
@@ -746,6 +750,16 @@ export const TestProjectTaskDelegationScripted: Story = {
               }),
             ],
           },
+          // Filing the document is not scripted here: its URI only exists once the create tool has
+          // run, and a script is fixed before the session starts. `ArtifactAdd`'s own test covers
+          // the task attachment.
+          {
+            parts: [
+              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), {
+                tasks: [{ title: POEM_TASK_TITLE, status: 'done' }],
+              }),
+            ],
+          },
           { parts: [text('Wrote the poem.')] },
         ],
       },
@@ -764,5 +778,11 @@ export const TestProjectTaskDelegationScripted: Story = {
     await waitForChecklist((items) => items.some(({ title }) => title === POEM_TASK_TITLE), { timeout: 90_000 });
     const documents = await storySpace!.db.query(Filter.type(Markdown.Document)).run();
     await expect(documents.map((document) => document.name)).toContain(POEM_DOC_NAME);
+
+    // Finished, not closed: the task named a reviewer, so the session marking it done lands on
+    // `review`. The model asked for `done` and cannot know about reviewers — the rule is the task's.
+    const tasks = await storySpace!.db.query(Filter.type(Task.Task)).run();
+    const worked = tasks.find(({ title }) => title === POEM_TASK_TITLE);
+    await expect(worked?.status).toEqual('review');
   },
 };
