@@ -34,10 +34,12 @@ import {
   Toolbar,
   composable,
   composableProps,
+  toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
 import { Listbox, TreeDropIndicator, TreeItemToggle, paddingIndentation, useListDisclosure } from '@dxos/react-ui-list';
 import { MarkdownEditable, type MarkdownEditableController, MarkdownView } from '@dxos/react-ui-markdown';
+import { Menu, type MenuAction, type MenuItem, executeMenuAction, fallbackIcon } from '@dxos/react-ui-menu';
 import { type Actor, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
@@ -83,7 +85,7 @@ type TaskListContextValue = {
   onDraggingChange: (task: Task.Task | undefined) => void;
   onTaskCreate?: (task: Task.Draft) => void;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
-  onTaskDelete?: (task: Task.Task) => void;
+  getTaskActions?: (task: Task.Task) => MenuItem[];
   /** Selects a task, or clears the selection with `undefined`; defined only when the list is selectable. */
   onTaskSelect?: (task: Task.Task | undefined) => void;
   onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
@@ -113,8 +115,11 @@ type TaskListRootProps = PropsWithChildren<{
   onTaskCreate?: (task: Task.Draft) => void;
   /** Enables the done toggle. Every mutation is delegated — the list never writes. */
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
-  /** Enables the per-row delete affordance. */
-  onTaskDelete?: (task: Task.Task) => void;
+  /**
+   * Trailing menu for a row. One item renders as a plain icon button, several as a `…` menu, none as
+   * nothing — so delete is an ordinary contributed action rather than a special case of its own.
+   */
+  getTaskActions?: (task: Task.Task) => MenuItem[];
   /**
    * Row click, and `Escape` — which passes `undefined`, since a reader needs a way back out of a
    * selection. Wiring it (or `selected`) makes the list selectable, so the row shows as selected.
@@ -161,7 +166,7 @@ const TaskListRoot = ({
   selectable: selectableProp,
   onTaskCreate,
   onTaskUpdate,
-  onTaskDelete,
+  getTaskActions,
   onTaskSelect,
   onTaskMove,
   onCollapsedChange,
@@ -228,7 +233,7 @@ const TaskListRoot = ({
       onCollapseToggle={onCollapseToggle}
       onTaskCreate={onTaskCreate}
       onTaskUpdate={onTaskUpdate}
-      onTaskDelete={onTaskDelete}
+      getTaskActions={getTaskActions}
       onTaskSelect={selectable ? handleSelect : undefined}
       onTaskMove={onTaskMove}
     >
@@ -637,7 +642,7 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
       showDescriptions,
       showGutter,
       onTaskUpdate,
-      onTaskDelete,
+      getTaskActions,
       selected,
       onTaskSelect,
       onTaskMove,
@@ -840,15 +845,7 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
           {blocked && <Tag hue='indigo'>{t('task-blocked.label')}</Tag>}
           {current.priority && current.priority !== 'none' && <Tag hue='neutral'>{current.priority}</Tag>}
         </div>
-        {onTaskDelete && (
-          <CompactIconButton
-            variant='ghost'
-            icon='ph--x--regular'
-            label={t('delete-task.label')}
-            classNames='invisible group-hover/row:visible group-has-[:focus-visible]/row:visible'
-            onClick={() => onTaskDelete(task)}
-          />
-        )}
+        <TaskListItemActions task={task} />
         {instruction && <TreeDropIndicator instruction={instruction} gap={0} />}
         {description && (
           // Its own row in the subgrid, starting under the title and spanning the label columns.
@@ -870,6 +867,64 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
     );
   },
 );
+
+//
+// Item actions — the trailing cell of a row.
+//
+
+const ROW_ACTION_CLASSNAMES = 'invisible group-hover/row:visible group-has-[:focus-visible]/row:visible';
+
+const isMenuAction = (item: MenuItem): item is MenuAction => 'data' in item && typeof item.data === 'function';
+
+/**
+ * A row's contributed actions. One is a plain button — a `…` menu hiding a single item costs a click
+ * to discover nothing — and several collapse into the overflow menu, matching the nav tree's rows.
+ */
+const TaskListItemActions = ({ task }: { task: Task.Task }) => {
+  const { t } = useTranslation(translationKey);
+  const { getTaskActions } = useTaskListContext('TaskList.ItemActions');
+  const actions = useMemo(() => getTaskActions?.(task) ?? [], [getTaskActions, task]);
+
+  if (actions.length === 0) {
+    return null;
+  }
+
+  const [only] = actions;
+  if (actions.length === 1 && isMenuAction(only)) {
+    return (
+      <CompactIconButton
+        variant='ghost'
+        icon={only.properties?.icon ?? fallbackIcon}
+        label={toLocalizedString(only.properties?.label, t)}
+        data-testid={only.properties?.testId}
+        classNames={ROW_ACTION_CLASSNAMES}
+        onClick={(event) => {
+          // The row is the selection target; running its action must not also select it.
+          event.stopPropagation();
+          void executeMenuAction(only);
+        }}
+      />
+    );
+  }
+
+  return (
+    <Menu.Root>
+      <Menu.Trigger asChild>
+        <CompactIconButton
+          variant='ghost'
+          icon='ph--dots-three-vertical--regular'
+          label={t('task-actions.label')}
+          data-testid='taskList.item.actions'
+          classNames={ROW_ACTION_CLASSNAMES}
+          onClick={(event) => event.stopPropagation()}
+        />
+      </Menu.Trigger>
+      <Menu.Content items={actions} />
+    </Menu.Root>
+  );
+};
+
+TaskListItemActions.displayName = 'TaskList.ItemActions';
 
 TaskListItem.displayName = 'TaskList.Item';
 

@@ -22938,6 +22938,9 @@ importers:
       '@dxos/react-ui-markdown':
         specifier: workspace:*
         version: link:../react-ui-markdown
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../react-ui-menu
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types

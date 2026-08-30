@@ -7,6 +7,7 @@ import React, { useCallback, useState } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { Obj, Ref } from '@dxos/echo';
+import { createMenuAction } from '@dxos/react-ui-menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Task } from '@dxos/types';
 
@@ -107,6 +108,19 @@ const DefaultStory = ({
     setTasks((tasks) => [...tasks]);
   }, []);
 
+  // Delete is an ordinary contributed action now, which is also what a plugin's own actions look like.
+  const getTaskActions = useCallback(
+    (task: Task.Task) => [
+      createMenuAction(`delete-${task.id}`, () => handleDelete(task), {
+        label: 'Delete task',
+        icon: 'ph--x--regular',
+        testId: 'taskList.item.delete',
+      }),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
   const handleDelete = useCallback((task: Task.Task) => {
     setTasks((tasks) => tasks.filter(({ id }) => id !== task.id));
   }, []);
@@ -138,7 +152,7 @@ const DefaultStory = ({
       showDescriptions={showDescriptions}
       onTaskCreate={readonly ? undefined : handleCreate}
       onTaskUpdate={readonly ? undefined : handleUpdate}
-      onTaskDelete={readonly ? undefined : handleDelete}
+      getTaskActions={readonly ? undefined : getTaskActions}
       onTaskMove={readonly || !hierarchical ? undefined : handleMove}
       onTaskSelect={(task) => setSelected(task?.id)}
     >
