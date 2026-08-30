@@ -2,15 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type PropsWithChildren } from 'react';
 
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { type ActionGraphProps, Menu, useMenuActions } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
 import { type ChatEvent } from '../Chat/events';
-import { ChatAudioButton } from './ChatAudioButton';
 
 /**
  * 44px at the 16px (pointer: fine) root font-size, the iOS HIG minimum touch target; the density
@@ -21,8 +22,14 @@ const TOUCH_TARGET = 'max-md:size-11 pointer-coarse:size-11';
 
 export type ChatActionsProps = ThemedClassName<
   PropsWithChildren<{
-    docId?: string;
-    microphone?: boolean;
+    /** The prompt's graph node, which is what contributed actions are filed under. */
+    attendableId?: string;
+    /**
+     * Toolbar actions other plugins filed on this chat's node — the microphone among them. Sourced
+     * the way `MarkdownArticle` sources its own, so a contributor reaches the prompt without either
+     * side importing the other.
+     */
+    customActions?: Atom.Atom<ActionGraphProps>;
     processing?: boolean;
     debug?: boolean;
     /** Submits the current prompt; the send control renders only when provided. */
@@ -38,8 +45,8 @@ export type ChatActionsProps = ThemedClassName<
 export const ChatActions = ({
   classNames,
   children,
-  docId,
-  microphone,
+  attendableId,
+  customActions,
   processing,
   debug,
   onSend,
@@ -52,7 +59,7 @@ export const ChatActions = ({
     <div className={mx('flex items-center gap-1', classNames)}>
       {children}
 
-      {microphone && <ChatAudioButton docId={docId} />}
+      {customActions && <ContributedActions actions={customActions} attendableId={attendableId} />}
 
       {debug && (
         <IconButton
@@ -96,5 +103,30 @@ export const ChatActions = ({
         />
       )}
     </div>
+  );
+};
+
+/**
+ * The contributed actions, rendered through the menu's own item dispatch rather than a local copy
+ * of it — that is what makes a `variant: 'custom'` contribution (the mic's press-and-hold and its
+ * options menu) render here exactly as it does in a document toolbar.
+ *
+ * Its own component so the hook is unconditional; the row renders it only when a caller supplies
+ * actions.
+ */
+const ContributedActions = ({
+  actions,
+  attendableId,
+}: {
+  actions: Atom.Atom<ActionGraphProps>;
+  attendableId?: string;
+}) => {
+  const menuActions = useMenuActions(actions);
+  return (
+    // `Menu.Items` without `Menu.Toolbar`: the items are container-free, so they take their place
+    // in the prompt's own row rather than bringing a toolbar of their own.
+    <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
+      <Menu.Items />
+    </Menu.Root>
   );
 };

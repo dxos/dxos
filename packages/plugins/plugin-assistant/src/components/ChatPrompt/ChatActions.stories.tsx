@@ -15,7 +15,7 @@ import { translations } from '#translations';
 import { type ChatEvent } from '../Chat';
 import { ChatActions, type ChatActionsProps } from './ChatActions';
 
-type StoryArgs = Pick<ChatActionsProps, 'processing' | 'canSend' | 'tasksVisible' | 'microphone' | 'debug'>;
+type StoryArgs = Pick<ChatActionsProps, 'processing' | 'canSend' | 'tasksVisible' | 'debug'>;
 
 const DefaultStory = ({ tasksVisible: initialTasksVisible, ...args }: StoryArgs) => {
   // Held here rather than fixed by args so the toggle can be clicked and seen to change.

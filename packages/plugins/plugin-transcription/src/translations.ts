@@ -18,6 +18,7 @@ export const translations = [
         'scroll-to-end.label': 'Scroll to latest',
 
         'start-recording.label': 'Start recording',
+        'microphone-denied.label': 'Microphone access denied',
         'stop-recording.label': 'Stop recording',
         'hold-to-record.label': 'Hold to record',
 

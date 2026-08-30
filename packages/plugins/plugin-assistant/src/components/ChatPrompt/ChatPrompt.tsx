@@ -5,6 +5,7 @@
 import { EditorView } from '@codemirror/view';
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
 import { type Chat } from '@dxos/assistant-toolkit';
@@ -20,6 +21,7 @@ import {
   ChatStatusIndicator,
   commands,
 } from '@dxos/react-ui-chat';
+import { type ActionGraphProps } from '@dxos/react-ui-menu';
 import { pendingText } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { type Merge } from '@dxos/util';
@@ -48,6 +50,10 @@ export type ChatPromptProps = Merge<
     event: Event<ChatEvent>;
     /** Whether the checklist beside the prompt is shown; the toggle renders only when provided. */
     tasksVisible?: boolean;
+    /** The prompt's graph node, which is what contributed actions are filed under. */
+    attendableId?: string;
+    /** Toolbar actions other plugins filed on this chat's node (see `ChatActions`). */
+    customActions?: Atom.Atom<ActionGraphProps>;
     placeholder?: ChatEditorProps['placeholder'];
     /** Object the chat is attached to; its project instructions (if any) supply sentinel-command completion. */
     companionTo?: Obj.Unknown;
@@ -63,6 +69,8 @@ export const ChatPrompt = ({
   processor,
   event,
   tasksVisible,
+  attendableId,
+  customActions,
   placeholder,
   onPresetChange,
   settings = true,
@@ -210,8 +218,8 @@ export const ChatPrompt = ({
 
           <ChatActions
             classNames='col-span-2'
-            microphone={true}
-            docId={docId}
+            attendableId={attendableId}
+            customActions={customActions}
             processing={streaming}
             canSend={canSend}
             tasksVisible={tasksVisible}

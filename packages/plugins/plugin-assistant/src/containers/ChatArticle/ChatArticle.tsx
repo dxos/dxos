@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type Chat as ChatType } from '@dxos/assistant-toolkit';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -14,6 +16,7 @@ import { ClientOperation } from '@dxos/plugin-client';
 import { useRegistry } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { type ChatView } from '@dxos/react-ui-assistant';
+import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
 import { Merge } from '@dxos/util';
 
 import { Chat as ChatComponent, type ChatRootProps } from '#components';
@@ -54,6 +57,15 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     const handleViewUsage = useCallback(() => {
       void invokePromise(ClientOperation.OpenUsage, undefined);
     }, [invokePromise]);
+
+    // Toolbar actions other plugins filed on this chat's node — the microphone among them. Read the
+    // way `MarkdownArticle` reads its own, so a contributor reaches the prompt without plugin-assistant
+    // importing it (or knowing it exists).
+    const { graph } = useAppGraph();
+    const customActions = useMemo(
+      () => Atom.make((get) => graphActions(graph, get, attendableId, { filter: isToolbarAction })),
+      [graph, attendableId],
+    );
 
     // Shown by default: a chat carrying a checklist should show it without being asked, and the
     // toggle is how the reader gets the room back once they have read it. Per mount rather than
@@ -138,6 +150,8 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                 <ChatComponent.Prompt
                   {...chatProps}
                   outline
+                  attendableId={attendableId}
+                  customActions={customActions}
                   tasksVisible={tasksVisible}
                   preset={preset?.id}
                   companionTo={companionTo}

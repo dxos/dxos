@@ -16846,6 +16846,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/compute/assistant
+      '@dxos/assistant-toolkit':
+        specifier: workspace:*
+        version: link:../../core/compute/assistant-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
