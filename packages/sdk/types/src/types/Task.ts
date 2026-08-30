@@ -20,7 +20,11 @@ import * as Milestone from './Milestone';
 export const Priority = Schema.Literals(['none', 'low', 'medium', 'high', 'urgent']);
 export type Priority = Schema.Schema.Type<typeof Priority>;
 
-export const Status = Schema.Literals(['todo', 'started', 'done', 'cancelled', 'failed']);
+/**
+ * `review` sits between working and done: a task whose {@link Task.reviewers} is non-empty lands
+ * there when the work is finished, so nothing a reviewer was named for closes without them.
+ */
+export const Status = Schema.Literals(['todo', 'started', 'review', 'done', 'cancelled', 'failed']);
 export type Status = Schema.Schema.Type<typeof Status>;
 
 /**
@@ -44,7 +48,7 @@ export const HistoryEntry = Schema.Struct({
 }).annotate({ title: 'History Entry' });
 export type HistoryEntry = Schema.Schema.Type<typeof HistoryEntry>;
 
-export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '0.4.0'))(
+export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '0.5.0'))(
   Schema.Struct({
     title: Schema.String.pipe(
       Schema.annotate({ title: 'Title' }),
@@ -96,6 +100,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
             options: [
               { id: 'todo', title: 'Todo', color: 'indigo' },
               { id: 'started', title: 'Started', color: 'purple' },
+              { id: 'review', title: 'In Review', color: 'cyan' },
               { id: 'done', title: 'Done', color: 'amber' },
               { id: 'cancelled', title: 'Cancelled', color: 'gray' },
               { id: 'failed', title: 'Failed', color: 'red' },
@@ -108,6 +113,24 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
 
     /** Human or agent assignment: a HALO identity (DID), a Person ref, a bare email, or a display name. */
     assignee: Schema.optional(Actor.Actor.annotate({ title: 'Assignee' })),
+
+    /**
+     * Who must look at the finished work. Non-empty means the task goes to `review` rather than
+     * `done`, so delegated work comes back to whoever asked for it.
+     */
+    reviewers: Schema.optional(Schema.Array(Actor.Actor).annotate({ title: 'Reviewers' })),
+
+    /**
+     * What the task produced — the documents, sketches and records made while working it. Refs
+     * rather than an ECHO parent edge: an artifact belongs to the project (or wherever it was
+     * filed) and merely records which task made it, so completing a task must not cascade to it.
+     */
+    artifacts: Schema.optional(
+      Schema.Array(Ref.Ref(Obj.Unknown)).pipe(
+        Annotation.FormInputAnnotation.set(false),
+        Schema.annotate({ title: 'Artifacts' }),
+      ),
+    ),
     estimate: Schema.optional(Schema.Number.annotate({ title: 'Estimate' })),
 
     /**

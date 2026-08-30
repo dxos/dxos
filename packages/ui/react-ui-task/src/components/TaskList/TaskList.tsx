@@ -61,7 +61,7 @@ import {
 const TASK_LIST_NAME = 'TaskList.Root';
 
 /** Linear-style status groups, most active first. */
-export const STATUS_ORDER: Task.Status[] = ['started', 'todo', 'done', 'failed', 'cancelled'];
+export const STATUS_ORDER: Task.Status[] = ['started', 'review', 'todo', 'done', 'failed', 'cancelled'];
 
 //
 // Context — plain Radix context (un-scoped); nesting task lists has no meaning today.
@@ -627,6 +627,7 @@ const DESCRIPTION_COMPONENTS = {
 const STATUS_ICONS: Record<Task.Status, { icon: string; classNames?: string }> = {
   todo: { icon: 'ph--square--regular', classNames: 'text-subdued' },
   started: { icon: 'ph--hourglass--regular', classNames: 'text-info-text' },
+  review: { icon: 'ph--eye--regular', classNames: 'text-info-text' },
   done: { icon: 'ph--check--regular', classNames: 'text-success-text' },
   failed: { icon: 'ph--x--regular', classNames: 'text-error-text' },
   cancelled: { icon: 'ph--x--regular', classNames: 'text-error-text' },

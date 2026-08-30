@@ -14,6 +14,7 @@ export const translations = [
         'mark-todo.label': 'Mark todo',
         'status-todo.label': 'To Do',
         'status-started.label': 'Started',
+        'status-review.label': 'In Review',
         'status-done.label': 'Done',
         'status-failed.label': 'Failed',
         'status-cancelled.label': 'Cancelled',

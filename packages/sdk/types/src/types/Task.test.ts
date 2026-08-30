@@ -148,6 +148,31 @@ describe('collectSubtree', () => {
   );
 });
 
+describe('review', () => {
+  it.effect('carries reviewers and the artifacts a task produced', () =>
+    Effect.gen(function* () {
+      // Any object can be an artifact; a second task stands in so the test registers no extra type.
+      const doc = yield* Database.add(Task.make({ title: 'The poem' }));
+      const task = yield* Database.add(
+        Task.make({
+          title: 'Write a poem',
+          status: 'review',
+          reviewers: [{ name: 'Rich' }],
+          artifacts: [Ref.make(doc)],
+        }),
+      );
+      yield* Database.flush();
+
+      // `review` is a status of its own: work is finished but not closed, because someone was named.
+      expect(task.status).toEqual('review');
+      expect(task.reviewers?.map((reviewer) => reviewer.name)).toEqual(['Rich']);
+      // The artifact is a ref, not a child: completing the task must not cascade to what it made.
+      expect(Task.refEntityId(task.artifacts?.[0])).toEqual(doc.id);
+      expect(Obj.getParent(doc)?.id).not.toEqual(task.id);
+    }).pipe(Effect.provide(testLayer())),
+  );
+});
+
 describe('mutations', () => {
   it.effect('records one entry per edit, naming what changed', () =>
     Effect.gen(function* () {

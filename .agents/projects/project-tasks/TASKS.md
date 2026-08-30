@@ -172,6 +172,13 @@ back. Ordered as a chain — each item is what the one above it needs.
       `reviewers` to the acting identity when it opens the chat, so delegated
       work comes back to whoever asked for it.
 
+- [ ] **A lone tool call renders outside its "Ran N commands" group** — observed
+      2026-08-30: a `space-query-objects` call sat above the group block, which
+      then listed two more of the same tool. The grouping in the chat thread is
+      dropping the first call rather than folding it in (an off-by-one in how a
+      run of consecutive tool blocks is collected, or a group started only on the
+      second matching block). Lives in the thread renderer, not in this feature.
+
 ### References
 
 - `packages/plugins/plugin-projects/src/operations/delegate-task-to-chat.ts` —
